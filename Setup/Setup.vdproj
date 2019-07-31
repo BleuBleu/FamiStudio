@@ -21,80 +21,92 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_09CD62F1148387CE8C2ABA6D9864C2F2"
+        "MsmKey" = "8:_08ABB2DDB70E10C039F78967922FAD29"
         "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_2BD4E5C6358E7B8687D1635A85BABE39"
+        "MsmKey" = "8:_0E8D5BE6867142BA88C824E848A44DF4"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_2170D06C2813442491EACBF5C1BB3201"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_22A1362FC71278D331596B4CAF60BB72"
         "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
+        "MsmKey" = "8:_22A1362FC71278D331596B4CAF60BB72"
+        "OwnerKey" = "8:_6173E1F2A38B50FB34E1B9FCDAB63A64"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_22A1362FC71278D331596B4CAF60BB72"
+        "OwnerKey" = "8:_5E9917F8EC7F628283FE8FC184E91162"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_22A1362FC71278D331596B4CAF60BB72"
+        "OwnerKey" = "8:_C51B2C6F5B8EB68199D7E91BD7D1BC99"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_22A1362FC71278D331596B4CAF60BB72"
+        "OwnerKey" = "8:_08ABB2DDB70E10C039F78967922FAD29"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_5E9917F8EC7F628283FE8FC184E91162"
         "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_731E91E9BD0915C26D2A6D386BFD5430"
+        "MsmKey" = "8:_6173E1F2A38B50FB34E1B9FCDAB63A64"
         "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_731E91E9BD0915C26D2A6D386BFD5430"
-        "OwnerKey" = "8:_8DE87EC4F3DE1574D8768ADF6F8811D2"
+        "MsmKey" = "8:_6802629516074A218C72D553A3E74FED"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_731E91E9BD0915C26D2A6D386BFD5430"
-        "OwnerKey" = "8:_09CD62F1148387CE8C2ABA6D9864C2F2"
+        "MsmKey" = "8:_85119041E96C4B0A8666F356F4C6CF7F"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_731E91E9BD0915C26D2A6D386BFD5430"
-        "OwnerKey" = "8:_9B003F6CE4D8E337404D04AECBE12ADE"
+        "MsmKey" = "8:_C51B2C6F5B8EB68199D7E91BD7D1BC99"
+        "OwnerKey" = "8:_08ABB2DDB70E10C039F78967922FAD29"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_731E91E9BD0915C26D2A6D386BFD5430"
-        "OwnerKey" = "8:_2BD4E5C6358E7B8687D1635A85BABE39"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_8DE87EC4F3DE1574D8768ADF6F8811D2"
+        "MsmKey" = "8:_C51B2C6F5B8EB68199D7E91BD7D1BC99"
         "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_9B003F6CE4D8E337404D04AECBE12ADE"
-        "OwnerKey" = "8:_2BD4E5C6358E7B8687D1635A85BABE39"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_9B003F6CE4D8E337404D04AECBE12ADE"
-        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_9B003F6CE4D8E337404D04AECBE12ADE"
-        "OwnerKey" = "8:_09CD62F1148387CE8C2ABA6D9864C2F2"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
+        "MsmKey" = "8:_C51B2C6F5B8EB68199D7E91BD7D1BC99"
+        "OwnerKey" = "8:_5E9917F8EC7F628283FE8FC184E91162"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -106,31 +118,31 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_8DE87EC4F3DE1574D8768ADF6F8811D2"
+        "OwnerKey" = "8:_6173E1F2A38B50FB34E1B9FCDAB63A64"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_09CD62F1148387CE8C2ABA6D9864C2F2"
+        "OwnerKey" = "8:_5E9917F8EC7F628283FE8FC184E91162"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_2BD4E5C6358E7B8687D1635A85BABE39"
+        "OwnerKey" = "8:_08ABB2DDB70E10C039F78967922FAD29"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_9B003F6CE4D8E337404D04AECBE12ADE"
+        "OwnerKey" = "8:_C51B2C6F5B8EB68199D7E91BD7D1BC99"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_731E91E9BD0915C26D2A6D386BFD5430"
+        "OwnerKey" = "8:_22A1362FC71278D331596B4CAF60BB72"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -151,6 +163,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
         "Release"
         {
@@ -167,6 +187,22 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    }
+                }
+            }
         }
     }
     "Deployable"
@@ -196,45 +232,14 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_09CD62F1148387CE8C2ABA6D9864C2F2"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:SharpDX.Direct3D11, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_09CD62F1148387CE8C2ABA6D9864C2F2"
-                    {
-                    "Name" = "8:SharpDX.Direct3D11.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:SharpDX.Direct3D11.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_2BD4E5C6358E7B8687D1635A85BABE39"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_08ABB2DDB70E10C039F78967922FAD29"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:SharpDX.Direct2D1, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_2BD4E5C6358E7B8687D1635A85BABE39"
+                    "_08ABB2DDB70E10C039F78967922FAD29"
                     {
                     "Name" = "8:SharpDX.Direct2D1.dll"
                     "Attributes" = "3:512"
@@ -258,23 +263,12 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_68F38BC81F0EC8ABA97B80F723386F61"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0E8D5BE6867142BA88C824E848A44DF4"
             {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
-                "ScatterAssemblies"
-                {
-                    "_68F38BC81F0EC8ABA97B80F723386F61"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Net.Http.dll"
-            "TargetName" = "8:"
+            "SourcePath" = "8:Demo Songs\\Mega Man 2.fms"
+            "TargetName" = "8:Mega Man 2.fms"
             "Tag" = "8:"
-            "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -286,17 +280,37 @@
             "PackageAs" = "3:1"
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_731E91E9BD0915C26D2A6D386BFD5430"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2170D06C2813442491EACBF5C1BB3201"
+            {
+            "SourcePath" = "8:Demo Songs\\Journey To Silius.fms"
+            "TargetName" = "8:Journey To Silius.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_22A1362FC71278D331596B4CAF60BB72"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_731E91E9BD0915C26D2A6D386BFD5430"
+                    "_22A1362FC71278D331596B4CAF60BB72"
                     {
                     "Name" = "8:SharpDX.dll"
                     "Attributes" = "3:512"
@@ -320,14 +334,45 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_8DE87EC4F3DE1574D8768ADF6F8811D2"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5E9917F8EC7F628283FE8FC184E91162"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:SharpDX.Direct3D11, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_5E9917F8EC7F628283FE8FC184E91162"
+                    {
+                    "Name" = "8:SharpDX.Direct3D11.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:SharpDX.Direct3D11.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6173E1F2A38B50FB34E1B9FCDAB63A64"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:SharpDX.XAudio2, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_8DE87EC4F3DE1574D8768ADF6F8811D2"
+                    "_6173E1F2A38B50FB34E1B9FCDAB63A64"
                     {
                     "Name" = "8:SharpDX.XAudio2.dll"
                     "Attributes" = "3:512"
@@ -351,14 +396,54 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_9B003F6CE4D8E337404D04AECBE12ADE"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6802629516074A218C72D553A3E74FED"
+            {
+            "SourcePath" = "8:Demo Songs\\After The Rain.fms"
+            "TargetName" = "8:After The Rain.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_85119041E96C4B0A8666F356F4C6CF7F"
+            {
+            "SourcePath" = "8:Demo Songs\\Danger Street.fms"
+            "TargetName" = "8:Danger Street.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C51B2C6F5B8EB68199D7E91BD7D1BC99"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:SharpDX.DXGI, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_9B003F6CE4D8E337404D04AECBE12ADE"
+                    "_C51B2C6F5B8EB68199D7E91BD7D1BC99"
                     {
                     "Name" = "8:SharpDX.DXGI.dll"
                     "Attributes" = "3:512"
@@ -421,6 +506,17 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_480746F9AE674AEFA02C8BA1191EE4A2"
+                    {
+                    "Name" = "8:Demo Songs"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_1DC7B328893C4FF390F22C681EED7789"
+                        "Folders"
+                        {
+                        }
+                    }
                 }
             }
             "{1525181F-901A-416C-8A58-119130FE478E}:_4C03B7838519446D91F3E0FA12703A85"
@@ -462,7 +558,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
         "ProductCode" = "8:{E4DBB547-9E27-4366-838D-D55FA30A1368}"
-        "PackageCode" = "8:{9B0FE4A5-575A-4295-B874-4D367E56A8BC}"
+        "PackageCode" = "8:{BCDC4CF8-FFB8-4199-A3C9-D3CDB8698A52}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -983,7 +1079,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_02EAA2AD59C5483CB557FE728242DD43"
             {
-            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\FamiStudio.exe"
+            "SourcePath" = "8:"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"

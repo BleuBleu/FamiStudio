@@ -26,13 +26,17 @@ The solution/projects are in VS2017:
 - You will need C++ support installed if you plan to edit the DLL wrapper around Nes_Snd_Emu.
 - The Setup project is built using the "Microsoft Visual Studio Installer Projects" extension which can be installed from Visual Studio in the "Extensions and Updates" menu.
 
-The C# application is built on top of SharpDX 4.2.0. It should install the required packages automatically, but in case it does not, simply open the Package Manager and type in the following:
+The C# application is built on top of SharpDX 4.2.0. It should install the required packages automatically, but in case it does not, simply open the Package Manager console and type in the following:
 ```
 Install-Package SharpDX -Version 4.2.0
 Install-Package SharpDX.Direct3D11 -Version 4.2.0
 Install-Package SharpDX.Direct2D1 -Version 4.2.0
 Install-Package SharpDX.DXGI -Version 4.2.0
 Install-Package SharpDX.XAudio2 -Version 4.2.0
+```
+If that fails, or if you have general issues with packages, running this in the Package Manager console often fixes issue:
+```
+Update-Package -reinstall
 ```
 ## Issues and Contributing
 Please open issues if you find bugs or have feature suggestion ideas. 
