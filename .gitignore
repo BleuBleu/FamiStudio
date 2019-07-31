@@ -1,0 +1,12 @@
+*.o
+*.obj
+*.gch
+*.pch
+*.rar
+*.user
+
+obj/
+.vs/
+Debug/
+Release/
+packages/

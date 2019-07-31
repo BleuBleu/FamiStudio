@@ -1,0 +1,132 @@
+Nes_Snd_Emu Change Log
+----------------------
+
+Nes_Snd_Emu 0.1.7
+-----------------
+- Created discussion forum: http://groups.google.com/group/blargg-sound-libs
+
+- Added simplified version of APU to make it easy to get started
+
+- Added Konami VRC6 and Namco 106 sound chip emulators
+
+- Added support for APU's non-linear output
+
+- Added demo of using SDL sound, along with helpful Sound_Queue
+
+- Improved documentation
+
+- Redid state snapshot support
+
+
+Nes_Snd_Emu 0.1.5
+-----------------
+- Changed licensing to GNU Lesser General Public License (LGPL)
+
+- Partially implemented DMC non-linearity when its value is directly set using
+$4011, which reduces previously over-emphasized "popping" of percussion on some
+games (TMNT II in particular)
+
+- Implemented workaround for MSVC++ 6 compiler limitations, allowing it to work
+on that compiler again
+
+- Changed error return value of Blip_Buffer::sample_rate() to blargg_err_t
+(defined in blargg_common.h), to make error reporting consistent with other
+functions. This means the "no error" return value is the opposite of what it
+was before, which will break current code which checks the error return value:
+
+	// current code (broken)
+	if ( !buf.sample_rate( samples_per_sec ) )
+		out_of_memory();
+	
+	// quick-and-dirty fix (just remove the ! operation)
+	if ( buf.sample_rate( samples_per_sec ) )
+		out_of_memory();
+	
+	// proper fix
+	blargg_err_t error = buf.sample_rate( samples_per_sec );
+	if ( error )
+		report_error( error );
+
+- Added sample clamping to Blip_Buffer::read_samples(), allowing higher volume
+with little distortion
+
+- Changed 'size_t' values in Blip_Buffer interface to 'long'
+
+- Changed demo to generate a WAVE sound file rather than an AIFF file
+
+- Updated to Blip_Buffer 0.3.2
+
+
+Nes_Snd_Emu 0.1.4
+-----------------
+- Moved NSF player-related modules to Game_Music_Emu library
+
+- Added note about compiler optimizer bugs and workaround for one that was
+found
+
+- Nes_Apu::write_register() now takes the actual memory address, rather than
+register number  (i.e. it now takes 0x4015 rather than 0x15). An assertion was
+added to catch the old usage. See Nes_Apu.h.
+
+- Replaced Blip_Buffer::buffer_size() and Blip_Buffer::units_per_sample() with
+simpler functions (see Blip_Buffer.h and updated demo)
+
+	// old way
+	if ( !buf.buffer_size( sample_count ) )
+		out_of_memory();
+	buf.units_per_sample( clocks_per_sec / samples_per_sec );
+	
+	// new way
+	int length = 1000 / 2; // 1/2 second buffer length
+	if ( !buf.sample_rate( samples_per_sec, length ) )
+		out_of_memory();
+	buf.clock_rate( clocks_per_sec );
+
+- Renamed Nes_Apu::master_volume() to volume()
+
+- Added Nes_Apu::output() to assign all oscillators in one call.
+
+- Changed Nes_Apu_Reflector.cpp to better insulate it:
+
+	if ( load ) apu.noise.was_playing = true;   // removed
+	if ( load ) apu.dmc.last_amp = apu.dmc.dac; // removed
+	if ( load ) apu.state_restored();  // added to end of reflect_apu()
+
+- Expanded notes
+
+- Updated to Blip_Buffer 0.3.0
+
+- Improved demo code
+
+- Made assertions more descriptive when they fail
+
+- Fixed problem with Solstice and the noise oscillator
+
+- Added usage.txt with full examples of use in a NES emulator
+
+- Optimized Nes_Apu::earliest_irq() and irq_notifer() invocation
+
+
+Nes_Snd_Emu 0.1.3
+-----------------
+- Added and moved documentation. References are now in header files.
+
+- Nes_Apu has full support for frame and DMC IRQs.
+
+- Nes_Apu supports Blip_Buffer's improved treble equalization.
+
+- Added Nes_Apu_Reflector for saving and restoring the APU's sound state
+to/from a file. Meant for emulators which freeze exact game state.
+
+- Reworked Nes_Snd_Emu's interface; the inherent fixed frame rate has been
+eliminated.
+
+- Added NES_SND_EMU_QUALITY setting.
+
+- Deprecated Nes_Channel and nes_sample_t; use Blip_Buffer and blip_sample_t
+instead.
+
+
+Nes_Snd_Emu 0.1
+---------------
+- Numerous changes from previous releases.

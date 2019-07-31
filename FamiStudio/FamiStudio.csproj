@@ -1,0 +1,327 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{20AC976F-95BC-42A4-B95C-85609728A36B}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>FamiStudio</RootNamespace>
+    <AssemblyName>FamiStudio</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <SupportUrl>https://twitter.com/nesbleubleu</SupportUrl>
+    <ProductName>FamiStudio</ProductName>
+    <PublisherName>BleuBleu</PublisherName>
+    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <CreateDesktopShortcut>true</CreateDesktopShortcut>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>131F0F7650FBE4772D65735F53378AD6D40DB0C8</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>FamiStudio_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup>
+    <Reference Include="SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.Direct2D1.4.2.0\lib\net45\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.Direct3D11.4.2.0\lib\net45\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.DXGI.4.2.0\lib\net45\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.XAudio2, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <HintPath>packages\SharpDX.XAudio2.4.2.0\lib\net45\SharpDX.XAudio2.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Source\IO\FamitoneMusicFile.cs" />
+    <Compile Include="Source\IO\IniFile.cs" />
+    <Compile Include="Source\IO\ProjectBuffer.cs" />
+    <Compile Include="Source\IO\ProjectFile.cs" />
+    <Compile Include="Source\Player\ChannelState.cs" />
+    <Compile Include="Source\Player\DPCMChannelState.cs" />
+    <Compile Include="Source\Player\InstrumentPlayer.cs" />
+    <Compile Include="Source\Player\MIDI.cs" />
+    <Compile Include="Source\Player\NoiseChannelState.cs" />
+    <Compile Include="Source\Player\SongPlayer.cs" />
+    <Compile Include="Source\Player\SquareChannelState.cs" />
+    <Compile Include="Source\Player\TriangleChannelState.cs" />
+    <Compile Include="Source\Project\Envelope.cs" />
+    <Compile Include="Source\UI\CustomFont.cs" />
+    <Compile Include="Source\Project\DPCMSample.cs" />
+    <Compile Include="Source\IO\FamitrackerFile.cs" />
+    <Compile Include="Source\Project\Instrument.cs" />
+    <Compile Include="Source\Player\NesApu.cs" />
+    <Compile Include="Source\Project\Note.cs" />
+    <Compile Include="Source\Project\Pattern.cs" />
+    <Compile Include="Source\Player\PlayerBase.cs" />
+    <Compile Include="Source\Project\Project.cs" />
+    <Compile Include="Source\Project\Song.cs" />
+    <Compile Include="Source\Project\Channel.cs" />
+    <Compile Include="Source\Utils\Compression.cs" />
+    <Compile Include="Source\Utils\CRC32.cs" />
+    <Compile Include="Source\Utils\PerformanceCounter.cs" />
+    <Compile Include="Source\Project\UndoRedo.cs" />
+    <Compile Include="Source\Player\XAudio2Stream.cs" />
+    <Compile Include="Source\Utils\Utils.cs" />
+    <Compile Include="UI\Direct2DUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\FamiStudio.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\FamiStudio.Designer.cs">
+      <DependentUpon>FamiStudio.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\PaddedCheckedListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\ProjectExplorer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\NoFocusButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\NoInterpolationPictureBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\PianoRoll.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Source\Utils\Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\EditDPCMDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\EditDPCMDialog.Designer.cs">
+      <DependentUpon>EditDPCMDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\FamitoneExportDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\FamitoneExportDialog.Designer.cs">
+      <DependentUpon>FamitoneExportDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\SongEditDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\SongEditDialog.Designer.cs">
+      <DependentUpon>SongEditDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\RenameColorDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\RenameColorDialog.Designer.cs">
+      <DependentUpon>RenameColorDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Sequencer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Theme.cs" />
+    <Compile Include="UI\Toolbar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <EmbeddedResource Include="UI\FamiStudio.resx">
+      <DependentUpon>FamiStudio.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\EditDPCMDialog.resx">
+      <DependentUpon>EditDPCMDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\FamitoneExportDialog.resx">
+      <DependentUpon>FamitoneExportDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\SongEditDialog.resx">
+      <DependentUpon>SongEditDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\RenameColorDialog.resx">
+      <DependentUpon>RenameColorDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Quicksand-Regular.ttf" />
+    <None Include="Resources\DPCM.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Noise.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
+    <None Include="Resources\Square.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Triangle.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Arpeggio.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pitch.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Volume.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Edit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Duty0.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Duty1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Duty2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Duty3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Loop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DPCMSmall.png" />
+    <None Include="Resources\NoiseSmall.png" />
+    <None Include="Resources\SquareSmall.png" />
+    <None Include="Resources\TriangleSmall.png" />
+    <None Include="Resources\File.png" />
+    <None Include="Resources\Music.png" />
+    <None Include="Resources\Open.png" />
+    <None Include="Resources\Pattern.png" />
+    <None Include="Resources\Play.png" />
+    <None Include="Resources\PlayLoop.png" />
+    <None Include="Resources\Redo.png" />
+    <None Include="Resources\Rewind.png" />
+    <None Include="Resources\Save.png" />
+    <None Include="Resources\SFX.png" />
+    <None Include="Resources\Stop.png" />
+    <None Include="Resources\Undo.png" />
+    <None Include="Resources\EditSmall.png" />
+    <None Include="Resources\No.png" />
+    <None Include="Resources\Yes.png" />
+    <None Include="Resources\ExportMusic.png" />
+    <None Include="Resources\ExportSFX.png" />
+    <None Include="Resources\LoopPattern.png" />
+    <None Include="Resources\LoopNone.png" />
+    <None Include="Resources\Pause.png" />
+    <None Include="Resources\LoopSmall.png" />
+    <None Include="Resources\Add.png" />
+    <None Include="Resources\CollapsedSmall.png" />
+    <None Include="Resources\ExpandedSmall.png" />
+    <None Include="Resources\FamiStudio.ico" />
+    <Content Include="NesSndEmu.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\JumpSmall.png" />
+    <None Include="Resources\SpeedSmall.png" />
+    <None Include="Resources\JumpSmallFill.png" />
+    <None Include="Resources\LoopSmallFill.png" />
+    <None Include="Resources\SpeedSmallFill.png" />
+    <None Include="Resources\GhostSmall.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

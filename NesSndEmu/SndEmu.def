@@ -1,0 +1,11 @@
+LIBRARY   SNDEMU
+EXPORTS
+	NesApuInit             @1
+	NesApuWriteRegister    @2
+	NesApuSamplesAvailable @3
+	NesApuReadSamples      @4
+	NesApuRemoveSamples    @5
+	NesApuReadStatus       @6
+	NesApuEndFrame         @7
+	NesApuReset            @8
+	NesApuEnableChannel    @9
