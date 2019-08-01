@@ -1,8 +1,12 @@
 # FamiStudio NES Music Editor
-FamiStudio is a very simple NES Music editor. It is intended to be more user-friendly than FamiTracker. Its feature designed to match [FamiTone2](https://shiru.untergrund.net/code.shtml "FamiTone2"), a popular audio library among NES homebrew developers.
+FamiStudio is a very simple NES Music editor. It is intended to be more user-friendly than FamiTracker. 
 
-Features:
-- Modern DAW-style UI with sequencer and piano roll
+Its feature set is designed to match [FamiTone2](https://shiru.untergrund.net/code.shtml "FamiTone2"), a popular audio library among NES homebrew developers.
+
+[[https://github.com/BleuBleu/FamiStudio/blob/master/Wiki/MainWindow.png|alt=Main window]]
+
+##Features
+- Modern DAW-style UI with sequencer and piano roll, no hexadecimal anywhere
 - Full Undo/Redo support
 - Native export to FamiTone2 music format
 - Famitracker text import
@@ -10,10 +14,11 @@ Features:
 - Low CPU usage (Direct2D for graphics, XAudio2 for audio, fairly well threaded)
 - Runs on top of Blargg's [Nes_Snd_Emu](http://www.slack.net/~ant/libs/audio.html#Nes_Snd_Emu "Nes_Snd_Emu").
 
-Limitations / Known Issues (*: plan to improve in the coming weeks/months):
+##Limitations / Known Issues (*: plan to improve in the coming weeks/months)
 - No High-DPI support, any scaling larger than 100% will make the application look blurry
 - No PAL support*
 - No copy-paste support (other than pattern instancing)*
+- No FamiTone2 SFX format support (could be added, but for short SFX, Famitracker is probably fine)
 - Lots of missing keyboard shortcuts (also no piano keyboard input)*
 - MIDI support is barebone: it only uses device #0 and notes are never stopped*
 - FamiTone2 export has not been extensively tested*
@@ -46,8 +51,8 @@ If that fails, or if you have general issues with packages, running this in the 
 Update-Package -reinstall
 ```
 ## Issues and Contributing
-Please open issues if you find bugs or have feature suggestion ideas. 
-You can contact me:
+Please open issues contact me if you find bugs or have feature suggestion ideas. 
+You can find me:
 - On the [NESDEV Forums](https://forums.nesdev.com/) as BleuBleu 
 - On twitter [@NesBleuBleu](http://www.twitter.com/nesbleubleu)
 
