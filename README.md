@@ -1,7 +1,5 @@
 # FamiStudio NES Music Editor
-FamiStudio is a very simple NES Music editor. It is designed to match the feature set of [FamiTone2](https://shiru.untergrund.net/code.shtml "FamiTone2"), a popular audio library among NES homebrew developers.
-
-This could serve as a basis to extend to add support for modified/unofficial FamiTone versions (3 and 4, by nesdoug for example), add support for more effects, or audio expansion chips. I have no intention of doing such a thing but you are welcome to. I plan to keep this reference version simple and on-par with FamiTone2.
+FamiStudio is a very simple NES Music editor. It is intended to be more user-friendly than FamiTracker. Its feature designed to match [FamiTone2](https://shiru.untergrund.net/code.shtml "FamiTone2"), a popular audio library among NES homebrew developers.
 
 Features:
 - Modern DAW-style UI with sequencer and piano roll
@@ -12,14 +10,16 @@ Features:
 - Low CPU usage (Direct2D for graphics, XAudio2 for audio, fairly well threaded)
 - Runs on top of Blargg's [Nes_Snd_Emu](http://www.slack.net/~ant/libs/audio.html#Nes_Snd_Emu "Nes_Snd_Emu").
 
-Limitations / Known Issues:
+Limitations / Known Issues (*: plan to improve in the coming weeks/months):
 - No High-DPI support, any scaling larger than 100% will make the application look blurry
-- No PAL support
-- No copy-paste support (other than pattern instancing)
-- Lots of missing keyboard shortcuts (also no piano keyboard input)
-- MIDI support is barebone: it only uses device #0 and notes are never stopped
-- FamiTone2 export has not been extensively tested
+- No PAL support*
+- No copy-paste support (other than pattern instancing)*
+- Lots of missing keyboard shortcuts (also no piano keyboard input)*
+- MIDI support is barebone: it only uses device #0 and notes are never stopped*
+- FamiTone2 export has not been extensively tested*
 - The UI code is terrible
+
+While I intend to keep this reference version simple and on-par with FamiTone2, it could easily be extended to support modified/unofficial FamiTone versions (3 and 4, by nesdoug for example), add support for more effects, or audio expansion chips. 
 
 ## Releases
 Version 1.0 is available for download in the Releases section.
