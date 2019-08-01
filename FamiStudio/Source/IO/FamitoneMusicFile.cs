@@ -263,7 +263,7 @@ namespace FamiStudio
                     Array.Copy(sample.Data, 0, sampleData, project.GetAddressForSample(sample), sample.Data.Length);
                 }
 
-                var path = Path.GetDirectoryName(project.Filename);
+                var path = Path.GetDirectoryName(filename);
                 var projectname = Utils.MakeNiceAsmName(Path.GetFileNameWithoutExtension(project.Filename));
 
                 File.WriteAllBytes(Path.Combine(path, projectname + ".dmc"), sampleData);
