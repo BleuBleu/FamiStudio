@@ -1,7 +1,7 @@
 # FamiStudio NES Music Editor
 FamiStudio is a very simple NES Music editor. It is designed to match the feature set of [FamiTone2](https://shiru.untergrund.net/code.shtml "FamiTone2"), a popular audio library among NES homebrew developers.
 
-This could serve as a basis to extend to add support for modified/unofficial FamiTone versions (3 and 4) or to add support for more effects, or audio expansion chips. I have no intention of doing such a thing but you are welcome to. I want to keep this reference version simple and on-par with FamiTone2.
+This could serve as a basis to extend to add support for modified/unofficial FamiTone versions (3 and 4, by nesdoug for example), add support for more effects, or audio expansion chips. I have no intention of doing such a thing but you are welcome to. I plan to keep this reference version simple and on-par with FamiTone2.
 
 Features:
 - Modern DAW-style UI with sequencer and piano roll
@@ -12,15 +12,22 @@ Features:
 - Low CPU usage (Direct2D for graphics, XAudio2 for audio, fairly well threaded)
 - Runs on top of Blargg's [Nes_Snd_Emu](http://www.slack.net/~ant/libs/audio.html#Nes_Snd_Emu "Nes_Snd_Emu").
 
-Limitations/Known Issues:
+Limitations / Known Issues:
 - No High-DPI support, any scaling larger than 100% will make the application look blurry
-- MIDI support is barebone, notes are never stopped for example
+- No PAL support
+- No copy-paste support (other than pattern instancing)
+- Lots of missing keyboard shortcuts (also no piano keyboard input)
+- MIDI support is barebone: it only uses device #0 and notes are never stopped
 - FamiTone2 export has not been extensively tested
 - The UI code is terrible
 
 ## Releases
 Version 1.0 is available for download in the Releases section.
+
 ## Getting Started
+Please check out the [Wiki](https://github.com/BleuBleu/FamiStudio/wiki) for instructions on how to use FamiStudio.
+
+## Compiling
 The solution/projects are in VS2017:
 - The main application is written in C#.
 - You will need C++ support installed if you plan to edit the DLL wrapper around Nes_Snd_Emu.
