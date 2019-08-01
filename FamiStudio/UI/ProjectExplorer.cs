@@ -62,7 +62,7 @@ namespace FamiStudio
         public void Reset()
         {
             selectedSong = App.Project.Songs[0];
-            selectedInstrument = null;
+            selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
             ConditionalInvalidate();
         }
 

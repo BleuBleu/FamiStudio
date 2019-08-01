@@ -25,11 +25,12 @@ namespace FamiStudio
         public string              Filename { get => filename; set => filename = value; }
         public string              Name     { get => Path.GetFileNameWithoutExtension(filename); }
 
-        public Project(bool createSong = false)
+        public Project(bool createSongAndInstrument = false)
         {
-            if (createSong)
+            if (createSongAndInstrument)
             {
                 songs.Add(new Song(this, GenerateUniqueId(), "New Song"));
+                instruments.Add(new Instrument(GenerateUniqueId(), "New Instrument"));
             }
         }
 
