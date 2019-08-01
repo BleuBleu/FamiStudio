@@ -3,9 +3,9 @@ FamiStudio is a very simple NES Music editor. It is intended to be more user-fri
 
 Its feature set is designed to match [FamiTone2](https://shiru.untergrund.net/code.shtml "FamiTone2"), a popular audio library among NES homebrew developers.
 
-[[https://github.com/BleuBleu/FamiStudio/blob/master/Wiki/MainWindow.png|alt=Main window]]
+![FamiStudio](https://github.com/BleuBleu/FamiStudio/blob/master/Wiki/MainWindow.png)
 
-##Features
+## Features
 - Modern DAW-style UI with sequencer and piano roll, no hexadecimal anywhere
 - Full Undo/Redo support
 - Native export to FamiTone2 music format
@@ -14,7 +14,7 @@ Its feature set is designed to match [FamiTone2](https://shiru.untergrund.net/co
 - Low CPU usage (Direct2D for graphics, XAudio2 for audio, fairly well threaded)
 - Runs on top of Blargg's [Nes_Snd_Emu](http://www.slack.net/~ant/libs/audio.html#Nes_Snd_Emu "Nes_Snd_Emu").
 
-##Limitations / Known Issues (*: plan to improve in the coming weeks/months)
+## Limitations / Known Issues (*: plan to improve in the coming weeks/months)
 - No High-DPI support, any scaling larger than 100% will make the application look blurry
 - No PAL support*
 - No copy-paste support (other than pattern instancing)*
