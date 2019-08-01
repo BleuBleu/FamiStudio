@@ -171,6 +171,8 @@ namespace FamiStudio
 
         public bool SaveProject()
         {
+            bool success = true;
+
             if (string.IsNullOrEmpty(project.Filename))
             {
                 var sfd = new SaveFileDialog()
@@ -181,16 +183,27 @@ namespace FamiStudio
 
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    ProjectFile.Save(project, sfd.FileName);
-                    UpdateTitle();
+                    success = ProjectFile.Save(project, sfd.FileName);
+                    if (success)
+                    {
+                        UpdateTitle();
+                    }
                 }
             }
             else
             {
-                ProjectFile.Save(project, project.Filename);
+                success = ProjectFile.Save(project, project.Filename);
             }
 
-            undoRedoManager.Clear();
+            if (success)
+            {
+                undoRedoManager.Clear();
+            }
+            else
+            {
+                MessageBox.Show("An error happened while saving.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
             InvalidateEverything();
 
             return true;
