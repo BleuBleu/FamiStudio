@@ -1270,12 +1270,12 @@ namespace FamiStudio
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.F && editMode == EditionMode.Channel)
-            {
-                showEffectsPanel = !showEffectsPanel;
-                ClampScroll();
-                ConditionalInvalidate();
-            }
+            //if (e.KeyCode == Keys.F && editMode == EditionMode.Channel)
+            //{
+            //    showEffectsPanel = !showEffectsPanel;
+            //    ClampScroll();
+            //    ConditionalInvalidate();
+            //}
         }
 
         public void SerializeState(ProjectBuffer buffer)

@@ -444,6 +444,10 @@ namespace FamiStudio
             {
                 SaveProject();
             }
+            else if (ctrl && e.KeyCode == Keys.E)
+            {
+                ExportFamitone();
+            }
             else if (ctrl && e.KeyCode == Keys.O)
             {
                 OpenProject();
