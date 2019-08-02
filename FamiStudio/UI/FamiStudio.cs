@@ -389,7 +389,8 @@ namespace FamiStudio
             if (RealTimeUpdate)
             {
                 songPlayer.CheckIfEnded();
-                currentFrame = songPlayer.CurrentFrame;
+                if (songPlayer.IsPlaying)
+                    currentFrame = songPlayer.CurrentFrame;
                 InvalidateEverything();
             }
         }
