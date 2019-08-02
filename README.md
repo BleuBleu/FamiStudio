@@ -31,6 +31,13 @@ _(*): plan to improve in the coming weeks/months_
 ## Releases
 Version 1.0 is available for download in the Releases section.
 
+## Demo Songs
+A few demo songs are included in the installation folder (typically _C:\Program Files (x86)\FamiStudio_):
+- After The Rain (by Shiru, included with FamiTone2)
+- Danger Streets (by Shiru, included with FamiTone2)
+- Mega Man 2 - Stage Select (my approximate recreation)
+- Journey To Silius - Intro (my approximate recreation)
+
 ## Getting Started
 Please check out the [Wiki](https://github.com/BleuBleu/FamiStudio/wiki) for instructions on how to use FamiStudio.
 
