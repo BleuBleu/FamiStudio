@@ -74,7 +74,7 @@ namespace FamiStudio
             {
                 if (undoRedoManager.UndoScope != TransactionScope.Max)
                 {
-                    var result = MessageBox.Show("Save changes?", "Famitone Studio", MessageBoxButtons.YesNoCancel);
+                    var result = MessageBox.Show("Save changes?", "FamiStudio", MessageBoxButtons.YesNoCancel);
                     if (result == DialogResult.Cancel)
                     {
                         return false;
