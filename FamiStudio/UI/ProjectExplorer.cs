@@ -262,6 +262,11 @@ namespace FamiStudio
                 }
             }
 
+            CancelDrag();
+        }
+
+        protected void CancelDrag()
+        {
             isDraggingInstrument = false;
             mouseDragY = -1;
             instrumentDragIdx = -1;
@@ -499,6 +504,7 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
+                CancelDrag();
                 ClampScroll();
                 ConditionalInvalidate();
             }
