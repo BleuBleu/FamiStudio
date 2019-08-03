@@ -14,7 +14,7 @@ namespace FamiStudio
             this.song = song;
 
             InitializeComponent();
-
+            
             textBox1.Text = song.Name;
             textBox1.Font = new Font(Theme.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             textBox1.BackColor = song.Color;
@@ -63,6 +63,16 @@ namespace FamiStudio
 
             pictureBox1.Image = bmp;
             DialogResult = DialogResult.Cancel;
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var p = base.CreateParams;
+                p.ExStyle |= 0x2000000; // WS_EX_COMPOSITED
+                return p;
+            }
         }
 
         public string NewName => textBox1.Text;

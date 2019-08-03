@@ -22,6 +22,16 @@ namespace FamiStudio
             DialogResult = DialogResult.Cancel;
         }
 
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var p = base.CreateParams;
+                p.ExStyle |= 0x2000000; // WS_EX_COMPOSITED
+                return p;
+            }
+        }
+
         public string NewName => textBox1.Text;
         public int NewPitch => (int)upDownPitch.Value;
         public bool NewLoop => checkLoop.Checked;
