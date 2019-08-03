@@ -684,9 +684,9 @@ namespace FamiStudio
                     int value = i - 64;
                     int y = (VirtualSizeY - EnvelopeSizeY * i) - scrollY;
                     if ((value % spacing) == 0)
-                        g.FillRectangle(0, y - EnvelopeSizeY, env.Length * NoteSizeX, y, value == 0 ? theme.DarkGreyLineBrush2 : theme.DarkGreyFillBrush1);
+                        g.FillRectangle(0, y - EnvelopeSizeY, env.Length * NoteSizeX - scrollX, y, value == 0 ? theme.DarkGreyLineBrush2 : theme.DarkGreyFillBrush1);
 
-                    g.DrawLineHalfPixel(0, y, env.Length * NoteSizeX, y, theme.DarkGreyLineBrush2);
+                    g.DrawLineHalfPixel(0, y, env.Length * NoteSizeX - scrollX, y, theme.DarkGreyLineBrush2);
                 }
 
                 // Draw the vertical bars.
@@ -697,9 +697,9 @@ namespace FamiStudio
                 }
 
                 if (env.Loop >= 0)
-                    g.DrawLineHalfPixel(env.Loop * NoteSizeX, 0, env.Loop * NoteSizeX, Height, theme.DarkGreyLineBrush1);
+                    g.DrawLineHalfPixel(env.Loop * NoteSizeX - scrollX, 0, env.Loop * NoteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
                 if (env.Length > 0)
-                    g.DrawLineHalfPixel(env.Length * NoteSizeX, 0, env.Length * NoteSizeX, Height, theme.DarkGreyLineBrush1);
+                    g.DrawLineHalfPixel(env.Length * NoteSizeX - scrollX, 0, env.Length * NoteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
 
                 int seekX = App.GetEnvelopeFrame(editEnvelope) * NoteSizeX - scrollX;
                 g.FillRectangle(seekX + 1, 0, seekX + NoteSizeX, Height, playPositionBrush);
