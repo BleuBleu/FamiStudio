@@ -123,6 +123,7 @@ namespace FamiStudio
             projectExplorer.Reset();
             pianoRoll.Reset();
             sequencer.Reset();
+            pianoRoll.CurrentInstrument = projectExplorer.SelectedInstrument;
             InvalidateEverything();
             UpdateTitle();
         }
