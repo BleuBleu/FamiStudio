@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FamiStudio
+﻿namespace FamiStudio
 {
     public class DPCMSample
     {
