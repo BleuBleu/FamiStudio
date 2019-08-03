@@ -1077,7 +1077,7 @@ namespace FamiStudio
             ClampScroll();
             ConditionalInvalidate(); 
         }
-
+        
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -1284,22 +1284,17 @@ namespace FamiStudio
             buffer.Serialize(ref editModeInt);
             editMode = (EditionMode)editModeInt;
 
-            switch (editMode)
-            {
-                case EditionMode.Channel:
-                    buffer.Serialize(ref editChannel);
-                    int currentInstrumentId = currentInstrument == null ? -1 : currentInstrument.Id;
-                    buffer.Serialize(ref currentInstrumentId);
-                    if (buffer.IsReading)
-                        currentInstrument = buffer.Project.GetInstrument(currentInstrumentId);
-                    break;
-                case EditionMode.Enveloppe:
-                    int editInstrumentId = editInstrument == null ? -1 : editInstrument.Id;
-                    buffer.Serialize(ref editEnvelope);
-                    if (buffer.IsReading)
-                        editInstrument = buffer.Project.GetInstrument(editInstrumentId);
-                    break;
-            }
+            buffer.Serialize(ref editChannel);
+
+            int currentInstrumentId = currentInstrument == null ? -1 : currentInstrument.Id;
+            buffer.Serialize(ref currentInstrumentId);
+            if (buffer.IsReading)
+                currentInstrument = buffer.Project.GetInstrument(currentInstrumentId);
+
+            int editInstrumentId = editInstrument == null ? -1 : editInstrument.Id;
+            buffer.Serialize(ref editEnvelope);
+            if (buffer.IsReading)
+                editInstrument = buffer.Project.GetInstrument(editInstrumentId);
 
             buffer.Serialize(ref scrollX);
             buffer.Serialize(ref scrollY);
