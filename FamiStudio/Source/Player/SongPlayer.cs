@@ -129,7 +129,7 @@ namespace FamiStudio
                 {
                     foreach (var channel in channels)
                     {
-                        channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed, false);
+                        channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed);
                         channel.Advance(song, playPattern, playNote);
                         channel.UpdateEnvelopes();
                         channel.UpdateAPU();

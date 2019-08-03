@@ -19,7 +19,7 @@
             note.Value = Note.NoteStop;
         }
 
-        public void ProcessEffects(Song song, ref int patternIdx, ref int noteIdx, ref int speed, bool allowJump = true)
+        public void ProcessEffects(Song song, ref int patternIdx, ref int noteIdx, ref int speed)
         {
             var pattern = song.Channels[channelIdx].PatternInstances[patternIdx];
 
@@ -31,14 +31,14 @@
             switch (tmpNote.Effect)
             {
                 case Note.EffectJump:
-                    if (allowJump)
+                    if (!seeking)
                     {
                         patternIdx = tmpNote.EffectParam;
                         noteIdx = 0;
                     }
                     break;
                 case Note.EffectSkip:
-                    if (allowJump)
+                    if (!seeking)
                     {
                         patternIdx++;
                         noteIdx = tmpNote.EffectParam;
