@@ -25,6 +25,7 @@ namespace FamiStudio
 
         const int MinZoomLevel = -2;
         const int MaxZoomLevel = 4;
+        const int ScrollMargin = 128;
 
         int PatternSizeX => ScaleForZoom(Song.PatternLength);
 
@@ -340,7 +341,7 @@ namespace FamiStudio
         private void ClampScroll()
         {
             int minScrollX = 0;
-            int maxScrollX = Math.Max(Song.Length * PatternSizeX + TrackNameSizeX - Width, 0);
+            int maxScrollX = Math.Max(Song.Length * PatternSizeX - ScrollMargin, 0);
 
             if (scrollX < minScrollX) scrollX = minScrollX;
             if (scrollX > maxScrollX) scrollX = maxScrollX;

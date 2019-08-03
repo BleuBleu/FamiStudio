@@ -34,6 +34,7 @@ namespace FamiStudio
 
         const int MinZoomLevel = -3;
         const int MaxZoomLevel = 4;
+        const int ScrollMargin = 128;
 
         // TODO: Compute these when zooming, instead of on-the-fly.
         int NoteSizeX => ScaleForZoom(NoteDefaultSizeX);
@@ -1058,9 +1059,9 @@ namespace FamiStudio
                 int maxScrollY = Math.Max(VirtualSizeY + HeaderSizeY - Height, 0);
 
                 if (editMode == EditionMode.Channel)
-                    maxScrollX = Math.Max(Song.Length * PatternSizeX + WhiteKeySizeX - Width, 0);
+                    maxScrollX = Math.Max(Song.Length * PatternSizeX - ScrollMargin, 0);
                 else if (editMode == EditionMode.Enveloppe)
-                    maxScrollX = Math.Max(EditEnvelope.Length * NoteSizeX + WhiteKeySizeX - Width, 0);
+                    maxScrollX = Math.Max(EditEnvelope.Length * NoteSizeX - ScrollMargin, 0);
 
                 if (scrollX < minScrollX) scrollX = minScrollX;
                 if (scrollX > maxScrollX) scrollX = maxScrollX;
