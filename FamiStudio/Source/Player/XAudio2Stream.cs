@@ -88,6 +88,8 @@ namespace FamiStudio
             if (sourceVoice != null)
             {
                 sourceVoice.Stop();
+                sourceVoice.FlushSourceBuffers();
+                sourceVoice.DestroyVoice();
                 sourceVoice.BufferEnd -= SourceVoice_BufferEnd;
                 sourceVoice.Dispose();
                 sourceVoice = null;
