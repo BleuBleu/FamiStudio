@@ -90,7 +90,7 @@ namespace FamiStudio
         }
     }
 
-    public class Direct2DGraphics
+    public class Direct2DGraphics : IDisposable
     {
         private Factory factory;
         private DirectWriteFactory directWriteFactory;
@@ -117,11 +117,29 @@ namespace FamiStudio
 
         public void Dispose()
         {
+            foreach (var grad in verticalGradientCache.Values)
+            {
+                grad.Dispose();
+            }
             verticalGradientCache.Clear();
 
-            renderTarget.Dispose();
-            directWriteFactory.Dispose();
-            factory.Dispose();
+            if (renderTarget != null)
+            {
+                renderTarget.Dispose();
+                renderTarget = null;
+            }
+
+            if (directWriteFactory != null)
+            {
+                directWriteFactory.Dispose();
+                directWriteFactory = null;
+            }
+
+            if (factory != null)
+            {
+                factory.Dispose();
+                factory = null;
+            }
         }
 
         public void BeginDraw()

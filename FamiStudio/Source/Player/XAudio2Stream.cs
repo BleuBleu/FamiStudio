@@ -103,7 +103,10 @@ namespace FamiStudio
 
             masteringVoice.DestroyVoice();
             masteringVoice.Dispose();
+            masteringVoice = null;
+
             xaudio2.Dispose();
+            xaudio2 = null;
         }
 
         private void PlayAsync()
