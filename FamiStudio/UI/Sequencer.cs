@@ -217,7 +217,6 @@ namespace FamiStudio
                         g.DrawBitmap(bmp, 1, 1 + PatternHeaderSizeY, PatternSizeX - 1, bmp.Size.Height);
                         g.PushClipHalfPixel(0, 0, PatternSizeX, Height);
                         g.DrawText(pattern.Name, Theme.FontSmall, 2, 3, theme.BlackBrush);
-                        //g.DrawBitmap(bmpEdit, patternSizeX - 13, 2);
                         g.PopClip();
                         g.PopTransform();
                     }
@@ -236,8 +235,6 @@ namespace FamiStudio
                 var drawY = minSelectedChannelIdx * TrackSizeY;
                 var sizeX = (maxSelectedPatternIdx - minSelectedPatternIdx + 1) * patternSizeX;
                 var sizeY = (maxSelectedChannelIdx - minSelectedChannelIdx + 1) * TrackSizeY;
-
-                Debug.WriteLine($"{selectionDragAnchorX}");
 
                 g.FillRectangle(drawX, drawY, drawX + sizeX, drawY + sizeY, selectedPatternBrush);
             }
@@ -277,7 +274,7 @@ namespace FamiStudio
 
             Note minNote;
             Note maxNote;
-            //if (Song.Channels[p.ChannelType].GetMinMaxNote(out minNote, out maxNote))
+
             if (p.GetMinMaxNote(out minNote, out maxNote))
             {
                 if (maxNote.Value == minNote.Value)

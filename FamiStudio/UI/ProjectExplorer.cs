@@ -424,8 +424,6 @@ namespace FamiStudio
             var songIndex = buttonIndex - 1;
             var instrumentIndex = buttonIndex - (App.Project.Songs.Count + 2);
 
-            Debug.WriteLine($"Instrument {instrumentIndex}");
-
             if (songIndex >= 0 && songIndex < App.Project.Songs.Count)
             {
                 var song = App.Project.Songs[songIndex];
