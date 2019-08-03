@@ -12,7 +12,7 @@ While I intend to keep this reference version simple and on-par with FamiTone2, 
 - Full Undo/Redo support
 - Native export to FamiTone2 music format
 - Famitracker text import
-- Basic MIDI input support
+- Basic MIDI input support 
 - Low CPU usage (Direct2D for graphics, XAudio2 for audio, fairly well threaded)
 - Runs on top of Blargg's [Nes_Snd_Emu](http://www.slack.net/~ant/libs/audio.html#Nes_Snd_Emu "Nes_Snd_Emu").
 
@@ -20,10 +20,9 @@ While I intend to keep this reference version simple and on-par with FamiTone2, 
 - No High-DPI support, any scaling larger than 100% will make the application look blurry
 - No PAL support (*)
 - No copy-paste support (other than pattern instancing) (*)
-- No FamiTone2 SFX format support (could be added, but for short SFX, Famitracker is probably fine)
+- No FamiTone2 SFX format support (could be added, but for short SFX, Famitracker is probably a better tool)
 - Lots of missing keyboard shortcuts (also no piano keyboard input) (*)
 - MIDI support is barebone: it only uses device #0 and notes are never stopped (*)
-- FamiTone2 export has not been extensively tested (*)
 - The UI code is terrible
 
 _(*): plan to improve in the coming weeks/months_

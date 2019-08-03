@@ -65,13 +65,6 @@ namespace FamiStudio
             xaudio2Stream.Dispose();
         }
 
-        protected unsafe void EndFrameAndDiscardSamples()
-        {
-            NesApu.NesApuEndFrame(apuIndex);
-            int numTotalSamples = NesApu.NesApuSamplesAvailable(apuIndex);
-            NesApu.NesApuRemoveSamples(apuIndex, numTotalSamples);
-        }
-
         protected unsafe void EndFrameAndQueueSamples()
         {
             NesApu.NesApuEndFrame(apuIndex);

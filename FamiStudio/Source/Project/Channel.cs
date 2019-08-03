@@ -216,9 +216,9 @@ namespace FamiStudio
             if (buffer.IsWriting)
                 CleanupUnusedPatterns();
 
-            buffer.Serialize(ref song);
-
             int patternCount = patterns.Count;
+
+            buffer.Serialize(ref song);
             buffer.Serialize(ref patternCount);
             buffer.InitializeList(ref patterns, patternCount);
 
@@ -226,9 +226,7 @@ namespace FamiStudio
                 pattern.SerializeState(buffer);
 
             for (int i = 0; i < PatternInstances.Length; i++)
-            {
                 buffer.Serialize(ref patternInstances[i], this);
-            }
         }
     }
 }

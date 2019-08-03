@@ -60,17 +60,12 @@ namespace FamiStudio
 
             quitEvent.Reset();
 
-            // TODO: There has to be a cleaner way to reset a semaphore.
-            while (true)
+            try
             {
-                try 
-                {
-                    bufferSemaphore.Release();
-                }
-                catch (SemaphoreFullException)
-                {
-                    break;
-                }
+                while (true) bufferSemaphore.Release();
+            }
+            catch (SemaphoreFullException)
+            {
             }
 
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
