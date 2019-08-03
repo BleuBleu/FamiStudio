@@ -24,6 +24,16 @@ namespace FamiStudio
         {
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            if (!DesignMode)
+            {
+                d2dGraphics.Dispose();
+            }
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -34,23 +44,10 @@ namespace FamiStudio
         {
             if (!DesignMode)
             {
-                d2dGraphics = new Direct2DGraphics();
-                d2dGraphics.factory = new SharpDX.Direct2D1.Factory();
-                d2dGraphics.directWriteFactory = new SharpDX.DirectWrite.Factory();
-
-                HwndRenderTargetProperties properties = new HwndRenderTargetProperties();
-                properties.Hwnd = Handle;
-                properties.PixelSize = new SharpDX.Size2(ClientSize.Width, ClientSize.Height);
-                properties.PresentOptions = PresentOptions.None;
-
-                d2dGraphics.renderTarget = new WindowRenderTarget(d2dGraphics.factory, new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)), properties);
-                d2dGraphics.renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
-                //d2dGraphics.renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Aliased;
-                d2dGraphics.renderTarget.AntialiasMode = AntialiasMode.Aliased;
-
                 DoubleBuffered = false;
                 ResizeRedraw = true;
 
+                d2dGraphics = new Direct2DGraphics(this);
                 OnDirect2DInitialized(d2dGraphics);
             }
         }
@@ -69,7 +66,7 @@ namespace FamiStudio
 
             if (d2dGraphics != null)
             {
-                d2dGraphics.renderTarget.Resize(new Size2(ClientSize.Width, ClientSize.Height));
+                d2dGraphics.Resize(ClientSize.Width, ClientSize.Height);
             }
         }
 
@@ -86,23 +83,60 @@ namespace FamiStudio
             }
             else
             {
-                d2dGraphics.renderTarget.BeginDraw();
+                d2dGraphics.BeginDraw();
                 OnRender(d2dGraphics);
-                d2dGraphics.renderTarget.EndDraw();
+                d2dGraphics.EndDraw();
             }
         }
     }
 
     public class Direct2DGraphics
     {
-        public Factory factory;
-        public DirectWriteFactory directWriteFactory;
-        public WindowRenderTarget renderTarget;
+        private Factory factory;
+        private DirectWriteFactory directWriteFactory;
+        private WindowRenderTarget renderTarget;
         private Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
 
-        public Direct2DGraphics()
-        {
+        public Factory Factory => factory;
+        public WindowRenderTarget RenderTarget => renderTarget;
 
+        public Direct2DGraphics(UserControl control)
+        {
+            factory = new SharpDX.Direct2D1.Factory();
+            directWriteFactory = new SharpDX.DirectWrite.Factory();
+
+            HwndRenderTargetProperties properties = new HwndRenderTargetProperties();
+            properties.Hwnd = control.Handle;
+            properties.PixelSize = new SharpDX.Size2(control.ClientSize.Width, control.ClientSize.Height);
+            properties.PresentOptions = PresentOptions.None;
+
+            renderTarget = new WindowRenderTarget(factory, new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)), properties);
+            renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
+            renderTarget.AntialiasMode = AntialiasMode.Aliased;
+        }
+
+        public void Dispose()
+        {
+            verticalGradientCache.Clear();
+
+            renderTarget.Dispose();
+            directWriteFactory.Dispose();
+            factory.Dispose();
+        }
+
+        public void BeginDraw()
+        {
+            renderTarget.BeginDraw();
+        }
+
+        public void EndDraw()
+        {
+            renderTarget.EndDraw();
+        }
+
+        public void Resize(int width, int height)
+        {
+            renderTarget.Resize(new Size2(width, height));
         }
 
         public bool AntiAliasing

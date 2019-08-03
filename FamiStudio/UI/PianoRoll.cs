@@ -211,7 +211,7 @@ namespace FamiStudio
             for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
             {
                 int idx = z - MinZoomLevel;
-                stopNoteGeometry[idx] = new PathGeometry(g.factory);
+                stopNoteGeometry[idx] = new PathGeometry(g.Factory);
                 var sink = stopNoteGeometry[idx].Open();
                 sink.SetFillMode(FillMode.Winding);
                 sink.BeginFigure(new RawVector2(0, 0), FigureBegin.Filled);

@@ -330,7 +330,7 @@ namespace FamiStudio
             {
                 DataStream stream = new DataStream(new IntPtr(ptr), data.Length * sizeof(uint), true, false);
                 BitmapProperties bmpProps = new BitmapProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied));
-                bmp = new Bitmap(d2dGraphics.renderTarget, new Size2(patternSizeX, patternSizeY), stream, patternSizeX * sizeof(uint), bmpProps);
+                bmp = new Bitmap(d2dGraphics.RenderTarget, new Size2(patternSizeX, patternSizeY), stream, patternSizeX * sizeof(uint), bmpProps);
                 patternBitmapCache[p.Id] = bmp;
                 stream.Dispose();
             }

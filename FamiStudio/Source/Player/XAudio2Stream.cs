@@ -101,6 +101,7 @@ namespace FamiStudio
                 memBuffers[i].Pointer = IntPtr.Zero;
             }
 
+            masteringVoice.DestroyVoice();
             masteringVoice.Dispose();
             xaudio2.Dispose();
         }
