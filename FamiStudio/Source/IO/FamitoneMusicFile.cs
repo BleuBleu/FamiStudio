@@ -172,10 +172,10 @@ namespace FamiStudio
             var defaultEnvCRC = CRC32.Compute(defaultEnv);
             uniqueEnvelopes.Add(defaultEnvCRC, defaultEnv);
 
-           foreach (var instrument in project.Instruments)
-           {
-               foreach (var env in instrument.Envelopes)
-               {
+            foreach (var instrument in project.Instruments)
+            {
+                foreach (var env in instrument.Envelopes)
+                {
                     var processed = ProcessEnvelope(env);
 
                     if (processed == null)
@@ -188,8 +188,8 @@ namespace FamiStudio
                         uniqueEnvelopes[crc] = processed;
                         instrumentEnvelopes[env] = crc;
                     }
-               }
-           }
+                }
+            }
 
             int size = 0;
 
@@ -319,7 +319,7 @@ namespace FamiStudio
         {
             var packedPatternBuffers = new List<List<byte>>(globalPacketPatternBuffers);
             var size = 0;
-            var loopPoint = FindLoopPoint(song);
+            var loopPoint = FindLoopPoint(song) * factor;
             var emptyPattern = new Pattern(-1, song, 0, "");
 
             for (int c = 0; c < song.Channels.Length; c++)
