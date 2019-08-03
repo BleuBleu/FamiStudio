@@ -69,6 +69,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_29A022B6EE314228BD07A95FFF02AAC0"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_5E9917F8EC7F628283FE8FC184E91162"
         "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
@@ -82,12 +88,6 @@
         "Entry"
         {
         "MsmKey" = "8:_6802629516074A218C72D553A3E74FED"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_85119041E96C4B0A8666F356F4C6CF7F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -342,6 +342,26 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_29A022B6EE314228BD07A95FFF02AAC0"
+            {
+            "SourcePath" = "8:Demo Songs\\Danger Streets.fms"
+            "TargetName" = "8:Danger Streets.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5E9917F8EC7F628283FE8FC184E91162"
             {
             "AssemblyRegister" = "3:1"
@@ -408,26 +428,6 @@
             {
             "SourcePath" = "8:Demo Songs\\After The Rain.fms"
             "TargetName" = "8:After The Rain.fms"
-            "Tag" = "8:"
-            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_85119041E96C4B0A8666F356F4C6CF7F"
-            {
-            "SourcePath" = "8:Demo Songs\\Danger Street.fms"
-            "TargetName" = "8:Danger Street.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -577,7 +577,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
         "ProductCode" = "8:{E4DBB547-9E27-4366-838D-D55FA30A1368}"
-        "PackageCode" = "8:{480F4368-12FB-4943-8C89-3ED6ED80280D}"
+        "PackageCode" = "8:{E2A1CDED-FF13-4E53-A566-422DCAB9883B}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
