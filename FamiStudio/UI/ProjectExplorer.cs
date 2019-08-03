@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
 using FamiStudio.Properties;
@@ -490,16 +491,8 @@ namespace FamiStudio
         
         public void SerializeState(ProjectBuffer buffer)
         {
-            int selectedSongId = selectedSong.Id;
-            buffer.Serialize(ref selectedSongId);
-            if (buffer.IsReading)
-                selectedSong = buffer.Project.GetSong(selectedSongId);
-
-            int selectedInstrumentId = selectedInstrument == null ? -1 : selectedInstrument.Id;
-            buffer.Serialize(ref selectedInstrumentId);
-            if (buffer.IsReading)
-                selectedInstrument = selectedInstrumentId >= 0 ? buffer.Project.GetInstrument(selectedInstrumentId) : null;
-
+            buffer.Serialize(ref selectedSong);
+            buffer.Serialize(ref selectedInstrument);
             buffer.Serialize(ref scrollY);
 
             if (buffer.IsReading)

@@ -488,18 +488,15 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            int songId = song.Id;
-            buffer.Serialize(ref songId);
             buffer.Serialize(ref ghostChannelMask);
-            if (buffer.IsReading)
-            {
-                song = buffer.Project.GetSong(songId);
-                Invalidate();
-            }
+            buffer.Serialize(ref song);
 
             projectExplorer.SerializeState(buffer);
             sequencer.SerializeState(buffer);
             pianoRoll.SerializeState(buffer);
+
+            if (buffer.IsReading)
+                Invalidate();
         }
 
         private void projectExplorer_InstrumentSelected(Instrument instrument)

@@ -17,6 +17,10 @@ namespace FamiStudio
         void Serialize(ref string b);
         void Serialize(ref byte[] values);
         void Serialize(ref sbyte[] values);
+        void Serialize(ref Song song);
+        void Serialize(ref Instrument instrument);
+        void Serialize(ref Pattern pattern, Channel channel);
+        void Serialize(ref DPCMSample pattern);
         bool IsReading { get; }
         bool IsWriting { get; }
         bool IsForUndoRedo { get; }
@@ -102,6 +106,30 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 buffer.Add((byte)values[i]);
             idx += values.Length;
+        }
+
+        public void Serialize(ref Song song)
+        {
+            int songId = song == null ? -1 : song.Id;
+            Serialize(ref songId);
+        }
+
+        public void Serialize(ref Instrument instrument)
+        {
+            int instrumentId = instrument == null ? -1 : instrument.Id;
+            Serialize(ref instrumentId);
+        }
+
+        public void Serialize(ref Pattern pattern, Channel channel)
+        {
+            int patternId = pattern == null ? -1 : pattern.Id;
+            Serialize(ref patternId);
+        }
+
+        public void Serialize(ref DPCMSample sample)
+        {
+            int sampleId = sample == null ? -1 : sample.Id;
+            Serialize(ref sampleId);
         }
 
         public void InitializeList<T>(ref List<T> list, int count) where T : new()
@@ -194,6 +222,34 @@ namespace FamiStudio
             {
                 dest[i] = (sbyte)buffer[idx++];
             }
+        }
+
+        public void Serialize(ref Song song)
+        {
+            int songId = -1;
+            Serialize(ref songId);
+            song = project.GetSong(songId);
+        }
+
+        public void Serialize(ref Instrument instrument)
+        {
+            int instrumentId = -1;
+            Serialize(ref instrumentId);
+            instrument = project.GetInstrument(instrumentId);
+        }
+
+        public void Serialize(ref Pattern pattern, Channel channel)
+        {
+            int patternId = -1;
+            Serialize(ref patternId);
+            pattern = channel.GetPattern(patternId);
+        }
+
+        public void Serialize(ref DPCMSample sample)
+        {
+            int sampleId = -1;
+            Serialize(ref sampleId);
+            sample = project.GetSample(sampleId);
         }
 
         public void InitializeList<T>(ref List<T> list, int count) where T : new()

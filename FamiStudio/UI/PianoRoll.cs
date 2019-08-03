@@ -1285,17 +1285,8 @@ namespace FamiStudio
             editMode = (EditionMode)editModeInt;
 
             buffer.Serialize(ref editChannel);
-
-            int currentInstrumentId = currentInstrument == null ? -1 : currentInstrument.Id;
-            buffer.Serialize(ref currentInstrumentId);
-            if (buffer.IsReading)
-                currentInstrument = buffer.Project.GetInstrument(currentInstrumentId);
-
-            int editInstrumentId = editInstrument == null ? -1 : editInstrument.Id;
+            buffer.Serialize(ref currentInstrument);
             buffer.Serialize(ref editEnvelope);
-            if (buffer.IsReading)
-                editInstrument = buffer.Project.GetInstrument(editInstrumentId);
-
             buffer.Serialize(ref scrollX);
             buffer.Serialize(ref scrollY);
             buffer.Serialize(ref zoomLevel);

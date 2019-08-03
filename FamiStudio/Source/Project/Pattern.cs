@@ -112,11 +112,7 @@ namespace FamiStudio
             buffer.Serialize(ref name);
             buffer.Serialize(ref channelType);
             buffer.Serialize(ref color);
-
-            int songId = song == null ? -1 : song.Id;
-            buffer.Serialize(ref songId);
-            if (buffer.IsReading)
-                song = buffer.Project.GetSong(songId);
+            buffer.Serialize(ref song);
 
             for (int i = 0; i < 256; i++)
             {

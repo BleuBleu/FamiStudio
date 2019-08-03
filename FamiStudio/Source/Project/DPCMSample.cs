@@ -44,11 +44,7 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            int sampleId = sample != null ? sample.Id : -1;
-            buffer.Serialize(ref sampleId);
-            if (buffer.IsReading)
-                sample = buffer.Project.GetSample(sampleId);
-
+            buffer.Serialize(ref sample);
             buffer.Serialize(ref loop);
             buffer.Serialize(ref pitch);
         }
