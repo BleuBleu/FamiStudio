@@ -170,6 +170,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.6.1"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.6.1 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.6.1"
+                    }
+                }
             }
         }
         "Release"
@@ -530,6 +538,17 @@
                 {
                 }
             }
+            "{1525181F-901A-416C-8A58-119130FE478E}:_502895A100E348DAA0391738AD1300BB"
+            {
+            "Name" = "8:#1921"
+            "AlwaysCreate" = "11:FALSE"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Property" = "8:StartMenuFolder"
+                "Folders"
+                {
+                }
+            }
             "{1525181F-901A-416C-8A58-119130FE478E}:_88B7C86F10994184AC07D51C3716673C"
             {
             "Name" = "8:#1919"
@@ -558,7 +577,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
         "ProductCode" = "8:{E4DBB547-9E27-4366-838D-D55FA30A1368}"
-        "PackageCode" = "8:{BCDC4CF8-FFB8-4199-A3C9-D3CDB8698A52}"
+        "PackageCode" = "8:{480F4368-12FB-4943-8C89-3ED6ED80280D}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -678,6 +697,20 @@
         }
         "Shortcut"
         {
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_6AE47143EBD24EA9A571B4734BD7D569"
+            {
+            "Name" = "8:FamiStudio"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:32512"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+            "Folder" = "8:_502895A100E348DAA0391738AD1300BB"
+            "WorkingFolder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
+            "Icon" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+            "Feature" = "8:"
+            }
         }
         "UserInterface"
         {
@@ -1079,7 +1112,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_02EAA2AD59C5483CB557FE728242DD43"
             {
-            "SourcePath" = "8:"
+            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\FamiStudio.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
