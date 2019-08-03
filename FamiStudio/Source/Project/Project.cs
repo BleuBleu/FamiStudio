@@ -29,8 +29,8 @@ namespace FamiStudio
         {
             if (createSongAndInstrument)
             {
-                songs.Add(new Song(this, GenerateUniqueId(), "New Song"));
-                instruments.Add(new Instrument(GenerateUniqueId(), "New Instrument"));
+                CreateSong();
+                CreateInstrument();
             }
         }
 
