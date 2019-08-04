@@ -7,6 +7,8 @@ While I intend to keep this reference version simple and on-par with FamiTone2, 
 
 ## Tutorial
 
+There is a 10 minutes tutorial on YouTube:
+
 [![Tutorial](https://github.com/BleuBleu/FamiStudio/blob/master/Wiki/Video.png)](https://www.youtube.com/watch?v=_unlyRlsbcM)
 
 ## Features
