@@ -286,13 +286,13 @@ namespace FamiStudio
                 {
                     if (env.Loop >= 0)
                     {
-                        g.FillRectangle(env.Loop * NoteSizeX, 0, env.Length * NoteSizeX, HeaderSizeY, theme.DarkGreyFillBrush2);
-                        g.DrawLineHalfPixel(env.Loop * NoteSizeX, 0, env.Loop * NoteSizeX, HeaderSizeY, theme.DarkGreyLineBrush1);
-                        g.DrawBitmap(bmpLoop, env.Loop * NoteSizeX + 3, 2);
+                        g.FillRectangle(env.Loop * NoteSizeX - scrollX, 0, env.Length * NoteSizeX - scrollX, HeaderSizeY, theme.DarkGreyFillBrush2);
+                        g.DrawLineHalfPixel(env.Loop * NoteSizeX - scrollX, 0, env.Loop * NoteSizeX - scrollX, HeaderSizeY, theme.DarkGreyLineBrush1);
+                        g.DrawBitmap(bmpLoop, env.Loop * NoteSizeX - scrollX + 3, 2);
                     }
                     if (env.Length > 0)
                     {
-                        g.DrawLineHalfPixel(env.Length * NoteSizeX, 0, env.Length * NoteSizeX, HeaderSizeY, theme.DarkGreyLineBrush1);
+                        g.DrawLineHalfPixel(env.Length * NoteSizeX - scrollX, 0, env.Length * NoteSizeX - scrollX, HeaderSizeY, theme.DarkGreyLineBrush1);
                     }
                 }
             }
@@ -753,7 +753,7 @@ namespace FamiStudio
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
             var env = EditEnvelope;
-            int length = (int)Math.Round((e.X - WhiteKeySizeX) / (double)NoteSizeX);
+            int length = (int)Math.Round((e.X - WhiteKeySizeX - scrollX) / (double)NoteSizeX);
 
             if (left  && env.Length == length ||
                 right && env.Loop   == length)
