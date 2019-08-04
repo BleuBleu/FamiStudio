@@ -433,7 +433,7 @@ namespace FamiStudio
             {
                 if (e.Y > HeaderSizeY)
                 {
-                    selectedChannel = (e.Y - HeaderSizeY) / TrackSizeY;
+                    selectedChannel = Utils.Clamp((e.Y - HeaderSizeY) / TrackSizeY, 0, Channel.Count - 1);
                     ConditionalInvalidate();
                 }
             }
