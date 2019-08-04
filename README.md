@@ -5,7 +5,9 @@ Its feature set is designed to match [FamiTone2](https://shiru.untergrund.net/co
 
 While I intend to keep this reference version simple and on-par with FamiTone2, it could easily be extended to support modified/unofficial FamiTone versions (3 and 4, by nesdoug for example), add support for more effects, or audio expansion chips. 
 
-![FamiStudio](https://github.com/BleuBleu/FamiStudio/blob/master/Wiki/MainWindow.png)
+## Tutorial
+
+[![Tutorial](https://github.com/BleuBleu/FamiStudio/blob/master/Wiki/Video.png)](https://www.youtube.com/watch?v=_unlyRlsbcM)
 
 ## Features
 - Modern DAW-style UI with sequencer and piano roll, no hexadecimal anywhere
