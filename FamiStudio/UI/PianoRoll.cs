@@ -820,7 +820,7 @@ namespace FamiStudio
                         if (note != playingNote)
                         {
                             playingNote = note;
-                            (ParentForm as FamiStudioForm)?.PlayInstrumentNote(playingNote, true);
+                            App.PlayInstrumentNote(playingNote, true);
                             ConditionalInvalidate();
                         }
                         return;
@@ -834,7 +834,7 @@ namespace FamiStudio
                         if (note != playingNote)
                         {
                             playingNote = note;
-                            (ParentForm as FamiStudioForm)?.PlayInstrumentNote(playingNote, true);
+                            App.PlayInstrumentNote(playingNote, true);
                             ConditionalInvalidate();
                         }
                         return;
@@ -1160,7 +1160,7 @@ namespace FamiStudio
 
             if (playingPiano)
             {
-                (ParentForm as FamiStudioForm)?.StopIntrumentNote();
+                App.StopIntrumentNote();
                 playingPiano = false;
                 playingNote = -1;
                 Capture = false;
