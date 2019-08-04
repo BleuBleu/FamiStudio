@@ -753,7 +753,7 @@ namespace FamiStudio
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
             var env = EditEnvelope;
-            int length = (int)Math.Round((e.X - WhiteKeySizeX - scrollX) / (double)NoteSizeX);
+            int length = (int)Math.Round((e.X - WhiteKeySizeX + scrollX) / (double)NoteSizeX);
 
             if (left  && env.Length == length ||
                 right && env.Loop   == length)
