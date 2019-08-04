@@ -32,7 +32,7 @@ There is a 10 minutes tutorial on YouTube:
 _(*): plan to improve in the coming weeks/months_
 
 ## Releases
-Version 1.0 is available for download in the Releases section.
+[Version 1.0.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.0.0) is available for download in the Releases section.
 
 ## Demo Songs
 A few demo songs are included in the installation folder (typically _C:\Program Files (x86)\FamiStudio_):
