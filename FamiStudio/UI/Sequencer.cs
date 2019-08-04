@@ -386,6 +386,7 @@ namespace FamiStudio
             {
                 mouseLastX = e.X;
                 mouseLastY = e.Y;
+                return;
             }
             // Track muting, soloing.
             else if ((left || right) && e.X < TrackNameSizeX)
@@ -623,7 +624,17 @@ namespace FamiStudio
 
             bool inPatternZone = GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx);
 
-            if (left && inPatternZone)
+            if (middle)
+            {
+                int deltaX = e.X - mouseLastX;
+                int deltaY = e.Y - mouseLastY;
+
+                DoScroll(deltaX, deltaY);
+
+                mouseLastX = e.X;
+                mouseLastY = e.Y;
+            }
+            else if (left && inPatternZone)
             {
                 if (!isDraggingSelection && selectionDragStartX > 0 && Math.Abs(e.X - selectionDragStartX) > 5)
                 {
@@ -636,16 +647,6 @@ namespace FamiStudio
                 //}
 
                 ConditionalInvalidate();
-            }
-            else if (middle)
-            {
-                int deltaX = e.X - mouseLastX;
-                int deltaY = e.Y - mouseLastY;
-
-                DoScroll(deltaX, deltaY);
-
-                mouseLastX = e.X;
-                mouseLastY = e.Y;
             }
 
             UpdateCursor();

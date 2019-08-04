@@ -155,7 +155,7 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            if (buffer.IsReading && !buffer.IsForUndoRedo)
+            if (buffer.IsReading)
                 project = buffer.Project;
 
             buffer.Serialize(ref id);
