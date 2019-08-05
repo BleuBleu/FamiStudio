@@ -267,5 +267,288 @@ namespace FamiStudio
 
             return project;
         }
+
+        private static string[] FamiTrackerNoteNames =
+        {
+            "C-",
+            "C#",
+            "D-",
+            "D#",
+            "E-",
+            "F-",
+            "F#",
+            "G-",
+            "G#",
+            "A-",
+            "A#",
+            "B-"
+        };
+
+        private static void ConvertPitchEnvelopes(Project project)
+        {
+            foreach (var instrument in project.Instruments)
+            {
+                var env = instrument.Envelopes[Envelope.Pitch];
+                if (!env.IsEmpty)
+                {
+                    for (int i = 1; i < env.Length; i++)
+                    {
+                        env.Values[i] -= env.Values[i - 1];
+                    }
+
+                    if (env.Loop >= 0)
+                    {
+                        // Make relative.
+                        int delta = 0;
+                        for (int i = env.Loop; i < env.Length; i++)
+                        {
+                            delta += env.Values[i];
+                        }
+
+                        // Force loop part to sum to zero.
+                        if (delta != 0)
+                        {
+                            env.Values[env.Length - 1] = (sbyte)(env.Values[env.Length - 1] - delta);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static Envelope[][] MergeIdenticalEnvelopes(Project project)
+        {
+            var uniqueEnvelopes = new Dictionary<uint, Envelope>[Envelope.Max];
+
+            for (int i = 0; i < Envelope.Max; i++)
+            {
+                uniqueEnvelopes[i] = new Dictionary<uint, Envelope>();
+            }
+
+            foreach (var instrument in project.Instruments)
+            {
+                for (int i = 0; i < Envelope.Max; i++)
+                {
+                    var env = instrument.Envelopes[i];
+                    uint crc = env.CRC;
+
+                    if (uniqueEnvelopes[i].TryGetValue(crc, out var existingEnv))
+                    {
+                        instrument.Envelopes[i] = existingEnv;
+                    }
+                    else
+                    {
+                        uniqueEnvelopes[i][crc] = env;
+                    }
+                }
+            }
+
+            var envelopeArray = new Envelope[Envelope.Max][];
+            for (int i = 0; i < Envelope.Max; i++)
+            {
+                envelopeArray[i] = uniqueEnvelopes[i].Values.ToArray();
+            }
+
+            return envelopeArray;
+        }
+
+        private static void CreateMissingPatterns(Song song)
+        {
+            foreach (var channel in song.Channels)
+            {
+                int emptyPatternIdx = -1;
+                
+                for (int i = 0; i < channel.Patterns.Count; i++)
+                {
+                    if (!channel.Patterns[i].HasAnyNotes && !channel.Patterns[i].HasAnyEffect)
+                    {
+                        emptyPatternIdx = i;
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < channel.PatternInstances.Length; i++)
+                {
+                    if (channel.PatternInstances[i] == null)
+                    {
+                        if (emptyPatternIdx == -1)
+                        {
+                            emptyPatternIdx = channel.Patterns.IndexOf(channel.CreatePattern());
+                        }
+
+                        channel.PatternInstances[i] = channel.Patterns[emptyPatternIdx];
+                    }
+                }
+            }
+        }
+
+        private static string GetFamiTrackerNoteName(int channel, Note note)
+        {
+            if (channel == Channel.Noise)
+            {
+                return (note.Value & 0xf).ToString("X") + "-#";
+            }
+            else
+            {
+                int octave = (note.Value - 1) / 12 + 1;
+                int semitone = (note.Value - 1) % 12;
+
+                return FamiTrackerNoteNames[semitone] + octave.ToString();
+            }
+        }
+
+        public static bool Save(Project originalProject, string filename)
+        {
+            var project = originalProject.Clone();
+
+            ConvertPitchEnvelopes(project);
+            var envelopes = MergeIdenticalEnvelopes(project);
+
+            var lines = new List<string>();
+
+            lines.Add("# FamiTracker text export 0.4.2");
+            lines.Add("");
+
+            lines.Add("# Global settings");
+            lines.Add("MACHINE         0");
+            lines.Add("FRAMERATE       0");
+            lines.Add("EXPANSION       0");
+            lines.Add("VIBRATO         1");
+            lines.Add("SPLIT           21");
+            lines.Add("");
+
+            lines.Add("# Macros");
+            for (int i = 0; i < Envelope.Max; i++)
+            {
+                var envArray = envelopes[i];
+                for (int j = 0; j < envArray.Length; j++)
+                {
+                    var env = envArray[j];
+                    lines.Add($"MACRO{i,8} {j,4} {env.Loop,4}   -1    0 : {string.Join(" ", env.Values.Take(env.Length))}");
+                }
+            }
+            lines.Add($"MACRO{4,8} {0,4} {-1}   -1    0 : 0");
+            lines.Add($"MACRO{4,8} {1,4} {-1}   -1    0 : 1");
+            lines.Add($"MACRO{4,8} {2,4} {-1}   -1    0 : 2");
+            lines.Add($"MACRO{4,8} {3,4} {-1}   -1    0 : 3");
+            lines.Add("");
+
+            if (project.UsesSamples)
+            {
+                lines.Add("# DPCM samples");
+                for (int i = 0; i < project.Samples.Count; i++)
+                {
+                    var sample = project.Samples[i];
+                    lines.Add($"DPCMDEF{i,4}{sample.Data.Length,6} \"{sample.Name}\"");
+                    lines.Add($"DPCM : {String.Join(" ", sample.Data.Select(x => $"{x:X2}"))}");
+                }
+                lines.Add("");
+            }
+
+            lines.Add("# Instruments");
+            for (int i = 0; i < project.Instruments.Count; i++)
+            {
+                var instrument = project.Instruments[i];
+
+                int volEnvIdx = instrument.Envelopes[Envelope.Volume].Length   > 0 ? Array.IndexOf(envelopes[Envelope.Volume],   instrument.Envelopes[Envelope.Volume])   : -1;
+                int arpEnvIdx = instrument.Envelopes[Envelope.Arpeggio].Length > 0 ? Array.IndexOf(envelopes[Envelope.Arpeggio], instrument.Envelopes[Envelope.Arpeggio]) : -1;
+                int pitEnvIdx = instrument.Envelopes[Envelope.Pitch].Length    > 0 ? Array.IndexOf(envelopes[Envelope.Pitch],    instrument.Envelopes[Envelope.Pitch])    : -1;
+
+                lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{instrument.DutyCycle,4} \"{instrument.Name}\"");
+            }
+
+            if (project.UsesSamples)
+            {
+                lines.Add($"INST2A03{project.Instruments.Count,4}{-1,6}{-1,4}{-1,4}{-1,4}{-1,4} \"DPCM\"");
+
+                for (int i = 0; i < project.SamplesMapping.Length; i++)
+                {
+                    var mapping = project.SamplesMapping[i];
+
+                    if (mapping != null && mapping.Sample != null)
+                    {
+                        var octave   = (i - 1) / 12 + 1;
+                        var semitone = (i - 1) % 12;
+                        var idx      = project.Samples.IndexOf(mapping.Sample);
+                        var loop     = mapping.Loop ? 1 : 0;
+
+                        lines.Add($"KEYDPCM{project.Instruments.Count,4}{octave,4}{semitone,4}{idx,6}{mapping.Pitch,4}{loop,4}{0,6}{-1,4}");
+                    }
+                }
+            }
+            lines.Add("");
+
+            lines.Add("# Tracks");
+            for (int i = 0; i < project.Songs.Count; i++)
+            {
+                var song = project.Songs[i];
+
+                CreateMissingPatterns(song);
+
+                lines.Add($"TRACK{song.PatternLength,4}{song.Speed,4}{song.Tempo,4} \"{song.Name}\"");
+                lines.Add($"COLUMNS : 1 1 1 1 1");
+                lines.Add("");
+
+                for (int j = 0; j < song.Length; j++)
+                {
+                    var line = $"ORDER {j:X2} :";
+
+                    for (int k = 0; k < Channel.Count; k++)
+                    {
+                        line += $" {song.Channels[k].Patterns.IndexOf(song.Channels[k].PatternInstances[j]):X2}";
+                    }
+                    lines.Add(line);
+                }
+                lines.Add("");
+
+                int maxPatternCount = -1;
+                foreach (var channel in song.Channels)
+                {
+                    maxPatternCount = Math.Max(maxPatternCount, channel.Patterns.Count);
+                }
+
+                for (int j = 0; j < maxPatternCount; j++)
+                {
+                    lines.Add($"PATTERN {j:X2}");
+
+                    for (int k = 0; k < song.PatternLength; k++)
+                    {
+                        var line = $"ROW {k:X2}";
+                        for (int l = 0; l < Channel.Count; l++)
+                        {
+                            var channel = song.Channels[l];
+
+                            if (j >= channel.Patterns.Count)
+                            {
+                                line += " : ... .. . ...";
+                            }
+                            else
+                            {
+                                var pattern = channel.Patterns[j];
+                                var note = pattern.Notes[k];
+                                var noteString = note.IsStop ? "---" : note.IsValid ? GetFamiTrackerNoteName(l, note) : "...";
+                                var instrumentString = note.IsValid && !note.IsStop ? (note.Instrument == null ? project.Instruments.Count : project.Instruments.IndexOf(note.Instrument)).ToString("X2") : "..";
+                                var effectString = "...";
+
+                                switch (note.Effect)
+                                {
+                                    case Note.EffectJump  : effectString = $"B{note.EffectParam:X2}"; break;
+                                    case Note.EffectSkip  : effectString = $"D{note.EffectParam:X2}"; break;
+                                    case Note.EffectSpeed : effectString = $"F{note.EffectParam:X2}"; break;
+                                }
+
+                                line += $" : {noteString} {instrumentString} . {effectString}";
+                            }
+                        }
+                        lines.Add(line);
+                    }
+
+                    lines.Add("");
+                }
+            }
+
+            File.WriteAllLines(filename, lines);
+
+            return true;
+        }
     }
 }

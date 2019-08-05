@@ -106,6 +106,23 @@ namespace FamiStudio
             }
         }
 
+        public bool HasAnyEffect
+        {
+            get
+            {
+                for (int i = 0; i < song.PatternLength; i++)
+                {
+                    var n = notes[i];
+                    if (n.Effect != Note.EffectNone)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id);
