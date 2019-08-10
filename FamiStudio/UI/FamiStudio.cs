@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -19,6 +24,10 @@ namespace FamiStudio
         private int currentFrame = 0;
         private int ghostChannelMask = 0;
 
+        private bool newReleaseAvailable = false;
+        private string newReleaseString = null;
+        private string newReleaseUrl = null;
+        
         public bool RealTimeUpdate => songPlayer.IsPlaying || pianoRoll.IsEditingInstrument;
         public bool IsPlaying => songPlayer.IsPlaying;
         public int CurrentFrame => currentFrame;
@@ -60,6 +69,8 @@ namespace FamiStudio
             {
                 NewProject();
             }
+
+            Task.Factory.StartNew(CheckForNewRelease);
         }
 
         private void UndoRedoManager_Updated()
@@ -274,6 +285,51 @@ namespace FamiStudio
             return true;
         }
 
+        private void CheckForNewRelease()
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("https://api.github.com/repos/BleuBleu/FamiStudio/releases/latest");
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("FamiStudio");
+                    var response = client.GetAsync("").Result;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = response.Content.ReadAsStringAsync().Result;
+                        var jsonSerializer = new JavaScriptSerializer();
+
+                        dynamic release = jsonSerializer.Deserialize<dynamic>(json);
+
+                        newReleaseString = release["tag_name"].ToString();
+                        newReleaseUrl    = release["html_url"].ToString();
+
+                        // Assume > alphabetical order means newer version.
+                        if (newReleaseString.CompareTo(Application.ProductVersion) > 0)
+                        {
+                            newReleaseAvailable = true;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private void CheckNewReleaseDone()
+        {
+            if (newReleaseAvailable)
+            {
+                newReleaseAvailable = false;
+
+                if (MessageBox.Show($"A new release ({newReleaseString}) is available. Do you want to go to GitHub to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    Process.Start(newReleaseUrl);
+                }
+            }
+        }
+
         private void UpdateTitle()
         {
             if (string.IsNullOrEmpty(project.Filename))
@@ -407,6 +463,8 @@ namespace FamiStudio
                     currentFrame = songPlayer.CurrentFrame;
                 InvalidateEverything();
             }
+
+            CheckNewReleaseDone();
         }
         
         private void sequencer_PatternClicked(int trackIndex, int patternIndex)
