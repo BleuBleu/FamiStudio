@@ -153,6 +153,7 @@ namespace FamiStudio
             {
                 NewProject();
             }
+            NsfFile.Save(project, @"C:\Users\Mat\OneDrive\NES\resources\test.nsf");
         }
 
         public void OpenProject()
@@ -169,11 +170,11 @@ namespace FamiStudio
             }
         }
 
-        public bool SaveProject()
+        public bool SaveProject(bool forceSaveAs = false)
         {
             bool success = true;
 
-            if (string.IsNullOrEmpty(project.Filename))
+            if (forceSaveAs || string.IsNullOrEmpty(project.Filename))
             {
                 var sfd = new SaveFileDialog()
                 {
