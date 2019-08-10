@@ -130,6 +130,10 @@ namespace FamiStudio
                     foreach (var channel in channels)
                     {
                         channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed);
+                    }
+
+                    foreach (var channel in channels)
+                    {
                         channel.Advance(song, playPattern, playNote);
                         channel.UpdateEnvelopes();
                         channel.UpdateAPU();
@@ -161,9 +165,16 @@ namespace FamiStudio
                 // Advance to next note.
                 if (advance)
                 {
+                    // We process the effects before since one channel may have
+                    // a skip/jump and we need to process that first before advancing 
+                    // the song.
                     foreach (var channel in channels)
                     {
                         channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed);
+                    }
+
+                    foreach (var channel in channels)
+                    {
                         channel.Advance(song, playPattern, playNote);
                     }
 

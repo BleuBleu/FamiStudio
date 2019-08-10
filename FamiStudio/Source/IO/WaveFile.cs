@@ -108,6 +108,10 @@ namespace FamiStudio
                         foreach (var channel in channels)
                         {
                             channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed, false);
+                        }
+
+                        foreach (var channel in channels)
+                        {
                             channel.Advance(song, playPattern, playNote);
                         }
 
