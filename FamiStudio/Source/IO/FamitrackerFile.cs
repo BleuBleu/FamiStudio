@@ -291,14 +291,15 @@ namespace FamiStudio
                 var env = instrument.Envelopes[Envelope.Pitch];
                 if (!env.IsEmpty)
                 {
-                    for (int i = 1; i < env.Length; i++)
+                    // Make relative.
+                    for (int i = env.Length - 1; i > 0; i--)
                     {
                         env.Values[i] -= env.Values[i - 1];
                     }
 
                     if (env.Loop >= 0)
                     {
-                        // Make relative.
+                        // Make the looping par sum to zero.
                         int delta = 0;
                         for (int i = env.Loop; i < env.Length; i++)
                         {
