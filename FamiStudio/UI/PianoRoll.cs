@@ -1256,9 +1256,9 @@ namespace FamiStudio
                 {
                     while (noteIdx >= 0 && !pattern.Notes[noteIdx].IsValid) noteIdx--;
 
-                    if (noteIdx >= 0 && pattern.Notes[noteIdx].Value == noteValue)
+                    if (noteIdx >= 0)
                     {
-                        return true;
+                        return pattern.Notes[noteIdx].Value == noteValue;
                     }
                 }
 
