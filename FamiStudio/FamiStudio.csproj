@@ -109,6 +109,7 @@
     </Compile>
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
+    <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\Player\ChannelState.cs" />
@@ -214,6 +215,7 @@
     <EmbeddedResource Include="UI\RenameColorDialog.resx">
       <DependentUpon>RenameColorDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Nsf\nsf.bin" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

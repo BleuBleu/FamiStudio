@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -8,7 +9,15 @@ namespace FamiStudio
     public class FamitoneMusicFile
     {
         private Project project;
+
+        // Text version.
         private List<string> lines = new List<string>();
+
+        //// Binary version.
+        //private List<byte> bytes = new List<byte>();
+        //private List<int> envOffsets = new List<int>();
+        //private List<int> refOffsets = new List<int>();
+        //private int 
 
         private string db = ".byte";
         private string dw = ".word";
@@ -251,7 +260,7 @@ namespace FamiStudio
             return size;
         }
 
-        private void OutputSamples(string filename)
+        private void OutputSamples(string filename, string dmcFilename)
         {
             if (project.UsesSamples)
             {
@@ -261,10 +270,16 @@ namespace FamiStudio
                     Array.Copy(sample.Data, 0, sampleData, project.GetAddressForSample(sample), sample.Data.Length);
                 }
 
+                // TODO: Once we have a real project name, we will use that.
                 var path = Path.GetDirectoryName(filename);
                 var projectname = Utils.MakeNiceAsmName(Path.GetFileNameWithoutExtension(project.Filename));
 
-                File.WriteAllBytes(Path.Combine(path, projectname + ".dmc"), sampleData);
+                if (dmcFilename == null)
+                {
+                    dmcFilename = Path.Combine(path, projectname + ".dmc");
+                }
+
+                File.WriteAllBytes(dmcFilename, sampleData);
             }
         }
 
@@ -575,14 +590,14 @@ namespace FamiStudio
             project.DeleteUnusedInstruments(); 
         }
 
-        public bool Save(Project originalProject, int[] songIds, bool separateSongs, string filename, OutputFormat format)
+        public bool Save(Project originalProject, int[] songIds, bool separateSongs, string filename, OutputFormat format, string dmcFilename = null)
         {
             SetupProject(originalProject, songIds);
             SetupFormat(format);
             CleanupEnvelopes();
             OutputHeader(separateSongs);
             OutputInstruments();
-            OutputSamples(filename);
+            OutputSamples(filename, dmcFilename);
 
             for (int i = 0; i < project.Songs.Count; i++)
             {
@@ -590,6 +605,124 @@ namespace FamiStudio
             }
 
             File.WriteAllLines(filename, lines);
+
+            return true;
+        }
+
+        private byte[] ParseAsmFile(string filename, int songOffset, int dpcmOffset)
+        {
+            var labels = new Dictionary<string, int>();
+            var labelsToPatch = new List<Tuple<string, int>>();
+            var bytes = new List<byte>();
+
+            string[] lines = File.ReadAllLines(filename);
+
+            foreach (var line in lines)
+            {
+                var trimmedLine = line.Trim();
+
+                int commentIdx = trimmedLine.IndexOf(';');
+                if (commentIdx >= 0)
+                {
+                    trimmedLine = trimmedLine.Substring(0, commentIdx);
+                }
+
+                bool isByte = trimmedLine.StartsWith("db");
+                bool isWord = trimmedLine.StartsWith("dw");
+
+                if (isByte || isWord)
+                {
+                    var splits = trimmedLine.Substring(3).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = 0; i < splits.Length; i++)
+                    {
+                        var hex = false;
+                        var valStr = splits[i].Trim();
+                        var valNum = 0;
+
+                        if (valStr.StartsWith("$"))
+                        {
+                            hex = true;
+                            valStr = valStr.Substring(1).Trim();
+                        }
+
+                        if (labels.ContainsKey(valStr))
+                        {
+                            valNum = labels[valStr];
+                        }
+                        else
+                        {
+                            if (valStr.StartsWith("@"))
+                            {
+                                labelsToPatch.Add(new Tuple<string, int>(valStr, bytes.Count));
+                            }
+                            else if (valStr.Contains("FT_DPCM_PTR"))
+                            {
+                                valNum = Convert.ToInt32(valStr.Split('+')[0], 16) + (dpcmOffset & 0xff);
+                            }
+                            else
+                            {
+                                valNum = Convert.ToInt32(valStr, hex ? 16 : 10);
+                            }
+                        }
+
+                        if (isByte)
+                        {
+                            bytes.Add((byte)(valNum & 0xff));
+                        }
+                        else
+                        {
+                            bytes.Add((byte)((valNum >> 0) & 0xff));
+                            bytes.Add((byte)((valNum >> 8) & 0xff));
+                        }
+                    }
+                }
+                else if (trimmedLine.EndsWith(":"))
+                {
+                    labels[trimmedLine.TrimEnd(':')] = bytes.Count + songOffset;
+                }
+            }
+
+            foreach (var pair in labelsToPatch)
+            {
+                int val;
+                if (pair.Item1.Contains("-"))
+                {
+                    var splits = pair.Item1.Split('-');
+                    val = labels[splits[0]];
+                    val -= Convert.ToInt32(splits[1]);
+                }
+                else
+                {
+                    val = labels[pair.Item1];
+                }
+
+                bytes[pair.Item2 + 0] = ((byte)((val >> 0) & 0xff));
+                bytes[pair.Item2 + 1] = ((byte)((val >> 8) & 0xff));
+            }
+
+            return bytes.ToArray();
+        }
+
+        // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
+        public bool GetBytes(Project project, int[] songIds, int songOffset, int dpcmOffset, out byte[] songBytes, out byte[] dpcmBytes)
+        {
+            var tempFolder = Path.Combine(Path.GetTempPath(), "FamiStudio");
+
+            try
+            {
+                Directory.Delete(tempFolder, true);
+            }
+            catch {}
+
+            Directory.CreateDirectory(tempFolder);
+
+            var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
+            var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
+
+            Save(project, songIds, false, tempAsmFilename, OutputFormat.ASM6, tempDmcFilename);
+
+            songBytes = ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
+            dpcmBytes = project.UsesSamples ? File.ReadAllBytes(tempDmcFilename) : null;
 
             return true;
         }

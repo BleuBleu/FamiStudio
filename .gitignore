@@ -4,6 +4,8 @@
 *.pch
 *.rar
 *.user
+*.dbg
+*.map
 
 obj/
 .vs/

@@ -287,22 +287,8 @@ namespace FamiStudio
 
                 foreach (var song in songs)
                 {
-                    for (int p = 0; p < song.Length; p++) 
-                    {
-                        var pattern = song.Channels[Channel.DPCM].PatternInstances[p];
-                        if (pattern != null)
-                        {
-                            for (int i = 0; i < song.PatternLength; i++)
-                            {
-                                var note = pattern.Notes[i];
-                                if (note.IsValid && !note.IsStop)
-                                {
-                                    if (samplesMapping[note.Value] != null && samplesMapping[note.Value].Sample != null)
-                                        return true;
-                                }
-                            }
-                        }
-                    }
+                    if (song.UsesDpcm)
+                        return true;
                 }
 
                 return false;
