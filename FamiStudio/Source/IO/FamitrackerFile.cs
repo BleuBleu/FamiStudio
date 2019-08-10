@@ -203,7 +203,7 @@ namespace FamiStudio
                         {
                             pattern.Notes[rowIdx].Value = 0;
                         }
-                        else if (noteData[0] != "...")
+                        else if (noteData[0] != "..."&& noteData[0] != "===")
                         {
                             int famitoneNote;
 
