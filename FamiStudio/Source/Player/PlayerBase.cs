@@ -65,6 +65,37 @@ namespace FamiStudio
             xaudio2Stream.Dispose();
         }
 
+        public static bool AdvanceTempo(Song song, int speed, LoopMode loopMode, ref int tempoCounter, ref int playPattern, ref int playNote, ref int playFrame, ref bool advance)
+        {
+            // Tempo/speed logic.
+            tempoCounter += song.Tempo * 256 / 150; // NTSC
+
+            if ((tempoCounter >> 8) == speed)
+            {
+                tempoCounter -= (speed << 8);
+
+                if (++playNote == song.PatternLength)
+                {
+                    playNote = 0;
+
+                    if (loopMode != LoopMode.Pattern)
+                    {
+                        if (++playPattern == song.Length)
+                        {
+                            if (loopMode == LoopMode.None)
+                                return false;
+                            playPattern = 0;
+                        }
+                    }
+                }
+
+                playFrame = playPattern * song.PatternLength + playNote;
+                advance = true;
+            }
+
+            return true;
+        }
+
         protected unsafe void EndFrameAndQueueSamples()
         {
             NesApu.NesApuEndFrame(apuIndex);

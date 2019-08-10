@@ -112,6 +112,7 @@
     <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
+    <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Player\ChannelState.cs" />
     <Compile Include="Source\Player\DPCMChannelState.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
