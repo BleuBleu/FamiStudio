@@ -36,8 +36,71 @@ namespace FamiStudio
 
         public unsafe static void Save(Song song, string filename)
         {
+            var channels = new ChannelState[5]
+            {
+                new SquareChannelState(0, 0),
+                new SquareChannelState(0, 1),
+                new TriangleChannelState(0, 2),
+                new NoiseChannelState(0, 3),
+                new DPCMChannelState(0, 4)
+            };
+
+            var advance = true;
+            var tempoCounter = 0;
+            var playPattern = 0;
+            var playNote = 0;
+            var speed = song.Speed;
+            var wavBytes = new List<byte>();
+
+            NesApu.Reset(0);
+
+            while (true)
+            {
+                // Advance to next note.
+                if (advance)
+                {
+                    foreach (var channel in channels)
+                    {
+                        channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed, false);
+                    }
+
+                    foreach (var channel in channels)
+                    {
+                        channel.Advance(song, playPattern, playNote);
+                    }
+
+                    advance = false;
+                }
+
+                // Update envelopes + APU registers.
+                foreach (var channel in channels)
+                {
+                    channel.UpdateEnvelopes();
+                    channel.UpdateAPU();
+                }
+
+                NesApu.NesApuEndFrame(0);
+
+                int numTotalSamples = NesApu.NesApuSamplesAvailable(0);
+                byte[] samples = new byte[numTotalSamples * 2];
+
+                fixed (byte* ptr = &samples[0])
+                {
+                    NesApu.NesApuReadSamples(0, new IntPtr(ptr), numTotalSamples);
+                }
+
+                wavBytes.AddRange(samples);
+
+                int dummy1 = 0;
+                if (!PlayerBase.AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref dummy1, ref advance))
+                {
+                    break;
+                }
+            }
+
             using (var file = new FileStream(filename, FileMode.Create))
             {
+                
                 var header = new WaveHeader();
 
                 // RIFF WAVE Header
@@ -75,74 +138,14 @@ namespace FamiStudio
                 // Whenever a sample is added:
                 //    chunkSize += (nChannels * bitsPerSample/8)
                 //    subChunk2Size += (nChannels * bitsPerSample/8)
-                header.chunkSize = 4 + 8 + 16 + 8 + 0;
                 header.subChunk1Size = 16;
-                header.subChunk2Size = 0;
+                header.subChunk2Size = wavBytes.Count;
+                header.chunkSize = 4 + (8 + header.subChunk1Size) + (8 + header.subChunk2Size);
 
                 var headerBytes = new byte[sizeof(WaveHeader)];
                 Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);
                 file.Write(headerBytes, 0, headerBytes.Length);
-
-                var channels = new ChannelState[5]
-                {
-                    new SquareChannelState(0, 0),
-                    new SquareChannelState(0, 1),
-                    new TriangleChannelState(0, 2),
-                    new NoiseChannelState(0, 3),
-                    new DPCMChannelState(0, 4)
-                };
-
-                bool advance = true;
-                int tempoCounter = 0;
-                int playPattern = 0;
-                int playNote = 0;
-                int speed = song.Speed;
-
-                NesApu.Reset(0);
-               
-                while (true)
-                {
-                    // Advance to next note.
-                    if (advance)
-                    {
-                        foreach (var channel in channels)
-                        {
-                            channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed, false);
-                        }
-
-                        foreach (var channel in channels)
-                        {
-                            channel.Advance(song, playPattern, playNote);
-                        }
-
-                        advance = false;
-                    }
-
-                    // Update envelopes + APU registers.
-                    foreach (var channel in channels)
-                    {
-                        channel.UpdateEnvelopes();
-                        channel.UpdateAPU();
-                    }
-
-                    NesApu.NesApuEndFrame(0);
-
-                    int numTotalSamples = NesApu.NesApuSamplesAvailable(0);
-                    byte[] samples = new byte[numTotalSamples * 2];
-
-                    fixed (byte* ptr = &samples[0])
-                    {
-                        NesApu.NesApuReadSamples(0, new IntPtr(ptr), numTotalSamples);
-                    }
-
-                    file.Write(samples, 0, samples.Length);
-
-                    int dummy1 = 0;
-                    if (!PlayerBase.AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref dummy1, ref advance))
-                    {
-                        break;
-                    }
-                }
+                file.Write(wavBytes.ToArray(), 0, wavBytes.Count);
             }
         }
     }
