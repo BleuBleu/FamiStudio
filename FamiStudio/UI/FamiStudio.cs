@@ -153,7 +153,6 @@ namespace FamiStudio
             {
                 NewProject();
             }
-            NsfFile.Save(project, @"C:\Users\Mat\OneDrive\NES\resources\test.nsf");
         }
 
         public void OpenProject()
@@ -178,16 +177,34 @@ namespace FamiStudio
             {
                 var sfd = new SaveFileDialog()
                 {
-                    Filter = "FamiStudio Files (*.fms)|*.fms",
+                    Filter = "FamiStudio Files (*.fms)|*.fms|NES Sound File (*.nsf)|*.nsf|FamiTracker TXT Export (*.txt)|*.txt|WAV file of current song (*.wav)|*.wav",
                     Title = "Save File"
                 };
 
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    success = ProjectFile.Save(project, sfd.FileName);
-                    if (success)
+                    var extension = Path.GetExtension(sfd.FileName).ToLower();
+                    if (extension == ".fms")
                     {
-                        UpdateTitle();
+                        success = ProjectFile.Save(project, sfd.FileName);
+                        if (success)
+                        {
+                            UpdateTitle();
+                            undoRedoManager.Clear();
+                        }
+                    }
+                    else if (extension == ".wav")
+                    {
+                        Stop(); // TODO: The WAV exporter uses the same APU as the song player.
+                        WaveFile.Save(song, sfd.FileName);
+                    }
+                    else if (extension == ".nsf")
+                    {
+                        NsfFile.Save(project, sfd.FileName);
+                    }
+                    else if (extension == ".txt")
+                    {
+                        FamitrackerFile.Save(project, sfd.FileName);
                     }
                 }
             }
@@ -196,11 +213,7 @@ namespace FamiStudio
                 success = ProjectFile.Save(project, project.Filename);
             }
 
-            if (success)
-            {
-                undoRedoManager.Clear();
-            }
-            else
+            if (!success)
             {
                 MessageBox.Show("An error happened while saving.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
