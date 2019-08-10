@@ -252,7 +252,6 @@ namespace FamiStudio
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
                             instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].Clone();
-                            App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
                             App.UndoRedoManager.EndTransaction();
 
                             InstrumentEdited?.Invoke(instrumentDst, envelopeDragIdx);
