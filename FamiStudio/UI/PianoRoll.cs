@@ -1218,7 +1218,7 @@ namespace FamiStudio
                 patternIdx = noteIdx / Song.PatternLength;
                 noteIdx %= Song.PatternLength;
 
-                return true;
+                return patternIdx < Song.Length;
             }
             else
             {
@@ -1235,7 +1235,7 @@ namespace FamiStudio
             noteIdx   %= Song.PatternLength;
             noteValue  = (byte)(NumNotes - Math.Min((y + scrollY - HeaderSizeY) / NoteSizeY, NumNotes));
 
-            return (x > WhiteKeySizeX && y > HeaderSizeY);
+            return (x > WhiteKeySizeX && y > HeaderSizeY && patternIdx < Song.Length);
         }
 
         private bool GetEnvelopeValueForCoord(int x, int y, out int idx, out sbyte value)

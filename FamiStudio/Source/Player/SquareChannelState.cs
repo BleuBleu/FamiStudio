@@ -22,7 +22,7 @@
                 int period = NesApu.NoteTableNTSC[noteVal] + envelopeValues[Envelope.Pitch];
 
                 WriteApuRegister(NesApu.APU_PL1_LO + regOffset, period & 0xff);
-                period >>= 8;
+                period = (period >> 8) & 0x07;
 
                 if (prevPulseHi != period)
                 {
