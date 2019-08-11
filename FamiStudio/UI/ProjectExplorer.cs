@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
 using FamiStudio.Properties;
 using SharpDX.Direct2D1;
+using SharpDX.DirectWrite;
+using SharpDX.Mathematics.Interop;
 
 namespace FamiStudio
 {
@@ -11,29 +14,129 @@ namespace FamiStudio
         const int ScrollBarDefaultSizeX = 8;
         const int ButtonSizeY           = 24;
 
-        int VirtualSizeY => (App?.Project == null ? Height : App.Project.Songs.Count + App.Project.Instruments.Count + 2) * ButtonSizeY;
+        enum ButtonType
+        {
+            ProjectSettings,
+            SongHeader,
+            Song,
+            InstrumentHeader,
+            Instrument,
+            Max
+        };
+
+        enum SubButtonType
+        {
+            Add,
+            DPCM,
+            DutyCycle0,
+            DutyCycle1,
+            DutyCycle2,
+            DutyCycle3,
+            Arpeggio,
+            Pitch,
+            Volume,
+            Max
+        }
+
+        class Button
+        {
+            public ButtonType type;
+            public Song song;
+            public Instrument instrument;
+
+            public SubButtonType[] GetSubButtons(out bool[] active)
+            {
+                switch (type)
+                {
+                    case ButtonType.SongHeader:
+                    case ButtonType.InstrumentHeader:
+                        active = new[] { true };
+                        return new[] { SubButtonType.Add };
+                    case ButtonType.Instrument:
+                        if (instrument == null)
+                        {
+                            active = new[] { true };
+                            return new[] { SubButtonType.DPCM };
+                        }
+                        else
+                        {
+                            active = new[] {
+                                true,
+                                instrument.Envelopes[Envelope.Arpeggio].IsEmpty ? false : true,
+                                instrument.Envelopes[Envelope.Pitch].IsEmpty ? false : true,
+                                instrument.Envelopes[Envelope.Volume].IsEmpty ? false : true
+                            };
+                            return new[] { instrument.DutyCycle + SubButtonType.DutyCycle0, SubButtonType.Arpeggio, SubButtonType.Pitch, SubButtonType.Volume };
+                        }
+                }
+
+                active = null;
+                return null;
+            }
+
+            public string GetText(Project project)
+            {
+                switch (type)
+                {
+                    case ButtonType.ProjectSettings: return $"{project.Name} ({project.Author})";
+                    case ButtonType.SongHeader: return "Songs";
+                    case ButtonType.Song: return song.Name;
+                    case ButtonType.InstrumentHeader: return "Instruments";
+                    case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
+                }
+
+                return "";
+            }
+
+            public RawColor4 GetColor()
+            {
+                switch (type)
+                {
+                    case ButtonType.SongHeader:
+                    case ButtonType.InstrumentHeader: return Theme.LightGreyFillColor2;
+                    case ButtonType.Song: return Direct2DGraphics.ToRawColor4(song.Color);
+                    case ButtonType.Instrument: return instrument == null ? Theme.LightGreyFillColor1 : Direct2DGraphics.ToRawColor4(instrument.Color);
+                }
+
+                return Theme.LightGreyFillColor1;
+            }
+
+            public TextFormat GetFont(Song selectedSong, Instrument selectedInstrument)
+            {
+                if (type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.ProjectSettings)
+                {
+                    return Theme.FontMediumBoldCenter;
+                }
+                else if ((type == ButtonType.Song && song == selectedSong) ||
+                         (type == ButtonType.Instrument && instrument == selectedInstrument))
+                {
+                    return Theme.FontMediumBold;
+                }
+                else
+                {
+                    return Theme.FontMedium;
+                }
+            }
+        }
+
+        int VirtualSizeY => (App?.Project == null ? Height : buttons.Count) * ButtonSizeY;
         int ScrollBarSizeX => NeedsScrollBar ? ScrollBarDefaultSizeX : 0;
         bool NeedsScrollBar => VirtualSizeY > Height;
 
         int scrollY = 0;
         int mouseLastY = 0;
         int mouseDragY = -1;
-        int instrumentDragIdx = -1;
         int envelopeDragIdx = -1;
         bool isDraggingInstrument = false;
+        Instrument instrumentDrag = null;
         Song selectedSong = null;
         Instrument selectedInstrument = null; // null = DPCM
+        List<Button> buttons = new List<Button>();
 
         Theme theme;
 
-        Bitmap bmpVolume;
-        Bitmap bmpPitch;
-        Bitmap bmpArpeggio;
-        Bitmap bmpDPCM;
-        Bitmap bmpSong;
-        Bitmap bmpInstrument;
-        Bitmap bmpAdd;
-        Bitmap[] bmpDuty = new Bitmap[4];
+        Bitmap[] bmpButtonIcons = new Bitmap[(int)ButtonType.Max];
+        Bitmap[] bmpSubButtonIcons = new Bitmap[(int)SubButtonType.Max];
 
         public Song SelectedSong => selectedSong;
         public Instrument SelectedInstrument => selectedInstrument;
@@ -63,35 +166,47 @@ namespace FamiStudio
         {
             selectedSong = App.Project.Songs[0];
             selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
+            RefreshButtons();
             ConditionalInvalidate();
+        }
+
+        private void RefreshButtons()
+        {
+            buttons.Clear();
+            buttons.Add(new Button() { type = ButtonType.ProjectSettings });
+            buttons.Add(new Button() { type = ButtonType.SongHeader });
+
+            foreach (var song in App.Project.Songs)
+                buttons.Add(new Button() { type = ButtonType.Song, song = song });
+
+            buttons.Add(new Button() { type = ButtonType.InstrumentHeader });
+            buttons.Add(new Button() { type = ButtonType.Instrument }); // null instrument = DPCM
+
+            foreach (var instrument in App.Project.Instruments)
+                buttons.Add(new Button() { type = ButtonType.Instrument, instrument = instrument });
         }
 
         protected override void OnDirect2DInitialized(Direct2DGraphics g)
         {
             theme = Theme.CreateResourcesForGraphics(g);
 
-            bmpVolume = g.ConvertBitmap(Resources.Volume);
-            bmpPitch = g.ConvertBitmap(Resources.Pitch);
-            bmpArpeggio = g.ConvertBitmap(Resources.Arpeggio);
-            bmpDuty[0] = g.ConvertBitmap(Resources.Duty0);
-            bmpDuty[1] = g.ConvertBitmap(Resources.Duty1);
-            bmpDuty[2] = g.ConvertBitmap(Resources.Duty2);
-            bmpDuty[3] = g.ConvertBitmap(Resources.Duty3);
-            bmpDPCM = g.ConvertBitmap(Resources.DPCM);
-            bmpSong = g.ConvertBitmap(Resources.Music);
-            bmpAdd = g.ConvertBitmap(Resources.Add);
-            bmpInstrument = g.ConvertBitmap(Resources.Pattern);
+            bmpButtonIcons[(int)ButtonType.Song] = g.ConvertBitmap(Resources.Music);
+            bmpButtonIcons[(int)ButtonType.Instrument] = g.ConvertBitmap(Resources.Pattern);
+
+            bmpSubButtonIcons[(int)SubButtonType.Add] = g.ConvertBitmap(Resources.Add);
+            bmpSubButtonIcons[(int)SubButtonType.DPCM] = g.ConvertBitmap(Resources.DPCM);
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle0] = g.ConvertBitmap(Resources.Duty0);
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle1] = g.ConvertBitmap(Resources.Duty1);
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle2] = g.ConvertBitmap(Resources.Duty2);
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle3] = g.ConvertBitmap(Resources.Duty3);
+            bmpSubButtonIcons[(int)SubButtonType.Arpeggio] = g.ConvertBitmap(Resources.Arpeggio);
+            bmpSubButtonIcons[(int)SubButtonType.Pitch] = g.ConvertBitmap(Resources.Pitch);
+            bmpSubButtonIcons[(int)SubButtonType.Volume] = g.ConvertBitmap(Resources.Volume);
         }
 
         private void ConditionalInvalidate()
         {
-            //if (!(ParentForm as FamitoneStudio).IsPlaying)
-                Invalidate();
-        }
-
-        System.Drawing.Rectangle GetButtonRect(int buttonIdx, int shiftY = 0)
-        {
-            return new System.Drawing.Rectangle(Width - ScrollBarSizeX - 20 * buttonIdx, 4 + shiftY, 16, 16);
+            Invalidate();
         }
 
         protected override void OnRender(Direct2DGraphics g)
@@ -102,63 +217,31 @@ namespace FamiStudio
             int actualWidth = Width - ScrollBarSizeX;
 
             int y = -scrollY;
-            g.PushTranslation(0, y);
-            g.FillAndDrawRectangleHalfPixel(0, 0, actualWidth, ButtonSizeY, g.GetVerticalGradientBrush(Theme.LightGreyFillColor2, ButtonSizeY, 0.8f), theme.BlackBrush);
-            g.DrawText("Songs", Theme.FontMediumBoldCenter, 0, 5, theme.BlackBrush, actualWidth);
-            g.DrawBitmap(bmpAdd, actualWidth - 20, 4);
-            g.PopTransform();
-            y += ButtonSizeY;
 
-            for (int i = 0; i < App.Project.Songs.Count; i++, y += ButtonSizeY)
+            foreach (var button in buttons)
             {
-                var song = App.Project.Songs[i];
+                var icon = bmpButtonIcons[(int)button.type];
 
                 g.PushTranslation(0, y);
-                g.FillAndDrawRectangleHalfPixel(0, 0, actualWidth, ButtonSizeY, g.GetVerticalGradientBrush(Direct2DGraphics.ToRawColor4(song.Color), ButtonSizeY, 0.8f), theme.BlackBrush);
-                g.DrawText(song.Name, song == selectedSong ? Theme.FontMediumBold : Theme.FontMedium, 24, 5, theme.BlackBrush);
-                g.DrawBitmap(bmpSong, 4, 4);
+                g.FillAndDrawRectangleHalfPixel(0, 0, actualWidth, ButtonSizeY, g.GetVerticalGradientBrush(button.GetColor(), ButtonSizeY, 0.8f), theme.BlackBrush);
+                g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? 0 : 24, 5, theme.BlackBrush, actualWidth);
 
-                //var rcVolume = GetVolumeRect();
-                //g.DrawBitmap(bmpVolume, rcVolume.X, rcVolume.Y, instrument.Envelopes[Envelope.Volume].Length > 0 ? 1.0f : 0.2f);
+                if (icon != null)
+                {
+                    g.DrawBitmap(icon, 4, 4);
+                }
 
-                g.PopTransform();
-            }
-
-            g.PushTranslation(0, y);
-            g.FillAndDrawRectangleHalfPixel(0, 0, actualWidth, ButtonSizeY, g.GetVerticalGradientBrush(Theme.LightGreyFillColor2, ButtonSizeY, 0.8f), theme.BlackBrush);
-            g.DrawText("Instruments", Theme.FontMediumBoldCenter, 0, 5, theme.BlackBrush, actualWidth);
-            g.DrawBitmap(bmpAdd, actualWidth - 20, 4);
-            g.PopTransform();
-            y += ButtonSizeY;
-
-            g.PushTranslation(0, y);
-            g.FillAndDrawRectangleHalfPixel(0, 0, actualWidth, ButtonSizeY, g.GetVerticalGradientBrush(Theme.LightGreyFillColor1, ButtonSizeY, 0.8f), theme.BlackBrush);
-            g.DrawText("DPCM Samples", SelectedInstrument == null ? Theme.FontMediumBold : Theme.FontMedium, 24, 5, theme.BlackBrush);
-            g.DrawBitmap(bmpInstrument, 4, 4);
-            g.DrawBitmap(bmpDPCM, actualWidth - 20, 4);
-            g.PopTransform();
-            y += ButtonSizeY;
-
-            for (int i = 0; i < App.Project.Instruments.Count; i++, y += ButtonSizeY)
-            {
-                var instrument = App.Project.Instruments[i];
-
-                g.PushTranslation(0, y);
-                g.FillAndDrawRectangleHalfPixel(0, 0, actualWidth, ButtonSizeY, g.GetVerticalGradientBrush(instrument.Color, ButtonSizeY, 0.8f), theme.BlackBrush);
-                g.DrawText(instrument.Name, instrument == SelectedInstrument ? Theme.FontMediumBold : Theme.FontMedium, 24, 5, theme.BlackBrush);
-
-                var rcVolume   = GetButtonRect(4);
-                var rcPitch    = GetButtonRect(3);
-                var rcArpeggio = GetButtonRect(2);
-                var rcDuty     = GetButtonRect(1);
-
-                g.DrawBitmap(bmpInstrument, 4, 4);
-                g.DrawBitmap(bmpVolume, rcVolume.X, rcVolume.Y, instrument.Envelopes[Envelope.Volume].Length > 0 ? 1.0f : 0.2f);
-                g.DrawBitmap(bmpPitch, rcPitch.X, rcPitch.Y, instrument.Envelopes[Envelope.Pitch].Length > 0 ? 1.0f : 0.2f);
-                g.DrawBitmap(bmpArpeggio, rcArpeggio.X, rcArpeggio.Y, instrument.Envelopes[Envelope.Arpeggio].Length > 0 ? 1.0f : 0.2f);
-                g.DrawBitmap(bmpDuty[instrument.DutyCycle], rcDuty.X, rcDuty.Y, 1.0f);
+                var subButtons = button.GetSubButtons(out var active);
+                if (subButtons != null)
+                {
+                    for (int i = 0, x = actualWidth - 20; i < subButtons.Length; i++, x -= 20)
+                    {
+                        g.DrawBitmap(bmpSubButtonIcons[(int)subButtons[i]], x, 4, active[i] ? 1.0f : 0.2f);
+                    }
+                }
 
                 g.PopTransform();
+                y += ButtonSizeY;
             }
 
             if (NeedsScrollBar)
@@ -200,6 +283,43 @@ namespace FamiStudio
             }
         }
 
+        private int GetButtonAtCoord(int x, int y, out SubButtonType sub)
+        {
+            var buttonIndex = (y + scrollY) / ButtonSizeY;
+            sub = SubButtonType.Max;
+
+            if (buttonIndex >= 0 && buttonIndex < buttons.Count)
+            {
+                var subButtons = buttons[buttonIndex].GetSubButtons(out _);
+                if (subButtons != null)
+                {
+                    y -= (buttonIndex * ButtonSizeY - scrollY);
+
+                    for (int i = 0; i < subButtons.Length; i++)
+                    {
+                        int sx = Width - ScrollBarSizeX - 20 * (i + 1);
+                        int sy = 4;
+                        int dx = x - sx;
+                        int dy = y - sy;
+
+                        if (dx >= 0 && dx < 16 &&
+                            dy >= 0 && dy < 16)
+                        {
+                            sub = subButtons[i];
+                            break;
+                        }
+                        
+                    }
+                }
+
+                return buttonIndex;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -227,14 +347,13 @@ namespace FamiStudio
 
             if (isDraggingInstrument)
             {
-                var instrumentSrcIdx = instrumentDragIdx;
-                var instrumentDstIdx = ((e.Y + scrollY) / ButtonSizeY) - (App.Project.Songs.Count + 2) - 1;
+                var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
-                if (instrumentSrcIdx != instrumentDstIdx && instrumentDstIdx >= 0 && instrumentDstIdx < App.Project.Instruments.Count)
+                var instrumentSrc = instrumentDrag;
+                var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
+
+                if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null)
                 {
-                    var instrumentSrc = App.Project.Instruments[instrumentSrcIdx];
-                    var instrumentDst = App.Project.Instruments[instrumentDstIdx];
-
                     if (envelopeDragIdx == -1)
                     {
                         if (MessageBox.Show($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
@@ -268,7 +387,7 @@ namespace FamiStudio
         {
             isDraggingInstrument = false;
             mouseDragY = -1;
-            instrumentDragIdx = -1;
+            instrumentDrag = null;
             envelopeDragIdx = -1;
             UpdateCursor();
         }
@@ -293,118 +412,136 @@ namespace FamiStudio
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
             bool right  = e.Button.HasFlag(MouseButtons.Right);
 
-            var buttonIndex = (e.Y + scrollY) / ButtonSizeY;
-            var songIndex = buttonIndex - 1;
-            var instrumentIndex = buttonIndex - (App.Project.Songs.Count + 2);
-            var shiftY = (buttonIndex * ButtonSizeY - scrollY);
+            var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
-            if (left)
+            if (buttonIdx >= 0)
             {
-                if (songIndex == -1)
-                {
-                    if (GetButtonRect(1, shiftY).Contains(e.X, e.Y))
-                    {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                        App.Project.CreateSong();
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
-                    }
-                }
-                else if (instrumentIndex == -1)
-                {
-                    if (GetButtonRect(1, shiftY).Contains(e.X, e.Y))
-                    {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                        App.Project.CreateInstrument();
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
-                    }
-                }
-                else if (songIndex >= 0 && songIndex < App.Project.Songs.Count)
-                {
-                    selectedSong = App.Project.Songs[songIndex];
-                    SongSelected?.Invoke(selectedSong);
-                    ConditionalInvalidate();
-                    return;
-                }
-                else if (instrumentIndex >= 0 && instrumentIndex <= App.Project.Instruments.Count)
-                {
-                    selectedInstrument = instrumentIndex == 0 ? null : App.Project.Instruments[instrumentIndex - 1];
+                var button = buttons[buttonIdx];
 
-                    if (selectedInstrument != null)
+                if (left)
+                {
+                    if (button.type == ButtonType.SongHeader)
                     {
-                        instrumentDragIdx = instrumentIndex - 1;
-                        mouseDragY = e.Y;
-                    }
-
-                    if (selectedInstrument != null && GetButtonRect(4, shiftY).Contains(e.X, e.Y))
-                    {
-                        InstrumentEdited?.Invoke(selectedInstrument, Envelope.Volume);
-                        envelopeDragIdx = Envelope.Volume;
-                    }
-                    else if (selectedInstrument != null && GetButtonRect(3, shiftY).Contains(e.X, e.Y))
-                    {
-                        InstrumentEdited?.Invoke(selectedInstrument, Envelope.Pitch);
-                        envelopeDragIdx = Envelope.Pitch;
-                    }
-                    else if (selectedInstrument != null && GetButtonRect(2, shiftY).Contains(e.X, e.Y))
-                    {
-                        InstrumentEdited?.Invoke(selectedInstrument, Envelope.Arpeggio);
-                        envelopeDragIdx = Envelope.Arpeggio;
-                    }
-                    else if (GetButtonRect(1, shiftY).Contains(e.X, e.Y))
-                    {
-                        if (selectedInstrument == null)
+                        if (subButtonType == SubButtonType.Add)
                         {
-                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Max);
-                        }
-                        else
-                        {
-                            selectedInstrument.DutyCycle = (selectedInstrument.DutyCycle + 1) % 4;
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.Project.CreateSong();
+                            App.UndoRedoManager.EndTransaction();
+                            RefreshButtons();
                             ConditionalInvalidate();
                         }
                     }
-
-                    InstrumentSelected?.Invoke(selectedInstrument);
-                    ConditionalInvalidate();
-                }
-            }
-            else if (right)
-            {
-                instrumentIndex--;
-
-                if (songIndex >= 0 && songIndex < App.Project.Songs.Count && App.Project.Songs.Count > 1)
-                {
-                    var song = App.Project.Songs[songIndex];
-                    if (MessageBox.Show($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    else if (button.type == ButtonType.Song)
                     {
-                        bool selectNewSong = song == selectedSong;
-                        App.Stop();
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                        App.Project.DeleteSong(song);
-                        App.UndoRedoManager.EndTransaction();
-                        if (selectNewSong)
-                            selectedSong = App.Project.Songs[0];
+                        selectedSong = button.song;
                         SongSelected?.Invoke(selectedSong);
                         ConditionalInvalidate();
-                        return;
+                    }
+                    else if (button.type == ButtonType.InstrumentHeader)
+                    {
+                        if (subButtonType == SubButtonType.Add)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.Project.CreateInstrument();
+                            App.UndoRedoManager.EndTransaction();
+                            RefreshButtons();
+                            ConditionalInvalidate();
+                        }
+                    }
+                    else if (button.type == ButtonType.Instrument)
+                    {
+                        selectedInstrument = button.instrument;
+
+                        if (selectedInstrument != null)
+                        {
+                            instrumentDrag = selectedInstrument;
+                            mouseDragY = e.Y;
+                        }
+                    
+                        if (subButtonType == SubButtonType.Volume)
+                        {
+                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Volume);
+                            envelopeDragIdx = Envelope.Volume;
+                        }
+                        else if (subButtonType == SubButtonType.Pitch)
+                        {
+                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Pitch);
+                            envelopeDragIdx = Envelope.Pitch;
+                        }
+                        else if (subButtonType == SubButtonType.Arpeggio)
+                        {
+                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Arpeggio);
+                            envelopeDragIdx = Envelope.Arpeggio;
+                        }
+                        else if (subButtonType == SubButtonType.DPCM)
+                        {
+                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Max);
+                        }
+                        else if (subButtonType >= SubButtonType.DutyCycle0 && subButtonType <= SubButtonType.DutyCycle3)
+                        {
+                            selectedInstrument.DutyCycle = (selectedInstrument.DutyCycle + 1) % 4;
+                        }
+
+                        InstrumentSelected?.Invoke(selectedInstrument);
+                        ConditionalInvalidate();
                     }
                 }
-                else if (instrumentIndex >= 0 && instrumentIndex < App.Project.Instruments.Count)
+                else if (right)
                 {
-                    var instrument = App.Project.Instruments[instrumentIndex];
-                    if (MessageBox.Show($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (button.type == ButtonType.Song && App.Project.Songs.Count > 1)
                     {
-                        bool selectNewInstrument = instrument == selectedInstrument;
-                        App.StopInstrumentNoteAndWait();
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                        App.Project.DeleteInstrument(instrument);
-                        App.UndoRedoManager.EndTransaction();
-                        if (selectNewInstrument)
-                            selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
-                        SongSelected?.Invoke(selectedSong);
-                        ConditionalInvalidate();
-                        return;
+                        var song = button.song;
+                        if (MessageBox.Show($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        {
+                            bool selectNewSong = song == selectedSong;
+                            App.Stop();
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.Project.DeleteSong(song);
+                            App.UndoRedoManager.EndTransaction();
+                            if (selectNewSong)
+                                selectedSong = App.Project.Songs[0];
+                            SongSelected?.Invoke(selectedSong);
+                            RefreshButtons();
+                            ConditionalInvalidate();
+                        }
+                    }
+                    else if (button.type == ButtonType.Instrument && button.instrument != null)
+                    {
+                        var instrument = button.instrument;
+
+                        if (subButtonType == SubButtonType.Arpeggio ||
+                            subButtonType == SubButtonType.Pitch ||
+                            subButtonType == SubButtonType.Volume)
+                        {
+                            int envType = Envelope.Volume;
+
+                            switch (subButtonType)
+                            {
+                                case SubButtonType.Arpeggio: envType = Envelope.Arpeggio; break;
+                                case SubButtonType.Pitch: envType = Envelope.Pitch;    break;
+                            }
+
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);
+                            instrument.Envelopes[envType].Length = 0;
+                            App.UndoRedoManager.EndTransaction();
+                            ConditionalInvalidate();
+                        }
+                        else if (subButtonType == SubButtonType.Max)
+                        {
+                            if (MessageBox.Show($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                bool selectNewInstrument = instrument == selectedInstrument;
+                                App.StopInstrumentNoteAndWait();
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                                App.Project.DeleteInstrument(instrument);
+                                App.UndoRedoManager.EndTransaction();
+                                if (selectNewInstrument)
+                                    selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
+                                SongSelected?.Invoke(selectedSong);
+                                RefreshButtons();
+                                ConditionalInvalidate();
+                            }
+                        }
                     }
                 }
             }
@@ -419,67 +556,68 @@ namespace FamiStudio
         {
             base.OnMouseDoubleClick(e);
 
-            var buttonIndex = (e.Y + scrollY) / ButtonSizeY;
-            var songIndex = buttonIndex - 1;
-            var instrumentIndex = buttonIndex - (App.Project.Songs.Count + 2);
+            var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
-            if (songIndex >= 0 && songIndex < App.Project.Songs.Count)
+            if (buttonIdx >= 0)
             {
-                var song = App.Project.Songs[songIndex];
-                var dlg = new SongEditDialog(song)
+                var button = buttons[buttonIdx];
+
+                if (button.type == ButtonType.Song)
                 {
-                    StartPosition = FormStartPosition.Manual,
-                    Location = PointToScreen(new System.Drawing.Point(e.X - 210, e.Y))
-                };
-
-                if (dlg.ShowDialog() == DialogResult.OK)
-                {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                    App.Stop();
-                    App.Seek(0);
-
-                    if (App.Project.RenameSong(song, dlg.NewName))
-                    {
-                        song.Color = dlg.NewColor;
-                        song.Tempo = dlg.NewTempo;
-                        song.Speed = dlg.NewSpeed;
-                        song.Length = dlg.NewSongLength;
-                        song.PatternLength = dlg.NewPatternLength;
-                        song.BarLength = dlg.NewBarLength;
-                        ConditionalInvalidate();
-                        SongModified?.Invoke(song);
-                    }
-
-                    App.UndoRedoManager.EndTransaction();
-                }
-            }
-            else if (instrumentIndex > 0 && instrumentIndex <= App.Project.Instruments.Count)
-            {
-                var instrument = App.Project.Instruments[instrumentIndex - 1];
-                var shiftY = (buttonIndex * ButtonSizeY - scrollY);
-                var volRect = GetButtonRect(4, shiftY);
-
-                if (e.X < volRect.Left)
-                {
-                    var dlg = new RenameColorDialog(instrument.Name, instrument.Color)
+                    var song = button.song;
+                    var dlg = new SongEditDialog(song)
                     {
                         StartPosition = FormStartPosition.Manual,
-                        Location = PointToScreen(new System.Drawing.Point(e.X - 160, e.Y))
+                        Location = PointToScreen(new System.Drawing.Point(e.X - 210, e.Y))
                     };
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
-                        if (App.Project.RenameInstrument(instrument, dlg.NewName))
+                        App.Stop();
+                        App.Seek(0);
+
+                        if (App.Project.RenameSong(song, dlg.NewName))
                         {
-                            instrument.Color = dlg.NewColor;
-                            InstrumentColorChanged?.Invoke(instrument);
+                            song.Color = dlg.NewColor;
+                            song.Tempo = dlg.NewTempo;
+                            song.Speed = dlg.NewSpeed;
+                            song.Length = dlg.NewSongLength;
+                            song.PatternLength = dlg.NewPatternLength;
+                            song.BarLength = dlg.NewBarLength;
                             ConditionalInvalidate();
+                            SongModified?.Invoke(song);
                         }
 
                         App.UndoRedoManager.EndTransaction();
+                    }
+                }
+                else if (button.type == ButtonType.Instrument)
+                {
+                    var instrument = button.instrument;
+
+                    if (subButtonType == SubButtonType.Max)
+                    {
+                        var dlg = new RenameColorDialog(instrument.Name, instrument.Color)
+                        {
+                            StartPosition = FormStartPosition.Manual,
+                            Location = PointToScreen(new System.Drawing.Point(e.X - 160, e.Y))
+                        };
+
+                        if (dlg.ShowDialog() == DialogResult.OK)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                            if (App.Project.RenameInstrument(instrument, dlg.NewName))
+                            {
+                                instrument.Color = dlg.NewColor;
+                                InstrumentColorChanged?.Invoke(instrument);
+                                ConditionalInvalidate();
+                            }
+
+                            App.UndoRedoManager.EndTransaction();
+                        }
                     }
                 }
             }
@@ -495,6 +633,7 @@ namespace FamiStudio
             {
                 CancelDrag();
                 ClampScroll();
+                RefreshButtons();
                 ConditionalInvalidate();
             }
         }

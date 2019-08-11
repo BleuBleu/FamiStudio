@@ -6,7 +6,7 @@ namespace FamiStudio
 {
     public class Project
     {
-        public static int Version = 1;
+        public static int Version = 2;
         public static int MaxSampleSize = 0x4000;
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64];
@@ -15,14 +15,19 @@ namespace FamiStudio
         private List<Song> songs = new List<Song>();
         private int nextUniqueId = 100;
         private string filename = "";
+        private string name = "Untitled";
+        private string author = "Unkown";
+        private string copyright = "";
 
         public List<DPCMSample>    Samples        => samples;
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
         public int                 NextUniqueId   => nextUniqueId;
-        public string              Filename { get => filename; set => filename = value; }
-        public string              Name     { get => Path.GetFileNameWithoutExtension(filename); }
+        public string              Filename   { get => filename; set => filename = value; }
+        public string              Name       { get => name; }
+        public string              Author     { get => author; set => author = value; }
+        public string              Copyright  { get => copyright; set => copyright = value; }
 
         public Project(bool createSongAndInstrument = false)
         {
@@ -388,6 +393,13 @@ namespace FamiStudio
             if (!buffer.IsForUndoRedo)
             {
                 buffer.Serialize(ref nextUniqueId);
+            }
+
+            if (buffer.Version >= 2)
+            {
+                buffer.Serialize(ref name);
+                buffer.Serialize(ref author);
+                buffer.Serialize(ref copyright);
             }
 
             // DPCM samples
