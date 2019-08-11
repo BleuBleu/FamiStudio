@@ -332,10 +332,12 @@ namespace FamiStudio
 
         private void UpdateTitle()
         {
-            if (string.IsNullOrEmpty(project.Filename))
-                Text = "FamiStudio - New Project";
-            else
-                Text = "FamiStudio - " + project.Filename;
+            string projectFile = "New Project";
+
+            if (!string.IsNullOrEmpty(project.Filename))
+                projectFile = project.Filename;
+
+            Text = $"FamiStudio {Application.ProductVersion} - {projectFile}";
         }
 
         public void PlayInstrumentNote(int n, bool on)
