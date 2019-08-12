@@ -168,29 +168,29 @@
     </Compile>
     <Compile Include="Source\Utils\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\EditDPCMDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\EditDPCMDialog.Designer.cs">
-      <DependentUpon>EditDPCMDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\FamitoneExportDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\FamitoneExportDialog.Designer.cs">
       <DependentUpon>FamitoneExportDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\PropertyPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\PropertyPage.Designer.cs">
+      <DependentUpon>PropertyPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\PropertyDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\PropertyDialog.Designer.cs">
+      <DependentUpon>PropertyDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\SongEditDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\SongEditDialog.Designer.cs">
       <DependentUpon>SongEditDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\RenameColorDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\RenameColorDialog.Designer.cs">
-      <DependentUpon>RenameColorDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Sequencer.cs">
       <SubType>UserControl</SubType>
@@ -207,17 +207,17 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\EditDPCMDialog.resx">
-      <DependentUpon>EditDPCMDialog.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\FamitoneExportDialog.resx">
       <DependentUpon>FamitoneExportDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\PropertyPage.resx">
+      <DependentUpon>PropertyPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\PropertyDialog.resx">
+      <DependentUpon>PropertyDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\SongEditDialog.resx">
       <DependentUpon>SongEditDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\RenameColorDialog.resx">
-      <DependentUpon>RenameColorDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Nsf\nsf.bin" />
     <None Include="packages.config" />

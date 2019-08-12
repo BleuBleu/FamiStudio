@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Media;
 using System.Windows.Forms;
 using FamiStudio.Properties;
 using SharpDX.Direct2D1;
@@ -552,6 +553,21 @@ namespace FamiStudio
             }
         }
 
+        private int[] GenerateBarLengths(int patternLen)
+        {
+            var barLengths = new List<int>();
+
+            for (int i = patternLen; i >= 2; i--)
+            {
+                if (patternLen % i == 0)
+                {
+                    barLengths.Add(i);
+                }
+            }
+
+            return barLengths.ToArray();
+        }
+
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             base.OnMouseDoubleClick(e);
@@ -565,11 +581,21 @@ namespace FamiStudio
                 if (button.type == ButtonType.Song)
                 {
                     var song = button.song;
-                    var dlg = new SongEditDialog(song)
+                    var dlg = new PropertyDialog(250)
                     {
                         StartPosition = FormStartPosition.Manual,
-                        Location = PointToScreen(new System.Drawing.Point(e.X - 210, e.Y))
+                        Location = PointToScreen(new System.Drawing.Point(e.X - 250, e.Y))
                     };
+
+                    dlg.Properties.AddColoredString(song.Name, song.Color); // 0
+                    dlg.Properties.AddIntegerRange("Tempo :", song.Tempo, 32, 255); // 1
+                    dlg.Properties.AddIntegerRange("Speed :", song.Speed, 1, 31); // 2
+                    dlg.Properties.AddIntegerRange("Pattern Length :", song.PatternLength, 16, 256); // 3
+                    dlg.Properties.AddDomainRange("Bar Length :", GenerateBarLengths(song.PatternLength), song.BarLength); // 4
+                    dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, 128); // 5
+                    dlg.Properties.AddColor(song.Color); // 6
+                    dlg.Properties.Build();
+                    dlg.Properties.PropertyChanged += Properties_PropertyChanged;
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
@@ -578,20 +604,29 @@ namespace FamiStudio
                         App.Stop();
                         App.Seek(0);
 
-                        if (App.Project.RenameSong(song, dlg.NewName))
+                        var newName = dlg.Properties.GetPropertyValue<string>(0);
+
+                        if (App.Project.RenameSong(song, newName))
                         {
-                            song.Color = dlg.NewColor;
-                            song.Tempo = dlg.NewTempo;
-                            song.Speed = dlg.NewSpeed;
-                            song.Length = dlg.NewSongLength;
-                            song.PatternLength = dlg.NewPatternLength;
-                            song.BarLength = dlg.NewBarLength;
-                            ConditionalInvalidate();
+                            song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(6);
+                            song.Tempo = dlg.Properties.GetPropertyValue<int>(1);
+                            song.Speed = dlg.Properties.GetPropertyValue<int>(2);
+                            song.Length = dlg.Properties.GetPropertyValue<int>(5);
+                            song.PatternLength = dlg.Properties.GetPropertyValue<int>(3);
+                            song.BarLength = dlg.Properties.GetPropertyValue<int>(4);
                             SongModified?.Invoke(song);
+                            App.UndoRedoManager.EndTransaction();
+                        }
+                        else
+                        {
+                            App.UndoRedoManager.AbortTransaction();
+                            SystemSounds.Beep.Play();
                         }
 
-                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
                     }
+
+                    dlg.Properties.PropertyChanged -= Properties_PropertyChanged;
                 }
                 else if (button.type == ButtonType.Instrument)
                 {
@@ -599,30 +634,55 @@ namespace FamiStudio
 
                     if (subButtonType == SubButtonType.Max)
                     {
-                        var dlg = new RenameColorDialog(instrument.Name, instrument.Color)
+                        var dlg = new PropertyDialog(160)
                         {
                             StartPosition = FormStartPosition.Manual,
                             Location = PointToScreen(new System.Drawing.Point(e.X - 160, e.Y))
                         };
 
+                        dlg.Properties.AddColoredString(instrument.Name, instrument.Color);
+                        dlg.Properties.AddColor(instrument.Color);
+                        dlg.Properties.Build();
+
                         if (dlg.ShowDialog() == DialogResult.OK)
                         {
+                            var newName  = dlg.Properties.GetPropertyValue<string>(0);
+                            var newColor = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
-                            if (App.Project.RenameInstrument(instrument, dlg.NewName))
+                            if (App.Project.RenameInstrument(instrument, newName))
                             {
-                                instrument.Color = dlg.NewColor;
+                                instrument.Color = newColor;
                                 InstrumentColorChanged?.Invoke(instrument);
                                 ConditionalInvalidate();
+                                App.UndoRedoManager.EndTransaction();
                             }
-
-                            App.UndoRedoManager.EndTransaction();
+                            else
+                            {
+                                App.UndoRedoManager.AbortTransaction();
+                                SystemSounds.Beep.Play();
+                            }
                         }
                     }
                 }
             }
         }
-        
+
+        private void Properties_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            if (idx == 3)
+            {
+                var barLengths = GenerateBarLengths((int)value);
+                var barIdx = Array.IndexOf(barLengths, selectedSong.BarLength);
+
+                if (barIdx == -1)
+                    barIdx = barLengths.Length - 1;
+
+                props.UpdateDomainRange(4, barLengths, barLengths[barIdx]);
+            }
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref selectedSong);

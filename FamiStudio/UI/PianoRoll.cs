@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Media;
 using System.Windows.Forms;
 using FamiStudio.Properties;
 using SharpDX.Direct2D1;
@@ -854,19 +855,36 @@ namespace FamiStudio
                 var mapping = App.Project.SamplesMapping[noteValue];
                 if (left && mapping != null)
                 {
-                    var dlg = new EditDPCMDialog(mapping.Sample.Name, mapping.Pitch, mapping.Loop);
-                    dlg.Location = PointToScreen(new System.Drawing.Point(e.X, e.Y));
+                    var dlg = new PropertyDialog(160)
+                    {
+                        StartPosition = FormStartPosition.Manual,
+                        Location = PointToScreen(new System.Drawing.Point(e.X, e.Y))
+                    };
+
+                    dlg.Properties.AddColoredString(mapping.Sample.Name, Direct2DGraphics.ToDrawingColor4(Theme.LightGreyFillColor2));
+                    dlg.Properties.AddIntegerRange("Pitch :", mapping.Pitch, 0, 15);
+                    dlg.Properties.AddBoolean("Loop :", mapping.Loop);
+                    dlg.Properties.Build();
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
+                        var newName  = dlg.Properties.GetPropertyValue<string>(0);
+                        var newPitch = dlg.Properties.GetPropertyValue<int>(1);
+                        var newLoop  = dlg.Properties.GetPropertyValue<bool>(2);
+
                         App.Stop();
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
-                        if (App.Project.RenameSample(mapping.Sample, dlg.NewName))
+                        if (App.Project.RenameSample(mapping.Sample, newName))
                         {
-                            mapping.Pitch = dlg.NewPitch;
-                            mapping.Loop = dlg.NewLoop;
+                            mapping.Pitch = newPitch;
+                            mapping.Loop = newLoop;
+                            App.UndoRedoManager.EndTransaction();
                         }
-                        App.UndoRedoManager.EndTransaction();
+                        else
+                        {
+                            App.UndoRedoManager.AbortTransaction();
+                            SystemSounds.Beep.Play();
+                        }
                         ConditionalInvalidate();
                     }
                 }
