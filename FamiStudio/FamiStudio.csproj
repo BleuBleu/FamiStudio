@@ -186,12 +186,6 @@
     <Compile Include="UI\PropertyDialog.Designer.cs">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\SongEditDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\SongEditDialog.Designer.cs">
-      <DependentUpon>SongEditDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\Sequencer.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -215,9 +209,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\PropertyDialog.resx">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\SongEditDialog.resx">
-      <DependentUpon>SongEditDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Nsf\nsf.bin" />
     <None Include="packages.config" />
