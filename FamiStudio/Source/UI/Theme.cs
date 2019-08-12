@@ -150,7 +150,8 @@ namespace FamiStudio
             FontMediumBoldCenter.WordWrapping = WordWrapping.NoWrap;
 
             PrivateFontCollection = new PrivateFontCollection();
-            AddFontFromMemory(PrivateFontCollection);
+            AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Regular.ttf");
+            AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Bold.ttf");
 
             for (int j = 0; j < CustomColors.GetLength(1); j++)
             {
@@ -177,9 +178,9 @@ namespace FamiStudio
             CopyCursor = new Cursor(CopyCursorHandle);
         }
 
-        private static void AddFontFromMemory(PrivateFontCollection pfc)
+        private static void AddFontFromMemory(PrivateFontCollection pfc, string name)
         {
-            var fontStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Resources.Quicksand-Regular.ttf");
+            var fontStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
 
             byte[] fontdata = new byte[fontStream.Length];
             fontStream.Read(fontdata, 0, (int)fontStream.Length);

@@ -10,7 +10,7 @@ namespace FamiStudio
         const int ButtonNew = 0;
         const int ButtonOpen = 1;
         const int ButtonSave = 2;
-        const int ButtonFamitone = 3;
+        const int ButtonExport = 3;
         const int ButtonUndo = 4;
         const int ButtonRedo = 5;
         const int ButtonPlay = 6;
@@ -62,7 +62,7 @@ namespace FamiStudio
             buttons[ButtonNew] = new Button { X = 4, Y = 4, Bmp = g.ConvertBitmap(Resources.File), Click = OnNew };
             buttons[ButtonOpen] = new Button { X = 44, Y = 4, Bmp = g.ConvertBitmap(Resources.Open), Click = OnOpen };
             buttons[ButtonSave] = new Button { X = 84, Y = 4, Bmp = g.ConvertBitmap(Resources.Save), Click = OnSave, RightClick = OnSaveAs };
-            buttons[ButtonFamitone] = new Button { X = 124, Y = 4, Bmp = g.ConvertBitmap(Resources.ExportMusic), Click = OnExportFamitone, Enabled = OnExportFamitoneEnabled };
+            buttons[ButtonExport] = new Button { X = 124, Y = 4, Bmp = g.ConvertBitmap(Resources.ExportMusic), Click = OnExportFamitone, Enabled = OnExportFamitoneEnabled };
             buttons[ButtonUndo] = new Button { X = 164, Y = 4, Bmp = g.ConvertBitmap(Resources.Undo), Click = OnUndo, Enabled = OnUndoEnabled };
             buttons[ButtonRedo] = new Button { X = 204, Y = 4, Bmp = g.ConvertBitmap(Resources.Redo), Click = OnRedo, Enabled = OnRedoEnabled };
             buttons[ButtonPlay] = new Button { X = 436, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
@@ -72,7 +72,7 @@ namespace FamiStudio
             buttons[ButtonNew].ToolTip = "New Project (Ctrl-N)";
             buttons[ButtonOpen].ToolTip = "Open Project (Ctrl-O)";
             buttons[ButtonSave].ToolTip = "Save Project (Ctrl-S) [Right-Click: Save As...]";
-            buttons[ButtonFamitone].ToolTip = "Export to FamiTone2 (Ctrl+E)";
+            buttons[ButtonExport].ToolTip = "Export to various formats (Ctrl+E)";
             buttons[ButtonUndo].ToolTip = "Undo (Ctrl+Z)";
             buttons[ButtonRedo].ToolTip = "Redo (Ctrl+Y)";
             buttons[ButtonPlay].ToolTip = "Play/Pause (Space) [Ctrl+Space: Play pattern loop, Shift-Space: Play song loop]";

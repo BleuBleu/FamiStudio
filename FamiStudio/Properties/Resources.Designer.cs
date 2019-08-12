@@ -183,6 +183,26 @@ namespace FamiStudio.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ExportFamiTone2 {
+            get {
+                object obj = ResourceManager.GetObject("ExportFamiTone2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ExportFamiTracker {
+            get {
+                object obj = ResourceManager.GetObject("ExportFamiTracker", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap ExportMusic {
             get {
                 object obj = ResourceManager.GetObject("ExportMusic", resourceCulture);
@@ -193,9 +213,29 @@ namespace FamiStudio.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ExportNsf {
+            get {
+                object obj = ResourceManager.GetObject("ExportNsf", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap ExportSFX {
             get {
                 object obj = ResourceManager.GetObject("ExportSFX", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ExportWav {
+            get {
+                object obj = ResourceManager.GetObject("ExportWav", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

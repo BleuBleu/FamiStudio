@@ -272,7 +272,7 @@ namespace FamiStudio
 
                 // TODO: Once we have a real project name, we will use that.
                 var path = Path.GetDirectoryName(filename);
-                var projectname = Utils.MakeNiceAsmName(Path.GetFileNameWithoutExtension(project.Filename));
+                var projectname = Utils.MakeNiceAsmName(project.Name);
 
                 if (dmcFilename == null)
                 {

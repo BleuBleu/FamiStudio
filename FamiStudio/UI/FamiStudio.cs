@@ -188,34 +188,17 @@ namespace FamiStudio
             {
                 var sfd = new SaveFileDialog()
                 {
-                    Filter = "FamiStudio Files (*.fms)|*.fms|NES Sound File (*.nsf)|*.nsf|FamiTracker TXT Export (*.txt)|*.txt|WAV file of current song (*.wav)|*.wav",
+                    Filter = "FamiStudio Files (*.fms)|*.fms",
                     Title = "Save File"
                 };
 
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    var extension = Path.GetExtension(sfd.FileName).ToLower();
-                    if (extension == ".fms")
+                    success = ProjectFile.Save(project, sfd.FileName);
+                    if (success)
                     {
-                        success = ProjectFile.Save(project, sfd.FileName);
-                        if (success)
-                        {
-                            UpdateTitle();
-                            undoRedoManager.Clear();
-                        }
-                    }
-                    else if (extension == ".wav")
-                    {
-                        Stop(); // TODO: The WAV exporter uses the same APU as the song player.
-                        WaveFile.Save(song, sfd.FileName);
-                    }
-                    else if (extension == ".nsf")
-                    {
-                        NsfFile.Save(project, sfd.FileName);
-                    }
-                    else if (extension == ".txt")
-                    {
-                        FamitrackerFile.Save(project, sfd.FileName);
+                        UpdateTitle();
+                        undoRedoManager.Clear();
                     }
                 }
             }
@@ -236,6 +219,10 @@ namespace FamiStudio
 
         public bool ExportFamitone()
         {
+            ExportDialog dlg = new ExportDialog(project);
+            dlg.ShowDialog();
+
+            /*
             FamitoneExportDialog dlg = new FamitoneExportDialog(project);
 
             if (dlg.ShowDialog() == DialogResult.OK)
@@ -281,6 +268,7 @@ namespace FamiStudio
                     }
                 }
             }
+            */
 
             return true;
         }

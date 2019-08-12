@@ -57,10 +57,16 @@ namespace FamiStudio
             public fixed byte programSize[3];
         };
 
-        public unsafe static bool Save(Project project, string filename)
+        public unsafe static bool Save(Project originalProject, string filename, int[] songIds, string name, string author, string copyright)
         {
             try
             {
+                if (songIds.Length == 0)
+                    return false;
+
+                var project = originalProject.Clone();
+                project.RemoveAllSongsBut(songIds);
+
                 using (var file = new FileStream(filename, FileMode.Create))
                 {
                     // Header
@@ -86,6 +92,14 @@ namespace FamiStudio
                     header.banks[5] = 5;
                     header.banks[6] = 6;
                     header.banks[7] = 7;
+
+                    var nameBytes      = Encoding.ASCII.GetBytes(name);
+                    var artistBytes    = Encoding.ASCII.GetBytes(author);
+                    var copyrightBytes = Encoding.ASCII.GetBytes(copyright);
+
+                    Marshal.Copy(nameBytes,      0, new IntPtr(header.song),      Math.Min(31, nameBytes.Length));
+                    Marshal.Copy(artistBytes,    0, new IntPtr(header.artist),    Math.Min(31, artistBytes.Length));
+                    Marshal.Copy(copyrightBytes, 0, new IntPtr(header.copyright), Math.Min(31, copyrightBytes.Length));
 
                     var headerBytes = new byte[sizeof(NsfHeader)];
                     Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);

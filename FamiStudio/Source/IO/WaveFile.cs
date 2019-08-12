@@ -34,25 +34,31 @@ namespace FamiStudio
             public int subChunk2Size;
         };
 
-        public unsafe static void Save(Song song, string filename)
+        public unsafe static void Save(Song song, string filename, int sampleRate)
         {
-            var channels = new ChannelState[5]
-            {
-                new SquareChannelState(0, 0),
-                new SquareChannelState(0, 1),
-                new TriangleChannelState(0, 2),
-                new NoiseChannelState(0, 3),
-                new DPCMChannelState(0, 4)
-            };
-
             var advance = true;
             var tempoCounter = 0;
             var playPattern = 0;
             var playNote = 0;
             var speed = song.Speed;
             var wavBytes = new List<byte>();
+            var apuIndex = NesApu.APU_WAV_EXPORT;
+            var dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
 
-            NesApu.Reset(0);
+            NesApu.NesApuInit(apuIndex, sampleRate, dmcCallback);
+            NesApu.Reset(apuIndex);
+
+            var channels = new ChannelState[5]
+            {
+                new SquareChannelState(apuIndex, 0),
+                new SquareChannelState(apuIndex, 1),
+                new TriangleChannelState(apuIndex, 2),
+                new NoiseChannelState(apuIndex, 3),
+                new DPCMChannelState(apuIndex, 4)
+            };
+
+            for (int i = 0; i < 5; i++)
+                NesApu.NesApuEnableChannel(apuIndex, i, 1);
 
             while (true)
             {
@@ -79,14 +85,14 @@ namespace FamiStudio
                     channel.UpdateAPU();
                 }
 
-                NesApu.NesApuEndFrame(0);
+                NesApu.NesApuEndFrame(apuIndex);
 
-                int numTotalSamples = NesApu.NesApuSamplesAvailable(0);
+                int numTotalSamples = NesApu.NesApuSamplesAvailable(apuIndex);
                 byte[] samples = new byte[numTotalSamples * 2];
 
                 fixed (byte* ptr = &samples[0])
                 {
-                    NesApu.NesApuReadSamples(0, new IntPtr(ptr), numTotalSamples);
+                    NesApu.NesApuReadSamples(apuIndex, new IntPtr(ptr), numTotalSamples);
                 }
 
                 wavBytes.AddRange(samples);
@@ -100,7 +106,6 @@ namespace FamiStudio
 
             using (var file = new FileStream(filename, FileMode.Create))
             {
-                
                 var header = new WaveHeader();
 
                 // RIFF WAVE Header
@@ -120,7 +125,7 @@ namespace FamiStudio
                 header.subChunk1Id[3] = (byte)' ';
                 header.audioFormat = 1; // FOR PCM
                 header.numChannels = 1; // 1 for MONO, 2 for stereo
-                header.sampleRate = 44100; // ie 44100 hertz, cd quality audio
+                header.sampleRate = sampleRate; // ie 44100 hertz, cd quality audio
                 header.bitsPerSample = 16; // 
                 header.byteRate = header.sampleRate * header.numChannels * header.bitsPerSample / 8;
                 header.blockAlign = (short)(header.numChannels * header.bitsPerSample / 8);

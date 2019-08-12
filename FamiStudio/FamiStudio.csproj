@@ -151,6 +151,12 @@
     <Compile Include="UI\FamiStudio.Designer.cs">
       <DependentUpon>FamiStudio.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\ExportDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\ExportDialog.Designer.cs">
+      <DependentUpon>ExportDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\PaddedCheckedListBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -168,12 +174,6 @@
     </Compile>
     <Compile Include="Source\Utils\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\FamitoneExportDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\FamitoneExportDialog.Designer.cs">
-      <DependentUpon>FamitoneExportDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\PropertyPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -201,8 +201,8 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\FamitoneExportDialog.resx">
-      <DependentUpon>FamitoneExportDialog.cs</DependentUpon>
+    <EmbeddedResource Include="UI\ExportDialog.resx">
+      <DependentUpon>ExportDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\PropertyPage.resx">
       <DependentUpon>PropertyPage.cs</DependentUpon>
@@ -267,6 +267,10 @@
     <None Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\ExportWav.png" />
+    <None Include="Resources\ExportNsf.png" />
+    <None Include="Resources\ExportFamiTracker.png" />
+    <None Include="Resources\ExportFamiTone2.png" />
     <None Include="Resources\DPCMSmall.png" />
     <None Include="Resources\NoiseSmall.png" />
     <None Include="Resources\SquareSmall.png" />

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -75,6 +76,11 @@ namespace FamiStudio
         public Song GetSong(int id)
         {
             return songs.Find(s => s.Id == id);
+        }
+
+        public Song GetSong(string name)
+        {
+            return songs.Find(s => s.Name == name);
         }
 
         public Instrument GetInstrument(int id)
@@ -325,6 +331,20 @@ namespace FamiStudio
             return size;
         }
 
+        public void RemoveAllSongsBut(int[] songIds)
+        {
+            foreach (var song in songs)
+            {
+                if (Array.IndexOf(songIds, song.Id) < 0)
+                {
+                    DeleteSong(song);
+                }
+            }
+
+            DeleteUnusedInstruments();
+            DeleteUnusedSamples();
+        }
+
         public void DeleteUnusedInstruments()
         {
             var usedInstruments = new HashSet<Instrument>();
@@ -352,6 +372,44 @@ namespace FamiStudio
             }
 
             instruments = new List<Instrument>(usedInstruments);
+        }
+
+        public void DeleteUnusedSamples()
+        {
+            var usedSamples = new HashSet<DPCMSample>();
+
+            foreach (var song in songs)
+            {
+                var channel = song.Channels[Channel.DPCM];
+
+                for (int p = 0; p < song.Length; p++)
+                {
+                    var pattern = channel.PatternInstances[p];
+                    if (pattern != null)
+                    {
+                        for (int i = 0; i < song.PatternLength; i++)
+                        {
+                            var note = pattern.Notes[i];
+                            if (note.IsValid && !note.IsStop && note.Instrument == null && 
+                                samplesMapping[note.Value] != null && 
+                                samplesMapping[note.Value].Sample != null)
+                            {
+                                usedSamples.Add(samplesMapping[note.Value].Sample);
+                            }
+                        }
+                    }
+                }
+            }
+
+            samples = new List<DPCMSample>(usedSamples);
+
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null && !usedSamples.Contains(samplesMapping[i].Sample))
+                {
+                    samplesMapping[i] = null;
+                }
+            }
         }
 
         public void SerializeDPCMState(ProjectBuffer buffer)

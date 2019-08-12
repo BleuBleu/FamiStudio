@@ -15,7 +15,7 @@ namespace FamiStudio
         protected const int OutputDelay = NumAudioBuffers - NumGraphicsBuffers;
 
         protected int apuIndex;
-        NesApu.DmcReadDelegate dmcCallback;
+        protected NesApu.DmcReadDelegate dmcCallback;
 
         protected XAudio2Stream xaudio2Stream;
         protected Thread playerThread;
@@ -44,14 +44,9 @@ namespace FamiStudio
             }
         }
 
-        static int DmcReadCallback(IntPtr data, int addr)
-        {
-            return FamiStudioForm.StaticProject.GetSampleForAddress(addr - 0xc000);
-        }
-
         public virtual void Initialize()
         {
-            dmcCallback = new NesApu.DmcReadDelegate(DmcReadCallback);
+            dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
             NesApu.NesApuInit(apuIndex, SampleRate, dmcCallback);
             xaudio2Stream = new XAudio2Stream(SampleRate, 16, 1, BufferSize, NumAudioBuffers, AudioBufferFillCallback);
         }

@@ -122,12 +122,13 @@ namespace FamiStudio
             return textBox;
         }
 
-        private TextBox CreateTextBox(string txt)
+        private TextBox CreateTextBox(string txt, int maxLength)
         {
             var textBox = new TextBox();
 
             textBox.Text = txt;
             textBox.Font = font;
+            textBox.MaxLength = maxLength;
 
             return textBox;
         }
@@ -251,7 +252,7 @@ namespace FamiStudio
 
             for (int i = 0; i < values.Length; i++)
             {
-                listBox.Items.Add(values[i], selected[i]);
+                listBox.Items.Add(values[i], selected != null ? selected[i] : true);
             }
 
             listBox.IntegralHeight = false;
@@ -273,14 +274,14 @@ namespace FamiStudio
                 });
         }
 
-        public void AddString(string label, string value)
+        public void AddString(string label, string value, int maxLength = 0)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.String,
                     label = CreateLabel(label),
-                    control = CreateTextBox(value)
+                    control = CreateTextBox(value, maxLength)
                 });
         }
 
@@ -354,7 +355,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.StringListMulti,
-                    //label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label) : null,
                     control = CreateCheckedListBox(values, selected)
                 });
         }

@@ -397,9 +397,10 @@ namespace FamiStudio
             }
         }
 
-        public static bool Save(Project originalProject, string filename)
+        public static bool Save(Project originalProject, string filename, int[] songIds)
         {
             var project = originalProject.Clone();
+            project.RemoveAllSongsBut(songIds);
 
             ConvertPitchEnvelopes(project);
             var envelopes = MergeIdenticalEnvelopes(project);
