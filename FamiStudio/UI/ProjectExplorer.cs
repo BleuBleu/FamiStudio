@@ -625,8 +625,6 @@ namespace FamiStudio
 
                         ConditionalInvalidate();
                     }
-
-                    dlg.Properties.PropertyChanged -= Properties_PropertyChanged;
                 }
                 else if (button.type == ButtonType.Instrument)
                 {
@@ -647,13 +645,12 @@ namespace FamiStudio
                         if (dlg.ShowDialog() == DialogResult.OK)
                         {
                             var newName  = dlg.Properties.GetPropertyValue<string>(0);
-                            var newColor = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
 
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
                             if (App.Project.RenameInstrument(instrument, newName))
                             {
-                                instrument.Color = newColor;
+                                instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
                                 InstrumentColorChanged?.Invoke(instrument);
                                 ConditionalInvalidate();
                                 App.UndoRedoManager.EndTransaction();
@@ -671,7 +668,7 @@ namespace FamiStudio
 
         private void Properties_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            if (idx == 3)
+            if (idx == 3) // 3 = pattern length.
             {
                 var barLengths = GenerateBarLengths((int)value);
                 var barIdx = Array.IndexOf(barLengths, selectedSong.BarLength);
@@ -679,7 +676,7 @@ namespace FamiStudio
                 if (barIdx == -1)
                     barIdx = barLengths.Length - 1;
 
-                props.UpdateDomainRange(4, barLengths, barLengths[barIdx]);
+                props.UpdateDomainRange(4, barLengths, barLengths[barIdx]); // 4 = bar length.
             }
         }
 

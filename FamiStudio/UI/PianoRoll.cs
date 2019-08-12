@@ -869,15 +869,13 @@ namespace FamiStudio
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         var newName  = dlg.Properties.GetPropertyValue<string>(0);
-                        var newPitch = dlg.Properties.GetPropertyValue<int>(1);
-                        var newLoop  = dlg.Properties.GetPropertyValue<bool>(2);
 
                         App.Stop();
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
                         if (App.Project.RenameSample(mapping.Sample, newName))
                         {
-                            mapping.Pitch = newPitch;
-                            mapping.Loop = newLoop;
+                            mapping.Pitch = dlg.Properties.GetPropertyValue<int>(1);
+                            mapping.Loop = dlg.Properties.GetPropertyValue<bool>(2);
                             App.UndoRedoManager.EndTransaction();
                         }
                         else
