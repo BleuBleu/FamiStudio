@@ -93,6 +93,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
+        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_C51B2C6F5B8EB68199D7E91BD7D1BC99"
         "OwnerKey" = "8:_08ABB2DDB70E10C039F78967922FAD29"
         "MsmSig" = "8:_UNDEFINED"
@@ -107,6 +113,12 @@
         {
         "MsmKey" = "8:_C51B2C6F5B8EB68199D7E91BD7D1BC99"
         "OwnerKey" = "8:_5E9917F8EC7F628283FE8FC184E91162"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F5856227EA094ABDB33A33C4B8060B3C"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -143,6 +155,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_22A1362FC71278D331596B4CAF60BB72"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -444,6 +462,37 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_68F38BC81F0EC8ABA97B80F723386F61"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+                "ScatterAssemblies"
+                {
+                    "_68F38BC81F0EC8ABA97B80F723386F61"
+                    {
+                    "Name" = "8:System.Net.Http.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Net.Http.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C51B2C6F5B8EB68199D7E91BD7D1BC99"
             {
             "AssemblyRegister" = "3:1"
@@ -473,6 +522,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F5856227EA094ABDB33A33C4B8060B3C"
+            {
+            "SourcePath" = "8:Demo Songs\\DuckTales - The Moon.fms"
+            "TargetName" = "8:DuckTales - The Moon.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
         }
@@ -517,7 +586,7 @@
                     "{9EF0B969-E518-4E46-987F-47570745A589}:_480746F9AE674AEFA02C8BA1191EE4A2"
                     {
                     "Name" = "8:Demo Songs"
-                    "AlwaysCreate" = "11:FALSE"
+                    "AlwaysCreate" = "11:TRUE"
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
                     "Property" = "8:_1DC7B328893C4FF390F22C681EED7789"
@@ -577,14 +646,14 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
         "ProductCode" = "8:{E4DBB547-9E27-4366-838D-D55FA30A1368}"
-        "PackageCode" = "8:{E2A1CDED-FF13-4E53-A566-422DCAB9883B}"
+        "PackageCode" = "8:{5D0C8CB4-CE6F-4201-A4ED-2D91BC946F7F}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
-        "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.0"
+        "InstallAllUsers" = "11:TRUE"
+        "ProductVersion" = "8:1.1.0"
         "Manufacturer" = "8:BleuBleu"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -592,7 +661,7 @@
         "Subject" = "8:"
         "ARPCONTACT" = "8:BleuBleu"
         "Keywords" = "8:"
-        "ARPCOMMENTS" = "8:FamiStudio"
+        "ARPCOMMENTS" = "8:FamiStudio 1.1.0"
         "ARPURLINFOABOUT" = "8:"
         "ARPPRODUCTICON" = "8:"
         "ARPIconIndex" = "3:0"
@@ -697,6 +766,20 @@
         }
         "Shortcut"
         {
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_4FDAFD844A23403D830CB73690E3FDF9"
+            {
+            "Name" = "8:FamiStudio Demo Songs"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:32512"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Folder" = "8:_502895A100E348DAA0391738AD1300BB"
+            "WorkingFolder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
+            "Icon" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+            "Feature" = "8:"
+            }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_6AE47143EBD24EA9A571B4734BD7D569"
             {
             "Name" = "8:FamiStudio"
