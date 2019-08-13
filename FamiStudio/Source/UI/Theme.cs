@@ -26,6 +26,7 @@ namespace FamiStudio
         public static TextFormat FontSmallBold;
         public static TextFormat FontMediumBold;
         public static TextFormat FontMediumBoldCenter;
+        public static TextFormat FontMediumBoldCenterEllipsis;
         public static TextFormat FontBigBold;
         public static TextFormat FontHuge;
 
@@ -148,6 +149,14 @@ namespace FamiStudio
             FontMediumBoldCenter = new TextFormat(directWriteFactory, "Quicksand", fontCollection, FontWeight.Bold, FontStyle.Normal, FontStretch.Normal, 12.0f);
             FontMediumBoldCenter.TextAlignment = TextAlignment.Center;
             FontMediumBoldCenter.WordWrapping = WordWrapping.NoWrap;
+
+            FontMediumBoldCenterEllipsis = new TextFormat(directWriteFactory, "Quicksand", fontCollection, FontWeight.Bold, FontStyle.Normal, FontStretch.Normal, 12.0f);
+            FontMediumBoldCenterEllipsis.TextAlignment = TextAlignment.Center;
+            FontMediumBoldCenterEllipsis.WordWrapping = WordWrapping.NoWrap;
+            var trimmingSign = new EllipsisTrimming(directWriteFactory, FontMediumBoldCenterEllipsis);
+            FontMediumBoldCenterEllipsis.SetTrimming(new Trimming() { Delimiter = (int)')', Granularity = TrimmingGranularity.Character, DelimiterCount = 1 }, trimmingSign);
+
+
 
             PrivateFontCollection = new PrivateFontCollection();
             AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Regular.ttf");

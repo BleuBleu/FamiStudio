@@ -26,7 +26,7 @@ namespace FamiStudio
         public List<Song>          Songs          => songs;
         public int                 NextUniqueId   => nextUniqueId;
         public string              Filename   { get => filename; set => filename = value; }
-        public string              Name       { get => name; }
+        public string              Name       { get => name; set => name = value; }
         public string              Author     { get => author; set => author = value; }
         public string              Copyright  { get => copyright; set => copyright = value; }
 

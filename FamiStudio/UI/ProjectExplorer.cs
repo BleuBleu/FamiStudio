@@ -104,7 +104,11 @@ namespace FamiStudio
 
             public TextFormat GetFont(Song selectedSong, Instrument selectedInstrument)
             {
-                if (type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.ProjectSettings)
+                if (type == ButtonType.ProjectSettings)
+                {
+                    return Theme.FontMediumBoldCenterEllipsis;
+                }
+                if (type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader)
                 {
                     return Theme.FontMediumBoldCenter;
                 }
@@ -225,7 +229,7 @@ namespace FamiStudio
 
                 g.PushTranslation(0, y);
                 g.FillAndDrawRectangleHalfPixel(0, 0, actualWidth, ButtonSizeY, g.GetVerticalGradientBrush(button.GetColor(), ButtonSizeY, 0.8f), theme.BlackBrush);
-                g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? 0 : 24, 5, theme.BlackBrush, actualWidth);
+                g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? 5 : 24, 5, theme.BlackBrush, actualWidth - 10);
 
                 if (icon != null)
                 {
@@ -578,7 +582,32 @@ namespace FamiStudio
             {
                 var button = buttons[buttonIdx];
 
-                if (button.type == ButtonType.Song)
+                if (button.type == ButtonType.ProjectSettings)
+                {
+                    var dlg = new PropertyDialog(250)
+                    {
+                        StartPosition = FormStartPosition.Manual,
+                        Location = PointToScreen(new System.Drawing.Point(e.X - 250, e.Y))
+                    };
+
+                    var project = App.Project;
+
+                    dlg.Properties.AddString("Title :", project.Name, 31); // 0
+                    dlg.Properties.AddString("Author :", project.Author, 31); // 1
+                    dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
+                    dlg.Properties.Build();
+
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                        project.Name = dlg.Properties.GetPropertyValue<string>(0);
+                        project.Author = dlg.Properties.GetPropertyValue<string>(1);
+                        project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                    }
+                }
+                else if (button.type == ButtonType.Song)
                 {
                     var song = button.song;
                     var dlg = new PropertyDialog(250)

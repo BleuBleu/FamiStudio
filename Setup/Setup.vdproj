@@ -526,8 +526,8 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F5856227EA094ABDB33A33C4B8060B3C"
             {
-            "SourcePath" = "8:Demo Songs\\DuckTales - The Moon.fms"
-            "TargetName" = "8:DuckTales - The Moon.fms"
+            "SourcePath" = "8:Demo Songs\\DuckTales.fms"
+            "TargetName" = "8:DuckTales.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
