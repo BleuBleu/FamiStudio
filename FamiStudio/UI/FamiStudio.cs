@@ -220,60 +220,10 @@ namespace FamiStudio
             return true;
         }
 
-        public bool ExportFamitone()
+        public bool Export()
         {
-            ExportDialog dlg = new ExportDialog(project);
-            dlg.ShowDialog();
-
-            /*
-            FamitoneExportDialog dlg = new FamitoneExportDialog(project);
-
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                var selectedSongs = dlg.SelectedSongIds;
-
-                if (selectedSongs.Length > 0)
-                {
-                    if (dlg.SeparateFiles)
-                    {
-                        var folderBrowserDialog = new FolderBrowserDialog();
-                        folderBrowserDialog.Description = "Select the export folder";
-
-                        if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
-                        {
-                            var ext = dlg.ExportFormat == FamitoneMusicFile.OutputFormat.CA65 ? ".s" : ".asm";
-                            var projectName = Path.GetFileNameWithoutExtension(project.Filename);
-
-                            foreach (var songId in selectedSongs)
-                            {
-                                var song = project.GetSong(songId);
-                                var formattedName = dlg.NamePattern.Replace("{project}", projectName).Replace("{song}", song.Name);
-                                var filename = Path.Combine(folderBrowserDialog.SelectedPath, Utils.MakeNiceAsmName(formattedName) + ext);
-
-                                FamitoneMusicFile f = new FamitoneMusicFile();
-                                f.Save(project, new int[] { songId }, true, filename, dlg.ExportFormat);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        var sfd = new SaveFileDialog()
-                        {
-                            Filter = "FamiTone2 Assembly Files (*.s;*.asm)|*.s;*.asm",
-                            Title = "Export FamiTone2 File"
-                        };
-
-                        if (sfd.ShowDialog() == DialogResult.OK)
-                        {
-                            FamitoneMusicFile f = new FamitoneMusicFile();
-                            f.Save(project, selectedSongs, false, sfd.FileName, dlg.ExportFormat);
-                        }
-                    }
-                }
-            }
-            */
-
-            return true;
+            var dlg = new ExportDialog(project);
+            return dlg.ShowDialog() == DialogResult.OK;
         }
 
         private void CheckForNewRelease()
@@ -525,7 +475,7 @@ namespace FamiStudio
             }
             else if (ctrl && e.KeyCode == Keys.E)
             {
-                ExportFamitone();
+                Export();
             }
             else if (ctrl && e.KeyCode == Keys.O)
             {
