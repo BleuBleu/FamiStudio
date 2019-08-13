@@ -418,6 +418,21 @@ namespace FamiStudio
 
             const int margin = 5;
 
+            int maxLabelWidth = 0;
+
+            for (int i = 0; i < properties.Count; i++)
+            {
+                var prop = properties[i];
+
+                if (prop.label != null)
+                {
+                    // This is really ugly. We cant measure the labels unless they are added.
+                    Controls.Add(prop.label);
+                    maxLabelWidth = Math.Max(maxLabelWidth, prop.label.Width);
+                    Controls.Remove(prop.label);
+                }
+            }
+
             int widthNoMargin = Width - (margin * 2);
             int totalHeight = margin;
 
@@ -428,18 +443,18 @@ namespace FamiStudio
 
                 if (prop.label != null)
                 {
-                    height = prop.label.Height;
-
                     prop.label.Left    = margin;
                     prop.label.Top     = totalHeight;
-                    prop.label.Width   = widthNoMargin / 2;
+                    //prop.label.Width   = widthNoMargin / 2;
 
-                    prop.control.Left  = margin + widthNoMargin / 2;
+                    prop.control.Left  = maxLabelWidth + margin;
                     prop.control.Top   = totalHeight;
-                    prop.control.Width = widthNoMargin / 2;
+                    prop.control.Width = widthNoMargin - maxLabelWidth - margin;
 
                     Controls.Add(prop.label);
                     Controls.Add(prop.control);
+
+                    height = prop.label.Height;
                 }
                 else
                 {
