@@ -267,6 +267,7 @@
     <None Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\Export.png" />
     <None Include="Resources\ExportWav.png" />
     <None Include="Resources\ExportNsf.png" />
     <None Include="Resources\ExportFamiTracker.png" />
