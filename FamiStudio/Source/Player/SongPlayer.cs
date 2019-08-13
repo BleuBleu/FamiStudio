@@ -45,7 +45,7 @@ namespace FamiStudio
             Debug.Assert(sampleQueue.Count == 0);
 
             // HACK: This is a mess. The frame we pass here has the output delay baked in. Need to refactor.
-            playFrame = frame + 1;
+            //playFrame = frame + 1;
 
             stopEvent.Reset();
             frameEvent.Set();
