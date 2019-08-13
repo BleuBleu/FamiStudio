@@ -655,7 +655,7 @@ namespace FamiStudio
                         ConditionalInvalidate();
                     }
                 }
-                else if (button.type == ButtonType.Instrument)
+                else if (button.type == ButtonType.Instrument && button.instrument != null)
                 {
                     var instrument = button.instrument;
 
