@@ -291,7 +291,7 @@ namespace FamiStudio
                 var env = instrument.Envelopes[Envelope.Pitch];
                 if (!env.IsEmpty)
                 {
-                    for (int i = env.Length - 1; i > 0; i--)
+                    for (int i = 1; i < env.Length; i++)
                     {
                         env.Values[i] -= env.Values[i - 1];
                     }
@@ -300,7 +300,7 @@ namespace FamiStudio
                     {
                         // Make relative.
                         int delta = 0;
-                        for (int i = 0; i < env.Length; i++)
+                        for (int i = env.Loop; i < env.Length; i++)
                         {
                             delta += env.Values[i];
                         }
