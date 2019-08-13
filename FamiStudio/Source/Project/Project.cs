@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -6,7 +7,7 @@ namespace FamiStudio
 {
     public class Project
     {
-        public static int Version = 1;
+        public static int Version = 2;
         public static int MaxSampleSize = 0x4000;
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64];
@@ -15,14 +16,19 @@ namespace FamiStudio
         private List<Song> songs = new List<Song>();
         private int nextUniqueId = 100;
         private string filename = "";
+        private string name = "Untitled";
+        private string author = "Unkown";
+        private string copyright = "";
 
         public List<DPCMSample>    Samples        => samples;
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
         public int                 NextUniqueId   => nextUniqueId;
-        public string              Filename { get => filename; set => filename = value; }
-        public string              Name     { get => Path.GetFileNameWithoutExtension(filename); }
+        public string              Filename   { get => filename; set => filename = value; }
+        public string              Name       { get => name; }
+        public string              Author     { get => author; set => author = value; }
+        public string              Copyright  { get => copyright; set => copyright = value; }
 
         public Project(bool createSongAndInstrument = false)
         {
@@ -70,6 +76,11 @@ namespace FamiStudio
         public Song GetSong(int id)
         {
             return songs.Find(s => s.Id == id);
+        }
+
+        public Song GetSong(string name)
+        {
+            return songs.Find(s => s.Name == name);
         }
 
         public Instrument GetInstrument(int id)
@@ -287,22 +298,8 @@ namespace FamiStudio
 
                 foreach (var song in songs)
                 {
-                    for (int p = 0; p < song.Length; p++) 
-                    {
-                        var pattern = song.Channels[Channel.DPCM].PatternInstances[p];
-                        if (pattern != null)
-                        {
-                            for (int i = 0; i < song.PatternLength; i++)
-                            {
-                                var note = pattern.Notes[i];
-                                if (note.IsValid && !note.IsStop)
-                                {
-                                    if (samplesMapping[note.Value] != null && samplesMapping[note.Value].Sample != null)
-                                        return true;
-                                }
-                            }
-                        }
-                    }
+                    if (song.UsesDpcm)
+                        return true;
                 }
 
                 return false;
@@ -334,6 +331,20 @@ namespace FamiStudio
             return size;
         }
 
+        public void RemoveAllSongsBut(int[] songIds)
+        {
+            foreach (var song in songs)
+            {
+                if (Array.IndexOf(songIds, song.Id) < 0)
+                {
+                    DeleteSong(song);
+                }
+            }
+
+            DeleteUnusedInstruments();
+            DeleteUnusedSamples();
+        }
+
         public void DeleteUnusedInstruments()
         {
             var usedInstruments = new HashSet<Instrument>();
@@ -361,6 +372,44 @@ namespace FamiStudio
             }
 
             instruments = new List<Instrument>(usedInstruments);
+        }
+
+        public void DeleteUnusedSamples()
+        {
+            var usedSamples = new HashSet<DPCMSample>();
+
+            foreach (var song in songs)
+            {
+                var channel = song.Channels[Channel.DPCM];
+
+                for (int p = 0; p < song.Length; p++)
+                {
+                    var pattern = channel.PatternInstances[p];
+                    if (pattern != null)
+                    {
+                        for (int i = 0; i < song.PatternLength; i++)
+                        {
+                            var note = pattern.Notes[i];
+                            if (note.IsValid && !note.IsStop && note.Instrument == null && 
+                                samplesMapping[note.Value] != null && 
+                                samplesMapping[note.Value].Sample != null)
+                            {
+                                usedSamples.Add(samplesMapping[note.Value].Sample);
+                            }
+                        }
+                    }
+                }
+            }
+
+            samples = new List<DPCMSample>(usedSamples);
+
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null && !usedSamples.Contains(samplesMapping[i].Sample))
+                {
+                    samplesMapping[i] = null;
+                }
+            }
         }
 
         public void SerializeDPCMState(ProjectBuffer buffer)
@@ -402,6 +451,13 @@ namespace FamiStudio
             if (!buffer.IsForUndoRedo)
             {
                 buffer.Serialize(ref nextUniqueId);
+            }
+
+            if (buffer.Version >= 2)
+            {
+                buffer.Serialize(ref name);
+                buffer.Serialize(ref author);
+                buffer.Serialize(ref copyright);
             }
 
             // DPCM samples

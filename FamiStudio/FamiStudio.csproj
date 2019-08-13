@@ -92,6 +92,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -109,8 +112,10 @@
     </Compile>
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
+    <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
+    <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Player\ChannelState.cs" />
     <Compile Include="Source\Player\DPCMChannelState.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
@@ -146,6 +151,12 @@
     <Compile Include="UI\FamiStudio.Designer.cs">
       <DependentUpon>FamiStudio.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\ExportDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\ExportDialog.Designer.cs">
+      <DependentUpon>ExportDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\PaddedCheckedListBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -163,29 +174,17 @@
     </Compile>
     <Compile Include="Source\Utils\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\EditDPCMDialog.cs">
+    <Compile Include="UI\PropertyPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\PropertyPage.Designer.cs">
+      <DependentUpon>PropertyPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\PropertyDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\EditDPCMDialog.Designer.cs">
-      <DependentUpon>EditDPCMDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\FamitoneExportDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\FamitoneExportDialog.Designer.cs">
-      <DependentUpon>FamitoneExportDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\SongEditDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\SongEditDialog.Designer.cs">
-      <DependentUpon>SongEditDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\RenameColorDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\RenameColorDialog.Designer.cs">
-      <DependentUpon>RenameColorDialog.cs</DependentUpon>
+    <Compile Include="UI\PropertyDialog.Designer.cs">
+      <DependentUpon>PropertyDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Sequencer.cs">
       <SubType>UserControl</SubType>
@@ -202,18 +201,16 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\EditDPCMDialog.resx">
-      <DependentUpon>EditDPCMDialog.cs</DependentUpon>
+    <EmbeddedResource Include="UI\ExportDialog.resx">
+      <DependentUpon>ExportDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\FamitoneExportDialog.resx">
-      <DependentUpon>FamitoneExportDialog.cs</DependentUpon>
+    <EmbeddedResource Include="UI\PropertyPage.resx">
+      <DependentUpon>PropertyPage.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\SongEditDialog.resx">
-      <DependentUpon>SongEditDialog.cs</DependentUpon>
+    <EmbeddedResource Include="UI\PropertyDialog.resx">
+      <DependentUpon>PropertyDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\RenameColorDialog.resx">
-      <DependentUpon>RenameColorDialog.cs</DependentUpon>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Nsf\nsf.bin" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -270,6 +267,10 @@
     <None Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\ExportWav.png" />
+    <None Include="Resources\ExportNsf.png" />
+    <None Include="Resources\ExportFamiTracker.png" />
+    <None Include="Resources\ExportFamiTone2.png" />
     <None Include="Resources\DPCMSmall.png" />
     <None Include="Resources\NoiseSmall.png" />
     <None Include="Resources\SquareSmall.png" />

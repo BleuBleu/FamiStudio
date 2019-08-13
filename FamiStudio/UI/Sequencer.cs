@@ -12,6 +12,7 @@ using Bitmap = SharpDX.Direct2D1.Bitmap;
 using PixelFormat = SharpDX.Direct2D1.PixelFormat;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Media;
 
 namespace FamiStudio
 {
@@ -668,15 +669,22 @@ namespace FamiStudio
                 {
                     bool multiplePatternSelected = (maxSelectedChannelIdx != minSelectedChannelIdx) || (minSelectedPatternIdx != maxSelectedPatternIdx);
 
-                    var dlg = new RenameColorDialog(pattern.Name, pattern.Color, !multiplePatternSelected)
+                    var dlg = new PropertyDialog(160)
                     {
                         StartPosition = FormStartPosition.Manual,
                         Location = PointToScreen(new System.Drawing.Point(e.X, e.Y))
                     };
 
+                    dlg.Properties.AddColoredString(pattern.Name, pattern.Color);
+                    dlg.Properties.AddColor(pattern.Color);
+                    dlg.Properties.Build();
+
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+
+                        var newName  = dlg.Properties.GetPropertyValue<string>(0);
+                        var newColor = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
 
                         if (multiplePatternSelected)
                         {
@@ -684,17 +692,23 @@ namespace FamiStudio
                             {
                                 for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                                 {
-                                    Song.Channels[i].PatternInstances[j].Color = dlg.NewColor;
+                                    Song.Channels[i].PatternInstances[j].Color = newColor;
                                 }
                             }
+                            App.UndoRedoManager.EndTransaction();
                         }
-                        else if (Song.Channels[selectedChannel].RenamePattern(pattern, dlg.NewName))
+                        else if (Song.Channels[selectedChannel].RenamePattern(pattern, newName))
                         {
-                            pattern.Color = dlg.NewColor;
+                            pattern.Color = newColor;
+                            App.UndoRedoManager.EndTransaction();
+                        }
+                        else
+                        {
+                            App.UndoRedoManager.AbortTransaction();
+                            SystemSounds.Beep.Play();
                         }
 
                         ConditionalInvalidate();
-                        App.UndoRedoManager.EndTransaction();
                     }
                 }
             }

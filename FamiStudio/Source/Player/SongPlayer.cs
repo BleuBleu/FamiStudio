@@ -130,25 +130,20 @@ namespace FamiStudio
                     foreach (var channel in channels)
                     {
                         channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed);
+                    }
+
+                    foreach (var channel in channels)
+                    {
                         channel.Advance(song, playPattern, playNote);
                         channel.UpdateEnvelopes();
                         channel.UpdateAPU();
                     }
 
-                    // Tempo/speed logic.
-                    tempoCounter += song.Tempo * 256 / 150; // NTSC
-
-                    if ((tempoCounter >> 8) == speed)
+                    int dummy1 = 0;
+                    bool dummy2 = false;
+                    if (!AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref dummy1, ref dummy2))
                     {
-                        tempoCounter -= (speed << 8);
-                        if (++playNote == song.PatternLength)
-                        {
-                            playNote = 0;
-                            if (++playPattern == song.Length)
-                            {
-                                playPattern = 0;
-                            }
-                        }
+                        break;
                     }
                 }
 
@@ -170,9 +165,16 @@ namespace FamiStudio
                 // Advance to next note.
                 if (advance)
                 {
+                    // We process the effects before since one channel may have
+                    // a skip/jump and we need to process that first before advancing 
+                    // the song.
                     foreach (var channel in channels)
                     {
                         channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed);
+                    }
+
+                    foreach (var channel in channels)
+                    {
                         channel.Advance(song, playPattern, playNote);
                     }
 
@@ -194,30 +196,9 @@ namespace FamiStudio
 
                 EndFrameAndQueueSamples();
 
-                // Tempo/speed logic.
-                tempoCounter += song.Tempo * 256 / 150; // NTSC
-
-                if ((tempoCounter >> 8) == speed)
+                if (!AdvanceTempo(song, speed, loopMode, ref tempoCounter, ref playPattern, ref playNote, ref playFrame, ref advance))
                 {
-                    tempoCounter -= (speed << 8);
-
-                    if (++playNote == song.PatternLength)
-                    {
-                        playNote = 0;
-
-                        if (loopMode != LoopMode.Pattern)
-                        {
-                            if (++playPattern == song.Length)
-                            {
-                                if (loopMode == LoopMode.None)
-                                    break;
-                                playPattern = 0;
-                            }
-                        }
-                    }
-
-                    playFrame = playPattern * song.PatternLength + playNote;
-                    advance = true;
+                    break;
                 }
             }
 

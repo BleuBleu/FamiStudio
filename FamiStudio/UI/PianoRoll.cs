@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Media;
 using System.Windows.Forms;
 using FamiStudio.Properties;
 using SharpDX.Direct2D1;
@@ -854,19 +855,34 @@ namespace FamiStudio
                 var mapping = App.Project.SamplesMapping[noteValue];
                 if (left && mapping != null)
                 {
-                    var dlg = new EditDPCMDialog(mapping.Sample.Name, mapping.Pitch, mapping.Loop);
-                    dlg.Location = PointToScreen(new System.Drawing.Point(e.X, e.Y));
+                    var dlg = new PropertyDialog(160)
+                    {
+                        StartPosition = FormStartPosition.Manual,
+                        Location = PointToScreen(new System.Drawing.Point(e.X, e.Y))
+                    };
+
+                    dlg.Properties.AddColoredString(mapping.Sample.Name, Direct2DGraphics.ToDrawingColor4(Theme.LightGreyFillColor2));
+                    dlg.Properties.AddIntegerRange("Pitch :", mapping.Pitch, 0, 15);
+                    dlg.Properties.AddBoolean("Loop :", mapping.Loop);
+                    dlg.Properties.Build();
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
+                        var newName  = dlg.Properties.GetPropertyValue<string>(0);
+
                         App.Stop();
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
-                        if (App.Project.RenameSample(mapping.Sample, dlg.NewName))
+                        if (App.Project.RenameSample(mapping.Sample, newName))
                         {
-                            mapping.Pitch = dlg.NewPitch;
-                            mapping.Loop = dlg.NewLoop;
+                            mapping.Pitch = dlg.Properties.GetPropertyValue<int>(1);
+                            mapping.Loop = dlg.Properties.GetPropertyValue<bool>(2);
+                            App.UndoRedoManager.EndTransaction();
                         }
-                        App.UndoRedoManager.EndTransaction();
+                        else
+                        {
+                            App.UndoRedoManager.AbortTransaction();
+                            SystemSounds.Beep.Play();
+                        }
                         ConditionalInvalidate();
                     }
                 }
@@ -1218,7 +1234,7 @@ namespace FamiStudio
                 patternIdx = noteIdx / Song.PatternLength;
                 noteIdx %= Song.PatternLength;
 
-                return true;
+                return patternIdx < Song.Length;
             }
             else
             {
@@ -1235,7 +1251,7 @@ namespace FamiStudio
             noteIdx   %= Song.PatternLength;
             noteValue  = (byte)(NumNotes - Math.Min((y + scrollY - HeaderSizeY) / NoteSizeY, NumNotes));
 
-            return (x > WhiteKeySizeX && y > HeaderSizeY);
+            return (x > WhiteKeySizeX && y > HeaderSizeY && patternIdx < Song.Length);
         }
 
         private bool GetEnvelopeValueForCoord(int x, int y, out int idx, out sbyte value)
@@ -1256,9 +1272,9 @@ namespace FamiStudio
                 {
                     while (noteIdx >= 0 && !pattern.Notes[noteIdx].IsValid) noteIdx--;
 
-                    if (noteIdx >= 0 && pattern.Notes[noteIdx].Value == noteValue)
+                    if (noteIdx >= 0)
                     {
-                        return true;
+                        return pattern.Notes[noteIdx].Value == noteValue;
                     }
                 }
 

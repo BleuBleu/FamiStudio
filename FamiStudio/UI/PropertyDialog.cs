@@ -1,25 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FamiStudio
-{
-    public partial class EditDPCMDialog : Form
+{ 
+    public partial class PropertyDialog : Form
     {
-        public unsafe EditDPCMDialog(string name, int pitch, bool loop)
+        public PropertyPage Properties => propertyPage;
+
+        public PropertyDialog(int width = 200)
         {
             InitializeComponent();
-
-            textBox1.Text = name;
-            textBox1.Font = new Font(Theme.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
-            textBox1.BackColor = Color.FromArgb(198, 205, 218);
-            textBox1.SelectionStart = textBox1.Text.Length;
-            textBox1.DeselectAll();
-
-            upDownPitch.Value = pitch;
-            checkLoop.Checked = loop;
-
-            DialogResult = DialogResult.Cancel;
+            Width = width;
         }
 
         protected override CreateParams CreateParams
@@ -32,13 +31,20 @@ namespace FamiStudio
             }
         }
 
-        public string NewName => textBox1.Text;
-        public int NewPitch => (int)upDownPitch.Value;
-        public bool NewLoop => checkLoop.Checked;
-
-        private void EditDPCMDialog_KeyDown(object sender, KeyEventArgs e)
+        private void PropertyDialog_Shown(object sender, EventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
+            Height = propertyPage.Height + buttonNo.Height + 5;
+        }
+        
+        private void propertyPage_PropertyWantsClose(int idx)
+        {
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+        
+        private void PropertyDialog_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Return)
             {
                 DialogResult = DialogResult.OK;
                 Close();

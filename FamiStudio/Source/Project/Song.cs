@@ -153,6 +153,34 @@ namespace FamiStudio
             return name;
         }
 
+        public bool UsesDpcm
+        {
+            get
+            {
+                for (int p = 0; p < songLength; p++)
+                {
+                    var pattern = channels[Channel.DPCM].PatternInstances[p];
+                    if (pattern != null)
+                    {
+                        for (int i = 0; i < patternLength; i++)
+                        {
+                            var note = pattern.Notes[i];
+                            if (note.IsValid && !note.IsStop)
+                            {
+                                if (project.SamplesMapping[note.Value] != null &&
+                                    project.SamplesMapping[note.Value].Sample != null)
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return false;
+            }
+        }
+        
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsReading)

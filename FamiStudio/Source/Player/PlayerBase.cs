@@ -15,7 +15,7 @@ namespace FamiStudio
         protected const int OutputDelay = NumAudioBuffers - NumGraphicsBuffers;
 
         protected int apuIndex;
-        NesApu.DmcReadDelegate dmcCallback;
+        protected NesApu.DmcReadDelegate dmcCallback;
 
         protected XAudio2Stream xaudio2Stream;
         protected Thread playerThread;
@@ -44,14 +44,9 @@ namespace FamiStudio
             }
         }
 
-        static int DmcReadCallback(IntPtr data, int addr)
-        {
-            return FamiStudioForm.StaticProject.GetSampleForAddress(addr - 0xc000);
-        }
-
         public virtual void Initialize()
         {
-            dmcCallback = new NesApu.DmcReadDelegate(DmcReadCallback);
+            dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
             NesApu.NesApuInit(apuIndex, SampleRate, dmcCallback);
             xaudio2Stream = new XAudio2Stream(SampleRate, 16, 1, BufferSize, NumAudioBuffers, AudioBufferFillCallback);
         }
@@ -63,6 +58,37 @@ namespace FamiStudio
                 playerThread.Join();
 
             xaudio2Stream.Dispose();
+        }
+
+        public static bool AdvanceTempo(Song song, int speed, LoopMode loopMode, ref int tempoCounter, ref int playPattern, ref int playNote, ref int playFrame, ref bool advance)
+        {
+            // Tempo/speed logic.
+            tempoCounter += song.Tempo * 256 / 150; // NTSC
+
+            if ((tempoCounter >> 8) == speed)
+            {
+                tempoCounter -= (speed << 8);
+
+                if (++playNote == song.PatternLength)
+                {
+                    playNote = 0;
+
+                    if (loopMode != LoopMode.Pattern)
+                    {
+                        if (++playPattern == song.Length)
+                        {
+                            if (loopMode == LoopMode.None)
+                                return false;
+                            playPattern = 0;
+                        }
+                    }
+                }
+
+                playFrame = playPattern * song.PatternLength + playNote;
+                advance = true;
+            }
+
+            return true;
         }
 
         protected unsafe void EndFrameAndQueueSamples()

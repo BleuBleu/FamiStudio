@@ -25,6 +25,12 @@ namespace FamiStudio
                     stream.Read(data, 0, 4);
                     int loadVersion = BitConverter.ToInt32(data, 0);
 
+                    if (loadVersion > Project.Version)
+                    {
+                        // TODO: Error message.
+                        return null;
+                    }
+
                     var buffer = new byte[stream.Length - stream.Position];
                     stream.Read(buffer, 0, buffer.Length);
                     buffer = Compression.DecompressBytes(buffer);

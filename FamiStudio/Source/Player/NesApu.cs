@@ -30,6 +30,7 @@ namespace FamiStudio
 
         public const int APU_SONG       = 0;
         public const int APU_INSTRUMENT = 1;
+        public const int APU_WAV_EXPORT = 2;
 
         public const int APU_PL1_VOL    = 0x4000;
         public const int APU_PL1_SWEEP  = 0x4001;
@@ -58,6 +59,11 @@ namespace FamiStudio
             0x011c,0x010c,0x00fd,0x00ee,0x00e1,0x00d4,0x00c8,0x00bd,0x00b2,0x00a8,0x009f,0x0096,0x008d,0x0085,0x007e,0x0076,
             0x0070,0x0069,0x0063,0x005e,0x0058,0x0053,0x004f,0x004a,0x0046,0x0042,0x003e,0x003a,0x0037,0x0034,0x0031,0x002e
         };
+
+        public static int DmcReadCallback(IntPtr data, int addr)
+        {
+            return FamiStudioForm.StaticProject.GetSampleForAddress(addr - 0xc000);
+        }
 
         public static void Reset(int apuIdx)
         {

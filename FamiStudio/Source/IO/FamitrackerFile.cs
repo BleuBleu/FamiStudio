@@ -203,7 +203,7 @@ namespace FamiStudio
                         {
                             pattern.Notes[rowIdx].Value = 0;
                         }
-                        else if (noteData[0] != "...")
+                        else if (noteData[0] != "..."&& noteData[0] != "===")
                         {
                             int famitoneNote;
 
@@ -291,14 +291,15 @@ namespace FamiStudio
                 var env = instrument.Envelopes[Envelope.Pitch];
                 if (!env.IsEmpty)
                 {
-                    for (int i = 1; i < env.Length; i++)
+                    // Make relative.
+                    for (int i = env.Length - 1; i > 0; i--)
                     {
                         env.Values[i] -= env.Values[i - 1];
                     }
 
                     if (env.Loop >= 0)
                     {
-                        // Make relative.
+                        // Make the looping par sum to zero.
                         int delta = 0;
                         for (int i = env.Loop; i < env.Length; i++)
                         {
@@ -396,9 +397,10 @@ namespace FamiStudio
             }
         }
 
-        public static bool Save(Project originalProject, string filename)
+        public static bool Save(Project originalProject, string filename, int[] songIds)
         {
             var project = originalProject.Clone();
+            project.RemoveAllSongsBut(songIds);
 
             ConvertPitchEnvelopes(project);
             var envelopes = MergeIdenticalEnvelopes(project);
