@@ -283,7 +283,7 @@ namespace FamiStudio
             }
         }
 
-        private int FindEffect(Song song, int patternIdx, int noteIdx, int effect)
+        private int FindEffectParam(Song song, int patternIdx, int noteIdx, int effect)
         {
             foreach (var channel in song.Channels)
             {
@@ -297,11 +297,42 @@ namespace FamiStudio
             return -1;
         }
 
+        private int FindEffectParam(Song song, int effect)
+        {
+            for (int p = 0; p < song.Length; p++)
+            {
+                for (int i = 0; i < song.PatternLength; i++)
+                {
+                    int fx = FindEffectParam(song, p, i, effect);
+                    if (fx >= 0)
+                    {
+                        return fx;
+                    }
+                }
+            }
+
+            return -1;
+        }
+
+        private int FindEffectPosition(Song song, int patternIdx, int effect)
+        {
+            for (int i = 0; i < song.PatternLength; i++)
+            {
+                var fx = FindEffectParam(song, patternIdx, i, effect);
+                if (fx >= 0)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         private int FindSkip(Song song, int patternIdx)
         {
             for (int i = 0; i < song.PatternLength; i++)
             {
-                var skip = FindEffect(song, patternIdx, i, Note.EffectSkip);
+                var skip = FindEffectParam(song, patternIdx, i, Note.EffectSkip);
                 if (skip >= 0)
                 {
                     return i;
@@ -311,28 +342,12 @@ namespace FamiStudio
             return -1;
         }
 
-        private int FindLoopPoint(Song song)
-        {
-            for (int p = 0; p < song.Length; p++)
-            {
-                for (int i = 0; i < song.PatternLength; i++)
-                {
-                    int fx = FindEffect(song, p, i, Note.EffectJump);
-                    if (fx >= 0)
-                    {
-                        return fx;
-                    }
-                }
-            }
-
-            return 0;
-        }
 
         private int OutputSong(Song song, int songIdx, int speedChannel, int factor, bool test)
         {
             var packedPatternBuffers = new List<List<byte>>(globalPacketPatternBuffers);
             var size = 0;
-            var loopPoint = FindLoopPoint(song) * factor;
+            var loopPoint = Math.Max(0, FindEffectParam(song, Note.EffectJump)) * factor;
             var emptyPattern = new Pattern(-1, song, 0, "");
 
             for (int c = 0; c < song.Channels.Length; c++)
@@ -371,7 +386,8 @@ namespace FamiStudio
                     }
 
                     var i = 0;
-                    var patternLength = FindSkip(song, p);
+                    var patternLength = FindEffectPosition(song, p, Note.EffectSkip);
+                    var jumpFound = false;
 
                     if (patternLength >= 0)
                     {
@@ -380,7 +396,16 @@ namespace FamiStudio
                     else
                     {
                         isSkipping = false;
-                        patternLength = song.PatternLength;
+
+                        patternLength = FindEffectPosition(song, p, Note.EffectJump);
+                        if (patternLength >= 0)
+                        {
+                            jumpFound = true;
+                        }
+                        else
+                        {
+                            patternLength = song.PatternLength;
+                        }
                     }
 
                     var numValidNotes = patternLength;
@@ -391,7 +416,7 @@ namespace FamiStudio
 
                         if (isSpeedChannel)
                         {
-                            var speed = FindEffect(song, p, i, Note.EffectSpeed);
+                            var speed = FindEffectParam(song, p, i, Note.EffectSpeed);
                             if (speed >= 0)
                             {
                                 patternBuffer.Add(0xfb);
@@ -419,8 +444,8 @@ namespace FamiStudio
                                 var nextNote1 = pattern.Notes[i + 0];
                                 var nextNote2 = pattern.Notes[i + 1];
 
-                                var valid1 = nextNote1.IsValid || (isSpeedChannel && FindEffect(song, p, i + 0, Note.EffectSpeed) >= 0);
-                                var valid2 = nextNote2.IsValid || (isSpeedChannel && FindEffect(song, p, i + 1, Note.EffectSpeed) >= 0);
+                                var valid1 = nextNote1.IsValid || (isSpeedChannel && FindEffectParam(song, p, i + 0, Note.EffectSpeed) >= 0);
+                                var valid2 = nextNote2.IsValid || (isSpeedChannel && FindEffectParam(song, p, i + 1, Note.EffectSpeed) >= 0);
 
                                 if (!valid1 && valid2)
                                 {
@@ -440,7 +465,7 @@ namespace FamiStudio
                             {
                                 var emptyNote = pattern.Notes[i];
 
-                                if (numEmptyNotes >= MaxRepeatCount || emptyNote.IsValid || (isSpeedChannel && FindEffect(song, p, i, Note.EffectSpeed) >= 0))
+                                if (numEmptyNotes >= MaxRepeatCount || emptyNote.IsValid || (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
                                     break;
 
                                 i++;
@@ -454,42 +479,50 @@ namespace FamiStudio
 
                     int matchingPatternIdx = -1;
 
-                    if (patternBuffer.Count > 4)
+                    if (patternBuffer.Count > 0)
                     {
-                        for (int j = 0; j < packedPatternBuffers.Count; j++)
+                        if (patternBuffer.Count > 4)
                         {
-                            if (packedPatternBuffers[j].SequenceEqual(patternBuffer))
+                            for (int j = 0; j < packedPatternBuffers.Count; j++)
                             {
-                                matchingPatternIdx = j;
-                                break;
+                                if (packedPatternBuffers[j].SequenceEqual(patternBuffer))
+                                {
+                                    matchingPatternIdx = j;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                    if (matchingPatternIdx < 0)
-                    {
-                        if (packedPatternBuffers.Count > MaxPackedPatterns)
-                            return -1; // TODO: Error.
-
-                        packedPatternBuffers.Add(patternBuffer);
-
-                        size += patternBuffer.Count;
-
-                        if (!test)
+                        if (matchingPatternIdx < 0)
                         {
-                            lines.Add($"{ll}ref{packedPatternBuffers.Count - 1}:");
-                            lines.Add($"\t{db} {String.Join(",", patternBuffer.Select(x => $"${x:x2}"))}");
+                            if (packedPatternBuffers.Count > MaxPackedPatterns)
+                                return -1; // TODO: Error.
+
+                            packedPatternBuffers.Add(patternBuffer);
+
+                            size += patternBuffer.Count;
+
+                            if (!test)
+                            {
+                                lines.Add($"{ll}ref{packedPatternBuffers.Count - 1}:");
+                                lines.Add($"\t{db} {String.Join(",", patternBuffer.Select(x => $"${x:x2}"))}");
+                            }
+                        }
+                        else
+                        {
+                            if (!test)
+                            {
+                                lines.Add($"\t{db} $ff,${numValidNotes:x2}");
+                                lines.Add($"\t{dw} {ll}ref{matchingPatternIdx}");
+                            }
+
+                            size += 4;
                         }
                     }
-                    else
-                    {
-                        if (!test)
-                        {
-                            lines.Add($"\t{db} $ff,${numValidNotes:x2}");
-                            lines.Add($"\t{dw} {ll}ref{matchingPatternIdx}");
-                        }
 
-                        size += 4;
+                    if (jumpFound)
+                    {
+                        break;
                     }
                 }
 
