@@ -198,7 +198,6 @@ namespace FamiStudio
                     if (success)
                     {
                         UpdateTitle();
-                        undoRedoManager.Clear();
                     }
                 }
             }
@@ -207,7 +206,11 @@ namespace FamiStudio
                 success = ProjectFile.Save(project, project.Filename);
             }
 
-            if (!success)
+            if (success)
+            {
+                undoRedoManager.Clear();
+            }
+            else
             {
                 MessageBox.Show("An error happened while saving.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
