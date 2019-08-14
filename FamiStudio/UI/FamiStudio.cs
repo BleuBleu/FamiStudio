@@ -278,7 +278,9 @@ namespace FamiStudio
             if (!string.IsNullOrEmpty(project.Filename))
                 projectFile = project.Filename;
 
-            Text = $"FamiStudio {Application.ProductVersion} - {projectFile}";
+            var version = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
+
+            Text = $"FamiStudio {version} - {projectFile}";
         }
 
         public void PlayInstrumentNote(int n, bool on)
