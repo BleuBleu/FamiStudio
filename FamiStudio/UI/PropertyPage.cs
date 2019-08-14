@@ -449,7 +449,7 @@ namespace FamiStudio
 
                     prop.control.Left  = maxLabelWidth + margin;
                     prop.control.Top   = totalHeight;
-                    prop.control.Width = widthNoMargin - maxLabelWidth - margin;
+                    prop.control.Width = widthNoMargin - maxLabelWidth;
 
                     Controls.Add(prop.label);
                     Controls.Add(prop.control);
