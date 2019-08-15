@@ -95,6 +95,7 @@ namespace FamiStudio
             zoomLevel = 1;
             selectedChannel = 0;
             ClearSelection();
+            InvalidatePatternCache();
         }
 
         private void ClearSelection()
