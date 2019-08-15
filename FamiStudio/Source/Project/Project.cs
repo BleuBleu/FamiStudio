@@ -333,8 +333,10 @@ namespace FamiStudio
 
         public void RemoveAllSongsBut(int[] songIds)
         {
-            foreach (var song in songs)
+            for (int i = songs.Count - 1; i >= 0; i--)
             {
+                var song = songs[i];
+
                 if (Array.IndexOf(songIds, song.Id) < 0)
                 {
                     DeleteSong(song);
