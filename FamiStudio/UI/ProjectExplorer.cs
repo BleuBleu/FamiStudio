@@ -645,6 +645,7 @@ namespace FamiStudio
                             song.BarLength = dlg.Properties.GetPropertyValue<int>(4);
                             SongModified?.Invoke(song);
                             App.UndoRedoManager.EndTransaction();
+                            RefreshButtons();
                         }
                         else
                         {
@@ -681,6 +682,7 @@ namespace FamiStudio
                             {
                                 instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
                                 InstrumentColorChanged?.Invoke(instrument);
+                                RefreshButtons();
                                 ConditionalInvalidate();
                                 App.UndoRedoManager.EndTransaction();
                             }
