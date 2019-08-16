@@ -534,6 +534,8 @@ namespace FamiStudio
 
         private void projectExplorer_SongSelected(Song song)
         {
+            Stop();
+            this.currentFrame = 0;
             this.song = song;
             sequencer.InvalidatePatternCache();
             pianoRoll.ClampScroll();
