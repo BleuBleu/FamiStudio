@@ -439,6 +439,7 @@ namespace FamiStudio
                     if (ctrl)
                     {
                         LoopMode = LoopMode.Pattern;
+                        Seek(currentFrame / song.PatternLength * song.PatternLength);
                     }
                     else if (shift)
                     {
