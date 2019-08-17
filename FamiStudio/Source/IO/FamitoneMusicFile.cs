@@ -105,8 +105,6 @@ namespace FamiStudio
 
             for (int j = 0; j < env.Length; j++)
             {
-                if (j == env.Loop) ptr_loop = ptr;
-
                 byte val;
 
                 if (env.Values[j] < -64)
@@ -118,7 +116,7 @@ namespace FamiStudio
 
                 val += 192;
 
-                if (prev_val != val || j == env.Length - 1)
+                if (prev_val != val || j == env.Loop || j == env.Length - 1)
                 {
                     if (rle_cnt != 0)
                     {
@@ -140,6 +138,8 @@ namespace FamiStudio
                         rle_cnt = 0;
                     }
 
+                    if (j == env.Loop) ptr_loop = ptr;
+
                     data[ptr++] = val;
 
                     prev_val = val;
@@ -151,9 +151,13 @@ namespace FamiStudio
             }
 
             if (ptr_loop == 0xff)
+            {
                 ptr_loop = (byte)(ptr - 1);
-            else if (data[ptr_loop] < 128)
-                ++ptr_loop;//ptr_loop increased if it points at RLEd repeats of a previous value
+            }
+            else
+            {
+                Debug.Assert(data[ptr_loop] >= 128); // Cant be jumping back to the middle of RLE.
+            }
 
             data[ptr++] = 0;
             data[ptr++] = ptr_loop;
