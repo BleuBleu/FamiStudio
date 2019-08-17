@@ -1,0 +1,17 @@
+Version 1.2:
+- MIDI improvements.
+- PAL support
+- Release notes
+- Volume track
+- Look at list of features from FT3/4/5 (nesdoug), see which ones would be interesting.
+
+Backlog:
+- Freeze on some atom processors?
+- Fix crash on startup when there are no audio device 
+- Proper error messages when soemthing fails (save, etc.)
+- Add taskbar progress bar + color to show playback state
+- VRC6, FDS, etc.
+- Mono port (need help)
+- High DPI support.
+- Copy-paste support for notes/effects.
+- Refactor UI draw code, split in small functions.
