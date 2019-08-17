@@ -13,12 +13,6 @@ namespace FamiStudio
         // Text version.
         private List<string> lines = new List<string>();
 
-        //// Binary version.
-        //private List<byte> bytes = new List<byte>();
-        //private List<int> envOffsets = new List<int>();
-        //private List<int> refOffsets = new List<int>();
-        //private int 
-
         private string db = ".byte";
         private string dw = ".word";
         private string ll = "@";
@@ -611,19 +605,23 @@ namespace FamiStudio
             project = originalProject.Clone();
             project.Filename = originalProject.Filename;
 
-            for (int i = 0; i < project.Songs.Count; i++)
+            // NULL = All songs.
+            if (songIds != null)
             {
-                if (!songIds.Contains(project.Songs[i].Id))
+                for (int i = 0; i < project.Songs.Count; i++)
                 {
-                    project.DeleteSong(project.Songs[i]);
-                    i--;
+                    if (!songIds.Contains(project.Songs[i].Id))
+                    {
+                        project.DeleteSong(project.Songs[i]);
+                        i--;
+                    }
                 }
             }
 
             project.DeleteUnusedInstruments(); 
         }
 
-        public bool Save(Project originalProject, int[] songIds, bool separateSongs, string filename, OutputFormat format, string dmcFilename = null)
+        public bool Save(Project originalProject, int[] songIds, OutputFormat format, bool separateSongs, string filename, string dmcFilename)
         {
             SetupProject(originalProject, songIds);
             SetupFormat(format);
@@ -690,7 +688,7 @@ namespace FamiStudio
                             }
                             else if (valStr.Contains("FT_DPCM_PTR"))
                             {
-                                valNum = Convert.ToInt32(valStr.Split('+')[0], 16) + (dpcmOffset & 0xff);
+                                valNum = Convert.ToInt32(valStr.Split('+')[0], 16) + ((dpcmOffset & 0x3fff) >> 6);
                             }
                             else
                             {
@@ -752,7 +750,7 @@ namespace FamiStudio
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, false, tempAsmFilename, OutputFormat.ASM6, tempDmcFilename);
+            Save(project, songIds, OutputFormat.ASM6, false, tempAsmFilename, tempDmcFilename);
 
             songBytes = ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
             dpcmBytes = project.UsesSamples ? File.ReadAllBytes(tempDmcFilename) : null;

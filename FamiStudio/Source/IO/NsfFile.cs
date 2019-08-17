@@ -114,10 +114,25 @@ namespace FamiStudio
 
                     file.Write(nsfBinBuffer, 0, nsfBinBuffer.Length);
 
-                    var projectUsesSamples = project.UsesSamples;
+                    var numDpcmPages = 0;
+                    var dpcmBaseAddr = NsfDpcmOffset;
+                    byte[] dpcmBytes = null;
+
+                    if (project.UsesSamples)
+                    {
+                        var famiToneFile = new FamitoneMusicFile();
+                        famiToneFile.GetBytes(project, null, 0, NsfDpcmOffset, out _, out dpcmBytes);
+                        numDpcmPages = dpcmBytes != null ? (dpcmBytes.Length + NsfPageSize - 1) / NsfPageSize : 0;
+
+                        //  0KB -  4KB samples: starts at 0xf000
+                        //  4KB -  8KB samples: starts at 0xe000
+                        //  8KB - 12KB samples: starts at 0xd000
+                        // 12KB - 16KB samples: starts at 0xc000
+                        dpcmBaseAddr += (4 - numDpcmPages) * 0x1000;
+                    }
+
                     var songTable = new byte[NsfMaxSongs * 4];
                     var songBytes = new List<byte>();
-                    byte[] dpcmBytes = null;
 
                     // Export each song individually, build TOC at the same time.
                     for (int i = 0; i < project.Songs.Count && i < NsfMaxSongs; i++)
@@ -127,14 +142,12 @@ namespace FamiStudio
                         int addr = NsfSongAddr + (songBytes.Count & (NsfPageSize - 1));
 
                         var famiToneFile = new FamitoneMusicFile();
-                        famiToneFile.GetBytes(project, new int[] { song.Id }, addr, NsfDpcmOffset, out var currentSongBytes, out dpcmBytes);
-
-                        int numDpcmPages = dpcmBytes != null ? (dpcmBytes.Length + NsfPageSize - 1) / NsfPageSize : 0;
+                        famiToneFile.GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, out var currentSongBytes, out _);
 
                         songTable[i * 4 + 0] = (byte)(page + numDpcmPages);
                         songTable[i * 4 + 1] = (byte)((addr >> 0) & 0xff);
                         songTable[i * 4 + 2] = (byte)((addr >> 8) & 0xff);
-                        songTable[i * 4 + 3] = (byte)(song.UsesDpcm ? 1 : 0);
+                        songTable[i * 4 + 3] = (byte)(numDpcmPages); // TODO: Same value for all songs... No need to be in song table.
 
                         songBytes.AddRange(currentSongBytes);
                     }
@@ -150,8 +163,6 @@ namespace FamiStudio
                             // TODO: Error message.
                             return false;
                         }
-
-                        int numDpcmPages = (dpcmBytes.Length + NsfPageSize - 1) / NsfPageSize;
 
                         Array.Resize(ref dpcmBytes, numDpcmPages * NsfPageSize);
 

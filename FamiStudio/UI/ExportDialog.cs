@@ -263,7 +263,7 @@ namespace FamiStudio
                         var dpcmFilename = Path.Combine(folderBrowserDialog.SelectedPath, Utils.MakeNiceAsmName(formattedDpcmName) + ".dmc");
 
                         FamitoneMusicFile f = new FamitoneMusicFile();
-                        f.Save(project, new int[] { songId }, true, songFilename, exportFormat, dpcmFilename);
+                        f.Save(project, new int[] { songId }, exportFormat, true, songFilename, dpcmFilename);
                     }
                 }
             }
@@ -278,7 +278,7 @@ namespace FamiStudio
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     FamitoneMusicFile f = new FamitoneMusicFile();
-                    f.Save(project, songIds, false, sfd.FileName, exportFormat, Path.ChangeExtension(sfd.FileName, ".dmc"));
+                    f.Save(project, songIds, exportFormat, false, sfd.FileName, Path.ChangeExtension(sfd.FileName, ".dmc"));
                 }
             }
         }
