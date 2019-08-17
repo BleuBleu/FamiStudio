@@ -40,7 +40,7 @@ All releases are available in the [Releases](https://github.com/BleuBleu/FamiStu
 - Added WAV export
 - Added FamiTracker Text export (see the [wiki](https://github.com/BleuBleu/FamiStudio/wiki) for limitations)
 - Added NSF export (see the [wiki](https://github.com/BleuBleu/FamiStudio/wiki) for limitations)
-- Bug files and core refactoring.
+- Bug files and code refactoring.
 
 ### [Version 1.0.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.0.0)
 - Initial release
