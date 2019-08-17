@@ -21,6 +21,7 @@ There is a 10 minutes tutorial on YouTube:
 - Runs on top of Blargg's [Nes_Snd_Emu](http://www.slack.net/~ant/libs/audio.html#Nes_Snd_Emu "Nes_Snd_Emu").
 
 ## Limitations / Known Issues 
+- Windows only
 - No High-DPI support, any scaling larger than 100% will make the application look blurry
 - No PAL support (*)
 - No copy-paste support (other than pattern instancing) (*)
@@ -50,6 +51,7 @@ A few demo songs are included in the installation folder (typically _C:\Program 
 - Danger Streets (by Shiru, included with FamiTone2)
 - Mega Man 2 - Stage Select (my approximate recreation)
 - Journey To Silius - Intro (my approximate recreation)
+- DuckTales! - The Moon (my approximate recreation)
 
 ## Getting Started
 Please check out the [Wiki](https://github.com/BleuBleu/FamiStudio/wiki) for instructions on how to use FamiStudio.
