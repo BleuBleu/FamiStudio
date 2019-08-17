@@ -32,7 +32,17 @@ There is a 10 minutes tutorial on YouTube:
 _(*): plan to improve in the coming weeks/months_
 
 ## Releases
-[Version 1.0.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.0.0) is available for download in the Releases section.
+All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section.
+
+### [Version 1.1.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.1.0)
+- New export dialog
+- Added WAV export
+- Added FamiTracker Text export (see the [wiki](https://github.com/BleuBleu/FamiStudio/wiki) for limitations)
+- Added NSF export (see the [wiki](https://github.com/BleuBleu/FamiStudio/wiki) for limitations)
+- Bug files and core refactoring.
+
+### [Version 1.0.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.0.0)
+- Initial release
 
 ## Demo Songs
 A few demo songs are included in the installation folder (typically _C:\Program Files (x86)\FamiStudio_):
