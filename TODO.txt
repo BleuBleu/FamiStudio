@@ -4,6 +4,7 @@ Version 1.2:
 	- Fix DPCM samples
 	- Fix Envelope editing
 	- Make sure FT2 stock still works.
+- Split famitone2 ASM into stock and my custom version.
 - Volume track, do it with a LUT
 - Verify that doug's encoding matches what I see in FT2.
 - Look at list of features from FT3/4/5 (nesdoug), see which ones would be interesting (see how much it differs from stock FT2).
