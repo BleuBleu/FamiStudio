@@ -14,7 +14,7 @@
             }
             else if (note.IsValid)
             {
-                var noteVal = Note.Clamp(note.Value + envelopeValues[Envelope.Arpeggio]);
+                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], NesApu.MinimumNote, NesApu.NoteTableNTSC.Length - 1);
                 int period = NesApu.NoteTableNTSC[noteVal] + envelopeValues[Envelope.Pitch];
 
                 WriteApuRegister(NesApu.APU_TRI_LO, (period >> 0) & 0xff);

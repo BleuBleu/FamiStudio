@@ -30,10 +30,10 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FamiStudioForm));
             this.tableLayout = new System.Windows.Forms.TableLayoutPanel();
-            this.sequencer = new Sequencer();
-            this.pianoRoll = new PianoRoll();
-            this.projectExplorer = new ProjectExplorer();
-            this.toolbar = new Toolbar();
+            this.sequencer = new FamiStudio.Sequencer();
+            this.pianoRoll = new FamiStudio.PianoRoll();
+            this.projectExplorer = new FamiStudio.ProjectExplorer();
+            this.toolbar = new FamiStudio.Toolbar();
             this.tableLayout.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -61,7 +61,7 @@
             this.sequencer.Name = "sequencer";
             this.sequencer.Size = new System.Drawing.Size(1004, 298);
             this.sequencer.TabIndex = 3;
-            this.sequencer.PatternClicked += new Sequencer.PatternDoubleClick(this.sequencer_PatternClicked);
+            this.sequencer.PatternClicked += new FamiStudio.Sequencer.PatternDoubleClick(this.sequencer_PatternClicked);
             // 
             // pianoRoll
             // 
@@ -72,8 +72,8 @@
             this.pianoRoll.Name = "pianoRoll";
             this.pianoRoll.Size = new System.Drawing.Size(1004, 343);
             this.pianoRoll.TabIndex = 2;
-            this.pianoRoll.PatternChanged += new PianoRoll.PatternChange(this.pianoRoll_PatternChanged);
-            this.pianoRoll.EnvelopeResized += new PianoRoll.EnvelopeResize(this.pianoRoll_EnvelopeResized);
+            this.pianoRoll.PatternChanged += new FamiStudio.PianoRoll.PatternChange(this.pianoRoll_PatternChanged);
+            this.pianoRoll.EnvelopeResized += new FamiStudio.PianoRoll.EnvelopeResize(this.pianoRoll_EnvelopeResized);
             // 
             // projectExplorer
             // 
@@ -83,12 +83,12 @@
             this.projectExplorer.Name = "projectExplorer";
             this.projectExplorer.Size = new System.Drawing.Size(260, 641);
             this.projectExplorer.TabIndex = 4;
-            this.projectExplorer.InstrumentEdited += new ProjectExplorer.InstrumentEnvelopeDelegate(this.projectExplorer_InstrumentEdited);
-            this.projectExplorer.InstrumentSelected += new ProjectExplorer.InstrumentDelegate(this.projectExplorer_InstrumentSelected);
-            this.projectExplorer.InstrumentColorChanged += new ProjectExplorer.InstrumentDelegate(this.projectExplorer_InstrumentColorChanged);
-            this.projectExplorer.InstrumentReplaced += new ProjectExplorer.InstrumentDelegate(this.projectExplorer_InstrumentReplaced);
-            this.projectExplorer.SongModified += new ProjectExplorer.SongDelegate(this.projectExplorer_SongModified);
-            this.projectExplorer.SongSelected += new ProjectExplorer.SongDelegate(this.projectExplorer_SongSelected);
+            this.projectExplorer.InstrumentEdited += new FamiStudio.ProjectExplorer.InstrumentEnvelopeDelegate(this.projectExplorer_InstrumentEdited);
+            this.projectExplorer.InstrumentSelected += new FamiStudio.ProjectExplorer.InstrumentDelegate(this.projectExplorer_InstrumentSelected);
+            this.projectExplorer.InstrumentColorChanged += new FamiStudio.ProjectExplorer.InstrumentDelegate(this.projectExplorer_InstrumentColorChanged);
+            this.projectExplorer.InstrumentReplaced += new FamiStudio.ProjectExplorer.InstrumentDelegate(this.projectExplorer_InstrumentReplaced);
+            this.projectExplorer.SongModified += new FamiStudio.ProjectExplorer.SongDelegate(this.projectExplorer_SongModified);
+            this.projectExplorer.SongSelected += new FamiStudio.ProjectExplorer.SongDelegate(this.projectExplorer_SongSelected);
             // 
             // toolbar
             // 
@@ -99,7 +99,7 @@
             this.toolbar.TabIndex = 6;
             this.toolbar.ToolTip = "";
             // 
-            // FamiStudio
+            // FamiStudioForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -110,7 +110,7 @@
             this.Controls.Add(this.toolbar);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
-            this.Name = "FamiStudio";
+            this.Name = "FamiStudioForm";
             this.Text = "FamiStudio";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);

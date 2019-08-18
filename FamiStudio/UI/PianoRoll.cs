@@ -16,20 +16,20 @@ namespace FamiStudio
         const int EffectButtonSizeY = 17;
 
         const int NoteDefaultSizeX = 16;
-        const int NoteSizeY = 14;
+        const int NoteSizeY = 12;
 
-        const int EnvelopeSizeY = 7;
+        const int EnvelopeSizeY = 9;
         const int EnvelopeBias = 64;
         const int EnvelopeMax = 127;
 
-        const int WhiteKeySizeY = 24;
+        const int WhiteKeySizeY = 20;
         const int WhiteKeySizeX = 81;
         const int BlackKeySizeY = 14;
         const int BlackKeySizeX = 56;
 
-        const int NumNotes = 63;
-        const int NumOctaves = 6;
-        const int BaseOctave = 1;
+        const int NumNotes = 96;
+        const int NumOctaves = 8;
+        const int BaseOctave = 0;
         const int OctaveSizeY = 12 * NoteSizeY;
         const int VirtualSizeY = NumNotes * NoteSizeY;
 
@@ -242,14 +242,11 @@ namespace FamiStudio
             }
             else
             {
-                rc.Top = VirtualSizeY - OctaveSizeY * octave - (key / 2 + (key <= 4 ? 1 : 2)) * WhiteKeySizeY - scrollY;
-                rc.Right = rc.Left + WhiteKeySizeX;
-                rc.Bottom = rc.Top + WhiteKeySizeY;
+                int keySizeY = key > 4 ? WhiteKeySizeY + 1 : WhiteKeySizeY;
 
-                if (key == 4)
-                    rc.Top += 2;
-                else if (key == 5)
-                    rc.Bottom += 2;
+                rc.Top = VirtualSizeY - OctaveSizeY * octave - (key <= 4 ? ((key / 2 + 1) * WhiteKeySizeY) : ((WhiteKeySizeY * 3) + ((key - 4) / 2 + 1) * keySizeY)) - scrollY;
+                rc.Right = rc.Left + WhiteKeySizeX;
+                rc.Bottom = rc.Top + keySizeY;
             }
 
             return rc;
@@ -432,6 +429,8 @@ namespace FamiStudio
                     g.FillRectangle(GetKeyRectangle(playOctave, playNote), whiteKeyPressedBrush);
             }
 
+            //g.DrawRectangleHalfPixel(GetKeyRectangle(5, 5), debugBrush);
+
             // Draw the piano
             for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
             {
@@ -476,7 +475,7 @@ namespace FamiStudio
 
                 if (!showSampleNames)
                 {
-                    g.DrawText("C" + (i + BaseOctave), Theme.FontSmall, 2, octaveBaseY - 13, theme.BlackBrush);
+                    g.DrawText("C" + (i + BaseOctave), Theme.FontSmall, 1, octaveBaseY - 11, theme.BlackBrush);
                 }
             }
 
@@ -672,8 +671,7 @@ namespace FamiStudio
             else if (editMode == EditionMode.Enveloppe)
             {
                 // Draw the enveloppe value backgrounds
-                // TODO: Get rid of that 126.
-                const int maxValues = 126;
+                const int maxValues = 128;
                 int maxVisibleValue = maxValues - Math.Min((int)Math.Floor(scrollY / (float)EnvelopeSizeY), maxValues);
                 int minVisibleValue = maxValues - Math.Max((int)Math.Ceiling((scrollY + Height) / (float)EnvelopeSizeY), 0);
 
@@ -1257,7 +1255,7 @@ namespace FamiStudio
         private bool GetEnvelopeValueForCoord(int x, int y, out int idx, out sbyte value)
         {
             idx = (x - WhiteKeySizeX + scrollX) / NoteSizeX;
-            value = (sbyte)(61 - Math.Min((y + scrollY - HeaderSizeY - 1) / EnvelopeSizeY, 126)); // TODO: Why the 61 again???
+            value = (sbyte)(61 - Math.Min((y + scrollY - HeaderSizeY - 1) / EnvelopeSizeY, 128)); // TODO: Why the 61 again???
 
             return (x > WhiteKeySizeX && y > HeaderSizeY);
         }

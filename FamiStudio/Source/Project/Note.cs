@@ -28,9 +28,9 @@ namespace FamiStudio
         public const int NoteInvalid = 0xff;
         public const int NoteStop    = 0x00;
         public const int NoteMin     = 0x01;
-        public const int NoteMax     = 0x3f;
+        public const int NoteMax     = 0x60;
 
-        public byte Value; // Uses FamiTone2 encoding (0 = stop, 1 = C1 ... 63 = D6).
+        public byte Value; // (0 = stop, 1 = C0 ... 96 = B7).
         public byte Effect; // Tempo/Jump/Skip
         public byte EffectParam; // Value for fx.
         public Instrument Instrument;

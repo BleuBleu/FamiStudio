@@ -142,6 +142,16 @@ namespace FamiStudio
                 if (!buffer.IsWriting)
                     notes[i].Instrument = buffer.Project.GetInstrument(instrumentId);
             }
+
+            // At version 3 (FamiStudio 1.2.0), we extended the range of notes.
+            if (buffer.Version < 3 && channelType != Channel.Noise)
+            {
+                for (int i = 0; i < 256; i++)
+                {
+                    if (!notes[i].IsStop && notes[i].IsValid)
+                        notes[i].Value += 12;
+                }
+            }
         }
     }
 }

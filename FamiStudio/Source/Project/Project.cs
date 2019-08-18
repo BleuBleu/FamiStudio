@@ -7,17 +7,17 @@ namespace FamiStudio
 {
     public class Project
     {
-        public static int Version = 2;
+        public static int Version = 3;
         public static int MaxSampleSize = 0x4000;
 
-        private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64];
+        private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[96];
         private List<DPCMSample> samples = new List<DPCMSample>();
         private List<Instrument> instruments = new List<Instrument>();
         private List<Song> songs = new List<Song>();
         private int nextUniqueId = 100;
         private string filename = "";
         private string name = "Untitled";
-        private string author = "Unkown";
+        private string author = "Unknown";
         private string copyright = "";
 
         public List<DPCMSample>    Samples        => samples;
@@ -425,25 +425,53 @@ namespace FamiStudio
                 sample.SerializeState(buffer);
 
             // Mapping
-            ulong mappingMask = 0;
-            for (int i = 0; i < samplesMapping.Length; i++)
+            ulong mappingMask0 = 0;
+            for (int i = 0; i < 64; i++)
             {
                 if (samplesMapping[i] != null)
-                    mappingMask |= (((ulong)1) << i);
+                    mappingMask0 |= (((ulong)1) << i);
             }
-            buffer.Serialize(ref mappingMask);
+            buffer.Serialize(ref mappingMask0);
 
-            for (int i = 0; i < samplesMapping.Length; i++)
+            // At version 3 (FamiStudio 1.2.0), we extended the range of notes.
+            int noteOffset = buffer.Version < 3 ? 12 : 0;
+
+            for (int i = 0; i < 64; i++)
             {
-                if ((mappingMask & (((ulong)1) << i)) != 0)
+                if ((mappingMask0 & (((ulong)1) << i)) != 0)
                 {
                     if (buffer.IsReading)
-                        samplesMapping[i] = new DPCMSampleMapping();
-                    samplesMapping[i].SerializeState(buffer);
+                        samplesMapping[i + noteOffset] = new DPCMSampleMapping();
+                    samplesMapping[i + noteOffset].SerializeState(buffer);
                 }
                 else
                 {
-                    samplesMapping[i] = null;
+                    samplesMapping[i + noteOffset] = null;
+                }
+            }
+
+            if (buffer.Version >= 3)
+            {
+                uint mappingMask1 = 0;
+                for (int i = 0; i < 32; i++)
+                {
+                    if (samplesMapping[i] != null)
+                        mappingMask1 |= (((uint)1) << i);
+                }
+                buffer.Serialize(ref mappingMask1);
+
+                for (int i = 0; i < 32; i++)
+                {
+                    if ((mappingMask1 & (((uint)1) << i)) != 0)
+                    {
+                        if (buffer.IsReading)
+                            samplesMapping[64 + i] = new DPCMSampleMapping();
+                        samplesMapping[64 + i].SerializeState(buffer);
+                    }
+                    else
+                    {
+                        samplesMapping[64 + i] = null;
+                    }
                 }
             }
         }
@@ -455,11 +483,18 @@ namespace FamiStudio
                 buffer.Serialize(ref nextUniqueId);
             }
 
+            // At version 2 (FamiStudio 1.1.0) we added project properties
             if (buffer.Version >= 2)
             {
                 buffer.Serialize(ref name);
                 buffer.Serialize(ref author);
                 buffer.Serialize(ref copyright);
+
+                // Version 2 (FamiStudio 1.1.0) had a typo in the name of the author.
+                if (buffer.Version < 3 && author == "Unkown")
+                {
+                    author = "Unknown";
+                }
             }
 
             // DPCM samples
