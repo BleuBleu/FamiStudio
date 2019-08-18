@@ -1,0 +1,21 @@
+Encoding:
+
+$00            Stop note
+$01-$3f        Note (n << 1) | e   Note n (e = 1 if note -> empty -> note, 0 otherwise) (GET RID OF THIS!)
+$80 | idx      Instrument change
+$81 | (n << 1) Series of n empty notes
+$fb            Speed change
+$fd            Jump
+$ff, n, ref    Plays n notes starting at ref
+
+Idea:
+- The sequnce note (with duration) -> stopnote -> new note is very frequent. THIS would require a special encoding, not the other crap, two possible ways:
+	* Encode "n empty notes" + 1 stop.
+	* Encode 1 stop followed by new note.
+	
+Effects doug added in FT3/4/5:
+- 1xy/2xy      Slide up/down, useful since our pitch env are absolute. Good substitude for lack of HW sweep. DuckTables and JTS could have used that.
+- 3xx          Partamento, useful, but wait until i see a game that uses it.
+- 4xy          Vibrato, not needed, less accurate as an FX too.
+- Qxy/Rxy      Similar to slide up, but stops after semitones. Portamento seems more general since it can do more than 15 steps. Which one is cheaper?
+
