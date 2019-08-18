@@ -328,6 +328,12 @@ namespace FamiStudio
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            if (!CheckUnloadProject())
+            {
+                e.Cancel = true;
+                return;
+            }
+
             if (midi != null)
             {
                 midi.Stop();

@@ -65,7 +65,7 @@ namespace FamiStudio
             // Tempo/speed logic.
             tempoCounter += song.Tempo * 256 / 150; // NTSC
 
-            if ((tempoCounter >> 8) == speed)
+            if ((tempoCounter >> 8) >= speed)
             {
                 tempoCounter -= (speed << 8);
 
