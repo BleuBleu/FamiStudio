@@ -32,6 +32,10 @@ namespace FamiStudio
         {
             InitializeComponent();
 
+#if DEBUG
+            Height += 60;
+#endif
+
             this.project = project;
             this.font = new Font(Theme.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             this.fontBold = new Font(Theme.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
@@ -114,13 +118,16 @@ namespace FamiStudio
                     page.AddString("Copyright :", project.Copyright, 31); // 2
                     page.AddStringList("Mode :", new[] { "NTSC", "PAL", "Dual" }, "NTSC"); // 3
                     page.AddStringListMulti(null, songName, null); // 4
+#if DEBUG
+                    page.AddStringList("Kernel :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 5
+#endif
                     page.SetPropertyEnabled(3, false);
                     break;
                 case ExportFormat.FamiTracker:
                     page.AddStringListMulti(null, songName, null); // 0
                     break;
                 case ExportFormat.FamiTone2:
-                    page.AddStringList("Format :", new[] { "NESASM", "CA65", "ASM6" }, "NESASM"); // 0
+                    page.AddStringList("Format :", Enum.GetNames(typeof(FamitoneMusicFile.OutputFormat)), Enum.GetNames(typeof(FamitoneMusicFile.OutputFormat))[0]); // 0
                     page.AddBoolean("Separate Files :", false); // 1
                     page.AddString("Song Name Pattern :", "{project}_{song}"); // 2
                     page.AddString("DMC Name Pattern :", "{project}"); // 3
@@ -213,7 +220,13 @@ namespace FamiStudio
             {
                 var props = formatProps[(int)ExportFormat.Nsf];
 
-                NsfFile.Save(project, sfd.FileName,
+#if DEBUG
+                var kernel = (FamitoneMusicFile.FamiToneKernel)Enum.Parse(typeof(FamitoneMusicFile.FamiToneKernel), props.GetPropertyValue<string>(5));
+#else
+                var kernel = FamitoneMusicFile.FamiToneKernel.FamiTone2FS;
+#endif
+
+                NsfFile.Save(project, kernel, sfd.FileName,
                     GetSongIds(props.GetPropertyValue<bool[]>(4)),
                     props.GetPropertyValue<string>(0),
                     props.GetPropertyValue<string>(1),
@@ -262,7 +275,7 @@ namespace FamiStudio
                         var songFilename = Path.Combine(folderBrowserDialog.SelectedPath, Utils.MakeNiceAsmName(formattedSongName) + "." + ext);
                         var dpcmFilename = Path.Combine(folderBrowserDialog.SelectedPath, Utils.MakeNiceAsmName(formattedDpcmName) + ".dmc");
 
-                        FamitoneMusicFile f = new FamitoneMusicFile();
+                        FamitoneMusicFile f = new FamitoneMusicFile(FamitoneMusicFile.FamiToneKernel.FamiTone2);
                         f.Save(project, new int[] { songId }, exportFormat, true, songFilename, dpcmFilename);
                     }
                 }
@@ -277,7 +290,7 @@ namespace FamiStudio
 
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    FamitoneMusicFile f = new FamitoneMusicFile();
+                    FamitoneMusicFile f = new FamitoneMusicFile(FamitoneMusicFile.FamiToneKernel.FamiTone2);
                     f.Save(project, songIds, exportFormat, false, sfd.FileName, Path.ChangeExtension(sfd.FileName, ".dmc"));
                 }
             }

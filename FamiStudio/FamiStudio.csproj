@@ -75,11 +75,11 @@
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
-    <PackageReference Include="SharpDX" Version="4.2.0"/>
-    <PackageReference Include="SharpDX.Direct2D1" Version="4.2.0"/>
-    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0"/>
-    <PackageReference Include="SharpDX.DXGI" Version="4.2.0"/>
-    <PackageReference Include="SharpDX.XAudio2" Version="4.2.0"/>
+    <PackageReference Include="SharpDX" Version="4.2.0" />
+    <PackageReference Include="SharpDX.Direct2D1" Version="4.2.0" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+    <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
+    <PackageReference Include="SharpDX.XAudio2" Version="4.2.0" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net" />
@@ -200,7 +200,8 @@
     <EmbeddedResource Include="UI\PropertyDialog.resx">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Nsf\nsf.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

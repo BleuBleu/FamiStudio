@@ -10,7 +10,6 @@ namespace FamiStudio
     {
         private Project project;
 
-        // Text version.
         private List<string> lines = new List<string>();
 
         private string db = ".byte";
@@ -18,14 +17,21 @@ namespace FamiStudio
         private string ll = "@";
         private string lo = ".lobyte";
 
-        //private int globalReferenceId = 0;
-        private List<List<byte>> globalPacketPatternBuffers = new List<List<byte>>(); 
+        private List<List<byte>> globalPacketPatternBuffers = new List<List<byte>>();
+
+        private FamiToneKernel kernel = FamiToneKernel.FamiTone2FS;
 
         private const int MinPatternLength = 6;
         private const int MaxRepeatCount = 60;
         private const int MaxSongs = (256 - 5) / 14;
         private const int MaxPatterns = 128 * MaxSongs;
         private const int MaxPackedPatterns = (5 * MaxPatterns * MaxSongs);
+
+        public enum FamiToneKernel
+        {
+            FamiTone2FS,
+            FamiTone2
+        };
 
         public enum OutputFormat
         {
@@ -34,9 +40,14 @@ namespace FamiStudio
             ASM6
         };
 
+        public FamitoneMusicFile(FamiToneKernel kernel)
+        {
+            this.kernel = kernel;
+        }
+
         private void CleanupEnvelopes()
         {
-            // ALl instruments must have a volume envelope.
+            // All instruments must have a volume envelope.
             foreach (var instrument in project.Instruments)
             {
                 var env = instrument.Envelopes[Envelope.Volume];
@@ -340,6 +351,26 @@ namespace FamiStudio
             return -1;
         }
 
+        private byte EncodeNoteValue(int value, int numNotes)
+        {
+            if (kernel == FamiToneKernel.FamiTone2)
+            {
+                // 0 = stop, 1 = C-1 ... 63 = D-6
+                if (value != 0) value -= 12; 
+                return (byte)(((value & 63) << 1) | numNotes);
+            }
+            else
+            {
+                // 0 = stop, 1 = A0 ... 87 = B7
+                if (value != 0)
+                {
+                    value = Math.Max(1,  value - 9);
+                    value = Math.Min(87, value);
+                }
+
+                return (byte)(value);
+            }
+        }
 
         private int OutputSong(Song song, int songIdx, int speedChannel, int factor, bool test)
         {
@@ -436,24 +467,27 @@ namespace FamiStudio
 
                             int numNotes = 0;
 
-                            // Note -> Empty -> Note special encoding.
-                            if (i < patternLength - 1)
+                            if (kernel == FamiToneKernel.FamiTone2)
                             {
-                                var nextNote1 = pattern.Notes[i + 0];
-                                var nextNote2 = pattern.Notes[i + 1];
-
-                                var valid1 = nextNote1.IsValid || (isSpeedChannel && FindEffectParam(song, p, i + 0, Note.EffectSpeed) >= 0);
-                                var valid2 = nextNote2.IsValid || (isSpeedChannel && FindEffectParam(song, p, i + 1, Note.EffectSpeed) >= 0);
-
-                                if (!valid1 && valid2)
+                                // Note -> Empty -> Note special encoding.
+                                if (i < patternLength - 1)
                                 {
-                                    i++;
-                                    numValidNotes--;
-                                    numNotes = 1;
+                                    var nextNote1 = pattern.Notes[i + 0];
+                                    var nextNote2 = pattern.Notes[i + 1];
+
+                                    var valid1 = nextNote1.IsValid || (isSpeedChannel && FindEffectParam(song, p, i + 0, Note.EffectSpeed) >= 0);
+                                    var valid2 = nextNote2.IsValid || (isSpeedChannel && FindEffectParam(song, p, i + 1, Note.EffectSpeed) >= 0);
+
+                                    if (!valid1 && valid2)
+                                    {
+                                        i++;
+                                        numValidNotes--;
+                                        numNotes = 1;
+                                    }
                                 }
                             }
 
-                            patternBuffer.Add((byte)((note.Value << 1) | numNotes));
+                            patternBuffer.Add(EncodeNoteValue(note.Value, numNotes));
                         }
                         else
                         {

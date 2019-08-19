@@ -57,7 +57,7 @@ namespace FamiStudio
             public fixed byte programSize[3];
         };
 
-        public unsafe static bool Save(Project originalProject, string filename, int[] songIds, string name, string author, string copyright)
+        public unsafe static bool Save(Project originalProject, FamitoneMusicFile.FamiToneKernel kernel, string filename, int[] songIds, string name, string author, string copyright)
         {
             try
             {
@@ -105,8 +105,10 @@ namespace FamiStudio
                     Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);
                     file.Write(headerBytes, 0, headerBytes.Length);
 
+                    string kernelBinary = kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2 ? "nsf_ft2.bin" : "nsf_ft2_fs.bin";
+
                     // Code/sound engine
-                    var nsfBinStream = typeof(NsfFile).Assembly.GetManifestResourceStream("FamiStudio.Nsf.nsf.bin");
+                    var nsfBinStream = typeof(NsfFile).Assembly.GetManifestResourceStream("FamiStudio.Nsf." + kernelBinary);
                     var nsfBinBuffer = new byte[NsfCodeSize];
                     nsfBinStream.Read(nsfBinBuffer, 0, nsfBinBuffer.Length);
 
@@ -120,7 +122,7 @@ namespace FamiStudio
 
                     if (project.UsesSamples)
                     {
-                        var famiToneFile = new FamitoneMusicFile();
+                        var famiToneFile = new FamitoneMusicFile(kernel);
                         famiToneFile.GetBytes(project, null, 0, NsfDpcmOffset, out _, out dpcmBytes);
                         numDpcmPages = dpcmBytes != null ? (dpcmBytes.Length + NsfPageSize - 1) / NsfPageSize : 0;
 
@@ -141,7 +143,7 @@ namespace FamiStudio
                         int page = songBytes.Count / NsfPageSize + 1;
                         int addr = NsfSongAddr + (songBytes.Count & (NsfPageSize - 1));
 
-                        var famiToneFile = new FamitoneMusicFile();
+                        var famiToneFile = new FamitoneMusicFile(kernel);
                         famiToneFile.GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, out var currentSongBytes, out _);
 
                         songTable[i * 4 + 0] = (byte)(page + numDpcmPages);

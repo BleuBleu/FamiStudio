@@ -4,17 +4,18 @@ Version 1.2:
 	- Fix DPCM samples
 	- Fix Envelope editing
 	- Make sure FT2 stock still works.
-- Split famitone2 ASM into stock and my custom version.
+	- Remove note -> empty -> note feature in famitone2fs
 - Volume track, do it with a LUT
-- Verify that doug's encoding matches what I see in FT2.
-- Look at list of features from FT3/4/5 (nesdoug), see which ones would be interesting (see how much it differs from stock FT2).
-- Add "kernel" debug option to NSF export to test FT2 vs. FT2Ex.
 - Release envelopes (see how envelopes are stored in FT2)
+- MIDI improvements.
+- PAL support
+x Split famitone2 ASM into stock and my custom version.
+x Verify that doug's encoding matches what I see in FT2.
+x Look at list of features from FT3/4/5 (nesdoug), see which ones would be interesting (see how much it differs from stock FT2).
+x Add "kernel" debug option to NSF export to test FT2 vs. FT2Ex.
 x Improve NSF DPCM (add offset from C000).
 x Tempo bug from GitHub.
 x Unify notes freq from ASM and C#
-- MIDI improvements.
-- PAL support
 
 Backlog:
 - VRC6, FDS, etc.
