@@ -31,7 +31,10 @@ namespace FamiStudio
             this.name = n;
             this.color = Theme.RandomCustomColor();
             for (int i = 0; i < notes.Length; i++)
-                notes[i].Value = 0xff;
+            {
+                notes[i].Value  = 0xff;
+                notes[i].Volume = 0xff;
+            }
         }
 
         public Note[] Notes
@@ -136,6 +139,10 @@ namespace FamiStudio
                 buffer.Serialize(ref notes[i].Value);
                 buffer.Serialize(ref notes[i].Effect);
                 buffer.Serialize(ref notes[i].EffectParam);
+
+                // At version 3 (FamiStudio 1.2.0), we added a volume track.
+                if (buffer.Version > 3)
+                    buffer.Serialize(ref notes[i].Volume);
 
                 int instrumentId = notes[i].Instrument == null ? -1 : notes[i].Instrument.Id;
                 buffer.Serialize(ref instrumentId);

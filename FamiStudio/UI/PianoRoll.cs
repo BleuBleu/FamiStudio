@@ -66,6 +66,7 @@ namespace FamiStudio
         Bitmap bmpLoop;
         Bitmap bmpEffectExpanded;
         Bitmap bmpEffectCollapsed;
+        Bitmap bmpVolume;
         Bitmap[] bmpEffects = new Bitmap[3];
         Bitmap[] bmpEffectsFilled = new Bitmap[3];
 
@@ -198,6 +199,7 @@ namespace FamiStudio
             playPositionBrush = g.CreateSolidBrush(new RawColor4(Theme.LightGreyFillColor1.R, Theme.LightGreyFillColor1.G, Theme.LightGreyFillColor1.B, 0.5f));
             bmpLoop = g.ConvertBitmap(Resources.LoopSmall);
 
+            bmpVolume = g.ConvertBitmap(Resources.VolumeSmall);
             bmpEffects[0] = g.ConvertBitmap(Resources.LoopSmall);
             bmpEffects[1] = g.ConvertBitmap(Resources.JumpSmall);
             bmpEffects[2] = g.ConvertBitmap(Resources.SpeedSmall);
@@ -353,6 +355,12 @@ namespace FamiStudio
                     g.DrawText(EffectNames[i], selectedEffectIdx == i ? Theme.FontSmallBold : Theme.FontSmall, 18, 3, theme.BlackBrush);
                     g.PopTransform();
                 }
+
+                //g.PushTranslation(-1, 3 * EffectButtonSizeY - 1);
+                //g.DrawRectangleHalfPixel(0, 0, WhiteKeySizeX, EffectButtonSizeY, theme.BlackBrush);
+                //g.DrawBitmap(bmpVolume, 3, 3);
+                //g.DrawText("Volume", /*selectedEffectIdx == i ? Theme.FontSmallBold :*/ Theme.FontSmall, 18, 3, theme.BlackBrush);
+                //g.PopTransform();
 
                 g.PopClip();
                 g.PopTransform();

@@ -33,6 +33,7 @@ namespace FamiStudio
         public byte Value; // (0 = stop, 1 = C0 ... 96 = B7).
         public byte Effect; // Tempo/Jump/Skip
         public byte EffectParam; // Value for fx.
+        public byte Volume; // 0-15. 0xff = no volume change.
         public Instrument Instrument;
 
         public bool IsValid
