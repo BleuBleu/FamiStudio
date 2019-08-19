@@ -52,8 +52,8 @@ namespace FamiStudio
         public const int APU_DMC_LEN    = 0x4013;
         public const int APU_SND_CHN    = 0x4015;
 
-        // Note.NoteMin (C1) maps to 4.
-        public const int MinimumNote = 10;
+        // NES period was 11 bits.
+        public const int MaximumPeriod = 0x7ff;
 
         // Taken from FamiTracker.
         public static readonly ushort[] NoteTableNTSC = new ushort[]

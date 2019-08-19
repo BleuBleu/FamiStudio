@@ -1,4 +1,6 @@
-﻿namespace FamiStudio
+﻿using System;
+
+namespace FamiStudio
 {
     public class SquareChannelState : ChannelState
     {
@@ -18,8 +20,8 @@
             }
             else if (note.IsValid)
             {
-                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], NesApu.MinimumNote, NesApu.NoteTableNTSC.Length - 1);
-                int period = NesApu.NoteTableNTSC[noteVal] + envelopeValues[Envelope.Pitch];
+                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, NesApu.NoteTableNTSC.Length - 1);
+                int period = Math.Min(NesApu.MaximumPeriod, NesApu.NoteTableNTSC[noteVal] + envelopeValues[Envelope.Pitch]);
 
                 WriteApuRegister(NesApu.APU_PL1_LO + regOffset, period & 0xff);
                 period = (period >> 8) & 0x07;
