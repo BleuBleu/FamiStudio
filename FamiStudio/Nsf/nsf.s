@@ -1,4 +1,8 @@
+.ifdef FS
+.include "famitone2fs.s"
+.else
 .include "famitone2.s"
+.endif
 
 .global nsf_init
 .global nsf_play

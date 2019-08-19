@@ -2,7 +2,7 @@
 @echo off
 
 ..\..\..\NES\tools\bin\ca65 nsf.s -g -o nsf_ft2.o
-..\..\..\NES\tools\bin\ca65 nsf.s -g -o nsf_ft2_fs.o
+..\..\..\NES\tools\bin\ca65 nsf.s -g -o nsf_ft2_fs.o -D FS
 
 @del nsf_ft2.bin
 @del nsf_ft2.dbg
