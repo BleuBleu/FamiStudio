@@ -25,6 +25,9 @@ namespace FamiStudio
         public const int EffectSkip  = 2; // Dxx
         public const int EffectSpeed = 3; // Fxx
 
+        public const int VolumeInvalid = 0xff;
+        public const int VolumeMax     = 0x0f;
+
         public const int NoteInvalid = 0xff;
         public const int NoteStop    = 0x00;
         public const int NoteMin     = 0x01;
@@ -51,6 +54,13 @@ namespace FamiStudio
         public bool HasEffect
         {
             get { return Effect != EffectNone; }
+            set { if (!value) Effect = EffectNone; }
+        }
+
+        public bool HasVolume
+        {
+            get { return Volume != VolumeInvalid; }
+            set { if (!value) Volume = VolumeInvalid; }
         }
 
         public string FriendlyName

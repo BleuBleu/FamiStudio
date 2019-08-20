@@ -14,6 +14,11 @@ namespace FamiStudio
         private Color color;
         private Note[] notes = new Note[MaxLength];
 
+        private byte lastVolumeValue = Note.VolumeInvalid;
+        private byte lastValidNoteValue = Note.NoteInvalid;
+        private Instrument lastValidNoteInstrument = null;
+        private byte lastValidNoteIdx = 0;
+
         public int Id => id;
         public int ChannelType => channelType;
         public Color Color { get => color; set => color = value; }
@@ -32,8 +37,8 @@ namespace FamiStudio
             this.color = Theme.RandomCustomColor();
             for (int i = 0; i < notes.Length; i++)
             {
-                notes[i].Value  = 0xff;
-                notes[i].Volume = 0xff;
+                notes[i].Value  = Note.NoteInvalid;
+                notes[i].Volume = Note.VolumeInvalid;
             }
         }
 
@@ -126,6 +131,53 @@ namespace FamiStudio
             }
         }
 
+        public void UpdateLastValidNotesAndVolume()
+        {
+            lastVolumeValue = Note.VolumeInvalid;
+            lastValidNoteValue = Note.NoteInvalid;
+            lastValidNoteIdx = 0;
+            lastValidNoteInstrument = null;
+
+            for (int i = song.PatternLength - 1; i >= 0; i--)
+            {
+                var note = notes[i];
+                if (note.IsValid && lastValidNoteValue == Note.NoteInvalid)
+                {
+                    lastValidNoteIdx = (byte)i;
+                    lastValidNoteValue = note.Value;
+                    lastValidNoteInstrument = note.Instrument;
+                    if (lastVolumeValue != Note.VolumeInvalid)
+                        break;
+                }
+                if (note.HasVolume && lastVolumeValue == Note.VolumeInvalid)
+                {
+                    lastVolumeValue = note.Volume;
+                    if (lastValidNoteValue != Note.NoteInvalid)
+                        break;
+                }
+            }
+        }
+
+        public byte LastValidNoteTime
+        {
+            get { return lastValidNoteIdx; }
+        }
+
+        public byte LastValidNoteValue
+        {
+            get { return lastValidNoteValue; }
+        }
+
+        public Instrument LastValidNoteInstrument
+        {
+            get { return lastValidNoteInstrument; }
+        }
+
+        public byte LastVolumeValue
+        {
+            get { return lastVolumeValue; }
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id);
@@ -141,13 +193,12 @@ namespace FamiStudio
                 buffer.Serialize(ref notes[i].EffectParam);
 
                 // At version 3 (FamiStudio 1.2.0), we added a volume track.
-                if (buffer.Version > 3)
+                if (buffer.Version >= 3)
                     buffer.Serialize(ref notes[i].Volume);
+                else
+                    notes[i].Volume = Note.VolumeInvalid;
 
-                int instrumentId = notes[i].Instrument == null ? -1 : notes[i].Instrument.Id;
-                buffer.Serialize(ref instrumentId);
-                if (!buffer.IsWriting)
-                    notes[i].Instrument = buffer.Project.GetInstrument(instrumentId);
+                buffer.Serialize(ref notes[i].Instrument);
             }
 
             // At version 3 (FamiStudio 1.2.0), we extended the range of notes.
@@ -158,6 +209,18 @@ namespace FamiStudio
                     if (!notes[i].IsStop && notes[i].IsValid)
                         notes[i].Value += 12;
                 }
+            }
+
+            if (buffer.IsForUndoRedo)
+            {
+                buffer.Serialize(ref lastVolumeValue);
+                buffer.Serialize(ref lastValidNoteIdx);
+                buffer.Serialize(ref lastValidNoteValue);
+                buffer.Serialize(ref lastValidNoteInstrument);
+            }
+            else if (buffer.IsReading)
+            {
+                UpdateLastValidNotesAndVolume();
             }
         }
     }

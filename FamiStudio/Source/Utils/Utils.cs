@@ -11,6 +11,13 @@ namespace FamiStudio
             return val;
         }
 
+        public static float Clamp(float val, float min, float max)
+        {
+            if (val < min) return min;
+            if (val > max) return max;
+            return val;
+        }
+
         public static string MakeNiceAsmName(string name)
         {
             string niceName = "";

@@ -7,6 +7,9 @@ namespace FamiStudio
 {
     public class Project
     {
+        // Version 1 = 1.0.0
+        // Version 2 = 1.1.0 (Project properties)
+        // Version 3 = 1.2.0 (Volume tracks, extended notes, release envelopes)
         public static int Version = 3;
         public static int MaxSampleSize = 0x4000;
 
@@ -198,6 +201,8 @@ namespace FamiStudio
                                 pattern.Notes[i].Instrument = instrumentNew;
                             }
                         }
+
+                        pattern.UpdateLastValidNotesAndVolume();
                     }
                 }
             }

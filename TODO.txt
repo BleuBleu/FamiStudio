@@ -5,7 +5,9 @@ Version 1.2:
 	- Fix Envelope editing
 	- Make sure FT2 stock still works.
 	- Remove note -> empty -> note feature in famitone2fs
-- Volume track, do it with a LUT
+- Volume track:
+	- UI. Add field on patterns to store last valid note + volume.
+	- ASM, do with a LUT
 - Release envelopes (see how envelopes are stored in FT2)
 - MIDI improvements.
 - PAL support

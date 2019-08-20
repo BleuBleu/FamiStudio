@@ -211,6 +211,89 @@ namespace FamiStudio
             patterns.AddRange(usedPatterns);
         }
 
+        public byte GetLastValidVolume(int startPatternIdx)
+        {
+            var lastVolume = (byte)Note.VolumeInvalid;
+
+            for (int p = startPatternIdx; p >= 0 && lastVolume == Note.VolumeInvalid; p--)
+            {
+                var pattern = patternInstances[p];
+                if (pattern != null)
+                {
+                    lastVolume = pattern.LastVolumeValue;
+                    if (lastVolume != Note.VolumeInvalid)
+                    {
+                        return lastVolume;
+                    }
+                }
+            }
+
+            return Note.VolumeInvalid;
+        }
+
+        public byte GetLastValidNote(ref int patternIdx, out int lastNoteTime, out Instrument instrument)
+        {
+            var lastTime = int.MinValue;
+            var lastNote = new Note() { Value = Note.NoteInvalid };
+
+            // Find previous valid note.
+            for (int p = patternIdx; p >= 0 && lastTime == int.MinValue; p--)
+            {
+                var pattern = patternInstances[p];
+                if (pattern != null)
+                {
+                    var val = pattern.LastValidNoteValue;
+                    if (val != Note.NoteInvalid)
+                    { 
+                        lastNoteTime = pattern.LastValidNoteTime;
+                        instrument   = pattern.LastValidNoteInstrument;
+
+                        return val;
+                    }
+                }
+            }
+
+            lastNoteTime = -1;
+            patternIdx   = int.MinValue;
+            instrument   = null;
+
+            return Note.NoteInvalid;
+        }
+
+        public bool FindPreviousValidNote(int noteValue, ref int patternIdx, ref int noteIdx)
+        {
+            var pattern = patternInstances[patternIdx];
+            if (pattern != null)
+            {
+                while (noteIdx >= 0 && !pattern.Notes[noteIdx].IsValid) noteIdx--;
+
+                if (noteIdx >= 0)
+                {
+                    return pattern.Notes[noteIdx].Value == noteValue;
+                }
+            }
+
+            patternIdx--;
+            while (patternIdx >= 0)
+            {
+                pattern = patternInstances[patternIdx];
+                if (pattern != null)
+                {
+                    var val = pattern.LastValidNoteValue;
+                    if (val != Note.NoteInvalid && val == noteValue)
+                    {
+                        noteIdx = pattern.LastValidNoteTime;
+                        return true;
+                    }
+                }
+
+                noteIdx = song.PatternLength - 1;
+                patternIdx--;
+            }
+
+            return false;
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsWriting)
