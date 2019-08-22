@@ -12,3 +12,4 @@ obj/
 Debug/
 Release/
 packages/
+*.htm
