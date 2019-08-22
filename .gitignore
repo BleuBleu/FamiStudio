@@ -13,3 +13,4 @@ Debug/
 Release/
 packages/
 *.htm
+.DS_Store
