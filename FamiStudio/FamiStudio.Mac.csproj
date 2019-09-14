@@ -120,7 +120,6 @@
     <Compile Include="Source\Utils\CRC32.cs" />
     <Compile Include="Source\Utils\PerformanceCounter.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
-    <Compile Include="Source\Player\XAudio2Stream.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="UI\Dialogs\Common\ExportDialog.cs" />
     <Compile Include="UI\MainWindow\Common\FamiStudio.cs" />

@@ -10,9 +10,31 @@ namespace FamiStudio
     {
         public static void Initialize()
         {
-            // MATTT: Use relative paths from packaging.
-            MacUtils.CoreTextRegisterFont("/Users/mat/Downloads/FamiStudioStartWorkOnMac/FamiStudio/Resources/Quicksand-Regular.ttf");
-            MacUtils.CoreTextRegisterFont("/Users/mat/Downloads/FamiStudioStartWorkOnMac/FamiStudio/Resources/Quicksand-Bold.ttf");
+            // When debugging or when in a app package, our paths are a bit different.
+            string[] pathsToSearch =
+            {
+                "../../Resources/",
+                "../Resources/Fonts/"
+            };
+
+            string[] fontsToLoad =
+            {
+                "Quicksand-Regular.ttf",
+                "Quicksand-Bold.ttf"
+            };
+
+            foreach (var path in pathsToSearch)
+            {
+                if (File.Exists(Path.Combine(path, fontsToLoad[0])))
+                {
+                    foreach (var font in fontsToLoad)
+                    {
+                        var fullpath = Path.Combine(path, font);
+                        MacUtils.CoreTextRegisterFont(fullpath);
+                    }
+                    break;
+                }
+            }
 
             Gtk.Application.Init();
 

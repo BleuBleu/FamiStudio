@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics;
@@ -50,7 +49,6 @@ namespace FamiStudio
         private GLControl[] controls = new GLControl[4];
         private bool[] keys = new bool[256];
         private bool processingDeferredEvents = false;
-        //private bool frozen = false;
         private List<DeferredEvent> deferredEvents = new List<DeferredEvent>();
         private GLControl captureControl;
         private System.Windows.Forms.MouseButtons captureButtons;
@@ -61,11 +59,12 @@ namespace FamiStudio
         private ProjectExplorer projectExplorer;
 
         public FamiStudio FamiStudio => famistudio;
-
         public Toolbar ToolBar => toolbar;
         public Sequencer Sequencer => sequencer;
         public PianoRoll PianoRoll => pianoRoll;
         public ProjectExplorer ProjectExplorer => projectExplorer;
+
+        public string Text { get => Title; set => Title = value; }
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         private delegate bool WindowShouldZoomToFrameDelegate(IntPtr self, IntPtr cmd, IntPtr nsWindow, RectangleF toFrame);
