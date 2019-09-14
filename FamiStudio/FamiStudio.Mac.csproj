@@ -254,9 +254,6 @@
     <None Include="Resources\CollapsedSmall.png" />
     <None Include="Resources\ExpandedSmall.png" />
     <None Include="Resources\FamiStudio.ico" />
-    <Content Include="NesSndEmu.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="Resources\JumpSmall.png" />
     <None Include="Resources\SpeedSmall.png" />
     <None Include="Resources\JumpSmallFill.png" />
