@@ -23,13 +23,17 @@ namespace FamiStudio
                 "Quicksand-Bold.ttf"
             };
 
+            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
             foreach (var path in pathsToSearch)
             {
-                if (File.Exists(Path.Combine(path, fontsToLoad[0])))
+                var absPath = Path.Combine(appPath, path);
+
+                if (File.Exists(Path.Combine(absPath, fontsToLoad[0])))
                 {
                     foreach (var font in fontsToLoad)
                     {
-                        var fullpath = Path.Combine(path, font);
+                        var fullpath = Path.Combine(absPath, font);
                         MacUtils.CoreTextRegisterFont(fullpath);
                     }
                     break;
