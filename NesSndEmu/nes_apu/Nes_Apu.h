@@ -82,7 +82,7 @@ public:
 	// Get time that APU-generated IRQ will occur if no further register reads
 	// or writes occur. If IRQ is already pending, returns irq_waiting. If no
 	// IRQ will occur, returns no_irq.
-	enum { no_irq = LONG_MAX / 2 + 1 };
+	enum { no_irq = INT_MAX / 2 + 1 };
 	enum { irq_waiting = 0 };
 	cpu_time_t earliest_irq() const;
 	
