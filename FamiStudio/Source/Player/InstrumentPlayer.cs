@@ -110,7 +110,7 @@ namespace FamiStudio
                 EndFrameAndQueueSamples();
             }
 
-            xaudio2Stream.Stop();
+            audioStream.Stop();
             while (sampleQueue.TryDequeue(out _)) ;
         }
     }

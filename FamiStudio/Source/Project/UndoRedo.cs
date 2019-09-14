@@ -17,7 +17,7 @@ namespace FamiStudio
 
     public class Transaction
     {
-        private FamiStudioForm form;
+        private FamiStudio app;
         private Project project;
         private TransactionScope scope;
         private int objectId;
@@ -29,10 +29,10 @@ namespace FamiStudio
         public byte[] StateBefore { get => stateBefore; private set => stateBefore = value; }
         public byte[] StateAfter { get => stateAfter; private set => stateAfter = value; }
 
-        public Transaction(Project project, FamiStudioForm form, TransactionScope scope, int objectId)
+        public Transaction(Project project, FamiStudio app, TransactionScope scope, int objectId)
         {
             this.project = project;
-            this.form = form;
+            this.app = app;
             this.scope = scope;
             this.objectId = objectId;
         }
@@ -83,7 +83,7 @@ namespace FamiStudio
                     break;
             }
 
-            form.SerializeState(buffer); 
+            app.SerializeState(buffer); 
         }
 
         private byte[] CaptureState()
@@ -105,15 +105,15 @@ namespace FamiStudio
         public delegate void UndoRedoDelegate();
         public event UndoRedoDelegate Updated;
 
-        private FamiStudioForm mainForm;
+        private FamiStudio app;
         private Project project;
         private List<Transaction> transactions = new List<Transaction>();
         private int index = 0;
 
-        public UndoRedoManager(Project proj, FamiStudioForm form) 
+        public UndoRedoManager(Project proj, FamiStudio app) 
         {
-            project = proj;
-            mainForm = form;
+            this.project = proj;
+            this.app = app;
         }
 
         public void BeginTransaction(TransactionScope scope, int objectId = -1)
@@ -125,7 +125,7 @@ namespace FamiStudio
                 transactions.RemoveRange(index, transactions.Count - index);
             }
 
-            var trans = new Transaction(project, mainForm, scope, objectId);
+            var trans = new Transaction(project, app, scope, objectId);
             transactions.Add(trans);
             trans.Begin();
             index++;

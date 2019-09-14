@@ -5,26 +5,30 @@ namespace FamiStudio
 {
     public static class NesApu
     {
-        [DllImport("NesSndEmu.dll", CallingConvention = CallingConvention.StdCall)]
+#if FAMISTUDIO_WINDOWS
+        private const string NesSndEmuDll = "NesSndEmu.dll";
+#else
+        private const string NesSndEmuDll = "NesSndEmu.dylib";
+#endif
+
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static int NesApuInit(int apuIdx, int sampleRate, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
-        [DllImport("NesSndEmu.dll", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NesApuWriteRegister(int apuIdx, int addr, int data);
-        [DllImport("NesSndEmu.dll", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static int NesApuSamplesAvailable(int apuIdx);
-        [DllImport("NesSndEmu.dll", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static int NesApuReadSamples(int apuIdx, IntPtr buffer, int bufferSize);
-        [DllImport("NesSndEmu.dll", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NesApuRemoveSamples(int apuIdx, int count);
-        [DllImport("NesSndEmu.dll", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static int NesApuReadStatus(int apuIdx);
-        [DllImport("NesSndEmu.dll", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NesApuEndFrame(int apuIdx);
-        [DllImport("NesSndEmu.dll", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NesApuReset(int apuIdx);
-        [DllImport("NesSndEmu.dll", CallingConvention = CallingConvention.StdCall)]
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NesApuEnableChannel(int apuIdx, int idx, int enable);
-        [DllImport("Kernel32.dll", EntryPoint = "RtlZeroMemory", SetLastError = false)]
-        public static extern void ZeroMemory(IntPtr dest, int size);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
 
@@ -85,7 +89,7 @@ namespace FamiStudio
 
         public static int DmcReadCallback(IntPtr data, int addr)
         {
-            return FamiStudioForm.StaticProject.GetSampleForAddress(addr - 0xc000);
+            return FamiStudio.StaticProject.GetSampleForAddress(addr - 0xc000);
         }
 
         public static void Reset(int apuIdx)

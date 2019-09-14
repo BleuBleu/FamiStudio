@@ -119,7 +119,7 @@ namespace FamiStudio
         {
             foreach (var pat in patterns)
             {
-                pat.Color = Theme.RandomCustomColor();
+                pat.Color = ThemeBase.RandomCustomColor();
             }
         }
 
