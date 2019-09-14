@@ -34,7 +34,7 @@ namespace FamiStudio
             this.song = song;
             this.channelType = channelType;
             this.name = n;
-            this.color = Theme.RandomCustomColor();
+            this.color = ThemeBase.RandomCustomColor();
             for (int i = 0; i < notes.Length; i++)
             {
                 notes[i].Value  = Note.NoteInvalid;

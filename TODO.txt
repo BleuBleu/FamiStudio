@@ -1,4 +1,11 @@
+Port:
+- Low-priority: Move to integer for all graphics call
+- Low-priority: Mac: In property page, typing in a txt doesn't register unless I enter or TAB out of it.
+- Test high-GPI scaling, retina.
+
 Version 1.2:
+- Don't stop song if changing to same song.
+- Cleanup resources. Only embed the ones that are needed for each platform.
 - All notes
 	- Fix noise
 	- Fix DPCM samples
@@ -9,8 +16,6 @@ Version 1.2:
 	- UI. Add field on patterns to store last valid note + volume.
 	- ASM, do with a LUT
 - Release envelopes (see how envelopes are stored in FT2)
-- MIDI improvements.
-- PAL support
 x Split famitone2 ASM into stock and my custom version.
 x Verify that doug's encoding matches what I see in FT2.
 x Look at list of features from FT3/4/5 (nesdoug), see which ones would be interesting (see how much it differs from stock FT2).
@@ -20,6 +25,9 @@ x Tempo bug from GitHub.
 x Unify notes freq from ASM and C#
 
 Backlog:
+- Mac: Use actual mac cursors, not images.
+- PAL support
+- MIDI improvements.
 - VRC6, FDS, etc.
 - Fix crash on startup when there are no audio device 
 - Proper error messages when soemthing fails (save, etc.)

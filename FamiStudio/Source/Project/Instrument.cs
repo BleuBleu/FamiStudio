@@ -28,7 +28,7 @@ namespace FamiStudio
         {
             this.id = id;
             this.name = name;
-            this.color = Theme.RandomCustomColor();
+            this.color = ThemeBase.RandomCustomColor();
             for (int i = 0; i < Envelope.Max; i++)
                 envelopes[i] = new Envelope();
         }

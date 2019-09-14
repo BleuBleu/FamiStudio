@@ -44,7 +44,14 @@ namespace FamiStudio
 
         public static int InputCount
         {
-            get { return midiInGetNumDevs(); }
+            get
+            {
+#if FAMISTUDIO_WINDOWS
+                return midiInGetNumDevs();
+#else
+                return 0;
+#endif
+            }
         }
 
         public bool Close()

@@ -3,12 +3,13 @@ using SharpDX.Multimedia;
 using SharpDX.XAudio2;
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    public class XAudio2Stream : IDisposable
+    public class XAudio2Stream
     {
         private XAudio2 xaudio2;
         private MasteringVoice masteringVoice;
@@ -18,16 +19,16 @@ namespace FamiStudio
         private DataPointer[] memBuffers;
         private Semaphore bufferSemaphore;
         private ManualResetEvent quitEvent;
-        private BufferFillEventHandler bufferFill;
+        private GetBufferDataCallback bufferFill;
         private Task playingTask;
 
-        public delegate void BufferFillEventHandler(IntPtr data, ref int size);
+        public delegate short[] GetBufferDataCallback();
 
-        public XAudio2Stream(int rate, int bits, int channels, int bufferSize, int numBuffers, BufferFillEventHandler bufferFillCallback)
+        public XAudio2Stream(int rate, int channels, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             xaudio2 = new XAudio2();
             masteringVoice = new MasteringVoice(xaudio2);
-            waveFormat = new WaveFormat(rate, bits, channels);
+            waveFormat = new WaveFormat(rate, 16, channels);
             audioBuffersRing = new AudioBuffer[numBuffers];
             memBuffers = new DataPointer[audioBuffersRing.Length];
 
@@ -123,9 +124,14 @@ namespace FamiStudio
                     break;
                 }
 
-                int size = memBuffers[nextBuffer].Size;
-                bufferFill(memBuffers[nextBuffer].Pointer, ref size);
-                Debug.Assert(size <= memBuffers[nextBuffer].Size);
+                var size = memBuffers[nextBuffer].Size;
+                var data = bufferFill();
+                if (data != null)
+                {
+                    size = data.Length * sizeof(short);
+                    Debug.Assert(data.Length * sizeof(short) <= memBuffers[nextBuffer].Size);
+                    Marshal.Copy(data, 0, memBuffers[nextBuffer].Pointer, data.Length);
+                }
 
                 audioBuffersRing[nextBuffer].AudioDataPointer = memBuffers[nextBuffer].Pointer;
                 audioBuffersRing[nextBuffer].AudioBytes = size;

@@ -1,0 +1,38 @@
+﻿style "label"
+{
+    fg[NORMAL] = "#C6CDDA" # LightGreyFillColor2
+}
+
+style "spin"
+{
+    bg[NORMAL] = "#2A3033" # DarkGreyFillColor2
+    fg[NORMAL] = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE] = "#C6CDDA" # LightGreyFillColor2
+}
+
+style "dialog"
+{
+    bg[NORMAL] = "#2A3033" # DarkGreyFillColor2
+}
+
+style "flatbutton"
+{
+    fg[NORMAL]   = "#C6CDDA" # LightGreyFillColor2
+    fg[PRELIGHT] = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE]   = "#C6CDDA" # LightGreyFillColor2
+
+    bg[NORMAL]   = "#2A3033" # DarkGreyFillColor2
+    bg[PRELIGHT] = "#3A4043" # DarkGreyFillColor2 + 0x10
+    bg[ACTIVE]   = "#4A5053" # DarkGreyFillColor2 + 0x20
+}
+
+style "all"
+{
+    font_name = "Quicksand 14"
+}
+
+widget_class "*" style "all"
+widget_class "*GtkLabel*" style "label"
+widget_class "*Spin*" style "spin"
+widget_class "*FlatButton*" style "flatbutton"
+widget_class "*Dialog" style "dialog"

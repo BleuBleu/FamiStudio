@@ -4,6 +4,12 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 
+#if FAMISTUDIO_WINDOWS
+using AudioStream = FamiStudio.XAudio2Stream;
+#else
+using AudioStream = FamiStudio.PortAudioStream;
+#endif
+
 namespace FamiStudio
 {
     public class PlayerBase
@@ -17,7 +23,7 @@ namespace FamiStudio
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;
 
-        protected XAudio2Stream xaudio2Stream;
+        protected AudioStream audioStream;
         protected Thread playerThread;
         protected AutoResetEvent frameEvent = new AutoResetEvent(true);
         protected ManualResetEvent stopEvent = new ManualResetEvent(false);
@@ -28,27 +34,26 @@ namespace FamiStudio
             this.apuIndex = apuIndex;
         }
 
-        protected void AudioBufferFillCallback(IntPtr data, ref int size)
+        protected short[] AudioBufferFillCallback()
         {
-            short[] samples;
+            short[] samples = null;
             if (sampleQueue.TryDequeue(out samples))
             {
-                Debug.Assert(samples.Length * sizeof(short) <= size);
-                Marshal.Copy(samples, 0, data, samples.Length);
-                size = samples.Length * sizeof(short);
                 frameEvent.Set(); // Wake up player thread.
             }
-            else
-            {
-                Trace.WriteLine("Audio is starving!");
-            }
+            //else
+            //{
+            //    Trace.WriteLine("Audio is starving!");
+            //}
+
+            return samples;
         }
 
         public virtual void Initialize()
         {
             dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
             NesApu.NesApuInit(apuIndex, SampleRate, dmcCallback);
-            xaudio2Stream = new XAudio2Stream(SampleRate, 16, 1, BufferSize, NumAudioBuffers, AudioBufferFillCallback);
+            audioStream = new AudioStream(SampleRate, 1, BufferSize, NumAudioBuffers, AudioBufferFillCallback);
         }
 
         public virtual void Shutdown()
@@ -57,7 +62,7 @@ namespace FamiStudio
             if (playerThread != null)
                 playerThread.Join();
 
-            xaudio2Stream.Dispose();
+            audioStream.Dispose();
         }
 
         public static bool AdvanceTempo(Song song, int speed, LoopMode loopMode, ref int tempoCounter, ref int playPattern, ref int playNote, ref int playFrame, ref bool advance)
@@ -107,11 +112,11 @@ namespace FamiStudio
 
             // Wait until we have queued as many frames as XAudio buffers to start
             // the audio thread, otherwise, we risk starving on the first frame.
-            if (!xaudio2Stream.IsStarted)
+            if (!audioStream.IsStarted)
             {
                 if (sampleQueue.Count == NumAudioBuffers)
                 {
-                    xaudio2Stream.Start();
+                    audioStream.Start();
                 }
                 else
                 {

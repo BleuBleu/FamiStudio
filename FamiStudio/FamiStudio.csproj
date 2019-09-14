@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -29,26 +29,28 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FAMISTUDIO_WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;FAMISTUDIO_WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugSymbols>true</DebugSymbols>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
@@ -62,17 +64,11 @@
     <PackageReference Include="SharpDX.XAudio2" Version="4.2.0" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Net" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\Resources.Designer.cs">
@@ -95,7 +91,8 @@
     <Compile Include="Source\Player\SquareChannelState.cs" />
     <Compile Include="Source\Player\TriangleChannelState.cs" />
     <Compile Include="Source\Project\Envelope.cs" />
-    <Compile Include="Source\UI\CustomFont.cs" />
+    <Compile Include="UI\MainWindow\Direct2D\Direct2DGraphics.cs" />
+    <Compile Include="UI\MainWindow\Direct2D\Direct2DFontLoader.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />
     <Compile Include="Source\IO\FamitrackerFile.cs" />
     <Compile Include="Source\Project\Instrument.cs" />
@@ -106,78 +103,65 @@
     <Compile Include="Source\Project\Project.cs" />
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\Channel.cs" />
+    <Compile Include="UI\MainWindow\Direct2D\Direct2DTheme.cs" />
+    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
+    <Compile Include="UI\MainWindow\Direct2D\Cursors.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
     <Compile Include="Source\Utils\PerformanceCounter.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\Player\XAudio2Stream.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
-    <Compile Include="UI\Direct2DUserControl.cs">
+    <Compile Include="UI\MainWindow\Direct2D\Direct2DControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\FamiStudio.cs">
+    <Compile Include="UI\MainWindow\Direct2D\FamiStudioForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\FamiStudio.Designer.cs">
-      <DependentUpon>FamiStudio.cs</DependentUpon>
+    <Compile Include="UI\MainWindow\Direct2D\FamiStudioForm.Designer.cs">
+      <DependentUpon>FamiStudioForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ExportDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\ExportDialog.Designer.cs">
-      <DependentUpon>ExportDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\PaddedCheckedListBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="UI\ProjectExplorer.cs">
+    <Compile Include="UI\Dialogs\Common\ExportDialog.cs" />
+    <Compile Include="UI\MainWindow\Common\FamiStudio.cs" />
+    <Compile Include="UI\MainWindow\Common\ProjectExplorer.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\NoFocusButton.cs">
+    <Compile Include="UI\Dialogs\WinForms\NoInterpolationPictureBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI\NoInterpolationPictureBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="UI\PianoRoll.cs">
+    <Compile Include="UI\MainWindow\Common\PianoRoll.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Source\Utils\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\PropertyPage.cs">
+    <Compile Include="UI\MainWindow\Common\Sequencer.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\PropertyPage.Designer.cs">
-      <DependentUpon>PropertyPage.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\PropertyDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\PropertyDialog.Designer.cs">
-      <DependentUpon>PropertyDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Sequencer.cs">
+    <Compile Include="UI\MainWindow\Common\ThemeBase.cs" />
+    <Compile Include="UI\MainWindow\Common\Toolbar.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Source\UI\Theme.cs" />
-    <Compile Include="UI\Toolbar.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <EmbeddedResource Include="UI\FamiStudio.resx">
-      <DependentUpon>FamiStudio.cs</DependentUpon>
+    <EmbeddedResource Include="UI\Dialogs\WinForms\MultiPropertyDialog.resx">
+      <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\MainWindow\Direct2D\FamiStudioForm.resx">
+      <DependentUpon>FamiStudioForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ExportDialog.resx">
-      <DependentUpon>ExportDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\PropertyPage.resx">
+    <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyPage.resx">
       <DependentUpon>PropertyPage.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\PropertyDialog.resx">
+    <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyDialog.resx">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
@@ -191,6 +175,39 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="UI\Dialogs\WinForms\MultiPropertyDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Dialogs\WinForms\MultiPropertyDialog.Designer.cs">
+      <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="Resources\gtk.rc" />
+    <Compile Include="UI\Dialogs\WinForms\PlatformDialogs.cs" />
+    <Compile Include="UI\Dialogs\WinForms\PropertyPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Dialogs\WinForms\PropertyDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Dialogs\WinForms\PaddedCheckedListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Dialogs\WinForms\NoFocusButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Dialogs\WinForms\PropertyDialog.Designer.cs">
+      <DependentUpon>PropertyDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Dialogs\WinForms\PropertyPage.Designer.cs">
+      <DependentUpon>PropertyPage.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="Resources\No.png" />
+    <EmbeddedResource Include="Resources\Yes.png" />
+    <Compile Include="Source\Player\PortAudioStream.cs" />
+    <EmbeddedResource Include="Resources\ExportFamiTone2.png" />
+    <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
+    <EmbeddedResource Include="Resources\ExportNsf.png" />
+    <EmbeddedResource Include="Resources\ExportWav.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -237,12 +254,23 @@
     <None Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\MacDrag32px.png" />
+    <EmbeddedResource Include="Resources\MacDrag64px.png" />
+    <EmbeddedResource Include="Resources\MacCopy32px.png" />
+    <EmbeddedResource Include="Resources\MacCopy64px.png" />
+    <EmbeddedResource Include="Resources\MacSizeNS32px.png" />
+    <EmbeddedResource Include="Resources\MacSizeNS64px.png" />
+    <EmbeddedResource Include="Resources\MacSizeWE32px.png" />
+    <EmbeddedResource Include="Resources\MacSizeWE64px.png" />
+    <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand10_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand12_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand20Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand20_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand28_0.png" />
     <None Include="Resources\VolumeSmall.png" />
     <None Include="Resources\Export.png" />
-    <None Include="Resources\ExportWav.png" />
-    <None Include="Resources\ExportNsf.png" />
-    <None Include="Resources\ExportFamiTracker.png" />
-    <None Include="Resources\ExportFamiTone2.png" />
     <None Include="Resources\DPCMSmall.png" />
     <None Include="Resources\NoiseSmall.png" />
     <None Include="Resources\SquareSmall.png" />
@@ -260,8 +288,6 @@
     <None Include="Resources\Stop.png" />
     <None Include="Resources\Undo.png" />
     <None Include="Resources\EditSmall.png" />
-    <None Include="Resources\No.png" />
-    <None Include="Resources\Yes.png" />
     <None Include="Resources\ExportMusic.png" />
     <None Include="Resources\ExportSFX.png" />
     <None Include="Resources\LoopPattern.png" />
