@@ -97,8 +97,8 @@
             this.BackColor = System.Drawing.SystemColors.ControlDarkDark;
             this.ClientSize = new System.Drawing.Size(1264, 681);
             this.Controls.Add(this.tableLayout);
-            this.Controls.Add(this.projectExplorer); 
-            this.Controls.Add(this.toolbar); 
+            this.Controls.Add(this.projectExplorer);
+            this.Controls.Add(this.toolbar);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.Name = "FamiStudioForm";
