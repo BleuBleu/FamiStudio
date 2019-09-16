@@ -280,8 +280,6 @@ namespace FamiStudio
             base.OnMouseDown(e);
             if (captureControl != null) return;
 
-            Debug.WriteLine($"FOCUSED? {Focused}");
-
 #if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
             var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
