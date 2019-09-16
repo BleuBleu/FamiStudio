@@ -124,21 +124,17 @@ namespace FamiStudio
         public System.Drawing.Point GetCursorPosition()
         {
 #if FAMISTUDIO_MACOS
-            return MacUtils.GetMousePosition(DisplayDevice.Default.Height);
-#else
-            var state = Mouse.GetCursorState();
-            return new Point(state.X, state.Y);
+            return PointToScreen(MacUtils.GetWindowMousePosition(WindowInfo.Handle));
 #endif
         }
 
         public void RefreshCursor()
         {
 #if FAMISTUDIO_MACOS
-            var pt = MacUtils.GetMousePosition(DisplayDevice.Default.Height);
+            var client = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
 #else
-            var pt = Mouse.GetCursorState();
+            var client = PointToClient(Mouse.GetCursorState());
 #endif
-            var client = PointToClient(new Point(pt.X, pt.Y));
             var ctrl = GetControlAtCoord(client.X, client.Y, out _, out _);
 
             if (ctrl != null)
@@ -288,7 +284,7 @@ namespace FamiStudio
 
 #if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
-            var pt = PointToClient(MacUtils.GetMousePosition(DisplayDevice.Default.Height));
+            var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
 #else
             var pt = new Point(e.X, e.Y);
 #endif
@@ -329,7 +325,7 @@ namespace FamiStudio
 
 #if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
-            var pt = PointToClient(MacUtils.GetMousePosition(DisplayDevice.Default.Height));
+            var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
 #else
             var pt = new Point(e.X, e.Y);
 #endif
@@ -349,7 +345,7 @@ namespace FamiStudio
 
 #if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
-            var pt = PointToClient(MacUtils.GetMousePosition(DisplayDevice.Default.Height));
+            var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
 #else
             var pt = new Point(e.X, e.Y);
 #endif
@@ -491,9 +487,9 @@ namespace FamiStudio
             if (captureControl != null)
             {
 #if FAMISTUDIO_MACOS
-                var pt = captureControl.PointToClient(MacUtils.GetMousePosition(DisplayDevice.Default.Height));
+                var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
                 var buttons = MacUtils.GetMouseButtons();
-                var args = new System.Windows.Forms.MouseEventArgs(buttons, 0, pt.X, pt.Y, 0);
+                var args = new System.Windows.Forms.MouseEventArgs(buttons, 0, pt.X - captureControl.Left, pt.Y - captureControl.Top, 0);
 
                 if (buttons != captureButtons)
                 {

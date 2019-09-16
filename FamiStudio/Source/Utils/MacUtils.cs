@@ -21,6 +21,9 @@ namespace FamiStudio
         public extern static int SendInt(IntPtr receiver, IntPtr selector);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static double SendFloat(IntPtr receiver, IntPtr selector);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
@@ -32,14 +35,17 @@ namespace FamiStudio
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, int int1);
 
-        //[DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
-        //public extern static NSPoint SendPoint(IntPtr receiver, IntPtr selector);
-
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public static extern NSPointF SendPointF(IntPtr receiver, IntPtr selector);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public static extern NSPointD SendPointD(IntPtr receiver, IntPtr selector);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend_stret")]
+        private static extern void SendRect(out NSRect retval, IntPtr receiver, IntPtr selector);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend_stret")]
+        private static extern void SendRect(out NSRect retval, IntPtr receiver, IntPtr selector, NSRect rect1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "class_replaceMethod")]
         public static extern void ClassReplaceMethod(IntPtr classHandle, IntPtr selector, IntPtr method, string types);
@@ -67,10 +73,51 @@ namespace FamiStudio
         const int NSAlertFirstButtonReturn  = 1000;
         const int NSAlertSecondButtonReturn = 1001;
 
+        static IntPtr clsNSURL = ObjCGetClass("NSURL");
+        static IntPtr clsNSString = ObjCGetClass("NSString");
+        static IntPtr clsNSArray = ObjCGetClass("NSArray");
+        static IntPtr clsNSEvent;
+        static IntPtr clsNSOpenPanel;
+        static IntPtr clsNSSavePanel;
+        static IntPtr clsNSAlert;
+
+        static IntPtr selAlloc = SelRegisterName("alloc");
+        static IntPtr selInitWithCharactersLength = SelRegisterName("initWithCharacters:length:");
+        static IntPtr selFileURLWithPath = SelRegisterName("fileURLWithPath:");
+        static IntPtr selPath = SelRegisterName("path");
+        static IntPtr selUTF8String = SelRegisterName("UTF8String");
+        static IntPtr selArrayWithObjectsCount = SelRegisterName("arrayWithObjects:count:");
+        static IntPtr selPressedMouseButtons = SelRegisterName("pressedMouseButtons");
+        static IntPtr selBackingScaleFactor = SelRegisterName("backingScaleFactor");
+        static IntPtr selContentView = SelRegisterName("contentView");
+        static IntPtr selFrame = SelRegisterName("frame");
+        static IntPtr selMouseLocationOutsideOfEventStream = SelRegisterName("mouseLocationOutsideOfEventStream");
+        static IntPtr selMakeKeyAndOrderFront = SelRegisterName("makeKeyAndOrderFront:");
+        static IntPtr selSetLevel = SelRegisterName("setLevel:");
+        static IntPtr selStandardWindowButton = SelRegisterName("standardWindowButton:");
+        static IntPtr selSetHidden = SelRegisterName("setHidden:");
+        static IntPtr selOpenPanel = SelRegisterName("openPanel");
+        static IntPtr selSavePanel = SelRegisterName("savePanel");
+        static IntPtr selSetTitle = SelRegisterName("setTitle:");
+        static IntPtr selSetDirectoryURL = SelRegisterName("setDirectoryURL:");
+        static IntPtr selSetAllowedFileTypes = SelRegisterName("setAllowedFileTypes:");
+        static IntPtr selRunModal = SelRegisterName("runModal");
+        static IntPtr selURL = SelRegisterName("URL");
+        static IntPtr selInit = SelRegisterName("init");
+        static IntPtr selSetMessageText = SelRegisterName("setMessageText:");
+        static IntPtr selSetInformativeText = SelRegisterName("setInformativeText:");
+        static IntPtr selSetAlertStyle = SelRegisterName("setAlertStyle:");
+        static IntPtr selAddButtonWithTitle = SelRegisterName("addButtonWithTitle:");
+
         public static void Initialize(IntPtr nsWin)
         {
             mainNsWindow = nsWin;
             appKit = LoadLibrary("/System/Library/Frameworks/AppKit.framework/AppKit");
+
+            clsNSEvent = ObjCGetClass("NSEvent");
+            clsNSOpenPanel = ObjCGetClass("NSOpenPanel");
+            clsNSSavePanel = ObjCGetClass("NSSavePanel");
+            clsNSAlert = ObjCGetClass("NSAlert");
         }
 
         public static IntPtr ToNSString(string str)
@@ -82,8 +129,8 @@ namespace FamiStudio
             {
                 fixed (char* ptrFirstChar = str)
                 {
-                    var handle = SendIntPtr(MacUtils.ObjCGetClass("NSString"), SelRegisterName("alloc"));
-                    handle = MacUtils.SendIntPtr(handle, MacUtils.SelRegisterName("initWithCharacters:length:"), (IntPtr)ptrFirstChar, str.Length);
+                    var handle = SendIntPtr(clsNSString, selAlloc);
+                    handle = SendIntPtr(handle, selInitWithCharactersLength, (IntPtr)ptrFirstChar, str.Length);
                     return handle;
                 }
             }
@@ -92,15 +139,15 @@ namespace FamiStudio
         public static IntPtr ToNSURL(string filepath)
         {
             return SendIntPtr(
-                ObjCGetClass("NSURL"),
-                SelRegisterName("fileURLWithPath:"),
+                clsNSURL,
+                selFileURLWithPath,
                 ToNSString(filepath));
         }
 
         public static unsafe string FromNSURL(IntPtr url)
         {
-            var str = SendIntPtr(url, SelRegisterName("path"));
-            var charPtr = SendIntPtr(str, SelRegisterName("UTF8String"));
+            var str = SendIntPtr(url, selPath);
+            var charPtr = SendIntPtr(str, selUTF8String);
             return Marshal.PtrToStringAnsi(charPtr);
         }
 
@@ -111,8 +158,8 @@ namespace FamiStudio
                 Marshal.WriteIntPtr(buf, i * IntPtr.Size, ToNSString(items[i]));
 
             var array = SendIntPtr(
-                ObjCGetClass("NSArray"),
-                SelRegisterName("arrayWithObjects:count:"),
+                clsNSArray,
+                selArrayWithObjectsCount,
                 buf,
                 items.Length);
 
@@ -202,6 +249,20 @@ namespace FamiStudio
         {
             public NSFloat X;
             public NSFloat Y;
+
+            public static implicit operator NSPoint(System.Drawing.PointF p)
+            {
+                return new NSPoint
+                {
+                    X = p.X,
+                    Y = p.Y
+                };
+            }
+
+            public static implicit operator System.Drawing.PointF(NSPoint s)
+            {
+                return new System.Drawing.PointF(s.X, s.Y);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -216,6 +277,53 @@ namespace FamiStudio
         {
             public double X;
             public double Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct NSSize
+        {
+            public NSFloat Width;
+            public NSFloat Height;
+
+            public static implicit operator NSSize(System.Drawing.SizeF s)
+            {
+                return new NSSize
+                {
+                    Width = s.Width,
+                    Height = s.Height
+                };
+            }
+
+            public static implicit operator System.Drawing.SizeF(NSSize s)
+            {
+                return new System.Drawing.SizeF(s.Width, s.Height);
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct NSRect
+        {
+            public NSPoint Location;
+            public NSSize Size;
+
+            public NSFloat Width => Size.Width;
+            public NSFloat Height => Size.Height;
+            public NSFloat X => Location.X;
+            public NSFloat Y => Location.Y;
+
+            public static implicit operator NSRect(System.Drawing.RectangleF s)
+            {
+                return new NSRect
+                {
+                    Location = s.Location,
+                    Size = s.Size
+                };
+            }
+
+            public static implicit operator System.Drawing.RectangleF(NSRect s)
+            {
+                return new System.Drawing.RectangleF(s.Location, s.Size);
+            }
         }
 
         public static NSPoint SendPoint(IntPtr receiver, IntPtr selector)
@@ -241,9 +349,23 @@ namespace FamiStudio
             return r;
         }
 
+        public static NSRect SendRect(IntPtr receiver, IntPtr selector)
+        {
+            NSRect r;
+            SendRect(out r, receiver, selector);
+            return r;
+        }
+
+        public static NSRect SendRect(IntPtr receiver, IntPtr selector, NSRect rect1)
+        {
+            NSRect r;
+            SendRect(out r, receiver, selector, rect1);
+            return r;
+        }
+
         public static System.Windows.Forms.MouseButtons GetMouseButtons()
         {
-            int macButtons = SendInt(ObjCGetClass("NSEvent"), SelRegisterName("pressedMouseButtons"));
+            int macButtons = SendInt(clsNSEvent, selPressedMouseButtons);
 
             System.Windows.Forms.MouseButtons buttons = 0;
             if ((macButtons & 1) != 0) buttons |= System.Windows.Forms.MouseButtons.Left;
@@ -252,15 +374,20 @@ namespace FamiStudio
             return buttons;
         }
 
-        public static System.Drawing.Point GetMousePosition(int displayHeight)
+        public static System.Drawing.Point GetWindowMousePosition(IntPtr nsWin)
         {
-            NSPoint mouseLoc = SendPoint(ObjCGetClass("NSEvent"), SelRegisterName("mouseLocation"));
-            var pt = new System.Drawing.Point();
-            pt.X = (int)Math.Round((float)mouseLoc.X);
-            pt.Y = (int)Math.Round((float)mouseLoc.Y);
-            pt.Y = displayHeight - pt.Y - 1;
+            var scaling = SendFloat(nsWin, selBackingScaleFactor);
 
-            return pt;
+            var nsView = SendIntPtr(nsWin, selContentView);
+            var viewRect = SendRect(nsView, selFrame);
+            var winHeight = (float)viewRect.Size.Height * scaling;
+
+            var mouseLoc = SendPoint(nsWin, selMouseLocationOutsideOfEventStream);
+            float x = (float)(mouseLoc.X * scaling);
+            float y = (float)(mouseLoc.Y * scaling);
+            y = (float)winHeight - y;
+
+            return new System.Drawing.Point((int)Math.Round(x), (int)Math.Round(y));
         }
 
         public static IntPtr LoadLibrary(string fileName)
@@ -271,13 +398,13 @@ namespace FamiStudio
 
         public static void SetNSWindowAlwayOnTop(IntPtr nsWin)
         {
-            SendIntPtr(nsWin, SelRegisterName("makeKeyAndOrderFront:"), IntPtr.Zero);
-            SendIntPtr(nsWin, SelRegisterName("setLevel:"), 25);
+            SendIntPtr(nsWin, selMakeKeyAndOrderFront, IntPtr.Zero);
+            SendIntPtr(nsWin, selSetLevel, 25);
         }
 
         public static void SetNSWindowFocus(IntPtr nsWin)
         {
-            SendIntPtr(nsWin, SelRegisterName("makeKeyAndOrderFront:"), nsWin);
+            SendIntPtr(nsWin, selMakeKeyAndOrderFront, nsWin);
         }
 
         public static void RestoreMainNSWindowFocus()
@@ -287,32 +414,31 @@ namespace FamiStudio
 
         public static void RemoveMaximizeButton(IntPtr nsWin)
         {
-            var btn = SendIntPtr(nsWin, SelRegisterName("standardWindowButton:"), NSWindowZoomButton);
-            SendIntPtr(btn, SelRegisterName("setHidden:"), 1);
+            var btn = SendIntPtr(nsWin, selStandardWindowButton, NSWindowZoomButton);
+            SendIntPtr(btn, selSetHidden, 1);
         }
 
         public static string ShowOpenDialog(string title, string[] extensions, string path = null)
         {
-            var clsOpenPanel = ObjCGetClass("NSOpenPanel");
-            var openPanel = SendIntPtr(clsOpenPanel, SelRegisterName("openPanel"));
-            SendIntPtr(openPanel, SelRegisterName("setTitle:"), ToNSString(title));
+            var openPanel = SendIntPtr(clsNSOpenPanel, selOpenPanel);
+            SendIntPtr(openPanel, selSetTitle, ToNSString(title));
 
             if (path != null)
             {
                 var url = ToNSURL(path);
-                SendIntPtr(openPanel, SelRegisterName("setDirectoryURL:"), url);
+                SendIntPtr(openPanel, selSetDirectoryURL, url);
             }
 
             var fileTypesArray = ToNSArray(extensions);
-            SendIntPtr(openPanel, SelRegisterName("setAllowedFileTypes:"), fileTypesArray);
+            SendIntPtr(openPanel, selSetAllowedFileTypes, fileTypesArray);
 
-            var status = SendInt(openPanel, SelRegisterName("runModal"));
+            var status = SendInt(openPanel, selRunModal);
 
             SetNSWindowFocus(mainNsWindow);
 
             if (status == NSOKButton)
             {
-                var url = SendIntPtr(openPanel, SelRegisterName("URL"));
+                var url = SendIntPtr(openPanel, selURL);
                 return FromNSURL(url);
             }
 
@@ -321,26 +447,25 @@ namespace FamiStudio
 
         public static string ShowSaveDialog(string title, string[] extensions, string path = null)
         {
-            var clsSavePanel = ObjCGetClass("NSSavePanel");
-            var savePanel = SendIntPtr(clsSavePanel, SelRegisterName("savePanel"));
-            SendIntPtr(savePanel, SelRegisterName("setTitle:"), ToNSString(title));
+            var savePanel = SendIntPtr(clsNSSavePanel, selSavePanel);
+            SendIntPtr(savePanel, selSetTitle, ToNSString(title));
 
             if (path != null)
             {
                 var url = ToNSURL(path);
-                SendIntPtr(savePanel, SelRegisterName("setDirectoryURL:"), url);
+                SendIntPtr(savePanel, selSetDirectoryURL, url);
             }
 
             var fileTypesArray = ToNSArray(extensions);
-            SendIntPtr(savePanel, SelRegisterName("setAllowedFileTypes:"), fileTypesArray);
+            SendIntPtr(savePanel, selSetAllowedFileTypes, fileTypesArray);
 
-            var status = SendInt(savePanel, SelRegisterName("runModal"));
+            var status = SendInt(savePanel, selRunModal);
 
             SetNSWindowFocus(mainNsWindow);
 
             if (status == NSOKButton)
             {
-                var url = SendIntPtr(savePanel, SelRegisterName("URL"));
+                var url = SendIntPtr(savePanel, selURL);
                 return FromNSURL(url);
             }
 
@@ -349,25 +474,25 @@ namespace FamiStudio
 
         public static System.Windows.Forms.DialogResult ShowAlert(string text, string title, System.Windows.Forms.MessageBoxButtons buttons)
         {
-            var alert = SendIntPtr(SendIntPtr(ObjCGetClass("NSAlert"), SelRegisterName("alloc")), SelRegisterName("init"));
+            var alert = SendIntPtr(SendIntPtr(clsNSAlert, selAlloc), selInit);
 
-            SendIntPtr(alert, SelRegisterName("setMessageText:"), ToNSString(title));
-            SendIntPtr(alert, SelRegisterName("setInformativeText:"), ToNSString(text));
-            SendIntPtr(alert, SelRegisterName("setAlertStyle:"), 2);
+            SendIntPtr(alert, selSetMessageText, ToNSString(title));
+            SendIntPtr(alert, selSetInformativeText, ToNSString(text));
+            SendIntPtr(alert, selSetAlertStyle, 2);
 
             if (buttons == System.Windows.Forms.MessageBoxButtons.YesNo ||
                 buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
             {
-                SendIntPtr(alert, SelRegisterName("addButtonWithTitle:"), ToNSString("Yes"));
-                SendIntPtr(alert, SelRegisterName("addButtonWithTitle:"), ToNSString("No"));
+                SendIntPtr(alert, selAddButtonWithTitle, ToNSString("Yes"));
+                SendIntPtr(alert, selAddButtonWithTitle, ToNSString("No"));
 
                 if (buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
                 {
-                    SendIntPtr(alert, SelRegisterName("addButtonWithTitle:"), ToNSString("Cancel"));
+                    SendIntPtr(alert, selAddButtonWithTitle, ToNSString("Cancel"));
                 }
             }
 
-            var ret = SendInt(alert, SelRegisterName("runModal"));
+            var ret = SendInt(alert, selRunModal);
 
             SetNSWindowFocus(mainNsWindow);
 
