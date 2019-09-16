@@ -210,14 +210,6 @@
     <None Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\MacDrag32px.png" />
-    <EmbeddedResource Include="Resources\MacDrag64px.png" />
-    <EmbeddedResource Include="Resources\MacCopy32px.png" />
-    <EmbeddedResource Include="Resources\MacCopy64px.png" />
-    <EmbeddedResource Include="Resources\MacSizeNS32px.png" />
-    <EmbeddedResource Include="Resources\MacSizeNS64px.png" />
-    <EmbeddedResource Include="Resources\MacSizeWE32px.png" />
-    <EmbeddedResource Include="Resources\MacSizeWE64px.png" />
     <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand10_0.png" />
     <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />

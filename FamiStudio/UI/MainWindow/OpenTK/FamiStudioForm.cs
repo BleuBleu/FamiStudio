@@ -44,6 +44,7 @@ namespace FamiStudio
         const int ControlPianoRoll = 2;
         const int ControlProjectExplorer = 3;
 
+        private IntPtr cursor = Cursors.Default;
         private FamiStudio famistudio;
         private GLGraphics gfx = new GLGraphics();
         private GLControl[] controls = new GLControl[4];
@@ -66,14 +67,25 @@ namespace FamiStudio
 
         public string Text { get => Title; set => Title = value; }
 
+#if FAMISTUDIO_MACOS
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         private delegate bool WindowShouldZoomToFrameDelegate(IntPtr self, IntPtr cmd, IntPtr nsWindow, RectangleF toFrame);
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        private delegate void ResetCursorRectsDelegate(IntPtr self, IntPtr cmd);
+
         private readonly WindowShouldZoomToFrameDelegate WindowShouldZoomToFrameHandler;
+        private readonly ResetCursorRectsDelegate ResetCursorRectsHandler;
 
         private bool WindowShouldZoomToFrame(IntPtr self, IntPtr cmd, IntPtr nsWindow, RectangleF toFrame)
         {
             return false;
         }
+
+        private void ResetCursorRects(IntPtr sender, IntPtr cmd)
+        {
+            MacUtils.SetWindowCursor(WindowInfo.Handle, sender, cursor);
+        }
+#endif
 
         public FamiStudioForm(FamiStudio famistudio)
             : base(1280, 720, new GraphicsMode(new ColorFormat(8, 8, 8, 0), 0, 0), "FamiStudio")
@@ -81,8 +93,10 @@ namespace FamiStudio
             this.VSync = VSyncMode.On;
             this.famistudio = famistudio;
 
+#if FAMISTUDIO_MACOS
             // There are some severe maximize bugs in OpenTK. Simply disable the maximize and bypass all the frame zooming thing.
             WindowShouldZoomToFrameHandler = WindowShouldZoomToFrame;
+            ResetCursorRectsHandler = ResetCursorRects;
 
             MacUtils.RemoveMaximizeButton(WindowInfo.Handle);
             MacUtils.ClassReplaceMethod(
@@ -90,6 +104,12 @@ namespace FamiStudio
                 MacUtils.SelRegisterName("windowShouldZoom:toFrame:"),
                 Marshal.GetFunctionPointerForDelegate(WindowShouldZoomToFrameHandler),
                 "b@:@{NSRect={NSPoint=ff}{NSSize=ff}}");
+            MacUtils.ClassReplaceMethod(
+                MacUtils.ClassLookup("OpenTK_NSView1"),
+                MacUtils.SelRegisterName("resetCursorRects"),
+                Marshal.GetFunctionPointerForDelegate(ResetCursorRectsHandler),
+                "v@:");
+#endif
 
             toolbar = new Toolbar();
             sequencer = new Sequencer();
@@ -138,13 +158,17 @@ namespace FamiStudio
             var ctrl = GetControlAtCoord(client.X, client.Y, out _, out _);
 
             if (ctrl != null)
-                Cursor = ctrl.Cursor.Current;
+                cursor = ctrl.Cursor.Current;
+
+            MacUtils.InvalidateCursor(WindowInfo.Handle);
         }
 
         public void RefreshCursor(GLControl ctrl)
         {
             if (ctrl != null)
-                Cursor = ctrl.Cursor.Current;
+                cursor = ctrl.Cursor.Current;
+
+            MacUtils.InvalidateCursor(WindowInfo.Handle);
         }
 
         protected override void OnMove(EventArgs e)

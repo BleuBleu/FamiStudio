@@ -18,6 +18,12 @@ namespace FamiStudio
         public extern static void SendVoid(IntPtr receiver, IntPtr selector);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static void SendVoid(IntPtr receiver, IntPtr selector, IntPtr intPtr1);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static void SendVoid(IntPtr receiver, IntPtr selector, NSRect rect1, IntPtr intPtr1);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static int SendInt(IntPtr receiver, IntPtr selector);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
@@ -80,6 +86,7 @@ namespace FamiStudio
         static IntPtr clsNSOpenPanel;
         static IntPtr clsNSSavePanel;
         static IntPtr clsNSAlert;
+        static IntPtr clsNSCursor;
 
         static IntPtr selAlloc = SelRegisterName("alloc");
         static IntPtr selInitWithCharactersLength = SelRegisterName("initWithCharacters:length:");
@@ -108,6 +115,9 @@ namespace FamiStudio
         static IntPtr selSetInformativeText = SelRegisterName("setInformativeText:");
         static IntPtr selSetAlertStyle = SelRegisterName("setAlertStyle:");
         static IntPtr selAddButtonWithTitle = SelRegisterName("addButtonWithTitle:");
+        static IntPtr selInvalidateCursorRectsForView = SelRegisterName("invalidateCursorRectsForView:");
+        static IntPtr selBounds = SelRegisterName("bounds");
+        static IntPtr selAddCursorRectCursor = SelRegisterName("addCursorRect:cursor:");
 
         public static void Initialize(IntPtr nsWin)
         {
@@ -118,6 +128,7 @@ namespace FamiStudio
             clsNSOpenPanel = ObjCGetClass("NSOpenPanel");
             clsNSSavePanel = ObjCGetClass("NSSavePanel");
             clsNSAlert = ObjCGetClass("NSAlert");
+            clsNSCursor = ObjCGetClass("NSCursor");
         }
 
         public static IntPtr ToNSString(string str)
@@ -388,6 +399,20 @@ namespace FamiStudio
             y = (float)winHeight - y;
 
             return new System.Drawing.Point((int)Math.Round(x), (int)Math.Round(y));
+        }
+
+        public static void SetWindowCursor(IntPtr nsWin, IntPtr target, IntPtr cursor)
+        {
+            var nsView = SendIntPtr(nsWin, selContentView);
+            var rect = SendRect(nsView, selBounds);
+            var nsCursor = SendIntPtr(clsNSCursor, cursor);
+            SendVoid(target, selAddCursorRectCursor, rect, nsCursor);
+        }
+
+        public static void InvalidateCursor(IntPtr nsWin)
+        {
+            var nsView = SendIntPtr(nsWin, selContentView);
+            SendVoid(nsWin, selInvalidateCursorRectsForView, nsView);
         }
 
         public static IntPtr LoadLibrary(string fileName)

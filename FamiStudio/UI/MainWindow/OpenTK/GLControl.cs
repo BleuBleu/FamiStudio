@@ -69,12 +69,12 @@ namespace FamiStudio
 
     public class CursorInfo
     {
-        private OpenTK.MouseCursor cursor = OpenTK.MouseCursor.Default;
+        private IntPtr cursor = Cursors.Default;
         private GLControl parentControl;
 
         public CursorInfo(GLControl ctrl) { parentControl = ctrl; }
         public System.Drawing.Point Position => parentControl.ParentForm.GetCursorPosition();
-        public OpenTK.MouseCursor Current
+        public IntPtr Current
         {
             get { return cursor; }
             set { cursor = value; parentControl.ParentForm.RefreshCursor(); }
