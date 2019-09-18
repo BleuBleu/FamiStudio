@@ -15,13 +15,13 @@ using FamiStudio.Properties;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderPath     = FamiStudio.GLConvexPath;
-    using RenderFont     = FamiStudio.GLFont;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
+using RenderBitmap = FamiStudio.GLBitmap;
+using RenderBrush = FamiStudio.GLBrush;
+using RenderPath = FamiStudio.GLConvexPath;
+using RenderFont = FamiStudio.GLFont;
+using RenderControl = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLGraphics;
+using RenderTheme = FamiStudio.GLTheme;
 #endif
 
 namespace FamiStudio
@@ -97,8 +97,8 @@ namespace FamiStudio
         bool resizingEnvelope = false;
         bool changingEffectValue = false;
         bool drawingEnvelope = false;
-        int  effectPatternIdx;
-        int  effectNoteIdx;
+        int effectPatternIdx;
+        int effectNoteIdx;
 
         bool showEffectsPanel = false;
         int scrollX = 0;
@@ -166,7 +166,7 @@ namespace FamiStudio
             ClampScroll();
             ConditionalInvalidate();
         }
-       
+
 
         private Song Song
         {
@@ -210,19 +210,19 @@ namespace FamiStudio
             blackKeyPressedBrush = g.CreateHorizontalGradientBrush(0, BlackKeySizeX, ThemeBase.Lighten(ThemeBase.DarkGreyFillColor1), ThemeBase.Lighten(ThemeBase.DarkGreyFillColor2));
             debugBrush = g.CreateSolidBrush(ThemeBase.GreenColor);
             playPositionBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.LightGreyFillColor1));
-            bmpLoop = g.ConvertBitmap(Resources.LoopSmall);
+            bmpLoop = g.CreateBitmapFromResource("LoopSmall");
 
-            bmpVolume = g.ConvertBitmap(Resources.VolumeSmall);
-            bmpEffects[0] = g.ConvertBitmap(Resources.LoopSmall);
-            bmpEffects[1] = g.ConvertBitmap(Resources.JumpSmall);
-            bmpEffects[2] = g.ConvertBitmap(Resources.SpeedSmall);
+            bmpVolume = g.CreateBitmapFromResource("VolumeSmall");
+            bmpEffects[0] = g.CreateBitmapFromResource("LoopSmall");
+            bmpEffects[1] = g.CreateBitmapFromResource("JumpSmall");
+            bmpEffects[2] = g.CreateBitmapFromResource("SpeedSmall");
 
-            bmpEffectsFilled[0] = g.ConvertBitmap(Resources.LoopSmallFill);
-            bmpEffectsFilled[1] = g.ConvertBitmap(Resources.JumpSmallFill);
-            bmpEffectsFilled[2] = g.ConvertBitmap(Resources.SpeedSmallFill);
+            bmpEffectsFilled[0] = g.CreateBitmapFromResource("LoopSmallFill");
+            bmpEffectsFilled[1] = g.CreateBitmapFromResource("JumpSmallFill");
+            bmpEffectsFilled[2] = g.CreateBitmapFromResource("SpeedSmallFill");
 
-            bmpEffectExpanded = g.ConvertBitmap(Resources.ExpandedSmall);
-            bmpEffectCollapsed = g.ConvertBitmap(Resources.CollapsedSmall);
+            bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
+            bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
 
             for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
             {
@@ -238,7 +238,7 @@ namespace FamiStudio
                 stopNoteGeometry[idx] = g.CreateConvexPath(points);
             }
         }
-        
+
         private bool IsBlackKey(int key)
         {
             return key == 1 || key == 3 || key == 6 || key == 8 || key == 10;
@@ -265,7 +265,7 @@ namespace FamiStudio
                     keySizeY);
             }
         }
-        
+
         protected override void OnRender(RenderGraphics g)
         {
             g.Clear(ThemeBase.DarkGreyFillColor2);
@@ -437,11 +437,11 @@ namespace FamiStudio
                         {
                             var note = pattern.Notes[Math.Min(i, Song.PatternLength - 1)];
 
-                            if ((note.HasEffect && selectedEffectIdx >=  0) ||
+                            if ((note.HasEffect && selectedEffectIdx >= 0) ||
                                 (note.HasVolume && selectedEffectIdx == -1))
                             {
                                 var effectMaxValue = selectedEffectIdx == -1 ? Note.VolumeMax : Note.GetEffectMaxValue(Song, note.Effect);
-                                var effectValue    = selectedEffectIdx == -1 ? note.Volume    : note.EffectParam;
+                                var effectValue = selectedEffectIdx == -1 ? note.Volume : note.EffectParam;
                                 var sizeY = (float)Math.Floor(effectValue / (float)effectMaxValue * EffectPanelSizeY);
 
                                 g.PushTranslation(x + i * NoteSizeX - scrollX, 0);
@@ -488,14 +488,14 @@ namespace FamiStudio
 
             bool showSampleNames = editMode == EditionMode.Channel && editChannel == 4;
             bool showNoiseValues = editMode == EditionMode.Channel && editChannel == 3;
-            
+
             int playOctave = -1;
             int playNote = -1;
 
             if (playingNote > 0)
             {
                 playOctave = (playingNote - 1) / 12;
-                playNote   = (playingNote - 1) - playOctave * 12;
+                playNote = (playingNote - 1) - playOctave * 12;
 
                 if (!IsBlackKey(playNote))
                     g.FillRectangle(GetKeyRectangle(playOctave, playNote), whiteKeyPressedBrush);
@@ -609,7 +609,7 @@ namespace FamiStudio
                             var dimmed = c != editChannel;
 
                             var lastNotePatternIdx = minVisiblePattern - 1;
-                            var lastNoteValue      = Song.Channels[c].GetLastValidNote(ref lastNotePatternIdx, out var lastNoteTime, out var lastNoteInstrument);
+                            var lastNoteValue = Song.Channels[c].GetLastValidNote(ref lastNotePatternIdx, out var lastNoteTime, out var lastNoteInstrument);
 
                             if (lastNoteValue != Note.NoteInvalid)
                             {
@@ -806,14 +806,14 @@ namespace FamiStudio
 
         void ResizeEnvelope(MouseEventArgs e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
             var env = EditEnvelope;
             int length = (int)Math.Round((e.X - WhiteKeySizeX + scrollX) / (double)NoteSizeX);
 
-            if (left  && env.Length == length ||
-                right && env.Loop   == length)
+            if (left && env.Length == length ||
+                right && env.Loop == length)
             {
                 return;
             }
@@ -869,7 +869,7 @@ namespace FamiStudio
         protected bool PointInRectangle(Rectangle rect, int x, int y)
         {
             return (x >= rect.Left && x <= rect.Right &&
-                    y >= rect.Top  && y <= rect.Bottom);
+                    y >= rect.Top && y <= rect.Bottom);
         }
 
         protected void PlayPiano(int x, int y)
@@ -920,7 +920,7 @@ namespace FamiStudio
                 var mapping = App.Project.SamplesMapping[noteValue];
                 if (left && mapping != null)
                 {
-                    
+
                     var dlg = new PropertyDialog(160, PointToScreen(new Point(e.X - 160, e.Y)));
                     dlg.Properties.AddColoredString(mapping.Sample.Name, ThemeBase.LightGreyFillColor2);
                     dlg.Properties.AddIntegerRange("Pitch :", mapping.Pitch, 0, 15);
@@ -929,7 +929,7 @@ namespace FamiStudio
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
-                        var newName  = dlg.Properties.GetPropertyValue<string>(0);
+                        var newName = dlg.Properties.GetPropertyValue<string>(0);
 
                         App.Stop();
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
@@ -954,9 +954,9 @@ namespace FamiStudio
         {
             base.OnMouseDown(e);
 
-            bool left   = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
-            bool right  = e.Button.HasFlag(MouseButtons.Right);
+            bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (left && e.Y > HeaderSizeY && e.X < WhiteKeySizeX)
             {
@@ -1001,7 +1001,7 @@ namespace FamiStudio
                 drawingEnvelope = true;
                 Capture = true;
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
-                DrawEnvelope(e); 
+                DrawEnvelope(e);
             }
             else if (!changingEffectValue && left && editMode == EditionMode.Channel && e.X > WhiteKeySizeX && e.Y > HeaderDefaultSizeY && e.Y < HeaderSizeY)
             {
@@ -1152,9 +1152,9 @@ namespace FamiStudio
             scrollY -= deltaY;
 
             ClampScroll();
-            ConditionalInvalidate(); 
+            ConditionalInvalidate();
         }
-        
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -1171,7 +1171,7 @@ namespace FamiStudio
                 mouseLastX = e.X;
                 mouseLastY = e.Y;
             }
-            
+
             if (editMode == EditionMode.Enveloppe && (e.X > WhiteKeySizeX && e.Y < HeaderSizeY) || resizingEnvelope)
                 Cursor.Current = Cursors.SizeWE;
             else if (changingEffectValue)
@@ -1245,7 +1245,7 @@ namespace FamiStudio
             if (scrolling)
             {
                 scrolling = false;
-                Capture   = false;
+                Capture = false;
             }
             if (resizingEnvelope)
             {
@@ -1289,7 +1289,7 @@ namespace FamiStudio
         private bool GetEffectNoteForCoord(int x, int y, out int patternIdx, out int noteIdx)
         {
             if (x > WhiteKeySizeX && y > HeaderDefaultSizeY && y < HeaderSizeY)
-            { 
+            {
                 noteIdx = (x - WhiteKeySizeX + scrollX) / NoteSizeX;
                 patternIdx = noteIdx / Song.PatternLength;
                 noteIdx %= Song.PatternLength;
@@ -1306,10 +1306,10 @@ namespace FamiStudio
 
         private bool GetNoteForCoord(int x, int y, out int patternIdx, out int noteIdx, out byte noteValue)
         {
-            noteIdx    = (x - WhiteKeySizeX + scrollX) / NoteSizeX;
+            noteIdx = (x - WhiteKeySizeX + scrollX) / NoteSizeX;
             patternIdx = noteIdx / Song.PatternLength;
-            noteIdx   %= Song.PatternLength;
-            noteValue  = (byte)(NumNotes - Math.Min((y + scrollY - HeaderSizeY) / NoteSizeY, NumNotes));
+            noteIdx %= Song.PatternLength;
+            noteValue = (byte)(NumNotes - Math.Min((y + scrollY - HeaderSizeY) / NoteSizeY, NumNotes));
 
             return (x > WhiteKeySizeX && y > HeaderSizeY && patternIdx < Song.Length);
         }

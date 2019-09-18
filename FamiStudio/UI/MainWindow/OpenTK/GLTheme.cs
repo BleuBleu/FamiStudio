@@ -35,11 +35,11 @@ namespace FamiStudio
                         str = reader.ReadToEnd();
                     }
 
-                    var bmp = Image.FromStream(typeof(GLTheme).Assembly.GetManifestResourceStream(imgfile)) as Bitmap;
+                    var pixbuf = Gdk.Pixbuf.LoadFromResource(imgfile);
                     var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
                     fontTextureMap.TryGetValue(imgfile, out int texture);
-                    var font = g.CreateFont(bmp, lines, def.Size, def.Alignment, def.Ellipsis, texture);
+                    var font = g.CreateFont(pixbuf, lines, def.Size, def.Alignment, def.Ellipsis, texture);
 
                     fontTextureMap[imgfile] = font.Texture;
                     Fonts[i] = font;

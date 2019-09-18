@@ -15,13 +15,13 @@ using Color = System.Drawing.Color;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderPath     = FamiStudio.GLConvexPath;
-    using RenderFont     = FamiStudio.GLFont;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
+using RenderBitmap = FamiStudio.GLBitmap;
+using RenderBrush = FamiStudio.GLBrush;
+using RenderPath = FamiStudio.GLConvexPath;
+using RenderFont = FamiStudio.GLFont;
+using RenderControl = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLGraphics;
+using RenderTheme = FamiStudio.GLTheme;
 #endif
 
 namespace FamiStudio
@@ -29,7 +29,7 @@ namespace FamiStudio
     public class ProjectExplorer : RenderControl
     {
         const int ScrollBarDefaultSizeX = 8;
-        const int ButtonSizeY           = 24;
+        const int ButtonSizeY = 24;
 
         enum ButtonType
         {
@@ -156,7 +156,7 @@ namespace FamiStudio
 
         RenderTheme theme;
 
-        RenderBitmap[] bmpButtonIcons    = new RenderBitmap[(int)ButtonType.Max];
+        RenderBitmap[] bmpButtonIcons = new RenderBitmap[(int)ButtonType.Max];
         RenderBitmap[] bmpSubButtonIcons = new RenderBitmap[(int)SubButtonType.Max];
 
         public Song SelectedSong => selectedSong;
@@ -177,7 +177,7 @@ namespace FamiStudio
         public ProjectExplorer()
         {
         }
-        
+
         public void Reset()
         {
             selectedSong = App.Project.Songs[0];
@@ -206,18 +206,18 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
-            bmpButtonIcons[(int)ButtonType.Song] = g.ConvertBitmap(Resources.Music);
-            bmpButtonIcons[(int)ButtonType.Instrument] = g.ConvertBitmap(Resources.Pattern);
+            bmpButtonIcons[(int)ButtonType.Song] = g.CreateBitmapFromResource("Music");
+            bmpButtonIcons[(int)ButtonType.Instrument] = g.CreateBitmapFromResource("Pattern");
 
-            bmpSubButtonIcons[(int)SubButtonType.Add] = g.ConvertBitmap(Resources.Add);
-            bmpSubButtonIcons[(int)SubButtonType.DPCM] = g.ConvertBitmap(Resources.DPCM);
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle0] = g.ConvertBitmap(Resources.Duty0);
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle1] = g.ConvertBitmap(Resources.Duty1);
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle2] = g.ConvertBitmap(Resources.Duty2);
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle3] = g.ConvertBitmap(Resources.Duty3);
-            bmpSubButtonIcons[(int)SubButtonType.Arpeggio] = g.ConvertBitmap(Resources.Arpeggio);
-            bmpSubButtonIcons[(int)SubButtonType.Pitch] = g.ConvertBitmap(Resources.Pitch);
-            bmpSubButtonIcons[(int)SubButtonType.Volume] = g.ConvertBitmap(Resources.Volume);
+            bmpSubButtonIcons[(int)SubButtonType.Add] = g.CreateBitmapFromResource("Add");
+            bmpSubButtonIcons[(int)SubButtonType.DPCM] = g.CreateBitmapFromResource("DPCM");
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle0] = g.CreateBitmapFromResource("Duty0");
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle1] = g.CreateBitmapFromResource("Duty1");
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle2] = g.CreateBitmapFromResource("Duty2");
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle3] = g.CreateBitmapFromResource("Duty3");
+            bmpSubButtonIcons[(int)SubButtonType.Arpeggio] = g.CreateBitmapFromResource("Arpeggio");
+            bmpSubButtonIcons[(int)SubButtonType.Pitch] = g.CreateBitmapFromResource("Pitch");
+            bmpSubButtonIcons[(int)SubButtonType.Volume] = g.CreateBitmapFromResource("Volume");
         }
 
         private void ConditionalInvalidate()
@@ -262,9 +262,9 @@ namespace FamiStudio
 
             if (NeedsScrollBar)
             {
-                int virtualSizeY   = VirtualSizeY;
-                int scrollBarSizeY = (int)Math.Round(Height * (Height  / (float)virtualSizeY));
-                int scrollBarPosY  = (int)Math.Round(Height * (scrollY / (float)virtualSizeY));
+                int virtualSizeY = VirtualSizeY;
+                int scrollBarSizeY = (int)Math.Round(Height * (Height / (float)virtualSizeY));
+                int scrollBarPosY = (int)Math.Round(Height * (scrollY / (float)virtualSizeY));
 
                 g.FillAndDrawRectangle(actualWidth, 0, Width - 1, Height, theme.DarkGreyFillBrush1, theme.BlackBrush);
                 g.FillAndDrawRectangle(actualWidth, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, theme.LightGreyFillBrush1, theme.BlackBrush);
@@ -324,7 +324,7 @@ namespace FamiStudio
                             sub = subButtons[i];
                             break;
                         }
-                        
+
                     }
                 }
 
@@ -340,7 +340,7 @@ namespace FamiStudio
         {
             base.OnMouseMove(e);
 
-            bool left   = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             if (left && mouseDragY > 0 && !isDraggingInstrument && Math.Abs(e.Y - mouseDragY) > 5)
@@ -424,9 +424,9 @@ namespace FamiStudio
         {
             base.OnMouseDown(e);
 
-            bool left   = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
-            bool right  = e.Button.HasFlag(MouseButtons.Right);
+            bool right = e.Button.HasFlag(MouseButtons.Right);
 
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
@@ -473,7 +473,7 @@ namespace FamiStudio
                             instrumentDrag = selectedInstrument;
                             mouseDragY = e.Y;
                         }
-                    
+
                         if (subButtonType == SubButtonType.Volume)
                         {
                             InstrumentEdited?.Invoke(selectedInstrument, Envelope.Volume);
@@ -534,7 +534,7 @@ namespace FamiStudio
                             switch (subButtonType)
                             {
                                 case SubButtonType.Arpeggio: envType = Envelope.Arpeggio; break;
-                                case SubButtonType.Pitch: envType = Envelope.Pitch;    break;
+                                case SubButtonType.Pitch: envType = Envelope.Pitch; break;
                             }
 
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);
@@ -677,7 +677,7 @@ namespace FamiStudio
 
                         if (dlg.ShowDialog() == DialogResult.OK)
                         {
-                            var newName  = dlg.Properties.GetPropertyValue<string>(0);
+                            var newName = dlg.Properties.GetPropertyValue<string>(0);
 
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 

@@ -15,24 +15,24 @@ using System.Media;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderPath     = FamiStudio.GLConvexPath;
-    using RenderFont     = FamiStudio.GLFont;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
+using RenderBitmap = FamiStudio.GLBitmap;
+using RenderBrush = FamiStudio.GLBrush;
+using RenderPath = FamiStudio.GLConvexPath;
+using RenderFont = FamiStudio.GLFont;
+using RenderControl = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLGraphics;
+using RenderTheme = FamiStudio.GLTheme;
 #endif
 
 namespace FamiStudio
 {
     public class Sequencer : RenderControl
     {
-        const int TrackNameSizeX     = 81;
-        const int HeaderSizeY        = 17;
-        const int TrackSizeY         = 56;
+        const int TrackNameSizeX = 81;
+        const int HeaderSizeY = 17;
+        const int TrackSizeY = 56;
         const int PatternHeaderSizeY = 16;
-        const int NoteSizeY          = 4;
+        const int NoteSizeY = 4;
 
         const int MinZoomLevel = -2;
         const int MaxZoomLevel = 4;
@@ -114,7 +114,7 @@ namespace FamiStudio
             minSelectedPatternIdx = -1;
             maxSelectedPatternIdx = -1;
         }
-        
+
         private bool IsPatternSelected(int channelIdx, int patternIdx)
         {
             return channelIdx >= minSelectedChannelIdx && channelIdx <= maxSelectedChannelIdx &&
@@ -124,15 +124,15 @@ namespace FamiStudio
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
-            
-            bmpTracks[Channel.Square1]  = g.ConvertBitmap(Resources.Square);
-            bmpTracks[Channel.Square2]  = g.ConvertBitmap(Resources.Square);
-            bmpTracks[Channel.Triangle] = g.ConvertBitmap(Resources.Triangle);
-            bmpTracks[Channel.Noise]    = g.ConvertBitmap(Resources.Noise);
-            bmpTracks[Channel.DPCM]     = g.ConvertBitmap(Resources.DPCM);
 
-            bmpEdit = g.ConvertBitmap(Resources.EditSmall);
-            bmpGhostNote = g.ConvertBitmap(Resources.GhostSmall);
+            bmpTracks[Channel.Square1] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.Square2] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.Triangle] = g.CreateBitmapFromResource("Triangle");
+            bmpTracks[Channel.Noise] = g.CreateBitmapFromResource("Noise");
+            bmpTracks[Channel.DPCM] = g.CreateBitmapFromResource("DPCM");
+
+            bmpEdit = g.CreateBitmapFromResource("EditSmall");
+            bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
 
             playPositionBrush = g.CreateSolidBrush(Color.FromArgb(192, ThemeBase.LightGreyFillColor1));
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, TrackNameSizeX, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
@@ -380,9 +380,9 @@ namespace FamiStudio
         {
             base.OnMouseDown(e);
 
-            bool left   = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
-            bool right  = e.Button.HasFlag(MouseButtons.Right);
+            bool right = e.Button.HasFlag(MouseButtons.Right);
 
             CancelDragSelection();
             UpdateCursor();
@@ -405,7 +405,7 @@ namespace FamiStudio
                         if (left)
                         {
                             // Toggle muted
-                            App.ChannelMask ^= bit; 
+                            App.ChannelMask ^= bit;
                         }
                         else
                         {
@@ -413,7 +413,7 @@ namespace FamiStudio
                             if (App.ChannelMask == (1 << i))
                                 App.ChannelMask = 0x1f;
                             else
-                                App.ChannelMask = (1 << i); 
+                                App.ChannelMask = (1 << i);
                         }
                         ConditionalInvalidate();
                         break;
@@ -539,7 +539,7 @@ namespace FamiStudio
                 Pattern[,] tmpPatterns = new Pattern[maxSelectedChannelIdx - minSelectedChannelIdx + 1, maxSelectedPatternIdx - minSelectedPatternIdx + 1];
 
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                
+
                 for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
                 {
                     for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
@@ -624,7 +624,7 @@ namespace FamiStudio
         {
             base.OnMouseMove(e);
 
-            bool left   = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             bool inPatternZone = GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx);
@@ -682,7 +682,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
-                        var newName  = dlg.Properties.GetPropertyValue<string>(0);
+                        var newName = dlg.Properties.GetPropertyValue<string>(0);
                         var newColor = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
 
                         if (multiplePatternSelected)

@@ -70,20 +70,20 @@ namespace FamiStudio
             theme = RenderTheme.CreateResourcesForGraphics(g);
             toolbarBrush = g.CreateHorizontalGradientBrush(0, 81, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
 
-            bmpLoopNone = g.ConvertBitmap(Resources.LoopNone);
-            bmpLoopSong = g.ConvertBitmap(Resources.Loop);
-            bmpLoopPattern = g.ConvertBitmap(Resources.LoopPattern);
-            bmpPlay = g.ConvertBitmap(Resources.Play);
-            bmpPause = g.ConvertBitmap(Resources.Pause);
+            bmpLoopNone = g.CreateBitmapFromResource("LoopNone");
+            bmpLoopSong = g.CreateBitmapFromResource("Loop");
+            bmpLoopPattern = g.CreateBitmapFromResource("LoopPattern");
+            bmpPlay = g.CreateBitmapFromResource("Play");
+            bmpPause = g.CreateBitmapFromResource("Pause");
 
-            buttons[ButtonNew]    = new Button { X = 4,   Y = 4, Bmp = g.ConvertBitmap(Resources.File), Click = OnNew };
-            buttons[ButtonOpen]   = new Button { X = 44,  Y = 4, Bmp = g.ConvertBitmap(Resources.Open), Click = OnOpen };
-            buttons[ButtonSave]   = new Button { X = 84,  Y = 4, Bmp = g.ConvertBitmap(Resources.Save), Click = OnSave, RightClick = OnSaveAs };
-            buttons[ButtonExport] = new Button { X = 124, Y = 4, Bmp = g.ConvertBitmap(Resources.Export), Click = OnExport, Enabled = OnExportEnabled };
-            buttons[ButtonUndo]   = new Button { X = 164, Y = 4, Bmp = g.ConvertBitmap(Resources.Undo), Click = OnUndo, Enabled = OnUndoEnabled };
-            buttons[ButtonRedo]   = new Button { X = 204, Y = 4, Bmp = g.ConvertBitmap(Resources.Redo), Click = OnRedo, Enabled = OnRedoEnabled };
+            buttons[ButtonNew]    = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
+            buttons[ButtonOpen]   = new Button { X = 44,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
+            buttons[ButtonSave]   = new Button { X = 84,  Y = 4, Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
+            buttons[ButtonExport] = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport, Enabled = OnExportEnabled };
+            buttons[ButtonUndo]   = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
+            buttons[ButtonRedo]   = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
             buttons[ButtonPlay]   = new Button { X = 436, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
-            buttons[ButtonRewind] = new Button { X = 476, Y = 4, Bmp = g.ConvertBitmap(Resources.Rewind), Click = OnRewind };
+            buttons[ButtonRewind] = new Button { X = 476, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]   = new Button { X = 516, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
 
             buttons[ButtonNew].ToolTip    = "New Project (Ctrl-N)";

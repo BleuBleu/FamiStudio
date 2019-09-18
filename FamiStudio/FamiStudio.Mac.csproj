@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -69,11 +69,6 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
@@ -131,11 +126,6 @@
     <Compile Include="UI\MainWindow\Common\Sequencer.cs" />
     <Compile Include="UI\MainWindow\Common\ThemeBase.cs" />
     <Compile Include="UI\MainWindow\Common\Toolbar.cs" />
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
     <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs.bin" />
     <None Include="Properties\Settings.settings">
@@ -170,44 +160,44 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Quicksand-Regular.ttf" />
-    <None Include="Resources\DPCM.png" />
+    <EmbeddedResource Include="Resources\DPCM.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Noise.png" />
+    <EmbeddedResource Include="Resources\Noise.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
-    <None Include="Resources\Square.png" />
+    <EmbeddedResource Include="Resources\Square.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Triangle.png" />
+    <EmbeddedResource Include="Resources\Triangle.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Arpeggio.png" />
+    <EmbeddedResource Include="Resources\Arpeggio.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Pitch.png" />
+    <EmbeddedResource Include="Resources\Pitch.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Volume.png" />
+    <EmbeddedResource Include="Resources\Volume.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Edit.png" />
+    <EmbeddedResource Include="Resources\Edit.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Duty0.png" />
+    <EmbeddedResource Include="Resources\Duty0.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Duty1.png" />
+    <EmbeddedResource Include="Resources\Duty1.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Duty2.png" />
+    <EmbeddedResource Include="Resources\Duty2.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Duty3.png" />
+    <EmbeddedResource Include="Resources\Duty3.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Loop.png" />
+    <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
@@ -217,41 +207,41 @@
     <EmbeddedResource Include="Resources\QuickSand20Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand20_0.png" />
     <EmbeddedResource Include="Resources\QuickSand28_0.png" />
-    <None Include="Resources\VolumeSmall.png" />
-    <None Include="Resources\Export.png" />
-    <None Include="Resources\DPCMSmall.png" />
-    <None Include="Resources\NoiseSmall.png" />
-    <None Include="Resources\SquareSmall.png" />
-    <None Include="Resources\TriangleSmall.png" />
-    <None Include="Resources\File.png" />
-    <None Include="Resources\Music.png" />
-    <None Include="Resources\Open.png" />
-    <None Include="Resources\Pattern.png" />
-    <None Include="Resources\Play.png" />
-    <None Include="Resources\PlayLoop.png" />
-    <None Include="Resources\Redo.png" />
-    <None Include="Resources\Rewind.png" />
-    <None Include="Resources\Save.png" />
-    <None Include="Resources\SFX.png" />
-    <None Include="Resources\Stop.png" />
-    <None Include="Resources\Undo.png" />
-    <None Include="Resources\EditSmall.png" />
-    <None Include="Resources\ExportMusic.png" />
-    <None Include="Resources\ExportSFX.png" />
-    <None Include="Resources\LoopPattern.png" />
-    <None Include="Resources\LoopNone.png" />
-    <None Include="Resources\Pause.png" />
-    <None Include="Resources\LoopSmall.png" />
-    <None Include="Resources\Add.png" />
-    <None Include="Resources\CollapsedSmall.png" />
-    <None Include="Resources\ExpandedSmall.png" />
+    <EmbeddedResource Include="Resources\VolumeSmall.png" />
+    <EmbeddedResource Include="Resources\Export.png" />
+    <EmbeddedResource Include="Resources\DPCMSmall.png" />
+    <EmbeddedResource Include="Resources\NoiseSmall.png" />
+    <EmbeddedResource Include="Resources\SquareSmall.png" />
+    <EmbeddedResource Include="Resources\TriangleSmall.png" />
+    <EmbeddedResource Include="Resources\File.png" />
+    <EmbeddedResource Include="Resources\Music.png" />
+    <EmbeddedResource Include="Resources\Open.png" />
+    <EmbeddedResource Include="Resources\Pattern.png" />
+    <EmbeddedResource Include="Resources\Play.png" />
+    <EmbeddedResource Include="Resources\PlayLoop.png" />
+    <EmbeddedResource Include="Resources\Redo.png" />
+    <EmbeddedResource Include="Resources\Rewind.png" />
+    <EmbeddedResource Include="Resources\Save.png" />
+    <EmbeddedResource Include="Resources\SFX.png" />
+    <EmbeddedResource Include="Resources\Stop.png" />
+    <EmbeddedResource Include="Resources\Undo.png" />
+    <EmbeddedResource Include="Resources\EditSmall.png" />
+    <EmbeddedResource Include="Resources\ExportMusic.png" />
+    <EmbeddedResource Include="Resources\ExportSFX.png" />
+    <EmbeddedResource Include="Resources\LoopPattern.png" />
+    <EmbeddedResource Include="Resources\LoopNone.png" />
+    <EmbeddedResource Include="Resources\Pause.png" />
+    <EmbeddedResource Include="Resources\LoopSmall.png" />
+    <EmbeddedResource Include="Resources\Add.png" />
+    <EmbeddedResource Include="Resources\CollapsedSmall.png" />
+    <EmbeddedResource Include="Resources\ExpandedSmall.png" />
     <None Include="Resources\FamiStudio.ico" />
-    <None Include="Resources\JumpSmall.png" />
-    <None Include="Resources\SpeedSmall.png" />
-    <None Include="Resources\JumpSmallFill.png" />
-    <None Include="Resources\LoopSmallFill.png" />
-    <None Include="Resources\SpeedSmallFill.png" />
-    <None Include="Resources\GhostSmall.png" />
+    <EmbeddedResource Include="Resources\JumpSmall.png" />
+    <EmbeddedResource Include="Resources\SpeedSmall.png" />
+    <EmbeddedResource Include="Resources\JumpSmallFill.png" />
+    <EmbeddedResource Include="Resources\LoopSmallFill.png" />
+    <EmbeddedResource Include="Resources\SpeedSmallFill.png" />
+    <EmbeddedResource Include="Resources\GhostSmall.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">

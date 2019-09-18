@@ -503,30 +503,23 @@ namespace FamiStudio
             return new GLBrush(color0, color1, 0.0f, y1 - y0);
         }
 
-        public int CreateGLTexture(System.Drawing.Bitmap bmp)
+        public int CreateGLTexture(Gdk.Pixbuf pixbuf)
         {
-            System.Drawing.Imaging.BitmapData bmpData =
-                bmp.LockBits(
-                    new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
-                    System.Drawing.Imaging.ImageLockMode.ReadWrite,
-                    System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-            Debug.Assert(bmpData.Stride == bmp.Width * 4);
+            Debug.Assert(pixbuf.Rowstride == pixbuf.Width * 4);
 
             int id = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, id);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, bmp.Width, bmp.Height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, pixbuf.Width, pixbuf.Height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, pixbuf.Pixels);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
-
-            bmp.UnlockBits(bmpData);
 
             return id;
         }
 
-        public unsafe GLBitmap ConvertBitmap(System.Drawing.Bitmap bmp)
+        public unsafe GLBitmap CreateBitmapFromResource(string name)
         {
-            return new GLBitmap(CreateGLTexture(bmp), bmp.Width, bmp.Height);
+            var pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
+            return new GLBitmap(CreateGLTexture(pixbuf), pixbuf.Width, pixbuf.Height);
         }
 
         public GLBrush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)
@@ -563,7 +556,7 @@ namespace FamiStudio
             return default(T);
         }
 
-        public GLFont CreateFont(Bitmap bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+        public GLFont CreateFont(Gdk.Pixbuf pixbuf, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
         {
             var font = (GLFont)null;
             var lines = def;
@@ -586,7 +579,7 @@ namespace FamiStudio
 
                         int glTex = existingTexture;
                         if (glTex == 0)
-                            glTex = CreateGLTexture(bmp);
+                            glTex = CreateGLTexture(pixbuf);
 
                         font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
                         break;
