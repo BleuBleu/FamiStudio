@@ -289,19 +289,22 @@ namespace FamiStudio
             }
         }
 
-        public Bitmap ConvertBitmap(System.Drawing.Bitmap bmp)
+        public Bitmap CreateBitmapFromResource(string name)
         {
-            System.Drawing.Imaging.BitmapData bmpData =
+            var bmpStream = typeof(NsfFile).Assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}.png");
+            var bmp = System.Drawing.Image.FromStream(bmpStream) as System.Drawing.Bitmap;
+
+            var bmpData =
                 bmp.LockBits(
                     new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
                     System.Drawing.Imaging.ImageLockMode.ReadOnly,
                     System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
 
-            DataStream stream = new DataStream(bmpData.Scan0, bmpData.Stride * bmpData.Height, true, false);
-            PixelFormat pFormat = new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied);
-            BitmapProperties bmpProps = new BitmapProperties(pFormat);
+            var stream = new DataStream(bmpData.Scan0, bmpData.Stride * bmpData.Height, true, false);
+            var pFormat = new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied);
+            var bmpProps = new BitmapProperties(pFormat);
 
-            Bitmap result =
+            var result =
                 new Bitmap(
                     renderTarget,
                     new Size2(bmp.Width, bmp.Height),
@@ -312,6 +315,8 @@ namespace FamiStudio
             bmp.UnlockBits(bmpData);
 
             stream.Dispose();
+            bmp.Dispose();
+            bmpStream.Dispose();
 
             return result;
         }
