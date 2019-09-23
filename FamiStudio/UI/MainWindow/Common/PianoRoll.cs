@@ -10,7 +10,6 @@ using FamiStudio.Properties;
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderPath     = SharpDX.Direct2D1.PathGeometry;
-    using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
@@ -18,7 +17,6 @@ using FamiStudio.Properties;
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
     using RenderPath     = FamiStudio.GLConvexPath;
-    using RenderFont     = FamiStudio.GLFont;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
@@ -42,7 +40,6 @@ namespace FamiStudio
         const int DefaultNoteSizeX              = 16;
         const int DefaultNoteSizeY              = 12;
         const int DefaultEnvelopeSizeY          = 8;
-        const int DefaultEnvelopeBias           = 64;
         const int DefaultEnvelopeMax            = 127;
         const int DefaultWhiteKeySizeX          = 81;
         const int DefaultWhiteKeySizeY          = 20;
@@ -70,7 +67,6 @@ namespace FamiStudio
         int noteSizeX;       
         int noteSizeY;
         int envelopeSizeY;
-        int envelopeBias;
         int envelopeMax;  
         int whiteKeySizeY;
         int whiteKeySizeX;
@@ -169,7 +165,6 @@ namespace FamiStudio
             noteSizeX              = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
             noteSizeY              = (int)(DefaultNoteSizeY * scaling);        
             envelopeSizeY          = (int)(DefaultEnvelopeSizeY * scaling);    
-            envelopeBias           = (int)(DefaultEnvelopeBias * scaling);     
             envelopeMax            = (int)(DefaultEnvelopeMax * scaling);      
             whiteKeySizeY          = (int)(DefaultWhiteKeySizeY * scaling);    
             whiteKeySizeX          = (int)(DefaultWhiteKeySizeX * scaling);    
@@ -840,7 +835,7 @@ namespace FamiStudio
                     for (int i = 0; i < env.Length; i++)
                     {
                         int x = i * noteSizeX - scrollX;
-                        int y = (virtualSizeY - envelopeSizeY * (env.Values[i] + envelopeBias)) - scrollY;
+                        int y = (virtualSizeY - envelopeSizeY * (env.Values[i] + 64)) - scrollY;
                         g.FillRectangle(x, y - envelopeSizeY, x + noteSizeX, y, g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, envelopeSizeY, 0.8f));
                         g.DrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, theme.BlackBrush);
                     }
@@ -856,13 +851,13 @@ namespace FamiStudio
 
                         if (val >= 0)
                         {
-                            y0 = (virtualSizeY - envelopeSizeY * (val + envelopeBias + 1)) - scrollY;
-                            y1 = (virtualSizeY - envelopeSizeY * (envelopeBias) - scrollY);
+                            y0 = (virtualSizeY - envelopeSizeY * (val + 64 + 1)) - scrollY;
+                            y1 = (virtualSizeY - envelopeSizeY * (64) - scrollY);
                         }
                         else
                         {
-                            y1 = (virtualSizeY - envelopeSizeY * (val + envelopeBias)) - scrollY;
-                            y0 = (virtualSizeY - envelopeSizeY * (envelopeBias + 1) - scrollY);
+                            y1 = (virtualSizeY - envelopeSizeY * (val + 64)) - scrollY;
+                            y0 = (virtualSizeY - envelopeSizeY * (64 + 1) - scrollY);
                         }
 
                         g.FillRectangle(x, y0, x + noteSizeX, y1, theme.LightGreyFillBrush1);

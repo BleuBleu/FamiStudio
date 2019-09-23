@@ -118,11 +118,6 @@ namespace FamiStudio
             renderTarget.Transform = matrixStack.Pop();
         }
 
-        //public void PushClip(float x0, float y0, float x1, float y1)
-        //{
-        //    renderTarget.PushAxisAlignedClip(new RawRectangleF(x0, y0, x1, y1), AntialiasMode.Aliased);
-        //}
-
         public void PushClip(float x0, float y0, float x1, float y1)
         {
             renderTarget.PushAxisAlignedClip(new RawRectangleF(x0 + 0.5f, y0 + 0.5f, x1 + 0.5f, y1 + 0.5f), AntialiasMode.Aliased);

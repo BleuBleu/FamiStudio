@@ -5,16 +5,12 @@ using FamiStudio.Properties;
 #if FAMISTUDIO_WINDOWS
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderPath     = SharpDX.Direct2D1.PathGeometry;
-    using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
-    using RenderPath     = FamiStudio.GLConvexPath;
-    using RenderFont     = FamiStudio.GLFont;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
