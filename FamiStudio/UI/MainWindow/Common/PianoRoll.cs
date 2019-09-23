@@ -396,8 +396,8 @@ namespace FamiStudio
                     }
                 }
             }
-
-            int seekX = App.CurrentFrame * noteSizeX - scrollX;
+            
+            int seekX = (editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editEnvelope) : App.CurrentFrame) * noteSizeX - scrollX;
             g.FillRectangle(seekX + 1, 0, seekX + noteSizeX, headerSizeY, playPositionBrush);
             g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
             
@@ -646,7 +646,6 @@ namespace FamiStudio
 
                 if (editMode == EditionMode.Channel)
                 {
-                    // Seek
                     int seekX = App.CurrentFrame * noteSizeX - scrollX;
                     g.FillRectangle(seekX + 1, 0, seekX + noteSizeX, Height, playPositionBrush);
 
