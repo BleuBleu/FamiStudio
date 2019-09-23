@@ -12,9 +12,18 @@ namespace FamiStudio
 {
     static class Program
     {
+#if FAMISTUDIO_WINDOWS
+        [DllImport("SHCore.dll", SetLastError = true)]
+        private static extern bool SetProcessDpiAwareness(int awareness);
+#endif
+
         [STAThread]
         static unsafe void Main(string[] args)
         {
+#if FAMISTUDIO_WINDOWS
+            SetProcessDpiAwareness(1 /*Process_System_DPI_Aware*/);
+#endif
+
             Cursors.Initialize();
             RenderTheme.Initialize();
             PlatformDialogs.Initialize();

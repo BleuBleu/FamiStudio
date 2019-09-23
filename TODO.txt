@@ -1,11 +1,11 @@
 Port:
-- Low-priority: Move to integer for all graphics call
 - Low-priority: Mac: In property page, typing in a txt doesn't register unless I enter or TAB out of it.
-- Test high-GPI scaling, retina.
+- Test high-DPI scaling, retina.
 
 Version 1.2:
 - Don't stop song if changing to same song.
-- Cleanup resources. Only embed the ones that are needed for each platform.
+- Pause, rewind and play: The seek bar jumps. weird.
+x Cleanup resources. Only embed the ones that are needed for each platform.
 - All notes
 	- Fix noise
 	- Fix DPCM samples
@@ -25,17 +25,13 @@ x Tempo bug from GitHub.
 x Unify notes freq from ASM and C#
 
 Backlog:
-- Mac: Use actual mac cursors, not images.
 - PAL support
 - MIDI improvements.
 - VRC6, FDS, etc.
 - Fix crash on startup when there are no audio device 
 - Proper error messages when soemthing fails (save, etc.)
 - Add taskbar progress bar + color to show playback state
-- Mono port (need help)
-- High DPI support.
 - Copy-paste support for notes/effects.
-- Refactor UI draw code, split in small functions.
 - Freeze on some atom processors?
 
  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -54,6 +50,3 @@ Backlog:
  {0, 1, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 12, 13},
  {0, 1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10, 11, 12, 13, 14},
  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
-
-Extending the range of notes supported. 
-This is similar to what nesdoug did in FT3. Also taking the note tables from FamiTracker so that nobody complains the pitch isnt exactly the same.

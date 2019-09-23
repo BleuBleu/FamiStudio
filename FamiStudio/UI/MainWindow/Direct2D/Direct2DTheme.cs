@@ -10,10 +10,23 @@ namespace FamiStudio
         private static Factory directWriteFactory;
         private static Direct2DResourceFontLoader resourceFontLoader;
         private static FontCollection fontCollection;
-        
+
+        private static int   mainWindowScaling = 1;
+        private static float dialogScaling = 1.0f;
+
+        public static int   MainWindowScaling => mainWindowScaling;
+        public static float DialogScaling => dialogScaling;
+
         public static void Initialize()
         {
             ThemeBase.InitializeBase();
+
+            var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+
+            // For the main window, we only support 1x or 2x.
+            mainWindowScaling = dialogScaling >= 2.0f ? 2 : 1;
+            dialogScaling = graphics.DpiX / 96.0f;
+
             InitializeFonts();
         }
 
@@ -26,6 +39,7 @@ namespace FamiStudio
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
                 var def = FontDefinitions[i];
+                def.Size *= mainWindowScaling;
 
                 var format = new TextFormat(directWriteFactory, def.Name, fontCollection, def.Bold ? FontWeight.Bold : FontWeight.Regular, FontStyle.Normal, FontStretch.Normal, def.Size);
 

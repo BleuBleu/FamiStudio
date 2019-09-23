@@ -59,7 +59,6 @@
             this.buttonYes.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonYes.FlatAppearance.BorderSize = 0;
             this.buttonYes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonYes.Image = global::FamiStudio.Properties.Resources.Yes;
             this.buttonYes.Location = new System.Drawing.Point(374, 337);
             this.buttonYes.Name = "buttonYes";
             this.buttonYes.Size = new System.Drawing.Size(32, 32);
@@ -72,7 +71,6 @@
             this.buttonNo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonNo.FlatAppearance.BorderSize = 0;
             this.buttonNo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonNo.Image = global::FamiStudio.Properties.Resources.No;
             this.buttonNo.Location = new System.Drawing.Point(411, 337);
             this.buttonNo.Name = "buttonNo";
             this.buttonNo.Size = new System.Drawing.Size(32, 32);
@@ -83,7 +81,7 @@
             // MultiPropertyDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
             this.ClientSize = new System.Drawing.Size(448, 373);
             this.ControlBox = false;

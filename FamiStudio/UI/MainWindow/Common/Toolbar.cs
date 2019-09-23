@@ -24,19 +24,28 @@ namespace FamiStudio
 {
     public class Toolbar : RenderControl
     {
-        const int ButtonNew = 0;
-        const int ButtonOpen = 1;
-        const int ButtonSave = 2;
+        const int ButtonNew    = 0;
+        const int ButtonOpen   = 1;
+        const int ButtonSave   = 2;
         const int ButtonExport = 3;
-        const int ButtonUndo = 4;
-        const int ButtonRedo = 5;
-        const int ButtonPlay = 6;
+        const int ButtonUndo   = 4;
+        const int ButtonRedo   = 5;
+        const int ButtonPlay   = 6;
         const int ButtonRewind = 7;
-        const int ButtonLoop = 8;
-        const int ButtonCount = 9;
+        const int ButtonLoop   = 8;
+        const int ButtonCount  = 9;
 
-        const int TimecodePosX = 260;
-        const int TimecodeSizeX = 160;
+        const int DefaultTimecodePosX     = 260;
+        const int DefaultTimecodePosY     = 4;
+        const int DefaultTimecodeSizeX    = 160;
+        const int DefaultTimecodeTextPosX = 30;
+        const int DefaultTooltipPosY      = 12;
+
+        int TimecodePosX     = DefaultTimecodePosX;
+        int TimecodePosY     = DefaultTimecodePosY;
+        int TimecodeSizeX    = DefaultTimecodeSizeX;
+        int TimecodeTextPosX = DefaultTimecodeTextPosX;
+        int TooltipPosY      = DefaultTooltipPosY;
 
         private delegate void EmptyDelegate();
         private delegate bool BoolDelegate();
@@ -46,13 +55,14 @@ namespace FamiStudio
         {
             public int X;
             public int Y;
+            public int Size = 32;
             public string ToolTip;
             public RenderBitmap Bmp;
             public BoolDelegate Enabled;
             public EmptyDelegate Click;
             public EmptyDelegate RightClick;
             public BitmapDelegate GetBitmap;
-            public bool IsPointIn(int px, int py) => px >= X && (px - X) < 32 && py >= Y && (py - Y) < 32;
+            public bool IsPointIn(int px, int py) => px >= X && (px - X) < Size && py >= Y && (py - Y) < Size;
         };
 
         string tooltip = "";
@@ -95,6 +105,22 @@ namespace FamiStudio
             buttons[ButtonPlay].ToolTip   = "Play/Pause (Space) [Ctrl+Space: Play pattern loop, Shift-Space: Play song loop]";
             buttons[ButtonRewind].ToolTip = "Rewind (Home) [Ctrl+Home: Rewind to beginning of current pattern]";
             buttons[ButtonLoop].ToolTip   = "Toggle Loop Mode";
+
+            var scaling = RenderTheme.MainWindowScaling;
+
+            for (int i = 0; i < ButtonCount; i++)
+            {
+                var btn = buttons[i];
+                btn.X *= scaling;
+                btn.Y *= scaling;
+                btn.Size *= scaling;
+            }
+
+            TimecodePosX     *= scaling;
+            TimecodePosY     *= scaling;
+            TimecodeSizeX    *= scaling;
+            TimecodeTextPosX *= scaling;
+            TooltipPosY      *= scaling;
         }
 
         public string ToolTip
@@ -204,6 +230,7 @@ namespace FamiStudio
         {
             g.FillRectangle(0, 0, Width, Height, toolbarBrush);
 
+            var scaling = RenderTheme.MainWindowScaling;
             var pt = this.PointToClient(Cursor.Position);
 
             // Buttons
@@ -214,7 +241,7 @@ namespace FamiStudio
                 if (bmp == null)
                     bmp = btn.Bmp;
                 bool enabled = btn.Enabled != null ? btn.Enabled() : true;
-                g.DrawBitmap(bmp, btn.X, btn.Y, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
+                g.DrawBitmap(bmp, btn.X, btn.Y, true, 1, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
             }
 
             // Timecode
@@ -222,13 +249,13 @@ namespace FamiStudio
             int patternIdx = frame / App.Song.PatternLength;
             int noteIdx = frame % App.Song.PatternLength;
 
-            g.FillAndDrawRectangle(TimecodePosX, 4, TimecodePosX + TimecodeSizeX, Height - 4, theme.DarkGreyFillBrush1, theme.BlackBrush);
-            g.DrawText($"{patternIdx:D3}:{noteIdx:D3}", ThemeBase.FontHuge, TimecodePosX + 30, 2, theme.LightGreyFillBrush1, TimecodeSizeX);
+            g.FillAndDrawRectangle(TimecodePosX, TimecodePosY, TimecodePosX + TimecodeSizeX, Height - TimecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
+            g.DrawText($"{patternIdx:D3}:{noteIdx:D3}", ThemeBase.FontHuge, TimecodePosX + TimecodeTextPosX, 2, theme.LightGreyFillBrush1, TimecodeSizeX);
 
             // Tooltip
             if (!string.IsNullOrEmpty(tooltip))
             {
-                g.DrawText(tooltip, ThemeBase.FontMediumRight, Width - 314, 12, theme.BlackBrush, 300);
+                g.DrawText(tooltip, ThemeBase.FontMediumRight, Width - 314, TooltipPosY, theme.BlackBrush, 300);
             }
         }
 

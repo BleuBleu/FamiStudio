@@ -15,21 +15,40 @@ using Color = System.Drawing.Color;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
-using RenderBitmap = FamiStudio.GLBitmap;
-using RenderBrush = FamiStudio.GLBrush;
-using RenderPath = FamiStudio.GLConvexPath;
-using RenderFont = FamiStudio.GLFont;
-using RenderControl = FamiStudio.GLControl;
-using RenderGraphics = FamiStudio.GLGraphics;
-using RenderTheme = FamiStudio.GLTheme;
+    using RenderBitmap   = FamiStudio.GLBitmap;
+    using RenderBrush    = FamiStudio.GLBrush;
+    using RenderPath     = FamiStudio.GLConvexPath;
+    using RenderFont     = FamiStudio.GLFont;
+    using RenderControl  = FamiStudio.GLControl;
+    using RenderGraphics = FamiStudio.GLGraphics;
+    using RenderTheme    = FamiStudio.GLTheme;
 #endif
 
 namespace FamiStudio
 {
     public class ProjectExplorer : RenderControl
     {
-        const int ScrollBarDefaultSizeX = 8;
-        const int ButtonSizeY = 24;
+        const int DefaultButtonIconPosX       = 4;
+        const int DefaultButtonIconPosY       = 4;
+        const int DefaultButtonTextPosX       = 24;
+        const int DefaultButtonTextPosY       = 5;
+        const int DefaultButtonTextNoIconPosX = 5;
+        const int DefaultSubButtonSpacingX    = 20;
+        const int DefaultSubButtonPosY        = 4;
+        const int DefaultScrollBarSizeX       = 8;
+        const int DefaultButtonSizeY          = 24;
+
+        int ButtonIconPosX       = DefaultButtonIconPosX;      
+        int ButtonIconPosY       = DefaultButtonIconPosY;      
+        int ButtonTextPosX       = DefaultButtonTextPosX;      
+        int ButtonTextPosY       = DefaultButtonTextPosY;
+        int ButtonTextNoIconPosX = DefaultButtonTextNoIconPosX;
+        int SubButtonSpacingX    = DefaultSubButtonSpacingX;   
+        int SubButtonPosY        = DefaultSubButtonPosY;       
+        int ButtonSizeY          = DefaultButtonSizeY;
+        int VirtualSizeY;
+        int ScrollBarSizeX;
+        bool NeedsScrollBar;
 
         enum ButtonType
         {
@@ -140,10 +159,6 @@ namespace FamiStudio
             }
         }
 
-        int VirtualSizeY => (App?.Project == null ? Height : buttons.Count) * ButtonSizeY;
-        int ScrollBarSizeX => NeedsScrollBar ? ScrollBarDefaultSizeX : 0;
-        bool NeedsScrollBar => VirtualSizeY > Height;
-
         int scrollY = 0;
         int mouseLastY = 0;
         int mouseDragY = -1;
@@ -156,7 +171,7 @@ namespace FamiStudio
 
         RenderTheme theme;
 
-        RenderBitmap[] bmpButtonIcons = new RenderBitmap[(int)ButtonType.Max];
+        RenderBitmap[] bmpButtonIcons    = new RenderBitmap[(int)ButtonType.Max];
         RenderBitmap[] bmpSubButtonIcons = new RenderBitmap[(int)SubButtonType.Max];
 
         public Song SelectedSong => selectedSong;
@@ -176,6 +191,24 @@ namespace FamiStudio
 
         public ProjectExplorer()
         {
+            UpdateRenderCoords();
+        }
+
+        private void UpdateRenderCoords()
+        {
+            var scaling = RenderTheme.MainWindowScaling;
+
+            ButtonIconPosX       = DefaultButtonIconPosX * scaling;      
+            ButtonIconPosY       = DefaultButtonIconPosY * scaling;      
+            ButtonTextPosX       = DefaultButtonTextPosX * scaling;      
+            ButtonTextPosY       = DefaultButtonTextPosY * scaling;
+            ButtonTextNoIconPosX = DefaultButtonTextNoIconPosX * scaling;
+            SubButtonSpacingX    = DefaultSubButtonSpacingX * scaling;   
+            SubButtonPosY        = DefaultSubButtonPosY * scaling;       
+            ButtonSizeY          = DefaultButtonSizeY * scaling;
+            VirtualSizeY         = App?.Project == null ? Height : buttons.Count * ButtonSizeY;
+            NeedsScrollBar       = VirtualSizeY > Height; 
+            ScrollBarSizeX       = NeedsScrollBar ? DefaultScrollBarSizeX * scaling : 0;      
         }
 
         public void Reset()
@@ -200,6 +233,8 @@ namespace FamiStudio
 
             foreach (var instrument in App.Project.Instruments)
                 buttons.Add(new Button() { type = ButtonType.Instrument, instrument = instrument });
+
+            UpdateRenderCoords();
         }
 
         protected override void OnRenderInitialized(RenderGraphics g)
@@ -240,19 +275,19 @@ namespace FamiStudio
 
                 g.PushTranslation(0, y);
                 g.FillAndDrawRectangle(0, 0, actualWidth, ButtonSizeY, g.GetVerticalGradientBrush(button.GetColor(), ButtonSizeY, 0.8f), theme.BlackBrush);
-                g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? 5 : 24, 5, theme.BlackBrush, actualWidth - 10);
+                g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? ButtonTextNoIconPosX : ButtonTextPosX, ButtonTextPosY, theme.BlackBrush, actualWidth - ButtonTextNoIconPosX * 2);
 
                 if (icon != null)
                 {
-                    g.DrawBitmap(icon, 4, 4);
+                    g.DrawBitmap(icon, ButtonIconPosX, ButtonIconPosY, false, RenderTheme.MainWindowScaling);
                 }
 
                 var subButtons = button.GetSubButtons(out var active);
                 if (subButtons != null)
                 {
-                    for (int i = 0, x = actualWidth - 20; i < subButtons.Length; i++, x -= 20)
+                    for (int i = 0, x = actualWidth - SubButtonSpacingX; i < subButtons.Length; i++, x -= SubButtonSpacingX)
                     {
-                        g.DrawBitmap(bmpSubButtonIcons[(int)subButtons[i]], x, 4, active[i] ? 1.0f : 0.2f);
+                        g.DrawBitmap(bmpSubButtonIcons[(int)subButtons[i]], x, SubButtonPosY, false, RenderTheme.MainWindowScaling, active[i] ? 1.0f : 0.2f);
                     }
                 }
 
@@ -262,9 +297,9 @@ namespace FamiStudio
 
             if (NeedsScrollBar)
             {
-                int virtualSizeY = VirtualSizeY;
-                int scrollBarSizeY = (int)Math.Round(Height * (Height / (float)virtualSizeY));
-                int scrollBarPosY = (int)Math.Round(Height * (scrollY / (float)virtualSizeY));
+                int virtualSizeY   = VirtualSizeY;
+                int scrollBarSizeY = (int)Math.Round(Height * (Height  / (float)virtualSizeY));
+                int scrollBarPosY  = (int)Math.Round(Height * (scrollY / (float)virtualSizeY));
 
                 g.FillAndDrawRectangle(actualWidth, 0, Width - 1, Height, theme.DarkGreyFillBrush1, theme.BlackBrush);
                 g.FillAndDrawRectangle(actualWidth, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, theme.LightGreyFillBrush1, theme.BlackBrush);
@@ -313,18 +348,18 @@ namespace FamiStudio
 
                     for (int i = 0; i < subButtons.Length; i++)
                     {
-                        int sx = Width - ScrollBarSizeX - 20 * (i + 1);
-                        int sy = 4;
+                        int sx = Width - ScrollBarSizeX - SubButtonSpacingX * (i + 1);
+                        int sy = SubButtonPosY;
                         int dx = x - sx;
                         int dy = y - sy;
 
-                        if (dx >= 0 && dx < 16 &&
-                            dy >= 0 && dy < 16)
+                        if (dx >= 0 && dx < 16 * RenderTheme.MainWindowScaling &&
+                            dy >= 0 && dy < 16 * RenderTheme.MainWindowScaling)
                         {
                             sub = subButtons[i];
                             break;
                         }
-
+                        
                     }
                 }
 
@@ -340,7 +375,7 @@ namespace FamiStudio
         {
             base.OnMouseMove(e);
 
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             if (left && mouseDragY > 0 && !isDraggingInstrument && Math.Abs(e.Y - mouseDragY) > 5)
@@ -416,6 +451,7 @@ namespace FamiStudio
 
         protected override void OnResize(EventArgs e)
         {
+            UpdateRenderCoords();
             ClampScroll();
             base.OnResize(e);
         }
@@ -424,9 +460,9 @@ namespace FamiStudio
         {
             base.OnMouseDown(e);
 
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool right  = e.Button.HasFlag(MouseButtons.Right);
 
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
@@ -473,7 +509,7 @@ namespace FamiStudio
                             instrumentDrag = selectedInstrument;
                             mouseDragY = e.Y;
                         }
-
+                    
                         if (subButtonType == SubButtonType.Volume)
                         {
                             InstrumentEdited?.Invoke(selectedInstrument, Envelope.Volume);
@@ -534,7 +570,7 @@ namespace FamiStudio
                             switch (subButtonType)
                             {
                                 case SubButtonType.Arpeggio: envType = Envelope.Arpeggio; break;
-                                case SubButtonType.Pitch: envType = Envelope.Pitch; break;
+                                case SubButtonType.Pitch: envType = Envelope.Pitch;    break;
                             }
 
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);
@@ -603,7 +639,7 @@ namespace FamiStudio
                 {
                     var project = App.Project;
 
-                    var dlg = new PropertyDialog(250, PointToScreen(new Point(e.X - 250, e.Y)));
+                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 250, true);
                     dlg.Properties.AddString("Title :", project.Name, 31); // 0
                     dlg.Properties.AddString("Author :", project.Author, 31); // 1
                     dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
@@ -623,7 +659,7 @@ namespace FamiStudio
                 {
                     var song = button.song;
 
-                    var dlg = new PropertyDialog(250, PointToScreen(new Point(e.X - 250, e.Y)));
+                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 200, true);
                     dlg.Properties.AddColoredString(song.Name, song.Color); // 0
                     dlg.Properties.AddIntegerRange("Tempo :", song.Tempo, 32, 255); // 1
                     dlg.Properties.AddIntegerRange("Speed :", song.Speed, 1, 31); // 2
@@ -670,14 +706,14 @@ namespace FamiStudio
 
                     if (subButtonType == SubButtonType.Max)
                     {
-                        var dlg = new PropertyDialog(160, PointToScreen(new Point(e.X - 160, e.Y)));
+                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, true);
                         dlg.Properties.AddColoredString(instrument.Name, instrument.Color);
                         dlg.Properties.AddColor(instrument.Color);
                         dlg.Properties.Build();
 
                         if (dlg.ShowDialog() == DialogResult.OK)
                         {
-                            var newName = dlg.Properties.GetPropertyValue<string>(0);
+                            var newName  = dlg.Properties.GetPropertyValue<string>(0);
 
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 

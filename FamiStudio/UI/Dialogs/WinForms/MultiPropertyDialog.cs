@@ -1,5 +1,6 @@
 ﻿using FamiStudio.Properties;
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -25,15 +26,25 @@ namespace FamiStudio
         {
             InitializeComponent();
 
-            this.Width  = width;
-            this.Height = height;
-            this.font = new Font(PlatformDialogs.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
+            // TODO: Resize Yes/No button depending on DPI.
+            string suffix = ""; // Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
+
+            int oldTabWidth = panelTabs.Width;
+
+            panelTabs.Width  = (int)(panelTabs.Width  * Direct2DTheme.DialogScaling);
+            panelProps.Width = panelProps.Width - (panelTabs.Width - oldTabWidth);
+            panelProps.Left  = panelTabs.Left + panelTabs.Width;
+
+            this.buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
+            this.buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
+            this.Width    = (int)(width  * Direct2DTheme.DialogScaling);
+            this.font     = new Font(PlatformDialogs.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             this.fontBold = new Font(PlatformDialogs.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
         {
-            var bmp = (Bitmap)Resources.ResourceManager.GetObject(image, Resources.Culture);
+            var bmp = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{image}.png")) as Bitmap;
 
             var page = new PropertyPage();
             page.Dock = DockStyle.Fill;
@@ -50,12 +61,17 @@ namespace FamiStudio
 
         protected override void OnShown(EventArgs e)
         {
+            int maxHeight = 0;
+
             // Property pages need to be visible when doing the layout otherwise
             // they have the wrong size.
             for (int i = 0; i < tabs.Count; i++)
             {
+                maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
                 tabs[i].properties.Visible = i == selectedIndex;
             }
+
+            this.Height = maxHeight + 50;
 
             base.OnShown(e);
         }
@@ -88,6 +104,7 @@ namespace FamiStudio
         private Button AddButton(string text, Bitmap image)
         {
             var btn = new NoFocusButton();
+            var sizeY = (int)(32 * Direct2DTheme.DialogScaling);
 
             btn.BackColor = BackColor;
             btn.ForeColor = ThemeBase.LightGreyFillColor2;
@@ -98,10 +115,10 @@ namespace FamiStudio
             btn.FlatAppearance.MouseOverBackColor = ThemeBase.DarkGreyFillColor2;
             btn.FlatAppearance.MouseDownBackColor = ThemeBase.DarkGreyFillColor2;
             btn.Image = image;
-            btn.Top = tabs.Count * 32;
+            btn.Top = tabs.Count * sizeY;
             btn.Left = 0;
             btn.Width = panelTabs.Width;
-            btn.Height = 32;
+            btn.Height = sizeY;
             btn.Font = tabs.Count == 0 ? fontBold : font;
             btn.Text = text;
             btn.TextImageRelation = TextImageRelation.ImageBeforeText;

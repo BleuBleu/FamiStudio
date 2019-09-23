@@ -33,6 +33,7 @@ namespace FamiStudio
             public Control control;
         };
 
+        int layoutHeight;
         Font font;
         Bitmap colorBitmap;
         List<Property> properties = new List<Property>();
@@ -41,6 +42,8 @@ namespace FamiStudio
         public event PropertyChangedDelegate PropertyChanged;
         public delegate void PropertyWantsCloseDelegate(int idx);
         public event PropertyWantsCloseDelegate PropertyWantsClose;
+
+        public int LayoutHeight => layoutHeight;
 
         public PropertyPage()
         {
@@ -460,6 +463,7 @@ namespace FamiStudio
             }
 
             Height = totalHeight;
+            layoutHeight = totalHeight;
             ResumeLayout();
         }
     }

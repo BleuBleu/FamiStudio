@@ -565,8 +565,12 @@ namespace FamiStudio
             Stop();
             this.currentFrame = 0;
             this.song = song;
-            Sequencer.InvalidatePatternCache();
-            PianoRoll.ClampScroll();
+
+            ToolBar.Reset();
+            ProjectExplorer.Reset();
+            PianoRoll.Reset();
+            Sequencer.Reset();
+
             InvalidateEverything();
         }
 

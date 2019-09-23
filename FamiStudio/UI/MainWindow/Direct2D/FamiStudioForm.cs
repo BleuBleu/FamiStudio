@@ -28,6 +28,12 @@ namespace FamiStudio
             timer.Start();
 
             InitializeComponent();
+
+            var scaling = Direct2DTheme.MainWindowScaling;
+
+            toolbar.Height *= scaling;
+            tableLayout.RowStyles[0].Height *= scaling;
+            projectExplorer.Width *= scaling;
         }
 
         private void timer_Tick(object sender, EventArgs e)

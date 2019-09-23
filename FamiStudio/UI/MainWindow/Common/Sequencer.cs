@@ -15,29 +15,54 @@ using System.Media;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
-using RenderBitmap = FamiStudio.GLBitmap;
-using RenderBrush = FamiStudio.GLBrush;
-using RenderPath = FamiStudio.GLConvexPath;
-using RenderFont = FamiStudio.GLFont;
-using RenderControl = FamiStudio.GLControl;
-using RenderGraphics = FamiStudio.GLGraphics;
-using RenderTheme = FamiStudio.GLTheme;
+    using RenderBitmap   = FamiStudio.GLBitmap;
+    using RenderBrush    = FamiStudio.GLBrush;
+    using RenderPath     = FamiStudio.GLConvexPath;
+    using RenderFont     = FamiStudio.GLFont;
+    using RenderControl  = FamiStudio.GLControl;
+    using RenderGraphics = FamiStudio.GLGraphics;
+    using RenderTheme    = FamiStudio.GLTheme;
 #endif
 
 namespace FamiStudio
 {
     public class Sequencer : RenderControl
     {
-        const int TrackNameSizeX = 81;
-        const int HeaderSizeY = 17;
-        const int TrackSizeY = 56;
-        const int PatternHeaderSizeY = 16;
-        const int NoteSizeY = 4;
+        const int DefaultTrackNameSizeX     = 81;
+        const int DefaultHeaderSizeY        = 17;
+        const int DefaultTrackSizeY         = 56;
+        const int DefaultPatternHeaderSizeY = 16;
+        const int DefaultNoteSizeY          = 4;
+        const int DefaultScrollMargin       = 128;
+        const int DefaultBarTextPosY        = 2;
+        const int DefaultTrackIconPosX      = 4;
+        const int DefaultTrackIconPosY      = 4;
+        const int DefaultTrackNamePosX      = 24;
+        const int DefaultTrackNamePosY      = 4;
+        const int DefaultGhostNoteOffsetX   = 16;
+        const int DefaultGhostNoteOffsetY   = 16;
+        const int DefaultPatternNamePosX    = 2;
+        const int DefaultPatternNamePosY    = 3;
+
+        int TrackNameSizeX     = DefaultTrackNameSizeX;
+        int HeaderSizeY        = DefaultHeaderSizeY;
+        int TrackSizeY         = DefaultTrackSizeY;
+        int PatternHeaderSizeY = DefaultPatternHeaderSizeY;
+        int NoteSizeY          = DefaultNoteSizeY;
+        int ScrollMargin       = DefaultScrollMargin;
+        int BarTextPosY        = DefaultBarTextPosY;  
+        int TrackIconPosX      = DefaultTrackIconPosX;   
+        int TrackIconPosY      = DefaultTrackIconPosY;   
+        int TrackNamePosX      = DefaultTrackNamePosX;   
+        int TrackNamePosY      = DefaultTrackNamePosY;   
+        int GhostNoteOffsetX   = DefaultGhostNoteOffsetX;
+        int GhostNoteOffsetY   = DefaultGhostNoteOffsetY;
+        int PatternNamePosX    = DefaultPatternNamePosX;
+        int PatternNamePosY    = DefaultPatternNamePosY;
 
         const int MinZoomLevel = -2;
-        const int MaxZoomLevel = 4;
-        const int ScrollMargin = 128;
-
+        const int MaxZoomLevel =  4;
+        
         int PatternSizeX => ScaleForZoom(Song.PatternLength);
 
         int ScaleForZoom(int value)
@@ -83,6 +108,7 @@ namespace FamiStudio
 
         public Sequencer()
         {
+            UpdateRenderCoords();
         }
 
         private Song Song
@@ -96,6 +122,27 @@ namespace FamiStudio
         {
             if (!App.RealTimeUpdate)
                 Invalidate();
+        }
+
+        private void UpdateRenderCoords()
+        {
+            var scaling = RenderTheme.MainWindowScaling;
+
+            TrackNameSizeX     = DefaultTrackNameSizeX * scaling;
+            HeaderSizeY        = DefaultHeaderSizeY * scaling;
+            TrackSizeY         = DefaultTrackSizeY * scaling;
+            PatternHeaderSizeY = DefaultPatternHeaderSizeY * scaling;
+            NoteSizeY          = DefaultNoteSizeY * scaling;
+            ScrollMargin       = DefaultScrollMargin * scaling;
+            BarTextPosY        = DefaultBarTextPosY * scaling;
+            TrackIconPosX      = DefaultTrackIconPosX * scaling;
+            TrackIconPosY      = DefaultTrackIconPosY * scaling;
+            TrackNamePosX      = DefaultTrackNamePosX * scaling;
+            TrackNamePosY      = DefaultTrackNamePosY * scaling;
+            GhostNoteOffsetX   = DefaultGhostNoteOffsetX * scaling;
+            GhostNoteOffsetY   = DefaultGhostNoteOffsetY * scaling;
+            PatternNamePosX    = DefaultPatternNamePosX * scaling;
+            PatternNamePosY    = DefaultPatternNamePosY * scaling;
         }
 
         public void Reset()
@@ -163,7 +210,7 @@ namespace FamiStudio
             for (int i = minVisiblePattern, x = minVisiblePattern * patternSizeX - scrollX; i < maxVisiblePattern; i++, x += patternSizeX)
             {
                 g.PushTranslation(x, 0);
-                g.DrawText(i.ToString(), ThemeBase.FontMediumCenter, 0, 2, theme.LightGreyFillBrush1, patternSizeX);
+                g.DrawText(i.ToString(), ThemeBase.FontMediumCenter, 0, BarTextPosY, theme.LightGreyFillBrush1, patternSizeX);
                 g.PopTransform();
             }
 
@@ -174,15 +221,15 @@ namespace FamiStudio
 
             // Icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += TrackSizeY)
-                g.DrawBitmap(bmpTracks[(int)Song.Channels[i].Type], 4, y + 4, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
+                g.DrawBitmap(bmpTracks[(int)Song.Channels[i].Type], TrackIconPosX, y + TrackIconPosY, false, RenderTheme.MainWindowScaling, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
 
             // Track names
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += TrackSizeY)
-                g.DrawText(Song.Channels[i].Name, i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium, 24, y + 4, theme.BlackBrush);
+                g.DrawText(Song.Channels[i].Name, i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium, TrackNamePosX, y + TrackNamePosY, theme.BlackBrush);
 
             // Ghost note icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += TrackSizeY)
-                g.DrawBitmap(bmpGhostNote, TrackNameSizeX - 16, y + TrackSizeY - 15, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
+                g.DrawBitmap(bmpGhostNote, TrackNameSizeX - GhostNoteOffsetX, y + TrackSizeY - GhostNoteOffsetY - 1, false, RenderTheme.MainWindowScaling, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
 
             // Vertical line seperating the track labels.
             g.DrawLine(TrackNameSizeX - 1, 0, TrackNameSizeX - 1, Height, theme.DarkGreyLineBrush1);
@@ -226,7 +273,7 @@ namespace FamiStudio
 
                         g.DrawBitmap(bmp, 1, 1 + PatternHeaderSizeY, PatternSizeX - 1, bmp.Size.Height);
                         g.PushClip(0, 0, PatternSizeX, TrackSizeY);
-                        g.DrawText(pattern.Name, ThemeBase.FontSmall, 2, 3, theme.BlackBrush);
+                        g.DrawText(pattern.Name, ThemeBase.FontSmall, PatternNamePosX, PatternNamePosY, theme.BlackBrush);
                         g.PopClip();
                         g.PopTransform();
                     }
@@ -366,23 +413,31 @@ namespace FamiStudio
             return (x > TrackNameSizeX && y > HeaderSizeY && pattern >= 0 && pattern < Song.Length && track >= 0 && track < Song.Channels.Length);
         }
 
-        System.Drawing.Rectangle GetTrackIconRect(int idx)
+        Rectangle GetTrackIconRect(int idx)
         {
-            return new System.Drawing.Rectangle(4, HeaderSizeY + idx * TrackSizeY + 4, 16, 16);
+            return new Rectangle(
+                TrackIconPosX,
+                TrackIconPosY + HeaderSizeY + idx * TrackSizeY, 
+                16 * RenderTheme.MainWindowScaling,
+                16 * RenderTheme.MainWindowScaling);
         }
 
-        System.Drawing.Rectangle GetTrackGhostRect(int idx)
+        Rectangle GetTrackGhostRect(int idx)
         {
-            return new System.Drawing.Rectangle(TrackNameSizeX - 16, HeaderSizeY + (idx + 1) * TrackSizeY - 15, 12, 12);
+            return new Rectangle(
+                TrackNameSizeX - GhostNoteOffsetX, 
+                HeaderSizeY + (idx + 1) * TrackSizeY - GhostNoteOffsetY - 1, 
+                12 * RenderTheme.MainWindowScaling, 
+                12 * RenderTheme.MainWindowScaling);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
 
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool right  = e.Button.HasFlag(MouseButtons.Right);
 
             CancelDragSelection();
             UpdateCursor();
@@ -405,7 +460,7 @@ namespace FamiStudio
                         if (left)
                         {
                             // Toggle muted
-                            App.ChannelMask ^= bit;
+                            App.ChannelMask ^= bit; 
                         }
                         else
                         {
@@ -413,7 +468,7 @@ namespace FamiStudio
                             if (App.ChannelMask == (1 << i))
                                 App.ChannelMask = 0x1f;
                             else
-                                App.ChannelMask = (1 << i);
+                                App.ChannelMask = (1 << i); 
                         }
                         ConditionalInvalidate();
                         break;
@@ -539,7 +594,7 @@ namespace FamiStudio
                 Pattern[,] tmpPatterns = new Pattern[maxSelectedChannelIdx - minSelectedChannelIdx + 1, maxSelectedPatternIdx - minSelectedPatternIdx + 1];
 
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-
+                
                 for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
                 {
                     for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
@@ -624,7 +679,7 @@ namespace FamiStudio
         {
             base.OnMouseMove(e);
 
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             bool inPatternZone = GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx);
@@ -673,7 +728,7 @@ namespace FamiStudio
                 {
                     bool multiplePatternSelected = (maxSelectedChannelIdx != minSelectedChannelIdx) || (minSelectedPatternIdx != maxSelectedPatternIdx);
 
-                    var dlg = new PropertyDialog(160, PointToScreen(new Point(e.X, e.Y)));
+                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160);
                     dlg.Properties.AddColoredString(pattern.Name, pattern.Color);
                     dlg.Properties.AddColor(pattern.Color);
                     dlg.Properties.Build();
@@ -682,8 +737,8 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
-                        var newName = dlg.Properties.GetPropertyValue<string>(0);
-                        var newColor = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                        var newName  = dlg.Properties.GetPropertyValue<string>(0);
+                        var newColor = dlg.Properties.GetPropertyValue<Color>(1);
 
                         if (multiplePatternSelected)
                         {

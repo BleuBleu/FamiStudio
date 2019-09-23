@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -8,15 +9,27 @@ namespace FamiStudio
     {
         public PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, Point pt)
+        public PropertyDialog(Point pt, int width, bool leftAlign = false)
         {
+            width = (int)(width * Direct2DTheme.DialogScaling);
+            
             if (pt.X >= 0 && pt.Y >= 0)
             {
+                if (leftAlign)
+                    pt.X -= width;
+
                 StartPosition = FormStartPosition.Manual;
-                Location = PointToScreen(new System.Drawing.Point(pt.X, pt.Y));
+                Location = pt;
             }
 
             InitializeComponent();
+
+            // TODO: Resize Yes/No button depending on DPI.
+            string suffix = ""; // Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
+
+            buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
+            buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
+
             Width = width;
         }
 

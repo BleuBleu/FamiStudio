@@ -71,11 +71,6 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
@@ -104,10 +99,6 @@
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\Channel.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DTheme.cs" />
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\QuickSand10.fnt" />
     <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand12.fnt" />
@@ -253,6 +244,21 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Export%402x.png" />
+    <EmbeddedResource Include="Resources\File%402x.png" />
+    <EmbeddedResource Include="Resources\Loop%402x.png" />
+    <EmbeddedResource Include="Resources\LoopNone%402x.png" />
+    <EmbeddedResource Include="Resources\LoopPattern%402x.png" />
+    <EmbeddedResource Include="Resources\No%402x.png" />
+    <EmbeddedResource Include="Resources\Open%402x.png" />
+    <EmbeddedResource Include="Resources\Pause%402x.png" />
+    <EmbeddedResource Include="Resources\Play%402x.png" />
+    <EmbeddedResource Include="Resources\Redo%402x.png" />
+    <EmbeddedResource Include="Resources\Rewind%402x.png" />
+    <EmbeddedResource Include="Resources\Save%402x.png" />
+    <EmbeddedResource Include="Resources\Stop%402x.png" />
+    <EmbeddedResource Include="Resources\Undo%402x.png" />
+    <EmbeddedResource Include="Resources\Yes%402x.png" />
     <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand10_0.png" />
     <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />

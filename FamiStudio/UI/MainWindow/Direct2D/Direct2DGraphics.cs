@@ -15,6 +15,7 @@ using Bitmap = SharpDX.Direct2D1.Bitmap;
 using PixelFormat = SharpDX.Direct2D1.PixelFormat;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
+using System.Reflection;
 
 namespace FamiStudio
 {
@@ -137,9 +138,9 @@ namespace FamiStudio
             renderTarget.Clear(ToRawColor4(color));
         }
 
-        public void DrawBitmap(Bitmap bmp, float x, float y, float opacity = 1.0f)
+        public void DrawBitmap(Bitmap bmp, float x, float y, bool filter = false, float scale = 1.0f, float opacity = 1.0f)
         {
-            renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + bmp.Size.Width, y + bmp.Size.Height), opacity, BitmapInterpolationMode.NearestNeighbor);
+            renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + bmp.Size.Width * scale, y + bmp.Size.Height * scale), opacity, filter ? BitmapInterpolationMode.Linear : BitmapInterpolationMode.NearestNeighbor);
         }
 
         public void DrawBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity = 1.0f)
@@ -154,7 +155,7 @@ namespace FamiStudio
 
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush)
         {
-            renderTarget.DrawLine(new RawVector2(x0, y0), new RawVector2(x1, y1), brush);
+            renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush);
         }
 
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush, float width = 1.0f)
@@ -291,8 +292,15 @@ namespace FamiStudio
 
         public Bitmap CreateBitmapFromResource(string name)
         {
-            var bmpStream = typeof(NsfFile).Assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}.png");
-            var bmp = System.Drawing.Image.FromStream(bmpStream) as System.Drawing.Bitmap;
+            string suffix = Direct2DTheme.MainWindowScaling > 1 ? "@2x" : "";
+            var assembly = Assembly.GetExecutingAssembly();
+
+            System.Drawing.Bitmap bmp;
+
+            if (assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}{suffix}.png") != null)
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}{suffix}.png")) as System.Drawing.Bitmap;
+            else
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}.png")) as System.Drawing.Bitmap;
 
             var bmpData =
                 bmp.LockBits(
@@ -316,7 +324,6 @@ namespace FamiStudio
 
             stream.Dispose();
             bmp.Dispose();
-            bmpStream.Dispose();
 
             return result;
         }
