@@ -246,7 +246,7 @@ namespace FamiStudio
                 if (bmp == null)
                     bmp = btn.Bmp;
                 bool enabled = btn.Enabled != null ? btn.Enabled() : true;
-                g.DrawBitmap(bmp, btn.X, btn.Y, true, buttonScaling, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
+                g.DrawBitmap(bmp, btn.X, btn.Y, buttonScaling, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
             }
 
             // Timecode

@@ -279,7 +279,7 @@ namespace FamiStudio
 
                 if (icon != null)
                 {
-                    g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY, false, RenderTheme.MainWindowScaling);
+                    g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY, RenderTheme.MainWindowScaling);
                 }
 
                 var subButtons = button.GetSubButtons(out var active);
@@ -287,7 +287,7 @@ namespace FamiStudio
                 {
                     for (int i = 0, x = actualWidth - subButtonSpacingX; i < subButtons.Length; i++, x -= subButtonSpacingX)
                     {
-                        g.DrawBitmap(bmpSubButtonIcons[(int)subButtons[i]], x, subButtonPosY, false, RenderTheme.MainWindowScaling, active[i] ? 1.0f : 0.2f);
+                        g.DrawBitmap(bmpSubButtonIcons[(int)subButtons[i]], x, subButtonPosY, RenderTheme.MainWindowScaling, active[i] ? 1.0f : 0.2f);
                     }
                 }
 

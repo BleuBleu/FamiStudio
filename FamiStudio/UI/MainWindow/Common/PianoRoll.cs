@@ -361,7 +361,7 @@ namespace FamiStudio
                     {
                         g.FillRectangle(env.Loop * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, headerAndEffectSizeY, theme.DarkGreyFillBrush2);
                         g.DrawLine(env.Loop * noteSizeX - scrollX, 0, env.Loop * noteSizeX - scrollX, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
-                        g.DrawBitmap(bmpLoop, env.Loop * noteSizeX - scrollX + effectIconPosX + 1, effectIconPosY, false, RenderTheme.MainWindowScaling);
+                        g.DrawBitmap(bmpLoop, env.Loop * noteSizeX - scrollX + effectIconPosX + 1, effectIconPosY, RenderTheme.MainWindowScaling);
                     }
                     if (env.Length > 0)
                     {
@@ -394,7 +394,7 @@ namespace FamiStudio
                                 var note = pattern.Notes[i];
                                 if (note.HasEffect)
                                 {
-                                    g.DrawBitmap(bmpEffectsFilled[note.Effect - 1], patternX + i * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2, effectIconPosY, false, RenderTheme.MainWindowScaling);
+                                    g.DrawBitmap(bmpEffectsFilled[note.Effect - 1], patternX + i * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2, effectIconPosY, RenderTheme.MainWindowScaling);
                                 }
                             }
                         }
@@ -419,7 +419,7 @@ namespace FamiStudio
             // Effect icons
             if (editMode == EditionMode.Channel)
             { 
-                g.DrawBitmap(showEffectsPanel ? bmpEffectExpanded : bmpEffectCollapsed, effectIconPosX, effectIconPosY, false, RenderTheme.MainWindowScaling);
+                g.DrawBitmap(showEffectsPanel ? bmpEffectExpanded : bmpEffectCollapsed, effectIconPosX, effectIconPosY, RenderTheme.MainWindowScaling);
 
                 if (showEffectsPanel)
                 {
@@ -433,7 +433,7 @@ namespace FamiStudio
                     g.PushTranslation(0, headerSizeY);
 
                     g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
-                    g.DrawBitmap(bmpVolume, effectIconPosX, effectIconPosY, false, RenderTheme.MainWindowScaling);
+                    g.DrawBitmap(bmpVolume, effectIconPosX, effectIconPosY, RenderTheme.MainWindowScaling);
                     g.DrawText("Volume", selectedEffectIdx == -1 ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
 
                     int effectButtonY = 0;
@@ -442,7 +442,7 @@ namespace FamiStudio
                         effectButtonY += effectButtonSizeY;
                         g.PushTranslation(0, effectButtonY);
                         g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
-                        g.DrawBitmap(bmpEffects[i], effectIconPosX, effectIconPosY, false, RenderTheme.MainWindowScaling);
+                        g.DrawBitmap(bmpEffects[i], effectIconPosX, effectIconPosY, RenderTheme.MainWindowScaling);
                         g.DrawText(EffectNames[i], selectedEffectIdx == i ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
                         g.PopTransform();
                     }

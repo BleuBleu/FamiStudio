@@ -138,8 +138,9 @@ namespace FamiStudio
             renderTarget.Clear(ToRawColor4(color));
         }
 
-        public void DrawBitmap(Bitmap bmp, float x, float y, bool filter = false, float scale = 1.0f, float opacity = 1.0f)
+        public void DrawBitmap(Bitmap bmp, float x, float y, float scale = 1.0f, float opacity = 1.0f)
         {
+            bool filter = (scale % 1.0f) != 0.0f;
             renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + bmp.Size.Width * scale, y + bmp.Size.Height * scale), opacity, filter ? BitmapInterpolationMode.Linear : BitmapInterpolationMode.NearestNeighbor);
         }
 
