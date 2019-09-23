@@ -41,11 +41,11 @@ namespace FamiStudio
         const int DefaultTimecodeTextPosX = 30;
         const int DefaultTooltipPosY      = 12;
 
-        int TimecodePosX     = DefaultTimecodePosX;
-        int TimecodePosY     = DefaultTimecodePosY;
-        int TimecodeSizeX    = DefaultTimecodeSizeX;
-        int TimecodeTextPosX = DefaultTimecodeTextPosX;
-        int TooltipPosY      = DefaultTooltipPosY;
+        int timecodePosX;
+        int timecodePosY;
+        int timecodeSizeX;
+        int timecodeTextPosX;
+        int tooltipPosY;
 
         private delegate void EmptyDelegate();
         private delegate bool BoolDelegate();
@@ -111,16 +111,16 @@ namespace FamiStudio
             for (int i = 0; i < ButtonCount; i++)
             {
                 var btn = buttons[i];
-                btn.X *= scaling;
-                btn.Y *= scaling;
-                btn.Size *= scaling;
+                btn.X = (int)(btn.X * scaling);
+                btn.Y = (int)(btn.Y * scaling);
+                btn.Size = (int)(btn.Size * scaling);
             }
 
-            TimecodePosX     *= scaling;
-            TimecodePosY     *= scaling;
-            TimecodeSizeX    *= scaling;
-            TimecodeTextPosX *= scaling;
-            TooltipPosY      *= scaling;
+            timecodePosX     = (int)(DefaultTimecodePosX     * scaling);
+            timecodePosY     = (int)(DefaultTimecodePosY     * scaling);
+            timecodeSizeX    = (int)(DefaultTimecodeSizeX    * scaling);
+            timecodeTextPosX = (int)(DefaultTimecodeTextPosX * scaling);
+            tooltipPosY      = (int)(DefaultTooltipPosY      * scaling);
         }
 
         public string ToolTip
@@ -167,7 +167,7 @@ namespace FamiStudio
 
         private bool OnExportEnabled()
         {
-            return !string.IsNullOrEmpty(App.Project.Filename);
+            return App.Project != null && !string.IsNullOrEmpty(App.Project.Filename);
         }
 
         private void OnUndo()
@@ -177,7 +177,7 @@ namespace FamiStudio
 
         private bool OnUndoEnabled()
         {
-            return App.UndoRedoManager.UndoScope != TransactionScope.Max;
+            return App.UndoRedoManager != null && App.UndoRedoManager.UndoScope != TransactionScope.Max;
         }
 
         private void OnRedo()
@@ -187,7 +187,7 @@ namespace FamiStudio
 
         private bool OnRedoEnabled()
         {
-            return App.UndoRedoManager.RedoScope != TransactionScope.Max;
+            return App.UndoRedoManager != null && App.UndoRedoManager.RedoScope != TransactionScope.Max;
         }
 
         private void OnPlay()
@@ -249,13 +249,13 @@ namespace FamiStudio
             int patternIdx = frame / App.Song.PatternLength;
             int noteIdx = frame % App.Song.PatternLength;
 
-            g.FillAndDrawRectangle(TimecodePosX, TimecodePosY, TimecodePosX + TimecodeSizeX, Height - TimecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
-            g.DrawText($"{patternIdx:D3}:{noteIdx:D3}", ThemeBase.FontHuge, TimecodePosX + TimecodeTextPosX, 2, theme.LightGreyFillBrush1, TimecodeSizeX);
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
+            g.DrawText($"{patternIdx:D3}:{noteIdx:D3}", ThemeBase.FontHuge, timecodePosX + timecodeTextPosX, 2, theme.LightGreyFillBrush1, timecodeSizeX);
 
             // Tooltip
             if (!string.IsNullOrEmpty(tooltip))
             {
-                g.DrawText(tooltip, ThemeBase.FontMediumRight, Width - 314, TooltipPosY, theme.BlackBrush, 300);
+                g.DrawText(tooltip, ThemeBase.FontMediumRight, Width - 314, tooltipPosY, theme.BlackBrush, 300);
             }
         }
 

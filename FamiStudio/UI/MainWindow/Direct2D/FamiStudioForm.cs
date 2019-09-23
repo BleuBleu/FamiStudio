@@ -31,9 +31,9 @@ namespace FamiStudio
 
             var scaling = Direct2DTheme.MainWindowScaling;
 
-            toolbar.Height *= scaling;
-            tableLayout.RowStyles[0].Height *= scaling;
-            projectExplorer.Width *= scaling;
+            toolbar.Height = (int)(toolbar.Height * scaling);
+            tableLayout.RowStyles[0].Height = (int)(tableLayout.RowStyles[0].Height * scaling);
+            projectExplorer.Width = (int)(projectExplorer.Width * scaling);
         }
 
         private void timer_Tick(object sender, EventArgs e)

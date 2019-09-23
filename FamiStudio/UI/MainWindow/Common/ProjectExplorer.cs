@@ -38,17 +38,17 @@ namespace FamiStudio
         const int DefaultScrollBarSizeX       = 8;
         const int DefaultButtonSizeY          = 24;
 
-        int ButtonIconPosX       = DefaultButtonIconPosX;      
-        int ButtonIconPosY       = DefaultButtonIconPosY;      
-        int ButtonTextPosX       = DefaultButtonTextPosX;      
-        int ButtonTextPosY       = DefaultButtonTextPosY;
-        int ButtonTextNoIconPosX = DefaultButtonTextNoIconPosX;
-        int SubButtonSpacingX    = DefaultSubButtonSpacingX;   
-        int SubButtonPosY        = DefaultSubButtonPosY;       
-        int ButtonSizeY          = DefaultButtonSizeY;
-        int VirtualSizeY;
-        int ScrollBarSizeX;
-        bool NeedsScrollBar;
+        int buttonIconPosX;
+        int buttonIconPosY;
+        int buttonTextPosX;
+        int buttonTextPosY;
+        int buttonTextNoIconPosX;
+        int subButtonSpacingX;
+        int subButtonPosY;
+        int buttonSizeY;
+        int virtualSizeY;
+        int scrollBarSizeX;
+        bool needsScrollBar;
 
         enum ButtonType
         {
@@ -198,17 +198,17 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
 
-            ButtonIconPosX       = DefaultButtonIconPosX * scaling;      
-            ButtonIconPosY       = DefaultButtonIconPosY * scaling;      
-            ButtonTextPosX       = DefaultButtonTextPosX * scaling;      
-            ButtonTextPosY       = DefaultButtonTextPosY * scaling;
-            ButtonTextNoIconPosX = DefaultButtonTextNoIconPosX * scaling;
-            SubButtonSpacingX    = DefaultSubButtonSpacingX * scaling;   
-            SubButtonPosY        = DefaultSubButtonPosY * scaling;       
-            ButtonSizeY          = DefaultButtonSizeY * scaling;
-            VirtualSizeY         = App?.Project == null ? Height : buttons.Count * ButtonSizeY;
-            NeedsScrollBar       = VirtualSizeY > Height; 
-            ScrollBarSizeX       = NeedsScrollBar ? DefaultScrollBarSizeX * scaling : 0;      
+            buttonIconPosX       = (int)(DefaultButtonIconPosX * scaling);      
+            buttonIconPosY       = (int)(DefaultButtonIconPosY * scaling);      
+            buttonTextPosX       = (int)(DefaultButtonTextPosX * scaling);      
+            buttonTextPosY       = (int)(DefaultButtonTextPosY * scaling);
+            buttonTextNoIconPosX = (int)(DefaultButtonTextNoIconPosX * scaling);
+            subButtonSpacingX    = (int)(DefaultSubButtonSpacingX * scaling);   
+            subButtonPosY        = (int)(DefaultSubButtonPosY * scaling);       
+            buttonSizeY          = (int)(DefaultButtonSizeY * scaling);
+            virtualSizeY         = App?.Project == null ? Height : buttons.Count * buttonSizeY;
+            needsScrollBar       = virtualSizeY > Height; 
+            scrollBarSizeX       = needsScrollBar ? (int)(DefaultScrollBarSizeX * scaling) : 0;      
         }
 
         public void Reset()
@@ -265,7 +265,7 @@ namespace FamiStudio
             g.Clear(ThemeBase.DarkGreyFillColor1);
             g.DrawLine(0, 0, 0, Height, theme.BlackBrush);
 
-            int actualWidth = Width - ScrollBarSizeX;
+            int actualWidth = Width - scrollBarSizeX;
 
             int y = -scrollY;
 
@@ -274,30 +274,30 @@ namespace FamiStudio
                 var icon = bmpButtonIcons[(int)button.type];
 
                 g.PushTranslation(0, y);
-                g.FillAndDrawRectangle(0, 0, actualWidth, ButtonSizeY, g.GetVerticalGradientBrush(button.GetColor(), ButtonSizeY, 0.8f), theme.BlackBrush);
-                g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? ButtonTextNoIconPosX : ButtonTextPosX, ButtonTextPosY, theme.BlackBrush, actualWidth - ButtonTextNoIconPosX * 2);
+                g.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.GetColor(), buttonSizeY, 0.8f), theme.BlackBrush);
+                g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, theme.BlackBrush, actualWidth - buttonTextNoIconPosX * 2);
 
                 if (icon != null)
                 {
-                    g.DrawBitmap(icon, ButtonIconPosX, ButtonIconPosY, false, RenderTheme.MainWindowScaling);
+                    g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY, false, RenderTheme.MainWindowScaling);
                 }
 
                 var subButtons = button.GetSubButtons(out var active);
                 if (subButtons != null)
                 {
-                    for (int i = 0, x = actualWidth - SubButtonSpacingX; i < subButtons.Length; i++, x -= SubButtonSpacingX)
+                    for (int i = 0, x = actualWidth - subButtonSpacingX; i < subButtons.Length; i++, x -= subButtonSpacingX)
                     {
-                        g.DrawBitmap(bmpSubButtonIcons[(int)subButtons[i]], x, SubButtonPosY, false, RenderTheme.MainWindowScaling, active[i] ? 1.0f : 0.2f);
+                        g.DrawBitmap(bmpSubButtonIcons[(int)subButtons[i]], x, subButtonPosY, false, RenderTheme.MainWindowScaling, active[i] ? 1.0f : 0.2f);
                     }
                 }
 
                 g.PopTransform();
-                y += ButtonSizeY;
+                y += buttonSizeY;
             }
 
-            if (NeedsScrollBar)
+            if (needsScrollBar)
             {
-                int virtualSizeY   = VirtualSizeY;
+                int virtualSizeY   = this.virtualSizeY;
                 int scrollBarSizeY = (int)Math.Round(Height * (Height  / (float)virtualSizeY));
                 int scrollBarPosY  = (int)Math.Round(Height * (scrollY / (float)virtualSizeY));
 
@@ -309,7 +309,7 @@ namespace FamiStudio
         private void ClampScroll()
         {
             int minScrollY = 0;
-            int maxScrollY = Math.Max(VirtualSizeY - Height, 0);
+            int maxScrollY = Math.Max(virtualSizeY - Height, 0);
 
             if (scrollY < minScrollY) scrollY = minScrollY;
             if (scrollY > maxScrollY) scrollY = maxScrollY;
@@ -336,7 +336,7 @@ namespace FamiStudio
 
         private int GetButtonAtCoord(int x, int y, out SubButtonType sub)
         {
-            var buttonIndex = (y + scrollY) / ButtonSizeY;
+            var buttonIndex = (y + scrollY) / buttonSizeY;
             sub = SubButtonType.Max;
 
             if (buttonIndex >= 0 && buttonIndex < buttons.Count)
@@ -344,12 +344,12 @@ namespace FamiStudio
                 var subButtons = buttons[buttonIndex].GetSubButtons(out _);
                 if (subButtons != null)
                 {
-                    y -= (buttonIndex * ButtonSizeY - scrollY);
+                    y -= (buttonIndex * buttonSizeY - scrollY);
 
                     for (int i = 0; i < subButtons.Length; i++)
                     {
-                        int sx = Width - ScrollBarSizeX - SubButtonSpacingX * (i + 1);
-                        int sy = SubButtonPosY;
+                        int sx = Width - scrollBarSizeX - subButtonSpacingX * (i + 1);
+                        int sy = subButtonPosY;
                         int dx = x - sx;
                         int dy = y - sy;
 
@@ -446,7 +446,7 @@ namespace FamiStudio
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
-            DoScroll(e.Delta > 0 ? ButtonSizeY * 3 : -ButtonSizeY * 3);
+            DoScroll(e.Delta > 0 ? buttonSizeY * 3 : -buttonSizeY * 3);
         }
 
         protected override void OnResize(EventArgs e)
