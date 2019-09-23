@@ -46,6 +46,7 @@ namespace FamiStudio
         int timecodeSizeX;
         int timecodeTextPosX;
         int tooltipPosY;
+        float buttonScaling = 1.0f;
 
         private delegate void EmptyDelegate();
         private delegate bool BoolDelegate();
@@ -107,6 +108,10 @@ namespace FamiStudio
             buttons[ButtonLoop].ToolTip   = "Toggle Loop Mode";
 
             var scaling = RenderTheme.MainWindowScaling;
+
+            // When scaling is > 1, we use the 64x64 icons, but we need to scale them to 48.
+            if (scaling == 1.5f)
+                buttonScaling = 0.75f;
 
             for (int i = 0; i < ButtonCount; i++)
             {
@@ -241,7 +246,7 @@ namespace FamiStudio
                 if (bmp == null)
                     bmp = btn.Bmp;
                 bool enabled = btn.Enabled != null ? btn.Enabled() : true;
-                g.DrawBitmap(bmp, btn.X, btn.Y, true, 1, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
+                g.DrawBitmap(bmp, btn.X, btn.Y, true, buttonScaling, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
             }
 
             // Timecode
