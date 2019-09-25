@@ -62,7 +62,7 @@ namespace FamiStudio
         }
 
         public System.Windows.Forms.Keys ModifierKeys => parentForm.GetModifierKeys(); 
-        public FamiStudio App => parentForm.FamiStudio; 
+        public FamiStudio App => parentForm?.FamiStudio; 
         public CursorInfo Cursor => cursorInfo; 
         public FamiStudioForm ParentForm { get => parentForm; set => parentForm = value; }
     }

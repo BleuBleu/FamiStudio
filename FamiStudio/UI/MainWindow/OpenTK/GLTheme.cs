@@ -13,6 +13,9 @@ namespace FamiStudio
             InitializeBase();
         }
 
+        public static float MainWindowScaling => MacUtils.DPIScaling;
+        public static float DialogScaling => MacUtils.DPIScaling;
+
         private void InitializeFonts(GLGraphics g)
         {
             if (Fonts[0] == null)
@@ -22,6 +25,8 @@ namespace FamiStudio
                 for (int i = 0; i < FontDefinitions.Length; i++)
                 {
                     var def = FontDefinitions[i];
+
+                    def.Size = (int)(def.Size * MainWindowScaling);
 
                     var suffix   = def.Bold ? "Bold" : "";
                     var basename = $"{def.Name}{def.Size}{suffix}";

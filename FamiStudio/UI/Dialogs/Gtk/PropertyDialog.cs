@@ -12,12 +12,13 @@ namespace FamiStudio
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, System.Drawing.Point pt) : base(WindowType.Toplevel)
+        public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false) : base(WindowType.Toplevel)
         {
             var hbox = new HBox(false, 0);
 
-            var buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource("FamiStudio.Resources.Yes.png"));
-            var buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource("FamiStudio.Resources.No.png"));
+            var suffix = ""; // GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
+            var buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
 
             buttonYes.Show();
             buttonYes.ButtonPressEvent += ButtonYes_ButtonPressEvent;
@@ -49,6 +50,10 @@ namespace FamiStudio
             KeepAbove = true;
             Modal = true;
             WidthRequest = width;
+
+            if (leftAlign)
+                pt.X -= width;
+
             Move(pt.X, pt.Y);
         }
 

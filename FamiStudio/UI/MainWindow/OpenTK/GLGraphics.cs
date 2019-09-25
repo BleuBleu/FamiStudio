@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using OpenTK.Graphics.OpenGL;
 
 namespace FamiStudio
@@ -249,21 +250,18 @@ namespace FamiStudio
             GL.Clear(ClearBufferMask.ColorBufferBit);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
+        public void DrawBitmap(GLBitmap bmp, float x, float y, float scale = 1.0f, float opacity = 1.0f)
         {
-            DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
-        }
+            //DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity = 1.0f)
-        {
             GL.Enable(EnableCap.Texture2D);
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.Color4(1.0f, 1.0f, 1.0f, opacity);
 
             int x0 = (int)x;
             int y0 = (int)y;
-            int x1 = (int)(x + width);
-            int y1 = (int)(y + height);
+            int x1 = (int)(x + bmp.Size.Width * scale);
+            int y1 = (int)(y + bmp.Size.Height * scale);
 
             GL.Begin(BeginMode.Quads);
             GL.TexCoord2(0, 0); GL.Vertex2(x0, y0);
@@ -518,7 +516,16 @@ namespace FamiStudio
 
         public unsafe GLBitmap CreateBitmapFromResource(string name)
         {
-            var pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
+            string suffix = GLTheme.MainWindowScaling > 1 ? "@2x" : "";
+            var assembly = Assembly.GetExecutingAssembly();
+
+            Gdk.Pixbuf pixbuf = null;
+
+            if (assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}{suffix}.png") != null)
+                pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}{suffix}.png");
+            else
+                pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
+
             return new GLBitmap(CreateGLTexture(pixbuf), pixbuf.Width, pixbuf.Height);
         }
 

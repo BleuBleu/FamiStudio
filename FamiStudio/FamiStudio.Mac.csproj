@@ -154,6 +154,18 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportWav.png" />
+    <EmbeddedResource Include="Resources\QuickSand24.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand24Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand24Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand40.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand40_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand40Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand40Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand56.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand56_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand24_0.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

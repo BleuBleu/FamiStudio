@@ -109,8 +109,9 @@ namespace FamiStudio
                 MacUtils.SelRegisterName("resetCursorRects"),
                 Marshal.GetFunctionPointerForDelegate(ResetCursorRectsHandler),
                 "v@:");
-#endif
 
+            MacUtils.Initialize(WindowInfo.Handle);
+#endif
             toolbar = new Toolbar();
             sequencer = new Sequencer();
             pianoRoll = new PianoRoll();
@@ -182,9 +183,9 @@ namespace FamiStudio
         {
             base.OnResize(e);
 
-            const int toolBarHeight = 40;
-            const int projectExplorerWidth = 260;
-            const int sequencerHeight = 298;
+            int toolBarHeight = (int)(40 * GLTheme.MainWindowScaling);
+            int projectExplorerWidth = (int)(260 * GLTheme.MainWindowScaling);
+            int sequencerHeight = (int)(298 * GLTheme.MainWindowScaling);
 
             toolbar.Move(0, 0, Width, toolBarHeight);
             projectExplorer.Move(Width - projectExplorerWidth, toolBarHeight, projectExplorerWidth, Height - toolBarHeight);
@@ -556,10 +557,6 @@ namespace FamiStudio
 
         public new void Run() 
         {
-#if FAMISTUDIO_MACOS
-            MacUtils.Initialize(WindowInfo.Handle);
-#endif
-
             Visible = true; 
             OnResize(EventArgs.Empty);
 
