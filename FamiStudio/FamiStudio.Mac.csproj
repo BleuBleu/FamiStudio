@@ -200,6 +200,21 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Export%402x.png" />
+    <EmbeddedResource Include="Resources\File%402x.png" />
+    <EmbeddedResource Include="Resources\Loop%402x.png" />
+    <EmbeddedResource Include="Resources\LoopNone%402x.png" />
+    <EmbeddedResource Include="Resources\LoopPattern%402x.png" />
+    <EmbeddedResource Include="Resources\No%402x.png" />
+    <EmbeddedResource Include="Resources\Open%402x.png" />
+    <EmbeddedResource Include="Resources\Pause%402x.png" />
+    <EmbeddedResource Include="Resources\Play%402x.png" />
+    <EmbeddedResource Include="Resources\Redo%402x.png" />
+    <EmbeddedResource Include="Resources\Rewind%402x.png" />
+    <EmbeddedResource Include="Resources\Save%402x.png" />
+    <EmbeddedResource Include="Resources\Stop%402x.png" />
+    <EmbeddedResource Include="Resources\Undo%402x.png" />
+    <EmbeddedResource Include="Resources\Yes%402x.png" />
     <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand10_0.png" />
     <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
@@ -226,8 +241,6 @@
     <EmbeddedResource Include="Resources\Stop.png" />
     <EmbeddedResource Include="Resources\Undo.png" />
     <EmbeddedResource Include="Resources\EditSmall.png" />
-    <EmbeddedResource Include="Resources\ExportMusic.png" />
-    <EmbeddedResource Include="Resources\ExportSFX.png" />
     <EmbeddedResource Include="Resources\LoopPattern.png" />
     <EmbeddedResource Include="Resources\LoopNone.png" />
     <EmbeddedResource Include="Resources\Pause.png" />
