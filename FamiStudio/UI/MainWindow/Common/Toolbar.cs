@@ -105,9 +105,9 @@ namespace FamiStudio
 
             var scaling = RenderTheme.MainWindowScaling;
 
-            // When scaling is > 1, we use the 64x64 icons, but we need to scale them to 48.
-            if (scaling == 1.5f)
-                buttonScaling = 0.75f;
+            // When scaling is > 1, we use the 64x64 icons, but we need to scale them back.
+            if (scaling > 1.0f)
+                buttonScaling *= (scaling / 2.0f);
 
             for (int i = 0; i < ButtonCount; i++)
             {
