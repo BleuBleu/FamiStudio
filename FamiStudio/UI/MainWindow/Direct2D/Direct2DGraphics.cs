@@ -139,7 +139,7 @@ namespace FamiStudio
             renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + bmp.Size.Width * scale, y + bmp.Size.Height * scale), opacity, filter ? BitmapInterpolationMode.Linear : BitmapInterpolationMode.NearestNeighbor);
         }
 
-        public void DrawBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity = 1.0f)
+        public void DrawBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity)
         {
             renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + width, y + height), opacity, BitmapInterpolationMode.NearestNeighbor);
         }
