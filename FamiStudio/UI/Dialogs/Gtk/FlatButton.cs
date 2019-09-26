@@ -14,23 +14,6 @@ namespace FamiStudio
         Pango.Layout layoutNormal;
         Pango.Layout layoutBold;
 
-        unsafe ImageSurface GdkPixbufToCairoImageSurface(Pixbuf pb)
-        {
-            byte* p = (byte*)pb.Pixels.ToPointer();
-
-            for (int y = 0; y < pb.Height; y++, p += pb.Rowstride)
-            {
-                for (int x = 0; x < pb.Width * 4; x += 4)
-                {
-                    byte tmp = p[x + 0];
-                    p[x + 0] = p[x + 2];
-                    p[x + 2] = tmp;
-                }
-            }
-
-            return new ImageSurface(pb.Pixels, Format.ARGB32, pb.Width, pb.Height, pb.Rowstride);
-        }
-
         public FlatButton(Pixbuf pb, string text = null)
         {
             image = GdkPixbufToCairoImageSurface(pb);
@@ -59,6 +42,23 @@ namespace FamiStudio
                 WidthRequest  = 40;
                 HeightRequest = 40;
             }
+        }
+
+        unsafe ImageSurface GdkPixbufToCairoImageSurface(Pixbuf pb)
+        {
+            byte* p = (byte*)pb.Pixels.ToPointer();
+
+            for (int y = 0; y < pb.Height; y++, p += pb.Rowstride)
+            {
+                for (int x = 0; x < pb.Width * 4; x += 4)
+                {
+                    byte tmp = p[x + 0];
+                    p[x + 0] = p[x + 2];
+                    p[x + 2] = tmp;
+                }
+            }
+
+            return new ImageSurface(pb.Pixels, Format.ARGB32, pb.Width, pb.Height, pb.Rowstride);
         }
 
         public bool Bold
@@ -120,15 +120,15 @@ namespace FamiStudio
             int yp = State == Gtk.StateType.Active ? 1 : 0;
 
             // Have to use Cairo here since i am unable to draw unpixelated bitmaps with Gdk.
-            var cr = CairoHelper.Create(ev.Window);
-            cr.SetSourceRGB(bgColor.Red / 65535.0f, bgColor.Green / 65535.0f, bgColor.Blue / 65535.0f);
-            cr.Paint();
-            cr.Translate(x, y + yp);
-            cr.Scale(1.0f / GLTheme.DialogScaling, 1.0f / GLTheme.DialogScaling);
-            cr.SetSource(image);
-            cr.Paint();
-            cr.Target.Dispose();
-            cr.Dispose();
+            var ctx = CairoHelper.Create(ev.Window);
+            ctx.SetSourceRGB(bgColor.Red / 65535.0f, bgColor.Green / 65535.0f, bgColor.Blue / 65535.0f);
+            ctx.Paint();
+            ctx.Translate(x, y + yp);
+            ctx.Scale(1.0f / GLTheme.DialogScaling, 1.0f / GLTheme.DialogScaling);
+            ctx.SetSource(image);
+            ctx.Paint();
+            ctx.Target.Dispose();
+            ctx.Dispose();
 
             if (layoutNormal != null)
             {

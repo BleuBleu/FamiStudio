@@ -252,16 +252,19 @@ namespace FamiStudio
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float scale = 1.0f, float opacity = 1.0f)
         {
-            //DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
+            DrawBitmap(bmp, x, y, bmp.Size.Width * scale, bmp.Size.Height * scale, opacity);
+        }
 
+        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity)
+        {
             GL.Enable(EnableCap.Texture2D);
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.Color4(1.0f, 1.0f, 1.0f, opacity);
 
             int x0 = (int)x;
             int y0 = (int)y;
-            int x1 = (int)(x + bmp.Size.Width * scale);
-            int y1 = (int)(y + bmp.Size.Height * scale);
+            int x1 = (int)(x + width);
+            int y1 = (int)(y + height);
 
             GL.Begin(BeginMode.Quads);
             GL.TexCoord2(0, 0); GL.Vertex2(x0, y0);
@@ -271,7 +274,7 @@ namespace FamiStudio
             GL.End();
             GL.Disable(EnableCap.Texture2D);
         }
-
+        
         public void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
         {
             GL.Enable(EnableCap.Texture2D);
