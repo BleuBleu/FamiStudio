@@ -5,8 +5,20 @@ Its feature set is designed to match [FamiTone2](https://shiru.untergrund.net/co
 
 While I intend to keep this reference version simple and on-par with FamiTone2, it could easily be extended to support modified/unofficial FamiTone versions (3 and 4, by nesdoug for example), add support for more effects, or audio expansion chips. 
 
-## Tutorial
+## Download
+All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section. If you are on Windows, simply download the .MSI installer. A shortcut to FamiStudio will be placed in your Start menu.
 
+### [Version 1.1.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.1.0)
+- New export dialog
+- Added WAV export
+- Added FamiTracker Text export (see the [wiki](https://github.com/BleuBleu/FamiStudio/wiki) for limitations)
+- Added NSF export (see the [wiki](https://github.com/BleuBleu/FamiStudio/wiki) for limitations)
+- Bug fixes and code refactoring.
+
+### [Version 1.0.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.0.0)
+- Initial release
+
+## Tutorial
 There is a 10 minutes tutorial on YouTube:
 
 [![Tutorial](https://github.com/BleuBleu/FamiStudio/blob/master/Wiki/Video.png)](https://www.youtube.com/watch?v=_unlyRlsbcM)
@@ -31,19 +43,6 @@ There is a 10 minutes tutorial on YouTube:
 - The UI code is terrible
 
 _(*): plan to improve in the coming weeks/months_
-
-## Releases
-All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section.
-
-### [Version 1.1.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.1.0)
-- New export dialog
-- Added WAV export
-- Added FamiTracker Text export (see the [wiki](https://github.com/BleuBleu/FamiStudio/wiki) for limitations)
-- Added NSF export (see the [wiki](https://github.com/BleuBleu/FamiStudio/wiki) for limitations)
-- Bug fixes and code refactoring.
-
-### [Version 1.0.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.0.0)
-- Initial release
 
 ## Demo Songs
 A few demo songs are included in the installation folder (typically _C:\Program Files (x86)\FamiStudio_):
