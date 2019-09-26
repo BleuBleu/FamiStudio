@@ -6,7 +6,7 @@ Its feature set is designed to match [FamiTone2](https://shiru.untergrund.net/co
 While I intend to keep this reference version simple and on-par with FamiTone2, it could easily be extended to support modified/unofficial FamiTone versions (3 and 4, by nesdoug for example), add support for more effects, or audio expansion chips. 
 
 ## Download
-All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section. If you are on Windows, simply download the .MSI installer. A shortcut to FamiStudio will be placed in your Start menu.
+All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section. If you are on Windows, simply download and run the .MSI installer. A shortcut to FamiStudio will be placed in your Start menu.
 
 ### [Version 1.1.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.1.0)
 - New export dialog
