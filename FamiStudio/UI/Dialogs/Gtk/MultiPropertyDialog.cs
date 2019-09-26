@@ -23,8 +23,9 @@ namespace FamiStudio
         {
             var buttonsHBox = new HBox(false, 0);
 
-            var buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource("FamiStudio.Resources.Yes.png"));
-            var buttonNo = new FlatButton(Gdk.Pixbuf.LoadFromResource("FamiStudio.Resources.No.png"));
+            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
+            var buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
 
             buttonYes.Show();
             buttonYes.ButtonPressEvent += ButtonYes_ButtonPressEvent;

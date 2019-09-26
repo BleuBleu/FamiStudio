@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Gdk;
+using Cairo;
 
 namespace FamiStudio
 {
@@ -8,14 +9,32 @@ namespace FamiStudio
     {
         bool focus;
         bool bold;
-        Pixbuf pixbuf;
+        ImageSurface image;
         static Pango.Context context;
         Pango.Layout layoutNormal;
         Pango.Layout layoutBold;
 
+        unsafe ImageSurface GdkPixbufToCairoImageSurface(Pixbuf pb)
+        {
+            byte* p = (byte*)pb.Pixels.ToPointer();
+
+            for (int y = 0; y < pb.Height; y++, p += pb.Rowstride)
+            {
+                for (int x = 0; x < pb.Width * 4; x += 4)
+                {
+                    byte tmp = p[x + 0];
+                    p[x + 0] = p[x + 2];
+                    p[x + 2] = tmp;
+                }
+            }
+
+            return new ImageSurface(pb.Pixels, Format.ARGB32, pb.Width, pb.Height, pb.Rowstride);
+        }
+
         public FlatButton(Pixbuf pb, string text = null)
         {
-            pixbuf = pb;
+            image = GdkPixbufToCairoImageSurface(pb);
+
             Events |= Gdk.EventMask.ButtonPressMask | EventMask.EnterNotifyMask | EventMask.LeaveNotifyMask | EventMask.ButtonReleaseMask;
 
             if (text != null)
@@ -34,6 +53,11 @@ namespace FamiStudio
                 layoutBold.Alignment = Pango.Alignment.Left;
                 layoutBold.SetText(text);
                 layoutBold.FontDescription = Pango.FontDescription.FromString("Quicksand Bold 14");
+            }
+            else
+            {
+                WidthRequest  = 40;
+                HeightRequest = 40;
             }
         }
 
@@ -83,31 +107,40 @@ namespace FamiStudio
         {
             base.OnExposeEvent(ev);
 
-            using (Gdk.GC gc = new Gdk.GC((Drawable)base.GdkWindow))
+            var bgColor = Style.Backgrounds[(int)State];
+
+            int width  = Allocation.Width;
+            int height = Allocation.Height;
+
+            int imgWidth  = (int)(image.Width  / GLTheme.DialogScaling);
+            int imgHeight = (int)(image.Height / GLTheme.DialogScaling);
+
+            int x = layoutNormal == null ? (width - imgWidth) / 2 : 5;
+            int y = (height - imgHeight) / 2;
+            int yp = State == Gtk.StateType.Active ? 1 : 0;
+
+            // Have to use Cairo here since i am unable to draw unpixelated bitmaps with Gdk.
+            var cr = CairoHelper.Create(ev.Window);
+            cr.SetSourceRGB(bgColor.Red / 65535.0f, bgColor.Green / 65535.0f, bgColor.Blue / 65535.0f);
+            cr.Paint();
+            cr.Translate(x, y + yp);
+            cr.Scale(1.0f / GLTheme.DialogScaling, 1.0f / GLTheme.DialogScaling);
+            cr.SetSource(image);
+            cr.Paint();
+            cr.Target.Dispose();
+            cr.Dispose();
+
+            if (layoutNormal != null)
             {
-                int width  = Allocation.Width;
-                int height = Allocation.Height;
-
-                int x = layoutNormal == null ? (width - pixbuf.Width) / 2 : 5;
-                int y = (height - pixbuf.Height) / 2;
-                int yp = State == Gtk.StateType.Active ? 1 : 0;
-
-                GdkWindow.DrawRectangle(Style.BackgroundGC(State), true, 0, 0, width, height);
-
-                if (layoutNormal != null)
+                using (Gdk.GC gc = new Gdk.GC((Drawable)base.GdkWindow))
                 {
                     var layout = bold ? layoutBold : layoutNormal;
 
-                    layout.Width = Allocation.Width - pixbuf.Width - 10;
+                    layout.Width = Allocation.Width - image.Width - 10;
                     layout.GetSize(out _, out int layoutHeight);
                     layoutHeight = Pango.Units.ToPixels(layoutHeight);
 
-                    GdkWindow.DrawPixbuf(gc, pixbuf, 0, 0, x, y + yp, pixbuf.Width, pixbuf.Height, RgbDither.None, 0, 0);
-                    GdkWindow.DrawLayout(Style.ForegroundGC(State), 10 + pixbuf.Width, (height - layoutHeight) / 2 + yp, layout);
-                }
-                else
-                {
-                    GdkWindow.DrawPixbuf(gc, pixbuf, 0, 0, x, y + yp, pixbuf.Width, pixbuf.Height, RgbDither.None, 0, 0);
+                    GdkWindow.DrawLayout(Style.ForegroundGC(State), 10 + image.Width, (height - layoutHeight) / 2 + yp, layout);
                 }
             }
 
@@ -117,12 +150,6 @@ namespace FamiStudio
         protected override void OnSizeAllocated(Gdk.Rectangle allocation)
         {
             base.OnSizeAllocated(allocation);
-        }
-
-        protected override void OnSizeRequested(ref Gtk.Requisition requisition)
-        {
-            requisition.Width  = pixbuf.Width  + 8;
-            requisition.Height = pixbuf.Height + 8;
         }
     }
 }

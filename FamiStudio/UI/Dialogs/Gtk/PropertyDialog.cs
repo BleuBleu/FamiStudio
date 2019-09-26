@@ -16,7 +16,7 @@ namespace FamiStudio
         {
             var hbox = new HBox(false, 0);
 
-            var suffix = ""; // GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
             var buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
             var buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
 
