@@ -521,7 +521,7 @@ namespace FamiStudio
                 g.PushClip(0, 0, Width, effectPanelSizeY);
                 g.Clear(ThemeBase.DarkGreyFillColor1);
 
-                var lastVolumeFrame = -1;
+                var lastVolumeFrame = 0;
                 var lastVolumeValue = Song.Channels[editChannel].GetLastValidVolume(a.minVisiblePattern - 1);
 
                 // Draw the effects.
@@ -533,7 +533,6 @@ namespace FamiStudio
                         if (pattern != null)
                         {
                             int x = p * patternSizeX;
-
 
                             for (int i = 0; i < Song.PatternLength; i++)
                             {
@@ -552,13 +551,13 @@ namespace FamiStudio
                                     g.PopTransform();
                                 }
                             }
-
-                            g.PushTranslation(lastVolumeFrame * noteSizeX - scrollX, 0);
-                            var lastSizeY = (float)Math.Floor(lastVolumeValue / (float)Note.VolumeMax * effectPanelSizeY);
-                            g.FillRectangle(noteSizeX, effectPanelSizeY - lastSizeY, Width, effectPanelSizeY, theme.DarkGreyFillBrush2);
-                            g.PopTransform();
                         }
                     }
+
+                    g.PushTranslation(Math.Max(0, lastVolumeFrame * noteSizeX - scrollX), 0);
+                    var lastSizeY = (float)Math.Floor(lastVolumeValue / (float)Note.VolumeMax * effectPanelSizeY);
+                    g.FillRectangle(noteSizeX, effectPanelSizeY - lastSizeY, Width, effectPanelSizeY, theme.DarkGreyFillBrush2);
+                    g.PopTransform();
                 }
 
                 for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)

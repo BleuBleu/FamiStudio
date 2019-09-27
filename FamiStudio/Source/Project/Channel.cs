@@ -228,7 +228,7 @@ namespace FamiStudio
                 }
             }
 
-            return Note.VolumeInvalid;
+            return Note.VolumeMax;
         }
 
         public byte GetLastValidNote(ref int patternIdx, out int lastNoteTime, out Instrument instrument)
