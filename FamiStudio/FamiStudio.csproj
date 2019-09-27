@@ -86,6 +86,7 @@
     <Compile Include="Source\Player\SquareChannelState.cs" />
     <Compile Include="Source\Player\TriangleChannelState.cs" />
     <Compile Include="Source\Project\Envelope.cs" />
+    <Compile Include="UI\Dialogs\Common\ConfigDialog.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DGraphics.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DFontLoader.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />
@@ -241,6 +242,8 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Config%402x.png" />
+    <EmbeddedResource Include="Resources\Config.png" />
     <EmbeddedResource Include="Resources\Export%402x.png" />
     <EmbeddedResource Include="Resources\File%402x.png" />
     <EmbeddedResource Include="Resources\Loop%402x.png" />

@@ -59,7 +59,7 @@ namespace FamiStudio
 
         protected override void OnShown(EventArgs e)
         {
-            int maxHeight = 0;
+            int maxHeight = Width / 2;
 
             // Property pages need to be visible when doing the layout otherwise
             // they have the wrong size.
@@ -69,7 +69,7 @@ namespace FamiStudio
                 tabs[i].properties.Visible = i == selectedIndex;
             }
 
-            panelTabs.Height = maxHeight;
+            panelTabs.Height  = maxHeight;
             panelProps.Height = maxHeight;
 
             buttonYes.Width  = (int)(buttonYes.Width  * Direct2DTheme.DialogScaling);

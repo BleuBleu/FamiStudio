@@ -26,12 +26,13 @@ namespace FamiStudio
         const int ButtonExport = 3;
         const int ButtonUndo   = 4;
         const int ButtonRedo   = 5;
-        const int ButtonPlay   = 6;
-        const int ButtonRewind = 7;
-        const int ButtonLoop   = 8;
-        const int ButtonCount  = 9;
+        const int ButtonConfig = 6;
+        const int ButtonPlay   = 7;
+        const int ButtonRewind = 8;
+        const int ButtonLoop   = 9;
+        const int ButtonCount  = 10;
 
-        const int DefaultTimecodePosX     = 260;
+        const int DefaultTimecodePosX     = 300;
         const int DefaultTimecodePosY     = 4;
         const int DefaultTimecodeSizeX    = 160;
         const int DefaultTimecodeTextPosX = 30;
@@ -89,9 +90,10 @@ namespace FamiStudio
             buttons[ButtonExport] = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport, Enabled = OnExportEnabled };
             buttons[ButtonUndo]   = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
             buttons[ButtonRedo]   = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
-            buttons[ButtonPlay]   = new Button { X = 436, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
-            buttons[ButtonRewind] = new Button { X = 476, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
-            buttons[ButtonLoop]   = new Button { X = 516, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[ButtonConfig] = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
+            buttons[ButtonPlay]   = new Button { X = 476, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
+            buttons[ButtonRewind] = new Button { X = 516, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
+            buttons[ButtonLoop]   = new Button { X = 556, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
 
             buttons[ButtonNew].ToolTip    = "New Project (Ctrl-N)";
             buttons[ButtonOpen].ToolTip   = "Open Project (Ctrl-O)";
@@ -99,6 +101,7 @@ namespace FamiStudio
             buttons[ButtonExport].ToolTip = "Export to various formats (Ctrl+E)";
             buttons[ButtonUndo].ToolTip   = "Undo (Ctrl+Z)";
             buttons[ButtonRedo].ToolTip   = "Redo (Ctrl+Y)";
+            buttons[ButtonConfig].ToolTip = "Edit Application Settings";
             buttons[ButtonPlay].ToolTip   = "Play/Pause (Space) [Ctrl+Space: Play pattern loop, Shift-Space: Play song loop]";
             buttons[ButtonRewind].ToolTip = "Rewind (Home) [Ctrl+Home: Rewind to beginning of current pattern]";
             buttons[ButtonLoop].ToolTip   = "Toggle Loop Mode";
@@ -189,6 +192,11 @@ namespace FamiStudio
         private bool OnRedoEnabled()
         {
             return App.UndoRedoManager != null && App.UndoRedoManager.RedoScope != TransactionScope.Max;
+        }
+
+        private void OnConfig()
+        {
+            App.OpenConfigDialog();
         }
 
         private void OnPlay()

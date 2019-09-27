@@ -233,6 +233,12 @@ namespace FamiStudio
             dlg.ShowDialog();
         }
 
+        public void OpenConfigDialog()
+        {
+            var dlg = new ConfigDialog(mainForm.Bounds);
+            dlg.ShowDialog();
+        }
+
         public bool TryClosing()
         {
             if (!CheckUnloadProject())
