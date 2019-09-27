@@ -26,15 +26,13 @@ namespace FamiStudio
         {
             InitializeComponent();
 
-            // TODO: Resize Yes/No button depending on DPI.
-            string suffix = ""; // Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
-
             int oldTabWidth = panelTabs.Width;
 
             panelTabs.Width  = (int)(panelTabs.Width  * Direct2DTheme.DialogScaling);
             panelProps.Width = panelProps.Width - (panelTabs.Width - oldTabWidth);
             panelProps.Left  = panelTabs.Left + panelTabs.Width;
 
+            string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
             this.buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
             this.buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
             this.Width    = (int)(width  * Direct2DTheme.DialogScaling);
@@ -71,7 +69,20 @@ namespace FamiStudio
                 tabs[i].properties.Visible = i == selectedIndex;
             }
 
-            this.Height = maxHeight + 50;
+            panelTabs.Height = maxHeight;
+            panelProps.Height = maxHeight;
+
+            buttonYes.Width  = (int)(buttonYes.Width  * Direct2DTheme.DialogScaling);
+            buttonYes.Height = (int)(buttonYes.Height * Direct2DTheme.DialogScaling);
+            buttonNo.Width   = (int)(buttonNo.Width   * Direct2DTheme.DialogScaling);
+            buttonNo.Height  = (int)(buttonNo.Height  * Direct2DTheme.DialogScaling);
+
+            Height = maxHeight + buttonNo.Height + 20;
+
+            buttonYes.Left = Width  - buttonYes.Width * 2 - 17;
+            buttonYes.Top  = Height - buttonNo.Height - 12;
+            buttonNo.Left  = Width  - buttonNo.Width  - 12;
+            buttonNo.Top   = Height - buttonNo.Height - 12;
 
             base.OnShown(e);
         }

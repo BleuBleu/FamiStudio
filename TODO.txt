@@ -1,12 +1,9 @@
-Port:
-- Low-priority: Mac: In property page, typing in a txt doesn't register unless I enter or TAB out of it.
-- Test high-DPI scaling, retina.
-
-Version 1.2:
+Version 1.2.0:
 - Don't stop song if changing to same song.
 - Piano Roll: Make sure all mouse input scales with DPI.
 - BUG: Pause, rewind and play: The seek bar jumps. weird.
 - BUG: In envelope mode, header doesnt display the right seek location.
+- BUG (Low-priority): Mac: In property page, typing in a txt doesn't register unless I enter or TAB out of it.
 x Cleanup resources. Only embed the ones that are needed for each platform.
 - All notes
 	- Fix noise

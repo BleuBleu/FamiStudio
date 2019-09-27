@@ -36,18 +36,16 @@
             // 
             // panelProps
             // 
-            this.panelProps.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelProps.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelProps.Location = new System.Drawing.Point(125, 5);
+            this.panelProps.Margin = new System.Windows.Forms.Padding(0);
             this.panelProps.Name = "panelProps";
             this.panelProps.Size = new System.Drawing.Size(318, 326);
             this.panelProps.TabIndex = 20;
             // 
             // panelTabs
             // 
-            this.panelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
             this.panelTabs.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
             this.panelTabs.Location = new System.Drawing.Point(5, 5);
             this.panelTabs.Name = "panelTabs";
@@ -80,7 +78,6 @@
             // 
             // MultiPropertyDialog
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
             this.ClientSize = new System.Drawing.Size(448, 373);

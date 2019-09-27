@@ -24,9 +24,7 @@ namespace FamiStudio
 
             InitializeComponent();
 
-            // TODO: Resize Yes/No button depending on DPI.
-            string suffix = ""; // Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
-
+            string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
             buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
             buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
 
@@ -45,7 +43,17 @@ namespace FamiStudio
 
         private void PropertyDialog_Shown(object sender, EventArgs e)
         {
-            Height = propertyPage.Height + buttonNo.Height + 5;
+            buttonYes.Width  = (int)(buttonYes.Width  * Direct2DTheme.DialogScaling);
+            buttonYes.Height = (int)(buttonYes.Height * Direct2DTheme.DialogScaling);
+            buttonNo.Width   = (int)(buttonNo.Width   * Direct2DTheme.DialogScaling);
+            buttonNo.Height  = (int)(buttonNo.Height  * Direct2DTheme.DialogScaling);
+
+            Height = propertyPage.Height + buttonNo.Height + 7;
+
+            buttonYes.Left = propertyPage.Right - buttonYes.Width * 2 - 10;
+            buttonYes.Top  = propertyPage.Bottom + 0;
+            buttonNo.Left  = propertyPage.Right - buttonNo.Width - 5;
+            buttonNo.Top   = propertyPage.Bottom + 0;
         }
         
         private void propertyPage_PropertyWantsClose(int idx)

@@ -47,7 +47,6 @@
             // 
             // buttonYes
             // 
-            this.buttonYes.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonYes.FlatAppearance.BorderSize = 0;
             this.buttonYes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonYes.Location = new System.Drawing.Point(224, 361);
@@ -59,7 +58,6 @@
             // 
             // buttonNo
             // 
-            this.buttonNo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonNo.FlatAppearance.BorderSize = 0;
             this.buttonNo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonNo.Location = new System.Drawing.Point(261, 361);
@@ -71,7 +69,6 @@
             // 
             // PropertyDialog
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
             this.ClientSize = new System.Drawing.Size(298, 398);
