@@ -94,7 +94,6 @@ namespace FamiStudio
         RenderBrush selectedPatternBrush;
 
         RenderBitmap[] bmpTracks = new RenderBitmap[Channel.Count];
-        RenderBitmap bmpEdit;
         RenderBitmap bmpGhostNote;
 
         public delegate void PatternDoubleClick(int trackIdx, int barIdx);
@@ -172,7 +171,6 @@ namespace FamiStudio
             bmpTracks[Channel.Noise] = g.CreateBitmapFromResource("Noise");
             bmpTracks[Channel.DPCM] = g.CreateBitmapFromResource("DPCM");
 
-            bmpEdit = g.CreateBitmapFromResource("EditSmall");
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
 
             playPositionBrush = g.CreateSolidBrush(Color.FromArgb(192, ThemeBase.LightGreyFillColor1));
