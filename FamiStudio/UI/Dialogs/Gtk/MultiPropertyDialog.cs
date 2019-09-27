@@ -48,13 +48,18 @@ namespace FamiStudio
             buttonsVBox.Show();
             buttonsVBox.WidthRequest = 120;
 
+            var buttonsVBoxPadding = new Alignment(0.0f, 0.0f, 0.0f, 0.0f);
+            buttonsVBoxPadding.RightPadding = 5;
+            buttonsVBoxPadding.Show();
+            buttonsVBoxPadding.Add(buttonsVBox);
+
             propsVBox = new VBox();
             propsVBox.Show();
             propsVBox.HeightRequest = 250;
 
             mainHbox = new HBox();
             mainHbox.Show();
-            mainHbox.PackStart(buttonsVBox, false, false, 0);
+            mainHbox.PackStart(buttonsVBoxPadding, false, false, 0);
             mainHbox.PackStart(propsVBox, true, true, 0);
 
             vbox.Show();
