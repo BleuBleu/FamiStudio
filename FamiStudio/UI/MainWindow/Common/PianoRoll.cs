@@ -200,12 +200,8 @@ namespace FamiStudio
             editMode = EditionMode.Channel;
             editChannel = trackIdx;
 
-            int maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
-
-            scrollX = patternIdx * patternSizeX;
-            scrollY = maxScrollY / 2;
-
             UpdateRenderCoords();
+            CenterScroll(patternIdx);
             ClampScroll();
             ConditionalInvalidate();
         }
@@ -219,8 +215,16 @@ namespace FamiStudio
             Debug.Assert(editInstrument != null);
 
             UpdateRenderCoords();
+            CenterScroll();
             ClampScroll();
             ConditionalInvalidate();
+        }
+
+        private void CenterScroll(int patternIdx = 0)
+        {
+            int maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
+            scrollX = patternIdx * patternSizeX;
+            scrollY = maxScrollY / 2;
         }
 
         public void StartEditDPCMSamples()
