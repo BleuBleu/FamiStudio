@@ -1,27 +1,8 @@
 Version 1.2.0:
-- Don't stop song if changing to same song.
-- Piano Roll: Make sure all mouse input scales with DPI.
-- BUG: Pause, rewind and play: The seek bar jumps. weird.
-- BUG: In envelope mode, header doesnt display the right seek location.
 - BUG (Low-priority): Mac: In property page, typing in a txt doesn't register unless I enter or TAB out of it.
-x Cleanup resources. Only embed the ones that are needed for each platform.
-- All notes
-	- Fix noise
-	- Fix DPCM samples
-	- Fix Envelope editing
-	- Make sure FT2 stock still works.
-	- Remove note -> empty -> note feature in famitone2fs
-- Volume track:
-	- UI. Add field on patterns to store last valid note + volume.
-	- ASM, do with a LUT
+- Should center piano roll better initially
 - Release envelopes (see how envelopes are stored in FT2)
-x Split famitone2 ASM into stock and my custom version.
-x Verify that doug's encoding matches what I see in FT2.
-x Look at list of features from FT3/4/5 (nesdoug), see which ones would be interesting (see how much it differs from stock FT2).
-x Add "kernel" debug option to NSF export to test FT2 vs. FT2Ex.
-x Improve NSF DPCM (add offset from C000).
-x Tempo bug from GitHub.
-x Unify notes freq from ASM and C#
+- All notes testing: noise channel conversion, DPCM sample position, envelope editing, stock FT2 must still work).ill works.
 
 Backlog:
 - PAL support
@@ -32,20 +13,3 @@ Backlog:
 - Add taskbar progress bar + color to show playback state
 - Copy-paste support for notes/effects.
 - Freeze on some atom processors?
-
- {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
- {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
- {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2},
- {0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3},
- {0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4},
- {0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5},
- {0, 0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6},
- {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7},
- {0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8},
- {0, 1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 7, 7, 8, 8, 9},
- {0, 1, 1, 2, 3, 3, 4, 5, 5, 6, 7, 7, 8, 9, 9, 10},
- {0, 1, 1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 10, 11},
- {0, 1, 2, 2, 3, 4, 5, 6, 6, 7, 8, 9, 10, 10, 11, 12},
- {0, 1, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 12, 13},
- {0, 1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10, 11, 12, 13, 14},
- {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}

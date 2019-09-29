@@ -44,9 +44,6 @@ namespace FamiStudio
             Debug.Assert(playerThread == null);
             Debug.Assert(sampleQueue.Count == 0);
 
-            // HACK: This is a mess. The frame we pass here has the output delay baked in. Need to refactor.
-            //playFrame = frame + 1;
-
             stopEvent.Reset();
             frameEvent.Set();
             playerThread = new Thread(PlayerThread);
@@ -90,7 +87,8 @@ namespace FamiStudio
 
         public int CurrentFrame
         {
-            get { return Math.Max(0, playFrame - OutputDelay); }
+            get { return Math.Max(0, playFrame); }
+            set { playFrame = value; }
         }
 
         public bool IsPlaying

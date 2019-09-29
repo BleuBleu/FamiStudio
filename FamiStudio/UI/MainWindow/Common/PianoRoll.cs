@@ -268,6 +268,17 @@ namespace FamiStudio
             UpdateRenderCoords();
         }
 
+        public void SongChanged()
+        {
+            if (editMode == EditionMode.Channel)
+            {
+                editMode = EditionMode.None;
+                editChannel = -1;
+                editInstrument = null;
+                UpdateRenderCoords();
+            }
+        }
+
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
@@ -321,7 +332,7 @@ namespace FamiStudio
             }
             else
             {
-                int keySizeY = key > 4 ? whiteKeySizeY + 1 : whiteKeySizeY;
+                int keySizeY = key > 4 ? (noteSizeY * 12 - whiteKeySizeY * 3) / 4 : whiteKeySizeY;
 
                 return new Rectangle(
                     0,
@@ -469,8 +480,10 @@ namespace FamiStudio
 
             if (playingNote > 0)
             {
-                playOctave = (playingNote - 1) / 12;
-                playNote   = (playingNote - 1) - playOctave * 12;
+                int tmpNote = playingNote - (12 * baseOctave);
+
+                playOctave = (tmpNote - 1) / 12;
+                playNote   = (tmpNote - 1) - playOctave * 12;
 
                 if (!IsBlackKey(playNote))
                     g.FillRectangle(GetKeyRectangle(playOctave, playNote), whiteKeyPressedBrush);
@@ -980,7 +993,7 @@ namespace FamiStudio
                 {
                     if (!IsBlackKey(j) && PointInRectangle(GetKeyRectangle(i, j), x, y))
                     {
-                        int note = i * 12 + j + 1;
+                        int note = (baseOctave + i) * 12 + j + 1;
                         if (note != playingNote)
                         {
                             playingNote = note;

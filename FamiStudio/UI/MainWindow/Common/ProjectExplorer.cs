@@ -481,9 +481,12 @@ namespace FamiStudio
                     }
                     else if (button.type == ButtonType.Song)
                     {
-                        selectedSong = button.song;
-                        SongSelected?.Invoke(selectedSong);
-                        ConditionalInvalidate();
+                        if (button.song != selectedSong)
+                        {
+                            selectedSong = button.song;
+                            SongSelected?.Invoke(selectedSong);
+                            ConditionalInvalidate();
+                        }
                     }
                     else if (button.type == ButtonType.InstrumentHeader)
                     {

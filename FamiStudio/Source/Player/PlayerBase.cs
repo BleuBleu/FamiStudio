@@ -17,8 +17,6 @@ namespace FamiStudio
         protected const int SampleRate = 44100;
         protected const int BufferSize = 734 * sizeof(short); // 734 = ceil(SampleRate / FrameRate) = ceil(44100 / 60.0988)
         protected const int NumAudioBuffers = 3;
-        protected const int NumGraphicsBuffers = 2; // Assume D2D is triple buffered, probably true.
-        protected const int OutputDelay = 0; // NumAudioBuffers - NumGraphicsBuffers; Disabled for now.
 
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;

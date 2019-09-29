@@ -22,7 +22,6 @@ namespace FamiStudio
         private InstrumentPlayer instrumentPlayer;
         private Midi midi;
         private UndoRedoManager undoRedoManager;
-        private int currentFrame = 0;
         private int ghostChannelMask = 0;
 
         private bool newReleaseAvailable = false;
@@ -31,7 +30,7 @@ namespace FamiStudio
 
         public bool RealTimeUpdate => songPlayer.IsPlaying || PianoRoll.IsEditingInstrument;
         public bool IsPlaying => songPlayer.IsPlaying;
-        public int CurrentFrame => currentFrame;
+        public int CurrentFrame => songPlayer.CurrentFrame;
         public int ChannelMask { get => songPlayer.ChannelMask; set => songPlayer.ChannelMask = value; }
         public string ToolTip { get => ToolBar.ToolTip; set => ToolBar.ToolTip = value; }
         public Project Project => project;
@@ -145,7 +144,7 @@ namespace FamiStudio
             undoRedoManager = new UndoRedoManager(project, this);
             undoRedoManager.Updated += UndoRedoManager_Updated;
 
-            currentFrame = 0;
+            songPlayer.CurrentFrame = 0;
             ToolBar.Reset();
             ProjectExplorer.Reset();
             PianoRoll.Reset();
@@ -334,6 +333,7 @@ namespace FamiStudio
         {
             Note note = new Note();
             note.Value = (byte)n;
+            note.Volume = Note.VolumeMax;
 
             int channel = Sequencer.SelectedChannel;
             if (ProjectExplorer.SelectedInstrument == null)
@@ -376,7 +376,7 @@ namespace FamiStudio
                     if (ctrl)
                     {
                         LoopMode = LoopMode.Pattern;
-                        Seek(currentFrame / song.PatternLength * song.PatternLength);
+                        Seek(songPlayer.CurrentFrame / song.PatternLength * song.PatternLength);
                     }
                     else if (shift)
                     {
@@ -440,7 +440,7 @@ namespace FamiStudio
         {
             if (!songPlayer.IsPlaying)
             {
-                songPlayer.Play(song, currentFrame);
+                songPlayer.Play(song, songPlayer.CurrentFrame);
             }
         }
 
@@ -449,7 +449,6 @@ namespace FamiStudio
             if (songPlayer.IsPlaying)
             {
                 songPlayer.Stop();
-                currentFrame = songPlayer.CurrentFrame;
                 InvalidateEverything();
             }
         }
@@ -458,7 +457,7 @@ namespace FamiStudio
         {
             bool wasPlaying = songPlayer.IsPlaying;
             if (wasPlaying) Stop();
-            currentFrame = Math.Min(frame, song.Length * song.PatternLength - 1);
+            songPlayer.CurrentFrame = Math.Min(frame, song.Length * song.PatternLength - 1);
             if (wasPlaying) Play();
             InvalidateEverything();
         }
@@ -467,7 +466,7 @@ namespace FamiStudio
         {
             bool wasPlaying = songPlayer.IsPlaying;
             if (wasPlaying) Stop();
-            currentFrame = currentFrame - (currentFrame % song.PatternLength);
+            songPlayer.CurrentFrame = songPlayer.CurrentFrame - (songPlayer.CurrentFrame % song.PatternLength);
             if (wasPlaying) Play();
             InvalidateEverything();
         }
@@ -500,8 +499,6 @@ namespace FamiStudio
             if (RealTimeUpdate)
             {
                 songPlayer.CheckIfEnded();
-                if (songPlayer.IsPlaying)
-                    currentFrame = songPlayer.CurrentFrame;
                 InvalidateEverything();
             }
 
@@ -569,13 +566,12 @@ namespace FamiStudio
         private void projectExplorer_SongSelected(Song song)
         {
             Stop();
-            this.currentFrame = 0;
+            Seek(0);
             this.song = song;
 
-            ToolBar.Reset();
-            ProjectExplorer.Reset();
-            PianoRoll.Reset();
+            PianoRoll.SongChanged();
             Sequencer.Reset();
+            ToolBar.Reset();
 
             InvalidateEverything();
         }
