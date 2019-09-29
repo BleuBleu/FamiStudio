@@ -1,4 +1,6 @@
-﻿namespace FamiStudio
+﻿using System;
+
+namespace FamiStudio
 {
     public abstract class ChannelState
     {
@@ -17,6 +19,7 @@
             apuIdx = apu;
             channelIdx = idx;
             note.Value = Note.NoteStop;
+            note.Volume = Note.VolumeMax;
         }
 
         public void ProcessEffects(Song song, ref int patternIdx, ref int noteIdx, ref int speed, bool allowJump = true)
@@ -62,10 +65,17 @@
             {
                 PlayNote(tmpNote);
             }
+            else if (tmpNote.HasVolume)
+            {
+                note.Volume = tmpNote.Volume;
+            }
         }
 
         public void PlayNote(Note note)
         {
+            if (!note.HasVolume)
+                note.Volume = this.note.Volume;
+
             this.note = note;
             this.newNote = true;
 
@@ -131,6 +141,11 @@
         public void ClearNote()
         {
             note.Instrument = null;
+        }
+
+        protected int MultiplyVolumes(int v0, int v1)
+        {
+            return (int)Math.Round((v0 / 15.0f) * (v1 / 15.0f) * 15.0f);
         }
 
         protected void WriteApuRegister(int register, int data)

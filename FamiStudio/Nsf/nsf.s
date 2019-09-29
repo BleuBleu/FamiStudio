@@ -7,14 +7,10 @@
 .global nsf_init
 .global nsf_play
 
-NSF_INIT_ADDR   = $8500
-NSF_PLAY_ADDR   = $8600
-
-SONG_TABLE_ADDR = $8700
+SONG_TABLE_ADDR = $8900
 DPCM_ADDR       = $c000
 
-.align $100
-.assert * = NSF_INIT_ADDR, error, "NSF init addr is not what was expected, has the sound engine got bigger?"
+.segment "CODE_INIT"
 
 ; [in] a = song index.
 .proc nsf_init
@@ -84,8 +80,7 @@ DPCM_ADDR       = $c000
 
 .endproc
 
-.align $100
-.assert * = NSF_PLAY_ADDR, error, "NSF play addr is not what was expected, has the sound engine got bigger?"
+.segment "CODE_PLAY"
 
 .proc nsf_play
 	jsr FamiToneUpdate

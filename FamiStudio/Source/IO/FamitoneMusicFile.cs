@@ -455,6 +455,11 @@ namespace FamiStudio
 
                         i++;
 
+                        if (note.HasVolume)
+                        {
+                            patternBuffer.Add((byte)(0x70 | note.Volume));
+                        }
+
                         if (note.IsValid)
                         {
                             // Instrument change.
@@ -497,7 +502,7 @@ namespace FamiStudio
                             {
                                 var emptyNote = pattern.Notes[i];
 
-                                if (numEmptyNotes >= MaxRepeatCount || emptyNote.IsValid || (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
+                                if (numEmptyNotes >= MaxRepeatCount || emptyNote.IsValid || emptyNote.HasVolume || (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
                                     break;
 
                                 i++;
@@ -652,6 +657,24 @@ namespace FamiStudio
                     {
                         project.DeleteSong(project.Songs[i]);
                         i--;
+                    }
+                }
+            }
+
+            // Remove features not supported by famitone, keeps the rest of the processing simpler.
+            if (kernel == FamiToneKernel.FamiTone2)
+            {
+                foreach (var song in project.Songs)
+                {
+                    foreach (var channel in song.Channels)
+                    {
+                        foreach (var pattern in channel.Patterns)
+                        {
+                            for (int i = 0; i < song.PatternLength; i++)
+                            {
+                                pattern.Notes[i].HasVolume = false;
+                            }
+                        }
                     }
                 }
             }

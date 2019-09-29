@@ -14,7 +14,7 @@ New encoding:
 	$01-$58        Notes (like doug)
 	$59-$5f        Free (for up to 7 effects)
 	$60-$6f        Empty + Stop, up to 16 (???)
-	$70-$7f        Volume (like doug), or make it a code + value? 
+	$70-$7f        Volume (like doug).
 	$80 | (n << 1) Instrument change, max 64
 	$81 | (n << 1) Series of n empty notes (max 60 because 61 = $fb, 62 = $fd)
 	$fb            Speed change

@@ -32,7 +32,7 @@ namespace FamiStudio
                     WriteApuRegister(NesApu.APU_PL1_HI + regOffset, period);
                 }
 
-                WriteApuRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | (envelopeValues[Envelope.Volume]));
+                WriteApuRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]));
             }
         }
     };

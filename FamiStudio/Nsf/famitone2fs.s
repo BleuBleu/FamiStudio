@@ -1,6 +1,6 @@
 ;FamiTone2 v1.12
 FT_TEMP_SIZE_DEF = 3
-FT_BASE_SIZE_DEF = 140
+FT_BASE_SIZE_DEF = 145
 
 .segment "ZEROPAGE"
 FT_TEMP:		.res FT_TEMP_SIZE_DEF
@@ -49,10 +49,10 @@ FT_ENV_ADR_H		= FT_BASE_ADR+3*FT_ENVELOPES_ALL
 FT_ENV_PTR			= FT_BASE_ADR+4*FT_ENVELOPES_ALL
 
 
-;channel structure offsets, 7 bytes per channel
+;channel structure offsets, 10 bytes per channel
 
 FT_CHANNELS_ALL		= 5
-FT_CHN_STRUCT_SIZE	= 9
+FT_CHN_STRUCT_SIZE	= 10
 
 FT_CHN_PTR_L		= FT_BASE_ADR+0*FT_CHANNELS_ALL
 FT_CHN_PTR_H		= FT_BASE_ADR+1*FT_CHANNELS_ALL
@@ -63,7 +63,7 @@ FT_CHN_RETURN_L		= FT_BASE_ADR+5*FT_CHANNELS_ALL
 FT_CHN_RETURN_H		= FT_BASE_ADR+6*FT_CHANNELS_ALL
 FT_CHN_REF_LEN		= FT_BASE_ADR+7*FT_CHANNELS_ALL
 FT_CHN_DUTY			= FT_BASE_ADR+8*FT_CHANNELS_ALL
-
+FT_CHN_VOLUME_TRACK	= FT_BASE_ADR+9*FT_CHANNELS_ALL ; DPCM(4) + Triangle(2) are unused.
 
 ;variables and aliases
 
@@ -79,7 +79,6 @@ FT_CH2_VARS		= FT_CHANNELS+1
 FT_CH3_VARS		= FT_CHANNELS+2
 FT_CH4_VARS		= FT_CHANNELS+3
 FT_CH5_VARS		= FT_CHANNELS+4
-
 
 FT_CH1_NOTE			= FT_CH1_VARS+.lobyte(FT_CHN_NOTE)
 FT_CH2_NOTE			= FT_CH2_VARS+.lobyte(FT_CHN_NOTE)
@@ -98,6 +97,10 @@ FT_CH2_DUTY			= FT_CH2_VARS+.lobyte(FT_CHN_DUTY)
 FT_CH3_DUTY			= FT_CH3_VARS+.lobyte(FT_CHN_DUTY)
 FT_CH4_DUTY			= FT_CH4_VARS+.lobyte(FT_CHN_DUTY)
 FT_CH5_DUTY			= FT_CH5_VARS+.lobyte(FT_CHN_DUTY)
+
+FT_CH1_VOLUME_TRACK	= FT_CH1_VARS+.lobyte(FT_CHN_VOLUME_TRACK)
+FT_CH2_VOLUME_TRACK	= FT_CH2_VARS+.lobyte(FT_CHN_VOLUME_TRACK)
+FT_CH4_VOLUME_TRACK	= FT_CH4_VARS+.lobyte(FT_CHN_VOLUME_TRACK)
 
 FT_CH1_VOLUME		= FT_CH1_ENVS+.lobyte(FT_ENV_VALUE)+0
 FT_CH2_VOLUME		= FT_CH2_ENVS+.lobyte(FT_ENV_VALUE)+0
@@ -299,6 +302,7 @@ FamiToneMusicStop:
 	sta FT_CHN_INSTRUMENT,x
 	sta FT_CHN_NOTE,x
 	sta FT_CHN_REF_LEN,x
+	sta FT_CHN_VOLUME_TRACK,x
 	lda #$30
 	sta FT_CHN_DUTY,x
 
@@ -373,6 +377,8 @@ FamiToneMusicPlay:
 	sta FT_CHN_INSTRUMENT,x
 	sta FT_CHN_NOTE,x
 	sta FT_CHN_REF_LEN,x
+	lda #$f0
+	sta FT_CHN_VOLUME_TRACK,x
 	lda #$30
 	sta FT_CHN_DUTY,x
 
@@ -613,6 +619,9 @@ FamiToneUpdate:
 	sta FT_MR_PULSE1_H
 @ch1prev:
 	lda FT_CH1_VOLUME
+	ora FT_CH1_VOLUME_TRACK
+	tax
+	lda _FT2VolumeTable, x 
 @ch1cut:
 	ora FT_CH1_DUTY
 	sta FT_MR_PULSE1_V
@@ -646,6 +655,9 @@ FamiToneUpdate:
 	sta FT_MR_PULSE2_H
 @ch2prev:
 	lda FT_CH2_VOLUME
+	ora FT_CH2_VOLUME_TRACK
+	tax
+	lda _FT2VolumeTable, x 	
 @ch2cut:
 	ora FT_CH2_DUTY
 	sta FT_MR_PULSE2_V
@@ -689,6 +701,9 @@ FamiToneUpdate:
 	ora <FT_TEMP_VAR1
 	sta FT_MR_NOISE_F
 	lda FT_CH4_VOLUME
+	ora FT_CH4_VOLUME_TRACK
+	tax
+	lda _FT2VolumeTable, x 	
 @ch4cut:
 	ora #$f0
 	sta FT_MR_NOISE_V
@@ -847,6 +862,18 @@ _FT2ChannelUpdate:
 	ora #0
 	bmi @special_code		;bit 7 0=note 1=special code
 
+@check_volume:
+	cmp #$70
+	bcc @no_vol_change
+	and #$0f
+	asl ; a LUT would be nice, but x/y are both in-use here.
+	asl
+	asl
+	asl
+	sta FT_CHN_VOLUME_TRACK,x
+	jmp @read_byte
+
+@no_vol_change:	
 	sta FT_CHN_NOTE,x		;store note code
 	sec						;new note flag is set
 	bcs @done ;bra
@@ -1262,3 +1289,23 @@ _FT2NoteTableMSB:
 		.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
 	.endif
 
+; Precomputed volume multiplication table (rounded) [0-15]x[0-15].
+; Load the 2 volumes in the lo/hi nibble and fetch.
+
+_FT2VolumeTable:
+ 	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+ 	.byte $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $01, $01, $01, $01
+ 	.byte $00, $00, $00, $00, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02, $02, $02
+ 	.byte $00, $00, $00, $01, $01, $01, $01, $01, $02, $02, $02, $02, $02, $03, $03, $03
+ 	.byte $00, $00, $01, $01, $01, $01, $02, $02, $02, $02, $03, $03, $03, $03, $04, $04
+ 	.byte $00, $00, $01, $01, $01, $02, $02, $02, $03, $03, $03, $04, $04, $04, $05, $05
+ 	.byte $00, $00, $01, $01, $02, $02, $02, $03, $03, $04, $04, $04, $05, $05, $06, $06
+ 	.byte $00, $00, $01, $01, $02, $02, $03, $03, $04, $04, $05, $05, $06, $06, $07, $07
+ 	.byte $00, $01, $01, $02, $02, $03, $03, $04, $04, $05, $05, $06, $06, $07, $07, $08
+ 	.byte $00, $01, $01, $02, $02, $03, $04, $04, $05, $05, $06, $07, $07, $08, $08, $09
+ 	.byte $00, $01, $01, $02, $03, $03, $04, $05, $05, $06, $07, $07, $08, $09, $09, $0a
+ 	.byte $00, $01, $01, $02, $03, $04, $04, $05, $06, $07, $07, $08, $09, $0a, $0a, $0b
+ 	.byte $00, $01, $02, $02, $03, $04, $05, $06, $06, $07, $08, $09, $0a, $0a, $0b, $0c
+ 	.byte $00, $01, $02, $03, $03, $04, $05, $06, $07, $08, $09, $0a, $0a, $0b, $0c, $0d
+ 	.byte $00, $01, $02, $03, $04, $05, $06, $07, $07, $08, $09, $0a, $0b, $0c, $0d, $0e
+ 	.byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f

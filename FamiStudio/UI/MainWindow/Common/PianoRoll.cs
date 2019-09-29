@@ -1176,7 +1176,10 @@ namespace FamiStudio
             else if (editMode == EditionMode.Channel && right && GetEffectNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx))
             {
                 var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
-                pattern.Notes[noteIdx].HasEffect = false;
+                if (selectedEffectIdx == -1)
+                    pattern.Notes[noteIdx].HasVolume = false;
+                else
+                    pattern.Notes[noteIdx].HasEffect = false;
                 PatternChanged?.Invoke(pattern);
                 ConditionalInvalidate();
             }
