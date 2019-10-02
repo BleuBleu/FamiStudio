@@ -1,9 +1,13 @@
 # FamiStudio NES Music Editor
-FamiStudio is a very simple NES Music editor. It is intended to be more user-friendly than FamiTracker. 
+FamiStudio is very simple NES music editor. It is designed to be easier to use than FamiTracker, but its feature set is much more limited.
 
-Its feature set is designed to match [FamiTone2](https://shiru.untergrund.net/code.shtml "FamiTone2"), a popular audio library among NES homebrew developers.
-
-While I intend to keep this reference version simple and on-par with FamiTone2, it could easily be extended to support modified/unofficial FamiTone versions (3 and 4, by nesdoug for example), add support for more effects, or audio expansion chips. 
+## Features
+- Modern DAW-style UI with sequencer and piano roll, no hexadecimal anywhere
+- Full Undo/Redo support
+- Export to various formats (WAV, NSF, FamiTone2, FamiTracker)
+- Import from FamiTracker TXT
+- Basic MIDI input support 
+- Low CPU usage (Direct2D for graphics, XAudio2 for audio, fairly well threaded)
 
 ## Download
 All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section. If you are on Windows, simply download and run the .MSI installer. A shortcut to FamiStudio will be placed in your Start menu.
@@ -22,15 +26,6 @@ All releases are available in the [Releases](https://github.com/BleuBleu/FamiStu
 There is a 10 minutes tutorial on YouTube:
 
 [![Tutorial](https://github.com/BleuBleu/FamiStudio/blob/master/Wiki/Video.png)](https://www.youtube.com/watch?v=_unlyRlsbcM)
-
-## Features
-- Modern DAW-style UI with sequencer and piano roll, no hexadecimal anywhere
-- Full Undo/Redo support
-- Native export to FamiTone2 music format
-- Famitracker text import
-- Basic MIDI input support 
-- Low CPU usage (Direct2D for graphics, XAudio2 for audio, fairly well threaded)
-- Runs on top of Blargg's [Nes_Snd_Emu](http://www.slack.net/~ant/libs/audio.html#Nes_Snd_Emu "Nes_Snd_Emu").
 
 ## Limitations / Known Issues 
 - Windows only
