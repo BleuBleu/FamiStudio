@@ -231,10 +231,12 @@ namespace FamiStudio
             return Note.VolumeMax;
         }
 
-        public byte GetLastValidNote(ref int patternIdx, out int lastNoteTime, out Instrument instrument)
+        public byte GetLastValidNote(ref int patternIdx, out int lastNoteTime, out Instrument instrument, out bool released)
         {
             var lastTime = int.MinValue;
             var lastNote = new Note() { Value = Note.NoteInvalid };
+
+            released = false;
 
             // Find previous valid note.
             for (int p = patternIdx; p >= 0 && lastTime == int.MinValue; p--)
@@ -243,11 +245,13 @@ namespace FamiStudio
                 if (pattern != null)
                 {
                     var val = pattern.LastValidNoteValue;
+
+                    released = val == Note.NoteStop ? false : released || pattern.LastValidNoteReleased;
+
                     if (val != Note.NoteInvalid)
                     { 
                         lastNoteTime = pattern.LastValidNoteTime;
                         instrument   = pattern.LastValidNoteInstrument;
-
                         return val;
                     }
                 }
@@ -256,6 +260,7 @@ namespace FamiStudio
             lastNoteTime = -1;
             patternIdx   = int.MinValue;
             instrument   = null;
+            released     = false;
 
             return Note.NoteInvalid;
         }

@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -8,6 +9,7 @@ namespace FamiStudio
         enum ConfigSection
         {
             UserInterface,
+            Sound,
             MIDI,
             Max
         };
@@ -15,11 +17,13 @@ namespace FamiStudio
         readonly string[] ConfigSectionNames =
         {
             "Interface",
+            "Sound",
             "MIDI",
             ""
         };
 
-        MultiPropertyDialog dialog;
+        private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
+        private MultiPropertyDialog dialog;
 
         public unsafe ConfigDialog(Rectangle mainWinRect)
         {
@@ -43,24 +47,72 @@ namespace FamiStudio
             switch (section)
             {
                 case ConfigSection.UserInterface:
-                    page.AddStringList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); 
+                {
+                    var scalingValues = new[] { "System", "100%", "200%" };
+                    var idx = Settings.DpiScaling / 100;
+
+                    page.AddStringList("Scaling (Requires Restart):", scalingValues, scalingValues[idx]); // 0
+                    page.AddBoolean("Check for updates:", true); // 1
                     break;
+                }
+                case ConfigSection.Sound:
+                {
+                    page.AddIntegerRange("Stop Instruments After (sec):", Settings.InstrumentStopTime, 0, 10); // 0
+                    break;
+                }
                 case ConfigSection.MIDI:
-                    page.AddString("Device :", "Allo", 31); 
+                {
+                    int midiDeviceCount = Midi.InputCount;
+                    var midiDevices = new List<string>();
+                    for (int i = 0; i < midiDeviceCount; i++)
+                    {
+                        midiDevices.Add(Midi.GetDeviceName(i));
+                    }
+
+                    var midiDevice = "";
+
+                    if (Settings.MidiDevice.Length > 0 && midiDevices.Contains(Settings.MidiDevice))
+                        midiDevice = Settings.MidiDevice;
+                    else if (midiDevices.Count > 0)
+                        midiDevice = midiDevices[0];
+
+                    page.AddStringList("Device :", midiDevices.ToArray(), midiDevice); // 0
                     break;
+                }
             }
 
             page.Build();
-            //page.PropertyChanged += Page_PropertyChanged;
+            pages[(int)section] = page;
 
             return page;
         }
 
-        public void ShowDialog()
+        public DialogResult ShowDialog()
         {
-            if (dialog.ShowDialog() == DialogResult.OK)
+            var dialogResult = dialog.ShowDialog();
+
+            if (dialogResult == DialogResult.OK)
             {
+                // UI
+                var pageUI = pages[(int)ConfigSection.UserInterface];
+                var pageSound = pages[(int)ConfigSection.Sound];
+                var scalingString = pageUI.GetPropertyValue<string>(0);
+
+                Settings.DpiScaling = scalingString == "System" ? 0 : int.Parse(scalingString.Substring(0, 3));
+                Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(1);
+
+                // Sound
+                Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(0);
+
+                // MIDI
+                var pageMIDI = pages[(int)ConfigSection.MIDI];
+
+                Settings.MidiDevice = pageMIDI.GetPropertyValue<string>(0);
+
+                Settings.Save();
             }
+
+            return dialogResult;
         }
     }
 }

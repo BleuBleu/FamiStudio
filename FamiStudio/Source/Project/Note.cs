@@ -32,6 +32,7 @@ namespace FamiStudio
         public const int NoteStop    = 0x00;
         public const int NoteMin     = 0x01;
         public const int NoteMax     = 0x60;
+        public const int NoteRelease = 0x61;
 
         public byte Value; // (0 = stop, 1 = C0 ... 96 = B7).
         public byte Effect; // Tempo/Jump/Skip
@@ -49,6 +50,11 @@ namespace FamiStudio
         {
             get { return Value == NoteStop; }
             set { if (value) Value = NoteStop; }
+        }
+
+        public bool IsRelease
+        {
+            get { return Value == NoteRelease; }
         }
 
         public bool HasEffect
@@ -75,11 +81,13 @@ namespace FamiStudio
         {
             if (value == NoteStop)
                 return "Stop Note";
+            if (value == NoteRelease)
+                return "Release Note";
             if (value == NoteInvalid)
                 return "";
 
             int octave = (value - 1) / 12 + 1;
-            int note = (value - 1) % 12;
+            int note   = (value - 1) % 12;
 
             return NoteNames[note] + octave.ToString();
         }

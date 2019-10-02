@@ -15,6 +15,7 @@ namespace FamiStudio
         sbyte[] values = new sbyte[MaxLength];
         int length;
         int loop = -1;
+        int release = -1;
 
         public sbyte[] Values => values;
 
@@ -34,12 +35,28 @@ namespace FamiStudio
             get { return loop; }
             set
             {
-                loop = Math.Min(value, MaxLength);
+                if (release >= 0)
+                    loop = Utils.Clamp(value, 0, release - 1);
+                else
+                    loop = Math.Min(value, MaxLength);
+
                 if (loop >= length)
                     loop = -1;
             }
         }
 
+        public int Release
+        {
+            get { return release; }
+            set
+            {
+                if (loop >= 0)
+                    release = Utils.Clamp(value, loop + 1, MaxLength);
+
+                if (release >= length)
+                    release = -1;
+            }
+        }
         public void ConvertToAbsolute()
         {
             // Pitch are absolute in Famitone.
@@ -109,6 +126,7 @@ namespace FamiStudio
         {
             buffer.Serialize(ref length);
             buffer.Serialize(ref loop);
+            buffer.Serialize(ref release);
             buffer.Serialize(ref values);
         }
     }

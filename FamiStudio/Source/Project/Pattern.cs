@@ -16,6 +16,7 @@ namespace FamiStudio
 
         private byte lastVolumeValue = Note.VolumeInvalid;
         private byte lastValidNoteValue = Note.NoteInvalid;
+        private bool lastValidNoteReleased = false;
         private Instrument lastValidNoteInstrument = null;
         private byte lastValidNoteIdx = 0;
 
@@ -137,17 +138,29 @@ namespace FamiStudio
             lastValidNoteValue = Note.NoteInvalid;
             lastValidNoteIdx = 0;
             lastValidNoteInstrument = null;
+            lastValidNoteReleased = false;
 
             for (int i = song.PatternLength - 1; i >= 0; i--)
             {
                 var note = notes[i];
-                if (note.IsValid && lastValidNoteValue == Note.NoteInvalid)
+                if (note.IsRelease)
                 {
-                    lastValidNoteIdx = (byte)i;
-                    lastValidNoteValue = note.Value;
-                    lastValidNoteInstrument = note.Instrument;
-                    if (lastVolumeValue != Note.VolumeInvalid)
-                        break;
+                    lastValidNoteReleased = true;
+                }
+                else
+                {
+                    if (note.IsStop)
+                    {
+                        lastValidNoteReleased = false;
+                    }
+                    if (note.IsValid && lastValidNoteValue == Note.NoteInvalid)
+                    {
+                        lastValidNoteIdx = (byte)i;
+                        lastValidNoteValue = note.Value;
+                        lastValidNoteInstrument = note.Instrument;
+                        if (lastVolumeValue != Note.VolumeInvalid)
+                            break;
+                    }
                 }
                 if (note.HasVolume && lastVolumeValue == Note.VolumeInvalid)
                 {
@@ -171,6 +184,11 @@ namespace FamiStudio
         public Instrument LastValidNoteInstrument
         {
             get { return lastValidNoteInstrument; }
+        }
+
+        public bool LastValidNoteReleased
+        {
+            get { return lastValidNoteReleased; }
         }
 
         public byte LastVolumeValue
@@ -217,6 +235,7 @@ namespace FamiStudio
                 buffer.Serialize(ref lastValidNoteIdx);
                 buffer.Serialize(ref lastValidNoteValue);
                 buffer.Serialize(ref lastValidNoteInstrument);
+                buffer.Serialize(ref lastValidNoteReleased);
             }
             else if (buffer.IsReading)
             {

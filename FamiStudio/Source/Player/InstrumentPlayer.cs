@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Threading;
 
 namespace FamiStudio
@@ -21,6 +22,11 @@ namespace FamiStudio
         public void PlayNote(int channel, Note note)
         {
             noteQueue.Enqueue(new PlayerNote() { channel = channel, note = note });
+        }
+
+        public void ReleaseNote(int channel)
+        {
+            noteQueue.Enqueue(new PlayerNote() { channel = channel, note = new Note() { Value = Note.NoteRelease } });
         }
 
         public void StopAllNotes()
@@ -59,6 +65,9 @@ namespace FamiStudio
                 new DPCMChannelState(apuIndex, 4)
             };
 
+            var lastNoteWasRelease = false;
+            var lastReleaseTime = DateTime.Now;
+
             var activeChannel = -1;
             var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
 
@@ -85,10 +94,31 @@ namespace FamiStudio
 
                     activeChannel = lastNote.channel;
                     if (activeChannel >= 0)
+                    {
                         channels[activeChannel].PlayNote(lastNote.note);
+
+                        if (lastNote.note.IsRelease)
+                        {
+                            lastNoteWasRelease = true;
+                            lastReleaseTime = DateTime.Now;
+                        }
+                        else
+                        {
+                            lastNoteWasRelease = false;
+                        }
+                    }
 
                     for (int i = 0; i < 5; i++)
                         NesApu.NesApuEnableChannel(apuIndex, i, i == activeChannel ? 1 : 0);
+                }
+
+                if (lastNoteWasRelease &&
+                    activeChannel >= 0 &&
+                    Settings.InstrumentStopTime >= 0 &&
+                    DateTime.Now.Subtract(lastReleaseTime).TotalSeconds >= Settings.InstrumentStopTime)
+                {
+                    NesApu.NesApuEnableChannel(apuIndex, activeChannel, 0);
+                    activeChannel = -1;
                 }
 
                 if (activeChannel >= 0)

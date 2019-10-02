@@ -18,6 +18,16 @@ namespace FamiStudio
         internal const int STATUS_NOTE_ON   = 0x90;
         internal const int STATUS_NOTE_OFF  = 0x80;
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        internal unsafe struct MIDIINCAPS
+        {
+            public ushort wMid;
+            public ushort wPid;
+            public uint vDriverVersion;
+            public fixed char szPname[32];
+            public uint dwSupport;
+        };
+
         internal delegate void MidiInProc(IntPtr hMidiIn, int wMsg, IntPtr dwInstance, int dwParam1, int dwParam2);
         [DllImport("winmm.dll")]
         internal static extern int midiInGetNumDevs();
@@ -29,6 +39,8 @@ namespace FamiStudio
         internal static extern int midiInStart(IntPtr hMidiIn);
         [DllImport("winmm.dll")]
         internal static extern int midiInStop(IntPtr hMidiIn);
+        [DllImport("winmm.dll", EntryPoint = "midiInGetDevCapsW")]
+        internal static extern int midiInGetDevCaps(uint uDeviceID, IntPtr pmic, uint cbmic);
 
         public delegate void MidiNoteDelegate(int note, bool on);
         public event MidiNoteDelegate NotePlayed;
@@ -52,6 +64,13 @@ namespace FamiStudio
                 return 0;
 #endif
             }
+        }
+
+        public static unsafe string GetDeviceName(int idx)
+        {
+            MIDIINCAPS caps = new MIDIINCAPS();
+            midiInGetDevCaps((uint)idx, new IntPtr(&caps), (uint)Marshal.SizeOf<MIDIINCAPS>());
+            return new string(caps.szPname);
         }
 
         public bool Close()

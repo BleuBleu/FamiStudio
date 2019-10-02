@@ -33,6 +33,16 @@ namespace FamiStudio
                 envelopes[i] = new Envelope();
         }
 
+        public bool HasReleaseEnvelope
+        {
+            get
+            {
+                for (int i = 0; i < Envelope.Max; i++)
+                    if (envelopes[i].Release >= 0) return true;
+                return false;
+            }
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id);

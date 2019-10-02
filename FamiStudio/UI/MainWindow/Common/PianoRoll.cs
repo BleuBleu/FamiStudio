@@ -39,6 +39,7 @@ namespace FamiStudio
         const int DefaultEffectButtonSizeY      = 17;
         const int DefaultNoteSizeX              = 16;
         const int DefaultNoteSizeY              = 12;
+        const int DefaultReleaseNoteSizeY       = 8;
         const int DefaultEnvelopeSizeY          = 8;
         const int DefaultEnvelopeMax            = 127;
         const int DefaultWhiteKeySizeX          = 81;
@@ -66,6 +67,7 @@ namespace FamiStudio
         int effectButtonSizeY;
         int noteSizeX;       
         int noteSizeY;
+        int releaseNoteSizeY;
         int envelopeSizeY;
         int envelopeMax;  
         int whiteKeySizeY;
@@ -109,12 +111,15 @@ namespace FamiStudio
         RenderBrush debugBrush;
         RenderBrush playPositionBrush;
         RenderBitmap bmpLoop;
+        RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
         RenderBitmap bmpEffectCollapsed;
         RenderBitmap bmpVolume;
         RenderBitmap[] bmpEffects = new RenderBitmap[3];
         RenderBitmap[] bmpEffectsFilled = new RenderBitmap[3];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
+        RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
+        RenderPath[] releaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
 
         int mouseLastX = 0;
         int mouseLastY = 0;
@@ -122,6 +127,7 @@ namespace FamiStudio
         bool playingPiano = false;
         bool scrolling = false;
         bool resizingEnvelope = false;
+        bool draggingRelease = false;
         bool changingEffectValue = false;
         bool drawingEnvelope = false;
         int  effectPatternIdx;
@@ -163,7 +169,8 @@ namespace FamiStudio
             effectPanelSizeY       = (int)(DefaultEffectPanelSizeY * scaling);
             effectButtonSizeY      = (int)(DefaultEffectButtonSizeY * scaling);
             noteSizeX              = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
-            noteSizeY              = (int)(DefaultNoteSizeY * scaling);        
+            noteSizeY              = (int)(DefaultNoteSizeY * scaling);
+            releaseNoteSizeY       = (int)(DefaultReleaseNoteSizeY * scaling);
             envelopeSizeY          = (int)(DefaultEnvelopeSizeY * scaling);    
             envelopeMax            = (int)(DefaultEnvelopeMax * scaling);      
             whiteKeySizeY          = (int)(DefaultWhiteKeySizeY * scaling);    
@@ -204,6 +211,15 @@ namespace FamiStudio
             CenterScroll(patternIdx);
             ClampScroll();
             ConditionalInvalidate();
+        }
+
+        public void ChangeChannel(int trackIdx)
+        {
+            if (editMode == EditionMode.Channel)
+            {
+                editChannel = trackIdx;
+                ConditionalInvalidate();
+            }
         }
 
         public void StartEditEnveloppe(Instrument instrument, int envelope)
@@ -294,6 +310,7 @@ namespace FamiStudio
             playPositionBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.LightGreyFillColor1));
 
             bmpLoop = g.CreateBitmapFromResource("LoopSmall");
+            bmpRelease = g.CreateBitmapFromResource("ReleaseSmall");
             bmpVolume = g.CreateBitmapFromResource("VolumeSmall");
             bmpEffects[0] = g.CreateBitmapFromResource("LoopSmall");
             bmpEffects[1] = g.CreateBitmapFromResource("JumpSmall");
@@ -307,15 +324,29 @@ namespace FamiStudio
             for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
             {
                 int idx = z - MinZoomLevel;
+                int x = (int)(noteSizeX * (float)Math.Pow(2.0, z) - 1);
 
-                var points = new Point[3]
+                stopNoteGeometry[idx] = g.CreateConvexPath(new[]
                 {
                     new Point(0, 0),
                     new Point(0, noteSizeY),
-                    new Point((int)(noteSizeX * (float)Math.Pow(2.0, z) - 1), noteSizeY / 2)
-                };
+                    new Point(x, noteSizeY / 2)
+                });
 
-                stopNoteGeometry[idx] = g.CreateConvexPath(points);
+                releaseNoteGeometry[idx] = g.CreateConvexPath(new[]
+                {
+                    new Point(0, 0),
+                    new Point(0, noteSizeY),
+                    new Point(x + 1, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2),
+                    new Point(x + 1, noteSizeY / 2 - releaseNoteSizeY / 2)
+                });
+
+                stopReleaseNoteGeometry[idx] = g.CreateConvexPath(new[]
+                {
+                    new Point(0, noteSizeY / 2 - releaseNoteSizeY / 2),
+                    new Point(0, noteSizeY / 2 + releaseNoteSizeY / 2),
+                    new Point(x, noteSizeY / 2)
+                });
             }
         }
         
@@ -369,13 +400,24 @@ namespace FamiStudio
                 {
                     if (env.Loop >= 0)
                     {
-                        g.FillRectangle(env.Loop * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, headerAndEffectSizeY, theme.DarkGreyFillBrush2);
-                        g.DrawLine(env.Loop * noteSizeX - scrollX, 0, env.Loop * noteSizeX - scrollX, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
-                        g.DrawBitmap(bmpLoop, env.Loop * noteSizeX - scrollX + effectIconPosX + 1, effectIconPosY, RenderTheme.MainWindowScaling);
+                        g.PushTranslation(env.Loop * noteSizeX - scrollX, 0);
+                        g.FillRectangle(0, 0, ((env.Release >= 0 ? env.Release : env.Length) - env.Loop) * noteSizeX, headerAndEffectSizeY, theme.DarkGreyFillBrush2);
+                        g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                        g.DrawBitmap(bmpLoop, effectIconPosX + 1, effectIconPosY, RenderTheme.MainWindowScaling);
+                        g.PopTransform();
+                    }
+                    if (env.Release >= 0)
+                    {
+                        g.PushTranslation(env.Release * noteSizeX - scrollX, 0);
+                        g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                        g.DrawBitmap(bmpRelease, effectIconPosX + 1, effectIconPosY, RenderTheme.MainWindowScaling);
+                        g.PopTransform();
                     }
                     if (env.Length > 0)
                     {
-                        g.DrawLine(env.Length * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                        g.PushTranslation(env.Length * noteSizeX - scrollX, 0);
+                        g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                        g.PopTransform();
                     }
                 }
             }
@@ -693,7 +735,7 @@ namespace FamiStudio
                             var dimmed = c != editChannel;
 
                             var lastNotePatternIdx = a.minVisiblePattern - 1;
-                            var lastNoteValue = Song.Channels[c].GetLastValidNote(ref lastNotePatternIdx, out var lastNoteTime, out var lastNoteInstrument);
+                            var lastNoteValue = Song.Channels[c].GetLastValidNote(ref lastNotePatternIdx, out var lastNoteTime, out var lastNoteInstrument, out var lastNoteReleased);
 
                             if (lastNoteValue != Note.NoteInvalid)
                             {
@@ -719,38 +761,50 @@ namespace FamiStudio
                                             if (lastNoteValue >= a.minVisibleNote && lastNoteValue <= a.maxVisibleNote)
                                             {
                                                 int x = startX + lastNoteTime * noteSizeX - scrollX;
-                                                int y = virtualSizeY - lastNoteValue * noteSizeY - scrollY;
+                                                int y = virtualSizeY - lastNoteValue * noteSizeY - scrollY + (lastNoteReleased ? noteSizeY / 2 - releaseNoteSizeY / 2 : 0);
+
+                                                int sizeY = lastNoteReleased ? releaseNoteSizeY : noteSizeY;
 
                                                 g.PushTranslation(x, y);
-                                                g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, noteSizeY, g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-                                                g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, noteSizeY, theme.BlackBrush);
+                                                g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
+                                                g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, theme.BlackBrush);
                                                 g.PopTransform();
                                             }
                                         }
 
-                                        if (note.IsStop)
+                                        if (note.IsStop || note.IsRelease)
                                         {
-                                            int value = lastNoteValue != Note.NoteInvalid ? lastNoteValue : 49; // C4 by default.
+                                            int value = lastNoteValue >= Note.NoteMin && lastNoteValue <= Note.NoteMax ? lastNoteValue : 49; // C4 by default.
 
                                             if (value >= a.minVisibleNote && value <= a.maxVisibleNote)
                                             {
                                                 int x = startX + i * noteSizeX - scrollX;
                                                 int y = virtualSizeY - value * noteSizeY - scrollY;
 
+                                                var paths = note.IsStop ? (lastNoteReleased ? stopReleaseNoteGeometry :  stopNoteGeometry) : releaseNoteGeometry;
+
                                                 g.AntiAliasing = true;
                                                 g.PushTranslation(x, y);
-                                                g.FillConvexPath(stopNoteGeometry[zoomLevel - MinZoomLevel], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-                                                g.DrawConvexPath(stopNoteGeometry[zoomLevel - MinZoomLevel], theme.BlackBrush);
+                                                g.FillConvexPath(paths[zoomLevel - MinZoomLevel], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
+                                                g.DrawConvexPath(paths[zoomLevel - MinZoomLevel], theme.BlackBrush);
                                                 g.PopTransform();
                                                 g.AntiAliasing = false;
                                             }
 
-                                            lastNoteTime = int.MinValue;
+                                            lastNoteTime = note.IsStop ? int.MinValue : i + 1;
+                                            lastNoteReleased = note.IsRelease;
+
+                                            if (note.IsStop)
+                                            {
+                                                lastNoteValue = Note.NoteInvalid;
+                                                lastNoteInstrument = null;
+                                            }
                                         }
                                         else if (note.IsValid)
                                         {
                                             lastNoteValue = note.Value;
                                             lastNoteInstrument = note.Instrument;
+                                            lastNoteReleased = false;
                                             lastNoteTime = i;
                                         }
                                     }
@@ -773,14 +827,17 @@ namespace FamiStudio
                                 {
                                     int i = Song.PatternLength;
                                     int x = startX + lastNoteTime * noteSizeX - scrollX;
-                                    int y = virtualSizeY - lastNoteValue * noteSizeY - scrollY;
+                                    int y = virtualSizeY - lastNoteValue * noteSizeY - scrollY + (lastNoteReleased ? noteSizeY / 2 - releaseNoteSizeY / 2 : 0);
+
                                     var instrument = lastNoteInstrument;
                                     var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
                                     if (dimmed) color = Color.FromArgb((int)(color.A * 0.2f), color);
 
+                                    int sizeY = lastNoteReleased ? releaseNoteSizeY : noteSizeY;
+
                                     g.PushTranslation(x, y);
-                                    g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, noteSizeY, g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-                                    g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, noteSizeY, theme.BlackBrush);
+                                    g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
+                                    g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, theme.BlackBrush);
                                     g.PopTransform();
                                 }
                             }
@@ -839,6 +896,8 @@ namespace FamiStudio
 
                 if (env.Loop >= 0)
                     g.DrawLine(env.Loop * noteSizeX - scrollX, 0, env.Loop * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
+                if (env.Release >= 0)
+                    g.DrawLine(env.Release * noteSizeX - scrollX, 0, env.Release * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
                 if (env.Length > 0)
                     g.DrawLine(env.Length * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
 
@@ -925,7 +984,10 @@ namespace FamiStudio
             }
             else
             {
-                env.Loop = length;
+                if (draggingRelease)
+                    env.Release = length;
+                else
+                    env.Loop = length;
             }
 
             ClampScroll();
@@ -987,7 +1049,7 @@ namespace FamiStudio
                         if (note != playingNote)
                         {
                             playingNote = note;
-                            App.PlayInstrumentNote(playingNote, true);
+                            App.PlayInstrumentNote(playingNote);
                             ConditionalInvalidate();
                         }
                         return;
@@ -1001,7 +1063,7 @@ namespace FamiStudio
                         if (note != playingNote)
                         {
                             playingNote = note;
-                            App.PlayInstrumentNote(playingNote, true);
+                            App.PlayInstrumentNote(playingNote);
                             ConditionalInvalidate();
                         }
                         return;
@@ -1091,6 +1153,16 @@ namespace FamiStudio
                 mouseLastX = e.X;
                 mouseLastY = e.Y;
                 resizingEnvelope = true;
+
+                var env = EditEnvelope;
+                if (right && env.Loop >= 0)
+                {
+                    int noteX = (e.X - whiteKeySizeX + scrollX) / noteSizeX;
+                    int distLoop    = Math.Abs(noteX - env.Loop);
+                    int distRelease = Math.Abs(noteX - (env.Release >= 0 ? env.Release : env.Length));
+
+                    draggingRelease = distRelease < distLoop;
+                }
                 Capture = true;
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
@@ -1138,11 +1210,12 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    bool ctrl = ModifierKeys.HasFlag(Keys.Control);
-                    if (ctrl)
+                    bool ctrl  = ModifierKeys.HasFlag(Keys.Control);
+                    bool shift = ModifierKeys.HasFlag(Keys.Shift);
+                    if (ctrl || shift)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                        pattern.Notes[noteIdx].Value = Note.NoteStop;
+                        pattern.Notes[noteIdx].Value = (byte)(ctrl ? Note.NoteStop : Note.NoteRelease);
                         pattern.Notes[noteIdx].Instrument = null;
                         pattern.UpdateLastValidNotesAndVolume();
                         App.UndoRedoManager.EndTransaction();
@@ -1160,7 +1233,8 @@ namespace FamiStudio
                 }
                 else if (right)
                 {
-                    if (pattern.Notes[noteIdx].IsStop)
+                    if (pattern.Notes[noteIdx].IsStop ||
+                        pattern.Notes[noteIdx].IsRelease)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].IsValid = false;
@@ -1345,7 +1419,7 @@ namespace FamiStudio
 
             if (playingPiano)
             {
-                App.StopIntrumentNote();
+                App.StopOrReleaseIntrumentNote();
                 playingPiano = false;
                 playingNote = -1;
                 Capture = false;
@@ -1361,6 +1435,7 @@ namespace FamiStudio
                 App.UndoRedoManager.EndTransaction();
                 EnvelopeResized?.Invoke();
                 resizingEnvelope = false;
+                draggingRelease = false;
                 Capture = false;
             }
             if (drawingEnvelope)

@@ -76,14 +76,28 @@ namespace FamiStudio
             if (!note.HasVolume)
                 note.Volume = this.note.Volume;
 
-            this.note = note;
-            this.newNote = true;
+            if (note.IsRelease)
+            {
+                if (this.note.Instrument != null)
+                {
+                    for (int j = 0; j < Envelope.Max; j++)
+                    {
+                        if (this.note.Instrument.Envelopes[j].Release >= 0)
+                            envelopeIdx[j] = this.note.Instrument.Envelopes[j].Release;
+                    }
+                }
+            }
+            else
+            {
+                this.note = note;
+                this.newNote = true;
 
-            if (note.Instrument != null)
-                duty = note.Instrument.DutyCycle;
+                if (note.Instrument != null)
+                    duty = note.Instrument.DutyCycle;
 
-            for (int j = 0; j < Envelope.Max; j++)
-                envelopeIdx[j] = 0;
+                for (int j = 0; j < Envelope.Max; j++)
+                    envelopeIdx[j] = 0;
+            }
         }
 
         public void UpdateEnvelopes()
@@ -109,8 +123,12 @@ namespace FamiStudio
 
                 envelopeValues[j] = instrument.Envelopes[j].Values[idx];
 
-                if (++idx >= env.Length)
-                    envelopeIdx[j] = env.Loop >= 0 ? env.Loop : env.Length - 1;
+                idx++;
+
+                if (env.Release >= 0 && idx == env.Release)
+                    envelopeIdx[j] = env.Loop;
+                else if (idx >= env.Length)
+                    envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : env.Length - 1;
                 else
                     envelopeIdx[j] = idx;
             }

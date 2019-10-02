@@ -98,6 +98,8 @@ namespace FamiStudio
 
         public delegate void PatternDoubleClick(int trackIdx, int barIdx);
         public event PatternDoubleClick PatternClicked;
+        public delegate void SelectedChannelChangedDelegate(int channelIdx);
+        public event SelectedChannelChangedDelegate SelectedChannelChanged;
 
         public Sequencer()
         {
@@ -485,8 +487,13 @@ namespace FamiStudio
             {
                 if (e.Y > headerSizeY)
                 {
-                    selectedChannel = Utils.Clamp((e.Y - headerSizeY) / trackSizeY, 0, Channel.Count - 1);
-                    ConditionalInvalidate();
+                    var newChannel = Utils.Clamp((e.Y - headerSizeY) / trackSizeY, 0, Channel.Count - 1);
+                    if (newChannel != selectedChannel)
+                    {
+                        selectedChannel = newChannel;
+                        SelectedChannelChanged?.Invoke(selectedChannel);
+                        ConditionalInvalidate();
+                    }
                 }
             }
 
@@ -692,11 +699,6 @@ namespace FamiStudio
                 {
                     isDraggingSelection = true;
                 }
-
-                //if (IsPatternSelected(channelIdx, patternIdx))
-                //{
-                //    //selectionDragPointX = patternIdx;
-                //}
 
                 ConditionalInvalidate();
             }

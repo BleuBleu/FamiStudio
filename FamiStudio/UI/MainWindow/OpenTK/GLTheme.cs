@@ -13,8 +13,10 @@ namespace FamiStudio
             InitializeBase();
         }
 
-        public static float MainWindowScaling => MacUtils.DPIScaling;
-        public static float DialogScaling => MacUtils.DPIScaling;
+#if FAMISTUDIO_MACOS
+        public static float MainWindowScaling => MacUtils.MainWindowScaling;
+        public static float DialogScaling     => MacUtils.DialogScaling;
+#endif
 
         private void InitializeFonts(GLGraphics g)
         {

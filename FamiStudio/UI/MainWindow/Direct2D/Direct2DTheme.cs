@@ -25,8 +25,12 @@ namespace FamiStudio
 
             // For the main window, we only support 1x or 2x.
             dialogScaling = graphics.DpiX / 96.0f;
-            mainWindowScaling = (int)(dialogScaling * 4.0f) / 4.0f; // Round to 1/4.
 
+            if (Settings.DpiScaling != 0)
+                mainWindowScaling = Settings.DpiScaling / 100.0f;
+            else
+                mainWindowScaling = (int)(dialogScaling * 4.0f) / 4.0f; // Round to 1/4.
+    
             InitializeFonts();
         }
 

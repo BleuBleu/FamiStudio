@@ -119,8 +119,11 @@ namespace FamiStudio
         static IntPtr selBounds = SelRegisterName("bounds");
         static IntPtr selAddCursorRectCursor = SelRegisterName("addCursorRect:cursor:");
 
-        static float dpiScaling = 1.0f;
-        public static float DPIScaling => dpiScaling;
+        static float mainWindowScaling = 1.0f;
+        static float dialogScaling = 1.0f;
+
+        public static float MainWindowScaling => mainWindowScaling;
+        public static float DialogScaling => dialogScaling;
 
         public static void Initialize(IntPtr nsWin)
         {
@@ -133,7 +136,12 @@ namespace FamiStudio
             clsNSAlert = ObjCGetClass("NSAlert");
             clsNSCursor = ObjCGetClass("NSCursor");
 
-            dpiScaling = (float)SendFloat(nsWin, selBackingScaleFactor);
+            dialogScaling = (float)SendFloat(nsWin, selBackingScaleFactor);
+
+            if (Settings.DpiScaling != 0)
+                mainWindowScaling = Settings.DpiScaling / 100.0f;
+            else
+                mainWindowScaling = dialogScaling;
         }
 
         public static IntPtr ToNSString(string str)
@@ -394,11 +402,11 @@ namespace FamiStudio
         {
             var nsView = SendIntPtr(nsWin, selContentView);
             var viewRect = SendRect(nsView, selFrame);
-            var winHeight = (float)viewRect.Size.Height * dpiScaling;
+            var winHeight = (float)viewRect.Size.Height * mainWindowScaling;
 
             var mouseLoc = SendPoint(nsWin, selMouseLocationOutsideOfEventStream);
-            var x = (float)mouseLoc.X * dpiScaling;
-            var y = (float)mouseLoc.Y * dpiScaling;
+            var x = (float)mouseLoc.X * mainWindowScaling;
+            var y = (float)mouseLoc.Y * mainWindowScaling;
             y = winHeight - y;
 
             return new System.Drawing.Point((int)Math.Round(x), (int)Math.Round(y));

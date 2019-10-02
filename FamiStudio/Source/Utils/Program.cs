@@ -24,6 +24,7 @@ namespace FamiStudio
             SetProcessDpiAwareness(1 /*Process_System_DPI_Aware*/);
 #endif
 
+            Settings.Load();
             Cursors.Initialize();
             RenderTheme.Initialize();
             PlatformDialogs.Initialize();
@@ -36,6 +37,8 @@ namespace FamiStudio
 
             var famiStudio = new FamiStudio(args.Length > 0 ? args[0] : null);
             famiStudio.Run();
+
+            Settings.Save();
         }
     }
 }

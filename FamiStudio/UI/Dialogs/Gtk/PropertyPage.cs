@@ -230,6 +230,7 @@ namespace FamiStudio
                     cb.Active = i;
             }
 
+            cb.Sensitive = values.Length > 0;
             return cb;
         }
 

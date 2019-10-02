@@ -245,6 +245,7 @@ namespace FamiStudio
             cb.Items.AddRange(values);
             cb.Text = value;
             cb.Font = font;
+            cb.Enabled = values.Length > 0;
 
             return cb;
         }
