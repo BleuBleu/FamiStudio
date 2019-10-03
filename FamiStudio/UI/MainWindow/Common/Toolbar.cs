@@ -306,12 +306,12 @@ namespace FamiStudio
             {
                 foreach (var btn in buttons)
                 {
-                    if (btn.IsPointIn(e.X, e.Y) && (btn.Enabled == null || btn.Enabled()))
+                    if (btn != null && btn.IsPointIn(e.X, e.Y) && (btn.Enabled == null || btn.Enabled()))
                     {
                         if (left)
-                            btn?.Click();
+                            btn.Click?.Invoke();
                         else
-                            btn?.RightClick();
+                            btn.RightClick?.Invoke();
                         break;
                     }
                 }

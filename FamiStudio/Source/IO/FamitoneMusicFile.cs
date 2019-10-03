@@ -21,8 +21,11 @@ namespace FamiStudio
 
         private FamiToneKernel kernel = FamiToneKernel.FamiTone2FS;
 
+        private int maxRepeatCount = MaxRepeatCountFT2;
+
         private const int MinPatternLength = 6;
-        private const int MaxRepeatCount = 60;
+        private const int MaxRepeatCountFT2FS = 58; // 2 less for release notes.
+        private const int MaxRepeatCountFT2   = 60;
         private const int MaxSongs = (256 - 5) / 14;
         private const int MaxPatterns = 128 * MaxSongs;
         private const int MaxPackedPatterns = (5 * MaxPatterns * MaxSongs);
@@ -43,6 +46,7 @@ namespace FamiStudio
         public FamitoneMusicFile(FamiToneKernel kernel)
         {
             this.kernel = kernel;
+            this.maxRepeatCount = kernel == FamiToneKernel.FamiTone2FS ? MaxRepeatCountFT2FS : MaxRepeatCountFT2;
         }
 
         private void CleanupEnvelopes()
@@ -102,17 +106,18 @@ namespace FamiStudio
             return size;
         }
 
-        private byte[] ProcessEnvelope(Envelope env)
+        private byte[] ProcessEnvelope(Envelope env, bool allowReleases)
         {
             if (env.IsEmpty)
                 return null;
 
             var data = new byte[256];
 
-            byte ptr = 0;
+            byte ptr = (byte)(allowReleases ? 1 : 0);
             byte ptr_loop = 0xff;
             byte rle_cnt = 0;
             byte prev_val = (byte)(env.Values[0] + 1);//prevent rle match
+            bool found_release = false;
 
             for (int j = 0; j < env.Length; j++)
             {
@@ -127,7 +132,7 @@ namespace FamiStudio
 
                 val += 192;
 
-                if (prev_val != val || j == env.Loop || j == env.Length - 1)
+                if (prev_val != val || j == env.Loop || (allowReleases && j == env.Release) || j == env.Length - 1)
                 {
                     if (rle_cnt != 0)
                     {
@@ -151,6 +156,16 @@ namespace FamiStudio
 
                     if (j == env.Loop) ptr_loop = ptr;
 
+                    if (j == env.Release && allowReleases)
+                    {
+                        // A release implies the end of the loop.
+                        Debug.Assert(ptr_loop != 0xff && data[ptr_loop] >= 128); // Cant be jumping back to the middle of RLE.
+                        found_release = true;
+                        data[ptr++] = 0;
+                        data[ptr++] = ptr_loop;
+                        data[0] = ptr;
+                    }
+
                     data[ptr++] = val;
 
                     prev_val = val;
@@ -161,7 +176,7 @@ namespace FamiStudio
                 }
             }
 
-            if (ptr_loop == 0xff)
+            if (ptr_loop == 0xff || found_release)
             {
                 ptr_loop = (byte)(ptr - 1);
             }
@@ -190,9 +205,10 @@ namespace FamiStudio
 
             foreach (var instrument in project.Instruments)
             {
-                foreach (var env in instrument.Envelopes)
+                for (int i = 0; i < Envelope.Max; i++)
                 {
-                    var processed = ProcessEnvelope(env);
+                    var env = instrument.Envelopes[i];
+                    var processed = ProcessEnvelope(env, i == Envelope.Volume && kernel == FamiToneKernel.FamiTone2FS);
 
                     if (processed == null)
                     {
@@ -362,6 +378,11 @@ namespace FamiStudio
             else
             {
                 // 0 = stop, 1 = A0 ... 87 = B7
+                if (value == Note.NoteRelease)
+                {
+                    return (byte)value;
+                }
+
                 if (value != 0)
                 {
                     value = Math.Max(1,  value - 9);
@@ -455,7 +476,7 @@ namespace FamiStudio
 
                         i++;
 
-                        if (note.HasVolume)
+                        if (note.HasVolume && kernel == FamiToneKernel.FamiTone2FS)
                         {
                             patternBuffer.Add((byte)(0x70 | note.Volume));
                         }
@@ -463,7 +484,7 @@ namespace FamiStudio
                         if (note.IsValid)
                         {
                             // Instrument change.
-                            if (!note.IsStop && note.Instrument != instrument)
+                            if (note.IsMusical && note.Instrument != instrument)
                             {
                                 int idx = project.Instruments.IndexOf(note.Instrument);
                                 patternBuffer.Add((byte)(0x80 | (idx << 1)));
@@ -502,7 +523,7 @@ namespace FamiStudio
                             {
                                 var emptyNote = pattern.Notes[i];
 
-                                if (numEmptyNotes >= MaxRepeatCount || emptyNote.IsValid || emptyNote.HasVolume || (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
+                                if (numEmptyNotes >= maxRepeatCount || emptyNote.IsValid || (emptyNote.HasVolume && kernel == FamiToneKernel.FamiTone2FS) || (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
                                     break;
 
                                 i++;
@@ -657,24 +678,6 @@ namespace FamiStudio
                     {
                         project.DeleteSong(project.Songs[i]);
                         i--;
-                    }
-                }
-            }
-
-            // Remove features not supported by famitone, keeps the rest of the processing simpler.
-            if (kernel == FamiToneKernel.FamiTone2)
-            {
-                foreach (var song in project.Songs)
-                {
-                    foreach (var channel in song.Channels)
-                    {
-                        foreach (var pattern in channel.Patterns)
-                        {
-                            for (int i = 0; i < song.PatternLength; i++)
-                            {
-                                pattern.Notes[i].HasVolume = false;
-                            }
-                        }
                     }
                 }
             }

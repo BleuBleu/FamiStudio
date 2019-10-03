@@ -5,14 +5,20 @@ Version 1.2.0:
 	x Enveloppe edition, playing.
 	x Song player support
 	- FT2/NSF support.
+		x Add extra byte to envelope
+		x FT_ENV_REPEAT,x = 0
+		x FT_ENV_PTR,x = set to first env value.
+		- Make sure default envelope for volume work (will need to be 4 bytes)
+		- Test other channels.
 - Dialog icon double size
-- Decide on windows scaling. 100/200 only?
+- Decide on windows scaling. 100/200 only.
 - MIDI improvements.
 	x Configuration (load/save settings)
 	- Release notes.
 	- Config dialog icons.
 x Stop note on channel change
 x Change piano roll on channel change.
+- Remove toolbar mute. Stop intrument on channel change.
 
 TO TEST:
 - All notes: noise channel conversion, DPCM sample position, envelope editing, stock FT2 must still work).ill works.

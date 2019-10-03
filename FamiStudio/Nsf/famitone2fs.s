@@ -1,5 +1,5 @@
 ;FamiTone2 v1.12
-FT_TEMP_SIZE_DEF = 3
+FT_TEMP_SIZE_DEF = 5
 FT_BASE_SIZE_DEF = 145
 
 .segment "ZEROPAGE"
@@ -35,7 +35,10 @@ FT_TEMP_PTR			= FT_TEMP		;word
 FT_TEMP_PTR_L		= FT_TEMP_PTR+0
 FT_TEMP_PTR_H		= FT_TEMP_PTR+1
 FT_TEMP_VAR1		= FT_TEMP+2
-FT_TEMP_SIZE        = 3
+FT_TEMP_PTR2		= FT_TEMP+3		;word
+FT_TEMP_PTR2_L		= FT_TEMP_PTR+3
+FT_TEMP_PTR2_H		= FT_TEMP_PTR+4
+FT_TEMP_SIZE        = 5
 
 ;envelope structure offsets, 5 bytes per envelope, grouped by variable type
 
@@ -809,9 +812,10 @@ _FT2SetInstrument:
 	lda (FT_TEMP_PTR),y		;instrument pointer MSB
 	sta FT_ENV_ADR_H,x
 
+	lda #1
+	sta FT_ENV_PTR-1,x		;reset env1 pointer (env1 is volume and volume can have releases)
 	lda #0
 	sta FT_ENV_REPEAT-1,x	;reset env1 repeat counter
-	sta FT_ENV_PTR-1,x		;reset env1 pointer
 	sta FT_ENV_REPEAT,x		;reset env2 repeat counter
 	sta FT_ENV_PTR,x		;reset env2 pointer
 
@@ -876,7 +880,7 @@ _FT2ChannelUpdate:
 @no_vol_change:	
 	sta FT_CHN_NOTE,x		;store note code
 	sec						;new note flag is set
-	bcs @done ;bra
+	jmp @done ;bra
 
 @special_code:
 	and #$7f
@@ -888,6 +892,8 @@ _FT2ChannelUpdate:
 	bcc @read_byte ;bra
 
 @set_empty_rows:
+	cmp #$3b
+	beq @release_note
 	cmp #$3d
 	bcc @set_repeat
 	beq @set_speed
@@ -933,6 +939,29 @@ _FT2ChannelUpdate:
 	sta <FT_TEMP_PTR_L
 	dey
 	jmp @read_byte
+
+@release_note:
+	stx <FT_TEMP_VAR1
+	lda _FT2ChannelToVolumeEnvelope - .lobyte(FT_CH1_VARS),x ; DPCM(5) will never have releases.
+	tax
+
+	lda FT_ENV_ADR_L,x   ;load envelope data address into temp
+	sta <FT_TEMP_PTR2_L
+	lda FT_ENV_ADR_H,x
+	sta <FT_TEMP_PTR2_H	
+	
+	ldy #0
+	lda (FT_TEMP_PTR2),y  ;read first byte of the envelope data, this contains the release index.
+	beq @env_has_no_release
+
+	sta FT_ENV_PTR,x
+	lda #0
+	sta FT_ENV_REPEAT,x ; need to reset envelope repeat to force update.
+	
+@env_has_no_release:
+	ldx <FT_TEMP_VAR1
+	clc
+	jmp @done
 
 @set_repeat:
 	sta FT_CHN_REPEAT,x		;set up repeat counter, carry is clear, no new note
@@ -1288,6 +1317,12 @@ _FT2NoteTableMSB:
 		.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
 		.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
 	.endif
+
+_FT2ChannelToVolumeEnvelope:
+	.byte .lobyte(FT_ENVELOPES)+$00
+	.byte .lobyte(FT_ENVELOPES)+$03
+	.byte .lobyte(FT_ENVELOPES)+$06
+	.byte .lobyte(FT_ENVELOPES)+$09
 
 ; Precomputed volume multiplication table (rounded) [0-15]x[0-15].
 ; Load the 2 volumes in the lo/hi nibble and fetch.

@@ -1155,7 +1155,7 @@ namespace FamiStudio
                 resizingEnvelope = true;
 
                 var env = EditEnvelope;
-                if (right && env.Loop >= 0)
+                if (right && editEnvelope == Envelope.Volume && env.Loop >= 0)
                 {
                     int noteX = (e.X - whiteKeySizeX + scrollX) / noteSizeX;
                     int distLoop    = Math.Abs(noteX - env.Loop);
@@ -1212,7 +1212,7 @@ namespace FamiStudio
                 {
                     bool ctrl  = ModifierKeys.HasFlag(Keys.Control);
                     bool shift = ModifierKeys.HasFlag(Keys.Shift);
-                    if (ctrl || shift)
+                    if (ctrl || (shift && editChannel != Channel.DPCM))
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].Value = (byte)(ctrl ? Note.NoteStop : Note.NoteRelease);

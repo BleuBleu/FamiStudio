@@ -32,7 +32,7 @@ namespace FamiStudio
         public const int NoteStop    = 0x00;
         public const int NoteMin     = 0x01;
         public const int NoteMax     = 0x60;
-        public const int NoteRelease = 0x61;
+        public const int NoteRelease = 0xf7;
 
         public byte Value; // (0 = stop, 1 = C0 ... 96 = B7).
         public byte Effect; // Tempo/Jump/Skip
@@ -55,6 +55,11 @@ namespace FamiStudio
         public bool IsRelease
         {
             get { return Value == NoteRelease; }
+        }
+
+        public bool IsMusical
+        {
+            get { return IsValid && !IsStop && !IsRelease; }
         }
 
         public bool HasEffect
