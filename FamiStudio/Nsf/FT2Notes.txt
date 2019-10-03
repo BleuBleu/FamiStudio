@@ -4,21 +4,24 @@ Encoding FT2 stock:
 	$01-$7f        Note (n << 1) | e   Note n (e = 1 if note -> empty -> note, 0 otherwise) (GET RID OF THIS!)
 	$80 | (n << 1) Instrument change, max 64
 	$81 | (n << 1) Series of n empty notes (max 60 because 61 = $fb, 62 = $fd)
-	$fb            Speed change
-	$fd            Jump
+	$f9            Repeat (3c)
+	$fb            Speed change (3d)
+	$fd            Jump (3e)
 	$ff, n, ref    Plays n notes starting at ref
 	
 New encoding:
 	
 	$00            Stop note
-	$01-$58        Notes (like doug)
-	$59-$5f        Free (for up to 7 effects)
+	$01-$57        Notes (like doug)
+	$58-$5f        Free (for up to 7 effects)
 	$60-$6f        Empty + Stop, up to 16 (???)
 	$70-$7f        Volume (like doug).
 	$80 | (n << 1) Instrument change, max 64
-	$81 | (n << 1) Series of n empty notes (max 60 because 61 = $fb, 62 = $fd)
-	$fb            Speed change
-	$fd            Jump
+	$81 | (n << 1) Series of n empty notes (max 58 because 59 = $f7, 60 = $f9, 61 = $fb, 62 = $fd)
+	$f7            Release note (3b)
+	$f9            Repeat (3c)
+	$fb            Speed change (3d)
+	$fd            Jump (3e)
 	$ff, n, ref    Plays n notes starting at ref
 	
 Effects doug added in FT3/4/5:
