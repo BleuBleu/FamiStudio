@@ -274,8 +274,6 @@
     <EmbeddedResource Include="Resources\Triangle%402x.png" />
     <EmbeddedResource Include="Resources\Volume%402x.png" />
     <EmbeddedResource Include="Resources\VolumeSmall%402x.png" />
-    <EmbeddedResource Include="Resources\Mute%402x.png" />
-    <EmbeddedResource Include="Resources\Mute.png" />
     <EmbeddedResource Include="Resources\ReleaseSmall.png" />
     <EmbeddedResource Include="Resources\Config%402x.png" />
     <EmbeddedResource Include="Resources\Config.png" />

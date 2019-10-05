@@ -30,8 +30,7 @@ namespace FamiStudio
         const int ButtonPlay   = 7;
         const int ButtonRewind = 8;
         const int ButtonLoop   = 9;
-        const int ButtonMute   = 10;
-        const int ButtonCount  = 11;
+        const int ButtonCount  = 10;
 
         const int DefaultTimecodePosX     = 300;
         const int DefaultTimecodePosY     = 4;
@@ -94,7 +93,6 @@ namespace FamiStudio
             buttons[ButtonPlay]   = new Button { X = 476, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
             buttons[ButtonRewind] = new Button { X = 516, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]   = new Button { X = 556, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
-            buttons[ButtonMute]   = new Button { X = 596, Y = 4, Bmp = g.CreateBitmapFromResource("Mute"), Click = OnStopSound };
 
             buttons[ButtonNew].ToolTip    = "New Project (Ctrl-N)";
             buttons[ButtonOpen].ToolTip   = "Open Project (Ctrl-O)";
@@ -106,7 +104,6 @@ namespace FamiStudio
             buttons[ButtonPlay].ToolTip   = "Play/Pause (Space) [Ctrl+Space: Play pattern loop, Shift-Space: Play song loop]";
             buttons[ButtonRewind].ToolTip = "Rewind (Home) [Ctrl+Home: Rewind to beginning of current pattern]";
             buttons[ButtonLoop].ToolTip   = "Toggle Loop Mode";
-            buttons[ButtonMute].ToolTip   = "Stop Instrument Sound (Escape)";
 
             var scaling = RenderTheme.MainWindowScaling;
 
@@ -231,11 +228,6 @@ namespace FamiStudio
             }
 
             return null;
-        }
-
-        private void OnStopSound()
-        {
-            App.StopIntrumentNote();
         }
 
         protected override void OnRender(RenderGraphics g)
