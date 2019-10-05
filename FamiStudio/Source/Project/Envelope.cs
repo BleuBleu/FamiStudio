@@ -126,7 +126,8 @@ namespace FamiStudio
         {
             buffer.Serialize(ref length);
             buffer.Serialize(ref loop);
-            buffer.Serialize(ref release);
+            if (buffer.Version >= 3)
+                buffer.Serialize(ref release);
             buffer.Serialize(ref values);
         }
     }
