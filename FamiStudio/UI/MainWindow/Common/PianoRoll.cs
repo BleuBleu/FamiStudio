@@ -309,8 +309,8 @@ namespace FamiStudio
             debugBrush = g.CreateSolidBrush(ThemeBase.GreenColor);
             playPositionBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.LightGreyFillColor1));
 
-            bmpLoop = g.CreateBitmapFromResource("LoopSmall");
-            bmpRelease = g.CreateBitmapFromResource("ReleaseSmall");
+            bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
+            bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
             bmpVolume = g.CreateBitmapFromResource("VolumeSmall");
             bmpEffects[0] = g.CreateBitmapFromResource("LoopSmall");
             bmpEffects[1] = g.CreateBitmapFromResource("JumpSmall");
@@ -403,14 +403,14 @@ namespace FamiStudio
                         g.PushTranslation(env.Loop * noteSizeX - scrollX, 0);
                         g.FillRectangle(0, 0, ((env.Release >= 0 ? env.Release : env.Length) - env.Loop) * noteSizeX, headerAndEffectSizeY, theme.DarkGreyFillBrush2);
                         g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
-                        g.DrawBitmap(bmpLoop, effectIconPosX + 1, effectIconPosY, RenderTheme.MainWindowScaling);
+                        g.DrawBitmap(bmpLoop, effectIconPosX + 1, effectIconPosY);
                         g.PopTransform();
                     }
                     if (env.Release >= 0)
                     {
                         g.PushTranslation(env.Release * noteSizeX - scrollX, 0);
                         g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
-                        g.DrawBitmap(bmpRelease, effectIconPosX + 1, effectIconPosY, RenderTheme.MainWindowScaling);
+                        g.DrawBitmap(bmpRelease, effectIconPosX + 1, effectIconPosY);
                         g.PopTransform();
                     }
                     if (env.Length > 0)
@@ -446,7 +446,7 @@ namespace FamiStudio
                                 var note = pattern.Notes[i];
                                 if (note.HasEffect)
                                 {
-                                    g.DrawBitmap(bmpEffectsFilled[note.Effect - 1], patternX + i * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2, effectIconPosY, RenderTheme.MainWindowScaling);
+                                    g.DrawBitmap(bmpEffectsFilled[note.Effect - 1], patternX + i * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2, effectIconPosY);
                                 }
                             }
                         }
@@ -471,7 +471,7 @@ namespace FamiStudio
             // Effect icons
             if (editMode == EditionMode.Channel)
             { 
-                g.DrawBitmap(showEffectsPanel ? bmpEffectExpanded : bmpEffectCollapsed, effectIconPosX, effectIconPosY, RenderTheme.MainWindowScaling);
+                g.DrawBitmap(showEffectsPanel ? bmpEffectExpanded : bmpEffectCollapsed, effectIconPosX, effectIconPosY);
 
                 if (showEffectsPanel)
                 {
@@ -485,7 +485,7 @@ namespace FamiStudio
                     g.PushTranslation(0, headerSizeY);
 
                     g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
-                    g.DrawBitmap(bmpVolume, effectIconPosX, effectIconPosY, RenderTheme.MainWindowScaling);
+                    g.DrawBitmap(bmpVolume, effectIconPosX, effectIconPosY);
                     g.DrawText("Volume", selectedEffectIdx == -1 ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
 
                     int effectButtonY = 0;
@@ -494,7 +494,7 @@ namespace FamiStudio
                         effectButtonY += effectButtonSizeY;
                         g.PushTranslation(0, effectButtonY);
                         g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
-                        g.DrawBitmap(bmpEffects[i], effectIconPosX, effectIconPosY, RenderTheme.MainWindowScaling);
+                        g.DrawBitmap(bmpEffects[i], effectIconPosX, effectIconPosY);
                         g.DrawText(EffectNames[i], selectedEffectIdx == i ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
                         g.PopTransform();
                     }
