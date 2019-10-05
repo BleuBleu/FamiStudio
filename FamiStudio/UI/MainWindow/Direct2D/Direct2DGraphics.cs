@@ -287,18 +287,27 @@ namespace FamiStudio
 
         public Bitmap CreateBitmapFromResource(string name)
         {
-            string suffix = Direct2DTheme.MainWindowScaling > 1 ? "@2x" : "";
             var assembly = Assembly.GetExecutingAssembly();
 
+            bool needsScaling = false;
             System.Drawing.Bitmap bmp;
 
-            if (assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}{suffix}.png") != null)
-                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}{suffix}.png")) as System.Drawing.Bitmap;
+            if (Direct2DTheme.MainWindowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
+            {
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@15x.png")) as System.Drawing.Bitmap;
+            }
+            else if (Direct2DTheme.MainWindowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
+            {
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@2x.png")) as System.Drawing.Bitmap;
+                needsScaling = Direct2DTheme.MainWindowScaling != 2.0f;
+            }
             else
+            {
                 bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}.png")) as System.Drawing.Bitmap;
+            }
 
             // Pre-resize all images so we dont have to deal with scaling later.
-            if ((Direct2DTheme.MainWindowScaling % 1.0f) != 0.0f)
+            if (needsScaling)
             {
                 var newWidth  = (int)(bmp.Width  * (Direct2DTheme.MainWindowScaling / 2.0f));
                 var newHeight = (int)(bmp.Height * (Direct2DTheme.MainWindowScaling / 2.0f));
