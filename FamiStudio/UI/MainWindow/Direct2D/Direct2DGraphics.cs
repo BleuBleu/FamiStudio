@@ -133,10 +133,9 @@ namespace FamiStudio
             renderTarget.Clear(ToRawColor4(color));
         }
 
-        public void DrawBitmap(Bitmap bmp, float x, float y, float scale = 1.0f, float opacity = 1.0f)
+        public void DrawBitmap(Bitmap bmp, float x, float y, float opacity = 1.0f)
         {
-            bool filter = (scale % 1.0f) != 0.0f;
-            renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + bmp.Size.Width * scale, y + bmp.Size.Height * scale), opacity, filter ? BitmapInterpolationMode.Linear : BitmapInterpolationMode.NearestNeighbor);
+            renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + bmp.Size.Width, y + bmp.Size.Height), opacity, BitmapInterpolationMode.NearestNeighbor);
         }
 
         public void DrawBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity)
@@ -297,6 +296,15 @@ namespace FamiStudio
                 bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}{suffix}.png")) as System.Drawing.Bitmap;
             else
                 bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}.png")) as System.Drawing.Bitmap;
+
+            // Pre-resize all images so we dont have to deal with scaling later.
+            if ((Direct2DTheme.MainWindowScaling % 1.0f) != 0.0f)
+            {
+                var newWidth  = (int)(bmp.Width  * (Direct2DTheme.MainWindowScaling / 2.0f));
+                var newHeight = (int)(bmp.Height * (Direct2DTheme.MainWindowScaling / 2.0f));
+
+                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
+            }
 
             var bmpData =
                 bmp.LockBits(

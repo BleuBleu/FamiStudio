@@ -44,7 +44,6 @@ namespace FamiStudio
         int timecodeSizeX;
         int timecodeTextPosX;
         int tooltipPosY;
-        float buttonScaling = 1.0f;
 
         private delegate void EmptyDelegate();
         private delegate bool BoolDelegate();
@@ -110,10 +109,6 @@ namespace FamiStudio
             buttons[ButtonMute].ToolTip   = "Stop Instrument Sound (Escape)";
 
             var scaling = RenderTheme.MainWindowScaling;
-
-            // When scaling is > 1, we use the 64x64 icons, but we need to scale them back.
-            if (scaling > 1.0f)
-                buttonScaling *= (scaling / 2.0f);
 
             for (int i = 0; i < ButtonCount; i++)
             {
@@ -258,7 +253,7 @@ namespace FamiStudio
                 if (bmp == null)
                     bmp = btn.Bmp;
                 bool enabled = btn.Enabled != null ? btn.Enabled() : true;
-                g.DrawBitmap(bmp, btn.X, btn.Y, buttonScaling, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
+                g.DrawBitmap(bmp, btn.X, btn.Y, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
             }
 
             // Timecode

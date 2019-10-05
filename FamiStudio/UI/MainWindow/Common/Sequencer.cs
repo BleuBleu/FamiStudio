@@ -215,7 +215,7 @@ namespace FamiStudio
 
             // Icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
-                g.DrawBitmap(bmpTracks[(int)Song.Channels[i].Type], trackIconPosX, y + trackIconPosY, RenderTheme.MainWindowScaling, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
+                g.DrawBitmap(bmpTracks[(int)Song.Channels[i].Type], trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
 
             // Track names
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
@@ -223,7 +223,7 @@ namespace FamiStudio
 
             // Ghost note icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
-                g.DrawBitmap(bmpGhostNote, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, RenderTheme.MainWindowScaling, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
+                g.DrawBitmap(bmpGhostNote, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
 
             // Vertical line seperating the track labels.
             g.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, theme.DarkGreyLineBrush1);

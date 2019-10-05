@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -48,8 +49,12 @@ namespace FamiStudio
             {
                 case ConfigSection.UserInterface:
                 {
+#if FAMISTUDIO_WINDOWS
+                    var scalingValues = new[] { "System", "100%", "150%", "200%" };
+#else
                     var scalingValues = new[] { "System", "100%", "200%" };
-                    var idx = Settings.DpiScaling / 100;
+#endif
+                    var idx = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
 
                     page.AddStringList("Scaling (Requires Restart):", scalingValues, scalingValues[idx]); // 0
                     page.AddBoolean("Check for updates:", true); // 1

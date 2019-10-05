@@ -34,7 +34,7 @@ namespace FamiStudio
             {
             }
 
-            if (DpiScaling != 100 && DpiScaling != 200)
+            if (DpiScaling != 100 && DpiScaling != 150 && DpiScaling != 200)
                 DpiScaling = 0;
 
             InstrumentStopTime = Utils.Clamp(InstrumentStopTime, 0, 10);

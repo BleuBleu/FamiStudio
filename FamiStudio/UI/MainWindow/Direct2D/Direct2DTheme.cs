@@ -29,8 +29,8 @@ namespace FamiStudio
             if (Settings.DpiScaling != 0)
                 mainWindowScaling = Settings.DpiScaling / 100.0f;
             else
-                mainWindowScaling = (int)(dialogScaling * 4.0f) / 4.0f; // Round to 1/4.
-    
+                mainWindowScaling = Math.Min(2.0f, (int)(dialogScaling * 2.0f) / 2.0f); // Round to 1/2 (so only 100%, 150% and 175%) are supported.
+
             InitializeFonts();
         }
 
