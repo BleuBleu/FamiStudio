@@ -23,6 +23,7 @@ namespace FamiStudio
         private Midi midi;
         private UndoRedoManager undoRedoManager;
         private int ghostChannelMask = 0;
+        private int lastMidiNote = -1;
 
         private bool newReleaseAvailable = false;
         private string newReleaseString = null;
@@ -488,12 +489,14 @@ namespace FamiStudio
         {
             if (on)
             {
-                // In MIDI: 60 = C4, In Famitone 37 = C4
-                PlayInstrumentNote(Math.Max(1, Math.Min(n - 23, 63)));
+                // In MIDI: 60 = C4, In Famitone 37 = C4, but in 1.2.0 we extended the range, so C4 is now 49.
+                PlayInstrumentNote(Math.Max(1, Math.Min(n - 11, 63)));
+                lastMidiNote = n;
             }
-            else
+            else if (n == lastMidiNote)
             {
-                //StopIntrumentNote();
+                StopOrReleaseIntrumentNote();
+                lastMidiNote = -1;
             }
         }
 
