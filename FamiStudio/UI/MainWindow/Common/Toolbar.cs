@@ -86,7 +86,7 @@ namespace FamiStudio
             buttons[ButtonNew]    = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]   = new Button { X = 44,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
             buttons[ButtonSave]   = new Button { X = 84,  Y = 4, Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
-            buttons[ButtonExport] = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport, Enabled = OnExportEnabled };
+            buttons[ButtonExport] = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
             buttons[ButtonUndo]   = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
             buttons[ButtonRedo]   = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
             buttons[ButtonConfig] = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
@@ -162,11 +162,6 @@ namespace FamiStudio
         private void OnExport()
         {
             App.Export();
-        }
-
-        private bool OnExportEnabled()
-        {
-            return App.Project != null && !string.IsNullOrEmpty(App.Project.Filename);
         }
 
         private void OnUndo()
