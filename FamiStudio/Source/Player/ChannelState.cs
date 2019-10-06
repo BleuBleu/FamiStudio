@@ -163,7 +163,7 @@ namespace FamiStudio
 
         protected int MultiplyVolumes(int v0, int v1)
         {
-            return (int)Math.Round((v0 / 15.0f) * (v1 / 15.0f) * 15.0f);
+            return (int)Math.Ceiling((v0 / 15.0f) * (v1 / 15.0f) * 15.0f);
         }
 
         protected void WriteApuRegister(int register, int data)
