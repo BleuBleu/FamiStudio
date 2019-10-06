@@ -42,7 +42,16 @@ namespace FamiStudio
 
         public PropertyPage AddPropertyPage(string text, string image)
         {
-            var bmp = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{image}.png")) as Bitmap;
+            var suffix = Direct2DTheme.DialogScaling > 1.0f ? "@2x" : "";
+            var bmp = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{image}{suffix}.png")) as Bitmap;
+
+            if ((Direct2DTheme.DialogScaling % 1.0f) != 0.0f)
+            {
+                var newWidth  = (int)(bmp.Width  * (Direct2DTheme.DialogScaling / 2.0f));
+                var newHeight = (int)(bmp.Height * (Direct2DTheme.DialogScaling / 2.0f));
+
+                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
+            }
 
             var page = new PropertyPage();
             page.Dock = DockStyle.Fill;
