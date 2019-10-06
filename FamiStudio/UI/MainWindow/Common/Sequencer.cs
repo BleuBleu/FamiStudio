@@ -465,13 +465,13 @@ namespace FamiStudio
                                 App.ChannelMask = (1 << i); 
                         }
                         ConditionalInvalidate();
-                        break;
+                        return;
                     }
                     if (GetTrackGhostRect(i).Contains(e.X, e.Y))
                     {
                         App.GhostChannelMask ^= bit;
                         ConditionalInvalidate();
-                        break;
+                        return;
                     }
                 }
             }

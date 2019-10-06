@@ -91,7 +91,7 @@ namespace FamiStudio
             if (value == NoteInvalid)
                 return "";
 
-            int octave = (value - 1) / 12 + 1;
+            int octave = (value - 1) / 12;
             int note   = (value - 1) % 12;
 
             return NoteNames[note] + octave.ToString();
