@@ -250,9 +250,9 @@ namespace FamiStudio
             GL.Clear(ClearBufferMask.ColorBufferBit);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float scale = 1.0f, float opacity = 1.0f)
+        public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
         {
-            DrawBitmap(bmp, x, y, bmp.Size.Width * scale, bmp.Size.Height * scale, opacity);
+            DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
         }
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity)

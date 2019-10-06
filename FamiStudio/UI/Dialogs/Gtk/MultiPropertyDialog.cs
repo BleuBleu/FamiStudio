@@ -82,7 +82,8 @@ namespace FamiStudio
 
         public PropertyPage AddPropertyPage(string text, string image)
         {
-            var pixbuf = Gdk.Pixbuf.LoadFromResource("FamiStudio.Resources." + image + ".png");
+            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{image}{suffix}.png");
 
             var page = new PropertyPage();
             page.Show();
