@@ -38,7 +38,7 @@ namespace FamiStudio
             for (int i = 0; i < (int)ConfigSection.Max; i++)
             {
                 var section = (ConfigSection)i;
-                var page = dialog.AddPropertyPage(ConfigSectionNames[i], /*"Config" + section.ToString()*/ "ExportWav");
+                var page = dialog.AddPropertyPage(ConfigSectionNames[i], "Config" + section.ToString());
                 CreatePropertyPage(page, section);
             }
         }

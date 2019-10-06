@@ -243,6 +243,13 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\ConfigMIDI%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigMIDI.png" />
+    <EmbeddedResource Include="Resources\ConfigSound%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigSound.png" />
+    <EmbeddedResource Include="Resources\ConfigUserInterface%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigUserInterface.png" />
+    <EmbeddedResource Include="Resources\Noise%4015x.png" />
     <EmbeddedResource Include="Resources\JumpSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\SpeedSmallFill%402x.png" />

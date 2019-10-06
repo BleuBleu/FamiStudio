@@ -1,28 +1,26 @@
 Version 1.2.0:
 - BUG (Low-priority): Mac: In property page, typing in a txt doesn't register unless I enter or TAB out of it.
 - Release envelopes (see how envelopes are stored in FT2)
-	x Piano roll, drawing
-	x Enveloppe edition, playing.
-	x Song player support
-	- FT2/NSF support.
-		x Add extra byte to envelope
-		x FT_ENV_REPEAT,x = 0
-		x FT_ENV_PTR,x = set to first env value.
-		- Make sure default envelope for volume work (will need to be 4 bytes)
-		- Test other channels.
-- Dialog icon double size
-- Decide on windows scaling. 100/200 only.
-- MIDI improvements.
-	x Configuration (load/save settings)
-	- Release notes.
-	- Config dialog icons.
-x Stop note on channel change
-x Change piano roll on channel change.
-- Remove toolbar mute. Stop intrument on channel change.
+	- NSF: Make sure default envelope for volume work (will need to be 4 bytes)
+	- NSF: Test other channels.
+- Config dialog icons.
+- Export dialog images + layout are messed up on macos.
 
 TO TEST:
 - All notes: noise channel conversion, DPCM sample position, envelope editing, stock FT2 must still work).ill works.
 - Make sure windows still works ok with hi-dpi + blurry.
+
+1.2.0 Trailer
+=============
+- macOS support (Mono)
+- Hi-DPI support
+- All notes support (full 8 octaves)
+- Volume tracks
+- Release notes
+- MIDI improvements (select device + note release)
+- Improved NSF memory usage
+- Misc bug fix (infinite loop on some tempo, Fixed FT2 loop point, crashes)
+- Config dialog
 
 Backlog:
 - PAL support
