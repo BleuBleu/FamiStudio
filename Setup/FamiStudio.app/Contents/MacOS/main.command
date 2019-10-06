@@ -40,7 +40,7 @@ fi
 MONO_EXEC="exec -a \"$PROCESS_NAME\" mono"
 
 #create log file directory if it doesn't exist
-LOG_FILE="$HOME/Library/Logs/$APPNAME/$APPNAME.log"
+LOG_FILE="$HOME/Library/Application Support/$APPNAME/$APPNAME.log"
 mkdir -p "`dirname \"$LOG_FILE\"`"
 
 #run app using mono
