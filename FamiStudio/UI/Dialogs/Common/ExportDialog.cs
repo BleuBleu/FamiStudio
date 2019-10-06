@@ -24,9 +24,13 @@ namespace FamiStudio
         public unsafe ExportDialog(Rectangle mainWinRect, Project project)
         {
             int width  = 450;
-            int height = 375;
+            int height = 390;
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
             int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
+
+#if DEBUG && FAMISTUDIO_MACOS
+            height += 60;
+#endif
 
             this.dialog = new MultiPropertyDialog(x, y, width, height);
             this.project = project;
