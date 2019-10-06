@@ -3,13 +3,24 @@ Version 1.2.0:
 - Release envelopes (see how envelopes are stored in FT2)
 	- NSF: Make sure default envelope for volume work (will need to be 4 bytes)
 	- NSF: Test other channels.
-- MIDI release notes.
 - Config dialog icons.
 - Export dialog images + layout are messed up on macos.
 
 TO TEST:
 - All notes: noise channel conversion, DPCM sample position, envelope editing, stock FT2 must still work).ill works.
 - Make sure windows still works ok with hi-dpi + blurry.
+
+1.2.0 Trailer
+=============
+- macOS support (Mono)
+- Hi-DPI support
+- All notes support (full 8 octaves)
+- Volume tracks
+- Release notes
+- MIDI improvements (select device + note release)
+- Improved NSF memory usage
+- Misc bug fix (infinite loop on some tempo, Fixed FT2 loop point, crashes)
+- Config dialog
 
 Backlog:
 - PAL support
