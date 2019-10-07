@@ -167,8 +167,9 @@ namespace FamiStudio
                             var note = pattern.Notes[i];
                             if (note.IsValid && !note.IsStop)
                             {
-                                if (project.SamplesMapping[note.Value] != null &&
-                                    project.SamplesMapping[note.Value].Sample != null)
+                                var mapping = project.GetDPCMMapping(note.Value);
+
+                                if (mapping != null && mapping.Sample != null)
                                 {
                                     return true;
                                 }

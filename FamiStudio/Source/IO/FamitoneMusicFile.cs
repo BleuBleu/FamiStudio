@@ -367,28 +367,27 @@ namespace FamiStudio
             return -1;
         }
 
-        private byte EncodeNoteValue(int value, int numNotes)
+        private byte EncodeNoteValue(int channel, int value, int numNotes)
         {
             if (kernel == FamiToneKernel.FamiTone2)
             {
                 // 0 = stop, 1 = C-1 ... 63 = D-6
-                if (value != 0) value -= 12; 
+                if (value != 0 && channel != Channel.Noise) value = Math.Max(1, value - 12); 
                 return (byte)(((value & 63) << 1) | numNotes);
             }
             else
             {
-                // 0 = stop, 1 = A0 ... 87 = B7
                 if (value == Note.NoteRelease)
-                {
                     return (byte)value;
-                }
 
+                // 0 = stop, 1 = A0 ... 87 = B7
                 if (value != 0)
                 {
-                    value = Math.Max(1,  value - 9);
-                    value = Math.Min(87, value);
+                    if (channel == Channel.DPCM)
+                        value = Utils.Clamp(value - Note.DPCMNoteMin, 1, 63);
+                    else if (channel != Channel.Noise)
+                        value = Utils.Clamp(value - 9, 1, 87);
                 }
-
                 return (byte)(value);
             }
         }
@@ -513,7 +512,7 @@ namespace FamiStudio
                                 }
                             }
 
-                            patternBuffer.Add(EncodeNoteValue(note.Value, numNotes));
+                            patternBuffer.Add(EncodeNoteValue(c, note.Value, numNotes));
                         }
                         else
                         {

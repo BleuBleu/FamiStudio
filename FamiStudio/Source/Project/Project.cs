@@ -12,7 +12,7 @@ namespace FamiStudio
         public static int Version = 3;
         public static int MaxSampleSize = 0x4000;
 
-        private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[96];
+        private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
         private List<DPCMSample> samples = new List<DPCMSample>();
         private List<Instrument> instruments = new List<Instrument>();
         private List<Song> songs = new List<Song>();
@@ -131,20 +131,41 @@ namespace FamiStudio
             return sample;
         }
 
+        public bool NoteSupportsDPCM(int note)
+        {
+            return note > Note.DPCMNoteMin && note <= Note.DPCMNoteMax;
+        }
+
         public void MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
         {
-            if (samplesMapping[note] == null)
+            if (NoteSupportsDPCM(note))
             {
-                samplesMapping[note] = new DPCMSampleMapping();
-                samplesMapping[note].Sample = sample;
-                samplesMapping[note].Pitch = pitch;
-                samplesMapping[note].Loop = loop;
+                note -= Note.DPCMNoteMin;
+
+                if (samplesMapping[note] == null)
+                {
+                    samplesMapping[note] = new DPCMSampleMapping();
+                    samplesMapping[note].Sample = sample;
+                    samplesMapping[note].Pitch = pitch;
+                    samplesMapping[note].Loop = loop;
+                }
+            }
+        }
+
+        public void UnmapDPCMSample(int note)
+        {
+            if (NoteSupportsDPCM(note))
+            {
+                samplesMapping[note - Note.DPCMNoteMin] = null;
             }
         }
 
         public DPCMSampleMapping GetDPCMMapping(int note)
         {
-            return samplesMapping[note];
+            if (NoteSupportsDPCM(note))
+                return samplesMapping[note - Note.DPCMNoteMin];
+            else
+                return null;
         }
 
         public Song CreateSong(string name = null)
@@ -396,11 +417,10 @@ namespace FamiStudio
                         for (int i = 0; i < song.PatternLength; i++)
                         {
                             var note = pattern.Notes[i];
-                            if (note.IsValid && !note.IsStop && note.Instrument == null && 
-                                samplesMapping[note.Value] != null && 
-                                samplesMapping[note.Value].Sample != null)
+                            var mapping = GetDPCMMapping(note.Value);
+                            if (note.IsValid && !note.IsStop && note.Instrument == null && mapping != null && mapping.Sample != null)
                             {
-                                usedSamples.Add(samplesMapping[note.Value].Sample);
+                                usedSamples.Add(mapping.Sample);
                             }
                         }
                     }
@@ -429,53 +449,25 @@ namespace FamiStudio
                 sample.SerializeState(buffer);
 
             // Mapping
-            ulong mappingMask0 = 0;
+            ulong mappingMask = 0;
             for (int i = 0; i < 64; i++)
             {
                 if (samplesMapping[i] != null)
-                    mappingMask0 |= (((ulong)1) << i);
+                    mappingMask |= (((ulong)1) << i);
             }
-            buffer.Serialize(ref mappingMask0);
-
-            // At version 3 (FamiStudio 1.2.0), we extended the range of notes.
-            int noteOffset = buffer.Version < 3 ? 12 : 0;
+            buffer.Serialize(ref mappingMask);
 
             for (int i = 0; i < 64; i++)
             {
-                if ((mappingMask0 & (((ulong)1) << i)) != 0)
+                if ((mappingMask & (((ulong)1) << i)) != 0)
                 {
                     if (buffer.IsReading)
-                        samplesMapping[i + noteOffset] = new DPCMSampleMapping();
-                    samplesMapping[i + noteOffset].SerializeState(buffer);
+                        samplesMapping[i] = new DPCMSampleMapping();
+                    samplesMapping[i].SerializeState(buffer);
                 }
                 else
                 {
-                    samplesMapping[i + noteOffset] = null;
-                }
-            }
-
-            if (buffer.Version >= 3)
-            {
-                uint mappingMask1 = 0;
-                for (int i = 0; i < 32; i++)
-                {
-                    if (samplesMapping[i] != null)
-                        mappingMask1 |= (((uint)1) << i);
-                }
-                buffer.Serialize(ref mappingMask1);
-
-                for (int i = 0; i < 32; i++)
-                {
-                    if ((mappingMask1 & (((uint)1) << i)) != 0)
-                    {
-                        if (buffer.IsReading)
-                            samplesMapping[64 + i] = new DPCMSampleMapping();
-                        samplesMapping[64 + i].SerializeState(buffer);
-                    }
-                    else
-                    {
-                        samplesMapping[64 + i] = null;
-                    }
+                    samplesMapping[i] = null;
                 }
             }
         }

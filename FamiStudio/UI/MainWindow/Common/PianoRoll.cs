@@ -518,9 +518,6 @@ namespace FamiStudio
             g.PushClip(0, 0, whiteKeySizeX, Height);
             g.FillRectangle(0, 0, whiteKeySizeX, Height, whiteKeyBrush);
 
-            bool showSampleNames = editMode == EditionMode.Channel && editChannel == 4;
-            bool showNoiseValues = editMode == EditionMode.Channel && editChannel == 3;
-
             int playOctave = -1;
             int playNote = -1;
 
@@ -560,10 +557,7 @@ namespace FamiStudio
                         g.DrawLine(0, y, whiteKeySizeX, y, theme.DarkGreyLineBrush2);
                 }
 
-                if (!showSampleNames)
-                {
-                    g.DrawText("C" + (i + baseOctave), ThemeBase.FontSmall, 1, octaveBaseY - octaveNameOffsetY, theme.BlackBrush);
-                }
+                g.DrawText("C" + (i + baseOctave), ThemeBase.FontSmall, 1, octaveBaseY - octaveNameOffsetY, theme.BlackBrush);
             }
 
             g.DrawLine(whiteKeySizeX - 1, 0, whiteKeySizeX - 1, Height, theme.DarkGreyLineBrush1);
@@ -848,10 +842,10 @@ namespace FamiStudio
                 {
                     for (int i = 0; i < Note.NoteMax; i++)
                     {
-                        if (App.Project.SamplesMapping[i] != null)
+                        var mapping = App.Project.GetDPCMMapping(i);
+                        if (mapping != null)
                         {
-                            var mapping = App.Project.SamplesMapping[i];
-                            var y = virtualSizeY - i * noteSizeY - scrollY;
+                            var y = virtualSizeY - i  * noteSizeY - scrollY;
 
                             g.PushTranslation(0, y);
                             g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, noteSizeY, 0.8f), theme.BlackBrush);
@@ -1080,10 +1074,9 @@ namespace FamiStudio
 
             if (editMode == EditionMode.DPCM && left && GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
             {
-                var mapping = App.Project.SamplesMapping[noteValue];
+                var mapping = App.Project.GetDPCMMapping(noteValue);
                 if (left && mapping != null)
                 {
-                    
                     var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160);
                     dlg.Properties.AddColoredString(mapping.Sample.Name, ThemeBase.LightGreyFillColor2);
                     dlg.Properties.AddIntegerRange("Pitch :", mapping.Pitch, 0, 15);
@@ -1276,27 +1269,34 @@ namespace FamiStudio
             }
             else if (editMode == EditionMode.DPCM && (left || right) && GetNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx, out noteValue))
             {
-                var mapping = App.Project.SamplesMapping[noteValue];
-                if (left && mapping == null)
+                if (App.Project.NoteSupportsDPCM(noteValue))
                 {
-                    var filename = PlatformDialogs.ShowOpenFileDialog("Open File", "DPCM Samples (*.dmc)|*.dmc");
-                    if (filename != null)
+                    var mapping = App.Project.GetDPCMMapping(noteValue);
+                    if (left && mapping == null)
+                    {
+                        var filename = PlatformDialogs.ShowOpenFileDialog("Open File", "DPCM Samples (*.dmc)|*.dmc");
+                        if (filename != null)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
+                            var name = Path.GetFileNameWithoutExtension(filename);
+                            var sample = App.Project.CreateDPCMSample(name, File.ReadAllBytes(filename));
+                            App.Project.MapDPCMSample(noteValue, sample);
+                            App.UndoRedoManager.EndTransaction();
+                            ConditionalInvalidate();
+                        }
+                    }
+                    else if (right && mapping != null)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
-                        var name = Path.GetFileNameWithoutExtension(filename);
-                        var sample = App.Project.CreateDPCMSample(name, File.ReadAllBytes(filename));
-                        App.Project.MapDPCMSample(noteValue, sample);
+                        App.Project.UnmapDPCMSample(noteValue);
+                        App.Project.CleanupUnusedSamples();
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                     }
                 }
-                else if (right && mapping != null)
+                else
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
-                    App.Project.SamplesMapping[noteValue] = null;
-                    App.Project.CleanupUnusedSamples();
-                    App.UndoRedoManager.EndTransaction();
-                    ConditionalInvalidate();
+                    PlatformDialogs.MessageBox("DPCM samples are only allowed between C1 and D6", "Error", MessageBoxButtons.OK);
                 }
             }
         }

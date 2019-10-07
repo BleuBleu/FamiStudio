@@ -33,6 +33,8 @@ namespace FamiStudio
         public const int NoteMin     = 0x01;
         public const int NoteMax     = 0x60;
         public const int NoteRelease = 0xf7;
+        public const int DPCMNoteMin = 0x0c;
+        public const int DPCMNoteMax = 0x4b;
 
         public byte Value; // (0 = stop, 1 = C0 ... 96 = B7).
         public byte Effect; // Tempo/Jump/Skip
