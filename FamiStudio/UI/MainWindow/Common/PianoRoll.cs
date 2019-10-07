@@ -453,9 +453,14 @@ namespace FamiStudio
                     }
                 }
             }
-            
-            int seekX = (editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editEnvelope) : App.CurrentFrame) * noteSizeX - scrollX;
-            g.FillRectangle(seekX + 1, 0, seekX + noteSizeX, headerSizeY, playPositionBrush);
+
+            if (editMode == EditionMode.Enveloppe || 
+                editMode == EditionMode.Channel)
+            {
+                int seekX = (editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editEnvelope) : App.CurrentFrame) * noteSizeX - scrollX;
+                g.FillRectangle(seekX + 1, 0, seekX + noteSizeX, headerSizeY, playPositionBrush);
+            }
+
             g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
             
             g.PopClip();
