@@ -662,6 +662,39 @@ namespace FamiStudio
             }
         }
 
+        private void RemoveUnsupportedFeatures()
+        {
+            if (kernel == FamiToneKernel.FamiTone2)
+            {
+                foreach (var song in project.Songs)
+                {
+                    foreach (var channel in song.Channels)
+                    {
+                        foreach (var pattern in channel.Patterns)
+                        {
+                            for (int i = 0; i < song.PatternLength; i++)
+                            {
+                                if (pattern.Notes[i].IsRelease)
+                                {
+                                    pattern.Notes[i].Value = Note.NoteInvalid;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                foreach (var instrument in project.Instruments)
+                {
+                    var env = instrument.Envelopes[Envelope.Volume];
+                    if (env.Release >= 0)
+                    {
+                        env.Length  = env.Release;
+                        env.Release = -1;
+                    }
+                }
+            }
+        }
+
         private void SetupProject(Project originalProject, int[] songIds)
         {
             // Work on a temporary copy.
@@ -681,6 +714,7 @@ namespace FamiStudio
                 }
             }
 
+            RemoveUnsupportedFeatures();
             project.DeleteUnusedInstruments(); 
         }
 
