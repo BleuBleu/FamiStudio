@@ -1,26 +1,30 @@
 Version 1.2.0:
-- BUG (Low-priority): Mac: In property page, typing in a txt doesn't register unless I enter or TAB out of it.
 - Release envelopes (see how envelopes are stored in FT2)
 	- NSF: Make sure default envelope for volume work (will need to be 4 bytes)
 	- NSF: Test other channels.
-- Config dialog icons.
-- Export dialog images + layout are messed up on macos.
+x Castlevania
+
+- BUG P3: Mac: In property page, typing in a txt doesn't register unless I enter or TAB out of it.
 
 TO TEST:
 - All notes: noise channel conversion, DPCM sample position, envelope editing, stock FT2 must still work).ill works.
 - Make sure windows still works ok with hi-dpi + blurry.
+- Retest FamiTracker export. 
+	- Add volume track
+	- Add releases
+- Remove volume track in Castlevania 2.
 
 1.2.0 Trailer
 =============
-- macOS support (Mono)
-- Hi-DPI support
+- macOS support (FamiStudio <3 macOS)
+- Hi-DPI support (150% and 200% scaling support on Windows, Retina on macOS)
 - All notes support (full 8 octaves)
 - Volume tracks
-- Release notes
+- Release notes (Show piano roll + volume envelope)
+- Config dialog
 - MIDI improvements (select device + note release)
 - Improved NSF memory usage
 - Misc bug fix (infinite loop on some tempo, Fixed FT2 loop point, crashes)
-- Config dialog
 
 Backlog:
 - PAL support
