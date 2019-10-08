@@ -94,6 +94,8 @@ namespace FamiStudio
             this.famistudio = famistudio;
 
 #if FAMISTUDIO_MACOS
+            MacUtils.Initialize(WindowInfo.Handle);
+
             // There are some severe maximize bugs in OpenTK. Simply disable the maximize and bypass all the frame zooming thing.
             WindowShouldZoomToFrameHandler = WindowShouldZoomToFrame;
             ResetCursorRectsHandler = ResetCursorRects;
@@ -109,8 +111,6 @@ namespace FamiStudio
                 MacUtils.SelRegisterName("resetCursorRects"),
                 Marshal.GetFunctionPointerForDelegate(ResetCursorRectsHandler),
                 "v@:");
-
-            MacUtils.Initialize(WindowInfo.Handle);
 #endif
             toolbar = new Toolbar();
             sequencer = new Sequencer();
