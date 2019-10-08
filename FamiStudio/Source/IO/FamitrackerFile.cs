@@ -44,7 +44,6 @@ namespace FamiStudio
             int dpcmWriteIdx = 0;
             Song song = null;
             string patternName = "";
-            string projectName;
 
             var lines = File.ReadAllLines(filename);
 
@@ -54,7 +53,15 @@ namespace FamiStudio
 
                 if (line.StartsWith("TITLE"))
                 {
-                    projectName = line.Substring(5).Trim(' ', '"');
+                    project.Name = line.Substring(5).Trim(' ', '"');
+                }
+                else if (line.StartsWith("AUTHOR"))
+                {
+                    project.Author = line.Substring(6).Trim(' ', '"');
+                }
+                else if (line.StartsWith("COPYRIGHT"))
+                {
+                    project.Copyright = line.Substring(9).Trim(' ', '"');
                 }
                 else if (line.StartsWith("MACRO"))
                 {
@@ -65,12 +72,14 @@ namespace FamiStudio
                     var type = int.Parse(param[0]);
                     var idx  = int.Parse(param[1]);
                     var loop = int.Parse(param[2]);
+                    var rel  = int.Parse(param[3]);
 
                     if (type < 3)
                     {
                         var env = new Envelope();
                         env.Length = curve.Length;
                         env.Loop = loop;
+                        env.Release = type == Envelope.Volume ? rel : -1;
                         for (int j = 0; j < curve.Length; j++)
                             env.Values[j] = sbyte.Parse(curve[j]);
                         if (type == 2)
@@ -111,9 +120,9 @@ namespace FamiStudio
                     {
                         int octave   = int.Parse(param[1]);
                         int semitone = int.Parse(param[2]);
-                        int note = octave * 12 + semitone - 11;
+                        int note = octave * 12 + semitone + 1;
 
-                        if (note >= Note.NoteMin && note <= Note.NoteMax)
+                        if (project.NoteSupportsDPCM(note))
                         {
                             int dpcm  = int.Parse(param[3]);
                             int pitch = int.Parse(param[4]);
@@ -199,11 +208,16 @@ namespace FamiStudio
                         if (pattern == null)
                             continue;
 
+                        // Note
                         if (noteData[0] == "---")
                         {
-                            pattern.Notes[rowIdx].Value = 0;
+                            pattern.Notes[rowIdx].Value = Note.NoteStop;
                         }
-                        else if (noteData[0] != "..."&& noteData[0] != "===")
+                        else if (noteData[0] == "===")
+                        {
+                            pattern.Notes[rowIdx].Value = Note.NoteRelease;
+                        }
+                        else if (noteData[0] != "...")
                         {
                             int famitoneNote;
 
@@ -215,10 +229,10 @@ namespace FamiStudio
                             {
                                 int semitone = noteLookup[noteData[0].Substring(0, 2)];
                                 int octave = noteData[0][2] - '0';
-                                famitoneNote = octave * 12 + semitone - 11;
+                                famitoneNote = octave * 12 + semitone + 1;
                             }
 
-                            if (famitoneNote > 0 && famitoneNote < 64)
+                            if (famitoneNote >= Note.NoteMin && famitoneNote <= Note.NoteMax)
                             {
                                 pattern.Notes[rowIdx].Value = (byte)famitoneNote;
                                 pattern.Notes[rowIdx].Instrument = j == 5 ? null : instruments[Convert.ToInt32(noteData[1], 16)];
@@ -227,6 +241,12 @@ namespace FamiStudio
                             {
                                 // Note outside of range.
                             }
+                        }
+
+                        // Volume
+                        if (noteData[2] != ".")
+                        {
+                            pattern.Notes[rowIdx].Volume = Convert.ToByte(noteData[2], 16);
                         }
 
                         // Read FX.
@@ -384,16 +404,31 @@ namespace FamiStudio
 
         private static string GetFamiTrackerNoteName(int channel, Note note)
         {
-            if (channel == Channel.Noise)
+            if (note.IsStop)
             {
-                return (note.Value & 0xf).ToString("X") + "-#";
+                return "---";
+            }
+            else if (note.IsRelease)
+            {
+                return "===";
+            }
+            else if (!note.IsMusical)
+            {
+                return "...";
             }
             else
             {
-                int octave = (note.Value - 1) / 12 + 1;
-                int semitone = (note.Value - 1) % 12;
+                if (channel == Channel.Noise)
+                {
+                    return (note.Value & 0xf).ToString("X") + "-#";
+                }
+                else
+                {
+                    int octave = (note.Value - 1) / 12;
+                    int semitone = (note.Value - 1) % 12;
 
-                return FamiTrackerNoteNames[semitone] + octave.ToString();
+                    return FamiTrackerNoteNames[semitone] + octave.ToString();
+                }
             }
         }
 
@@ -408,6 +443,12 @@ namespace FamiStudio
             var lines = new List<string>();
 
             lines.Add("# FamiTracker text export 0.4.2");
+            lines.Add("");
+
+            lines.Add("# Song information");
+            lines.Add("TITLE           \"" + project.Name      + "\"");
+            lines.Add("AUTHOR          \"" + project.Author    + "\"");
+            lines.Add("COPYRIGHT       \"" + project.Copyright + "\"");
             lines.Add("");
 
             lines.Add("# Global settings");
@@ -425,7 +466,7 @@ namespace FamiStudio
                 for (int j = 0; j < envArray.Length; j++)
                 {
                     var env = envArray[j];
-                    lines.Add($"MACRO{i,8} {j,4} {env.Loop,4}   -1    0 : {string.Join(" ", env.Values.Take(env.Length))}");
+                    lines.Add($"MACRO{i,8} {j,4} {env.Loop,4} {env.Release,4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                 }
             }
             lines.Add($"MACRO{4,8} {0,4} {-1}   -1    0 : 0");
@@ -468,8 +509,9 @@ namespace FamiStudio
 
                     if (mapping != null && mapping.Sample != null)
                     {
-                        var octave   = (i - 1) / 12 + 1;
-                        var semitone = (i - 1) % 12;
+                        int note     = i + Note.DPCMNoteMin;
+                        var octave   = (note - 1) / 12 ;
+                        var semitone = (note - 1) % 12;
                         var idx      = project.Samples.IndexOf(mapping.Sample);
                         var loop     = mapping.Loop ? 1 : 0;
 
@@ -527,7 +569,8 @@ namespace FamiStudio
                             {
                                 var pattern = channel.Patterns[j];
                                 var note = pattern.Notes[k];
-                                var noteString = note.IsStop ? "---" : note.IsValid ? GetFamiTrackerNoteName(l, note) : "...";
+                                var noteString = GetFamiTrackerNoteName(l, note);
+                                var volumeString = note.HasVolume ? note.Volume.ToString("X") : ".";
                                 var instrumentString = note.IsValid && !note.IsStop ? (note.Instrument == null ? project.Instruments.Count : project.Instruments.IndexOf(note.Instrument)).ToString("X2") : "..";
                                 var effectString = "...";
 
@@ -538,7 +581,7 @@ namespace FamiStudio
                                     case Note.EffectSpeed : effectString = $"F{note.EffectParam:X2}"; break;
                                 }
 
-                                line += $" : {noteString} {instrumentString} . {effectString}";
+                                line += $" : {noteString} {instrumentString} {volumeString} {effectString}";
                             }
                         }
                         lines.Add(line);

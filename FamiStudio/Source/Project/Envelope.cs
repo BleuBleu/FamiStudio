@@ -35,13 +35,21 @@ namespace FamiStudio
             get { return loop; }
             set
             {
-                if (release >= 0)
-                    loop = Utils.Clamp(value, 0, release - 1);
-                else
-                    loop = Math.Min(value, MaxLength);
+                if (value >= 0)
+                {
+                    if (release >= 0)
+                        loop = Utils.Clamp(value, 0, release - 1);
+                    else
+                        loop = Math.Min(value, MaxLength);
 
-                if (loop >= length)
+                    if (loop >= length)
+                        loop = -1;
+                }
+                else
+                {
                     loop = -1;
+                    release = -1;
+                }
             }
         }
 
@@ -50,11 +58,18 @@ namespace FamiStudio
             get { return release; }
             set
             {
-                if (loop >= 0)
-                    release = Utils.Clamp(value, loop + 1, MaxLength);
+                if (value >= 0)
+                {
+                    if (loop >= 0)
+                        release = Utils.Clamp(value, loop + 1, MaxLength);
 
-                if (release >= length)
+                    if (release >= length)
+                        release = -1;
+                }
+                else
+                {
                     release = -1;
+                }
             }
         }
         public void ConvertToAbsolute()
@@ -75,6 +90,7 @@ namespace FamiStudio
             var env = new Envelope();
             env.Length = Length;
             env.Loop = Loop;
+            env.Release = Release;
             values.CopyTo(env.values, 0);
             return env;
         }
@@ -86,6 +102,7 @@ namespace FamiStudio
                 uint crc = 0;
                 crc = CRC32.Compute(BitConverter.GetBytes(length), crc);
                 crc = CRC32.Compute(BitConverter.GetBytes(loop), crc);
+                crc = CRC32.Compute(BitConverter.GetBytes(release), crc);
                 crc = CRC32.Compute(values, crc);
                 return crc;
             }

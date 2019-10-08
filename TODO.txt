@@ -9,9 +9,6 @@ x Castlevania
 TO TEST:
 - All notes: noise channel conversion, DPCM sample position, envelope editing, stock FT2 must still work).ill works.
 - Make sure windows still works ok with hi-dpi + blurry.
-- Retest FamiTracker export. 
-	- Add volume track
-	- Add releases
 - Remove volume track in Castlevania 2.
 
 1.2.0 Trailer
