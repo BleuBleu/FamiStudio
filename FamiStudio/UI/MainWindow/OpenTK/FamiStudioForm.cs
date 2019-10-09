@@ -415,7 +415,7 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            var args = new System.Windows.Forms.KeyEventArgs(ToWinFormKey(e.Key));
+            var args = new System.Windows.Forms.KeyEventArgs(ToWinFormKey(e.Key) | GetModifierKeys());
             famistudio.KeyDown(args);
             foreach (var ctrl in controls)
                 deferredEvents.Add(new DeferredEvent(DeferredEventType.KeyDown, ctrl, args));
@@ -425,8 +425,7 @@ namespace FamiStudio
         {
             base.OnKeyUp(e);
 
-            var args = new System.Windows.Forms.KeyEventArgs(ToWinFormKey(e.Key));
-            famistudio.KeyDown(args);
+            var args = new System.Windows.Forms.KeyEventArgs(ToWinFormKey(e.Key) | GetModifierKeys());
             foreach (var ctrl in controls)
                 deferredEvents.Add(new DeferredEvent(DeferredEventType.KeyUp, ctrl, args));
         }
