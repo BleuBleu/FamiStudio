@@ -765,10 +765,10 @@ namespace FamiStudio
                                                 int sizeY = lastNoteReleased ? releaseNoteSizeY : noteSizeY;
 
                                                 g.PushTranslation(x, y);
-                                                g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
+                                                g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, sizeY, 0.8f));
                                                 g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, theme.BlackBrush);
                                                 g.PopTransform();
-                                            }
+                                            }       
                                         }
 
                                         if (note.IsStop || note.IsRelease)
