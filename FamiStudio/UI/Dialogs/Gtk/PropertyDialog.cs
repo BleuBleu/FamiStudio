@@ -86,11 +86,6 @@ namespace FamiStudio
             return base.OnKeyPressEvent(evnt);
         }
 
-        protected override bool OnFocusOutEvent(Gdk.EventFocus evnt)
-        {
-            return base.OnFocusOutEvent(evnt);
-        }
-
         public System.Windows.Forms.DialogResult ShowDialog()
         {
             Show();

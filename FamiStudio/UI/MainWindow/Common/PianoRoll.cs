@@ -1520,11 +1520,13 @@ namespace FamiStudio
 
             buffer.Serialize(ref editChannel);
             buffer.Serialize(ref currentInstrument);
+            buffer.Serialize(ref editInstrument);
             buffer.Serialize(ref editEnvelope);
             buffer.Serialize(ref scrollX);
             buffer.Serialize(ref scrollY);
             buffer.Serialize(ref zoomLevel);
             buffer.Serialize(ref selectedEffectIdx);
+            buffer.Serialize(ref showEffectsPanel);
 
             if (buffer.IsReading)
             {

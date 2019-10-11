@@ -27,6 +27,8 @@ namespace FamiStudio
                 length = Utils.Clamp(value, 0, MaxLength);
                 if (loop >= length)
                     loop = -1;
+                if (release >= length)
+                    release = -1;
             }
         }
 
