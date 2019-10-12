@@ -39,6 +39,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>
     </NoWarn>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -51,6 +52,7 @@
     <DebugSymbols>true</DebugSymbols>
     <NoWarn>
     </NoWarn>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
@@ -195,7 +197,6 @@
     </Compile>
     <EmbeddedResource Include="Resources\No.png" />
     <EmbeddedResource Include="Resources\Yes.png" />
-    <Compile Include="Source\Player\PortAudioStream.cs" />
     <EmbeddedResource Include="Resources\ExportFamiTone2.png" />
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />

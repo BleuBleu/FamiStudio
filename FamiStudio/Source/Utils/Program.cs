@@ -21,7 +21,12 @@ namespace FamiStudio
         static unsafe void Main(string[] args)
         {
 #if FAMISTUDIO_WINDOWS
-            SetProcessDpiAwareness(1 /*Process_System_DPI_Aware*/);
+            try
+            {
+                // This is only supported in Windows 8.1+.
+                SetProcessDpiAwareness(1 /*Process_System_DPI_Aware*/);
+            }
+            catch { }
 #endif
 
             Settings.Load();
