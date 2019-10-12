@@ -14,6 +14,9 @@ If you are simply interested in installing FamiStudio, please visit the brand ne
 ## Download
 All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section. If you are on Windows, simply download and run the .MSI installer. A shortcut to FamiStudio will be placed in your Start menu.
 
+### [Version 1.2.1](https://github.com/BleuBleu/FamiStudio/releases/tag/1.2.1)
+- Windows 7 hotfix
+
 ### [Version 1.2.0](https://github.com/BleuBleu/FamiStudio/releases/tag/1.2.0)
 - macOS support 
 - Extended note range to 8 octaves
