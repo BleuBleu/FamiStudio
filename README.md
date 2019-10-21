@@ -1,5 +1,5 @@
 # FamiStudio NES Music Editor
-FamiStudio is very simple NES music editor. It is designed to be easier to use than FamiTracker, but its feature set is much more limited.
+FamiStudio is very simple music editor for the Nintendo Entertainment System or Famicom. It is designed to be easier to use than FamiTracker, but its feature set is much more limited.
 
 If you are simply interested in installing FamiStudio, please visit the brand new [www.famistudio.org](https://famistudio.org/) or [itch.io](https://bleubleu.itch.io/famistudio).
 
