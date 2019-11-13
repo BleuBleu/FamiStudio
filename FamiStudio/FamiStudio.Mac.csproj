@@ -169,6 +169,7 @@
     <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand24_0.png" />
+    <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -202,6 +202,26 @@ namespace FamiStudio
             SortInstruments();
             return instrument;
         }
+        public Instrument CreateInstrumentFromFile()
+        {
+            var filename = PlatformDialogs.ShowOpenFileDialog("Open File", "Fami Tracker Instrument (*.fti)|*.fti");
+            if (filename == null)
+            {
+                return null;
+            }
+            
+            var instrument = FamitrackerInstrumentFile.Load(GenerateUniqueId(), filename);
+            if(instrument == null)
+            {
+                return null;
+            }
+            if (instruments.Find(inst => inst.Name == instrument.Name) != null)
+                return null;
+
+            instruments.Add(instrument);
+            SortInstruments();
+            return instrument;
+        }
 
         public void ReplaceInstrument(Instrument instrumentOld, Instrument instrumentNew)
         {
