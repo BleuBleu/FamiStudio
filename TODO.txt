@@ -1,4 +1,11 @@
+1.3.0 Roadmap
+=============
+- Copy/paste support
+- Sign exe/setup on Windows
+- Sign/notarize on MacOS
+
 Copy paste support:
+===================
 x Icon
 x Toolbar
 - What can be copy/pasted:
@@ -10,11 +17,11 @@ x Toolbar
 - Clipboard management
 - Paste
 
+========================
 Backlog:
 - PAL support
 - VRC6, FDS, etc.
 - Fix crash on startup when there are no audio device 
 - Proper error messages when soemthing fails (save, etc.)
 - Add taskbar progress bar + color to show playback state
-- Copy-paste support for notes/effects.
 - Freeze on some atom processors?
