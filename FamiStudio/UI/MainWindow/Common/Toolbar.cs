@@ -24,15 +24,18 @@ namespace FamiStudio
         const int ButtonOpen   = 1;
         const int ButtonSave   = 2;
         const int ButtonExport = 3;
-        const int ButtonUndo   = 4;
-        const int ButtonRedo   = 5;
-        const int ButtonConfig = 6;
-        const int ButtonPlay   = 7;
-        const int ButtonRewind = 8;
-        const int ButtonLoop   = 9;
-        const int ButtonCount  = 10;
+        const int ButtonCopy   = 4;
+        const int ButtonCut    = 5;
+        const int ButtonPaste  = 6;
+        const int ButtonUndo   = 7;
+        const int ButtonRedo   = 8;
+        const int ButtonConfig = 9;
+        const int ButtonPlay   = 10;
+        const int ButtonRewind = 11;
+        const int ButtonLoop   = 12;
+        const int ButtonCount  = 13;
 
-        const int DefaultTimecodePosX     = 300;
+        const int DefaultTimecodePosX     = 415;
         const int DefaultTimecodePosY     = 4;
         const int DefaultTimecodeSizeX    = 160;
         const int DefaultTimecodeTextPosX = 30;
@@ -87,17 +90,23 @@ namespace FamiStudio
             buttons[ButtonOpen]   = new Button { X = 44,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
             buttons[ButtonSave]   = new Button { X = 84,  Y = 4, Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
             buttons[ButtonExport] = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
-            buttons[ButtonUndo]   = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
-            buttons[ButtonRedo]   = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
-            buttons[ButtonConfig] = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
-            buttons[ButtonPlay]   = new Button { X = 476, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
-            buttons[ButtonRewind] = new Button { X = 516, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
-            buttons[ButtonLoop]   = new Button { X = 556, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[ButtonCopy]   = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
+            buttons[ButtonCut]    = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
+            buttons[ButtonPaste]  = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, Enabled = OnPasteEnabled };
+            buttons[ButtonUndo]   = new Button { X = 284, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
+            buttons[ButtonRedo]   = new Button { X = 324, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
+            buttons[ButtonConfig] = new Button { X = 364, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
+            buttons[ButtonPlay]   = new Button { X = 594, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
+            buttons[ButtonRewind] = new Button { X = 634, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
+            buttons[ButtonLoop]   = new Button { X = 674, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
 
             buttons[ButtonNew].ToolTip    = "New Project (Ctrl-N)";
             buttons[ButtonOpen].ToolTip   = "Open Project (Ctrl-O)";
             buttons[ButtonSave].ToolTip   = "Save Project (Ctrl-S) [Right-Click: Save As...]";
             buttons[ButtonExport].ToolTip = "Export to various formats (Ctrl+E)";
+            buttons[ButtonCopy].ToolTip   = "Copy selection (Ctrl+C)";
+            buttons[ButtonCut].ToolTip    = "Cut selection (Ctrl+X)";
+            buttons[ButtonPaste].ToolTip  = "Paste (Ctrl+V)";
             buttons[ButtonUndo].ToolTip   = "Undo (Ctrl+Z)";
             buttons[ButtonRedo].ToolTip   = "Redo (Ctrl+Y)";
             buttons[ButtonConfig].ToolTip = "Edit Application Settings";
@@ -162,6 +171,36 @@ namespace FamiStudio
         private void OnExport()
         {
             App.Export();
+        }
+
+        private void OnCut()
+        {
+            //App.Export();
+        }
+
+        private bool OnCutEnabled()
+        {
+            return false;
+        }
+
+        private void OnCopy()
+        {
+            //App.Export();
+        }
+
+        private bool OnCopyEnabled()
+        {
+            return false;
+        }
+
+        private void OnPaste()
+        {
+            //App.Export();
+        }
+
+        private bool OnPasteEnabled()
+        {
+            return false;
         }
 
         private void OnUndo()

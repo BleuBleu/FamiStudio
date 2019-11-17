@@ -1,3 +1,11 @@
+Copy paste support:
+x Icon
+x Toolbar
+- Show which control is in focus (piano roll vs. sequencer)
+- Range selection
+- Clipboard management
+- Paste.
+
 Backlog:
 - PAL support
 - VRC6, FDS, etc.

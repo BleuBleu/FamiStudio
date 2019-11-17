@@ -244,6 +244,12 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Copy%402x.png" />
+    <EmbeddedResource Include="Resources\Copy.png" />
+    <EmbeddedResource Include="Resources\Cut%402x.png" />
+    <EmbeddedResource Include="Resources\Cut.png" />
+    <EmbeddedResource Include="Resources\Paste%402x.png" />
+    <EmbeddedResource Include="Resources\Paste.png" />
     <EmbeddedResource Include="Resources\ConfigMIDI%402x.png" />
     <EmbeddedResource Include="Resources\ConfigMIDI.png" />
     <EmbeddedResource Include="Resources\ConfigSound%402x.png" />
