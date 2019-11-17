@@ -1,10 +1,14 @@
 Copy paste support:
 x Icon
 x Toolbar
-- Show which control is in focus (piano roll vs. sequencer)
+- What can be copy/pasted:
+	- Notes in piano roll
+	- Effect values (right click on copy/cut icon?)
+	- Envelope values.
 - Range selection
+- Transpose or drag/drop support (need for envelope too)
 - Clipboard management
-- Paste.
+- Paste
 
 Backlog:
 - PAL support
