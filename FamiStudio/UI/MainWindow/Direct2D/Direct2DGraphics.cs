@@ -209,14 +209,28 @@ namespace FamiStudio
 
         public void FillConvexPath(Geometry geo, Brush brush)
         {
+            AntiAliasing = true;
             renderTarget.FillGeometry(geo, brush);
+            AntiAliasing = false;
         }
 
         public void DrawConvexPath(Geometry geo, Brush brush)
         {
+            AntiAliasing = true;
             PushTranslation(0.5f, 0.5f);
             renderTarget.DrawGeometry(geo, brush);
             PopTransform();
+            AntiAliasing = false;
+        }
+
+        public void FillAndDrawConvexPath(Geometry geo, Brush fillBrush, Brush lineBrush)
+        {
+            AntiAliasing = true;
+            renderTarget.FillGeometry(geo, fillBrush);
+            PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawGeometry(geo, lineBrush);
+            PopTransform();
+            AntiAliasing = false;
         }
 
         public static Color ToDrawingColor4(RawColor4 color)

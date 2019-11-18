@@ -9,12 +9,14 @@ using System.Media;
 #if FAMISTUDIO_WINDOWS
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
+    using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
+    using RenderPath     = FamiStudio.GLConvexPath;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
@@ -88,10 +90,11 @@ namespace FamiStudio
         Dictionary<int, RenderBitmap> patternBitmapCache = new Dictionary<int, RenderBitmap>();
 
         RenderTheme theme;
-        RenderBrush playPositionBrush;
+        RenderBrush seekBarBrush;
         RenderBrush whiteKeyBrush;
         RenderBrush patternHeaderBrush;
         RenderBrush selectedPatternBrush;
+        RenderPath  seekGeometry;
 
         RenderBitmap[] bmpTracks = new RenderBitmap[Channel.Count];
         RenderBitmap bmpGhostNote;
@@ -175,10 +178,17 @@ namespace FamiStudio
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
 
-            playPositionBrush = g.CreateSolidBrush(Color.FromArgb(192, ThemeBase.LightGreyFillColor1));
+            seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, trackNameSizeX, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             patternHeaderBrush = g.CreateVerticalGradientBrush(0, patternHeaderSizeY, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             selectedPatternBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.LightGreyFillColor1));
+
+            seekGeometry = g.CreateConvexPath(new[]
+            {
+                new Point(-headerSizeY / 2, 1),
+                new Point(0, headerSizeY - 2),
+                new Point( headerSizeY / 2, 1)
+            });
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -186,6 +196,7 @@ namespace FamiStudio
             g.Clear(ThemeBase.DarkGreyFillColor1);
 
             int patternSizeX = PatternSizeX;
+            int seekX = ScaleForZoom(App.CurrentFrame) - scrollX;
             int minVisiblePattern = Math.Max((int)Math.Floor(scrollX / (float)patternSizeX), 0);
             int maxVisiblePattern = Math.Min((int)Math.Ceiling((scrollX + Width) / (float)patternSizeX), Song.Length);
 
@@ -207,6 +218,10 @@ namespace FamiStudio
                 g.DrawText(i.ToString(), ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, patternSizeX);
                 g.PopTransform();
             }
+
+            g.PushTranslation(seekX, 0);
+            g.FillAndDrawConvexPath(seekGeometry, seekBarBrush, theme.BlackBrush);
+            g.PopTransform();
 
             g.PopClip();
             g.PopTransform();
@@ -245,8 +260,7 @@ namespace FamiStudio
             g.PushClip(trackNameSizeX, 0, Width, Height);
 
             // Seek
-            int xxx = ScaleForZoom(App.CurrentFrame) + trackNameSizeX - scrollX;
-            g.DrawLine(xxx, -headerSizeY, xxx, Height, playPositionBrush);
+            g.DrawLine(seekX + trackNameSizeX, 1, seekX + trackNameSizeX, Height, seekBarBrush, 3);
 
             // Patterns
             for (int t = 0, y = 0; t < Song.Channels.Length; t++, y += trackSizeY)

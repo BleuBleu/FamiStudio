@@ -473,6 +473,12 @@ namespace FamiStudio
             GL.End();
             GL.Disable(EnableCap.LineSmooth);
         }
+        
+        public void FillAndDrawConvexPath(GLConvexPath geo, GLBrush fillBrush, GLBrush lineBrush)
+        {
+            FillConvexPath(geo, fillBrush);
+            DrawConvexPath(geo, lineBrush);
+        }
 
         public unsafe GLBitmap CreateBitmap(int width, int height, uint[] data)
         {

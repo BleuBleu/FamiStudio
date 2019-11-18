@@ -109,7 +109,7 @@ namespace FamiStudio
         RenderBrush whiteKeyPressedBrush;
         RenderBrush blackKeyPressedBrush;
         RenderBrush debugBrush;
-        RenderBrush playPositionBrush;
+        RenderBrush seekBarBrush;
         RenderBitmap bmpLoop;
         RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
@@ -120,6 +120,7 @@ namespace FamiStudio
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] releaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
+        RenderPath seekGeometry;
 
         int mouseLastX = 0;
         int mouseLastY = 0;
@@ -307,7 +308,7 @@ namespace FamiStudio
             whiteKeyPressedBrush = g.CreateHorizontalGradientBrush(0, whiteKeySizeX, ThemeBase.Darken(ThemeBase.LightGreyFillColor1), ThemeBase.Darken(ThemeBase.LightGreyFillColor2));
             blackKeyPressedBrush = g.CreateHorizontalGradientBrush(0, blackKeySizeX, ThemeBase.Lighten(ThemeBase.DarkGreyFillColor1), ThemeBase.Lighten(ThemeBase.DarkGreyFillColor2));
             debugBrush = g.CreateSolidBrush(ThemeBase.GreenColor);
-            playPositionBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.LightGreyFillColor1));
+            seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
 
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
@@ -348,6 +349,13 @@ namespace FamiStudio
                     new Point(x, noteSizeY / 2)
                 });
             }
+
+            seekGeometry = g.CreateConvexPath(new[]
+            {
+                new Point(-headerSizeY / 2, 1),
+                new Point(0, headerSizeY - 2),
+                new Point( headerSizeY / 2, 1)
+            });
         }
         
         private bool IsBlackKey(int key)
@@ -458,7 +466,9 @@ namespace FamiStudio
                 editMode == EditionMode.Channel)
             {
                 int seekX = (editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editEnvelope) : App.CurrentFrame) * noteSizeX - scrollX;
-                g.FillRectangle(seekX + 1, 0, seekX + noteSizeX, headerSizeY, playPositionBrush);
+                g.PushTranslation(seekX, 0);
+                g.FillAndDrawConvexPath(seekGeometry, seekBarBrush, theme.BlackBrush);
+                g.PopTransform();
             }
 
             g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
@@ -667,7 +677,7 @@ namespace FamiStudio
                 }
 
                 int seekX = App.CurrentFrame * noteSizeX - scrollX;
-                g.FillRectangle(seekX + 1, 0, seekX + noteSizeX, effectPanelSizeY, playPositionBrush);
+                g.DrawLine(seekX, 0, seekX, effectPanelSizeY, seekBarBrush, 3);
 
                 g.DrawLine(0, effectPanelSizeY - 1, Width, effectPanelSizeY - 1, theme.BlackBrush);
                 g.PopClip();
@@ -703,9 +713,6 @@ namespace FamiStudio
 
                 if (editMode == EditionMode.Channel)
                 {
-                    int seekX = App.CurrentFrame * noteSizeX - scrollX;
-                    g.FillRectangle(seekX + 1, 0, seekX + noteSizeX, Height, playPositionBrush);
-
                     int barCount = Song.PatternLength / Song.BarLength;
 
                     // Draw the vertical bars.
@@ -725,6 +732,9 @@ namespace FamiStudio
                     }
 
                     g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1);
+
+                    int seekX = App.CurrentFrame * noteSizeX - scrollX;
+                    g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
 
                     // Pattern drawing.
                     for (int c = 0; c < Song.Channels.Length; c++)
@@ -782,12 +792,9 @@ namespace FamiStudio
 
                                                 var paths = note.IsStop ? (lastNoteReleased ? stopReleaseNoteGeometry :  stopNoteGeometry) : releaseNoteGeometry;
 
-                                                g.AntiAliasing = true;
                                                 g.PushTranslation(x, y);
-                                                g.FillConvexPath(paths[zoomLevel - MinZoomLevel], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-                                                g.DrawConvexPath(paths[zoomLevel - MinZoomLevel], theme.BlackBrush);
+                                                g.FillAndDrawConvexPath(paths[zoomLevel - MinZoomLevel], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f), theme.BlackBrush);
                                                 g.PopTransform();
-                                                g.AntiAliasing = false;
                                             }
 
                                             lastNoteTime = note.IsStop ? int.MinValue : i + 1;
@@ -901,7 +908,7 @@ namespace FamiStudio
                     g.DrawLine(env.Length * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
 
                 int seekX = App.GetEnvelopeFrame(editEnvelope) * noteSizeX - scrollX;
-                g.FillRectangle(seekX + 1, 0, seekX + noteSizeX, Height, playPositionBrush);
+                g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
 
                 if (editEnvelope == Envelope.Arpeggio)
                 {

@@ -85,6 +85,7 @@ namespace FamiStudio
         public static Color DarkGreyFillColor2  = Color.FromArgb( 49,  55,  61);
         public static Color LightGreyFillColor1 = Color.FromArgb(178, 185, 198);
         public static Color LightGreyFillColor2 = Color.FromArgb(198, 205, 218);
+        public static Color SeekBarColor        = Color.FromArgb(225, 170,   0);
 
         public static Color BlackColor = Color.FromArgb(0, 0,   0);
         public static Color GreenColor = Color.FromArgb(0, 0, 255);
