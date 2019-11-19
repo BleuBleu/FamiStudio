@@ -724,6 +724,13 @@ namespace FamiStudio
                     }
                 }
 
+                if (selectionMin > 0 && selectionMax > 0)
+                {
+                    g.FillRectangle(
+                        selectionMin * noteSizeX - scrollX, 0,
+                        selectionMax * noteSizeX - scrollX, Height, debugBrush);
+                }
+
                 if (editMode == EditionMode.Channel)
                 {
                     int barCount = Song.PatternLength / Song.BarLength;
@@ -1361,12 +1368,33 @@ namespace FamiStudio
             ClampScroll();
             ConditionalInvalidate(); 
         }
+
+        private void UpdateSelection(MouseEventArgs e, bool first = false)
+        {
+            int noteIdx = Utils.Clamp((e.X - whiteKeySizeX + scrollX) / noteSizeX, 0, Song.Length * Song.PatternLength);
+
+            if (first)
+            {
+                selectionMin = noteIdx;
+                selectionMax = noteIdx;
+            }
+            else
+            {
+                if (e.X < captureStartX)
+                    selectionMin = noteIdx;
+                else
+                    selectionMax = noteIdx;
+            }
+
+            ConditionalInvalidate();
+        }
         
         private void CheckIfSelecting(MouseEventArgs e)
         {
             if (Math.Abs(e.X - captureStartX) > 3)
             {
-                //captureOperation = CaptureOperation.Select;
+                captureOperation = CaptureOperation.Select;
+                UpdateSelection(e, true);
             }
         }
 
@@ -1402,6 +1430,9 @@ namespace FamiStudio
                     break;
                 case CaptureOperation.Seek:
                     CheckIfSelecting(e);
+                    break;
+                case CaptureOperation.Select:
+                    UpdateSelection(e);
                     break;
             }
 
@@ -1547,12 +1578,17 @@ namespace FamiStudio
             buffer.Serialize(ref zoomLevel);
             buffer.Serialize(ref selectedEffectIdx);
             buffer.Serialize(ref showEffectsPanel);
+            buffer.Serialize(ref selectionMin);
+            buffer.Serialize(ref selectionMax);
 
             if (buffer.IsReading)
             {
                 UpdateRenderCoords();
                 ClampScroll();
                 ConditionalInvalidate();
+
+                captureOperation = CaptureOperation.None;
+                Capture = false;
             }
         }
     }
