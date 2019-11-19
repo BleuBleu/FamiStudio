@@ -122,17 +122,30 @@ namespace FamiStudio
         RenderPath[] releaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath seekGeometry;
 
+        enum CaptureOperation
+        {
+            None,
+            Scroll,
+            PlayPiano,
+            ResizeEnvelope,
+            DragLoop,
+            DragRelease,
+            ChangeEffectValue,
+            DrawEnvelope,
+            Seek,
+            Select
+        }
+
+        int captureStartX = 0;
+        int captureStartY = 0;
         int mouseLastX = 0;
         int mouseLastY = 0;
         int playingNote = -1;
-        bool playingPiano = false;
-        bool scrolling = false;
-        bool resizingEnvelope = false;
-        bool draggingRelease = false;
-        bool changingEffectValue = false;
-        bool drawingEnvelope = false;
-        int  effectPatternIdx;
-        int  effectNoteIdx;
+        int effectPatternIdx;
+        int effectNoteIdx;
+        int selectionMin = -1;
+        int selectionMax = -1;
+        CaptureOperation captureOperation = CaptureOperation.None;
 
         bool showEffectsPanel = false;
         int scrollX = 0;
@@ -972,28 +985,26 @@ namespace FamiStudio
 
         void ResizeEnvelope(MouseEventArgs e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
-
             var env = EditEnvelope;
             int length = (int)Math.Round((e.X - whiteKeySizeX + scrollX) / (double)noteSizeX);
 
-            if (left  && env.Length == length ||
-                right && env.Loop   == length)
+            switch (captureOperation)
             {
-                return;
-            }
-
-            if (left)
-            {
-                env.Length = length;
-            }
-            else
-            {
-                if (draggingRelease)
+                case CaptureOperation.ResizeEnvelope:
+                    if (env.Length == length)
+                        return;
+                    env.Length = length;
+                    break;
+                case CaptureOperation.DragRelease:
+                    if (env.Release == length)
+                        return;
                     env.Release = length;
-                else
+                    break;
+                case CaptureOperation.DragLoop:
+                    if (env.Loop == length)
+                        return;
                     env.Loop = length;
+                    break;
             }
 
             ClampScroll();
@@ -1118,6 +1129,17 @@ namespace FamiStudio
             }
         }
 
+        private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op)
+        {
+            Debug.Assert(captureOperation == CaptureOperation.None);
+            mouseLastX = e.X;
+            mouseLastY = e.Y;
+            captureStartX = e.X;
+            captureStartY = e.Y;
+            captureOperation = op;
+            Capture = true;
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -1126,16 +1148,16 @@ namespace FamiStudio
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
             bool right  = e.Button.HasFlag(MouseButtons.Right);
 
-            if (left && e.Y > headerAndEffectSizeY && e.X < whiteKeySizeX)
+            bool canCapture = captureOperation == CaptureOperation.None;
+
+            if (left && e.Y > headerAndEffectSizeY && e.X < whiteKeySizeX && canCapture)
             {
-                playingPiano = true;
+                StartCaptureOperation(e, CaptureOperation.PlayPiano);
                 PlayPiano(e.X, e.Y);
-                Capture = true;
             }
             else if (left && editMode == EditionMode.Channel && e.Y < headerSizeY && e.X > whiteKeySizeX)
             {
-                int frame = (int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX);
-                App.Seek(frame);
+                StartCaptureOperation(e, CaptureOperation.Seek);
             }
             else if (left && showEffectsPanel && editMode == EditionMode.Channel && e.X < whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY)
             {
@@ -1146,18 +1168,13 @@ namespace FamiStudio
                     ConditionalInvalidate();
                 }
             }
-            else if (middle && e.Y > headerSizeY && e.X > whiteKeySizeX)
+            else if (middle && e.Y > headerSizeY && e.X > whiteKeySizeX && canCapture)
             {
-                mouseLastX = e.X;
-                mouseLastY = e.Y;
-                scrolling = true;
-                Capture = true;
+                StartCaptureOperation(e, CaptureOperation.Scroll);
             }
-            else if (!resizingEnvelope && (left || right) && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y < headerAndEffectSizeY)
+            else if ((left || right) && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y < headerAndEffectSizeY && canCapture)
             {
-                mouseLastX = e.X;
-                mouseLastY = e.Y;
-                resizingEnvelope = true;
+                CaptureOperation op = left ? CaptureOperation.ResizeEnvelope : CaptureOperation.DragLoop; 
 
                 var env = EditEnvelope;
                 if (right && editEnvelope == Envelope.Volume && env.Loop >= 0)
@@ -1166,32 +1183,27 @@ namespace FamiStudio
                     int distLoop    = Math.Abs(noteX - env.Loop);
                     int distRelease = Math.Abs(noteX - (env.Release >= 0 ? env.Release : env.Length));
 
-                    draggingRelease = distRelease < distLoop;
+                    if (distRelease < distLoop)
+                        op = CaptureOperation.DragRelease;
                 }
-                Capture = true;
+                StartCaptureOperation(e, op);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
             }
-            else if (!drawingEnvelope && (left || right) && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > headerAndEffectSizeY)
+            else if ((left || right) && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > headerAndEffectSizeY && canCapture)
             {
-                mouseLastX = e.X;
-                mouseLastY = e.Y;
-                drawingEnvelope = true;
-                Capture = true;
+                StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 DrawEnvelope(e); 
             }
-            else if (!changingEffectValue && left && editMode == EditionMode.Channel && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY)
+            else if (left && editMode == EditionMode.Channel && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY && canCapture)
             {
                 if (GetEffectNoteForCoord(e.X, e.Y, out effectPatternIdx, out effectNoteIdx))
                 {
                     var pattern = Song.Channels[editChannel].PatternInstances[effectPatternIdx];
                     if (pattern != null)
                     {
-                        mouseLastX = e.X;
-                        mouseLastY = e.Y;
-                        changingEffectValue = true;
-                        Capture = true;
+                        StartCaptureOperation(e, CaptureOperation.ChangeEffectValue);
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         ChangeEffectValue(e);
                     }
@@ -1350,45 +1362,47 @@ namespace FamiStudio
             ConditionalInvalidate(); 
         }
         
+        private void CheckIfSelecting(MouseEventArgs e)
+        {
+            if (Math.Abs(e.X - captureStartX) > 3)
+            {
+                //captureOperation = CaptureOperation.Select;
+            }
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
 
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
-
-            if (middle && scrolling)
-            {
-                int deltaX = e.X - mouseLastX;
-                int deltaY = e.Y - mouseLastY;
-
-                DoScroll(deltaX, deltaY);
-
-                mouseLastX = e.X;
-                mouseLastY = e.Y;
-            }
-            
-            if (editMode == EditionMode.Enveloppe && (e.X > whiteKeySizeX && e.Y < headerAndEffectSizeY) || resizingEnvelope)
+            if (editMode == EditionMode.Enveloppe && (e.X > whiteKeySizeX && e.Y < headerAndEffectSizeY) || captureOperation == CaptureOperation.ResizeEnvelope)
                 Cursor.Current = Cursors.SizeWE;
-            else if (changingEffectValue)
+            else if (captureOperation == CaptureOperation.ChangeEffectValue)
                 Cursor.Current = Cursors.SizeNS;
             else
                 Cursor.Current = Cursors.Default;
 
-            if (playingPiano)
+            switch (captureOperation)
             {
-                PlayPiano(e.X, e.Y);
-            }
-            else if (resizingEnvelope)
-            {
-                ResizeEnvelope(e);
-            }
-            else if (changingEffectValue)
-            {
-                ChangeEffectValue(e);
-            }
-            else if (drawingEnvelope)
-            {
-                DrawEnvelope(e);
+                case CaptureOperation.DragLoop:
+                case CaptureOperation.DragRelease:
+                case CaptureOperation.ResizeEnvelope:
+                    ResizeEnvelope(e);
+                    break;
+                case CaptureOperation.PlayPiano:
+                    PlayPiano(e.X, e.Y);
+                    break;
+                case CaptureOperation.ChangeEffectValue:
+                    ChangeEffectValue(e);
+                    break;
+                case CaptureOperation.DrawEnvelope:
+                    DrawEnvelope(e);
+                    break;
+                case CaptureOperation.Scroll:
+                    DoScroll(e.X - mouseLastX, e.Y - mouseLastY);
+                    break;
+                case CaptureOperation.Seek:
+                    CheckIfSelecting(e);
+                    break;
             }
 
             string tooltip = "";
@@ -1417,6 +1431,9 @@ namespace FamiStudio
                 }
             }
             App.ToolTip = tooltip;
+
+            mouseLastX = e.X;
+            mouseLastY = e.Y;
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -1424,43 +1441,39 @@ namespace FamiStudio
             base.OnMouseLeave(e);
             App.ToolTip = "";
         }
-
+        
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
 
-            if (playingPiano)
+            if (captureOperation != CaptureOperation.None)
             {
-                App.StopOrReleaseIntrumentNote();
-                playingPiano = false;
-                playingNote = -1;
-                Capture = false;
-                ConditionalInvalidate();
-            }
-            if (scrolling)
-            {
-                scrolling = false;
-                Capture   = false;
-            }
-            if (resizingEnvelope)
-            {
-                App.UndoRedoManager.EndTransaction();
-                EnvelopeResized?.Invoke();
-                resizingEnvelope = false;
-                draggingRelease = false;
-                Capture = false;
-            }
-            if (drawingEnvelope)
-            {
-                App.UndoRedoManager.EndTransaction();
-                EnvelopeResized?.Invoke();
-                drawingEnvelope = false;
-                Capture = false;
-            }
-            if (changingEffectValue)
-            {
-                App.UndoRedoManager.EndTransaction();
-                changingEffectValue = false;
+                switch (captureOperation)
+                {
+                    case CaptureOperation.PlayPiano:
+                        App.StopOrReleaseIntrumentNote();
+                        playingNote = -1;
+                        ConditionalInvalidate();
+                        break;
+                    case CaptureOperation.Scroll:
+                        break;
+                    case CaptureOperation.ResizeEnvelope:
+                        App.UndoRedoManager.EndTransaction();
+                        EnvelopeResized?.Invoke();
+                        break;
+                    case CaptureOperation.DrawEnvelope:
+                        App.UndoRedoManager.EndTransaction();
+                        EnvelopeResized?.Invoke();
+                        break;
+                    case CaptureOperation.ChangeEffectValue:
+                        App.UndoRedoManager.EndTransaction();
+                        break;
+                    case CaptureOperation.Seek:
+                        App.Seek((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
+                        break;
+                }
+
+                captureOperation = CaptureOperation.None;
                 Capture = false;
             }
         }
