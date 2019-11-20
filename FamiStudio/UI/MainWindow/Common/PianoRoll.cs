@@ -1481,23 +1481,20 @@ namespace FamiStudio
             {
                 switch (captureOperation)
                 {
+                    case CaptureOperation.DragLoop:
+                    case CaptureOperation.DragRelease:
+                    case CaptureOperation.ChangeEffectValue:
+                        App.UndoRedoManager.EndTransaction();
+                        break;
                     case CaptureOperation.PlayPiano:
                         App.StopOrReleaseIntrumentNote();
                         playingNote = -1;
                         ConditionalInvalidate();
                         break;
-                    case CaptureOperation.Scroll:
-                        break;
                     case CaptureOperation.ResizeEnvelope:
-                        App.UndoRedoManager.EndTransaction();
-                        EnvelopeResized?.Invoke();
-                        break;
                     case CaptureOperation.DrawEnvelope:
                         App.UndoRedoManager.EndTransaction();
                         EnvelopeResized?.Invoke();
-                        break;
-                    case CaptureOperation.ChangeEffectValue:
-                        App.UndoRedoManager.EndTransaction();
                         break;
                     case CaptureOperation.Seek:
                         App.Seek((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
