@@ -118,5 +118,20 @@ namespace FamiStudio
             if (note > NoteMax) return NoteMax;
             return note;
         }
+
+        public void SerializeState(ProjectBuffer buffer)
+        {
+            buffer.Serialize(ref Value);
+            buffer.Serialize(ref Effect);
+            buffer.Serialize(ref EffectParam);
+
+            // At version 3 (FamiStudio 1.2.0), we added a volume track.
+            if (buffer.Version >= 3)
+                buffer.Serialize(ref Volume);
+            else
+                Volume = Note.VolumeInvalid;
+
+            buffer.Serialize(ref Instrument);
+        }
     }
 }

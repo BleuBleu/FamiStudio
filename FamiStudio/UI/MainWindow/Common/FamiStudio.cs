@@ -483,6 +483,14 @@ namespace FamiStudio
             {
                 StopIntrumentNote();
             }
+            else if (ctrl && e.KeyCode == Keys.C)
+            {
+                PianoRoll.Copy(); // MATTT
+            }
+            else if (ctrl && e.KeyCode == Keys.V)
+            {
+                PianoRoll.Paste(); // MATTT
+            }
         }
 
         private void Midi_NotePlayed(int n, bool on)

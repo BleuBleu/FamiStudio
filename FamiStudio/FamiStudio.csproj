@@ -88,6 +88,7 @@
     <Compile Include="Source\Player\SquareChannelState.cs" />
     <Compile Include="Source\Player\TriangleChannelState.cs" />
     <Compile Include="Source\Project\Envelope.cs" />
+    <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="UI\Dialogs\Common\ConfigDialog.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DGraphics.cs" />

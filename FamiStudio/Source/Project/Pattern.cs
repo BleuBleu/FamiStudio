@@ -206,17 +206,7 @@ namespace FamiStudio
 
             for (int i = 0; i < 256; i++)
             {
-                buffer.Serialize(ref notes[i].Value);
-                buffer.Serialize(ref notes[i].Effect);
-                buffer.Serialize(ref notes[i].EffectParam);
-
-                // At version 3 (FamiStudio 1.2.0), we added a volume track.
-                if (buffer.Version >= 3)
-                    buffer.Serialize(ref notes[i].Volume);
-                else
-                    notes[i].Volume = Note.VolumeInvalid;
-
-                buffer.Serialize(ref notes[i].Instrument);
+                notes[i].SerializeState(buffer);
             }
 
             // At version 3 (FamiStudio 1.2.0), we extended the range of notes.

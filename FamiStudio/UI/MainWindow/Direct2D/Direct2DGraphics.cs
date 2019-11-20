@@ -158,18 +158,18 @@ namespace FamiStudio
             renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush, width);
         }
 
-        public void DrawRectangle(RawRectangleF rect, Brush brush)
+        public void DrawRectangle(RawRectangleF rect, Brush brush, float width = 1.0f)
         {
             rect.Left += 0.5f;
             rect.Top += 0.5f;
             rect.Right += 0.5f;
             rect.Bottom += 0.5f;
-            renderTarget.DrawRectangle(rect, brush);
+            renderTarget.DrawRectangle(rect, brush, width);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, Brush brush)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, Brush brush, float width = 1.0f)
         {
-            DrawRectangle(new RawRectangleF(x0, y0, x1, y1), brush);
+            DrawRectangle(new RawRectangleF(x0, y0, x1, y1), brush, width);
         }
 
         public PathGeometry CreateConvexPath(System.Drawing.Point[] points)
@@ -223,12 +223,12 @@ namespace FamiStudio
             AntiAliasing = false;
         }
 
-        public void FillAndDrawConvexPath(Geometry geo, Brush fillBrush, Brush lineBrush)
+        public void FillAndDrawConvexPath(Geometry geo, Brush fillBrush, Brush lineBrush, float lineWidth = 1.0f)
         {
             AntiAliasing = true;
             renderTarget.FillGeometry(geo, fillBrush);
             PushTranslation(0.5f, 0.5f);
-            renderTarget.DrawGeometry(geo, lineBrush);
+            renderTarget.DrawGeometry(geo, lineBrush, lineWidth);
             PopTransform();
             AntiAliasing = false;
         }

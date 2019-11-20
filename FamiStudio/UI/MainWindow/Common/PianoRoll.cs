@@ -5,9 +5,10 @@ using System.Media;
 using System.Drawing;
 using System.Windows.Forms;
 using FamiStudio.Properties;
+using System.Collections.Generic;
 
 #if FAMISTUDIO_WINDOWS
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
+using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
@@ -110,6 +111,8 @@ namespace FamiStudio
         RenderBrush blackKeyPressedBrush;
         RenderBrush debugBrush;
         RenderBrush seekBarBrush;
+        RenderBrush selectionBackgroundBrush;
+        RenderBrush selectionNoteBrush;
         RenderBitmap bmpLoop;
         RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
@@ -322,7 +325,8 @@ namespace FamiStudio
             blackKeyPressedBrush = g.CreateHorizontalGradientBrush(0, blackKeySizeX, ThemeBase.Lighten(ThemeBase.DarkGreyFillColor1), ThemeBase.Lighten(ThemeBase.DarkGreyFillColor2));
             debugBrush = g.CreateSolidBrush(ThemeBase.GreenColor);
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
-
+            selectionBackgroundBrush = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
+            selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
             bmpVolume = g.CreateBitmapFromResource("VolumeSmall");
@@ -698,6 +702,52 @@ namespace FamiStudio
             }
         }
 
+        private SortedDictionary<int, Note> GetValidNotesInRange(int channelIdx, int min, int max)
+        {
+            int minPattern = min / Song.PatternLength;
+            int maxPattern = max / Song.PatternLength;
+
+            int minNote = min % Song.PatternLength;
+            int maxNote = max % Song.PatternLength;
+
+            var notes = new SortedDictionary<int, Note>();
+
+            for (int p = minPattern; p <= maxPattern; p++)
+            {
+                var pattern = Song.Channels[channelIdx].PatternInstances[p];
+                if (pattern != null)
+                {
+                    int n0 = p == minPattern ? minNote : 0;
+                    int n1 = p == maxPattern ? maxNote : Song.PatternLength;
+                    for (int n = n0; n < n1; n++)
+                    {
+                        if (pattern.Notes[n].IsValid)
+                            notes[p * Song.PatternLength + n] = pattern.Notes[n];
+                    }
+                }
+            }
+
+            return notes;
+        }
+
+        public void Copy()
+        {
+            var notes = GetValidNotesInRange(editChannel, selectionMin, selectionMax);
+            ClipboardUtils.SetNotes(notes);
+            ClipboardUtils.GetNotes(App.Project);
+        }
+
+        public void Paste()
+        {
+
+        }
+
+        private bool IsNoteSelected(int patternIdx, int noteIdx)
+        {
+            int absoluteNoteIdx = patternIdx * Song.PatternLength + noteIdx;
+            return absoluteNoteIdx >= selectionMin && absoluteNoteIdx < selectionMax;
+        }
+
         private void RenderNotes(RenderGraphics g, RenderArea a)
         {
             g.PushTranslation(whiteKeySizeX, headerAndEffectSizeY);
@@ -728,7 +778,7 @@ namespace FamiStudio
                 {
                     g.FillRectangle(
                         selectionMin * noteSizeX - scrollX, 0,
-                        selectionMax * noteSizeX - scrollX, Height, debugBrush);
+                        selectionMax * noteSizeX - scrollX, Height, selectionBackgroundBrush);
                 }
 
                 if (editMode == EditionMode.Channel)
@@ -782,6 +832,7 @@ namespace FamiStudio
                                     {
                                         var note = pattern.Notes[i];
                                         var instrument = lastNoteInstrument;
+                                        var selected = IsNoteSelected(p, lastNoteTime);
                                         var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
                                         if (dimmed) color = Color.FromArgb((int)(color.A * 0.2f), color);
 
@@ -796,13 +847,14 @@ namespace FamiStudio
 
                                                 g.PushTranslation(x, y);
                                                 g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, sizeY, 0.8f));
-                                                g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, theme.BlackBrush);
+                                                g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
                                                 g.PopTransform();
                                             }       
                                         }
 
                                         if (note.IsStop || note.IsRelease)
                                         {
+                                            selected = IsNoteSelected(p, i);
                                             int value = lastNoteValue >= Note.NoteMin && lastNoteValue <= Note.NoteMax ? lastNoteValue : 49; // C4 by default.
 
                                             if (value >= a.minVisibleNote && value <= a.maxVisibleNote)
@@ -813,7 +865,7 @@ namespace FamiStudio
                                                 var paths = note.IsStop ? (lastNoteReleased ? stopReleaseNoteGeometry :  stopNoteGeometry) : releaseNoteGeometry;
 
                                                 g.PushTranslation(x, y);
-                                                g.FillAndDrawConvexPath(paths[zoomLevel - MinZoomLevel], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f), theme.BlackBrush);
+                                                g.FillAndDrawConvexPath(paths[zoomLevel - MinZoomLevel], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f), selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
                                                 g.PopTransform();
                                             }
 
@@ -856,6 +908,7 @@ namespace FamiStudio
                                     int y = virtualSizeY - lastNoteValue * noteSizeY - scrollY + (lastNoteReleased ? noteSizeY / 2 - releaseNoteSizeY / 2 : 0);
 
                                     var instrument = lastNoteInstrument;
+                                    var selected = IsNoteSelected(a.maxVisiblePattern - 1, lastNoteTime);
                                     var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
                                     if (dimmed) color = Color.FromArgb((int)(color.A * 0.2f), color);
 
@@ -863,7 +916,7 @@ namespace FamiStudio
 
                                     g.PushTranslation(x, y);
                                     g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-                                    g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, theme.BlackBrush);
+                                    g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, selected ? selectionNoteBrush :  theme.BlackBrush, selected ? 2 : 1);
                                     g.PopTransform();
                                 }
                             }

@@ -19,9 +19,10 @@ namespace FamiStudio
             return compressedBuffer;
         }
 
-        public static byte[] DecompressBytes(byte[] compressedBuffer)
+        public static byte[] DecompressBytes(byte[] compressedBuffer, int offset = 0)
         {
             var inputStream = new MemoryStream(compressedBuffer);
+            inputStream.Seek(offset, SeekOrigin.Begin);
             var bytes = new byte[4];
             inputStream.Read(bytes, 0, 4);
             var decompressedSize = BitConverter.ToInt32(bytes, 0);
