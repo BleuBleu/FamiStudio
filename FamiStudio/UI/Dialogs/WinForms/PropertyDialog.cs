@@ -22,13 +22,27 @@ namespace FamiStudio
                 Location = pt;
             }
 
+            Init();
+
+            Width = width;
+        }
+
+        public PropertyDialog(int x, int y, int width, int height)
+        {
+            width = (int)(width * Direct2DTheme.DialogScaling);
+            Init();
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            Width = width;
+        }
+
+        private void Init()
+        {
             InitializeComponent();
 
             string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
             buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
-            buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
+            buttonNo.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
 
-            Width = width;
         }
 
         protected override CreateParams CreateParams

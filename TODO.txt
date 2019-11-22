@@ -7,12 +7,12 @@
 Copy paste support:
 ===================
 - What can be copy/pasted:
-	- Notes in piano roll
-	- Effect values (right click on copy/cut icon?)
-	- Envelope values.
+	/ Notes in piano roll
+	/ Effect values (==> paste special)
+	/ Envelope values.
 	- Patterns
 - Clipboard format:
-	- For notes: a big array of notes.
+	x For notes: a big array of notes.
 	- For envelopes: a series of values
 	- For sequencer: a 2D array of patterns.
 x Icon
@@ -21,16 +21,13 @@ x Toolbar
 / Range selection in piano roll
 - Range selection in sequencer
 x Display notes as selected
-- Paste and display ghost notes
-- Paste special (notes only, volume, effects only)
+/ Paste special (notes only, volume, effects only)
 - Clear selection in a bunch of cases (open new file, change song params, etc)
 - Make sure can still scroll with mouse when selecting and stuff (scrolling should not be a capture operation maybe?).
 - Mac: Add line width param to GL
 
 - Transpose or drag/drop support (need for envelope too)
 / Clipboard management
-
-*** Covert patterns to sparse SortedDictionary<int, Note>?
 
 ========================
 Backlog:

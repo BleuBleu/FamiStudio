@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -43,6 +44,7 @@ namespace FamiStudio
         public Sequencer Sequencer => mainForm.Sequencer;
         public PianoRoll PianoRoll => mainForm.PianoRoll;
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
+        public Rectangle MainWindowBounds => mainForm.Bounds;
 
         public FamiStudio(string filename)
         {
@@ -507,7 +509,12 @@ namespace FamiStudio
             else if (ctrl && e.KeyCode == Keys.V)
             {
                 if (PianoRoll.ShowSelection)
-                    PianoRoll.Paste();
+                {
+                    if (e.Shift)
+                        PianoRoll.PasteSpecial();
+                    else
+                        PianoRoll.Paste();
+                }
                 //else
                 //    Sequencer.Paste(); 
             }

@@ -769,7 +769,7 @@ namespace FamiStudio
             ClipboardUtils.SetNotes(GetSelectedNotes());
         }
 
-        private void ReplaceNotes(Note[] notes, int idx)
+        private void ReplaceNotes(Note[] notes, int idx, bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
         {
             // TODO: Need new "Channel" scope.
             App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
@@ -786,7 +786,25 @@ namespace FamiStudio
                     int n1 = p == maxPattern ? maxNote : Song.PatternLength;
 
                     for (int n = n0; n < n1; n++)
-                        pattern.Notes[n] = notes[p * Song.PatternLength + n - idx];
+                    {
+                        var note = notes[p * Song.PatternLength + n - idx];
+
+                        if (pasteNotes)
+                        {
+                            pattern.Notes[n].Value = note.Value;
+                            pattern.Notes[n].Instrument = note.Instrument;
+
+                        }
+                        if (pasteVolume)
+                        {
+                            pattern.Notes[n].Volume = note.Volume;
+                        }
+                        if (pasteFx)
+                        {
+                            pattern.Notes[n].Effect = note.Effect;
+                            pattern.Notes[n].EffectParam = note.EffectParam;
+                        }
+                    }
                 }
             }
 
@@ -797,7 +815,7 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private void PasteNotes()
+        private void PasteNotes(bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
         {
             if (selectionMin < 0 || selectionMin == selectionMax)
             {
@@ -813,7 +831,7 @@ namespace FamiStudio
                 return;
             }
 
-            ReplaceNotes(notes, selectionMin);
+            ReplaceNotes(notes, selectionMin, pasteNotes, pasteVolume, pasteFx);
         }
 
         public void Copy()
@@ -826,6 +844,17 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
                 PasteNotes();
+        }
+
+        public void PasteSpecial()
+        {
+            if (editMode == EditionMode.Channel)
+            {
+                var dlg = new PasteSpecialDialog(App.MainWindowBounds);
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    PasteNotes(dlg.PasteNotes, dlg.PasteVolumes, dlg.PasteEffects);
+            }
         }
 
         private bool IsNoteSelected(int patternIdx, int noteIdx)
