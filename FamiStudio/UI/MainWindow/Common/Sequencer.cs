@@ -5,9 +5,10 @@ using System.Windows.Forms;
 using FamiStudio.Properties;
 using Color = System.Drawing.Color;
 using System.Media;
+using System.Diagnostics;
 
 #if FAMISTUDIO_WINDOWS
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
+using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
@@ -67,13 +68,25 @@ namespace FamiStudio
         int mouseLastY = 0;
         int selectedChannel = 0;
 
-        bool isDraggingSelection = false;
-        int selectionDragStartX = -1;
+        enum CaptureOperation
+        {
+            None,
+            Seek,
+            Select,
+            ClickPattern,
+            DragSelection
+        }
+
+        bool showSelection = true;
+        //bool isDraggingSelection = false;
+        int captureStartX = -1;
+        int captureStartY = -1;
         int selectionDragAnchorX = -64;
         int minSelectedChannelIdx = -1;
         int maxSelectedChannelIdx = -1;
         int minSelectedPatternIdx = -1;
         int maxSelectedPatternIdx = -1;
+        CaptureOperation captureOperation = CaptureOperation.None;
 
         int PatternSizeX => ScaleForZoom(Song.PatternLength);
 
@@ -103,6 +116,8 @@ namespace FamiStudio
         public event PatternDoubleClick PatternClicked;
         public delegate void SelectedChannelChangedDelegate(int channelIdx);
         public event SelectedChannelChangedDelegate SelectedChannelChanged;
+        public delegate void ControlActivate();
+        public event ControlActivate ControlActivated;
 
         public Sequencer()
         {
@@ -112,6 +127,12 @@ namespace FamiStudio
         private Song Song
         {
             get { return App?.Song; }
+        }
+
+        public bool ShowSelection
+        {
+            get { return showSelection; }
+            set { showSelection = value; ConditionalInvalidate(); }
         }
 
         public int SelectedChannel => selectedChannel;
@@ -162,7 +183,8 @@ namespace FamiStudio
 
         private bool IsPatternSelected(int channelIdx, int patternIdx)
         {
-            return channelIdx >= minSelectedChannelIdx && channelIdx <= maxSelectedChannelIdx &&
+            return showSelection && 
+                   channelIdx >= minSelectedChannelIdx && channelIdx <= maxSelectedChannelIdx &&
                    patternIdx >= minSelectedPatternIdx && patternIdx <= maxSelectedPatternIdx;
         }
 
@@ -289,7 +311,7 @@ namespace FamiStudio
             }
 
             // Dragging selection
-            if (isDraggingSelection)
+            if (captureOperation == CaptureOperation.DragSelection)
             {
                 var pt = this.PointToClient(Cursor.Position);
 
@@ -439,13 +461,28 @@ namespace FamiStudio
                 (int)(12 * RenderTheme.MainWindowScaling));
         }
 
+        private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op)
+        {
+            Debug.Assert(captureOperation == CaptureOperation.None);
+            mouseLastX = e.X;
+            mouseLastY = e.Y;
+            captureStartX = e.X;
+            captureStartY = e.Y;
+            captureOperation = op;
+            Capture = true;
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
 
+            ControlActivated?.Invoke();
+
             bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
             bool right  = e.Button.HasFlag(MouseButtons.Right);
+
+            bool canCapture = captureOperation == CaptureOperation.None;
 
             CancelDragSelection();
             UpdateCursor();
@@ -454,6 +491,7 @@ namespace FamiStudio
             {
                 mouseLastX = e.X;
                 mouseLastY = e.Y;
+                Capture = true;
                 return;
             }
             // Track muting, soloing.
@@ -490,10 +528,11 @@ namespace FamiStudio
                 }
             }
 
-            if (left && e.X > trackNameSizeX && e.Y < headerSizeY)
+            if (left && e.X > trackNameSizeX && e.Y < headerSizeY && canCapture)
             {
-                int frame = (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)PatternSizeX * Song.PatternLength);
-                App.Seek(frame);
+                StartCaptureOperation(e, CaptureOperation.Seek);
+                //int frame = (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)PatternSizeX * Song.PatternLength);
+                //App.Seek(frame);
                 return;
             }
 
@@ -518,7 +557,7 @@ namespace FamiStudio
                 var channel = Song.Channels[channelIdx];
                 var pattern = channel.PatternInstances[patternIdx];
 
-                if (left)
+                if (left && canCapture)
                 {
                     bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
@@ -561,7 +600,7 @@ namespace FamiStudio
                         }
 
                         selectionDragAnchorX = e.X - trackNameSizeX + scrollX - minSelectedPatternIdx * PatternSizeX;
-                        selectionDragStartX = e.X;
+                        StartCaptureOperation(e, CaptureOperation.ClickPattern);
 
                         if (pattern != null)
                         {
@@ -583,7 +622,7 @@ namespace FamiStudio
 
         protected void UpdateCursor()
         {
-            if (isDraggingSelection)
+            if (captureOperation == CaptureOperation.DragSelection)
             {
                 Cursor.Current = ModifierKeys.HasFlag(Keys.Control) ? Cursors.CopyCursor : Cursors.DragCursor;
             }
@@ -597,41 +636,47 @@ namespace FamiStudio
         {
             base.OnMouseUp(e);
 
-            if (isDraggingSelection)
+            if (captureOperation != CaptureOperation.None)
             {
-                bool copy = ModifierKeys.HasFlag(Keys.Control);
-
-                int centerX = e.X - selectionDragAnchorX + PatternSizeX / 2;
-                int basePatternIdx = (centerX - trackNameSizeX + scrollX) / PatternSizeX;
-
-                Pattern[,] tmpPatterns = new Pattern[maxSelectedChannelIdx - minSelectedChannelIdx + 1, maxSelectedPatternIdx - minSelectedPatternIdx + 1];
-
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                
-                for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
+                if (captureOperation == CaptureOperation.DragSelection)
                 {
-                    for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                    bool copy = ModifierKeys.HasFlag(Keys.Control);
+
+                    int centerX = e.X - selectionDragAnchorX + PatternSizeX / 2;
+                    int basePatternIdx = (centerX - trackNameSizeX + scrollX) / PatternSizeX;
+
+                    Pattern[,] tmpPatterns = new Pattern[maxSelectedChannelIdx - minSelectedChannelIdx + 1, maxSelectedPatternIdx - minSelectedPatternIdx + 1];
+
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+
+                    for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
                     {
-                        tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx] = Song.Channels[i].PatternInstances[j];
-                        if (!copy)
+                        for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                         {
-                            Song.Channels[i].PatternInstances[j] = null;
+                            tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx] = Song.Channels[i].PatternInstances[j];
+                            if (!copy)
+                            {
+                                Song.Channels[i].PatternInstances[j] = null;
+                            }
                         }
                     }
-                }
 
-                for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
-                {
-                    for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                    for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
                     {
-                        Song.Channels[i].PatternInstances[j + basePatternIdx - minSelectedPatternIdx] = tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx];
+                        for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                        {
+                            Song.Channels[i].PatternInstances[j + basePatternIdx - minSelectedPatternIdx] = tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx];
+                        }
                     }
+
+                    App.UndoRedoManager.EndTransaction();
+
+                    ClearSelection();
+                    ConditionalInvalidate();
                 }
 
-                App.UndoRedoManager.EndTransaction();
-
-                ClearSelection();
-                ConditionalInvalidate();
+                Capture = false;
+                captureOperation = CaptureOperation.None;
             }
 
             CancelDragSelection();
@@ -640,9 +685,11 @@ namespace FamiStudio
 
         protected void CancelDragSelection()
         {
-            selectionDragAnchorX = -64;
-            selectionDragStartX = -1;
-            isDraggingSelection = false;
+            if (captureOperation == CaptureOperation.DragSelection)
+            {
+                selectionDragAnchorX = -64;
+                captureOperation = CaptureOperation.None;
+            }
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -672,7 +719,7 @@ namespace FamiStudio
                 ConditionalInvalidate();
             }
 
-            if (isDraggingSelection)
+            if (captureOperation == CaptureOperation.DragSelection)
             {
                 UpdateCursor();
             }
@@ -682,7 +729,7 @@ namespace FamiStudio
         {
             base.OnKeyUp(e);
 
-            if (isDraggingSelection)
+            if (captureOperation == CaptureOperation.DragSelection)
             {
                 UpdateCursor();
             }
@@ -709,9 +756,9 @@ namespace FamiStudio
             }
             else if (left && inPatternZone)
             {
-                if (!isDraggingSelection && selectionDragStartX > 0 && Math.Abs(e.X - selectionDragStartX) > 5)
+                if (captureOperation == CaptureOperation.ClickPattern && captureStartX > 0 && Math.Abs(e.X - captureStartX) > 5)
                 {
-                    isDraggingSelection = true;
+                    captureOperation = CaptureOperation.DragSelection;
                 }
 
                 ConditionalInvalidate();

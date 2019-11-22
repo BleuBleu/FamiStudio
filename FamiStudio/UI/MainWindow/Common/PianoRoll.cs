@@ -8,7 +8,7 @@ using FamiStudio.Properties;
 using System.Collections.Generic;
 
 #if FAMISTUDIO_WINDOWS
-using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
+    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
@@ -135,7 +135,6 @@ namespace FamiStudio
             DragRelease,
             ChangeEffectValue,
             DrawEnvelope,
-            Seek,
             Select
         }
 
@@ -150,6 +149,7 @@ namespace FamiStudio
         int selectionMax = -1;
         CaptureOperation captureOperation = CaptureOperation.None;
 
+        bool showSelection = false;
         bool showEffectsPanel = false;
         int scrollX = 0;
         int scrollY = 0;
@@ -170,6 +170,8 @@ namespace FamiStudio
         public event PatternChange PatternChanged;
         public delegate void EnvelopeResize();
         public event EnvelopeResize EnvelopeResized;
+        public delegate void ControlActivate();
+        public event ControlActivate ControlActivated;
 
         public PianoRoll()
         {
@@ -284,6 +286,12 @@ namespace FamiStudio
         public bool IsEditingInstrument
         {
             get { return editMode == EditionMode.Enveloppe; }
+        }
+
+        public bool ShowSelection
+        {
+            get { return showSelection; }
+            set { showSelection = value; ConditionalInvalidate(); }
         }
 
         public void ConditionalInvalidate()
@@ -730,22 +738,100 @@ namespace FamiStudio
             return notes;
         }
 
+        private Note[] GetSelectedNotes()
+        {
+            GetSelectionRange(selectionMin, selectionMax, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
+
+            var notes = new Note[selectionMax - selectionMin + 1];
+
+            for (int i = 0; i < notes.Length; i++)
+                notes[i].IsValid = false;
+
+            for (int p = minPattern; p <= maxPattern; p++)
+            {
+                var pattern = Song.Channels[editChannel].PatternInstances[p];
+
+                if (pattern != null)
+                {
+                    int n0 = p == minPattern ? minNote : 0;
+                    int n1 = p == maxPattern ? maxNote : Song.PatternLength;
+
+                    for (int n = n0; n < n1; n++)
+                        notes[p * Song.PatternLength + n - selectionMin] = pattern.Notes[n];
+                }
+            }
+
+            return notes;
+        }
+
+        private void CopyNotes()
+        {
+            ClipboardUtils.SetNotes(GetSelectedNotes());
+        }
+
+        private void ReplaceNotes(Note[] notes, int idx)
+        {
+            // TODO: Need new "Channel" scope.
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+
+            GetSelectionRange(idx, idx + notes.Length, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
+
+            for (int p = minPattern; p <= maxPattern; p++)
+            {
+                var pattern = Song.Channels[editChannel].PatternInstances[p];
+
+                if (pattern != null)
+                {
+                    int n0 = p == minPattern ? minNote : 0;
+                    int n1 = p == maxPattern ? maxNote : Song.PatternLength;
+
+                    for (int n = n0; n < n1; n++)
+                        pattern.Notes[n] = notes[p * Song.PatternLength + n - idx];
+                }
+            }
+
+            selectionMax = idx + notes.Length - 1;
+            selectionMin = idx;
+
+            App.UndoRedoManager.EndTransaction();
+            ConditionalInvalidate();
+        }
+
+        private void PasteNotes()
+        {
+            if (selectionMin < 0 || selectionMin == selectionMax)
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
+            var notes = ClipboardUtils.GetNotes(App.Project);
+
+            if (notes == null)
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
+            ReplaceNotes(notes, selectionMin);
+        }
+
         public void Copy()
         {
-            var notes = GetValidNotesInRange(editChannel, selectionMin, selectionMax);
-            ClipboardUtils.SetNotes(notes);
-            ClipboardUtils.GetNotes(App.Project);
+            if (editMode == EditionMode.Channel)
+                CopyNotes();
         }
 
         public void Paste()
         {
-
+            if (editMode == EditionMode.Channel)
+                PasteNotes();
         }
 
         private bool IsNoteSelected(int patternIdx, int noteIdx)
         {
             int absoluteNoteIdx = patternIdx * Song.PatternLength + noteIdx;
-            return absoluteNoteIdx >= selectionMin && absoluteNoteIdx < selectionMax;
+            return showSelection && absoluteNoteIdx >= selectionMin && absoluteNoteIdx < selectionMax;
         }
 
         private void RenderNotes(RenderGraphics g, RenderArea a)
@@ -774,7 +860,7 @@ namespace FamiStudio
                     }
                 }
 
-                if (selectionMin > 0 && selectionMax > 0)
+                if (showSelection && (selectionMin > 0 && selectionMax > 0))
                 {
                     g.FillRectangle(
                         selectionMin * noteSizeX - scrollX, 0,
@@ -1200,9 +1286,91 @@ namespace FamiStudio
             Capture = true;
         }
 
+        private void GetSelectionRange(int minIdx, int maxIdx, out int minPattern, out int maxPattern, out int minNote, out int maxNote)
+        {
+            minPattern = minIdx / Song.PatternLength;
+            maxPattern = maxIdx / Song.PatternLength;
+            minNote = minIdx % Song.PatternLength;
+            maxNote = maxIdx % Song.PatternLength;
+        }
+
+        private void MoveSelection(int amount)
+        {
+            if (selectionMin >= 0 && selectionMin != selectionMax && selectionMin + amount >= 0)
+            {
+                var notes = GetSelectedNotes();
+                ReplaceNotes(notes, selectionMin + amount);
+            }
+        }
+
+        private void TransposeSelection(int amount)
+        {
+            if (selectionMin >= 0 && selectionMin != selectionMax)
+            {
+                // TODO: Channel scope.
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+
+                GetSelectionRange(selectionMin, selectionMax, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
+
+                for (int p = minPattern; p <= maxPattern; p++)
+                {
+                    var pattern = Song.Channels[editChannel].PatternInstances[p];
+                    if (pattern != null)
+                    {
+                        int n0 = p == minPattern ? minNote : 0;
+                        int n1 = p == maxPattern ? maxNote : Song.PatternLength;
+
+                        for (int n = n0; n < n1; n++)
+                        {
+                            if (pattern.Notes[n].IsMusical)
+                            {
+                                int value = pattern.Notes[n].Value + amount;
+                                if (value < Note.NoteMin || value > Note.NoteMax)
+                                    pattern.Notes[n].IsValid = false;
+                                else
+                                    pattern.Notes[n].Value = (byte)value;
+                            }
+                        }
+                    }
+                }
+
+                App.UndoRedoManager.EndTransaction();
+                ConditionalInvalidate();
+            }
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (editMode == EditionMode.Channel)
+            {
+                switch (keyData)
+                {
+                    case Keys.Up:
+                        TransposeSelection(1);
+                        return true;
+                    case Keys.Down:
+                        TransposeSelection(-1);
+                        return true;
+                    case Keys.Right:
+                        MoveSelection(1);
+                        return true;
+                    case Keys.Left:
+                        MoveSelection(-1);
+                        return true;
+                }
+            }
+            //else if (editMode == EditionMode.Enveloppe)
+            //{
+            //}
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+
+            ControlActivated?.Invoke();
 
             bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
@@ -1217,7 +1385,12 @@ namespace FamiStudio
             }
             else if (left && editMode == EditionMode.Channel && e.Y < headerSizeY && e.X > whiteKeySizeX)
             {
-                StartCaptureOperation(e, CaptureOperation.Seek);
+                App.Seek((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
+            }
+            else if (right && e.Y < headerSizeY && e.X > whiteKeySizeX)
+            {
+                StartCaptureOperation(e, CaptureOperation.Select);
+                UpdateSelection(e, true);
             }
             else if (left && showEffectsPanel && editMode == EditionMode.Channel && e.X < whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY)
             {
@@ -1429,7 +1602,7 @@ namespace FamiStudio
             if (first)
             {
                 selectionMin = noteIdx;
-                selectionMax = noteIdx;
+                selectionMax = noteIdx + 1;
             }
             else
             {
@@ -1442,15 +1615,6 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
         
-        private void CheckIfSelecting(MouseEventArgs e)
-        {
-            if (Math.Abs(e.X - captureStartX) > 3)
-            {
-                captureOperation = CaptureOperation.Select;
-                UpdateSelection(e, true);
-            }
-        }
-
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -1480,9 +1644,6 @@ namespace FamiStudio
                     break;
                 case CaptureOperation.Scroll:
                     DoScroll(e.X - mouseLastX, e.Y - mouseLastY);
-                    break;
-                case CaptureOperation.Seek:
-                    CheckIfSelecting(e);
                     break;
                 case CaptureOperation.Select:
                     UpdateSelection(e);
@@ -1548,9 +1709,6 @@ namespace FamiStudio
                     case CaptureOperation.DrawEnvelope:
                         App.UndoRedoManager.EndTransaction();
                         EnvelopeResized?.Invoke();
-                        break;
-                    case CaptureOperation.Seek:
-                        App.Seek((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
                         break;
                 }
 

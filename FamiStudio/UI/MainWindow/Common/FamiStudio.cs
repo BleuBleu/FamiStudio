@@ -50,8 +50,10 @@ namespace FamiStudio
 
             Sequencer.PatternClicked += sequencer_PatternClicked;
             Sequencer.SelectedChannelChanged += sequencer_SelectedChannelChanged;
+            Sequencer.ControlActivated += Sequencer_ControlActivated;
             PianoRoll.PatternChanged += pianoRoll_PatternChanged;
             PianoRoll.EnvelopeResized += pianoRoll_EnvelopeResized;
+            PianoRoll.ControlActivated += PianoRoll_ControlActivated;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
             ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
@@ -79,6 +81,18 @@ namespace FamiStudio
             {
                 Task.Factory.StartNew(CheckForNewRelease);
             }
+        }
+
+        private void Sequencer_ControlActivated()
+        {
+            PianoRoll.ShowSelection = false;
+            Sequencer.ShowSelection = true;
+        }
+
+        private void PianoRoll_ControlActivated()
+        {
+            PianoRoll.ShowSelection = true;
+            Sequencer.ShowSelection = false;
         }
 
         private void sequencer_SelectedChannelChanged(int channelIdx)
@@ -485,11 +499,17 @@ namespace FamiStudio
             }
             else if (ctrl && e.KeyCode == Keys.C)
             {
-                PianoRoll.Copy(); // MATTT
+                if (PianoRoll.ShowSelection)
+                    PianoRoll.Copy();
+                //else
+                //    Sequencer.Copy(); 
             }
             else if (ctrl && e.KeyCode == Keys.V)
             {
-                PianoRoll.Paste(); // MATTT
+                if (PianoRoll.ShowSelection)
+                    PianoRoll.Paste();
+                //else
+                //    Sequencer.Paste(); 
             }
         }
 

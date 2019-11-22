@@ -17,10 +17,10 @@ Copy paste support:
 	- For sequencer: a 2D array of patterns.
 x Icon
 x Toolbar
-- Only display selection if control is in focus.
-- Range selection in piano roll
+/ Only display selection if control is in focus (confusing, maybe have 2 colors?)
+/ Range selection in piano roll
 - Range selection in sequencer
-- Display notes as selected
+x Display notes as selected
 - Paste and display ghost notes
 - Paste special (notes only, volume, effects only)
 - Clear selection in a bunch of cases (open new file, change song params, etc)
@@ -28,9 +28,9 @@ x Toolbar
 - Mac: Add line width param to GL
 
 - Transpose or drag/drop support (need for envelope too)
-- Clipboard management
+/ Clipboard management
 
-*** Covert patterns to SortedDictionary?
+*** Covert patterns to sparse SortedDictionary<int, Note>?
 
 ========================
 Backlog:

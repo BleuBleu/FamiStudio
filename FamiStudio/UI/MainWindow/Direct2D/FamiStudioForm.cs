@@ -51,7 +51,7 @@ namespace FamiStudio
 
             base.OnFormClosing(e);
         }
-
+        
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             famistudio.KeyDown(e);

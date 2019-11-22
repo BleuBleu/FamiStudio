@@ -34,28 +34,24 @@ namespace FamiStudio
 #endif
         }
 
-        public static void SetNotes(SortedDictionary<int, Note> notes)
+        public static void SetNotes(Note[] notes)
         {
             var serializer = new ProjectSaveBuffer(null);
 
-            foreach (var kv in notes)
-            {
-                int time = kv.Key;
-                serializer.Serialize(ref time);
-                kv.Value.SerializeState(serializer);
-            }
+            foreach (var note in notes)
+                note.SerializeState(serializer);
             
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Optimal);
 
             var clipboardData = new List<byte>();
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardNotes));
-            clipboardData.AddRange(BitConverter.GetBytes(notes.Count));
+            clipboardData.AddRange(BitConverter.GetBytes(notes.Length));
             clipboardData.AddRange(buffer);
 
             SetClipboardData(clipboardData.ToArray());
         }
 
-        public static SortedDictionary<int, Note> GetNotes(Project project)
+        public static Note[] GetNotes(Project project)
         {
             var buffer = GetClipboardData();
 
@@ -66,15 +62,10 @@ namespace FamiStudio
             var decompressedBuffer = Compression.DecompressBytes(buffer, 8);
             var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
 
-            var notes = new SortedDictionary<int, Note>();
+            var notes = new Note[numNotes];
+
             for (int i = 0; i < numNotes; i++)
-            {
-                var time = 0; ;
-                serializer.Serialize(ref time);
-                var note = new Note();
-                note.SerializeState(serializer);
-                notes[time] = note;
-            }
+                notes[i].SerializeState(serializer);
 
             return notes;
         }
