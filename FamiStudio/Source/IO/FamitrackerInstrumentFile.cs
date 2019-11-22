@@ -342,7 +342,7 @@ namespace FamiStudio
 
                 }
             }
-
+            instrument.Envelopes[Envelope.Pitch].ConvertToAbsolute();
             return instrument;
         }
     }
