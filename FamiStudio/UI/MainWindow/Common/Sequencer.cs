@@ -656,6 +656,77 @@ namespace FamiStudio
             }
         }
 
+        private Pattern[,] GetSelectedPatterns()
+        {
+            if (!IsSelectionValid())
+                return null;
+
+            var patterns = new Pattern[maxSelectedPatternIdx - minSelectedPatternIdx + 1, maxSelectedChannelIdx - minSelectedChannelIdx + 1];
+
+            for (int i = 0; i < patterns.GetLength(0); i++)
+            {
+                for (int j = 0; j < patterns.GetLength(1); j++)
+                {
+                    patterns[i, j] = Song.Channels[minSelectedChannelIdx + j].PatternInstances[minSelectedPatternIdx + i];
+                }
+            }
+
+            return patterns;
+        }
+
+        public void Copy()
+        {
+            ClipboardUtils.SetPatterns(GetSelectedPatterns());
+        }
+
+        public void Cut()
+        {
+
+        }
+
+        public void Paste()
+        {
+            if (!IsSelectionValid())
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
+            var patterns = ClipboardUtils.GetPatterns(App.Project);
+
+            if (patterns == null)
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+
+            for (int i = 0; i < patterns.GetLength(0); i++)
+            {
+                for (int j = 0; j < patterns.GetLength(1); j++)
+                {
+                    var pattern = patterns[i, j];
+
+                    if ((i + minSelectedPatternIdx) < Song.Length)
+                    {
+                        var channel = Song.Channels[pattern.ChannelType];
+                        var existingPattern = channel.GetPattern(pattern.Id);
+                        if (existingPattern == null)
+                        {
+                            channel.Patterns.Add(pattern);
+                            existingPattern = pattern;
+                        }
+
+                        channel.PatternInstances[i + minSelectedPatternIdx] = existingPattern;
+                    }
+                }
+            }
+
+            App.UndoRedoManager.EndTransaction();
+            ConditionalInvalidate();
+        }
+
         protected void UpdateCursor()
         {
             if (captureOperation == CaptureOperation.DragSelection)
@@ -755,6 +826,18 @@ namespace FamiStudio
 
             if (showSelection)
             {
+                bool ctrl = ModifierKeys.HasFlag(Keys.Control);
+
+                if (ctrl)
+                {
+                    if (e.KeyCode == Keys.C)
+                        Copy();
+                    else if (e.KeyCode == Keys.X)
+                        Cut();
+                    else if (e.KeyCode == Keys.V)
+                        Paste();
+                }
+
                 if (e.KeyCode == Keys.Delete)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
@@ -770,7 +853,7 @@ namespace FamiStudio
                     ConditionalInvalidate();
                 }
             }
-           
+
             if (captureOperation == CaptureOperation.DragSelection)
             {
                 UpdateCursor();

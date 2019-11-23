@@ -47,7 +47,7 @@ namespace FamiStudio
             foreach (var note in notes)
                 note.SerializeState(serializer);
             
-            var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Optimal);
+            var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
 
             var clipboardData = new List<byte>();
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardNotes));
@@ -101,6 +101,81 @@ namespace FamiStudio
                 values[i] = (sbyte)buffer[8 + i];
 
             return values;
+        }
+
+        public static void SetPatterns(Pattern[,] patterns)
+        {
+            if (patterns == null)
+            {
+                SetClipboardData(null);
+                return;
+            }
+
+            int numNonNullPatterns = 0;
+
+            for (int i = 0; i < patterns.GetLength(0); i++)
+            {
+                for (int j = 0; j < patterns.GetLength(1); j++)
+                {
+                    if (patterns[i, j] != null)
+                        numNonNullPatterns++;
+                }
+            }
+
+            var serializer = new ProjectSaveBuffer(null);
+
+            for (int i = 0; i < patterns.GetLength(0); i++)
+            {
+                for (int j = 0; j < patterns.GetLength(1); j++)
+                {
+                    var pattern = patterns[i, j];
+                    if (pattern != null)
+                    {
+                        serializer.Serialize(ref i);
+                        serializer.Serialize(ref j);
+                        patterns[i, j].SerializeState(serializer);
+                    }
+                }
+            }
+
+            var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
+
+            var clipboardData = new List<byte>();
+            clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardPatterns));
+            clipboardData.AddRange(BitConverter.GetBytes(numNonNullPatterns));
+            clipboardData.AddRange(BitConverter.GetBytes(patterns.GetLength(0)));
+            clipboardData.AddRange(BitConverter.GetBytes(patterns.GetLength(1)));
+            clipboardData.AddRange(buffer);
+
+            SetClipboardData(clipboardData.ToArray());
+        }
+
+        public static Pattern[,] GetPatterns(Project project)
+        {
+            var buffer = GetClipboardData();
+
+            if (buffer == null || BitConverter.ToUInt32(buffer, 0) != MagicNumberClipboardPatterns)
+                return null;
+
+            var numNonNullPatterns = BitConverter.ToInt32(buffer, 4);
+            var numPatterns = BitConverter.ToInt32(buffer, 8);
+            var numChannels = BitConverter.ToInt32(buffer, 12);
+            var decompressedBuffer = Compression.DecompressBytes(buffer, 16);
+            var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
+
+            var patterns = new Pattern[numPatterns, numChannels];
+
+            for (int p = 0; p < numNonNullPatterns; p++)
+            {
+                int i = 0;
+                int j = 0;
+                serializer.Serialize(ref i);
+                serializer.Serialize(ref j);
+                patterns[i, j] = new Pattern();
+                patterns[i, j].SerializeState(serializer);
+            }
+
+            return patterns;
         }
     }
 }
