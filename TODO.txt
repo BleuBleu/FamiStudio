@@ -7,8 +7,6 @@
 
 Copy paste support:
 ===================
-- Clipboard format:
-	- For sequencer: a 2D array of patterns.
 - Improve paste special dialog, ugly.
 - Make sure can still scroll with mouse when selecting and stuff (scrolling should not be a capture operation maybe?).
 - Mac:

@@ -708,7 +708,7 @@ namespace FamiStudio
                 {
                     var pattern = patterns[i, j];
 
-                    if ((i + minSelectedPatternIdx) < Song.Length)
+                    if (pattern != null && (i + minSelectedPatternIdx) < Song.Length)
                     {
                         var channel = Song.Channels[pattern.ChannelType];
                         var existingPattern = channel.GetPattern(pattern.Id);
