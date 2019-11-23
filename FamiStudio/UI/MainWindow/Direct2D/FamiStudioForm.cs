@@ -17,7 +17,7 @@ namespace FamiStudio
         public PianoRoll PianoRoll => pianoRoll;
         public ProjectExplorer ProjectExplorer => projectExplorer;
 
-        private Timer timer = new Timer(); 
+        private Timer timer = new Timer();
 
         public FamiStudioForm(FamiStudio famistudio)
         {
@@ -51,10 +51,30 @@ namespace FamiStudio
 
             base.OnFormClosing(e);
         }
-        
+
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             famistudio.KeyDown(e);
+        }
+
+        private void Form1_KeyUp(object sender, KeyEventArgs e)
+        {
+            famistudio.KeyUp(e);
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            var keyCode = keyData & ~Keys.Modifiers;
+
+            if (keyCode == Keys.Up   ||
+                keyCode == Keys.Down ||
+                keyCode == Keys.Left ||
+                keyCode == Keys.Right)
+            {
+                famistudio.KeyDown(new KeyEventArgs(keyData));
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         public void Run()

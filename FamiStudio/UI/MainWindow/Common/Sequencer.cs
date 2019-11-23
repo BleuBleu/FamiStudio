@@ -743,20 +743,18 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        public void FormKeyDown(KeyEventArgs e)
         {
-            base.OnKeyDown(e);
+            if (e.KeyCode == Keys.Escape)
+            {
+                CancelDragSelection();
+                UpdateCursor();
+                ClearSelection();
+                ConditionalInvalidate();
+            }
 
             if (showSelection)
             {
-                if (e.KeyCode == Keys.Escape)
-                {
-                    CancelDragSelection();
-                    UpdateCursor();
-                    ClearSelection();
-                    ConditionalInvalidate();
-                }
-
                 if (e.KeyCode == Keys.Delete)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
@@ -779,10 +777,8 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyUp(KeyEventArgs e)
+        public void FormKeyUp(KeyEventArgs e)
         {
-            base.OnKeyUp(e);
-
             if (captureOperation == CaptureOperation.DragSelection)
             {
                 UpdateCursor();

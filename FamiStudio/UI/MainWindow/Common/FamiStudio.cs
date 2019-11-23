@@ -439,6 +439,11 @@ namespace FamiStudio
             bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
             bool shift = e.Modifiers.HasFlag(Keys.Shift);
 
+            if (e.KeyCode == Keys.Escape)
+            {
+                StopIntrumentNote();
+            }
+
             if (e.KeyCode == Keys.Space)
             {
                 if (IsPlaying)
@@ -495,29 +500,16 @@ namespace FamiStudio
             {
                 OpenProject();
             }
-            else if (e.KeyCode == Keys.Escape)
+            else
             {
-                StopIntrumentNote();
+                PianoRoll.FormKeyDown(e);
+                Sequencer.FormKeyDown(e);
             }
-            else if (ctrl && e.KeyCode == Keys.C)
-            {
-                if (PianoRoll.ShowSelection)
-                    PianoRoll.Copy();
-                //else
-                //    Sequencer.Copy(); 
-            }
-            else if (ctrl && e.KeyCode == Keys.V)
-            {
-                if (PianoRoll.ShowSelection)
-                {
-                    if (e.Shift)
-                        PianoRoll.PasteSpecial();
-                    else
-                        PianoRoll.Paste();
-                }
-                //else
-                //    Sequencer.Paste(); 
-            }
+        }
+
+        public void KeyUp(KeyEventArgs e)
+        {
+            Sequencer.FormKeyUp(e);
         }
 
         private void Midi_NotePlayed(int n, bool on)

@@ -15,6 +15,7 @@ Copy paste support:
 - Mac:
 	- Add line width param to GL
 	- Up/down/left/right keys wont work
+	- Change the key handling thing.
 
 ========================
 Backlog:
