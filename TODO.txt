@@ -11,7 +11,6 @@ Copy paste support:
 	- For sequencer: a 2D array of patterns.
 - Improve paste special dialog, ugly.
 - Make sure can still scroll with mouse when selecting and stuff (scrolling should not be a capture operation maybe?).
-- Esc: clear selection in active control.
 - Mac:
 	- Add line width param to GL
 	- Up/down/left/right keys wont work

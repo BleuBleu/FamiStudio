@@ -1438,6 +1438,8 @@ namespace FamiStudio
                     {
                         pattern.Notes[n] = function(pattern.Notes[n], p * Song.PatternLength + n - startIdx);
                     }
+
+                    PatternChanged?.Invoke(pattern);
                 }
             }
 
