@@ -747,29 +747,32 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            if (e.KeyCode == Keys.Escape)
+            if (showSelection)
             {
-                CancelDragSelection();
-                UpdateCursor();
-                ClearSelection();
-                ConditionalInvalidate();
-            }
-
-            if (e.KeyCode == Keys.Delete)
-            {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
+                if (e.KeyCode == Keys.Escape)
                 {
-                    for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                    {
-                        Song.Channels[i].PatternInstances[j] = null;
-                    }
+                    CancelDragSelection();
+                    UpdateCursor();
+                    ClearSelection();
+                    ConditionalInvalidate();
                 }
-                App.UndoRedoManager.EndTransaction();
 
-                ConditionalInvalidate();
+                if (e.KeyCode == Keys.Delete)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                    for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
+                    {
+                        for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                        {
+                            Song.Channels[i].PatternInstances[j] = null;
+                        }
+                    }
+                    App.UndoRedoManager.EndTransaction();
+
+                    ConditionalInvalidate();
+                }
             }
-
+           
             if (captureOperation == CaptureOperation.DragSelection)
             {
                 UpdateCursor();

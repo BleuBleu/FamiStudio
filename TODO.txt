@@ -8,17 +8,8 @@
 Copy paste support:
 ===================
 - Clipboard format:
-	x For notes: a big array of notes.
-	x For envelopes: a series of values
 	- For sequencer: a 2D array of patterns.
-x Icon
-x Toolbar
-x Only display selection if control is in focus (confusing, maybe have 2 colors?)
-x Range selection in sequencer (cleanup a bit).
-x Display envelope values as selection.
-x Pattern dragging is broken
 - Improve paste special dialog, ugly.
-- Unify sequencer/piano roll selection min/,ax (inclusive or exclusive).
 - Make sure can still scroll with mouse when selecting and stuff (scrolling should not be a capture operation maybe?).
 - Esc: clear selection in active control.
 - Mac:
