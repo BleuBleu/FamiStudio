@@ -71,14 +71,12 @@ namespace FamiStudio
         enum CaptureOperation
         {
             None,
-            Seek,
             Select,
             ClickPattern,
             DragSelection
         }
 
         bool showSelection = true;
-        //bool isDraggingSelection = false;
         int captureStartX = -1;
         int captureStartY = -1;
         int selectionDragAnchorX = -64;
@@ -106,8 +104,9 @@ namespace FamiStudio
         RenderBrush seekBarBrush;
         RenderBrush whiteKeyBrush;
         RenderBrush patternHeaderBrush;
-        RenderBrush selectedPatternBrush;
-        RenderPath  seekGeometry;
+        RenderBrush selectedPatternVisibleBrush;
+        RenderBrush selectedPatternInvisibleBrush;
+        RenderPath seekGeometry;
 
         RenderBitmap[] bmpTracks = new RenderBitmap[Channel.Count];
         RenderBitmap bmpGhostNote;
@@ -183,8 +182,7 @@ namespace FamiStudio
 
         private bool IsPatternSelected(int channelIdx, int patternIdx)
         {
-            return showSelection && 
-                   channelIdx >= minSelectedChannelIdx && channelIdx <= maxSelectedChannelIdx &&
+            return channelIdx >= minSelectedChannelIdx && channelIdx <= maxSelectedChannelIdx &&
                    patternIdx >= minSelectedPatternIdx && patternIdx <= maxSelectedPatternIdx;
         }
 
@@ -203,7 +201,8 @@ namespace FamiStudio
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, trackNameSizeX, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             patternHeaderBrush = g.CreateVerticalGradientBrush(0, patternHeaderSizeY, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
-            selectedPatternBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.LightGreyFillColor1));
+            selectedPatternVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
+            selectedPatternInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(32, ThemeBase.LightGreyFillColor1));
 
             seekGeometry = g.CreateConvexPath(new[]
             {
@@ -211,6 +210,14 @@ namespace FamiStudio
                 new Point(0, headerSizeY - 2),
                 new Point( headerSizeY / 2, 1)
             });
+        }
+
+        private bool IsSelectionValid()
+        {
+            return minSelectedPatternIdx >= 0 &&
+                   maxSelectedPatternIdx >= 0 &&
+                   minSelectedChannelIdx >= 0 &&
+                   maxSelectedChannelIdx >= 0;
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -224,6 +231,18 @@ namespace FamiStudio
 
             // Track name background
             g.FillRectangle(0, 0, trackNameSizeX, Height, whiteKeyBrush);
+
+            if (IsSelectionValid())
+            {
+                g.PushClip(trackNameSizeX, 0, Width, headerSizeY);
+                g.PushTranslation(trackNameSizeX, 0);
+                g.FillRectangle(
+                    (minSelectedPatternIdx + 0) * patternSizeX - scrollX, 0,
+                    (maxSelectedPatternIdx + 1) * patternSizeX - scrollX, headerSizeY,
+                    showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
+                g.PopTransform();
+                g.PopClip();
+            }
 
             // Header
             g.DrawLine(0, 0, Width, 0, theme.BlackBrush);
@@ -272,6 +291,15 @@ namespace FamiStudio
                 if ((i & 1) == 0) g.FillRectangle(x, 0, x + patternSizeX, Height, theme.DarkGreyFillBrush2);
             for (int i = minVisiblePattern, x = minVisiblePattern * patternSizeX - scrollX; i <= maxVisiblePattern; i++, x += patternSizeX)
                 if (i != 0) g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1);
+
+            if (IsSelectionValid())
+            {
+                g.FillRectangle(
+                    (minSelectedPatternIdx + 0) * patternSizeX - scrollX, trackSizeY * (minSelectedChannelIdx + 0),
+                    (maxSelectedPatternIdx + 1) * patternSizeX - scrollX, trackSizeY * (maxSelectedChannelIdx + 1), 
+                    showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
+            }
+
             g.PopTransform();
             g.PopClip();
 
@@ -293,13 +321,14 @@ namespace FamiStudio
 
                     if (pattern != null)
                     {
+                        //var selected = IsPatternSelected(t, i);
                         var bmp = GetPatternBitmapFromCache(g, pattern);
 
                         g.PushTranslation(x, y);
                         g.FillRectangle(1, 1, patternSizeX, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY - 1, 0.9f));
                         g.DrawLine(0, patternHeaderSizeY, patternSizeX, patternHeaderSizeY, theme.DarkGreyLineBrush1);
-                        if (IsPatternSelected(t, i))
-                            g.FillRectangle(1, 1 + patternHeaderSizeY, PatternSizeX, patternHeaderSizeY + bmp.Size.Height + 1, selectedPatternBrush);
+                        //if (selected)
+                        //    g.FillRectangle(1, 1 + patternHeaderSizeY, PatternSizeX, patternHeaderSizeY + bmp.Size.Height + 1, showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
 
                         g.DrawBitmap(bmp, 1, 1 + patternHeaderSizeY, PatternSizeX - 1, bmp.Size.Height, 1.0f);
                         g.PushClip(0, 0, PatternSizeX, trackSizeY);
@@ -323,7 +352,7 @@ namespace FamiStudio
                 var sizeX = (maxSelectedPatternIdx - minSelectedPatternIdx + 1) * patternSizeX;
                 var sizeY = (maxSelectedChannelIdx - minSelectedChannelIdx + 1) * trackSizeY;
 
-                g.FillRectangle(drawX, drawY, drawX + sizeX, drawY + sizeY, selectedPatternBrush);
+                g.FillRectangle(drawX, drawY, drawX + sizeX, drawY + sizeY, showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
             }
 
             g.PopClip();
@@ -435,9 +464,7 @@ namespace FamiStudio
 
         private bool GetPatternForCoord(int x, int y, out int track, out int pattern)
         {
-            int patternSizeX = PatternSizeX;
-
-            pattern = (x - trackNameSizeX + scrollX) / patternSizeX;
+            pattern = (x - trackNameSizeX + scrollX) / PatternSizeX;
             track = (y - headerSizeY) / trackSizeY;
 
             return (x > trackNameSizeX && y > headerSizeY && pattern >= 0 && pattern < Song.Length && track >= 0 && track < Song.Channels.Length);
@@ -484,7 +511,7 @@ namespace FamiStudio
 
             bool canCapture = captureOperation == CaptureOperation.None;
 
-            CancelDragSelection();
+            CancelDragSelection(); // MATTT
             UpdateCursor();
 
             if (middle)
@@ -528,15 +555,20 @@ namespace FamiStudio
                 }
             }
 
-            if (left && e.X > trackNameSizeX && e.Y < headerSizeY && canCapture)
+            if (e.X > trackNameSizeX && e.Y < headerSizeY)
             {
-                StartCaptureOperation(e, CaptureOperation.Seek);
-                //int frame = (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)PatternSizeX * Song.PatternLength);
-                //App.Seek(frame);
-                return;
+                if (left)
+                {
+                    int frame = (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)PatternSizeX * Song.PatternLength);
+                    App.Seek(frame);
+                }
+                else if (right && canCapture)
+                {
+                    StartCaptureOperation(e, CaptureOperation.Select);
+                    UpdateSelection(e, true);
+                }
             }
-
-            if (left || right)
+            else if (e.Y > headerSizeY && (left || right))
             {
                 if (e.Y > headerSizeY)
                 {
@@ -557,7 +589,7 @@ namespace FamiStudio
                 var channel = Song.Channels[channelIdx];
                 var pattern = channel.PatternInstances[patternIdx];
 
-                if (left && canCapture)
+                if (left)
                 {
                     bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
@@ -566,10 +598,16 @@ namespace FamiStudio
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                         channel.PatternInstances[patternIdx] = channel.CreatePattern();
                         App.UndoRedoManager.EndTransaction();
+                        ClearSelection();
                         ConditionalInvalidate();
                     }
-                    else
+                    else if (canCapture)
                     {
+                        if (pattern != null)
+                        {
+                            PatternClicked?.Invoke(channelIdx, patternIdx);
+                        }
+
                         if (shift && minSelectedChannelIdx >= 0 && minSelectedPatternIdx >= 0)
                         {
                             if (channelIdx < minSelectedChannelIdx)
@@ -590,6 +628,8 @@ namespace FamiStudio
                             {
                                 maxSelectedPatternIdx = patternIdx;
                             }
+
+                            return;
                         }
                         else if (!IsPatternSelected(channelIdx, patternIdx) && pattern != null)
                         {
@@ -602,11 +642,6 @@ namespace FamiStudio
                         selectionDragAnchorX = e.X - trackNameSizeX + scrollX - minSelectedPatternIdx * PatternSizeX;
                         StartCaptureOperation(e, CaptureOperation.ClickPattern);
 
-                        if (pattern != null)
-                        {
-                            PatternClicked?.Invoke(channelIdx, patternIdx);
-                        }
-
                         ConditionalInvalidate();
                     }
                 }
@@ -615,6 +650,7 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                     channel.PatternInstances[patternIdx] = null;
                     App.UndoRedoManager.EndTransaction();
+                    ClearSelection();
                     ConditionalInvalidate();
                 }
             }
@@ -638,7 +674,22 @@ namespace FamiStudio
 
             if (captureOperation != CaptureOperation.None)
             {
-                if (captureOperation == CaptureOperation.DragSelection)
+                if (captureOperation == CaptureOperation.ClickPattern)
+                {
+                    if (GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx))
+                    {
+                        minSelectedChannelIdx = channelIdx;
+                        maxSelectedChannelIdx = channelIdx;
+                        minSelectedPatternIdx = patternIdx;
+                        maxSelectedPatternIdx = patternIdx;
+                        ConditionalInvalidate();
+                    }
+                    else
+                    {
+                        ClearSelection();
+                    }
+                }
+                else if (captureOperation == CaptureOperation.DragSelection)
                 {
                     bool copy = ModifierKeys.HasFlag(Keys.Control);
 
@@ -735,6 +786,28 @@ namespace FamiStudio
             }
         }
 
+        private void UpdateSelection(MouseEventArgs e, bool first = false)
+        {
+            int patternIdx = (e.X - trackNameSizeX + scrollX) / PatternSizeX;
+
+            if (first)
+            {
+                minSelectedPatternIdx = patternIdx;
+                maxSelectedPatternIdx = patternIdx;
+                minSelectedChannelIdx = 0;
+                maxSelectedChannelIdx = Channel.Count - 1;
+            }
+            else
+            {
+                if (e.X > captureStartX)
+                    maxSelectedPatternIdx = patternIdx;
+                else
+                    minSelectedPatternIdx = patternIdx;
+            }
+
+            ConditionalInvalidate();
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -754,13 +827,18 @@ namespace FamiStudio
                 mouseLastX = e.X;
                 mouseLastY = e.Y;
             }
-            else if (left && inPatternZone)
-            {
-                if (captureOperation == CaptureOperation.ClickPattern && captureStartX > 0 && Math.Abs(e.X - captureStartX) > 5)
-                {
-                    captureOperation = CaptureOperation.DragSelection;
-                }
 
+            if (captureOperation == CaptureOperation.ClickPattern && captureStartX > 0 && Math.Abs(e.X - captureStartX) > 5)
+            {
+                captureOperation = CaptureOperation.DragSelection;
+                ConditionalInvalidate();
+            }
+            else if (captureOperation == CaptureOperation.Select)
+            {
+                UpdateSelection(e);
+            }
+            else if (captureOperation == CaptureOperation.DragSelection)
+            {
                 ConditionalInvalidate();
             }
 

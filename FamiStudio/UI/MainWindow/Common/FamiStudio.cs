@@ -658,7 +658,7 @@ namespace FamiStudio
         private void projectExplorer_SongModified(Song song)
         {
             Sequencer.InvalidatePatternCache();
-            PianoRoll.ClampScroll();
+            PianoRoll.SongModified();
             InvalidateEverything();
         }
 

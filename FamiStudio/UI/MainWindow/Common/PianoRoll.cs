@@ -111,7 +111,8 @@ namespace FamiStudio
         RenderBrush blackKeyPressedBrush;
         RenderBrush debugBrush;
         RenderBrush seekBarBrush;
-        RenderBrush selectionBackgroundBrush;
+        RenderBrush selectionBgVisibleBrush;
+        RenderBrush selectionBgInvisibleBrush;
         RenderBrush selectionNoteBrush;
         RenderBitmap bmpLoop;
         RenderBitmap bmpRelease;
@@ -226,6 +227,7 @@ namespace FamiStudio
             editMode = EditionMode.Channel;
             editChannel = trackIdx;
 
+            ClearSelection();
             UpdateRenderCoords();
             CenterScroll(patternIdx);
             ClampScroll();
@@ -249,6 +251,7 @@ namespace FamiStudio
             showEffectsPanel = false;
             Debug.Assert(editInstrument != null);
 
+            ClearSelection();
             UpdateRenderCoords();
             CenterScroll();
             ClampScroll();
@@ -268,6 +271,7 @@ namespace FamiStudio
             showEffectsPanel = false;
             zoomLevel = 0;
 
+            ClearSelection();
             UpdateRenderCoords();
             ClampScroll();
             ConditionalInvalidate();
@@ -310,7 +314,15 @@ namespace FamiStudio
             editChannel = -1;
             currentInstrument = null;
             editInstrument = null;
+            ClearSelection();
             UpdateRenderCoords();
+        }
+
+        public void SongModified()
+        {
+            ClearSelection();
+            UpdateRenderCoords();
+            ConditionalInvalidate();
         }
 
         public void SongChanged()
@@ -320,6 +332,7 @@ namespace FamiStudio
                 editMode = EditionMode.None;
                 editChannel = -1;
                 editInstrument = null;
+                ClearSelection();
                 UpdateRenderCoords();
             }
         }
@@ -333,7 +346,8 @@ namespace FamiStudio
             blackKeyPressedBrush = g.CreateHorizontalGradientBrush(0, blackKeySizeX, ThemeBase.Lighten(ThemeBase.DarkGreyFillColor1), ThemeBase.Lighten(ThemeBase.DarkGreyFillColor2));
             debugBrush = g.CreateSolidBrush(ThemeBase.GreenColor);
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
-            selectionBackgroundBrush = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
+            selectionBgVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
+            selectionBgInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, ThemeBase.LightGreyFillColor1));
             selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
@@ -773,7 +787,7 @@ namespace FamiStudio
 
             GetSelectionRange(selectionMin, selectionMax, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
 
-            var notes = new Note[selectionMax - selectionMin + 1];
+            var notes = new Note[selectionMax - selectionMin];
 
             for (int i = 0; i < notes.Length; i++)
                 notes[i].IsValid = false;
@@ -838,7 +852,7 @@ namespace FamiStudio
                 }
             }
 
-            SetSelection(idx, idx + notes.Length - 1);
+            SetSelection(idx, idx + notes.Length);
             ConditionalInvalidate();
             App.UndoRedoManager.EndTransaction();
         }
@@ -867,7 +881,7 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return null;
             
-            var values = new sbyte[selectionMax - selectionMin + 1];
+            var values = new sbyte[selectionMax - selectionMin];
 
             for (int i = selectionMin; i < selectionMax; i++)
                 values[i - selectionMin] = EditEnvelope.Values[i];
@@ -886,10 +900,10 @@ namespace FamiStudio
 
             Envelope.GetMinMaxValue(editEnvelope, out int minVal, out int maxVal);
 
-            for (int i = selectionMin; i < Math.Min(selectionMin + values.Length, EditEnvelope.Length); i++)
-                EditEnvelope.Values[i] = (sbyte)Utils.Clamp(values[i - selectionMin], minVal, maxVal);
+            for (int i = idx; i < Math.Min(idx + values.Length, EditEnvelope.Length); i++)
+                EditEnvelope.Values[i] = (sbyte)Utils.Clamp(values[i - idx], minVal, maxVal);
 
-            SetSelection(idx, idx + values.Length - 1);
+            SetSelection(idx, idx + values.Length);
             ConditionalInvalidate();
             App.UndoRedoManager.EndTransaction();
         }
@@ -943,7 +957,12 @@ namespace FamiStudio
         private bool IsNoteSelected(int patternIdx, int noteIdx)
         {
             int absoluteNoteIdx = patternIdx * Song.PatternLength + noteIdx;
-            return showSelection && absoluteNoteIdx >= selectionMin && absoluteNoteIdx < selectionMax;
+            return IsSelectionValid() && absoluteNoteIdx >= selectionMin && absoluteNoteIdx < selectionMax;
+        }
+
+        private bool IsEnvelopeValueSelected(int idx)
+        {
+            return IsSelectionValid() && idx >= selectionMin && idx < selectionMax;
         }
 
         private void RenderNotes(RenderGraphics g, RenderArea a)
@@ -972,11 +991,11 @@ namespace FamiStudio
                     }
                 }
 
-                if (showSelection && IsSelectionValid())
+                if (IsSelectionValid())
                 {
                     g.FillRectangle(
                         selectionMin * noteSizeX - scrollX, 0,
-                        selectionMax * noteSizeX - scrollX, Height, selectionBackgroundBrush);
+                        selectionMax * noteSizeX - scrollX, Height, showSelection ? selectionBgVisibleBrush : selectionBgInvisibleBrush);
                 }
 
                 if (editMode == EditionMode.Channel)
@@ -1164,11 +1183,11 @@ namespace FamiStudio
                     g.DrawLine(0, y, env.Length * noteSizeX - scrollX, y, theme.DarkGreyLineBrush2);
                 }
 
-                if (showSelection && IsSelectionValid())
+                if (IsSelectionValid())
                 {
                     g.FillRectangle(
                         selectionMin * noteSizeX - scrollX, 0,
-                        selectionMax * noteSizeX - scrollX, Height, selectionBackgroundBrush);
+                        selectionMax * noteSizeX - scrollX, Height, showSelection ? selectionBgVisibleBrush : selectionBgInvisibleBrush);
                 }
 
                 // Draw the vertical bars.
@@ -1192,10 +1211,11 @@ namespace FamiStudio
                 {
                     for (int i = 0; i < env.Length; i++)
                     {
-                        int x = i * noteSizeX - scrollX;
-                        int y = (virtualSizeY - envelopeSizeY * (env.Values[i] + 64)) - scrollY;
+                        var x = i * noteSizeX - scrollX;
+                        var y = (virtualSizeY - envelopeSizeY * (env.Values[i] + 64)) - scrollY;
+                        var selected = IsEnvelopeValueSelected(i);
                         g.FillRectangle(x, y - envelopeSizeY, x + noteSizeX, y, g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, envelopeSizeY, 0.8f));
-                        g.DrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, theme.BlackBrush);
+                        g.DrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, theme.BlackBrush, selected ? 2 : 1);
                     }
                 }
                 else
@@ -1206,6 +1226,7 @@ namespace FamiStudio
 
                         int x = i * noteSizeX - scrollX;
                         int y0, y1;
+                        var selected = IsEnvelopeValueSelected(i);
 
                         if (val >= 0)
                         {
@@ -1219,7 +1240,7 @@ namespace FamiStudio
                         }
 
                         g.FillRectangle(x, y0, x + noteSizeX, y1, theme.LightGreyFillBrush1);
-                        g.DrawRectangle(x, y0, x + noteSizeX, y1, theme.BlackBrush);
+                        g.DrawRectangle(x, y0, x + noteSizeX, y1, theme.BlackBrush, selected ? 2 : 1);
                     }
                 }
 
@@ -1260,6 +1281,8 @@ namespace FamiStudio
                     if (env.Length == length)
                         return;
                     env.Length = length;
+                    if (IsSelectionValid())
+                        SetSelection(selectionMin, selectionMax);
                     break;
                 case CaptureOperation.DragRelease:
                     if (env.Release == length)

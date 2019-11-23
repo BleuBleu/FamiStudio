@@ -7,35 +7,23 @@
 
 Copy paste support:
 ===================
-- What can be copy/pasted:
-	/ Notes in piano roll
-	/ Effect values (==> paste special)
-	/ Envelope values.
-	- Patterns
 - Clipboard format:
 	x For notes: a big array of notes.
-	- For envelopes: a series of values
+	x For envelopes: a series of values
 	- For sequencer: a 2D array of patterns.
 x Icon
 x Toolbar
-/ Only display selection if control is in focus (confusing, maybe have 2 colors?)
-/ Range selection in piano roll
-- Range selection in sequencer
-x Display notes as selected
-/ Paste special (notes only, volume, effects only)
-- Clear selection in a bunch of cases (open new file, change song params, etc)
+x Only display selection if control is in focus (confusing, maybe have 2 colors?)
+x Range selection in sequencer (cleanup a bit).
+x Display envelope values as selection.
+x Pattern dragging is broken
+- Improve paste special dialog, ugly.
+- Unify sequencer/piano roll selection min/,ax (inclusive or exclusive).
 - Make sure can still scroll with mouse when selecting and stuff (scrolling should not be a capture operation maybe?).
-- Envelope edition:
-	- 2 rows, timeline + loop/release points
-		- timeline: left click seek or resize. right click select
-		- loop/release: left click loop point, right click release point	
-	- When resizing envelope, clamp max selection.
+- Esc: clear selection in active control.
 - Mac:
 	- Add line width param to GL
 	- Up/down/left/right keys wont work
-- Clamp selection min/max in ReplaceEnvelopeValues and other. Create a SetSelection function.
-
-/ Clipboard management
 
 ========================
 Backlog:

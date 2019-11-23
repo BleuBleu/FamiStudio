@@ -79,13 +79,13 @@ namespace FamiStudio
         public static RenderFont FontBigBold                  => Fonts[(int)RenderFontStyle.BigBold];
         public static RenderFont FontHuge                     => Fonts[(int)RenderFontStyle.Huge];
 
-        public static Color DarkGreyLineColor1  = Color.FromArgb(  0,   0,   0);
-        public static Color DarkGreyLineColor2  = Color.FromArgb( 33,  37,  41);
-        public static Color DarkGreyFillColor1  = Color.FromArgb( 42,  48,  51);
-        public static Color DarkGreyFillColor2  = Color.FromArgb( 49,  55,  61);
-        public static Color LightGreyFillColor1 = Color.FromArgb(178, 185, 198);
-        public static Color LightGreyFillColor2 = Color.FromArgb(198, 205, 218);
-        public static Color SeekBarColor        = Color.FromArgb(225, 170,   0);
+        public static Color DarkGreyLineColor1    = Color.FromArgb(  0,   0,   0);
+        public static Color DarkGreyLineColor2    = Color.FromArgb( 33,  37,  41);
+        public static Color DarkGreyFillColor1    = Color.FromArgb( 42,  48,  51);
+        public static Color DarkGreyFillColor2    = Color.FromArgb( 49,  55,  61);
+        public static Color LightGreyFillColor1   = Color.FromArgb(178, 185, 198);
+        public static Color LightGreyFillColor2   = Color.FromArgb(198, 205, 218);
+        public static Color SeekBarColor          = Color.FromArgb(225, 170,   0);
 
         public static Color BlackColor = Color.FromArgb(0, 0,   0);
         public static Color GreenColor = Color.FromArgb(0, 0, 255);
