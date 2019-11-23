@@ -212,7 +212,7 @@ namespace FamiStudio
             virtualSizeY           = numNotes * noteSizeY;
             patternSizeX           = noteSizeX * (Song == null ? 256 : Song.PatternLength);
             barSizeX               = noteSizeX * (Song == null ? 16  : Song.BarLength);
-            headerAndEffectSizeY   = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
+            headerAndEffectSizeY   = headerSizeY + (showEffectsPanel ? effectPanelSizeY : (editMode == EditionMode.Enveloppe ? headerSizeY : 0));
         }
 
         public Instrument CurrentInstrument
@@ -426,32 +426,18 @@ namespace FamiStudio
             g.PushClip(0, 0, Width, headerSizeY);
             g.Clear(ThemeBase.DarkGreyLineColor2);
 
-            if (editMode == EditionMode.Enveloppe)
+            if (editMode == EditionMode.Enveloppe && EditEnvelope != null)
             {
                 var env = EditEnvelope;
-                if (env != null)
+
+                // Draw the header bars
+                for (int n = 0; n <= env.Length; n++)
                 {
-                    if (env.Loop >= 0)
-                    {
-                        g.PushTranslation(env.Loop * noteSizeX - scrollX, 0);
-                        g.FillRectangle(0, 0, ((env.Release >= 0 ? env.Release : env.Length) - env.Loop) * noteSizeX, headerAndEffectSizeY, theme.DarkGreyFillBrush2);
-                        g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
-                        g.DrawBitmap(bmpLoop, effectIconPosX + 1, effectIconPosY);
-                        g.PopTransform();
-                    }
-                    if (env.Release >= 0)
-                    {
-                        g.PushTranslation(env.Release * noteSizeX - scrollX, 0);
-                        g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
-                        g.DrawBitmap(bmpRelease, effectIconPosX + 1, effectIconPosY);
-                        g.PopTransform();
-                    }
-                    if (env.Length > 0)
-                    {
-                        g.PushTranslation(env.Length * noteSizeX - scrollX, 0);
-                        g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
-                        g.PopTransform();
-                    }
+                    int x = n * noteSizeX - scrollX;
+                    if (x != 0)
+                        g.DrawLine(x, 0, x, headerSizeY, theme.DarkGreyLineBrush1, 1.0f);
+                    if (zoomLevel >= 1 && n != env.Length)
+                        g.DrawText(n.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, theme.LightGreyFillBrush1, noteSizeX);
                 }
             }
             else if (editMode == EditionMode.Channel)
@@ -500,6 +486,48 @@ namespace FamiStudio
             
             g.PopClip();
             g.PopTransform();
+        }
+
+        private void RenderEnvelopeHeader(RenderGraphics g)
+        {
+            if (editMode == EditionMode.Enveloppe && EditEnvelope != null)
+            {
+                g.PushTranslation(whiteKeySizeX, headerSizeY);
+                g.PushClip(0, 0, Width, headerSizeY);
+                g.Clear(ThemeBase.DarkGreyLineColor2);
+
+                var env = EditEnvelope;
+
+                if (env.Loop >= 0)
+                {
+                    g.PushTranslation(env.Loop * noteSizeX - scrollX, 0);
+                    g.FillRectangle(0, 0, ((env.Release >= 0 ? env.Release : env.Length) - env.Loop) * noteSizeX, headerAndEffectSizeY, theme.DarkGreyFillBrush2);
+                    g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                    g.DrawBitmap(bmpLoop, effectIconPosX + 1, effectIconPosY);
+                    g.PopTransform();
+                }
+                if (env.Release >= 0)
+                {
+                    g.PushTranslation(env.Release * noteSizeX - scrollX, 0);
+                    g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                    g.DrawBitmap(bmpRelease, effectIconPosX + 1, effectIconPosY);
+                    g.PopTransform();
+                }
+                if (env.Length > 0)
+                {
+                    g.PushTranslation(env.Length * noteSizeX - scrollX, 0);
+                    g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                    g.PopTransform();
+                }
+
+                g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
+
+                int seekX = App.GetEnvelopeFrame(editEnvelope) * noteSizeX - scrollX;
+                g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
+
+                g.PopClip();
+                g.PopTransform();
+            }
         }
 
         private void RenderEffectList(RenderGraphics g)
@@ -740,6 +768,9 @@ namespace FamiStudio
 
         private Note[] GetSelectedNotes()
         {
+            if (!IsSelectionValid())
+                return null;
+
             GetSelectionRange(selectionMin, selectionMax, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
 
             var notes = new Note[selectionMax - selectionMin + 1];
@@ -793,7 +824,6 @@ namespace FamiStudio
                         {
                             pattern.Notes[n].Value = note.Value;
                             pattern.Notes[n].Instrument = note.Instrument;
-
                         }
                         if (pasteVolume)
                         {
@@ -808,16 +838,14 @@ namespace FamiStudio
                 }
             }
 
-            selectionMax = idx + notes.Length - 1;
-            selectionMin = idx;
-
-            App.UndoRedoManager.EndTransaction();
+            SetSelection(idx, idx + notes.Length - 1);
             ConditionalInvalidate();
+            App.UndoRedoManager.EndTransaction();
         }
 
         private void PasteNotes(bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
         {
-            if (selectionMin < 0 || selectionMin == selectionMax)
+            if (!IsSelectionValid())
             {
                 SystemSounds.Beep.Play();
                 return;
@@ -834,16 +862,71 @@ namespace FamiStudio
             ReplaceNotes(notes, selectionMin, pasteNotes, pasteVolume, pasteFx);
         }
 
+        private sbyte[] GetSelectedEnvelopeValues()
+        {
+            if (!IsSelectionValid())
+                return null;
+            
+            var values = new sbyte[selectionMax - selectionMin + 1];
+
+            for (int i = selectionMin; i < selectionMax; i++)
+                values[i - selectionMin] = EditEnvelope.Values[i];
+
+            return values;
+        }
+
+        private void CopyEnvelopeValues()
+        {
+            ClipboardUtils.SetEnvelopeValues(GetSelectedEnvelopeValues());
+        }
+
+        private void ReplaceEnvelopeValues(sbyte[] values, int idx)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+
+            Envelope.GetMinMaxValue(editEnvelope, out int minVal, out int maxVal);
+
+            for (int i = selectionMin; i < Math.Min(selectionMin + values.Length, EditEnvelope.Length); i++)
+                EditEnvelope.Values[i] = (sbyte)Utils.Clamp(values[i - selectionMin], minVal, maxVal);
+
+            SetSelection(idx, idx + values.Length - 1);
+            ConditionalInvalidate();
+            App.UndoRedoManager.EndTransaction();
+        }
+
+        private void PasteEnvelopeValues()
+        {
+            if (!IsSelectionValid())
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
+            var values = ClipboardUtils.GetEnvelopeValues();
+
+            if (values == null)
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
+            ReplaceEnvelopeValues(values, selectionMin);
+        }
+
         public void Copy()
         {
             if (editMode == EditionMode.Channel)
                 CopyNotes();
+            else if (editMode == EditionMode.Enveloppe)
+                CopyEnvelopeValues();
         }
 
         public void Paste()
         {
             if (editMode == EditionMode.Channel)
                 PasteNotes();
+            else if (editMode == EditionMode.Enveloppe)
+                PasteEnvelopeValues();
         }
 
         public void PasteSpecial()
@@ -889,7 +972,7 @@ namespace FamiStudio
                     }
                 }
 
-                if (showSelection && (selectionMin > 0 && selectionMax > 0))
+                if (showSelection && IsSelectionValid())
                 {
                     g.FillRectangle(
                         selectionMin * noteSizeX - scrollX, 0,
@@ -1081,6 +1164,13 @@ namespace FamiStudio
                     g.DrawLine(0, y, env.Length * noteSizeX - scrollX, y, theme.DarkGreyLineBrush2);
                 }
 
+                if (showSelection && IsSelectionValid())
+                {
+                    g.FillRectangle(
+                        selectionMin * noteSizeX - scrollX, 0,
+                        selectionMax * noteSizeX - scrollX, Height, selectionBackgroundBrush);
+                }
+
                 // Draw the vertical bars.
                 for (int b = 0; b < env.Length; b++)
                 {
@@ -1153,6 +1243,7 @@ namespace FamiStudio
 
             RenderHeader(g, a);
             RenderEffectList(g);
+            RenderEnvelopeHeader(g);
             RenderEffectPanel(g, a);
             RenderPiano(g, a);
             RenderNotes(g, a);
@@ -1214,7 +1305,7 @@ namespace FamiStudio
             {
                 if (idx >= 0 && idx < editInstrument.Envelopes[editEnvelope].Length)
                 {
-                    Envelope.GetMinValueValue(editEnvelope, out int min, out int max);
+                    Envelope.GetMinMaxValue(editEnvelope, out int min, out int max);
                     editInstrument.Envelopes[editEnvelope].Values[idx] = (sbyte)Math.Max(min, Math.Min(max, value));
                     ConditionalInvalidate();
                 }
@@ -1323,74 +1414,112 @@ namespace FamiStudio
             maxNote = maxIdx % Song.PatternLength;
         }
 
-        private void MoveSelection(int amount)
+        private bool IsSelectionValid()
         {
-            if (selectionMin >= 0 && selectionMin != selectionMax && selectionMin + amount >= 0)
-            {
-                var notes = GetSelectedNotes();
-                ReplaceNotes(notes, selectionMin + amount);
-            }
+            return selectionMin >= 0 && selectionMin != selectionMax;
         }
 
-        private void TransposeSelection(int amount)
+        private void MoveNotes(int amount)
         {
-            if (selectionMin >= 0 && selectionMin != selectionMax)
+            if (selectionMin + amount >= 0)
+                ReplaceNotes(GetSelectedNotes(), selectionMin + amount);
+        }
+
+        private void TransposeNotes(int amount)
+        {
+            // TODO: Channel scope.
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+
+            GetSelectionRange(selectionMin, selectionMax, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
+
+            for (int p = minPattern; p <= maxPattern; p++)
             {
-                // TODO: Channel scope.
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-
-                GetSelectionRange(selectionMin, selectionMax, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
-
-                for (int p = minPattern; p <= maxPattern; p++)
+                var pattern = Song.Channels[editChannel].PatternInstances[p];
+                if (pattern != null)
                 {
-                    var pattern = Song.Channels[editChannel].PatternInstances[p];
-                    if (pattern != null)
-                    {
-                        int n0 = p == minPattern ? minNote : 0;
-                        int n1 = p == maxPattern ? maxNote : Song.PatternLength;
+                    int n0 = p == minPattern ? minNote : 0;
+                    int n1 = p == maxPattern ? maxNote : Song.PatternLength;
 
-                        for (int n = n0; n < n1; n++)
+                    for (int n = n0; n < n1; n++)
+                    {
+                        if (pattern.Notes[n].IsMusical)
                         {
-                            if (pattern.Notes[n].IsMusical)
-                            {
-                                int value = pattern.Notes[n].Value + amount;
-                                if (value < Note.NoteMin || value > Note.NoteMax)
-                                    pattern.Notes[n].IsValid = false;
-                                else
-                                    pattern.Notes[n].Value = (byte)value;
-                            }
+                            int value = pattern.Notes[n].Value + amount;
+                            if (value < Note.NoteMin || value > Note.NoteMax)
+                                pattern.Notes[n].IsValid = false;
+                            else
+                                pattern.Notes[n].Value = (byte)value;
                         }
                     }
                 }
-
-                App.UndoRedoManager.EndTransaction();
-                ConditionalInvalidate();
             }
+
+            App.UndoRedoManager.EndTransaction();
+            ConditionalInvalidate();
+        }
+
+        private void IncrementEnvelopeValues(int amount)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+
+            Envelope.GetMinMaxValue(editEnvelope, out int minVal, out int maxVal);
+
+            for (int i = selectionMin; i < selectionMax; i++)
+                EditEnvelope.Values[i] = (sbyte)Utils.Clamp(EditEnvelope.Values[i] + amount, minVal, maxVal);
+
+            App.UndoRedoManager.EndTransaction();
+            ConditionalInvalidate();
+        }
+
+        private void MoveEnvelopeValues(int amount)
+        {
+            if (selectionMin + amount >= 0)
+                ReplaceEnvelopeValues(GetSelectedEnvelopeValues(), selectionMin + amount);
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (editMode == EditionMode.Channel)
+            bool ctrl = keyData.HasFlag(Keys.Control);
+
+            if (IsSelectionValid())
             {
-                switch (keyData)
+                if (editMode == EditionMode.Channel)
                 {
-                    case Keys.Up:
-                        TransposeSelection(1);
-                        return true;
-                    case Keys.Down:
-                        TransposeSelection(-1);
-                        return true;
-                    case Keys.Right:
-                        MoveSelection(1);
-                        return true;
-                    case Keys.Left:
-                        MoveSelection(-1);
-                        return true;
+                    switch (keyData & ~Keys.Modifiers)
+                    {
+                        case Keys.Up:
+                            TransposeNotes(ctrl ? 12 : 1);
+                            return true;
+                        case Keys.Down:
+                            TransposeNotes(ctrl ? -12 : -1);
+                            return true;
+                        case Keys.Right:
+                            MoveNotes(ctrl ? Song.BarLength : 1);
+                            return true;
+                        case Keys.Left:
+                            MoveNotes(ctrl ? -Song.BarLength : -1);
+                            return true;
+                    }
+                }
+                else if (editMode == EditionMode.Enveloppe)
+                {
+                    switch (keyData & ~Keys.Modifiers)
+                    {
+                        case Keys.Up:
+                            IncrementEnvelopeValues(ctrl ? 4 : 1);
+                            return true;
+                        case Keys.Down:
+                            IncrementEnvelopeValues(ctrl ? -4 : -1);
+                            return true;
+                        case Keys.Right:
+                            MoveEnvelopeValues(ctrl ? 4 : 1);
+                            return true;
+                        case Keys.Left:
+                            MoveEnvelopeValues(ctrl ? -4 : -1);
+                            return true;
+                    }
                 }
             }
-            //else if (editMode == EditionMode.Enveloppe)
-            //{
-            //}
 
             return base.ProcessCmdKey(ref msg, keyData);
         }
@@ -1434,20 +1563,15 @@ namespace FamiStudio
             {
                 StartCaptureOperation(e, CaptureOperation.Scroll);
             }
-            else if ((left || right) && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y < headerAndEffectSizeY && canCapture)
+            else if (left && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y < headerSizeY && canCapture)
             {
-                CaptureOperation op = left ? CaptureOperation.ResizeEnvelope : CaptureOperation.DragLoop; 
-
-                var env = EditEnvelope;
-                if (right && editEnvelope == Envelope.Volume && env.Loop >= 0)
-                {
-                    int noteX = (e.X - whiteKeySizeX + scrollX) / noteSizeX;
-                    int distLoop    = Math.Abs(noteX - env.Loop);
-                    int distRelease = Math.Abs(noteX - (env.Release >= 0 ? env.Release : env.Length));
-
-                    if (distRelease < distLoop)
-                        op = CaptureOperation.DragRelease;
-                }
+                StartCaptureOperation(e, CaptureOperation.ResizeEnvelope);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+                ResizeEnvelope(e);
+            }
+            else if ((left || right) && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY && canCapture)
+            {
+                CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e, op);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
@@ -1624,21 +1748,34 @@ namespace FamiStudio
             ConditionalInvalidate(); 
         }
 
+        private void SetSelection(int min, int max)
+        {
+            int rangeMax = editMode == EditionMode.Channel ? Song.Length * Song.PatternLength : EditEnvelope.Length;
+
+            selectionMin = Utils.Clamp(min, 0, rangeMax);
+            selectionMax = Utils.Clamp(max, min, rangeMax);
+        }
+
+        private void ClearSelection()
+        {
+            selectionMin = -1;
+            selectionMax = -1;
+        }
+
         private void UpdateSelection(MouseEventArgs e, bool first = false)
         {
-            int noteIdx = Utils.Clamp((e.X - whiteKeySizeX + scrollX) / noteSizeX, 0, Song.Length * Song.PatternLength);
+            int noteIdx = (e.X - whiteKeySizeX + scrollX) / noteSizeX;
 
             if (first)
             {
-                selectionMin = noteIdx;
-                selectionMax = noteIdx + 1;
+                SetSelection(noteIdx, noteIdx + 1);
             }
             else
             {
                 if (e.X < captureStartX)
-                    selectionMin = noteIdx;
+                    SetSelection(Math.Min(selectionMax - 1, noteIdx), selectionMax);
                 else
-                    selectionMax = noteIdx;
+                    SetSelection(selectionMin, Math.Max(selectionMin + 1, noteIdx + 1));
             }
 
             ConditionalInvalidate();
@@ -1648,7 +1785,7 @@ namespace FamiStudio
         {
             base.OnMouseMove(e);
 
-            if (editMode == EditionMode.Enveloppe && (e.X > whiteKeySizeX && e.Y < headerAndEffectSizeY) || captureOperation == CaptureOperation.ResizeEnvelope)
+            if (editMode == EditionMode.Enveloppe && (e.X > whiteKeySizeX && e.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
                 Cursor.Current = Cursors.SizeWE;
             else if (captureOperation == CaptureOperation.ChangeEffectValue)
                 Cursor.Current = Cursors.SizeNS;

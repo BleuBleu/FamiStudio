@@ -127,7 +127,7 @@ namespace FamiStudio
             }
         }
 
-        public static void GetMinValueValue(int type, out int min, out int max)
+        public static void GetMinMaxValue(int type, out int min, out int max)
         {
             if (type == Volume)
             {

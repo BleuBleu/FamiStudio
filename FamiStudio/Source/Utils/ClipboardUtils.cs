@@ -36,6 +36,12 @@ namespace FamiStudio
 
         public static void SetNotes(Note[] notes)
         {
+            if (notes == null)
+            {
+                SetClipboardData(null);
+                return;
+            }
+
             var serializer = new ProjectSaveBuffer(null);
 
             foreach (var note in notes)
@@ -55,7 +61,7 @@ namespace FamiStudio
         {
             var buffer = GetClipboardData();
 
-            if (BitConverter.ToUInt32(buffer, 0) != MagicNumberClipboardNotes)
+            if (buffer == null || BitConverter.ToUInt32(buffer, 0) != MagicNumberClipboardNotes)
                 return null;
 
             var numNotes = BitConverter.ToInt32(buffer, 4);
@@ -68,6 +74,33 @@ namespace FamiStudio
                 notes[i].SerializeState(serializer);
 
             return notes;
+        }
+
+        public static void SetEnvelopeValues(sbyte[] values)
+        {
+            var clipboardData = new List<byte>();
+            clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardEnvelope));
+            clipboardData.AddRange(BitConverter.GetBytes(values.Length));
+            for (int i = 0; i < values.Length; i++)
+                clipboardData.Add((byte)values[i]);
+
+            SetClipboardData(clipboardData.ToArray());
+        }
+
+        public static sbyte[] GetEnvelopeValues()
+        {
+            var buffer = GetClipboardData();
+
+            if (buffer == null || BitConverter.ToUInt32(buffer, 0) != MagicNumberClipboardEnvelope)
+                return null;
+
+            var numValues = BitConverter.ToInt32(buffer, 4);
+            var values = new sbyte[numValues];
+
+            for (int i = 0; i < numValues; i++)
+                values[i] = (sbyte)buffer[8 + i];
+
+            return values;
         }
     }
 }
