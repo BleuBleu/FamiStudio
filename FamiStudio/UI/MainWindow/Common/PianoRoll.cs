@@ -800,7 +800,7 @@ namespace FamiStudio
                 if (pasteNotes)
                 {
                     note.Value = newNote.Value;
-                    note.Instrument = newNote.Instrument;
+                    note.Instrument = editChannel == Channel.DPCM ? null : newNote.Instrument;
                 }
                 if (pasteVolume)
                 {
@@ -1353,7 +1353,8 @@ namespace FamiStudio
         {
             base.OnMouseDoubleClick(e);
 
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left  = e.Button.HasFlag(MouseButtons.Left);
+            bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (editMode == EditionMode.DPCM && left && GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
             {
@@ -1385,6 +1386,15 @@ namespace FamiStudio
                         }
                         ConditionalInvalidate();
                     }
+                }
+            }
+            else if (right && editMode == EditionMode.Channel && e.Y < headerSizeY && e.X > whiteKeySizeX)
+            {
+                int patIdx = (int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)patternSizeX);
+                if (patIdx >= 0 && patIdx < Song.Length)
+                {
+                    SetSelection(patIdx * Song.PatternLength, (patIdx + 1) * Song.PatternLength - 1);
+                    ConditionalInvalidate();
                 }
             }
         }
