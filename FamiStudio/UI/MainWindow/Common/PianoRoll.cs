@@ -1638,7 +1638,7 @@ namespace FamiStudio
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
             }
-            else if ((left || right) && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY && canCapture)
+            else if ((left || (right && editEnvelope == Envelope.Volume && EditEnvelope.Loop >= 0)) && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY && canCapture)
             {
                 CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e, op);
