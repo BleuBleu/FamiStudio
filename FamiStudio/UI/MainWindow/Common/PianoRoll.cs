@@ -129,7 +129,6 @@ namespace FamiStudio
         enum CaptureOperation
         {
             None,
-            Scroll,
             PlayPiano,
             ResizeEnvelope,
             DragLoop,
@@ -140,8 +139,6 @@ namespace FamiStudio
         }
 
         int captureNoteIdx = 0;
-        int captureStartX = 0;
-        int captureStartY = 0;
         int mouseLastX = 0;
         int mouseLastY = 0;
         int playingNote = -1;
@@ -1399,16 +1396,19 @@ namespace FamiStudio
             }
         }
 
+        private void CaptureMouse(MouseEventArgs e)
+        {
+            mouseLastX = e.X;
+            mouseLastY = e.Y;
+            Capture = true;
+        }
+
         private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op)
         {
             Debug.Assert(captureOperation == CaptureOperation.None);
-            mouseLastX = e.X;
-            mouseLastY = e.Y;
-            captureStartX = e.X;
-            captureStartY = e.Y;
+            CaptureMouse(e);
             captureOperation = op;
             captureNoteIdx = (e.X - whiteKeySizeX + scrollX) / noteSizeX;
-            Capture = true;
         }
 
         private void GetSelectionRange(int minIdx, int maxIdx, out int minPattern, out int maxPattern, out int minNote, out int maxNote)
@@ -1628,9 +1628,9 @@ namespace FamiStudio
                     ConditionalInvalidate();
                 }
             }
-            else if (middle && e.Y > headerSizeY && e.X > whiteKeySizeX && canCapture)
+            else if (middle && e.Y > headerSizeY && e.X > whiteKeySizeX)
             {
-                StartCaptureOperation(e, CaptureOperation.Scroll);
+                CaptureMouse(e);
             }
             else if (left && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y < headerSizeY && canCapture)
             {
@@ -1841,7 +1841,7 @@ namespace FamiStudio
             }
             else
             {
-                if (e.X < captureStartX)
+                if (noteIdx < captureNoteIdx)
                     SetSelection(noteIdx, captureNoteIdx);
                 else
                     SetSelection(captureNoteIdx, noteIdx);
@@ -1853,6 +1853,8 @@ namespace FamiStudio
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+
+            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             if (editMode == EditionMode.Enveloppe && (e.X > whiteKeySizeX && e.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
                 Cursor.Current = Cursors.SizeWE;
@@ -1877,12 +1879,14 @@ namespace FamiStudio
                 case CaptureOperation.DrawEnvelope:
                     DrawEnvelope(e);
                     break;
-                case CaptureOperation.Scroll:
-                    DoScroll(e.X - mouseLastX, e.Y - mouseLastY);
-                    break;
                 case CaptureOperation.Select:
                     UpdateSelection(e);
                     break;
+            }
+
+            if (middle)
+            {
+                DoScroll(e.X - mouseLastX, e.Y - mouseLastY);
             }
 
             string tooltip = "";
@@ -1926,7 +1930,9 @@ namespace FamiStudio
         {
             base.OnMouseUp(e);
 
-            if (captureOperation != CaptureOperation.None)
+            bool middle = e.Button.HasFlag(MouseButtons.Middle);
+
+            if (captureOperation != CaptureOperation.None && !middle)
             {
                 switch (captureOperation)
                 {

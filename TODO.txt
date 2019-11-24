@@ -4,11 +4,11 @@
 - Change undo/redo keys on macos
 - Sign exe/setup on Windows
 - Sign/notarize on MacOS
+- New tutorial video
 
 Copy paste support:
 ===================
 - Improve paste special dialog, ugly.
-- Make sure can still scroll with mouse when selecting and stuff (scrolling should not be a capture operation maybe?).
 - Mac:
 	- Add line width param to GL
 	- Up/down/left/right keys wont work
