@@ -148,6 +148,12 @@ namespace FamiStudio
             renderTarget.DrawText(text, font, new RawRectangleF(x, y, x + width, y + 1000), brush);
         }
 
+        public float MeasureString(string text, TextFormat font)
+        {
+            using (TextLayout layout = new TextLayout(directWriteFactory, text, font, 1000, 1000))
+                return (float)layout.Metrics.WidthIncludingTrailingWhitespace;
+        }
+
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush)
         {
             renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush);
@@ -353,6 +359,11 @@ namespace FamiStudio
             bmp.Dispose();
 
             return result;
+        }
+
+        public float GetBitmapWidth(Bitmap bmp)
+        {
+            return bmp.Size.Width;
         }
 
         public Brush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)

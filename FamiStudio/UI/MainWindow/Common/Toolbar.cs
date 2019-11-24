@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using FamiStudio.Properties;
 
@@ -35,17 +36,25 @@ namespace FamiStudio
         const int ButtonLoop   = 12;
         const int ButtonCount  = 13;
 
-        const int DefaultTimecodePosX     = 415;
-        const int DefaultTimecodePosY     = 4;
-        const int DefaultTimecodeSizeX    = 160;
-        const int DefaultTimecodeTextPosX = 30;
-        const int DefaultTooltipPosY      = 12;
+        const int DefaultTimecodePosX            = 415;
+        const int DefaultTimecodePosY            = 4;
+        const int DefaultTimecodeSizeX           = 160;
+        const int DefaultTimecodeTextPosX        = 30;
+        const int DefaultTooltipSingleLinePosY   = 12;
+        const int DefaultTooltipMultiLinePosY    = 4;
+        const int DefaultTooltipLineSizeY        = 17;
+        const int DefaultTooltipSpecialCharSizeX = 16;
+        const int DefaultTooltipSpecialCharSizeY = 14;
 
         int timecodePosX;
         int timecodePosY;
         int timecodeSizeX;
         int timecodeTextPosX;
-        int tooltipPosY;
+        int tooltipSingleLinePosY;
+        int tooltipMultiLinePosY;
+        int tooltipLineSizeY;
+        int tooltipSpecialCharSizeX;
+        int tooltipSpecialCharSizeY;
 
         private delegate void EmptyDelegate();
         private delegate bool BoolDelegate();
@@ -65,6 +74,14 @@ namespace FamiStudio
             public bool IsPointIn(int px, int py) => px >= X && (px - X) < Size && py >= Y && (py - Y) < Size;
         };
 
+        class TooltipSpecialCharacter
+        {
+            public RenderBitmap Bmp;
+            public int Width;
+            public int Height;
+            public float OffsetY;
+        };
+
         string tooltip = "";
         RenderTheme theme;
         RenderBrush toolbarBrush;
@@ -74,6 +91,7 @@ namespace FamiStudio
         RenderBitmap bmpPlay;
         RenderBitmap bmpPause;
         Button[] buttons = new Button[ButtonCount];
+        Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
@@ -100,7 +118,7 @@ namespace FamiStudio
             buttons[ButtonRewind] = new Button { X = 634, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]   = new Button { X = 674, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
 
-            buttons[ButtonNew].ToolTip    = "New Project (Ctrl-N)";
+            buttons[ButtonNew].ToolTip    = "New Project {MouseLeft} {Ctrl} {N}\nThis is a test {MouseRight} {Shift} {Alt}";
             buttons[ButtonOpen].ToolTip   = "Open Project (Ctrl-O)";
             buttons[ButtonSave].ToolTip   = "Save Project (Ctrl-S) [Right-Click: Save As...]";
             buttons[ButtonExport].ToolTip = "Export to various formats (Ctrl+E)";
@@ -124,11 +142,32 @@ namespace FamiStudio
                 btn.Size = (int)(btn.Size * scaling);
             }
 
-            timecodePosX     = (int)(DefaultTimecodePosX     * scaling);
-            timecodePosY     = (int)(DefaultTimecodePosY     * scaling);
-            timecodeSizeX    = (int)(DefaultTimecodeSizeX    * scaling);
-            timecodeTextPosX = (int)(DefaultTimecodeTextPosX * scaling);
-            tooltipPosY      = (int)(DefaultTooltipPosY      * scaling);
+            timecodePosX            = (int)(DefaultTimecodePosX            * scaling);
+            timecodePosY            = (int)(DefaultTimecodePosY            * scaling);
+            timecodeSizeX           = (int)(DefaultTimecodeSizeX           * scaling);
+            timecodeTextPosX        = (int)(DefaultTimecodeTextPosX        * scaling);
+            tooltipSingleLinePosY   = (int)(DefaultTooltipSingleLinePosY   * scaling);
+            tooltipMultiLinePosY    = (int)(DefaultTooltipMultiLinePosY    * scaling);
+            tooltipLineSizeY        = (int)(DefaultTooltipLineSizeY        * scaling);
+            tooltipSpecialCharSizeX = (int)(DefaultTooltipSpecialCharSizeX * scaling);
+            tooltipSpecialCharSizeY = (int)(DefaultTooltipSpecialCharSizeY * scaling);
+
+            specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = (int)(32 * scaling) };
+            specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = (int)(28 * scaling) };
+            specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
+            specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseLeft"),  OffsetY = 2 * scaling };
+            specialCharacters["MouseRight"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseRight"), OffsetY = 2 * scaling };
+            specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseWheel"), OffsetY = 2 * scaling };
+
+            for (char i = 'A'; i <= 'Z'; i++)
+                specialCharacters[i.ToString()] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
+
+            foreach (var specialChar in specialCharacters.Values)
+            {
+                if (specialChar.Bmp != null)
+                    specialChar.Width = (int)g.GetBitmapWidth(specialChar.Bmp);
+                specialChar.Height = tooltipSpecialCharSizeY;
+            }
         }
 
         public string ToolTip
@@ -298,7 +337,41 @@ namespace FamiStudio
             // Tooltip
             if (!string.IsNullOrEmpty(tooltip))
             {
-                g.DrawText(tooltip, ThemeBase.FontMediumRight, Width - 314, tooltipPosY, theme.BlackBrush, 300);
+                var lines = tooltip.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                var posY = lines.Length == 1 ? tooltipSingleLinePosY : tooltipMultiLinePosY;
+
+                for (int j = 0; j < lines.Length; j++)
+                {
+                    var splits = lines[j].Split(new char[] { '{', '}' }, StringSplitOptions.RemoveEmptyEntries);
+                    var posX = Width - 8 * RenderTheme.MainWindowScaling;
+
+                    for (int i = splits.Length - 1; i >= 0; i--)
+                    {
+                        var str = splits[i];
+
+                        if (specialCharacters.TryGetValue(str, out var specialCharacter))
+                        {
+                            posX -= specialCharacter.Width;
+
+                            if (specialCharacter.Bmp != null)
+                            {
+                                g.DrawBitmap(specialCharacter.Bmp, posX, posY + specialCharacter.OffsetY);
+                            }
+                            else
+                            {
+                                g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, theme.BlackBrush, RenderTheme.MainWindowScaling * 2 - 1);
+                                g.DrawText(str, ThemeBase.FontMediumCenter, posX, posY, theme.BlackBrush, specialCharacter.Width);
+                            }
+                        }
+                        else
+                        {
+                            posX -= g.MeasureString(splits[i], ThemeBase.FontMedium);
+                            g.DrawText(str, ThemeBase.FontMedium, posX, posY, theme.BlackBrush);
+                        }
+                    }
+
+                    posY += tooltipLineSizeY;
+                }
             }
         }
 

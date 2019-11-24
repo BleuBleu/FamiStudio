@@ -2,6 +2,7 @@
 =============
 - Copy/paste support
 - Change undo/redo keys on macos
+- Show instrument draw in project instrument list.
 - Sign exe/setup on Windows
 - Sign/notarize on MacOS
 - New tutorial video
@@ -9,10 +10,12 @@
 Copy paste support:
 ===================
 - Improve paste special dialog, ugly.
+- Add tooltips.
 - Mac:
 	- Add line width param to GL
 	- Up/down/left/right keys wont work
 	- Change the key handling thing.
+	- MeasureString
 
 ========================
 Backlog:
