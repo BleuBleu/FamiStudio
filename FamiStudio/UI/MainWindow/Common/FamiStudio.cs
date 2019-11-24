@@ -89,12 +89,14 @@ namespace FamiStudio
         {
             PianoRoll.ShowSelection = false;
             Sequencer.ShowSelection = true;
+            ToolBar.Invalidate();
         }
 
         private void PianoRoll_ControlActivated()
         {
             PianoRoll.ShowSelection = true;
             Sequencer.ShowSelection = false;
+            ToolBar.Invalidate();
         }
 
         private void sequencer_SelectedChannelChanged(int channelIdx)
@@ -505,6 +507,41 @@ namespace FamiStudio
                 PianoRoll.FormKeyDown(e);
                 Sequencer.FormKeyDown(e);
             }
+        }
+
+        public bool CanCopy  => PianoRoll.CanCopy  || Sequencer.CanCopy;
+        public bool CanPaste => PianoRoll.CanPaste || Sequencer.CanPaste;
+
+        public void Copy()
+        {
+            if (PianoRoll.ShowSelection)
+                PianoRoll.Copy();
+            else
+                Sequencer.Copy();
+        }
+
+        public void Cut()
+        {
+            if (PianoRoll.ShowSelection)
+                PianoRoll.Cut();
+            else
+                Sequencer.Cut();
+        }
+
+        public void Paste()
+        {
+            if (PianoRoll.ShowSelection)
+                PianoRoll.Paste();
+            else
+                Sequencer.Paste();
+        }
+
+        public void PasteSpecial()
+        {
+            if (PianoRoll.ShowSelection)
+                PianoRoll.PasteSpecial();
+            else
+                Sequencer.Paste();
         }
 
         public void KeyUp(KeyEventArgs e)

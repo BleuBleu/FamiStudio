@@ -34,6 +34,20 @@ namespace FamiStudio
 #endif
         }
 
+        public static bool ConstainsNotes    => CheckContainsData(MagicNumberClipboardNotes);
+        public static bool ConstainsEnvelope => CheckContainsData(MagicNumberClipboardEnvelope);
+        public static bool ConstainsPatterns => CheckContainsData(MagicNumberClipboardPatterns);
+
+        private static bool CheckContainsData(uint magic)
+        {
+            var buffer = GetClipboardData();
+
+            if (buffer == null || BitConverter.ToUInt32(buffer, 0) != magic)
+                return false;
+
+            return true;
+        }
+
         public static void SetNotes(Note[] notes)
         {
             if (notes == null)

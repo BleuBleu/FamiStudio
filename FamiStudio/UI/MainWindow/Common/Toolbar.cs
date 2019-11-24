@@ -92,7 +92,7 @@ namespace FamiStudio
             buttons[ButtonExport] = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
             buttons[ButtonCopy]   = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
             buttons[ButtonCut]    = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
-            buttons[ButtonPaste]  = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, Enabled = OnPasteEnabled };
+            buttons[ButtonPaste]  = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
             buttons[ButtonUndo]   = new Button { X = 284, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
             buttons[ButtonRedo]   = new Button { X = 324, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
             buttons[ButtonConfig] = new Button { X = 364, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
@@ -175,32 +175,37 @@ namespace FamiStudio
 
         private void OnCut()
         {
-            //App.Export();
+            App.Cut();
         }
 
         private bool OnCutEnabled()
         {
-            return false;
+            return App.CanCopy;
         }
 
         private void OnCopy()
         {
-            //App.Export();
+            App.Copy();
         }
 
         private bool OnCopyEnabled()
         {
-            return false;
+            return App.CanCopy;
         }
 
         private void OnPaste()
         {
-            //App.Export();
+            App.Paste();
+        }
+
+        private void OnPasteSpecial()
+        {
+            App.PasteSpecial();
         }
 
         private bool OnPasteEnabled()
         {
-            return false;
+            return App.CanPaste;
         }
 
         private void OnUndo()

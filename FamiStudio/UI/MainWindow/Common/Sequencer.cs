@@ -674,31 +674,35 @@ namespace FamiStudio
             return patterns;
         }
 
+        public bool CanCopy  => showSelection && IsSelectionValid();
+        public bool CanPaste => showSelection && IsSelectionValid() && ClipboardUtils.ConstainsPatterns;
+
         public void Copy()
         {
-            ClipboardUtils.SetPatterns(GetSelectedPatterns());
+            if (IsSelectionValid())
+            {
+                ClipboardUtils.SetPatterns(GetSelectedPatterns());
+            }
         }
 
         public void Cut()
         {
-
+            if (IsSelectionValid())
+            {
+                ClipboardUtils.SetPatterns(GetSelectedPatterns());
+                DeleteSelection();
+            }
         }
 
         public void Paste()
         {
             if (!IsSelectionValid())
-            {
-                SystemSounds.Beep.Play();
                 return;
-            }
 
             var patterns = ClipboardUtils.GetPatterns(App.Project);
 
             if (patterns == null)
-            {
-                SystemSounds.Beep.Play();
                 return;
-            }
 
             App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
@@ -814,6 +818,22 @@ namespace FamiStudio
             }
         }
 
+        private void DeleteSelection()
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+
+            for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
+            {
+                for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                {
+                    Song.Channels[i].PatternInstances[j] = null;
+                }
+            }
+
+            App.UndoRedoManager.EndTransaction();
+            ConditionalInvalidate();
+        }
+
         public void FormKeyDown(KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
@@ -838,19 +858,9 @@ namespace FamiStudio
                         Paste();
                 }
 
-                if (e.KeyCode == Keys.Delete)
+                if (e.KeyCode == Keys.Delete && IsSelectionValid())
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                    for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
-                    {
-                        for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                        {
-                            Song.Channels[i].PatternInstances[j] = null;
-                        }
-                    }
-                    App.UndoRedoManager.EndTransaction();
-
-                    ConditionalInvalidate();
+                    DeleteSelection();
                 }
             }
 
