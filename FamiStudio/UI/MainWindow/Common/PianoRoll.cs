@@ -818,18 +818,12 @@ namespace FamiStudio
         private void PasteNotes(bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
         {
             if (!IsSelectionValid())
-            {
-                SystemSounds.Beep.Play();
                 return;
-            }
 
             var notes = ClipboardUtils.GetNotes(App.Project);
 
             if (notes == null)
-            {
-                SystemSounds.Beep.Play();
                 return;
-            }
 
             ReplaceNotes(notes, selectionMin, pasteNotes, pasteVolume, pasteFx);
         }
@@ -871,21 +865,18 @@ namespace FamiStudio
         private void PasteEnvelopeValues()
         {
             if (!IsSelectionValid())
-            {
-                SystemSounds.Beep.Play();
                 return;
-            }
 
             var values = ClipboardUtils.GetEnvelopeValues();
 
             if (values == null)
-            {
-                SystemSounds.Beep.Play();
                 return;
-            }
 
             ReplaceEnvelopeValues(values, selectionMin);
         }
+
+        public bool CanCopy  => showSelection && IsSelectionValid();
+        public bool CanPaste => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ConstainsNotes || editMode == EditionMode.Enveloppe && ClipboardUtils.ConstainsEnvelope);
 
         public void Copy()
         {
@@ -1854,6 +1845,8 @@ namespace FamiStudio
         {
             base.OnMouseMove(e);
 
+            string tooltip = "";
+
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             if (editMode == EditionMode.Enveloppe && (e.X > whiteKeySizeX && e.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
@@ -1889,7 +1882,6 @@ namespace FamiStudio
                 DoScroll(e.X - mouseLastX, e.Y - mouseLastY);
             }
 
-            string tooltip = "";
             if (editMode == EditionMode.Channel)
             {
                 if (GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
