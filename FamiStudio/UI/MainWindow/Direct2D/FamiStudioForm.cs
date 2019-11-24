@@ -64,12 +64,10 @@ namespace FamiStudio
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            var keyCode = keyData & ~Keys.Modifiers;
-
-            if (keyCode == Keys.Up   ||
-                keyCode == Keys.Down ||
-                keyCode == Keys.Left ||
-                keyCode == Keys.Right)
+            if (keyData == Keys.Up   ||
+                keyData == Keys.Down ||
+                keyData == Keys.Left ||
+                keyData == Keys.Right)
             {
                 famistudio.KeyDown(new KeyEventArgs(keyData));
             }
