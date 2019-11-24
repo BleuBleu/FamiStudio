@@ -246,6 +246,12 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\MouseLeft%402x.png" />
+    <EmbeddedResource Include="Resources\MouseLeft.png" />
+    <EmbeddedResource Include="Resources\MouseRight%402x.png" />
+    <EmbeddedResource Include="Resources\MouseRight.png" />
+    <EmbeddedResource Include="Resources\MouseWheel%402x.png" />
+    <EmbeddedResource Include="Resources\MouseWheel.png" />
     <EmbeddedResource Include="Resources\Copy%402x.png" />
     <EmbeddedResource Include="Resources\Copy.png" />
     <EmbeddedResource Include="Resources\Cut%402x.png" />
