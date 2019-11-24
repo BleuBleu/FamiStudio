@@ -118,19 +118,19 @@ namespace FamiStudio
             buttons[ButtonRewind] = new Button { X = 634, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]   = new Button { X = 674, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
 
-            buttons[ButtonNew].ToolTip    = "New Project {MouseLeft} {Ctrl} {N}\nThis is a test {MouseRight} {Shift} {Alt}";
-            buttons[ButtonOpen].ToolTip   = "Open Project (Ctrl-O)";
-            buttons[ButtonSave].ToolTip   = "Save Project (Ctrl-S) [Right-Click: Save As...]";
-            buttons[ButtonExport].ToolTip = "Export to various formats (Ctrl+E)";
-            buttons[ButtonCopy].ToolTip   = "Copy selection (Ctrl+C)";
-            buttons[ButtonCut].ToolTip    = "Cut selection (Ctrl+X)";
-            buttons[ButtonPaste].ToolTip  = "Paste (Ctrl+V)";
-            buttons[ButtonUndo].ToolTip   = "Undo (Ctrl+Z)";
-            buttons[ButtonRedo].ToolTip   = "Redo (Ctrl+Y)";
-            buttons[ButtonConfig].ToolTip = "Edit Application Settings";
-            buttons[ButtonPlay].ToolTip   = "Play/Pause (Space) [Ctrl+Space: Play pattern loop, Shift-Space: Play song loop]";
-            buttons[ButtonRewind].ToolTip = "Rewind (Home) [Ctrl+Home: Rewind to beginning of current pattern]";
-            buttons[ButtonLoop].ToolTip   = "Toggle Loop Mode";
+            buttons[ButtonNew].ToolTip    = "{MouseLeft} New Project {Ctrl} {N}";
+            buttons[ButtonOpen].ToolTip   = "{MouseLeft} Open Project {Ctrl} {O}";
+            buttons[ButtonSave].ToolTip   = "{MouseLeft} Save Project {Ctrl} {S}  - {MouseRight} Save As...";
+            buttons[ButtonExport].ToolTip = "{MouseLeft} Export to various formats {Ctrl} {E}";
+            buttons[ButtonCopy].ToolTip   = "{MouseLeft} Copy selection {Ctrl} {C}";
+            buttons[ButtonCut].ToolTip    = "{MouseLeft} Cut selection {Ctrl} {X}";
+            buttons[ButtonPaste].ToolTip  = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
+            buttons[ButtonUndo].ToolTip   = "{MouseLeft} Undo {Ctrl} {Z}";
+            buttons[ButtonRedo].ToolTip   = "{MouseLeft} Redo {Ctrl} {Y}";
+            buttons[ButtonConfig].ToolTip = "{MouseLeft} Edit Application Settings";
+            buttons[ButtonPlay].ToolTip   = "{MouseLeft} Play/Pause {Space}\nPlay pattern loop {Ctrl} {Space}  - Play song loop {Shift} {Space}";
+            buttons[ButtonRewind].ToolTip = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
+            buttons[ButtonLoop].ToolTip   = "{MouseLeft} Toggle Loop Mode";
 
             var scaling = RenderTheme.MainWindowScaling;
 
@@ -153,6 +153,8 @@ namespace FamiStudio
             tooltipSpecialCharSizeY = (int)(DefaultTooltipSpecialCharSizeY * scaling);
 
             specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = (int)(32 * scaling) };
+            specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
+            specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
             specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = (int)(28 * scaling) };
             specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
             specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseLeft"),  OffsetY = 2 * scaling };
