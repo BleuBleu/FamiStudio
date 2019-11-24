@@ -900,6 +900,34 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private void UpdateToolTip(MouseEventArgs e)
+        {
+            string tooltip = "";
+
+            if (e.Y > headerSizeY && e.X > trackNameSizeX)
+            {
+                tooltip = "{MouseLeft} Add Pattern {MouseRight} Delete Pattern {MouseWheel} Pan";
+            }
+            else if (e.Y < headerSizeY && e.X > trackNameSizeX)
+            {
+                tooltip = "{MouseLeft} Seek {MouseRight} Select Patterns {MouseWheel} Pan";
+            }
+            else if (e.X < trackNameSizeX)
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    if (GetTrackIconRect(i).Contains(e.X, e.Y))
+                        tooltip = "{MouseLeft} Mute Channel {MouseRight} Solo Channel";
+                    else if (GetTrackGhostRect(i).Contains(e.X, e.Y))
+                        tooltip = "{MouseLeft} Toggle channel for display";
+                }
+                if (tooltip == "")
+                    tooltip = "{MouseLeft} Make channel active";
+            }
+
+            App.ToolTip = tooltip;
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -919,6 +947,8 @@ namespace FamiStudio
                 mouseLastX = e.X;
                 mouseLastY = e.Y;
             }
+
+            UpdateToolTip(e);
 
             if (captureOperation == CaptureOperation.ClickPattern && captureStartX > 0 && Math.Abs(e.X - captureStartX) > 5)
             {

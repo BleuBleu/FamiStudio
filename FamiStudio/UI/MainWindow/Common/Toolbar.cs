@@ -175,7 +175,14 @@ namespace FamiStudio
         public string ToolTip
         {
             get { return tooltip; }
-            set { tooltip = value; ConditionalInvalidate(); }
+            set
+            {
+                if (tooltip != value)
+                {
+                    tooltip = value;
+                    ConditionalInvalidate();
+                }
+            }
         }
 
         public void Reset()
