@@ -1532,9 +1532,10 @@ namespace FamiStudio
                 ClearSelection();
                 ConditionalInvalidate();
             }
-            else if (showSelection)
+            else if (showSelection && IsSelectionValid())
             {
                 bool ctrl = ModifierKeys.HasFlag(Keys.Control);
+                bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
                 if (ctrl)
                 {
@@ -1543,54 +1544,56 @@ namespace FamiStudio
                     else if (e.KeyCode == Keys.X)
                         Cut();
                     else if (e.KeyCode == Keys.V)
-                        Paste();
+                    {
+                        if (shift)
+                            PasteSpecial();
+                        else
+                            Paste();
+                    }
                 }
 
-                if (IsSelectionValid())
+                if (e.KeyCode == Keys.Delete)
                 {
-                    if (e.KeyCode == Keys.Delete)
-                    {
-                        if (editMode == EditionMode.Channel)
-                            DeleteSelectedNotes();
-                        else if (editMode == EditionMode.Enveloppe)
-                            DeleteSelectedEnvelopeValues();
-                    }
-
                     if (editMode == EditionMode.Channel)
-                    {
-                        switch (e.KeyCode)
-                        {
-                            case Keys.Up:
-                                TransposeNotes(ctrl ? 12 : 1);
-                                break;
-                            case Keys.Down:
-                                TransposeNotes(ctrl ? -12 : -1);
-                                break;
-                            case Keys.Right:
-                                MoveNotes(ctrl ? Song.BarLength : 1);
-                                break;
-                            case Keys.Left:
-                                MoveNotes(ctrl ? -Song.BarLength : -1);
-                                break;
-                        }
-                    }
+                        DeleteSelectedNotes();
                     else if (editMode == EditionMode.Enveloppe)
+                        DeleteSelectedEnvelopeValues();
+                }
+
+                if (editMode == EditionMode.Channel)
+                {
+                    switch (e.KeyCode)
                     {
-                        switch (e.KeyCode)
-                        {
-                            case Keys.Up:
-                                IncrementEnvelopeValues(ctrl ? 4 : 1);
-                                break;
-                            case Keys.Down:
-                                IncrementEnvelopeValues(ctrl ? -4 : -1);
-                                break;
-                            case Keys.Right:
-                                MoveEnvelopeValues(ctrl ? 4 : 1);
-                                break;
-                            case Keys.Left:
-                                MoveEnvelopeValues(ctrl ? -4 : -1);
-                                break;
-                        }
+                        case Keys.Up:
+                            TransposeNotes(ctrl ? 12 : 1);
+                            break;
+                        case Keys.Down:
+                            TransposeNotes(ctrl ? -12 : -1);
+                            break;
+                        case Keys.Right:
+                            MoveNotes(ctrl ? Song.BarLength : 1);
+                            break;
+                        case Keys.Left:
+                            MoveNotes(ctrl ? -Song.BarLength : -1);
+                            break;
+                    }
+                }
+                else if (editMode == EditionMode.Enveloppe)
+                {
+                    switch (e.KeyCode)
+                    {
+                        case Keys.Up:
+                            IncrementEnvelopeValues(ctrl ? 4 : 1);
+                            break;
+                        case Keys.Down:
+                            IncrementEnvelopeValues(ctrl ? -4 : -1);
+                            break;
+                        case Keys.Right:
+                            MoveEnvelopeValues(ctrl ? 4 : 1);
+                            break;
+                        case Keys.Left:
+                            MoveEnvelopeValues(ctrl ? -4 : -1);
+                            break;
                     }
                 }
             }

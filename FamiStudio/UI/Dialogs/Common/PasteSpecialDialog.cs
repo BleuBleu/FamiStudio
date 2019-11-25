@@ -9,15 +9,15 @@ namespace FamiStudio
 
         public unsafe PasteSpecialDialog(Rectangle mainWinRect)
         {
-            int width = 150;
+            int width  = 200;
             int height = 300;
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
             int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
 
             dialog = new PropertyDialog(x, y, width, height);
-            dialog.Properties.AddBoolean("Paste Notes", true);
-            dialog.Properties.AddBoolean("Paste Volumes", true);
-            dialog.Properties.AddBoolean("Paste Effects", true);
+            dialog.Properties.AddLabelBoolean("Paste Notes", true);
+            dialog.Properties.AddLabelBoolean("Paste Volumes", true);
+            dialog.Properties.AddLabelBoolean("Paste Effects", true);
             dialog.Properties.Build();
         }
 

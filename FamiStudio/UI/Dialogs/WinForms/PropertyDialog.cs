@@ -41,8 +41,7 @@ namespace FamiStudio
 
             string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
             buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
-            buttonNo.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
-
+            buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
         }
 
         protected override CreateParams CreateParams
