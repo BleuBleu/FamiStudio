@@ -955,7 +955,10 @@ namespace FamiStudio
                 }
                 else
                 {
-                    tooltip = "{MouseLeft} Select Pattern - {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {MouseWheel} Pan";
+                    if (IsPatternSelected(channelIdx, patternIdx))
+                        tooltip = "{Drag} Move Pattern - {Ctrl} {Drag} Clone pattern {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {MouseWheel} Pan";
+                    else
+                        tooltip = "{MouseLeft} Select Pattern - {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {MouseWheel} Pan";
                 }
             }
             else if (IsMouseInHeader(e))

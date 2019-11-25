@@ -1,8 +1,7 @@
 1.3.0 Roadmap
 =============
-- Copy/paste support
+x Copy/paste support
 - Change undo/redo keys on macos
-- Show instrument draw in project instrument list.
 - Sign exe/setup on Windows
 - Sign/notarize on MacOS
 - New tutorial video
@@ -10,7 +9,6 @@
 Copy paste support:
 ===================
 - Improve paste special dialog, ugly.
-- Add tooltips.
 - Mac:
 	- Add line width param to GL
 	- Up/down/left/right keys wont work
@@ -22,6 +20,6 @@ Backlog:
 - PAL support
 - VRC6, FDS, etc.
 - Fix crash on startup when there are no audio device 
-- Proper error messages when soemthing fails (save, etc.)
+- Proper error messages when something fails (save, etc.)
 - Add taskbar progress bar + color to show playback state
-- Freeze on some atom processors?
+- Show instrument draw in project instrument list.
