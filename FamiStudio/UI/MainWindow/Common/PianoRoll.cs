@@ -1883,17 +1883,17 @@ namespace FamiStudio
             if (IsMouseInHeader(e))
             {
                 if (editMode == EditionMode.Channel)
-                    tooltip = "{MouseLeft} Seek {MouseRight} Select";
+                    tooltip = "{MouseLeft} Seek - {MouseRight} Select";
                 else if (editMode == EditionMode.Enveloppe)
-                    tooltip = "{MouseRight} Select {MouseRight} Resize envelope";
+                    tooltip = "{MouseRight} Select - {MouseRight} Resize envelope";
             }
             else if (IsMouseInEnvelopeLoopHeader(e))
             {
-                tooltip = "{MouseLeft} Set loop point {MouseRight} Set release point (volume only, must have loop point)";
+                tooltip = "{MouseLeft} Set loop point - {MouseRight} Set release point (volume only, must have loop point)";
             }
             else if (IsMouseInPiano(e))
             {
-                tooltip = "{MouseLeft} Play piano";
+                tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan";
             }
             else if (IsMouseInTopLeftCorner(e))
             {
@@ -1905,15 +1905,17 @@ namespace FamiStudio
             }
             else if (IsMouseInEffectPanel(e))
             {
-                tooltip = "{MouseLeft} Set effect value {MouseRight} Clear effect value";
+                tooltip = "{MouseLeft} Set effect value - {MouseRight} Clear effect value - {MouseWheel} Pan";
             }
             else if (IsMouseInNoteArea(e))
             {
                 if (editMode == EditionMode.Channel)
                 {
+                    tooltip = "{MouseLeft} Add note - {Shift} {MouseLeft} Add release note - {Ctrl} {MouseLeft} Add stop note - {MouseRight} Delete note - {MouseWheel} Pan";
+
                     if (GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
                     {
-                        tooltip = $"{Note.GetFriendlyName(noteValue)} [{patternIdx:D3}:{noteIdx:D3}]";
+                        tooltip += $"\n{Note.GetFriendlyName(noteValue)} [{patternIdx:D3}:{noteIdx:D3}]";
                         if (Song.Channels[editChannel].FindPreviousValidNote(noteValue, ref patternIdx, ref noteIdx))
                         {
                             var pat = Song.Channels[editChannel].PatternInstances[patternIdx];
@@ -1928,10 +1930,10 @@ namespace FamiStudio
                 }
                 else if (editMode == EditionMode.Enveloppe)
                 {
+                    tooltip = "{MouseLeft} Set envelope value - {MouseWheel} Pan";
+
                     if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
-                    {
-                        tooltip = $"{idx:D3}:{value}";
-                    }
+                        tooltip += $"\n{idx:D3}:{value}";
                 }
             }
 

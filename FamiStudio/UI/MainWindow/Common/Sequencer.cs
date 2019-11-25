@@ -951,21 +951,21 @@ namespace FamiStudio
 
                 if (pattern == null)
                 {
-                    tooltip = "{MouseLeft} Add Pattern {MouseWheel} Pan";
+                    tooltip = "{MouseLeft} Add Pattern - {MouseWheel} Pan";
                 }
                 else
                 {
-                    tooltip = "{MouseLeft} Select Pattern {MouseLeft}{MouseLeft} Pattern properties {MouseRight} Delete Pattern {MouseWheel} Pan";
+                    tooltip = "{MouseLeft} Select Pattern - {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {MouseWheel} Pan";
                 }
             }
             else if (IsMouseInHeader(e))
             {
-                tooltip = "{MouseLeft} Seek {MouseRight} Select Colume {MouseWheel} Pan";
+                tooltip = "{MouseLeft} Seek - {MouseRight} Select Colume - {MouseWheel} Pan";
             }
             else if (IsMouseInTrackName(e))
             {
                 if (GetTrackIconForPos(e) >= 0)
-                    tooltip = "{MouseLeft} Mute Channel {MouseRight} Solo Channel";
+                    tooltip = "{MouseLeft} Mute Channel - {MouseRight} Solo Channel";
                 else if (GetTrackGhostForPos(e) >= 0)
                     tooltip = "{MouseLeft} Toggle channel for display";
                 else

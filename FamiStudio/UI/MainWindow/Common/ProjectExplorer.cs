@@ -382,7 +382,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.Song)
                 {
-                    tooltip = "{MouseLeft} Make song current {MouseLeft}{MouseLeft} Song properties {MouseRight} Delete song";
+                    tooltip = "{MouseLeft} Make song current - {MouseLeft}{MouseLeft} Song properties - {MouseRight} Delete song";
                 }
                 else if (buttonType == ButtonType.InstrumentHeader && subButtonType == SubButtonType.Add)
                 {
@@ -399,16 +399,16 @@ namespace FamiStudio
                         if (buttons[buttonIdx].instrument == null)
                             tooltip = "{MouseLeft} Select instrument";
                         else
-                            tooltip = "{MouseLeft} Select instrument {MouseLeft}{MouseLeft} Instrument properties {MouseRight} Delete instrument {Drag} Replace instrument";
+                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{MouseLeft} Instrument properties - {MouseRight} Delete instrument - {Drag} Replace instrument";
                     }
                     else
                     {
                         if (subButtonType == SubButtonType.Volume)
-                            tooltip = "{MouseLeft} Edit volume enveloppe {MouseRight} Delete envelope {Drag} Copy envelope";
+                            tooltip = "{MouseLeft} Edit volume enveloppe - {MouseRight} Delete envelope - {Drag} Copy envelope";
                         else if (subButtonType == SubButtonType.Pitch)
-                            tooltip = "{MouseLeft} Edit pitch enveloppe {MouseRight} Delete envelope {Drag} Copy envelope";
+                            tooltip = "{MouseLeft} Edit pitch enveloppe - {MouseRight} Delete envelope - {Drag} Copy envelope";
                         else if (subButtonType == SubButtonType.Arpeggio)
-                            tooltip = "{MouseLeft} Edit arpeggio enveloppe {MouseRight} Delete envelope {Drag} Copy envelope";
+                            tooltip = "{MouseLeft} Edit arpeggio enveloppe - {MouseRight} Delete envelope - {Drag} Copy envelope";
                         else if (subButtonType == SubButtonType.DPCM)
                             tooltip = "{MouseLeft} Edit DPCM samples";
                         else if (subButtonType >= SubButtonType.DutyCycle0 && subButtonType <= SubButtonType.DutyCycle3)
