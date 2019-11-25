@@ -117,6 +117,8 @@ namespace FamiStudio
         public event SelectedChannelChangedDelegate SelectedChannelChanged;
         public delegate void ControlActivate();
         public event ControlActivate ControlActivated;
+        public delegate void PatternModifiedDelegate();
+        public event PatternModifiedDelegate PatternModified;
 
         public Sequencer()
         {
@@ -1068,6 +1070,7 @@ namespace FamiStudio
                         }
 
                         ConditionalInvalidate();
+                        PatternModified?.Invoke();
                     }
                 }
             }

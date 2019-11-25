@@ -456,8 +456,6 @@ namespace FamiStudio
             }
             else if (editMode == EditionMode.Channel)
             {
-                DrawSelectionRect(g, headerSizeY);
-
                 // Draw colored header
                 for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                 {
@@ -468,6 +466,8 @@ namespace FamiStudio
                         g.FillRectangle(patternX, 0, patternX + patternSizeX, headerSizeY, theme.CustomColorBrushes[pattern.Color]);
                     }
                 }
+
+                DrawSelectionRect(g, headerSizeY);
 
                 // Draw the header bars
                 for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)

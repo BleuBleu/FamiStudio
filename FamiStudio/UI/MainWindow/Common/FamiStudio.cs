@@ -53,6 +53,7 @@ namespace FamiStudio
             Sequencer.PatternClicked += sequencer_PatternClicked;
             Sequencer.SelectedChannelChanged += sequencer_SelectedChannelChanged;
             Sequencer.ControlActivated += Sequencer_ControlActivated;
+            Sequencer.PatternModified += Sequencer_PatternModified;
             PianoRoll.PatternChanged += pianoRoll_PatternChanged;
             PianoRoll.EnvelopeResized += pianoRoll_EnvelopeResized;
             PianoRoll.ControlActivated += PianoRoll_ControlActivated;
@@ -83,6 +84,11 @@ namespace FamiStudio
             {
                 Task.Factory.StartNew(CheckForNewRelease);
             }
+        }
+
+        private void Sequencer_PatternModified()
+        {
+            PianoRoll.ConditionalInvalidate();
         }
 
         private void Sequencer_ControlActivated()
