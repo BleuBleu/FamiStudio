@@ -367,12 +367,67 @@ namespace FamiStudio
             }
         }
 
+        private void UpdateToolTip(MouseEventArgs e)
+        {
+            var tooltip = "";
+            var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
+
+            if (buttonIdx >= 0)
+            {
+                var buttonType = buttons[buttonIdx].type;
+
+                if (buttonType == ButtonType.SongHeader && subButtonType == SubButtonType.Add)
+                {
+                    tooltip = "{MouseLeft} Add new song";
+                }
+                else if (buttonType == ButtonType.Song)
+                {
+                    tooltip = "{MouseLeft} Make song current {MouseLeft}{MouseLeft} Song properties {MouseRight} Delete song";
+                }
+                else if (buttonType == ButtonType.InstrumentHeader && subButtonType == SubButtonType.Add)
+                {
+                    tooltip = "{MouseLeft} Add new instrument";
+                }
+                else if (buttonType == ButtonType.ProjectSettings)
+                {
+                    tooltip = "{MouseLeft}{MouseLeft} Project properties";
+                }
+                else if (buttonType == ButtonType.Instrument)
+                {
+                    if (subButtonType == SubButtonType.Max)
+                    {
+                        if (buttons[buttonIdx].instrument == null)
+                            tooltip = "{MouseLeft} Select instrument";
+                        else
+                            tooltip = "{MouseLeft} Select instrument {MouseLeft}{MouseLeft} Instrument properties {MouseRight} Delete instrument {Drag} Replace instrument";
+                    }
+                    else
+                    {
+                        if (subButtonType == SubButtonType.Volume)
+                            tooltip = "{MouseLeft} Edit volume enveloppe {MouseRight} Delete envelope {Drag} Copy envelope";
+                        else if (subButtonType == SubButtonType.Pitch)
+                            tooltip = "{MouseLeft} Edit pitch enveloppe {MouseRight} Delete envelope {Drag} Copy envelope";
+                        else if (subButtonType == SubButtonType.Arpeggio)
+                            tooltip = "{MouseLeft} Edit arpeggio enveloppe {MouseRight} Delete envelope {Drag} Copy envelope";
+                        else if (subButtonType == SubButtonType.DPCM)
+                            tooltip = "{MouseLeft} Edit DPCM samples";
+                        else if (subButtonType >= SubButtonType.DutyCycle0 && subButtonType <= SubButtonType.DutyCycle3)
+                            tooltip = "{MouseLeft} Change duty cycle";
+                    }
+                }
+            }
+
+            App.ToolTip = tooltip;
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
 
             bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+
+            UpdateToolTip(e);
 
             if (left && mouseDragY > 0 && !isDraggingInstrument && Math.Abs(e.Y - mouseDragY) > 5)
             {

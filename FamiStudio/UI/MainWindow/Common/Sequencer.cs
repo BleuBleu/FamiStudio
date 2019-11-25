@@ -521,41 +521,43 @@ namespace FamiStudio
                 Capture = true;
                 return;
             }
+
             // Track muting, soloing.
             else if ((left || right) && e.X < trackNameSizeX)
             {
-                for (int i = 0; i < 5; i++)
-                {
-                    int bit = (1 << i);
+                var trackIcon = GetTrackIconForPos(e);
+                var ghostIcon = GetTrackGhostForPos(e);
 
-                    if (GetTrackIconRect(i).Contains(e.X, e.Y))
+                if (trackIcon >= 0)
+                {
+                    int bit = (1 << trackIcon);
+
+                    if (left)
                     {
-                        if (left)
-                        {
-                            // Toggle muted
-                            App.ChannelMask ^= bit; 
-                        }
+                        // Toggle muted
+                        App.ChannelMask ^= bit;
+                    }
+                    else
+                    {
+                        // Toggle Solo
+                        if (App.ChannelMask == bit)
+                            App.ChannelMask = 0x1f;
                         else
-                        {
-                            // Toggle Solo
-                            if (App.ChannelMask == (1 << i))
-                                App.ChannelMask = 0x1f;
-                            else
-                                App.ChannelMask = (1 << i); 
-                        }
-                        ConditionalInvalidate();
-                        return;
+                            App.ChannelMask = bit;
                     }
-                    if (GetTrackGhostRect(i).Contains(e.X, e.Y))
-                    {
-                        App.GhostChannelMask ^= bit;
-                        ConditionalInvalidate();
-                        return;
-                    }
+
+                    ConditionalInvalidate();
+                    return;
+                }
+                else if (ghostIcon >= 0)
+                {
+                    App.GhostChannelMask ^= (1 << ghostIcon);
+                    ConditionalInvalidate();
+                    return;
                 }
             }
 
-            if (e.X > trackNameSizeX && e.Y < headerSizeY)
+            if (IsMouseInHeader(e))
             {
                 if (left)
                 {
@@ -900,28 +902,73 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private bool IsMouseInPatternZone(MouseEventArgs e)
+        {
+            return e.Y > headerSizeY && e.X > trackNameSizeX;
+        }
+
+        private bool IsMouseInHeader(MouseEventArgs e)
+        {
+            return e.Y < headerSizeY && e.X > trackNameSizeX;
+        }
+
+        private bool IsMouseInTrackName(MouseEventArgs e)
+        {
+            return e.Y > headerSizeY && e.X < trackNameSizeX;
+        }
+
+        private int GetTrackIconForPos(MouseEventArgs e)
+        {
+            for (int i = 0; i < Channel.Count; i++)
+            {
+                if (GetTrackIconRect(i).Contains(e.X, e.Y))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        private int GetTrackGhostForPos(MouseEventArgs e)
+        {
+            for (int i = 0; i < Channel.Count; i++)
+            {
+                if (GetTrackGhostRect(i).Contains(e.X, e.Y))
+                    return i;
+            }
+
+            return -1;
+        }
+
         private void UpdateToolTip(MouseEventArgs e)
         {
             string tooltip = "";
 
-            if (e.Y > headerSizeY && e.X > trackNameSizeX)
+            bool inPatternZone = GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx);
+
+            if (inPatternZone)
             {
-                tooltip = "{MouseLeft} Add Pattern {MouseRight} Delete Pattern {MouseWheel} Pan";
-            }
-            else if (e.Y < headerSizeY && e.X > trackNameSizeX)
-            {
-                tooltip = "{MouseLeft} Seek {MouseRight} Select Patterns {MouseWheel} Pan";
-            }
-            else if (e.X < trackNameSizeX)
-            {
-                for (int i = 0; i < 5; i++)
+                var pattern = Song.Channels[channelIdx].PatternInstances[patternIdx];
+
+                if (pattern == null)
                 {
-                    if (GetTrackIconRect(i).Contains(e.X, e.Y))
-                        tooltip = "{MouseLeft} Mute Channel {MouseRight} Solo Channel";
-                    else if (GetTrackGhostRect(i).Contains(e.X, e.Y))
-                        tooltip = "{MouseLeft} Toggle channel for display";
+                    tooltip = "{MouseLeft} Add Pattern {MouseWheel} Pan";
                 }
-                if (tooltip == "")
+                else
+                {
+                    tooltip = "{MouseLeft} Select Pattern {MouseLeft}{MouseLeft} Pattern properties {MouseRight} Delete Pattern {MouseWheel} Pan";
+                }
+            }
+            else if (IsMouseInHeader(e))
+            {
+                tooltip = "{MouseLeft} Seek {MouseRight} Select Colume {MouseWheel} Pan";
+            }
+            else if (IsMouseInTrackName(e))
+            {
+                if (GetTrackIconForPos(e) >= 0)
+                    tooltip = "{MouseLeft} Mute Channel {MouseRight} Solo Channel";
+                else if (GetTrackGhostForPos(e) >= 0)
+                    tooltip = "{MouseLeft} Toggle channel for display";
+                else
                     tooltip = "{MouseLeft} Make channel active";
             }
 

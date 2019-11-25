@@ -213,6 +213,8 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Drag%402x.png" />
+    <EmbeddedResource Include="Resources\Drag.png" /> 
     <EmbeddedResource Include="Resources\MouseLeft%402x.png" />
     <EmbeddedResource Include="Resources\MouseLeft.png" />
     <EmbeddedResource Include="Resources\MouseRight%402x.png" />
