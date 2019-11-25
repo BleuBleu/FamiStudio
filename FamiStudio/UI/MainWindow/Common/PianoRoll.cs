@@ -1596,21 +1596,21 @@ namespace FamiStudio
 
             bool canCapture = captureOperation == CaptureOperation.None;
 
-            if (left && e.Y > headerAndEffectSizeY && e.X < whiteKeySizeX && canCapture)
+            if (left && IsMouseInPiano(e) && canCapture)
             {
                 StartCaptureOperation(e, CaptureOperation.PlayPiano);
                 PlayPiano(e.X, e.Y);
             }
-            else if (left && editMode == EditionMode.Channel && e.Y < headerSizeY && e.X > whiteKeySizeX)
+            else if (left && editMode == EditionMode.Channel && IsMouseInHeader(e))
             {
                 App.Seek((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
             }
-            else if (right && e.Y < headerSizeY && e.X > whiteKeySizeX)
+            else if (right && IsMouseInHeader(e))
             {
                 StartCaptureOperation(e, CaptureOperation.Select);
                 UpdateSelection(e, true);
             }
-            else if (left && showEffectsPanel && editMode == EditionMode.Channel && e.X < whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY)
+            else if (left && IsMouseInEffectList(e))
             {
                 int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY - 1;
                 if (effectIdx >= -1 && effectIdx < 3)
@@ -1623,26 +1623,26 @@ namespace FamiStudio
             {
                 CaptureMouse(e);
             }
-            else if (left && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y < headerSizeY && canCapture)
+            else if (left && editMode == EditionMode.Enveloppe && IsMouseInHeader(e) && canCapture)
             {
                 StartCaptureOperation(e, CaptureOperation.ResizeEnvelope);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
             }
-            else if (editMode == EditionMode.Enveloppe && (left || (right && editEnvelope == Envelope.Volume && EditEnvelope.Loop >= 0)) && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY && canCapture)
+            else if (editMode == EditionMode.Enveloppe && (left || (right && editEnvelope == Envelope.Volume && EditEnvelope.Loop >= 0)) && IsMouseInEnvelopeLoopHeader(e) && canCapture)
             {
                 CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e, op);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
             }
-            else if ((left || right) && editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > headerAndEffectSizeY && canCapture)
+            else if ((left || right) && editMode == EditionMode.Enveloppe && IsMouseInNoteArea(e) && canCapture)
             {
                 StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 DrawEnvelope(e); 
             }
-            else if (left && editMode == EditionMode.Channel && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY && canCapture)
+            else if (left && editMode == EditionMode.Channel && IsMouseInEffectPanel(e) && canCapture)
             {
                 if (GetEffectNoteForCoord(e.X, e.Y, out effectPatternIdx, out effectNoteIdx))
                 {
@@ -1655,7 +1655,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (editMode == EditionMode.Channel && e.X < whiteKeySizeX && e.Y < headerSizeY)
+            else if (editMode == EditionMode.Channel && IsMouseInTopLeftCorner(e))
             {
                 showEffectsPanel = !showEffectsPanel;
                 UpdateRenderCoords();
@@ -1840,13 +1840,108 @@ namespace FamiStudio
 
             ConditionalInvalidate();
         }
-        
+
+        private bool IsMouseInHeader(MouseEventArgs e)
+        {
+            return e.X > whiteKeySizeX && e.Y < headerSizeY;
+        }
+
+        private bool IsMouseInEnvelopeLoopHeader(MouseEventArgs e)
+        {
+            return editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY;
+        }
+
+        private bool IsMouseInPiano(MouseEventArgs e)
+        {
+            return e.X < whiteKeySizeX && e.Y > headerAndEffectSizeY;
+        }
+
+        private bool IsMouseInEffectList(MouseEventArgs e)
+        {
+            return showEffectsPanel && editMode == EditionMode.Channel && e.X < whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY;
+        }
+
+        private bool IsMouseInEffectPanel(MouseEventArgs e)
+        {
+            return showEffectsPanel && editMode == EditionMode.Channel && e.X > whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY;
+        }
+
+        private bool IsMouseInNoteArea(MouseEventArgs e)
+        {
+            return e.Y > headerSizeY && e.X > whiteKeySizeX;
+        }
+
+        private bool IsMouseInTopLeftCorner(MouseEventArgs e)
+        {
+            return editMode == EditionMode.Channel && e.Y < headerSizeY && e.X < whiteKeySizeX;
+        }
+
+        private void UpdateToolTip(MouseEventArgs e)
+        {
+            var tooltip = "";
+
+            if (IsMouseInHeader(e))
+            {
+                if (editMode == EditionMode.Channel)
+                    tooltip = "{MouseLeft} Seek {MouseRight} Select";
+                else if (editMode == EditionMode.Enveloppe)
+                    tooltip = "{MouseRight} Select {MouseRight} Resize envelope";
+            }
+            else if (IsMouseInEnvelopeLoopHeader(e))
+            {
+                tooltip = "{MouseLeft} Set loop point {MouseRight} Set release point (volume only, must have loop point)";
+            }
+            else if (IsMouseInPiano(e))
+            {
+                tooltip = "{MouseLeft} Play piano";
+            }
+            else if (IsMouseInTopLeftCorner(e))
+            {
+                tooltip = "{MouseLeft} Show/hide effect panel";
+            }
+            else if (IsMouseInEffectList(e))
+            {
+                tooltip = "{MouseLeft} Select effect track to edit";
+            }
+            else if (IsMouseInEffectPanel(e))
+            {
+                tooltip = "{MouseLeft} Set effect value {MouseRight} Clear effect value";
+            }
+            else if (IsMouseInNoteArea(e))
+            {
+                if (editMode == EditionMode.Channel)
+                {
+                    if (GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
+                    {
+                        tooltip = $"{Note.GetFriendlyName(noteValue)} [{patternIdx:D3}:{noteIdx:D3}]";
+                        if (Song.Channels[editChannel].FindPreviousValidNote(noteValue, ref patternIdx, ref noteIdx))
+                        {
+                            var pat = Song.Channels[editChannel].PatternInstances[patternIdx];
+                            if (pat != null)
+                            {
+                                var note = pat.Notes[noteIdx];
+                                if (note.Instrument != null)
+                                    tooltip += $" ({note.Instrument.Name})";
+                            }
+                        }
+                    }
+                }
+                else if (editMode == EditionMode.Enveloppe)
+                {
+                    if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
+                    {
+                        tooltip = $"{idx:D3}:{value}";
+                    }
+                }
+            }
+
+            App.ToolTip = tooltip;
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-
-            string tooltip = "";
-
+            
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             if (editMode == EditionMode.Enveloppe && (e.X > whiteKeySizeX && e.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
@@ -1882,40 +1977,10 @@ namespace FamiStudio
                 DoScroll(e.X - mouseLastX, e.Y - mouseLastY);
             }
 
-            if (editMode == EditionMode.Channel)
-            {
-                if (GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
-                {
-                    tooltip = $"{Note.GetFriendlyName(noteValue)} [{patternIdx:D3}:{noteIdx:D3}]";
-                    if (Song.Channels[editChannel].FindPreviousValidNote(noteValue, ref patternIdx, ref noteIdx))
-                    {
-                        var pat = Song.Channels[editChannel].PatternInstances[patternIdx];
-                        if (pat != null)
-                        {
-                            var note = pat.Notes[noteIdx];
-                            if (note.Instrument != null)
-                                tooltip += $" ({note.Instrument.Name})";
-                        }
-                    }
-                }
-            }
-            else if (editMode == EditionMode.Enveloppe)
-            {
-                if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
-                {
-                    tooltip = $"{idx:D3}:{value}";
-                }
-            }
-            App.ToolTip = tooltip;
+            UpdateToolTip(e);
 
             mouseLastX = e.X;
             mouseLastY = e.Y;
-        }
-
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-            App.ToolTip = "";
         }
         
         protected override void OnMouseUp(MouseEventArgs e)
