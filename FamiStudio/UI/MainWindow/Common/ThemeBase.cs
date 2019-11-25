@@ -4,9 +4,10 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Collections.Generic;
 
 #if FAMISTUDIO_WINDOWS
-    using RenderFont     = SharpDX.DirectWrite.TextFormat;
+using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
 #else
@@ -130,9 +131,10 @@ namespace FamiStudio
                 Color.FromArgb(unchecked((int)0xff607d8b)),
                 Color.FromArgb(unchecked((int)0xff767d8a)), // LightGreyFillColor1
                 Color.FromArgb(unchecked((int)0xffc6cdda))  // LightGreyFillColor2
-                
             }
         };
+
+        public Dictionary<Color, RenderBrush> CustomColorBrushes = new Dictionary<Color, RenderBrush>();
 
         public static void InitializeBase()
         {
@@ -164,6 +166,14 @@ namespace FamiStudio
             DarkGreyLineBrush2 = g.CreateSolidBrush(DarkGreyLineColor2);
             DarkGreyFillBrush1 = g.CreateSolidBrush(DarkGreyFillColor1);
             DarkGreyFillBrush2 = g.CreateSolidBrush(DarkGreyFillColor2);
+
+            for (int j = 0; j < CustomColors.GetLength(1); j++)
+            {
+                for (int i = 0; i < CustomColors.GetLength(0); i++)
+                {
+                    CustomColorBrushes[CustomColors[i, j]] = g.CreateSolidBrush(CustomColors[i, j]);
+                }
+            }
         }
 
         public static System.Drawing.Color RandomCustomColor()

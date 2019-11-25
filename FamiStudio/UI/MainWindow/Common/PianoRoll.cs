@@ -458,13 +458,25 @@ namespace FamiStudio
             {
                 DrawSelectionRect(g, headerSizeY);
 
+                // Draw colored header
+                for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
+                {
+                    var pattern = Song.Channels[editChannel].PatternInstances[p];
+                    if (pattern != null)
+                    {
+                        int patternX = p * patternSizeX - scrollX;
+                        g.FillRectangle(patternX, 0, patternX + patternSizeX, headerSizeY, theme.CustomColorBrushes[pattern.Color]);
+                    }
+                }
+
                 // Draw the header bars
                 for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                 {
                     int x = p * patternSizeX - scrollX;
                     if (p != 0)
                         g.DrawLine(x, 0, x, headerSizeY, theme.DarkGreyLineBrush1, 3.0f);
-                    g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, theme.LightGreyFillBrush1, patternSizeX);
+                    var pattern = Song.Channels[editChannel].PatternInstances[p];
+                    g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, pattern == null ? theme.LightGreyFillBrush1 : theme.BlackBrush, patternSizeX);
                 }
 
                 // Draw the effect icons.
@@ -1911,10 +1923,13 @@ namespace FamiStudio
             {
                 if (editMode == EditionMode.Channel)
                 {
-                    tooltip = "{MouseLeft} Add note - {Shift} {MouseLeft} Add release note - {Ctrl} {MouseLeft} Add stop note - {MouseRight} Delete note - {MouseWheel} Pan";
-
                     if (GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
                     {
+                        if (Song.Channels[editChannel].PatternInstances[patternIdx] == null)
+                            tooltip = "{MouseWheel} Pan";
+                        else
+                            tooltip = "{MouseLeft} Add note - {Shift} {MouseLeft} Add release note - {Ctrl} {MouseLeft} Add stop note - {MouseRight} Delete note - {MouseWheel} Pan";
+
                         tooltip += $"\n{Note.GetFriendlyName(noteValue)} [{patternIdx:D3}:{noteIdx:D3}]";
                         if (Song.Channels[editChannel].FindPreviousValidNote(noteValue, ref patternIdx, ref noteIdx))
                         {
