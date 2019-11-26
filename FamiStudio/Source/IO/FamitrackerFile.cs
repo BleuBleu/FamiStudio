@@ -278,6 +278,7 @@ namespace FamiStudio
             foreach (var s in project.Songs)
             {
                 s.RemoveEmptyPatterns();
+                s.SetSensibleBarLength();
 
                 foreach (var c in s.Channels)
                 {

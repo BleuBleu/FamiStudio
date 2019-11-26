@@ -660,23 +660,13 @@ namespace FamiStudio
 
         private int[] GenerateBarLengths(int patternLen)
         {
-            var barLengths = new List<int>();
-
-            for (int i = patternLen; i >= 2; i--)
-            {
-                if (patternLen % i == 0)
-                {
-                    barLengths.Add(i);
-                }
-            }
-
-            var lengths = barLengths.ToArray();
+            var barLengths = Song.GenerateBarLengths(patternLen);
 
 #if !FAMISTUDIO_WINDOWS
-            Array.Reverse(lengths);
+            Array.Reverse(barLengths);
 #endif
 
-            return lengths;
+            return barLengths;
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
