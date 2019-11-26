@@ -3,6 +3,13 @@
     fg[NORMAL] = "#C6CDDA" # LightGreyFillColor2
 }
 
+style "check"
+{
+    fg[NORMAL] = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE] = "#C6CDDA" # LightGreyFillColor2
+    fg[PRELIGHT] = "#C6CDDA" # DarkGreyFillColor2
+}
+
 style "spin"
 {
     bg[NORMAL] = "#2A3033" # DarkGreyFillColor2
@@ -33,6 +40,7 @@ style "all"
 
 widget_class "*" style "all"
 widget_class "*GtkLabel*" style "label"
+widget_class "*GtkCheckButton*Label*" style "check"
 widget_class "*Spin*" style "spin"
 widget_class "*FlatButton*" style "flatbutton"
 widget_class "*Dialog" style "dialog"

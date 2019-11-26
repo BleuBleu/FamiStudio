@@ -10,10 +10,11 @@ x Copy/paste support
 Copy paste support:
 ===================
 - Mac:
-	- Add line width param to GL
+	x Add line width param to GL
 	- Up/down/left/right keys wont work
 	- Change the key handling thing.
-	- MeasureString
+	- PasteSpecialDialog cannot be opened in keydown => GTK crash.
+	x MeasureString
 - Test pattern copy between projects (if pattern isnt there)
 - Add some kind of project id so that copy between project doesnt conflict?
 - Bad bar length when importing MM3 180

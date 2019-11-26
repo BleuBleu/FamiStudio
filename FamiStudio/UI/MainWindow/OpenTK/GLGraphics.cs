@@ -329,6 +329,12 @@ namespace FamiStudio
             GL.Disable(EnableCap.Texture2D);
         }
 
+        public float MeasureString(string text, GLFont font)
+        {
+            font.MeasureString(text, out int minX, out int maxX);
+            return maxX - minX;
+        }
+
         public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
         {
             GL.Color4(brush.Color0);
@@ -339,14 +345,15 @@ namespace FamiStudio
             GL.End();
         }
 
-        public void DrawRectangle(RectangleF rect, GLBrush brush)
+        public void DrawRectangle(RectangleF rect, GLBrush brush, float width = 1.0f)
         {
-            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
+            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
         {
             GL.Color4(brush.Color0);
+            GL.LineWidth(width);
             GL.Begin(BeginMode.LineLoop);
             GL.Vertex2(x0 + 0.5f, y0 + 0.5f);
             GL.Vertex2(x1 + 0.5f, y0 + 0.5f);
@@ -463,10 +470,11 @@ namespace FamiStudio
             }
         }
 
-        public void DrawConvexPath(GLConvexPath geo, GLBrush brush)
+        public void DrawConvexPath(GLConvexPath geo, GLBrush brush, float lineWidth = 1.0f)
         {
             GL.Enable(EnableCap.LineSmooth);
             GL.Color4(brush.Color0);
+            GL.LineWidth(lineWidth);
             GL.Begin(BeginMode.LineLoop);
             foreach (var pt in geo.Points)
                 GL.Vertex2(pt.X + 0.5f, pt.Y + 0.5f);
@@ -474,10 +482,10 @@ namespace FamiStudio
             GL.Disable(EnableCap.LineSmooth);
         }
         
-        public void FillAndDrawConvexPath(GLConvexPath geo, GLBrush fillBrush, GLBrush lineBrush)
+        public void FillAndDrawConvexPath(GLConvexPath geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f)
         {
             FillConvexPath(geo, fillBrush);
-            DrawConvexPath(geo, lineBrush);
+            DrawConvexPath(geo, lineBrush, lineWidth);
         }
 
         public unsafe GLBitmap CreateBitmap(int width, int height, uint[] data)
@@ -536,6 +544,11 @@ namespace FamiStudio
                 pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
 
             return new GLBitmap(CreateGLTexture(pixbuf), pixbuf.Width, pixbuf.Height);
+        }
+
+        public float GetBitmapWidth(GLBitmap bmp)
+        {
+            return bmp.Size.Width;
         }
 
         public GLBrush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)
