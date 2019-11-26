@@ -397,6 +397,14 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.Alt;
             else if (k == Key.ShiftRight || k == Key.ShiftLeft)
                 return System.Windows.Forms.Keys.Shift;
+            else if (k == Key.Up)
+                return System.Windows.Forms.Keys.Up;
+            else if (k == Key.Down)
+                return System.Windows.Forms.Keys.Down;
+            else if (k == Key.Left)
+                return System.Windows.Forms.Keys.Left;
+            else if (k == Key.Right)
+                return System.Windows.Forms.Keys.Right;
             else if (k == Key.Space)
                 return System.Windows.Forms.Keys.Space;
             else if (k == Key.Enter)
@@ -516,6 +524,10 @@ namespace FamiStudio
                 if (buttons != captureButtons)
                 {
                     captureControl.MouseUp(args);
+
+                    // Failsafe.
+                    if (buttons == System.Windows.Forms.MouseButtons.None)
+                        captureControl = null;
                 }
                 else
                 {
