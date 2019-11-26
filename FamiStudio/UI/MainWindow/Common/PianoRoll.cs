@@ -1525,7 +1525,14 @@ namespace FamiStudio
             });
         }
 
-        public void FormKeyDown(KeyEventArgs e)
+#if FAMISTUDIO_WINDOWS
+        public void UnfocusedKeyDown(KeyEventArgs e)
+        {
+            OnKeyDown(e);
+        }
+#endif
+
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
             {

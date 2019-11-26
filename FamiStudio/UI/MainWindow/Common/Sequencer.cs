@@ -838,7 +838,19 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        public void FormKeyDown(KeyEventArgs e)
+#if FAMISTUDIO_WINDOWS
+        public void UnfocusedKeyDown(KeyEventArgs e)
+        {
+            OnKeyDown(e);
+        }
+
+        public void UnfocusedKeyUp(KeyEventArgs e)
+        {
+            OnKeyUp(e);
+        }
+#endif
+
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
             {
@@ -874,7 +886,7 @@ namespace FamiStudio
             }
         }
 
-        public void FormKeyUp(KeyEventArgs e)
+        protected override void OnKeyUp(KeyEventArgs e)
         {
             if (captureOperation == CaptureOperation.DragSelection)
             {

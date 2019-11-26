@@ -508,11 +508,13 @@ namespace FamiStudio
             {
                 OpenProject();
             }
+#if FAMISTUDIO_WINDOWS
             else
             {
-                PianoRoll.FormKeyDown(e);
-                Sequencer.FormKeyDown(e);
+                if (!PianoRoll.Focused) PianoRoll.UnfocusedKeyDown(e);
+                if (!Sequencer.Focused) Sequencer.UnfocusedKeyDown(e);
             }
+#endif
         }
 
         public bool CanCopy  => PianoRoll.CanCopy  || Sequencer.CanCopy;
@@ -552,7 +554,9 @@ namespace FamiStudio
 
         public void KeyUp(KeyEventArgs e)
         {
-            Sequencer.FormKeyUp(e);
+#if FAMISTUDIO_WINDOWS
+            if (!Sequencer.Focused) Sequencer.UnfocusedKeyUp(e);
+#endif
         }
 
         private void Midi_NotePlayed(int n, bool on)
