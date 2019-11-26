@@ -1898,7 +1898,7 @@ namespace FamiStudio
             if (IsMouseInHeader(e))
             {
                 if (editMode == EditionMode.Channel)
-                    tooltip = "{MouseLeft} Seek - {MouseRight} Select";
+                    tooltip = "{MouseLeft} Seek - {MouseRight} Select - {MouseRight}{MouseRight} Select entire pattern";
                 else if (editMode == EditionMode.Enveloppe)
                     tooltip = "{MouseRight} Select - {MouseRight} Resize envelope";
             }
