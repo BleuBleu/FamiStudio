@@ -4,16 +4,20 @@ x Copy/paste support
 - Change undo/redo keys on macos
 - Sign exe/setup on Windows
 - Sign/notarize on MacOS
+- New song
 - New tutorial video
 
 Copy paste support:
 ===================
-- Improve paste special dialog, ugly.
 - Mac:
 	- Add line width param to GL
 	- Up/down/left/right keys wont work
 	- Change the key handling thing.
 	- MeasureString
+- Test pattern copy between projects (if pattern isnt there)
+- Add some kind of project id so that copy between project doesnt conflict?
+- Bad bar length when importing MM3 180
+- Add some kind of delete for FX.
 
 ========================
 Backlog:
