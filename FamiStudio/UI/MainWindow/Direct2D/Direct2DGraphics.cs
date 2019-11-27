@@ -26,6 +26,7 @@ namespace FamiStudio
         private WindowRenderTarget renderTarget;
         private Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
         private Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
+        private StrokeStyle strokeStyle;
 
         public Factory Factory => factory;
         public WindowRenderTarget RenderTarget => renderTarget;
@@ -43,6 +44,8 @@ namespace FamiStudio
             renderTarget = new WindowRenderTarget(factory, new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)), properties);
             renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
             renderTarget.AntialiasMode = AntialiasMode.Aliased;
+
+            strokeStyle = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
         }
 
         public void Dispose()
@@ -234,7 +237,7 @@ namespace FamiStudio
             AntiAliasing = true;
             renderTarget.FillGeometry(geo, fillBrush);
             PushTranslation(0.5f, 0.5f);
-            renderTarget.DrawGeometry(geo, lineBrush, lineWidth);
+            renderTarget.DrawGeometry(geo, lineBrush, lineWidth, strokeStyle);
             PopTransform();
             AntiAliasing = false;
         }
