@@ -70,9 +70,12 @@ namespace FamiStudio
                 keyData == Keys.Right)
             {
                 famistudio.KeyDown(new KeyEventArgs(keyData));
+                return true;
             }
-
-            return base.ProcessCmdKey(ref msg, keyData);
+            else
+            {
+                return base.ProcessCmdKey(ref msg, keyData);
+            }
         }
 
         public void Run()

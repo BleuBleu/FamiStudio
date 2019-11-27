@@ -521,10 +521,14 @@ namespace FamiStudio
                 OpenProject();
             }
 #if FAMISTUDIO_WINDOWS
-            else
+            else if (e.KeyData == Keys.Up    ||
+                     e.KeyData == Keys.Down  ||
+                     e.KeyData == Keys.Left  ||
+                     e.KeyData == Keys.Right ||
+                     e.KeyData == Keys.Escape)
             {
-                if (!PianoRoll.Focused) PianoRoll.UnfocusedKeyDown(e);
-                if (!Sequencer.Focused) Sequencer.UnfocusedKeyDown(e);
+                PianoRoll.UnfocusedKeyDown(e);
+                Sequencer.UnfocusedKeyDown(e);
             }
 #endif
         }

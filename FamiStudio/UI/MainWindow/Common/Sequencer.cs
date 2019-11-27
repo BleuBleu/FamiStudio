@@ -859,8 +859,7 @@ namespace FamiStudio
                 ClearSelection();
                 ConditionalInvalidate();
             }
-
-            if (showSelection)
+            else if (showSelection)
             {
                 bool ctrl = ModifierKeys.HasFlag(Keys.Control);
 
