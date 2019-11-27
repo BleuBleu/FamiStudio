@@ -223,6 +223,7 @@ namespace FamiStudio
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
             InvalidateEverything();
             UpdateTitle();
+            ClipboardUtils.Reset();
         }
 
         public void OpenProject(string filename)

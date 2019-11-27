@@ -12,13 +12,13 @@ namespace FamiStudio
         const uint MagicNumberClipboardEnvelope = 0x21454346; // FCE!
         const uint MagicNumberClipboardPatterns = 0x21504346; // FCP!
 
-#if !FAMISTUDIO_WINDOWS
+#if TRUE //!FAMISTUDIO_WINDOWS
         static byte[] macClipboardData; // Cant copy between FamiStudio instance on MacOS.
 #endif
 
         private static void SetClipboardData(byte[] data)
         {
-#if FAMISTUDIO_WINDOWS
+#if FALSE //FAMISTUDIO_WINDOWS
             Clipboard.SetData("FamiStudio", data);
 #else
             macClipboardData = data;
@@ -27,7 +27,7 @@ namespace FamiStudio
 
         private static byte[] GetClipboardData()
         {
-#if FAMISTUDIO_WINDOWS
+#if FALSE //FAMISTUDIO_WINDOWS
             return Clipboard.GetData("FamiStudio") as byte[];
 #else
             return macClipboardData;
@@ -190,6 +190,11 @@ namespace FamiStudio
             }
 
             return patterns;
+        }
+
+        public static void Reset()
+        {
+            SetClipboardData(null);
         }
     }
 }
