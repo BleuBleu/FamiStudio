@@ -1002,9 +1002,11 @@ namespace FamiStudio
                     // Pattern drawing.
                     for (int c = 0; c < Song.Channels.Length; c++)
                     {
-                        if (c == editChannel || (App.GhostChannelMask & (1 << c)) != 0)
+                        var isActiveChannel = c == editChannel;
+
+                        if (isActiveChannel || (App.GhostChannelMask & (1 << c)) != 0)
                         {
-                            var dimmed = c != editChannel;
+                            var dimmed = !isActiveChannel;
 
                             var lastNotePatternIdx = a.minVisiblePattern - 1;
                             var lastNoteValue = Song.Channels[c].GetLastValidNote(ref lastNotePatternIdx, out var lastNoteTime, out var lastNoteInstrument, out var lastNoteReleased);
@@ -1025,7 +1027,7 @@ namespace FamiStudio
                                     {
                                         var note = pattern.Notes[i];
                                         var instrument = lastNoteInstrument;
-                                        var selected = IsNoteSelected(p, lastNoteTime);
+                                        var selected = IsNoteSelected(p, lastNoteTime) && isActiveChannel;
                                         var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
                                         if (dimmed) color = Color.FromArgb((int)(color.A * 0.2f), color);
 
@@ -1047,7 +1049,7 @@ namespace FamiStudio
 
                                         if (note.IsStop || note.IsRelease)
                                         {
-                                            selected = IsNoteSelected(p, i);
+                                            selected = IsNoteSelected(p, i) && isActiveChannel;
                                             int value = lastNoteValue >= Note.NoteMin && lastNoteValue <= Note.NoteMax ? lastNoteValue : 49; // C4 by default.
 
                                             if (value >= a.minVisibleNote && value <= a.maxVisibleNote)
@@ -1080,7 +1082,7 @@ namespace FamiStudio
                                         }
                                     }
 
-                                    if (c == editChannel)
+                                    if (isActiveChannel)
                                         g.DrawText(pattern.Name, ThemeBase.FontBig, startX + bigTextPosX - scrollX, bigTextPosY, whiteKeyBrush);
                                 }
 
@@ -1101,7 +1103,7 @@ namespace FamiStudio
                                     int y = virtualSizeY - lastNoteValue * noteSizeY - scrollY + (lastNoteReleased ? noteSizeY / 2 - releaseNoteSizeY / 2 : 0);
 
                                     var instrument = lastNoteInstrument;
-                                    var selected = IsNoteSelected(a.maxVisiblePattern - 1, lastNoteTime);
+                                    var selected = IsNoteSelected(a.maxVisiblePattern - 1, lastNoteTime) && isActiveChannel;
                                     var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
                                     if (dimmed) color = Color.FromArgb((int)(color.A * 0.2f), color);
 
