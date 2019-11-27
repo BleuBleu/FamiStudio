@@ -672,7 +672,7 @@ namespace FamiStudio
                 g.PushClip(0, 0, Width, effectPanelSizeY);
                 g.Clear(ThemeBase.DarkGreyFillColor1);
 
-                var lastVolumeFrame = 0;
+                var lastVolumeFrame = -1;
                 var lastVolumeValue = Song.Channels[editChannel].GetLastValidVolume(a.minVisiblePattern - 1);
 
                 // Draw the effects.
@@ -695,7 +695,7 @@ namespace FamiStudio
 
                                     var frame = p * Song.PatternLength + i;
                                     var sizeY = (float)Math.Floor(lastVolumeValue / (float)Note.VolumeMax * effectPanelSizeY);
-                                    g.FillRectangle(lastVolumeFrame < 0 ? -noteSizeX * 1000 : (frame - lastVolumeFrame - 1) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
+                                    g.FillRectangle(lastVolumeFrame < 0 ? -noteSizeX * 100000 : (frame - lastVolumeFrame - 1) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
                                     lastVolumeValue = note.Volume;
                                     lastVolumeFrame = frame;
 
@@ -707,7 +707,7 @@ namespace FamiStudio
 
                     g.PushTranslation(Math.Max(0, lastVolumeFrame * noteSizeX - scrollX), 0);
                     var lastSizeY = (float)Math.Floor(lastVolumeValue / (float)Note.VolumeMax * effectPanelSizeY);
-                    g.FillRectangle(noteSizeX, effectPanelSizeY - lastSizeY, Width, effectPanelSizeY, theme.DarkGreyFillBrush2);
+                    g.FillRectangle(0, effectPanelSizeY - lastSizeY, Width, effectPanelSizeY, theme.DarkGreyFillBrush2);
                     g.PopTransform();
                 }
 
@@ -1498,7 +1498,7 @@ namespace FamiStudio
 
             TransformEnvelopeValues(selectionMin, selectionMax, (val, idx) =>
             {
-                return (sbyte)Utils.Clamp(val + amount, minVal, maxVal); ;
+                return (sbyte)Utils.Clamp(val + amount, minVal, maxVal);
             });
         }
 
@@ -1834,7 +1834,7 @@ namespace FamiStudio
 
         private void SetSelection(int min, int max)
         {
-            int rangeMax = editMode == EditionMode.Channel ? Song.Length * Song.PatternLength : EditEnvelope.Length;
+            int rangeMax = editMode == EditionMode.Channel ? Song.Length * Song.PatternLength - 1 : EditEnvelope.Length - 1;
 
             selectionMin = Utils.Clamp(min, 0, rangeMax);
             selectionMax = Utils.Clamp(max, min, rangeMax);
@@ -1954,7 +1954,7 @@ namespace FamiStudio
                         else
                             tooltip = "{MouseLeft} Add note - {Shift} {MouseLeft} Add release note - {Ctrl} {MouseLeft} Add stop note - {MouseRight} Delete note - {MouseWheel} Pan";
 
-                        tooltip += $"\n{Note.GetFriendlyName(noteValue)} [{patternIdx:D3}-{noteIdx:D3}]";
+                        tooltip += $"\n{Note.GetFriendlyName(noteValue)} [{patternIdx:D3} : {noteIdx:D3}]";
                         if (Song.Channels[editChannel].FindPreviousValidNote(noteValue, ref patternIdx, ref noteIdx))
                         {
                             var pat = Song.Channels[editChannel].PatternInstances[patternIdx];
@@ -1972,7 +1972,7 @@ namespace FamiStudio
                     tooltip = "{MouseLeft} Set envelope value - {MouseWheel} Pan";
 
                     if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
-                        tooltip += $"\n{idx:D3}-{value}";
+                        tooltip += $"\n{idx:D3} : {value}";
                 }
             }
 
