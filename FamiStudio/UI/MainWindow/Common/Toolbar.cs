@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using FamiStudio.Properties;
 
@@ -24,25 +25,36 @@ namespace FamiStudio
         const int ButtonOpen   = 1;
         const int ButtonSave   = 2;
         const int ButtonExport = 3;
-        const int ButtonUndo   = 4;
-        const int ButtonRedo   = 5;
-        const int ButtonConfig = 6;
-        const int ButtonPlay   = 7;
-        const int ButtonRewind = 8;
-        const int ButtonLoop   = 9;
-        const int ButtonCount  = 10;
+        const int ButtonCopy   = 4;
+        const int ButtonCut    = 5;
+        const int ButtonPaste  = 6;
+        const int ButtonUndo   = 7;
+        const int ButtonRedo   = 8;
+        const int ButtonConfig = 9;
+        const int ButtonPlay   = 10;
+        const int ButtonRewind = 11;
+        const int ButtonLoop   = 12;
+        const int ButtonCount  = 13;
 
-        const int DefaultTimecodePosX     = 300;
-        const int DefaultTimecodePosY     = 4;
-        const int DefaultTimecodeSizeX    = 160;
-        const int DefaultTimecodeTextPosX = 30;
-        const int DefaultTooltipPosY      = 12;
+        const int DefaultTimecodePosX            = 415;
+        const int DefaultTimecodePosY            = 4;
+        const int DefaultTimecodeSizeX           = 160;
+        const int DefaultTimecodeTextPosX        = 30;
+        const int DefaultTooltipSingleLinePosY   = 12;
+        const int DefaultTooltipMultiLinePosY    = 4;
+        const int DefaultTooltipLineSizeY        = 17;
+        const int DefaultTooltipSpecialCharSizeX = 16;
+        const int DefaultTooltipSpecialCharSizeY = 14;
 
         int timecodePosX;
         int timecodePosY;
         int timecodeSizeX;
         int timecodeTextPosX;
-        int tooltipPosY;
+        int tooltipSingleLinePosY;
+        int tooltipMultiLinePosY;
+        int tooltipLineSizeY;
+        int tooltipSpecialCharSizeX;
+        int tooltipSpecialCharSizeY;
 
         private delegate void EmptyDelegate();
         private delegate bool BoolDelegate();
@@ -62,6 +74,14 @@ namespace FamiStudio
             public bool IsPointIn(int px, int py) => px >= X && (px - X) < Size && py >= Y && (py - Y) < Size;
         };
 
+        class TooltipSpecialCharacter
+        {
+            public RenderBitmap Bmp;
+            public int Width;
+            public int Height;
+            public float OffsetY;
+        };
+
         string tooltip = "";
         RenderTheme theme;
         RenderBrush toolbarBrush;
@@ -71,6 +91,7 @@ namespace FamiStudio
         RenderBitmap bmpPlay;
         RenderBitmap bmpPause;
         Button[] buttons = new Button[ButtonCount];
+        Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
@@ -87,23 +108,29 @@ namespace FamiStudio
             buttons[ButtonOpen]   = new Button { X = 44,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
             buttons[ButtonSave]   = new Button { X = 84,  Y = 4, Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
             buttons[ButtonExport] = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
-            buttons[ButtonUndo]   = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
-            buttons[ButtonRedo]   = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
-            buttons[ButtonConfig] = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
-            buttons[ButtonPlay]   = new Button { X = 476, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
-            buttons[ButtonRewind] = new Button { X = 516, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
-            buttons[ButtonLoop]   = new Button { X = 556, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[ButtonCopy]   = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
+            buttons[ButtonCut]    = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
+            buttons[ButtonPaste]  = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
+            buttons[ButtonUndo]   = new Button { X = 284, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
+            buttons[ButtonRedo]   = new Button { X = 324, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
+            buttons[ButtonConfig] = new Button { X = 364, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
+            buttons[ButtonPlay]   = new Button { X = 594, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
+            buttons[ButtonRewind] = new Button { X = 634, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
+            buttons[ButtonLoop]   = new Button { X = 674, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
 
-            buttons[ButtonNew].ToolTip    = "New Project (Ctrl-N)";
-            buttons[ButtonOpen].ToolTip   = "Open Project (Ctrl-O)";
-            buttons[ButtonSave].ToolTip   = "Save Project (Ctrl-S) [Right-Click: Save As...]";
-            buttons[ButtonExport].ToolTip = "Export to various formats (Ctrl+E)";
-            buttons[ButtonUndo].ToolTip   = "Undo (Ctrl+Z)";
-            buttons[ButtonRedo].ToolTip   = "Redo (Ctrl+Y)";
-            buttons[ButtonConfig].ToolTip = "Edit Application Settings";
-            buttons[ButtonPlay].ToolTip   = "Play/Pause (Space) [Ctrl+Space: Play pattern loop, Shift-Space: Play song loop]";
-            buttons[ButtonRewind].ToolTip = "Rewind (Home) [Ctrl+Home: Rewind to beginning of current pattern]";
-            buttons[ButtonLoop].ToolTip   = "Toggle Loop Mode";
+            buttons[ButtonNew].ToolTip    = "{MouseLeft} New Project {Ctrl} {N}";
+            buttons[ButtonOpen].ToolTip   = "{MouseLeft} Open Project {Ctrl} {O}";
+            buttons[ButtonSave].ToolTip   = "{MouseLeft} Save Project {Ctrl} {S}  - {MouseRight} Save As...";
+            buttons[ButtonExport].ToolTip = "{MouseLeft} Export to various formats {Ctrl} {E}";
+            buttons[ButtonCopy].ToolTip   = "{MouseLeft} Copy selection {Ctrl} {C}";
+            buttons[ButtonCut].ToolTip    = "{MouseLeft} Cut selection {Ctrl} {X}";
+            buttons[ButtonPaste].ToolTip  = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
+            buttons[ButtonUndo].ToolTip   = "{MouseLeft} Undo {Ctrl} {Z}";
+            buttons[ButtonRedo].ToolTip   = "{MouseLeft} Redo {Ctrl} {Y}";
+            buttons[ButtonConfig].ToolTip = "{MouseLeft} Edit Application Settings";
+            buttons[ButtonPlay].ToolTip   = "{MouseLeft} Play/Pause {Space}\nPlay pattern loop {Ctrl} {Space}  - Play song loop {Shift} {Space}";
+            buttons[ButtonRewind].ToolTip = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
+            buttons[ButtonLoop].ToolTip   = "{MouseLeft} Toggle Loop Mode";
 
             var scaling = RenderTheme.MainWindowScaling;
 
@@ -115,17 +142,48 @@ namespace FamiStudio
                 btn.Size = (int)(btn.Size * scaling);
             }
 
-            timecodePosX     = (int)(DefaultTimecodePosX     * scaling);
-            timecodePosY     = (int)(DefaultTimecodePosY     * scaling);
-            timecodeSizeX    = (int)(DefaultTimecodeSizeX    * scaling);
-            timecodeTextPosX = (int)(DefaultTimecodeTextPosX * scaling);
-            tooltipPosY      = (int)(DefaultTooltipPosY      * scaling);
+            timecodePosX            = (int)(DefaultTimecodePosX            * scaling);
+            timecodePosY            = (int)(DefaultTimecodePosY            * scaling);
+            timecodeSizeX           = (int)(DefaultTimecodeSizeX           * scaling);
+            timecodeTextPosX        = (int)(DefaultTimecodeTextPosX        * scaling);
+            tooltipSingleLinePosY   = (int)(DefaultTooltipSingleLinePosY   * scaling);
+            tooltipMultiLinePosY    = (int)(DefaultTooltipMultiLinePosY    * scaling);
+            tooltipLineSizeY        = (int)(DefaultTooltipLineSizeY        * scaling);
+            tooltipSpecialCharSizeX = (int)(DefaultTooltipSpecialCharSizeX * scaling);
+            tooltipSpecialCharSizeY = (int)(DefaultTooltipSpecialCharSizeY * scaling);
+
+            specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = (int)(32 * scaling) };
+            specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
+            specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
+            specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = (int)(28 * scaling) };
+            specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
+            specialCharacters["Drag"]       = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("Drag"),       OffsetY = 2 * scaling };
+            specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseLeft"),  OffsetY = 2 * scaling };
+            specialCharacters["MouseRight"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseRight"), OffsetY = 2 * scaling };
+            specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseWheel"), OffsetY = 2 * scaling };
+
+            for (char i = 'A'; i <= 'Z'; i++)
+                specialCharacters[i.ToString()] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
+
+            foreach (var specialChar in specialCharacters.Values)
+            {
+                if (specialChar.Bmp != null)
+                    specialChar.Width = (int)g.GetBitmapWidth(specialChar.Bmp);
+                specialChar.Height = tooltipSpecialCharSizeY;
+            }
         }
 
         public string ToolTip
         {
             get { return tooltip; }
-            set { tooltip = value; ConditionalInvalidate(); }
+            set
+            {
+                if (tooltip != value)
+                {
+                    tooltip = value;
+                    ConditionalInvalidate();
+                }
+            }
         }
 
         public void Reset()
@@ -162,6 +220,41 @@ namespace FamiStudio
         private void OnExport()
         {
             App.Export();
+        }
+
+        private void OnCut()
+        {
+            App.Cut();
+        }
+
+        private bool OnCutEnabled()
+        {
+            return App.CanCopy;
+        }
+
+        private void OnCopy()
+        {
+            App.Copy();
+        }
+
+        private bool OnCopyEnabled()
+        {
+            return App.CanCopy;
+        }
+
+        private void OnPaste()
+        {
+            App.Paste();
+        }
+
+        private void OnPasteSpecial()
+        {
+            App.PasteSpecial();
+        }
+
+        private bool OnPasteEnabled()
+        {
+            return App.CanPaste;
         }
 
         private void OnUndo()
@@ -254,7 +347,46 @@ namespace FamiStudio
             // Tooltip
             if (!string.IsNullOrEmpty(tooltip))
             {
-                g.DrawText(tooltip, ThemeBase.FontMediumRight, Width - 314, tooltipPosY, theme.BlackBrush, 300);
+                var lines = tooltip.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                var posY = lines.Length == 1 ? tooltipSingleLinePosY : tooltipMultiLinePosY;
+
+                for (int j = 0; j < lines.Length; j++)
+                {
+                    var splits = lines[j].Split(new char[] { '{', '}' }, StringSplitOptions.RemoveEmptyEntries);
+                    var posX = Width - 8 * RenderTheme.MainWindowScaling;
+
+                    for (int i = splits.Length - 1; i >= 0; i--)
+                    {
+                        var str = splits[i];
+
+                        if (specialCharacters.TryGetValue(str, out var specialCharacter))
+                        {
+                            posX -= specialCharacter.Width;
+
+                            if (specialCharacter.Bmp != null)
+                            {
+                                g.DrawBitmap(specialCharacter.Bmp, posX, posY + specialCharacter.OffsetY);
+                            }
+                            else
+                            {
+                                g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, theme.BlackBrush, RenderTheme.MainWindowScaling * 2 - 1);
+                                g.DrawText(str, ThemeBase.FontMediumCenter, posX, posY, theme.BlackBrush, specialCharacter.Width);
+
+#if !FAMISTUDIO_WINDOWS
+                                // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
+                                posX -= 2;
+#endif
+                            }
+                        }
+                        else
+                        {
+                            posX -= g.MeasureString(splits[i], ThemeBase.FontMedium);
+                            g.DrawText(str, ThemeBase.FontMedium, posX, posY, theme.BlackBrush);
+                        }
+                    }
+
+                    posY += tooltipLineSizeY;
+                }
             }
         }
 

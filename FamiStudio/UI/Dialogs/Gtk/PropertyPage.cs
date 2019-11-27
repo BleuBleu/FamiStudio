@@ -125,10 +125,11 @@ namespace FamiStudio
             return textBox;
         }
 
-        private CheckButton CreateCheckBox(bool value)
+        private CheckButton CreateCheckBox(bool value, string text = "")
         {
             var cb = new CheckButton();
             cb.Active = value;
+            cb.Label = text;
             cb.Toggled += Cb_Toggled;
 
             return cb;
@@ -268,6 +269,16 @@ namespace FamiStudio
                     type = PropertyType.Boolean,
                     label = CreateLabel(label),
                     control = CreateCheckBox(value)
+                });
+        }
+
+        public void AddLabelBoolean(string label, bool value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Boolean,
+                    control = CreateCheckBox(value, label)
                 });
         }
 

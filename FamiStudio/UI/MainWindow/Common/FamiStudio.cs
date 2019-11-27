@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -43,6 +44,7 @@ namespace FamiStudio
         public Sequencer Sequencer => mainForm.Sequencer;
         public PianoRoll PianoRoll => mainForm.PianoRoll;
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
+        public Rectangle MainWindowBounds => mainForm.Bounds;
 
         public FamiStudio(string filename)
         {
@@ -50,8 +52,11 @@ namespace FamiStudio
 
             Sequencer.PatternClicked += sequencer_PatternClicked;
             Sequencer.SelectedChannelChanged += sequencer_SelectedChannelChanged;
+            Sequencer.ControlActivated += Sequencer_ControlActivated;
+            Sequencer.PatternModified += Sequencer_PatternModified;
             PianoRoll.PatternChanged += pianoRoll_PatternChanged;
             PianoRoll.EnvelopeResized += pianoRoll_EnvelopeResized;
+            PianoRoll.ControlActivated += PianoRoll_ControlActivated;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
             ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
@@ -79,6 +84,25 @@ namespace FamiStudio
             {
                 Task.Factory.StartNew(CheckForNewRelease);
             }
+        }
+
+        private void Sequencer_PatternModified()
+        {
+            PianoRoll.ConditionalInvalidate();
+        }
+
+        private void Sequencer_ControlActivated()
+        {
+            PianoRoll.ShowSelection = false;
+            Sequencer.ShowSelection = true;
+            ToolBar.Invalidate();
+        }
+
+        private void PianoRoll_ControlActivated()
+        {
+            PianoRoll.ShowSelection = true;
+            Sequencer.ShowSelection = false;
+            ToolBar.Invalidate();
         }
 
         private void sequencer_SelectedChannelChanged(int channelIdx)
@@ -423,6 +447,11 @@ namespace FamiStudio
             bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
             bool shift = e.Modifiers.HasFlag(Keys.Shift);
 
+            if (e.KeyCode == Keys.Escape)
+            {
+                StopIntrumentNote();
+            }
+
             if (e.KeyCode == Keys.Space)
             {
                 if (IsPlaying)
@@ -479,10 +508,55 @@ namespace FamiStudio
             {
                 OpenProject();
             }
-            else if (e.KeyCode == Keys.Escape)
+#if FAMISTUDIO_WINDOWS
+            else
             {
-                StopIntrumentNote();
+                if (!PianoRoll.Focused) PianoRoll.UnfocusedKeyDown(e);
+                if (!Sequencer.Focused) Sequencer.UnfocusedKeyDown(e);
             }
+#endif
+        }
+
+        public bool CanCopy  => PianoRoll.CanCopy  || Sequencer.CanCopy;
+        public bool CanPaste => PianoRoll.CanPaste || Sequencer.CanPaste;
+
+        public void Copy()
+        {
+            if (PianoRoll.ShowSelection)
+                PianoRoll.Copy();
+            else
+                Sequencer.Copy();
+        }
+
+        public void Cut()
+        {
+            if (PianoRoll.ShowSelection)
+                PianoRoll.Cut();
+            else
+                Sequencer.Cut();
+        }
+
+        public void Paste()
+        {
+            if (PianoRoll.ShowSelection)
+                PianoRoll.Paste();
+            else
+                Sequencer.Paste();
+        }
+
+        public void PasteSpecial()
+        {
+            if (PianoRoll.ShowSelection)
+                PianoRoll.PasteSpecial();
+            else
+                Sequencer.Paste();
+        }
+
+        public void KeyUp(KeyEventArgs e)
+        {
+#if FAMISTUDIO_WINDOWS
+            if (!Sequencer.Focused) Sequencer.UnfocusedKeyUp(e);
+#endif
         }
 
         private void Midi_NotePlayed(int n, bool on)
@@ -623,7 +697,7 @@ namespace FamiStudio
         private void projectExplorer_SongModified(Song song)
         {
             Sequencer.InvalidatePatternCache();
-            PianoRoll.ClampScroll();
+            PianoRoll.SongModified();
             InvalidateEverything();
         }
 

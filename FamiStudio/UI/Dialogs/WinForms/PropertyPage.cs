@@ -219,13 +219,14 @@ namespace FamiStudio
             return upDown;
         }
 
-        private CheckBox CreateCheckBox(bool value)
+        private CheckBox CreateCheckBox(bool value, string text = "")
         {
             var cb = new CheckBox();
 
-            cb.Text = "";
+            cb.Text = text;
             cb.Checked = value;
             cb.Font = font;
+            cb.ForeColor = ThemeBase.LightGreyFillColor2;
             cb.CheckedChanged += Cb_CheckedChanged;
 
             return cb;
@@ -339,6 +340,16 @@ namespace FamiStudio
                     type = PropertyType.Boolean,
                     label = CreateLabel(label),
                     control = CreateCheckBox(value)
+                });
+        }
+
+        public void AddLabelBoolean(string label, bool value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Boolean,
+                    control = CreateCheckBox(value, label)
                 });
         }
 

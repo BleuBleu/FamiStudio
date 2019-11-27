@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace FamiStudio
@@ -99,6 +100,27 @@ namespace FamiStudio
                 return true;
             }
             return false;
+        }
+
+        public static int[] GenerateBarLengths(int patternLen)
+        {
+            var barLengths = new List<int>();
+
+            for (int i = patternLen; i >= 2; i--)
+            {
+                if (patternLen % i == 0)
+                {
+                    barLengths.Add(i);
+                }
+            }
+
+            return barLengths.ToArray();
+        }
+
+        public void SetSensibleBarLength()
+        {
+            var barLengths = GenerateBarLengths(patternLength);
+            barLength = barLengths[barLengths.Length / 2];
         }
 
         public Pattern GetPattern(int id)

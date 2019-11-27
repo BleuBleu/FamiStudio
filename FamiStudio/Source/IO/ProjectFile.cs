@@ -6,7 +6,7 @@ namespace FamiStudio
 {
     public static class ProjectFile
     {
-        const uint MagicNumber = 0x21534D46;
+        const uint MagicNumber = 0x21534D46; // FMS!
 
         public static Project Load(string filename)
         {

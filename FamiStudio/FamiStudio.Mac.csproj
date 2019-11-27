@@ -85,6 +85,7 @@
     <Compile Include="Source\Player\SquareChannelState.cs" />
     <Compile Include="Source\Player\TriangleChannelState.cs" />
     <Compile Include="Source\Project\Envelope.cs" />
+    <Compile Include="Source\Utils\ClipboardUtils.cs" /> 
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="UI\Dialogs\Common\ConfigDialog.cs" />
     <Content Include="libportaudio.2.dylib">
@@ -170,6 +171,7 @@
     <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand24_0.png" />
     <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
+    <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -213,6 +215,20 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Drag%402x.png" />
+    <EmbeddedResource Include="Resources\Drag.png" /> 
+    <EmbeddedResource Include="Resources\MouseLeft%402x.png" />
+    <EmbeddedResource Include="Resources\MouseLeft.png" />
+    <EmbeddedResource Include="Resources\MouseRight%402x.png" />
+    <EmbeddedResource Include="Resources\MouseRight.png" />
+    <EmbeddedResource Include="Resources\MouseWheel%402x.png" />
+    <EmbeddedResource Include="Resources\MouseWheel.png" /> 
+    <EmbeddedResource Include="Resources\Copy%402x.png" />
+    <EmbeddedResource Include="Resources\Copy.png" />
+    <EmbeddedResource Include="Resources\Cut%402x.png" />
+    <EmbeddedResource Include="Resources\Cut.png" />
+    <EmbeddedResource Include="Resources\Paste%402x.png" />
+    <EmbeddedResource Include="Resources\Paste.png" />
     <EmbeddedResource Include="Resources\ConfigMIDI%402x.png" />
     <EmbeddedResource Include="Resources\ConfigMIDI.png" />
     <EmbeddedResource Include="Resources\ConfigSound%402x.png" />

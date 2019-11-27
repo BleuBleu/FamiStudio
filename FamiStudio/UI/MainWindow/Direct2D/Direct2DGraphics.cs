@@ -148,6 +148,12 @@ namespace FamiStudio
             renderTarget.DrawText(text, font, new RawRectangleF(x, y, x + width, y + 1000), brush);
         }
 
+        public float MeasureString(string text, TextFormat font)
+        {
+            using (TextLayout layout = new TextLayout(directWriteFactory, text, font, 1000, 1000))
+                return (float)layout.Metrics.WidthIncludingTrailingWhitespace;
+        }
+
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush)
         {
             renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush);
@@ -158,18 +164,18 @@ namespace FamiStudio
             renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush, width);
         }
 
-        public void DrawRectangle(RawRectangleF rect, Brush brush)
+        public void DrawRectangle(RawRectangleF rect, Brush brush, float width = 1.0f)
         {
             rect.Left += 0.5f;
             rect.Top += 0.5f;
             rect.Right += 0.5f;
             rect.Bottom += 0.5f;
-            renderTarget.DrawRectangle(rect, brush);
+            renderTarget.DrawRectangle(rect, brush, width);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, Brush brush)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, Brush brush, float width = 1.0f)
         {
-            DrawRectangle(new RawRectangleF(x0, y0, x1, y1), brush);
+            DrawRectangle(new RawRectangleF(x0, y0, x1, y1), brush, width);
         }
 
         public PathGeometry CreateConvexPath(System.Drawing.Point[] points)
@@ -209,14 +215,28 @@ namespace FamiStudio
 
         public void FillConvexPath(Geometry geo, Brush brush)
         {
+            AntiAliasing = true;
             renderTarget.FillGeometry(geo, brush);
+            AntiAliasing = false;
         }
 
         public void DrawConvexPath(Geometry geo, Brush brush)
         {
+            AntiAliasing = true;
             PushTranslation(0.5f, 0.5f);
             renderTarget.DrawGeometry(geo, brush);
             PopTransform();
+            AntiAliasing = false;
+        }
+
+        public void FillAndDrawConvexPath(Geometry geo, Brush fillBrush, Brush lineBrush, float lineWidth = 1.0f)
+        {
+            AntiAliasing = true;
+            renderTarget.FillGeometry(geo, fillBrush);
+            PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawGeometry(geo, lineBrush, lineWidth);
+            PopTransform();
+            AntiAliasing = false;
         }
 
         public static Color ToDrawingColor4(RawColor4 color)
@@ -339,6 +359,11 @@ namespace FamiStudio
             bmp.Dispose();
 
             return result;
+        }
+
+        public float GetBitmapWidth(Bitmap bmp)
+        {
+            return bmp.Size.Width;
         }
 
         public Brush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)
