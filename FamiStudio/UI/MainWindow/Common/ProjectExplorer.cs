@@ -176,12 +176,14 @@ namespace FamiStudio
         public delegate void EmptyDelegate();
         public delegate void InstrumentEnvelopeDelegate(Instrument instrument, int envelope);
         public delegate void InstrumentDelegate(Instrument instrument);
+        public delegate void InstrumentPointDelegate(Instrument instrument, Point pos);
         public delegate void SongDelegate(Song song);
 
         public event InstrumentEnvelopeDelegate InstrumentEdited;
         public event InstrumentDelegate InstrumentSelected;
         public event InstrumentDelegate InstrumentColorChanged;
         public event InstrumentDelegate InstrumentReplaced;
+        public event InstrumentPointDelegate InstrumentDraggedOutside;
         public event SongDelegate SongModified;
         public event SongDelegate SongSelected;
 
@@ -449,36 +451,43 @@ namespace FamiStudio
 
             if (isDraggingInstrument)
             {
-                var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
-
-                var instrumentSrc = instrumentDrag;
-                var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
-
-                if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null)
+                if (ClientRectangle.Contains(e.X, e.Y))
                 {
-                    if (envelopeDragIdx == -1)
-                    {
-                        if (PlatformDialogs.MessageBox($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                            App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
-                            App.UndoRedoManager.EndTransaction();
+                    var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
-                            InstrumentReplaced?.Invoke(instrumentDst);
+                    var instrumentSrc = instrumentDrag;
+                    var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
+
+                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null)
+                    {
+                        if (envelopeDragIdx == -1)
+                        {
+                            if (PlatformDialogs.MessageBox($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                                App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
+                                App.UndoRedoManager.EndTransaction();
+
+                                InstrumentReplaced?.Invoke(instrumentDst);
+                            }
+                        }
+                        else
+                        {
+                            if (PlatformDialogs.MessageBox($"Are you sure you want to copy the {Envelope.EnvelopeStrings[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
+                                instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].Clone();
+                                App.UndoRedoManager.EndTransaction();
+
+                                InstrumentEdited?.Invoke(instrumentDst, envelopeDragIdx);
+                                Invalidate();
+                            }
                         }
                     }
-                    else
-                    {
-                        if (PlatformDialogs.MessageBox($"Are you sure you want to copy the {Envelope.EnvelopeStrings[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
-                            instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].Clone();
-                            App.UndoRedoManager.EndTransaction();
-
-                            InstrumentEdited?.Invoke(instrumentDst, envelopeDragIdx);
-                            Invalidate();
-                        }
-                    }
+                }
+                else
+                {
+                    InstrumentDraggedOutside(instrumentDrag, PointToScreen(new Point(e.X, e.Y)));
                 }
             }
 

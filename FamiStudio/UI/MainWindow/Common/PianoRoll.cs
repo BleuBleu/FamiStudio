@@ -1437,7 +1437,7 @@ namespace FamiStudio
 
         private void TransformNotes(int startIdx, int endIdx, Func<Note, int, Note> function)
         {
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
 
             GetSelectionRange(startIdx, endIdx, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
 
@@ -1865,6 +1865,18 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        public void ReplaceSelectionInstrument(Instrument instrument)
+        {
+            if (editMode == EditionMode.Channel && editChannel != Channel.DPCM && IsSelectionValid())
+            {
+                TransformNotes(selectionMin, selectionMax, (note, idx) =>
+                {
+                    note.Instrument = instrument;
+                    return note;
+                });
+            }
+        }
+
         private bool IsMouseInHeader(MouseEventArgs e)
         {
             return e.X > whiteKeySizeX && e.Y < headerSizeY;
@@ -1942,7 +1954,7 @@ namespace FamiStudio
                         else
                             tooltip = "{MouseLeft} Add note - {Shift} {MouseLeft} Add release note - {Ctrl} {MouseLeft} Add stop note - {MouseRight} Delete note - {MouseWheel} Pan";
 
-                        tooltip += $"\n{Note.GetFriendlyName(noteValue)} [{patternIdx:D3}:{noteIdx:D3}]";
+                        tooltip += $"\n{Note.GetFriendlyName(noteValue)} [{patternIdx:D3}-{noteIdx:D3}]";
                         if (Song.Channels[editChannel].FindPreviousValidNote(noteValue, ref patternIdx, ref noteIdx))
                         {
                             var pat = Song.Channels[editChannel].PatternInstances[patternIdx];
@@ -1960,7 +1972,7 @@ namespace FamiStudio
                     tooltip = "{MouseLeft} Set envelope value - {MouseWheel} Pan";
 
                     if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
-                        tooltip += $"\n{idx:D3}:{value}";
+                        tooltip += $"\n{idx:D3}-{value}";
                 }
             }
 

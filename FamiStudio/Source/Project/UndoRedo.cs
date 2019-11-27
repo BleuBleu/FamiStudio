@@ -10,6 +10,7 @@ namespace FamiStudio
         Project,
         DCPMSamples,
         Song,
+        Channel,
         Pattern,
         Instrument,
         Max
@@ -21,6 +22,7 @@ namespace FamiStudio
         private Project project;
         private TransactionScope scope;
         private int objectId;
+        private int subIdx;
         private byte[] stateBefore;
         private byte[] stateAfter;
 
@@ -29,12 +31,15 @@ namespace FamiStudio
         public byte[] StateBefore { get => stateBefore; private set => stateBefore = value; }
         public byte[] StateAfter { get => stateAfter; private set => stateAfter = value; }
 
-        public Transaction(Project project, FamiStudio app, TransactionScope scope, int objectId)
+        public Transaction(Project project, FamiStudio app, TransactionScope scope, int objectId, int subIdx = -1)
         {
             this.project = project;
             this.app = app;
             this.scope = scope;
             this.objectId = objectId;
+            this.subIdx = subIdx;
+
+            Debug.Assert(scope != TransactionScope.Channel || subIdx >= 0);
         }
 
         public void Begin()
@@ -78,6 +83,9 @@ namespace FamiStudio
                 case TransactionScope.Pattern:
                     project.GetPattern(objectId).SerializeState(buffer);
                     break;
+                case TransactionScope.Channel:
+                    project.GetSong(objectId).Channels[subIdx].SerializeState(buffer);
+                    break;
                 case TransactionScope.Song:
                     project.GetSong(objectId).SerializeState(buffer);
                     break;
@@ -116,7 +124,7 @@ namespace FamiStudio
             this.app = app;
         }
 
-        public void BeginTransaction(TransactionScope scope, int objectId = -1)
+        public void BeginTransaction(TransactionScope scope, int objectId = -1, int subIdx = -1)
         {
             Debug.Assert(transactions.Count == 0 || transactions.Last().IsEnded);
 
@@ -125,7 +133,7 @@ namespace FamiStudio
                 transactions.RemoveRange(index, transactions.Count - index);
             }
 
-            var trans = new Transaction(project, app, scope, objectId);
+            var trans = new Transaction(project, app, scope, objectId, subIdx);
             transactions.Add(trans);
             trans.Begin();
             index++;
