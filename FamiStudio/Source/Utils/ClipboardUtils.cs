@@ -71,6 +71,11 @@ namespace FamiStudio
                 instrumentIdNameMap.Add(new Tuple<int, string>(instId, instName));
             }
 
+            var dummyInstrument = new Instrument();
+
+            bool messageShown = false;
+            bool createMissing = false;
+
             for (int i = 0; i < numInstruments; i++)
             {
                 var instId = instrumentIdNameMap[i].Item1;
@@ -83,14 +88,27 @@ namespace FamiStudio
                 {
                     serializer.RemapId(instId, existingInstrument.Id);
                     instrument = existingInstrument;
-                    var dummyInstrument = new Instrument(); // Skip instrument
-                    dummyInstrument.SerializeState(serializer);
+                    dummyInstrument.SerializeState(serializer); // Skip instrument
                 }
                 else
                 {
-                    instrument = serializer.Project.CreateInstrument(instName);
-                    serializer.RemapId(instId, instrument.Id);
-                    instrument.SerializeState(serializer);
+                    if (!messageShown)
+                    {
+                        createMissing = PlatformDialogs.MessageBox($"You are pasting notes refering to non-existant instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                        messageShown = true;
+                    }
+
+                    if (createMissing)
+                    {
+                        instrument = serializer.Project.CreateInstrument(instName);
+                        serializer.RemapId(instId, instrument.Id);
+                        instrument.SerializeState(serializer);
+                    }
+                    else
+                    {
+                        serializer.RemapId(instId, -1);
+                        dummyInstrument.SerializeState(serializer); // Skip instrument
+                    }
                 }
             }
 
