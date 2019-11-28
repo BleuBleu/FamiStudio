@@ -12,13 +12,13 @@ namespace FamiStudio
         const uint MagicNumberClipboardEnvelope = 0x21454346; // FCE!
         const uint MagicNumberClipboardPatterns = 0x21504346; // FCP!
 
-#if TRUE //!FAMISTUDIO_WINDOWS
+#if !FAMISTUDIO_WINDOWS
         static byte[] macClipboardData; // Cant copy between FamiStudio instance on MacOS.
 #endif
 
         private static void SetClipboardData(byte[] data)
         {
-#if FALSE //FAMISTUDIO_WINDOWS
+#if FAMISTUDIO_WINDOWS
             Clipboard.SetData("FamiStudio", data);
 #else
             macClipboardData = data;
@@ -27,7 +27,7 @@ namespace FamiStudio
 
         private static byte[] GetClipboardData()
         {
-#if FALSE //FAMISTUDIO_WINDOWS
+#if FAMISTUDIO_WINDOWS
             return Clipboard.GetData("FamiStudio") as byte[];
 #else
             return macClipboardData;
@@ -48,7 +48,55 @@ namespace FamiStudio
             return true;
         }
 
-        public static void SetNotes(Note[] notes)
+        private static void SaveInstrumentList(ProjectSaveBuffer serializer, IEnumerable<Instrument> instruments)
+        {
+            foreach (var inst in instruments)
+            {
+                var instId = inst.Id;
+                var instName = inst.Name;
+                serializer.Serialize(ref instId);
+                serializer.Serialize(ref instName);
+            }
+        }
+
+        private static void LoadInstrumentList(ProjectLoadBuffer serializer, int numInstruments)
+        {
+            var instrumentIdNameMap = new List<Tuple<int, string>>();
+            for (int i = 0; i < numInstruments; i++)
+            {
+                var instId = 0;
+                var instName = "";
+                serializer.Serialize(ref instId);
+                serializer.Serialize(ref instName);
+                instrumentIdNameMap.Add(new Tuple<int, string>(instId, instName));
+            }
+
+            for (int i = 0; i < numInstruments; i++)
+            {
+                var instId = instrumentIdNameMap[i].Item1;
+                var instName = instrumentIdNameMap[i].Item2;
+
+                Instrument instrument = null;
+                var existingInstrument = serializer.Project.GetInstrument(instName);
+
+                if (existingInstrument != null)
+                {
+                    serializer.RemapId(instId, existingInstrument.Id);
+                    instrument = existingInstrument;
+                    var dummyInstrument = new Instrument(); // Skip instrument
+                    dummyInstrument.SerializeState(serializer);
+                }
+                else
+                {
+                    instrument = serializer.Project.CreateInstrument(instName);
+                    serializer.RemapId(instId, instrument.Id);
+                    instrument.SerializeState(serializer);
+                }
+            }
+
+        }
+
+        public static void SetNotes(Project project, Note[] notes)
         {
             if (notes == null)
             {
@@ -56,7 +104,25 @@ namespace FamiStudio
                 return;
             }
 
+            var instruments = new HashSet<Instrument>();
+            foreach (var note in notes)
+            {
+                if (note.Instrument != null)
+                    instruments.Add(note.Instrument);
+            }
+
             var serializer = new ProjectSaveBuffer(null);
+
+            int numInstruments = instruments.Count;
+            int numNotes = notes.Length;
+
+            serializer.Serialize(ref numInstruments);
+            serializer.Serialize(ref numNotes);
+
+            SaveInstrumentList(serializer, instruments);
+
+            foreach (var inst in instruments)
+                inst.SerializeState(serializer);
 
             foreach (var note in notes)
                 note.SerializeState(serializer);
@@ -65,7 +131,6 @@ namespace FamiStudio
 
             var clipboardData = new List<byte>();
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardNotes));
-            clipboardData.AddRange(BitConverter.GetBytes(notes.Length));
             clipboardData.AddRange(buffer);
 
             SetClipboardData(clipboardData.ToArray());
@@ -78,14 +143,22 @@ namespace FamiStudio
             if (buffer == null || BitConverter.ToUInt32(buffer, 0) != MagicNumberClipboardNotes)
                 return null;
 
-            var numNotes = BitConverter.ToInt32(buffer, 4);
-            var decompressedBuffer = Compression.DecompressBytes(buffer, 8);
+            var decompressedBuffer = Compression.DecompressBytes(buffer, 4);
             var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
 
-            var notes = new Note[numNotes];
+            int numInstruments = 0;
+            int numNotes = 0;
 
+            serializer.Serialize(ref numInstruments);
+            serializer.Serialize(ref numNotes);
+
+            LoadInstrumentList(serializer, numInstruments);
+
+            var notes = new Note[numNotes];
             for (int i = 0; i < numNotes; i++)
                 notes[i].SerializeState(serializer);
+
+            project.SortInstruments();
 
             return notes;
         }
@@ -117,7 +190,7 @@ namespace FamiStudio
             return values;
         }
 
-        public static void SetPatterns(Pattern[,] patterns)
+        public static void SetPatterns(Project project, Pattern[,] patterns)
         {
             if (patterns == null)
             {

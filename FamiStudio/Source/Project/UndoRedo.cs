@@ -10,7 +10,8 @@ namespace FamiStudio
         Project,
         DCPMSamples,
         Song,
-        Channel,
+        Channels,
+        ChannelsAndInstruments,
         Pattern,
         Instrument,
         Max
@@ -22,7 +23,7 @@ namespace FamiStudio
         private Project project;
         private TransactionScope scope;
         private int objectId;
-        private int subIdx;
+        private int mask;
         private byte[] stateBefore;
         private byte[] stateAfter;
 
@@ -31,15 +32,13 @@ namespace FamiStudio
         public byte[] StateBefore { get => stateBefore; private set => stateBefore = value; }
         public byte[] StateAfter { get => stateAfter; private set => stateAfter = value; }
 
-        public Transaction(Project project, FamiStudio app, TransactionScope scope, int objectId, int subIdx = -1)
+        public Transaction(Project project, FamiStudio app, TransactionScope scope, int objectId, int mask = -1)
         {
             this.project = project;
             this.app = app;
             this.scope = scope;
             this.objectId = objectId;
-            this.subIdx = subIdx;
-
-            Debug.Assert(scope != TransactionScope.Channel || subIdx >= 0);
+            this.mask = mask;
         }
 
         public void Begin()
@@ -67,6 +66,16 @@ namespace FamiStudio
             get { return stateAfter != null; }
         }
 
+        private void SerializeChannels(ProjectBuffer buffer)
+        {
+            var song = project.GetSong(objectId);
+            for (int i = 0; i < Channel.Count; i++)
+            {
+                if ((mask & (1 << i)) != 0)
+                    song.Channels[i].SerializeState(buffer);
+            }
+        }
+
         private void Serialize(ProjectBuffer buffer)
         {
             switch (scope)
@@ -83,8 +92,12 @@ namespace FamiStudio
                 case TransactionScope.Pattern:
                     project.GetPattern(objectId).SerializeState(buffer);
                     break;
-                case TransactionScope.Channel:
-                    project.GetSong(objectId).Channels[subIdx].SerializeState(buffer);
+                case TransactionScope.Channels:
+                    SerializeChannels(buffer);
+                    break;
+                case TransactionScope.ChannelsAndInstruments:
+                    project.SerializeInstrumentState(buffer);
+                    SerializeChannels(buffer);
                     break;
                 case TransactionScope.Song:
                     project.GetSong(objectId).SerializeState(buffer);
@@ -124,7 +137,7 @@ namespace FamiStudio
             this.app = app;
         }
 
-        public void BeginTransaction(TransactionScope scope, int objectId = -1, int subIdx = -1)
+        public void BeginTransaction(TransactionScope scope, int objectId = -1, int mask = -1)
         {
             Debug.Assert(transactions.Count == 0 || transactions.Last().IsEnded);
 
@@ -133,7 +146,7 @@ namespace FamiStudio
                 transactions.RemoveRange(index, transactions.Count - index);
             }
 
-            var trans = new Transaction(project, app, scope, objectId, subIdx);
+            var trans = new Transaction(project, app, scope, objectId, mask);
             transactions.Add(trans);
             trans.Begin();
             index++;

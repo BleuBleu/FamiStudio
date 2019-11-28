@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace FamiStudio
@@ -8,7 +9,7 @@ namespace FamiStudio
     {
         void Serialize(ref bool b);
         void Serialize(ref byte b);
-        void Serialize(ref int b);
+        void Serialize(ref int b, bool id = false);
         void Serialize(ref uint b);
         void Serialize(ref ulong b);
         void Serialize(ref System.Drawing.Color b);
@@ -57,7 +58,7 @@ namespace FamiStudio
             idx += sizeof(byte);
         }
 
-        public void Serialize(ref int i)
+        public void Serialize(ref int i, bool id = false)
         {
             buffer.AddRange(BitConverter.GetBytes(i));
             idx += sizeof(int);
@@ -148,6 +149,7 @@ namespace FamiStudio
         private int idx = 0;
         private int version;
         private bool undoRedo;
+        private Dictionary<int, int> idRemapTable = new Dictionary<int, int>();
 
         public ProjectLoadBuffer(Project p, byte[] buffer, int version, bool forUndoRedo = false)
         {
@@ -155,6 +157,18 @@ namespace FamiStudio
             this.buffer = buffer;
             this.version = version;
             this.undoRedo = forUndoRedo;
+        }
+
+        public void RemapId(int oldId, int newId)
+        {
+            idRemapTable[oldId] = newId;
+        }
+
+        private int GetRemappedId(int id)
+        {
+            if (idRemapTable.TryGetValue(id, out int newId))
+                return newId;
+            return id;
         }
 
         public void Serialize(ref bool b)
@@ -169,9 +183,11 @@ namespace FamiStudio
             idx += sizeof(byte);
         }
 
-        public void Serialize(ref int i)
+        public void Serialize(ref int i, bool id = false)
         {
             i = BitConverter.ToInt32(buffer, idx);
+            if (id)
+                i = GetRemappedId(i);
             idx += sizeof(int);
         }
 
@@ -232,7 +248,7 @@ namespace FamiStudio
         public void Serialize(ref Instrument instrument)
         {
             int instrumentId = -1;
-            Serialize(ref instrumentId);
+            Serialize(ref instrumentId, true);
             instrument = project.GetInstrument(instrumentId);
         }
 

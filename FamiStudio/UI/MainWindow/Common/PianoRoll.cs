@@ -171,6 +171,8 @@ namespace FamiStudio
         public event EnvelopeResize EnvelopeResized;
         public delegate void ControlActivate();
         public event ControlActivate ControlActivated;
+        public delegate void NotesPastedDelegate();
+        public event NotesPastedDelegate NotesPasted;
 
         public PianoRoll()
         {
@@ -780,7 +782,7 @@ namespace FamiStudio
             for (int i = 0; i < notes.Length; i++)
                 notes[i].IsValid = false;
 
-            TransformNotes(selectionMin, selectionMax, (note, idx) =>
+            TransformNotes(selectionMin, selectionMax, false, (note, idx) =>
             {
                 notes[idx] = note;
                 return note;
@@ -791,7 +793,7 @@ namespace FamiStudio
 
         private void CopyNotes()
         {
-            ClipboardUtils.SetNotes(GetSelectedNotes());
+            ClipboardUtils.SetNotes(App.Project, GetSelectedNotes());
         }
 
         private void CutNotes()
@@ -800,9 +802,9 @@ namespace FamiStudio
             DeleteSelectedNotes();
         }
 
-        private void ReplaceNotes(Note[] notes, int startIdx, bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
+        private void ReplaceNotes(Note[] notes, int startIdx, bool doTransaction, bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
         {
-            TransformNotes(startIdx, startIdx + notes.Length - 1, (note, idx) =>
+            TransformNotes(startIdx, startIdx + notes.Length - 1, doTransaction, (note, idx) =>
             {
                 var newNote = notes[idx];
 
@@ -832,12 +834,19 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
+            App.UndoRedoManager.BeginTransaction(TransactionScope.ChannelsAndInstruments, Song.Id, 1 << editChannel);
+
             var notes = ClipboardUtils.GetNotes(App.Project);
 
             if (notes == null)
+            {
+                App.UndoRedoManager.AbortTransaction();
                 return;
+            }
 
-            ReplaceNotes(notes, selectionMin, pasteNotes, pasteVolume, pasteFx);
+            ReplaceNotes(notes, selectionMin, false, pasteNotes, pasteVolume, pasteFx);
+            App.UndoRedoManager.EndTransaction();
+            NotesPasted?.Invoke();
         }
 
         private sbyte[] GetSelectedEnvelopeValues()
@@ -1432,12 +1441,13 @@ namespace FamiStudio
         private void MoveNotes(int amount)
         {
             if (selectionMin + amount >= 0)
-                ReplaceNotes(GetSelectedNotes(), selectionMin + amount);
+                ReplaceNotes(GetSelectedNotes(), selectionMin + amount, true);
         }
 
-        private void TransformNotes(int startIdx, int endIdx, Func<Note, int, Note> function)
+        private void TransformNotes(int startIdx, int endIdx, bool doTransaction, Func<Note, int, Note> function)
         {
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+            if (doTransaction)
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channels, Song.Id, 1 << editChannel);
 
             GetSelectionRange(startIdx, endIdx, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
 
@@ -1458,7 +1468,9 @@ namespace FamiStudio
                 }
             }
 
-            App.UndoRedoManager.EndTransaction();
+            if (doTransaction)
+                App.UndoRedoManager.EndTransaction();
+
             ConditionalInvalidate();
         }
 
@@ -1477,7 +1489,7 @@ namespace FamiStudio
 
         private void TransposeNotes(int amount)
         {
-            TransformNotes(selectionMin, selectionMax, (note, idx) =>
+            TransformNotes(selectionMin, selectionMax, true, (note, idx) =>
             {
                 if (note.IsMusical)
                 {
@@ -1510,7 +1522,7 @@ namespace FamiStudio
         
         private void DeleteSelectedNotes()
         {
-            TransformNotes(selectionMin, selectionMax, (note, idx) =>
+            TransformNotes(selectionMin, selectionMax, true, (note, idx) =>
             {
                 note = new Note();
                 note.IsValid = false;
@@ -1869,7 +1881,7 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel && editChannel != Channel.DPCM && IsSelectionValid())
             {
-                TransformNotes(selectionMin, selectionMax, (note, idx) =>
+                TransformNotes(selectionMin, selectionMax, true, (note, idx) =>
                 {
                     note.Instrument = instrument;
                     return note;

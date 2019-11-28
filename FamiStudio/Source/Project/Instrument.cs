@@ -5,8 +5,6 @@ namespace FamiStudio
 {
     public class Instrument
     {
-        static Random random = new Random();
-
         private int id;
         private string name;
         private Envelope[] envelopes = new Envelope[Envelope.Max];
@@ -45,7 +43,7 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            buffer.Serialize(ref id);
+            buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
             buffer.Serialize(ref color);
             buffer.Serialize(ref dutyCycle);

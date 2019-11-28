@@ -217,7 +217,7 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private void RefreshButtons()
+        public void RefreshButtons()
         {
             buttons.Clear();
             buttons.Add(new Button() { type = ButtonType.ProjectSettings });
@@ -253,7 +253,7 @@ namespace FamiStudio
             bmpSubButtonIcons[(int)SubButtonType.Volume] = g.CreateBitmapFromResource("Volume");
         }
 
-        private void ConditionalInvalidate()
+        public void ConditionalInvalidate()
         {
             Invalidate();
         }

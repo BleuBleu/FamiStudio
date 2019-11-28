@@ -57,6 +57,7 @@ namespace FamiStudio
             PianoRoll.PatternChanged += pianoRoll_PatternChanged;
             PianoRoll.EnvelopeResized += pianoRoll_EnvelopeResized;
             PianoRoll.ControlActivated += PianoRoll_ControlActivated;
+            PianoRoll.NotesPasted += PianoRoll_NotesPasted;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
             ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
@@ -85,6 +86,12 @@ namespace FamiStudio
             {
                 Task.Factory.StartNew(CheckForNewRelease);
             }
+        }
+
+        private void PianoRoll_NotesPasted()
+        {
+            ProjectExplorer.RefreshButtons();
+            ProjectExplorer.ConditionalInvalidate();
         }
 
         private void ProjectExplorer_InstrumentDraggedOutside(Instrument instrument, Point pos)
@@ -223,7 +230,7 @@ namespace FamiStudio
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
             InvalidateEverything();
             UpdateTitle();
-            ClipboardUtils.Reset();
+            //ClipboardUtils.Reset();
         }
 
         public void OpenProject(string filename)

@@ -90,6 +90,11 @@ namespace FamiStudio
             return instruments.Find(i => i.Id == id);
         }
 
+        public Instrument GetInstrument(string name)
+        {
+            return instruments.Find(i => i.Name == name);
+        }
+
         public DPCMSample GetSample(int id)
         {
             return samples.Find(s => s.Id == id);
@@ -472,6 +477,15 @@ namespace FamiStudio
             }
         }
 
+        public void SerializeInstrumentState(ProjectBuffer buffer)
+        {
+            int instrumentCount = instruments.Count;
+            buffer.Serialize(ref instrumentCount);
+            buffer.InitializeList(ref instruments, instrumentCount);
+            foreach (var instrument in instruments)
+                instrument.SerializeState(buffer);
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (!buffer.IsForUndoRedo)
@@ -497,11 +511,7 @@ namespace FamiStudio
             SerializeDPCMState(buffer);
 
             // Instruments
-            int instrumentCount = instruments.Count;
-            buffer.Serialize(ref instrumentCount);
-            buffer.InitializeList(ref instruments, instrumentCount);
-            foreach (var instrument in instruments)
-                instrument.SerializeState(buffer);
+            SerializeInstrumentState(buffer);
 
             // Songs
             int songCount = songs.Count;

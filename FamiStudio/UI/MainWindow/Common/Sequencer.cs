@@ -685,7 +685,7 @@ namespace FamiStudio
         {
             if (IsSelectionValid())
             {
-                ClipboardUtils.SetPatterns(GetSelectedPatterns());
+                ClipboardUtils.SetPatterns(App.Project, GetSelectedPatterns());
             }
         }
 
@@ -693,7 +693,7 @@ namespace FamiStudio
         {
             if (IsSelectionValid())
             {
-                ClipboardUtils.SetPatterns(GetSelectedPatterns());
+                ClipboardUtils.SetPatterns(App.Project, GetSelectedPatterns());
                 DeleteSelection();
             }
         }
@@ -708,7 +708,18 @@ namespace FamiStudio
             if (patterns == null)
                 return;
 
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+            int channelMask = 0;
+            for (int i = 0; i < patterns.GetLength(0); i++)
+            {
+                for (int j = 0; j < patterns.GetLength(1); j++)
+                {
+                    var pattern = patterns[i, j];
+                    if (pattern != null)
+                        channelMask |= (1 << pattern.ChannelType);
+                }
+            }
+
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id, channelMask);
 
             for (int i = 0; i < patterns.GetLength(0); i++)
             {
