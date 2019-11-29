@@ -25,31 +25,29 @@ namespace FamiStudio
 #endif
         }
 
-        private static byte[] GetClipboardData()
+        private static byte[] GetClipboardData(uint magic)
         {
 #if FAMISTUDIO_WINDOWS
-            return Clipboard.GetData("FamiStudio") as byte[];
+            var buffer = Clipboard.GetData("FamiStudio") as byte[];
 #else
-            return macClipboardData;
+            var buffer = macClipboardData;
 #endif
-        }
-
-        public static bool ConstainsNotes    => CheckContainsData(MagicNumberClipboardNotes);
-        public static bool ConstainsEnvelope => CheckContainsData(MagicNumberClipboardEnvelope);
-        public static bool ConstainsPatterns => CheckContainsData(MagicNumberClipboardPatterns);
-
-        private static bool CheckContainsData(uint magic)
-        {
-            var buffer = GetClipboardData();
 
             if (buffer == null || BitConverter.ToUInt32(buffer, 0) != magic)
-                return false;
+                return null;
 
-            return true;
+            return buffer;
         }
 
-        private static void SaveInstrumentList(ProjectSaveBuffer serializer, IEnumerable<Instrument> instruments)
+        public static bool ConstainsNotes    => GetClipboardData(MagicNumberClipboardNotes) != null;
+        public static bool ConstainsEnvelope => GetClipboardData(MagicNumberClipboardEnvelope) != null;
+        public static bool ConstainsPatterns => GetClipboardData(MagicNumberClipboardPatterns) != null;
+
+        private static void SaveInstrumentList(ProjectSaveBuffer serializer, ICollection<Instrument> instruments)
         {
+            int numInstruments = instruments.Count;
+            serializer.Serialize(ref numInstruments);
+
             foreach (var inst in instruments)
             {
                 var instId = inst.Id;
@@ -59,8 +57,11 @@ namespace FamiStudio
             }
         }
 
-        private static void LoadInstrumentList(ProjectLoadBuffer serializer, int numInstruments)
+        private static bool LoadAndMergeInstrumentList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
         {
+            int numInstruments = 0;
+            serializer.Serialize(ref numInstruments);
+
             var instrumentIdNameMap = new List<Tuple<int, string>>();
             for (int i = 0; i < numInstruments; i++)
             {
@@ -72,9 +73,7 @@ namespace FamiStudio
             }
 
             var dummyInstrument = new Instrument();
-
-            bool messageShown = false;
-            bool createMissing = false;
+            var needMerge = false;
 
             for (int i = 0; i < numInstruments; i++)
             {
@@ -92,29 +91,29 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (!messageShown)
-                    {
-                        createMissing = PlatformDialogs.MessageBox($"You are pasting notes refering to non-existant instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
-                        messageShown = true;
-                    }
+                    needMerge = true;
 
-                    if (createMissing)
+                    if (!checkOnly)
                     {
-                        instrument = serializer.Project.CreateInstrument(instName);
-                        serializer.RemapId(instId, instrument.Id);
-                        instrument.SerializeState(serializer);
-                    }
-                    else
-                    {
-                        serializer.RemapId(instId, -1);
-                        dummyInstrument.SerializeState(serializer); // Skip instrument
+                        if (createMissing)
+                        {
+                            instrument = serializer.Project.CreateInstrument(instName);
+                            serializer.RemapId(instId, instrument.Id);
+                            instrument.SerializeState(serializer);
+                        }
+                        else
+                        {
+                            serializer.RemapId(instId, -1);
+                            dummyInstrument.SerializeState(serializer); // Skip instrument
+                        }
                     }
                 }
             }
 
+            return needMerge;
         }
 
-        public static void SetNotes(Project project, Note[] notes)
+        public static void SaveNotes(Project project, Note[] notes)
         {
             if (notes == null)
             {
@@ -131,17 +130,12 @@ namespace FamiStudio
 
             var serializer = new ProjectSaveBuffer(null);
 
-            int numInstruments = instruments.Count;
-            int numNotes = notes.Length;
-
-            serializer.Serialize(ref numInstruments);
-            serializer.Serialize(ref numNotes);
-
             SaveInstrumentList(serializer, instruments);
-
             foreach (var inst in instruments)
                 inst.SerializeState(serializer);
 
+            int numNotes = notes.Length;
+            serializer.Serialize(ref numNotes);
             foreach (var note in notes)
                 note.SerializeState(serializer);
             
@@ -154,24 +148,31 @@ namespace FamiStudio
             SetClipboardData(clipboardData.ToArray());
         }
 
-        public static Note[] GetNotes(Project project)
+        public static bool ContainsMissingInstruments(Project project)
         {
-            var buffer = GetClipboardData();
+            var buffer = GetClipboardData(MagicNumberClipboardNotes);
 
-            if (buffer == null || BitConverter.ToUInt32(buffer, 0) != MagicNumberClipboardNotes)
+            if (buffer == null)
+                return false;
+
+            var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version);
+
+            return LoadAndMergeInstrumentList(serializer, true);
+        }
+
+        public static Note[] LoadNotes(Project project, bool createMissingInstruments)
+        {
+            var buffer = GetClipboardData(MagicNumberClipboardNotes);
+
+            if (buffer == null)
                 return null;
 
-            var decompressedBuffer = Compression.DecompressBytes(buffer, 4);
-            var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
+            var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version);
 
-            int numInstruments = 0;
+            LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
+
             int numNotes = 0;
-
-            serializer.Serialize(ref numInstruments);
             serializer.Serialize(ref numNotes);
-
-            LoadInstrumentList(serializer, numInstruments);
-
             var notes = new Note[numNotes];
             for (int i = 0; i < numNotes; i++)
                 notes[i].SerializeState(serializer);
@@ -181,7 +182,7 @@ namespace FamiStudio
             return notes;
         }
 
-        public static void SetEnvelopeValues(sbyte[] values)
+        public static void SaveEnvelopeValues(sbyte[] values)
         {
             var clipboardData = new List<byte>();
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardEnvelope));
@@ -192,11 +193,11 @@ namespace FamiStudio
             SetClipboardData(clipboardData.ToArray());
         }
 
-        public static sbyte[] GetEnvelopeValues()
+        public static sbyte[] LoadEnvelopeValues()
         {
-            var buffer = GetClipboardData();
+            var buffer = GetClipboardData(MagicNumberClipboardEnvelope);
 
-            if (buffer == null || BitConverter.ToUInt32(buffer, 0) != MagicNumberClipboardEnvelope)
+            if (buffer == null)
                 return null;
 
             var numValues = BitConverter.ToInt32(buffer, 4);
@@ -208,7 +209,7 @@ namespace FamiStudio
             return values;
         }
 
-        public static void SetPatterns(Project project, Pattern[,] patterns)
+        public static void SavePatterns(Project project, Pattern[,] patterns)
         {
             if (patterns == null)
             {
@@ -255,11 +256,11 @@ namespace FamiStudio
             SetClipboardData(clipboardData.ToArray());
         }
 
-        public static Pattern[,] GetPatterns(Project project)
+        public static Pattern[,] LoadPatterns(Project project)
         {
-            var buffer = GetClipboardData();
+            var buffer = GetClipboardData(MagicNumberClipboardPatterns);
 
-            if (buffer == null || BitConverter.ToUInt32(buffer, 0) != MagicNumberClipboardPatterns)
+            if (buffer == null)
                 return null;
 
             var numNonNullPatterns = BitConverter.ToInt32(buffer, 4);

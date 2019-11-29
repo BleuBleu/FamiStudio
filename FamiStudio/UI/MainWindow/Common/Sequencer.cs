@@ -685,7 +685,7 @@ namespace FamiStudio
         {
             if (IsSelectionValid())
             {
-                ClipboardUtils.SetPatterns(App.Project, GetSelectedPatterns());
+                ClipboardUtils.SavePatterns(App.Project, GetSelectedPatterns());
             }
         }
 
@@ -693,7 +693,7 @@ namespace FamiStudio
         {
             if (IsSelectionValid())
             {
-                ClipboardUtils.SetPatterns(App.Project, GetSelectedPatterns());
+                ClipboardUtils.SavePatterns(App.Project, GetSelectedPatterns());
                 DeleteSelection();
             }
         }
@@ -703,7 +703,7 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var patterns = ClipboardUtils.GetPatterns(App.Project);
+            var patterns = ClipboardUtils.LoadPatterns(App.Project);
 
             if (patterns == null)
                 return;

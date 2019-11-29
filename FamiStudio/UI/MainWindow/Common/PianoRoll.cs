@@ -793,7 +793,7 @@ namespace FamiStudio
 
         private void CopyNotes()
         {
-            ClipboardUtils.SetNotes(App.Project, GetSelectedNotes());
+            ClipboardUtils.SaveNotes(App.Project, GetSelectedNotes());
         }
 
         private void CutNotes()
@@ -834,9 +834,17 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            App.UndoRedoManager.BeginTransaction(TransactionScope.ChannelsAndInstruments, Song.Id, 1 << editChannel);
+            var mergeInstruments = ClipboardUtils.ContainsMissingInstruments(App.Project);
 
-            var notes = ClipboardUtils.GetNotes(App.Project);
+            bool createMissingInstrument = false;
+            if (mergeInstruments)
+            {
+                createMissingInstrument = PlatformDialogs.MessageBox($"You are pasting notes refering to non-existant instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+            }
+
+            App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
+
+            var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument);
 
             if (notes == null)
             {
@@ -864,7 +872,7 @@ namespace FamiStudio
 
         private void CopyEnvelopeValues()
         {
-            ClipboardUtils.SetEnvelopeValues(GetSelectedEnvelopeValues());
+            ClipboardUtils.SaveEnvelopeValues(GetSelectedEnvelopeValues());
         }
 
         private void CutEnvelopeValues()
@@ -888,7 +896,7 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var values = ClipboardUtils.GetEnvelopeValues();
+            var values = ClipboardUtils.LoadEnvelopeValues();
 
             if (values == null)
                 return;
@@ -1447,7 +1455,7 @@ namespace FamiStudio
         private void TransformNotes(int startIdx, int endIdx, bool doTransaction, Func<Note, int, Note> function)
         {
             if (doTransaction)
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Channels, Song.Id, 1 << editChannel);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, 1 << editChannel);
 
             GetSelectionRange(startIdx, endIdx, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
 
