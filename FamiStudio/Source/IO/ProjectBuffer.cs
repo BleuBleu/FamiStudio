@@ -241,7 +241,7 @@ namespace FamiStudio
         public void Serialize(ref Song song)
         {
             int songId = -1;
-            Serialize(ref songId);
+            Serialize(ref songId, true);
             song = project.GetSong(songId);
         }
 
