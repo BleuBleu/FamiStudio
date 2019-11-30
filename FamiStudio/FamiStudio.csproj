@@ -73,6 +73,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />

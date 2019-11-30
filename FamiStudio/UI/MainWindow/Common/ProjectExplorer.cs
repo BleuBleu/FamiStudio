@@ -67,6 +67,7 @@ namespace FamiStudio
             Arpeggio,
             Pitch,
             Volume,
+            LoadInstrument,
             Max
         }
 
@@ -81,9 +82,12 @@ namespace FamiStudio
                 switch (type)
                 {
                     case ButtonType.SongHeader:
-                    case ButtonType.InstrumentHeader:
                         active = new[] { true };
                         return new[] { SubButtonType.Add };
+                    case ButtonType.InstrumentHeader:
+                        active = new[] { true ,true };
+                        return new[] { SubButtonType.Add ,
+                                       SubButtonType.LoadInstrument };
                     case ButtonType.Instrument:
                         if (instrument == null)
                         {
@@ -252,6 +256,7 @@ namespace FamiStudio
             bmpSubButtonIcons[(int)SubButtonType.Arpeggio] = g.CreateBitmapFromResource("Arpeggio");
             bmpSubButtonIcons[(int)SubButtonType.Pitch] = g.CreateBitmapFromResource("Pitch");
             bmpSubButtonIcons[(int)SubButtonType.Volume] = g.CreateBitmapFromResource("Volume");
+            bmpSubButtonIcons[(int)SubButtonType.LoadInstrument] = g.CreateBitmapFromResource("Add");
         }
 
         public void ConditionalInvalidate()
@@ -261,6 +266,7 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
+
             g.Clear(ThemeBase.DarkGreyFillColor1);
             g.DrawLine(0, 0, 0, Height, theme.BlackBrush);
 
@@ -562,6 +568,14 @@ namespace FamiStudio
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                             App.Project.CreateInstrument();
+                            App.UndoRedoManager.EndTransaction();
+                            RefreshButtons();
+                            ConditionalInvalidate();
+                        }
+                        if (subButtonType == SubButtonType.LoadInstrument)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.Project.CreateInstrumentFromFile();
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
                             ConditionalInvalidate();
