@@ -367,7 +367,6 @@ namespace FamiStudio
 
             var patterns = new Pattern[numPatterns, numChannels];
 
-
             for (int i = 0; i < numPatterns; i++)
             {
                 for (int j = 0; j < numChannels; j++)

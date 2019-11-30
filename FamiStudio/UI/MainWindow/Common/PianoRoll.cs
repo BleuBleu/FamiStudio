@@ -481,6 +481,9 @@ namespace FamiStudio
                     g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, pattern == null ? theme.LightGreyFillBrush1 : theme.BlackBrush, patternSizeX);
                 }
 
+                int maxX = patternSizeX * a.maxVisiblePattern - scrollX;
+                g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
+
                 // Draw the effect icons.
                 if (editMode == EditionMode.Channel && zoomLevel >= 0)
                 {
@@ -763,6 +766,9 @@ namespace FamiStudio
                     if (p != 0) g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, 3.0f);
                 }
 
+                int maxX = patternSizeX * a.maxVisiblePattern - scrollX;
+                g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
+
                 int seekX = App.CurrentFrame * noteSizeX - scrollX;
                 g.DrawLine(seekX, 0, seekX, effectPanelSizeY, seekBarBrush, 3);
 
@@ -1011,7 +1017,7 @@ namespace FamiStudio
                         }
                     }
 
-                    g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1);
+                    g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
 
                     int seekX = App.CurrentFrame * noteSizeX - scrollX;
                     g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
@@ -1996,6 +2002,22 @@ namespace FamiStudio
 
                     if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
                         tooltip += $"\n{idx:D3} : {value}";
+                }
+                else if (editMode == EditionMode.DPCM)
+                {
+                    if (GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
+                    {
+                        if (App.Project.NoteSupportsDPCM(noteValue))
+                        {
+                            var mapping = App.Project.GetDPCMMapping(noteValue);
+                            if (mapping == null)
+                                tooltip = "{MouseLeft} Load DPCM sample - {MouseWheel} Pan";
+                            else
+                                tooltip = "{MouseLeft}{MouseLeft} Sample properties - {MouseRight} Delete sample {MouseWheel} Pan";
+                        }
+                        else
+                            tooltip = "Samples must be between C1 and D6";
+                    }
                 }
             }
 
