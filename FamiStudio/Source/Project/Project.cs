@@ -95,6 +95,11 @@ namespace FamiStudio
             return instruments.Find(i => i.Name == name);
         }
 
+        public bool InstrumentExists(Instrument inst)
+        {
+            return instruments.Contains(inst);
+        }
+
         public DPCMSample GetSample(int id)
         {
             return samples.Find(s => s.Id == id);
@@ -208,6 +213,18 @@ namespace FamiStudio
             return instrument;
         }
 
+        public void UpdateAllLastValidNotesAndVolume()
+        {
+            foreach (var song in songs)
+            {
+                foreach (var channel in song.Channels)
+                {
+                    foreach (var pattern in channel.Patterns)
+                        pattern.UpdateLastValidNotesAndVolume();
+                }
+            }
+        }
+
         public void ReplaceInstrument(Instrument instrumentOld, Instrument instrumentNew)
         {
             foreach (var song in songs)
@@ -226,11 +243,11 @@ namespace FamiStudio
                                 pattern.Notes[i].Instrument = instrumentNew;
                             }
                         }
-
-                        pattern.UpdateLastValidNotesAndVolume();
                     }
                 }
             }
+
+            UpdateAllLastValidNotesAndVolume();
         }
 
         public void DeleteInstrument(Instrument instrument)
@@ -441,6 +458,30 @@ namespace FamiStudio
                     samplesMapping[i] = null;
                 }
             }
+        }
+
+#if DEBUG
+        private void ValidateDPCMSamples()
+        {
+            foreach (var mapping in samplesMapping)
+            {
+                if (mapping != null && mapping.Sample != null)
+                {
+                    Debug.Assert(GetSample(mapping.Sample.Id) == mapping.Sample);
+                    Debug.Assert(samples.Contains(mapping.Sample));
+                }
+            }
+        }
+#endif
+
+        public void Validate()
+        {
+#if DEBUG
+            ValidateDPCMSamples();
+
+            foreach (var song in Songs)
+                song.Validate(this);
+#endif
         }
 
         public void SerializeDPCMState(ProjectBuffer buffer)

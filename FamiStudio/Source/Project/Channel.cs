@@ -17,6 +17,12 @@ namespace FamiStudio
         private List<Pattern> patterns = new List<Pattern>();
         private int type;
 
+        public int Type => type;
+        public string Name => channelNames[(int)type];
+        public Song Song => song;
+        public Pattern[] PatternInstances => patternInstances;
+        public List<Pattern> Patterns => patterns;
+
         static string[] channelNames =
         {
             "Square 1",
@@ -31,26 +37,6 @@ namespace FamiStudio
         {
             this.song = song;
             this.type = type;
-        }
-
-        public int Type
-        {
-            get { return type; }
-        }
-
-        public string Name
-        {
-            get { return channelNames[(int)type]; }
-        }
-
-        public Pattern[] PatternInstances
-        {
-            get { return patternInstances; }
-        }
-
-        public List<Pattern> Patterns
-        {
-            get { return patterns; }
         }
 
         public Pattern GetPattern(string name)
@@ -299,6 +285,18 @@ namespace FamiStudio
             return false;
         }
 
+#if DEBUG
+        public void Validate(Song song)
+        {
+            Debug.Assert(this == song.Channels[type]);
+            Debug.Assert(this.song == song);
+            foreach (var inst in patternInstances)
+                Debug.Assert(inst == null || patterns.Contains(inst));
+            foreach (var pat in patterns)
+                pat.Validate(this);
+        }
+#endif
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsWriting)
@@ -313,7 +311,7 @@ namespace FamiStudio
             foreach (var pattern in patterns)
                 pattern.SerializeState(buffer);
 
-            for (int i = 0; i < PatternInstances.Length; i++)
+            for (int i = 0; i < patternInstances.Length; i++)
                 buffer.Serialize(ref patternInstances[i], this);
         }
     }

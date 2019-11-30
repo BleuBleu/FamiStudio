@@ -135,6 +135,7 @@ namespace FamiStudio
             transactions.Add(trans);
             trans.Begin();
             index++;
+            project.Validate();
         }
 
         public void EndTransaction()
@@ -145,6 +146,7 @@ namespace FamiStudio
             Debug.Assert(trans.StateAfter == null);
             trans.End();
             Updated?.Invoke();
+            project.Validate();
         }
 
         public void AbortTransaction()
@@ -154,6 +156,7 @@ namespace FamiStudio
             transactions.RemoveAt(transactions.Count - 1);
             index--;
             Updated?.Invoke();
+            project.Validate();
         }
 
         public TransactionScope UndoScope

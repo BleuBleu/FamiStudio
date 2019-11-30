@@ -62,6 +62,7 @@ namespace FamiStudio
             ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
             ProjectExplorer.InstrumentReplaced += projectExplorer_InstrumentReplaced;
+            ProjectExplorer.InstrumentDeleted += ProjectExplorer_InstrumentDeleted;
             ProjectExplorer.InstrumentDraggedOutside += ProjectExplorer_InstrumentDraggedOutside;
             ProjectExplorer.SongModified += projectExplorer_SongModified;
             ProjectExplorer.SongSelected += projectExplorer_SongSelected;
@@ -86,6 +87,11 @@ namespace FamiStudio
             {
                 Task.Factory.StartNew(CheckForNewRelease);
             }
+        }
+
+        private void ProjectExplorer_InstrumentDeleted(Instrument instrument)
+        {
+            PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
         }
 
         private void PianoRoll_NotesPasted()

@@ -203,7 +203,15 @@ namespace FamiStudio
                 return false;
             }
         }
-        
+
+#if DEBUG
+        public void Validate(Project project)
+        {
+            foreach (var channel in channels)
+                channel.Validate(this);
+        }
+#endif
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsReading)

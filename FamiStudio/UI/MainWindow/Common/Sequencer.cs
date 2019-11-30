@@ -703,42 +703,40 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var patterns = ClipboardUtils.LoadPatterns(App.Project);
+            var mergeInstruments = ClipboardUtils.ContainsMissingInstruments(App.Project);
+
+            bool createMissingInstrument = false;
+            if (mergeInstruments)
+            {
+                createMissingInstrument = PlatformDialogs.MessageBox($"You are pasting notes refering to non-existant instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+            }
+
+            App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Song, Song.Id);
+
+            var patterns = ClipboardUtils.LoadPatterns(App.Project, createMissingInstrument);
 
             if (patterns == null)
                 return;
 
-            int channelMask = 0;
-            for (int i = 0; i < patterns.GetLength(0); i++)
-            {
-                for (int j = 0; j < patterns.GetLength(1); j++)
-                {
-                    var pattern = patterns[i, j];
-                    if (pattern != null)
-                        channelMask |= (1 << pattern.ChannelType);
-                }
-            }
-
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id, channelMask);
-
             for (int i = 0; i < patterns.GetLength(0); i++)
             {
                 for (int j = 0; j < patterns.GetLength(1); j++)
                 {
                     var pattern = patterns[i, j];
 
-                    if (pattern != null && (i + minSelectedPatternIdx) < Song.Length)
-                    {
-                        var channel = Song.Channels[pattern.ChannelType];
-                        var existingPattern = channel.GetPattern(pattern.Id);
-                        if (existingPattern == null)
-                        {
-                            channel.Patterns.Add(pattern);
-                            existingPattern = pattern;
-                        }
+                    // MATTT
+                    //if (pattern != null && (i + minSelectedPatternIdx) < Song.Length)
+                    //{
+                    //    var channel = Song.Channels[pattern.ChannelType];
+                    //    var existingPattern = channel.GetPattern(pattern.Id);
+                    //    if (existingPattern == null)
+                    //    {
+                    //        channel.Patterns.Add(pattern);
+                    //        existingPattern = pattern;
+                    //    }
 
-                        channel.PatternInstances[i + minSelectedPatternIdx] = existingPattern;
-                    }
+                    //    channel.PatternInstances[i + minSelectedPatternIdx] = existingPattern;
+                    //}
                 }
             }
 

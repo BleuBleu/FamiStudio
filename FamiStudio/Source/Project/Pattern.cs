@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace FamiStudio
@@ -23,6 +24,7 @@ namespace FamiStudio
         public int Id => id;
         public int ChannelType => channelType;
         public Color Color { get => color; set => color = value; }
+        public Song Song => song;
 
         public Pattern()
         {
@@ -196,6 +198,22 @@ namespace FamiStudio
             get { return lastVolumeValue; }
         }
 
+#if DEBUG
+        public void Validate(Channel channel)
+        {
+            Debug.Assert(this.song == channel.Song);
+            Debug.Assert(lastValidNoteInstrument == null || song.Project.InstrumentExists(lastValidNoteInstrument));
+            Debug.Assert(lastValidNoteInstrument == null || song.Project.GetInstrument(lastValidNoteInstrument.Id) == lastValidNoteInstrument);
+
+            for (int i = 0; i < MaxLength; i++)
+            {
+                var inst = notes[i].Instrument;
+                Debug.Assert(inst == null || song.Project.InstrumentExists(inst));
+                Debug.Assert(inst == null || song.Project.GetInstrument(inst.Id) == inst);
+            }
+        }
+#endif
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id);
@@ -204,7 +222,7 @@ namespace FamiStudio
             buffer.Serialize(ref color);
             buffer.Serialize(ref song);
 
-            for (int i = 0; i < 256; i++)
+            for (int i = 0; i < MaxLength; i++)
             {
                 notes[i].SerializeState(buffer);
             }

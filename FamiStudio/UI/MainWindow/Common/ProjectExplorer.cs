@@ -183,6 +183,7 @@ namespace FamiStudio
         public event InstrumentDelegate InstrumentSelected;
         public event InstrumentDelegate InstrumentColorChanged;
         public event InstrumentDelegate InstrumentReplaced;
+        public event InstrumentDelegate InstrumentDeleted;
         public event InstrumentPointDelegate InstrumentDraggedOutside;
         public event SongDelegate SongModified;
         public event SongDelegate SongSelected;
@@ -612,10 +613,10 @@ namespace FamiStudio
                             App.Stop();
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                             App.Project.DeleteSong(song);
-                            App.UndoRedoManager.EndTransaction();
                             if (selectNewSong)
                                 selectedSong = App.Project.Songs[0];
                             SongSelected?.Invoke(selectedSong);
+                            App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
                             ConditionalInvalidate();
                         }
@@ -649,10 +650,11 @@ namespace FamiStudio
                                 App.StopInstrumentNoteAndWait();
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                                 App.Project.DeleteInstrument(instrument);
-                                App.UndoRedoManager.EndTransaction();
                                 if (selectNewInstrument)
                                     selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
                                 SongSelected?.Invoke(selectedSong);
+                                InstrumentDeleted?.Invoke(instrument);
+                                App.UndoRedoManager.EndTransaction();
                                 RefreshButtons();
                                 ConditionalInvalidate();
                             }
