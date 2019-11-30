@@ -1455,7 +1455,13 @@ namespace FamiStudio
         private void MoveNotes(int amount)
         {
             if (selectionMin + amount >= 0)
-                ReplaceNotes(GetSelectedNotes(), selectionMin + amount, true);
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                var notes = GetSelectedNotes();
+                DeleteSelectedNotes(false);
+                ReplaceNotes(notes, selectionMin + amount, false);
+                App.UndoRedoManager.EndTransaction();
+            }
         }
 
         private void TransformNotes(int startIdx, int endIdx, bool doTransaction, Func<Note, int, Note> function)
@@ -1534,9 +1540,9 @@ namespace FamiStudio
                 ReplaceEnvelopeValues(GetSelectedEnvelopeValues(), selectionMin + amount);
         }
         
-        private void DeleteSelectedNotes()
+        private void DeleteSelectedNotes(bool doTransaction = true)
         {
-            TransformNotes(selectionMin, selectionMax, true, (note, idx) =>
+            TransformNotes(selectionMin, selectionMax, doTransaction, (note, idx) =>
             {
                 note = new Note();
                 note.IsValid = false;
