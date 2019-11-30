@@ -40,7 +40,7 @@ namespace FamiStudio
             {Sequence_t.SEQ_PITCH ,Envelope.Pitch},
 
         };
-        public static Instrument Load(int uniqueId, string filename)
+        public static Instrument CreateFromFile(Project project, string filename)
         {
             var bytes = System.IO.File.ReadAllBytes(filename);
             var version = -1;
@@ -59,7 +59,7 @@ namespace FamiStudio
                 case Inst_Type_t.INST_NONE:
                     break;
                 case Inst_Type_t.INST_2A03:
-                    return new ConvertInstrument2A03().Convert(uniqueId, version, bytes, offsetIndex);//ConvertInstrument2A03(uniqueId, bytes);
+                    return new ConvertInstrument2A03().Convert(project, version, bytes, offsetIndex);//ConvertInstrument2A03(uniqueId, bytes);
                 case Inst_Type_t.INST_VRC6:
                     break;
                 case Inst_Type_t.INST_VRC7:
@@ -164,13 +164,13 @@ namespace FamiStudio
         protected sbyte[,] m_cSampleLoopOffset = new sbyte[FamitrackerInstrumentFile.OCTAVE_RANGE, 12];// Loop offset
         protected sbyte[,] m_cSampleDelta = new sbyte[FamitrackerInstrumentFile.OCTAVE_RANGE, 12];// Delta setting
 
-        public Instrument Convert(int uniqueId, int iVersion ,byte[] data, int idx)
+        public Instrument Convert(Project project, int iVersion ,byte[] data, int idx)
         {
             this.idx = idx;
             this.data = data;
-            return Convert(uniqueId, iVersion);
+            return Convert(project, iVersion);
         }
-        protected abstract Instrument Convert(int uniqueId, int iVersion);
+        protected abstract Instrument Convert(Project project, int iVersion);
 
         protected string GetName()
         {
@@ -261,10 +261,13 @@ namespace FamiStudio
 		        }
 	        }
         }
-        protected override Instrument Convert(int uniqueId,int iVersion)
+        protected override Instrument Convert(Project project, int iVersion)
         {
             var name = GetName();
-            var instrument = new Instrument(uniqueId, name);
+            var instrument = project.CreateInstrument(name);
+            if (instrument == null)
+                return null;
+
             byte[] temp;
             var intSize = sizeof(int);
             var byteSize = 1;

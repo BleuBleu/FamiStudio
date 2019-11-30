@@ -256,7 +256,7 @@ namespace FamiStudio
             bmpSubButtonIcons[(int)SubButtonType.Arpeggio] = g.CreateBitmapFromResource("Arpeggio");
             bmpSubButtonIcons[(int)SubButtonType.Pitch] = g.CreateBitmapFromResource("Pitch");
             bmpSubButtonIcons[(int)SubButtonType.Volume] = g.CreateBitmapFromResource("Volume");
-            bmpSubButtonIcons[(int)SubButtonType.LoadInstrument] = g.CreateBitmapFromResource("Add");
+            bmpSubButtonIcons[(int)SubButtonType.LoadInstrument] = g.CreateBitmapFromResource("InstrumentOpen");
         }
 
         public void ConditionalInvalidate()
@@ -574,9 +574,17 @@ namespace FamiStudio
                         }
                         if (subButtonType == SubButtonType.LoadInstrument)
                         {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                            App.Project.CreateInstrumentFromFile();
-                            App.UndoRedoManager.EndTransaction();
+                            var filename = PlatformDialogs.ShowOpenFileDialog("Open File", "Fami Tracker Instrument (*.fti)|*.fti");
+                            if (filename != null)
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                                var instrument = FamitrackerInstrumentFile.CreateFromFile(App.Project, filename);
+                                if (instrument == null)
+                                    App.UndoRedoManager.AbortTransaction();
+                                else
+                                    App.UndoRedoManager.EndTransaction();
+                            }
+
                             RefreshButtons();
                             ConditionalInvalidate();
                         }
