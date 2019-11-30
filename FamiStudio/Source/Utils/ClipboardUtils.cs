@@ -43,6 +43,68 @@ namespace FamiStudio
         public static bool ConstainsEnvelope => GetClipboardData(MagicNumberClipboardEnvelope) != null;
         public static bool ConstainsPatterns => GetClipboardData(MagicNumberClipboardPatterns) != null;
 
+        private static void SavePatternList(ProjectSaveBuffer serializer, ICollection<Pattern> patterns)
+        {
+            int numUniquePatterns = patterns.Count;
+            serializer.Serialize(ref numUniquePatterns);
+
+            foreach (var pat in patterns)
+            {
+                var patId = pat.Id;
+                var patChannel = pat.ChannelType;
+                var patName = pat.Name;
+                serializer.Serialize(ref patId);
+                serializer.Serialize(ref patChannel);
+                serializer.Serialize(ref patName);
+            }
+
+            foreach (var pat in patterns)
+                pat.SerializeState(serializer);
+        }
+
+        private static int LoadAndMergePatternList(ProjectLoadBuffer serializer, Song song)
+        {
+            int numPatterns = 0;
+            serializer.Serialize(ref numPatterns);
+
+            var patternIdNameMap = new List<Tuple<int,int, string>>();
+            for (int i = 0; i < numPatterns; i++)
+            {
+                var patId = 0;
+                var patChannel = 0;
+                var patName = "";
+                serializer.Serialize(ref patId);
+                serializer.Serialize(ref patChannel);
+                serializer.Serialize(ref patName);
+                patternIdNameMap.Add(new Tuple<int, int, string>(patId, patChannel, patName));
+            }
+
+            var dummyPattern = new Pattern();
+
+            for (int i = 0; i < numPatterns; i++)
+            {
+                var patId = patternIdNameMap[i].Item1;
+                var patChannel = patternIdNameMap[i].Item2;
+                var patName = patternIdNameMap[i].Item3;
+
+                var existingPattern = song.Channels[patChannel].GetPattern(patName);
+
+                if (existingPattern != null)
+                {
+                    serializer.RemapId(patId, existingPattern.Id);
+                    dummyPattern.SerializeState(serializer); // Skip 
+                }
+                else
+                {
+                    var pattern = song.Channels[patChannel].CreatePattern(patName);
+                    serializer.RemapId(patId, pattern.Id);
+                    pattern.SerializeState(serializer);
+                }
+            }
+
+            return numPatterns;
+        }
+
         private static void SaveInstrumentList(ProjectSaveBuffer serializer, ICollection<Instrument> instruments)
         {
             int numInstruments = instruments.Count;
@@ -55,6 +117,9 @@ namespace FamiStudio
                 serializer.Serialize(ref instId);
                 serializer.Serialize(ref instName);
             }
+
+            foreach (var inst in instruments)
+                inst.SerializeState(serializer);
         }
 
         private static bool LoadAndMergeInstrumentList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
@@ -80,14 +145,12 @@ namespace FamiStudio
                 var instId = instrumentIdNameMap[i].Item1;
                 var instName = instrumentIdNameMap[i].Item2;
 
-                Instrument instrument = null;
                 var existingInstrument = serializer.Project.GetInstrument(instName);
 
                 if (existingInstrument != null)
                 {
                     serializer.RemapId(instId, existingInstrument.Id);
-                    instrument = existingInstrument;
-                    dummyInstrument.SerializeState(serializer); // Skip instrument
+                    dummyInstrument.SerializeState(serializer); // Skip
                 }
                 else
                 {
@@ -97,14 +160,14 @@ namespace FamiStudio
                     {
                         if (createMissing)
                         {
-                            instrument = serializer.Project.CreateInstrument(instName);
+                            var instrument = serializer.Project.CreateInstrument(instName);
                             serializer.RemapId(instId, instrument.Id);
                             instrument.SerializeState(serializer);
                         }
                         else
                         {
                             serializer.RemapId(instId, -1);
-                            dummyInstrument.SerializeState(serializer); // Skip instrument
+                            dummyInstrument.SerializeState(serializer); // Skip
                         }
                     }
                 }
@@ -131,8 +194,6 @@ namespace FamiStudio
             var serializer = new ProjectSaveBuffer(null);
 
             SaveInstrumentList(serializer, instruments);
-            foreach (var inst in instruments)
-                inst.SerializeState(serializer);
 
             int numNotes = notes.Length;
             serializer.Serialize(ref numNotes);
@@ -140,7 +201,6 @@ namespace FamiStudio
                 note.SerializeState(serializer);
             
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
-
             var clipboardData = new List<byte>();
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardNotes));
             clipboardData.AddRange(buffer);
@@ -148,9 +208,9 @@ namespace FamiStudio
             SetClipboardData(clipboardData.ToArray());
         }
 
-        public static bool ContainsMissingInstruments(Project project)
+        public static bool ContainsMissingInstruments(Project project, bool notes)
         {
-            var buffer = GetClipboardData(MagicNumberClipboardNotes);
+            var buffer = GetClipboardData(notes ? MagicNumberClipboardNotes : MagicNumberClipboardPatterns);
 
             if (buffer == null)
                 return false;
@@ -217,57 +277,77 @@ namespace FamiStudio
                 return;
             }
 
-            int numNonNullPatterns = 0;
+            var uniqueInstruments = new HashSet<Instrument>();
+            var uniquePatterns = new HashSet<Pattern>();
+            var numPatterns = patterns.GetLength(0);
+            var numChannels = patterns.GetLength(1);
 
-            for (int i = 0; i < patterns.GetLength(0); i++)
+            for (int i = 0; i < numPatterns; i++)
             {
-                for (int j = 0; j < patterns.GetLength(1); j++)
+                for (int j = 0; j < numChannels; j++)
                 {
-                    if (patterns[i, j] != null)
-                        numNonNullPatterns++;
+                    var pattern = patterns[i, j];
+                    if (pattern != null)
+                    {
+                        uniquePatterns.Add(pattern);
+                        for (int k = 0; k < pattern.Song.PatternLength; k++)
+                        {
+                            var inst = pattern.Notes[k].Instrument;
+                            if (inst != null)
+                                uniqueInstruments.Add(inst);
+                        }
+                    }
                 }
             }
 
             var serializer = new ProjectSaveBuffer(null);
 
-            for (int i = 0; i < patterns.GetLength(0); i++)
+            SaveInstrumentList(serializer, uniqueInstruments);
+            SavePatternList(serializer, uniquePatterns);
+
+            serializer.Serialize(ref numPatterns);
+            serializer.Serialize(ref numChannels);
+
+            for (int i = 0; i < numPatterns; i++)
             {
-                for (int j = 0; j < patterns.GetLength(1); j++)
+                for (int j = 0; j < numChannels; j++)
                 {
                     var pattern = patterns[i, j];
                     if (pattern != null)
                     {
+                        int patId = pattern.Id;
                         serializer.Serialize(ref i);
                         serializer.Serialize(ref j);
-                        patterns[i, j].SerializeState(serializer);
+                        serializer.Serialize(ref patId);
                     }
                 }
             }
 
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
-
             var clipboardData = new List<byte>();
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardPatterns));
-            clipboardData.AddRange(BitConverter.GetBytes(numNonNullPatterns));
-            clipboardData.AddRange(BitConverter.GetBytes(patterns.GetLength(0)));
-            clipboardData.AddRange(BitConverter.GetBytes(patterns.GetLength(1)));
             clipboardData.AddRange(buffer);
 
             SetClipboardData(clipboardData.ToArray());
         }
 
-        public static Pattern[,] LoadPatterns(Project project)
+        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments)
         {
             var buffer = GetClipboardData(MagicNumberClipboardPatterns);
 
             if (buffer == null)
                 return null;
 
-            var numNonNullPatterns = BitConverter.ToInt32(buffer, 4);
-            var numPatterns = BitConverter.ToInt32(buffer, 8);
-            var numChannels = BitConverter.ToInt32(buffer, 12);
-            var decompressedBuffer = Compression.DecompressBytes(buffer, 16);
+            var decompressedBuffer = Compression.DecompressBytes(buffer, 4);
             var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
+
+            LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
+            int numNonNullPatterns = LoadAndMergePatternList(serializer, song);
+
+            int numPatterns = 0;
+            int numChannels = 0;
+            serializer.Serialize(ref numPatterns);
+            serializer.Serialize(ref numChannels);
 
             var patterns = new Pattern[numPatterns, numChannels];
 
@@ -275,10 +355,11 @@ namespace FamiStudio
             {
                 int i = 0;
                 int j = 0;
+                int patId = -1;
                 serializer.Serialize(ref i);
                 serializer.Serialize(ref j);
-                patterns[i, j] = new Pattern();
-                patterns[i, j].SerializeState(serializer);
+                serializer.Serialize(ref patId, true);
+                patterns[i, j] = song.GetPattern(patId);
             }
 
             return patterns;

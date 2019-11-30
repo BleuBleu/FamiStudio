@@ -216,7 +216,7 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            buffer.Serialize(ref id);
+            buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
             buffer.Serialize(ref channelType);
             buffer.Serialize(ref color);

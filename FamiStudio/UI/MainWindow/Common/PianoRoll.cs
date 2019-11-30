@@ -834,7 +834,7 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var mergeInstruments = ClipboardUtils.ContainsMissingInstruments(App.Project);
+            var mergeInstruments = ClipboardUtils.ContainsMissingInstruments(App.Project, true);
 
             bool createMissingInstrument = false;
             if (mergeInstruments)
@@ -853,8 +853,8 @@ namespace FamiStudio
             }
 
             ReplaceNotes(notes, selectionMin, false, pasteNotes, pasteVolume, pasteFx);
-            App.UndoRedoManager.EndTransaction();
             NotesPasted?.Invoke();
+            App.UndoRedoManager.EndTransaction();
         }
 
         private sbyte[] GetSelectedEnvelopeValues()

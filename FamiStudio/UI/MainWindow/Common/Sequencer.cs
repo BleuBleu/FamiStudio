@@ -111,14 +111,15 @@ namespace FamiStudio
         RenderBitmap[] bmpTracks = new RenderBitmap[Channel.Count];
         RenderBitmap bmpGhostNote;
 
-        public delegate void PatternDoubleClick(int trackIdx, int barIdx);
-        public event PatternDoubleClick PatternClicked;
-        public delegate void SelectedChannelChangedDelegate(int channelIdx);
-        public event SelectedChannelChangedDelegate SelectedChannelChanged;
-        public delegate void ControlActivate();
-        public event ControlActivate ControlActivated;
-        public delegate void PatternModifiedDelegate();
-        public event PatternModifiedDelegate PatternModified;
+        public delegate void TrackBarDelegate(int trackIdx, int barIdx);
+        public delegate void ChannelDelegate(int channelIdx);
+        public delegate void EmptyDelegate();
+
+        public event TrackBarDelegate PatternClicked;
+        public event ChannelDelegate SelectedChannelChanged;
+        public event EmptyDelegate ControlActivated;
+        public event EmptyDelegate PatternModified;
+        public event EmptyDelegate PatternsPasted;
 
         public Sequencer()
         {
@@ -601,6 +602,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                         channel.PatternInstances[patternIdx] = channel.CreatePattern();
+                        PatternClicked?.Invoke(channelIdx, patternIdx);
                         App.UndoRedoManager.EndTransaction();
                         ClearSelection();
                         ConditionalInvalidate();
@@ -703,7 +705,7 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var mergeInstruments = ClipboardUtils.ContainsMissingInstruments(App.Project);
+            var mergeInstruments = ClipboardUtils.ContainsMissingInstruments(App.Project, false);
 
             bool createMissingInstrument = false;
             if (mergeInstruments)
@@ -713,34 +715,26 @@ namespace FamiStudio
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 
-            var patterns = ClipboardUtils.LoadPatterns(App.Project, createMissingInstrument);
+            var patterns = ClipboardUtils.LoadPatterns(App.Project, Song, createMissingInstrument);
 
             if (patterns == null)
+            {
+                App.UndoRedoManager.AbortTransaction();
                 return;
+            }
 
             for (int i = 0; i < patterns.GetLength(0); i++)
             {
                 for (int j = 0; j < patterns.GetLength(1); j++)
                 {
                     var pattern = patterns[i, j];
-
-                    // MATTT
-                    //if (pattern != null && (i + minSelectedPatternIdx) < Song.Length)
-                    //{
-                    //    var channel = Song.Channels[pattern.ChannelType];
-                    //    var existingPattern = channel.GetPattern(pattern.Id);
-                    //    if (existingPattern == null)
-                    //    {
-                    //        channel.Patterns.Add(pattern);
-                    //        existingPattern = pattern;
-                    //    }
-
-                    //    channel.PatternInstances[i + minSelectedPatternIdx] = existingPattern;
-                    //}
+                    if (pattern != null && (i + minSelectedPatternIdx) < Song.Length)
+                        Song.Channels[pattern.ChannelType].PatternInstances[i + minSelectedPatternIdx] = pattern;
                 }
             }
 
             App.UndoRedoManager.EndTransaction();
+            PatternsPasted?.Invoke();
             ConditionalInvalidate();
         }
 

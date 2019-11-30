@@ -54,6 +54,7 @@ namespace FamiStudio
             Sequencer.SelectedChannelChanged += sequencer_SelectedChannelChanged;
             Sequencer.ControlActivated += Sequencer_ControlActivated;
             Sequencer.PatternModified += Sequencer_PatternModified;
+            Sequencer.PatternsPasted += PianoRoll_NotesPasted;
             PianoRoll.PatternChanged += pianoRoll_PatternChanged;
             PianoRoll.EnvelopeResized += pianoRoll_EnvelopeResized;
             PianoRoll.ControlActivated += PianoRoll_ControlActivated;
