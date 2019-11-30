@@ -510,13 +510,13 @@ namespace FamiStudio
                     Seek(0);
                 }
             }
+            else if ((ctrl && e.KeyCode == Keys.Y) || (ctrl && shift && e.KeyCode == Keys.Z))
+            {
+                undoRedoManager.Redo();
+            }
             else if (ctrl && e.KeyCode == Keys.Z)
             {
                 undoRedoManager.Undo();
-            }
-            else if (ctrl && e.KeyCode == Keys.Y)
-            {
-                undoRedoManager.Redo();
             }
             else if (ctrl && e.KeyCode == Keys.N)
             {

@@ -435,6 +435,7 @@ namespace FamiStudio
             if (left && mouseDragY > 0 && !isDraggingInstrument && Math.Abs(e.Y - mouseDragY) > 5)
             {
                 isDraggingInstrument = true;
+                Capture = true;
             }
             if (middle)
             {
@@ -490,6 +491,8 @@ namespace FamiStudio
                 {
                     InstrumentDraggedOutside(instrumentDrag, PointToScreen(new Point(e.X, e.Y)));
                 }
+
+                Capture = false;
             }
 
             CancelDrag();

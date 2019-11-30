@@ -42,6 +42,7 @@ namespace FamiStudio
 
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
+        public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
         public void Validate() { invalid = false; }
         public void Invalidate() { invalid = true; }
         public int Left => left;

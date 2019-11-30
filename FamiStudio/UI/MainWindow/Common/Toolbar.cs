@@ -369,12 +369,21 @@ namespace FamiStudio
                             }
                             else
                             {
+#if FAMISTUDIO_MACOS
+                                if (str == "Ctrl") str = "Cmd";
+#endif
+
+#if !FAMISTUDIO_WINDOWS
+                                // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
+                                posX--;
+#endif
+
                                 g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, theme.BlackBrush, RenderTheme.MainWindowScaling * 2 - 1);
                                 g.DrawText(str, ThemeBase.FontMediumCenter, posX, posY, theme.BlackBrush, specialCharacter.Width);
 
 #if !FAMISTUDIO_WINDOWS
                                 // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
-                                posX -= 2;
+                                posX--;
 #endif
                             }
                         }

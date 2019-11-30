@@ -158,6 +158,9 @@ namespace FamiStudio
 #endif
             var ctrl = GetControlAtCoord(client.X, client.Y, out _, out _);
 
+            if (captureControl != null && captureControl != ctrl)
+                return;
+
             if (ctrl != null)
                 cursor = ctrl.Cursor.Current;
 
@@ -166,6 +169,9 @@ namespace FamiStudio
 
         public void RefreshCursor(GLControl ctrl)
         {
+            if (captureControl != null && captureControl != ctrl)
+                return;
+
             if (ctrl != null)
                 cursor = ctrl.Cursor.Current;
 
@@ -285,7 +291,6 @@ namespace FamiStudio
         protected override void OnMouseMove(MouseMoveEventArgs e)
         {
             base.OnMouseMove(e);
-            if (captureControl != null) return;
             var ctrl = GetControlAtCoord(e.X, e.Y, out int x, out int y);
             RefreshCursor(ctrl);
             deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseMove, ctrl, ToWinFormArgs(e, x, y)));
@@ -391,7 +396,7 @@ namespace FamiStudio
         {
             if (k >= Key.A && k <= Key.Z)
                 return System.Windows.Forms.Keys.A + (k - Key.A);
-            else if (k == Key.ControlRight || k == Key.ControlLeft)
+            else if (k == Key.ControlRight || k == Key.ControlLeft || k == Key.Command || k == Key.WinLeft)
                 return System.Windows.Forms.Keys.Control;
             else if (k == Key.AltRight || k == Key.AltLeft)
                 return System.Windows.Forms.Keys.Alt;
@@ -442,7 +447,7 @@ namespace FamiStudio
         {
             System.Windows.Forms.Keys modifiers = System.Windows.Forms.Keys.None;
 
-            if (Keyboard.GetState().IsKeyDown(Key.ControlRight) || Keyboard.GetState().IsKeyDown(Key.ControlLeft))
+            if (Keyboard.GetState().IsKeyDown(Key.ControlRight) || Keyboard.GetState().IsKeyDown(Key.ControlLeft) || Keyboard.GetState().IsKeyDown(Key.Command) || Keyboard.GetState().IsKeyDown(Key.WinLeft))
                 modifiers |= System.Windows.Forms.Keys.Control;
             if (Keyboard.GetState().IsKeyDown(Key.ShiftRight) || Keyboard.GetState().IsKeyDown(Key.ShiftLeft))
                 modifiers |= System.Windows.Forms.Keys.Shift;
