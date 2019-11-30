@@ -1461,7 +1461,7 @@ namespace FamiStudio
         private void TransformNotes(int startIdx, int endIdx, bool doTransaction, Func<Note, int, Note> function)
         {
             if (doTransaction)
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, 1 << editChannel);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
 
             GetSelectionRange(startIdx, endIdx, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
 
