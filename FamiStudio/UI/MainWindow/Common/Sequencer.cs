@@ -710,7 +710,7 @@ namespace FamiStudio
             bool createMissingInstrument = false;
             if (mergeInstruments)
             {
-                createMissingInstrument = PlatformDialogs.MessageBox($"You are pasting notes refering to non-existant instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingInstrument = PlatformDialogs.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
             }
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Song, Song.Id);
