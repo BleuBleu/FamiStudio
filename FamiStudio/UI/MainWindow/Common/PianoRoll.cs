@@ -1873,8 +1873,15 @@ namespace FamiStudio
             {
                 int rangeMax = editMode == EditionMode.Channel ? Song.Length * Song.PatternLength - 1 : EditEnvelope.Length - 1;
 
-                selectionMin = Utils.Clamp(min, 0, rangeMax);
-                selectionMax = Utils.Clamp(max, min, rangeMax);
+                if (min > rangeMax)
+                {
+                    ClearSelection();
+                }
+                else
+                {
+                    selectionMin = Utils.Clamp(min, 0, rangeMax);
+                    selectionMax = Utils.Clamp(max, min, rangeMax);
+                }
             }
         }
 
