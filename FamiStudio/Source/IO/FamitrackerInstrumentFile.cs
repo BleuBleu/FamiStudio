@@ -339,10 +339,43 @@ namespace FamiStudio
                             
                         }
                     }
+                    else
+                    {
+                        if (i == (int)FamitrackerInstrumentFile.Sequence_t.SEQ_DUTYCYCLE)
+                        {
+                            //famistudio doesn't fully support duty cycle
+                            //but  it is possible to refer to the first value.
+
+                            //loop setting
+                            if (!ReadByte(intSize, out temp))
+                                return null;
+                            if (iVersion > 20)
+                            {
+                                //release
+                                if (!ReadByte(intSize, out temp))
+                                    return null;
+                            }
+                            if (iVersion >= 23)
+                            {
+                                //arp_setting_t
+                                if (!ReadByte(intSize, out temp))
+                                    return null;
+                            }
+                            //duty cycle first value
+                            if (!ReadByte(byteSize, out temp))
+                                return null;
+                            if (temp.Length <= 0)
+                            {
+                                continue;
+                            }
+                            instrument.DutyCycle = temp[0];
+                            continue;
+                        }
+                    }
                 }
                 else
                 {
-
+                    
                 }
             }
             instrument.Envelopes[Envelope.Pitch].ConvertToAbsolute();
