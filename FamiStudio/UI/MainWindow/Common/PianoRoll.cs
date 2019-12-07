@@ -845,7 +845,7 @@ namespace FamiStudio
             bool createMissingInstrument = false;
             if (mergeInstruments)
             {
-                createMissingInstrument = PlatformDialogs.MessageBox($"You are pasting notes referring to non-existant instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingInstrument = PlatformDialogs.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
             }
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
@@ -1786,11 +1786,14 @@ namespace FamiStudio
             else if (editMode == EditionMode.Channel && right && GetEffectNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx))
             {
                 var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                 if (selectedEffectIdx == -1)
                     pattern.Notes[noteIdx].HasVolume = false;
                 else
                     pattern.Notes[noteIdx].HasEffect = false;
+                pattern.UpdateLastValidNotesAndVolume();
                 PatternChanged?.Invoke(pattern);
+                App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();
             }
             else if (editMode == EditionMode.DPCM && (left || right) && GetNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx, out noteValue))
