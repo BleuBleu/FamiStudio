@@ -92,8 +92,7 @@ namespace FamiStudio
         public delegate short[] GetBufferDataCallback();
 
         private IntPtr stream = new IntPtr();
-        private Task playingTask;
-        private bool stop = false;
+        private bool playing = false;
         private GetBufferDataCallback bufferFill;
         private static int refCount = 0;
         private PaStreamCallback streamCallback;
@@ -114,23 +113,21 @@ namespace FamiStudio
 
         public void Start()
         {
-            stop = false;
             Pa_StartStream(stream);
+            playing = true;
         }
 
         public void Stop()
         {
-            if (playingTask != null)
+            if (playing)
             {
                 //Pa_StopStream(stream);
                 Pa_AbortStream(stream); // Sleep slightly faster?
-                stop = true;
-                playingTask.Wait();
-                playingTask = null;
+                playing = false;
             }
         }
 
-        public bool IsStarted => playingTask != null;
+        public bool IsStarted => playing;
 
         public void Dispose()
         {

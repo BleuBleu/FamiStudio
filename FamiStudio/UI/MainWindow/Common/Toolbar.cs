@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using FamiStudio.Properties;
@@ -375,7 +375,7 @@ namespace FamiStudio
 
 #if !FAMISTUDIO_WINDOWS
                                 // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
-                                posX -= (int)RenderTheme.MainWindowScaling;
+                                posX -= (int)scaling;
 #endif
 
                                 g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, theme.BlackBrush);
@@ -383,7 +383,7 @@ namespace FamiStudio
 
 #if !FAMISTUDIO_WINDOWS
                                 // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
-                                posX -= (int)RenderTheme.MainWindowScaling;
+                                posX -= (int)scaling;
 #endif
                             }
                         }

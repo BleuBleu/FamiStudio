@@ -295,6 +295,7 @@ namespace FamiStudio
                         {
                             //todo support old version
                             return null;
+                            /*
                             var length = new sbyte[count];
                             var value = new sbyte[count];
                             for (int j = 0; j < count; ++j)
@@ -304,6 +305,7 @@ namespace FamiStudio
                                 ReadByte(byteSize, out temp);
                                 value[j] = System.Convert.ToSByte(temp[0]);
                             }
+                            */
                         }
                         else
                         {
