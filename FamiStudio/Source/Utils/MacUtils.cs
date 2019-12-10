@@ -402,11 +402,11 @@ namespace FamiStudio
         {
             var nsView = SendIntPtr(nsWin, selContentView);
             var viewRect = SendRect(nsView, selFrame);
-            var winHeight = (float)viewRect.Size.Height * mainWindowScaling;
+            var winHeight = (float)viewRect.Size.Height * dialogScaling;
 
             var mouseLoc = SendPoint(nsWin, selMouseLocationOutsideOfEventStream);
-            var x = (float)mouseLoc.X * mainWindowScaling;
-            var y = (float)mouseLoc.Y * mainWindowScaling;
+            var x = (float)mouseLoc.X * dialogScaling;
+            var y = (float)mouseLoc.Y * dialogScaling;
             y = winHeight - y;
 
             return new System.Drawing.Point((int)Math.Round(x), (int)Math.Round(y));

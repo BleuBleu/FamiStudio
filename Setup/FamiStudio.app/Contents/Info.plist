@@ -13,11 +13,11 @@
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.2.0</string>
+	<string>1.3.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1.2.0</string>
+	<string>1.3.0</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2019 BleuBleu, All Rights Reserved.</string>
 	<key>NSPrincipalClass</key>
