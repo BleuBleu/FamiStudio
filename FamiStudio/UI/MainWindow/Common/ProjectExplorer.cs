@@ -331,7 +331,10 @@ namespace FamiStudio
         {
             if (isDraggingInstrument)
             {
+#if !FAMISTUDIO_LINUX
+                // TODO LINUX: Cursors
                 Cursor.Current = envelopeDragIdx == -1 ? Cursors.DragCursor : Cursors.CopyCursor;
+#endif
             }
             else
             {

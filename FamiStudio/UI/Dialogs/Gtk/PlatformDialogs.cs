@@ -34,7 +34,11 @@ namespace FamiStudio
                     foreach (var font in fontsToLoad)
                     {
                         var fullpath = Path.Combine(absPath, font);
+#if FAMISTUDIO_MACOS
                         MacUtils.CoreTextRegisterFont(fullpath);
+#else
+                        // TODO LINUX: Load fonts.
+#endif
                     }
                     break;
                 }
@@ -65,17 +69,32 @@ namespace FamiStudio
 
         public static string ShowOpenFileDialog(string title, string extensions)
         {
+#if FAMISTUDIO_MACOS
             return MacUtils.ShowOpenDialog(title, GetExtensionList(extensions));
+#else
+            // TODO LINUX: Dialogs
+            return null;
+#endif
         }
 
         public static string ShowSaveFileDialog(string title, string extensions)
         {
+#if FAMISTUDIO_MACOS
             return MacUtils.ShowSaveDialog(title, GetExtensionList(extensions));
+#else
+            // TODO LINUX: Dialogs
+            return null;
+#endif
         }
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icons = MessageBoxIcon.None)
         {
+#if FAMISTUDIO_MACOS
             return MacUtils.ShowAlert(text, title, buttons);
+#else
+            // TODO LINUX: Dialogs
+            return DialogResult.Cancel; 
+#endif
         }
     }
 }

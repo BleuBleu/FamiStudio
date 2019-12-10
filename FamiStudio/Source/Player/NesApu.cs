@@ -7,8 +7,10 @@ namespace FamiStudio
     {
 #if FAMISTUDIO_WINDOWS
         private const string NesSndEmuDll = "NesSndEmu.dll";
-#else
+#elif FAMISTUDIO_MACOS
         private const string NesSndEmuDll = "NesSndEmu.dylib";
+#else
+        private const string NesSndEmuDll = "NesSndEmu.so";
 #endif
 
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]

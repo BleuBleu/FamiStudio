@@ -134,7 +134,11 @@ namespace FamiStudio
         public void CaptureMouse(GLControl ctrl)
         {
             captureControl = ctrl;
+#if FAMISTUDIO_MACOS
             captureButtons = MacUtils.GetMouseButtons();
+#else
+            captureButtons = GetStateButtons(Mouse.GetState());
+#endif
         }
 
         public void ReleaseMouse()
@@ -146,6 +150,9 @@ namespace FamiStudio
         {
 #if FAMISTUDIO_MACOS
             return PointToScreen(MacUtils.GetWindowMousePosition(WindowInfo.Handle));
+#else
+            var mouseState = Mouse.GetCursorState();
+            return new Point(mouseState.X, mouseState.Y);
 #endif
         }
 
@@ -154,7 +161,8 @@ namespace FamiStudio
 #if FAMISTUDIO_MACOS
             var client = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
 #else
-            var client = PointToClient(Mouse.GetCursorState());
+            var mouseState = Mouse.GetCursorState();
+            var client = PointToClient(new Point(mouseState.X, mouseState.Y));
 #endif
             var ctrl = GetControlAtCoord(client.X, client.Y, out _, out _);
 
@@ -164,7 +172,9 @@ namespace FamiStudio
             if (ctrl != null)
                 cursor = ctrl.Cursor.Current;
 
+#if FAMISTUDIO_MACOS
             MacUtils.InvalidateCursor(WindowInfo.Handle);
+#endif
         }
 
         public void RefreshCursor(GLControl ctrl)
@@ -175,7 +185,9 @@ namespace FamiStudio
             if (ctrl != null)
                 cursor = ctrl.Cursor.Current;
 
+#if FAMISTUDIO_MACOS
             MacUtils.InvalidateCursor(WindowInfo.Handle);
+#endif
         }
 
         protected override void OnMove(EventArgs e)
@@ -484,6 +496,20 @@ namespace FamiStudio
             }
         }
 
+        protected System.Windows.Forms.MouseButtons GetStateButtons(MouseState state)
+        {
+            System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;
+
+            if (state.IsButtonDown(MouseButton.Left))
+                buttons |= System.Windows.Forms.MouseButtons.Left;
+            if (state.IsButtonDown(MouseButton.Right))
+                buttons |= System.Windows.Forms.MouseButtons.Right;
+            if (state.IsButtonDown(MouseButton.Middle))
+                buttons |= System.Windows.Forms.MouseButtons.Middle;
+
+            return buttons;
+        }
+
         protected void ProcessDeferredEvents()
         {
             processingDeferredEvents = true;
@@ -524,6 +550,11 @@ namespace FamiStudio
 #if FAMISTUDIO_MACOS
                 var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
                 var buttons = MacUtils.GetMouseButtons();
+#else
+                var mouseState = Mouse.GetState();
+                var buttons = GetStateButtons(mouseState);
+                var pt = PointToClient(new Point(mouseState.X, mouseState.Y));
+#endif
                 var args = new System.Windows.Forms.MouseEventArgs(buttons, 0, pt.X - captureControl.Left, pt.Y - captureControl.Top, 0);
 
                 if (buttons != captureButtons)
@@ -538,10 +569,6 @@ namespace FamiStudio
                 {
                     captureControl.MouseMove(args);
                 }
-#else
-                // TODO: Implement for Linux.
-                Debug.Assert(false);
-#endif
             }
 
             processingDeferredEvents = false;

@@ -514,7 +514,7 @@ namespace FamiStudio
 
             bool canCapture = captureOperation == CaptureOperation.None;
 
-            CancelDragSelection(); // MATTT
+            CancelDragSelection();
             UpdateCursor();
 
             if (middle)
@@ -742,7 +742,10 @@ namespace FamiStudio
         {
             if (captureOperation == CaptureOperation.DragSelection)
             {
+#if !FAMISTUDIO_LINUX
+                // TODO LINUX: Cursors
                 Cursor.Current = ModifierKeys.HasFlag(Keys.Control) ? Cursors.CopyCursor : Cursors.DragCursor;
+#endif
             }
             else
             {

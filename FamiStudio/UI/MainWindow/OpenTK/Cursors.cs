@@ -15,6 +15,8 @@ namespace FamiStudio
         public static IntPtr SizeNS     = MacUtils.SelRegisterName("resizeUpDownCursor");
         public static IntPtr DragCursor = MacUtils.SelRegisterName("closedHandCursor");
         public static IntPtr CopyCursor = MacUtils.SelRegisterName("dragCopyCursor");
+#else
+        public static IntPtr Default    = IntPtr.Zero;
 #endif
 
         public static void Initialize()

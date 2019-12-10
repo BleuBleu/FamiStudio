@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+
+#if FAMISTUDIO_MACOS
+#define USE_BLOCKING_STREAM
+#endif
 
 namespace FamiStudio
 {
@@ -46,37 +51,43 @@ namespace FamiStudio
             NonInterleaved = ~(0x0FFFFFFF)
         }
 
-        [DllImport("libportaudio.2.dylib")]
+#if FAMISTUDIO_MACOS
+        const string PortAudioLibName = "libportaudio.2.dylib";
+#else
+        const string PortAudioLibName = "libportaudio.so.2.0.0";
+#endif
+
+        [DllImport(PortAudioLibName)]
         public static extern PaError Pa_Initialize();
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern PaError Pa_Terminate();
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern int Pa_GetDefaultOutputDevice();
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern PaError Pa_OpenDefaultStream(out IntPtr stream, int numInputChannels, int numOutputChannels, PaSampleFormat sampleFormat, double sampleRate, uint framesPerBuffer, PaStreamCallback streamCallback, IntPtr userData);
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern PaError Pa_CloseStream(IntPtr stream);
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern PaError Pa_StartStream(IntPtr stream);
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern PaError Pa_StopStream(IntPtr stream);
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern PaError Pa_AbortStream(IntPtr stream);
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern int Pa_GetStreamWriteAvailable(IntPtr stream);
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern PaError Pa_WriteStream(IntPtr stream, IntPtr buffer, uint frames);
 
-        [DllImport("libportaudio.2.dylib")]
+        [DllImport(PortAudioLibName)]
         public static extern void Pa_Sleep(int msec);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -89,6 +100,9 @@ namespace FamiStudio
         private bool stop = false;
         private GetBufferDataCallback bufferFill;
         private static int refCount = 0;
+#if !USE_BLOCKING_STREAM
+        private PaStreamCallback streamCallback;
+#endif
 
         public PortAudioStream(int rate, int channels, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
@@ -98,7 +112,17 @@ namespace FamiStudio
                 refCount++;
             }
 
-            Pa_OpenDefaultStream(out stream, 0, 1, PaSampleFormat.Int16, 44100, 0, null, IntPtr.Zero);
+#if !USE_BLOCKING_STREAM
+            streamCallback = new PaStreamCallback(StreamCallback);
+#endif
+
+            Pa_OpenDefaultStream(out stream, 0, 1, PaSampleFormat.Int16, 44100, 0,
+#if !USE_BLOCKING_STREAM
+                streamCallback,
+#else
+                null,
+#endif
+                IntPtr.Zero);
             bufferFill = bufferFillCallback;
         }
 
@@ -106,7 +130,9 @@ namespace FamiStudio
         {
             stop = false;
             Pa_StartStream(stream);
-            playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
+#if USE_BLOCKING_STREAM
+                playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
+#endif
         }
 
         public void Stop()
@@ -140,6 +166,43 @@ namespace FamiStudio
             }
         }
 
+#if !USE_BLOCKING_STREAM
+        short[] zeroSamples = new short[2048];
+        short[] lastSamples = null;
+        int     lastSamplesOffset = 0;
+
+        unsafe PaStreamCallbackResult StreamCallback(IntPtr input, IntPtr output, uint frameCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData)
+        {
+            var outPtr = output;
+
+            do
+            {
+                if (lastSamplesOffset == 0)
+                {
+                    lastSamples = bufferFill();
+                    if (lastSamples == null)
+                        lastSamples = zeroSamples;
+                }
+
+                int numSamplesToCopy = (int)Math.Min(frameCount, lastSamples.Length - lastSamplesOffset);
+                fixed (short* p = &lastSamples[lastSamplesOffset])
+                    Buffer.MemoryCopy(p, outPtr.ToPointer(), frameCount * sizeof(short), numSamplesToCopy * sizeof(short));
+
+                lastSamplesOffset += numSamplesToCopy;
+                if (lastSamplesOffset == lastSamples.Length)
+                    lastSamplesOffset = 0;
+
+                outPtr = IntPtr.Add(outPtr, numSamplesToCopy * sizeof(short));
+                frameCount = (uint)(frameCount - numSamplesToCopy);
+            }
+            while (frameCount != 0);
+
+            if (lastSamples == zeroSamples)
+                lastSamplesOffset = 0;
+
+            return PaStreamCallbackResult.Continue;
+        }
+#else
         private unsafe void PlayAsync()
         {
             short[] samples = null;
@@ -155,16 +218,28 @@ namespace FamiStudio
                 {
                     int avail = Pa_GetStreamWriteAvailable(stream);
 
+                    Trace.WriteLine("A:" + avail.ToString() + " " + DateTime.Now.Millisecond.ToString());
+
                     if (avail >= samples.Length)
                     {
                         fixed (short* p = &samples[0])
-                            Pa_WriteStream(stream, new IntPtr(p), (uint)samples.Length);
+                        {
+                            var err = Pa_WriteStream(stream, new IntPtr(p), (uint)samples.Length);
+                            Trace.WriteLine("W:" + err + " " + samples.Length.ToString());
+                            avail = Pa_GetStreamWriteAvailable(stream);
+                            Trace.WriteLine("A2:" + avail.ToString());
+                        }
                         samples = null;
                     }
                 }
+                else
+                {
+                    Trace.WriteLine("NULL SAMPLES");
+                }
 
-                Pa_Sleep(4);
+                //Pa_Sleep(4);
             }
         }
+#endif
     }
 }

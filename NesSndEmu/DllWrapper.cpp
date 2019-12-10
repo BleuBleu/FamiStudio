@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <memory.h>
 
+#ifdef LINUX
+#define __stdcall
+#define __cdecl
+#endif
+
 static Simple_Apu apu[3];
 
 extern "C" int __stdcall NesApuInit(int apuIdx, long sampleRate, int (__cdecl *dmcReadFunc)(void* user_data, cpu_addr_t))

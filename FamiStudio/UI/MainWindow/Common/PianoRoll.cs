@@ -2046,12 +2046,15 @@ namespace FamiStudio
             
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
+#if !FAMISTUDIO_LINUX
+            // TODO LINUX: Cursors.
             if (editMode == EditionMode.Enveloppe && (e.X > whiteKeySizeX && e.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
                 Cursor.Current = Cursors.SizeWE;
             else if (captureOperation == CaptureOperation.ChangeEffectValue)
                 Cursor.Current = Cursors.SizeNS;
             else
                 Cursor.Current = Cursors.Default;
+#endif
 
             switch (captureOperation)
             {

@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E1E67A3F-2AF6-4FB0-B847-C91E4269A8D6}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>FamiStudio</RootNamespace>
+    <AssemblyName>FamiStudio</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <SupportUrl>https://twitter.com/nesbleubleu</SupportUrl>
+    <ProductName>FamiStudio</ProductName>
+    <PublisherName>BleuBleu</PublisherName>
+    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;FAMISTUDIO_LINUX</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>CS0618</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;FAMISTUDIO_LINUX</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugSymbols>true</DebugSymbols>
+    <NoWarn>CS0618</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup>
+    <PackageReference Include="OpenTK" Version="3.1.0" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
+      <Package>gtk-sharp-2.0</Package>
+    </Reference>
+    <Reference Include="glib-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
+      <Package>glib-sharp-2.0</Package>
+    </Reference>
+    <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
+      <Package>gtk-sharp-2.0</Package>
+    </Reference>
+    <Reference Include="pango-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
+      <Package>gtk-sharp-2.0</Package>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Mono.Cairo" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Source\IO\FamitoneMusicFile.cs" />
+    <Compile Include="Source\IO\IniFile.cs" />
+    <Compile Include="Source\IO\NsfFile.cs" />
+    <Compile Include="Source\IO\ProjectBuffer.cs" />
+    <Compile Include="Source\IO\ProjectFile.cs" />
+    <Compile Include="Source\IO\WaveFile.cs" />
+    <Compile Include="Source\Player\ChannelState.cs" />
+    <Compile Include="Source\Player\DPCMChannelState.cs" />
+    <Compile Include="Source\Player\InstrumentPlayer.cs" />
+    <Compile Include="Source\Player\MIDI.cs" />
+    <Compile Include="Source\Player\NoiseChannelState.cs" />
+    <Compile Include="Source\Player\SongPlayer.cs" />
+    <Compile Include="Source\Player\SquareChannelState.cs" />
+    <Compile Include="Source\Player\TriangleChannelState.cs" />
+    <Compile Include="Source\Project\Envelope.cs" />
+    <Compile Include="Source\Utils\ClipboardUtils.cs" /> 
+    <Compile Include="Source\Utils\Settings.cs" />
+    <Compile Include="UI\Dialogs\Common\ConfigDialog.cs" />
+    <Content Include="libportaudio.so.2.0.0">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="NesSndEmu.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Source\Project\DPCMSample.cs" />
+    <Compile Include="Source\IO\FamitrackerFile.cs" />
+    <Compile Include="Source\Project\Instrument.cs" />
+    <Compile Include="Source\Player\NesApu.cs" />
+    <Compile Include="Source\Project\Note.cs" />
+    <Compile Include="Source\Project\Pattern.cs" />
+    <Compile Include="Source\Player\PlayerBase.cs" />
+    <Compile Include="Source\Project\Project.cs" />
+    <Compile Include="Source\Project\Song.cs" />
+    <Compile Include="Source\Project\Channel.cs" />
+    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
+    <Compile Include="UI\MainWindow\OpenTK\Cursors.cs" />
+    <Compile Include="UI\MainWindow\OpenTK\GLControl.cs" />
+    <Compile Include="UI\MainWindow\OpenTK\GLGraphics.cs" />
+    <Compile Include="UI\MainWindow\OpenTK\GLTheme.cs" />
+    <Compile Include="Source\Utils\Compression.cs" />
+    <Compile Include="Source\Utils\CRC32.cs" />
+    <Compile Include="Source\Utils\PerformanceCounter.cs" />
+    <Compile Include="Source\Project\UndoRedo.cs" />
+    <Compile Include="Source\Utils\Utils.cs" />
+    <Compile Include="UI\Dialogs\Common\ExportDialog.cs" />
+    <Compile Include="UI\MainWindow\Common\FamiStudio.cs" />
+    <Compile Include="UI\MainWindow\OpenTK\FamiStudioForm.cs" />
+    <Compile Include="UI\MainWindow\Common\ProjectExplorer.cs" />
+    <Compile Include="UI\MainWindow\Common\PianoRoll.cs" />
+    <Compile Include="Source\Utils\Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\MainWindow\Common\Sequencer.cs" />
+    <Compile Include="UI\MainWindow\Common\ThemeBase.cs" />
+    <Compile Include="UI\MainWindow\Common\Toolbar.cs" />
+    <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs.bin" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="UI\Dialogs\Gtk\PlatformDialogs.cs" />
+    <EmbeddedResource Include="Resources\gtk.rc" />
+    <Compile Include="UI\Dialogs\Gtk\CheckBoxList.cs" />
+    <Compile Include="UI\Dialogs\Gtk\DomainSpin.cs" />
+    <Compile Include="UI\Dialogs\Gtk\PropertyPage.cs" />
+    <Compile Include="UI\Dialogs\Gtk\ScaledImage.cs" />
+    <Compile Include="UI\Dialogs\Gtk\PropertyDialog.cs" />
+    <Compile Include="UI\Dialogs\Gtk\MultiPropertyDialog.cs" />
+    <EmbeddedResource Include="Resources\No.png" />
+    <EmbeddedResource Include="Resources\Yes.png" />
+    <Compile Include="UI\Dialogs\Gtk\FlatButton.cs" />
+    <Compile Include="Source\Player\PortAudioStream.cs" />
+    <EmbeddedResource Include="Resources\ExportFamiTone2.png" />
+    <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
+    <EmbeddedResource Include="Resources\ExportNsf.png" />
+    <EmbeddedResource Include="Resources\ExportWav.png" />
+    <EmbeddedResource Include="Resources\QuickSand24.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand24Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand24Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand40.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand40_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand40Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand40Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand56.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand56_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand24_0.png" />
+    <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
+    <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Quicksand-Regular.ttf" />
+    <EmbeddedResource Include="Resources\DPCM.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Noise.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
+    <EmbeddedResource Include="Resources\Square.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Triangle.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Arpeggio.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Pitch.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Volume.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Duty0.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Duty1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Duty2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Duty3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Loop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\InstrumentOpen%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentOpen.png" />
+    <EmbeddedResource Include="Resources\Drag%402x.png" />
+    <EmbeddedResource Include="Resources\Drag.png" /> 
+    <EmbeddedResource Include="Resources\MouseLeft%402x.png" />
+    <EmbeddedResource Include="Resources\MouseLeft.png" />
+    <EmbeddedResource Include="Resources\MouseRight%402x.png" />
+    <EmbeddedResource Include="Resources\MouseRight.png" />
+    <EmbeddedResource Include="Resources\MouseWheel%402x.png" />
+    <EmbeddedResource Include="Resources\MouseWheel.png" /> 
+    <EmbeddedResource Include="Resources\Copy%402x.png" />
+    <EmbeddedResource Include="Resources\Copy.png" />
+    <EmbeddedResource Include="Resources\Cut%402x.png" />
+    <EmbeddedResource Include="Resources\Cut.png" />
+    <EmbeddedResource Include="Resources\Paste%402x.png" />
+    <EmbeddedResource Include="Resources\Paste.png" />
+    <EmbeddedResource Include="Resources\ConfigMIDI%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigMIDI.png" />
+    <EmbeddedResource Include="Resources\ConfigSound%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigSound.png" />
+    <EmbeddedResource Include="Resources\ConfigUserInterface%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigUserInterface.png" />
+    <EmbeddedResource Include="Resources\Noise%4015x.png" />
+    <EmbeddedResource Include="Resources\JumpSmallFill%402x.png" />
+    <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
+    <EmbeddedResource Include="Resources\SpeedSmallFill%402x.png" />
+    <EmbeddedResource Include="Resources\LoopSmall%402x.png" />
+    <EmbeddedResource Include="Resources\Music%402x.png" />
+    <EmbeddedResource Include="Resources\ReleaseSmallFill%402x.png" />
+    <EmbeddedResource Include="Resources\ReleaseSmallFill.png" />
+    <EmbeddedResource Include="Resources\ExportFamiTone2%402x.png" />
+    <EmbeddedResource Include="Resources\ExportFamiTracker%402x.png" />
+    <EmbeddedResource Include="Resources\ExportNsf%402x.png" />
+    <EmbeddedResource Include="Resources\ExportWav%402x.png" />
+    <EmbeddedResource Include="Resources\Add%402x.png" />
+    <EmbeddedResource Include="Resources\Arpeggio%402x.png" />
+    <EmbeddedResource Include="Resources\CollapsedSmall%402x.png" />
+    <EmbeddedResource Include="Resources\DPCM%402x.png" />
+    <EmbeddedResource Include="Resources\Duty0%402x.png" />
+    <EmbeddedResource Include="Resources\Duty1%402x.png" />
+    <EmbeddedResource Include="Resources\Duty2%402x.png" />
+    <EmbeddedResource Include="Resources\Duty3%402x.png" />
+    <EmbeddedResource Include="Resources\ExpandedSmall%402x.png" />
+    <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
+    <EmbeddedResource Include="Resources\JumpSmall%402x.png" />
+    <EmbeddedResource Include="Resources\Noise%402x.png" />
+    <EmbeddedResource Include="Resources\Pattern%402x.png" />
+    <EmbeddedResource Include="Resources\Pitch%402x.png" />
+    <EmbeddedResource Include="Resources\ReleaseSmall%402x.png" />
+    <EmbeddedResource Include="Resources\SpeedSmall%402x.png" />
+    <EmbeddedResource Include="Resources\Square%402x.png" />
+    <EmbeddedResource Include="Resources\Triangle%402x.png" />
+    <EmbeddedResource Include="Resources\Volume%402x.png" />
+    <EmbeddedResource Include="Resources\VolumeSmall%402x.png" />
+    <EmbeddedResource Include="Resources\ReleaseSmall.png" />
+    <EmbeddedResource Include="Resources\Config%402x.png" />
+    <EmbeddedResource Include="Resources\Config.png" />
+    <EmbeddedResource Include="Resources\Export%402x.png" />
+    <EmbeddedResource Include="Resources\File%402x.png" />
+    <EmbeddedResource Include="Resources\Loop%402x.png" />
+    <EmbeddedResource Include="Resources\LoopNone%402x.png" />
+    <EmbeddedResource Include="Resources\LoopPattern%402x.png" />
+    <EmbeddedResource Include="Resources\No%402x.png" />
+    <EmbeddedResource Include="Resources\Open%402x.png" />
+    <EmbeddedResource Include="Resources\Pause%402x.png" />
+    <EmbeddedResource Include="Resources\Play%402x.png" />
+    <EmbeddedResource Include="Resources\Redo%402x.png" />
+    <EmbeddedResource Include="Resources\Rewind%402x.png" />
+    <EmbeddedResource Include="Resources\Save%402x.png" />
+    <EmbeddedResource Include="Resources\Stop%402x.png" />
+    <EmbeddedResource Include="Resources\Undo%402x.png" />
+    <EmbeddedResource Include="Resources\Yes%402x.png" />
+    <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand10_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand12_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand20Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand20_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand28_0.png" />
+    <EmbeddedResource Include="Resources\VolumeSmall.png" />
+    <EmbeddedResource Include="Resources\Export.png" />
+    <EmbeddedResource Include="Resources\File.png" />
+    <EmbeddedResource Include="Resources\Music.png" />
+    <EmbeddedResource Include="Resources\Open.png" />
+    <EmbeddedResource Include="Resources\Pattern.png" />
+    <EmbeddedResource Include="Resources\Play.png" />
+    <EmbeddedResource Include="Resources\Redo.png" />
+    <EmbeddedResource Include="Resources\Rewind.png" />
+    <EmbeddedResource Include="Resources\Save.png" />
+    <EmbeddedResource Include="Resources\Stop.png" />
+    <EmbeddedResource Include="Resources\Undo.png" />
+    <EmbeddedResource Include="Resources\LoopPattern.png" />
+    <EmbeddedResource Include="Resources\LoopNone.png" />
+    <EmbeddedResource Include="Resources\Pause.png" />
+    <EmbeddedResource Include="Resources\LoopSmall.png" />
+    <EmbeddedResource Include="Resources\Add.png" />
+    <EmbeddedResource Include="Resources\CollapsedSmall.png" />
+    <EmbeddedResource Include="Resources\ExpandedSmall.png" />
+    <None Include="Resources\FamiStudio.ico" />
+    <EmbeddedResource Include="Resources\JumpSmall.png" />
+    <EmbeddedResource Include="Resources\SpeedSmall.png" />
+    <EmbeddedResource Include="Resources\JumpSmallFill.png" />
+    <EmbeddedResource Include="Resources\LoopSmallFill.png" />
+    <EmbeddedResource Include="Resources\SpeedSmallFill.png" />
+    <EmbeddedResource Include="Resources\GhostSmall.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -16,6 +16,9 @@ namespace FamiStudio
 #if FAMISTUDIO_MACOS
         public static float MainWindowScaling => MacUtils.MainWindowScaling;
         public static float DialogScaling     => MacUtils.DialogScaling;
+#else
+        public const float MainWindowScaling = 1;
+        public const float DialogScaling     = 1;
 #endif
 
         private void InitializeFonts(GLGraphics g)
