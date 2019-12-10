@@ -3,10 +3,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-#if FAMISTUDIO_MACOS
-#define USE_BLOCKING_STREAM
-#endif
-
 namespace FamiStudio
 {
     public class PortAudioStream
@@ -100,9 +96,7 @@ namespace FamiStudio
         private bool stop = false;
         private GetBufferDataCallback bufferFill;
         private static int refCount = 0;
-#if !USE_BLOCKING_STREAM
         private PaStreamCallback streamCallback;
-#endif
 
         public PortAudioStream(int rate, int channels, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
@@ -112,17 +106,9 @@ namespace FamiStudio
                 refCount++;
             }
 
-#if !USE_BLOCKING_STREAM
             streamCallback = new PaStreamCallback(StreamCallback);
-#endif
 
-            Pa_OpenDefaultStream(out stream, 0, 1, PaSampleFormat.Int16, 44100, 0,
-#if !USE_BLOCKING_STREAM
-                streamCallback,
-#else
-                null,
-#endif
-                IntPtr.Zero);
+            Pa_OpenDefaultStream(out stream, 0, 1, PaSampleFormat.Int16, 44100, 0, streamCallback, IntPtr.Zero);
             bufferFill = bufferFillCallback;
         }
 
@@ -130,9 +116,6 @@ namespace FamiStudio
         {
             stop = false;
             Pa_StartStream(stream);
-#if USE_BLOCKING_STREAM
-                playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
-#endif
         }
 
         public void Stop()
@@ -166,7 +149,6 @@ namespace FamiStudio
             }
         }
 
-#if !USE_BLOCKING_STREAM
         short[] zeroSamples = new short[2048];
         short[] lastSamples = null;
         int     lastSamplesOffset = 0;
@@ -202,44 +184,5 @@ namespace FamiStudio
 
             return PaStreamCallbackResult.Continue;
         }
-#else
-        private unsafe void PlayAsync()
-        {
-            short[] samples = null;
-
-            while (!stop)
-            {
-                if (samples == null)
-                {
-                    samples = bufferFill();
-                }
-
-                if (samples != null)
-                {
-                    int avail = Pa_GetStreamWriteAvailable(stream);
-
-                    Trace.WriteLine("A:" + avail.ToString() + " " + DateTime.Now.Millisecond.ToString());
-
-                    if (avail >= samples.Length)
-                    {
-                        fixed (short* p = &samples[0])
-                        {
-                            var err = Pa_WriteStream(stream, new IntPtr(p), (uint)samples.Length);
-                            Trace.WriteLine("W:" + err + " " + samples.Length.ToString());
-                            avail = Pa_GetStreamWriteAvailable(stream);
-                            Trace.WriteLine("A2:" + avail.ToString());
-                        }
-                        samples = null;
-                    }
-                }
-                else
-                {
-                    Trace.WriteLine("NULL SAMPLES");
-                }
-
-                //Pa_Sleep(4);
-            }
-        }
-#endif
     }
 }
