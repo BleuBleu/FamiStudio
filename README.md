@@ -10,7 +10,7 @@ All releases are available in the [Releases](https://github.com/BleuBleu/FamiStu
 The tools needed to compile are:
 - Visual Studio 2017 on Windows 
 - Visual Studio 2019 for Mac, on MacOS
-- MonoDevelop 8.* on Linux (the Linux version is very functional, but it should compile, launch and play a song)
+- MonoDevelop 8.* on Linux (the Linux version is not usable, but it should compile, launch and play a song)
 
 There are 3 main projects:
 - The main FamiStudio application is written in C#.
