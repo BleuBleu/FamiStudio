@@ -151,6 +151,7 @@ namespace FamiStudio
 
     public class GLGraphics
     {
+        private bool supportsLineWidth = false;
         private int windowSizeY;
         private GLControl control;
         private Rectangle scissor;
@@ -165,6 +166,12 @@ namespace FamiStudio
 
         public void BeginDraw(GLControl control, int windowSizeY)
         {
+#if FAMISTUDIO_LINUX
+            var lineWidths = new float[2];
+            GL.GetFloat(GetPName.LineWidthRange, lineWidths);
+            supportsLineWidth = lineWidths[1] > 1.0f;
+#endif
+
             this.windowSizeY = windowSizeY;
             this.control = control;
 
@@ -338,11 +345,22 @@ namespace FamiStudio
         public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
         {
             GL.Color4(brush.Color0);
-            GL.LineWidth(width);
-            GL.Begin(BeginMode.Lines);
-            GL.Vertex2(x0 + 0.5f, y0 + 0.5f);
-            GL.Vertex2(x1 + 0.5f, y1 + 0.5f);
-            GL.End();
+#if FAMISTUDIO_LINUX
+            if (!supportsLineWidth && width > 1)
+            {
+                DrawThickLineAsPolygon(new[] { 
+                    x0 + 0.5f, y0 + 0.5f, 
+                    x1 + 0.5f, y1 + 0.5f }, brush, width);
+            }
+            else
+#endif
+            {
+                GL.LineWidth(width);
+                GL.Begin(BeginMode.Lines);
+                GL.Vertex2(x0 + 0.5f, y0 + 0.5f);
+                GL.Vertex2(x1 + 0.5f, y1 + 0.5f);
+                GL.End();
+            }
         }
 
         public void DrawRectangle(RectangleF rect, GLBrush brush, float width = 1.0f)
@@ -353,13 +371,27 @@ namespace FamiStudio
         public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
         {
             GL.Color4(brush.Color0);
-            GL.LineWidth(width);
-            GL.Begin(BeginMode.LineLoop);
-            GL.Vertex2(x0 + 0.5f, y0 + 0.5f);
-            GL.Vertex2(x1 + 0.5f, y0 + 0.5f);
-            GL.Vertex2(x1 + 0.5f, y1 + 0.5f);
-            GL.Vertex2(x0 + 0.5f, y1 + 0.5f);
-            GL.End();
+#if FAMISTUDIO_LINUX
+            if (!supportsLineWidth && width > 1)
+            {
+                DrawThickLineAsPolygon(new[] { 
+                    x0 + 0.5f, y0 + 0.5f, 
+                    x1 + 0.5f, y0 + 0.5f, 
+                    x1 + 0.5f, y1 + 0.5f, 
+                    x0 + 0.5f, y1 + 0.5f,
+                    x0 + 0.5f, y0 + 0.5f }, brush, width);
+            }
+            else
+#endif
+            {
+                GL.LineWidth(width);
+                GL.Begin(BeginMode.LineLoop);
+                GL.Vertex2(x0 + 0.5f, y0 + 0.5f);
+                GL.Vertex2(x1 + 0.5f, y0 + 0.5f);
+                GL.Vertex2(x1 + 0.5f, y1 + 0.5f);
+                GL.Vertex2(x0 + 0.5f, y1 + 0.5f);
+                GL.End();
+            }
         }
 
         public void FillRectangle(RectangleF rect, GLBrush brush)
@@ -474,14 +506,56 @@ namespace FamiStudio
         {
             GL.Enable(EnableCap.LineSmooth);
             GL.Color4(brush.Color0);
-            GL.LineWidth(lineWidth);
-            GL.Begin(BeginMode.LineLoop);
-            foreach (var pt in geo.Points)
-                GL.Vertex2(pt.X + 0.5f, pt.Y + 0.5f);
-            GL.End();
+#if FAMISTUDIO_LINUX
+            if (!supportsLineWidth && lineWidth > 1)
+            {
+                var pts = new float[geo.Points.Length * 2 + 2];
+                for (int i = 0; i < geo.Points.Length; i++)
+                {
+                    pts[i * 2 + 0] = geo.Points[i].X;
+                    pts[i * 2 + 1] = geo.Points[i].Y;
+                }
+                pts[geo.Points.Length * 2 + 0] = geo.Points[0].X;
+                pts[geo.Points.Length * 2 + 1] = geo.Points[0].Y;
+
+                DrawThickLineAsPolygon(pts, brush, lineWidth);
+            }
+            else
+#endif
+            {
+                GL.LineWidth(lineWidth);
+                GL.Begin(BeginMode.LineLoop);
+                foreach (var pt in geo.Points)
+                    GL.Vertex2(pt.X + 0.5f, pt.Y + 0.5f);
+                GL.End();
+            }
             GL.Disable(EnableCap.LineSmooth);
         }
-        
+
+        private void DrawThickLineAsPolygon(float[] points, GLBrush brush, float width)
+        {
+            GL.Begin(BeginMode.Quads);
+            for (int i = 0; i < points.Length / 2 - 1; i++)
+            {
+                float x0 = points[(i + 0) * 2 + 0];
+                float y0 = points[(i + 0) * 2 + 1];
+                float x1 = points[(i + 1) * 2 + 0];
+                float y1 = points[(i + 1) * 2 + 1];
+
+                float dx = x1 - x0;
+                float dy = y1 - y0;
+                float invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
+                dx *= invHalfWidth;
+                dy *= invHalfWidth;
+
+                GL.Vertex2(x0 + dy, y0 + dx);
+                GL.Vertex2(x1 + dy, y1 + dx);
+                GL.Vertex2(x1 - dy, y1 - dx);
+                GL.Vertex2(x0 - dy, y0 - dx);
+            }
+            GL.End();
+        }
+
         public void FillAndDrawConvexPath(GLConvexPath geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f)
         {
             FillConvexPath(geo, fillBrush);
