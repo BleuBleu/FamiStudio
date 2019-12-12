@@ -28,7 +28,6 @@ namespace FamiStudio
             public Widget control;
         };
 
-        //FontDescription font;
         System.Drawing.Color color;
         Pixbuf colorBitmap;
         List<Property> properties = new List<Property>();
@@ -40,8 +39,6 @@ namespace FamiStudio
 
         public PropertyPage() : base(1, 1, false)
         {
-            //font = FontDescription.FromString("Quicksand 14");
-
             //AddColoredString("Hello!", System.Drawing.Color.FromArgb(0, 128, 0));
             //AddString("Allo oii oQi ", "Qoto");
             //AddIntegerRange("Number", 7, 0, 16);

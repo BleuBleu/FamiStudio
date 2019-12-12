@@ -1,4 +1,4 @@
-﻿using Gtk;
+using Gtk;
 using System;
 using System.Reflection;
 using System.Resources;
@@ -109,8 +109,11 @@ namespace FamiStudio
                 Application.RunIteration();
 
             Hide();
+
 #if FAMISTUDIO_MACOS
             MacUtils.RestoreMainNSWindowFocus();
+#else
+            PlatformDialogs.ProcessPendingEvents();
 #endif
 
             return result;

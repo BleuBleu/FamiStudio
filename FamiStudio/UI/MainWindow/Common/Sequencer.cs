@@ -8,7 +8,7 @@ using System.Media;
 using System.Diagnostics;
 
 #if FAMISTUDIO_WINDOWS
-using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
+    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;

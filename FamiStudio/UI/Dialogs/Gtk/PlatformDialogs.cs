@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
+using Gtk;
 
 namespace FamiStudio
 {
@@ -43,7 +47,10 @@ namespace FamiStudio
                     break;
                 }
             }
+        }
 
+        public static void InitializeGtk()
+        {
             Gtk.Application.Init();
 
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Resources.gtk.rc"))
@@ -52,6 +59,12 @@ namespace FamiStudio
                 string gtkrc = reader.ReadToEnd();
                 Gtk.Rc.ParseString(gtkrc);
             }
+        }
+
+        public static void ProcessPendingEvents()
+        {
+            while (Gtk.Application.EventsPending())
+                Gtk.Application.RunIteration();
         }
 
         private static string[] GetExtensionList(string str)
@@ -64,36 +77,93 @@ namespace FamiStudio
                 extensions.AddRange(splits[i].Split(new[] { ';', '*', '.' }, StringSplitOptions.RemoveEmptyEntries));
             }
 
-            return extensions.ToArray();
+            return extensions.Distinct().ToArray();
         }
 
         public static string ShowOpenFileDialog(string title, string extensions)
         {
+            var extensionList = GetExtensionList(extensions);
 #if FAMISTUDIO_MACOS
-            return MacUtils.ShowOpenDialog(title, GetExtensionList(extensions));
+            return MacUtils.ShowOpenDialog(title, extensionList);
 #else
-            // TODO LINUX: Dialogs
-            return null;
+            Gtk.FileChooserDialog filechooser =
+                new Gtk.FileChooserDialog("Choose the file to open",
+                    null,
+                    FileChooserAction.Open,
+                    "Cancel", ResponseType.Cancel,
+                    "Open", ResponseType.Accept);
+
+            filechooser.Filter = new FileFilter();
+            foreach (var ext in extensionList)
+                filechooser.Filter.AddPattern($"*.{ext}");
+
+            string filename = null;
+            if (filechooser.Run() == (int)ResponseType.Accept)
+                filename = filechooser.Filename;
+
+            ProcessPendingEvents();
+            filechooser.Destroy();
+            ProcessPendingEvents();
+
+            return filename;
 #endif
         }
 
         public static string ShowSaveFileDialog(string title, string extensions)
         {
+            var extensionList = GetExtensionList(extensions);
 #if FAMISTUDIO_MACOS
-            return MacUtils.ShowSaveDialog(title, GetExtensionList(extensions));
+            return MacUtils.ShowSaveDialog(title, extensionList);
 #else
-            // TODO LINUX: Dialogs
-            return null;
+            Gtk.FileChooserDialog filechooser =
+                new Gtk.FileChooserDialog("Choose the file to open",
+                    null,
+                    FileChooserAction.Save,
+                    "Cancel", ResponseType.Cancel,
+                    "Open", ResponseType.Accept);
+
+            filechooser.Filter = new FileFilter();
+            foreach (var ext in extensionList)
+                filechooser.Filter.AddPattern($"*.{ext}");
+
+            string filename = null;
+            if (filechooser.Run() == (int)ResponseType.Accept)
+                filename = filechooser.Filename;
+
+            ProcessPendingEvents();
+            filechooser.Destroy();
+            ProcessPendingEvents();
+
+            return filename;
 #endif
         }
 
-        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icons = MessageBoxIcon.None)
+        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icon = MessageBoxIcon.None)
         {
 #if FAMISTUDIO_MACOS
             return MacUtils.ShowAlert(text, title, buttons);
 #else
-            // TODO LINUX: Dialogs
-            return DialogResult.Cancel; 
+            if (buttons == MessageBoxButtons.YesNoCancel)
+            {
+                buttons = MessageBoxButtons.YesNo;
+                text += " (Close or ESC to cancel)";
+            }
+
+            MessageDialog md = new MessageDialog(null, 
+                DialogFlags.Modal | DialogFlags.DestroyWithParent, 
+                icon == MessageBoxIcon.Error ? MessageType.Error : MessageType.Info,
+                buttons == MessageBoxButtons.YesNo ? ButtonsType.YesNo : ButtonsType.Ok, text);
+            md.Title = title;
+            int ret = md.Run();
+
+            ProcessPendingEvents();
+            md.Destroy();
+            ProcessPendingEvents();
+
+            if (buttons == MessageBoxButtons.YesNo)
+                return ret == -8 ? DialogResult.Yes : ret == -9 ? DialogResult.No : DialogResult.Cancel;
+            else
+                return DialogResult.OK;
 #endif
         }
     }

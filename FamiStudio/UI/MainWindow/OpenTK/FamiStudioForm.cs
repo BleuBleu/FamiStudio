@@ -603,6 +603,8 @@ namespace FamiStudio
             Visible = true; 
             OnResize(EventArgs.Empty);
 
+            PlatformDialogs.InitializeGtk();
+
             while (true)
             {
                 var timeStart = DateTime.Now;
