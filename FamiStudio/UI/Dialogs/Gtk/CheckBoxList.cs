@@ -18,6 +18,7 @@ namespace FamiStudio
             {
                 var chk = new CheckButton(values[i]);
                 chk.Active = selected == null ? true : selected[i];
+                chk.Name = "CheckBoxList";
                 chk.Show();
                 vbox.PackStart(chk, false, false, 0);
                 checkButtons.Add(chk);

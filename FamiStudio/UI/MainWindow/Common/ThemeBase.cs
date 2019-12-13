@@ -189,6 +189,19 @@ namespace FamiStudio
             return CustomColors[i, j];
         }
 
+        public static int GetCustomColorIndex(Color color)
+        {
+            for (int j = 0; j < CustomColors.GetLength(1); j++)
+            {
+                for (int i = 0; i < CustomColors.GetLength(0); i++)
+                {
+                    if (CustomColors[i, j] == color) return j * CustomColors.GetLength(0) + i;
+                }
+            }
+
+            return 0;
+        }
+
         public static Color Darken(Color color)
         {
             return Color.FromArgb(

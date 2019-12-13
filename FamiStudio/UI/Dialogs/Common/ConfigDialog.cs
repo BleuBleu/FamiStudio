@@ -51,8 +51,10 @@ namespace FamiStudio
                 {
 #if FAMISTUDIO_WINDOWS
                     var scalingValues = new[] { "System", "100%", "150%", "200%" };
-#else
+#elif FAMISTUDIO_MACOS
                     var scalingValues = new[] { "System", "100%", "200%" };
+#else
+                    var scalingValues = new[] { "System" };
 #endif
                     var idx = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
 
@@ -88,6 +90,10 @@ namespace FamiStudio
 
             page.Build();
             pages[(int)section] = page;
+
+#if FAMISTUDIO_LINUX
+            page.SetPropertyEnabled(0, false);
+#endif
 
             return page;
         }

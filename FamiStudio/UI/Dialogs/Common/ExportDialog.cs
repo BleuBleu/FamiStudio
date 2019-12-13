@@ -28,8 +28,11 @@ namespace FamiStudio
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
             int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
 
-#if DEBUG && FAMISTUDIO_MACOS
+#if DEBUG
             height += 60;
+#endif
+#if FAMISTUDIO_LINUX
+            height += 30;
 #endif
 
             this.dialog = new MultiPropertyDialog(x, y, width, height);

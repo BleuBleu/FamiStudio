@@ -138,9 +138,9 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
-        private ScaledImage CreatePictureBox(System.Drawing.Color color) 
+        private ColorSelector CreatePictureBox(System.Drawing.Color color) 
         {
-            var pictureBox = new ScaledImage(GetColorBitmap());
+            var pictureBox = new ColorSelector(GetColorBitmap(), ThemeBase.GetCustomColorIndex(color));
 
             pictureBox.Show();
             pictureBox.ButtonPressEvent += PictureBox_ButtonPressEvent;
@@ -156,7 +156,7 @@ namespace FamiStudio
             return new Gdk.Color(color.R, color.G, color.B);
         }
 
-        private void ChangeColor(ScaledImage image, int x, int y)
+        private void ChangeColor(ColorSelector image, int x, int y)
         {
             int colorSizeX = ThemeBase.CustomColors.GetLength(0);
             int colorSizeY = ThemeBase.CustomColors.GetLength(1);
@@ -166,6 +166,9 @@ namespace FamiStudio
             int i = Math.Min(colorSizeX - 1, Math.Max(0, (int)(x / (float)imageWidth  * colorSizeX)));
             int j = Math.Min(colorSizeY - 1, Math.Max(0, (int)(y / (float)imageHeight * colorSizeY)));
 
+#if FAMISTUDIO_LINUX
+            image.SelectedColor = j * colorSizeX + i;
+#else
             foreach (var prop in properties)
             {
                 if (prop.type == PropertyType.ColoredString)
@@ -173,6 +176,7 @@ namespace FamiStudio
                     prop.control.ModifyBase(StateType.Normal, ToGdkColor(ThemeBase.CustomColors[i, j]));
                 }
             }
+#endif
 
             color = ThemeBase.CustomColors[i, j];
         }
@@ -181,7 +185,7 @@ namespace FamiStudio
         {
             var e = args.Event;
 
-            ChangeColor(o as ScaledImage, (int)e.X, (int)e.Y);
+            ChangeColor(o as ColorSelector, (int)e.X, (int)e.Y);
 
             if (e.Type == EventType.TwoButtonPress ||
                 e.Type == EventType.ThreeButtonPress)
@@ -193,7 +197,7 @@ namespace FamiStudio
         private void PictureBox_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
         {
             var e = args.Event;
-            ChangeColor(o as ScaledImage, (int)e.X, (int)e.Y);
+            ChangeColor(o as ColorSelector, (int)e.X, (int)e.Y);
         }
 
         private SpinButton CreateNumericUpDown(int value, int min, int max)
@@ -398,7 +402,7 @@ namespace FamiStudio
                 else
                 {
                     // HACK: Cant be bothered to deal with GTK+2 aspect ratios.
-                    if (prop.control is ScaledImage img)
+                    if (prop.control is ColorSelector img)
                         img.DesiredWidth = Toplevel.WidthRequest - 10; // (10 = Border * 2)
 
                     Attach(prop.control, 0, 2, (uint)i, (uint)(i + 1));

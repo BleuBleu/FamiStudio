@@ -12,13 +12,21 @@ namespace FamiStudio
 {
     public static class PlatformDialogs
     {
+#if FAMISTUDIO_LINUX
+        [System.Runtime.InteropServices.DllImport("fontconfig.so")]
+        static extern bool FcConfigAppFontAddFile(System.IntPtr config, string fontPath);
+        [System.Runtime.InteropServices.DllImport("fontconfig.so.1", EntryPoint = "FcConfigAppFontAddFile")]
+        static extern bool FcConfigAppFontAddFile1(System.IntPtr config, string fontPath);
+#endif
+
         public static void Initialize()
         {
             // When debugging or when in a app package, our paths are a bit different.
             string[] pathsToSearch =
             {
                 "../../Resources/",
-                "../Resources/Fonts/"
+                "../Resources/Fonts/",
+                "."
             };
 
             string[] fontsToLoad =
@@ -41,7 +49,15 @@ namespace FamiStudio
 #if FAMISTUDIO_MACOS
                         MacUtils.CoreTextRegisterFont(fullpath);
 #else
-                        // TODO LINUX: Load fonts.
+                        try
+                        {
+                            FcConfigAppFontAddFile(IntPtr.Zero, fullpath);
+                        }
+                        catch
+                        {
+                            //try { FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); } catch { }
+                            FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); // MATTT
+                        }
 #endif
                     }
                     break;
@@ -53,7 +69,13 @@ namespace FamiStudio
         {
             Gtk.Application.Init();
 
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Resources.gtk.rc"))
+#if FAMISTUDIO_MACOS
+            var rcFile = "FamiStudio.Resources.gtk_mac.rc";
+#else
+            var rcFile = "FamiStudio.Resources.gtk_linux.rc";
+#endif
+
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(rcFile))
             using (var reader = new StreamReader(stream))
             {
                 string gtkrc = reader.ReadToEnd();
@@ -86,6 +108,9 @@ namespace FamiStudio
 #if FAMISTUDIO_MACOS
             return MacUtils.ShowOpenDialog(title, extensionList);
 #else
+            Gtk.Rc.ResetStyles(Gtk.Settings.GetForScreen(Gdk.Screen.Default));
+            Gtk.Rc.ReparseAll();
+
             Gtk.FileChooserDialog filechooser =
                 new Gtk.FileChooserDialog("Choose the file to open",
                     null,
@@ -165,6 +190,7 @@ namespace FamiStudio
             md.KeepAbove = true;
             md.Modal = true;
             md.SkipTaskbarHint = true;
+            md.TypeHint = Gdk.WindowTypeHint.Dialog;
             md.Title = title;
 
             int ret = md.Run();

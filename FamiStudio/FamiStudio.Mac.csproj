@@ -143,7 +143,8 @@
     </Compile>
     <Compile Include="UI\Dialogs\Gtk\PlatformDialogs.cs" />
     <Compile Include="Source\Utils\MacUtils.cs" />
-    <EmbeddedResource Include="Resources\gtk.rc" />
+    <EmbeddedResource Include="Resources\gtk_mac.rc" />
+    <EmbeddedResource Include="Resources\gtk_linux.rc" />
     <Compile Include="UI\Dialogs\Gtk\CheckBoxList.cs" />
     <Compile Include="UI\Dialogs\Gtk\DomainSpin.cs" />
     <Compile Include="UI\Dialogs\Gtk\PropertyPage.cs" />

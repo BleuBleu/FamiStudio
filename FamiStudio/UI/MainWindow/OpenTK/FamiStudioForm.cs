@@ -92,6 +92,10 @@ namespace FamiStudio
         {
             this.VSync = VSyncMode.On;
             this.famistudio = famistudio;
+#if FAMISTUDIO_LINUX
+            // Doesnt work!
+            //this.Icon = new Icon("/home/ubuntu/FamiStudio.ico", 32, 32);
+#endif
 
 #if FAMISTUDIO_MACOS
             MacUtils.Initialize(WindowInfo.Handle);

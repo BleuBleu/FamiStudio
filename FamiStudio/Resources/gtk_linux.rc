@@ -1,0 +1,75 @@
+﻿style "label"
+{
+    fg[NORMAL] = "#C6CDDA" # LightGreyFillColor2
+}
+
+style "entry"
+{
+    text[NORMAL]   = "#000000"
+    text[ACTIVE]   = "#000000"
+    text[PRELIGHT] = "#000000"
+}
+
+style "combo"
+{
+    text[NORMAL] = "#000000"
+    text[ACTIVE] = "#000000"
+    text[PRELIGHT] = "#000000"
+}
+
+style "check_label"
+{
+    fg[NORMAL] = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE] = "#C6CDDA" # LightGreyFillColor2
+    fg[PRELIGHT] = "#C6CDDA" # DarkGreyFillColor2
+}
+
+style "check"
+{
+    bg[NORMAL]   = "#2A3033" # DarkGreyFillColor2
+    bg[ACTIVE]   = "#2A3033" # DarkGreyFillColor2
+    bg[PRELIGHT] = "#2A3033" # DarkGreyFillColor2    
+}
+
+style "check_list"
+{
+    fg[NORMAL]   = "#000000"
+    fg[PRELIGHT] = "#000000"
+    fg[ACTIVE]   = "#000000"
+    bg[NORMAL]   = "#FFFFFF"
+    bg[ACTIVE]   = "#FFFFFF"
+    bg[PRELIGHT] = "#FFFFFF"  
+}
+
+style "dialog"
+{
+    bg[NORMAL]   = "#2A3033" # DarkGreyFillColor2
+    bg[ACTIVE]   = "#2A3033" # DarkGreyFillColor2
+    bg[PRELIGHT] = "#2A3033" # DarkGreyFillColor2
+}
+
+style "flatbutton"
+{
+    fg[NORMAL]   = "#C6CDDA" # LightGreyFillColor2
+    fg[PRELIGHT] = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE]   = "#C6CDDA" # LightGreyFillColor2
+
+    bg[NORMAL]   = "#2A3033" # DarkGreyFillColor2
+    bg[PRELIGHT] = "#3A4043" # DarkGreyFillColor2 + 0x10
+    bg[ACTIVE]   = "#4A5053" # DarkGreyFillColor2 + 0x20
+}
+
+style "all"
+{
+    font_name = "Quicksand"
+}
+
+widget_class "*" style "all"
+widget_class "*GtkLabel*" style "label"
+widget_class "*Entry*" style "entry"
+widget_class "*ComboBox*" style "combo"
+widget_class "*GtkCheckButton*Label*" style "check_label"
+widget_class "*GtkCheckButton*" style "check"
+widget_class "*FlatButton*" style "flatbutton"
+widget_class "*Dialog" style "dialog"
+widget "*CheckBoxList*" style "check_list"
