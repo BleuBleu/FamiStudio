@@ -76,6 +76,7 @@ namespace FamiStudio
             Decorated = false;
             KeepAbove = true;
             Modal = true;
+            SkipTaskbarHint = true;
 
             Move(x, y);
         }

@@ -67,6 +67,7 @@ namespace FamiStudio
             Decorated = false;
             KeepAbove = true;
             Modal = true;
+            SkipTaskbarHint = true;
         }
 
         private void ButtonNo_ButtonPressEvent(object o, ButtonPressEventArgs args)

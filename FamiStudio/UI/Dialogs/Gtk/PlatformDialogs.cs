@@ -93,6 +93,10 @@ namespace FamiStudio
                     "Cancel", ResponseType.Cancel,
                     "Open", ResponseType.Accept);
 
+            filechooser.KeepAbove = true;
+            filechooser.Modal = true;
+            filechooser.SkipTaskbarHint = true;
+
             filechooser.Filter = new FileFilter();
             foreach (var ext in extensionList)
                 filechooser.Filter.AddPattern($"*.{ext}");
@@ -121,6 +125,10 @@ namespace FamiStudio
                     FileChooserAction.Save,
                     "Cancel", ResponseType.Cancel,
                     "Open", ResponseType.Accept);
+
+            filechooser.KeepAbove = true;
+            filechooser.Modal = true;
+            filechooser.SkipTaskbarHint = true;
 
             filechooser.Filter = new FileFilter();
             foreach (var ext in extensionList)
@@ -153,7 +161,12 @@ namespace FamiStudio
                 DialogFlags.Modal | DialogFlags.DestroyWithParent, 
                 icon == MessageBoxIcon.Error ? MessageType.Error : MessageType.Info,
                 buttons == MessageBoxButtons.YesNo ? ButtonsType.YesNo : ButtonsType.Ok, text);
+
+            md.KeepAbove = true;
+            md.Modal = true;
+            md.SkipTaskbarHint = true;
             md.Title = title;
+
             int ret = md.Run();
 
             ProcessPendingEvents();
