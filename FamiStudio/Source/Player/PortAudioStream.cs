@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FamiStudio
@@ -121,7 +122,6 @@ namespace FamiStudio
         {
             if (playing)
             {
-                //Pa_StopStream(stream);
                 Pa_AbortStream(stream); // Sleep slightly faster?
                 playing = false;
             }
@@ -146,11 +146,10 @@ namespace FamiStudio
             }
         }
 
-        short[] zeroSamples = new short[2048];
         short[] lastSamples = null;
         int     lastSamplesOffset = 0;
 
-        unsafe PaStreamCallbackResult StreamCallback(IntPtr input, IntPtr output, uint frameCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData)
+        PaStreamCallbackResult StreamCallback(IntPtr input, IntPtr output, uint frameCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData)
         {
             var outPtr = output;
 
@@ -158,14 +157,17 @@ namespace FamiStudio
             {
                 if (lastSamplesOffset == 0)
                 {
-                    lastSamples = bufferFill();
-                    if (lastSamples == null)
-                        lastSamples = zeroSamples;
+                    while (true)
+                    {
+                        lastSamples = bufferFill();
+                        if (lastSamples != null)
+                            break;
+                        Pa_Sleep(0);
+                    }
                 }
 
                 int numSamplesToCopy = (int)Math.Min(frameCount, lastSamples.Length - lastSamplesOffset);
-                fixed (short* p = &lastSamples[lastSamplesOffset])
-                    Buffer.MemoryCopy(p, outPtr.ToPointer(), frameCount * sizeof(short), numSamplesToCopy * sizeof(short));
+                Marshal.Copy(lastSamples, lastSamplesOffset, outPtr, numSamplesToCopy);
 
                 lastSamplesOffset += numSamplesToCopy;
                 if (lastSamplesOffset == lastSamples.Length)
@@ -175,9 +177,6 @@ namespace FamiStudio
                 frameCount = (uint)(frameCount - numSamplesToCopy);
             }
             while (frameCount != 0);
-
-            if (lastSamples == zeroSamples)
-                lastSamplesOffset = 0;
 
             return PaStreamCallbackResult.Continue;
         }
