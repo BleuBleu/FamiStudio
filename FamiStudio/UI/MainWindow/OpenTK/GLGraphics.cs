@@ -151,7 +151,9 @@ namespace FamiStudio
 
     public class GLGraphics
     {
+#if FAMISTUDIO_LINUX
         private bool supportsLineWidth = false;
+#endif
         private int windowSizeY;
         private GLControl control;
         private Rectangle scissor;

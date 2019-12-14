@@ -148,7 +148,7 @@
     <Compile Include="UI\Dialogs\Gtk\CheckBoxList.cs" />
     <Compile Include="UI\Dialogs\Gtk\DomainSpin.cs" />
     <Compile Include="UI\Dialogs\Gtk\PropertyPage.cs" />
-    <Compile Include="UI\Dialogs\Gtk\ScaledImage.cs" />
+    <Compile Include="UI\Dialogs\Gtk\ColorSelector.cs" />
     <Compile Include="UI\Dialogs\Gtk\PropertyDialog.cs" />
     <Compile Include="UI\Dialogs\Gtk\MultiPropertyDialog.cs" />
     <EmbeddedResource Include="Resources\No.png" />
