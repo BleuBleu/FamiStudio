@@ -178,7 +178,8 @@
     <Compile Include="UI\Dialogs\WinForms\MultiPropertyDialog.Designer.cs">
       <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Resources\gtk.rc" />
+    <EmbeddedResource Include="Resources\gtk_mac.rc" />
+    <EmbeddedResource Include="Resources\gtk_linux.rc" />
     <Compile Include="UI\Dialogs\WinForms\PlatformDialogs.cs" />
     <Compile Include="UI\Dialogs\WinForms\PropertyPage.cs">
       <SubType>UserControl</SubType>
