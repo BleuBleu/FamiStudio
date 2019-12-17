@@ -2,14 +2,15 @@
 
 namespace FamiStudio
 {
-    public class SquareChannelState : ChannelState
+    public class ApuSquareChannelState : ChannelState
     {
         int regOffset = 0;
         int prevPulseHi = -1;
 
-        public SquareChannelState(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
+        public ApuSquareChannelState(int apuIdx, int channelType) : base(apuIdx, channelType)
         {
-            regOffset = channelIdx * 4;
+            noteTable = NesApu.NoteTableNTSC;
+            regOffset = channelType * 4;
         }
 
         public override void UpdateAPU()
@@ -20,8 +21,8 @@ namespace FamiStudio
             }
             else if (note.IsValid)
             {
-                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, NesApu.NoteTableNTSC.Length - 1);
-                int period = Math.Min(NesApu.MaximumPeriod, NesApu.NoteTableNTSC[noteVal] + envelopeValues[Envelope.Pitch]);
+                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
+                int period = Math.Min(NesApu.MaximumPeriod, noteTable[noteVal] + portamentoPitch + envelopeValues[Envelope.Pitch]);
 
                 WriteApuRegister(NesApu.APU_PL1_LO + regOffset, period & 0xff);
                 period = (period >> 8) & 0x07;

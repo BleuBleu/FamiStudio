@@ -94,6 +94,61 @@ namespace FamiStudio
             return true;
         }
 
+        private static ChannelState CreateChannelState(int apuIdx, int channelType)
+        {
+            switch (channelType)
+            {
+                case Channel.Square1:
+                    return new ApuSquareChannelState(apuIdx, channelType);
+                case Channel.Square2:
+                    return new ApuSquareChannelState(apuIdx, channelType);
+                case Channel.Triangle:
+                    return new ApuTriangleChannelState(apuIdx, channelType);
+                case Channel.Noise:
+                    return new ApuSquareChannelState(apuIdx, channelType);
+                case Channel.DPCM:
+                    return new ApuSquareChannelState(apuIdx, channelType);
+                case Channel.VRC6Square1:
+                    return new Vrc6SquareChannelState(apuIdx, channelType);
+                case Channel.VRC6Square2:
+                    return new Vrc6SquareChannelState(apuIdx, channelType);
+                case Channel.VRC6Saw:
+                    return new Vrc6SawChannelState(apuIdx, channelType);
+            }
+
+            Debug.Assert(false);
+            return null;
+        }
+
+        public static ChannelState[] CreateChannelStates(Project project, int apuIdx)
+        {
+            var channelCount = project.GetActiveChannelCount();
+            var states = new ChannelState[channelCount];
+
+            int idx = 0;
+            for (int i = 0; i < Channel.Count; i++)
+            {
+                if (project.IsChannelActive(i))
+                    states[idx++] = CreateChannelState(apuIdx, i);
+            }
+
+            return states;
+        }
+
+        public static int GetNesApuExpansionAudio(Project project)
+        {
+            switch (project.ExpansionAudio)
+            {
+                case Project.ExpansionAudioType.None:
+                    return NesApu.APU_EXPANSION_NONE;
+                case Project.ExpansionAudioType.VRC6:
+                    return NesApu.APU_EXPANSION_VRC6;
+            }
+
+            Debug.Assert(false);
+            return 0;
+        }
+
         protected unsafe void EndFrameAndQueueSamples()
         {
             NesApu.NesApuEndFrame(apuIndex);

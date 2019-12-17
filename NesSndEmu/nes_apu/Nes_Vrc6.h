@@ -34,6 +34,8 @@ public:
 	enum { addr_step = 0x1000 };
 	void write_osc( cpu_time_t, int osc, int reg, int data );
 	
+	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
+
 private:
 	// noncopyable
 	Nes_Vrc6( const Nes_Vrc6& );

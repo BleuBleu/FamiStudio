@@ -82,5 +82,10 @@ namespace FamiStudio
         {
             Application.Run(this);
         }
+
+        public void RefreshSequencerLayout()
+        {
+            tableLayout.RowStyles[0].Height = sequencer.ComputeDesiredSizeY(); // MATTT: Scaling???
+        }
     }
 }

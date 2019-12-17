@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace FamiStudio
@@ -10,7 +11,7 @@ namespace FamiStudio
 
         private int id;
         private Project project;
-        private Channel[] channels = new Channel[5];
+        private Channel[] channels;
         private Color color;
         private int patternLength = 256;
         private int songLength = 64;
@@ -49,13 +50,21 @@ namespace FamiStudio
             CreateChannels();
         }
 
-        private void CreateChannels()
+        public void CreateChannels(bool preserve = false)
         {
-            channels[0] = new Channel(this, Channel.Square1, songLength);
-            channels[1] = new Channel(this, Channel.Square2, songLength);
-            channels[2] = new Channel(this, Channel.Triangle, songLength);
-            channels[3] = new Channel(this, Channel.Noise, songLength);
-            channels[4] = new Channel(this, Channel.DPCM, songLength);
+            int channelCount = project.GetActiveChannelCount();
+
+            if (preserve)
+                Array.Resize(ref channels, channelCount);
+            else
+                channels = new Channel[channelCount];
+
+            int idx = preserve ? Channel.ExpansionAudioStart : 0;
+            for (int i = idx; i < Channel.Count; i++)
+            {
+                if (project.IsChannelActive(i))
+                    channels[idx++] = new Channel(this, i, songLength);
+            }
         }
 
         public bool Split(int factor)

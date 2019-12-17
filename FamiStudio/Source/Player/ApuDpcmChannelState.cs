@@ -1,8 +1,8 @@
 ﻿namespace FamiStudio
 {
-    public class DPCMChannelState : ChannelState
+    public class ApuDpcmChannelState : ChannelState
     {
-        public DPCMChannelState(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
+        public ApuDpcmChannelState(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
         {
         }
 

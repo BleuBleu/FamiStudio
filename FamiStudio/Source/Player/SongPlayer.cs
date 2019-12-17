@@ -14,7 +14,7 @@ namespace FamiStudio
 
     public class SongPlayer : PlayerBase
     {
-        protected int channelMask = 0x1f;
+        protected int channelMask = 0xffff;
         protected int playFrame = 0;
         protected LoopMode loopMode = LoopMode.Song;
 
@@ -98,17 +98,10 @@ namespace FamiStudio
 
         unsafe void PlayerThread(object o)
         {
-            var channels = new ChannelState[5]
-            {
-                new SquareChannelState(apuIndex, 0),
-                new SquareChannelState(apuIndex, 1),
-                new TriangleChannelState(apuIndex, 2),
-                new NoiseChannelState(apuIndex, 3),
-                new DPCMChannelState(apuIndex, 4) 
-            };
-
             var startInfo = (SongPlayerStartInfo)o;
             var song = startInfo.song;
+
+            var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex);
 
             bool advance = true;
             int tempoCounter = 0;
@@ -116,7 +109,7 @@ namespace FamiStudio
             int playNote = 0;
             int speed = song.Speed;
 
-            NesApu.Reset(apuIndex);
+            NesApu.Reset(apuIndex, GetNesApuExpansionAudio(song.Project));
 
             if (startInfo.frame != 0)
             {
@@ -187,7 +180,7 @@ namespace FamiStudio
                 }
 
                 // Mute.
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < channels.Length; i++) 
                 {
                     NesApu.NesApuEnableChannel(apuIndex, i, (channelMask & (1 << i)));
                 }

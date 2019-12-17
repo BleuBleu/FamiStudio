@@ -25,6 +25,9 @@ namespace FamiStudio
         public const int EffectSkip  = 2; // Dxx
         public const int EffectSpeed = 3; // Fxx
 
+        public const int FlagNone       = 0x00;
+        public const int FlagPortamento = 0x01;
+
         public const int VolumeInvalid = 0xff;
         public const int VolumeMax     = 0x0f;
 
@@ -39,6 +42,7 @@ namespace FamiStudio
         public byte Value; // (0 = stop, 1 = C0 ... 96 = B7).
         public byte Effect; // Tempo/Jump/Skip
         public byte EffectParam; // Value for fx.
+        public byte Flags; // 
         public byte Volume; // 0-15. 0xff = no volume change.
         public Instrument Instrument;
 
@@ -130,6 +134,12 @@ namespace FamiStudio
                 buffer.Serialize(ref Volume);
             else
                 Volume = Note.VolumeInvalid;
+
+            // At version 4 (FamiStudio 1.4.0), we added a portamento (flags)
+            if (buffer.Version >= 4)
+                buffer.Serialize(ref Flags);
+            else
+                Flags = FlagNone;
 
             buffer.Serialize(ref Instrument);
         }

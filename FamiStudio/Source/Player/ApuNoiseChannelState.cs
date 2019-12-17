@@ -1,8 +1,8 @@
 ﻿namespace FamiStudio
 {
-    public class NoiseChannelState : ChannelState
+    public class ApuNoiseChannelState : ChannelState
     {
-        public NoiseChannelState(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
+        public ApuNoiseChannelState(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
         {
         }
 

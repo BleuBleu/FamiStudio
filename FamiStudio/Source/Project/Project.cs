@@ -9,8 +9,15 @@ namespace FamiStudio
         // Version 1 = 1.0.0
         // Version 2 = 1.1.0 (Project properties)
         // Version 3 = 1.2.0 (Volume tracks, extended notes, release envelopes)
-        public static int Version = 3;
+        // Version 4 = 1.4.0 (VRC6, portamento fx)
+        public static int Version = 4;
         public static int MaxSampleSize = 0x4000;
+
+        public enum ExpansionAudioType
+        {
+            None,
+            VRC6
+        };
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
         private List<DPCMSample> samples = new List<DPCMSample>();
@@ -21,12 +28,15 @@ namespace FamiStudio
         private string name = "Untitled";
         private string author = "Unknown";
         private string copyright = "";
+        private ExpansionAudioType expansionAudio = ExpansionAudioType.None;
 
         public List<DPCMSample>    Samples        => samples;
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
         public int                 NextUniqueId   => nextUniqueId;
+        public ExpansionAudioType  ExpansionAudio => expansionAudio;
+
         public string              Filename   { get => filename; set => filename = value; }
         public string              Name       { get => name; set => name = value; }
         public string              Author     { get => author; set => author = value; }
@@ -334,6 +344,37 @@ namespace FamiStudio
         public void SortSongs()
         {
             songs.Sort((s1, s2) => s1.Name.CompareTo(s2.Name));
+        }
+
+        public void SetExpansionAudio(ExpansionAudioType expansion)
+        {
+            expansionAudio = expansion;
+
+            foreach (var song in songs)
+                song.CreateChannels(true);
+
+            // TODO: Delete instruments from other expansion audio
+        }
+
+        public int GetActiveChannelCount()
+        {
+            int channelCount = 0;
+            for (int i = 0; i < Channel.Count; i++)
+                if (IsChannelActive(i)) channelCount++;
+            return channelCount;
+        }
+
+        public bool IsChannelActive(int channelType)
+        {
+            if (channelType <= Channel.DPCM)
+                return true;
+
+            if (channelType >= Channel.VRC6Square1 && channelType <= Channel.VRC6Saw)
+                return expansionAudio == ExpansionAudioType.VRC6;
+
+            Debug.Assert(false);
+
+            return false;
         }
 
         public bool UsesSamples

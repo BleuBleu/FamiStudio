@@ -2,10 +2,11 @@
 
 namespace FamiStudio
 {
-    public class TriangleChannelState : ChannelState
+    public class ApuTriangleChannelState : ChannelState
     {
-        public TriangleChannelState(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
+        public ApuTriangleChannelState(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
         {
+            noteTable = NesApu.NoteTableNTSC;
         }
 
         public override void UpdateAPU()
@@ -16,8 +17,8 @@ namespace FamiStudio
             }
             else if (note.IsValid)
             {
-                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, NesApu.NoteTableNTSC.Length - 1);
-                int period = Math.Min(NesApu.MaximumPeriod, NesApu.NoteTableNTSC[noteVal] + envelopeValues[Envelope.Pitch]);
+                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
+                int period = Utils.Clamp(noteTable[noteVal] + portamentoPitch + envelopeValues[Envelope.Pitch], 0, NesApu.MaximumPeriod);
 
                 WriteApuRegister(NesApu.APU_TRI_LO, (period >> 0) & 0xff);
                 WriteApuRegister(NesApu.APU_TRI_HI, (period >> 8) & 0x07);

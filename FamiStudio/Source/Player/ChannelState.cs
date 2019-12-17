@@ -1,30 +1,35 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
     public abstract class ChannelState
     {
         protected int apuIdx;
-        protected int channelIdx;
+        protected int channelType;
         protected bool seeking = false;
         protected bool newNote = false;
         protected Note note;
+        protected int portamentoPitch = 0;
+        protected int portamentoStepCount = 0;
+        protected int portamentoStep = 0;
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
         protected int duty;
-        protected int[] shadowRegisters = new int[21];
+        protected int[] shadowRegisters = new int[21]; // MATTT: Add registers for expansion audio.
+        protected ushort[] noteTable = null;
 
-        public ChannelState(int apu, int idx)
+        public ChannelState(int apu, int type)
         {
             apuIdx = apu;
-            channelIdx = idx;
+            channelType = type;
             note.Value = Note.NoteStop;
             note.Volume = Note.VolumeMax;
         }
 
         public void ProcessEffects(Song song, ref int patternIdx, ref int noteIdx, ref int speed, bool allowJump = true)
         {
-            var pattern = song.Channels[channelIdx].PatternInstances[patternIdx];
+            var pattern = song.Channels[channelType].PatternInstances[patternIdx];
 
             if (pattern == null)
                 return;
@@ -55,7 +60,7 @@ namespace FamiStudio
 
         public void Advance(Song song, int patternIdx, int noteIdx)
         {
-            var pattern = song.Channels[channelIdx].PatternInstances[patternIdx];
+            var pattern = song.Channels[channelType].PatternInstances[patternIdx];
 
             if (pattern == null)
                 return;
@@ -63,6 +68,32 @@ namespace FamiStudio
             var tmpNote = pattern.Notes[noteIdx];
             if (tmpNote.IsValid)
             {
+                portamentoPitch = 0;
+                portamentoStep = 0;
+                portamentoStepCount = 0;
+
+                if ((tmpNote.Flags & Note.FlagPortamento) != 0)
+                {
+                    int nextPatternIdx = patternIdx;
+                    int nextNoteIdx    = noteIdx;
+
+                    if (song.Channels[channelType].FindNextValidNote(ref nextPatternIdx, ref nextNoteIdx))
+                    {
+                        var noteDuration = (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx);
+                        portamentoPitch = (int)noteTable[note.Value] - (int)noteTable[tmpNote.Value];
+
+                        if (portamentoPitch != 0 && noteDuration != 0)
+                        {
+                            var frameCount = noteDuration * song.Speed;
+                            var floatStep = Math.Abs(portamentoPitch) / (float)frameCount;
+                            portamentoStep = (int)Math.Ceiling(floatStep) * -Math.Sign(portamentoPitch);
+                            portamentoStepCount = Math.Abs(portamentoPitch / portamentoStep);
+
+                            Debug.Assert(Math.Abs(portamentoStep * portamentoStepCount) <= Math.Abs(portamentoPitch));
+                        }
+                    }
+                }
+
                 PlayNote(tmpNote);
             }
             else if (tmpNote.HasVolume)
@@ -131,6 +162,13 @@ namespace FamiStudio
                     envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : env.Length - 1;
                 else
                     envelopeIdx[j] = idx;
+            }
+
+            // Update portamento.
+            if (portamentoStepCount > 0)
+            {
+                portamentoPitch += portamentoStep;
+                portamentoStepCount--;
             }
         }
 

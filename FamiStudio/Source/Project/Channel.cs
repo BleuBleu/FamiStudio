@@ -10,7 +10,11 @@ namespace FamiStudio
         public const int Triangle = 2;
         public const int Noise = 3;
         public const int DPCM = 4;
-        public const int Count = 5;
+        public const int ExpansionAudioStart = 5;
+        public const int VRC6Square1 = 5;
+        public const int VRC6Square2 = 6;
+        public const int VRC6Saw = 7;
+        public const int Count = 8;
 
         private Song song;
         private Pattern[] patternInstances = new Pattern[Song.MaxLength];
@@ -30,6 +34,9 @@ namespace FamiStudio
             "Triangle",
             "Noise",
             "DPCM",
+            "Square 1", // VRC6
+            "Square 2", // VRC6
+            "Saw", // VRC6
             ""
         };
 
@@ -217,11 +224,12 @@ namespace FamiStudio
             return Note.VolumeMax;
         }
 
-        public byte GetLastValidNote(ref int patternIdx, out int lastNoteTime, out Instrument instrument, out bool released)
+        public int GetLastValidNote(int patternIdx, out Note lastNote, out bool released)
         {
             var lastTime = int.MinValue;
-            var lastNote = new Note() { Value = Note.NoteInvalid };
+            var invalidNote = new Note() { Value = Note.NoteInvalid }; ;
 
+            lastNote = invalidNote;
             released = false;
 
             // Find previous valid note.
@@ -230,28 +238,52 @@ namespace FamiStudio
                 var pattern = patternInstances[p];
                 if (pattern != null)
                 {
-                    var val = pattern.LastValidNoteValue;
+                    var note = invalidNote;
+                    if (pattern.LastValidNoteTime >= 0)
+                        note = pattern.LastValidNote;
 
-                    released = val == Note.NoteStop ? false : released || pattern.LastValidNoteReleased;
+                    released = note.IsStop ? false : released || pattern.LastValidNoteReleased;
 
-                    if (val != Note.NoteInvalid)
-                    { 
-                        lastNoteTime = pattern.LastValidNoteTime;
-                        instrument   = pattern.LastValidNoteInstrument;
-                        return val;
+                    if (note.IsValid)
+                    {
+                        lastNote = note;
+                        return pattern.LastValidNoteTime;
                     }
                 }
             }
 
-            lastNoteTime = -1;
-            patternIdx   = int.MinValue;
-            instrument   = null;
-            released     = false;
-
-            return Note.NoteInvalid;
+            return int.MinValue;
         }
 
-        public bool FindPreviousValidNote(int noteValue, ref int patternIdx, ref int noteIdx)
+        public bool FindNextValidNote(ref int patternIdx, ref int noteIdx)
+        {
+            var pattern = patternInstances[patternIdx];
+            if (pattern != null)
+            {
+                noteIdx++;
+                while (noteIdx < song.PatternLength && !pattern.Notes[noteIdx].IsValid) noteIdx++;
+
+                if (noteIdx < song.PatternLength)
+                    return true;
+            }
+
+            patternIdx++;
+            while (patternIdx < song.Length)
+            {
+                pattern = patternInstances[patternIdx];
+                if (pattern != null && pattern.FirstValidNoteTime >= 0)
+                {
+                    noteIdx = pattern.FirstValidNoteTime;
+                    return true;
+                }
+
+                patternIdx++;
+            }
+
+            return false;
+        }
+
+        public bool FindPreviousMatchingNote(int noteValue, ref int patternIdx, ref int noteIdx)
         {
             var pattern = patternInstances[patternIdx];
             if (pattern != null)
@@ -259,19 +291,17 @@ namespace FamiStudio
                 while (noteIdx >= 0 && !pattern.Notes[noteIdx].IsValid) noteIdx--;
 
                 if (noteIdx >= 0)
-                {
                     return pattern.Notes[noteIdx].Value == noteValue;
-                }
             }
 
             patternIdx--;
             while (patternIdx >= 0)
             {
                 pattern = patternInstances[patternIdx];
-                if (pattern != null)
+                if (pattern != null && pattern.LastValidNoteTime >= 0)
                 {
-                    var val = pattern.LastValidNoteValue;
-                    if (val != Note.NoteInvalid && val == noteValue)
+                    if (pattern.LastValidNote.IsValid && 
+                        pattern.LastValidNote.Value == noteValue)
                     {
                         noteIdx = pattern.LastValidNoteTime;
                         return true;

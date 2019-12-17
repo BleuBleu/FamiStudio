@@ -56,14 +56,9 @@ namespace FamiStudio
 
         unsafe void PlayerThread(object o)
         {
-            var channels = new ChannelState[5]
-            {
-                new SquareChannelState(apuIndex, 0),
-                new SquareChannelState(apuIndex, 1),
-                new TriangleChannelState(apuIndex, 2),
-                new NoiseChannelState(apuIndex, 3),
-                new DPCMChannelState(apuIndex, 4)
-            };
+            return; // MATTT Will need to restart the instrument player when changing expansion chip.
+
+            var channels = PlayerBase.CreateChannelStates(/*song.Project*/ null, apuIndex);
 
             var lastNoteWasRelease = false;
             var lastReleaseTime = DateTime.Now;

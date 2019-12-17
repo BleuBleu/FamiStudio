@@ -23,6 +23,7 @@ Simple_Apu::Simple_Apu()
 {
 	time = 0;
 	frame_length = 29780;
+	expansion = expansion_none;
 	apu.dmc_reader( null_dmc_reader, NULL );
 }
 
@@ -39,18 +40,25 @@ void Simple_Apu::dmc_reader( int (*f)( void* user_data, cpu_addr_t ), void* p )
 blargg_err_t Simple_Apu::sample_rate( long rate )
 {
 	apu.output( &buf );
+	vrc6.output(&buf);
 	buf.clock_rate( 1789773 );
 	return buf.sample_rate( rate );
 }
 
 void Simple_Apu::enable_channel(int idx, bool enable)
 {
-	apu.osc_output(idx, enable ? &buf : NULL);
+	if (idx < 5)
+		apu.osc_output(idx, enable ? &buf : NULL);
+	else if (expansion == expansion_vrc6)
+		vrc6.osc_output(idx - 5, enable ? &buf : NULL);
 }
 
-void Simple_Apu::write_register( cpu_addr_t addr, int data )
+void Simple_Apu::write_register(cpu_addr_t addr, int data)
 {
-	apu.write_register( clock(), addr, data );
+	if (addr >= Nes_Apu::start_addr && addr <= Nes_Apu::end_addr)
+		apu.write_register(clock(), addr, data);
+	else if (expansion == expansion_vrc6)
+		vrc6.write_register(clock(), addr, data);
 }
 
 int Simple_Apu::read_status()
@@ -63,12 +71,20 @@ void Simple_Apu::end_frame()
 	time = 0;
 	frame_length ^= 1;
 	apu.end_frame( frame_length );
+	if (expansion == expansion_vrc6)
+		vrc6.end_frame( frame_length );
 	buf.end_frame( frame_length );
 }
 
 void Simple_Apu::reset()
 {
 	apu.reset();
+	vrc6.reset();
+}
+
+void Simple_Apu::set_audio_expansion(long exp)
+{
+	expansion = exp;
 }
 
 long Simple_Apu::samples_avail() const

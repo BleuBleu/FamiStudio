@@ -7,10 +7,15 @@
 #define SIMPLE_APU_H
 
 #include "nes_apu/Nes_Apu.h"
+#include "nes_apu/Nes_Vrc6.h"
 #include "nes_apu/Blip_Buffer.h"
 
 class Simple_Apu {
 public:
+
+	enum { expansion_none = 0 };
+	enum { expansion_vrc6 = 1 };
+
 	Simple_Apu();
 	~Simple_Apu();
 	
@@ -36,6 +41,8 @@ public:
 	// Resets
 	void reset();
 
+	void set_audio_expansion(long exp);
+
 	// Number of samples in buffer
 	long samples_avail() const;
 
@@ -53,7 +60,9 @@ public:
 	void load_snapshot( apu_snapshot_t const& );
 	
 private:
+	long expansion;
 	Nes_Apu apu;
+	Nes_Vrc6 vrc6;
 	Blip_Buffer buf;
 	blip_time_t time;
 	blip_time_t frame_length;

@@ -67,6 +67,7 @@ namespace FamiStudio
             ProjectExplorer.InstrumentDraggedOutside += ProjectExplorer_InstrumentDraggedOutside;
             ProjectExplorer.SongModified += projectExplorer_SongModified;
             ProjectExplorer.SongSelected += projectExplorer_SongSelected;
+            ProjectExplorer.ExpansionAudioChanged += ProjectExplorer_ExpansionAudioChanged;
 
             songPlayer = new SongPlayer();
             songPlayer.Initialize();
@@ -88,6 +89,12 @@ namespace FamiStudio
             {
                 Task.Factory.StartNew(CheckForNewRelease);
             }
+        }
+
+        private void ProjectExplorer_ExpansionAudioChanged()
+        {
+            RefreshSequencerLayout();
+            PianoRoll.Reset();
         }
 
         private void ProjectExplorer_InstrumentDeleted(Instrument instrument)
@@ -346,6 +353,12 @@ namespace FamiStudio
             instrumentPlayer.Shutdown();
 
             return true;
+        }
+
+        private void RefreshSequencerLayout()
+        {
+            mainForm.RefreshSequencerLayout();
+            Sequencer.SequencerLayoutChanged();
         }
 
         private void CheckForNewRelease()

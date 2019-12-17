@@ -15,11 +15,10 @@ namespace FamiStudio
         private Color color;
         private Note[] notes = new Note[MaxLength];
 
-        private byte lastVolumeValue = Note.VolumeInvalid;
-        private byte lastValidNoteValue = Note.NoteInvalid;
+        private int  firstValidNoteTime = -1;
+        private int  lastValidNoteTime  = -1;
+        private byte lastVolumeValue = 0xff;
         private bool lastValidNoteReleased = false;
-        private Instrument lastValidNoteInstrument = null;
-        private byte lastValidNoteIdx = 0;
 
         public int Id => id;
         public int ChannelType => channelType;
@@ -137,9 +136,7 @@ namespace FamiStudio
         public void UpdateLastValidNotesAndVolume()
         {
             lastVolumeValue = Note.VolumeInvalid;
-            lastValidNoteValue = Note.NoteInvalid;
-            lastValidNoteIdx = 0;
-            lastValidNoteInstrument = null;
+            lastValidNoteTime = -1;
             lastValidNoteReleased = false;
 
             for (int i = song.PatternLength - 1; i >= 0; i--)
@@ -155,11 +152,9 @@ namespace FamiStudio
                     {
                         lastValidNoteReleased = false;
                     }
-                    if (note.IsValid && lastValidNoteValue == Note.NoteInvalid)
+                    if (note.IsValid && lastValidNoteTime < 0)
                     {
-                        lastValidNoteIdx = (byte)i;
-                        lastValidNoteValue = note.Value;
-                        lastValidNoteInstrument = note.Instrument;
+                        lastValidNoteTime = (byte)i;
                         if (lastVolumeValue != Note.VolumeInvalid)
                             break;
                     }
@@ -167,25 +162,52 @@ namespace FamiStudio
                 if (note.HasVolume && lastVolumeValue == Note.VolumeInvalid)
                 {
                     lastVolumeValue = note.Volume;
-                    if (lastValidNoteValue != Note.NoteInvalid)
+                    if (lastValidNoteTime >= 0)
                         break;
+                }
+            }
+
+            firstValidNoteTime = 0;
+
+            for (int i = 0; i < song.PatternLength; i++)
+            {
+                var note = notes[i];
+
+                // The first note is only used for portamento for now. We want to stop it when there is a jump or skip.
+                if (note.IsValid || (note.Effect == Note.EffectJump || note.Effect == Note.EffectSkip))
+                {
+                    firstValidNoteTime = (byte)i;
+                    break;
                 }
             }
         }
 
-        public byte LastValidNoteTime
+        public int FirstValidNoteTime
         {
-            get { return lastValidNoteIdx; }
+            get { return firstValidNoteTime; }
         }
 
-        public byte LastValidNoteValue
+        public Note FirstValidNote
         {
-            get { return lastValidNoteValue; }
+            get
+            {
+                Debug.Assert(firstValidNoteTime >= 0);
+                return notes[firstValidNoteTime];
+            }
         }
 
-        public Instrument LastValidNoteInstrument
+        public int LastValidNoteTime
         {
-            get { return lastValidNoteInstrument; }
+            get { return lastValidNoteTime; }
+        }
+
+        public Note LastValidNote
+        {
+            get
+            {
+                Debug.Assert(lastValidNoteTime >= 0);
+                return notes[lastValidNoteTime];
+            }
         }
 
         public bool LastValidNoteReleased
@@ -202,8 +224,8 @@ namespace FamiStudio
         public void Validate(Channel channel)
         {
             Debug.Assert(this.song == channel.Song);
-            Debug.Assert(lastValidNoteInstrument == null || song.Project.InstrumentExists(lastValidNoteInstrument));
-            Debug.Assert(lastValidNoteInstrument == null || song.Project.GetInstrument(lastValidNoteInstrument.Id) == lastValidNoteInstrument);
+            //Debug.Assert(lastValidNoteInstrument == null || song.Project.InstrumentExists(lastValidNoteInstrument));
+            //Debug.Assert(lastValidNoteInstrument == null || song.Project.GetInstrument(lastValidNoteInstrument.Id) == lastValidNoteInstrument);
 
             for (int i = 0; i < MaxLength; i++)
             {
@@ -239,10 +261,9 @@ namespace FamiStudio
 
             if (buffer.IsForUndoRedo)
             {
+                buffer.Serialize(ref firstValidNoteTime);
+                buffer.Serialize(ref lastValidNoteTime);
                 buffer.Serialize(ref lastVolumeValue);
-                buffer.Serialize(ref lastValidNoteIdx);
-                buffer.Serialize(ref lastValidNoteValue);
-                buffer.Serialize(ref lastValidNoteInstrument);
                 buffer.Serialize(ref lastValidNoteReleased);
             }
             else if (buffer.IsReading)

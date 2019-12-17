@@ -191,6 +191,7 @@ namespace FamiStudio
         public event InstrumentPointDelegate InstrumentDraggedOutside;
         public event SongDelegate SongModified;
         public event SongDelegate SongSelected;
+        public event EmptyDelegate ExpansionAudioChanged;
 
         public ProjectExplorer()
         {
@@ -726,14 +727,28 @@ namespace FamiStudio
                     dlg.Properties.AddString("Title :", project.Name, 31); // 0
                     dlg.Properties.AddString("Author :", project.Author, 31); // 1
                     dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
+                    dlg.Properties.AddStringList("Expansion Audio:", Enum.GetNames(typeof(Project.ExpansionAudioType)), project.ExpansionAudio.ToString()); // 3
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
                         project.Name = dlg.Properties.GetPropertyValue<string>(0);
                         project.Author = dlg.Properties.GetPropertyValue<string>(1);
                         project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
+
+                        var expansion = (Project.ExpansionAudioType)Enum.Parse(typeof(Project.ExpansionAudioType), dlg.Properties.GetPropertyValue<string>(3));
+                        if (expansion != project.ExpansionAudio)
+                        {
+                            if (project.ExpansionAudio == Project.ExpansionAudioType.None ||
+                                PlatformDialogs.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                project.SetExpansionAudio(expansion);
+                                ExpansionAudioChanged?.Invoke();
+                            }
+                        }
+
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                     }

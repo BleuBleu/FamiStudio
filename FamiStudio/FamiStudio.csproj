@@ -81,13 +81,15 @@
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Player\ChannelState.cs" />
-    <Compile Include="Source\Player\DPCMChannelState.cs" />
+    <Compile Include="Source\Player\ApuDpcmChannelState.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\MIDI.cs" />
-    <Compile Include="Source\Player\NoiseChannelState.cs" />
+    <Compile Include="Source\Player\ApuNoiseChannelState.cs" />
+    <Compile Include="Source\Player\Vrc6SawChannelState.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
-    <Compile Include="Source\Player\SquareChannelState.cs" />
-    <Compile Include="Source\Player\TriangleChannelState.cs" />
+    <Compile Include="Source\Player\ApuSquareChannelState.cs" />
+    <Compile Include="Source\Player\ApuTriangleChannelState.cs" />
+    <Compile Include="Source\Player\Vrc6SquareChannelState.cs" />
     <Compile Include="Source\Project\Envelope.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
@@ -248,6 +250,10 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\PortamentoSmall%402x.png" />
+    <EmbeddedResource Include="Resources\PortamentoSmall.png" />
+    <EmbeddedResource Include="Resources\Saw%402x.png" />
+    <EmbeddedResource Include="Resources\Saw.png" />
     <EmbeddedResource Include="Resources\InstrumentOpen%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentOpen.png" />
     <EmbeddedResource Include="Resources\Drag%402x.png" />

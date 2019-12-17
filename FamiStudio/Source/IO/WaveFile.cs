@@ -43,18 +43,11 @@ namespace FamiStudio
             var dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
 
             NesApu.NesApuInit(apuIndex, sampleRate, dmcCallback);
-            NesApu.Reset(apuIndex);
+            NesApu.Reset(apuIndex, PlayerBase.GetNesApuExpansionAudio(song.Project));
 
-            var channels = new ChannelState[5]
-            {
-                new SquareChannelState(apuIndex, 0),
-                new SquareChannelState(apuIndex, 1),
-                new TriangleChannelState(apuIndex, 2),
-                new NoiseChannelState(apuIndex, 3),
-                new DPCMChannelState(apuIndex, 4)
-            };
+            var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex);
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < channels.Length; i++)
                 NesApu.NesApuEnableChannel(apuIndex, i, 1);
 
             while (true)

@@ -28,7 +28,7 @@ namespace FamiStudio
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NesApuEndFrame(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NesApuReset(int apuIdx);
+        public extern static void NesApuReset(int apuIdx, int expansion);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NesApuEnableChannel(int apuIdx, int idx, int enable);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -58,6 +58,20 @@ namespace FamiStudio
         public const int APU_DMC_LEN    = 0x4013;
         public const int APU_SND_CHN    = 0x4015;
 
+        public const int APU_EXPANSION_NONE = 0;
+        public const int APU_EXPANSION_VRC6 = 1;
+
+        public const int VRC6_CTRL     = 0x9003;
+        public const int VRC6_PL1_VOL  = 0x9000;
+        public const int VRC6_PL1_LO   = 0x9001;
+        public const int VRC6_PL1_HI   = 0x9002;
+        public const int VRC6_PL2_VOL  = 0xA000;
+        public const int VRC6_PL2_LO   = 0xA001;
+        public const int VRC6_PL2_HI   = 0xA002;
+        public const int VRC6_SAW_VOL  = 0xB000;
+        public const int VRC6_SAW_LO   = 0xB001;
+        public const int VRC6_SAW_HI   = 0xB002;
+
         // NES period was 11 bits.
         public const int MaximumPeriod = 0x7ff;
 
@@ -65,7 +79,7 @@ namespace FamiStudio
         public static readonly ushort[] NoteTableNTSC = new ushort[]
         {
             0x0000,
-            0x0d5b, 0x0c9c, 0x0be6, 0x0b3b, 0x0a9a, 0x0a01, 0x0972, 0x08ea, 0x086a, 0x07f1, 0x077f, 0x0713, // Octave 0                                                                    // Octave 0
+            0x0d5b, 0x0c9c, 0x0be6, 0x0b3b, 0x0a9a, 0x0a01, 0x0972, 0x08ea, 0x086a, 0x07f1, 0x077f, 0x0713, // Octave 0
             0x06ad, 0x064d, 0x05f3, 0x059d, 0x054c, 0x0500, 0x04b8, 0x0474, 0x0434, 0x03f8, 0x03bf, 0x0389, // Octave 1
             0x0356, 0x0326, 0x02f9, 0x02ce, 0x02a6, 0x0280, 0x025c, 0x023a, 0x021a, 0x01fb, 0x01df, 0x01c4, // Octave 2
             0x01ab, 0x0193, 0x017c, 0x0167, 0x0152, 0x013f, 0x012d, 0x011c, 0x010c, 0x00fd, 0x00ef, 0x00e1, // Octave 3
@@ -79,7 +93,7 @@ namespace FamiStudio
         public static readonly ushort[] NoteTablePAL = new ushort[]
         {
             0x0000,
-            0x0c68, 0x0bb6, 0x0b0e, 0x0a6f, 0x09d9, 0x094b, 0x08c6, 0x0848, 0x07d1, 0x0760, 0x06f6, 0x0692, // Octave 0                                                                      // Octave 0
+            0x0c68, 0x0bb6, 0x0b0e, 0x0a6f, 0x09d9, 0x094b, 0x08c6, 0x0848, 0x07d1, 0x0760, 0x06f6, 0x0692, // Octave 0
             0x0634, 0x05db, 0x0586, 0x0537, 0x04ec, 0x04a5, 0x0462, 0x0423, 0x03e8, 0x03b0, 0x037b, 0x0349, // Octave 1
             0x0319, 0x02ed, 0x02c3, 0x029b, 0x0275, 0x0252, 0x0231, 0x0211, 0x01f3, 0x01d7, 0x01bd, 0x01a4, // Octave 2
             0x018c, 0x0176, 0x0161, 0x014d, 0x013a, 0x0129, 0x0118, 0x0108, 0x00f9, 0x00eb, 0x00de, 0x00d1, // Octave 3
@@ -89,14 +103,28 @@ namespace FamiStudio
             0x0018, 0x0016, 0x0015, 0x0014, 0x0013, 0x0012, 0x0011, 0x0010, 0x000f, 0x000e, 0x000d, 0x000c  // Octave 7
         };
 
+        // Taken from FamiTracker.
+        public static readonly ushort[] NoteTableVrc6Saw = new ushort[]
+        {
+            0x0000,
+	        0x0f44, 0x0e69, 0x0d9a, 0x0cd6, 0x0c1e, 0x0b70, 0x0acb, 0x0a30, 0x099e, 0x0913, 0x0891, 0x0816,  // Octave 0
+            0x07a2, 0x0734, 0x06cc, 0x066b, 0x060e, 0x05b7, 0x0565, 0x0518, 0x04ce, 0x0489, 0x0448, 0x040a,  // Octave 1
+            0x03d0, 0x0399, 0x0366, 0x0335, 0x0307, 0x02db, 0x02b2, 0x028b, 0x0267, 0x0244, 0x0223, 0x0205,  // Octave 2
+            0x01e8, 0x01cc, 0x01b2, 0x019a, 0x0183, 0x016d, 0x0159, 0x0145, 0x0133, 0x0122, 0x0111, 0x0102,  // Octave 3
+            0x00f3, 0x00e6, 0x00d9, 0x00cc, 0x00c1, 0x00b6, 0x00ac, 0x00a2, 0x0099, 0x0090, 0x0088, 0x0080,  // Octave 4
+            0x0079, 0x0072, 0x006c, 0x0066, 0x0060, 0x005b, 0x0055, 0x0051, 0x004c, 0x0048, 0x0044, 0x0040,  // Octave 5
+            0x003c, 0x0039, 0x0035, 0x0032, 0x002f, 0x002d, 0x002a, 0x0028, 0x0025, 0x0023, 0x0021, 0x001f,  // Octave 6
+            0x001e, 0x001c, 0x001a, 0x0019, 0x0017, 0x0016, 0x0015, 0x0013, 0x0012, 0x0011, 0x0010, 0x000f   // Octave 7
+        };
+
         public static int DmcReadCallback(IntPtr data, int addr)
         {
             return FamiStudio.StaticProject.GetSampleForAddress(addr - 0xc000);
         }
 
-        public static void Reset(int apuIdx)
+        public static void Reset(int apuIdx, int expansion = APU_EXPANSION_NONE)
         {
-            NesApuReset(apuIdx);
+            NesApuReset(apuIdx, expansion);
             NesApuWriteRegister(apuIdx, APU_SND_CHN,    0x0f); // enable channels, stop DMC
             NesApuWriteRegister(apuIdx, APU_TRI_LINEAR, 0x80); // disable triangle length counter
             NesApuWriteRegister(apuIdx, APU_NOISE_HI,   0x00); // load noise length
@@ -105,6 +133,9 @@ namespace FamiStudio
             NesApuWriteRegister(apuIdx, APU_NOISE_VOL,  0x30);
             NesApuWriteRegister(apuIdx, APU_PL1_SWEEP,  0x08); // no sweep
             NesApuWriteRegister(apuIdx, APU_PL2_SWEEP,  0x08);
+
+            if (expansion == APU_EXPANSION_VRC6)
+                NesApuWriteRegister(apuIdx, VRC6_CTRL, 0x00);  // No halt, no octave change.
         }
     }
 }

@@ -50,9 +50,10 @@ extern "C" void __stdcall  NesApuEndFrame(int apuIdx)
 	apu[apuIdx].end_frame();
 }
 
-extern "C" void __stdcall NesApuReset(int apuIdx)
+extern "C" void __stdcall NesApuReset(int apuIdx, int expansion)
 {
 	apu[apuIdx].reset();
+	apu[apuIdx].set_audio_expansion(expansion);
 }
 
 extern "C" void __stdcall  NesApuEnableChannel(int apuIdx, int idx, int enable)

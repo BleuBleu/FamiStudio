@@ -29,7 +29,6 @@ namespace FamiStudio
     {
         const int DefaultTrackNameSizeX     = 81;
         const int DefaultHeaderSizeY        = 17;
-        const int DefaultTrackSizeY         = 56;
         const int DefaultPatternHeaderSizeY = 16;
         const int DefaultNoteSizeY          = 4;
         const int DefaultScrollMargin       = 128;
@@ -151,7 +150,7 @@ namespace FamiStudio
 
             trackNameSizeX     = (int)(DefaultTrackNameSizeX * scaling);
             headerSizeY        = (int)(DefaultHeaderSizeY * scaling);
-            trackSizeY         = (int)(DefaultTrackSizeY * scaling);
+            trackSizeY         = (int)(ComputeDesiredTrackSizeY() * scaling);
             patternHeaderSizeY = (int)(DefaultPatternHeaderSizeY * scaling);
             noteSizeY          = (int)(DefaultNoteSizeY * scaling);
             scrollMargin       = (int)(DefaultScrollMargin * scaling);
@@ -164,6 +163,29 @@ namespace FamiStudio
             ghostNoteOffsetY   = (int)(DefaultGhostNoteOffsetY * scaling);
             patternNamePosX    = (int)(DefaultPatternNamePosX * scaling);
             patternNamePosY    = (int)(DefaultPatternNamePosY * scaling);
+        }
+
+        private int GetChannelCount()
+        {
+            return App?.Project != null ? App.Project.Songs[0].Channels.Length : 5;
+        }
+
+        private int ComputeDesiredTrackSizeY()
+        {
+            return Math.Max(280 / GetChannelCount(), 40);
+        }
+
+        public int ComputeDesiredSizeY()
+        {
+            // Does not include scaling.
+            return ComputeDesiredTrackSizeY() * GetChannelCount() + headerSizeY + 1;
+        }
+
+        public void SequencerLayoutChanged()
+        {
+            UpdateRenderCoords();
+            InvalidatePatternCache();
+            ConditionalInvalidate();
         }
 
         public void Reset()
@@ -198,6 +220,9 @@ namespace FamiStudio
             bmpTracks[Channel.Triangle] = g.CreateBitmapFromResource("Triangle");
             bmpTracks[Channel.Noise] = g.CreateBitmapFromResource("Noise");
             bmpTracks[Channel.DPCM] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.VRC6Square1] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.VRC6Square2] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.VRC6Saw] = g.CreateBitmapFromResource("Saw");
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
 
@@ -213,6 +238,12 @@ namespace FamiStudio
                 new Point(0, headerSizeY - 2),
                 new Point( headerSizeY / 2, 1)
             });
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            UpdateRenderCoords();
+            base.OnResize(e);
         }
 
         private bool IsSelectionValid()
@@ -577,7 +608,7 @@ namespace FamiStudio
             {
                 if (e.Y > headerSizeY)
                 {
-                    var newChannel = Utils.Clamp((e.Y - headerSizeY) / trackSizeY, 0, Channel.Count - 1);
+                    var newChannel = Utils.Clamp((e.Y - headerSizeY) / trackSizeY, 0, Song.Channels.Length - 1);
                     if (newChannel != selectedChannel)
                     {
                         selectedChannel = newChannel;
