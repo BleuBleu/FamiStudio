@@ -9,7 +9,8 @@ x Lower register notes for VRC6?
 - Slide notes.
 - NSF to test:
 	- Try putting multiple things at once: volume + slide, volume + jump, etc. etc. Must all work.
-
+	- Retest volume tracks
+	
 1.5.0: FDS & MMC5
 ================
 - FDS support in NesSndEmu 
