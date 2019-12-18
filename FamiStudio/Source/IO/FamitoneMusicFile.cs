@@ -380,13 +380,13 @@ namespace FamiStudio
                 if (value == Note.NoteRelease)
                     return (byte)value;
 
-                // 0 = stop, 1 = A0 ... 87 = B7
+                // 0 = stop, 1 = C0 ... 96 = B7
                 if (value != 0)
                 {
                     if (channel == Channel.DPCM)
                         value = Utils.Clamp(value - Note.DPCMNoteMin, 1, 63);
                     else if (channel != Channel.Noise)
-                        value = Utils.Clamp(value - 9, 1, 87);
+                        value = Utils.Clamp(value, 1, 96);
                 }
                 return (byte)(value);
             }
@@ -419,6 +419,7 @@ namespace FamiStudio
 
                 for (int p = 0; p < song.Length; p++)
                 {
+                    var prevNoteValue = Note.NoteInvalid;
                     var pattern = channel.PatternInstances[p] == null ? emptyPattern : channel.PatternInstances[p];
                     var patternBuffer = new List<byte>();
 
@@ -512,7 +513,21 @@ namespace FamiStudio
                                 }
                             }
 
+                            if (kernel == FamiToneKernel.FamiTone2FS)
+                            {
+                                if (prevNoteValue != Note.NoteInvalid && (note.Flags & Note.FlagPortamento) != 0)
+                                {
+                                    if (channel.ComputeSlideNoteParams(p, i - 1, prevNoteValue, out _, out int stepCount, out int stepSize))
+                                    {
+                                        patternBuffer.Add(0x61);
+                                        patternBuffer.Add((byte)stepCount);
+                                        patternBuffer.Add((byte)stepSize);
+                                    }
+                                }
+                            }
+
                             patternBuffer.Add(EncodeNoteValue(c, note.Value, numNotes));
+                            prevNoteValue = note.Value;
                         }
                         else
                         {

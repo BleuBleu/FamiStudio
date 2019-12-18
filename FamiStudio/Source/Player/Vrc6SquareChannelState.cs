@@ -9,7 +9,6 @@ namespace FamiStudio
 
         public Vrc6SquareChannelState(int apuIdx, int channelType) : base(apuIdx, channelType)
         {
-            noteTable = NesApu.NoteTableNTSC;
             regOffset = (channelType - Channel.VRC6Square1) * 0x1000;
         }
 

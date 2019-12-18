@@ -36,17 +36,17 @@ namespace FamiStudio
 
         public void StopAllNotesAndWait()
         {
-            while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
-            noteQueue.Enqueue(new PlayerNote() { channel = -1 });
-            while (!noteQueue.IsEmpty) Thread.Sleep(1);
+            //while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
+            //noteQueue.Enqueue(new PlayerNote() { channel = -1 });
+            //while (!noteQueue.IsEmpty) Thread.Sleep(1);
         }
 
         public override void Initialize()
         {
             base.Initialize();
 
-            playerThread = new Thread(PlayerThread);
-            playerThread.Start();
+            //playerThread = new Thread(PlayerThread);
+            //playerThread.Start();
         }
 
         public int GetEnvelopeFrame(int idx)

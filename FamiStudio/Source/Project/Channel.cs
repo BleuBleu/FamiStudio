@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace FamiStudio
@@ -39,6 +40,11 @@ namespace FamiStudio
             "Saw", // VRC6
             ""
         };
+
+        public Channel()
+        {
+            // For serialization
+        }
 
         public Channel(Song song, int type, int songLength)
         {
@@ -255,29 +261,65 @@ namespace FamiStudio
             return int.MinValue;
         }
 
-        public bool FindNextValidNote(ref int patternIdx, ref int noteIdx)
+        private int FindSlideNoteDuration(int patternIdx, int noteIdx)
         {
-            var pattern = patternInstances[patternIdx];
-            if (pattern != null)
-            {
-                noteIdx++;
-                while (noteIdx < song.PatternLength && !pattern.Notes[noteIdx].IsValid) noteIdx++;
+            var nextPatternIdx = patternIdx;
+            var nextNoteIdx    = noteIdx;
 
-                if (noteIdx < song.PatternLength)
-                    return true;
-            }
+            var pattern = patternInstances[nextPatternIdx];
+            Debug.Assert((pattern.Notes[nextNoteIdx].Flags & Note.FlagPortamento) != 0);
 
-            patternIdx++;
-            while (patternIdx < song.Length)
+            nextNoteIdx++;
+            while (nextNoteIdx < song.PatternLength && !pattern.Notes[nextNoteIdx].IsValid) nextNoteIdx++;
+
+            if (nextNoteIdx < song.PatternLength)
+                return (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx);
+
+            nextPatternIdx++;
+            while (nextPatternIdx < song.Length)
             {
-                pattern = patternInstances[patternIdx];
+                pattern = patternInstances[nextPatternIdx];
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
                 {
-                    noteIdx = pattern.FirstValidNoteTime;
-                    return true;
+                    nextNoteIdx = pattern.FirstValidNoteTime;
+                    return (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx);
                 }
 
-                patternIdx++;
+                nextPatternIdx++;
+            }
+
+            return -1;
+        }
+
+        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, int prevNote, out int pitchDelta, out int stepCount, out int stepSize)
+        {
+            pitchDelta = 0;
+            stepCount  = 0;
+            stepSize   = 0;
+
+            int noteDuration = FindSlideNoteDuration(patternIdx, noteIdx);
+
+            if (noteDuration > 0)
+            {
+                var currNote  = patternInstances[patternIdx].Notes[noteIdx].Value;
+                var noteTable = NesApu.GetNoteTableForChannelType(type, false);
+
+                pitchDelta = (int)noteTable[prevNote] - (int)noteTable[currNote];
+
+                if (pitchDelta != 0)
+                {
+                    var frameCount = Math.Min(noteDuration * song.Speed, 255);
+                    var floatStep = Math.Abs(pitchDelta) / (float)frameCount;
+
+                    stepSize  = (int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta);
+                    stepCount = Math.Abs(pitchDelta / stepSize);
+
+                    Debug.Assert(stepCount < 255);
+                    Debug.Assert(Math.Abs(stepSize) < 128);
+                    Debug.Assert(Math.Abs(stepSize * stepCount) <= Math.Abs(pitchDelta));
+
+                    return true;
+                }
             }
 
             return false;

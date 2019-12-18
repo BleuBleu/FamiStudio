@@ -18,11 +18,13 @@ namespace FamiStudio
         protected int duty;
         protected int[] shadowRegisters = new int[21]; // MATTT: Add registers for expansion audio.
         protected ushort[] noteTable = null;
+        protected short maximumPeriod = NesApu.MaximumPeriod11Bit;
 
         public ChannelState(int apu, int type)
         {
             apuIdx = apu;
             channelType = type;
+            noteTable = NesApu.GetNoteTableForChannelType(channelType, false);
             note.Value = Note.NoteStop;
             note.Volume = Note.VolumeMax;
         }
@@ -60,7 +62,8 @@ namespace FamiStudio
 
         public void Advance(Song song, int patternIdx, int noteIdx)
         {
-            var pattern = song.Channels[channelType].PatternInstances[patternIdx];
+            var channel = song.Channels[channelType];
+            var pattern = channel.PatternInstances[patternIdx];
 
             if (pattern == null)
                 return;
@@ -74,24 +77,7 @@ namespace FamiStudio
 
                 if ((tmpNote.Flags & Note.FlagPortamento) != 0)
                 {
-                    int nextPatternIdx = patternIdx;
-                    int nextNoteIdx    = noteIdx;
-
-                    if (song.Channels[channelType].FindNextValidNote(ref nextPatternIdx, ref nextNoteIdx))
-                    {
-                        var noteDuration = (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx);
-                        portamentoPitch = (int)noteTable[note.Value] - (int)noteTable[tmpNote.Value];
-
-                        if (portamentoPitch != 0 && noteDuration != 0)
-                        {
-                            var frameCount = noteDuration * song.Speed;
-                            var floatStep = Math.Abs(portamentoPitch) / (float)frameCount;
-                            portamentoStep = (int)Math.Ceiling(floatStep) * -Math.Sign(portamentoPitch);
-                            portamentoStepCount = Math.Abs(portamentoPitch / portamentoStep);
-
-                            Debug.Assert(Math.Abs(portamentoStep * portamentoStepCount) <= Math.Abs(portamentoPitch));
-                        }
-                    }
+                    channel.ComputeSlideNoteParams(patternIdx, noteIdx, note.Value, out portamentoPitch, out portamentoStepCount, out portamentoStep);
                 }
 
                 PlayNote(tmpNote);

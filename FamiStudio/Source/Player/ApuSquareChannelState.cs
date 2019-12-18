@@ -9,7 +9,6 @@ namespace FamiStudio
 
         public ApuSquareChannelState(int apuIdx, int channelType) : base(apuIdx, channelType)
         {
-            noteTable = NesApu.NoteTableNTSC;
             regOffset = channelType * 4;
         }
 
@@ -22,7 +21,7 @@ namespace FamiStudio
             else if (note.IsValid)
             {
                 var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                int period = Math.Min(NesApu.MaximumPeriod, noteTable[noteVal] + portamentoPitch + envelopeValues[Envelope.Pitch]);
+                int period = Math.Min(maximumPeriod, noteTable[noteVal] + portamentoPitch + envelopeValues[Envelope.Pitch]);
 
                 WriteApuRegister(NesApu.APU_PL1_LO + regOffset, period & 0xff);
                 period = (period >> 8) & 0x07;

@@ -73,7 +73,8 @@ namespace FamiStudio
         public const int VRC6_SAW_HI   = 0xB002;
 
         // NES period was 11 bits.
-        public const int MaximumPeriod = 0x7ff;
+        public const int MaximumPeriod11Bit = 0x7ff;
+        public const int MaximumPeriod12Bit = 0xfff;
 
         // Taken from FamiTracker.
         public static readonly ushort[] NoteTableNTSC = new ushort[]
@@ -116,6 +117,15 @@ namespace FamiStudio
             0x003c, 0x0039, 0x0035, 0x0032, 0x002f, 0x002d, 0x002a, 0x0028, 0x0025, 0x0023, 0x0021, 0x001f,  // Octave 6
             0x001e, 0x001c, 0x001a, 0x0019, 0x0017, 0x0016, 0x0015, 0x0013, 0x0012, 0x0011, 0x0010, 0x000f   // Octave 7
         };
+
+        public static ushort[] GetNoteTableForChannelType(int channelType, bool pal)
+        {
+            // TODO: PAL
+            if (channelType == Channel.VRC6Saw)
+                return NesApu.NoteTableVrc6Saw;
+            else
+                return NesApu.NoteTableNTSC;
+        }
 
         public static int DmcReadCallback(IntPtr data, int addr)
         {

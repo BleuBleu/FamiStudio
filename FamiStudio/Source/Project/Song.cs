@@ -34,10 +34,6 @@ namespace FamiStudio
         public Song()
         {
             // For serialization.
-            if (channels[0] == null)
-            {
-                CreateChannels();
-            }
         }
 
         public Song(Project project, int id, string name)
@@ -235,6 +231,7 @@ namespace FamiStudio
             buffer.Serialize(ref speed);
             buffer.Serialize(ref color);
 
+            buffer.InitializeArray<Channel>(ref channels, buffer.Project.GetActiveChannelCount());
             foreach (var channel in channels)
                 channel.SerializeState(buffer);
         }

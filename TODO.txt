@@ -5,11 +5,14 @@
 - FamiTracker TXT import/export
 - NSF support too.
 - WAV support.
-- Do FDS support in NesSndEmu right away
-- Auto-portamento.
+x Lower register notes for VRC6? 
+- Slide notes.
+- NSF to test:
+	- Try putting multiple things at once: volume + slide, volume + jump, etc. etc. Must all work.
 
 1.5.0: FDS & MMC5
 ================
+- FDS support in NesSndEmu 
 - Instrument refactoring (base class + derived)
 - Instrument icons.
 - 

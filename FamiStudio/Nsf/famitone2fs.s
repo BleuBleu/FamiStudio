@@ -51,7 +51,6 @@ FT_ENV_ADR_L		= FT_BASE_ADR+2*FT_ENVELOPES_ALL
 FT_ENV_ADR_H		= FT_BASE_ADR+3*FT_ENVELOPES_ALL
 FT_ENV_PTR			= FT_BASE_ADR+4*FT_ENVELOPES_ALL
 
-
 ;channel structure offsets, 10 bytes per channel
 
 FT_CHANNELS_ALL		= 5
@@ -866,6 +865,25 @@ _FT2ChannelUpdate:
 	ora #0
 	bmi @special_code		;bit 7 0=note 1=special code
 
+@check_slide:
+	cmp #$61				; slide note (followed by num steps, step size and the target note)
+	bne @check_volume
+
+@read_slide_num_steps
+	lda (FT_TEMP_PTR),y
+	;sta FT_SONG_SPEED
+	inc <FT_TEMP_PTR_L
+	bne @read_slide_step_size
+	inc <FT_TEMP_PTR_H
+
+@read_slide_step_size:
+	lda (FT_TEMP_PTR),y
+	;sta FT_SONG_SPEED
+	inc <FT_TEMP_PTR_L
+	bne @read_byte
+	inc <FT_TEMP_PTR_H
+	jmp @read_byte
+
 @check_volume:
 	cmp #$70
 	bcc @no_vol_change
@@ -1274,7 +1292,7 @@ _FT2DummyEnvelope:
 _FT2NoteTableLSB:
 	.if(FT_PAL_SUPPORT)
 		.byte $00
-		.byte $60, $f6, $92                                              ; Octave 0
+		.byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $60, $f6, $92 ; Octave 0
 		.byte $34, $db, $86, $37, $ec, $a5, $62, $23, $e8, $b0, $7b, $49 ; Octave 1
 		.byte $19, $ed, $c3, $9b, $75, $52, $31, $11, $f3, $d7, $bd, $a4 ; Octave 2
 		.byte $8c, $76, $61, $4d, $3a, $29, $18, $08, $f9, $eb, $de, $d1 ; Octave 3
@@ -1285,7 +1303,7 @@ _FT2NoteTableLSB:
 	.endif
 	.if(FT_NTSC_SUPPORT)
 		.byte $00
-		.byte $f1, $7f, $13                                              ; Octave 0
+		.byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $f1, $7f, $13 ; Octave 0
 		.byte $ad, $4d, $f3, $9d, $4c, $00, $b8, $74, $34, $f8, $bf, $89 ; Octave 1
 		.byte $56, $26, $f9, $ce, $a6, $80, $5c, $3a, $1a, $fb, $df, $c4 ; Octave 2
 		.byte $ab, $93, $7c, $67, $52, $3f, $2d, $1c, $0c, $fd, $ef, $e1 ; Octave 3
@@ -1294,10 +1312,11 @@ _FT2NoteTableLSB:
 		.byte $34, $31, $2f, $2c, $29, $27, $25, $23, $21, $1f, $1d, $1b ; Octave 6
 		.byte $1a, $18, $17, $15, $14, $13, $12, $11, $10, $0f, $0e, $0d ; Octave 7
 	.endif
+
 _FT2NoteTableMSB:
 	.if(FT_PAL_SUPPORT)
 		.byte $00
-		.byte $07, $06, $06                                              ; Octave 0
+		.byte $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $06, $06 ; Octave 0
 		.byte $06, $05, $05, $05, $04, $04, $04, $04, $03, $03, $03, $03 ; Octave 1
 		.byte $03, $02, $02, $02, $02, $02, $02, $02, $01, $01, $01, $01 ; Octave 2
 		.byte $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $00, $00 ; Octave 3
@@ -1308,7 +1327,7 @@ _FT2NoteTableMSB:
 	.endif
 	.if(FT_NTSC_SUPPORT)
 		.byte $00
-		.byte $07, $07, $07                                              ; Octave 0
+		.byte $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07 ; Octave 0
 		.byte $06, $06, $05, $05, $05, $05, $04, $04, $04, $03, $03, $03 ; Octave 1
 		.byte $03, $03, $02, $02, $02, $02, $02, $02, $02, $01, $01, $01 ; Octave 2
 		.byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $00 ; Octave 3
@@ -1317,6 +1336,29 @@ _FT2NoteTableMSB:
 		.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
 		.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
 	.endif
+
+.ifdef FT_VRC6_ENABLE
+_FT2SawNoteTableLSB:
+	.byte $00
+    .byte $44, $69, $9a, $d6, $1e, $70, $cb, $30, $9e, $13, $91, $16 ; Octave 0
+    .byte $a2, $34, $cc, $6b, $0e, $b7, $65, $18, $ce, $89, $48, $0a ; Octave 1
+    .byte $d0, $99, $66, $35, $07, $db, $b2, $8b, $67, $44, $23, $05 ; Octave 2
+    .byte $e8, $cc, $b2, $9a, $83, $6d, $59, $45, $33, $22, $11, $02 ; Octave 3
+    .byte $f3, $e6, $d9, $cc, $c1, $b6, $ac, $a2, $99, $90, $88, $80 ; Octave 4
+    .byte $79, $72, $6c, $66, $60, $5b, $55, $51, $4c, $48, $44, $40 ; Octave 5
+    .byte $3c, $39, $35, $32, $2f, $2d, $2a, $28, $25, $23, $21, $1f ; Octave 6
+    .byte $1e, $1c, $1a, $19, $17, $16, $15, $13, $12, $11, $10, $0f ; Octave 7
+_FT2SawNoteTableMSB:    
+	.byte $00
+	.byte $0f, $0e, $0d, $0c, $0c, $0b, $0a, $0a, $09, $09, $08, $08  ; Octave 0
+	.byte $07, $07, $06, $06, $06, $05, $05, $05, $04, $04, $04, $04  ; Octave 1
+	.byte $03, $03, $03, $03, $03, $02, $02, $02, $02, $02, $02, $02  ; Octave 2
+	.byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; Octave 3
+	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; Octave 4
+	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; Octave 5
+	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; Octave 6
+	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; Octave 7
+.endif
 
 _FT2ChannelToVolumeEnvelope:
 	.byte .lobyte(FT_ENVELOPES)+$00
