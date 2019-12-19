@@ -250,6 +250,20 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Duty4%402x.png" />
+    <EmbeddedResource Include="Resources\Duty4.png" />
+    <EmbeddedResource Include="Resources\Duty5%402x.png" />
+    <EmbeddedResource Include="Resources\Duty5.png" />
+    <EmbeddedResource Include="Resources\Duty6%402x.png" />
+    <EmbeddedResource Include="Resources\Duty6.png" />
+    <EmbeddedResource Include="Resources\Duty7%402x.png" />
+    <EmbeddedResource Include="Resources\Duty7.png" />
+    <EmbeddedResource Include="Resources\Duty7Flip%402x.png" />
+    <EmbeddedResource Include="Resources\Duty7Flip.png" />
+    <EmbeddedResource Include="Resources\Instrument%402x.png" />
+    <EmbeddedResource Include="Resources\Instrument.png" />
+    <EmbeddedResource Include="Resources\Konami%402x.png" />
+    <EmbeddedResource Include="Resources\Konami.png" />
     <EmbeddedResource Include="Resources\PortamentoSmall%402x.png" />
     <EmbeddedResource Include="Resources\PortamentoSmall.png" />
     <EmbeddedResource Include="Resources\Saw%402x.png" />

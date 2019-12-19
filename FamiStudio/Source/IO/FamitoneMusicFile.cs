@@ -515,7 +515,7 @@ namespace FamiStudio
 
                             if (kernel == FamiToneKernel.FamiTone2FS)
                             {
-                                if (prevNoteValue != Note.NoteInvalid && (note.Flags & Note.FlagPortamento) != 0)
+                                if (prevNoteValue != Note.NoteInvalid && note.IsSlideNote)
                                 {
                                     if (channel.ComputeSlideNoteParams(p, i - 1, prevNoteValue, out _, out int stepCount, out int stepSize))
                                     {

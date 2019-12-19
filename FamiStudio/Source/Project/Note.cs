@@ -25,8 +25,8 @@ namespace FamiStudio
         public const int EffectSkip  = 2; // Dxx
         public const int EffectSpeed = 3; // Fxx
 
-        public const int FlagNone       = 0x00;
-        public const int FlagPortamento = 0x01;
+        public const int FlagNone  = 0x00;
+        public const int FlagSlide = 0x01;
 
         public const int VolumeInvalid = 0xff;
         public const int VolumeMax     = 0x0f;
@@ -66,6 +66,18 @@ namespace FamiStudio
         public bool IsMusical
         {
             get { return IsValid && !IsStop && !IsRelease; }
+        }
+
+        public bool IsSlideNote
+        {
+            get { return (Flags & FlagSlide) != 0; }
+            set
+            {
+                if (value)
+                    Flags |= FlagSlide;
+                else
+                    Flags &= unchecked((byte)(~FlagSlide));
+            }
         }
 
         public bool HasEffect
@@ -135,7 +147,7 @@ namespace FamiStudio
             else
                 Volume = Note.VolumeInvalid;
 
-            // At version 4 (FamiStudio 1.4.0), we added a portamento (flags)
+            // At version 4 (FamiStudio 1.4.0), we added a slide (flags)
             if (buffer.Version >= 4)
                 buffer.Serialize(ref Flags);
             else

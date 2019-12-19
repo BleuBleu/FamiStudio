@@ -5,14 +5,21 @@ namespace FamiStudio
 {
     public class Instrument
     {
+        // Instrument types.
+        public const int Apu   = 0;
+        public const int Vrc6  = 1;
+        public const int Count = 2;
+
         private int id;
         private string name;
+        private int type = Apu;
         private Envelope[] envelopes = new Envelope[Envelope.Max];
         private Color color;
         private int dutyCycle;
 
         public int Id => id;
         public string Name { get => name; set => name = value; }
+        public int Type { get => type; }
         public Color Color { get => color; set => color = value; }
         public Envelope[] Envelopes => envelopes;
         public int DutyCycle { get => dutyCycle; set => dutyCycle = value; }

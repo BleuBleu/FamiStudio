@@ -10,9 +10,9 @@ namespace FamiStudio
         protected bool seeking = false;
         protected bool newNote = false;
         protected Note note;
-        protected int portamentoPitch = 0;
-        protected int portamentoStepCount = 0;
-        protected int portamentoStep = 0;
+        protected int slidePitch = 0;
+        protected int slideStepCount = 0;
+        protected int slideStep = 0;
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
         protected int duty;
@@ -71,14 +71,12 @@ namespace FamiStudio
             var tmpNote = pattern.Notes[noteIdx];
             if (tmpNote.IsValid)
             {
-                portamentoPitch = 0;
-                portamentoStep = 0;
-                portamentoStepCount = 0;
+                slidePitch = 0;
+                slideStep = 0;
+                slideStepCount = 0;
 
-                if ((tmpNote.Flags & Note.FlagPortamento) != 0)
-                {
-                    channel.ComputeSlideNoteParams(patternIdx, noteIdx, note.Value, out portamentoPitch, out portamentoStepCount, out portamentoStep);
-                }
+                if (tmpNote.IsSlideNote)
+                    channel.ComputeSlideNoteParams(patternIdx, noteIdx, note.Value, out slidePitch, out slideStepCount, out slideStep);
 
                 PlayNote(tmpNote);
             }
@@ -150,11 +148,11 @@ namespace FamiStudio
                     envelopeIdx[j] = idx;
             }
 
-            // Update portamento.
-            if (portamentoStepCount > 0)
+            // Update slide.
+            if (slideStepCount > 0)
             {
-                portamentoPitch += portamentoStep;
-                portamentoStepCount--;
+                slidePitch += slideStep;
+                slideStepCount--;
             }
         }
 

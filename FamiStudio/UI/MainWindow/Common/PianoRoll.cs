@@ -59,8 +59,8 @@ namespace FamiStudio
         const int DefaultDPCMTextPosX           = 2;
         const int DefaultDPCMTextPosY           = 0;
         const int DefaultOctaveNameOffsetY      = 11;
-        const int DefaultPortamentoIconPosX     = 2; // MATTT: Image is not centered.
-        const int DefaultPortamentoIconPosY     = 2;
+        const int DefaultSlideIconPosX          = 2; // MATTT: Image is not centered.
+        const int DefaultSlideIconPosY          = 2;
 
         int numNotes;
         int numOctaves;
@@ -93,8 +93,8 @@ namespace FamiStudio
         int virtualSizeY;
         int patternSizeX;
         int barSizeX;
-        int portamentoIconPosX;
-        int portamentoIconPosY;
+        int slideIconPosX;
+        int slideIconPosY;
 
         int ScaleForZoom(int value)
         {
@@ -124,7 +124,7 @@ namespace FamiStudio
         RenderBitmap bmpEffectExpanded;
         RenderBitmap bmpEffectCollapsed;
         RenderBitmap bmpVolume;
-        RenderBitmap bmpPortamento;
+        RenderBitmap bmpSlide;
         RenderBitmap[] bmpEffects = new RenderBitmap[3];
         RenderBitmap[] bmpEffectsFilled = new RenderBitmap[3];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
@@ -214,8 +214,8 @@ namespace FamiStudio
             dpcmTextPosX           = (int)(DefaultDPCMTextPosX * scaling);
             dpcmTextPosY           = (int)(DefaultDPCMTextPosY * scaling);
             octaveNameOffsetY      = (int)(DefaultOctaveNameOffsetY * scaling);
-            portamentoIconPosX     = (int)(DefaultPortamentoIconPosX * scaling);
-            portamentoIconPosY     = (int)(DefaultPortamentoIconPosY * scaling);
+            slideIconPosX          = (int)(DefaultSlideIconPosX * scaling);
+            slideIconPosY          = (int)(DefaultSlideIconPosY * scaling);
             octaveSizeY            = 12 * noteSizeY;
             numNotes               = numOctaves * 12;
             virtualSizeY           = numNotes * noteSizeY;
@@ -368,7 +368,7 @@ namespace FamiStudio
             bmpEffectsFilled[2] = g.CreateBitmapFromResource("SpeedSmallFill");
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
-            bmpPortamento = g.CreateBitmapFromResource("PortamentoSmall");
+            bmpSlide = g.CreateBitmapFromResource("PortamentoSmall");
 
             for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
             {
@@ -1072,8 +1072,8 @@ namespace FamiStudio
                                                 g.PushTranslation(x, y);
                                                 g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, sizeY, 0.8f));
                                                 g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
-                                                if ((lastNote.Flags & Note.FlagPortamento) != 0)
-                                                    g.DrawBitmap(bmpPortamento, portamentoIconPosX, portamentoIconPosY);
+                                                if (lastNote.IsSlideNote)
+                                                    g.DrawBitmap(bmpSlide, slideIconPosX, slideIconPosY);
                                                 g.PopTransform();
                                             }       
                                         }
@@ -1141,8 +1141,8 @@ namespace FamiStudio
                                     g.PushTranslation(x, y);
                                     g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
                                     g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, selected ? selectionNoteBrush :  theme.BlackBrush, selected ? 2 : 1);
-                                    if ((lastNote.Flags & Note.FlagPortamento) != 0)
-                                        g.DrawBitmap(bmpPortamento, portamentoIconPosX, portamentoIconPosY);
+                                    if (lastNote.IsSlideNote)
+                                        g.DrawBitmap(bmpSlide, slideIconPosX, slideIconPosY);
                                     g.PopTransform();
                                 }
                             }
@@ -1736,7 +1736,8 @@ namespace FamiStudio
             else if (editMode == EditionMode.Channel && GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
             {
                 var changed = false;
-                var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
+                var channel = Song.Channels[editChannel];
+                var pattern = channel.PatternInstances[patternIdx];
 
                 if (pattern == null)
                     return;
@@ -1747,7 +1748,7 @@ namespace FamiStudio
                     bool shift = ModifierKeys.HasFlag(Keys.Shift);
                     bool porta = (GetKeyState((int)'P') & 0x8000) != 0; // MATTT
 
-                    if (ctrl || (shift && editChannel != Channel.DPCM))
+                    if (ctrl || shift && channel.SupportsReleaseNotes())
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].Value = (byte)(ctrl ? Note.NoteStop : Note.NoteRelease);
@@ -1756,14 +1757,14 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
-                    else if (currentInstrument != null || editChannel == Channel.DPCM)
+                    else if (channel.SupportsInstrument(currentInstrument))
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].Value = noteValue;
                         pattern.Notes[noteIdx].Instrument = editChannel == Channel.DPCM ? null : currentInstrument;
 
                         if (porta && editChannel != Channel.DPCM)
-                            pattern.Notes[noteIdx].Flags ^= Note.FlagPortamento;
+                            pattern.Notes[noteIdx].IsSlideNote = !pattern.Notes[noteIdx].IsSlideNote;
 
                         pattern.UpdateLastValidNotesAndVolume();
                         App.UndoRedoManager.EndTransaction();

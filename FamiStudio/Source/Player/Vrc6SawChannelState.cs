@@ -19,7 +19,7 @@ namespace FamiStudio
             else if (note.IsValid)
             {
                 var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                int period = Math.Min(maximumPeriod, noteTable[noteVal] + envelopeValues[Envelope.Pitch]);
+                int period = Math.Min(maximumPeriod, noteTable[noteVal] + slidePitch + envelopeValues[Envelope.Pitch]);
                 int volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
 
                 WriteApuRegister(NesApu.VRC6_SAW_VOL, (volume << 1) | ((duty & 1) << 5)); // Get hi-bit from duty, like FamiTracker.

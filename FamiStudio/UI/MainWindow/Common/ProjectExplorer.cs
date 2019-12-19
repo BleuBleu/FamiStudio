@@ -246,14 +246,14 @@ namespace FamiStudio
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
             bmpButtonIcons[(int)ButtonType.Song] = g.CreateBitmapFromResource("Music");
-            bmpButtonIcons[(int)ButtonType.Instrument] = g.CreateBitmapFromResource("Pattern");
+            bmpButtonIcons[(int)ButtonType.Instrument] = g.CreateBitmapFromResource("Instrument");
 
             bmpSubButtonIcons[(int)SubButtonType.Add] = g.CreateBitmapFromResource("Add");
             bmpSubButtonIcons[(int)SubButtonType.DPCM] = g.CreateBitmapFromResource("DPCM");
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle0] = g.CreateBitmapFromResource("Duty0");
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle1] = g.CreateBitmapFromResource("Duty1");
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle2] = g.CreateBitmapFromResource("Duty2");
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle3] = g.CreateBitmapFromResource("Duty3");
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle0] = g.CreateBitmapFromResource("Duty1");
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle1] = g.CreateBitmapFromResource("Duty3");
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle2] = g.CreateBitmapFromResource("Duty7");
+            bmpSubButtonIcons[(int)SubButtonType.DutyCycle3] = g.CreateBitmapFromResource("Duty7Flip");
             bmpSubButtonIcons[(int)SubButtonType.Arpeggio] = g.CreateBitmapFromResource("Arpeggio");
             bmpSubButtonIcons[(int)SubButtonType.Pitch] = g.CreateBitmapFromResource("Pitch");
             bmpSubButtonIcons[(int)SubButtonType.Volume] = g.CreateBitmapFromResource("Volume");

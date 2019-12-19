@@ -6,6 +6,7 @@ namespace FamiStudio
 {
     public class Channel
     {
+        // Channel types.
         public const int Square1 = 0;
         public const int Square2 = 1;
         public const int Triangle = 2;
@@ -60,6 +61,28 @@ namespace FamiStudio
         public Pattern GetPattern(int id)
         {
             return patterns.Find(p => p.Id == id);
+        }
+
+        public bool SupportsInstrument(Instrument instrument)
+        {
+            if (instrument == null)
+                return type == DPCM;
+
+            return true;
+
+            // TODO
+            //if (instrument.Type == Instrument.Apu && type < ExpansionAudioStart)
+            //    return true;
+
+            //if (instrument.Type == Instrument.Vrc6 && type >= VRC6Square1 && type <= VRC6Saw)
+            //    return true;
+
+            //return false;
+        }
+
+        public bool SupportsReleaseNotes()
+        {
+            return type != DPCM;
         }
 
         public void Split(int factor)
@@ -267,7 +290,7 @@ namespace FamiStudio
             var nextNoteIdx    = noteIdx;
 
             var pattern = patternInstances[nextPatternIdx];
-            Debug.Assert((pattern.Notes[nextNoteIdx].Flags & Note.FlagPortamento) != 0);
+            Debug.Assert(pattern.Notes[nextNoteIdx].IsSlideNote);
 
             nextNoteIdx++;
             while (nextNoteIdx < song.PatternLength && !pattern.Notes[nextNoteIdx].IsValid) nextNoteIdx++;
@@ -299,27 +322,27 @@ namespace FamiStudio
 
             int noteDuration = FindSlideNoteDuration(patternIdx, noteIdx);
 
-            if (noteDuration > 0)
+            if (noteDuration < 0)
+                noteDuration = 255;
+
+            var currNote  = patternInstances[patternIdx].Notes[noteIdx].Value;
+            var noteTable = NesApu.GetNoteTableForChannelType(type, false);
+
+            pitchDelta = (int)noteTable[prevNote] - (int)noteTable[currNote];
+
+            if (pitchDelta != 0)
             {
-                var currNote  = patternInstances[patternIdx].Notes[noteIdx].Value;
-                var noteTable = NesApu.GetNoteTableForChannelType(type, false);
+                var frameCount = Math.Min(noteDuration * song.Speed, 255);
+                var floatStep = Math.Abs(pitchDelta) / (float)frameCount;
 
-                pitchDelta = (int)noteTable[prevNote] - (int)noteTable[currNote];
+                stepSize  = (int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta);
+                stepCount = Math.Abs(pitchDelta / stepSize);
 
-                if (pitchDelta != 0)
-                {
-                    var frameCount = Math.Min(noteDuration * song.Speed, 255);
-                    var floatStep = Math.Abs(pitchDelta) / (float)frameCount;
+                Debug.Assert(stepCount < 255);
+                Debug.Assert(Math.Abs(stepSize) < 128);
+                Debug.Assert(Math.Abs(stepSize * stepCount) <= Math.Abs(pitchDelta));
 
-                    stepSize  = (int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta);
-                    stepCount = Math.Abs(pitchDelta / stepSize);
-
-                    Debug.Assert(stepCount < 255);
-                    Debug.Assert(Math.Abs(stepSize) < 128);
-                    Debug.Assert(Math.Abs(stepSize * stepCount) <= Math.Abs(pitchDelta));
-
-                    return true;
-                }
+                return true;
             }
 
             return false;

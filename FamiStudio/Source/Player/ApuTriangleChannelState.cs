@@ -17,7 +17,7 @@ namespace FamiStudio
             else if (note.IsValid)
             {
                 var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                int period = Utils.Clamp(noteTable[noteVal] + portamentoPitch + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
+                int period = Utils.Clamp(noteTable[noteVal] + slidePitch + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
 
                 WriteApuRegister(NesApu.APU_TRI_LO, (period >> 0) & 0xff);
                 WriteApuRegister(NesApu.APU_TRI_HI, (period >> 8) & 0x07);
