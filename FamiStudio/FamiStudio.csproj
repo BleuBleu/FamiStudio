@@ -250,6 +250,8 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Warning%402x.png" />
+    <EmbeddedResource Include="Resources\Warning.png" />
     <EmbeddedResource Include="Resources\InstrumentExp%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentExp.png" />
     <EmbeddedResource Include="Resources\Duty4%402x.png" />
