@@ -669,6 +669,27 @@ FamiToneUpdate:
 	ora FT_PAL_ADJUST
 	.endif
 	tax
+	ldy FT_CH1_SLIDE_REPEAT
+	beq @ch1noslide
+@ch1slide:
+	lda FT_CH1_PITCH_OFF
+	tay
+	adc _FT2NoteTableLSB,x
+	sta FT_TEMP_PTR2_L
+	tya
+	ora #$7f
+	bmi @ch1slidesign
+	lda #0
+@ch1slidesign:
+	adc _FT2NoteTableMSB,x
+	sta FT_TEMP_PTR2_H
+	lda FT_TEMP_PTR2_L
+	adc FT_CH1_SLIDE_PITCH_L
+	sta FT_MR_PULSE1_L
+	lda FT_TEMP_PTR2_H
+	adc FT_CH1_SLIDE_PITCH_H
+	jmp @ch1checkprevpulse
+@ch1noslide:	
 	lda FT_CH1_PITCH_OFF
 	tay
 	adc _FT2NoteTableLSB,x
@@ -679,7 +700,7 @@ FamiToneUpdate:
 	lda #0
 @ch1sign:
 	adc _FT2NoteTableMSB,x
-
+@ch1checkprevpulse:
 	.if(!FT_SFX_ENABLE)
 	cmp FT_PULSE1_PREV
 	beq @ch1prev
@@ -696,7 +717,6 @@ FamiToneUpdate:
 	ora FT_CH1_DUTY
 	sta FT_MR_PULSE1_V
 
-
 	lda FT_CH2_NOTE
 	beq @ch2cut
 	clc
@@ -705,6 +725,27 @@ FamiToneUpdate:
 	ora FT_PAL_ADJUST
 	.endif
 	tax
+	ldy FT_CH2_SLIDE_REPEAT
+	beq @ch2noslide
+@ch2slide:
+	lda FT_CH2_PITCH_OFF
+	tay
+	adc _FT2NoteTableLSB,x
+	sta FT_TEMP_PTR2_L
+	tya
+	ora #$7f
+	bmi @ch2slidesign
+	lda #0
+@ch2slidesign:
+	adc _FT2NoteTableMSB,x
+	sta FT_TEMP_PTR2_H
+	lda FT_TEMP_PTR2_L
+	adc FT_CH2_SLIDE_PITCH_L
+	sta FT_MR_PULSE2_L
+	lda FT_TEMP_PTR2_H
+	adc FT_CH2_SLIDE_PITCH_H
+	jmp @ch2checkprevpulse
+@ch2noslide:	
 	lda FT_CH2_PITCH_OFF
 	tay
 	adc _FT2NoteTableLSB,x
@@ -715,7 +756,7 @@ FamiToneUpdate:
 	lda #0
 @ch2sign:
 	adc _FT2NoteTableMSB,x
-
+@ch2checkprevpulse:
 	.if(!FT_SFX_ENABLE)
 	cmp FT_PULSE2_PREV
 	beq @ch2prev
