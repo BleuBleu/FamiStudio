@@ -106,7 +106,7 @@ namespace FamiStudio
                 for (int i = 0; i < song.PatternLength; i++)
                 {
                     var n = notes[i];
-                    if (n.IsValid || n.IsStop)
+                    if (n.IsValid || n.IsStop || n.IsRelease || n.Effect != Note.EffectNone)
                     {
                         return true;
                     }
@@ -230,7 +230,7 @@ namespace FamiStudio
                 var inst = notes[i].Instrument;
                 Debug.Assert(inst == null || song.Project.InstrumentExists(inst));
                 Debug.Assert(inst == null || song.Project.GetInstrument(inst.Id) == inst);
-                Debug.Assert(channel.SupportsInstrument(inst));
+                Debug.Assert(inst == null || channel.SupportsInstrument(inst));
             }
         }
 #endif

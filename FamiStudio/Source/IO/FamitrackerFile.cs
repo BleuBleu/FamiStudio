@@ -19,7 +19,7 @@ namespace FamiStudio
         {
             var project = new Project();
 
-            var envelopes = new Dictionary<int, Envelope>[Envelope.Max] { new Dictionary<int, Envelope>(), new Dictionary<int, Envelope>(), new Dictionary<int, Envelope>() };
+            var envelopes = new Dictionary<int, Envelope>[Project.ExpansionCount, Envelope.Max];
             var duties = new Dictionary<int, int>();
             var instruments = new Dictionary<int, Instrument>();
             var dpcms = new Dictionary<int, DPCMSample>();
@@ -39,6 +39,10 @@ namespace FamiStudio
                 ["G-"] = 7,
                 ["G#"] = 8
             };
+
+            for (int i = 0; i < envelopes.GetLength(0); i++)
+                for (int j = 0; j < envelopes.GetLength(1); j++)
+                    envelopes[i, j] = new Dictionary<int, Envelope>();
 
             DPCMSample currentDpcm = null;
             int dpcmWriteIdx = 0;
@@ -63,9 +67,16 @@ namespace FamiStudio
                 {
                     project.Copyright = line.Substring(9).Trim(' ', '"');
                 }
+                else if (line.StartsWith("EXPANSION"))
+                {
+                    var exp = int.Parse(line.Substring(9));
+                    if (exp == 1)
+                        project.SetExpansionAudio(Project.ExpansionVRC6);
+                }
                 else if (line.StartsWith("MACRO"))
                 {
-                    var halves = line.Substring(5).Split(':');
+                    var expansion = line.Substring(5, 4) == "VRC6" ? Project.ExpansionVRC6 : Project.ExpansionNone;
+                    var halves = line.Substring(line.IndexOf(' ')).Split(':');
                     var param = halves[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     var curve = halves[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -78,15 +89,28 @@ namespace FamiStudio
                     {
                         var env = new Envelope();
                         env.Length = curve.Length;
+
+                        // FamiTracker allows envelope with release with no loop. We dont allow that.
+                        if (type == Envelope.Volume && loop == -1 && rel != -1)
+                        {
+                            env.Length++;
+                            for (int j = env.Length - 1; j >= 1; j--)
+                                env.Values[j] = env.Values[j - 1];
+
+                            loop = rel;
+                            rel++;
+                        }
+
                         env.Loop = loop;
                         env.Release = type == Envelope.Volume ? rel : -1;
+
                         for (int j = 0; j < curve.Length; j++)
                             env.Values[j] = sbyte.Parse(curve[j]);
                         if (type == 2)
                         {
                             env.ConvertToAbsolute();
                         }
-                        envelopes[type][idx] = env;
+                        envelopes[expansion, type][idx] = env;
                     }
                     else if (type == 4)
                     {
@@ -132,9 +156,10 @@ namespace FamiStudio
                         }
                     }
                 }
-                else if (line.StartsWith("INST2A03"))
+                else if (line.StartsWith("INST2A03") || line.StartsWith("INSTVRC6"))
                 {
-                    var param = SplitStringKeepQuotes(line.Substring(8));
+                    var expansion = line.Substring(4, 4) == "VRC6" ? Project.ExpansionVRC6 : Project.ExpansionNone;
+                    var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
 
                     int idx = int.Parse(param[0]);
                     int vol = int.Parse(param[1]);
@@ -147,11 +172,12 @@ namespace FamiStudio
                     if (!project.IsInstrumentNameUnique(name))
                         name = param[6] + "-" + j++;
 
-                    var instrument = project.CreateInstrument(Project.ExpansionNone, name);
+                    var expansionType = line.StartsWith("INSTVRC6") ? Project.ExpansionVRC6 : Project.ExpansionNone;
+                    var instrument = project.CreateInstrument(expansionType, name);
 
-                    if (vol >= 0) instrument.Envelopes[0] = envelopes[0][vol].Clone();
-                    if (arp >= 0) instrument.Envelopes[1] = envelopes[1][arp].Clone();
-                    if (pit >= 0) instrument.Envelopes[2] = envelopes[2][pit].Clone();
+                    if (vol >= 0) instrument.Envelopes[0] = envelopes[expansion, 0][vol].Clone();
+                    if (arp >= 0) instrument.Envelopes[1] = envelopes[expansion, 1][arp].Clone();
+                    if (pit >= 0) instrument.Envelopes[2] = envelopes[expansion, 2][pit].Clone();
                     if (dut >= 0) instrument.DutyCycle = duties[dut];
 
                     instruments[idx] = instrument;
@@ -165,19 +191,20 @@ namespace FamiStudio
                     song.PatternLength = int.Parse(param[0]);
                     song.Speed = int.Parse(param[1]);
                     song.Tempo = int.Parse(param[2]);
+                    columns = new int[song.Channels.Length];
                 }
                 else if (line.StartsWith("COLUMNS"))
                 {
                     var param = line.Substring(7).Split(new[] { ' ', ':' }, StringSplitOptions.RemoveEmptyEntries);
-                    for (int j = 0; j < 5; j++)
+                    for (int j = 0; j < song.Channels.Length; j++)
                         columns[j] = int.Parse(param[j]);
                 }
                 else if (line.StartsWith("ORDER"))
                 {
                     var orderIdx = Convert.ToInt32(line.Substring(6, 2), 16);
                     var values = line.Substring(5).Split(':')[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    var order = new int[5];
-                    for (int j = 0; j < 5; j++)
+                    var order = new int[song.Channels.Length];
+                    for (int j = 0; j < song.Channels.Length; j++)
                     {
                         int patternIdx = Convert.ToInt32(values[j], 16);
                         var name = values[j];
@@ -200,7 +227,7 @@ namespace FamiStudio
                     var channels = line.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
                     var rowIdx = Convert.ToInt32(channels[0].Substring(4, 2), 16);
 
-                    for (int j = 1; j <= 5; j++)
+                    for (int j = 1; j <= song.Channels.Length; j++)
                     {
                         var noteData = channels[j].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                         var pattern = song.Channels[j - 1].GetPattern(patternName);
