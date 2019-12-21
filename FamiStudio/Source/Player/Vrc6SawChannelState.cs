@@ -14,13 +14,12 @@ namespace FamiStudio
             if (note.IsStop)
             {
                 WriteApuRegister(NesApu.VRC6_SAW_VOL, 0x00);
-                WriteApuRegister(NesApu.VRC6_SAW_HI,  0x00); // Hi-bit disable channels
             }
             else if (note.IsValid)
             {
                 var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                int period = Math.Min(maximumPeriod, noteTable[noteVal] + slidePitch + envelopeValues[Envelope.Pitch]);
-                int volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
+                var period = Math.Min(maximumPeriod, noteTable[noteVal] + slidePitch + envelopeValues[Envelope.Pitch]);
+                var volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
 
                 WriteApuRegister(NesApu.VRC6_SAW_VOL, (volume << 1) | ((duty & 1) << 5)); // Get hi-bit from duty, like FamiTracker.
                 WriteApuRegister(NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));

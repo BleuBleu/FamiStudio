@@ -67,16 +67,16 @@ namespace FamiStudio
             if (instrument == null)
                 return type == DPCM;
 
-            return true;
+            if (type == DPCM)
+                return true;
 
-            // TODO
-            //if (instrument.Type == Instrument.Apu && type < ExpansionAudioStart)
-            //    return true;
+            if (instrument.ExpansionType == Project.ExpansionNone && type < ExpansionAudioStart)
+                return true;
 
-            //if (instrument.Type == Instrument.Vrc6 && type >= VRC6Square1 && type <= VRC6Saw)
-            //    return true;
+            if (instrument.ExpansionType == Project.ExpansionVRC6 && type >= VRC6Square1 && type <= VRC6Saw)
+                return true;
 
-            //return false;
+            return false;
         }
 
         public bool SupportsReleaseNotes()
@@ -400,8 +400,12 @@ namespace FamiStudio
 
             buffer.Serialize(ref song);
             buffer.Serialize(ref patternCount);
-            buffer.InitializeList(ref patterns, patternCount);
 
+            // At version 4 (FamiStudio 1.4.0) we added basic expansion audio.
+            if (buffer.Version >= 4)
+                buffer.Serialize(ref type);
+
+            buffer.InitializeList(ref patterns, patternCount);
             foreach (var pattern in patterns)
                 pattern.SerializeState(buffer);
 

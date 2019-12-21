@@ -181,6 +181,11 @@ namespace FamiStudio
             }
         }
 
+        public void DisplayWarning(string msg)
+        {
+            ToolBar.DisplayWarning(msg);
+        }
+
         private void UndoRedoManager_Updated()
         {
             ToolBar.Invalidate();
@@ -244,6 +249,7 @@ namespace FamiStudio
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
             InvalidateEverything();
             UpdateTitle();
+            RefreshSequencerLayout();
             //ClipboardUtils.Reset();
         }
 
@@ -677,6 +683,8 @@ namespace FamiStudio
 
         public void Tick()
         {
+            ToolBar.Tick();
+
             if (RealTimeUpdate)
             {
                 songPlayer.CheckIfEnded();

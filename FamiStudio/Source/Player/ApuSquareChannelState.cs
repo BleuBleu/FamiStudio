@@ -21,18 +21,19 @@ namespace FamiStudio
             else if (note.IsValid)
             {
                 var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                int period = Math.Min(maximumPeriod, noteTable[noteVal] + slidePitch + envelopeValues[Envelope.Pitch]);
+                var period = Utils.Clamp(noteTable[noteVal] + slidePitch + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
+                var volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
 
                 WriteApuRegister(NesApu.APU_PL1_LO + regOffset, period & 0xff);
                 period = (period >> 8) & 0x07;
 
-                if (prevPulseHi != period)
+                if (prevPulseHi != period) // Avoid resetting the sequence.
                 {
                     prevPulseHi = period;
                     WriteApuRegister(NesApu.APU_PL1_HI + regOffset, period);
                 }
 
-                WriteApuRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]));
+                WriteApuRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
             }
         }
     };

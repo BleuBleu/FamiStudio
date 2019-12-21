@@ -1770,6 +1770,10 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
+                    else
+                    {
+                        App.DisplayWarning("Selected instrument is incompatible with channel!");
+                    }
                 }
                 else if (right)
                 {

@@ -244,6 +244,8 @@ namespace FamiStudio
 
         public void ReplaceInstrument(Instrument instrumentOld, Instrument instrumentNew)
         {
+            Debug.Assert(instrumentNew == null || instrumentOld.ExpansionType == instrumentNew.ExpansionType);
+
             foreach (var song in songs)
             {
                 foreach (var channel in song.Channels)
@@ -358,9 +360,16 @@ namespace FamiStudio
             expansionAudio = expansion;
 
             foreach (var song in songs)
+            {
                 song.CreateChannels(true);
+            }
 
-            // TODO: Delete instruments from other expansion audio
+            for (int i = instruments.Count - 1; i >= 0; i--)
+            {
+                var inst = instruments[i];
+                if (inst.ExpansionType != Project.ExpansionNone)
+                    DeleteInstrument(inst);
+            }
         }
 
         public int GetActiveChannelCount()
@@ -594,6 +603,12 @@ namespace FamiStudio
                 {
                     author = "Unknown";
                 }
+            }
+
+            // At version 4 (FamiStudio 1.4.0) we added basic expansion audio.
+            if (buffer.Version >= 4)
+            {
+                buffer.Serialize(ref expansionAudio);
             }
 
             // DPCM samples

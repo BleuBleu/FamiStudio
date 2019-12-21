@@ -60,10 +60,7 @@ namespace FamiStudio
         {
             Add,
             DPCM,
-            DutyCycle0,
-            DutyCycle1,
-            DutyCycle2,
-            DutyCycle3,
+            DutyCycle,
             Arpeggio,
             Pitch,
             Volume,
@@ -76,6 +73,12 @@ namespace FamiStudio
             public ButtonType type;
             public Song song;
             public Instrument instrument;
+            public ProjectExplorer projectExplorer;
+
+            public Button(ProjectExplorer pe)
+            {
+                projectExplorer = pe;
+            }
 
             public SubButtonType[] GetSubButtons(out bool[] active)
             {
@@ -102,7 +105,7 @@ namespace FamiStudio
                                 instrument.Envelopes[Envelope.Pitch].IsEmpty ? false : true,
                                 instrument.Envelopes[Envelope.Volume].IsEmpty ? false : true
                             };
-                            return new[] { instrument.DutyCycle + SubButtonType.DutyCycle0, SubButtonType.Arpeggio, SubButtonType.Pitch, SubButtonType.Volume };
+                            return new[] { SubButtonType.DutyCycle, SubButtonType.Arpeggio, SubButtonType.Pitch, SubButtonType.Volume };
                         }
                 }
 
@@ -168,6 +171,51 @@ namespace FamiStudio
                     return ThemeBase.FontMedium;
                 }
             }
+
+            public RenderBitmap GetIcon()
+            {
+                if (type == ButtonType.Song)
+                    return projectExplorer.bmpSong;
+                else if (type == ButtonType.Instrument)
+                    return projectExplorer.bmpInstrument;
+                return null;
+            }
+
+            public RenderBitmap GetIcon(SubButtonType sub)
+            {
+                switch (sub)
+                {
+                    case SubButtonType.Add:
+                        return projectExplorer.bmpAdd;
+                    case SubButtonType.DPCM:
+                        return projectExplorer.bmpDPCM;
+                    case SubButtonType.DutyCycle:
+                        if (instrument.ExpansionType == Project.ExpansionVRC6)
+                        {
+                            return projectExplorer.bmpDuty[instrument.DutyCycle];
+                        }
+                        else
+                        {
+                            switch (instrument.DutyCycle)
+                            {
+                                case 0: return projectExplorer.bmpDuty[1];
+                                case 1: return projectExplorer.bmpDuty[3];
+                                case 2: return projectExplorer.bmpDuty[7];
+                                default: return projectExplorer.bmpDuty7Inv;
+                            }
+                        }
+                    case SubButtonType.Arpeggio:
+                        return projectExplorer.bmpArpeggio;
+                    case SubButtonType.Pitch:
+                        return projectExplorer.bmpPitch;
+                    case SubButtonType.Volume:
+                        return projectExplorer.bmpVolume;
+                    case SubButtonType.LoadInstrument:
+                        return projectExplorer.bmpLoadInstrument;
+                }
+
+                return null;
+            }
         }
 
         int scrollY = 0;
@@ -182,8 +230,16 @@ namespace FamiStudio
 
         RenderTheme theme;
 
-        RenderBitmap[] bmpButtonIcons    = new RenderBitmap[(int)ButtonType.Max];
-        RenderBitmap[] bmpSubButtonIcons = new RenderBitmap[(int)SubButtonType.Max];
+        RenderBitmap   bmpSong;
+        RenderBitmap   bmpInstrument;
+        RenderBitmap   bmpAdd;
+        RenderBitmap   bmpDPCM;
+        RenderBitmap   bmpArpeggio;
+        RenderBitmap   bmpPitch;
+        RenderBitmap   bmpVolume;
+        RenderBitmap   bmpLoadInstrument;
+        RenderBitmap[] bmpDuty = new RenderBitmap[8];
+        RenderBitmap   bmpDuty7Inv;
 
         public Song SelectedSong => selectedSong;
         public Instrument SelectedInstrument => selectedInstrument;
@@ -237,17 +293,17 @@ namespace FamiStudio
         public void RefreshButtons()
         {
             buttons.Clear();
-            buttons.Add(new Button() { type = ButtonType.ProjectSettings });
-            buttons.Add(new Button() { type = ButtonType.SongHeader });
+            buttons.Add(new Button(this) { type = ButtonType.ProjectSettings });
+            buttons.Add(new Button(this) { type = ButtonType.SongHeader });
 
             foreach (var song in App.Project.Songs)
-                buttons.Add(new Button() { type = ButtonType.Song, song = song });
+                buttons.Add(new Button(this) { type = ButtonType.Song, song = song });
 
-            buttons.Add(new Button() { type = ButtonType.InstrumentHeader });
-            buttons.Add(new Button() { type = ButtonType.Instrument }); // null instrument = DPCM
+            buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader });
+            buttons.Add(new Button(this) { type = ButtonType.Instrument }); // null instrument = DPCM
 
             foreach (var instrument in App.Project.Instruments)
-                buttons.Add(new Button() { type = ButtonType.Instrument, instrument = instrument });
+                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument });
 
             UpdateRenderCoords();
         }
@@ -256,19 +312,23 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
-            bmpButtonIcons[(int)ButtonType.Song] = g.CreateBitmapFromResource("Music");
-            bmpButtonIcons[(int)ButtonType.Instrument] = g.CreateBitmapFromResource("Instrument");
-
-            bmpSubButtonIcons[(int)SubButtonType.Add] = g.CreateBitmapFromResource("Add");
-            bmpSubButtonIcons[(int)SubButtonType.DPCM] = g.CreateBitmapFromResource("DPCM");
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle0] = g.CreateBitmapFromResource("Duty1");
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle1] = g.CreateBitmapFromResource("Duty3");
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle2] = g.CreateBitmapFromResource("Duty7");
-            bmpSubButtonIcons[(int)SubButtonType.DutyCycle3] = g.CreateBitmapFromResource("Duty7Flip");
-            bmpSubButtonIcons[(int)SubButtonType.Arpeggio] = g.CreateBitmapFromResource("Arpeggio");
-            bmpSubButtonIcons[(int)SubButtonType.Pitch] = g.CreateBitmapFromResource("Pitch");
-            bmpSubButtonIcons[(int)SubButtonType.Volume] = g.CreateBitmapFromResource("Volume");
-            bmpSubButtonIcons[(int)SubButtonType.LoadInstrument] = g.CreateBitmapFromResource("InstrumentOpen");
+            bmpSong = g.CreateBitmapFromResource("Music");
+            bmpInstrument = g.CreateBitmapFromResource("Instrument");
+            bmpAdd = g.CreateBitmapFromResource("Add");
+            bmpDPCM = g.CreateBitmapFromResource("DPCM");
+            bmpDuty[0] = g.CreateBitmapFromResource("Duty1");
+            bmpDuty[1] = g.CreateBitmapFromResource("Duty2");
+            bmpDuty[2] = g.CreateBitmapFromResource("Duty3");
+            bmpDuty[3] = g.CreateBitmapFromResource("Duty3");
+            bmpDuty[4] = g.CreateBitmapFromResource("Duty4");
+            bmpDuty[5] = g.CreateBitmapFromResource("Duty5");
+            bmpDuty[6] = g.CreateBitmapFromResource("Duty6");
+            bmpDuty[7] = g.CreateBitmapFromResource("Duty7");
+            bmpDuty7Inv = g.CreateBitmapFromResource("Duty7Flip");
+            bmpArpeggio = g.CreateBitmapFromResource("Arpeggio");
+            bmpPitch = g.CreateBitmapFromResource("Pitch");
+            bmpVolume = g.CreateBitmapFromResource("Volume");
+            bmpLoadInstrument = g.CreateBitmapFromResource("InstrumentOpen");
         }
 
         public void ConditionalInvalidate()
@@ -288,7 +348,7 @@ namespace FamiStudio
 
             foreach (var button in buttons)
             {
-                var icon = bmpButtonIcons[(int)button.type];
+                var icon = button.GetIcon();
 
                 g.PushTranslation(0, y);
                 g.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.GetColor(), buttonSizeY, 0.8f), theme.BlackBrush);
@@ -304,7 +364,7 @@ namespace FamiStudio
                 {
                     for (int i = 0, x = actualWidth - subButtonSpacingX; i < subButtons.Length; i++, x -= subButtonSpacingX)
                     {
-                        g.DrawBitmap(bmpSubButtonIcons[(int)subButtons[i]], x, subButtonPosY, active[i] ? 1.0f : 0.2f);
+                        g.DrawBitmap(button.GetIcon(subButtons[i]), x, subButtonPosY, active[i] ? 1.0f : 0.2f);
                     }
                 }
 
@@ -435,7 +495,7 @@ namespace FamiStudio
                             tooltip = "{MouseLeft} Edit arpeggio enveloppe - {MouseRight} Delete envelope - {Drag} Copy envelope";
                         else if (subButtonType == SubButtonType.DPCM)
                             tooltip = "{MouseLeft} Edit DPCM samples";
-                        else if (subButtonType >= SubButtonType.DutyCycle0 && subButtonType <= SubButtonType.DutyCycle3)
+                        else if (subButtonType == SubButtonType.DutyCycle)
                             tooltip = "{MouseLeft} Change duty cycle";
                     }
                 }
@@ -481,7 +541,7 @@ namespace FamiStudio
                     var instrumentSrc = instrumentDrag;
                     var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
 
-                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null)
+                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null && instrumentSrc.ExpansionType == instrumentDst.ExpansionType)
                     {
                         if (envelopeDragIdx == -1)
                         {
@@ -647,9 +707,9 @@ namespace FamiStudio
                         {
                             InstrumentEdited?.Invoke(selectedInstrument, Envelope.Max);
                         }
-                        else if (subButtonType >= SubButtonType.DutyCycle0 && subButtonType <= SubButtonType.DutyCycle3)
+                        else if (subButtonType == SubButtonType.DutyCycle)
                         {
-                            selectedInstrument.DutyCycle = (selectedInstrument.DutyCycle + 1) % 4;
+                            selectedInstrument.DutyCycle = (selectedInstrument.DutyCycle + 1) % selectedInstrument.DutyCycleRange;
                         }
 
                         InstrumentSelected?.Invoke(selectedInstrument);

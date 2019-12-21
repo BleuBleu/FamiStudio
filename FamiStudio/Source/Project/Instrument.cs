@@ -18,6 +18,7 @@ namespace FamiStudio
         public Color Color { get => color; set => color = value; }
         public Envelope[] Envelopes => envelopes;
         public int DutyCycle { get => dutyCycle; set => dutyCycle = value; }
+        public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
 
         public Instrument()
         {
@@ -51,8 +52,9 @@ namespace FamiStudio
             buffer.Serialize(ref color);
             buffer.Serialize(ref dutyCycle);
 
-
-            buffer.Serialize(ref expansion);
+            // At version 4 (FamiStudio 1.4.0) we added basic expansion audio (VRC6).
+            if (buffer.Version >= 4)
+                buffer.Serialize(ref expansion);
 
             byte envelopeMask = 0;
             if (buffer.IsWriting)

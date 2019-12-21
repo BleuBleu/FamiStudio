@@ -224,14 +224,13 @@ namespace FamiStudio
         public void Validate(Channel channel)
         {
             Debug.Assert(this.song == channel.Song);
-            //Debug.Assert(lastValidNoteInstrument == null || song.Project.InstrumentExists(lastValidNoteInstrument));
-            //Debug.Assert(lastValidNoteInstrument == null || song.Project.GetInstrument(lastValidNoteInstrument.Id) == lastValidNoteInstrument);
 
             for (int i = 0; i < MaxLength; i++)
             {
                 var inst = notes[i].Instrument;
                 Debug.Assert(inst == null || song.Project.InstrumentExists(inst));
                 Debug.Assert(inst == null || song.Project.GetInstrument(inst.Id) == inst);
+                Debug.Assert(channel.SupportsInstrument(inst));
             }
         }
 #endif

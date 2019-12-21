@@ -14,26 +14,20 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
-            //if (note.IsStop)
-            //{
-            //    WriteApuRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
-            //}
-            //else if (note.IsValid)
-            //{
-            //    var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-            //    int period = Math.Min(NesApu.MaximumPeriod, noteTable[noteVal] + envelopeValues[Envelope.Pitch]);
+            if (note.IsStop)
+            {
+                WriteApuRegister(NesApu.VRC6_PL1_VOL + regOffset, (duty << 4));
+            }
+            else if (note.IsValid)
+            {
+                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
+                var period = Utils.Clamp(noteTable[noteVal] + slidePitch + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
+                var volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
 
-            //    WriteApuRegister(NesApu.APU_PL1_LO + regOffset, period & 0xff);
-            //    period = (period >> 8) & 0x07;
-
-            //    if (prevPulseHi != period)
-            //    {
-            //        prevPulseHi = period;
-            //        WriteApuRegister(NesApu.APU_PL1_HI + regOffset, period);
-            //    }
-
-            //    WriteApuRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]));
-            //}
+                WriteApuRegister(NesApu.VRC6_PL1_LO  + regOffset, period & 0xff);
+                WriteApuRegister(NesApu.VRC6_PL1_HI  + regOffset, ((period >> 8) & 0x0f) | 0x80);
+                WriteApuRegister(NesApu.VRC6_PL1_VOL + regOffset, (duty << 4) | volume);
+            }
         }
     };
 }

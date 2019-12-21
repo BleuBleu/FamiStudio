@@ -5,12 +5,15 @@
 - FamiTracker TXT import/export
 - NSF support too.
 - WAV support.
+- Tooltip warning on incomparible instruments
 x Lower register notes for VRC6? 
 - Slide notes.
 - NSF to test:
 	- Try putting multiple things at once: volume + slide, volume + jump, etc. etc. Must all work.
 	- Retest volume tracks
-	
+- Fix all MATTT
+- Make it very clear what is an expansion channel (color, icon, etc.). Visually must match instrument. 
+
 1.5.0: FDS & MMC5
 ================
 - FDS support in NesSndEmu 
