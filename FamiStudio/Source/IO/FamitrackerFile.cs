@@ -147,7 +147,7 @@ namespace FamiStudio
                     if (!project.IsInstrumentNameUnique(name))
                         name = param[6] + "-" + j++;
 
-                    var instrument = project.CreateInstrument(name);
+                    var instrument = project.CreateInstrument(Project.ExpansionNone, name);
 
                     if (vol >= 0) instrument.Envelopes[0] = envelopes[0][vol].Clone();
                     if (arp >= 0) instrument.Envelopes[1] = envelopes[1][arp].Clone();

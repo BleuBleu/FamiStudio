@@ -175,7 +175,7 @@ namespace FamiStudio
                     {
                         if (createMissing)
                         {
-                            var instrument = serializer.Project.CreateInstrument(instName);
+                            var instrument = serializer.Project.CreateInstrument(Project.ExpansionNone, instName); // MATTT
                             serializer.RemapId(instId, instrument.Id);
                             instrument.SerializeState(serializer);
                         }

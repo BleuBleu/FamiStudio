@@ -24,12 +24,12 @@ namespace FamiStudio
         private int type;
 
         public int Type => type;
-        public string Name => channelNames[(int)type];
+        public string Name => ChannelNames[(int)type];
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
 
-        static string[] channelNames =
+        public static string[] ChannelNames =
         {
             "Square 1",
             "Square 2",
@@ -38,8 +38,7 @@ namespace FamiStudio
             "DPCM",
             "Square 1", // VRC6
             "Square 2", // VRC6
-            "Saw", // VRC6
-            ""
+            "Saw" // VRC6
         };
 
         public Channel()

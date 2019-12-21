@@ -118,7 +118,18 @@ namespace FamiStudio
                     case ButtonType.SongHeader: return "Songs";
                     case ButtonType.Song: return song.Name;
                     case ButtonType.InstrumentHeader: return "Instruments";
-                    case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
+                    case ButtonType.Instrument:
+                        if (instrument == null)
+                        {
+                            return "DPCM Samples";
+                        }
+                        else
+                        {
+                            if (instrument.ExpansionType == Project.ExpansionNone)
+                                return instrument.Name;
+                            else
+                                return $"[{project.ExpansionAudioName}] {instrument.Name}";
+                        }
                 }
 
                 return "";
@@ -570,8 +581,22 @@ namespace FamiStudio
                     {
                         if (subButtonType == SubButtonType.Add)
                         {
+                            var instrumentType = Project.ExpansionNone;
+
+                            if (App.Project.ExpansionAudio != Project.ExpansionNone)
+                            {
+                                var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, true);
+                                dlg.Properties.AddStringList("Expansion:", Project.ExpansionNames, Project.ExpansionNames[0] ); // 0
+                                dlg.Properties.Build();
+
+                                if (dlg.ShowDialog() == DialogResult.OK)
+                                    instrumentType = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(0));
+                                else
+                                    return;
+                            }
+
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                            App.Project.CreateInstrument();
+                            App.Project.CreateInstrument(instrumentType);
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
                             ConditionalInvalidate();
@@ -727,7 +752,7 @@ namespace FamiStudio
                     dlg.Properties.AddString("Title :", project.Name, 31); // 0
                     dlg.Properties.AddString("Author :", project.Author, 31); // 1
                     dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
-                    dlg.Properties.AddStringList("Expansion Audio:", Enum.GetNames(typeof(Project.ExpansionAudioType)), project.ExpansionAudio.ToString()); // 3
+                    dlg.Properties.AddStringList("Expansion Audio:", Project.ExpansionNames, project.ExpansionAudioName); // 3
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog() == DialogResult.OK)
@@ -738,10 +763,10 @@ namespace FamiStudio
                         project.Author = dlg.Properties.GetPropertyValue<string>(1);
                         project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
 
-                        var expansion = (Project.ExpansionAudioType)Enum.Parse(typeof(Project.ExpansionAudioType), dlg.Properties.GetPropertyValue<string>(3));
+                        var expansion = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
                         if (expansion != project.ExpansionAudio)
                         {
-                            if (project.ExpansionAudio == Project.ExpansionAudioType.None ||
+                            if (project.ExpansionAudio == Project.ExpansionNone ||
                                 PlatformDialogs.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 project.SetExpansionAudio(expansion);

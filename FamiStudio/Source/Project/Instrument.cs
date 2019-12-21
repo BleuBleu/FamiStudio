@@ -5,21 +5,16 @@ namespace FamiStudio
 {
     public class Instrument
     {
-        // Instrument types.
-        public const int Apu   = 0;
-        public const int Vrc6  = 1;
-        public const int Count = 2;
-
         private int id;
         private string name;
-        private int type = Apu;
+        private int expansion = Project.ExpansionNone;
         private Envelope[] envelopes = new Envelope[Envelope.Max];
         private Color color;
         private int dutyCycle;
 
         public int Id => id;
         public string Name { get => name; set => name = value; }
-        public int Type { get => type; }
+        public int ExpansionType { get => expansion; }
         public Color Color { get => color; set => color = value; }
         public Envelope[] Envelopes => envelopes;
         public int DutyCycle { get => dutyCycle; set => dutyCycle = value; }
@@ -29,9 +24,10 @@ namespace FamiStudio
             // For serialization.
         }
 
-        public Instrument(int id, string name)
+        public Instrument(int id, int expansion, string name)
         {
             this.id = id;
+            this.expansion = expansion;
             this.name = name;
             this.color = ThemeBase.RandomCustomColor();
             for (int i = 0; i < Envelope.Max; i++)
@@ -54,6 +50,9 @@ namespace FamiStudio
             buffer.Serialize(ref name);
             buffer.Serialize(ref color);
             buffer.Serialize(ref dutyCycle);
+
+
+            buffer.Serialize(ref expansion);
 
             byte envelopeMask = 0;
             if (buffer.IsWriting)

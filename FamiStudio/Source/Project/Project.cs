@@ -13,10 +13,14 @@ namespace FamiStudio
         public static int Version = 4;
         public static int MaxSampleSize = 0x4000;
 
-        public enum ExpansionAudioType
+        public const int ExpansionNone  = 0;
+        public const int ExpansionVRC6  = 1;
+        public const int ExpansionCount = 2;
+
+        public static string[] ExpansionNames =
         {
-            None,
-            VRC6
+            "None",
+            "VRC6"
         };
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
@@ -28,14 +32,15 @@ namespace FamiStudio
         private string name = "Untitled";
         private string author = "Unknown";
         private string copyright = "";
-        private ExpansionAudioType expansionAudio = ExpansionAudioType.None;
+        private int expansionAudio = ExpansionNone;
 
         public List<DPCMSample>    Samples        => samples;
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
         public int                 NextUniqueId   => nextUniqueId;
-        public ExpansionAudioType  ExpansionAudio => expansionAudio;
+        public int                 ExpansionAudio => expansionAudio;
+        public string              ExpansionAudioName => ExpansionNames[expansionAudio];
 
         public string              Filename   { get => filename; set => filename = value; }
         public string              Name       { get => name; set => name = value; }
@@ -47,7 +52,7 @@ namespace FamiStudio
             if (createSongAndInstrument)
             {
                 CreateSong();
-                CreateInstrument();
+                CreateInstrument(ExpansionNone);
             }
         }
 
@@ -210,14 +215,16 @@ namespace FamiStudio
             return instruments.Find(inst => inst.Name == name) == null;
         }
 
-        public Instrument CreateInstrument(string name = null)
+        public Instrument CreateInstrument(int type, string name = null)
         {
             if (name == null)
                 name = GenerateUniqueInstrumentName();
             else if (instruments.Find(inst => inst.Name == name) != null)
                 return null;
 
-            var instrument = new Instrument(GenerateUniqueId(), name);
+            Debug.Assert(type == ExpansionNone || type == expansionAudio);
+
+            var instrument = new Instrument(GenerateUniqueId(), type, name);
             instruments.Add(instrument);
             SortInstruments();
             return instrument;
@@ -346,7 +353,7 @@ namespace FamiStudio
             songs.Sort((s1, s2) => s1.Name.CompareTo(s2.Name));
         }
 
-        public void SetExpansionAudio(ExpansionAudioType expansion)
+        public void SetExpansionAudio(int expansion)
         {
             expansionAudio = expansion;
 
@@ -370,7 +377,7 @@ namespace FamiStudio
                 return true;
 
             if (channelType >= Channel.VRC6Square1 && channelType <= Channel.VRC6Saw)
-                return expansionAudio == ExpansionAudioType.VRC6;
+                return expansionAudio == Project.ExpansionVRC6;
 
             Debug.Assert(false);
 

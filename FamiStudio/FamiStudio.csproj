@@ -250,6 +250,8 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\InstrumentExp%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentExp.png" />
     <EmbeddedResource Include="Resources\Duty4%402x.png" />
     <EmbeddedResource Include="Resources\Duty4.png" />
     <EmbeddedResource Include="Resources\Duty5%402x.png" />
@@ -262,8 +264,6 @@
     <EmbeddedResource Include="Resources\Duty7Flip.png" />
     <EmbeddedResource Include="Resources\Instrument%402x.png" />
     <EmbeddedResource Include="Resources\Instrument.png" />
-    <EmbeddedResource Include="Resources\Konami%402x.png" />
-    <EmbeddedResource Include="Resources\Konami.png" />
     <EmbeddedResource Include="Resources\PortamentoSmall%402x.png" />
     <EmbeddedResource Include="Resources\PortamentoSmall.png" />
     <EmbeddedResource Include="Resources\Saw%402x.png" />
@@ -314,7 +314,6 @@
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
     <EmbeddedResource Include="Resources\JumpSmall%402x.png" />
     <EmbeddedResource Include="Resources\Noise%402x.png" />
-    <EmbeddedResource Include="Resources\Pattern%402x.png" />
     <EmbeddedResource Include="Resources\Pitch%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmall%402x.png" />
     <EmbeddedResource Include="Resources\SpeedSmall%402x.png" />
@@ -352,7 +351,6 @@
     <EmbeddedResource Include="Resources\File.png" />
     <EmbeddedResource Include="Resources\Music.png" />
     <EmbeddedResource Include="Resources\Open.png" />
-    <EmbeddedResource Include="Resources\Pattern.png" />
     <EmbeddedResource Include="Resources\Play.png" />
     <EmbeddedResource Include="Resources\Redo.png" />
     <EmbeddedResource Include="Resources\Rewind.png" />

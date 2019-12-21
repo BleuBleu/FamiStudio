@@ -264,7 +264,7 @@ namespace FamiStudio
         protected override Instrument Convert(Project project, int iVersion)
         {
             var name = GetName();
-            var instrument = project.CreateInstrument(name);
+            var instrument = project.CreateInstrument(Project.ExpansionNone, name); // MATTT
             if (instrument == null)
                 return null;
 

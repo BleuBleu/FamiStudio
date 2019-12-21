@@ -139,9 +139,9 @@ namespace FamiStudio
         {
             switch (project.ExpansionAudio)
             {
-                case Project.ExpansionAudioType.None:
+                case Project.ExpansionNone:
                     return NesApu.APU_EXPANSION_NONE;
-                case Project.ExpansionAudioType.VRC6:
+                case Project.ExpansionVRC6:
                     return NesApu.APU_EXPANSION_VRC6;
             }
 
