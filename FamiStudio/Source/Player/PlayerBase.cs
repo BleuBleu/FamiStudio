@@ -105,9 +105,9 @@ namespace FamiStudio
                 case Channel.Triangle:
                     return new ApuTriangleChannelState(apuIdx, channelType);
                 case Channel.Noise:
-                    return new ApuSquareChannelState(apuIdx, channelType);
+                    return new ApuNoiseChannelState(apuIdx, channelType);
                 case Channel.DPCM:
-                    return new ApuSquareChannelState(apuIdx, channelType);
+                    return new ApuDpcmChannelState(apuIdx, channelType);
                 case Channel.VRC6Square1:
                     return new Vrc6SquareChannelState(apuIdx, channelType);
                 case Channel.VRC6Square2:

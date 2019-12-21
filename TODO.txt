@@ -1,11 +1,12 @@
 1.4.0: VRC6
 ===========
 - GOAL: Play Shovel Knight first track.
-- Refactor to have variying number of channels
+
+x Refactor to have variying number of channels
 - FamiTracker TXT import/export
 - NSF support too.
 - WAV support.
-- Tooltip warning on incomparible instruments
+x Tooltip warning on incomparible instruments
 x Lower register notes for VRC6? 
 - Slide notes.
 - NSF to test:
@@ -13,7 +14,6 @@ x Lower register notes for VRC6?
 	- Retest volume tracks
 - Fix all MATTT
 - Make it very clear what is an expansion channel (color, icon, etc.). Visually must match instrument. 
-- Saw is too low in the MIX? (smurf song).
 
 1.5.0: FDS & MMC5
 ================
