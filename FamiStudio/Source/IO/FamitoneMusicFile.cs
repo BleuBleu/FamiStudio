@@ -707,6 +707,8 @@ namespace FamiStudio
                         env.Release = -1;
                     }
                 }
+
+                project.SetExpansionAudio(Project.ExpansionNone);
             }
         }
 

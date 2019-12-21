@@ -82,6 +82,7 @@ namespace FamiStudio
                     header.playAddr = NsfPlayAddr;
                     header.playSpeedNTSC = 16639;
                     header.playSpeedPAL = 19997;
+                    header.extensionFlags = (byte)(project.ExpansionAudio == Project.ExpansionVRC6 ? 1 : 0);
                     header.banks[0] = 0;
                     header.banks[1] = 1;
                     header.banks[2] = 2;
@@ -103,7 +104,16 @@ namespace FamiStudio
                     Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);
                     file.Write(headerBytes, 0, headerBytes.Length);
 
-                    string kernelBinary = kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2 ? "nsf_ft2.bin" : "nsf_ft2_fs.bin";
+                    string kernelBinary;
+
+                    if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2)
+                    {
+                        kernelBinary = project.ExpansionAudio == Project.ExpansionVRC6 ? "nsf_ft2_fs_vrc6.bin" : "nsf_ft2_fs.bin";
+                    }
+                    else
+                    {
+                        kernelBinary = "nsf_ft2.bin";
+                    }
 
                     // Code/sound engine
                     var nsfBinStream = typeof(NsfFile).Assembly.GetManifestResourceStream("FamiStudio.Nsf." + kernelBinary);
