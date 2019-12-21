@@ -623,7 +623,7 @@ namespace FamiStudio
             int bestChannel = 0;
             int bestFactor = 1;
 
-            for (int speedChannel = 0; speedChannel < Channel.Count; speedChannel++)
+            for (int speedChannel = 0; speedChannel < song.Channels.Length; speedChannel++)
             {
                 for (int factor = 1; factor <= song.PatternLength; factor++)
                 {

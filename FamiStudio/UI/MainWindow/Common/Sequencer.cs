@@ -939,7 +939,7 @@ namespace FamiStudio
                 minSelectedPatternIdx = patternIdx;
                 maxSelectedPatternIdx = patternIdx;
                 minSelectedChannelIdx = 0;
-                maxSelectedChannelIdx = Channel.Count - 1;
+                maxSelectedChannelIdx = Song.Channels.Length - 1;
             }
             else
             {
@@ -969,7 +969,7 @@ namespace FamiStudio
 
         private int GetTrackIconForPos(MouseEventArgs e)
         {
-            for (int i = 0; i < Channel.Count; i++)
+            for (int i = 0; i < Song.Channels.Length; i++)
             {
                 if (GetTrackIconRect(i).Contains(e.X, e.Y))
                     return i;
@@ -980,7 +980,7 @@ namespace FamiStudio
 
         private int GetTrackGhostForPos(MouseEventArgs e)
         {
-            for (int i = 0; i < Channel.Count; i++)
+            for (int i = 0; i < Song.Channels.Length; i++)
             {
                 if (GetTrackGhostRect(i).Contains(e.X, e.Y))
                     return i;

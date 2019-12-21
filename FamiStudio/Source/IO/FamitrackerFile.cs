@@ -564,7 +564,7 @@ namespace FamiStudio
                 {
                     var line = $"ORDER {j:X2} :";
 
-                    for (int k = 0; k < Channel.Count; k++)
+                    for (int k = 0; k < song.Channels.Length; k++)
                     {
                         line += $" {song.Channels[k].Patterns.IndexOf(song.Channels[k].PatternInstances[j]):X2}";
                     }
@@ -585,7 +585,7 @@ namespace FamiStudio
                     for (int k = 0; k < song.PatternLength; k++)
                     {
                         var line = $"ROW {k:X2}";
-                        for (int l = 0; l < Channel.Count; l++)
+                        for (int l = 0; l < song.Channels.Length; l++)
                         {
                             var channel = song.Channels[l];
 

@@ -99,7 +99,6 @@ namespace FamiStudio
             switch (channelType)
             {
                 case Channel.Square1:
-                    return new ApuSquareChannelState(apuIdx, channelType);
                 case Channel.Square2:
                     return new ApuSquareChannelState(apuIdx, channelType);
                 case Channel.Triangle:
@@ -109,7 +108,6 @@ namespace FamiStudio
                 case Channel.DPCM:
                     return new ApuDpcmChannelState(apuIdx, channelType);
                 case Channel.VRC6Square1:
-                    return new Vrc6SquareChannelState(apuIdx, channelType);
                 case Channel.VRC6Square2:
                     return new Vrc6SquareChannelState(apuIdx, channelType);
                 case Channel.VRC6Saw:
