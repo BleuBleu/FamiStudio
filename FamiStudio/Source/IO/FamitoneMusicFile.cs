@@ -392,6 +392,31 @@ namespace FamiStudio
             }
         }
 
+        private bool IsPreviousNoteManualSlide(Channel channel, int patternIdx, int noteIdx)
+        {
+            if (--noteIdx < 0)
+            {
+                if (--patternIdx < 0)
+                    return false;
+            }
+
+            for (int p = patternIdx; p >= 0; p--)
+            {
+                for (int n = noteIdx; n >= 0; n--)
+                {
+                    var note = channel.PatternInstances[patternIdx].Notes[noteIdx];
+
+                    if (note.IsMusical && note.IsSlideNote && note.SlideStep != 0)
+                        return true;
+
+                    if (note.IsMusical || note.IsStop)
+                        return false;
+                }
+            }
+
+            return false;
+        }
+
         private int OutputSong(Song song, int songIdx, int speedChannel, int factor, bool test)
         {
             var packedPatternBuffers = new List<List<byte>>(globalPacketPatternBuffers);
@@ -519,11 +544,11 @@ namespace FamiStudio
                                 {
                                     if (note.SlideStep == 0)
                                     {
-                                        if (channel.ComputeAutoSlideNoteParams(p, i - 1, note.Value, out int stepCount, out int stepSize, out int targetNote))
+                                        if (channel.ComputeAutoSlideNoteParams(p, i - 1, note.Value, out _, out int stepCount, out int stepSize, out int targetNote))
                                         {
                                             patternBuffer.Add(0x61);
-                                            patternBuffer.Add((byte)stepCount);
                                             patternBuffer.Add((byte)stepSize);
+                                            patternBuffer.Add((byte)stepCount);
                                             patternBuffer.Add(EncodeNoteValue(c, targetNote, numNotes));
                                             continue;
                                         }
@@ -531,11 +556,15 @@ namespace FamiStudio
                                     else
                                     {
                                         patternBuffer.Add(0x61);
-                                        patternBuffer.Add((byte)255);
                                         patternBuffer.Add((byte)note.SlideStep);
-                                        patternBuffer.Add((byte)Note.NoteInvalid);
+                                        patternBuffer.Add((byte)255);
+                                        patternBuffer.Add(EncodeNoteValue(c, note.Value, numNotes));
                                         continue;
                                     }
+                                }
+                                else if (IsPreviousNoteManualSlide(channel, p, i - 1))
+                                {
+                                    patternBuffer.Add(0x62);
                                 }
                             }
 

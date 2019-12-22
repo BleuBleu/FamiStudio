@@ -13,7 +13,6 @@ namespace FamiStudio
         protected int slidePitch = 0;
         protected int slideStepCount = 0;
         protected int slideStep = 0;
-        protected int slideTargetNote = Note.NoteInvalid;
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
         protected int duty;
@@ -72,22 +71,25 @@ namespace FamiStudio
             var tmpNote = pattern.Notes[noteIdx];
             if (tmpNote.IsValid)
             {
-                slidePitch = 0;
-                slideStep = 0;
-                slideStepCount = 0;
-                slideTargetNote = Note.NoteInvalid;
+                //slidePitch = 0;
+                //slideStep = 0;
+                //slideStepCount = 0;
 
                 if (tmpNote.IsSlideNote)
                 {
                     if (tmpNote.SlideStep == 0)
                     {
-                        channel.ComputeAutoSlideNoteParams(patternIdx, noteIdx, tmpNote.Value, out slideStepCount, out slideStep, out slideTargetNote);
+                        if (channel.ComputeAutoSlideNoteParams(patternIdx, noteIdx, tmpNote.Value, out slidePitch, out slideStepCount, out slideStep, out int slideTargetNote))
+                            tmpNote.Value = (byte)slideTargetNote;
                     }
                     else
                     {
-                        slideTargetNote = Note.NoteInvalid;
-                        slideStep = tmpNote.SlideStep;
-                        slideStepCount = 255;
+                        if (channel.ComputeManualSlideNoteParams(patternIdx, noteIdx, out slideStepCount))
+                        {
+                            slidePitch = 0;
+                            slideStep = tmpNote.SlideStep;
+                        }
+                            //slideStepCount = 255;
                     }
                 }
 
@@ -131,46 +133,42 @@ namespace FamiStudio
         public void UpdateEnvelopes()
         {
             var instrument = note.Instrument;
-            if (instrument == null)
-                return;
-
-            for (int j = 0; j < Envelope.Max; j++)
+            if (instrument != null)
             {
-                if (instrument.Envelopes[j] == null ||
-                    instrument.Envelopes[j].Length <= 0)
+                for (int j = 0; j < Envelope.Max; j++)
                 {
-                    if (j == Envelope.Volume)
-                        envelopeValues[j] = 15;
+                    if (instrument.Envelopes[j] == null ||
+                        instrument.Envelopes[j].Length <= 0)
+                    {
+                        if (j == Envelope.Volume)
+                            envelopeValues[j] = 15;
+                        else
+                            envelopeValues[j] = 0;
+                        continue;
+                    }
+
+                    var idx = envelopeIdx[j];
+                    var env = instrument.Envelopes[j];
+
+                    envelopeValues[j] = instrument.Envelopes[j].Values[idx];
+
+                    idx++;
+
+                    if (env.Release >= 0 && idx == env.Release)
+                        envelopeIdx[j] = env.Loop;
+                    else if (idx >= env.Length)
+                        envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : env.Length - 1;
                     else
-                        envelopeValues[j] = 0;
-                    continue;
+                        envelopeIdx[j] = idx;
                 }
-
-                var idx = envelopeIdx[j];
-                var env = instrument.Envelopes[j];
-
-                envelopeValues[j] = instrument.Envelopes[j].Values[idx];
-
-                idx++;
-
-                if (env.Release >= 0 && idx == env.Release)
-                    envelopeIdx[j] = env.Loop;
-                else if (idx >= env.Length)
-                    envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : env.Length - 1;
-                else
-                    envelopeIdx[j] = idx;
             }
 
             // Update slide.
             if (slideStepCount > 0)
             {
                 slidePitch += slideStep;
-                slideStepCount--;
-                if (slideStepCount == 0 && slideTargetNote != Note.NoteInvalid)
-                {
+                if (--slideStepCount == 0)
                     slidePitch = 0;
-                    note.Value = (byte)slideTargetNote;
-                }
             }
         }
 

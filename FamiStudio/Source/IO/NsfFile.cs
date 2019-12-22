@@ -21,9 +21,9 @@ namespace FamiStudio
         //   0xc000: DPCM samples (16KB max, if the song uses them)
 
         const int NsfCodeStart       = 0x8000;
-        const int NsfInitAddr        = 0x8800; // Hardcoded in asm config.
-        const int NsfPlayAddr        = 0x8880; // Hardcoded in asm config.
-        const int NsfSongTableAddr   = 0x8900; // Hardcoded in asm.
+        const int NsfInitAddr        = 0x8900; // Hardcoded in asm config.
+        const int NsfPlayAddr        = 0x8980; // Hardcoded in asm config.
+        const int NsfSongTableAddr   = 0x8a00; // Hardcoded in asm.
         const int NsfSongAddr        = 0x9000;
         const int NsfDpcmOffset      = 0xc000;
         const int NsfPageSize        = 0x1000;

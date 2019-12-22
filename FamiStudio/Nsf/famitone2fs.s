@@ -990,12 +990,17 @@ _FT2ChannelUpdate:
 	lda (FT_TEMP_PTR),y		;read byte of the channel
 
 	inc <FT_TEMP_PTR_L		;advance pointer
-	bne @no_inc_ptr1
+	bne @check_regular_note
 	inc <FT_TEMP_PTR_H
-@no_inc_ptr1:
+@check_regular_note:
+	cmp #$61
+	bcs @check_special_code			; $00 to $60 are regular notes, most common case.
+	jmp @store_note
 
+@check_special_code:
 	ora #0
-	bmi @special_code		;bit 7 0=note 1=special code
+	bpl @check_volume
+	jmp @special_code		;bit 7 0=note 1=special code
 
 @check_volume:
 	cmp #$70
@@ -1010,26 +1015,39 @@ _FT2ChannelUpdate:
 
 @check_slide:
 	cmp #$61				; slide note (followed by num steps, step size and the target note)
-	bne @store_note
+	beq @read_slide_num_steps
 
-@read_slide_num_steps:
+@check_slide_cancel:	
+	;cmp #$62				; reset after a manual slide.
+	stx <FT_TEMP_VAR1
+	lda _FT2ChannelToSlide - .lobyte(FT_CHANNELS),x
+	tax
+	lda #0
+	sta FT_SLIDE_REPEAT,x
+	ldx <FT_TEMP_VAR1	
+	jmp @read_byte
+
+@read_slide_step_size:
 	stx <FT_TEMP_VAR1
 	lda _FT2ChannelToSlide - .lobyte(FT_CHANNELS),x
 	tax
 	lda (FT_TEMP_PTR),y
-	sta FT_SLIDE_REPEAT,x
+	sta FT_SLIDE_STEP,x
 	inc <FT_TEMP_PTR_L
-	bne @read_slide_step_size
+	bne @read_slide_num_steps
 	inc <FT_TEMP_PTR_H
 
-@read_slide_step_size:
+@read_slide_num_steps:
 	lda (FT_TEMP_PTR),y
-	sta FT_SLIDE_STEP,x
+	sta FT_SLIDE_REPEAT,x
 	inc <FT_TEMP_PTR_L
 	bne @read_slide_note
 	inc <FT_TEMP_PTR_H
 
 @read_slide_note:
+	cmp #$ff
+	beq @manual_slide
+@auto_slide:
 	stx <FT_TEMP_VAR2
 	sty <FT_TEMP_PTR2
 	lda (FT_TEMP_PTR),y		; new note
@@ -1037,7 +1055,7 @@ _FT2ChannelUpdate:
 	ldy FT_CHN_NOTE,x		; current note
 	sta FT_CHN_NOTE,x		; store note code
 	tax 
-	sec						; subtract the pitch of both notes. TODO: Saw channel.
+	sec						; subtract the pitch of both notes. TODO: PAL + Saw channel.
 	lda _FT2NoteTableLSB,y
 	sbc _FT2NoteTableLSB,x
 	sta <FT_TEMP_PTR2_H
@@ -1048,10 +1066,15 @@ _FT2ChannelUpdate:
 	sta FT_SLIDE_PITCH_H,x
 	lda <FT_TEMP_PTR2_H
 	sta FT_SLIDE_PITCH_L,x
-
 	ldx <FT_TEMP_VAR1
 	sec						;new note flag is set
 	jmp @done ;bra
+
+@manual_slide:
+	lda #0
+	sta FT_SLIDE_PITCH_H,x
+	sta FT_SLIDE_PITCH_L,x
+	lda (FT_TEMP_PTR),y		; new note
 
 @store_note:	
 	sta FT_CHN_NOTE,x		;store note code
@@ -1065,7 +1088,7 @@ _FT2ChannelUpdate:
 	asl a
 	asl a
 	sta FT_CHN_INSTRUMENT,x	;store instrument number*4
-	bcc @read_byte ;bra
+	jmp @read_byte 
 
 @set_empty_rows:
 	cmp #$3b

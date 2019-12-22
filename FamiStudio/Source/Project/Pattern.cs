@@ -167,14 +167,12 @@ namespace FamiStudio
                 }
             }
 
-            firstValidNoteTime = 0;
+            firstValidNoteTime = -1;
 
             for (int i = 0; i < song.PatternLength; i++)
             {
                 var note = notes[i];
-
-                // The first note is only used for slide notes for now. 
-                if (note.IsMusical)
+                if (note.IsMusical || note.IsStop)
                 {
                     firstValidNoteTime = (byte)i;
                     break;
@@ -195,7 +193,6 @@ namespace FamiStudio
                 return notes[firstValidNoteTime];
             }
         }
-
         public int LastValidNoteTime
         {
             get { return lastValidNoteTime; }

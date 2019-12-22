@@ -1459,26 +1459,6 @@ namespace FamiStudio
                     ConditionalInvalidate();
                 }
             }
-            else if (left && editMode == EditionMode.Channel && foundNote && e.Y > headerSizeY && e.X > whiteKeySizeX)
-            {
-                var channel = Song.Channels[editChannel];
-                var pattern = channel.PatternInstances[patternIdx];
-
-                if (pattern.Notes[noteIdx].IsSlideNote)
-                {
-                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 200);
-                    dlg.Properties.AddStringList("Slide Mode :", new[] { "Auto", "Manual" }, "Auto"); // 0
-                    dlg.Properties.AddIntegerRange("Step Size :", 0, -128, 127); // 1
-                    dlg.Properties.SetPropertyEnabled(1, false);
-                    dlg.Properties.Build();
-
-                    if (dlg.ShowDialog() == DialogResult.OK)
-                    {
-                        //var newName = dlg.Properties.GetPropertyValue<string>(0);
-
-                    }
-                }
-            }
         }
 
         private void CaptureMouse(MouseEventArgs e)

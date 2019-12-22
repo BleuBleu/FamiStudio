@@ -289,7 +289,7 @@ namespace FamiStudio
             Debug.Assert(pattern.Notes[nextNoteIdx].IsSlideNote);
 
             nextNoteIdx++;
-            while (nextNoteIdx < song.PatternLength && !pattern.Notes[nextNoteIdx].IsMusical) nextNoteIdx++;
+            while (nextNoteIdx < song.PatternLength && !pattern.Notes[nextNoteIdx].IsMusical && !pattern.Notes[nextNoteIdx].IsStop) nextNoteIdx++;
 
             if (nextNoteIdx < song.PatternLength)
                 return true;
@@ -310,11 +310,12 @@ namespace FamiStudio
             return false;
         }
 
-        public bool ComputeAutoSlideNoteParams(int patternIdx, int noteIdx, int currNote, out int stepCount, out int stepSize, out int targetNote)
+        public bool ComputeAutoSlideNoteParams(int patternIdx, int noteIdx, int currNote, out int pitchDelta, out int stepCount, out int stepSize, out int targetNote)
         {
             stepCount  = 0;
             stepSize   = 0;
             targetNote = Note.NoteInvalid;
+            pitchDelta = 0;
 
             var nextPatternIdx = patternIdx;
             var nextNoteIdx    = noteIdx;
@@ -322,18 +323,21 @@ namespace FamiStudio
             if (!FindNextNoteForSlide(ref nextPatternIdx, ref nextNoteIdx))
                 return false;
 
+            var nextNote = patternInstances[nextPatternIdx].Notes[nextNoteIdx].Value;
+            if (nextNote == Note.NoteStop)
+                return false;
+
             var noteDuration = (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx); 
-
             if (noteDuration < 0)
-                noteDuration = 255;
+                noteDuration = 254;
 
-            var nextNote   = patternInstances[nextPatternIdx].Notes[nextNoteIdx].Value;
             var noteTable  = NesApu.GetNoteTableForChannelType(type, false);
-            var pitchDelta = (int)noteTable[currNote] - (int)noteTable[nextNote];
+
+            pitchDelta = (int)noteTable[currNote] - (int)noteTable[nextNote];
 
             if (pitchDelta != 0)
             {
-                var frameCount = Math.Min(noteDuration * song.Speed, 255);
+                var frameCount = Math.Min(noteDuration * song.Speed, 254);
                 var floatStep = Math.Abs(pitchDelta) / (float)frameCount;
 
                 targetNote = nextNote;
@@ -348,6 +352,27 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        public bool ComputeManualSlideNoteParams(int patternIdx, int noteIdx, out int stepCount)
+        {
+            stepCount = 0;
+
+            var nextPatternIdx = patternIdx;
+            var nextNoteIdx = noteIdx;
+
+            if (!FindNextNoteForSlide(ref nextPatternIdx, ref nextNoteIdx))
+                return false;
+
+            var nextNote = patternInstances[nextPatternIdx].Notes[nextNoteIdx].Value;
+            var noteDuration = (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx);
+
+            if (noteDuration < 0)
+                noteDuration = 255;
+
+            stepCount = Math.Min(noteDuration * song.Speed + 1, 255);
+
+            return true;
         }
 
         public bool FindPreviousMatchingNote(int noteValue, ref int patternIdx, ref int noteIdx)
