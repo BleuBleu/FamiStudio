@@ -283,19 +283,16 @@ namespace FamiStudio
             return int.MinValue;
         }
 
-        private int FindSlideNoteDuration(int patternIdx, int noteIdx)
+        private bool FindNextNoteForSlide(ref int nextPatternIdx, ref int nextNoteIdx)
         {
-            var nextPatternIdx = patternIdx;
-            var nextNoteIdx    = noteIdx;
-
             var pattern = patternInstances[nextPatternIdx];
             Debug.Assert(pattern.Notes[nextNoteIdx].IsSlideNote);
 
             nextNoteIdx++;
-            while (nextNoteIdx < song.PatternLength && !pattern.Notes[nextNoteIdx].IsValid) nextNoteIdx++;
+            while (nextNoteIdx < song.PatternLength && !pattern.Notes[nextNoteIdx].IsMusical) nextNoteIdx++;
 
             if (nextNoteIdx < song.PatternLength)
-                return (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx);
+                return true;
 
             nextPatternIdx++;
             while (nextPatternIdx < song.Length)
@@ -304,37 +301,43 @@ namespace FamiStudio
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
                 {
                     nextNoteIdx = pattern.FirstValidNoteTime;
-                    return (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx);
+                    return true;
                 }
 
                 nextPatternIdx++;
             }
 
-            return -1;
+            return false;
         }
 
-        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, int prevNote, out int pitchDelta, out int stepCount, out int stepSize)
+        public bool ComputeAutoSlideNoteParams(int patternIdx, int noteIdx, int currNote, out int stepCount, out int stepSize, out int targetNote)
         {
-            pitchDelta = 0;
             stepCount  = 0;
             stepSize   = 0;
+            targetNote = Note.NoteInvalid;
 
-            int noteDuration = FindSlideNoteDuration(patternIdx, noteIdx);
+            var nextPatternIdx = patternIdx;
+            var nextNoteIdx    = noteIdx;
+
+            if (!FindNextNoteForSlide(ref nextPatternIdx, ref nextNoteIdx))
+                return false;
+
+            var noteDuration = (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx); 
 
             if (noteDuration < 0)
                 noteDuration = 255;
 
-            var currNote  = patternInstances[patternIdx].Notes[noteIdx].Value;
-            var noteTable = NesApu.GetNoteTableForChannelType(type, false);
-
-            pitchDelta = (int)noteTable[prevNote] - (int)noteTable[currNote];
+            var nextNote   = patternInstances[nextPatternIdx].Notes[nextNoteIdx].Value;
+            var noteTable  = NesApu.GetNoteTableForChannelType(type, false);
+            var pitchDelta = (int)noteTable[currNote] - (int)noteTable[nextNote];
 
             if (pitchDelta != 0)
             {
                 var frameCount = Math.Min(noteDuration * song.Speed, 255);
                 var floatStep = Math.Abs(pitchDelta) / (float)frameCount;
 
-                stepSize  = (int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta);
+                targetNote = nextNote;
+                stepSize = (int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta);
                 stepCount = Math.Abs(pitchDelta / stepSize);
 
                 Debug.Assert(stepCount < 255);

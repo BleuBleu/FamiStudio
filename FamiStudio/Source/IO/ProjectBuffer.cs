@@ -9,6 +9,7 @@ namespace FamiStudio
     {
         void Serialize(ref bool b);
         void Serialize(ref byte b);
+        void Serialize(ref sbyte b);
         void Serialize(ref int b, bool id = false);
         void Serialize(ref uint b);
         void Serialize(ref ulong b);
@@ -57,6 +58,12 @@ namespace FamiStudio
         {
             buffer.Add(b);
             idx += sizeof(byte);
+        }
+
+        public void Serialize(ref sbyte b)
+        {
+            buffer.Add((byte)b);
+            idx += sizeof(sbyte);
         }
 
         public void Serialize(ref int i, bool id = false)
@@ -186,6 +193,12 @@ namespace FamiStudio
         {
             b = buffer[idx];
             idx += sizeof(byte);
+        }
+
+        public void Serialize(ref sbyte b)
+        {
+            b = (sbyte)buffer[idx];
+            idx += sizeof(sbyte);
         }
 
         public void Serialize(ref int i, bool id = false)

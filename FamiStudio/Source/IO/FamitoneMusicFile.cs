@@ -515,13 +515,26 @@ namespace FamiStudio
 
                             if (kernel == FamiToneKernel.FamiTone2FS)
                             {
-                                if (prevNoteValue != Note.NoteInvalid && note.IsSlideNote)
+                                if (note.IsSlideNote)
                                 {
-                                    if (channel.ComputeSlideNoteParams(p, i - 1, prevNoteValue, out _, out int stepCount, out int stepSize))
+                                    if (note.SlideStep == 0)
+                                    {
+                                        if (channel.ComputeAutoSlideNoteParams(p, i - 1, note.Value, out int stepCount, out int stepSize, out int targetNote))
+                                        {
+                                            patternBuffer.Add(0x61);
+                                            patternBuffer.Add((byte)stepCount);
+                                            patternBuffer.Add((byte)stepSize);
+                                            patternBuffer.Add(EncodeNoteValue(c, targetNote, numNotes));
+                                            continue;
+                                        }
+                                    }
+                                    else
                                     {
                                         patternBuffer.Add(0x61);
-                                        patternBuffer.Add((byte)stepCount);
-                                        patternBuffer.Add((byte)stepSize);
+                                        patternBuffer.Add((byte)255);
+                                        patternBuffer.Add((byte)note.SlideStep);
+                                        patternBuffer.Add((byte)Note.NoteInvalid);
+                                        continue;
                                     }
                                 }
                             }

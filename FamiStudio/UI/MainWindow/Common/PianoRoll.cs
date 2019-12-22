@@ -32,6 +32,10 @@ namespace FamiStudio
         const int MaxZoomLevel = 4;
         const int ScrollMargin = 128;
 
+        const int SpecialEffectVolume = -2;
+        const int SpecialEffectSlide  = -1;
+        const int SpecialEffectCount  =  2;
+
         const int DefaultNumOctavesChannel      = 8;
         const int DefaultBaseOctaveChannel      = 0;
         const int DefaultNumOctavesEnvelope     = 7;
@@ -123,9 +127,8 @@ namespace FamiStudio
         RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
         RenderBitmap bmpEffectCollapsed;
-        RenderBitmap bmpVolume;
         RenderBitmap bmpSlide;
-        RenderBitmap[] bmpEffects = new RenderBitmap[3];
+        RenderBitmap[] bmpEffects = new RenderBitmap[5];
         RenderBitmap[] bmpEffectsFilled = new RenderBitmap[3];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
@@ -159,7 +162,7 @@ namespace FamiStudio
         int scrollX = 0;
         int scrollY = 0;
         int zoomLevel = 0;
-        int selectedEffectIdx = -1; // -1 = volume
+        int selectedEffectIdx = SpecialEffectVolume;
 
         EditionMode editMode = EditionMode.None;
 
@@ -359,10 +362,11 @@ namespace FamiStudio
             selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
-            bmpVolume = g.CreateBitmapFromResource("VolumeSmall");
-            bmpEffects[0] = g.CreateBitmapFromResource("LoopSmall");
-            bmpEffects[1] = g.CreateBitmapFromResource("JumpSmall");
-            bmpEffects[2] = g.CreateBitmapFromResource("SpeedSmall");
+            bmpEffects[0] = g.CreateBitmapFromResource("VolumeSmall");
+            bmpEffects[1] = g.CreateBitmapFromResource("VolumeSmall");
+            bmpEffects[2] = g.CreateBitmapFromResource("LoopSmall");
+            bmpEffects[3] = g.CreateBitmapFromResource("JumpSmall");
+            bmpEffects[4] = g.CreateBitmapFromResource("SpeedSmall");
             bmpEffectsFilled[0] = g.CreateBitmapFromResource("LoopSmallFill");
             bmpEffectsFilled[1] = g.CreateBitmapFromResource("JumpSmallFill");
             bmpEffectsFilled[2] = g.CreateBitmapFromResource("SpeedSmallFill");
@@ -589,6 +593,8 @@ namespace FamiStudio
                 {
                     string[] EffectNames =
                     {
+                        "Volume",
+                        "Slide Step",
                         "Jump",
                         "Skip",
                         "Speed"
@@ -596,22 +602,18 @@ namespace FamiStudio
 
                     g.PushTranslation(0, headerSizeY);
 
-                    g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
-                    g.DrawBitmap(bmpVolume, effectIconPosX, effectIconPosY);
-                    g.DrawText("Volume", selectedEffectIdx == -1 ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
-
                     int effectButtonY = 0;
-                    for (int i = 0; i < 3; i++)
+
+                    for (int i = -SpecialEffectCount; i < 3; i++)
                     {
-                        effectButtonY += effectButtonSizeY;
                         g.PushTranslation(0, effectButtonY);
                         g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
-                        g.DrawBitmap(bmpEffects[i], effectIconPosX, effectIconPosY);
-                        g.DrawText(EffectNames[i], selectedEffectIdx == i ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
+                        g.DrawBitmap(bmpEffects[i + SpecialEffectCount], effectIconPosX, effectIconPosY);
+                        g.DrawText(EffectNames[i + SpecialEffectCount], selectedEffectIdx == i ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
                         g.PopTransform();
+                        effectButtonY += effectButtonSizeY;
                     }
 
-                    effectButtonY += effectButtonSizeY;
                     g.PushTranslation(0, effectButtonY);
                     g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
                     g.PopTransform();
@@ -678,6 +680,25 @@ namespace FamiStudio
             g.PopTransform();
         }
 
+        private int GetSelectedEffectValue(Note note, out int minValue, out int maxValue)
+        {
+            switch (selectedEffectIdx)
+            {
+                case SpecialEffectVolume:
+                    minValue = 0;
+                    maxValue = Note.VolumeMax;
+                    return note.Volume;
+                case SpecialEffectSlide:
+                    minValue = sbyte.MinValue;
+                    maxValue = sbyte.MaxValue;
+                    return note.SlideStep;
+                default:
+                    minValue = 0;
+                    maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
+                    return note.EffectParam;
+            }
+        }
+
         private void RenderEffectPanel(RenderGraphics g, RenderArea a)
         {
             if (editMode == EditionMode.Channel && showEffectsPanel)
@@ -690,7 +711,7 @@ namespace FamiStudio
                 var lastVolumeValue = Song.Channels[editChannel].GetLastValidVolume(a.minVisiblePattern - 1);
 
                 // Draw the effects.
-                if (selectedEffectIdx == -1)
+                if (selectedEffectIdx == SpecialEffectVolume)
                 {
                     for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                     {
@@ -703,7 +724,7 @@ namespace FamiStudio
                             {
                                 var note = pattern.Notes[Math.Min(i, Song.PatternLength - 1)];
 
-                                if (note.HasVolume && selectedEffectIdx == -1)
+                                if (note.HasVolume && selectedEffectIdx == SpecialEffectVolume)
                                 {
                                     g.PushTranslation(x + i * noteSizeX - scrollX, 0);
 
@@ -738,19 +759,17 @@ namespace FamiStudio
                         {
                             var note = pattern.Notes[Math.Min(i, Song.PatternLength - 1)];
 
-                            if ((note.HasEffect && selectedEffectIdx >= 0) ||
-                                (note.HasVolume && selectedEffectIdx == -1))
+                            if ((note.HasEffect   && selectedEffectIdx >= 0) ||
+                                (note.HasVolume   && selectedEffectIdx == SpecialEffectVolume) ||
+                                (note.IsSlideNote && selectedEffectIdx == SpecialEffectSlide))
                             {
-                                var effectMaxValue = selectedEffectIdx == -1 ? Note.VolumeMax : Note.GetEffectMaxValue(Song, note.Effect);
-                                var effectValue = selectedEffectIdx == -1 ? note.Volume : note.EffectParam;
-                                var sizeY = (float)Math.Floor(effectValue / (float)effectMaxValue * effectPanelSizeY);
+                                var effectValue = GetSelectedEffectValue(note, out int effectMinValue, out int effectMaxValue);
+                                var sizeY = (float)Math.Floor((effectValue - effectMinValue) / (float)(effectMaxValue - effectMinValue) * effectPanelSizeY);
 
                                 g.PushTranslation(x + i * noteSizeX - scrollX, 0);
 
-                                if (selectedEffectIdx != -1)
-                                {
+                                if (selectedEffectIdx >= 0)
                                     g.FillRectangle(0, 0, noteSizeX, effectPanelSizeY, theme.DarkGreyFillBrush2);
-                                }
 
                                 g.FillRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, theme.LightGreyFillBrush1);
                                 g.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, theme.BlackBrush, IsNoteSelected(p, i) ? 2 : 1);
@@ -1309,16 +1328,25 @@ namespace FamiStudio
             var ratio = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
             var pattern = Song.Channels[editChannel].PatternInstances[effectPatternIdx];
 
-            if (selectedEffectIdx == -1)
+            if (selectedEffectIdx == SpecialEffectVolume)
             {
                 byte val = (byte)Math.Round(ratio * Note.VolumeMax);
                 pattern.Notes[effectNoteIdx].Volume = val;
                 pattern.UpdateLastValidNotesAndVolume();
             }
+            else if (selectedEffectIdx == SpecialEffectSlide)
+            {
+                if (pattern.Notes[effectNoteIdx].IsSlideNote)
+                {
+                    sbyte val = (sbyte)Utils.Clamp((int)Math.Round(ratio * sbyte.MaxValue + (1.0f - ratio) * sbyte.MinValue), sbyte.MinValue, sbyte.MaxValue);
+                    pattern.Notes[effectNoteIdx].SlideStep = val;
+                    pattern.UpdateLastValidNotesAndVolume();
+                }
+            }
             else
             {
                 if (pattern.Notes[effectNoteIdx].Effect == Note.EffectNone)
-                    pattern.Notes[effectNoteIdx].Effect = (byte)(selectedEffectIdx + 1);
+                    pattern.Notes[effectNoteIdx].Effect = (byte)(selectedEffectIdx + SpecialEffectCount);
                 byte val = (byte)Math.Round(ratio * Note.GetEffectMaxValue(Song, pattern.Notes[effectNoteIdx].Effect));
                 pattern.Notes[effectNoteIdx].EffectParam = val;
             }
@@ -1388,8 +1416,9 @@ namespace FamiStudio
 
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool foundNote = GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue);
 
-            if (editMode == EditionMode.DPCM && left && GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
+            if (editMode == EditionMode.DPCM && left && foundNote)
             {
                 var mapping = App.Project.GetDPCMMapping(noteValue);
                 if (left && mapping != null)
@@ -1402,7 +1431,7 @@ namespace FamiStudio
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
-                        var newName  = dlg.Properties.GetPropertyValue<string>(0);
+                        var newName = dlg.Properties.GetPropertyValue<string>(0);
 
                         App.Stop();
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
@@ -1428,6 +1457,26 @@ namespace FamiStudio
                 {
                     SetSelection(patIdx * Song.PatternLength, (patIdx + 1) * Song.PatternLength - 1);
                     ConditionalInvalidate();
+                }
+            }
+            else if (left && editMode == EditionMode.Channel && foundNote && e.Y > headerSizeY && e.X > whiteKeySizeX)
+            {
+                var channel = Song.Channels[editChannel];
+                var pattern = channel.PatternInstances[patternIdx];
+
+                if (pattern.Notes[noteIdx].IsSlideNote)
+                {
+                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 200);
+                    dlg.Properties.AddStringList("Slide Mode :", new[] { "Auto", "Manual" }, "Auto"); // 0
+                    dlg.Properties.AddIntegerRange("Step Size :", 0, -128, 127); // 1
+                    dlg.Properties.SetPropertyEnabled(1, false);
+                    dlg.Properties.Build();
+
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+                        //var newName = dlg.Properties.GetPropertyValue<string>(0);
+
+                    }
                 }
             }
         }
@@ -1682,8 +1731,8 @@ namespace FamiStudio
             }
             else if (left && IsMouseInEffectList(e))
             {
-                int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY - 1;
-                if (effectIdx >= -1 && effectIdx < 3)
+                int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY - SpecialEffectCount;
+                if (effectIdx >= -SpecialEffectCount && effectIdx < 3)
                 {
                     selectedEffectIdx = effectIdx;
                     ConditionalInvalidate();
@@ -1812,7 +1861,7 @@ namespace FamiStudio
             {
                 var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                if (selectedEffectIdx == -1)
+                if (selectedEffectIdx == SpecialEffectVolume)
                     pattern.Notes[noteIdx].HasVolume = false;
                 else
                     pattern.Notes[noteIdx].HasEffect = false;

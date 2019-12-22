@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Windows.Forms;
@@ -27,10 +28,18 @@ namespace FamiStudio
 
         private static byte[] GetClipboardData(uint magic)
         {
+            byte[] buffer = null;
 #if FAMISTUDIO_WINDOWS
-            var buffer = Clipboard.GetData("FamiStudio") as byte[];
+            try
+            {
+                buffer = Clipboard.GetData("FamiStudio") as byte[];
+            }
+            catch
+            {
+                Debug.WriteLine("Random DisconnectedContext exception. Ignoring.");
+            }
 #else
-            var buffer = macClipboardData;
+            buffer = macClipboardData;
 #endif
 
             if (buffer == null || BitConverter.ToUInt32(buffer, 0) != magic)

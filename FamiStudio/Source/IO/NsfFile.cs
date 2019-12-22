@@ -106,7 +106,7 @@ namespace FamiStudio
 
                     string kernelBinary;
 
-                    if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2)
+                    if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2FS)
                     {
                         kernelBinary = project.ExpansionAudio == Project.ExpansionVRC6 ? "nsf_ft2_fs_vrc6.bin" : "nsf_ft2_fs.bin";
                     }

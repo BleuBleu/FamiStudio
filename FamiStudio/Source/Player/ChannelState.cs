@@ -13,6 +13,7 @@ namespace FamiStudio
         protected int slidePitch = 0;
         protected int slideStepCount = 0;
         protected int slideStep = 0;
+        protected int slideTargetNote = Note.NoteInvalid;
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
         protected int duty;
@@ -74,9 +75,21 @@ namespace FamiStudio
                 slidePitch = 0;
                 slideStep = 0;
                 slideStepCount = 0;
+                slideTargetNote = Note.NoteInvalid;
 
                 if (tmpNote.IsSlideNote)
-                    channel.ComputeSlideNoteParams(patternIdx, noteIdx, note.Value, out slidePitch, out slideStepCount, out slideStep);
+                {
+                    if (tmpNote.SlideStep == 0)
+                    {
+                        channel.ComputeAutoSlideNoteParams(patternIdx, noteIdx, tmpNote.Value, out slideStepCount, out slideStep, out slideTargetNote);
+                    }
+                    else
+                    {
+                        slideTargetNote = Note.NoteInvalid;
+                        slideStep = tmpNote.SlideStep;
+                        slideStepCount = 255;
+                    }
+                }
 
                 PlayNote(tmpNote);
             }
@@ -153,6 +166,11 @@ namespace FamiStudio
             {
                 slidePitch += slideStep;
                 slideStepCount--;
+                if (slideStepCount == 0 && slideTargetNote != Note.NoteInvalid)
+                {
+                    slidePitch = 0;
+                    note.Value = (byte)slideTargetNote;
+                }
             }
         }
 

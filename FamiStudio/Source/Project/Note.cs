@@ -44,6 +44,7 @@ namespace FamiStudio
         public byte EffectParam; // Value for fx.
         public byte Flags; // 
         public byte Volume; // 0-15. 0xff = no volume change.
+        public sbyte SlideStep; // Slide step (0 = auto)
         public Instrument Instrument;
 
         public bool IsValid
@@ -149,9 +150,14 @@ namespace FamiStudio
 
             // At version 4 (FamiStudio 1.4.0), we added a slide (flags)
             if (buffer.Version >= 4)
+            {
                 buffer.Serialize(ref Flags);
+                buffer.Serialize(ref SlideStep);
+            }
             else
+            {
                 Flags = FlagNone;
+            }
 
             buffer.Serialize(ref Instrument);
         }

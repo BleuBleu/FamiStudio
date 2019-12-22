@@ -173,8 +173,8 @@ namespace FamiStudio
             {
                 var note = notes[i];
 
-                // The first note is only used for slide notes for now. We want to stop it when there is a jump or skip.
-                if (note.IsValid || (note.Effect == Note.EffectJump || note.Effect == Note.EffectSkip))
+                // The first note is only used for slide notes for now. 
+                if (note.IsMusical)
                 {
                     firstValidNoteTime = (byte)i;
                     break;
