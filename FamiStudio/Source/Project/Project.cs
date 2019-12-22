@@ -312,7 +312,15 @@ namespace FamiStudio
 
         public void SortInstruments()
         {
-            instruments.Sort((i1, i2) => i1.Name.CompareTo(i2.Name));
+            instruments.Sort((i1, i2) => 
+            {
+                var expComp = i1.ExpansionType.CompareTo(i2.ExpansionType);
+
+                if (expComp != 0)
+                    return expComp;
+                else
+                    return i1.Name.CompareTo(i2.Name);
+            });
         }
 
         public bool RenameSample(DPCMSample sample, string name)

@@ -12,6 +12,8 @@ namespace FamiStudio
             public Note note;
         };
 
+        int expansionAudio = Project.ExpansionNone;
+        ChannelState[] channels;
         int[] envelopeFrames = new int[Envelope.Max];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
 
@@ -36,17 +38,38 @@ namespace FamiStudio
 
         public void StopAllNotesAndWait()
         {
-            //while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
-            //noteQueue.Enqueue(new PlayerNote() { channel = -1 });
-            //while (!noteQueue.IsEmpty) Thread.Sleep(1);
+            while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
+            noteQueue.Enqueue(new PlayerNote() { channel = -1 });
+            while (!noteQueue.IsEmpty) Thread.Sleep(1);
         }
 
         public override void Initialize()
         {
             base.Initialize();
+        }
 
-            //playerThread = new Thread(PlayerThread);
-            //playerThread.Start();
+        public void Start(Project project)
+        {
+            expansionAudio = project.ExpansionAudio;
+            channels = PlayerBase.CreateChannelStates(project, apuIndex);
+
+            stopEvent.Reset();
+            frameEvent.Set();
+            playerThread = new Thread(PlayerThread);
+            playerThread.Start();
+        }
+
+        public void Stop()
+        {
+            StopAllNotesAndWait();
+
+            if (playerThread != null)
+            {
+                stopEvent.Set();
+                playerThread.Join();
+                playerThread = null;
+                channels = null;
+            }
         }
 
         public int GetEnvelopeFrame(int idx)
@@ -54,20 +77,17 @@ namespace FamiStudio
             return envelopeFrames[idx]; // TODO: Account for output delay.
         }
 
+        // MATTT Will need to restart the instrument player when changing expansion chip.
         unsafe void PlayerThread(object o)
         {
-            return; // MATTT Will need to restart the instrument player when changing expansion chip.
-
-            var channels = PlayerBase.CreateChannelStates(/*song.Project*/ null, apuIndex);
-
             var lastNoteWasRelease = false;
             var lastReleaseTime = DateTime.Now;
 
             var activeChannel = -1;
             var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
 
-            NesApu.Reset(apuIndex);
-            for (int i = 0; i < 5; i++)
+            NesApu.Reset(apuIndex, expansionAudio);
+            for (int i = 0; i < channels.Length; i++)
                 NesApu.NesApuEnableChannel(apuIndex, i, 0);
 
             while (true)
@@ -103,7 +123,7 @@ namespace FamiStudio
                         }
                     }
 
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 0; i < channels.Length; i++)
                         NesApu.NesApuEnableChannel(apuIndex, i, i == activeChannel ? 1 : 0);
                 }
 

@@ -71,8 +71,6 @@ namespace FamiStudio
 
             songPlayer = new SongPlayer();
             songPlayer.Initialize();
-            instrumentPlayer = new InstrumentPlayer();
-            instrumentPlayer.Initialize();
 
             InitializeMidi();
 
@@ -85,6 +83,10 @@ namespace FamiStudio
                 NewProject();
             }
 
+            instrumentPlayer = new InstrumentPlayer();
+            instrumentPlayer.Initialize();
+            instrumentPlayer.Start(project);
+
             if (Settings.CheckUpdates)
             {
                 Task.Factory.StartNew(CheckForNewRelease);
@@ -93,6 +95,8 @@ namespace FamiStudio
 
         private void ProjectExplorer_ExpansionAudioChanged()
         {
+            instrumentPlayer.Stop();
+            instrumentPlayer.Start(project);
             RefreshSequencerLayout();
             PianoRoll.Reset();
         }
@@ -446,9 +450,21 @@ namespace FamiStudio
 
             int channel = Sequencer.SelectedChannel;
             if (ProjectExplorer.SelectedInstrument == null)
+            {
                 channel = Channel.DPCM;
+            }
             else
-                note.Instrument = ProjectExplorer.SelectedInstrument;
+            {
+                if (song.Channels[channel].SupportsInstrument(ProjectExplorer.SelectedInstrument))
+                {
+                    note.Instrument = ProjectExplorer.SelectedInstrument;
+                }
+                else
+                {
+                    DisplayWarning("Selected instrument is incompatible with channel!");
+                    return;
+                }
+            }
 
             instrumentPlayer.PlayNote(channel, note);
         }

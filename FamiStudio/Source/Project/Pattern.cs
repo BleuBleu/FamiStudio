@@ -106,7 +106,7 @@ namespace FamiStudio
                 for (int i = 0; i < song.PatternLength; i++)
                 {
                     var n = notes[i];
-                    if (n.IsValid || n.IsStop || n.IsRelease || n.Effect != Note.EffectNone)
+                    if (n.IsValid || n.HasVolume || n.HasVolume)
                     {
                         return true;
                     }
