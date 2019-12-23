@@ -16,3 +16,4 @@
 ..\..\..\NES\tools\bin\ld65 -C nsf.cfg -o nsf_ft2.bin         nsf_ft2.o         --dbgfile nsf_ft2.dbg         --mapfile nsf_ft2.map         --force-import nsf_init --force-import nsf_play
 ..\..\..\NES\tools\bin\ld65 -C nsf.cfg -o nsf_ft2_fs.bin      nsf_ft2_fs.o      --dbgfile nsf_ft2_fs.dbg      --mapfile nsf_ft2_fs.map      --force-import nsf_init --force-import nsf_play
 ..\..\..\NES\tools\bin\ld65 -C nsf.cfg -o nsf_ft2_fs_vrc6.bin nsf_ft2_fs_vrc6.o --dbgfile nsf_ft2_fs_vrc6.dbg --mapfile nsf_ft2_fs_vrc6.map --force-import nsf_init --force-import nsf_play
+

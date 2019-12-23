@@ -1,5 +1,5 @@
 .ifdef FS
-.include "famitone2fs.s"
+.include "famitone2fs_v2.s"
 .else
 .include "famitone2.s"
 .endif
