@@ -11,9 +11,9 @@ namespace FamiStudio
     {
         // NSF memory layout
         //   0x8000: start of code
-        //   0x8800: nsf_init
-        //   0x8880: nsf_play
-        //   0x8900: song table of content, 4 bytes per song:
+        //   0x8900: nsf_init
+        //   0x8980: nsf_play
+        //   0x8a00: song table of content, 4 bytes per song:
         //      - first page of the song (1 byte)
         //      - address of the start of the song in page starting at 0x9000 (2 byte)
         //      - flags (1 = use DPCM)
