@@ -231,7 +231,9 @@ namespace FamiStudio
             buffer.Serialize(ref speed);
             buffer.Serialize(ref color);
 
-            buffer.InitializeArray<Channel>(ref channels, buffer.Project.GetActiveChannelCount());
+            if (buffer.IsReading)
+                CreateChannels();
+
             foreach (var channel in channels)
                 channel.SerializeState(buffer);
         }

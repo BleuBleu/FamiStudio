@@ -73,6 +73,7 @@ namespace FamiStudio
                 {
                     channel.UpdateEnvelopes();
                     channel.UpdateAPU();
+                    channel.UpdateSlides();
                 }
 
                 NesApu.NesApuEndFrame(apuIndex);

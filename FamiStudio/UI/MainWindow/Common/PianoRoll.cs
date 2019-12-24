@@ -32,9 +32,8 @@ namespace FamiStudio
         const int MaxZoomLevel = 4;
         const int ScrollMargin = 128;
 
-        const int SpecialEffectVolume = -2;
-        const int SpecialEffectSlide  = -1;
-        const int SpecialEffectCount  =  2;
+        const int SpecialEffectVolume = -1;
+        const int SpecialEffectCount  =  1;
 
         const int DefaultNumOctavesChannel      = 8;
         const int DefaultBaseOctaveChannel      = 0;
@@ -133,6 +132,7 @@ namespace FamiStudio
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] releaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
+        RenderPath[] slideNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath seekGeometry;
 
         enum CaptureOperation
@@ -144,7 +144,8 @@ namespace FamiStudio
             DragRelease,
             ChangeEffectValue,
             DrawEnvelope,
-            Select
+            Select,
+            AddSlideNote
         }
 
         int captureNoteIdx = 0;
@@ -399,6 +400,13 @@ namespace FamiStudio
                     new Point(0, noteSizeY / 2 - releaseNoteSizeY / 2),
                     new Point(0, noteSizeY / 2 + releaseNoteSizeY / 2),
                     new Point(x, noteSizeY / 2)
+                });
+
+                slideNoteGeometry[idx] = g.CreateConvexPath(new[]
+                {
+                    new Point(0, 0),
+                    new Point(x + 1, 0),
+                    new Point(x + 1,  noteSizeY)
                 });
             }
 
@@ -688,10 +696,6 @@ namespace FamiStudio
                     minValue = 0;
                     maxValue = Note.VolumeMax;
                     return note.Volume;
-                case SpecialEffectSlide:
-                    minValue = sbyte.MinValue;
-                    maxValue = sbyte.MaxValue;
-                    return note.SlideStep;
                 default:
                     minValue = 0;
                     maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
@@ -760,8 +764,7 @@ namespace FamiStudio
                             var note = pattern.Notes[Math.Min(i, Song.PatternLength - 1)];
 
                             if ((note.HasEffect   && selectedEffectIdx >= 0) ||
-                                (note.HasVolume   && selectedEffectIdx == SpecialEffectVolume) ||
-                                (note.IsSlideNote && selectedEffectIdx == SpecialEffectSlide))
+                                (note.HasVolume   && selectedEffectIdx == SpecialEffectVolume))
                             {
                                 var effectValue = GetSelectedEffectValue(note, out int effectMinValue, out int effectMaxValue);
                                 var sizeY = (float)Math.Floor((effectValue - effectMinValue) / (float)(effectMaxValue - effectMinValue) * effectPanelSizeY);
@@ -836,7 +839,7 @@ namespace FamiStudio
             DeleteSelectedNotes();
         }
 
-        private void ReplaceNotes(Note[] notes, int startIdx, bool doTransaction, bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
+        private void ReplaceNotes(Note[] notes, int startIdx, bool doTransaction, bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true, bool pasteSlide = true)
         {
             TransformNotes(startIdx, startIdx + notes.Length - 1, doTransaction, (note, idx) =>
             {
@@ -851,6 +854,10 @@ namespace FamiStudio
                 {
                     note.Volume = newNote.Volume;
                 }
+                if (pasteSlide)
+                {
+                    note.SlideFlags = newNote.SlideFlags;
+                }
                 if (pasteFx)
                 {
                     note.Effect = newNote.Effect;
@@ -863,7 +870,7 @@ namespace FamiStudio
             SetSelection(startIdx, startIdx + notes.Length - 1);
         }
 
-        private void PasteNotes(bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
+        private void PasteNotes(bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true, bool pasteSlides = true)
         {
             if (!IsSelectionValid())
                 return;
@@ -886,7 +893,7 @@ namespace FamiStudio
                 return;
             }
 
-            ReplaceNotes(notes, selectionMin, false, pasteNotes, pasteVolume, pasteFx);
+            ReplaceNotes(notes, selectionMin, false, pasteNotes, pasteVolume, pasteFx, pasteSlides);
             NotesPasted?.Invoke();
             App.UndoRedoManager.EndTransaction();
         }
@@ -972,7 +979,7 @@ namespace FamiStudio
                 var dlg = new PasteSpecialDialog(App.MainWindowBounds);
 
                 if (dlg.ShowDialog() == DialogResult.OK)
-                    PasteNotes(dlg.PasteNotes, dlg.PasteVolumes, dlg.PasteEffects);
+                    PasteNotes(dlg.PasteNotes, dlg.PasteVolumes, dlg.PasteEffects, dlg.PasteSlides);
             }
         }
 
@@ -1053,6 +1060,7 @@ namespace FamiStudio
                     // Pattern drawing.
                     for (int c = 0; c < Song.Channels.Length; c++)
                     {
+                        var channel = Song.Channels[c];
                         var isActiveChannel = c == editChannel;
 
                         if (isActiveChannel || (App.GhostChannelMask & (1 << c)) != 0)
@@ -1089,6 +1097,34 @@ namespace FamiStudio
                                                 int sizeY = lastNoteReleased ? releaseNoteSizeY : noteSizeY;
 
                                                 g.PushTranslation(x, y);
+                                                if (lastNote.IsSlideNote)
+                                                {
+                                                    if (channel.ComputeSlideNoteParams(p, lastNoteTime, lastNote.Value, lastNote.SlideTarget, false, out _, out _, out _, out int targetNote))
+                                                    {
+                                                        int sx = i - lastNoteTime;
+                                                        int sy = targetNote - lastNote.Value;
+
+                                                        if (sy > 0)
+                                                            g.PushTransform(0, 0, sx, -sy);
+                                                        else
+                                                            g.PushTransform(0, noteSizeY, sx, -sy);
+
+                                                        g.FillConvexPath(slideNoteGeometry[zoomLevel - MinZoomLevel], g.GetSolidBrush(color, 1.0f, 0.2f));
+                                                        g.PopTransform();
+
+                                                        //g.AntiAliasing = true;
+                                                        //g.DrawLine(0, noteSizeY / 2, (i - lastNoteTime) * noteSizeX, -sy * noteSizeY + noteSizeY / 2, g.GetSolidBrush(color, 0.5f, 0.5f), 3);
+                                                        //g.AntiAliasing = false;
+
+                                                        //g.AntiAliasing = true;
+                                                        //g.DrawLine(noteSizeY / 2, noteSizeY / 2, (i - lastNoteTime) * noteSizeX + noteSizeY / 2, -sy * noteSizeY + noteSizeY / 2, selectionBgVisibleBrush, noteSizeY);
+                                                        //g.AntiAliasing = false;
+
+                                                        //g.DrawLine(0, 0, (i - lastNoteTime) * noteSizeX - 4, -sy * noteSizeY, selectionBgVisibleBrush);
+                                                        //g.DrawLine(0, noteSizeY, (i - lastNoteTime) * noteSizeX - 4, (-sy + 1) * noteSizeY, selectionBgVisibleBrush);
+                                                    }
+                                                }
+
                                                 g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, sizeY, 0.8f));
                                                 g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
                                                 if (lastNote.IsSlideNote)
@@ -1334,15 +1370,16 @@ namespace FamiStudio
                 pattern.Notes[effectNoteIdx].Volume = val;
                 pattern.UpdateLastValidNotesAndVolume();
             }
-            else if (selectedEffectIdx == SpecialEffectSlide)
-            {
-                if (pattern.Notes[effectNoteIdx].IsSlideNote)
-                {
-                    sbyte val = (sbyte)Utils.Clamp((int)Math.Round(ratio * sbyte.MaxValue + (1.0f - ratio) * sbyte.MinValue), sbyte.MinValue, sbyte.MaxValue);
-                    pattern.Notes[effectNoteIdx].SlideStep = val;
-                    pattern.UpdateLastValidNotesAndVolume();
-                }
-            }
+            // MATTT
+            //else if (selectedEffectIdx == SpecialEffectSlide)
+            //{
+            //    if (pattern.Notes[effectNoteIdx].IsSlideNote)
+            //    {
+            //        sbyte val = (sbyte)Utils.Clamp((int)Math.Round(ratio * sbyte.MaxValue + (1.0f - ratio) * sbyte.MinValue), sbyte.MinValue, sbyte.MaxValue);
+            //        pattern.Notes[effectNoteIdx].SlideTarget = val;
+            //        pattern.UpdateLastValidNotesAndVolume();
+            //    }
+            //}
             else
             {
                 if (pattern.Notes[effectNoteIdx].Effect == Note.EffectNone)
@@ -1775,7 +1812,7 @@ namespace FamiStudio
                 {
                     bool ctrl  = ModifierKeys.HasFlag(Keys.Control);
                     bool shift = ModifierKeys.HasFlag(Keys.Shift);
-                    bool porta = (GetKeyState((int)'P') & 0x8000) != 0; // MATTT
+                    bool slide = (GetKeyState((int)'S') & 0x8000) != 0; // MATTT
 
                     if (ctrl || shift && channel.SupportsReleaseNotes())
                     {
@@ -1792,8 +1829,12 @@ namespace FamiStudio
                         pattern.Notes[noteIdx].Value = noteValue;
                         pattern.Notes[noteIdx].Instrument = editChannel == Channel.DPCM ? null : currentInstrument;
 
-                        if (porta && editChannel != Channel.DPCM)
-                            pattern.Notes[noteIdx].IsSlideNote = !pattern.Notes[noteIdx].IsSlideNote;
+                        if (slide && editChannel != Channel.DPCM && canCapture)
+                        {
+                            pattern.Notes[noteIdx].IsSlideNote = true;
+                            pattern.Notes[noteIdx].SlideTarget = 0;
+                            StartCaptureOperation(e, CaptureOperation.AddSlideNote);
+                        }
 
                         pattern.UpdateLastValidNotesAndVolume();
                         App.UndoRedoManager.EndTransaction();
@@ -1964,6 +2005,28 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private void UpdateSlideNoteTarget(MouseEventArgs e)
+        {
+            Debug.Assert(captureNoteIdx >= 0);
+
+            var patternIdx = captureNoteIdx / Song.PatternLength;
+            var noteIdx = captureNoteIdx % Song.PatternLength;
+            var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
+
+            Debug.Assert(pattern != null);
+            Debug.Assert(pattern.Notes[noteIdx].IsSlideNote);
+
+            if (GetNoteForCoord(e.X, e.Y, out _, out _, out byte noteValue))
+            {
+                if (noteValue == pattern.Notes[noteIdx].Value)
+                    pattern.Notes[noteIdx].SlideTarget = 0;
+                else
+                    pattern.Notes[noteIdx].SlideTarget = noteValue;
+
+                ConditionalInvalidate();
+            }
+        }
+
         public void ReplaceSelectionInstrument(Instrument instrument)
         {
             if (editMode == EditionMode.Channel && editChannel != Channel.DPCM && IsSelectionValid())
@@ -2129,6 +2192,9 @@ namespace FamiStudio
                 case CaptureOperation.Select:
                     UpdateSelection(e);
                     break;
+                case CaptureOperation.AddSlideNote:
+                    UpdateSlideNoteTarget(e);
+                    break;
             }
 
             if (middle)
@@ -2167,6 +2233,8 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
                         EnvelopeResized?.Invoke();
                         break;
+                    case CaptureOperation.AddSlideNote:
+                        break; // MATTT
                 }
 
                 captureOperation = CaptureOperation.None;

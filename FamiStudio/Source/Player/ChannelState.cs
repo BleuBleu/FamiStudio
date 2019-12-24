@@ -11,7 +11,6 @@ namespace FamiStudio
         protected bool newNote = false;
         protected Note note;
         protected int slidePitch = 0;
-        protected int slideStepCount = 0;
         protected int slideStep = 0;
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
@@ -71,26 +70,12 @@ namespace FamiStudio
             var tmpNote = pattern.Notes[noteIdx];
             if (tmpNote.IsValid)
             {
-                //slidePitch = 0;
-                //slideStep = 0;
-                //slideStepCount = 0;
+                slideStep = 0;
 
                 if (tmpNote.IsSlideNote)
                 {
-                    if (tmpNote.SlideStep == 0)
-                    {
-                        if (channel.ComputeAutoSlideNoteParams(patternIdx, noteIdx, tmpNote.Value, out slidePitch, out slideStepCount, out slideStep, out int slideTargetNote))
-                            tmpNote.Value = (byte)slideTargetNote;
-                    }
-                    else
-                    {
-                        if (channel.ComputeManualSlideNoteParams(patternIdx, noteIdx, out slideStepCount))
-                        {
-                            slidePitch = 0;
-                            slideStep = tmpNote.SlideStep;
-                        }
-                            //slideStepCount = 255;
-                    }
+                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, tmpNote.Value, tmpNote.SlideTarget, false, out slidePitch, out int slideStepCount, out slideStep, out int slideTargetNote))
+                        tmpNote.Value = (byte)slideTargetNote;
                 }
 
                 PlayNote(tmpNote);
@@ -162,13 +147,23 @@ namespace FamiStudio
                         envelopeIdx[j] = idx;
                 }
             }
+        }
 
-            // Update slide.
-            if (slideStepCount > 0)
+        public void UpdateSlides()
+        {
+            if (slideStep != 0)
             {
                 slidePitch += slideStep;
-                if (--slideStepCount == 0)
+
+                if ((slideStep > 0 && slidePitch > 0) ||
+                    (slideStep < 0 && slidePitch < 0))
+                {
                     slidePitch = 0;
+                }
+            }
+            else
+            {
+                slidePitch = 0;
             }
         }
 

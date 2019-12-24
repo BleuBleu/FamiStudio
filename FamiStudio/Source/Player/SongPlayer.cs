@@ -128,6 +128,7 @@ namespace FamiStudio
                         channel.Advance(song, playPattern, playNote);
                         channel.UpdateEnvelopes();
                         channel.UpdateAPU();
+                        channel.UpdateSlides();
                     }
 
                     int dummy1 = 0;
@@ -177,6 +178,7 @@ namespace FamiStudio
                 {
                     channel.UpdateEnvelopes();
                     channel.UpdateAPU();
+                    channel.UpdateSlides();
                 }
 
                 // Mute.

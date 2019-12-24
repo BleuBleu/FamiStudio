@@ -124,7 +124,7 @@ namespace FamiStudio
             if (channelType == Channel.VRC6Saw)
                 return NesApu.NoteTableVrc6Saw;
             else
-                return NesApu.NoteTableNTSC;
+                return pal ? NesApu.NoteTablePAL : NesApu.NoteTableNTSC;
         }
 
         public static int DmcReadCallback(IntPtr data, int addr)

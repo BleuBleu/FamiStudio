@@ -25,6 +25,7 @@ namespace FamiStudio
         private DirectWriteFactory directWriteFactory;
         private WindowRenderTarget renderTarget;
         private Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
+        private Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
         private Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
         private StrokeStyle strokeStyle;
 
@@ -51,10 +52,12 @@ namespace FamiStudio
         public void Dispose()
         {
             foreach (var grad in verticalGradientCache.Values)
-            {
                 grad.Dispose();
-            }
             verticalGradientCache.Clear();
+
+            foreach (var grad in solidGradientCache.Values)
+                grad.Dispose();
+            solidGradientCache.Clear();
 
             if (renderTarget != null)
             {
@@ -113,6 +116,19 @@ namespace FamiStudio
             mat.M12 *= y;
             mat.M21 *= x;
             mat.M22 *= y;
+            renderTarget.Transform = mat;
+        }
+
+        public void PushTransform(int tx, int ty, int sx, int sy)
+        {
+            var mat = renderTarget.Transform;
+            matrixStack.Push(mat);
+            mat.M11 *= sx;
+            mat.M12 *= sy;
+            mat.M21 *= sx;
+            mat.M22 *= sy;
+            mat.M31 += tx;
+            mat.M32 += ty;
             renderTarget.Transform = mat;
         }
 
@@ -367,6 +383,24 @@ namespace FamiStudio
         public float GetBitmapWidth(Bitmap bmp)
         {
             return bmp.Size.Width;
+        }
+
+        public Brush GetSolidBrush(Color color, float dimming, float alphaDimming)
+        {
+            Brush brush;
+            if (solidGradientCache.TryGetValue(color, out brush))
+                return brush;
+
+            Color color2 = Color.FromArgb(
+                Utils.Clamp((int)(color.A * alphaDimming), 0, 255),
+                Utils.Clamp((int)(color.R * dimming), 0, 255),
+                Utils.Clamp((int)(color.G * dimming), 0, 255),
+                Utils.Clamp((int)(color.B * dimming), 0, 255));
+
+            brush = CreateSolidBrush(color2);
+            solidGradientCache[color] = brush;
+
+            return brush;
         }
 
         public Brush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)

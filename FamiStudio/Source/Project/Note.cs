@@ -25,9 +25,6 @@ namespace FamiStudio
         public const int EffectSkip  = 2; // Dxx
         public const int EffectSpeed = 3; // Fxx
 
-        public const int FlagNone  = 0x00;
-        public const int FlagSlide = 0x01;
-
         public const int VolumeInvalid = 0xff;
         public const int VolumeMax     = 0x0f;
 
@@ -42,9 +39,8 @@ namespace FamiStudio
         public byte Value; // (0 = stop, 1 = C0 ... 96 = B7).
         public byte Effect; // Tempo/Jump/Skip
         public byte EffectParam; // Value for fx.
-        public byte Flags; // 
         public byte Volume; // 0-15. 0xff = no volume change.
-        public sbyte SlideStep; // Slide step (0 = auto)
+        public byte SlideFlags; // hi bit = slide note, low 7-bits, custom slide target note (0 = auto/portamento)
         public Instrument Instrument;
 
         public bool IsValid
@@ -71,13 +67,23 @@ namespace FamiStudio
 
         public bool IsSlideNote
         {
-            get { return (Flags & FlagSlide) != 0; }
+            get { return SlideFlags != 0 && IsMusical; }
             set
             {
                 if (value)
-                    Flags |= FlagSlide;
+                    SlideFlags |= 0x80;
                 else
-                    Flags &= unchecked((byte)(~FlagSlide));
+                    SlideFlags = 0;
+            }
+        }
+
+        public byte SlideTarget
+        {
+            get { return (byte)(SlideFlags & 0x7f); }
+            set
+            {
+                SlideFlags &= 0x80;
+                SlideFlags |= (byte)(value & 0x7f);
             }
         }
 
@@ -148,15 +154,14 @@ namespace FamiStudio
             else
                 Volume = Note.VolumeInvalid;
 
-            // At version 4 (FamiStudio 1.4.0), we added a slide (flags)
+            // At version 4 (FamiStudio 1.4.0), we added slide notes
             if (buffer.Version >= 4)
             {
-                buffer.Serialize(ref Flags);
-                buffer.Serialize(ref SlideStep);
+                buffer.Serialize(ref SlideFlags);
             }
             else
             {
-                Flags = FlagNone;
+                SlideFlags = 0;
             }
 
             buffer.Serialize(ref Instrument);

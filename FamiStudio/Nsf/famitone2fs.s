@@ -1,14 +1,4 @@
 ;FamiTone2 v1.12
-FT_TEMP_SIZE_DEF = 6
-FT_BASE_SIZE_DEF = 157
-
-.segment "ZEROPAGE"
-FT_TEMP:		.res FT_TEMP_SIZE_DEF
-
-.segment "FAMITONE"
-FT_BASE_ADR:	.res FT_BASE_SIZE_DEF
-
-.segment "CODE"
 
 ;settings, uncomment or put them into your main program; the latter makes possible updates easier
 
@@ -24,133 +14,105 @@ FT_THREAD	= 1			;undefine if you are calling sound effects from the same thread 
 FT_PAL_SUPPORT = 0			;undefine to exclude PAL support
 FT_NTSC_SUPPORT	= 1		;undefine to exclude NTSC support
 
-
 ;internal defines
 FT_PITCH_FIX    = 0 ;(FT_PAL_SUPPORT|FT_NTSC_SUPPORT) ;add PAL/NTSC pitch correction code only when both modes are enabled
 
-
-;zero page variables
-
-FT_TEMP_PTR			= FT_TEMP		;word
-FT_TEMP_PTR_L		= FT_TEMP_PTR+0
-FT_TEMP_PTR_H		= FT_TEMP_PTR+1
-FT_TEMP_VAR1		= FT_TEMP+2
-FT_TEMP_VAR2		= FT_TEMP+3
-FT_TEMP_PTR2		= FT_TEMP+4		;word
-FT_TEMP_PTR2_L		= FT_TEMP_PTR+4
-FT_TEMP_PTR2_H		= FT_TEMP_PTR+5
-FT_TEMP_SIZE        = 6
+.segment "FAMITONE"
 
 ;envelope structure offsets, 5 bytes per envelope, grouped by variable type
 
-FT_ENVELOPES_ALL	= 3+3+3+2	;3 for the pulse and triangle channels, 2 for the noise channel
-FT_ENV_STRUCT_SIZE	= 5
+FT_NUM_ENVELOPES	= 3+3+3+2	;3 for the pulse and triangle channels, 2 for the noise channel
 
-FT_ENV_VALUE		= FT_BASE_ADR+0*FT_ENVELOPES_ALL
-FT_ENV_REPEAT		= FT_BASE_ADR+1*FT_ENVELOPES_ALL
-FT_ENV_ADR_L		= FT_BASE_ADR+2*FT_ENVELOPES_ALL
-FT_ENV_ADR_H		= FT_BASE_ADR+3*FT_ENVELOPES_ALL
-FT_ENV_PTR			= FT_BASE_ADR+4*FT_ENVELOPES_ALL
+FT_ENVELOPES:
+FT_ENV_VALUE		: .res FT_NUM_ENVELOPES
+FT_ENV_REPEAT		: .res FT_NUM_ENVELOPES
+FT_ENV_ADR_L		: .res FT_NUM_ENVELOPES
+FT_ENV_ADR_H		: .res FT_NUM_ENVELOPES
+FT_ENV_PTR			: .res FT_NUM_ENVELOPES
 
 ;slide structure offsets, 4 bytes per slide.
 
-FT_SLIDES_ALL = 3 ;square and triangle have slide notes.
-FT_SLIDE_STRUCT_SIZE = 4
+FT_NUM_SLIDES = 3 ;square and triangle have slide notes.
 
-FT_SLIDE_STEP		= FT_BASE_ADR+0*FT_SLIDES_ALL
-FT_SLIDE_REPEAT		= FT_BASE_ADR+1*FT_SLIDES_ALL
-FT_SLIDE_PITCH_L	= FT_BASE_ADR+2*FT_SLIDES_ALL
-FT_SLIDE_PITCH_H	= FT_BASE_ADR+3*FT_SLIDES_ALL
+FT_SLIDES:
+FT_SLIDE_STEP		: .res FT_NUM_SLIDES
+FT_SLIDE_PITCH_L	: .res FT_NUM_SLIDES
+FT_SLIDE_PITCH_H	: .res FT_NUM_SLIDES
 
 ;channel structure offsets, 10 bytes per channel
 
-FT_CHANNELS_ALL		= 5
-FT_CHN_STRUCT_SIZE	= 10
+FT_NUM_CHANNELS	= 5
 
-FT_CHN_PTR_L		= FT_BASE_ADR+0*FT_CHANNELS_ALL
-FT_CHN_PTR_H		= FT_BASE_ADR+1*FT_CHANNELS_ALL
-FT_CHN_NOTE			= FT_BASE_ADR+2*FT_CHANNELS_ALL
-FT_CHN_INSTRUMENT	= FT_BASE_ADR+3*FT_CHANNELS_ALL
-FT_CHN_REPEAT		= FT_BASE_ADR+4*FT_CHANNELS_ALL
-FT_CHN_RETURN_L		= FT_BASE_ADR+5*FT_CHANNELS_ALL
-FT_CHN_RETURN_H		= FT_BASE_ADR+6*FT_CHANNELS_ALL
-FT_CHN_REF_LEN		= FT_BASE_ADR+7*FT_CHANNELS_ALL
-FT_CHN_DUTY			= FT_BASE_ADR+8*FT_CHANNELS_ALL
-FT_CHN_VOLUME_TRACK	= FT_BASE_ADR+9*FT_CHANNELS_ALL ; DPCM(4) + Triangle(2) are unused.
+FT_CHANNELS:
+FT_CHN_PTR_L		: .res FT_NUM_CHANNELS
+FT_CHN_PTR_H		: .res FT_NUM_CHANNELS
+FT_CHN_NOTE			: .res FT_NUM_CHANNELS
+FT_CHN_INSTRUMENT	: .res FT_NUM_CHANNELS
+FT_CHN_REPEAT		: .res FT_NUM_CHANNELS
+FT_CHN_RETURN_L		: .res FT_NUM_CHANNELS
+FT_CHN_RETURN_H		: .res FT_NUM_CHANNELS
+FT_CHN_REF_LEN		: .res FT_NUM_CHANNELS
+FT_CHN_DUTY			: .res FT_NUM_CHANNELS
+FT_CHN_VOLUME_TRACK	: .res FT_NUM_CHANNELS ; DPCM(4) + Triangle(2) are unused.
 
 ;variables and aliases
 
-FT_ENVELOPES	= FT_BASE_ADR
-FT_CH1_ENVS		= FT_ENVELOPES+0
-FT_CH2_ENVS		= FT_ENVELOPES+3
-FT_CH3_ENVS		= FT_ENVELOPES+6
-FT_CH4_ENVS		= FT_ENVELOPES+9
+FT_CH1_ENVS		= 0
+FT_CH2_ENVS		= 3
+FT_CH3_ENVS		= 6
+FT_CH4_ENVS		= 9
 
-FT_SLIDES       = FT_ENVELOPES+FT_ENVELOPES_ALL*FT_ENV_STRUCT_SIZE
-FT_CH1_SLIDES	= FT_SLIDES+0
-FT_CH2_SLIDES	= FT_SLIDES+1
-FT_CH3_SLIDES	= FT_SLIDES+2
+FT_CH1_NOTE			= FT_CHN_NOTE+0
+FT_CH2_NOTE			= FT_CHN_NOTE+1
+FT_CH3_NOTE			= FT_CHN_NOTE+2
+FT_CH4_NOTE			= FT_CHN_NOTE+3
+FT_CH5_NOTE			= FT_CHN_NOTE+4
 
-FT_CHANNELS		= FT_ENVELOPES+FT_ENVELOPES_ALL*FT_ENV_STRUCT_SIZE+FT_SLIDES_ALL*FT_SLIDE_STRUCT_SIZE
-FT_CH1_VARS		= FT_CHANNELS+0
-FT_CH2_VARS		= FT_CHANNELS+1
-FT_CH3_VARS		= FT_CHANNELS+2
-FT_CH4_VARS		= FT_CHANNELS+3
-FT_CH5_VARS		= FT_CHANNELS+4
+FT_CH1_INSTRUMENT	= FT_CHN_INSTRUMENT+0
+FT_CH2_INSTRUMENT	= FT_CHN_INSTRUMENT+1
+FT_CH3_INSTRUMENT	= FT_CHN_INSTRUMENT+2
+FT_CH4_INSTRUMENT	= FT_CHN_INSTRUMENT+3
+FT_CH5_INSTRUMENT	= FT_CHN_INSTRUMENT+4
 
-FT_CH1_NOTE			= FT_CH1_VARS+.lobyte(FT_CHN_NOTE)
-FT_CH2_NOTE			= FT_CH2_VARS+.lobyte(FT_CHN_NOTE)
-FT_CH3_NOTE			= FT_CH3_VARS+.lobyte(FT_CHN_NOTE)
-FT_CH4_NOTE			= FT_CH4_VARS+.lobyte(FT_CHN_NOTE)
-FT_CH5_NOTE			= FT_CH5_VARS+.lobyte(FT_CHN_NOTE)
+FT_CH1_DUTY			= FT_CHN_DUTY+0
+FT_CH2_DUTY			= FT_CHN_DUTY+1
+FT_CH3_DUTY			= FT_CHN_DUTY+2
+FT_CH4_DUTY			= FT_CHN_DUTY+3
+FT_CH5_DUTY			= FT_CHN_DUTY+4
 
-FT_CH1_INSTRUMENT	= FT_CH1_VARS+.lobyte(FT_CHN_INSTRUMENT)
-FT_CH2_INSTRUMENT	= FT_CH2_VARS+.lobyte(FT_CHN_INSTRUMENT)
-FT_CH3_INSTRUMENT	= FT_CH3_VARS+.lobyte(FT_CHN_INSTRUMENT)
-FT_CH4_INSTRUMENT	= FT_CH4_VARS+.lobyte(FT_CHN_INSTRUMENT)
-FT_CH5_INSTRUMENT	= FT_CH5_VARS+.lobyte(FT_CHN_INSTRUMENT)
+FT_CH1_VOLUME_TRACK	= FT_CHN_VOLUME_TRACK+0
+FT_CH2_VOLUME_TRACK	= FT_CHN_VOLUME_TRACK+1
+FT_CH4_VOLUME_TRACK	= FT_CHN_VOLUME_TRACK+3
 
-FT_CH1_DUTY			= FT_CH1_VARS+.lobyte(FT_CHN_DUTY)
-FT_CH2_DUTY			= FT_CH2_VARS+.lobyte(FT_CHN_DUTY)
-FT_CH3_DUTY			= FT_CH3_VARS+.lobyte(FT_CHN_DUTY)
-FT_CH4_DUTY			= FT_CH4_VARS+.lobyte(FT_CHN_DUTY)
-FT_CH5_DUTY			= FT_CH5_VARS+.lobyte(FT_CHN_DUTY)
+FT_CH1_VOLUME		= FT_ENV_VALUE+0
+FT_CH2_VOLUME		= FT_ENV_VALUE+3
+FT_CH3_VOLUME		= FT_ENV_VALUE+6
+FT_CH4_VOLUME		= FT_ENV_VALUE+9
 
-FT_CH1_VOLUME_TRACK	= FT_CH1_VARS+.lobyte(FT_CHN_VOLUME_TRACK)
-FT_CH2_VOLUME_TRACK	= FT_CH2_VARS+.lobyte(FT_CHN_VOLUME_TRACK)
-FT_CH4_VOLUME_TRACK	= FT_CH4_VARS+.lobyte(FT_CHN_VOLUME_TRACK)
+FT_CH1_NOTE_OFF		= FT_ENV_VALUE+1
+FT_CH2_NOTE_OFF		= FT_ENV_VALUE+4
+FT_CH3_NOTE_OFF		= FT_ENV_VALUE+7
+FT_CH4_NOTE_OFF		= FT_ENV_VALUE+10
 
-FT_CH1_VOLUME		= FT_CH1_ENVS+.lobyte(FT_ENV_VALUE)+0
-FT_CH2_VOLUME		= FT_CH2_ENVS+.lobyte(FT_ENV_VALUE)+0
-FT_CH3_VOLUME		= FT_CH3_ENVS+.lobyte(FT_ENV_VALUE)+0
-FT_CH4_VOLUME		= FT_CH4_ENVS+.lobyte(FT_ENV_VALUE)+0
+FT_CH1_PITCH_OFF	= FT_ENV_VALUE+2
+FT_CH2_PITCH_OFF	= FT_ENV_VALUE+5
+FT_CH3_PITCH_OFF	= FT_ENV_VALUE+8
 
-FT_CH1_NOTE_OFF		= FT_CH1_ENVS+.lobyte(FT_ENV_VALUE)+1
-FT_CH2_NOTE_OFF		= FT_CH2_ENVS+.lobyte(FT_ENV_VALUE)+1
-FT_CH3_NOTE_OFF		= FT_CH3_ENVS+.lobyte(FT_ENV_VALUE)+1
-FT_CH4_NOTE_OFF		= FT_CH4_ENVS+.lobyte(FT_ENV_VALUE)+1
+FT_CH1_SLIDE_STEP	= FT_SLIDE_STEP+0
+FT_CH2_SLIDE_STEP	= FT_SLIDE_STEP+1
+FT_CH3_SLIDE_STEP	= FT_SLIDE_STEP+2
 
-FT_CH1_PITCH_OFF	= FT_CH1_ENVS+.lobyte(FT_ENV_VALUE)+2
-FT_CH2_PITCH_OFF	= FT_CH2_ENVS+.lobyte(FT_ENV_VALUE)+2
-FT_CH3_PITCH_OFF	= FT_CH3_ENVS+.lobyte(FT_ENV_VALUE)+2
+FT_CH1_SLIDE_PITCH_L	= FT_SLIDE_PITCH_L+0
+FT_CH2_SLIDE_PITCH_L	= FT_SLIDE_PITCH_L+1
+FT_CH3_SLIDE_PITCH_L	= FT_SLIDE_PITCH_L+2
 
-FT_CH1_SLIDE_STEP	= FT_CH1_SLIDES+.lobyte(FT_SLIDE_STEP)
-FT_CH2_SLIDE_STEP	= FT_CH2_SLIDES+.lobyte(FT_SLIDE_STEP)
-FT_CH3_SLIDE_STEP	= FT_CH3_SLIDES+.lobyte(FT_SLIDE_STEP)
+FT_CH1_SLIDE_PITCH_H	= FT_SLIDE_PITCH_H+0
+FT_CH2_SLIDE_PITCH_H	= FT_SLIDE_PITCH_H+1
+FT_CH3_SLIDE_PITCH_H	= FT_SLIDE_PITCH_H+2
 
-FT_CH1_SLIDE_REPEAT	= FT_CH1_SLIDES+.lobyte(FT_SLIDE_REPEAT)
-FT_CH2_SLIDE_REPEAT	= FT_CH2_SLIDES+.lobyte(FT_SLIDE_REPEAT)
-FT_CH3_SLIDE_REPEAT	= FT_CH3_SLIDES+.lobyte(FT_SLIDE_REPEAT)
+FT_SFX_STRUCT_SIZE	= 15
 
-FT_CH1_SLIDE_PITCH_L	= FT_CH1_SLIDES+.lobyte(FT_SLIDE_PITCH_L)
-FT_CH2_SLIDE_PITCH_L	= FT_CH2_SLIDES+.lobyte(FT_SLIDE_PITCH_L)
-FT_CH3_SLIDE_PITCH_L	= FT_CH3_SLIDES+.lobyte(FT_SLIDE_PITCH_L)
-
-FT_CH1_SLIDE_PITCH_H	= FT_CH1_SLIDES+.lobyte(FT_SLIDE_PITCH_H)
-FT_CH2_SLIDE_PITCH_H	= FT_CH2_SLIDES+.lobyte(FT_SLIDE_PITCH_H)
-FT_CH3_SLIDE_PITCH_H	= FT_CH3_SLIDES+.lobyte(FT_SLIDE_PITCH_H)
-
-FT_VARS			= FT_CHANNELS+FT_CHANNELS_ALL*FT_CHN_STRUCT_SIZE
+FT_VARS: .res 13 - FT_SFX_STRUCT_SIZE * FT_SFX_STREAMS
 
 FT_PAL_ADJUST	= FT_VARS+0
 FT_SONG_LIST_L	= FT_VARS+1
@@ -177,14 +139,11 @@ FT_SFX_ADR_L		= FT_VARS+23
 FT_SFX_ADR_H		= FT_VARS+24
 FT_SFX_BASE_ADR		= FT_VARS+25
 
-FT_SFX_STRUCT_SIZE	= 15
 FT_SFX_REPEAT		= FT_SFX_BASE_ADR+0
 FT_SFX_PTR_L		= FT_SFX_BASE_ADR+1
 FT_SFX_PTR_H		= FT_SFX_BASE_ADR+2
 FT_SFX_OFF			= FT_SFX_BASE_ADR+3
 FT_SFX_BUF			= FT_SFX_BASE_ADR+4	;11 bytes
-
-FT_BASE_SIZE 		= FT_SFX_BUF+11-FT_BASE_ADR+FT_SFX_STRUCT_SIZE*FT_SFX_STREAMS
 
 ;aliases for sound effect channels to use in user calls
 
@@ -193,9 +152,23 @@ FT_SFX_CH1			= FT_SFX_STRUCT_SIZE*1
 FT_SFX_CH2			= FT_SFX_STRUCT_SIZE*2
 FT_SFX_CH3			= FT_SFX_STRUCT_SIZE*3
 
+.segment "ZEROPAGE"
+;zero page variables
+
+FT_TEMP:
+FT_TEMP_VAR1		: .res 1
+FT_TEMP_VAR2		: .res 1
+FT_TEMP_PTR1		: .res 2
+FT_TEMP_PTR2		: .res 2
+
+FT_TEMP_PTR_L		= FT_TEMP_PTR1+0
+FT_TEMP_PTR_H		= FT_TEMP_PTR1+1
+FT_TEMP_PTR2_L		= FT_TEMP_PTR2+0
+FT_TEMP_PTR2_H		= FT_TEMP_PTR2+1
+
+.segment "CODE"
 
 ;aliases for the APU registers
-
 APU_PL1_VOL		= $4000
 APU_PL1_SWEEP	= $4001
 APU_PL1_LO		= $4002
@@ -219,36 +192,31 @@ APU_SND_CHN		= $4015
 
 ;aliases for the APU registers in the output buffer
 
-	.if(!FT_SFX_ENABLE)				;if sound effects are disabled, write to the APU directly
-FT_MR_PULSE1_V		= APU_PL1_VOL
-FT_MR_PULSE1_L		= APU_PL1_LO
-FT_MR_PULSE1_H		= APU_PL1_HI
-FT_MR_PULSE2_V		= APU_PL2_VOL
-FT_MR_PULSE2_L		= APU_PL2_LO
-FT_MR_PULSE2_H		= APU_PL2_HI
-FT_MR_TRI_V			= APU_TRI_LINEAR
-FT_MR_TRI_L			= APU_TRI_LO
-FT_MR_TRI_H			= APU_TRI_HI
-FT_MR_NOISE_V		= APU_NOISE_VOL
-FT_MR_NOISE_F		= APU_NOISE_LO
-	.else								;otherwise write to the output buffer
-FT_MR_PULSE1_V		= FT_OUT_BUF
-FT_MR_PULSE1_L		= FT_OUT_BUF+1
-FT_MR_PULSE1_H		= FT_OUT_BUF+2
-FT_MR_PULSE2_V		= FT_OUT_BUF+3
-FT_MR_PULSE2_L		= FT_OUT_BUF+4
-FT_MR_PULSE2_H		= FT_OUT_BUF+5
-FT_MR_TRI_V			= FT_OUT_BUF+6
-FT_MR_TRI_L			= FT_OUT_BUF+7
-FT_MR_TRI_H			= FT_OUT_BUF+8
-FT_MR_NOISE_V		= FT_OUT_BUF+9
-FT_MR_NOISE_F		= FT_OUT_BUF+10
-	.endif
-
-.assert FT_TEMP_SIZE_DEF = FT_TEMP_SIZE, error, "Famitone temp size mismatch."
-.assert FT_BASE_SIZE_DEF = FT_BASE_SIZE, error, "Famitone base size mismatch."
-
-.out .sprintf ("Famitone base size is %d bytes.", FT_BASE_SIZE)
+.if(!FT_SFX_ENABLE)				;if sound effects are disabled, write to the APU directly
+	FT_MR_PULSE1_V		= APU_PL1_VOL
+	FT_MR_PULSE1_L		= APU_PL1_LO
+	FT_MR_PULSE1_H		= APU_PL1_HI
+	FT_MR_PULSE2_V		= APU_PL2_VOL
+	FT_MR_PULSE2_L		= APU_PL2_LO
+	FT_MR_PULSE2_H		= APU_PL2_HI
+	FT_MR_TRI_V			= APU_TRI_LINEAR
+	FT_MR_TRI_L			= APU_TRI_LO
+	FT_MR_TRI_H			= APU_TRI_HI
+	FT_MR_NOISE_V		= APU_NOISE_VOL
+	FT_MR_NOISE_F		= APU_NOISE_LO
+.else								;otherwise write to the output buffer
+	FT_MR_PULSE1_V		= FT_OUT_BUF
+	FT_MR_PULSE1_L		= FT_OUT_BUF+1
+	FT_MR_PULSE1_H		= FT_OUT_BUF+2
+	FT_MR_PULSE2_V		= FT_OUT_BUF+3
+	FT_MR_PULSE2_L		= FT_OUT_BUF+4
+	FT_MR_PULSE2_H		= FT_OUT_BUF+5
+	FT_MR_TRI_V			= FT_OUT_BUF+6
+	FT_MR_TRI_L			= FT_OUT_BUF+7
+	FT_MR_TRI_H			= FT_OUT_BUF+8
+	FT_MR_NOISE_V		= FT_OUT_BUF+9
+	FT_MR_NOISE_F		= FT_OUT_BUF+10
+.endif
 
 ;------------------------------------------------------------------------------
 ; reset APU, initialize FamiTone
@@ -281,16 +249,16 @@ FamiToneInit:
 	jsr FamiToneMusicStop	;initialize channels and envelopes
 
 	ldy #1
-	lda (FT_TEMP_PTR),y		;get instrument list address
+	lda (FT_TEMP_PTR1),y		;get instrument list address
 	sta FT_INSTRUMENT_L
 	iny
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta FT_INSTRUMENT_H
 	iny
-	lda (FT_TEMP_PTR),y		;get sample list address
+	lda (FT_TEMP_PTR1),y		;get sample list address
 	sta FT_DPCM_LIST_L
 	iny
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta FT_DPCM_LIST_H
 
 	lda #$ff				;previous pulse period MSB, to not write it when not changed
@@ -326,7 +294,7 @@ FamiToneMusicStop:
 	sta FT_SONG_SPEED		;stop music, reset pause flag
 	sta FT_DPCM_EFFECT		;no DPCM effect playing
 
-	ldx #.lobyte(FT_CHANNELS)	;initialize channel structures
+	ldx #0	;initialize channel structures
 
 @set_channels:
 
@@ -340,19 +308,19 @@ FamiToneMusicStop:
 	sta FT_CHN_DUTY,x
 
 	inx						;next channel
-	cpx #.lobyte(FT_CHANNELS)+FT_CHANNELS_ALL
+	cpx #FT_NUM_CHANNELS
 	bne @set_channels
 
-	ldx #.lobyte(FT_SLIDES)	;initialize all slides to zero
+	ldx #0	;initialize all slides to zero
 	lda #0
 @set_slides:
 
-	sta FT_SLIDE_REPEAT, x
+	sta FT_SLIDE_STEP, x
 	inx						;next channel
-	cpx #.lobyte(FT_SLIDES)+FT_SLIDES_ALL
+	cpx #FT_NUM_SLIDES
 	bne @set_slides
 
-	ldx #.lobyte(FT_ENVELOPES)	;initialize all envelopes to the dummy envelope
+	ldx #0	;initialize all envelopes to the dummy envelope
 
 @set_envelopes:
 
@@ -364,7 +332,7 @@ FamiToneMusicStop:
 	sta FT_ENV_REPEAT,x
 	sta FT_ENV_VALUE,x
 	inx
-	cpx #.lobyte(FT_ENVELOPES)+FT_ENVELOPES_ALL
+	cpx #FT_NUM_ENVELOPES
 
 	bne @set_envelopes
 
@@ -384,7 +352,7 @@ FamiToneMusicPlay:
 	stx <FT_TEMP_PTR_H
 
 	ldy #0
-	cmp (FT_TEMP_PTR),y		;check if there is such sub song
+	cmp (FT_TEMP_PTR1),y		;check if there is such sub song
 	bcs @skip
 
 	asl a					;multiply song number by 14
@@ -403,14 +371,14 @@ FamiToneMusicPlay:
 
 	jsr FamiToneMusicStop	;stop music, initialize channels and envelopes
 
-	ldx #.lobyte(FT_CHANNELS)	;initialize channel structures
+	ldx #0	;initialize channel structures
 
 @set_channels:
 
-	lda (FT_TEMP_PTR),y		;read channel pointers
+	lda (FT_TEMP_PTR1),y		;read channel pointers
 	sta FT_CHN_PTR_L,x
 	iny
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta FT_CHN_PTR_H,x
 	iny
 
@@ -425,7 +393,7 @@ FamiToneMusicPlay:
 	sta FT_CHN_DUTY,x
 
 	inx						;next channel
-	cpx #.lobyte(FT_CHANNELS)+FT_CHANNELS_ALL
+	cpx #FT_NUM_CHANNELS
 	bne @set_channels
 
 
@@ -435,10 +403,10 @@ FamiToneMusicPlay:
 	iny
 @pal:
 
-	lda (FT_TEMP_PTR),y		;read the tempo step
+	lda (FT_TEMP_PTR1),y		;read the tempo step
 	sta FT_TEMPO_STEP_L
 	iny
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta FT_TEMPO_STEP_H
 
 
@@ -523,36 +491,36 @@ FamiToneUpdate:
 	sta FT_TEMPO_ACC_H
 
 
-	ldx #.lobyte(FT_CH1_VARS)	;process channel 1
+	ldx #0	;process channel 1
 	jsr _FT2ChannelUpdate
 	bcc @no_new_note1
-	ldx #.lobyte(FT_CH1_ENVS)
+	ldx #FT_CH1_ENVS
 	lda FT_CH1_INSTRUMENT
 	jsr _FT2SetInstrument
 	sta FT_CH1_DUTY
 @no_new_note1:
 
-	ldx #.lobyte(FT_CH2_VARS)	;process channel 2
+	ldx #1	;process channel 2
 	jsr _FT2ChannelUpdate
 	bcc @no_new_note2
-	ldx #.lobyte(FT_CH2_ENVS)
+	ldx #FT_CH2_ENVS
 	lda FT_CH2_INSTRUMENT
 	jsr _FT2SetInstrument
 	sta FT_CH2_DUTY
 @no_new_note2:
 
-	ldx #.lobyte(FT_CH3_VARS)	;process channel 3
+	ldx #2	;process channel 3
 	jsr _FT2ChannelUpdate
 	bcc @no_new_note3
-	ldx #.lobyte(FT_CH3_ENVS)
+	ldx #FT_CH3_ENVS
 	lda FT_CH3_INSTRUMENT
 	jsr _FT2SetInstrument
 @no_new_note3:
 
-	ldx #.lobyte(FT_CH4_VARS)	;process channel 4
+	ldx #3	;process channel 4
 	jsr _FT2ChannelUpdate
 	bcc @no_new_note4
-	ldx #.lobyte(FT_CH4_ENVS)
+	ldx #FT_CH4_ENVS
 	lda FT_CH4_INSTRUMENT
 	jsr _FT2SetInstrument
 	sta FT_CH4_DUTY
@@ -560,7 +528,7 @@ FamiToneUpdate:
 
 	.if(FT_DPCM_ENABLE)
 
-	ldx #.lobyte(FT_CH5_VARS)	;process channel 5
+	ldx #4	;process channel 5
 	jsr _FT2ChannelUpdate
 	bcc @no_new_note5
 	lda FT_CH5_NOTE
@@ -576,7 +544,7 @@ FamiToneUpdate:
 
 @update_envelopes:
 
-	ldx #.lobyte(FT_ENVELOPES)	;process 11 envelopes
+	ldx #0	;process 11 envelopes
 
 @env_process:
 
@@ -595,7 +563,7 @@ FamiToneUpdate:
 
 @env_read_value:
 
-	lda (FT_TEMP_PTR),y		;read a byte of the envelope data
+	lda (FT_TEMP_PTR1),y		;read a byte of the envelope data
 	bpl @env_special		;values below 128 used as a special code, loop or repeat
 	clc						;values above 128 are output value+192 (output values are signed -63..64)
 	adc #256-192
@@ -607,7 +575,7 @@ FamiToneUpdate:
 
 	bne @env_set_repeat		;zero is the loop point, non-zero values used for the repeat counter
 	iny						;advance the pointer
-	lda (FT_TEMP_PTR),y		;read loop position
+	lda (FT_TEMP_PTR1),y		;read loop position
 	tay						;use loop position
 	jmp @env_read_value		;read next byte of the envelope
 
@@ -625,37 +593,8 @@ FamiToneUpdate:
 
 	inx						;next envelope
 
-	cpx #.lobyte(FT_ENVELOPES)+FT_ENVELOPES_ALL
+	cpx #FT_NUM_ENVELOPES
 	bne @env_process
-
-@update_slides:
-
-	ldx #.lobyte(FT_SLIDES)	;process 3 slides
-
-@slide_process:
-
-	lda FT_SLIDE_REPEAT,x 	; zero repeat means no active slide.
-	beq @slide_next
-
-	clc						; add step to slide pitch (16bit + 8bit signed).
-	lda FT_SLIDE_STEP,x
-	adc FT_SLIDE_PITCH_L,x
-	sta FT_SLIDE_PITCH_L,x
-	lda FT_SLIDE_STEP,x
-	and #$80
-	beq @positive_slide
-	lda #$ff
-@positive_slide:
-	adc FT_SLIDE_PITCH_H,x
-	sta FT_SLIDE_PITCH_H,x
-	dec FT_SLIDE_REPEAT,x
-
-@slide_next:
-
-	inx						;next slide
-
-	cpx #.lobyte(FT_SLIDES)+FT_SLIDES_ALL
-	bne @slide_process
 
 @update_sound:
 
@@ -669,7 +608,7 @@ FamiToneUpdate:
 	ora FT_PAL_ADJUST
 	.endif
 	tax
-	ldy FT_CH1_SLIDE_REPEAT
+	ldy FT_CH1_SLIDE_STEP
 	beq @ch1noslide
 @ch1slide:
 	lda FT_CH1_PITCH_OFF
@@ -725,7 +664,7 @@ FamiToneUpdate:
 	ora FT_PAL_ADJUST
 	.endif
 	tax
-	ldy FT_CH2_SLIDE_REPEAT
+	ldy FT_CH2_SLIDE_STEP
 	beq @ch2noslide
 @ch2slide:
 	lda FT_CH2_PITCH_OFF
@@ -782,7 +721,7 @@ FamiToneUpdate:
 	ora FT_PAL_ADJUST
 	.endif
 	tax
-	ldy FT_CH3_SLIDE_REPEAT
+	ldy FT_CH3_SLIDE_STEP
 	beq @ch3noslide
 @ch3slide:
 	lda FT_CH3_PITCH_OFF
@@ -903,6 +842,41 @@ FamiToneUpdate:
 
 	.endif
 
+@update_slides:
+	ldx #0	;process 3 slides
+
+@slide_process:
+	lda FT_SLIDE_STEP,x 	; zero repeat means no active slide.
+	beq @slide_next
+	clc						; add step to slide pitch (16bit + 8bit signed).
+	lda FT_SLIDE_STEP,x
+	adc FT_SLIDE_PITCH_L,x
+	sta FT_SLIDE_PITCH_L,x
+	lda FT_SLIDE_STEP,x
+	and #$80
+	beq @positive_slide
+
+@negative_slide:
+	lda #$ff
+	adc FT_SLIDE_PITCH_H,x
+	sta FT_SLIDE_PITCH_H,x
+	bpl @slide_next
+	jmp @clear_slide
+
+@positive_slide:
+	adc FT_SLIDE_PITCH_H,x
+	sta FT_SLIDE_PITCH_H,x
+	bmi @slide_next
+
+@clear_slide:
+	lda #0
+	sta FT_SLIDE_STEP,x
+
+@slide_next:
+	inx						;next slide
+	cpx #FT_NUM_SLIDES
+	bne @slide_process
+
 	.if(FT_THREAD)
 	pla
 	sta FT_TEMP_PTR_H
@@ -925,22 +899,22 @@ _FT2SetInstrument:
 	lda FT_INSTRUMENT_L
 	sta <FT_TEMP_PTR_L
 
-	lda (FT_TEMP_PTR),y		;duty cycle
+	lda (FT_TEMP_PTR1),y		;duty cycle
 	sta <FT_TEMP_VAR1
 	iny
 
-	lda (FT_TEMP_PTR),y		;instrument pointer LSB
+	lda (FT_TEMP_PTR1),y		;instrument pointer LSB
 	sta FT_ENV_ADR_L,x
 	iny
-	lda (FT_TEMP_PTR),y		;instrument pointer MSB
+	lda (FT_TEMP_PTR1),y		;instrument pointer MSB
 	iny
 	sta FT_ENV_ADR_H,x
 	inx						;next envelope
 
-	lda (FT_TEMP_PTR),y		;instrument pointer LSB
+	lda (FT_TEMP_PTR1),y		;instrument pointer LSB
 	sta FT_ENV_ADR_L,x
 	iny
-	lda (FT_TEMP_PTR),y		;instrument pointer MSB
+	lda (FT_TEMP_PTR1),y		;instrument pointer MSB
 	sta FT_ENV_ADR_H,x
 
 	lda #1
@@ -950,17 +924,17 @@ _FT2SetInstrument:
 	sta FT_ENV_REPEAT,x		;reset env2 repeat counter
 	sta FT_ENV_PTR,x		;reset env2 pointer
 
-	cpx #.lobyte(FT_CH4_ENVS)	;noise channel has only two envelopes
+	cpx #FT_CH4_ENVS	;noise channel has only two envelopes
 	bcs @no_pitch
 
 	inx						;next envelope
 	iny
 	sta FT_ENV_REPEAT,x		;reset env3 repeat counter
 	sta FT_ENV_PTR,x		;reset env3 pointer
-	lda (FT_TEMP_PTR),y		;instrument pointer LSB
+	lda (FT_TEMP_PTR1),y		;instrument pointer LSB
 	sta FT_ENV_ADR_L,x
 	iny
-	lda (FT_TEMP_PTR),y		;instrument pointer MSB
+	lda (FT_TEMP_PTR1),y		;instrument pointer MSB
 	sta FT_ENV_ADR_H,x
 
 @no_pitch:
@@ -987,15 +961,15 @@ _FT2ChannelUpdate:
 	ldy #0
 
 @read_byte:
-	lda (FT_TEMP_PTR),y		;read byte of the channel
-
+	lda (FT_TEMP_PTR1),y		;read byte of the channel
 	inc <FT_TEMP_PTR_L		;advance pointer
 	bne @check_regular_note
 	inc <FT_TEMP_PTR_H
+
 @check_regular_note:
 	cmp #$61
 	bcs @check_special_code			; $00 to $60 are regular notes, most common case.
-	jmp @store_note
+	jmp @regular_note
 
 @check_special_code:
 	ora #0
@@ -1014,72 +988,56 @@ _FT2ChannelUpdate:
 	jmp @read_byte
 
 @check_slide:
-	cmp #$61				; slide note (followed by num steps, step size and the target note)
-	beq @read_slide_num_steps
+;	cmp #$61				; slide note (followed by num steps, step size and the target note)
+;	beq @read_slide_num_steps
 
-@check_slide_cancel:	
-	;cmp #$62				; reset after a manual slide.
-	stx <FT_TEMP_VAR1
-	lda _FT2ChannelToSlide - .lobyte(FT_CHANNELS),x
+@slide:
+	stx FT_TEMP_VAR1
+	lda _FT2ChannelToSlide,x
 	tax
-	lda #0
-	sta FT_SLIDE_REPEAT,x
-	ldx <FT_TEMP_VAR1	
-	jmp @read_byte
-
-@read_slide_step_size:
-	stx <FT_TEMP_VAR1
-	lda _FT2ChannelToSlide - .lobyte(FT_CHANNELS),x
-	tax
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y	; read slide step size
+	iny
 	sta FT_SLIDE_STEP,x
-	inc <FT_TEMP_PTR_L
-	bne @read_slide_num_steps
-	inc <FT_TEMP_PTR_H
-
-@read_slide_num_steps:
-	lda (FT_TEMP_PTR),y
-	sta FT_SLIDE_REPEAT,x
-	inc <FT_TEMP_PTR_L
-	bne @read_slide_note
-	inc <FT_TEMP_PTR_H
-
-@read_slide_note:
-	cmp #$ff
-	beq @manual_slide
-@auto_slide:
-	stx <FT_TEMP_VAR2
-	sty <FT_TEMP_PTR2
-	lda (FT_TEMP_PTR),y		; new note
-	ldx <FT_TEMP_VAR1
-	ldy FT_CHN_NOTE,x		; current note
+	lda (FT_TEMP_PTR1),y	; read slide note from
+	sta FT_TEMP_VAR2
+	iny
+	lda (FT_TEMP_PTR1),y	; read slide note to
+	ldy FT_TEMP_VAR2		; start note
+	stx FT_TEMP_VAR2		; store slide index.
 	sta FT_CHN_NOTE,x		; store note code
-	tax 
+	tax
 	sec						; subtract the pitch of both notes. TODO: PAL + Saw channel.
 	lda _FT2NoteTableLSB,y
 	sbc _FT2NoteTableLSB,x
-	sta <FT_TEMP_PTR2_H
+	sta FT_TEMP_PTR2_H
 	lda _FT2NoteTableMSB,y
 	sbc _FT2NoteTableMSB,x
-	ldx <FT_TEMP_VAR2
-	ldy <FT_TEMP_PTR2
+	ldx FT_TEMP_VAR2		; slide index.
 	sta FT_SLIDE_PITCH_H,x
-	lda <FT_TEMP_PTR2_H
+	lda FT_TEMP_PTR2_H
 	sta FT_SLIDE_PITCH_L,x
-	ldx <FT_TEMP_VAR1
-	sec						;new note flag is set
-	jmp @done ;bra
+	ldx FT_TEMP_VAR1
+	lda #3
+	clc
+	adc FT_TEMP_PTR_L
+	sta FT_TEMP_PTR_L
+	bcc @slide_done_pos
+	inc FT_TEMP_PTR_H
 
-@manual_slide:
+@slide_done_pos:
+	ldy #0
+	sec						; new note flag is set
+	jmp @done
+
+@regular_note:	
+	sta FT_CHN_NOTE,x			; store note code
+	ldy _FT2ChannelToSlide,x	; clear any previous slide on new node.
+	bmi @sec_and_done
 	lda #0
-	sta FT_SLIDE_PITCH_H,x
-	sta FT_SLIDE_PITCH_L,x
-	lda (FT_TEMP_PTR),y		; new note
-
-@store_note:	
-	sta FT_CHN_NOTE,x		;store note code
+	sta FT_SLIDE_STEP,y
+@sec_and_done:
 	sec						;new note flag is set
-	jmp @done ;bra
+	jmp @done
 
 @special_code:
 	and #$7f
@@ -1107,13 +1065,13 @@ _FT2ChannelUpdate:
 	lda <FT_TEMP_PTR_H
 	adc #0
 	sta FT_CHN_RETURN_H,x
-	lda (FT_TEMP_PTR),y		;read length of the reference (how many rows)
+	lda (FT_TEMP_PTR1),y		;read length of the reference (how many rows)
 	sta FT_CHN_REF_LEN,x
 	iny
-	lda (FT_TEMP_PTR),y		;read 16-bit absolute address of the reference
+	lda (FT_TEMP_PTR1),y		;read 16-bit absolute address of the reference
 	sta <FT_TEMP_VAR1		;remember in temp
 	iny
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta <FT_TEMP_PTR_H
 	lda <FT_TEMP_VAR1
 	sta <FT_TEMP_PTR_L
@@ -1121,7 +1079,7 @@ _FT2ChannelUpdate:
 	jmp @read_byte
 
 @set_speed:
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta FT_SONG_SPEED
 	inc <FT_TEMP_PTR_L		;advance pointer after reading the speed value
 	bne @jump_back
@@ -1130,10 +1088,10 @@ _FT2ChannelUpdate:
 	jmp @read_byte 
 
 @set_loop:
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta <FT_TEMP_VAR1
 	iny
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta <FT_TEMP_PTR_H
 	lda <FT_TEMP_VAR1
 	sta <FT_TEMP_PTR_L
@@ -1142,7 +1100,7 @@ _FT2ChannelUpdate:
 
 @release_note:
 	stx <FT_TEMP_VAR1
-	lda _FT2ChannelToVolumeEnvelope - .lobyte(FT_CHANNELS),x ; DPCM(5) will never have releases.
+	lda _FT2ChannelToVolumeEnvelope,x ; DPCM(5) will never have releases.
 	tax
 
 	lda FT_ENV_ADR_L,x   ;load envelope data address into temp
@@ -1249,13 +1207,13 @@ _FT2SamplePlay:
 	sta APU_SND_CHN
 
 	ldy #0
-	lda (FT_TEMP_PTR),y		;sample offset
+	lda (FT_TEMP_PTR1),y		;sample offset
 	sta APU_DMC_START
 	iny
-	lda (FT_TEMP_PTR),y		;sample length
+	lda (FT_TEMP_PTR1),y		;sample length
 	sta APU_DMC_LEN
 	iny
-	lda (FT_TEMP_PTR),y		;pitch and loop
+	lda (FT_TEMP_PTR1),y		;pitch and loop
 	sta APU_DMC_FREQ
 
 	lda #32					;reset DAC counter
@@ -1291,10 +1249,10 @@ FamiToneSfxInit:
 
 	.endif
 	
-	lda (FT_TEMP_PTR),y		;read and store pointer to the effects list
+	lda (FT_TEMP_PTR1),y		;read and store pointer to the effects list
 	sta FT_SFX_ADR_L
 	iny
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta FT_SFX_ADR_H
 
 	ldx #FT_SFX_CH0			;init all the streams
@@ -1348,10 +1306,10 @@ FamiToneSfxPlay:
 	lda FT_SFX_ADR_H
 	sta <FT_TEMP_PTR_H
 
-	lda (FT_TEMP_PTR),y		;read effect pointer from the table
+	lda (FT_TEMP_PTR1),y		;read effect pointer from the table
 	sta FT_SFX_PTR_L,x		;store it
 	iny
-	lda (FT_TEMP_PTR),y
+	lda (FT_TEMP_PTR1),y
 	sta FT_SFX_PTR_H,x		;this write enables the effect
 
 	rts
@@ -1380,7 +1338,7 @@ _FT2SfxUpdate:
 	clc
 
 @read_byte:
-	lda (FT_TEMP_PTR),y		;read byte of effect
+	lda (FT_TEMP_PTR1),y		;read byte of effect
 	bmi @get_data			;if bit 7 is set, it is a register write
 	beq @eof
 	iny
@@ -1394,7 +1352,7 @@ _FT2SfxUpdate:
 	stx <FT_TEMP_VAR1		;it is a register write
 	adc <FT_TEMP_VAR1		;get offset in the effect output buffer
 	tax
-	lda (FT_TEMP_PTR),y		;read value
+	lda (FT_TEMP_PTR1),y		;read value
 	iny
 	sta FT_SFX_BUF-128,x	;store into output buffer
 	ldx <FT_TEMP_VAR1
@@ -1543,15 +1501,17 @@ _FT2SawNoteTableMSB:
 .endif
 
 _FT2ChannelToVolumeEnvelope:
-	.byte .lobyte(FT_ENVELOPES)+$00
-	.byte .lobyte(FT_ENVELOPES)+$03
-	.byte .lobyte(FT_ENVELOPES)+$06
-	.byte .lobyte(FT_ENVELOPES)+$09
+	.byte $00
+	.byte $03
+	.byte $06
+	.byte $09
 
 _FT2ChannelToSlide:
-	.byte .lobyte(FT_SLIDES)+$00
-	.byte .lobyte(FT_SLIDES)+$01
-	.byte .lobyte(FT_SLIDES)+$02
+	.byte $00
+	.byte $01
+	.byte $02
+	.byte $ff ; no slide for noise
+	.byte $ff ; no slide for DPCM
 
 ; Precomputed volume multiplication table (ceiling) [0-15]x[0-15].
 ; Load the 2 volumes in the lo/hi nibble and fetch.

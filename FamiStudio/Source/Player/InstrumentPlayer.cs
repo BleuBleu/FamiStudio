@@ -140,6 +140,7 @@ namespace FamiStudio
                 {
                     channels[activeChannel].UpdateEnvelopes();
                     channels[activeChannel].UpdateAPU();
+                    channels[activeChannel].UpdateSlides();
 
                     for (int i = 0; i < Envelope.Max; i++)
                         envelopeFrames[i] = channels[activeChannel].GetEnvelopeFrame(i);
