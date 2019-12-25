@@ -10,15 +10,15 @@
         {
             if (note.IsStop)
             {
-                WriteApuRegister(NesApu.APU_NOISE_VOL, 0xf0);
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_NOISE_VOL, 0xf0);
             }
             else if (note.IsValid)
             {
                 var noteVal = (int)(((note.Value + envelopeValues[Envelope.Arpeggio]) & 0x0f) ^ 0x0f) | ((duty << 7) & 0x80);
                 var volume  = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
 
-                WriteApuRegister(NesApu.APU_NOISE_LO, noteVal);
-                WriteApuRegister(NesApu.APU_NOISE_VOL, 0xf0 | volume);
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_NOISE_LO, noteVal);
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_NOISE_VOL, 0xf0 | volume);
             }
         }
     }

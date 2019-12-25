@@ -58,8 +58,15 @@ public:
 	// Save/load snapshot of emulation state
 	void save_snapshot( apu_snapshot_t* out ) const;
 	void load_snapshot( apu_snapshot_t const& );
-	
+
+	void start_seeking();
+	void stop_seeking();
+	bool is_seeking() const { return seeking; }
+
 private:
+	bool seeking;
+	int  shadowRegistersApu[21];
+	int  shadowRegistersVrc6[9];
 	long expansion;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;

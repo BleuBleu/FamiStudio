@@ -7,17 +7,15 @@ namespace FamiStudio
     {
         protected int apuIdx;
         protected int channelType;
-        protected bool seeking = false;
         protected bool newNote = false;
         protected Note note;
-        protected int slidePitch = 0;
-        protected int slideStep = 0;
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
         protected int duty;
-        protected int[] shadowRegisters = new int[21]; // MATTT: Add registers for expansion audio.
         protected ushort[] noteTable = null;
         protected short maximumPeriod = NesApu.MaximumPeriod11Bit;
+        protected int slideStep = 0;
+        private   int slidePitch = 0;
 
         public ChannelState(int apu, int type)
         {
@@ -40,14 +38,14 @@ namespace FamiStudio
             switch (tmpNote.Effect)
             {
                 case Note.EffectJump:
-                    if (!seeking && allowJump)
+                    if (!NesApu.NesApuIsSeeking(apuIdx) && allowJump)
                     {
                         patternIdx = tmpNote.EffectParam;
                         noteIdx = 0;
                     }
                     break;
                 case Note.EffectSkip:
-                    if (!seeking)
+                    if (!NesApu.NesApuIsSeeking(apuIdx))
                     {
                         patternIdx++;
                         noteIdx = tmpNote.EffectParam;
@@ -74,7 +72,9 @@ namespace FamiStudio
 
                 if (tmpNote.IsSlideNote)
                 {
-                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, tmpNote.Value, tmpNote.SlideTarget, false, out slidePitch, out int slideStepCount, out slideStep, out int slideTargetNote))
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+
+                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, tmpNote.Value, tmpNote.SlideTarget, noteTable, out slidePitch, out slideStep, out int slideTargetNote))
                         tmpNote.Value = (byte)slideTargetNote;
                 }
 
@@ -149,6 +149,11 @@ namespace FamiStudio
             }
         }
 
+        public int GetSlidePitch()
+        {
+            return slidePitch >> 1; // Remove the fraction part.
+        }
+
         public void UpdateSlides()
         {
             if (slideStep != 0)
@@ -172,23 +177,6 @@ namespace FamiStudio
             return envelopeIdx[envIdx];
         }
 
-        public void StartSeeking()
-        {
-            seeking = true;
-            for (int i = 0; i < shadowRegisters.Length; i++)
-                shadowRegisters[i] = -1;
-        }
-
-        public void StopSeeking()
-        {
-            seeking = false;
-            for (int i = 0; i < shadowRegisters.Length; i++)
-            {
-                if (shadowRegisters[i] >= 0)
-                    NesApu.NesApuWriteRegister(apuIdx, 0x4000 + i, shadowRegisters[i]);
-            }
-        }
-
         public void ClearNote()
         {
             note.Instrument = null;
@@ -197,23 +185,6 @@ namespace FamiStudio
         protected int MultiplyVolumes(int v0, int v1)
         {
             return (int)Math.Ceiling((v0 / 15.0f) * (v1 / 15.0f) * 15.0f);
-        }
-
-        protected void WriteApuRegister(int register, int data)
-        {
-            if (seeking)
-            {
-                int idx = register - 0x4000;
-                // Not caching DPCM register for now.
-                if (idx < shadowRegisters.Length) 
-                {
-                    shadowRegisters[idx] = data;
-                }
-            }
-            else
-            {
-                NesApu.NesApuWriteRegister(apuIdx, register, data);
-            }
         }
 
         public abstract void UpdateAPU();

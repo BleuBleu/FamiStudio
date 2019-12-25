@@ -62,7 +62,7 @@ namespace FamiStudio
         const int DefaultDPCMTextPosX           = 2;
         const int DefaultDPCMTextPosY           = 0;
         const int DefaultOctaveNameOffsetY      = 11;
-        const int DefaultSlideIconPosX          = 2; // MATTT: Image is not centered.
+        const int DefaultSlideIconPosX          = 2;
         const int DefaultSlideIconPosY          = 2;
 
         int numNotes;
@@ -127,6 +127,7 @@ namespace FamiStudio
         RenderBitmap bmpEffectExpanded;
         RenderBitmap bmpEffectCollapsed;
         RenderBitmap bmpSlide;
+        RenderBitmap bmpSlideCustom;
         RenderBitmap[] bmpEffects = new RenderBitmap[5];
         RenderBitmap[] bmpEffectsFilled = new RenderBitmap[3];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
@@ -373,7 +374,8 @@ namespace FamiStudio
             bmpEffectsFilled[2] = g.CreateBitmapFromResource("SpeedSmallFill");
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
-            bmpSlide = g.CreateBitmapFromResource("PortamentoSmall");
+            bmpSlide = g.CreateBitmapFromResource("SlideSmall");
+            bmpSlideCustom = g.CreateBitmapFromResource("SlideCustomSmall");
 
             for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
             {
@@ -880,7 +882,7 @@ namespace FamiStudio
             bool createMissingInstrument = false;
             if (mergeInstruments)
             {
-                createMissingInstrument = PlatformDialogs.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
             }
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
@@ -1099,36 +1101,21 @@ namespace FamiStudio
                                                 g.PushTranslation(x, y);
                                                 if (lastNote.IsSlideNote)
                                                 {
-                                                    if (channel.ComputeSlideNoteParams(p, lastNoteTime, lastNote.Value, lastNote.SlideTarget, false, out _, out _, out _, out int targetNote))
+                                                    if (channel.ComputeSlideNoteParams(p, lastNoteTime, lastNote.Value, lastNote.SlideTarget, null, out _, out _, out int targetNote))
                                                     {
                                                         int sx = i - lastNoteTime;
                                                         int sy = targetNote - lastNote.Value;
 
-                                                        if (sy > 0)
-                                                            g.PushTransform(0, 0, sx, -sy);
-                                                        else
-                                                            g.PushTransform(0, noteSizeY, sx, -sy);
-
+                                                        g.PushTransform(0, sy > 0 ? 0 : noteSizeY, sx, -sy);                                                        
                                                         g.FillConvexPath(slideNoteGeometry[zoomLevel - MinZoomLevel], g.GetSolidBrush(color, 1.0f, 0.2f));
                                                         g.PopTransform();
-
-                                                        //g.AntiAliasing = true;
-                                                        //g.DrawLine(0, noteSizeY / 2, (i - lastNoteTime) * noteSizeX, -sy * noteSizeY + noteSizeY / 2, g.GetSolidBrush(color, 0.5f, 0.5f), 3);
-                                                        //g.AntiAliasing = false;
-
-                                                        //g.AntiAliasing = true;
-                                                        //g.DrawLine(noteSizeY / 2, noteSizeY / 2, (i - lastNoteTime) * noteSizeX + noteSizeY / 2, -sy * noteSizeY + noteSizeY / 2, selectionBgVisibleBrush, noteSizeY);
-                                                        //g.AntiAliasing = false;
-
-                                                        //g.DrawLine(0, 0, (i - lastNoteTime) * noteSizeX - 4, -sy * noteSizeY, selectionBgVisibleBrush);
-                                                        //g.DrawLine(0, noteSizeY, (i - lastNoteTime) * noteSizeX - 4, (-sy + 1) * noteSizeY, selectionBgVisibleBrush);
                                                     }
                                                 }
 
                                                 g.FillRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, g.GetVerticalGradientBrush(color, sizeY, 0.8f));
                                                 g.DrawRectangle(0, 0, (i - lastNoteTime) * noteSizeX, sizeY, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
                                                 if (lastNote.IsSlideNote)
-                                                    g.DrawBitmap(bmpSlide, slideIconPosX, slideIconPosY);
+                                                    g.DrawBitmap(lastNote.SlideTarget != 0 ? bmpSlideCustom : bmpSlide, slideIconPosX, slideIconPosY);
                                                 g.PopTransform();
                                             }       
                                         }
@@ -1370,16 +1357,6 @@ namespace FamiStudio
                 pattern.Notes[effectNoteIdx].Volume = val;
                 pattern.UpdateLastValidNotesAndVolume();
             }
-            // MATTT
-            //else if (selectedEffectIdx == SpecialEffectSlide)
-            //{
-            //    if (pattern.Notes[effectNoteIdx].IsSlideNote)
-            //    {
-            //        sbyte val = (sbyte)Utils.Clamp((int)Math.Round(ratio * sbyte.MaxValue + (1.0f - ratio) * sbyte.MinValue), sbyte.MinValue, sbyte.MaxValue);
-            //        pattern.Notes[effectNoteIdx].SlideTarget = val;
-            //        pattern.UpdateLastValidNotesAndVolume();
-            //    }
-            //}
             else
             {
                 if (pattern.Notes[effectNoteIdx].Effect == Note.EffectNone)
@@ -1714,12 +1691,6 @@ namespace FamiStudio
             }
         }
 
-#if FAMISTUDIO_WINDOWS
-        // TODO: Move somewhere else!!!
-        [DllImport("USER32.dll")]
-        static extern short GetKeyState(int key); // MATTT
-#endif
-
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -1812,7 +1783,7 @@ namespace FamiStudio
                 {
                     bool ctrl  = ModifierKeys.HasFlag(Keys.Control);
                     bool shift = ModifierKeys.HasFlag(Keys.Shift);
-                    bool slide = (GetKeyState((int)'S') & 0x8000) != 0; // MATTT
+                    bool slide = PlatformUtils.IsKeyDown(Keys.S);
 
                     if (ctrl || shift && channel.SupportsReleaseNotes())
                     {
@@ -1898,7 +1869,7 @@ namespace FamiStudio
                     var mapping = App.Project.GetDPCMMapping(noteValue);
                     if (left && mapping == null)
                     {
-                        var filename = PlatformDialogs.ShowOpenFileDialog("Open File", "DPCM Samples (*.dmc)|*.dmc");
+                        var filename = PlatformUtils.ShowOpenFileDialog("Open File", "DPCM Samples (*.dmc)|*.dmc");
                         if (filename != null)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
@@ -1920,7 +1891,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    PlatformDialogs.MessageBox("DPCM samples are only allowed between C1 and D6", "Error", MessageBoxButtons.OK);
+                    PlatformUtils.MessageBox("DPCM samples are only allowed between C1 and D6", "Error", MessageBoxButtons.OK);
                 }
             }
         }

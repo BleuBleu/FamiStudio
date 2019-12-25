@@ -60,3 +60,18 @@ extern "C" void __stdcall  NesApuEnableChannel(int apuIdx, int idx, int enable)
 {
 	apu[apuIdx].enable_channel(idx, enable != 0);
 }
+
+extern "C" void __stdcall  NesApuStartSeeking(int apuIdx)
+{
+	apu[apuIdx].start_seeking();
+}
+
+extern "C" void __stdcall  NesApuStopSeeking(int apuIdx)
+{
+	apu[apuIdx].stop_seeking();
+}
+
+extern "C" bool __stdcall  NesApuIsSeeking(int apuIdx)
+{
+	return apu[apuIdx].is_seeking();
+}

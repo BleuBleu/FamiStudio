@@ -3,31 +3,30 @@
 - GOAL: Play Shovel Knight first track.
 	
 x Refactor to have variying number of channels
-- FamiTracker TXT import/export
-- NSF support too.
+- FamiTracker TXT import/export (+instrument...)
+x NSF support too. All done, just need to test a lot...
 - WAV support.
 x Tooltip warning on incomparible instruments
 x Lower register notes for VRC6? 
 - Slide notes. (fix keyboard shortcut, Mac, etc.)
-- VRC6 shadow register for seeking.
+x VRC6 shadow register for seeking.
 - To test:
 	- NSF: Try putting multiple things at once: volume + slide, volume + jump, etc. etc. Must all work.
 	- NSF: Retest volume tracks
 	- Copy paste: Handle all edge cases where you could copy from one expansion to another.
 	- Note drawing, release, stop, from far away.
 - Fix all MATTT
-- Make it very clear what is an expansion channel (color, icon, etc.). Visually must match instrument. 
 - Shovel Knight song:
 	- Noise track has weird 1 beat offset. Might need to start envelope at zero + move.
-- Pass current note pitch to ComputeSlideNoteParams so it doesnt know about NesApu note table.
-- BUG: After using expansion, new file -> weird grey square below sequencer (reset layout?).
-- BUG: Changing color of instrument in project explorer doesnt refresh piano roll.
 
-1.5.0: FDS & MMC5
-================
+TODO:
+- Finalize piano roll input for notes
+- Duty icons sucks.
+
+1.5.0: FDS
+==========
 - FDS support in NesSndEmu 
-- Instrument refactoring (base class + derived)
-- Instrument icons.
+- Instrument refactoring (base class + derived?)
 - 
 
 ========================

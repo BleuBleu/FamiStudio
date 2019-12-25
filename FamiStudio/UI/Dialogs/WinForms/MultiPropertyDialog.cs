@@ -36,8 +36,8 @@ namespace FamiStudio
             this.buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
             this.buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
             this.Width    = (int)(width  * Direct2DTheme.DialogScaling);
-            this.font     = new Font(PlatformDialogs.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
-            this.fontBold = new Font(PlatformDialogs.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
+            this.font     = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
+            this.fontBold = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
         }
 
         public PropertyPage AddPropertyPage(string text, string image)

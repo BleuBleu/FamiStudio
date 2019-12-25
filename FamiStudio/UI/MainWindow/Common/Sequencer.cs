@@ -220,8 +220,8 @@ namespace FamiStudio
             bmpTracks[Channel.Triangle] = g.CreateBitmapFromResource("Triangle");
             bmpTracks[Channel.Noise] = g.CreateBitmapFromResource("Noise");
             bmpTracks[Channel.DPCM] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.VRC6Square1] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.VRC6Square2] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.VRC6Square1] = g.CreateBitmapFromResource("SquareExp");
+            bmpTracks[Channel.VRC6Square2] = g.CreateBitmapFromResource("SquareExp");
             bmpTracks[Channel.VRC6Saw] = g.CreateBitmapFromResource("Saw");
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
@@ -741,7 +741,7 @@ namespace FamiStudio
             bool createMissingInstrument = false;
             if (mergeInstruments)
             {
-                createMissingInstrument = PlatformDialogs.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
             }
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Song, Song.Id);

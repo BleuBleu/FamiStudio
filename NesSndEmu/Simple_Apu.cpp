@@ -21,6 +21,7 @@ static int null_dmc_reader( void*, cpu_addr_t )
 
 Simple_Apu::Simple_Apu()
 {
+	seeking = false;
 	time = 0;
 	frame_length = 29780;
 	expansion = expansion_none;
@@ -55,10 +56,59 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 
 void Simple_Apu::write_register(cpu_addr_t addr, int data)
 {
-	if (addr >= Nes_Apu::start_addr && addr <= Nes_Apu::end_addr)
-		apu.write_register(clock(), addr, data);
-	else if (expansion == expansion_vrc6)
-		vrc6.write_register(clock(), addr, data);
+	if (seeking)
+	{
+		if (addr >= 0x4000 && addr <= 0x4013)
+		{
+			shadowRegistersApu[addr - 0x4000] = data;
+		}
+		else if (expansion == expansion_vrc6)
+		{
+			if (addr >= 0x9000 && addr <= 0x9002) shadowRegistersVrc6[0 + addr - 0x9000] = data;
+			if (addr >= 0xa000 && addr <= 0xa002) shadowRegistersVrc6[3 + addr - 0xa000] = data;
+			if (addr >= 0xb000 && addr <= 0xb002) shadowRegistersVrc6[6 + addr - 0xb000] = data;
+		}
+	}
+	else
+	{
+		if (addr >= Nes_Apu::start_addr && addr <= Nes_Apu::end_addr)
+			apu.write_register(clock(), addr, data);
+		else if (expansion == expansion_vrc6)
+			vrc6.write_register(clock(), addr, data);
+	}
+}
+
+#define ARRAY_COUNT(x) (sizeof(x) / sizeof(x[0]))
+
+void Simple_Apu::start_seeking()
+{
+	seeking = true;
+
+	for (int i = 0; i < ARRAY_COUNT(shadowRegistersApu); i++)
+		shadowRegistersApu[i] = -1;
+	for (int i = 0; i < ARRAY_COUNT(shadowRegistersVrc6); i++)
+		shadowRegistersVrc6[i] = -1;
+}
+
+void Simple_Apu::stop_seeking()
+{
+	for (int i = 0; i < ARRAY_COUNT(shadowRegistersApu); i++)
+	{
+		if (shadowRegistersApu[i] >= 0)
+			apu.write_register(clock(), 0x4000 + i, shadowRegistersApu[i]);
+	}
+
+	if (expansion == expansion_vrc6)
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			if (shadowRegistersVrc6[0 + i]) vrc6.write_register(clock(), 0x9000 + i, shadowRegistersVrc6[0 + i]);
+			if (shadowRegistersVrc6[3 + i]) vrc6.write_register(clock(), 0xa000 + i, shadowRegistersVrc6[3 + i]);
+			if (shadowRegistersVrc6[6 + i]) vrc6.write_register(clock(), 0xb000 + i, shadowRegistersVrc6[6 + i]);
+		}
+	}
+
+	seeking = false;
 }
 
 int Simple_Apu::read_status()
@@ -78,6 +128,7 @@ void Simple_Apu::end_frame()
 
 void Simple_Apu::reset()
 {
+	seeking = false;
 	apu.reset();
 	vrc6.reset();
 }

@@ -13,17 +13,17 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                WriteApuRegister(NesApu.VRC6_SAW_VOL, 0x00);
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, 0x00);
             }
             else if (note.IsValid)
             {
                 var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                var period = Math.Min(maximumPeriod, noteTable[noteVal] + slidePitch + envelopeValues[Envelope.Pitch]);
+                var period = Math.Min(maximumPeriod, noteTable[noteVal] + GetSlidePitch() + envelopeValues[Envelope.Pitch]);
                 var volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
 
-                WriteApuRegister(NesApu.VRC6_SAW_VOL, (volume << 1) | ((duty & 1) << 5)); // Get hi-bit from duty, like FamiTracker.
-                WriteApuRegister(NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
-                WriteApuRegister(NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, (volume << 1) | ((duty & 1) << 5)); // Get hi-bit from duty, like FamiTracker.
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
             }
         }
     };

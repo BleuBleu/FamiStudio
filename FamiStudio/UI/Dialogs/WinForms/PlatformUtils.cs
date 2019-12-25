@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-    public static class PlatformDialogs
+    public static class PlatformUtils
     {
         public static PrivateFontCollection PrivateFontCollection;
 
@@ -19,6 +19,9 @@ namespace FamiStudio
 
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
+
+        [DllImport("USER32.dll")]
+        private static extern short GetKeyState(int key);
 
         private static void AddFontFromMemory(PrivateFontCollection pfc, string name)
         {
@@ -71,6 +74,11 @@ namespace FamiStudio
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icons = MessageBoxIcon.None)
         {
             return System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
+        }
+
+        public static bool IsKeyDown(Keys k)
+        {
+            return (GetKeyState((int)k) & 0x8000) != 0;
         }
     }
 }

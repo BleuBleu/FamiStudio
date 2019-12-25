@@ -77,7 +77,6 @@ namespace FamiStudio
             return envelopeFrames[idx]; // TODO: Account for output delay.
         }
 
-        // MATTT Will need to restart the instrument player when changing expansion chip.
         unsafe void PlayerThread(object o)
         {
             var lastNoteWasRelease = false;

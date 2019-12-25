@@ -87,7 +87,7 @@ namespace FamiStudio
                 var song = project.Songs[i];
                 var line = $"\t{dw} ";
 
-                for (int chn = 0; chn < 5; ++chn)
+                for (int chn = 0; chn < song.Channels.Length; ++chn)
                 {
                     line += $"{ll}song{i}ch{chn},";
                 }
@@ -235,8 +235,9 @@ namespace FamiStudio
                 var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Volume]]);
                 var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Arpeggio]]);
                 var pitchEnvIdx    = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Pitch]]);
+                var dutyShift      = instrument.ExpansionType == Project.ExpansionVRC6 ? 4 : 6;
 
-                lines.Add($"\t{db} ${(instrument.DutyCycle << 6) | 0x30:x2} ;instrument {i:x2} ({instrument.Name})");
+                lines.Add($"\t{db} ${(instrument.DutyCycle << dutyShift) | 0x30:x2} ;instrument {i:x2} ({instrument.Name})");
                 lines.Add($"\t{dw} {ll}env{volumeEnvIdx},{ll}env{arpeggioEnvIdx},{ll}env{pitchEnvIdx}");
                 lines.Add($"\t{db} $00");
 
@@ -517,7 +518,9 @@ namespace FamiStudio
                             {
                                 if (note.IsSlideNote)
                                 {
-                                    if (channel.ComputeSlideNoteParams(p, i - 1, note.Value, note.SlideTarget, false, out _, out int stepCount, out int stepSize, out int targetNote))
+                                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+
+                                    if (channel.ComputeSlideNoteParams(p, i - 1, note.Value, note.SlideTarget, noteTable, out _, out int stepSize, out int targetNote))
                                     {
                                         patternBuffer.Add(0x61);
                                         patternBuffer.Add((byte)stepSize);

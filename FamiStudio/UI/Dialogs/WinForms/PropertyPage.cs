@@ -52,7 +52,7 @@ namespace FamiStudio
             // Happens in design mode
             try
             {
-                font = new Font(PlatformDialogs.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
+                font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             }
             catch
             {

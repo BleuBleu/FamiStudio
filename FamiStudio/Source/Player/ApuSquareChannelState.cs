@@ -16,24 +16,24 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                WriteApuRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
             }
             else if (note.IsValid)
             {
                 var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                var period = Utils.Clamp(noteTable[noteVal] + slidePitch + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
+                var period = Utils.Clamp(noteTable[noteVal] + GetSlidePitch() + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
                 var volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
 
-                WriteApuRegister(NesApu.APU_PL1_LO + regOffset, period & 0xff);
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_LO + regOffset, period & 0xff);
                 period = (period >> 8) & 0x07;
 
                 if (prevPulseHi != period) // Avoid resetting the sequence.
                 {
                     prevPulseHi = period;
-                    WriteApuRegister(NesApu.APU_PL1_HI + regOffset, period);
+                    NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_HI + regOffset, period);
                 }
 
-                WriteApuRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
             }
         }
     };

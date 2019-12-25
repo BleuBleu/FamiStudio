@@ -113,8 +113,10 @@ namespace FamiStudio
 
             if (startInfo.frame != 0)
             {
-                foreach (var channel in channels)
-                    channel.StartSeeking();
+                NesApu.NesApuStartSeeking(apuIndex);
+                #if DEBUG
+                    NesApu.seeking = true;
+                #endif
 
                 while (playPattern * song.PatternLength + playNote != startInfo.frame)
                 {
@@ -139,8 +141,10 @@ namespace FamiStudio
                     }
                 }
 
-                foreach (var channel in channels)
-                    channel.StopSeeking();
+                NesApu.NesApuStopSeeking(apuIndex);
+#if DEBUG
+                NesApu.seeking = false;
+#endif
             }
 
             var waitEvents = new WaitHandle[] { stopEvent, frameEvent };

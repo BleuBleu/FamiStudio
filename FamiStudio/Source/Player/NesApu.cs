@@ -31,12 +31,19 @@ namespace FamiStudio
         public extern static void NesApuReset(int apuIdx, int expansion);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NesApuEnableChannel(int apuIdx, int idx, int enable);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static void NesApuStartSeeking(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static void NesApuStopSeeking(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static bool NesApuIsSeeking(int apuIdx);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
 
         public const int APU_SONG       = 0;
         public const int APU_INSTRUMENT = 1;
         public const int APU_WAV_EXPORT = 2;
+        public const int APU_COUNT      = 3;
 
         public const int APU_PL1_VOL    = 0x4000;
         public const int APU_PL1_SWEEP  = 0x4001;
@@ -75,6 +82,10 @@ namespace FamiStudio
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;
         public const int MaximumPeriod12Bit = 0xfff;
+
+#if DEBUG
+        public static bool seeking = false;
+#endif
 
         // Taken from FamiTracker.
         public static readonly ushort[] NoteTableNTSC = new ushort[]

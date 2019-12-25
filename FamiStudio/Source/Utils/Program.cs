@@ -33,7 +33,7 @@ namespace FamiStudio
             Settings.Load();
             Cursors.Initialize();
             RenderTheme.Initialize();
-            PlatformDialogs.Initialize();
+            PlatformUtils.Initialize();
 
 #if FAMISTUDIO_WINDOWS
             PerformanceCounter.Initialize();

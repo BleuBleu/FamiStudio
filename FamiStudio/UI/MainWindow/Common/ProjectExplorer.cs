@@ -177,7 +177,7 @@ namespace FamiStudio
                 if (type == ButtonType.Song)
                     return projectExplorer.bmpSong;
                 else if (type == ButtonType.Instrument)
-                    return projectExplorer.bmpInstrument;
+                    return instrument == null || instrument.ExpansionType == Project.ExpansionNone ? projectExplorer.bmpInstrument : projectExplorer.bmpInstrumentExp;
                 return null;
             }
 
@@ -232,6 +232,7 @@ namespace FamiStudio
 
         RenderBitmap   bmpSong;
         RenderBitmap   bmpInstrument;
+        RenderBitmap   bmpInstrumentExp;
         RenderBitmap   bmpAdd;
         RenderBitmap   bmpDPCM;
         RenderBitmap   bmpArpeggio;
@@ -314,6 +315,7 @@ namespace FamiStudio
 
             bmpSong = g.CreateBitmapFromResource("Music");
             bmpInstrument = g.CreateBitmapFromResource("Instrument");
+            bmpInstrumentExp = g.CreateBitmapFromResource("InstrumentExp");
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
             bmpDuty[0] = g.CreateBitmapFromResource("Duty1");
@@ -545,7 +547,7 @@ namespace FamiStudio
                     {
                         if (envelopeDragIdx == -1)
                         {
-                            if (PlatformDialogs.MessageBox($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            if (PlatformUtils.MessageBox($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                                 App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
@@ -556,7 +558,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            if (PlatformDialogs.MessageBox($"Are you sure you want to copy the {Envelope.EnvelopeStrings[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            if (PlatformUtils.MessageBox($"Are you sure you want to copy the {Envelope.EnvelopeStrings[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
                                 instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].Clone();
@@ -663,7 +665,7 @@ namespace FamiStudio
                         }
                         if (subButtonType == SubButtonType.LoadInstrument)
                         {
-                            var filename = PlatformDialogs.ShowOpenFileDialog("Open File", "Fami Tracker Instrument (*.fti)|*.fti");
+                            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "Fami Tracker Instrument (*.fti)|*.fti");
                             if (filename != null)
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
@@ -721,7 +723,7 @@ namespace FamiStudio
                     if (button.type == ButtonType.Song && App.Project.Songs.Count > 1)
                     {
                         var song = button.song;
-                        if (PlatformDialogs.MessageBox($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        if (PlatformUtils.MessageBox($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             bool selectNewSong = song == selectedSong;
                             App.Stop();
@@ -758,7 +760,7 @@ namespace FamiStudio
                         }
                         else if (subButtonType == SubButtonType.Max)
                         {
-                            if (PlatformDialogs.MessageBox($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            if (PlatformUtils.MessageBox($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 bool selectNewInstrument = instrument == selectedInstrument;
                                 App.StopInstrumentNoteAndWait();
@@ -827,10 +829,12 @@ namespace FamiStudio
                         if (expansion != project.ExpansionAudio)
                         {
                             if (project.ExpansionAudio == Project.ExpansionNone ||
-                                PlatformDialogs.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                                PlatformUtils.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
+                                App.StopInstrumentPlayer();
                                 project.SetExpansionAudio(expansion);
                                 ExpansionAudioChanged?.Invoke();
+                                App.StartInstrumentPlayer();
                             }
                         }
 

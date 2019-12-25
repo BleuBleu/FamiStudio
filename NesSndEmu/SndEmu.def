@@ -9,3 +9,6 @@ EXPORTS
 	NesApuEndFrame         @7
 	NesApuReset            @8
 	NesApuEnableChannel    @9
+	NesApuStartSeeking     @10
+	NesApuStopSeeking      @11
+	NesApuIsSeeking        @12

@@ -95,8 +95,6 @@ namespace FamiStudio
 
         private void ProjectExplorer_ExpansionAudioChanged()
         {
-            instrumentPlayer.Stop();
-            instrumentPlayer.Start(project);
             RefreshSequencerLayout();
             PianoRoll.Reset();
         }
@@ -201,7 +199,7 @@ namespace FamiStudio
             {
                 if (undoRedoManager.UndoScope != TransactionScope.Max)
                 {
-                    var result = PlatformDialogs.MessageBox("Save changes?", "FamiStudio", MessageBoxButtons.YesNoCancel);
+                    var result = PlatformUtils.MessageBox("Save changes?", "FamiStudio", MessageBoxButtons.YesNoCancel);
                     if (result == DialogResult.Cancel)
                     {
                         return false;
@@ -287,7 +285,7 @@ namespace FamiStudio
 
         public void OpenProject()
         {
-            var filename = PlatformDialogs.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt)|*.fms;*.txt|FamiStudio Files (*.fms)|*.fms|Famitracker Text Export (*.txt)|*.txt");
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt)|*.fms;*.txt|FamiStudio Files (*.fms)|*.fms|Famitracker Text Export (*.txt)|*.txt");
             if (filename != null)
             {
                 OpenProject(filename);
@@ -300,7 +298,7 @@ namespace FamiStudio
 
             if (forceSaveAs || string.IsNullOrEmpty(project.Filename))
             {
-                string filename = PlatformDialogs.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms");
+                string filename = PlatformUtils.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms");
                 if (filename != null)
                 {
                     success = ProjectFile.Save(project, filename);
@@ -321,7 +319,7 @@ namespace FamiStudio
             }
             else
             {
-                PlatformDialogs.MessageBox("An error happened while saving.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                PlatformUtils.MessageBox("An error happened while saving.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             InvalidateEverything();
@@ -423,7 +421,7 @@ namespace FamiStudio
             {
                 newReleaseAvailable = false;
 
-                if (PlatformDialogs.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (PlatformUtils.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     Process.Start("http://www.famistudio.org");
                 }
@@ -501,6 +499,16 @@ namespace FamiStudio
         {
             Stop();
             StopInstrumentNoteAndWait();
+        }
+
+        public void StopInstrumentPlayer()
+        {
+            instrumentPlayer.Stop();
+        }
+
+        public void StartInstrumentPlayer()
+        {
+            instrumentPlayer.Start(project);
         }
 
         public void KeyDown(KeyEventArgs e)
@@ -759,6 +767,7 @@ namespace FamiStudio
         private void projectExplorer_InstrumentColorChanged(Instrument instrument)
         {
             Sequencer.InvalidatePatternCache();
+            PianoRoll.ConditionalInvalidate();
         }
 
         private void projectExplorer_SongModified(Song song)

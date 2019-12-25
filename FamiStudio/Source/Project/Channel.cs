@@ -317,9 +317,8 @@ namespace FamiStudio
             while (true);
         }
 
-        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, int currNote, int nextNoteTarget, bool pal, out int pitchDelta, out int stepCount, out int stepSize, out int targetNote)
+        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, int currNote, int customSlideTarget, ushort[] noteTable, out int pitchDelta, out int stepSize, out int targetNote)
         {
-            stepCount  = 0;
             stepSize   = 0;
             targetNote = Note.NoteInvalid;
             pitchDelta = 0;
@@ -328,29 +327,37 @@ namespace FamiStudio
             if (noteDuration < 0)
                 return false;
 
-            var nextNote = nextNoteTarget != 0 ? nextNoteTarget : nextNoteValue;
+            var nextNote = customSlideTarget != 0 ? customSlideTarget : nextNoteValue;
             if (nextNote == Note.NoteStop)
                 return false;
 
-            var noteTable  = NesApu.GetNoteTableForChannelType(type, pal);
-
-            pitchDelta = (int)noteTable[currNote] - (int)noteTable[nextNote];
-
-            if (pitchDelta != 0)
+            if (noteTable == null)
             {
-                var frameCount = Math.Min(noteDuration * song.Speed, 255);
-                var floatStep = Math.Abs(pitchDelta) / (float)frameCount;
-
                 targetNote = nextNote;
-                stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
-                stepCount = Math.Min(255, Math.Abs(pitchDelta / stepSize));
-
-                Debug.Assert(Math.Abs(stepSize * stepCount) <= Math.Abs(pitchDelta));
-
-                return true;
+                return currNote != nextNote;
             }
+            else
+            {
+                pitchDelta = (int)noteTable[currNote] - (int)noteTable[nextNote];
 
-            return false;
+                if (pitchDelta != 0)
+                {
+                    pitchDelta <<= 1; // We have 1 bit of fraction to better handle various slopes.
+
+                    var frameCount = Math.Min(noteDuration * song.Speed, 255);
+                    var floatStep = Math.Abs(pitchDelta) / (float)frameCount;
+
+                    targetNote = nextNote;
+                    stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
+                    int stepCount = Math.Min(255, Math.Abs(pitchDelta / stepSize));
+
+                    Debug.Assert(Math.Abs(stepSize * stepCount) <= Math.Abs(pitchDelta));
+
+                    return true;
+                }
+
+                return false;
+            }
         }
 
         public bool FindPreviousMatchingNote(int noteValue, ref int patternIdx, ref int noteIdx)
