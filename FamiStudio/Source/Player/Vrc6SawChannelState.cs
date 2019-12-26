@@ -21,7 +21,12 @@ namespace FamiStudio
                 var period = Math.Min(maximumPeriod, noteTable[noteVal] + GetSlidePitch() + envelopeValues[Envelope.Pitch]);
                 var volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
 
-                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, (volume << 1) | ((duty & 1) << 5)); // Get hi-bit from duty, like FamiTracker.
+                // Get hi-bit from duty, similar to FamiTracker, but taking volume into account.
+                // FamiTracker looses ability to output low volume when duty is odd.
+                if ((duty & 1) != 0 && volume)
+                    volume += (volume + 1);
+
+                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, (volume << 1)); 
                 NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
                 NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
             }

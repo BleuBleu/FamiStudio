@@ -288,7 +288,7 @@ FamiToneMusicStop:
     sta FT_CHN_NOTE,x
     sta FT_CHN_REF_LEN,x
     sta FT_CHN_VOLUME_TRACK,x
-    lda #$30
+    lda #$30 ; MATTT: Not right for VRC6.
     sta FT_CHN_DUTY,x
 
     inx                        ;next channel
@@ -384,7 +384,7 @@ FamiToneMusicPlay:
     lda #$f0
     sta FT_CHN_VOLUME_TRACK,x
     lda #$30
-    sta FT_CHN_DUTY,x
+    sta FT_CHN_DUTY,x          ; MATTT: Not right for VRC6
 
     inx                        ;next channel
     cpx #FT_NUM_CHANNELS
@@ -464,6 +464,7 @@ FamiToneMusicPause:
     .local @checkprevpulse
     .local @prev
     .local @cut
+    .local @zero_vol
     .local noteTableLSB
     .local noteTableMSB
 
@@ -570,13 +571,20 @@ FamiToneMusicPause:
 .ifnblank vol_ora
     .if .defined(FT_VRC6_ENABLE) && idx = 7 
         ; saw channel has 6 bit volumes. 
-        ; we do like famitracker and use the lo-bit of the duty as the hi-bit of the volume.
-        asl 
-        sta FT_TEMP_VAR1
+        ; get hi-bit from duty, similar to FamiTracker, but taking volume into account.
+        ; FamiTracker looses ability to output low volume when duty is odd.
+        beq @zero_vol
+        tax
         lda vol_ora ; duty is already bit shifted 4 times at export.
         and #$10
-        asl 
-        ora FT_TEMP_VAR1
+        bne @odd_duty
+        txa
+        jmp @zero_vol
+        @odd_duty:
+        txa
+        asl
+        adc #1
+        @zero_vol:
     .else
         ora vol_ora
     .endif
