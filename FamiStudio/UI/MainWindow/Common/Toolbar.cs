@@ -194,11 +194,12 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayWarning(string msg)
+        public void DisplayWarning(string msg, bool beep)
         {
             warningTime = DateTime.Now;
             warning = "{Warning} " + msg;
-            SystemSounds.Beep.Play();
+            if (beep)
+                SystemSounds.Beep.Play();
         }
 
         public void Tick()

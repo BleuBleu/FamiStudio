@@ -138,7 +138,6 @@ namespace FamiStudio
                 if (activeChannel >= 0)
                 {
                     channels[activeChannel].UpdateEnvelopes();
-                    channels[activeChannel].UpdateSlides(); // MATTT
                     channels[activeChannel].UpdateAPU();
 
                     for (int i = 0; i < Envelope.Max; i++)

@@ -2182,7 +2182,7 @@ namespace FamiStudio
                         if (Song.Channels[editChannel].PatternInstances[patternIdx] == null)
                             tooltip = "{MouseWheel} Pan";
                         else
-                            tooltip = "{MouseLeft} Add note - {Shift} {MouseLeft} Add release note - {Ctrl} {MouseLeft} Add stop note - {P} {MouseLeft} Add auto-portamento note - {S} {MouseLeft} {Drag} Add slide note - {MouseRight} Delete note - {MouseWheel} Pan";
+                            tooltip = "{MouseLeft} Add note - {Shift} {MouseLeft} Add release note - {Ctrl} {MouseLeft} Add stop note - {P} {MouseLeft} {Drag} Add auto-portamento note - {S} {MouseLeft} {Drag} Add slide note - {MouseRight} Delete note - {MouseWheel} Pan";
 
                         tooltip += $"\n{Note.GetFriendlyName(noteValue)} [{patternIdx:D3} : {noteIdx:D3}]";
                         if (Song.Channels[editChannel].FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))

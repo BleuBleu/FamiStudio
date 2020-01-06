@@ -72,7 +72,6 @@ namespace FamiStudio
                 foreach (var channel in channels)
                 {
                     channel.UpdateEnvelopes();
-                    channel.UpdateSlides(); // MATTT
                     channel.UpdateAPU();
                 }
 

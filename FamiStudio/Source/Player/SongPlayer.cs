@@ -129,7 +129,6 @@ namespace FamiStudio
                     {
                         channel.Advance(song, playPattern, playNote);
                         channel.UpdateEnvelopes();
-                        channel.UpdateSlides(); // MATTT
                         channel.UpdateAPU();
                     }
 
@@ -181,7 +180,6 @@ namespace FamiStudio
                 foreach (var channel in channels)
                 {
                     channel.UpdateEnvelopes();
-                    channel.UpdateSlides(); // MATTT
                     channel.UpdateAPU();
                 }
 

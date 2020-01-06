@@ -183,9 +183,9 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayWarning(string msg)
+        public void DisplayWarning(string msg, bool beep = true)
         {
-            ToolBar.DisplayWarning(msg);
+            ToolBar.DisplayWarning(msg, beep);
         }
 
         private void UndoRedoManager_Updated()
@@ -459,7 +459,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    DisplayWarning("Selected instrument is incompatible with channel!");
+                    DisplayWarning("Selected instrument is incompatible with channel!", false);
                     return;
                 }
             }

@@ -64,10 +64,9 @@ namespace FamiStudio
                     var releasePoint = BitConverter.ToInt32(bytes, offset); offset += 4;
                     var setting      = BitConverter.ToInt32(bytes, offset); offset += 4;
                     var seq          = new sbyte[itemCount];
-                    var scale        = i == (int)SequenceType.SEQ_PITCH ? -1 : 1;
 
                     for (int j = 0; j < itemCount; j++)
-                        seq[j] = (sbyte)(bytes[offset++] * scale);
+                        seq[j] = (sbyte)bytes[offset++];
 
                     if (releasePoint >= 0 && i != (int)SequenceType.SEQ_VOLUME)
                         releasePoint = -1;

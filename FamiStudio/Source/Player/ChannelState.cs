@@ -164,15 +164,7 @@ namespace FamiStudio
                         envelopeIdx[j] = idx;
                 }
             }
-        }
 
-        public int GetSlidePitch()
-        {
-            return slidePitch >> 1; // Remove the fraction part.
-        }
-
-        public void UpdateSlides()
-        {
             if (slideStep != 0)
             {
                 slidePitch += slideStep;
@@ -187,6 +179,11 @@ namespace FamiStudio
             {
                 slidePitch = 0;
             }
+        }
+
+        public int GetSlidePitch()
+        {
+            return slidePitch >> 1; // Remove the fraction part.
         }
 
         public int GetEnvelopeFrame(int envIdx)
