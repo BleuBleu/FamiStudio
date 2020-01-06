@@ -34,8 +34,8 @@ namespace FamiStudio
 
         public const int NoteInvalid = 0xff;
         public const int NoteStop    = 0x00;
-        public const int NoteMin     = 0x01;
-        public const int NoteMax     = 0x60;
+        public const int MusicalNoteMin     = 0x01;
+        public const int MusicalNoteMax     = 0x60;
         public const int NoteRelease = 0xf7;
         public const int DPCMNoteMin = 0x0c;
         public const int DPCMNoteMax = 0x4b;
@@ -172,8 +172,8 @@ namespace FamiStudio
         public static int Clamp(int note)
         {
             Debug.Assert(note != NoteInvalid);
-            if (note < NoteMin) return NoteMin;
-            if (note > NoteMax) return NoteMax;
+            if (note < MusicalNoteMin) return MusicalNoteMin;
+            if (note > MusicalNoteMax) return MusicalNoteMax;
             return note;
         }
 

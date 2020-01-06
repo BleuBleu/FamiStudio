@@ -114,6 +114,7 @@ namespace FamiStudio
                 crc = CRC32.Compute(BitConverter.GetBytes(length), crc);
                 crc = CRC32.Compute(BitConverter.GetBytes(loop), crc);
                 crc = CRC32.Compute(BitConverter.GetBytes(release), crc);
+                crc = CRC32.Compute(BitConverter.GetBytes(relative), crc);
                 crc = CRC32.Compute(values, crc);
                 return crc;
             }

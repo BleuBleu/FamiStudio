@@ -17,7 +17,7 @@ namespace FamiStudio
         //      - first page of the song (1 byte)
         //      - address of the start of the song in page starting at 0x9000 (2 byte)
         //      - flags (1 = use DPCM)
-        //   0x9000: start of song data. (Max song size = 0x3000 if uses samples, 0x7000 if not)
+        //   0x9000: start of song data. (Max song size 0x7000 minus number of DPCM pages)
         //   0xc000: DPCM samples (16KB max, if the song uses them)
 
         const int NsfCodeStart       = 0x8000;
@@ -27,7 +27,6 @@ namespace FamiStudio
         const int NsfSongAddr        = 0x9000;
         const int NsfDpcmOffset      = 0xc000;
         const int NsfPageSize        = 0x1000;
-        const int NsfMaxSongSizeDpcm = 0x3000;
         const int NsfMaxSongSize     = 0x7000;
 
         const int NsfCodeSize     = (NsfSongTableAddr - NsfCodeStart);
@@ -165,26 +164,17 @@ namespace FamiStudio
                     // Song table
                     file.Write(songTable, 0, songTable.Length);
 
+                    if (songBytes.Count > (NsfMaxSongSize - numDpcmPages * NsfPageSize))
+                    {
+                        // TODO: Error message.
+                        return false;
+                    }
+
                     // DPCM will be on the first 4 pages (1,2,3,4)
                     if (project.UsesSamples && dpcmBytes != null)
                     {
-                        if (songBytes.Count > NsfMaxSongSizeDpcm)
-                        {
-                            // TODO: Error message.
-                            return false;
-                        }
-
                         Array.Resize(ref dpcmBytes, numDpcmPages * NsfPageSize);
-
                         file.Write(dpcmBytes, 0, dpcmBytes.Length);
-                    }
-                    else
-                    {
-                        if (songBytes.Count > NsfMaxSongSize)
-                        {
-                            // TODO: Error message.
-                            return false;
-                        }
                     }
 
                     // Song

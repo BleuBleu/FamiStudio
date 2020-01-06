@@ -15,6 +15,12 @@ namespace FamiStudio
                                   .SelectMany(element => element).ToArray();
         }
 
+        struct RowFxData
+        {
+            public char fx;
+            public byte param;
+        }
+
         public static Project Load(string filename)
         {
             var project = new Project();
@@ -24,6 +30,7 @@ namespace FamiStudio
             var instruments = new Dictionary<int, Instrument>();
             var dpcms = new Dictionary<int, DPCMSample>();
             var columns = new int[5] { 1, 1, 1, 1, 1 };
+            var patternFxData = new Dictionary<Pattern, RowFxData[,]>();
             var noteLookup = new Dictionary<string, int>
             {
                 ["A-"] = 9,
@@ -233,6 +240,10 @@ namespace FamiStudio
                         if (pattern == null)
                             continue;
 
+                        //var fxData = new RowFxData[song.PatternLength];
+                        if (!patternFxData.ContainsKey(pattern))
+                            patternFxData[pattern] = new RowFxData[song.PatternLength, 4];
+
                         // Note
                         if (noteData[0] == "---")
                         {
@@ -257,7 +268,7 @@ namespace FamiStudio
                                 famitoneNote = octave * 12 + semitone + 1;
                             }
 
-                            if (famitoneNote >= Note.NoteMin && famitoneNote <= Note.NoteMax)
+                            if (famitoneNote >= Note.MusicalNoteMin && famitoneNote <= Note.MusicalNoteMax)
                             {
                                 pattern.Notes[rowIdx].Value = (byte)famitoneNote;
                                 pattern.Notes[rowIdx].Instrument = j == 5 ? null : instruments[Convert.ToInt32(noteData[1], 16)];
@@ -277,7 +288,16 @@ namespace FamiStudio
                         // Read FX.
                         for (int k = 0; k < columns[j - 1]; k++)
                         {
-                            string fx = noteData[3 + k];
+                            var fx = noteData[3 + k];
+
+                            if (fx == "...")
+                                continue;
+
+                            var param = Convert.ToByte(fx.Substring(1), 16);
+
+                            var fxData = patternFxData[pattern];
+                            fxData[rowIdx, k].fx = fx[0];
+                            fxData[rowIdx, k].param = param;
 
                             switch (fx[0])
                             {
@@ -294,7 +314,7 @@ namespace FamiStudio
                                     continue;
                             }
 
-                            pattern.Notes[rowIdx].EffectParam = Convert.ToByte(fx.Substring(1), 16);
+                            pattern.Notes[rowIdx].EffectParam = param;
                         }
                     }
                 }
@@ -302,16 +322,220 @@ namespace FamiStudio
 
             foreach (var s in project.Songs)
             {
+                CreateSlidesAndPortamento(s, patternFxData);
+
                 s.RemoveEmptyPatterns();
                 s.SetSensibleBarLength();
 
                 foreach (var c in s.Channels)
-                {
                     c.ColorizePatterns();
-                }
             }
 
             return project;
+        }
+
+        private static int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        {
+            for (int n = noteIdx - 1; n >= 0; n--)
+            {
+                var tmpNote = channel.PatternInstances[patternIdx].Notes[n];
+                if (tmpNote.IsMusical || tmpNote.IsStop)
+                    return tmpNote.Value;
+            }
+
+            for (var p = patternIdx - 1; p >= 0; p--)
+            {
+                var pattern = channel.PatternInstances[p];
+                if (pattern != null)
+                {
+                    for (int n = channel.Song.PatternLength - 1; n >= 0; n--)
+                    {
+                        var tmpNote = pattern.Notes[n];
+                        if (tmpNote.IsMusical || tmpNote.IsStop)
+                            return tmpNote.Value;
+                    }
+                }
+            }
+
+            return Note.NoteInvalid;
+        }
+
+        private static bool FindNextNoteForSlide(Channel channel, int patternIdx, int noteIdx, out int nextPatternIdx, out int nextNoteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        {
+            nextPatternIdx = -1;
+            nextNoteIdx = -1;
+
+            var pattern = channel.PatternInstances[patternIdx];
+            var fxData = patternFxData[pattern];
+
+            for (int n = noteIdx + 1; n < channel.Song.PatternLength; n++)
+            {
+                var fxChanged = false;
+                for (int i = 0; i < fxData.GetLength(1); i++)
+                {
+                    var fx = fxData[n, i];
+                    if (fx.fx == '1' || fx.fx == '2' || fx.fx == '3')
+                    {
+                        fxChanged = true;
+                        break;
+                    }
+                }
+
+                var tmpNote = pattern.Notes[n];
+                if (tmpNote.IsMusical || tmpNote.IsStop || fxChanged)
+                {
+                    nextPatternIdx = patternIdx;
+                    nextNoteIdx = n;
+                    return true;
+                }
+            }
+
+            for (int p = patternIdx + 1; p < channel.Song.Length; p++)
+            {
+                pattern = channel.PatternInstances[p];
+                fxData = patternFxData[pattern];
+
+                for (int n = 0; n < channel.Song.PatternLength; n++)
+                {
+                    var fxChanged = false;
+                    for (int i = 0; i < fxData.GetLength(1); i++)
+                    {
+                        var fx = fxData[n, i];
+                        if (fx.fx == '1' || fx.fx == '2' || fx.fx == '3')
+                        {
+                            fxChanged = true;
+                            break;
+                        }
+                    }
+
+                    var tmpNote = channel.PatternInstances[p].Notes[n];
+                    if (tmpNote.IsMusical || tmpNote.IsStop || fxChanged)
+                    {
+                        nextPatternIdx = p;
+                        nextNoteIdx = n;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static int FindBestMatchingNote(ushort[] noteTable, int pitch)
+        {
+            var bestIdx  = -1;
+            var bestDiff = 99999;
+
+            for (int i = 1; i < noteTable.Length; i++)
+            {
+                var diff = Math.Abs(pitch - noteTable[i]);
+                if (diff < bestDiff)
+                {
+                    bestIdx = i;
+                    bestDiff = diff;
+                }
+            }
+
+            return bestIdx;
+        }
+
+        private static void CreateSlidesAndPortamento(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        {
+            // Convert slide notes + portamento to our format.
+            foreach (var c in s.Channels)
+            {
+                if (!c.SupportsSlideNotes)
+                    continue;
+
+                var portamentoSpeed = 0;
+                var slideSpeed = 0;
+                var lastNoteInstrument = (Instrument)null;
+                var lastNoteValue = (byte)Note.NoteInvalid;
+
+                for (int p = 0; p < s.Length; p++)
+                {
+                    var pattern = c.PatternInstances[p];
+                    var fxData = patternFxData[pattern];
+
+                    for (int n = 0; n < s.PatternLength; n++)
+                    {
+                        var note = pattern.Notes[n];
+
+                        for (int i = 0; i < fxData.GetLength(1); i++)
+                        {
+                            var fx = fxData[n, i];
+
+                            // When the effect it turned on, we need to add a note.
+                            if ((fx.fx == '1' || fx.fx == '2' || fx.fx == '3') && fx.param != 0 && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax && !note.IsValid)
+                            {
+                                pattern.Notes[n].Value = lastNoteValue;
+                                pattern.Notes[n].Instrument = lastNoteInstrument;
+                                note = pattern.Notes[n];
+                            }
+
+                            if (fx.fx == '1') slideSpeed = -fx.param;
+                            if (fx.fx == '2') slideSpeed =  fx.param;
+                            if (fx.fx == '3') portamentoSpeed = fx.param;
+                        }
+
+                        // Create a slide or portamento note.
+                        if (!note.IsSlideOrPortamento)
+                        {
+                            if (note.IsMusical && slideSpeed != 0)
+                            {
+                                // Find the next note that would stop the slide or change the FX settings.
+                                if (FindNextNoteForSlide(c, p, n, out var np, out var nn, patternFxData))
+                                {
+                                    // Compute the pitch delta and find the closest target note.
+                                    var numFrames = ((np * s.PatternLength + nn) - (p * s.PatternLength + n)) * s.Speed;
+
+                                    // TODO: PAL.
+                                    var noteTable = NesApu.GetNoteTableForChannelType(c.Type, false);
+                                    var pitchLimit = NesApu.GetPitchLimitForChannelType(c.Type);
+                                    var newNotePitch = Utils.Clamp(noteTable[note.Value] + numFrames * slideSpeed, 0, pitchLimit);
+                                    var newNote = FindBestMatchingNote(noteTable, newNotePitch);
+
+                                    pattern.Notes[n].SlideNoteTarget = (byte)newNote;
+
+                                    // If the FX was turned off, we need to add an extra note.
+                                    if (!c.PatternInstances[np].Notes[nn].IsMusical)
+                                    {
+                                        c.PatternInstances[np].Notes[nn].Instrument = note.Instrument;
+                                        c.PatternInstances[np].Notes[nn].Value = (byte)newNote;
+                                    }
+                                }
+                            }
+                            else if (note.IsMusical && portamentoSpeed != 0)
+                            {
+                                // Find the previous note that we are sliding from.
+                                var prevNote = FindPrevNoteForPortamento(c, p, n, patternFxData);
+
+                                if (prevNote >= Note.MusicalNoteMin &&
+                                    prevNote <= Note.MusicalNoteMax &&
+                                    prevNote != note.Value)
+                                {
+                                    // TODO: PAL.
+                                    var noteTable = NesApu.GetNoteTableForChannelType(c.Type, false);
+
+                                    // Compute the pitch difference and set the custom portamento length.
+                                    var pitchDelta = Math.Abs(noteTable[prevNote] - noteTable[note.Value]);
+                                    var numFrames = pitchDelta / portamentoSpeed;
+                                    var numNotes = Utils.Clamp(numFrames / c.Song.Speed, 0, 127);
+
+                                    pattern.Notes[n].IsPortamento = true;
+                                    pattern.Notes[n].PortamentoLength = (byte)numNotes;
+                                }
+                            }
+                        }
+
+                        if (note.IsMusical || note.IsStop)
+                        {
+                            lastNoteValue = note.Value;
+                            lastNoteInstrument = note.Instrument;
+                        }
+                    }
+                }
+            }
         }
 
         private static string[] FamiTrackerNoteNames =
@@ -335,7 +559,7 @@ namespace FamiStudio
             foreach (var instrument in project.Instruments)
             {
                 var env = instrument.Envelopes[Envelope.Pitch];
-                if (!env.IsEmpty)
+                if (!env.IsEmpty && !env.Relative)
                 {
                     // Make relative.
                     for (int i = env.Length - 1; i > 0; i--)
@@ -362,13 +586,16 @@ namespace FamiStudio
             }
         }
 
-        private static Envelope[][] MergeIdenticalEnvelopes(Project project)
+        private static Envelope[,][] MergeIdenticalEnvelopes(Project project)
         {
-            var uniqueEnvelopes = new Dictionary<uint, Envelope>[Envelope.Max];
+            var uniqueEnvelopes = new Dictionary<uint, Envelope>[2, Envelope.Max];
 
-            for (int i = 0; i < Envelope.Max; i++)
+            for (int i = 0; i < 2; i++)
             {
-                uniqueEnvelopes[i] = new Dictionary<uint, Envelope>();
+                for (int j = 0; j < Envelope.Max; j++)
+                {
+                    uniqueEnvelopes[i, j] = new Dictionary<uint, Envelope>();
+                }
             }
 
             foreach (var instrument in project.Instruments)
@@ -378,21 +605,24 @@ namespace FamiStudio
                     var env = instrument.Envelopes[i];
                     uint crc = env.CRC;
 
-                    if (uniqueEnvelopes[i].TryGetValue(crc, out var existingEnv))
+                    if (uniqueEnvelopes[instrument.ExpansionType != Project.ExpansionNone ? 1 : 0, i].TryGetValue(crc, out var existingEnv))
                     {
                         instrument.Envelopes[i] = existingEnv;
                     }
                     else
                     {
-                        uniqueEnvelopes[i][crc] = env;
+                        uniqueEnvelopes[instrument.ExpansionType != Project.ExpansionNone ? 1 : 0, i][crc] = env;
                     }
                 }
             }
 
-            var envelopeArray = new Envelope[Envelope.Max][];
-            for (int i = 0; i < Envelope.Max; i++)
+            var envelopeArray = new Envelope[2, Envelope.Max][];
+            for (int i = 0; i < 2; i++)
             {
-                envelopeArray[i] = uniqueEnvelopes[i].Values.ToArray();
+                for (int j = 0; j < Envelope.Max; j++)
+                {
+                    envelopeArray[i, j] = uniqueEnvelopes[i, j].Values.ToArray();
+                }
             }
 
             return envelopeArray;
@@ -458,6 +688,44 @@ namespace FamiStudio
             }
         }
 
+        private static void FindSlideNoteTransitions(Song song, Dictionary<Pattern, List<int>> portamentoTransitions, Dictionary<Pattern, List<int>> slideTransitions)
+        {
+            foreach (var channel in song.Channels)
+            {
+                bool lastNoteWasSlide      = false;
+                bool lastNoteWasPortamento = false;
+
+                for (int p = 0; p < song.Length; p++)
+                {
+                    var pattern = channel.PatternInstances[p];
+
+                    if (pattern == null)
+                        continue;
+
+                    if (!slideTransitions.ContainsKey(pattern))
+                        slideTransitions[pattern] = new List<int>();
+                    if (!portamentoTransitions.ContainsKey(pattern))
+                        portamentoTransitions[pattern] = new List<int>();
+
+                    for (int n = 0; n < song.PatternLength; n++)
+                    {
+                        var note = pattern.Notes[n];
+
+                        if (lastNoteWasSlide && (note.IsMusical || note.IsStop) && !note.IsSlideNote)
+                            slideTransitions[pattern].Add(n);
+                        if (lastNoteWasPortamento && (note.IsMusical || note.IsStop) && !note.IsPortamento)
+                            portamentoTransitions[pattern].Add(n);
+
+                        if (note.IsMusical || note.IsStop)
+                        {
+                            lastNoteWasSlide      = note.IsSlideNote;
+                            lastNoteWasPortamento = note.IsPortamento;
+                        }
+                    }
+                }
+            }
+        }
+
         public static bool Save(Project originalProject, string filename, int[] songIds)
         {
             var project = originalProject.Clone();
@@ -480,7 +748,7 @@ namespace FamiStudio
             lines.Add("# Global settings");
             lines.Add("MACHINE         0");
             lines.Add("FRAMERATE       0");
-            lines.Add("EXPANSION       0");
+            lines.Add("EXPANSION       " + project.ExpansionAudio);
             lines.Add("VIBRATO         1");
             lines.Add("SPLIT           21");
             lines.Add("");
@@ -488,7 +756,7 @@ namespace FamiStudio
             lines.Add("# Macros");
             for (int i = 0; i < Envelope.Max; i++)
             {
-                var envArray = envelopes[i];
+                var envArray = envelopes[Project.ExpansionNone, i];
                 for (int j = 0; j < envArray.Length; j++)
                 {
                     var env = envArray[j];
@@ -499,6 +767,29 @@ namespace FamiStudio
             lines.Add($"MACRO{4,8} {1,4} {-1}   -1    0 : 1");
             lines.Add($"MACRO{4,8} {2,4} {-1}   -1    0 : 2");
             lines.Add($"MACRO{4,8} {3,4} {-1}   -1    0 : 3");
+
+            if (project.ExpansionAudio == Project.ExpansionVRC6)
+            {
+                for (int i = 0; i < Envelope.Max; i++)
+                {
+                    var envArray = envelopes[Project.ExpansionVRC6, i];
+                    for (int j = 0; j < envArray.Length; j++)
+                    {
+                        var env = envArray[j];
+                        lines.Add($"MACROVRC6{i,8} {j,4} {env.Loop,4} {env.Release,4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
+                    }
+                }
+
+                lines.Add($"MACROVRC6{4,8} {0,4} {-1}   -1    0 : 0");
+                lines.Add($"MACROVRC6{4,8} {1,4} {-1}   -1    0 : 1");
+                lines.Add($"MACROVRC6{4,8} {2,4} {-1}   -1    0 : 2");
+                lines.Add($"MACROVRC6{4,8} {3,4} {-1}   -1    0 : 3");
+                lines.Add($"MACROVRC6{4,8} {4,4} {-1}   -1    0 : 4");
+                lines.Add($"MACROVRC6{4,8} {5,4} {-1}   -1    0 : 5");
+                lines.Add($"MACROVRC6{4,8} {6,4} {-1}   -1    0 : 6");
+                lines.Add($"MACROVRC6{4,8} {7,4} {-1}   -1    0 : 7");
+            }
+
             lines.Add("");
 
             if (project.UsesSamples)
@@ -518,11 +809,19 @@ namespace FamiStudio
             {
                 var instrument = project.Instruments[i];
 
-                int volEnvIdx = instrument.Envelopes[Envelope.Volume].Length   > 0 ? Array.IndexOf(envelopes[Envelope.Volume],   instrument.Envelopes[Envelope.Volume])   : -1;
-                int arpEnvIdx = instrument.Envelopes[Envelope.Arpeggio].Length > 0 ? Array.IndexOf(envelopes[Envelope.Arpeggio], instrument.Envelopes[Envelope.Arpeggio]) : -1;
-                int pitEnvIdx = instrument.Envelopes[Envelope.Pitch].Length    > 0 ? Array.IndexOf(envelopes[Envelope.Pitch],    instrument.Envelopes[Envelope.Pitch])    : -1;
+                var expIdx = instrument.ExpansionType != Project.ExpansionNone ? 1 : 0;
+                int volEnvIdx = instrument.Envelopes[Envelope.Volume].Length   > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Volume],   instrument.Envelopes[Envelope.Volume])   : -1;
+                int arpEnvIdx = instrument.Envelopes[Envelope.Arpeggio].Length > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Arpeggio], instrument.Envelopes[Envelope.Arpeggio]) : -1;
+                int pitEnvIdx = instrument.Envelopes[Envelope.Pitch].Length    > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Pitch],    instrument.Envelopes[Envelope.Pitch])    : -1;
 
-                lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{instrument.DutyCycle,4} \"{instrument.Name}\"");
+                if (instrument.ExpansionType == Project.ExpansionNone)
+                {
+                    lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{instrument.DutyCycle,4} \"{instrument.Name}\"");
+                }
+                else if (instrument.ExpansionType == Project.ExpansionVRC6)
+                {
+                    lines.Add($"INSTVRC6{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{instrument.DutyCycle,4} \"{instrument.Name}\"");
+                }
             }
 
             if (project.UsesSamples)
@@ -554,8 +853,13 @@ namespace FamiStudio
 
                 CreateMissingPatterns(song);
 
+                // Find all the places where we need to turn of 1xx/2xx/3xx after we are done.
+                var portamentoTransitions = new Dictionary<Pattern, List<int>>();
+                var slideTransitions      = new Dictionary<Pattern, List<int>>();
+                FindSlideNoteTransitions(song, portamentoTransitions, slideTransitions);
+
                 lines.Add($"TRACK{song.PatternLength,4}{song.Speed,4}{song.Tempo,4} \"{song.Name}\"");
-                lines.Add($"COLUMNS : 1 1 1 1 1");
+                lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(2, song.Channels.Length))}");
                 lines.Add("");
 
                 for (int j = 0; j < song.Length; j++)
@@ -589,7 +893,7 @@ namespace FamiStudio
 
                             if (j >= channel.Patterns.Count)
                             {
-                                line += " : ... .. . ...";
+                                line += " : ... .. . ... ...";
                             }
                             else
                             {
@@ -598,16 +902,47 @@ namespace FamiStudio
                                 var noteString = GetFamiTrackerNoteName(l, note);
                                 var volumeString = note.HasVolume ? note.Volume.ToString("X") : ".";
                                 var instrumentString = note.IsValid && !note.IsStop ? (note.Instrument == null ? project.Instruments.Count : project.Instruments.IndexOf(note.Instrument)).ToString("X2") : "..";
-                                var effectString = "...";
+                                var effectString1 = "...";
+                                var effectString2 = "...";
 
                                 switch (note.Effect)
                                 {
-                                    case Note.EffectJump  : effectString = $"B{note.EffectParam:X2}"; break;
-                                    case Note.EffectSkip  : effectString = $"D{note.EffectParam:X2}"; break;
-                                    case Note.EffectSpeed : effectString = $"F{note.EffectParam:X2}"; break;
+                                    case Note.EffectJump  : effectString1 = $"B{note.EffectParam:X2}"; break;
+                                    case Note.EffectSkip  : effectString1 = $"D{note.EffectParam:X2}"; break;
+                                    case Note.EffectSpeed : effectString1 = $"F{note.EffectParam:X2}"; break;
                                 }
 
-                                line += $" : {noteString} {instrumentString} {volumeString} {effectString}";
+                                if (note.IsSlideOrPortamento)
+                                {
+                                    // TODO: PAL.
+                                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+
+                                    channel.ComputeSlideNoteParams(j, k, noteTable, out _, out int stepSize, out _, out _, out _);
+
+                                    // We have one bit of fraction. FramiTracker does not.
+                                    if (Math.Abs(stepSize) > 1)
+                                        stepSize /= 2;
+
+                                    if (note.IsSlideNote)
+                                    {
+                                        if (stepSize > 0)
+                                            effectString2 = $"2{ stepSize:X2}";
+                                        else if (stepSize < 0)
+                                            effectString2 = $"1{-stepSize:X2}";
+                                    }
+                                    else
+                                    {
+                                        effectString2 = $"3{Math.Abs(stepSize):X2}";
+                                    }
+                                }
+
+                                // Turn off 1xx/2xx/3xx when not needed.
+                                if (portamentoTransitions[pattern].IndexOf(k) >= 0)
+                                    effectString2 = "300";
+                                if (slideTransitions[pattern].IndexOf(k) >= 0)
+                                    effectString2 = "200";
+
+                                line += $" : {noteString} {instrumentString} {volumeString} {effectString1} {effectString2}";
                             }
                         }
                         lines.Add(line);

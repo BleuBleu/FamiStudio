@@ -294,30 +294,7 @@ namespace FamiStudio
             // For portamento, we need to find the previous note value.
             if (note.IsPortamento)
             {
-                var found = false;
-                for (int n = noteIdx - 1; n >= 0; n--)
-                {
-                    var tmpNote = patternInstances[patternIdx].Notes[n];
-                    if (tmpNote.IsMusical || tmpNote.IsStop)
-                    {
-                        prevNote = tmpNote.Value;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    for (var p = patternIdx - 1; p >= 0; p--)
-                    {
-                        var pattern = patternInstances[p];
-                        if (pattern != null && pattern.LastValidNoteTime >= 0)
-                        {
-                            prevNote = pattern.LastValidNote.Value;
-                            break;
-                        }
-                    }
-                }
+                prevNote = FindPrevNoteForPortamento(patternIdx, noteIdx);
 
                 if (prevNote == Note.NoteInvalid || prevNote == Note.NoteStop)
                     return false;
@@ -325,33 +302,10 @@ namespace FamiStudio
 
             // Then we need the next note to find calculate the slope.
             {
-                var found = false;
-                for (int n = noteIdx + 1; n < song.PatternLength; n++)
-                {
-                    var tmpNote = patternInstances[patternIdx].Notes[n];
-                    if (tmpNote.IsMusical || tmpNote.IsStop)
-                    {
-                        noteDuration = (patternIdx * song.PatternLength + n) - (patternIdx * song.PatternLength + noteIdx);
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    for (int p = patternIdx + 1; p < song.Length; p++)
-                    {
-                        var pattern = patternInstances[p];
-                        if (pattern != null && pattern.FirstValidNoteTime >= 0)
-                        {
-                            noteDuration = (p * song.PatternLength + pattern.FirstValidNoteTime) - (patternIdx * song.PatternLength + noteIdx);
-                            break;
-                        }
-                    }
-                }
+                noteDuration = FindNextNoteForSlide(patternIdx, noteIdx);
 
                 if (noteDuration < 0)
-                    noteDuration =  1024 / song.Speed; // This is kind of arbitrary. 
+                    noteDuration = 1024 / song.Speed; // This is kind of arbitrary. 
             }
 
             if (note.IsPortamento && note.PortamentoLength > 0)
@@ -375,18 +329,78 @@ namespace FamiStudio
                 {
                     pitchDelta <<= 1; // We have 1 bit of fraction to better handle various slopes.
 
-                    var frameCount = Math.Min(noteDuration * song.Speed + 1, 255);
+                    var frameCount = noteDuration * song.Speed + 1;
                     var floatStep  = Math.Abs(pitchDelta) / (float)frameCount;
 
                     stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
-
-                    noteDuration = (int)Math.Abs(Math.Ceiling(pitchDelta / (float)stepSize / song.Speed)); // MATTT
 
                     return true;
                 }
 
                 return false;
             }
+        }
+
+        public int FindPrevNoteForPortamento(int patternIdx, int noteIdx)
+        {
+            var prevNote = Note.NoteInvalid;
+            var found = false;
+            for (int n = noteIdx - 1; n >= 0; n--)
+            {
+                var tmpNote = patternInstances[patternIdx].Notes[n];
+                if (tmpNote.IsMusical || tmpNote.IsStop)
+                {
+                    prevNote = tmpNote.Value;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                for (var p = patternIdx - 1; p >= 0; p--)
+                {
+                    var pattern = patternInstances[p];
+                    if (pattern != null && pattern.LastValidNoteTime >= 0)
+                    {
+                        prevNote = pattern.LastValidNote.Value;
+                        break;
+                    }
+                }
+            }
+
+            return prevNote;
+        }
+
+        public int FindNextNoteForSlide(int patternIdx, int noteIdx)
+        {
+            var noteDuration = -1;
+            var found = false;
+            for (int n = noteIdx + 1; n < song.PatternLength; n++)
+            {
+                var tmpNote = patternInstances[patternIdx].Notes[n];
+                if (tmpNote.IsMusical || tmpNote.IsStop)
+                {
+                    noteDuration = (patternIdx * song.PatternLength + n) - (patternIdx * song.PatternLength + noteIdx);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                for (int p = patternIdx + 1; p < song.Length; p++)
+                {
+                    var pattern = patternInstances[p];
+                    if (pattern != null && pattern.FirstValidNoteTime >= 0)
+                    {
+                        noteDuration = (p * song.PatternLength + pattern.FirstValidNoteTime) - (patternIdx * song.PatternLength + noteIdx);
+                        break;
+                    }
+                }
+            }
+
+            return noteDuration;
         }
 
         public bool FindPreviousMatchingNote(int noteValue, ref int patternIdx, ref int noteIdx)

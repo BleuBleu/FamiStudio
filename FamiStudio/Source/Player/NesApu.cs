@@ -138,6 +138,11 @@ namespace FamiStudio
                 return pal ? NesApu.NoteTablePAL : NesApu.NoteTableNTSC;
         }
 
+        public static ushort GetPitchLimitForChannelType(int channelType)
+        {
+            return (ushort)(channelType == Channel.VRC6Saw ? 0xfff : 0x7ff);
+        }
+
         public static int DmcReadCallback(IntPtr data, int addr)
         {
             return FamiStudio.StaticProject.GetSampleForAddress(addr - 0xc000);

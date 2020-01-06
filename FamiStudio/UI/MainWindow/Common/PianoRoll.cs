@@ -148,8 +148,9 @@ namespace FamiStudio
             ChangeEffectValue,
             DrawEnvelope,
             Select,
-            DragPortamentoLength,
             CreateDragPortamentoLength,
+            DragPortamentoLength,
+            CreateDragSlideNoteTarget,
             DragSlideNoteTarget
         }
 
@@ -165,7 +166,8 @@ namespace FamiStudio
             false,
             true,
             true,
-            false
+            true,
+            true
         };
 
         int captureNoteIdx = 0;
@@ -1049,9 +1051,7 @@ namespace FamiStudio
 
             if (n0.IsSlideOrPortamento)
             {
-                //var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
-
-                if (channel.ComputeSlideNoteParams(p0, i0, null /*noteTable*/, out _, out _, out int duration, out int s0, out int s1))
+                if (channel.ComputeSlideNoteParams(p0, i0, null, out _, out _, out int duration, out int s0, out int s1))
                 {
                     int sx = duration;
                     int sy = (s1 - s0) * (n0.IsSlideNote ? 1 : -1);
@@ -1178,7 +1178,7 @@ namespace FamiStudio
                                     if (n1.IsStop || n1.IsRelease)
                                     {
                                         selected = IsNoteSelected(p1, i1) && isActiveChannel;
-                                        int value = n0.Value >= Note.NoteMin && n0.Value <= Note.NoteMax ? n0.Value : 49; // C4 by default.
+                                        int value = n0.Value >= Note.MusicalNoteMin && n0.Value <= Note.MusicalNoteMax ? n0.Value : 49; // C4 by default.
 
                                         if (value >= a.minVisibleNote && value <= a.maxVisibleNote)
                                         {
@@ -1239,7 +1239,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    for (int i = 0; i < Note.NoteMax; i++)
+                    for (int i = 0; i < Note.MusicalNoteMax; i++)
                     {
                         var mapping = App.Project.GetDPCMMapping(i);
                         if (mapping != null)
@@ -1623,7 +1623,7 @@ namespace FamiStudio
                 if (note.IsMusical)
                 {
                     int value = note.Value + amount;
-                    if (value < Note.NoteMin || value > Note.NoteMax)
+                    if (value < Note.MusicalNoteMin || value > Note.MusicalNoteMax)
                         note.Clear();
                     else
                         note.Value = (byte)value;
@@ -1877,7 +1877,7 @@ namespace FamiStudio
                             }
                             else
                             {
-                                StartCaptureOperation(e, CaptureOperation.DragSlideNoteTarget);
+                                StartCaptureOperation(e, CaptureOperation.CreateDragSlideNoteTarget);
                             }
                         }
                         else
@@ -2273,6 +2273,7 @@ namespace FamiStudio
                         UpdatePortamentoLength(e);
                         break;
                     case CaptureOperation.DragSlideNoteTarget:
+                    case CaptureOperation.CreateDragSlideNoteTarget:
                         UpdateSlideNoteTarget(e);
                         break;
                 }
@@ -2297,12 +2298,15 @@ namespace FamiStudio
 
             if (captureOperation != CaptureOperation.None && !middle)
             {
+                var patternIdx = captureNoteIdx / Song.PatternLength;
+                var noteIdx    = captureNoteIdx % Song.PatternLength;
+
                 switch (captureOperation)
                 {
                     case CaptureOperation.DragLoop:
                     case CaptureOperation.DragRelease:
                     case CaptureOperation.ChangeEffectValue:
-                    case CaptureOperation.DragSlideNoteTarget:
+                    case CaptureOperation.CreateDragSlideNoteTarget:
                     case CaptureOperation.CreateDragPortamentoLength:
                         App.UndoRedoManager.EndTransaction();
                         break;
@@ -2318,12 +2322,13 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.DragPortamentoLength:
                         if (!captureThresholdMet)
-                        {
-                            var patternIdx = captureNoteIdx / Song.PatternLength;
-                            var noteIdx = captureNoteIdx % Song.PatternLength;
-
                             Song.Channels[editChannel].PatternInstances[patternIdx].Notes[noteIdx].IsPortamento ^= true;
-                        }
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                        break;
+                    case CaptureOperation.DragSlideNoteTarget:
+                        if (!captureThresholdMet)
+                            Song.Channels[editChannel].PatternInstances[patternIdx].Notes[noteIdx].IsSlideNote ^= true;
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                         break;

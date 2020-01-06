@@ -14,3 +14,4 @@ Release/
 packages/
 *.htm
 .DS_Store
+*.nsf
