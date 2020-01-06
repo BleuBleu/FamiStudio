@@ -708,6 +708,8 @@ namespace FamiStudio
         public void Tick()
         {
             ToolBar.Tick();
+            PianoRoll.Tick();
+            Sequencer.Tick();
 
             if (RealTimeUpdate)
             {

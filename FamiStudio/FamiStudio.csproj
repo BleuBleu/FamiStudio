@@ -183,7 +183,7 @@
     </Compile>
     <EmbeddedResource Include="Resources\gtk_mac.rc" />
     <EmbeddedResource Include="Resources\gtk_linux.rc" />
-    <Compile Include="UI\Dialogs\WinForms\PlatformDialogs.cs" />
+    <Compile Include="UI\Dialogs\WinForms\PlatformUtils.cs" />
     <Compile Include="UI\Dialogs\WinForms\PropertyPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -251,6 +251,12 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\SquareExp%402x.png" />
+    <EmbeddedResource Include="Resources\SquareExp.png" />
+    <EmbeddedResource Include="Resources\SlideSmall%4015x.png" />
+    <EmbeddedResource Include="Resources\SlideSmall%402x.png" />
+    <EmbeddedResource Include="Resources\SlideSmall.png" />
+    <EmbeddedResource Include="Resources\PortamentoSmall%4015x.png" />
     <EmbeddedResource Include="Resources\Warning%402x.png" />
     <EmbeddedResource Include="Resources\Warning.png" />
     <EmbeddedResource Include="Resources\InstrumentExp%402x.png" />
@@ -263,8 +269,6 @@
     <EmbeddedResource Include="Resources\Duty6.png" />
     <EmbeddedResource Include="Resources\Duty7%402x.png" />
     <EmbeddedResource Include="Resources\Duty7.png" />
-    <EmbeddedResource Include="Resources\Duty7Flip%402x.png" />
-    <EmbeddedResource Include="Resources\Duty7Flip.png" />
     <EmbeddedResource Include="Resources\Instrument%402x.png" />
     <EmbeddedResource Include="Resources\Instrument.png" />
     <EmbeddedResource Include="Resources\PortamentoSmall%402x.png" />

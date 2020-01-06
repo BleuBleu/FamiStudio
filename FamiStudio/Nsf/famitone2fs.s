@@ -19,12 +19,12 @@ FT_PITCH_FIX    = 0 ;(FT_PAL_SUPPORT|FT_NTSC_SUPPORT) ;add PAL/NTSC pitch correc
 
 .segment "FAMITONE"
 
-;envelope structure offsets, 5 bytes per envelope, grouped by variable type
-
 .ifdef FT_VRC6_ENABLE
-FT_NUM_ENVELOPES    = 3+3+3+2+3+3+3    
+FT_NUM_ENVELOPES        = 2+2+2+2+2+2+2 
+FT_NUM_PITCH_ENVELOPES  = 6
 .else
-FT_NUM_ENVELOPES    = 3+3+3+2    ;3 for the pulse and triangle channels, 2 for the noise channel
+FT_NUM_ENVELOPES        = 2+2+2+2
+FT_NUM_PITCH_ENVELOPES  = 3
 .endif
 
 FT_ENVELOPES:
@@ -34,7 +34,15 @@ FT_ENV_ADR_L  : .res FT_NUM_ENVELOPES
 FT_ENV_ADR_H  : .res FT_NUM_ENVELOPES
 FT_ENV_PTR    : .res FT_NUM_ENVELOPES
 
-;slide structure offsets, 4 bytes per slide.
+FT_PITCH_ENVELOPES:
+FT_PITCH_ENV_VALUE_L  : .res FT_NUM_PITCH_ENVELOPES
+FT_PITCH_ENV_VALUE_H  : .res FT_NUM_PITCH_ENVELOPES
+FT_PITCH_ENV_REPEAT   : .res FT_NUM_PITCH_ENVELOPES
+FT_PITCH_ENV_ADR_L    : .res FT_NUM_PITCH_ENVELOPES
+FT_PITCH_ENV_ADR_H    : .res FT_NUM_PITCH_ENVELOPES
+FT_PITCH_ENV_PTR      : .res FT_NUM_PITCH_ENVELOPES
+
+;slide structure offsets, 3 bytes per slide.
 
 .ifdef FT_VRC6_ENABLE
 FT_NUM_SLIDES = 3 ;square and triangle have slide notes.
@@ -70,18 +78,17 @@ FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS ; DPCM(4) + Triangle(2) are unused.
 ;variables and aliases
 
 FT_CH1_ENVS = 0
-FT_CH2_ENVS = 3
-FT_CH3_ENVS = 6
-FT_CH4_ENVS = 9
+FT_CH2_ENVS = 2
+FT_CH3_ENVS = 4
+FT_CH4_ENVS = 8
 .ifdef FT_VRC6_ENABLE
-FT_CH6_ENVS = 11
-FT_CH7_ENVS = 14
-FT_CH8_ENVS = 17
+FT_CH6_ENVS = 10
+FT_CH7_ENVS = 12
+FT_CH8_ENVS = 14
 .endif
 
 FT_ENV_VOLUME_OFF = 0
 FT_ENV_NOTE_OFF   = 1
-FT_ENV_PITCH_OFF  = 2
 
 FT_SFX_STRUCT_SIZE    = 15
 
@@ -308,17 +315,35 @@ FamiToneMusicStop:
 
 @set_envelopes:
 
-    lda #.lobyte (_FT2DummyEnvelope)
+    lda #.lobyte(_FT2DummyEnvelope)
     sta FT_ENV_ADR_L,x
     lda #.hibyte(_FT2DummyEnvelope)
     sta FT_ENV_ADR_H,x
     lda #0
     sta FT_ENV_REPEAT,x
     sta FT_ENV_VALUE,x
+    sta FT_ENV_PTR,x
     inx
     cpx #FT_NUM_ENVELOPES
-
     bne @set_envelopes
+
+    ldx #0    ;initialize all envelopes to the dummy envelope
+
+@set_pitch_envelopes:
+
+    lda #.lobyte(_FT2DummyPitchEnvelope)
+    sta FT_PITCH_ENV_ADR_L,x
+    lda #.hibyte(_FT2DummyPitchEnvelope)
+    sta FT_PITCH_ENV_ADR_H,x
+    lda #0
+    sta FT_PITCH_ENV_REPEAT,x
+    sta FT_PITCH_ENV_VALUE_L,x
+    sta FT_PITCH_ENV_VALUE_H,x
+    lda #1
+    sta FT_PITCH_ENV_PTR,x
+    inx
+    cpx #FT_NUM_PITCH_ENVELOPES
+    bne @set_pitch_envelopes
 
     jmp FamiToneSampleStop
 
@@ -498,48 +523,44 @@ FamiToneMusicPause:
     .endif
     tax
 
-.ifnblank slide_offset
+; MATTT
+;.ifnblank slide_offset
 
-    ldy FT_SLIDE_STEP+slide_offset
-    beq @noslide
-@slide:
-    lda FT_ENV_VALUE+env_offset+FT_ENV_PITCH_OFF
-    tay
+;    ldy FT_SLIDE_STEP+slide_offset
+;    beq @noslide
+;@slide:
+;    lda FT_ENV_VALUE+env_offset+FT_ENV_PITCH_OFF
+;    tay
+;    adc noteTableLSB,x
+;    sta FT_TEMP_PTR2_L
+;    tya
+;    ora #$7f
+;    bmi @slidesign
+;    lda #0
+;@slidesign:
+;    adc noteTableMSB,x
+;    sta FT_TEMP_PTR2_H
+;    lda FT_SLIDE_PITCH_H+slide_offset
+;    asl ; sign extend upcoming right shift.
+;    ror ; we have 1 bit of fraction for slides, shift right hi byte.
+;    ror 
+;    sta FT_TEMP_VAR1
+;    lda FT_SLIDE_PITCH_L+slide_offset
+;    ror ; shift right low byte.
+;    clc
+;    adc FT_TEMP_PTR2_L
+;    sta reg_lo
+;    lda FT_TEMP_VAR1
+;    adc FT_TEMP_PTR2_H 
+;    jmp @checkprevpulse
+;@noslide:    
+
+;.endif
+
+    lda FT_PITCH_ENV_VALUE_L+slide_offset
     adc noteTableLSB,x
-    sta FT_TEMP_PTR2_L
-    tya
-    ora #$7f
-    bmi @slidesign
-    lda #0
-@slidesign:
-    adc noteTableMSB,x
-    sta FT_TEMP_PTR2_H
-    lda FT_SLIDE_PITCH_H+slide_offset
-    asl ; sign extend upcoming right shift.
-    ror ; we have 1 bit of fraction for slides, shift right hi byte.
-    ror 
-    sta FT_TEMP_VAR1
-    lda FT_SLIDE_PITCH_L+slide_offset
-    ror ; shift right low byte.
-    clc
-    adc FT_TEMP_PTR2_L
     sta reg_lo
-    lda FT_TEMP_VAR1
-    adc FT_TEMP_PTR2_H 
-    jmp @checkprevpulse
-@noslide:    
-
-.endif
-
-    lda FT_ENV_VALUE+env_offset+FT_ENV_PITCH_OFF
-    tay
-    adc noteTableLSB,x
-    sta reg_lo
-    tya ;sign extension for the pitch offset
-    ora #$7f
-    bmi @sign
-    lda #0
-@sign:
+    lda FT_PITCH_ENV_VALUE_H+slide_offset
     adc noteTableMSB,x
 
 @checkprevpulse:
@@ -627,7 +648,6 @@ FamiToneMusicPause:
 .endif
 .endmacro
 
-
 FamiToneUpdate:
 
     .if(FT_THREAD)
@@ -656,6 +676,7 @@ FamiToneUpdate:
     sta FT_TEMPO_ACC_H         ;no row update, skip to the envelopes update
     jmp @update_envelopes
 
+;----------------------------------------------------------------------------------------------------------------------
 @update_row:
 
     sec
@@ -673,19 +694,17 @@ FamiToneUpdate:
     update_row_standard 7, FT_CH8_ENVS, FT_CHN_DUTY+7
 .endif
 
+;----------------------------------------------------------------------------------------------------------------------
 @update_envelopes:
-
     ldx #0    ;process 11 envelopes
 
 @env_process:
-
-    lda FT_ENV_REPEAT,x        ;check envelope repeat counter
-    beq @env_read              ;if it is zero, process envelope
-    dec FT_ENV_REPEAT,x        ;otherwise decrement the counter
+    lda FT_ENV_REPEAT,x
+    beq @env_read  
+    dec FT_ENV_REPEAT,x
     bne @env_next
 
 @env_read:
-
     lda FT_ENV_ADR_L,x         ;load envelope data address into temp
     sta <FT_TEMP_PTR_L
     lda FT_ENV_ADR_H,x
@@ -693,7 +712,6 @@ FamiToneUpdate:
     ldy FT_ENV_PTR,x           ;load envelope pointer
 
 @env_read_value:
-
     lda (FT_TEMP_PTR1),y       ;read a byte of the envelope data
     bpl @env_special           ;values below 128 used as a special code, loop or repeat
     clc                        ;values above 128 are output value+192 (output values are signed -63..64)
@@ -703,7 +721,6 @@ FamiToneUpdate:
     bne @env_next_store_ptr    ;bra
 
 @env_special:
-
     bne @env_set_repeat        ;zero is the loop point, non-zero values used for the repeat counter
     iny                        ;advance the pointer
     lda (FT_TEMP_PTR1),y       ;read loop position
@@ -711,22 +728,133 @@ FamiToneUpdate:
     jmp @env_read_value        ;read next byte of the envelope
 
 @env_set_repeat:
-
     iny
     sta FT_ENV_REPEAT,x        ;store the repeat counter value
 
 @env_next_store_ptr:
-
     tya                        ;store the envelope pointer
     sta FT_ENV_PTR,x
 
 @env_next:
-
     inx                        ;next envelope
 
     cpx #FT_NUM_ENVELOPES
     bne @env_process
 
+;----------------------------------------------------------------------------------------------------------------------
+@update_pitch_envelopes:
+    ldx #0
+    jmp @pitch_env_process
+
+@pitch_relate_update_with_last_value:
+	lda FT_PITCH_ENV_REPEAT,x
+	sec 
+	sbc #1
+	sta  FT_PITCH_ENV_REPEAT,x
+	and #$7f 
+	beq @pitch_env_read
+    lda FT_PITCH_ENV_ADR_L,x 
+    sta <FT_TEMP_PTR_L
+    lda FT_PITCH_ENV_ADR_H,x
+    sta <FT_TEMP_PTR_H
+  	ldy FT_PITCH_ENV_PTR,x
+	dey	
+	dey
+	lda (FT_TEMP_PTR1),y
+	clc  
+    adc #256-192
+    sta FT_TEMP_VAR2
+    clc
+    adc FT_PITCH_ENV_VALUE_L,x
+    sta FT_PITCH_ENV_VALUE_L,x
+    lda FT_TEMP_VAR2
+ 	bpl @pitch_relative_last_pos  
+	lda #$ff
+@pitch_relative_last_pos:
+    adc FT_PITCH_ENV_VALUE_H,x
+    sta FT_PITCH_ENV_VALUE_H,x
+	jmp @pitch_env_next
+
+@pitch_env_process:
+    lda FT_PITCH_ENV_REPEAT,x
+    cmp #$81
+    bcs @pitch_relate_update_with_last_value
+    and #$7f
+    beq @pitch_env_read
+    dec FT_PITCH_ENV_REPEAT,x
+    bne @pitch_env_next
+
+@pitch_env_read:
+    lda FT_PITCH_ENV_ADR_L,x 
+    sta <FT_TEMP_PTR_L
+    lda FT_PITCH_ENV_ADR_H,x
+    sta <FT_TEMP_PTR_H
+    ldy #0
+    lda (FT_TEMP_PTR1),y
+    sta FT_TEMP_VAR1 ; going to be 0 for absolute envelope, 0x80 for relative.
+    ldy FT_PITCH_ENV_PTR,x
+
+@pitch_env_read_value:
+    lda (FT_TEMP_PTR1),y
+    bpl @pitch_env_special 
+    clc  
+    adc #256-192
+    bit FT_TEMP_VAR1
+    bmi @pitch_relative
+
+@pitch_absolute:
+    sta FT_PITCH_ENV_VALUE_L,x
+    ora #0
+    bmi @pitch_absolute_neg  
+    lda #0
+    jmp @pitch_absolute_set_value_hi
+@pitch_absolute_neg:
+	lda #$ff
+@pitch_absolute_set_value_hi:
+    sta FT_PITCH_ENV_VALUE_H,x
+    iny 
+    jmp @pitch_env_next_store_ptr
+
+@pitch_relative:
+	sta FT_TEMP_VAR2
+    clc
+    adc FT_PITCH_ENV_VALUE_L,x
+    sta FT_PITCH_ENV_VALUE_L,x
+    lda FT_TEMP_VAR2
+    and #$80
+ 	bpl @pitch_relative_pos  
+	lda #$ff
+@pitch_relative_pos:
+    adc FT_PITCH_ENV_VALUE_H,x
+    sta FT_PITCH_ENV_VALUE_H,x
+    iny 
+    jmp @pitch_env_next_store_ptr
+
+@pitch_env_special:
+    bne @pitch_env_set_repeat
+    iny 
+    lda (FT_TEMP_PTR1),y 
+    tay
+    jmp @pitch_env_read_value 
+
+@pitch_env_set_repeat:
+    iny
+    ora FT_TEMP_VAR1 ; this is going to set the relative flag in the hi-bit.
+    sta FT_PITCH_ENV_REPEAT,x
+
+@pitch_env_next_store_ptr:
+    tya 
+    sta FT_PITCH_ENV_PTR,x
+
+@pitch_env_next:
+    inx 
+
+    cpx #FT_NUM_PITCH_ENVELOPES
+    bne @pitch_env_process
+
+
+
+;----------------------------------------------------------------------------------------------------------------------
 @update_sound:
 
     update_channel_sound 0, FT_CH1_ENVS, 0, FT_PULSE1_PREV, FT_CHN_DUTY+0, , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V
@@ -739,7 +867,8 @@ FamiToneUpdate:
     update_channel_sound 7, FT_CH8_ENVS, 5, , FT_CHN_DUTY+7, #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
 .endif
 
-    .if(FT_SFX_ENABLE)
+;----------------------------------------------------------------------------------------------------------------------
+.if(FT_SFX_ENABLE)
 
     ;process all sound effect streams
 
@@ -796,8 +925,9 @@ FamiToneUpdate:
     lda FT_OUT_BUF+10   ;noise period
     sta APU_NOISE_LO
 
-    .endif
+.endif
 
+;----------------------------------------------------------------------------------------------------------------------
 @update_slides:
     ldx #0    ;process 3 slides
 
@@ -882,15 +1012,23 @@ _FT2SetInstrument:
     cpx #FT_CH4_ENVS           ;noise channel has only two envelopes
     bcs @no_pitch
 
-    inx                        ;next envelope
+    txa
+    lsr ; the channel number is basically envelope index / 2 now...
+    tax
+    lda _FT2ChannelToSlide, x
+    tax
     iny
-    sta FT_ENV_REPEAT,x        ;reset env3 repeat counter
-    sta FT_ENV_PTR,x           ;reset env3 pointer
+    lda #1
+    sta FT_PITCH_ENV_PTR,x     ;reset env3 pointer (pitch envelope have relative/absolute flag in the first byte)
+    lda #0
+    sta FT_PITCH_ENV_REPEAT,x  ;reset env3 repeat counter
+    sta FT_PITCH_ENV_VALUE_L,x
+    sta FT_PITCH_ENV_VALUE_H,x
     lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
-    sta FT_ENV_ADR_L,x
+    sta FT_PITCH_ENV_ADR_L,x
     iny
     lda (FT_TEMP_PTR1),y       ;instrument pointer MSB
-    sta FT_ENV_ADR_H,x
+    sta FT_PITCH_ENV_ADR_H,x
 
 @no_pitch:
     lda <FT_TEMP_VAR1
@@ -1397,7 +1535,10 @@ _FT2SfxUpdate:
 ;dummy envelope used to initialize all channels with silence
 
 _FT2DummyEnvelope:
-    .byte $c0,$00,$00
+    .byte $c0,$7f,$00,$00
+
+_FT2DummyPitchEnvelope:
+    .byte $00,$c0,$7f,$00,$01
 
 ;PAL and NTSC, 11-bit dividers
 ;rest note, then octaves 1-5, then three zeroes
@@ -1485,7 +1626,7 @@ _FT2ChannelToVolumeEnvelope:
     .byte FT_CH8_ENVS+FT_ENV_VOLUME_OFF
 .endif
 
-_FT2ChannelToSlide:
+_FT2ChannelToSlide: ; MATTT: Rename this. Slide + pitch envelope are related. 
     .byte $00
     .byte $01
     .byte $02

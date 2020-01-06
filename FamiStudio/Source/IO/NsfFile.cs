@@ -11,9 +11,9 @@ namespace FamiStudio
     {
         // NSF memory layout
         //   0x8000: start of code
-        //   0x8a00: nsf_init
-        //   0x8a80: nsf_play
-        //   0x8b00: song table of content, 4 bytes per song:
+        //   0x8b00: nsf_init
+        //   0x8b80: nsf_play
+        //   0x8c00: song table of content, 4 bytes per song:
         //      - first page of the song (1 byte)
         //      - address of the start of the song in page starting at 0x9000 (2 byte)
         //      - flags (1 = use DPCM)
@@ -21,9 +21,9 @@ namespace FamiStudio
         //   0xc000: DPCM samples (16KB max, if the song uses them)
 
         const int NsfCodeStart       = 0x8000;
-        const int NsfInitAddr        = 0x8a00; // Hardcoded in asm config.
-        const int NsfPlayAddr        = 0x8a80; // Hardcoded in asm config.
-        const int NsfSongTableAddr   = 0x8b00; // Hardcoded in asm.
+        const int NsfInitAddr        = 0x8b00; // Hardcoded in asm config.
+        const int NsfPlayAddr        = 0x8b80; // Hardcoded in asm config.
+        const int NsfSongTableAddr   = 0x8c00; // Hardcoded in asm.
         const int NsfSongAddr        = 0x9000;
         const int NsfDpcmOffset      = 0xc000;
         const int NsfPageSize        = 0x1000;

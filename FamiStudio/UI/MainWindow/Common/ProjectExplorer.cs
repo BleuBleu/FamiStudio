@@ -191,19 +191,9 @@ namespace FamiStudio
                         return projectExplorer.bmpDPCM;
                     case SubButtonType.DutyCycle:
                         if (instrument.ExpansionType == Project.ExpansionVRC6)
-                        {
                             return projectExplorer.bmpDuty[instrument.DutyCycle];
-                        }
                         else
-                        {
-                            switch (instrument.DutyCycle)
-                            {
-                                case 0: return projectExplorer.bmpDuty[1];
-                                case 1: return projectExplorer.bmpDuty[3];
-                                case 2: return projectExplorer.bmpDuty[7];
-                                default: return projectExplorer.bmpDuty7Inv;
-                            }
-                        }
+                            return projectExplorer.bmpDuty[instrument.DutyCycle * 2 + 1];
                     case SubButtonType.Arpeggio:
                         return projectExplorer.bmpArpeggio;
                     case SubButtonType.Pitch:
@@ -240,7 +230,6 @@ namespace FamiStudio
         RenderBitmap   bmpVolume;
         RenderBitmap   bmpLoadInstrument;
         RenderBitmap[] bmpDuty = new RenderBitmap[8];
-        RenderBitmap   bmpDuty7Inv;
 
         public Song SelectedSong => selectedSong;
         public Instrument SelectedInstrument => selectedInstrument;
@@ -318,15 +307,14 @@ namespace FamiStudio
             bmpInstrumentExp = g.CreateBitmapFromResource("InstrumentExp");
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
-            bmpDuty[0] = g.CreateBitmapFromResource("Duty1");
-            bmpDuty[1] = g.CreateBitmapFromResource("Duty2");
-            bmpDuty[2] = g.CreateBitmapFromResource("Duty3");
+            bmpDuty[0] = g.CreateBitmapFromResource("Duty0");
+            bmpDuty[1] = g.CreateBitmapFromResource("Duty1");
+            bmpDuty[2] = g.CreateBitmapFromResource("Duty2");
             bmpDuty[3] = g.CreateBitmapFromResource("Duty3");
             bmpDuty[4] = g.CreateBitmapFromResource("Duty4");
             bmpDuty[5] = g.CreateBitmapFromResource("Duty5");
             bmpDuty[6] = g.CreateBitmapFromResource("Duty6");
             bmpDuty[7] = g.CreateBitmapFromResource("Duty7");
-            bmpDuty7Inv = g.CreateBitmapFromResource("Duty7Flip");
             bmpArpeggio = g.CreateBitmapFromResource("Arpeggio");
             bmpPitch = g.CreateBitmapFromResource("Pitch");
             bmpVolume = g.CreateBitmapFromResource("Volume");
@@ -894,8 +882,9 @@ namespace FamiStudio
                     if (subButtonType == SubButtonType.Max)
                     {
                         var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, true);
-                        dlg.Properties.AddColoredString(instrument.Name, instrument.Color);
-                        dlg.Properties.AddColor(instrument.Color);
+                        dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
+                        dlg.Properties.AddColor(instrument.Color); // 1
+                        dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[Envelope.Pitch].Relative); // 2
                         dlg.Properties.Build();
 
                         if (dlg.ShowDialog() == DialogResult.OK)
@@ -907,6 +896,7 @@ namespace FamiStudio
                             if (App.Project.RenameInstrument(instrument, newName))
                             {
                                 instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                                instrument.Envelopes[Envelope.Pitch].Relative = dlg.Properties.GetPropertyValue<bool>(2);
                                 InstrumentColorChanged?.Invoke(instrument);
                                 RefreshButtons();
                                 ConditionalInvalidate();

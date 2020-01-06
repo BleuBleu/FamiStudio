@@ -93,10 +93,6 @@ namespace FamiStudio
                         // FamiTracker allows envelope with release with no loop. We dont allow that.
                         if (type == Envelope.Volume && loop == -1 && rel != -1)
                         {
-                            env.Length++;
-                            for (int j = env.Length - 1; j >= 1; j--)
-                                env.Values[j] = env.Values[j - 1];
-
                             loop = rel;
                             rel++;
                         }
@@ -108,7 +104,9 @@ namespace FamiStudio
                             env.Values[j] = sbyte.Parse(curve[j]);
                         if (type == 2)
                         {
-                            env.ConvertToAbsolute();
+                            env.Relative = true;
+                            for (int j = 0; j < env.Length; j++)
+                                env.Values[j] *= -1;
                         }
                         envelopes[expansion, type][idx] = env;
                     }

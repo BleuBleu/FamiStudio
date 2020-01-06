@@ -1,27 +1,24 @@
 1.4.0: VRC6
 ===========
 - GOAL: Play Shovel Knight first track.
-	
-x Refactor to have variying number of channels
-- FamiTracker TXT import/export (+instrument...)
-x NSF support too. All done, just need to test a lot...
-- WAV support.
-x Tooltip warning on incomparible instruments
-x Lower register notes for VRC6? 
-- Slide notes. (fix keyboard shortcut, Mac, etc.)
-x VRC6 shadow register for seeking.
-- To test:
-	- NSF: Try putting multiple things at once: volume + slide, volume + jump, etc. etc. Must all work.
-	- NSF: Retest volume tracks
-	- Copy paste: Handle all edge cases where you could copy from one expansion to another.
-	- Note drawing, release, stop, from far away.
-- Fix all MATTT
+
+- Fix all MATTT (asm too, 0x30 default duty is wrong...)
+- FamiTracker TXT import/export. Compare, must match exactly on behavior.
+- Fix Mac version.
+- FTI: Pitch discrepency between VRC6 and 2A03. Seems like 2A03 needs to be flipped, but not VRC6. Investigate...
+- NSF: Variable size.
 - Shovel Knight song:
 	- Noise track has weird 1 beat offset. Might need to start envelope at zero + move.
+- TESTING:
+	- NSF: Restest all songs, old FT2, etc.
+	- NSF: Try putting multiple things at once: volume + slide, volume + jump, etc. etc. Must all work.
+	- NSF: Retest volume tracks
+	- Note drawing, release, stop, from far away.
 
-TODO:
-- Finalize piano roll input for notes
-- Duty icons sucks.
+F1 -> F2
+0x0500 = 1280
+0x0280 = 640
+
 
 1.5.0: FDS
 ==========

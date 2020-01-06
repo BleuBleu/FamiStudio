@@ -7,7 +7,7 @@
 .global nsf_init
 .global nsf_play
 
-SONG_TABLE_ADDR = $8b00
+SONG_TABLE_ADDR = $8c00
 DPCM_ADDR       = $c000
 
 .segment "CODE_INIT"

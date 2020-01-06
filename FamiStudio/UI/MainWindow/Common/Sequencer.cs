@@ -60,6 +60,7 @@ namespace FamiStudio
         int ghostNoteOffsetY;
         int patternNamePosX;
         int patternNamePosY;
+        int patternSizeX;
         
         int scrollX = 0;
         int zoomLevel = 1;
@@ -84,17 +85,10 @@ namespace FamiStudio
         int minSelectedPatternIdx = -1;
         int maxSelectedPatternIdx = -1;
         CaptureOperation captureOperation = CaptureOperation.None;
-
-        int PatternSizeX => ScaleForZoom(Song.PatternLength);
-
+        
         int ScaleForZoom(int value)
         {
             return zoomLevel < 0 ? value / (1 << (-zoomLevel)) : value * (1 << zoomLevel);
-        }
-
-        int UnscaleForZoom(int value)
-        {
-            return zoomLevel < 0 ? value * (1 << (-zoomLevel)) : value / (1 << zoomLevel);
         }
 
         Dictionary<int, RenderBitmap> patternBitmapCache = new Dictionary<int, RenderBitmap>();
@@ -163,6 +157,7 @@ namespace FamiStudio
             ghostNoteOffsetY   = (int)(DefaultGhostNoteOffsetY * scaling);
             patternNamePosX    = (int)(DefaultPatternNamePosX * scaling);
             patternNamePosY    = (int)(DefaultPatternNamePosY * scaling);
+            patternSizeX       = (int)(ScaleForZoom(Song == null ? 256 : Song.PatternLength) * scaling);
         }
 
         private int GetChannelCount()
@@ -178,7 +173,7 @@ namespace FamiStudio
         public int ComputeDesiredSizeY()
         {
             // Does not include scaling.
-            return ComputeDesiredTrackSizeY() * GetChannelCount() + headerSizeY + 1;
+            return ComputeDesiredTrackSizeY() * GetChannelCount() + DefaultHeaderSizeY + 1;
         }
 
         public void SequencerLayoutChanged()
@@ -194,6 +189,7 @@ namespace FamiStudio
             zoomLevel = 1;
             selectedChannel = 0;
             ClearSelection();
+            UpdateRenderCoords();
             InvalidatePatternCache();
         }
 
@@ -258,7 +254,6 @@ namespace FamiStudio
         {
             g.Clear(ThemeBase.DarkGreyFillColor1);
 
-            int patternSizeX = PatternSizeX;
             int seekX = ScaleForZoom(App.CurrentFrame) - scrollX;
             int minVisiblePattern = Math.Max((int)Math.Floor(scrollX / (float)patternSizeX), 0);
             int maxVisiblePattern = Math.Min((int)Math.Ceiling((scrollX + Width) / (float)patternSizeX), Song.Length);
@@ -362,10 +357,10 @@ namespace FamiStudio
                         g.FillRectangle(1, 1, patternSizeX, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY - 1, 0.9f));
                         g.DrawLine(0, patternHeaderSizeY, patternSizeX, patternHeaderSizeY, theme.DarkGreyLineBrush1);
                         //if (selected)
-                        //    g.FillRectangle(1, 1 + patternHeaderSizeY, PatternSizeX, patternHeaderSizeY + bmp.Size.Height + 1, showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
+                        //    g.FillRectangle(1, 1 + patternHeaderSizeY, patternSizeX, patternHeaderSizeY + bmp.Size.Height + 1, showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
 
-                        g.DrawBitmap(bmp, 1, 1 + patternHeaderSizeY, PatternSizeX - 1, bmp.Size.Height, 1.0f);
-                        g.PushClip(0, 0, PatternSizeX, trackSizeY);
+                        g.DrawBitmap(bmp, 1, 1 + patternHeaderSizeY, patternSizeX - 1, bmp.Size.Height, 1.0f);
+                        g.PushClip(0, 0, patternSizeX, trackSizeY);
                         g.DrawText(pattern.Name, ThemeBase.FontSmall, patternNamePosX, patternNamePosY, theme.BlackBrush);
                         g.PopClip();
                         g.PopTransform();
@@ -483,7 +478,7 @@ namespace FamiStudio
         private void ClampScroll()
         {
             int minScrollX = 0;
-            int maxScrollX = Math.Max(Song.Length * PatternSizeX - scrollMargin, 0);
+            int maxScrollX = Math.Max(Song.Length * patternSizeX - scrollMargin, 0);
 
             if (scrollX < minScrollX) scrollX = minScrollX;
             if (scrollX > maxScrollX) scrollX = maxScrollX;
@@ -498,7 +493,7 @@ namespace FamiStudio
 
         private bool GetPatternForCoord(int x, int y, out int track, out int pattern)
         {
-            pattern = (x - trackNameSizeX + scrollX) / PatternSizeX;
+            pattern = (x - trackNameSizeX + scrollX) / patternSizeX;
             track = (y - headerSizeY) / trackSizeY;
 
             return (x > trackNameSizeX && y > headerSizeY && pattern >= 0 && pattern < Song.Length && track >= 0 && track < Song.Channels.Length);
@@ -595,13 +590,13 @@ namespace FamiStudio
             {
                 if (left)
                 {
-                    int frame = (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)PatternSizeX * Song.PatternLength);
+                    int frame = (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)patternSizeX * Song.PatternLength);
                     App.Seek(frame);
                 }
                 else if (right && canCapture)
                 {
                     StartCaptureOperation(e, CaptureOperation.Select);
-                    UpdateSelection(e, true);
+                    UpdateSelection(e.X, true);
                 }
             }
             else if (e.Y > headerSizeY && (left || right))
@@ -676,7 +671,7 @@ namespace FamiStudio
                             maxSelectedPatternIdx = patternIdx;
                         }
 
-                        selectionDragAnchorX = e.X - trackNameSizeX + scrollX - minSelectedPatternIdx * PatternSizeX;
+                        selectionDragAnchorX = e.X - trackNameSizeX + scrollX - minSelectedPatternIdx * patternSizeX;
                         StartCaptureOperation(e, CaptureOperation.ClickPattern);
 
                         ConditionalInvalidate();
@@ -759,8 +754,13 @@ namespace FamiStudio
                 for (int j = 0; j < patterns.GetLength(1); j++)
                 {
                     var pattern = patterns[i, j];
-                    if (pattern != null && (i + minSelectedPatternIdx) < Song.Length)
+
+                    if (pattern != null && (i + minSelectedPatternIdx) < Song.Length &&
+                        pattern.ChannelType  < Song.Channels.Length &&
+                        pattern.ChannelType == Song.Channels[pattern.ChannelType].Type)
+                    {
                         Song.Channels[pattern.ChannelType].PatternInstances[i + minSelectedPatternIdx] = pattern;
+                    }
                 }
             }
 
@@ -809,8 +809,8 @@ namespace FamiStudio
                 {
                     bool copy = ModifierKeys.HasFlag(Keys.Control);
 
-                    int centerX = e.X - selectionDragAnchorX + PatternSizeX / 2;
-                    int basePatternIdx = (centerX - trackNameSizeX + scrollX) / PatternSizeX;
+                    int centerX = e.X - selectionDragAnchorX + patternSizeX / 2;
+                    int basePatternIdx = (centerX - trackNameSizeX + scrollX) / patternSizeX;
 
                     Pattern[,] tmpPatterns = new Pattern[maxSelectedChannelIdx - minSelectedChannelIdx + 1, maxSelectedPatternIdx - minSelectedPatternIdx + 1];
 
@@ -930,9 +930,20 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateSelection(MouseEventArgs e, bool first = false)
+        private void UpdateSelection(int mouseX, bool first = false)
         {
-            int patternIdx = (e.X - trackNameSizeX + scrollX) / PatternSizeX;
+            if ((mouseX - trackNameSizeX) < 100)
+            {
+                scrollX -= 16;
+                ClampScroll();
+            }
+            else if ((Width - mouseX) < 100)
+            {
+                scrollX += 16;
+                ClampScroll();
+            }
+
+            int patternIdx = Utils.Clamp((mouseX - trackNameSizeX + scrollX) / patternSizeX, 0, Song.Length - 1);
 
             if (first)
             {
@@ -943,7 +954,7 @@ namespace FamiStudio
             }
             else
             {
-                if (e.X > captureStartX)
+                if (mouseX > captureStartX)
                     maxSelectedPatternIdx = patternIdx;
                 else
                     minSelectedPatternIdx = patternIdx;
@@ -1057,7 +1068,7 @@ namespace FamiStudio
             }
             else if (captureOperation == CaptureOperation.Select)
             {
-                UpdateSelection(e);
+                UpdateSelection(e.X);
             }
             else if (captureOperation == CaptureOperation.DragSelection)
             {
@@ -1134,8 +1145,18 @@ namespace FamiStudio
             if (e.Delta > 0 && zoomLevel < MaxZoomLevel) { zoomLevel++; absoluteX *= 2; selectionDragAnchorX *= 2; }
             scrollX = absoluteX - pixelX;
 
+            UpdateRenderCoords();
             ClampScroll();
             ConditionalInvalidate();
+        }
+
+        public void Tick()
+        {
+            if (captureOperation == CaptureOperation.Select)
+            {
+                var pt = PointToClient(Cursor.Position);
+                UpdateSelection(pt.X, false);
+            }
         }
 
         public void InvalidatePatternCache()
@@ -1159,6 +1180,7 @@ namespace FamiStudio
                 // TODO: This is overly aggressive. We should have the 
                 // scope on the transaction on the buffer and filter by that.
                 InvalidatePatternCache();
+                UpdateRenderCoords();
                 CancelDragSelection();
                 ConditionalInvalidate();
             }

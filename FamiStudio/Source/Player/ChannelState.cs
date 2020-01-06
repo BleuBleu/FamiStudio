@@ -70,12 +70,12 @@ namespace FamiStudio
             {
                 slideStep = 0;
 
-                if (tmpNote.IsSlideNote)
+                if (tmpNote.IsSlideNote || tmpNote.IsPortamento)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
-                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, tmpNote.Value, tmpNote.SlideTarget, noteTable, out slidePitch, out slideStep, out int slideTargetNote))
-                        tmpNote.Value = (byte)slideTargetNote;
+                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _, out _, out int nextNote))
+                        tmpNote.Value = (byte)nextNote;
                 }
 
                 PlayNote(tmpNote);
@@ -112,6 +112,8 @@ namespace FamiStudio
 
                 for (int j = 0; j < Envelope.Max; j++)
                     envelopeIdx[j] = 0;
+
+                envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
             }
         }
 
@@ -132,17 +134,32 @@ namespace FamiStudio
                         continue;
                     }
 
-                    var idx = envelopeIdx[j];
                     var env = instrument.Envelopes[j];
+                    var idx = envelopeIdx[j];
 
-                    envelopeValues[j] = instrument.Envelopes[j].Values[idx];
+                    // Non-looping, relative envelope end up with -1 when done.
+                    if (idx < 0)
+                    {
+                        Debug.Assert(env.Relative);
+                        continue;
+                    }
+
+                    if (env.Relative)
+                    {
+                        Debug.Assert(j == Envelope.Pitch);
+                        envelopeValues[j] += instrument.Envelopes[j].Values[idx];
+                    }
+                    else
+                    {
+                        envelopeValues[j] = instrument.Envelopes[j].Values[idx];
+                    }
 
                     idx++;
 
                     if (env.Release >= 0 && idx == env.Release)
                         envelopeIdx[j] = env.Loop;
                     else if (idx >= env.Length)
-                        envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : env.Length - 1;
+                        envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : (env.Relative ? -1 : env.Length - 1);
                     else
                         envelopeIdx[j] = idx;
                 }

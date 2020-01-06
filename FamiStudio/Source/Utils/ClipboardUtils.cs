@@ -136,8 +136,10 @@ namespace FamiStudio
             foreach (var inst in instruments)
             {
                 var instId = inst.Id;
+                var instType = inst.ExpansionType;
                 var instName = inst.Name;
                 serializer.Serialize(ref instId);
+                serializer.Serialize(ref instType);
                 serializer.Serialize(ref instName);
             }
 
@@ -150,14 +152,16 @@ namespace FamiStudio
             int numInstruments = 0;
             serializer.Serialize(ref numInstruments);
 
-            var instrumentIdNameMap = new List<Tuple<int, string>>();
+            var instrumentIdNameMap = new List<Tuple<int, int, string>>();
             for (int i = 0; i < numInstruments; i++)
             {
                 var instId = 0;
+                var instType = 0;
                 var instName = "";
                 serializer.Serialize(ref instId);
+                serializer.Serialize(ref instType);
                 serializer.Serialize(ref instName);
-                instrumentIdNameMap.Add(new Tuple<int, string>(instId, instName));
+                instrumentIdNameMap.Add(new Tuple<int, int, string>(instId, instType, instName));
             }
 
             var dummyInstrument = new Instrument();
@@ -167,13 +171,18 @@ namespace FamiStudio
             for (int i = 0; i < numInstruments; i++)
             {
                 var instId = instrumentIdNameMap[i].Item1;
-                var instName = instrumentIdNameMap[i].Item2;
+                var instType = instrumentIdNameMap[i].Item2;
+                var instName = instrumentIdNameMap[i].Item3;
 
                 var existingInstrument = serializer.Project.GetInstrument(instName);
 
                 if (existingInstrument != null)
                 {
-                    serializer.RemapId(instId, existingInstrument.Id);
+                    if (existingInstrument.ExpansionType == instType)
+                        serializer.RemapId(instId, existingInstrument.Id);
+                    else
+                        serializer.RemapId(instId, -1); // Incompatible expansion type, skip.
+
                     dummyInstrument.SerializeState(serializer); // Skip
                 }
                 else
@@ -184,7 +193,7 @@ namespace FamiStudio
                     {
                         if (createMissing)
                         {
-                            var instrument = serializer.Project.CreateInstrument(Project.ExpansionNone, instName); // MATTT
+                            var instrument = serializer.Project.CreateInstrument(instType, instName);
                             serializer.RemapId(instId, instrument.Id);
                             instrument.SerializeState(serializer);
                         }

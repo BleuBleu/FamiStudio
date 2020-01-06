@@ -16,6 +16,7 @@ namespace FamiStudio
         int length;
         int loop = -1;
         int release = -1;
+        bool relative = false;
 
         public sbyte[] Values => values;
 
@@ -74,6 +75,13 @@ namespace FamiStudio
                 }
             }
         }
+
+        public bool Relative
+        {
+            get { return relative; }
+            set { relative = value; }
+        }
+
         public void ConvertToAbsolute()
         {
             // Pitch are absolute in Famitone.
@@ -90,9 +98,10 @@ namespace FamiStudio
         public Envelope Clone()
         {
             var env = new Envelope();
-            env.Length = Length;
-            env.Loop = Loop;
-            env.Release = Release;
+            env.Length = length;
+            env.Loop = loop;
+            env.Release = release;
+            env.Relative = relative;
             values.CopyTo(env.values, 0);
             return env;
         }
@@ -147,6 +156,8 @@ namespace FamiStudio
             buffer.Serialize(ref loop);
             if (buffer.Version >= 3)
                 buffer.Serialize(ref release);
+            if (buffer.Version >= 4)
+                buffer.Serialize(ref relative);
             buffer.Serialize(ref values);
         }
     }

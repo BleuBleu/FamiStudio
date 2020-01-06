@@ -15,6 +15,7 @@ namespace FamiStudio
         private Color color;
         private Note[] notes = new Note[MaxLength];
 
+        private int  firstValidNoteTime  = -1;
         private int  lastValidNoteTime  = -1;
         private byte lastVolumeValue = 0xff;
         private bool lastValidNoteReleased = false;
@@ -141,23 +142,28 @@ namespace FamiStudio
             for (int i = song.PatternLength - 1; i >= 0; i--)
             {
                 var note = notes[i];
-                if (note.IsRelease)
+
+                if (lastValidNoteTime < 0)
                 {
-                    lastValidNoteReleased = true;
-                }
-                else
-                {
-                    if (note.IsStop)
+                    if (note.IsRelease)
                     {
-                        lastValidNoteReleased = false;
+                        lastValidNoteReleased = true;
                     }
-                    if (note.IsValid && lastValidNoteTime < 0)
+                    else
                     {
-                        lastValidNoteTime = (byte)i;
-                        if (lastVolumeValue != Note.VolumeInvalid)
-                            break;
+                        if (note.IsStop)
+                        {
+                            lastValidNoteReleased = false;
+                        }
+                        if (note.IsValid)
+                        {
+                            lastValidNoteTime = (byte)i;
+                            if (lastVolumeValue != Note.VolumeInvalid)
+                                break;
+                        }
                     }
                 }
+
                 if (note.HasVolume && lastVolumeValue == Note.VolumeInvalid)
                 {
                     lastVolumeValue = note.Volume;
@@ -165,8 +171,35 @@ namespace FamiStudio
                         break;
                 }
             }
+
+            firstValidNoteTime = -1;
+
+            for (int i = 0; i < song.PatternLength; i++)
+            {
+                var note = notes[i];
+
+                if (note.IsValid && !note.IsRelease)
+                {
+                    firstValidNoteTime = (byte)i;
+                    break;
+                }
+            }
         }
-        
+
+        public int FirstValidNoteTime
+        {
+            get { return firstValidNoteTime; }
+        }
+
+        public Note FirstValidNote
+        {
+            get
+            {
+                Debug.Assert(firstValidNoteTime >= 0);
+                return notes[firstValidNoteTime];
+            }
+        }
+
         public int LastValidNoteTime
         {
             get { return lastValidNoteTime; }
@@ -231,6 +264,7 @@ namespace FamiStudio
 
             if (buffer.IsForUndoRedo)
             {
+                buffer.Serialize(ref firstValidNoteTime);
                 buffer.Serialize(ref lastValidNoteTime);
                 buffer.Serialize(ref lastVolumeValue);
                 buffer.Serialize(ref lastValidNoteReleased);

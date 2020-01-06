@@ -62,9 +62,10 @@ namespace FamiStudio
                 }
                 if (env.Length == 0)
                 {
-                    env.Length = 1;
+                    env.Length = 127;
                     env.Loop = -1;
-                    env.Values[0] = 15;
+                    for (int i = 0; i < env.Length; i++)
+                        env.Values[i] = 15;
                 }
             }
         }
@@ -106,18 +107,21 @@ namespace FamiStudio
             return size;
         }
 
-        private byte[] ProcessEnvelope(Envelope env, bool allowReleases)
+        private byte[] ProcessEnvelope(Envelope env, bool allowReleases, bool newPitchEnvelope)
         {
             if (env.IsEmpty)
                 return null;
 
             var data = new byte[256];
 
-            byte ptr = (byte)(allowReleases ? 1 : 0);
+            byte ptr = (byte)(allowReleases || newPitchEnvelope ? 1 : 0);
             byte ptr_loop = 0xff;
             byte rle_cnt = 0;
             byte prev_val = (byte)(env.Values[0] + 1);//prevent rle match
             bool found_release = false;
+
+            if (newPitchEnvelope)
+                data[0] = (byte)(env.Relative ? 0x80 : 0x00);
 
             for (int j = 0; j < env.Length; j++)
             {
@@ -132,7 +136,7 @@ namespace FamiStudio
 
                 val += 192;
 
-                if (prev_val != val || j == env.Loop || (allowReleases && j == env.Release) || j == env.Length - 1)
+                if (prev_val != val || j == env.Loop || (allowReleases && j == env.Release) || j == env.Length - 1 || (rle_cnt == 127 && newPitchEnvelope))
                 {
                     if (rle_cnt != 0)
                     {
@@ -142,10 +146,10 @@ namespace FamiStudio
                         }
                         else
                         {
-                            while (rle_cnt > 126)
+                            while (rle_cnt > 127)
                             {
-                                data[ptr++] = 126;
-                                rle_cnt -= 126;
+                                data[ptr++] = 127;
+                                rle_cnt -= 127;
                             }
 
                             data[ptr++] = rle_cnt;
@@ -199,20 +203,32 @@ namespace FamiStudio
             var uniqueEnvelopes = new SortedList<uint, byte[]>();
             var instrumentEnvelopes = new Dictionary<Envelope, uint>();
 
-            var defaultEnv = new byte[] { 0xc0, 0x00, 0x00 };
+            var defaultEnv = new byte[] { 0xc0, 0x7f, 0x00, 0x00 };
+            var defaultPitchEnv = new byte[] { 0x00, 0xc0, 0x7f, 0x00, 0x01 };
             var defaultEnvCRC = CRC32.Compute(defaultEnv);
+            var defaultPitchEnvCRC = CRC32.Compute(defaultPitchEnv);
+
             uniqueEnvelopes.Add(defaultEnvCRC, defaultEnv);
+
+            if (kernel == FamiToneKernel.FamiTone2FS)
+                uniqueEnvelopes.Add(defaultPitchEnvCRC, defaultPitchEnv);
 
             foreach (var instrument in project.Instruments)
             {
                 for (int i = 0; i < Envelope.Max; i++)
                 {
                     var env = instrument.Envelopes[i];
-                    var processed = ProcessEnvelope(env, i == Envelope.Volume && kernel == FamiToneKernel.FamiTone2FS);
+                    var processed = 
+                        ProcessEnvelope(env, 
+                            i == Envelope.Volume && kernel == FamiToneKernel.FamiTone2FS, 
+                            i == Envelope.Pitch  && kernel == FamiToneKernel.FamiTone2FS);
 
                     if (processed == null)
                     {
-                        instrumentEnvelopes[env] = defaultEnvCRC;
+                        if (kernel == FamiToneKernel.FamiTone2FS && i == Envelope.Pitch)
+                            instrumentEnvelopes[env] = defaultPitchEnvCRC;
+                        else
+                            instrumentEnvelopes[env] = defaultEnvCRC;
                     }
                     else
                     {
@@ -521,12 +537,12 @@ namespace FamiStudio
                                 {
                                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
-                                    if (channel.ComputeSlideNoteParams(p, i - 1, note.Value, note.SlideTarget, noteTable, out _, out int stepSize, out int targetNote))
+                                    if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _, out int prevNote, out int nextNote))
                                     {
                                         patternBuffer.Add(0x61);
                                         patternBuffer.Add((byte)stepSize);
-                                        patternBuffer.Add(EncodeNoteValue(c, note.Value));
-                                        patternBuffer.Add(EncodeNoteValue(c, targetNote));
+                                        patternBuffer.Add(EncodeNoteValue(c, prevNote));
+                                        patternBuffer.Add(EncodeNoteValue(c, nextNote));
                                         continue;
                                     }
                                 }

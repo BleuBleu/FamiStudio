@@ -79,10 +79,8 @@ namespace FamiStudio
             return false;
         }
 
-        public bool SupportsReleaseNotes()
-        {
-            return type != DPCM;
-        }
+        public bool SupportsReleaseNotes => type != DPCM;
+        public bool SupportsSlideNotes => type != Noise && type != DPCM;
 
         public void Split(int factor)
         {
@@ -192,8 +190,8 @@ namespace FamiStudio
         {
             bool valid = false;
 
-            min = new Note() { Value = 255 };
-            max = new Note() { Value = 0 };
+            min = new Note(255);
+            max = new Note(0);
 
             for (int i = 0; i < song.Length; i++)
             {
@@ -252,106 +250,132 @@ namespace FamiStudio
             return Note.VolumeMax;
         }
 
-        public int GetLastValidNote(int patternIdx, out Note lastNote, out bool released)
+        public bool GetLastValidNote(ref int patternIdx, out int noteIdx, out bool released)
         {
-            var lastTime = int.MinValue;
-            var invalidNote = new Note() { Value = Note.NoteInvalid }; ;
-
-            lastNote = invalidNote;
+            noteIdx = -1;
             released = false;
 
             // Find previous valid note.
-            for (int p = patternIdx; p >= 0 && lastTime == int.MinValue; p--)
+            for (; patternIdx >= 0; patternIdx--)
             {
-                var pattern = patternInstances[p];
+                var pattern = patternInstances[patternIdx];
                 if (pattern != null)
                 {
-                    var note = invalidNote;
+                    var note = new Note(Note.NoteInvalid);
+
                     if (pattern.LastValidNoteTime >= 0)
+                    {
                         note = pattern.LastValidNote;
+                        noteIdx = pattern.LastValidNoteTime;
+                        Debug.Assert(pattern.LastValidNote.IsValid);
+                    }
 
                     released = note.IsStop ? false : released || pattern.LastValidNoteReleased;
 
                     if (note.IsValid)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration, out int slideFrom, out int slideTo)
+        {
+            stepSize = 0;
+            slideFrom = Note.NoteInvalid;
+            slideTo = Note.NoteInvalid;
+            pitchDelta = 0;
+            noteDuration = -1;
+
+            var note = patternInstances[patternIdx].Notes[noteIdx];
+            var prevNote = Note.NoteInvalid;
+
+            // For portamento, we need to find the previous note value.
+            if (note.IsPortamento)
+            {
+                var found = false;
+                for (int n = noteIdx - 1; n >= 0; n--)
+                {
+                    var tmpNote = patternInstances[patternIdx].Notes[n];
+                    if (tmpNote.IsMusical || tmpNote.IsStop)
                     {
-                        lastNote = note;
-                        return pattern.LastValidNoteTime;
+                        prevNote = tmpNote.Value;
+                        found = true;
+                        break;
                     }
                 }
+
+                if (!found)
+                {
+                    for (var p = patternIdx - 1; p >= 0; p--)
+                    {
+                        var pattern = patternInstances[p];
+                        if (pattern != null && pattern.LastValidNoteTime >= 0)
+                        {
+                            prevNote = pattern.LastValidNote.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (prevNote == Note.NoteInvalid || prevNote == Note.NoteStop)
+                    return false;
             }
 
-            return int.MinValue;
-        }
-
-        private int FindNextNoteForSlide(int patternIdx, int noteIdx, out int noteValue)
-        {
-            noteValue = Note.NoteStop;
-
-            var nextPatternIdx = patternIdx;
-            var nextNoteIdx    = noteIdx;
-
-            var pattern = patternInstances[nextPatternIdx];
-            Debug.Assert(pattern.Notes[nextNoteIdx].IsSlideNote);
-
-            var noteCount = 1;
-            do
+            // Then we need the next note to find calculate the slope.
             {
-                if (++nextNoteIdx == song.PatternLength)
+                var found = false;
+                for (int n = noteIdx + 1; n < song.PatternLength; n++)
                 {
-                    nextNoteIdx = 0;
-                    if (++patternIdx == song.Length)
-                        return -1;
+                    var tmpNote = patternInstances[patternIdx].Notes[n];
+                    if (tmpNote.IsMusical || tmpNote.IsStop)
+                    {
+                        noteDuration = (patternIdx * song.PatternLength + n) - (patternIdx * song.PatternLength + noteIdx);
+                        found = true;
+                        break;
+                    }
                 }
 
-                if (++noteCount == 255)
-                    return -1;
-
-                if (pattern.Notes[nextNoteIdx].IsValid)
+                if (!found)
                 {
-                    if (!pattern.Notes[nextNoteIdx].IsStop)
-                        noteValue = pattern.Notes[nextNoteIdx].Value;
-
-                    return (nextPatternIdx * song.PatternLength + nextNoteIdx) - (patternIdx * song.PatternLength + noteIdx);
+                    for (int p = patternIdx + 1; p < song.Length; p++)
+                    {
+                        var pattern = patternInstances[p];
+                        if (pattern != null && pattern.FirstValidNoteTime >= 0)
+                        {
+                            noteDuration = (p * song.PatternLength + pattern.FirstValidNoteTime) - (patternIdx * song.PatternLength + noteIdx);
+                            break;
+                        }
+                    }
                 }
+
+                if (noteDuration < 0)
+                    noteDuration =  1024 / song.Speed; // This is kind of arbitrary. 
             }
-            while (true);
-        }
 
-        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, int currNote, int customSlideTarget, ushort[] noteTable, out int pitchDelta, out int stepSize, out int targetNote)
-        {
-            stepSize   = 0;
-            targetNote = Note.NoteInvalid;
-            pitchDelta = 0;
+            slideFrom = note.IsPortamento ? prevNote   : note.Value;
+            slideTo   = note.IsPortamento ? note.Value : note.SlideNoteTarget;
 
-            var noteDuration = FindNextNoteForSlide(patternIdx, noteIdx, out int nextNoteValue);
-            if (noteDuration < 0)
-                return false;
-
-            var nextNote = customSlideTarget != 0 ? customSlideTarget : nextNoteValue;
-            if (nextNote == Note.NoteStop)
+            if (slideFrom == Note.NoteStop || slideTo == Note.NoteStop)
                 return false;
 
             if (noteTable == null)
             {
-                targetNote = nextNote;
-                return currNote != nextNote;
+                return slideFrom != slideTo;
             }
             else
             {
-                pitchDelta = (int)noteTable[currNote] - (int)noteTable[nextNote];
+                pitchDelta = (int)noteTable[slideFrom] - (int)noteTable[slideTo];
 
                 if (pitchDelta != 0)
                 {
                     pitchDelta <<= 1; // We have 1 bit of fraction to better handle various slopes.
 
-                    var frameCount = Math.Min(noteDuration * song.Speed, 255);
-                    var floatStep = Math.Abs(pitchDelta) / (float)frameCount;
+                    var frameCount = Math.Min(noteDuration * song.Speed + 1, 255);
+                    var floatStep  = Math.Abs(pitchDelta) / (float)frameCount;
 
-                    targetNote = nextNote;
                     stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
-                    int stepCount = Math.Min(255, Math.Abs(pitchDelta / stepSize));
-
-                    Debug.Assert(Math.Abs(stepSize * stepCount) <= Math.Abs(pitchDelta));
 
                     return true;
                 }
@@ -362,31 +386,47 @@ namespace FamiStudio
 
         public bool FindPreviousMatchingNote(int noteValue, ref int patternIdx, ref int noteIdx)
         {
-            var pattern = patternInstances[patternIdx];
+            int p = patternIdx;
+            int n = noteIdx;
+
+            var pattern = patternInstances[p];
             if (pattern != null)
             {
-                while (noteIdx >= 0 && !pattern.Notes[noteIdx].IsValid) noteIdx--;
+                while (n >= 0 && !pattern.Notes[n].IsValid) n--;
 
-                if (noteIdx >= 0)
-                    return pattern.Notes[noteIdx].Value == noteValue;
+                if (n >= 0)
+                {
+                    if (pattern.Notes[n].Value == noteValue)
+                    {
+                        patternIdx = p;
+                        noteIdx = n;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
             }
 
-            patternIdx--;
-            while (patternIdx >= 0)
+            p--;
+            while (p >= 0)
             {
-                pattern = patternInstances[patternIdx];
+                pattern = patternInstances[p];
                 if (pattern != null && pattern.LastValidNoteTime >= 0)
                 {
                     if (pattern.LastValidNote.IsValid && 
                         pattern.LastValidNote.Value == noteValue)
                     {
-                        noteIdx = pattern.LastValidNoteTime;
+                        n = pattern.LastValidNoteTime;
+                        patternIdx = p;
+                        noteIdx = n;
                         return true;
                     }
                 }
 
-                noteIdx = song.PatternLength - 1;
-                patternIdx--;
+                n = song.PatternLength - 1;
+                p--;
             }
 
             return false;

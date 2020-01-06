@@ -129,8 +129,8 @@ namespace FamiStudio
                     {
                         channel.Advance(song, playPattern, playNote);
                         channel.UpdateEnvelopes();
+                        channel.UpdateSlides(); // MATTT
                         channel.UpdateAPU();
-                        channel.UpdateSlides();
                     }
 
                     int dummy1 = 0;
@@ -181,8 +181,8 @@ namespace FamiStudio
                 foreach (var channel in channels)
                 {
                     channel.UpdateEnvelopes();
+                    channel.UpdateSlides(); // MATTT
                     channel.UpdateAPU();
-                    channel.UpdateSlides();
                 }
 
                 // Mute.

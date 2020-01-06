@@ -28,6 +28,10 @@ namespace FamiStudio
         public const int VolumeInvalid = 0xff;
         public const int VolumeMax     = 0x0f;
 
+        public const int SlideTypeNone       = 0;
+        public const int SlideTypeSlide      = 1;
+        public const int SlideTypePortamento = 2;
+
         public const int NoteInvalid = 0xff;
         public const int NoteStop    = 0x00;
         public const int NoteMin     = 0x01;
@@ -40,10 +44,20 @@ namespace FamiStudio
         public byte Effect; // Tempo/Jump/Skip
         public byte EffectParam; // Value for fx.
         public byte Volume; // 0-15. 0xff = no volume change.
-        public byte SlideFlags; // hi bit = slide note, low 7-bits, custom slide target note (0 = auto/portamento)
+        public byte SlideType; 
         public Instrument Instrument;
 
-        public bool IsValid
+        public Note(int value)
+        {
+            Value = (byte)value;
+            Effect = 0;
+            EffectParam = 0;
+            Volume = 0;
+            SlideType = 0;
+            Instrument = null;
+        }
+
+    public bool IsValid
         {
             get { return Value != NoteInvalid; }
             set { if (!value) Value = NoteInvalid; }
@@ -65,26 +79,22 @@ namespace FamiStudio
             get { return IsValid && !IsStop && !IsRelease; }
         }
 
-        public bool IsSlideNote
+        public bool IsPortamento
         {
-            get { return SlideFlags != 0 && IsMusical; }
-            set
-            {
-                if (value)
-                    SlideFlags |= 0x80;
-                else
-                    SlideFlags = 0;
-            }
+            get { return SlideType == 0x80; }
+            set { SlideType = (byte)(value ? 0x80 : 0x00); }
         }
 
-        public byte SlideTarget
+        public bool IsSlideNote
         {
-            get { return (byte)(SlideFlags & 0x7f); }
-            set
-            {
-                SlideFlags &= 0x80;
-                SlideFlags |= (byte)(value & 0x7f);
-            }
+            get { return (SlideType & 0x7f) != 0; }
+            set { if (!value) SlideType = 0; }
+        }
+
+        public byte SlideNoteTarget
+        {
+            get { return (byte)(SlideType & 0x7f); }
+            set { SlideType = (byte)(value & 0x7f); }
         }
 
         public bool HasEffect
@@ -156,13 +166,7 @@ namespace FamiStudio
 
             // At version 4 (FamiStudio 1.4.0), we added slide notes
             if (buffer.Version >= 4)
-            {
-                buffer.Serialize(ref SlideFlags);
-            }
-            else
-            {
-                SlideFlags = 0;
-            }
+                buffer.Serialize(ref SlideType);
 
             buffer.Serialize(ref Instrument);
         }
