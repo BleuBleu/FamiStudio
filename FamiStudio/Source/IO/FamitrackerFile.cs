@@ -498,7 +498,8 @@ namespace FamiStudio
                                     pattern.Notes[n].SlideNoteTarget = (byte)newNote;
 
                                     // If the FX was turned off, we need to add an extra note.
-                                    if (!c.PatternInstances[np].Notes[nn].IsMusical)
+                                    if (!c.PatternInstances[np].Notes[nn].IsMusical &&
+                                        !c.PatternInstances[np].Notes[nn].IsStop)
                                     {
                                         c.PatternInstances[np].Notes[nn].Instrument = note.Instrument;
                                         c.PatternInstances[np].Notes[nn].Value = (byte)newNote;
@@ -905,13 +906,6 @@ namespace FamiStudio
                                 var effectString1 = "...";
                                 var effectString2 = "...";
 
-                                switch (note.Effect)
-                                {
-                                    case Note.EffectJump  : effectString1 = $"B{note.EffectParam:X2}"; break;
-                                    case Note.EffectSkip  : effectString1 = $"D{note.EffectParam:X2}"; break;
-                                    case Note.EffectSpeed : effectString1 = $"F{note.EffectParam:X2}"; break;
-                                }
-
                                 if (note.IsSlideOrPortamento)
                                 {
                                     // TODO: PAL.
@@ -926,21 +920,28 @@ namespace FamiStudio
                                     if (note.IsSlideNote)
                                     {
                                         if (stepSize > 0)
-                                            effectString2 = $"2{ stepSize:X2}";
+                                            effectString1 = $"2{ stepSize:X2}";
                                         else if (stepSize < 0)
-                                            effectString2 = $"1{-stepSize:X2}";
+                                            effectString1 = $"1{-stepSize:X2}";
                                     }
                                     else
                                     {
-                                        effectString2 = $"3{Math.Abs(stepSize):X2}";
+                                        effectString1 = $"3{Math.Abs(stepSize):X2}";
                                     }
                                 }
 
                                 // Turn off 1xx/2xx/3xx when not needed.
                                 if (portamentoTransitions[pattern].IndexOf(k) >= 0)
-                                    effectString2 = "300";
+                                    effectString1 = "300";
                                 if (slideTransitions[pattern].IndexOf(k) >= 0)
-                                    effectString2 = "200";
+                                    effectString1 = "200";
+
+                                switch (note.Effect)
+                                {
+                                    case Note.EffectJump  : effectString2 = $"B{note.EffectParam:X2}"; break;
+                                    case Note.EffectSkip  : effectString2 = $"D{note.EffectParam:X2}"; break;
+                                    case Note.EffectSpeed : effectString2 = $"F{note.EffectParam:X2}"; break;
+                                }
 
                                 line += $" : {noteString} {instrumentString} {volumeString} {effectString1} {effectString2}";
                             }
