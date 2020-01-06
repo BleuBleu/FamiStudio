@@ -44,7 +44,7 @@ namespace FamiStudio
         public byte Effect; // Tempo/Jump/Skip
         public byte EffectParam; // Value for fx.
         public byte Volume; // 0-15. 0xff = no volume change.
-        public byte SlideType; 
+        public byte Slide; 
         public Instrument Instrument;
 
         public Note(int value)
@@ -52,12 +52,26 @@ namespace FamiStudio
             Value = (byte)value;
             Effect = 0;
             EffectParam = 0;
-            Volume = 0;
-            SlideType = 0;
+            Volume = VolumeInvalid;
+            Slide = 0;
             Instrument = null;
         }
 
-    public bool IsValid
+        public void Clear(bool preserveFx = true)
+        {
+            Value = NoteInvalid;
+            Instrument = null;
+            Slide = 0;
+
+            if (!preserveFx)
+            {
+                Effect = 0;
+                EffectParam = 0;
+                Volume = VolumeInvalid;
+            }
+        }
+
+        public bool IsValid
         {
             get { return Value != NoteInvalid; }
             set { if (!value) Value = NoteInvalid; }
@@ -81,20 +95,31 @@ namespace FamiStudio
 
         public bool IsPortamento
         {
-            get { return SlideType == 0x80; }
-            set { SlideType = (byte)(value ? 0x80 : 0x00); }
+            get { return (Slide & 0x80) != 0; }
+            set { Slide = (byte)(value ? 0x80 : 0x00); }
+        }
+
+        public byte PortamentoLength
+        {
+            get { return (byte)(Slide & 0x7f); }
+            set { Slide = (byte)((value & 0x7f) | 0x80); }
         }
 
         public bool IsSlideNote
         {
-            get { return (SlideType & 0x7f) != 0; }
-            set { if (!value) SlideType = 0; }
+            get { return (Slide & 0x80) == 0 && (Slide & 0x7f) != 0; }
+            set { if (!value) Slide = 0; }
         }
 
         public byte SlideNoteTarget
         {
-            get { return (byte)(SlideType & 0x7f); }
-            set { SlideType = (byte)(value & 0x7f); }
+            get { return (byte)(Slide & 0x7f); }
+            set { Slide = (byte)(value & 0x7f); }
+        }
+
+        public bool IsSlideOrPortamento
+        {
+            get { return Slide != 0; }
         }
 
         public bool HasEffect
@@ -166,7 +191,7 @@ namespace FamiStudio
 
             // At version 4 (FamiStudio 1.4.0), we added slide notes
             if (buffer.Version >= 4)
-                buffer.Serialize(ref SlideType);
+                buffer.Serialize(ref Slide);
 
             buffer.Serialize(ref Instrument);
         }

@@ -251,6 +251,9 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\PortamentoLength%4015x.png" />
+    <EmbeddedResource Include="Resources\PortamentoLength%402x.png" />
+    <EmbeddedResource Include="Resources\PortamentoLength.png" />
     <EmbeddedResource Include="Resources\SquareExp%402x.png" />
     <EmbeddedResource Include="Resources\SquareExp.png" />
     <EmbeddedResource Include="Resources\SlideSmall%4015x.png" />

@@ -354,6 +354,9 @@ namespace FamiStudio
                     noteDuration =  1024 / song.Speed; // This is kind of arbitrary. 
             }
 
+            if (note.IsPortamento && note.PortamentoLength > 0)
+                noteDuration = Math.Min(noteDuration, note.PortamentoLength);
+
             slideFrom = note.IsPortamento ? prevNote   : note.Value;
             slideTo   = note.IsPortamento ? note.Value : note.SlideNoteTarget;
 
@@ -376,6 +379,8 @@ namespace FamiStudio
                     var floatStep  = Math.Abs(pitchDelta) / (float)frameCount;
 
                     stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
+
+                    noteDuration = (int)Math.Abs(Math.Ceiling(pitchDelta / (float)stepSize / song.Speed)); // MATTT
 
                     return true;
                 }
