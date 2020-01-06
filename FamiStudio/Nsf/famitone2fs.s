@@ -295,9 +295,19 @@ FamiToneMusicStop:
     sta FT_CHN_NOTE,x
     sta FT_CHN_REF_LEN,x
     sta FT_CHN_VOLUME_TRACK,x
-    lda #$30 ; MATTT: Not right for VRC6.
+.ifdef FT_VRC6_ENABLE
+    cpx #5
+    bcc @regular_inst
+@vrc6_inst:
+	lda #$0
+    sta FT_CHN_DUTY,x
+	jmp @nextchannel
+@regular_inst:
+.endif
+	lda #$30
     sta FT_CHN_DUTY,x
 
+@nextchannel:
     inx                        ;next channel
     cpx #FT_NUM_CHANNELS
     bne @set_channels
@@ -408,9 +418,18 @@ FamiToneMusicPlay:
     sta FT_CHN_REF_LEN,x
     lda #$f0
     sta FT_CHN_VOLUME_TRACK,x
-    lda #$30
+.ifdef FT_VRC6_ENABLE
+    cpx #5
+    bcc @regular_inst
+@vrc6_inst:
+	lda #$0
+    sta FT_CHN_DUTY,x
+	jmp @nextchannel
+@regular_inst:
+.endif
     sta FT_CHN_DUTY,x          ; MATTT: Not right for VRC6
 
+@nextchannel:
     inx                        ;next channel
     cpx #FT_NUM_CHANNELS
     bne @set_channels
@@ -847,7 +866,41 @@ FamiToneUpdate:
     cpx #FT_NUM_PITCH_ENVELOPES
     bne @pitch_env_process
 
+;----------------------------------------------------------------------------------------------------------------------
+@update_slides:
+    ldx #0    ;process 3 slides
 
+@slide_process:
+    lda FT_SLIDE_STEP,x        ; zero repeat means no active slide.
+    beq @slide_next
+    clc                        ; add step to slide pitch (16bit + 8bit signed).
+    lda FT_SLIDE_STEP,x
+    adc FT_SLIDE_PITCH_L,x
+    sta FT_SLIDE_PITCH_L,x
+    lda FT_SLIDE_STEP,x
+    and #$80
+    beq @positive_slide
+
+@negative_slide:
+    lda #$ff
+    adc FT_SLIDE_PITCH_H,x
+    sta FT_SLIDE_PITCH_H,x
+    bpl @slide_next
+    jmp @clear_slide
+
+@positive_slide:
+    adc FT_SLIDE_PITCH_H,x
+    sta FT_SLIDE_PITCH_H,x
+    bmi @slide_next
+
+@clear_slide:
+    lda #0
+    sta FT_SLIDE_STEP,x
+
+@slide_next:
+    inx                        ;next slide
+    cpx #FT_NUM_SLIDES
+    bne @slide_process
 
 ;----------------------------------------------------------------------------------------------------------------------
 @update_sound:
@@ -922,42 +975,6 @@ FamiToneUpdate:
 
 .endif
 
-;----------------------------------------------------------------------------------------------------------------------
-@update_slides:
-    ldx #0    ;process 3 slides
-
-@slide_process:
-    lda FT_SLIDE_STEP,x        ; zero repeat means no active slide.
-    beq @slide_next
-    clc                        ; add step to slide pitch (16bit + 8bit signed).
-    lda FT_SLIDE_STEP,x
-    adc FT_SLIDE_PITCH_L,x
-    sta FT_SLIDE_PITCH_L,x
-    lda FT_SLIDE_STEP,x
-    and #$80
-    beq @positive_slide
-
-@negative_slide:
-    lda #$ff
-    adc FT_SLIDE_PITCH_H,x
-    sta FT_SLIDE_PITCH_H,x
-    bpl @slide_next
-    jmp @clear_slide
-
-@positive_slide:
-    adc FT_SLIDE_PITCH_H,x
-    sta FT_SLIDE_PITCH_H,x
-    bmi @slide_next
-
-@clear_slide:
-    lda #0
-    sta FT_SLIDE_STEP,x
-
-@slide_next:
-    inx                        ;next slide
-    cpx #FT_NUM_SLIDES
-    bne @slide_process
-
     .if(FT_THREAD)
     pla
     sta FT_TEMP_PTR_H
@@ -1010,7 +1027,7 @@ _FT2SetInstrument:
     txa
     lsr ; the channel number is basically envelope index / 2 now...
     tax
-    lda _FT2ChannelToSlide, x
+    lda _FT2ChannelToPitch, x
     tax
     iny
     lda #1
@@ -1621,7 +1638,8 @@ _FT2ChannelToVolumeEnvelope:
     .byte FT_CH8_ENVS+FT_ENV_VOLUME_OFF
 .endif
 
-_FT2ChannelToSlide: ; MATTT: Rename this. Slide + pitch envelope are related. 
+_FT2ChannelToPitch:
+_FT2ChannelToSlide:
     .byte $00
     .byte $01
     .byte $02
