@@ -1047,7 +1047,7 @@ namespace FamiStudio
             int y = virtualSizeY - n0.Value * noteSizeY - scrollY;
             int sizeY = released ? releaseNoteSizeY : noteSizeY;
 
-            if (n0.IsSlideNote || n0.IsPortamento)
+            if (n0.IsSlideOrPortamento)
             {
                 //var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
@@ -1072,7 +1072,7 @@ namespace FamiStudio
             g.FillRectangle(0, 0, sizeX, sizeY, g.GetVerticalGradientBrush(color, sizeY, 0.8f));
             g.DrawRectangle(0, 0, sizeX, sizeY, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
 
-            if (n0.IsSlideNote || n0.IsPortamento)
+            if (n0.IsSlideOrPortamento)
             {
                 g.DrawBitmap(n0.IsSlideNote ? bmpSlide : bmpPortamento, slideIconPosX, slideIconPosY);
 

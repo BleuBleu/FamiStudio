@@ -533,16 +533,16 @@ namespace FamiStudio
 
                             if (kernel == FamiToneKernel.FamiTone2FS)
                             {
-                                if (note.IsSlideNote)
+                                if (note.IsSlideOrPortamento)
                                 {
                                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
-                                    if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _, out int prevNote, out int nextNote))
+                                    if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _, out int noteFrom, out int noteTo))
                                     {
                                         patternBuffer.Add(0x61);
                                         patternBuffer.Add((byte)stepSize);
-                                        patternBuffer.Add(EncodeNoteValue(c, prevNote));
-                                        patternBuffer.Add(EncodeNoteValue(c, nextNote));
+                                        patternBuffer.Add(EncodeNoteValue(c, noteFrom));
+                                        patternBuffer.Add(EncodeNoteValue(c, noteTo));
                                         continue;
                                     }
                                 }

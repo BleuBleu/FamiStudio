@@ -523,39 +523,34 @@ FamiToneMusicPause:
     .endif
     tax
 
-; MATTT
-;.ifnblank slide_offset
+.ifnblank slide_offset
 
-;    ldy FT_SLIDE_STEP+slide_offset
-;    beq @noslide
-;@slide:
-;    lda FT_ENV_VALUE+env_offset+FT_ENV_PITCH_OFF
-;    tay
-;    adc noteTableLSB,x
-;    sta FT_TEMP_PTR2_L
-;    tya
-;    ora #$7f
-;    bmi @slidesign
-;    lda #0
-;@slidesign:
-;    adc noteTableMSB,x
-;    sta FT_TEMP_PTR2_H
-;    lda FT_SLIDE_PITCH_H+slide_offset
-;    asl ; sign extend upcoming right shift.
-;    ror ; we have 1 bit of fraction for slides, shift right hi byte.
-;    ror 
-;    sta FT_TEMP_VAR1
-;    lda FT_SLIDE_PITCH_L+slide_offset
-;    ror ; shift right low byte.
-;    clc
-;    adc FT_TEMP_PTR2_L
-;    sta reg_lo
-;    lda FT_TEMP_VAR1
-;    adc FT_TEMP_PTR2_H 
-;    jmp @checkprevpulse
-;@noslide:    
+    ldy FT_SLIDE_STEP+slide_offset
+    beq @noslide
+@slide:
+    clc
+    lda FT_PITCH_ENV_VALUE_L+slide_offset
+    adc noteTableLSB,x
+    sta FT_TEMP_PTR2_L
+    lda FT_PITCH_ENV_VALUE_H+slide_offset
+    adc noteTableMSB,x
+    sta FT_TEMP_PTR2_H
+    lda FT_SLIDE_PITCH_H+slide_offset
+    asl ; sign extend upcoming right shift.
+    ror ; we have 1 bit of fraction for slides, shift right hi byte.
+    ror 
+    sta FT_TEMP_VAR1
+    lda FT_SLIDE_PITCH_L+slide_offset
+    ror ; shift right low byte.
+    clc
+    adc FT_TEMP_PTR2_L
+    sta reg_lo
+    lda FT_TEMP_VAR1
+    adc FT_TEMP_PTR2_H 
+    jmp @checkprevpulse
+@noslide:    
 
-;.endif
+.endif
 
     lda FT_PITCH_ENV_VALUE_L+slide_offset
     adc noteTableLSB,x

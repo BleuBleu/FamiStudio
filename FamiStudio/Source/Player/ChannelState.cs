@@ -70,7 +70,7 @@ namespace FamiStudio
             {
                 slideStep = 0;
 
-                if (tmpNote.IsSlideNote || tmpNote.IsPortamento)
+                if (tmpNote.IsSlideOrPortamento)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
