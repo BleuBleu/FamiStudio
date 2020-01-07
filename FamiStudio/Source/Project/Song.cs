@@ -175,6 +175,14 @@ namespace FamiStudio
             }
         }
 
+        public void CleanupUnusedPatterns()
+        {
+            foreach (var channel in channels)
+            {
+                channel.CleanupUnusedPatterns();
+            }
+        }
+
         public override string ToString()
         {
             return name;

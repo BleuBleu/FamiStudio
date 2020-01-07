@@ -644,7 +644,7 @@ namespace FamiStudio
                     }
                 }
 
-                for (int i = 0; i < channel.PatternInstances.Length; i++)
+                for (int i = 0; i < song.Length; i++)
                 {
                     if (channel.PatternInstances[i] == null)
                     {
@@ -852,6 +852,7 @@ namespace FamiStudio
             {
                 var song = project.Songs[i];
 
+                song.CleanupUnusedPatterns();
                 CreateMissingPatterns(song);
 
                 // Find all the places where we need to turn of 1xx/2xx/3xx after we are done.
@@ -906,12 +907,15 @@ namespace FamiStudio
                                 var effectString1 = "...";
                                 var effectString2 = "...";
 
-                                if (note.IsSlideOrPortamento)
+                                if (note.IsSlideOrPortamento && note.IsMusical)
                                 {
                                     // TODO: PAL.
                                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
-                                    channel.ComputeSlideNoteParams(j, k, noteTable, out _, out int stepSize, out _, out _, out _);
+                                    // HACK: We only consider the first instance of the pattern. Will definately cause
+                                    // problems if we have slides between patterns that have different pitches.
+                                    var instIdx = Array.IndexOf(channel.PatternInstances, pattern);
+                                    channel.ComputeSlideNoteParams(instIdx, k, noteTable, out _, out int stepSize, out _, out _, out _);
 
                                     // We have one bit of fraction. FramiTracker does not.
                                     if (Math.Abs(stepSize) > 1)
