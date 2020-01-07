@@ -502,7 +502,7 @@ namespace FamiStudio
                 GL.Color4(brush.Color0);
                 GL.Begin(BeginMode.TriangleFan);
                 foreach (var pt in geo.Points)
-                    GL.Vertex2(pt.X + 0.5f, pt.Y + 0.5f);
+                    GL.Vertex2(pt.X, pt.Y);
                 GL.End();
             }
             else
@@ -519,7 +519,7 @@ namespace FamiStudio
                     byte a = (byte)(brush.Color0.A * (1.0f - lerp) + (brush.Color1.A * lerp));
 
                     GL.Color4(r, g, b, a);
-                    GL.Vertex2(pt.X + 0.5f, pt.Y + 0.5f);
+                    GL.Vertex2(pt.X, pt.Y);
                 }
                 GL.End();
             }
