@@ -103,7 +103,7 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
             toolbarBrush = g.CreateHorizontalGradientBrush(0, 81, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
-            warningBrush = g.CreateBrush(ThemeBase.Darken(ThemeBase.CustomColors[0, 0]));
+            warningBrush = g.CreateSolidBrush(ThemeBase.Darken(ThemeBase.CustomColors[0, 0]));
 
             bmpLoopNone = g.CreateBitmapFromResource("LoopNone");
             bmpLoopSong = g.CreateBitmapFromResource("Loop");

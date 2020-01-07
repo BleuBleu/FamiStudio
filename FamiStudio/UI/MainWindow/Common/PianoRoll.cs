@@ -1839,8 +1839,8 @@ namespace FamiStudio
                 {
                     var ctrl  = ModifierKeys.HasFlag(Keys.Control);
                     var shift = ModifierKeys.HasFlag(Keys.Shift);
-                    var porta = PlatformUtils.IsKeyDown(Keys.P);
-                    var slide = PlatformUtils.IsKeyDown(Keys.S);
+                    var porta = FamiStudioForm.IsKeyDown(Keys.P);
+                    var slide = FamiStudioForm.IsKeyDown(Keys.S);
 
                     if ((porta || slide) && channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
                     {

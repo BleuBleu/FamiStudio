@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Diagnostics;
@@ -270,11 +270,6 @@ namespace FamiStudio
         public static RawColor4 ToRawColor4(Color color)
         {
             return new RawColor4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-        }
-
-        public Brush CreateBrush(Color color)
-        {
-            return new SolidColorBrush(renderTarget, ToRawColor4(color));
         }
 
         public Brush CreateSolidBrush(Color color)

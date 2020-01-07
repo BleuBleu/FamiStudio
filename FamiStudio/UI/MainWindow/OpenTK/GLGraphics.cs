@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
 namespace FamiStudio
@@ -157,9 +158,9 @@ namespace FamiStudio
         private int windowSizeY;
         private GLControl control;
         private Rectangle scissor;
-        private Point translation;
+        private Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
         private Stack<Rectangle> clipStack = new Stack<Rectangle>();
-        private Stack<Point> translationStack = new Stack<Point>();
+        private Stack<Vector4> transformStack = new Stack<Vector4>();
         private Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
 
         public GLGraphics()
@@ -189,7 +190,7 @@ namespace FamiStudio
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.Enable(EnableCap.Blend);
 
-            translation = new Point(0, 0);
+            transform = new Vector4(1, 1, 0, 0);
             scissor = controlRect;
             GL.Enable(EnableCap.ScissorTest);
             GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
@@ -217,19 +218,33 @@ namespace FamiStudio
 
         public void PushTranslation(float x, float y)
         {
-            translationStack.Push(translation);
-            translation.X += (int)x;
-            translation.Y += (int)y;
+            transformStack.Push(transform);
+            transform.Z += (int)x;
+            transform.W += (int)y;
 
             GL.PushMatrix();
             GL.Translate(x, y, 0);
+        }
+
+        public void PushTransform(int tx, int ty, int sx, int sy)
+        {
+            transformStack.Push(transform);
+
+            transform.X *= (int)sx;
+            transform.Y *= (int)sy;
+            transform.Z += (int)tx;
+            transform.W += (int)ty;
+
+            GL.PushMatrix();
+            GL.Translate(tx, ty, 0);
+            GL.Scale(sx, sy, 0);
         }
 
         public void PopTransform()
         {
             GL.PopMatrix();
 
-            translation = translationStack.Pop();
+            transform = transformStack.Pop();
         }
 
         public void PushClip(int x0, int y0, int x1, int y1)
@@ -238,8 +253,8 @@ namespace FamiStudio
             // our purpose, simply intersecting the rects does the job.
             clipStack.Push(scissor);
             scissor = new Rectangle(
-                translation.X + control.Left + x0,
-                translation.Y + control.Top + y0,
+                (int)(transform.Z + control.Left + x0),
+                (int)(transform.W + control.Top  + y0),
                 x1 - x0,
                 y1 - y0);
             scissor = FlipRectangleY(scissor);
@@ -634,6 +649,17 @@ namespace FamiStudio
         public float GetBitmapWidth(GLBitmap bmp)
         {
             return bmp.Size.Width;
+        }
+
+        public GLBrush GetSolidBrush(Color color, float dimming, float alphaDimming)
+        {
+            Color color2 = Color.FromArgb(
+                Utils.Clamp((int)(color.A * alphaDimming), 0, 255),
+                Utils.Clamp((int)(color.R * dimming), 0, 255),
+                Utils.Clamp((int)(color.G * dimming), 0, 255),
+                Utils.Clamp((int)(color.B * dimming), 0, 255));
+
+            return new GLBrush(color2);
         }
 
         public GLBrush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)
