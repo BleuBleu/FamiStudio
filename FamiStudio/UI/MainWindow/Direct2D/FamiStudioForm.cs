@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -18,6 +19,9 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => projectExplorer;
 
         private Timer timer = new Timer();
+
+        [DllImport("USER32.dll")]
+        private static extern short GetKeyState(int key);
 
         public FamiStudioForm(FamiStudio famistudio)
         {
@@ -60,6 +64,11 @@ namespace FamiStudio
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
             famistudio.KeyUp(e);
+        }
+
+        public static bool IsKeyDown(Keys k)
+        {
+            return (GetKeyState((int)k) & 0x8000) != 0;
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
