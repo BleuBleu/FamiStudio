@@ -1,10 +1,16 @@
 1.4.0: VRC6
 ===========
 Polish:
-- 
+- Tooltip error envelope resize (bad mouse button)
+- When pasting envelope values, the project explorer env icon doesnt update
+- Portamento should not retrigger attack by default???
+- Work VRC6 -> new file -> gray box over piano roll.
 
 Shovel Knight:
-- Noise track has weird 1 beat offset. Might need to start envelope at zero + move.
+- Sq1:
+	- 04: Portamento without retriggering the attack, how???
+	- 
+- Noise: track has weird 1 beat offset. Might need to start envelope at zero + move.
 
 Testing:
 - NSF: Restest all songs, old FT2, etc.
