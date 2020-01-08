@@ -59,6 +59,8 @@ namespace FamiStudio
         const int DefaultEffectValueTextOffsetY = 12;
         const int DefaultBigTextPosX = 10;
         const int DefaultBigTextPosY = 10;
+        const int DefaultTooltipTextPosX = 10;
+        const int DefaultTooltipTextPosY = 30;
         const int DefaultDPCMTextPosX = 2;
         const int DefaultDPCMTextPosY = 0;
         const int DefaultOctaveNameOffsetY = 11;
@@ -89,6 +91,8 @@ namespace FamiStudio
         int effectValueTextOffsetY;
         int bigTextPosX;
         int bigTextPosY;
+        int tooltipTextPosX;
+        int tooltipTextPosY;
         int dpcmTextPosX;
         int dpcmTextPosY;
         int octaveNameOffsetY;
@@ -189,6 +193,7 @@ namespace FamiStudio
         int scrollY = 0;
         int zoomLevel = 0;
         int selectedEffectIdx = SpecialEffectVolume;
+        string noteTooltip = "";
 
         EditionMode editMode = EditionMode.None;
 
@@ -240,6 +245,8 @@ namespace FamiStudio
             effectValueTextOffsetY = (int)(DefaultEffectValueTextOffsetY * scaling);
             bigTextPosX            = (int)(DefaultBigTextPosX * scaling);
             bigTextPosY            = (int)(DefaultBigTextPosY * scaling);
+            tooltipTextPosX        = (int)(DefaultTooltipTextPosX * scaling);
+            tooltipTextPosY        = (int)(DefaultTooltipTextPosY * scaling);
             dpcmTextPosX           = (int)(DefaultDPCMTextPosX * scaling);
             dpcmTextPosY           = (int)(DefaultDPCMTextPosY * scaling);
             octaveNameOffsetY      = (int)(DefaultOctaveNameOffsetY * scaling);
@@ -263,6 +270,7 @@ namespace FamiStudio
         {
             editMode = EditionMode.Channel;
             editChannel = trackIdx;
+            noteTooltip = "";
 
             ClearSelection();
             UpdateRenderCoords();
@@ -276,6 +284,7 @@ namespace FamiStudio
             if (editMode == EditionMode.Channel)
             {
                 editChannel = trackIdx;
+                noteTooltip = "";
                 ConditionalInvalidate();
             }
         }
@@ -286,6 +295,7 @@ namespace FamiStudio
             editInstrument = instrument;
             editEnvelope = envelope;
             showEffectsPanel = false;
+            noteTooltip = "";
             Debug.Assert(editInstrument != null);
 
             ClearSelection();
@@ -307,6 +317,7 @@ namespace FamiStudio
             editMode = EditionMode.DPCM;
             showEffectsPanel = false;
             zoomLevel = 0;
+            noteTooltip = "";
 
             ClearSelection();
             UpdateRenderCoords();
@@ -351,6 +362,7 @@ namespace FamiStudio
             editChannel = -1;
             currentInstrument = null;
             editInstrument = null;
+            noteTooltip = "";
             ClearSelection();
             UpdateRenderCoords();
         }
@@ -878,7 +890,7 @@ namespace FamiStudio
             DeleteSelectedNotes();
         }
 
-        private void ReplaceNotes(Note[] notes, int startFrameIdx, bool doTransaction, bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true, bool pasteSlide = true)
+        private void ReplaceNotes(Note[] notes, int startFrameIdx, bool doTransaction, bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
         {
             TransformNotes(startFrameIdx, startFrameIdx + notes.Length - 1, doTransaction, (note, idx) =>
             {
@@ -888,14 +900,11 @@ namespace FamiStudio
                 {
                     note.Value = newNote.Value;
                     note.Instrument = editChannel == Channel.DPCM || !Song.Channels[editChannel].SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
+                    note.Slide = newNote.Slide;
                 }
                 if (pasteVolume)
                 {
                     note.Volume = newNote.Volume;
-                }
-                if (pasteSlide)
-                {
-                    note.Slide = newNote.Slide;
                 }
                 if (pasteFx)
                 {
@@ -909,7 +918,7 @@ namespace FamiStudio
             SetSelection(startFrameIdx, startFrameIdx + notes.Length - 1);
         }
 
-        private void PasteNotes(bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true, bool pasteSlides = true)
+        private void PasteNotes(bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true)
         {
             if (!IsSelectionValid())
                 return;
@@ -932,7 +941,7 @@ namespace FamiStudio
                 return;
             }
 
-            ReplaceNotes(notes, selectionFrameMin, false, pasteNotes, pasteVolume, pasteFx, pasteSlides);
+            ReplaceNotes(notes, selectionFrameMin, false, pasteNotes, pasteVolume, pasteFx);
             NotesPasted?.Invoke();
             App.UndoRedoManager.EndTransaction();
         }
@@ -1018,7 +1027,7 @@ namespace FamiStudio
                 var dlg = new PasteSpecialDialog(App.MainWindowBounds);
 
                 if (dlg.ShowDialog() == DialogResult.OK)
-                    PasteNotes(dlg.PasteNotes, dlg.PasteVolumes, dlg.PasteEffects, dlg.PasteSlides);
+                    PasteNotes(dlg.PasteNotes, dlg.PasteVolumes, dlg.PasteEffects);
             }
         }
 
@@ -1208,6 +1217,10 @@ namespace FamiStudio
                                                 i0 = 0;
                                                 p0++;
                                             }
+                                            else
+                                            {
+                                                p0 = p1;
+                                            }
 
                                             // To avoid redrawing slides after a release note.
                                             n0.IsPortamento = false;
@@ -1350,6 +1363,11 @@ namespace FamiStudio
 
             g.PopClip();
             g.PopTransform();
+
+            if (!string.IsNullOrEmpty(noteTooltip))
+            {
+                g.DrawText(noteTooltip, ThemeBase.FontMediumBigRight, 0, Height - tooltipTextPosY, whiteKeyBrush, Width - tooltipTextPosX);
+            }
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -2145,6 +2163,7 @@ namespace FamiStudio
         private void UpdateToolTip(MouseEventArgs e)
         {
             var tooltip = "";
+            var newNoteTooltip = "";
 
             if (IsMouseInHeader(e))
             {
@@ -2182,15 +2201,15 @@ namespace FamiStudio
                         if (Song.Channels[editChannel].PatternInstances[patternIdx] == null)
                             tooltip = "{MouseWheel} Pan";
                         else
-                            tooltip = "{MouseLeft} Add note - {Shift} {MouseLeft} Add release note - {Ctrl} {MouseLeft} Add stop note - {P} {MouseLeft} {Drag} Add auto-portamento note - {S} {MouseLeft} {Drag} Add slide note - {MouseRight} Delete note - {MouseWheel} Pan";
+                            tooltip = "{MouseLeft} Add note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseRight} Delete note - {MouseWheel} Pan\n{P} {MouseLeft} {Drag} Create/edit auto-portamento note - {S} {MouseLeft} {Drag} Create/edit slide note";
 
-                        tooltip += $"\n{Note.GetFriendlyName(noteValue)} [{patternIdx:D3} : {noteIdx:D3}]";
+                        newNoteTooltip = $"{Note.GetFriendlyName(noteValue)} [{patternIdx:D3} : {noteIdx:D3}]";
                         if (Song.Channels[editChannel].FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
                         {
                             var pat = Song.Channels[editChannel].PatternInstances[patternIdx];
                             var note = pat.Notes[noteIdx];
                             if (note.Instrument != null)
-                                tooltip += $" ({note.Instrument.Name})";
+                                newNoteTooltip += $" ({note.Instrument.Name})";
                         }
                     }
                 }
@@ -2199,7 +2218,7 @@ namespace FamiStudio
                     tooltip = "{MouseLeft} Set envelope value - {MouseWheel} Pan";
 
                     if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
-                        tooltip += $"\n{idx:D3} : {value}";
+                        newNoteTooltip = $"{idx:D3} : {value}";
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
@@ -2220,6 +2239,12 @@ namespace FamiStudio
             }
 
             App.ToolTip = tooltip;
+
+            if (noteTooltip != newNoteTooltip)
+            {
+                noteTooltip = newNoteTooltip;
+                ConditionalInvalidate();
+            }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

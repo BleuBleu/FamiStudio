@@ -427,7 +427,7 @@ FamiToneMusicPlay:
 	jmp @nextchannel
 @regular_inst:
 .endif
-    sta FT_CHN_DUTY,x          ; MATTT: Not right for VRC6
+    sta FT_CHN_DUTY,x
 
 @nextchannel:
     inx                        ;next channel

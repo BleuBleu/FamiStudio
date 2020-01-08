@@ -32,6 +32,7 @@ namespace FamiStudio
             MediumBold,
             MediumBoldCenter,
             MediumBoldCenterEllipsis,
+            MediumBigRight,
             Big,
             BigBold,
             Huge,
@@ -59,6 +60,7 @@ namespace FamiStudio
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Bold = true }, // MediumBold
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1, Bold = true }, // MediumBoldCenter
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1, Bold = true, Ellipsis = true }, // MediumBoldCenterEllipsis
+            new RenderFontDefinition() { Name = "QuickSand", Size = 16, Alignment = 2 }, // MediumBigRight
             new RenderFontDefinition() { Name = "QuickSand", Size = 20 }, // Big
             new RenderFontDefinition() { Name = "QuickSand", Size = 20, Bold = true }, // BigBold
             new RenderFontDefinition() { Name = "QuickSand", Size = 28 } // Huge
@@ -76,6 +78,7 @@ namespace FamiStudio
         public static RenderFont FontMediumBold               => Fonts[(int)RenderFontStyle.MediumBold];
         public static RenderFont FontMediumBoldCenter         => Fonts[(int)RenderFontStyle.MediumBoldCenter];
         public static RenderFont FontMediumBoldCenterEllipsis => Fonts[(int)RenderFontStyle.MediumBoldCenterEllipsis];
+        public static RenderFont FontMediumBigRight           => Fonts[(int)RenderFontStyle.MediumBigRight];
         public static RenderFont FontBig                      => Fonts[(int)RenderFontStyle.Big];
         public static RenderFont FontBigBold                  => Fonts[(int)RenderFontStyle.BigBold];
         public static RenderFont FontHuge                     => Fonts[(int)RenderFontStyle.Huge];

@@ -1,25 +1,25 @@
 1.4.0: VRC6
 ===========
-- GOAL: Play Shovel Knight first track.
+Polish:
+- 
 
-- Fix all MATTT (asm too, 0x30 default duty is wrong...)
-- Fix Mac version.
-- Shovel Knight song:
-	- Noise track has weird 1 beat offset. Might need to start envelope at zero + move.
-- TESTING:
-	- NSF: Restest all songs, old FT2, etc.
-	- NSF: Try putting multiple things at once: volume + slide, volume + jump, etc. etc. Must all work.
-	- NSF: Retest volume tracks
-	- Piano roll, selection, etc. Delete stuff, make sur FX and everything is consitent.
-	- Retest copy paste a lot...
-	- Note drawing, release, stop, from far away.
-	- Reset everywhere i changed to note.Clear();
+Shovel Knight:
+- Noise track has weird 1 beat offset. Might need to start envelope at zero + move.
+
+Testing:
+- NSF: Restest all songs, old FT2, etc.
+- NSF: Try putting multiple things at once: volume + slide, volume + jump, etc. etc. Must all work.
+- NSF: Retest volume tracks
+- Piano roll, selection, etc. Delete stuff, make sur FX and everything is consitent.
+- Retest copy paste a lot...
+- Note drawing, release, stop, from far away.
+- Reset everywhere i changed to note.Clear();
 
 1.5.0: FDS
 ==========
 - FDS support in NesSndEmu 
-- Instrument refactoring (base class + derived?)
-- 
+- FDS "envelope" in piano roll.
+- Instrument refactoring? (base class + derived?)
 
 ========================
 Backlog:
