@@ -329,14 +329,17 @@ namespace FamiStudio
         {
             buffer.Serialize(ref Value);
 
-            // At version 4 (FamiStudio 1.4.0), we refactored the notes to move away from the FamiTracker effect system.
-            //if (buffer.Version >= 4)
-            //{
-            //    buffer.Serialize(ref Jump);
-            //    buffer.Serialize(ref Skip);
-            //    buffer.Serialize(ref Speed);
-            //}
-            //else
+            // At version 4(FamiStudio 1.4.0), we refactored the notes, added slide notes and no-attack notes (flags).
+            if (buffer.Version >= 4)
+            {
+                buffer.Serialize(ref Jump);
+                buffer.Serialize(ref Skip);
+                buffer.Serialize(ref Speed);
+                buffer.Serialize(ref Vibrato); 
+                buffer.Serialize(ref Flags);
+                buffer.Serialize(ref Slide);
+            }
+            else
             {
                 byte effect = 0;
                 byte effectParam = 255;
@@ -361,14 +364,6 @@ namespace FamiStudio
                 buffer.Serialize(ref Volume);
             else
                 Volume = Note.VolumeInvalid;
-
-            // At version 4 (FamiStudio 1.4.0), we added slide notes and no-attack notes.
-            if (buffer.Version >= 4)
-            {
-                //buffer.Serialize(ref Vibrato); // MATTT: For shovel
-                //buffer.Serialize(ref Flags); // MATTT: For shovel
-                buffer.Serialize(ref Slide);
-            }
 
             buffer.Serialize(ref Instrument);
         }
