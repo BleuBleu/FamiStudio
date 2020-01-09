@@ -32,8 +32,10 @@ namespace FamiStudio
         const int MaxZoomLevel = 4;
         const int ScrollMargin = 128;
 
-        const int SpecialEffectVolume = -1;
-        const int SpecialEffectCount = 1;
+        const int SpecialEffectVolume = -3;
+        const int SpecialEffectVibratoSpeed = -2;
+        const int SpecialEffectVibratoDepth = -1;
+        const int SpecialEffectCount = 3;
 
         const int DefaultNumOctavesChannel = 8;
         const int DefaultBaseOctaveChannel = 0;
@@ -135,7 +137,7 @@ namespace FamiStudio
         RenderBitmap bmpSlide;
         RenderBitmap bmpSlideSmall;
         RenderBitmap bmpNoAttack;
-        RenderBitmap[] bmpEffects = new RenderBitmap[4];
+        RenderBitmap[] bmpEffects = new RenderBitmap[6];
         RenderBitmap[] bmpEffectsFilled = new RenderBitmap[3];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
@@ -399,9 +401,11 @@ namespace FamiStudio
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
             bmpEffects[0] = g.CreateBitmapFromResource("VolumeSmall");
-            bmpEffects[1] = g.CreateBitmapFromResource("LoopSmall");
-            bmpEffects[2] = g.CreateBitmapFromResource("JumpSmall");
-            bmpEffects[3] = g.CreateBitmapFromResource("SpeedSmall");
+            bmpEffects[1] = g.CreateBitmapFromResource("VolumeSmall");
+            bmpEffects[2] = g.CreateBitmapFromResource("VolumeSmall");
+            bmpEffects[3] = g.CreateBitmapFromResource("LoopSmall");
+            bmpEffects[4] = g.CreateBitmapFromResource("JumpSmall");
+            bmpEffects[5] = g.CreateBitmapFromResource("SpeedSmall");
             bmpEffectsFilled[0] = g.CreateBitmapFromResource("LoopSmallFill");
             bmpEffectsFilled[1] = g.CreateBitmapFromResource("JumpSmallFill");
             bmpEffectsFilled[2] = g.CreateBitmapFromResource("SpeedSmallFill");
@@ -645,6 +649,9 @@ namespace FamiStudio
                     string[] EffectNames =
                     {
                         "Volume",
+                        "Vibrato Spd",
+                        "Vibrato Dpt",
+                        "Volume",
                         "Jump",
                         "Skip",
                         "Speed"
@@ -738,6 +745,14 @@ namespace FamiStudio
                     minValue = 0;
                     maxValue = Note.VolumeMax;
                     return note.Volume;
+                case SpecialEffectVibratoSpeed:
+                    minValue = 0;
+                    maxValue = Note.VibratoMax;
+                    return note.VibratoSpeed;
+                case SpecialEffectVibratoDepth:
+                    minValue = 0;
+                    maxValue = Note.VibratoMax;
+                    return note.VibratoDepth;
                 default:
                     minValue = 0;
                     maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
@@ -805,8 +820,10 @@ namespace FamiStudio
                         {
                             var note = pattern.Notes[Math.Min(i, Song.PatternLength - 1)];
 
-                            if ((note.HasEffect   && selectedEffectIdx >= 0) ||
-                                (note.HasVolume   && selectedEffectIdx == SpecialEffectVolume))
+                            if ((note.HasEffect  && selectedEffectIdx >= 0) ||
+                                (note.HasVolume  && selectedEffectIdx == SpecialEffectVolume) ||
+                                (note.HasVibrato && selectedEffectIdx == SpecialEffectVibratoSpeed) ||
+                                (note.HasVibrato && selectedEffectIdx == SpecialEffectVibratoDepth))
                             {
                                 var effectValue = GetSelectedEffectValue(note, out int effectMinValue, out int effectMaxValue);
                                 var sizeY = (float)Math.Floor((effectValue - effectMinValue) / (float)(effectMaxValue - effectMinValue) * effectPanelSizeY);
@@ -1422,9 +1439,18 @@ namespace FamiStudio
 
             if (selectedEffectIdx == SpecialEffectVolume)
             {
-                byte val = (byte)Math.Round(ratio * Note.VolumeMax);
-                pattern.Notes[effectNoteIdx].Volume = val;
+                pattern.Notes[effectNoteIdx].Volume = (byte)Math.Round(ratio * Note.VolumeMax);
                 pattern.UpdateLastValidNotesAndVolume();
+            }
+            else if (selectedEffectIdx == SpecialEffectVibratoSpeed)
+            {
+                pattern.Notes[effectNoteIdx].VibratoSpeed = (byte)Math.Round(ratio * Note.VibratoMax);
+                //pattern.UpdateLastValidNotesAndVolume(); MATTT
+            }
+            else if (selectedEffectIdx == SpecialEffectVibratoDepth)
+            {
+                pattern.Notes[effectNoteIdx].VibratoDepth = (byte)Math.Round(ratio * Note.VibratoMax);
+                //pattern.UpdateLastValidNotesAndVolume(); MATTT
             }
             else
             {

@@ -20,6 +20,7 @@ namespace FamiStudio
             "B"
         };
 
+        // TODO: Get rid of this effect thing. Too much like FamiTracker, that's not what we want.
         public const int EffectNone  = 0;
         public const int EffectJump  = 1; // Bxx
         public const int EffectSkip  = 2; // Dxx
@@ -27,6 +28,8 @@ namespace FamiStudio
 
         public const int VolumeInvalid = 0xff;
         public const int VolumeMax     = 0x0f;
+
+        public const int VibratoMax    = 0x0f;
 
         public const int SlideTypeNone       = 0;
         public const int SlideTypeSlide      = 1;
@@ -48,6 +51,7 @@ namespace FamiStudio
         public byte EffectParam; // Value for fx.
         public byte Volume; // 0-15. 0xff = no volume change.
         public byte Flags;
+        public byte Vibrato; // Uses same encoding as FamiTracker
         public byte Slide; 
         public Instrument Instrument;
 
@@ -57,6 +61,7 @@ namespace FamiStudio
             Effect = 0;
             EffectParam = 0;
             Volume = VolumeInvalid;
+            Vibrato = 0;
             Slide = 0;
             Flags = 0;
             Instrument = null;
@@ -111,6 +116,26 @@ namespace FamiStudio
             set { Slide = value; }
         }
 
+        public byte VibratoSpeed
+        {
+            get { return (byte)(Vibrato >> 4); }
+            set
+            {
+                Vibrato &= 0x0f;
+                Vibrato |= (byte)(value << 4);
+            }
+        }
+
+        public byte VibratoDepth
+        {
+            get { return (byte)(Vibrato & 0x0f); }
+            set
+            {
+                Vibrato &= 0xf0;
+                Vibrato |= value;
+            }
+        }
+
         public bool HasEffect
         {
             get { return Effect != EffectNone; }
@@ -121,6 +146,12 @@ namespace FamiStudio
         {
             get { return Volume != VolumeInvalid; }
             set { if (!value) Volume = VolumeInvalid; }
+        }
+
+        public bool HasVibrato
+        {
+            get { return Vibrato != 0; }
+            set { if (!value) Vibrato = 0; }
         }
 
         public bool HasAttack
@@ -191,7 +222,8 @@ namespace FamiStudio
             // At version 4 (FamiStudio 1.4.0), we added slide notes and no-attack notes.
             if (buffer.Version >= 4)
             {
-                buffer.Serialize(ref Flags);
+                buffer.Serialize(ref Vibrato); // MATTT: For shovel
+                buffer.Serialize(ref Flags); // MATTT: For shovel
                 buffer.Serialize(ref Slide);
             }
 

@@ -8,6 +8,7 @@ namespace FamiStudio
         protected int apuIdx;
         protected int channelType;
         protected Note note;
+        protected Envelope vibratoEnvelope = null;
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
         protected int duty;
@@ -54,6 +55,15 @@ namespace FamiStudio
                     speed = tmpNote.EffectParam;
                     break;
             }
+
+            //if (tmpNote.HasVibrato)
+            //{
+
+            //}
+            //else if (vibratoEnvelope != null)
+            //{
+            //    vibratoEnvelope = null;
+            //}
         }
 
         public void Advance(Song song, int patternIdx, int noteIdx)

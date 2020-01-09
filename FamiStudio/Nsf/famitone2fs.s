@@ -765,7 +765,7 @@ FamiToneUpdate:
 	lda FT_PITCH_ENV_REPEAT,x
 	sec 
 	sbc #1
-	sta  FT_PITCH_ENV_REPEAT,x
+	sta FT_PITCH_ENV_REPEAT,x
 	and #$7f 
 	beq @pitch_env_read
     lda FT_PITCH_ENV_ADR_L,x 
