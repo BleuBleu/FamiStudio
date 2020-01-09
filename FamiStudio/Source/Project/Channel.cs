@@ -280,27 +280,17 @@ namespace FamiStudio
             return false;
         }
 
-        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration, out int slideFrom, out int slideTo)
+        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
         {
             stepSize = 0;
-            slideFrom = Note.NoteInvalid;
-            slideTo = Note.NoteInvalid;
             pitchDelta = 0;
             noteDuration = -1;
 
             var note = patternInstances[patternIdx].Notes[noteIdx];
-            var prevNote = Note.NoteInvalid;
 
-            // For portamento, we need to find the previous note value.
-            if (note.IsPortamento)
-            {
-                prevNote = FindPrevNoteForPortamento(patternIdx, noteIdx);
+            Debug.Assert(note.IsMusical);
 
-                if (prevNote == Note.NoteInvalid || prevNote == Note.NoteStop)
-                    return false;
-            }
-
-            // Then we need the next note to find calculate the slope.
+            // Find the next note to calculate the slope.
             {
                 noteDuration = FindNextNoteForSlide(patternIdx, noteIdx);
 
@@ -308,22 +298,13 @@ namespace FamiStudio
                     noteDuration = 1024 / song.Speed; // This is kind of arbitrary. 
             }
 
-            if (note.IsPortamento && note.PortamentoLength > 0)
-                noteDuration = Math.Min(noteDuration, note.PortamentoLength);
-
-            slideFrom = note.IsPortamento ? prevNote   : note.Value;
-            slideTo   = note.IsPortamento ? note.Value : note.SlideNoteTarget;
-
-            if (slideFrom == Note.NoteStop || slideTo == Note.NoteStop)
-                return false;
-
             if (noteTable == null)
             {
-                return slideFrom != slideTo;
+                return note.Value != note.SlideNoteTarget;
             }
             else
             {
-                pitchDelta = (int)noteTable[slideFrom] - (int)noteTable[slideTo];
+                pitchDelta = (int)noteTable[note.Value] - (int)noteTable[note.SlideNoteTarget];
 
                 if (pitchDelta != 0)
                 {
@@ -339,37 +320,6 @@ namespace FamiStudio
 
                 return false;
             }
-        }
-
-        public int FindPrevNoteForPortamento(int patternIdx, int noteIdx)
-        {
-            var prevNote = Note.NoteInvalid;
-            var found = false;
-            for (int n = noteIdx - 1; n >= 0; n--)
-            {
-                var tmpNote = patternInstances[patternIdx].Notes[n];
-                if (tmpNote.IsMusical || tmpNote.IsStop)
-                {
-                    prevNote = tmpNote.Value;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                for (var p = patternIdx - 1; p >= 0; p--)
-                {
-                    var pattern = patternInstances[p];
-                    if (pattern != null && pattern.LastValidNoteTime >= 0)
-                    {
-                        prevNote = pattern.LastValidNote.Value;
-                        break;
-                    }
-                }
-            }
-
-            return prevNote;
         }
 
         public int FindNextNoteForSlide(int patternIdx, int noteIdx)

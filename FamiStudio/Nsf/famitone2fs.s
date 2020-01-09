@@ -138,6 +138,7 @@ FT_SFX_CH3      = FT_SFX_STRUCT_SIZE*3
 FT_TEMP:
 FT_TEMP_VAR1 : .res 1
 FT_TEMP_VAR2 : .res 1
+FT_TEMP_VAR3 : .res 1
 FT_TEMP_PTR1 : .res 2
 FT_TEMP_PTR2 : .res 2
 
@@ -1049,7 +1050,9 @@ _FT2SetInstrument:
 
 ;internal routine, parses channel note data
 
-_FT2ChannelUpdate:
+.proc _FT2ChannelUpdate
+
+	FT_DISABLE_ATTACK = FT_TEMP_VAR3
 
     lda FT_CHN_REPEAT,x        ;check repeat counter
     beq @no_repeat
@@ -1058,18 +1061,19 @@ _FT2ChannelUpdate:
     rts
 
 @no_repeat:
+    lda #0
+    sta FT_DISABLE_ATTACK
     lda FT_CHN_PTR_L,x         ;load channel pointer into temp
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
     lda FT_CHN_PTR_H,x
-    sta <FT_TEMP_PTR_H
-@no_repeat_r:
+    sta FT_TEMP_PTR_H
     ldy #0
 
 @read_byte:
     lda (FT_TEMP_PTR1),y       ;read byte of the channel
-    inc <FT_TEMP_PTR_L         ;advance pointer
+    inc FT_TEMP_PTR_L         ;advance pointer
     bne @check_regular_note
-    inc <FT_TEMP_PTR_H
+    inc FT_TEMP_PTR_H
 
 @check_regular_note:
     cmp #$61
@@ -1093,8 +1097,13 @@ _FT2ChannelUpdate:
     jmp @read_byte
 
 @check_slide:
-;    cmp #$61                  ; slide note (followed by num steps, step size and the target note)
-;    beq @read_slide_num_steps
+    cmp #$61                  ; slide note (followed by num steps, step size and the target note)
+    beq @slide
+
+@disable_attack:
+	lda #1
+	sta FT_DISABLE_ATTACK    
+    jmp @read_byte 
 
 @slide:
     stx FT_TEMP_VAR1
@@ -1150,8 +1159,7 @@ _FT2ChannelUpdate:
 
 @slide_done_pos:
     ldy #0
-    sec                        ; new note flag is set
-    jmp @done
+    jmp @sec_and_done
 
 @regular_note:    
     sta FT_CHN_NOTE,x          ; store note code
@@ -1160,7 +1168,12 @@ _FT2ChannelUpdate:
     lda #0
     sta FT_SLIDE_STEP,y
 @sec_and_done:
+	lda FT_DISABLE_ATTACK
+	bne @no_attack
     sec                        ;new note flag is set
+    jmp @done
+@no_attack:
+    clc                        ;pretend there is no new note.
     jmp @done
 
 @special_code:
@@ -1183,10 +1196,10 @@ _FT2ChannelUpdate:
 
 @set_reference:
     clc                        ;remember return address+3
-    lda <FT_TEMP_PTR_L
+    lda FT_TEMP_PTR_L
     adc #3
     sta FT_CHN_RETURN_L,x
-    lda <FT_TEMP_PTR_H
+    lda FT_TEMP_PTR_H
     adc #0
     sta FT_CHN_RETURN_H,x
     lda (FT_TEMP_PTR1),y       ;read length of the reference (how many rows)
@@ -1196,29 +1209,29 @@ _FT2ChannelUpdate:
     sta <FT_TEMP_VAR1          ;remember in temp
     iny
     lda (FT_TEMP_PTR1),y
-    sta <FT_TEMP_PTR_H
-    lda <FT_TEMP_VAR1
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_H
+    lda FT_TEMP_VAR1
+    sta FT_TEMP_PTR_L
     ldy #0
     jmp @read_byte
 
 @set_speed:
     lda (FT_TEMP_PTR1),y
     sta FT_SONG_SPEED
-    inc <FT_TEMP_PTR_L         ;advance pointer after reading the speed value
+    inc FT_TEMP_PTR_L         ;advance pointer after reading the speed value
     bne @jump_back
-    inc <FT_TEMP_PTR_H
+    inc FT_TEMP_PTR_H
 @jump_back:    
     jmp @read_byte 
 
 @set_loop:
     lda (FT_TEMP_PTR1),y
-    sta <FT_TEMP_VAR1
+    sta FT_TEMP_VAR1
     iny
     lda (FT_TEMP_PTR1),y
-    sta <FT_TEMP_PTR_H
-    lda <FT_TEMP_VAR1
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_H
+    lda FT_TEMP_VAR1
+    sta FT_TEMP_PTR_L
     dey
     jmp @read_byte
 
@@ -1228,9 +1241,9 @@ _FT2ChannelUpdate:
     tax
 
     lda FT_ENV_ADR_L,x         ;load envelope data address into temp
-    sta <FT_TEMP_PTR2_L
+    sta FT_TEMP_PTR2_L
     lda FT_ENV_ADR_H,x
-    sta <FT_TEMP_PTR2_H    
+    sta FT_TEMP_PTR2_H    
     
     ldy #0
     lda (FT_TEMP_PTR2),y       ;read first byte of the envelope data, this contains the release index.
@@ -1241,7 +1254,7 @@ _FT2ChannelUpdate:
     sta FT_ENV_REPEAT,x        ;need to reset envelope repeat to force update.
     
 @env_has_no_release:
-    ldx <FT_TEMP_VAR1
+    ldx FT_TEMP_VAR1
     clc
     jmp @done
 
@@ -1261,13 +1274,13 @@ _FT2ChannelUpdate:
     rts
 
 @no_ref:
-    lda <FT_TEMP_PTR_L
+    lda FT_TEMP_PTR_L
     sta FT_CHN_PTR_L,x
-    lda <FT_TEMP_PTR_H
+    lda FT_TEMP_PTR_H
     sta FT_CHN_PTR_H,x
     rts
 
-
+.endproc
 
 ;------------------------------------------------------------------------------
 ; stop DPCM sample if it plays

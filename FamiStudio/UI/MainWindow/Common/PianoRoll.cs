@@ -44,6 +44,7 @@ namespace FamiStudio
         const int DefaultEffectButtonSizeY = 17;
         const int DefaultNoteSizeX = 16;
         const int DefaultNoteSizeY = 12;
+        const int DefaultNoteAttackSizeX = 2;
         const int DefaultReleaseNoteSizeY = 8;
         const int DefaultEnvelopeSizeY = 8;
         const int DefaultEnvelopeMax = 127;
@@ -76,6 +77,7 @@ namespace FamiStudio
         int effectButtonSizeY;
         int noteSizeX;
         int noteSizeY;
+        int noteAttackSizeX;
         int releaseNoteSizeY;
         int envelopeSizeY;
         int envelopeMax;
@@ -130,16 +132,15 @@ namespace FamiStudio
         RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
         RenderBitmap bmpEffectCollapsed;
-        RenderBitmap bmpPortamento;
-        RenderBitmap bmpPortamentoLength;
         RenderBitmap bmpSlide;
+        RenderBitmap bmpSlideSmall;
+        RenderBitmap bmpNoAttack;
         RenderBitmap[] bmpEffects = new RenderBitmap[4];
         RenderBitmap[] bmpEffectsFilled = new RenderBitmap[3];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] releaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] slideNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
-        RenderPath[] portaNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath seekGeometry;
 
         enum CaptureOperation
@@ -152,8 +153,6 @@ namespace FamiStudio
             ChangeEffectValue,
             DrawEnvelope,
             Select,
-            CreateDragPortamentoLength,
-            DragPortamentoLength,
             CreateDragSlideNoteTarget,
             DragSlideNoteTarget
         }
@@ -168,8 +167,6 @@ namespace FamiStudio
             false,
             false,
             false,
-            true,
-            true,
             true,
             true
         };
@@ -230,6 +227,7 @@ namespace FamiStudio
             effectButtonSizeY      = (int)(DefaultEffectButtonSizeY * scaling);
             noteSizeX              = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
             noteSizeY              = (int)(DefaultNoteSizeY * scaling);
+            noteAttackSizeX        = (int)(DefaultNoteAttackSizeX * scaling);
             releaseNoteSizeY       = (int)(DefaultReleaseNoteSizeY * scaling);
             envelopeSizeY          = (int)(DefaultEnvelopeSizeY * scaling);    
             envelopeMax            = (int)(DefaultEnvelopeMax * scaling);      
@@ -409,9 +407,9 @@ namespace FamiStudio
             bmpEffectsFilled[2] = g.CreateBitmapFromResource("SpeedSmallFill");
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
-            bmpPortamento = g.CreateBitmapFromResource("PortamentoSmall");
-            bmpPortamentoLength = g.CreateBitmapFromResource("PortamentoLength");
-            bmpSlide = g.CreateBitmapFromResource("SlideSmall");
+            bmpSlide = g.CreateBitmapFromResource("Slide");
+            bmpSlideSmall = g.CreateBitmapFromResource("SlideSmall");
+            bmpNoAttack = g.CreateBitmapFromResource("NoAttack");
 
             for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
             {
@@ -438,13 +436,6 @@ namespace FamiStudio
                     new Point(0, noteSizeY / 2 - releaseNoteSizeY / 2),
                     new Point(0, noteSizeY / 2 + releaseNoteSizeY / 2),
                     new Point(x, noteSizeY / 2)
-                });
-
-                portaNoteGeometry[idx] = g.CreateConvexPath(new[]
-                {
-                    new Point(0, 0),
-                    new Point(0, noteSizeY),
-                    new Point(x + 1, 0),
                 });
 
                 slideNoteGeometry[idx] = g.CreateConvexPath(new[]
@@ -1056,17 +1047,17 @@ namespace FamiStudio
         {
             int x = p0 * patternSizeX + i0 * noteSizeX - scrollX;
             int y = virtualSizeY - n0.Value * noteSizeY - scrollY;
-            int sizeY = released ? releaseNoteSizeY : noteSizeY;
+            int sy = released ? releaseNoteSizeY : noteSizeY;
 
-            if (n0.IsSlideOrPortamento)
+            if (n0.IsSlideNote)
             {
-                if (channel.ComputeSlideNoteParams(p0, i0, null, out _, out _, out int duration, out int s0, out int s1))
+                if (channel.ComputeSlideNoteParams(p0, i0, null, out _, out _, out int duration))
                 {
-                    int sx = duration;
-                    int sy = (s1 - s0) * (n0.IsSlideNote ? 1 : -1);
+                    int slideSizeX = duration;
+                    int slideSizeY = n0.SlideNoteTarget - n0.Value;
 
-                    g.PushTransform(x, y + (sy > 0 ? 0 : noteSizeY), sx, -sy);
-                    g.FillConvexPath(n0.IsSlideNote ? slideNoteGeometry[zoomLevel - MinZoomLevel] : portaNoteGeometry[zoomLevel - MinZoomLevel], g.GetSolidBrush(color, 1.0f, 0.2f));
+                    g.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), slideSizeX, -slideSizeY);
+                    g.FillConvexPath(slideNoteGeometry[zoomLevel - MinZoomLevel], g.GetSolidBrush(color, 1.0f, 0.2f));
                     g.PopTransform();
                 }
             }
@@ -1077,16 +1068,24 @@ namespace FamiStudio
             g.PushTranslation(x, y);
 
             int noteLen = (p1 * Song.PatternLength + i1) - (p0 * Song.PatternLength + i0);
-            int sizeX = noteLen * noteSizeX;
-            g.FillRectangle(0, 0, sizeX, sizeY, g.GetVerticalGradientBrush(color, sizeY, 0.8f));
-            g.DrawRectangle(0, 0, sizeX, sizeY, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
+            int sx = noteLen * noteSizeX;
+            g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
 
-            if (n0.IsSlideOrPortamento)
+            if ((n0.HasAttack && !released) || selected)
             {
-                g.DrawBitmap(n0.IsSlideNote ? bmpSlide : bmpPortamento, slideIconPosX, slideIconPosY);
+                g.DrawRectangle(0, 0, sx, sy, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
+            }
+            else
+            {
+                g.DrawLine(new float [,] { { 0, 0 }, { sx, 0 }, { sx, sy }, { 0, sy } }, theme.BlackBrush);
+                g.DrawBitmap(bmpNoAttack, 0, 0);
+            }
 
-                if (n0.IsPortamento && n0.PortamentoLength > 0 && n0.PortamentoLength < noteLen)
-                    g.DrawBitmap(bmpPortamentoLength, noteSizeX * n0.PortamentoLength, 0);
+            if (n0.IsSlideNote)
+            {
+                var bmp = released ? bmpSlideSmall : bmpSlide;
+                if (sx > bmp.Size.Width + slideIconPosX * 2)
+                    g.DrawBitmap(bmp, slideIconPosX, slideIconPosY);
             }
 
             g.PopTransform();
@@ -1179,10 +1178,8 @@ namespace FamiStudio
                                 {
                                     var n1 = pattern.Notes[i1];
 
-                                    if (n0.IsValid && n1.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideOrPortamento))
-                                    {
+                                    if (n0.IsValid && n1.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote))
                                         RenderNote(g, channel, selected, color, p0, i0, n0, released, p1, i1);
-                                    }
 
                                     if (n1.IsStop || n1.IsRelease)
                                     {
@@ -1223,7 +1220,6 @@ namespace FamiStudio
                                             }
 
                                             // To avoid redrawing slides after a release note.
-                                            n0.IsPortamento = false;
                                             n0.IsSlideNote = false;
                                         }
                                     }
@@ -1232,7 +1228,7 @@ namespace FamiStudio
                                         n0 = n1;
                                         p0 = p1;
                                         i0 = i1;
-                                        released = false;
+                                        released &= !n1.HasAttack;
                                         selected = IsNoteSelected(p0, i0) && isActiveChannel;
                                         color = n0.Instrument == null ? ThemeBase.LightGreyFillColor1 : n0.Instrument.Color;
                                         if (!isActiveChannel) color = Color.FromArgb((int)(color.A * 0.2f), color);
@@ -1243,7 +1239,7 @@ namespace FamiStudio
                                     g.DrawText(pattern.Name, ThemeBase.FontBig, p1 * patternSizeX + bigTextPosX - scrollX, bigTextPosY, whiteKeyBrush);
                             }
 
-                            if (n0.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideOrPortamento))
+                            if (n0.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote))
                             {
                                 RenderNote(g, channel, selected, color, p0, i0, n0, released, a.maxVisiblePattern + 1, 0);
                             }
@@ -1855,20 +1851,28 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    var ctrl  = ModifierKeys.HasFlag(Keys.Control);
-                    var shift = ModifierKeys.HasFlag(Keys.Shift);
-                    var porta = FamiStudioForm.IsKeyDown(Keys.P);
-                    var slide = FamiStudioForm.IsKeyDown(Keys.S);
+                    var ctrl   = ModifierKeys.HasFlag(Keys.Control);
+                    var shift  = ModifierKeys.HasFlag(Keys.Shift);
+                    var slide  = FamiStudioForm.IsKeyDown(Keys.S);
+                    var attack = FamiStudioForm.IsKeyDown(Keys.A);
 
-                    if ((porta || slide) && channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
+                    if (slide && channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
                     {
                         if (channel.SupportsSlideNotes && canCapture)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[patternIdx].Id);
-                            var op = porta ? CaptureOperation.DragPortamentoLength : CaptureOperation.DragSlideNoteTarget;
+                            var op = CaptureOperation.DragSlideNoteTarget;
                             StartCaptureOperation(e, op, patternIdx * Song.PatternLength + noteIdx);
                             changed = true;
                         }
+                    }
+                    else if (attack && channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[patternIdx].Id);
+                        pattern.Notes[noteIdx].HasAttack ^= true;
+                        pattern.UpdateLastValidNotesAndVolume();
+                        App.UndoRedoManager.EndTransaction();
+                        changed = true;
                     }
                     else if (ctrl || shift && channel.SupportsReleaseNotes)
                     {
@@ -1886,17 +1890,9 @@ namespace FamiStudio
                         pattern.Notes[noteIdx].Instrument = editChannel == Channel.DPCM ? null : currentInstrument;
                         pattern.UpdateLastValidNotesAndVolume();
 
-                        if ((porta || slide) && channel.SupportsSlideNotes && canCapture)
+                        if (slide && channel.SupportsSlideNotes && canCapture)
                         {
-                            if (porta)
-                            {
-                                pattern.Notes[noteIdx].IsPortamento = true;
-                                StartCaptureOperation(e, CaptureOperation.CreateDragPortamentoLength);
-                            }
-                            else
-                            {
-                                StartCaptureOperation(e, CaptureOperation.CreateDragSlideNoteTarget);
-                            }
+                            StartCaptureOperation(e, CaptureOperation.CreateDragSlideNoteTarget);
                         }
                         else
                         {
@@ -2079,21 +2075,6 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private void UpdatePortamentoLength(MouseEventArgs e)
-        {
-            Debug.Assert(captureNoteIdx >= 0);
-
-            var patternIdx = captureNoteIdx / Song.PatternLength;
-            var noteIdx = captureNoteIdx % Song.PatternLength;
-
-            var dragNoteIdx = (e.X - whiteKeySizeX + scrollX) / noteSizeX;
-            var length = Utils.Clamp(dragNoteIdx - captureNoteIdx, 0, 127);
-
-            Song.Channels[editChannel].PatternInstances[patternIdx].Notes[noteIdx].PortamentoLength = (byte)length;
-
-            ConditionalInvalidate();
-        }
-
         private void UpdateSlideNoteTarget(MouseEventArgs e)
         {
             Debug.Assert(captureNoteIdx >= 0);
@@ -2201,7 +2182,7 @@ namespace FamiStudio
                         if (Song.Channels[editChannel].PatternInstances[patternIdx] == null)
                             tooltip = "{MouseWheel} Pan";
                         else
-                            tooltip = "{MouseLeft} Add note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseRight} Delete note - {MouseWheel} Pan\n{P} {MouseLeft} {Drag} Create/edit auto-portamento note - {S} {MouseLeft} {Drag} Create/edit slide note";
+                            tooltip = "{MouseLeft} Add note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseRight} Delete note - {MouseWheel} Pan\n{S} {MouseLeft} {Drag} Create/edit slide note - {A} {MouseLeft} Toggle note attack";
 
                         newNoteTooltip = $"{Note.GetFriendlyName(noteValue)} [{patternIdx:D3} : {noteIdx:D3}]";
                         if (Song.Channels[editChannel].FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
@@ -2266,7 +2247,7 @@ namespace FamiStudio
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
                 if (Math.Abs(e.X - captureMouseX) > 4 ||
-                    Math.Abs(e.X - captureMouseX) > 4)
+                    Math.Abs(e.Y - captureMouseY) > 4)
                 {
                     captureThresholdMet = true;
                 }
@@ -2292,10 +2273,6 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.Select:
                         UpdateSelection(e.X);
-                        break;
-                    case CaptureOperation.DragPortamentoLength:
-                    case CaptureOperation.CreateDragPortamentoLength:
-                        UpdatePortamentoLength(e);
                         break;
                     case CaptureOperation.DragSlideNoteTarget:
                     case CaptureOperation.CreateDragSlideNoteTarget:
@@ -2332,7 +2309,6 @@ namespace FamiStudio
                     case CaptureOperation.DragRelease:
                     case CaptureOperation.ChangeEffectValue:
                     case CaptureOperation.CreateDragSlideNoteTarget:
-                    case CaptureOperation.CreateDragPortamentoLength:
                         App.UndoRedoManager.EndTransaction();
                         break;
                     case CaptureOperation.PlayPiano:
@@ -2344,12 +2320,6 @@ namespace FamiStudio
                     case CaptureOperation.DrawEnvelope:
                         App.UndoRedoManager.EndTransaction();
                         EnvelopeResized?.Invoke();
-                        break;
-                    case CaptureOperation.DragPortamentoLength:
-                        if (!captureThresholdMet)
-                            Song.Channels[editChannel].PatternInstances[patternIdx].Notes[noteIdx].IsPortamento ^= true;
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
                         break;
                     case CaptureOperation.DragSlideNoteTarget:
                         if (!captureThresholdMet)

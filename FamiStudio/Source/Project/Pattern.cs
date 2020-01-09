@@ -138,7 +138,7 @@ namespace FamiStudio
             lastVolumeValue = Note.VolumeInvalid;
             lastValidNoteTime = -1;
             lastValidNoteReleased = false;
-
+            
             for (int i = song.PatternLength - 1; i >= 0; i--)
             {
                 var note = notes[i];
@@ -158,17 +158,18 @@ namespace FamiStudio
                         if (note.IsValid)
                         {
                             lastValidNoteTime = (byte)i;
-                            if (lastVolumeValue != Note.VolumeInvalid)
-                                break;
                         }
                     }
+                }
+
+                if (note.IsMusical && note.HasAttack)
+                {
+                    lastValidNoteReleased = false;
                 }
 
                 if (note.HasVolume && lastVolumeValue == Note.VolumeInvalid)
                 {
                     lastVolumeValue = note.Volume;
-                    if (lastValidNoteTime >= 0)
-                        break;
                 }
             }
 

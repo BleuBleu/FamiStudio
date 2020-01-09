@@ -3,12 +3,23 @@
 Polish:
 - Tooltip error envelope resize (bad mouse button)
 - When pasting envelope values, the project explorer env icon doesnt update
-- Portamento should not retrigger attack by default???
 - Work VRC6 -> new file -> gray box over piano roll.
+- Slide icons mid line is too thick.
+
+New attack + simple slide note:
+x Remove portamento code.
+x Smaller slide icon for releases
+x Implement FT export immediately. Biggest risk.
+	- Need to do attack management now.
+- FamiTracker import.
+x ASM for no attack.
+- 
+
+
 
 Shovel Knight:
 - Sq1:
-	- 04: Portamento without retriggering the attack, how???
+	- 04: Portamento without retriggering the attack, how??? Qxx/Rxx.
 	- 
 - Noise: track has weird 1 beat offset. Might need to start envelope at zero + move.
 

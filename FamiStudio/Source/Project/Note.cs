@@ -32,18 +32,22 @@ namespace FamiStudio
         public const int SlideTypeSlide      = 1;
         public const int SlideTypePortamento = 2;
 
-        public const int NoteInvalid = 0xff;
-        public const int NoteStop    = 0x00;
-        public const int MusicalNoteMin     = 0x01;
-        public const int MusicalNoteMax     = 0x60;
-        public const int NoteRelease = 0xf7;
-        public const int DPCMNoteMin = 0x0c;
-        public const int DPCMNoteMax = 0x4b;
+        public const int FlagsNone     = 0x00;
+        public const int FlagsNoAttack = 0x01;
+
+        public const int NoteInvalid    = 0xff;
+        public const int NoteStop       = 0x00;
+        public const int MusicalNoteMin = 0x01;
+        public const int MusicalNoteMax = 0x60;
+        public const int NoteRelease    = 0xf7;
+        public const int DPCMNoteMin    = 0x0c;
+        public const int DPCMNoteMax    = 0x4b;
 
         public byte Value; // (0 = stop, 1 = C0 ... 96 = B7).
         public byte Effect; // Tempo/Jump/Skip
         public byte EffectParam; // Value for fx.
         public byte Volume; // 0-15. 0xff = no volume change.
+        public byte Flags;
         public byte Slide; 
         public Instrument Instrument;
 
@@ -54,6 +58,7 @@ namespace FamiStudio
             EffectParam = 0;
             Volume = VolumeInvalid;
             Slide = 0;
+            Flags = 0;
             Instrument = null;
         }
 
@@ -62,6 +67,7 @@ namespace FamiStudio
             Value = NoteInvalid;
             Instrument = null;
             Slide = 0;
+            Flags = 0;
 
             if (!preserveFx)
             {
@@ -93,33 +99,16 @@ namespace FamiStudio
             get { return IsValid && !IsStop && !IsRelease; }
         }
 
-        public bool IsPortamento
-        {
-            get { return (Slide & 0x80) != 0; }
-            set { Slide = (byte)(value ? 0x80 : 0x00); }
-        }
-
-        public byte PortamentoLength
-        {
-            get { return (byte)(Slide & 0x7f); }
-            set { Slide = (byte)((value & 0x7f) | 0x80); }
-        }
-
         public bool IsSlideNote
         {
-            get { return (Slide & 0x80) == 0 && (Slide & 0x7f) != 0; }
+            get { return Slide != 0; }
             set { if (!value) Slide = 0; }
         }
 
         public byte SlideNoteTarget
         {
-            get { return (byte)(Slide & 0x7f); }
-            set { Slide = (byte)(value & 0x7f); }
-        }
-
-        public bool IsSlideOrPortamento
-        {
-            get { return Slide != 0; }
+            get { return Slide; }
+            set { Slide = value; }
         }
 
         public bool HasEffect
@@ -132,6 +121,16 @@ namespace FamiStudio
         {
             get { return Volume != VolumeInvalid; }
             set { if (!value) Volume = VolumeInvalid; }
+        }
+
+        public bool HasAttack
+        {
+            get { return (Flags & FlagsNoAttack) == 0; }
+            set
+            {
+                Flags = (byte)(Flags & ~FlagsNoAttack);
+                if (!value) Flags = (byte)(Flags | FlagsNoAttack);
+            }
         }
 
         public string FriendlyName
@@ -189,9 +188,12 @@ namespace FamiStudio
             else
                 Volume = Note.VolumeInvalid;
 
-            // At version 4 (FamiStudio 1.4.0), we added slide notes
+            // At version 4 (FamiStudio 1.4.0), we added slide notes and no-attack notes.
             if (buffer.Version >= 4)
+            {
+                buffer.Serialize(ref Flags);
                 buffer.Serialize(ref Slide);
+            }
 
             buffer.Serialize(ref Instrument);
         }

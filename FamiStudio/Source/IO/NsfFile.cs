@@ -153,6 +153,12 @@ namespace FamiStudio
                         var famiToneFile = new FamitoneMusicFile(kernel);
                         famiToneFile.GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, out var currentSongBytes, out _);
 
+                        if (currentSongBytes.Length > (NsfMaxSongSize - numDpcmPages * NsfPageSize))
+                        {
+                            // TODO: Error message.
+                            return false;
+                        }
+
                         songTable[i * 4 + 0] = (byte)(page + numDpcmPages);
                         songTable[i * 4 + 1] = (byte)((addr >> 0) & 0xff);
                         songTable[i * 4 + 2] = (byte)((addr >> 8) & 0xff);
@@ -163,12 +169,6 @@ namespace FamiStudio
 
                     // Song table
                     file.Write(songTable, 0, songTable.Length);
-
-                    if (songBytes.Count > (NsfMaxSongSize - numDpcmPages * NsfPageSize))
-                    {
-                        // TODO: Error message.
-                        return false;
-                    }
 
                     // DPCM will be on the first 4 pages (1,2,3,4)
                     if (project.UsesSamples && dpcmBytes != null)

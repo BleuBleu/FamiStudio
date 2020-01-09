@@ -7,7 +7,6 @@ namespace FamiStudio
     {
         protected int apuIdx;
         protected int channelType;
-        protected bool newNote = false;
         protected Note note;
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
@@ -70,12 +69,12 @@ namespace FamiStudio
             {
                 slideStep = 0;
 
-                if (tmpNote.IsSlideOrPortamento)
+                if (tmpNote.IsSlideNote)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
-                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _, out _, out int nextNote))
-                        tmpNote.Value = (byte)nextNote;
+                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _))
+                        tmpNote.Value = (byte)tmpNote.SlideNoteTarget;
                 }
 
                 PlayNote(tmpNote);
@@ -86,34 +85,38 @@ namespace FamiStudio
             }
         }
 
-        public void PlayNote(Note note)
+        public void PlayNote(Note newNote)
         {
-            if (!note.HasVolume)
-                note.Volume = this.note.Volume;
+            if (!newNote.HasVolume)
+                newNote.Volume = note.Volume;
 
-            if (note.IsRelease)
+            if (newNote.IsRelease)
             {
-                if (this.note.Instrument != null)
+                if (note.Instrument != null)
                 {
                     for (int j = 0; j < Envelope.Max; j++)
                     {
-                        if (this.note.Instrument.Envelopes[j].Release >= 0)
-                            envelopeIdx[j] = this.note.Instrument.Envelopes[j].Release;
+                        if (note.Instrument.Envelopes[j].Release >= 0)
+                            envelopeIdx[j] = note.Instrument.Envelopes[j].Release;
                     }
                 }
             }
             else
             {
-                this.note = note;
-                this.newNote = true;
+                bool instrumentChanged = note.Instrument != newNote.Instrument;
 
-                if (note.Instrument != null)
-                    duty = note.Instrument.DutyCycle;
+                note = newNote;
 
-                for (int j = 0; j < Envelope.Max; j++)
-                    envelopeIdx[j] = 0;
+                if (newNote.Instrument != null)
+                    duty = newNote.Instrument.DutyCycle;
 
-                envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
+                if (instrumentChanged || note.HasAttack)
+                {
+                    for (int j = 0; j < Envelope.Max; j++)
+                        envelopeIdx[j] = 0;
+
+                    envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
+                }
             }
         }
 

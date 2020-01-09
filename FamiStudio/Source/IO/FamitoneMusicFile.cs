@@ -502,11 +502,19 @@ namespace FamiStudio
                         if (note.IsValid)
                         {
                             // Instrument change.
-                            if (note.IsMusical && note.Instrument != instrument)
+                            if (note.IsMusical)
                             {
-                                int idx = project.Instruments.IndexOf(note.Instrument);
-                                patternBuffer.Add((byte)(0x80 | (idx << 1)));
-                                instrument = note.Instrument;
+                                if (note.Instrument != instrument)
+                                {
+                                    int idx = project.Instruments.IndexOf(note.Instrument);
+                                    patternBuffer.Add((byte)(0x80 | (idx << 1)));
+                                    instrument = note.Instrument;
+                                }
+                                else if(!note.HasAttack && kernel == FamiToneKernel.FamiTone2FS)
+                                {
+                                    // TODO: Remove note entirely after a slide that matches the next note with no attack.
+                                    patternBuffer.Add(0x62);
+                                }
                             }
 
                             int numNotes = 0;
@@ -533,16 +541,16 @@ namespace FamiStudio
 
                             if (kernel == FamiToneKernel.FamiTone2FS)
                             {
-                                if (note.IsSlideOrPortamento)
+                                if (note.IsSlideNote)
                                 {
                                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
-                                    if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _, out int noteFrom, out int noteTo))
+                                    if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _))
                                     {
                                         patternBuffer.Add(0x61);
                                         patternBuffer.Add((byte)stepSize);
-                                        patternBuffer.Add(EncodeNoteValue(c, noteFrom));
-                                        patternBuffer.Add(EncodeNoteValue(c, noteTo));
+                                        patternBuffer.Add(EncodeNoteValue(c, note.Value));
+                                        patternBuffer.Add(EncodeNoteValue(c, note.SlideNoteTarget));
                                         continue;
                                     }
                                 }

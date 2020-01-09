@@ -178,6 +178,16 @@ namespace FamiStudio
             renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush);
         }
 
+        public void DrawLine(float[,] points, Brush brush)
+        {
+            for (int i = 0; i < points.GetLength(0) - 1; i++)
+            {
+                renderTarget.DrawLine(
+                    new RawVector2(points[i + 0, 0] + 0.5f, points[i + 0, 1] + 0.5f),
+                    new RawVector2(points[i + 1, 0] + 0.5f, points[i + 1, 1] + 0.5f), brush);
+            }
+        }
+
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush, float width = 1.0f)
         {
             renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush, width);

@@ -479,7 +479,7 @@ namespace FamiStudio
                         }
 
                         // Create a slide or portamento note.
-                        if (!note.IsSlideOrPortamento)
+                        if (!note.IsSlideNote)
                         {
                             if (note.IsMusical && slideSpeed != 0)
                             {
@@ -506,27 +506,29 @@ namespace FamiStudio
                                     }
                                 }
                             }
-                            else if (note.IsMusical && portamentoSpeed != 0)
-                            {
-                                // Find the previous note that we are sliding from.
-                                var prevNote = FindPrevNoteForPortamento(c, p, n, patternFxData);
 
-                                if (prevNote >= Note.MusicalNoteMin &&
-                                    prevNote <= Note.MusicalNoteMax &&
-                                    prevNote != note.Value)
-                                {
-                                    // TODO: PAL.
-                                    var noteTable = NesApu.GetNoteTableForChannelType(c.Type, false);
+                            // MATTT
+                            //else if (note.IsMusical && portamentoSpeed != 0)
+                            //{
+                            //    // Find the previous note that we are sliding from.
+                            //    var prevNote = FindPrevNoteForPortamento(c, p, n, patternFxData);
 
-                                    // Compute the pitch difference and set the custom portamento length.
-                                    var pitchDelta = Math.Abs(noteTable[prevNote] - noteTable[note.Value]);
-                                    var numFrames = pitchDelta / portamentoSpeed;
-                                    var numNotes = Utils.Clamp(numFrames / c.Song.Speed, 0, 127);
+                            //    if (prevNote >= Note.MusicalNoteMin &&
+                            //        prevNote <= Note.MusicalNoteMax &&
+                            //        prevNote != note.Value)
+                            //    {
+                            //        // TODO: PAL.
+                            //        var noteTable = NesApu.GetNoteTableForChannelType(c.Type, false);
 
-                                    pattern.Notes[n].IsPortamento = true;
-                                    pattern.Notes[n].PortamentoLength = (byte)numNotes;
-                                }
-                            }
+                            //        // Compute the pitch difference and set the custom portamento length.
+                            //        var pitchDelta = Math.Abs(noteTable[prevNote] - noteTable[note.Value]);
+                            //        var numFrames = pitchDelta / portamentoSpeed;
+                            //        var numNotes = Utils.Clamp(numFrames / c.Song.Speed, 0, 127);
+
+                            //        pattern.Notes[n].IsPortamento = true;
+                            //        pattern.Notes[n].PortamentoLength = (byte)numNotes;
+                            //    }
+                            //}
                         }
 
                         if (note.IsMusical || note.IsStop)
@@ -689,42 +691,62 @@ namespace FamiStudio
             }
         }
 
-        private static void FindSlideNoteTransitions(Song song, Dictionary<Pattern, List<int>> portamentoTransitions, Dictionary<Pattern, List<int>> slideTransitions)
+        //private static void FindSlideNoteTransitions(Song song, Dictionary<Pattern, List<int>> portamentoTransitions, Dictionary<Pattern, List<int>> slideTransitions)
+        //{
+        //    foreach (var channel in song.Channels)
+        //    {
+        //        bool lastNoteWasSlide      = false;
+
+        //        for (int p = 0; p < song.Length; p++)
+        //        {
+        //            var pattern = channel.PatternInstances[p];
+
+        //            if (pattern == null)
+        //                continue;
+
+        //            if (!slideTransitions.ContainsKey(pattern))
+        //                slideTransitions[pattern] = new List<int>();
+
+        //            for (int n = 0; n < song.PatternLength; n++)
+        //            {
+        //                var note = pattern.Notes[n];
+
+        //                if (lastNoteWasSlide && (note.IsMusical || note.IsStop) && !note.IsSlideNote)
+        //                    slideTransitions[pattern].Add(n);
+
+        //                if (note.IsMusical || note.IsStop)
+        //                {
+        //                    lastNoteWasSlide = note.IsSlideNote;
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+
+        public static bool FindNextNoteForSlide(Channel channel, ref int patternIdx, ref int noteIdx)
         {
-            foreach (var channel in song.Channels)
+            for (int n = noteIdx + 1; n < channel.Song.PatternLength; n++)
             {
-                bool lastNoteWasSlide      = false;
-                bool lastNoteWasPortamento = false;
-
-                for (int p = 0; p < song.Length; p++)
+                var tmpNote = channel.PatternInstances[patternIdx].Notes[n];
+                if (tmpNote.IsMusical || tmpNote.IsStop)
                 {
-                    var pattern = channel.PatternInstances[p];
-
-                    if (pattern == null)
-                        continue;
-
-                    if (!slideTransitions.ContainsKey(pattern))
-                        slideTransitions[pattern] = new List<int>();
-                    if (!portamentoTransitions.ContainsKey(pattern))
-                        portamentoTransitions[pattern] = new List<int>();
-
-                    for (int n = 0; n < song.PatternLength; n++)
-                    {
-                        var note = pattern.Notes[n];
-
-                        if (lastNoteWasSlide && (note.IsMusical || note.IsStop) && !note.IsSlideNote)
-                            slideTransitions[pattern].Add(n);
-                        if (lastNoteWasPortamento && (note.IsMusical || note.IsStop) && !note.IsPortamento)
-                            portamentoTransitions[pattern].Add(n);
-
-                        if (note.IsMusical || note.IsStop)
-                        {
-                            lastNoteWasSlide      = note.IsSlideNote;
-                            lastNoteWasPortamento = note.IsPortamento;
-                        }
-                    }
+                    noteIdx = n;
+                    return true;
                 }
             }
+
+            for (int p = patternIdx + 1; p < channel.Song.Length; p++)
+            {
+                var pattern = channel.PatternInstances[p];
+                if (pattern != null && pattern.FirstValidNoteTime >= 0)
+                {
+                    patternIdx = p;
+                    noteIdx = pattern.FirstValidNoteTime;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static bool Save(Project originalProject, string filename, int[] songIds)
@@ -856,12 +878,12 @@ namespace FamiStudio
                 CreateMissingPatterns(song);
 
                 // Find all the places where we need to turn of 1xx/2xx/3xx after we are done.
-                var portamentoTransitions = new Dictionary<Pattern, List<int>>();
-                var slideTransitions      = new Dictionary<Pattern, List<int>>();
-                FindSlideNoteTransitions(song, portamentoTransitions, slideTransitions);
+                //var portamentoTransitions = new Dictionary<Pattern, List<int>>();
+                //var slideTransitions = new Dictionary<Pattern, List<int>>();
+                //FindSlideNoteTransitions(song, portamentoTransitions, slideTransitions);
 
                 lines.Add($"TRACK{song.PatternLength,4}{song.Speed,4}{song.Tempo,4} \"{song.Name}\"");
-                lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(2, song.Channels.Length))}");
+                lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(3, song.Channels.Length))}");
                 lines.Add("");
 
                 for (int j = 0; j < song.Length; j++)
@@ -869,87 +891,149 @@ namespace FamiStudio
                     var line = $"ORDER {j:X2} :";
 
                     for (int k = 0; k < song.Channels.Length; k++)
-                    {
                         line += $" {song.Channels[k].Patterns.IndexOf(song.Channels[k].PatternInstances[j]):X2}";
-                    }
+
                     lines.Add(line);
                 }
                 lines.Add("");
 
                 int maxPatternCount = -1;
                 foreach (var channel in song.Channels)
-                {
                     maxPatternCount = Math.Max(maxPatternCount, channel.Patterns.Count);
+
+                var patternRows = new Dictionary<Pattern, List<string>>();
+                for (int c = 0; c < song.Channels.Length; c++)
+                {
+                    var channel = song.Channels[c];
+                    var prevNoteValue = Note.NoteInvalid;
+                    var prevSlideEffect = '\0';
+                    
+                    for (int p = 0; p < song.Length; p++)
+                    {
+                        var pattern = channel.PatternInstances[p];
+
+                        if (patternRows.ContainsKey(pattern))
+                            continue;
+
+                        var patternLines = new List<string>();
+
+                        for (int n = 0; n < song.PatternLength; n++)
+                        {
+                            var note = pattern.Notes[n];
+                            var noteString = GetFamiTrackerNoteName(c, note);
+                            var volumeString = note.HasVolume ? note.Volume.ToString("X") : ".";
+                            var instrumentString = note.IsValid && !note.IsStop ? (note.Instrument == null ? project.Instruments.Count : project.Instruments.IndexOf(note.Instrument)).ToString("X2") : "..";
+                            var effectString = "";
+
+                            if (note.IsSlideNote && note.IsMusical)
+                            {
+                                var np = p;
+                                var nn = n;
+
+                                var hasNextNote = FindNextNoteForSlide(channel, ref np, ref nn);
+                                var nextNoteValue = hasNextNote ? channel.PatternInstances[np].Notes[nn].Value: Note.NoteInvalid;
+
+                                // TODO: PAL.
+                                var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+                                channel.ComputeSlideNoteParams(p, n, noteTable, out _, out int stepSize, out _);
+
+                                // We have one bit of fraction. FramiTracker does not.
+                                var ceilStepSize  = Utils.SignedCeil (stepSize / 2.0f);
+                                var floorStepSize = Utils.SignedFloor(stepSize / 2.0f);
+
+                                var absNoteDelta = Math.Abs(note.Value - nextNoteValue);
+
+                                // See if we can use Qxy/Rxy (slide up/down y semitones, at speed x), this is preferable.
+                                if (absNoteDelta < 16) 
+                                {
+                                    if (prevSlideEffect != '\0')
+                                        effectString += $" {prevSlideEffect}00";
+
+                                    // FamiTracker use 2x + 1
+                                    var speed = Utils.Clamp((Math.Abs(ceilStepSize) - 1) / 2, 1, 15); 
+
+                                    if (nextNoteValue > note.Value)
+                                        effectString += $" Q{speed:X1}{absNoteDelta:X1}";
+                                    else
+                                        effectString += $" R{speed:X1}{absNoteDelta:X1}";
+
+                                    prevSlideEffect = '\0';
+                                }
+                                else
+                                {
+                                    // If the previous note matched too, we can use 3xx (auto-portamento).
+                                    if (prevNoteValue == note.Value)
+                                    {
+                                        if (prevSlideEffect == '1' || prevSlideEffect == '2')
+                                            effectString += $" 100";
+
+                                        noteString = GetFamiTrackerNoteName(c, channel.PatternInstances[np].Notes[nn]);
+                                        effectString += $" 3{Math.Abs(ceilStepSize):X2}";
+                                        prevSlideEffect = '3';
+                                    }
+                                    else
+                                    {
+                                        if (prevSlideEffect == '3')
+                                            effectString += $" 300";
+
+                                        if (stepSize > 0)
+                                        { 
+                                            effectString += $" 2{ floorStepSize:X2}";
+                                            prevSlideEffect = '2';
+                                        }
+                                        else if (stepSize < 0)
+                                        { 
+                                            effectString += $" 1{-floorStepSize:X2}";
+                                            prevSlideEffect = '1';
+                                        }
+                                    }
+                                }
+                            }
+                            else if ((note.IsMusical || note.IsStop) && prevSlideEffect != '\0')
+                            {
+                                effectString += $" {prevSlideEffect}00";
+                                prevSlideEffect = '\0';
+                            }
+
+                            switch (note.Effect)
+                            {
+                                case Note.EffectJump:  effectString += $"B{note.EffectParam:X2}"; break;
+                                case Note.EffectSkip:  effectString += $"D{note.EffectParam:X2}"; break;
+                                case Note.EffectSpeed: effectString += $"F{note.EffectParam:X2}"; break;
+                            }
+
+                            while (effectString.Length != 12)
+                                effectString += " ...";
+
+                            var line = $" : {noteString} {instrumentString} {volumeString}{effectString}";
+
+                            if (note.IsMusical || note.IsStop)
+                                prevNoteValue = note.Value;
+
+                            patternLines.Add(line);
+                        }
+
+                        patternRows[pattern] = patternLines;
+                    }
                 }
 
                 for (int j = 0; j < maxPatternCount; j++)
                 {
                     lines.Add($"PATTERN {j:X2}");
 
-                    for (int k = 0; k < song.PatternLength; k++)
+                    for (int p = 0; p < song.PatternLength; p++)
                     {
-                        var line = $"ROW {k:X2}";
-                        for (int l = 0; l < song.Channels.Length; l++)
+                        var line = $"ROW {p:X2}";
+                        for (int c = 0; c < song.Channels.Length; c++)
                         {
-                            var channel = song.Channels[l];
+                            var channel = song.Channels[c];
 
                             if (j >= channel.Patterns.Count)
-                            {
-                                line += " : ... .. . ... ...";
-                            }
+                                line += " : ... .. . ... ... ...";
                             else
-                            {
-                                var pattern = channel.Patterns[j];
-                                var note = pattern.Notes[k];
-                                var noteString = GetFamiTrackerNoteName(l, note);
-                                var volumeString = note.HasVolume ? note.Volume.ToString("X") : ".";
-                                var instrumentString = note.IsValid && !note.IsStop ? (note.Instrument == null ? project.Instruments.Count : project.Instruments.IndexOf(note.Instrument)).ToString("X2") : "..";
-                                var effectString1 = "...";
-                                var effectString2 = "...";
-
-                                if (note.IsSlideOrPortamento && note.IsMusical)
-                                {
-                                    // TODO: PAL.
-                                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
-
-                                    // HACK: We only consider the first instance of the pattern. Will definately cause
-                                    // problems if we have slides between patterns that have different pitches.
-                                    var instIdx = Array.IndexOf(channel.PatternInstances, pattern);
-                                    channel.ComputeSlideNoteParams(instIdx, k, noteTable, out _, out int stepSize, out _, out _, out _);
-
-                                    // We have one bit of fraction. FramiTracker does not.
-                                    if (Math.Abs(stepSize) > 1)
-                                        stepSize /= 2;
-
-                                    if (note.IsSlideNote)
-                                    {
-                                        if (stepSize > 0)
-                                            effectString1 = $"2{ stepSize:X2}";
-                                        else if (stepSize < 0)
-                                            effectString1 = $"1{-stepSize:X2}";
-                                    }
-                                    else
-                                    {
-                                        effectString1 = $"3{Math.Abs(stepSize):X2}";
-                                    }
-                                }
-
-                                // Turn off 1xx/2xx/3xx when not needed.
-                                if (portamentoTransitions[pattern].IndexOf(k) >= 0)
-                                    effectString1 = "300";
-                                if (slideTransitions[pattern].IndexOf(k) >= 0)
-                                    effectString1 = "200";
-
-                                switch (note.Effect)
-                                {
-                                    case Note.EffectJump  : effectString2 = $"B{note.EffectParam:X2}"; break;
-                                    case Note.EffectSkip  : effectString2 = $"D{note.EffectParam:X2}"; break;
-                                    case Note.EffectSpeed : effectString2 = $"F{note.EffectParam:X2}"; break;
-                                }
-
-                                line += $" : {noteString} {instrumentString} {volumeString} {effectString1} {effectString2}";
-                            }
+                                line += patternRows[channel.Patterns[j]][p];
                         }
+
                         lines.Add(line);
                     }
 

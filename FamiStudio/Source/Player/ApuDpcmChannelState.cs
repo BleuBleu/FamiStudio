@@ -12,7 +12,7 @@
             {
                 NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_SND_CHN, 0x0f);
             }
-            else if (newNote && note.IsValid)
+            else if (note.IsValid)
             {
                 NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_SND_CHN, 0x0f);
 
@@ -26,7 +26,8 @@
                     NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_SND_CHN, 0x1f);
                 }
 
-                newNote = false;
+                // To prevent from re-triggering.
+                note.IsValid = false;
             }
         }
     }
