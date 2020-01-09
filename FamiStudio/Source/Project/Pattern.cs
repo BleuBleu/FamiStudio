@@ -17,7 +17,8 @@ namespace FamiStudio
 
         private int  firstValidNoteTime  = -1;
         private int  lastValidNoteTime  = -1;
-        private byte lastVolumeValue = 0xff;
+        private byte lastVolumeValue = Note.VolumeInvalid;
+        private byte lastVibratoValue = Note.VibratoInvalid;
         private bool lastValidNoteReleased = false;
 
         public int Id => id;
@@ -38,10 +39,7 @@ namespace FamiStudio
             this.name = n;
             this.color = ThemeBase.RandomCustomColor();
             for (int i = 0; i < notes.Length; i++)
-            {
-                notes[i].Value  = Note.NoteInvalid;
-                notes[i].Volume = Note.VolumeInvalid;
-            }
+                notes[i] = new Note(Note.NoteInvalid);
         }
 
         public Note[] Notes
@@ -133,9 +131,10 @@ namespace FamiStudio
             }
         }
 
-        public void UpdateLastValidNotesAndVolume()
+        public void UpdateLastValidNote()
         {
             lastVolumeValue = Note.VolumeInvalid;
+            lastVibratoValue = Note.VibratoInvalid;
             lastValidNoteTime = -1;
             lastValidNoteReleased = false;
             
@@ -170,6 +169,11 @@ namespace FamiStudio
                 if (note.HasVolume && lastVolumeValue == Note.VolumeInvalid)
                 {
                     lastVolumeValue = note.Volume;
+                }
+
+                if (note.HasVibrato && lastVibratoValue == Note.VibratoInvalid)
+                {
+                    lastVibratoValue = note.Vibrato;
                 }
             }
 
@@ -225,6 +229,11 @@ namespace FamiStudio
             get { return lastVolumeValue; }
         }
 
+        public byte LastVibratoValue
+        {
+            get { return lastVibratoValue; }
+        }
+
 #if DEBUG
         public void Validate(Channel channel)
         {
@@ -268,11 +277,12 @@ namespace FamiStudio
                 buffer.Serialize(ref firstValidNoteTime);
                 buffer.Serialize(ref lastValidNoteTime);
                 buffer.Serialize(ref lastVolumeValue);
+                buffer.Serialize(ref lastVibratoValue);
                 buffer.Serialize(ref lastValidNoteReleased);
             }
             else if (buffer.IsReading)
             {
-                UpdateLastValidNotesAndVolume();
+                UpdateLastValidNote();
             }
         }
     }

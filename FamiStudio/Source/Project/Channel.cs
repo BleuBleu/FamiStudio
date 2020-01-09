@@ -81,6 +81,7 @@ namespace FamiStudio
 
         public bool SupportsReleaseNotes => type != DPCM;
         public bool SupportsSlideNotes => type != Noise && type != DPCM;
+        public bool SupportsVibrato => type != Noise && type != DPCM;
 
         public void Split(int factor)
         {
@@ -234,20 +235,36 @@ namespace FamiStudio
         {
             var lastVolume = (byte)Note.VolumeInvalid;
 
-            for (int p = startPatternIdx; p >= 0 && lastVolume == Note.VolumeInvalid; p--)
+            for (int p = startPatternIdx; p >= 0; p--)
             {
                 var pattern = patternInstances[p];
                 if (pattern != null)
                 {
                     lastVolume = pattern.LastVolumeValue;
                     if (lastVolume != Note.VolumeInvalid)
-                    {
                         return lastVolume;
-                    }
                 }
             }
 
             return Note.VolumeMax;
+        }
+
+        public byte GetLastValidVibrato(int startPatternIdx)
+        {
+            var lastVibrato = (byte)Note.VibratoInvalid;
+
+            for (int p = startPatternIdx; p >= 0; p--)
+            {
+                var pattern = patternInstances[p];
+                if (pattern != null)
+                {
+                    lastVibrato = pattern.LastVibratoValue;
+                    if (lastVibrato != Note.VibratoInvalid)
+                        return lastVibrato;
+                }
+            }
+
+            return 0;
         }
 
         public bool GetLastValidNote(ref int patternIdx, out int noteIdx, out bool released)

@@ -41,6 +41,7 @@ FT_PITCH_ENV_REPEAT   : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_ADR_L    : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_ADR_H    : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_PTR      : .res FT_NUM_PITCH_ENVELOPES
+FT_PITCH_ENV_OVERRIDE : .res FT_NUM_PITCH_ENVELOPES
 
 ;slide structure offsets, 3 bytes per slide.
 
@@ -350,6 +351,7 @@ FamiToneMusicStop:
     sta FT_PITCH_ENV_REPEAT,x
     sta FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_H,x
+    sta FT_PITCH_ENV_OVERRIDE,x
     lda #1
     sta FT_PITCH_ENV_PTR,x
     inx
@@ -1029,6 +1031,8 @@ FamiToneUpdate:
     lda _FT2ChannelToPitch, x
     bmi @no_pitch
     tax
+    lda FT_PITCH_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
+    bne @no_pitch
     iny
     lda #1
     sta FT_PITCH_ENV_PTR,x     ;reset env3 pointer (pitch envelope have relative/absolute flag in the first byte)
@@ -1036,6 +1040,7 @@ FamiToneUpdate:
     sta FT_PITCH_ENV_REPEAT,x  ;reset env3 repeat counter
     sta FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_H,x
+    sta FT_PITCH_ENV_OVERRIDE,x
     lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
     sta FT_PITCH_ENV_ADR_L,x
     iny
@@ -1099,6 +1104,48 @@ FamiToneUpdate:
 @check_slide:
     cmp #$61                  ; slide note (followed by num steps, step size and the target note)
     beq @slide
+
+@check_disable_attack:    
+    cmp #$62
+    beq @disable_attack
+
+@check_override_pitch_envelope:
+    cmp #$63
+    beq @override_pitch_envelope
+
+;cmp #$64
+;beq @override_pitch_envelope
+
+@clear_pitch_override_flag:
+    ldy _FT2ChannelToPitch,x
+    lda #0
+    sta FT_PITCH_ENV_OVERRIDE,y
+    ldy #0
+    jmp @read_byte 
+
+@override_pitch_envelope:
+	stx FT_TEMP_VAR1
+	lda _FT2ChannelToPitch,x
+	tax
+	lda (FT_TEMP_PTR1),y
+	sta FT_PITCH_ENV_ADR_L,x
+	iny
+	lda (FT_TEMP_PTR1),y
+	sta FT_PITCH_ENV_ADR_H,x
+	lda #0
+	tay
+	sta FT_PITCH_ENV_REPEAT,x
+	lda #1
+	sta FT_PITCH_ENV_PTR,x
+	sta FT_PITCH_ENV_OVERRIDE,x
+	ldx FT_TEMP_VAR1
+	clc
+	lda #2
+	adc FT_TEMP_PTR_L
+	sta FT_TEMP_PTR_L
+	bcc @read_byte 
+	inc FT_TEMP_PTR_H
+    jmp @read_byte 
 
 @disable_attack:
 	lda #1

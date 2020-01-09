@@ -237,7 +237,7 @@ namespace FamiStudio
                 foreach (var channel in song.Channels)
                 {
                     foreach (var pattern in channel.Patterns)
-                        pattern.UpdateLastValidNotesAndVolume();
+                        pattern.UpdateLastValidNote();
                 }
             }
         }

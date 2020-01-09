@@ -8,7 +8,8 @@ namespace FamiStudio
         protected int apuIdx;
         protected int channelType;
         protected Note note;
-        protected Envelope vibratoEnvelope = null;
+        protected bool pitchEnvelopeOverride = false;
+        protected Envelope[] envelopes = new Envelope[Envelope.Max];
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
         protected int duty;
@@ -56,14 +57,21 @@ namespace FamiStudio
                     break;
             }
 
-            //if (tmpNote.HasVibrato)
-            //{
-
-            //}
-            //else if (vibratoEnvelope != null)
-            //{
-            //    vibratoEnvelope = null;
-            //}
+            if (tmpNote.HasVibrato)
+            {
+                if (tmpNote.VibratoDepth != 0 && tmpNote.VibratoDepth != 0)
+                {
+                    envelopes[Envelope.Pitch] = Envelope.CreateVibratoEnvelope(tmpNote.VibratoSpeed, tmpNote.VibratoDepth);
+                    envelopeIdx[Envelope.Pitch] = 0;
+                    envelopeValues[Envelope.Pitch] = 0;
+                    pitchEnvelopeOverride = true;
+                }
+                else
+                {
+                    envelopes[Envelope.Pitch] = null;
+                    pitchEnvelopeOverride = false;
+                }
+            }
         }
 
         public void Advance(Song song, int patternIdx, int noteIdx)
@@ -106,8 +114,8 @@ namespace FamiStudio
                 {
                     for (int j = 0; j < Envelope.Max; j++)
                     {
-                        if (note.Instrument.Envelopes[j].Release >= 0)
-                            envelopeIdx[j] = note.Instrument.Envelopes[j].Release;
+                        if (envelopes[j].Release >= 0)
+                            envelopeIdx[j] = envelopes[j].Release;
                     }
                 }
             }
@@ -123,7 +131,11 @@ namespace FamiStudio
                 if (instrumentChanged || note.HasAttack)
                 {
                     for (int j = 0; j < Envelope.Max; j++)
+                    {
+                        if (j != Envelope.Pitch || !pitchEnvelopeOverride)
+                            envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
                         envelopeIdx[j] = 0;
+                    }
 
                     envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
                 }
@@ -132,13 +144,12 @@ namespace FamiStudio
 
         public void UpdateEnvelopes()
         {
-            var instrument = note.Instrument;
-            if (instrument != null)
+            if (note.Instrument != null)
             {
                 for (int j = 0; j < Envelope.Max; j++)
                 {
-                    if (instrument.Envelopes[j] == null ||
-                        instrument.Envelopes[j].Length <= 0)
+                    if (envelopes[j] == null ||
+                        envelopes[j].Length <= 0)
                     {
                         if (j == Envelope.Volume)
                             envelopeValues[j] = 15;
@@ -147,7 +158,7 @@ namespace FamiStudio
                         continue;
                     }
 
-                    var env = instrument.Envelopes[j];
+                    var env = envelopes[j];
                     var idx = envelopeIdx[j];
 
                     // Non-looping, relative envelope end up with -1 when done.
@@ -160,11 +171,11 @@ namespace FamiStudio
                     if (env.Relative)
                     {
                         Debug.Assert(j == Envelope.Pitch);
-                        envelopeValues[j] += instrument.Envelopes[j].Values[idx];
+                        envelopeValues[j] += envelopes[j].Values[idx];
                     }
                     else
                     {
-                        envelopeValues[j] = instrument.Envelopes[j].Values[idx];
+                        envelopeValues[j] = envelopes[j].Values[idx];
                     }
 
                     idx++;

@@ -7,6 +7,9 @@ namespace FamiStudio
 {
     public class FamitrackerFile
     {
+        private static readonly int[] VibratoSpeedImportLookup = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 11, 12 };
+        private static readonly int[] VibratoSpeedExportLookup = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15 };
+
         private static string[] SplitStringKeepQuotes(string str)
         {
             return str.Split('"').Select((element, index) => index % 2 == 0
@@ -310,6 +313,16 @@ namespace FamiStudio
                                 case 'F': // Tempo
                                     pattern.Notes[rowIdx].Effect = Note.EffectSpeed;
                                     break;
+                                case '4': // Vibrato
+                                    pattern.Notes[rowIdx].VibratoDepth = (byte)(param & 0x0f);
+                                    pattern.Notes[rowIdx].VibratoSpeed = (byte)VibratoSpeedImportLookup[param >> 4];
+
+                                    if (pattern.Notes[rowIdx].VibratoDepth == 0 ||
+                                        pattern.Notes[rowIdx].VibratoSpeed == 0)
+                                    {
+                                        pattern.Notes[rowIdx].Vibrato = 0;
+                                    }
+                                    break;
                                 default:
                                     continue;
                             }
@@ -506,29 +519,6 @@ namespace FamiStudio
                                     }
                                 }
                             }
-
-                            // MATTT
-                            //else if (note.IsMusical && portamentoSpeed != 0)
-                            //{
-                            //    // Find the previous note that we are sliding from.
-                            //    var prevNote = FindPrevNoteForPortamento(c, p, n, patternFxData);
-
-                            //    if (prevNote >= Note.MusicalNoteMin &&
-                            //        prevNote <= Note.MusicalNoteMax &&
-                            //        prevNote != note.Value)
-                            //    {
-                            //        // TODO: PAL.
-                            //        var noteTable = NesApu.GetNoteTableForChannelType(c.Type, false);
-
-                            //        // Compute the pitch difference and set the custom portamento length.
-                            //        var pitchDelta = Math.Abs(noteTable[prevNote] - noteTable[note.Value]);
-                            //        var numFrames = pitchDelta / portamentoSpeed;
-                            //        var numNotes = Utils.Clamp(numFrames / c.Song.Speed, 0, 127);
-
-                            //        pattern.Notes[n].IsPortamento = true;
-                            //        pattern.Notes[n].PortamentoLength = (byte)numNotes;
-                            //    }
-                            //}
                         }
 
                         if (note.IsMusical || note.IsStop)
@@ -997,12 +987,17 @@ namespace FamiStudio
 
                             switch (note.Effect)
                             {
-                                case Note.EffectJump:  effectString += $"B{note.EffectParam:X2}"; break;
-                                case Note.EffectSkip:  effectString += $"D{note.EffectParam:X2}"; break;
-                                case Note.EffectSpeed: effectString += $"F{note.EffectParam:X2}"; break;
+                                case Note.EffectJump:  effectString += $" B{note.EffectParam:X2}"; break;
+                                case Note.EffectSkip:  effectString += $" D{note.EffectParam:X2}"; break;
+                                case Note.EffectSpeed: effectString += $" F{note.EffectParam:X2}"; break;
                             }
 
-                            while (effectString.Length != 12)
+                            if (note.HasVibrato)
+                            {
+                                effectString += $" 4{VibratoSpeedExportLookup[note.VibratoSpeed]:X1}{note.VibratoDepth:X1}";
+                            }
+
+                            while (effectString.Length < 12)
                                 effectString += " ...";
 
                             var line = $" : {noteString} {instrumentString} {volumeString}{effectString}";

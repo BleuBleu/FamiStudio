@@ -29,7 +29,9 @@ namespace FamiStudio
         public const int VolumeInvalid = 0xff;
         public const int VolumeMax     = 0x0f;
 
-        public const int VibratoMax    = 0x0f;
+        public const int VibratoInvalid  = 0xf0;
+        public const int VibratoSpeedMax = 0x0c;
+        public const int VibratoDepthMax = 0x0f;
 
         public const int SlideTypeNone       = 0;
         public const int SlideTypeSlide      = 1;
@@ -61,7 +63,7 @@ namespace FamiStudio
             Effect = 0;
             EffectParam = 0;
             Volume = VolumeInvalid;
-            Vibrato = 0;
+            Vibrato = VibratoInvalid;
             Slide = 0;
             Flags = 0;
             Instrument = null;
@@ -79,6 +81,7 @@ namespace FamiStudio
                 Effect = 0;
                 EffectParam = 0;
                 Volume = VolumeInvalid;
+                Vibrato = VibratoInvalid;
             }
         }
 
@@ -133,6 +136,9 @@ namespace FamiStudio
             {
                 Vibrato &= 0xf0;
                 Vibrato |= value;
+
+                if (Vibrato != VibratoInvalid) 
+                    VibratoSpeed = (byte)Utils.Clamp(VibratoSpeed, 0, VibratoSpeedMax);
             }
         }
 
@@ -150,8 +156,8 @@ namespace FamiStudio
 
         public bool HasVibrato
         {
-            get { return Vibrato != 0; }
-            set { if (!value) Vibrato = 0; }
+            get { return Vibrato != VibratoInvalid; }
+            set { if (!value) Vibrato = VibratoInvalid; }
         }
 
         public bool HasAttack

@@ -442,8 +442,7 @@ namespace FamiStudio
 
         public void PlayInstrumentNote(int n)
         {
-            Note note = new Note();
-            note.Value = (byte)n;
+            Note note = new Note(n);
             note.Volume = Note.VolumeMax;
 
             int channel = Sequencer.SelectedChannel;

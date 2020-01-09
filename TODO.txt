@@ -14,7 +14,7 @@ x Implement FT export immediately. Biggest risk.
 	- Need to do attack management now.
 - FamiTracker import.
 x ASM for no attack.
-- 
+x ASM for vibrato. 
 
 
 
