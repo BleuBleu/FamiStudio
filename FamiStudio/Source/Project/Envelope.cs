@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -103,6 +104,35 @@ namespace FamiStudio
             env.Release = release;
             env.Relative = relative;
             values.CopyTo(env.values, 0);
+            return env;
+        }
+
+        // Based on FamiTracker, but simplified to use regular envelopes.
+        static readonly int[] VibratoDepthLookup = new[] { 0x01, 0x03, 0x05, 0x07, 0x09, 0x0d, 0x13, 0x17, 0x1b, 0x21, 0x2b, 0x3b, 0x57, 0x7f, 0xbf, 0xff };
+
+        public static Envelope CreateVibratoEnvelope(int speed, int depth)
+        {
+            Debug.Assert(speed >= 0 && speed < 16 && depth >= 0 && depth < 16);
+
+            var env = new Envelope();
+
+            if (speed == 0 || depth == 0)
+            {
+                env.Length = 0;
+                env.Values[0] = 0;
+            }
+            else
+            {
+                env.Length = (int)Math.Round(64.0f / speed);
+                env.Loop = 0;
+
+                // Since we use a regular envelope, we can't go as deep as FamiTracker.
+                depth = Math.Min(depth, 13); // VibratoDepthLookup[13] = 0x7f, which is the maximum value for a signed byte.
+
+                for (int i = 0; i < env.Length; i++)
+                    env.Values[i] = (sbyte)(Math.Sin(i * 2.0f * Math.PI / env.Length) * VibratoDepthLookup[depth]);
+            }
+
             return env;
         }
 
