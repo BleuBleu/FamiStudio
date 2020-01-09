@@ -988,17 +988,18 @@ FamiToneUpdate:
 ;internal routine, sets up envelopes of a channel according to current instrument
 ;in X envelope group offset, A instrument number
 
-_FT2SetInstrument:
+.proc _FT2SetInstrument
+
     asl a                      ;instrument number is pre multiplied by 4
     tay
     lda FT_INSTRUMENT_H
     adc #0                     ;use carry to extend range for 64 instruments
-    sta <FT_TEMP_PTR_H
+    sta<FT_TEMP_PTR_H
     lda FT_INSTRUMENT_L
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
 
     lda (FT_TEMP_PTR1),y       ;duty cycle
-    sta <FT_TEMP_VAR1
+    sta FT_TEMP_VAR1
     iny
 
     lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
@@ -1022,13 +1023,11 @@ _FT2SetInstrument:
     sta FT_ENV_REPEAT,x        ;reset env2 repeat counter
     sta FT_ENV_PTR,x           ;reset env2 pointer
 
-    cpx #FT_CH4_ENVS           ;noise channel has only two envelopes
-    bcs @no_pitch
-
     txa
     lsr ; the channel number is basically envelope index / 2 now...
     tax
     lda _FT2ChannelToPitch, x
+    bmi @no_pitch
     tax
     iny
     lda #1
@@ -1044,9 +1043,10 @@ _FT2SetInstrument:
     sta FT_PITCH_ENV_ADR_H,x
 
 @no_pitch:
-    lda <FT_TEMP_VAR1
+    lda FT_TEMP_VAR1
     rts
 
+.endproc
 
 ;internal routine, parses channel note data
 
