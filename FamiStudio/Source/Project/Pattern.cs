@@ -15,11 +15,10 @@ namespace FamiStudio
         private Color color;
         private Note[] notes = new Note[MaxLength];
 
-        private int  firstValidNoteTime  = -1;
-        private int  lastValidNoteTime  = -1;
-        private byte lastVolumeValue = Note.VolumeInvalid;
-        private byte lastVibratoValue = Note.VibratoInvalid;
-        private bool lastValidNoteReleased = false;
+        private int    firstValidNoteTime    = -1;
+        private int    lastValidNoteTime     = -1;
+        private byte[] lastEffectValues      = new byte[Note.EffectCount];
+        private bool   lastValidNoteReleased = false;
 
         public int Id => id;
         public int ChannelType => channelType;
@@ -40,6 +39,8 @@ namespace FamiStudio
             this.color = ThemeBase.RandomCustomColor();
             for (int i = 0; i < notes.Length; i++)
                 notes[i] = new Note(Note.NoteInvalid);
+            for (int i = 0; i < Note.EffectCount; i++)
+                lastEffectValues[i] = 0xff;
         }
 
         public Note[] Notes
@@ -118,12 +119,13 @@ namespace FamiStudio
         {
             get
             {
-                for (int i = 0; i < song.PatternLength; i++)
+                for (int n = 0; n < song.PatternLength; n++)
                 {
-                    var n = notes[i];
-                    if (n.Effect != Note.EffectNone)
-                    {
-                        return true;
+                    var note = notes[n];
+                    for (int i = 0; i < Note.EffectCount; i++)
+                    { 
+                        if (note.HasValidEffectValue(i))
+                            return true;
                     }
                 }
 
@@ -133,14 +135,14 @@ namespace FamiStudio
 
         public void UpdateLastValidNote()
         {
-            lastVolumeValue = Note.VolumeInvalid;
-            lastVibratoValue = Note.VibratoInvalid;
+            for (int i = 0; i < Note.EffectCount; i++)
+                lastEffectValues[i] = 0xff;
             lastValidNoteTime = -1;
             lastValidNoteReleased = false;
             
-            for (int i = song.PatternLength - 1; i >= 0; i--)
+            for (int n = song.PatternLength - 1; n >= 0; n--)
             {
-                var note = notes[i];
+                var note = notes[n];
 
                 if (lastValidNoteTime < 0)
                 {
@@ -156,7 +158,7 @@ namespace FamiStudio
                         }
                         if (note.IsValid)
                         {
-                            lastValidNoteTime = (byte)i;
+                            lastValidNoteTime = (byte)n;
                         }
                     }
                 }
@@ -166,14 +168,10 @@ namespace FamiStudio
                     lastValidNoteReleased = false;
                 }
 
-                if (note.HasVolume && lastVolumeValue == Note.VolumeInvalid)
+                for (int i = 0; i < Note.EffectCount; i++)
                 {
-                    lastVolumeValue = note.Volume;
-                }
-
-                if (note.HasVibrato && lastVibratoValue == Note.VibratoInvalid)
-                {
-                    lastVibratoValue = note.Vibrato;
+                    if (note.HasValidEffectValue(i) && lastEffectValues[i] == 0xff)
+                        lastEffectValues[i] = (byte)note.GetEffectValue(i);
                 }
             }
 
@@ -224,14 +222,9 @@ namespace FamiStudio
             get { return lastValidNoteReleased; }
         }
 
-        public byte LastVolumeValue
+        public byte GetLastEffectValue(int effect)
         {
-            get { return lastVolumeValue; }
-        }
-
-        public byte LastVibratoValue
-        {
-            get { return lastVibratoValue; }
+            return lastEffectValues[effect];
         }
 
 #if DEBUG
@@ -276,9 +269,9 @@ namespace FamiStudio
             {
                 buffer.Serialize(ref firstValidNoteTime);
                 buffer.Serialize(ref lastValidNoteTime);
-                buffer.Serialize(ref lastVolumeValue);
-                buffer.Serialize(ref lastVibratoValue);
                 buffer.Serialize(ref lastValidNoteReleased);
+                for (int i = 0; i < Note.EffectCount; i++)
+                    buffer.Serialize(ref lastEffectValues[i]);
             }
             else if (buffer.IsReading)
             {

@@ -253,8 +253,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\VibratoSmall%402x.png" />
     <EmbeddedResource Include="Resources\VibratoSmall.png" />
-    <EmbeddedResource Include="Resources\VibratoSmallFill%402x.png" />
-    <EmbeddedResource Include="Resources\VibratoSmallFill.png" />
     <EmbeddedResource Include="Resources\NoAttack%4015x.png" />
     <EmbeddedResource Include="Resources\NoAttack%402x.png" />
     <EmbeddedResource Include="Resources\NoAttack.png" />
@@ -305,9 +303,7 @@
     <EmbeddedResource Include="Resources\ConfigUserInterface%402x.png" />
     <EmbeddedResource Include="Resources\ConfigUserInterface.png" />
     <EmbeddedResource Include="Resources\Noise%4015x.png" />
-    <EmbeddedResource Include="Resources\JumpSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
-    <EmbeddedResource Include="Resources\SpeedSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\LoopSmall%402x.png" />
     <EmbeddedResource Include="Resources\Music%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill%402x.png" />
@@ -384,9 +380,7 @@
     </Content>
     <EmbeddedResource Include="Resources\JumpSmall.png" />
     <EmbeddedResource Include="Resources\SpeedSmall.png" />
-    <EmbeddedResource Include="Resources\JumpSmallFill.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
-    <EmbeddedResource Include="Resources\SpeedSmallFill.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />
   </ItemGroup>
   <ItemGroup>

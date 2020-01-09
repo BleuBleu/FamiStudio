@@ -305,13 +305,13 @@ namespace FamiStudio
                             switch (fx[0])
                             {
                                 case 'B': // Jump
-                                    pattern.Notes[rowIdx].Effect = Note.EffectJump;
+                                    pattern.Notes[rowIdx].Jump = param;
                                     break;
                                 case 'D': // Skip
-                                    pattern.Notes[rowIdx].Effect = Note.EffectSkip;
+                                    pattern.Notes[rowIdx].Skip = param;
                                     break;
                                 case 'F': // Tempo
-                                    pattern.Notes[rowIdx].Effect = Note.EffectSpeed;
+                                    pattern.Notes[rowIdx].Speed = param;
                                     break;
                                 case '4': // Vibrato
                                     pattern.Notes[rowIdx].VibratoDepth = (byte)(param & 0x0f);
@@ -323,11 +323,7 @@ namespace FamiStudio
                                         pattern.Notes[rowIdx].Vibrato = 0;
                                     }
                                     break;
-                                default:
-                                    continue;
                             }
-
-                            pattern.Notes[rowIdx].EffectParam = param;
                         }
                     }
                 }
@@ -985,17 +981,14 @@ namespace FamiStudio
                                 prevSlideEffect = '\0';
                             }
 
-                            switch (note.Effect)
-                            {
-                                case Note.EffectJump:  effectString += $" B{note.EffectParam:X2}"; break;
-                                case Note.EffectSkip:  effectString += $" D{note.EffectParam:X2}"; break;
-                                case Note.EffectSpeed: effectString += $" F{note.EffectParam:X2}"; break;
-                            }
-
+                            if (note.HasJump)
+                                effectString += $" B{note.Jump:X2}";
+                            if (note.HasSkip)
+                                effectString += $" D{note.Skip:X2}";
+                            if (note.HasSpeed)
+                                effectString += $" F{note.Speed:X2}";
                             if (note.HasVibrato)
-                            {
                                 effectString += $" 4{VibratoSpeedExportLookup[note.VibratoSpeed]:X1}{note.VibratoDepth:X1}";
-                            }
 
                             while (effectString.Length < 12)
                                 effectString += " ...";

@@ -32,11 +32,6 @@ namespace FamiStudio
         const int MaxZoomLevel = 4;
         const int ScrollMargin = 128;
 
-        const int SpecialEffectVolume = -3;
-        const int SpecialEffectVibratoSpeed = -2;
-        const int SpecialEffectVibratoDepth = -1;
-        const int SpecialEffectCount = 3;
-
         const int DefaultNumOctavesChannel = 8;
         const int DefaultBaseOctaveChannel = 0;
         const int DefaultNumOctavesEnvelope = 7;
@@ -137,9 +132,7 @@ namespace FamiStudio
         RenderBitmap bmpSlide;
         RenderBitmap bmpSlideSmall;
         RenderBitmap bmpNoAttack;
-        RenderBitmap bmpVibratoFilled;
         RenderBitmap[] bmpEffects = new RenderBitmap[6];
-        RenderBitmap[] bmpEffectsFilled = new RenderBitmap[3];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] releaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
@@ -192,7 +185,7 @@ namespace FamiStudio
         int scrollX = 0;
         int scrollY = 0;
         int zoomLevel = 0;
-        int selectedEffectIdx = SpecialEffectVolume;
+        int selectedEffectIdx = 0;
         string noteTooltip = "";
 
         EditionMode editMode = EditionMode.None;
@@ -407,10 +400,6 @@ namespace FamiStudio
             bmpEffects[3] = g.CreateBitmapFromResource("LoopSmall");
             bmpEffects[4] = g.CreateBitmapFromResource("JumpSmall");
             bmpEffects[5] = g.CreateBitmapFromResource("SpeedSmall");
-            bmpEffectsFilled[0] = g.CreateBitmapFromResource("LoopSmallFill");
-            bmpEffectsFilled[1] = g.CreateBitmapFromResource("JumpSmallFill");
-            bmpEffectsFilled[2] = g.CreateBitmapFromResource("SpeedSmallFill");
-            bmpVibratoFilled = g.CreateBitmapFromResource("VibratoSmallFill");
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
             bmpSlide = g.CreateBitmapFromResource("Slide");
@@ -556,16 +545,19 @@ namespace FamiStudio
                         if (pattern != null)
                         {
                             int patternX = p * patternSizeX - scrollX;
-                            for (int i = 0; i < Song.PatternLength; i++)
+                            for (int n = 0; n < Song.PatternLength; n++)
                             {
-                                var note = pattern.Notes[i];
-                                if (note.HasVibrato)
+                                var note = pattern.Notes[n];
+                                for (int i = Note.EffectCount - 1; i >= 0; i--)
                                 {
-                                    g.DrawBitmap(bmpVibratoFilled, patternX + i * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2, effectIconPosY);
-                                }
-                                if (note.HasEffect)
-                                {
-                                    g.DrawBitmap(bmpEffectsFilled[note.Effect - 1], patternX + i * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2, effectIconPosY);
+                                    if (note.HasValidEffectValue(i))
+                                    {
+                                        int iconX = patternX + n * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2;
+                                        int iconY = effectIconPosY;
+                                        g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.LightGreyFillBrush2);
+                                        g.DrawBitmap(bmpEffects[i], iconX, iconY);
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -666,20 +658,18 @@ namespace FamiStudio
 
                     int effectButtonY = 0;
 
-                    for (int i = -SpecialEffectCount; i < 3; i++)
+                    for (int i = 0; i < Note.EffectCount; i++, effectButtonY += effectButtonSizeY)
                     {
                         g.PushTranslation(0, effectButtonY);
                         g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
-                        g.DrawBitmap(bmpEffects[i + SpecialEffectCount], effectIconPosX, effectIconPosY);
-                        g.DrawText(EffectNames[i + SpecialEffectCount], selectedEffectIdx == i ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
+                        g.DrawBitmap(bmpEffects[i], effectIconPosX, effectIconPosY);
+                        g.DrawText(EffectNames[i], selectedEffectIdx == i ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
                         g.PopTransform();
-                        effectButtonY += effectButtonSizeY;
                     }
 
                     g.PushTranslation(0, effectButtonY);
                     g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
                     g.PopTransform();
-
                     g.PopTransform();
                 }
             }
@@ -742,29 +732,6 @@ namespace FamiStudio
             g.PopTransform();
         }
 
-        private int GetSelectedEffectValue(Note note, out int minValue, out int maxValue)
-        {
-            switch (selectedEffectIdx)
-            {
-                case SpecialEffectVolume:
-                    minValue = 0;
-                    maxValue = Note.VolumeMax;
-                    return note.Volume;
-                case SpecialEffectVibratoSpeed:
-                    minValue = 0;
-                    maxValue = Note.VibratoSpeedMax;
-                    return note.VibratoSpeed;
-                case SpecialEffectVibratoDepth:
-                    minValue = 0;
-                    maxValue = Note.VibratoDepthMax;
-                    return note.VibratoDepth;
-                default:
-                    minValue = 0;
-                    maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
-                    return note.EffectParam;
-            }
-        }
-
         private void RenderEffectPanel(RenderGraphics g, RenderArea a)
         {
             if (editMode == EditionMode.Channel && showEffectsPanel)
@@ -775,32 +742,12 @@ namespace FamiStudio
 
                 var channel = Song.Channels[editChannel];
 
-                // Draw the effects.
-                if (selectedEffectIdx < 0)
+                // Draw the effects current value rectangles. Not all effects need this.
+                if (Note.EffectWantsPreviousValue(selectedEffectIdx))
                 {
-                    var lastSpecialEffectFrame = -1;
-                    var lastSpecialEffectValue = 0;
-                    var specialEffectMaxValue = 1;
-
-                    if (selectedEffectIdx == SpecialEffectVolume)
-                    {
-                        lastSpecialEffectValue = channel.GetLastValidVolume(a.minVisiblePattern - 1);
-                        specialEffectMaxValue = Note.VolumeMax;
-                    }
-                    else
-                    {
-                        lastSpecialEffectValue = channel.GetLastValidVibrato(a.minVisiblePattern - 1);
-                        if (selectedEffectIdx == SpecialEffectVibratoSpeed)
-                        {
-                            lastSpecialEffectValue >>= 4;
-                            specialEffectMaxValue = Note.VibratoSpeedMax;
-                        }
-                        else
-                        {
-                            lastSpecialEffectValue &= 0x0f;
-                            specialEffectMaxValue = Note.VibratoDepthMax;
-                        }
-                    }
+                    var lastFrame = -1;
+                    var lastValue = channel.GetLastValidEffectValue(a.minVisiblePattern - 1, selectedEffectIdx);
+                    var maxValue  = Note.GetEffectMaxValue(Song, selectedEffectIdx);
 
                     for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                     {
@@ -813,17 +760,15 @@ namespace FamiStudio
                             {
                                 var note = pattern.Notes[Math.Min(i, Song.PatternLength - 1)];
 
-                                if (note.HasVolume  && selectedEffectIdx == SpecialEffectVolume ||
-                                    note.HasVibrato && selectedEffectIdx == SpecialEffectVibratoSpeed ||
-                                    note.HasVibrato && selectedEffectIdx == SpecialEffectVibratoDepth)
+                                if (note.HasValidEffectValue(selectedEffectIdx))
                                 {
                                     g.PushTranslation(x + i * noteSizeX - scrollX, 0);
 
                                     var frame = p * Song.PatternLength + i;
-                                    var sizeY = (float)Math.Floor(lastSpecialEffectValue / (float)specialEffectMaxValue * effectPanelSizeY);
-                                    g.FillRectangle(lastSpecialEffectFrame < 0 ? -noteSizeX * 100000 : (frame - lastSpecialEffectFrame - 1) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
-                                    lastSpecialEffectValue = selectedEffectIdx == SpecialEffectVolume ? note.Volume : (selectedEffectIdx == SpecialEffectVibratoSpeed ? note.VibratoSpeed : note.VibratoDepth);
-                                    lastSpecialEffectFrame = frame;
+                                    var sizeY = (float)Math.Floor(lastValue / (float)maxValue * effectPanelSizeY);
+                                    g.FillRectangle(lastFrame < 0 ? -noteSizeX * 100000 : (frame - lastFrame - 1) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
+                                    lastValue = (byte)note.GetEffectValue(selectedEffectIdx);
+                                    lastFrame = frame;
 
                                     g.PopTransform();
                                 }
@@ -831,8 +776,8 @@ namespace FamiStudio
                         }
                     }
 
-                    g.PushTranslation(Math.Max(0, lastSpecialEffectFrame * noteSizeX - scrollX), 0);
-                    var lastSizeY = (float)Math.Floor(lastSpecialEffectValue / (float)specialEffectMaxValue * effectPanelSizeY);
+                    g.PushTranslation(Math.Max(0, lastFrame * noteSizeX - scrollX), 0);
+                    var lastSizeY = (float)Math.Floor(lastValue / (float)maxValue * effectPanelSizeY);
                     g.FillRectangle(0, effectPanelSizeY - lastSizeY, Width, effectPanelSizeY, theme.DarkGreyFillBrush2);
                     g.PopTransform();
                 }
@@ -850,17 +795,16 @@ namespace FamiStudio
                         {
                             var note = pattern.Notes[Math.Min(i, Song.PatternLength - 1)];
 
-                            if ((note.HasEffect  && selectedEffectIdx >= 0) ||
-                                (note.HasVolume  && selectedEffectIdx == SpecialEffectVolume) ||
-                                (note.HasVibrato && selectedEffectIdx == SpecialEffectVibratoSpeed) ||
-                                (note.HasVibrato && selectedEffectIdx == SpecialEffectVibratoDepth))
+                            if (note.HasValidEffectValue(selectedEffectIdx))
                             {
-                                var effectValue = GetSelectedEffectValue(note, out int effectMinValue, out int effectMaxValue);
+                                var effectValue = note.GetEffectValue(selectedEffectIdx);
+                                var effectMinValue = Note.GetEffectMinValue(Song, selectedEffectIdx);
+                                var effectMaxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
                                 var sizeY = (float)Math.Floor((effectValue - effectMinValue) / (float)(effectMaxValue - effectMinValue) * effectPanelSizeY);
 
                                 g.PushTranslation(x + i * noteSizeX - scrollX, 0);
 
-                                if (selectedEffectIdx >= 0)
+                                if (!Note.EffectWantsPreviousValue(selectedEffectIdx))
                                     g.FillRectangle(0, 0, noteSizeX, effectPanelSizeY, theme.DarkGreyFillBrush2);
 
                                 g.FillRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, theme.LightGreyFillBrush1);
@@ -947,8 +891,9 @@ namespace FamiStudio
                 }
                 if (pasteFx)
                 {
-                    note.Effect = newNote.Effect;
-                    note.EffectParam = newNote.EffectParam;
+                    note.Jump = newNote.Jump;
+                    note.Skip = newNote.Skip;
+                    note.Speed = newNote.Speed;
                     note.Vibrato = newNote.Vibrato;
                 }
 
@@ -1466,37 +1411,18 @@ namespace FamiStudio
 
         void ChangeEffectValue(MouseEventArgs e)
         {
-            var ratio = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[effectPatternIdx];
 
-            if (selectedEffectIdx == SpecialEffectVolume)
+            if (channel.SupportsEffect(selectedEffectIdx))
             {
-                pattern.Notes[effectNoteIdx].Volume = (byte)Math.Round(ratio * Note.VolumeMax);
+                var ratio    = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
+                var minValue = Note.GetEffectMinValue(Song, selectedEffectIdx);
+                var maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
+                var newValue = (byte)Math.Round(ratio * (maxValue - minValue) + minValue);
+
+                pattern.Notes[effectNoteIdx].SetEffectValue(selectedEffectIdx, newValue);
                 pattern.UpdateLastValidNote();
-            }
-            else if (selectedEffectIdx == SpecialEffectVibratoSpeed)
-            {
-                if (channel.SupportsVibrato)
-                {
-                    pattern.Notes[effectNoteIdx].VibratoSpeed = (byte)Math.Round(ratio * Note.VibratoSpeedMax);
-                    pattern.UpdateLastValidNote();
-                }
-            }
-            else if (selectedEffectIdx == SpecialEffectVibratoDepth)
-            {
-                if (channel.SupportsVibrato)
-                {
-                    pattern.Notes[effectNoteIdx].VibratoDepth = (byte)Math.Round(ratio * Note.VibratoDepthMax);
-                    pattern.UpdateLastValidNote(); 
-                }
-            }
-            else
-            {
-                if (pattern.Notes[effectNoteIdx].Effect == Note.EffectNone)
-                    pattern.Notes[effectNoteIdx].Effect = (byte)(selectedEffectIdx + SpecialEffectCount);
-                byte val = (byte)Math.Round(ratio * Note.GetEffectMaxValue(Song, pattern.Notes[effectNoteIdx].Effect));
-                pattern.Notes[effectNoteIdx].EffectParam = val;
             }
 
             ConditionalInvalidate();
@@ -1854,8 +1780,8 @@ namespace FamiStudio
             }
             else if (left && IsMouseInEffectList(e))
             {
-                int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY - SpecialEffectCount;
-                if (effectIdx >= -SpecialEffectCount && effectIdx < 3)
+                int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY;
+                if (effectIdx < Note.EffectCount)
                 {
                     selectedEffectIdx = effectIdx;
                     ConditionalInvalidate();
@@ -2006,12 +1932,7 @@ namespace FamiStudio
             {
                 var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                if (selectedEffectIdx == SpecialEffectVolume)
-                    pattern.Notes[noteIdx].HasVolume = false;
-                else if (selectedEffectIdx == SpecialEffectVibratoDepth || selectedEffectIdx == SpecialEffectVibratoSpeed)
-                    pattern.Notes[noteIdx].HasVibrato = false;
-                else
-                    pattern.Notes[noteIdx].HasEffect = false;
+                pattern.Notes[noteIdx].ClearEffectValue(selectedEffectIdx);
                 pattern.UpdateLastValidNote();
                 PatternChanged?.Invoke(pattern);
                 App.UndoRedoManager.EndTransaction();

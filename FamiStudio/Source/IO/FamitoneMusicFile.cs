@@ -384,9 +384,9 @@ namespace FamiStudio
             foreach (var channel in song.Channels)
             {
                 var pattern = channel.PatternInstances[patternIdx];
-                if (pattern != null && pattern.Notes[noteIdx].Effect == effect)
+                if (pattern != null && pattern.Notes[noteIdx].HasValidEffectValue(effect))
                 {
-                    return pattern.Notes[noteIdx].EffectParam;
+                    return pattern.Notes[noteIdx].GetEffectValue(effect);
                 }
             }
 

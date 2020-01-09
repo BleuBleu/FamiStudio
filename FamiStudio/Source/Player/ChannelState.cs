@@ -36,25 +36,21 @@ namespace FamiStudio
 
             var tmpNote = pattern.Notes[noteIdx];
 
-            switch (tmpNote.Effect)
+            if (tmpNote.HasJump && !NesApu.NesApuIsSeeking(apuIdx) && allowJump)
             {
-                case Note.EffectJump:
-                    if (!NesApu.NesApuIsSeeking(apuIdx) && allowJump)
-                    {
-                        patternIdx = tmpNote.EffectParam;
-                        noteIdx = 0;
-                    }
-                    break;
-                case Note.EffectSkip:
-                    if (!NesApu.NesApuIsSeeking(apuIdx))
-                    {
-                        patternIdx++;
-                        noteIdx = tmpNote.EffectParam;
-                    }
-                    break;
-                case Note.EffectSpeed:
-                    speed = tmpNote.EffectParam;
-                    break;
+                patternIdx = tmpNote.Jump;
+                noteIdx = 0;
+            }
+
+            if (tmpNote.HasSkip && !NesApu.NesApuIsSeeking(apuIdx))
+            {
+                patternIdx++;
+                noteIdx = tmpNote.Skip;
+            }
+
+            if (tmpNote.HasSpeed)
+            {
+                speed = tmpNote.Speed;
             }
 
             if (tmpNote.HasVibrato)
@@ -218,6 +214,8 @@ namespace FamiStudio
         public void ClearNote()
         {
             note.Instrument = null;
+            for (int i = 0; i < Envelope.Max; i++)
+                envelopes[i] = null;
         }
 
         protected int MultiplyVolumes(int v0, int v1)

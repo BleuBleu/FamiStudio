@@ -83,6 +83,18 @@ namespace FamiStudio
         public bool SupportsSlideNotes => type != Noise && type != DPCM;
         public bool SupportsVibrato => type != Noise && type != DPCM;
 
+        public bool SupportsEffect(int effect)
+        {
+            switch (effect)
+            {
+                case Note.EffectVolume:       return type != DPCM;
+                case Note.EffectVibratoSpeed: return SupportsVibrato;
+                case Note.EffectVibratoDepth: return SupportsVibrato;
+            }
+
+            return true;
+        }
+
         public void Split(int factor)
         {
             if ((song.PatternLength % factor) == 0)
@@ -231,40 +243,22 @@ namespace FamiStudio
             patterns.AddRange(usedPatterns);
         }
 
-        public byte GetLastValidVolume(int startPatternIdx)
+        public byte GetLastValidEffectValue(int startPatternIdx, int effect)
         {
-            var lastVolume = (byte)Note.VolumeInvalid;
+            var lastValue = (byte)0xff;
 
             for (int p = startPatternIdx; p >= 0; p--)
             {
                 var pattern = patternInstances[p];
                 if (pattern != null)
                 {
-                    lastVolume = pattern.LastVolumeValue;
-                    if (lastVolume != Note.VolumeInvalid)
-                        return lastVolume;
+                    lastValue = pattern.GetLastEffectValue(effect);
+                    if (lastValue != 0xff)
+                        return lastValue;
                 }
             }
 
-            return Note.VolumeMax;
-        }
-
-        public byte GetLastValidVibrato(int startPatternIdx)
-        {
-            var lastVibrato = (byte)Note.VibratoInvalid;
-
-            for (int p = startPatternIdx; p >= 0; p--)
-            {
-                var pattern = patternInstances[p];
-                if (pattern != null)
-                {
-                    lastVibrato = pattern.LastVibratoValue;
-                    if (lastVibrato != Note.VibratoInvalid)
-                        return lastVibrato;
-                }
-            }
-
-            return 0;
+            return (byte)Note.GetEffectDefaultValue(song, effect);
         }
 
         public bool GetLastValidNote(ref int patternIdx, out int noteIdx, out bool released)
