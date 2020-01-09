@@ -5,6 +5,7 @@ Polish:
 - When pasting envelope values, the project explorer env icon doesnt update
 - Work VRC6 -> new file -> gray box over piano roll.
 - Slide icons mid line is too thick.
+- Make no attack icon for release notes.
 
 New attack + simple slide note:
 x Remove portamento code.
