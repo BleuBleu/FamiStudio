@@ -174,7 +174,7 @@ namespace FamiStudio
                 for (int i = 0; i < Note.EffectCount; i++)
                 {
                     var mask = 1 << i;
-                    if (note.HasValidEffectValue(i) && (lastEffectValuesMask & i) == 0)
+                    if (note.HasValidEffectValue(i) && (lastEffectValuesMask & mask) == 0)
                     {
                         lastEffectValuesMask |= mask;
                         lastEffectValues[i] = (byte)note.GetEffectValue(i);
