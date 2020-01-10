@@ -86,7 +86,7 @@ namespace FamiStudio
                 for (int i = 0; i < song.PatternLength; i++)
                 {
                     var n = notes[i];
-                    if (n.IsValid && !n.IsStop)
+                    if (n.IsMusical)
                     {
                         if (n.Value < min.Value) min = n;
                         if (n.Value > max.Value) max = n;

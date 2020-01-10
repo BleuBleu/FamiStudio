@@ -440,7 +440,7 @@ namespace FamiStudio
                 {
                     var n = p.Notes[i];
 
-                    if (n.IsValid && !n.IsStop)
+                    if (n.IsMusical)
                         lastValid = p.Notes[i];
 
                     if (lastValid.IsValid)
@@ -458,14 +458,6 @@ namespace FamiStudio
                             data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = (uint)color.ToArgb();
                         }
                     }
-
-                    //if (n.HasEffect)
-                    //{
-                    //    for (int y = 0; y < patternSizeY; y++)
-                    //    {
-                    //        data[y * patternSizeX + i] = 0xff000000;
-                    //    }
-                    //}
                 }
             }
 
