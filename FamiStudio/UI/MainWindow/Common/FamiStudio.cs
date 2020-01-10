@@ -529,14 +529,7 @@ namespace FamiStudio
                 else
                 {
                     if (ctrl)
-                    {
-                        LoopMode = LoopMode.Pattern;
                         Seek(songPlayer.CurrentFrame / song.PatternLength * song.PatternLength);
-                    }
-                    else if (shift)
-                    {
-                        LoopMode = LoopMode.Song;
-                    }
 
                     Play();
                 }

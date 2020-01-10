@@ -329,7 +329,7 @@ namespace FamiStudio
         {
             buffer.Serialize(ref Value);
 
-            // At version 4(FamiStudio 1.4.0), we refactored the notes, added slide notes and no-attack notes (flags).
+            // At version 4(FamiStudio 1.4.0), we refactored the notes, added slide notes, vibrato and no-attack notes (flags).
             if (buffer.Version >= 4)
             {
                 buffer.Serialize(ref Jump);

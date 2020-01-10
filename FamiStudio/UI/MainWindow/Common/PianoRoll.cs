@@ -1065,7 +1065,7 @@ namespace FamiStudio
             int sx = noteLen * noteSizeX;
             g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
 
-            if ((n0.HasAttack && !released) || selected)
+            if (n0.HasAttack || selected)
             {
                 g.DrawRectangle(0, 0, sx, sy, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
             }

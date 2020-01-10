@@ -127,7 +127,7 @@ namespace FamiStudio
 
             buttons[ButtonNew].ToolTip    = "{MouseLeft} New Project {Ctrl} {N}";
             buttons[ButtonOpen].ToolTip   = "{MouseLeft} Open Project {Ctrl} {O}";
-            buttons[ButtonSave].ToolTip   = "{MouseLeft} Save Project {Ctrl} {S}  - {MouseRight} Save As...";
+            buttons[ButtonSave].ToolTip   = "{MouseLeft} Save Project {Ctrl} {S} - {MouseRight} Save As...";
             buttons[ButtonExport].ToolTip = "{MouseLeft} Export to various formats {Ctrl} {E}";
             buttons[ButtonCopy].ToolTip   = "{MouseLeft} Copy selection {Ctrl} {C}";
             buttons[ButtonCut].ToolTip    = "{MouseLeft} Cut selection {Ctrl} {X}";
@@ -135,7 +135,7 @@ namespace FamiStudio
             buttons[ButtonUndo].ToolTip   = "{MouseLeft} Undo {Ctrl} {Z}";
             buttons[ButtonRedo].ToolTip   = "{MouseLeft} Redo {Ctrl} {Y}";
             buttons[ButtonConfig].ToolTip = "{MouseLeft} Edit Application Settings";
-            buttons[ButtonPlay].ToolTip   = "{MouseLeft} Play/Pause {Space}\nPlay pattern loop {Ctrl} {Space}  - Play song loop {Shift} {Space}";
+            buttons[ButtonPlay].ToolTip   = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}";
             buttons[ButtonRewind].ToolTip = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonLoop].ToolTip   = "{MouseLeft} Toggle Loop Mode";
 

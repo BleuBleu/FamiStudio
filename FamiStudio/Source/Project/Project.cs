@@ -6,10 +6,10 @@ namespace FamiStudio
 {
     public class Project
     {
-        // Version 1 = 1.0.0
-        // Version 2 = 1.1.0 (Project properties)
-        // Version 3 = 1.2.0 (Volume tracks, extended notes, release envelopes)
-        // Version 4 = 1.4.0 (VRC6, slide notes)
+        // Version 1 = FamiStudio 1.0.0
+        // Version 2 = FamiStudio 1.1.0 (Project properties)
+        // Version 3 = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
+        // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack ntoes)
         public static int Version = 4;
         public static int MaxSampleSize = 0x4000;
 

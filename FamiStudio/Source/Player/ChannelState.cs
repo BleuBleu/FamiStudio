@@ -110,7 +110,7 @@ namespace FamiStudio
                 {
                     for (int j = 0; j < Envelope.Max; j++)
                     {
-                        if (envelopes[j].Release >= 0)
+                        if (envelopes[j] != null && envelopes[j].Release >= 0)
                             envelopeIdx[j] = envelopes[j].Release;
                     }
                 }
