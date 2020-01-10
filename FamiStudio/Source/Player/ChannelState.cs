@@ -220,7 +220,9 @@ namespace FamiStudio
 
         protected int MultiplyVolumes(int v0, int v1)
         {
-            return (int)Math.Ceiling((v0 / 15.0f) * (v1 / 15.0f) * 15.0f);
+            var vol = (int)Math.Round((v0 / 15.0f) * (v1 / 15.0f) * 15.0f);
+            if (vol == 0 && v0 != 0 && v1 != 0) return 1;
+            return vol;
         }
 
         public abstract void UpdateAPU();
