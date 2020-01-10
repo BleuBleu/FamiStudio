@@ -576,7 +576,7 @@ namespace FamiStudio
                                 else if(!note.HasAttack && kernel == FamiToneKernel.FamiTone2FS)
                                 {
                                     // TODO: Remove note entirely after a slide that matches the next note with no attack.
-                                    patternBuffer.Add($"${0x62}:x2");
+                                    patternBuffer.Add($"${0x62:x2}");
                                 }
                             }
 
