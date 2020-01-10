@@ -193,7 +193,7 @@ namespace FamiStudio
                         if (instrument.ExpansionType == Project.ExpansionVRC6)
                             return projectExplorer.bmpDuty[instrument.DutyCycle];
                         else
-                            return projectExplorer.bmpDuty[instrument.DutyCycle * 2 + 1];
+                            return projectExplorer.bmpDuty[instrument.DutyCycle * 2];
                     case SubButtonType.Arpeggio:
                         return projectExplorer.bmpArpeggio;
                     case SubButtonType.Pitch:

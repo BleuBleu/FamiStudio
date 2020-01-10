@@ -1074,12 +1074,13 @@ namespace FamiStudio
                 iconX += noteAttackSizeX + slideIconPosX;
             }
 
-            if (n0.IsSlideNote)
-            {
-                var bmp = released ? bmpSlideSmall : bmpSlide;
-                if (sx > bmp.Size.Width + iconX + slideIconPosX)
-                    g.DrawBitmap(bmp, iconX, slideIconPosY, 0.5f);
-            }
+            // Not showing, redundant.
+            //if (n0.IsSlideNote)
+            //{
+            //    var bmp = released ? bmpSlideSmall : bmpSlide;
+            //    if (sx > bmp.Size.Width + iconX + slideIconPosX)
+            //        g.DrawBitmap(bmp, iconX, slideIconPosY, 0.5f);
+            //}
 
             g.PopTransform();
         }
