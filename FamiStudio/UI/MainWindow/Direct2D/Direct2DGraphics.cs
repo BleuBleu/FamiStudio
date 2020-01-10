@@ -207,7 +207,7 @@ namespace FamiStudio
             DrawRectangle(new RawRectangleF(x0, y0, x1, y1), brush, width);
         }
 
-        public PathGeometry CreateConvexPath(System.Drawing.Point[] points)
+        public PathGeometry CreateConvexPath(System.Drawing.Point[] points, bool closed = true)
         {
             var geo = new PathGeometry(factory);
             var sink = geo.Open();
@@ -216,9 +216,10 @@ namespace FamiStudio
             sink.BeginFigure(new RawVector2(points[0].X, points[0].Y), FigureBegin.Filled);
             for (int i = 1; i < points.Length; i++)
                 sink.AddLine(new RawVector2(points[i].X, points[i].Y));
-            sink.AddLine(new RawVector2(points[0].X, points[0].Y));
+            if (closed)
+                sink.AddLine(new RawVector2(points[0].X, points[0].Y));
 
-            sink.EndFigure(FigureEnd.Closed);
+            sink.EndFigure(closed ? FigureEnd.Closed : FigureEnd.Open);
             sink.Close();
             sink.Dispose();
 

@@ -56,7 +56,7 @@ namespace FamiStudio
             Sequencer.PatternModified += Sequencer_PatternModified;
             Sequencer.PatternsPasted += PianoRoll_NotesPasted;
             PianoRoll.PatternChanged += pianoRoll_PatternChanged;
-            PianoRoll.EnvelopeResized += pianoRoll_EnvelopeResized;
+            PianoRoll.EnvelopeChanged += pianoRoll_EnvelopeChanged;
             PianoRoll.ControlActivated += PianoRoll_ControlActivated;
             PianoRoll.NotesPasted += PianoRoll_NotesPasted;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
@@ -735,7 +735,7 @@ namespace FamiStudio
             }
         }
 
-        private void pianoRoll_EnvelopeResized()
+        private void pianoRoll_EnvelopeChanged()
         {
             ProjectExplorer.Invalidate();
         }

@@ -41,7 +41,7 @@ namespace FamiStudio
         const int DefaultEffectButtonSizeY = 17;
         const int DefaultNoteSizeX = 16;
         const int DefaultNoteSizeY = 12;
-        const int DefaultNoteAttackSizeX = 2;
+        const int DefaultNoteAttackSizeX = 3;
         const int DefaultReleaseNoteSizeY = 8;
         const int DefaultEnvelopeSizeY = 8;
         const int DefaultEnvelopeMax = 127;
@@ -125,13 +125,13 @@ namespace FamiStudio
         RenderBrush selectionBgVisibleBrush;
         RenderBrush selectionBgInvisibleBrush;
         RenderBrush selectionNoteBrush;
+        RenderBrush attackBrush;
         RenderBitmap bmpLoop;
         RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
         RenderBitmap bmpEffectCollapsed;
         RenderBitmap bmpSlide;
         RenderBitmap bmpSlideSmall;
-        RenderBitmap bmpNoAttack;
         RenderBitmap[] bmpEffects = new RenderBitmap[6];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
@@ -201,7 +201,7 @@ namespace FamiStudio
         public delegate void PatternChange(Pattern pattern);
         public event PatternChange PatternChanged;
         public delegate void EnvelopeResize();
-        public event EnvelopeResize EnvelopeResized;
+        public event EnvelopeResize EnvelopeChanged;
         public delegate void ControlActivate();
         public event ControlActivate ControlActivated;
         public delegate void NotesPastedDelegate();
@@ -392,6 +392,7 @@ namespace FamiStudio
             selectionBgVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
             selectionBgInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, ThemeBase.LightGreyFillColor1));
             selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
+            attackBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.BlackColor));
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
             bmpEffects[0] = g.CreateBitmapFromResource("VolumeSmall");
@@ -404,7 +405,6 @@ namespace FamiStudio
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
             bmpSlide = g.CreateBitmapFromResource("Slide");
             bmpSlideSmall = g.CreateBitmapFromResource("SlideSmall");
-            bmpNoAttack = g.CreateBitmapFromResource("NoAttack");
 
             for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
             {
@@ -1063,23 +1063,22 @@ namespace FamiStudio
 
             int noteLen = (p1 * Song.PatternLength + i1) - (p0 * Song.PatternLength + i0);
             int sx = noteLen * noteSizeX;
-            g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
+            int iconX = slideIconPosX;
 
-            if (n0.HasAttack || selected)
+            g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
+            g.DrawRectangle(0, 0, sx, sy, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
+
+            if (n0.HasAttack && sx > noteAttackSizeX + 4)
             {
-                g.DrawRectangle(0, 0, sx, sy, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
-            }
-            else
-            {
-                g.DrawLine(new float [,] { { 0, 0 }, { sx, 0 }, { sx, sy }, { 0, sy } }, theme.BlackBrush);
-                g.DrawBitmap(bmpNoAttack, 0, 0);
+                g.FillRectangle(slideIconPosX, slideIconPosX, slideIconPosX + noteAttackSizeX, sy - slideIconPosX + 1, attackBrush);
+                iconX += noteAttackSizeX + slideIconPosX;
             }
 
             if (n0.IsSlideNote)
             {
                 var bmp = released ? bmpSlideSmall : bmpSlide;
-                if (sx > bmp.Size.Width + slideIconPosX * 2)
-                    g.DrawBitmap(bmp, slideIconPosX, slideIconPosY);
+                if (sx > bmp.Size.Width + iconX + slideIconPosX)
+                    g.DrawBitmap(bmp, iconX, slideIconPosY, 0.5f);
             }
 
             g.PopTransform();
@@ -1215,6 +1214,7 @@ namespace FamiStudio
 
                                             // To avoid redrawing slides after a release note.
                                             n0.IsSlideNote = false;
+                                            n0.HasAttack = false;
                                         }
                                     }
                                     else if (n1.IsValid)
@@ -1235,7 +1235,7 @@ namespace FamiStudio
 
                             if (n0.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote))
                             {
-                                RenderNote(g, channel, selected, color, p0, i0, n0, released, a.maxVisiblePattern + 1, 0);
+                                RenderNote(g, channel, selected, color, p0, i0, n0, released, Math.Min(Song.Length, a.maxVisiblePattern + 1), 0);
                             }
                         }
                     }
@@ -1598,6 +1598,7 @@ namespace FamiStudio
                         pattern.Notes[n] = function(pattern.Notes[n], p * Song.PatternLength + n - startFrameIdx);
                     }
 
+                    pattern.UpdateLastValidNote();
                     PatternChanged?.Invoke(pattern);
                 }
             }
@@ -1617,6 +1618,7 @@ namespace FamiStudio
             for (int i = startFrameIdx; i <= endFrameIdx; i++)
                 EditEnvelope.Values[i] = function(EditEnvelope.Values[i], i - startFrameIdx);
 
+            EnvelopeChanged?.Invoke();
             App.UndoRedoManager.EndTransaction();
             ConditionalInvalidate();
         }
@@ -2139,7 +2141,7 @@ namespace FamiStudio
                 if (editMode == EditionMode.Channel)
                     tooltip = "{MouseLeft} Seek - {MouseRight} Select - {MouseRight}{MouseRight} Select entire pattern";
                 else if (editMode == EditionMode.Enveloppe)
-                    tooltip = "{MouseRight} Select - {MouseRight} Resize envelope";
+                    tooltip = "{MouseRight} Select - {MouseLeft} Resize envelope";
             }
             else if (IsMouseInEnvelopeLoopHeader(e))
             {
@@ -2307,7 +2309,7 @@ namespace FamiStudio
                     case CaptureOperation.ResizeEnvelope:
                     case CaptureOperation.DrawEnvelope:
                         App.UndoRedoManager.EndTransaction();
-                        EnvelopeResized?.Invoke();
+                        EnvelopeChanged?.Invoke();
                         break;
                     case CaptureOperation.DragSlideNoteTarget:
                         if (!captureThresholdMet)

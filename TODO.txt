@@ -1,27 +1,13 @@
 1.4.0: VRC6
 ===========
 Polish:
-- Tooltip error envelope resize (bad mouse button)
-- When pasting envelope values, the project explorer env icon doesnt update
 - Work VRC6 -> new file -> gray box over piano roll.
-- Slide icons mid line is too thick.
-- Make no attack icon for release notes. (something is not right here... debug)
-- Last note of bass in shovel knight extends beyond the end
-- Slide note at end of song should stop there.
-- When pasting/deleting selection, I think we dont update the last pattern notes.
 
 New attack + simple slide note:
-x Remove portamento code.
-x Smaller slide icon for releases
-x Implement FT export immediately. Biggest risk.
-	- Need to do attack management now.
-- FamiTracker import.
-x ASM for no attack.
-x ASM for vibrato. 
+- Slide attack management in FT export. Test Shovel when done.
+- FamiTracker slide import.
 
 Shovel Knight:
-- Sq1:
-	- 
 - Noise: track has weird 1 beat offset. Might need to start envelope at zero + move.
 - Optimize! I feel like lots of patterns are almost identical
 - Optimize drum channel. Some snares look like same with volume.

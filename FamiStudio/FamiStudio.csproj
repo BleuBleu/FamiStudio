@@ -253,9 +253,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\VibratoSmall%402x.png" />
     <EmbeddedResource Include="Resources\VibratoSmall.png" />
-    <EmbeddedResource Include="Resources\NoAttack%4015x.png" />
-    <EmbeddedResource Include="Resources\NoAttack%402x.png" />
-    <EmbeddedResource Include="Resources\NoAttack.png" />
     <EmbeddedResource Include="Resources\Slide%4015x.png" />
     <EmbeddedResource Include="Resources\Slide%402x.png" />
     <EmbeddedResource Include="Resources\Slide.png" />

@@ -293,21 +293,14 @@ namespace FamiStudio
 
         public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
         {
-            stepSize = 0;
-            pitchDelta = 0;
-            noteDuration = -1;
-
             var note = patternInstances[patternIdx].Notes[noteIdx];
 
             Debug.Assert(note.IsMusical);
 
             // Find the next note to calculate the slope.
-            {
-                noteDuration = FindNextNoteForSlide(patternIdx, noteIdx);
-
-                if (noteDuration < 0)
-                    noteDuration = 1024 / song.Speed; // This is kind of arbitrary. 
-            }
+            noteDuration = FindNextNoteForSlide(patternIdx, noteIdx, 256); // 256 is kind of arbitrary. 
+            stepSize = 0;
+            pitchDelta = 0;
 
             if (noteTable == null)
             {
@@ -333,35 +326,31 @@ namespace FamiStudio
             }
         }
 
-        public int FindNextNoteForSlide(int patternIdx, int noteIdx)
+        public int FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes)
         {
-            var noteDuration = -1;
-            var found = false;
-            for (int n = noteIdx + 1; n < song.PatternLength; n++)
+            var noteCount = 0;
+
+            for (int n = noteIdx + 1; n < song.PatternLength && noteCount < maxNotes; n++, noteCount++)
             {
                 var tmpNote = patternInstances[patternIdx].Notes[n];
                 if (tmpNote.IsMusical || tmpNote.IsStop)
-                {
-                    noteDuration = (patternIdx * song.PatternLength + n) - (patternIdx * song.PatternLength + noteIdx);
-                    found = true;
-                    break;
-                }
+                    return (patternIdx * song.PatternLength + n) - (patternIdx * song.PatternLength + noteIdx);
             }
 
-            if (!found)
+            for (int p = patternIdx + 1; p < song.Length && noteCount < maxNotes; p++)
             {
-                for (int p = patternIdx + 1; p < song.Length; p++)
-                {
-                    var pattern = patternInstances[p];
-                    if (pattern != null && pattern.FirstValidNoteTime >= 0)
-                    {
-                        noteDuration = (p * song.PatternLength + pattern.FirstValidNoteTime) - (patternIdx * song.PatternLength + noteIdx);
-                        break;
-                    }
-                }
+                var pattern = patternInstances[p];
+                if (pattern != null && pattern.FirstValidNoteTime >= 0)
+                    return (p * song.PatternLength + pattern.FirstValidNoteTime) - (patternIdx * song.PatternLength + noteIdx);
+                else
+                    noteCount += song.PatternLength;
             }
 
-            return noteDuration;
+            // This mean we hit the end of the song.
+            if (noteCount < maxNotes)
+                return (song.Length * song.PatternLength) - (patternIdx * song.PatternLength + noteIdx);
+
+            return maxNotes;
         }
 
         public bool FindPreviousMatchingNote(int noteValue, ref int patternIdx, ref int noteIdx)
