@@ -245,16 +245,13 @@ namespace FamiStudio
 
         public byte GetLastValidEffectValue(int startPatternIdx, int effect)
         {
-            var lastValue = (byte)0xff;
-
             for (int p = startPatternIdx; p >= 0; p--)
             {
                 var pattern = patternInstances[p];
                 if (pattern != null)
                 {
-                    lastValue = pattern.GetLastEffectValue(effect);
-                    if (lastValue != 0xff)
-                        return lastValue;
+                    if (pattern.HasLastEffectValue(effect))
+                        return pattern.GetLastEffectValue(effect);
                 }
             }
 

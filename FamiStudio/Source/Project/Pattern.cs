@@ -17,6 +17,7 @@ namespace FamiStudio
 
         private int    firstValidNoteTime    = -1;
         private int    lastValidNoteTime     = -1;
+        private int    lastEffectValuesMask  = 0;
         private byte[] lastEffectValues      = new byte[Note.EffectCount];
         private bool   lastValidNoteReleased = false;
 
@@ -39,6 +40,7 @@ namespace FamiStudio
             this.color = ThemeBase.RandomCustomColor();
             for (int i = 0; i < notes.Length; i++)
                 notes[i] = new Note(Note.NoteInvalid);
+            lastEffectValuesMask = 0;
             for (int i = 0; i < Note.EffectCount; i++)
                 lastEffectValues[i] = 0xff;
         }
@@ -135,6 +137,7 @@ namespace FamiStudio
 
         public void UpdateLastValidNote()
         {
+            lastEffectValuesMask = 0;
             for (int i = 0; i < Note.EffectCount; i++)
                 lastEffectValues[i] = 0xff;
             lastValidNoteTime = -1;
@@ -170,8 +173,12 @@ namespace FamiStudio
 
                 for (int i = 0; i < Note.EffectCount; i++)
                 {
-                    if (note.HasValidEffectValue(i) && lastEffectValues[i] == 0xff)
+                    var mask = 1 << i;
+                    if (note.HasValidEffectValue(i) && (lastEffectValuesMask & i) == 0)
+                    {
+                        lastEffectValuesMask |= mask;
                         lastEffectValues[i] = (byte)note.GetEffectValue(i);
+                    }
                 }
             }
 
@@ -222,6 +229,11 @@ namespace FamiStudio
             get { return lastValidNoteReleased; }
         }
 
+        public bool HasLastEffectValue(int effect)
+        {
+            return (lastEffectValuesMask & (1 << effect)) != 0;
+        }
+
         public byte GetLastEffectValue(int effect)
         {
             return lastEffectValues[effect];
@@ -270,6 +282,7 @@ namespace FamiStudio
                 buffer.Serialize(ref firstValidNoteTime);
                 buffer.Serialize(ref lastValidNoteTime);
                 buffer.Serialize(ref lastValidNoteReleased);
+                buffer.Serialize(ref lastEffectValuesMask);
                 for (int i = 0; i < Note.EffectCount; i++)
                     buffer.Serialize(ref lastEffectValues[i]);
             }

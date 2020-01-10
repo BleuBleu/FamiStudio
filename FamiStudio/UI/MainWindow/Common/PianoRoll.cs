@@ -1765,9 +1765,10 @@ namespace FamiStudio
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
             bool right  = e.Button.HasFlag(MouseButtons.Right);
 
-            bool canCapture = captureOperation == CaptureOperation.None;
+            if (captureOperation != CaptureOperation.None)
+                return;
 
-            if (left && IsMouseInPiano(e) && canCapture)
+            if (left && IsMouseInPiano(e))
             {
                 StartCaptureOperation(e, CaptureOperation.PlayPiano);
                 PlayPiano(e.X, e.Y);
@@ -1794,26 +1795,26 @@ namespace FamiStudio
             {
                 CaptureMouse(e);
             }
-            else if (left && editMode == EditionMode.Enveloppe && IsMouseInHeader(e) && canCapture)
+            else if (left && editMode == EditionMode.Enveloppe && IsMouseInHeader(e))
             {
                 StartCaptureOperation(e, CaptureOperation.ResizeEnvelope);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
             }
-            else if (editMode == EditionMode.Enveloppe && (left || (right && editEnvelope == Envelope.Volume && EditEnvelope.Loop >= 0)) && IsMouseInEnvelopeLoopHeader(e) && canCapture)
+            else if (editMode == EditionMode.Enveloppe && (left || (right && editEnvelope == Envelope.Volume && EditEnvelope.Loop >= 0)) && IsMouseInEnvelopeLoopHeader(e))
             {
                 CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e, op);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
             }
-            else if ((left || right) && editMode == EditionMode.Enveloppe && IsMouseInNoteArea(e) && canCapture)
+            else if ((left || right) && editMode == EditionMode.Enveloppe && IsMouseInNoteArea(e))
             {
                 StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 DrawEnvelope(e); 
             }
-            else if (left && editMode == EditionMode.Channel && IsMouseInEffectPanel(e) && canCapture)
+            else if (left && editMode == EditionMode.Channel && IsMouseInEffectPanel(e))
             {
                 if (GetEffectNoteForCoord(e.X, e.Y, out effectPatternIdx, out effectNoteIdx))
                 {
@@ -1852,7 +1853,7 @@ namespace FamiStudio
 
                     if (slide && channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
                     {
-                        if (channel.SupportsSlideNotes && canCapture)
+                        if (channel.SupportsSlideNotes)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[patternIdx].Id);
                             var op = CaptureOperation.DragSlideNoteTarget;
@@ -1884,7 +1885,7 @@ namespace FamiStudio
                         pattern.Notes[noteIdx].Instrument = editChannel == Channel.DPCM ? null : currentInstrument;
                         pattern.UpdateLastValidNote();
 
-                        if (slide && channel.SupportsSlideNotes && canCapture)
+                        if (slide && channel.SupportsSlideNotes)
                         {
                             StartCaptureOperation(e, CaptureOperation.CreateDragSlideNoteTarget);
                         }
