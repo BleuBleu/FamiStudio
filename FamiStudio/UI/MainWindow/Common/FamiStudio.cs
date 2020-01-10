@@ -71,6 +71,8 @@ namespace FamiStudio
 
             songPlayer = new SongPlayer();
             songPlayer.Initialize();
+            instrumentPlayer = new InstrumentPlayer();
+            instrumentPlayer.Initialize();
 
             InitializeMidi();
 
@@ -82,10 +84,6 @@ namespace FamiStudio
             {
                 NewProject();
             }
-
-            instrumentPlayer = new InstrumentPlayer();
-            instrumentPlayer.Initialize();
-            instrumentPlayer.Start(project);
 
             if (Settings.CheckUpdates)
             {
@@ -237,6 +235,8 @@ namespace FamiStudio
 
         private void InitProject()
         {
+            instrumentPlayer.Stop();
+
             StaticProject = project;
             song = project.Songs[0];
 
@@ -252,6 +252,8 @@ namespace FamiStudio
             InvalidateEverything();
             UpdateTitle();
             RefreshSequencerLayout();
+
+            instrumentPlayer.Start(project);
             //ClipboardUtils.Reset();
         }
 

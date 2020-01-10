@@ -823,6 +823,7 @@ namespace FamiStudio
                                 project.SetExpansionAudio(expansion);
                                 ExpansionAudioChanged?.Invoke();
                                 App.StartInstrumentPlayer();
+                                RefreshButtons();
                             }
                         }
 
