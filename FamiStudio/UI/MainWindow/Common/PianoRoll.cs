@@ -36,7 +36,8 @@ namespace FamiStudio
         const int DefaultBaseOctaveChannel = 0;
         const int DefaultNumOctavesEnvelope = 7;
         const int DefaultBaseOctaveEnvelope = 1;
-        const int DefaultHeaderSizeY = 17;
+        const int DefaultHeaderSizeY = 34;
+        const int DefaultDPCMHeaderSizeY = 17;
         const int DefaultEffectPanelSizeY = 256;
         const int DefaultEffectButtonSizeY = 17;
         const int DefaultNoteSizeX = 16;
@@ -218,7 +219,7 @@ namespace FamiStudio
 
             numOctaves             = editMode == EditionMode.Enveloppe ? DefaultNumOctavesEnvelope : DefaultNumOctavesChannel;
             baseOctave             = editMode == EditionMode.Enveloppe ? DefaultBaseOctaveEnvelope : DefaultBaseOctaveChannel;
-            headerSizeY            = (int)(DefaultHeaderSizeY * scaling);
+            headerSizeY            = (int)((editMode == EditionMode.DPCM ? DefaultDPCMHeaderSizeY : DefaultHeaderSizeY) * scaling);
             effectPanelSizeY       = (int)(DefaultEffectPanelSizeY * scaling);
             effectButtonSizeY      = (int)(DefaultEffectButtonSizeY * scaling);
             noteSizeX              = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
@@ -251,7 +252,7 @@ namespace FamiStudio
             virtualSizeY           = numNotes * noteSizeY;
             patternSizeX           = noteSizeX * (Song == null ? 256 : Song.PatternLength);
             barSizeX               = noteSizeX * (Song == null ? 16  : Song.BarLength);
-            headerAndEffectSizeY   = headerSizeY + (showEffectsPanel ? effectPanelSizeY : (editMode == EditionMode.Enveloppe ? headerSizeY : 0));
+            headerAndEffectSizeY   = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
         }
 
         public Instrument CurrentInstrument
@@ -443,9 +444,9 @@ namespace FamiStudio
 
             seekGeometry = g.CreateConvexPath(new[]
             {
-                new Point(-headerSizeY / 2, 1),
-                new Point(0, headerSizeY - 2),
-                new Point( headerSizeY / 2, 1)
+                new Point(-headerSizeY / 4, 1),
+                new Point(0, headerSizeY / 2 - 2),
+                new Point( headerSizeY / 4, 1)
             });
         }
         
@@ -496,104 +497,9 @@ namespace FamiStudio
             {
                 var env = EditEnvelope;
 
-                DrawSelectionRect(g, headerSizeY);
-
-                // Draw the header bars
-                for (int n = 0; n <= env.Length; n++)
-                {
-                    int x = n * noteSizeX - scrollX;
-                    if (x != 0)
-                        g.DrawLine(x, 0, x, headerSizeY, theme.DarkGreyLineBrush1, 1.0f);
-                    if (zoomLevel >= 1 && n != env.Length)
-                        g.DrawText(n.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, theme.LightGreyFillBrush1, noteSizeX);
-                }
-            }
-            else if (editMode == EditionMode.Channel)
-            {
-                // Draw colored header
-                for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
-                {
-                    var pattern = Song.Channels[editChannel].PatternInstances[p];
-                    if (pattern != null)
-                    {
-                        int patternX = p * patternSizeX - scrollX;
-                        g.FillRectangle(patternX, 0, patternX + patternSizeX, headerSizeY, theme.CustomColorBrushes[pattern.Color]);
-                    }
-                }
+                g.PushTranslation(0, headerSizeY / 2);
 
                 DrawSelectionRect(g, headerSizeY);
-
-                // Draw the header bars
-                for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
-                {
-                    int x = p * patternSizeX - scrollX;
-                    if (p != 0)
-                        g.DrawLine(x, 0, x, headerSizeY, theme.DarkGreyLineBrush1, 3.0f);
-                    var pattern = Song.Channels[editChannel].PatternInstances[p];
-                    g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, pattern == null ? theme.LightGreyFillBrush1 : theme.BlackBrush, patternSizeX);
-                }
-
-                int maxX = patternSizeX * a.maxVisiblePattern - scrollX;
-                g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
-
-                // Draw the effect icons.
-                if (editMode == EditionMode.Channel)
-                {
-                    for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
-                    {
-                        var pattern = Song.Channels[editChannel].PatternInstances[p];
-                        if (pattern != null)
-                        {
-                            int patternX = p * patternSizeX - scrollX;
-                            for (int n = 0; n < Song.PatternLength; n++)
-                            {
-                                var note = pattern.Notes[n];
-                                for (int i = Note.EffectCount - 1; i >= 0; i--)
-                                {
-                                    if (note.HasValidEffectValue(i))
-                                    {
-                                        int iconX = patternX + n * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2;
-                                        int iconY = effectIconPosY;
-                                        g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.LightGreyFillBrush2);
-                                        g.DrawBitmap(bmpEffects[i], iconX, iconY);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (editMode == EditionMode.Enveloppe || 
-                editMode == EditionMode.Channel)
-            {
-                var seekFrame = editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editEnvelope) : App.CurrentFrame;
-                if (seekFrame >= 0)
-                {
-                    g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
-                    g.FillAndDrawConvexPath(seekGeometry, seekBarBrush, theme.BlackBrush);
-                    g.PopTransform();
-                }
-            }
-
-            g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
-            
-            g.PopClip();
-            g.PopTransform();
-        }
-
-        private void RenderEnvelopeHeader(RenderGraphics g)
-        {
-            if (editMode == EditionMode.Enveloppe && EditEnvelope != null)
-            {
-                g.PushTranslation(whiteKeySizeX, headerSizeY);
-                g.PushClip(0, 0, Width, headerSizeY);
-                g.Clear(ThemeBase.DarkGreyLineColor2);
-
-                DrawSelectionRect(g, headerSizeY);
-
-                var env = EditEnvelope;
 
                 if (env.Loop >= 0)
                 {
@@ -626,9 +532,98 @@ namespace FamiStudio
                     g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
                 }
 
-                g.PopClip();
                 g.PopTransform();
+
+                DrawSelectionRect(g, headerSizeY);
+
+                // Draw the header bars
+                for (int n = 0; n <= env.Length; n++)
+                {
+                    int x = n * noteSizeX - scrollX;
+                    if (x != 0)
+                        g.DrawLine(x, 0, x, headerSizeY, theme.DarkGreyLineBrush1, 1.0f);
+                    if (zoomLevel >= 1 && n != env.Length)
+                        g.DrawText(n.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, theme.LightGreyFillBrush1, noteSizeX);
+                }
+
+                g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.DarkGreyLineBrush1);
             }
+            else if (editMode == EditionMode.Channel)
+            {
+                // Draw colored header
+                for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
+                {
+                    var pattern = Song.Channels[editChannel].PatternInstances[p];
+                    if (pattern != null)
+                    {
+                        int patternX = p * patternSizeX - scrollX;
+                        g.FillRectangle(patternX, headerSizeY / 2, patternX + patternSizeX, headerSizeY, theme.CustomColorBrushes[pattern.Color]);
+                    }
+                }
+
+                DrawSelectionRect(g, headerSizeY);
+
+                // Draw the header bars
+                for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
+                {
+                    int x = p * patternSizeX - scrollX;
+                    if (p != 0)
+                        g.DrawLine(x, 0, x, headerSizeY, theme.DarkGreyLineBrush1, 3.0f);
+                    var pattern = Song.Channels[editChannel].PatternInstances[p];
+                    g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, theme.LightGreyFillBrush1, patternSizeX);
+                    if (pattern != null)
+                        g.DrawText(pattern.Name, ThemeBase.FontMediumCenter, x, effectNamePosY + headerSizeY / 2, theme.BlackBrush, patternSizeX);
+                }
+
+                int maxX = patternSizeX * a.maxVisiblePattern - scrollX;
+                g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
+                g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.DarkGreyLineBrush1);
+
+                // Draw the effect icons.
+                if (editMode == EditionMode.Channel)
+                {
+                    for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
+                    {
+                        var pattern = Song.Channels[editChannel].PatternInstances[p];
+                        if (pattern != null)
+                        {
+                            int patternX = p * patternSizeX - scrollX;
+                            for (int n = 0; n < Song.PatternLength; n++)
+                            {
+                                var note = pattern.Notes[n];
+                                for (int i = Note.EffectCount - 1; i >= 0; i--)
+                                {
+                                    if (note.HasValidEffectValue(i))
+                                    {
+                                        int iconX = patternX + n * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2;
+                                        int iconY = headerSizeY / 2 + effectIconPosY;
+                                        g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.LightGreyFillBrush2);
+                                        g.DrawBitmap(bmpEffects[i], iconX, iconY);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (editMode == EditionMode.Enveloppe || 
+                editMode == EditionMode.Channel)
+            {
+                var seekFrame = editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editEnvelope) : App.CurrentFrame;
+                if (seekFrame >= 0)
+                {
+                    g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
+                    g.FillAndDrawConvexPath(seekGeometry, seekBarBrush, theme.BlackBrush);
+                    g.PopTransform();
+                }
+            }
+
+            g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
+            
+            g.PopClip();
+            g.PopTransform();
         }
 
         private void RenderEffectList(RenderGraphics g)
@@ -1229,9 +1224,6 @@ namespace FamiStudio
                                         if (!isActiveChannel) color = Color.FromArgb((int)(color.A * 0.2f), color);
                                     }
                                 }
-
-                                if (isActiveChannel)
-                                    g.DrawText(pattern.Name, ThemeBase.FontBig, p1 * patternSizeX + bigTextPosX - scrollX, bigTextPosY, whiteKeyBrush);
                             }
 
                             if (n0.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote))
@@ -1240,6 +1232,14 @@ namespace FamiStudio
                             }
                         }
                     }
+
+                    var channelType = Song.Channels[editChannel].Type;
+                    var channelName = Song.Channels[editChannel].Name;
+
+                    if (channelType >= Channel.ExpansionAudioStart)
+                        channelName += $" ({Song.Project.ExpansionAudioName})";
+
+                    g.DrawText($"Editing Channel {channelName}", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
                 }
                 else
                 {
@@ -1374,7 +1374,7 @@ namespace FamiStudio
 
             RenderHeader(g, a);
             RenderEffectList(g);
-            RenderEnvelopeHeader(g);
+            //RenderEnvelopeHeader(g);
             RenderEffectPanel(g, a);
             RenderPiano(g, a);
             RenderNotes(g, a);
@@ -1777,7 +1777,12 @@ namespace FamiStudio
             {
                 App.Seek((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
             }
-            else if (right && IsMouseInHeader(e))
+            else if (right && editMode == EditionMode.Channel && IsMouseInHeader(e))
+            {
+                StartCaptureOperation(e, CaptureOperation.Select);
+                UpdateSelection(e.X, true);
+            }
+            else if (right && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e))
             {
                 StartCaptureOperation(e, CaptureOperation.Select);
                 UpdateSelection(e.X, true);
@@ -1795,13 +1800,13 @@ namespace FamiStudio
             {
                 CaptureMouse(e);
             }
-            else if (left && editMode == EditionMode.Enveloppe && IsMouseInHeader(e))
+            else if (left && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e))
             {
                 StartCaptureOperation(e, CaptureOperation.ResizeEnvelope);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
             }
-            else if (editMode == EditionMode.Enveloppe && (left || (right && editEnvelope == Envelope.Volume && EditEnvelope.Loop >= 0)) && IsMouseInEnvelopeLoopHeader(e))
+            else if (editMode == EditionMode.Enveloppe && (left || (right && editEnvelope == Envelope.Volume && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e))
             {
                 CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e, op);
@@ -2103,9 +2108,14 @@ namespace FamiStudio
             return e.X > whiteKeySizeX && e.Y < headerSizeY;
         }
 
-        private bool IsMouseInEnvelopeLoopHeader(MouseEventArgs e)
+        private bool IsMouseInHeaderTopPart(MouseEventArgs e)
         {
-            return editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY;
+            return editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > 0 && e.Y < headerSizeY / 2;
+        }
+
+        private bool IsMouseInHeaderBottomPart(MouseEventArgs e)
+        {
+            return editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y >= headerSizeY / 2 && e.Y < headerSizeY;
         }
 
         private bool IsMouseInPiano(MouseEventArgs e)
@@ -2138,14 +2148,15 @@ namespace FamiStudio
             var tooltip = "";
             var newNoteTooltip = "";
 
-            if (IsMouseInHeader(e))
+            if (IsMouseInHeader(e) && editMode == EditionMode.Channel)
             {
-                if (editMode == EditionMode.Channel)
-                    tooltip = "{MouseLeft} Seek - {MouseRight} Select - {MouseRight}{MouseRight} Select entire pattern";
-                else if (editMode == EditionMode.Enveloppe)
-                    tooltip = "{MouseRight} Select - {MouseLeft} Resize envelope";
+                tooltip = "{MouseLeft} Seek - {MouseRight} Select - {MouseRight}{MouseRight} Select entire pattern";
             }
-            else if (IsMouseInEnvelopeLoopHeader(e))
+            else if (IsMouseInHeaderTopPart(e) && editMode == EditionMode.Enveloppe)
+            {
+                tooltip = "{MouseRight} Select - {MouseLeft} Resize envelope";
+            }
+            else if (IsMouseInHeaderBottomPart(e) && editMode == EditionMode.Enveloppe)
             {
                 tooltip = "{MouseLeft} Set loop point - {MouseRight} Set release point (volume only, must have loop point)";
             }
