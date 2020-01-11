@@ -239,6 +239,12 @@ namespace FamiStudio
             return lastEffectValues[effect];
         }
 
+        public void ClearNotesPastSongLength()
+        {
+            for (int i = song.PatternLength; i < notes.Length; i++)
+                notes[i].Clear();
+        }
+
 #if DEBUG
         public void Validate(Channel channel)
         {

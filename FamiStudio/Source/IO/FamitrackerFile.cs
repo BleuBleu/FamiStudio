@@ -195,8 +195,8 @@ namespace FamiStudio
                     var param = SplitStringKeepQuotes(line.Substring(5));
 
                     song = project.CreateSong(param[3]);
-                    song.Length = 0;
-                    song.PatternLength = int.Parse(param[0]);
+                    song.SetLength(0);
+                    song.SetPatternLength(int.Parse(param[0]));
                     song.Speed = int.Parse(param[1]);
                     song.Tempo = int.Parse(param[2]);
                     columns = new int[song.Channels.Length];
@@ -224,7 +224,7 @@ namespace FamiStudio
                         song.Channels[j].PatternInstances[orderIdx] = pattern;
                     }
 
-                    song.Length++;
+                    song.SetLength(song.Length + 1);
                 }
                 else if (line.StartsWith("PATTERN"))
                 {

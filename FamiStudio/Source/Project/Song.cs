@@ -27,8 +27,8 @@ namespace FamiStudio
         public string Name { get => name; set => name = value; }
         public int Tempo { get => tempo; set => tempo = value; }
         public int Speed { get => speed; set => speed = value; }
-        public int Length { get => songLength; set => songLength = value; }
-        public int PatternLength { get => patternLength; set => patternLength = value; }
+        public int Length { get => songLength; }
+        public int PatternLength { get => patternLength; }
         public int BarLength { get => barLength; set => barLength = value; }
 
         public Song()
@@ -107,6 +107,22 @@ namespace FamiStudio
             return false;
         }
 
+        public void SetLength(int newLength)
+        {
+            songLength = newLength;
+
+            foreach (var channel in channels)
+                channel.ClearPatternsInstancesPastSongLength();
+        }
+
+        public void SetPatternLength(int newLength)
+        {
+            patternLength = newLength;
+
+            foreach (var channel in channels)
+                channel.ClearNotesPastSongLength();
+        }
+
         public static int[] GenerateBarLengths(int patternLen)
         {
             var barLengths = new List<int>();
@@ -164,7 +180,7 @@ namespace FamiStudio
                 }
             }
 
-            Length = maxLength;
+            SetLength(maxLength);
         }
 
         public void RemoveEmptyPatterns()

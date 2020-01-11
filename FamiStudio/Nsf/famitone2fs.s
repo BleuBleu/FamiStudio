@@ -20,7 +20,7 @@ FT_PITCH_FIX    = 0 ;(FT_PAL_SUPPORT|FT_NTSC_SUPPORT) ;add PAL/NTSC pitch correc
 .segment "FAMITONE"
 
 .ifdef FT_VRC6_ENABLE
-FT_NUM_ENVELOPES        = 2+2+2+2+2+2+2 
+FT_NUM_ENVELOPES        = 2+2+2+2+2+2+2+2 ; DPCM envelopes [8-9] are unused. 
 FT_NUM_PITCH_ENVELOPES  = 6
 .else
 FT_NUM_ENVELOPES        = 2+2+2+2
@@ -46,9 +46,9 @@ FT_PITCH_ENV_OVERRIDE : .res FT_NUM_PITCH_ENVELOPES
 ;slide structure offsets, 3 bytes per slide.
 
 .ifdef FT_VRC6_ENABLE
-FT_NUM_SLIDES = 3 ;square and triangle have slide notes.
-.else
 FT_NUM_SLIDES = 6
+.else
+FT_NUM_SLIDES = 3 ;square and triangle have slide notes.
 .endif
 
 FT_SLIDES:
@@ -81,7 +81,7 @@ FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS ; DPCM(4) + Triangle(2) are unused.
 FT_CH1_ENVS = 0
 FT_CH2_ENVS = 2
 FT_CH3_ENVS = 4
-FT_CH4_ENVS = 8
+FT_CH4_ENVS = 6
 .ifdef FT_VRC6_ENABLE
 FT_CH6_ENVS = 10
 FT_CH7_ENVS = 12
@@ -635,7 +635,7 @@ FamiToneMusicPause:
 
     .local @no_new_note
 
-    ldx #channel_idx    ;process channel 1
+    ldx #channel_idx
     jsr _FT2ChannelUpdate
     bcc @no_new_note
     ldx #env_idx
@@ -1619,7 +1619,7 @@ _FT2DummyPitchEnvelope:
 _FT2NoteTableLSB:
     .if(FT_PAL_SUPPORT)
         .byte $00
-        .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $60, $f6, $92 ; Octave 0
+        .byte $68, $b6, $0e, $6f, $d9, $4b, $c6, $48, $d1, $60, $f6, $92 ; Octave 0
         .byte $34, $db, $86, $37, $ec, $a5, $62, $23, $e8, $b0, $7b, $49 ; Octave 1
         .byte $19, $ed, $c3, $9b, $75, $52, $31, $11, $f3, $d7, $bd, $a4 ; Octave 2
         .byte $8c, $76, $61, $4d, $3a, $29, $18, $08, $f9, $eb, $de, $d1 ; Octave 3
@@ -1630,7 +1630,7 @@ _FT2NoteTableLSB:
     .endif
     .if(FT_NTSC_SUPPORT)
         .byte $00
-        .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $f1, $7f, $13 ; Octave 0
+        .byte $5b, $9c, $e6, $3b, $9a, $01, $72, $ea, $6a, $f1, $7f, $13 ; Octave 0
         .byte $ad, $4d, $f3, $9d, $4c, $00, $b8, $74, $34, $f8, $bf, $89 ; Octave 1
         .byte $56, $26, $f9, $ce, $a6, $80, $5c, $3a, $1a, $fb, $df, $c4 ; Octave 2
         .byte $ab, $93, $7c, $67, $52, $3f, $2d, $1c, $0c, $fd, $ef, $e1 ; Octave 3
@@ -1643,7 +1643,7 @@ _FT2NoteTableLSB:
 _FT2NoteTableMSB:
     .if(FT_PAL_SUPPORT)
         .byte $00
-        .byte $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $06, $06 ; Octave 0
+        .byte $0c, $0b, $0b, $0a, $09, $09, $08, $08, $07, $07, $06, $06 ; Octave 0
         .byte $06, $05, $05, $05, $04, $04, $04, $04, $03, $03, $03, $03 ; Octave 1
         .byte $03, $02, $02, $02, $02, $02, $02, $02, $01, $01, $01, $01 ; Octave 2
         .byte $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $00, $00 ; Octave 3
@@ -1654,7 +1654,7 @@ _FT2NoteTableMSB:
     .endif
     .if(FT_NTSC_SUPPORT)
         .byte $00
-        .byte $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07 ; Octave 0
+        .byte $0d, $0c, $0b, $0b, $0a, $0a, $09, $08, $08, $07, $07, $07 ; Octave 0
         .byte $06, $06, $05, $05, $05, $05, $04, $04, $04, $03, $03, $03 ; Octave 1
         .byte $03, $03, $02, $02, $02, $02, $02, $02, $02, $01, $01, $01 ; Octave 2
         .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $00 ; Octave 3

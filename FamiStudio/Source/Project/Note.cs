@@ -147,12 +147,6 @@ namespace FamiStudio
             }
         }
 
-        //public bool HasEffect
-        //{
-        //    get { return Effect != EffectNone; }
-        //    set { if (!value) Effect = EffectNone; }
-        //}
-
         public bool HasVolume
         {
             get { return Volume != VolumeInvalid; }

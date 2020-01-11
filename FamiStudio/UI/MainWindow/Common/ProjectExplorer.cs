@@ -849,8 +849,8 @@ namespace FamiStudio
                             song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(6);
                             song.Tempo = dlg.Properties.GetPropertyValue<int>(1);
                             song.Speed = dlg.Properties.GetPropertyValue<int>(2);
-                            song.Length = dlg.Properties.GetPropertyValue<int>(5);
-                            song.PatternLength = dlg.Properties.GetPropertyValue<int>(3);
+                            song.SetLength(dlg.Properties.GetPropertyValue<int>(5));
+                            song.SetPatternLength(dlg.Properties.GetPropertyValue<int>(3));
                             song.BarLength = dlg.Properties.GetPropertyValue<int>(4);
                             SongModified?.Invoke(song);
                             App.UndoRedoManager.EndTransaction();

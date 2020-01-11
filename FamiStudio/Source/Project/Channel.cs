@@ -398,6 +398,18 @@ namespace FamiStudio
             return false;
         }
 
+        public void ClearPatternsInstancesPastSongLength()
+        {
+            for (int i = song.Length; i < patternInstances.Length; i++)
+                patternInstances[i] = null;
+        }
+
+        public void ClearNotesPastSongLength()
+        {
+            foreach (var pattern in patterns)
+                pattern.ClearNotesPastSongLength();
+        }
+
 #if DEBUG
         public void Validate(Song song)
         {

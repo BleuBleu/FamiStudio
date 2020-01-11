@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -424,20 +424,6 @@ namespace FamiStudio
             return -1;
         }
 
-        private int FindSkip(Song song, int patternIdx)
-        {
-            for (int i = 0; i < song.PatternLength; i++)
-            {
-                var skip = FindEffectParam(song, patternIdx, i, Note.EffectSkip);
-                if (skip >= 0)
-                {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
         private byte EncodeNoteValue(int channel, int value, int numNotes = 0)
         {
             if (kernel == FamiToneKernel.FamiTone2)
@@ -631,7 +617,7 @@ namespace FamiStudio
                                 var emptyNote = pattern.Notes[i];
 
                                 if (numEmptyNotes >= maxRepeatCount || emptyNote.IsValid ||
-                                    (emptyNote.HasVolume && kernel == FamiToneKernel.FamiTone2FS) ||
+                                    (emptyNote.HasVolume  && kernel == FamiToneKernel.FamiTone2FS) ||
                                     (emptyNote.HasVibrato && kernel == FamiToneKernel.FamiTone2FS) ||
                                     (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
                                 {
