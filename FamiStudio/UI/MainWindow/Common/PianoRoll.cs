@@ -36,7 +36,7 @@ namespace FamiStudio
         const int DefaultBaseOctaveChannel = 0;
         const int DefaultNumOctavesEnvelope = 7;
         const int DefaultBaseOctaveEnvelope = 1;
-        const int DefaultHeaderSizeY = 34;
+        const int DefaultHeaderSizeY = 17;
         const int DefaultDPCMHeaderSizeY = 17;
         const int DefaultEffectPanelSizeY = 256;
         const int DefaultEffectButtonSizeY = 17;
@@ -219,7 +219,7 @@ namespace FamiStudio
 
             numOctaves             = editMode == EditionMode.Enveloppe ? DefaultNumOctavesEnvelope : DefaultNumOctavesChannel;
             baseOctave             = editMode == EditionMode.Enveloppe ? DefaultBaseOctaveEnvelope : DefaultBaseOctaveChannel;
-            headerSizeY            = (int)((editMode == EditionMode.DPCM ? DefaultDPCMHeaderSizeY : DefaultHeaderSizeY) * scaling);
+            headerSizeY            = (int)((editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe ? 2 : 1) * DefaultHeaderSizeY * scaling);
             effectPanelSizeY       = (int)(DefaultEffectPanelSizeY * scaling);
             effectButtonSizeY      = (int)(DefaultEffectButtonSizeY * scaling);
             noteSizeX              = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
@@ -444,9 +444,9 @@ namespace FamiStudio
 
             seekGeometry = g.CreateConvexPath(new[]
             {
-                new Point(-headerSizeY / 4, 1),
-                new Point(0, headerSizeY / 2 - 2),
-                new Point( headerSizeY / 4, 1)
+                new Point(-headerSizeY / 2, 1),
+                new Point(0, headerSizeY - 2),
+                new Point( headerSizeY / 2, 1)
             });
         }
         
@@ -524,14 +524,6 @@ namespace FamiStudio
                 }
 
                 g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
-
-                var seekFrame = editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editEnvelope) : App.CurrentFrame;
-                if (seekFrame >= 0)
-                {
-                    int seekX = seekFrame * noteSizeX - scrollX;
-                    g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
-                }
-
                 g.PopTransform();
 
                 DrawSelectionRect(g, headerSizeY);
@@ -580,33 +572,32 @@ namespace FamiStudio
                 g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.DarkGreyLineBrush1);
 
                 // Draw the effect icons.
-                if (editMode == EditionMode.Channel)
+                for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                 {
-                    for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
+                    var pattern = Song.Channels[editChannel].PatternInstances[p];
+                    if (pattern != null)
                     {
-                        var pattern = Song.Channels[editChannel].PatternInstances[p];
-                        if (pattern != null)
+                        int patternX = p * patternSizeX - scrollX;
+                        for (int n = 0; n < Song.PatternLength; n++)
                         {
-                            int patternX = p * patternSizeX - scrollX;
-                            for (int n = 0; n < Song.PatternLength; n++)
+                            var note = pattern.Notes[n];
+                            for (int i = Note.EffectCount - 1; i >= 0; i--)
                             {
-                                var note = pattern.Notes[n];
-                                for (int i = Note.EffectCount - 1; i >= 0; i--)
+                                if (note.HasValidEffectValue(i))
                                 {
-                                    if (note.HasValidEffectValue(i))
-                                    {
-                                        int iconX = patternX + n * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2;
-                                        int iconY = headerSizeY / 2 + effectIconPosY;
-                                        g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.LightGreyFillBrush2);
-                                        g.DrawBitmap(bmpEffects[i], iconX, iconY);
-                                        break;
-                                    }
+                                    int iconX = patternX + n * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2;
+                                    int iconY = headerSizeY / 2 + effectIconPosY;
+                                    g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.LightGreyFillBrush2);
+                                    g.DrawBitmap(bmpEffects[i], iconX, iconY);
+                                    break;
                                 }
                             }
                         }
                     }
                 }
             }
+
+            g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
 
             if (editMode == EditionMode.Enveloppe || 
                 editMode == EditionMode.Channel)
@@ -616,12 +607,11 @@ namespace FamiStudio
                 {
                     g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
                     g.FillAndDrawConvexPath(seekGeometry, seekBarBrush, theme.BlackBrush);
+                    g.DrawLine(0, headerSizeY / 2, 0, headerSizeY, seekBarBrush, 3);
                     g.PopTransform();
                 }
             }
 
-            g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
-            
             g.PopClip();
             g.PopTransform();
         }
@@ -1790,7 +1780,7 @@ namespace FamiStudio
             else if (left && IsMouseInEffectList(e))
             {
                 int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY;
-                if (effectIdx < Note.EffectCount)
+                if (effectIdx >= 0 && effectIdx < Note.EffectCount)
                 {
                     selectedEffectIdx = effectIdx;
                     ConditionalInvalidate();
@@ -2125,7 +2115,7 @@ namespace FamiStudio
 
         private bool IsMouseInEffectList(MouseEventArgs e)
         {
-            return showEffectsPanel && editMode == EditionMode.Channel && e.X < whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY;
+            return showEffectsPanel && editMode == EditionMode.Channel && e.X < whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY;
         }
 
         private bool IsMouseInEffectPanel(MouseEventArgs e)
