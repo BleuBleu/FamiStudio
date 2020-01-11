@@ -121,18 +121,7 @@ namespace FamiStudio
                     case ButtonType.SongHeader: return "Songs";
                     case ButtonType.Song: return song.Name;
                     case ButtonType.InstrumentHeader: return "Instruments";
-                    case ButtonType.Instrument:
-                        if (instrument == null)
-                        {
-                            return "DPCM Samples";
-                        }
-                        else
-                        {
-                            if (instrument.ExpansionType == Project.ExpansionNone)
-                                return instrument.Name;
-                            else
-                                return $"[{project.ExpansionAudioName}] {instrument.Name}";
-                        }
+                    case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
                 }
 
                 return "";
