@@ -376,6 +376,7 @@ namespace FamiStudio
                 editMode = EditionMode.None;
                 editChannel = -1;
                 editInstrument = null;
+                showEffectsPanel = false;
                 ClearSelection();
                 UpdateRenderCoords();
             }

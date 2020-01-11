@@ -1151,6 +1151,14 @@ namespace FamiStudio
             }
         }
 
+        public void SongModified()
+        {
+            InvalidatePatternCache();
+            ClearSelection();
+            ClampScroll();
+            ConditionalInvalidate();
+        }
+
         public void InvalidatePatternCache()
         {
             patternBitmapCache.Clear();
