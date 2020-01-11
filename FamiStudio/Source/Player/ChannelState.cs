@@ -78,24 +78,24 @@ namespace FamiStudio
             if (pattern == null)
                 return;
 
-            var tmpNote = pattern.Notes[noteIdx];
-            if (tmpNote.IsValid)
+            var newNote = pattern.Notes[noteIdx];
+            if (newNote.IsValid)
             {
                 slideStep = 0;
 
-                if (tmpNote.IsSlideNote)
+                if (newNote.IsSlideNote)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
                     if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _))
-                        tmpNote.Value = (byte)tmpNote.SlideNoteTarget;
+                        newNote.Value = (byte)newNote.SlideNoteTarget;
                 }
 
-                PlayNote(tmpNote);
+                PlayNote(newNote);
             }
-            else if (tmpNote.HasVolume)
+            else if (newNote.HasVolume)
             {
-                note.Volume = tmpNote.Volume;
+                note.Volume = newNote.Volume;
             }
         }
 

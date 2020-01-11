@@ -1164,8 +1164,7 @@ FamiToneUpdate:
     iny
     lda (FT_TEMP_PTR1),y       ; read slide note to
     ldy FT_TEMP_VAR2           ; start note
-    stx FT_TEMP_VAR2           ; store slide index.
-    sta FT_CHN_NOTE,x          ; store note code
+    stx FT_TEMP_VAR2           ; store slide index.    
     tax
 .ifdef FT_VRC6_ENABLE
     lda FT_TEMP_VAR1
@@ -1197,6 +1196,9 @@ FamiToneUpdate:
     sta FT_SLIDE_PITCH_L,x
     rol FT_SLIDE_PITCH_H,x     ; shift-left, we have 1 bit of fractional slide.
     ldx FT_TEMP_VAR1
+    ldy #2
+    lda (FT_TEMP_PTR1),y       ; re-read the target note (ugly...)
+    sta FT_CHN_NOTE,x          ; store note code
     lda #3
     clc
     adc FT_TEMP_PTR_L
@@ -1692,6 +1694,7 @@ _FT2ChannelToVolumeEnvelope:
     .byte FT_CH2_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH3_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH4_ENVS+FT_ENV_VOLUME_OFF
+    .byte $ff
 .ifdef FT_VRC6_ENABLE
     .byte FT_CH6_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH7_ENVS+FT_ENV_VOLUME_OFF
