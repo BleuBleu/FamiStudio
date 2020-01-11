@@ -533,7 +533,7 @@ namespace FamiStudio
                 {
                     int x = n * noteSizeX - scrollX;
                     if (x != 0)
-                        g.DrawLine(x, 0, x, headerSizeY, theme.DarkGreyLineBrush1, 1.0f);
+                        g.DrawLine(x, 0, x, headerSizeY / 2, theme.DarkGreyLineBrush1, 1.0f);
                     if (zoomLevel >= 1 && n != env.Length)
                         g.DrawText(n.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, theme.LightGreyFillBrush1, noteSizeX);
                 }
