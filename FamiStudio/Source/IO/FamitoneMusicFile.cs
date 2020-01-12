@@ -527,12 +527,12 @@ namespace FamiStudio
 
                         i++;
 
-                        if (note.HasVolume && kernel == FamiToneKernel.FamiTone2FS)
+                        if (note.HasVolume)
                         {
                             patternBuffer.Add($"${(byte)(0x70 | note.Volume):x2}");
                         }
 
-                        if (note.HasVibrato && kernel == FamiToneKernel.FamiTone2FS)
+                        if (note.HasVibrato)
                         {
                             patternBuffer.Add($"${0x63:x2}");
                             patternBuffer.Add($"{lo}({vibratoEnvelopeNames[note.Vibrato]})");
@@ -553,7 +553,7 @@ namespace FamiStudio
                                     patternBuffer.Add($"${(byte)(0x80 | (idx << 1)):x2}");
                                     instrument = note.Instrument;
                                 }
-                                else if(!note.HasAttack && kernel == FamiToneKernel.FamiTone2FS)
+                                else if(!note.HasAttack)
                                 {
                                     // TODO: Remove note entirely after a slide that matches the next note with no attack.
                                     patternBuffer.Add($"${0x62:x2}");
@@ -582,20 +582,17 @@ namespace FamiStudio
                                 }
                             }
 
-                            if (kernel == FamiToneKernel.FamiTone2FS)
+                            if (note.IsSlideNote)
                             {
-                                if (note.IsSlideNote)
-                                {
-                                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+                                var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
-                                    if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _))
-                                    {
-                                        patternBuffer.Add($"${0x61:x2}");
-                                        patternBuffer.Add($"${(byte)stepSize:x2}");
-                                        patternBuffer.Add($"${EncodeNoteValue(c, note.Value):x2}");
-                                        patternBuffer.Add($"${EncodeNoteValue(c, note.SlideNoteTarget):x2}");
-                                        continue;
-                                    }
+                                if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _))
+                                {
+                                    patternBuffer.Add($"${0x61:x2}");
+                                    patternBuffer.Add($"${(byte)stepSize:x2}");
+                                    patternBuffer.Add($"${EncodeNoteValue(c, note.Value):x2}");
+                                    patternBuffer.Add($"${EncodeNoteValue(c, note.SlideNoteTarget):x2}");
+                                    continue;
                                 }
                             }
 
@@ -610,9 +607,7 @@ namespace FamiStudio
                             {
                                 var emptyNote = pattern.Notes[i];
 
-                                if (numEmptyNotes >= maxRepeatCount || emptyNote.IsValid ||
-                                    (emptyNote.HasVolume  && kernel == FamiToneKernel.FamiTone2FS) ||
-                                    (emptyNote.HasVibrato && kernel == FamiToneKernel.FamiTone2FS) ||
+                                if (numEmptyNotes >= maxRepeatCount || emptyNote.IsValid || emptyNote.HasVolume || emptyNote.HasVibrato ||
                                     (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
                                 {
                                     break;
@@ -797,6 +792,10 @@ namespace FamiStudio
                                 {
                                     pattern.Notes[i].Value = Note.NoteInvalid;
                                 }
+                                pattern.Notes[i].HasAttack   = true;
+                                pattern.Notes[i].HasVibrato  = false;
+                                pattern.Notes[i].HasVolume   = false;
+                                pattern.Notes[i].IsSlideNote = false;
                             }
                         }
                     }
