@@ -1870,6 +1870,7 @@ namespace FamiStudio
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].Value = (byte)(ctrl ? Note.NoteStop : Note.NoteRelease);
                         pattern.Notes[noteIdx].Instrument = null;
+                        pattern.Notes[noteIdx].Slide = 0;
                         pattern.UpdateLastValidNote();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
