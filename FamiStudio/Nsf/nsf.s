@@ -4,12 +4,6 @@
 .include "famitone2.s"
 .endif
 
-.global nsf_init
-.global nsf_play
-
-SONG_TABLE_ADDR = $8d00
-DPCM_ADDR       = $c000
-
 .segment "CODE_INIT"
 
 ; [in] a = song index.
@@ -24,7 +18,7 @@ DPCM_ADDR       = $c000
 	asl
 	tax
 	
-	ldy SONG_TABLE_ADDR+0, x
+	ldy SONG_TABLE+0, x
 
 	; First map the full 0x9000 - 0xf000 to song data.
 	sty $5FF9
@@ -42,8 +36,8 @@ DPCM_ADDR       = $c000
 	sty $5FFf
 	
 	; Then map the samples at the very end (if 1 page => start at 0xf000, if 2 pages => start at 0xe000, etc.)
-	ldy #1
-	lda SONG_TABLE_ADDR+3, x
+	ldy DPCM_PAGE_START
+	lda DPCM_PAGE_CNT
 	beq samples_none
 	
 	cmp #1
@@ -67,8 +61,8 @@ DPCM_ADDR       = $c000
 	samples_none:
 
 	; Load song data and play
-	ldy SONG_TABLE_ADDR+2, x ; hi-byte
-	lda SONG_TABLE_ADDR+1, x ; lo-byte
+	ldy SONG_TABLE+2, x ; hi-byte
+	lda SONG_TABLE+1, x ; lo-byte
 	tax
 	lda #1 ; NTSC
 	jsr FamiToneInit
@@ -87,3 +81,14 @@ DPCM_ADDR       = $c000
 	rts
 .endproc
 
+.segment "SONG_DATA"
+
+DPCM_PAGE_START: .res 1
+DPCM_PAGE_CNT:   .res 1
+
+; each entry in the song table is 4 bytes
+;  - first page of the song (1 byte)
+;  - address of the start of the song in page starting at 0x9000 (2 byte)
+;  - unused (1-byte)
+
+SONG_TABLE:      .res 4

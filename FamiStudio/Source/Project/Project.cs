@@ -437,10 +437,21 @@ namespace FamiStudio
         {
             int size = 0;
             foreach (var sample in samples)
-            {
                 size += (sample.Data.Length + 63) & 0xffc0;
-            }
-            return size;
+            return Math.Min(MaxSampleSize, size);
+        }
+
+        public byte[] GetPackedSampleData()
+        {
+            var sampleData = new List<byte>();
+
+            foreach (var sample in samples)
+                sampleData.AddRange(sample.Data);
+
+            if (sampleData.Count > MaxSampleSize)
+                sampleData.RemoveRange(MaxSampleSize, sampleData.Count - MaxSampleSize);
+
+            return sampleData.ToArray();
         }
 
         public void RemoveAllSongsBut(int[] songIds)

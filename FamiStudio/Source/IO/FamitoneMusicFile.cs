@@ -360,20 +360,14 @@ namespace FamiStudio
         {
             if (project.UsesSamples)
             {
-                var sampleData = new byte[project.GetTotalSampleSize()];
-                foreach (var sample in project.Samples)
-                {
-                    Array.Copy(sample.Data, 0, sampleData, project.GetAddressForSample(sample), sample.Data.Length);
-                }
+                var sampleData = project.GetPackedSampleData();
 
                 // TODO: Once we have a real project name, we will use that.
                 var path = Path.GetDirectoryName(filename);
                 var projectname = Utils.MakeNiceAsmName(project.Name);
 
                 if (dmcFilename == null)
-                {
                     dmcFilename = Path.Combine(path, projectname + ".dmc");
-                }
 
                 File.WriteAllBytes(dmcFilename, sampleData);
             }
@@ -707,24 +701,47 @@ namespace FamiStudio
             int bestChannel = 0;
             int bestFactor = 1;
 
-            for (int speedChannel = 0; speedChannel < song.Channels.Length; speedChannel++)
+            // Take the channel with the most speed effect as the speed channel.
+            // This was a really dumb optimziation in FT2...
+            var speedEffectCount = new int[song.Channels.Length];
+            for (int c = 0; c < song.Channels.Length; c++)
             {
-                for (int factor = 1; factor <= song.PatternLength; factor++)
+                foreach (var pattern in song.Channels[c].Patterns)
                 {
-                    if ((song.PatternLength % factor) == 0 && 
-                        (song.PatternLength / factor) >= MinPatternLength)
+                    for (int n = 0; n < song.PatternLength; n++)
                     {
-                        var splitSong = song.Clone();
-                        if (splitSong.Split(factor))
-                        {
-                            int size = OutputSong(splitSong, songIdx, speedChannel, factor, true);
+                        if (pattern.Notes[n].HasSpeed)
+                            speedEffectCount[c]++;
+                    }
+                }
+            }
 
-                            if (size < minSize)
-                            {
-                                minSize = size;
-                                bestChannel = speedChannel;
-                                bestFactor = factor;
-                            }
+            int speedChannel = 0;
+            int maxSpeedEffects = 0;
+            for (int c = 0; c < song.Channels.Length; c++)
+            {
+                if (speedEffectCount[c] > maxSpeedEffects)
+                {
+                    maxSpeedEffects = speedEffectCount[c];
+                    speedChannel = c;
+                }
+            }
+
+            for (int factor = 1; factor <= song.PatternLength; factor++)
+            {
+                if ((song.PatternLength % factor) == 0 && 
+                    (song.PatternLength / factor) >= MinPatternLength)
+                {
+                    var splitSong = song.Clone();
+                    if (splitSong.Split(factor))
+                    {
+                        int size = OutputSong(splitSong, songIdx, speedChannel, factor, true);
+
+                        if (size < minSize)
+                        {
+                            minSize = size;
+                            bestChannel = speedChannel;
+                            bestFactor = factor;
                         }
                     }
                 }
@@ -944,7 +961,7 @@ namespace FamiStudio
         }
 
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
-        public bool GetBytes(Project project, int[] songIds, int songOffset, int dpcmOffset, out byte[] songBytes, out byte[] dpcmBytes)
+        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmOffset)
         {
             var tempFolder = Path.Combine(Path.GetTempPath(), "FamiStudio");
 
@@ -961,10 +978,7 @@ namespace FamiStudio
 
             Save(project, songIds, OutputFormat.ASM6, false, tempAsmFilename, tempDmcFilename);
 
-            songBytes = ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
-            dpcmBytes = project.UsesSamples ? File.ReadAllBytes(tempDmcFilename) : null;
-
-            return true;
+            return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }
     }
 }

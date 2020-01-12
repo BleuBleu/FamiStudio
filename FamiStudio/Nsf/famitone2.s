@@ -8,7 +8,7 @@ FT_TEMP:		.res FT_TEMP_SIZE_DEF
 .segment "FAMITONE"
 FT_BASE_ADR:	.res FT_BASE_SIZE_DEF
 
-.segment "CODE"
+.segment "CODE_FAMITONE"
 
 ;settings, uncomment or put them into your main program; the latter makes possible updates easier
 

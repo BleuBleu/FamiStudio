@@ -149,7 +149,7 @@ FT_TEMP_PTR_H  = FT_TEMP_PTR1+1
 FT_TEMP_PTR2_L = FT_TEMP_PTR2+0
 FT_TEMP_PTR2_H = FT_TEMP_PTR2+1
 
-.segment "CODE"
+.segment "CODE_FAMITONE"
 
 ;aliases for the APU registers
 APU_PL1_VOL    = $4000
