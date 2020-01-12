@@ -256,7 +256,7 @@ FamiToneInit:
     lda (FT_TEMP_PTR1),y
     sta FT_DPCM_LIST_H
 
-    lda #$ff                   ;previous pulse period MSB, to not write it when not changed
+    lda #$80                   ;previous pulse period MSB, to not write it when not changed
     sta FT_PULSE1_PREV
     sta FT_PULSE2_PREV
 
