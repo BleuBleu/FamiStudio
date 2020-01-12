@@ -16,6 +16,7 @@ FT_NTSC_SUPPORT    = 1    ;undefine to exclude NTSC support
 
 ;internal defines
 FT_PITCH_FIX    = 0 ;(FT_PAL_SUPPORT|FT_NTSC_SUPPORT) ;add PAL/NTSC pitch correction code only when both modes are enabled
+FT_SMOOTH_VIBRATO = 1 ; Blaarg's smooth vibrato technique
 
 .segment "FAMITONE"
 
@@ -170,6 +171,7 @@ APU_DMC_RAW    = $4011
 APU_DMC_START  = $4012
 APU_DMC_LEN    = $4013
 APU_SND_CHN    = $4015
+APU_FRAME_CNT  = $4017
 
 .ifdef FT_VRC6_ENABLE
 VRC6_PL1_VOL   = $9000
@@ -301,12 +303,12 @@ FamiToneMusicStop:
     cpx #5
     bcc @regular_inst
 @vrc6_inst:
-	lda #$0
+    lda #$0
     sta FT_CHN_DUTY,x
-	jmp @nextchannel
+    jmp @nextchannel
 @regular_inst:
 .endif
-	lda #$30
+    lda #$30
     sta FT_CHN_DUTY,x
 
 @nextchannel:
@@ -425,9 +427,9 @@ FamiToneMusicPlay:
     cpx #5
     bcc @regular_inst
 @vrc6_inst:
-	lda #$0
+    lda #$0
     sta FT_CHN_DUTY,x
-	jmp @nextchannel
+    jmp @nextchannel
 @regular_inst:
 .endif
     sta FT_CHN_DUTY,x
@@ -502,7 +504,7 @@ FamiToneMusicPause:
 ; in: none
 ;------------------------------------------------------------------------------
 
-.macro update_channel_sound idx, env_offset, slide_offset, pulse_prev, vol_ora, hi_ora, reg_hi, reg_lo, reg_vol
+.macro update_channel_sound idx, env_offset, slide_offset, pulse_prev, vol_ora, hi_ora, reg_hi, reg_lo, reg_vol, reg_sweep
 
     .local @slide
     .local @slidesign
@@ -524,7 +526,13 @@ FamiToneMusicPause:
 .endif
 
     lda FT_CHN_NOTE+idx
+.if !.blank(pulse_prev) && FT_SMOOTH_VIBRATO
+    bne @has_note
+    jmp @cut
+@has_note:
+.else    
     beq @cut
+.endif
     clc
     adc FT_ENV_VALUE+env_offset+FT_ENV_NOTE_OFF
 
@@ -585,9 +593,50 @@ FamiToneMusicPause:
 .ifnblank pulse_prev
 
     .if(!FT_SFX_ENABLE)
-    cmp pulse_prev
-    beq @prev
-    sta pulse_prev
+        .if(FT_SMOOTH_VIBRATO)
+            ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
+            tay ; Y = new hi-period
+            sec
+            sbc pulse_prev
+            beq @prev
+            sty pulse_prev
+            tay ; Y = signed hi-period delta.
+        @check_hi_delta_is_one:
+        	cmp #$01
+        	beq @hi_delta_is_one
+        @check_hi_delta_is_minus_one:
+        	cmp #$ff
+        	bne @hi_delta_too_big ; not 1 or -1, we cant use sweep.
+        @hi_delta_is_one:
+            lda #$40
+            sta APU_FRAME_CNT ; reset frame counter in case it was about to clock
+            tya 
+            bpl @pos_hi_delta
+        @neg_hi_delta:
+            lda #$00 ; be sure low 8 bits of timer period are $00
+            sta reg_lo
+            lda #$8f ; sweep enabled, shift = 7, set negative flag.
+            sta reg_sweep
+            jmp @run_sweep
+        @pos_hi_delta:
+            lda #$ff ; be sure low 8 bits of timer period are $ff
+            sta reg_lo
+            lda #$87 ; sweep enabled, shift = 7, set negative flag.
+            sta reg_sweep
+        @run_sweep:
+            lda #$c0
+            sta APU_FRAME_CNT ; clock sweep immediately
+            lda #$08
+            sta reg_sweep ; disable sweep
+            jmp @prev
+        @hi_delta_too_big:
+        	lda pulse_prev
+            sta reg_hi
+        .else
+            cmp pulse_prev
+            beq @prev
+            sta pulse_prev    
+        .endif
     .endif
     
 .endif
@@ -596,9 +645,12 @@ FamiToneMusicPause:
     ora hi_ora
 .endif
 
+.endif ; idx = 3
+
+.if .blank(pulse_prev) || (!FT_SMOOTH_VIBRATO)
+    sta reg_hi
 .endif
 
-    sta reg_hi
 @prev:
 
     lda FT_ENV_VALUE+env_offset+FT_ENV_VOLUME_OFF
@@ -764,33 +816,33 @@ FamiToneUpdate:
     jmp @pitch_env_process
 
 @pitch_relate_update_with_last_value:
-	lda FT_PITCH_ENV_REPEAT,x
-	sec 
-	sbc #1
-	sta FT_PITCH_ENV_REPEAT,x
-	and #$7f 
-	beq @pitch_env_read
+    lda FT_PITCH_ENV_REPEAT,x
+    sec 
+    sbc #1
+    sta FT_PITCH_ENV_REPEAT,x
+    and #$7f 
+    beq @pitch_env_read
     lda FT_PITCH_ENV_ADR_L,x 
     sta <FT_TEMP_PTR_L
     lda FT_PITCH_ENV_ADR_H,x
     sta <FT_TEMP_PTR_H
-  	ldy FT_PITCH_ENV_PTR,x
-	dey	
-	dey
-	lda (FT_TEMP_PTR1),y
-	clc  
+    ldy FT_PITCH_ENV_PTR,x
+    dey    
+    dey
+    lda (FT_TEMP_PTR1),y
+    clc  
     adc #256-192
     sta FT_TEMP_VAR2
     clc
     adc FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_L,x
     lda FT_TEMP_VAR2
- 	bpl @pitch_relative_last_pos  
-	lda #$ff
+     bpl @pitch_relative_last_pos  
+    lda #$ff
 @pitch_relative_last_pos:
     adc FT_PITCH_ENV_VALUE_H,x
     sta FT_PITCH_ENV_VALUE_H,x
-	jmp @pitch_env_next
+    jmp @pitch_env_next
 
 @pitch_env_process:
     lda FT_PITCH_ENV_REPEAT,x
@@ -826,21 +878,21 @@ FamiToneUpdate:
     lda #0
     jmp @pitch_absolute_set_value_hi
 @pitch_absolute_neg:
-	lda #$ff
+    lda #$ff
 @pitch_absolute_set_value_hi:
     sta FT_PITCH_ENV_VALUE_H,x
     iny 
     jmp @pitch_env_next_store_ptr
 
 @pitch_relative:
-	sta FT_TEMP_VAR2
+    sta FT_TEMP_VAR2
     clc
     adc FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_L,x
     lda FT_TEMP_VAR2
     and #$80
- 	bpl @pitch_relative_pos  
-	lda #$ff
+    bpl @pitch_relative_pos  
+    lda #$ff
 @pitch_relative_pos:
     adc FT_PITCH_ENV_VALUE_H,x
     sta FT_PITCH_ENV_VALUE_H,x
@@ -908,8 +960,8 @@ FamiToneUpdate:
 ;----------------------------------------------------------------------------------------------------------------------
 @update_sound:
 
-    update_channel_sound 0, FT_CH1_ENVS, 0, FT_PULSE1_PREV, FT_CHN_DUTY+0, , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V
-    update_channel_sound 1, FT_CH2_ENVS, 1, FT_PULSE2_PREV, FT_CHN_DUTY+1, , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V
+    update_channel_sound 0, FT_CH1_ENVS, 0, FT_PULSE1_PREV, FT_CHN_DUTY+0, , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V, APU_PL1_SWEEP
+    update_channel_sound 1, FT_CH2_ENVS, 1, FT_PULSE2_PREV, FT_CHN_DUTY+1, , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V, APU_PL2_SWEEP
     update_channel_sound 2, FT_CH3_ENVS, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
     update_channel_sound 3, FT_CH4_ENVS,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
 .ifdef FT_VRC6_ENABLE
@@ -1057,7 +1109,7 @@ FamiToneUpdate:
 
 .proc _FT2ChannelUpdate
 
-	FT_DISABLE_ATTACK = FT_TEMP_VAR3
+    FT_DISABLE_ATTACK = FT_TEMP_VAR3
 
     lda FT_CHN_REPEAT,x        ;check repeat counter
     beq @no_repeat
@@ -1124,32 +1176,32 @@ FamiToneUpdate:
     jmp @read_byte 
 
 @override_pitch_envelope:
-	stx FT_TEMP_VAR1
-	lda _FT2ChannelToPitch,x
-	tax
-	lda (FT_TEMP_PTR1),y
-	sta FT_PITCH_ENV_ADR_L,x
-	iny
-	lda (FT_TEMP_PTR1),y
-	sta FT_PITCH_ENV_ADR_H,x
-	lda #0
-	tay
-	sta FT_PITCH_ENV_REPEAT,x
-	lda #1
-	sta FT_PITCH_ENV_PTR,x
-	sta FT_PITCH_ENV_OVERRIDE,x
-	ldx FT_TEMP_VAR1
-	clc
-	lda #2
-	adc FT_TEMP_PTR_L
-	sta FT_TEMP_PTR_L
-	bcc @read_byte 
-	inc FT_TEMP_PTR_H
+    stx FT_TEMP_VAR1
+    lda _FT2ChannelToPitch,x
+    tax
+    lda (FT_TEMP_PTR1),y
+    sta FT_PITCH_ENV_ADR_L,x
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta FT_PITCH_ENV_ADR_H,x
+    lda #0
+    tay
+    sta FT_PITCH_ENV_REPEAT,x
+    lda #1
+    sta FT_PITCH_ENV_PTR,x
+    sta FT_PITCH_ENV_OVERRIDE,x
+    ldx FT_TEMP_VAR1
+    clc
+    lda #2
+    adc FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
+    bcc @read_byte 
+    inc FT_TEMP_PTR_H
     jmp @read_byte 
 
 @disable_attack:
-	lda #1
-	sta FT_DISABLE_ATTACK    
+    lda #1
+    sta FT_DISABLE_ATTACK    
     jmp @read_byte 
 
 @slide:
@@ -1217,8 +1269,8 @@ FamiToneUpdate:
     lda #0
     sta FT_SLIDE_STEP,y
 @sec_and_done:
-	lda FT_DISABLE_ATTACK
-	bne @no_attack
+    lda FT_DISABLE_ATTACK
+    bne @no_attack
     sec                        ;new note flag is set
     jmp @done
 @no_attack:

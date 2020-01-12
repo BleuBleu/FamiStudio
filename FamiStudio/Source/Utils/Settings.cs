@@ -15,6 +15,7 @@ namespace FamiStudio
 
         // Audio section
         public static int InstrumentStopTime { get; set; } = 2;
+        public static bool SquareSmoothVibrato { get; set; } = true;
 
         // MIDI section
         public static string MidiDevice { get; set; } = "";
@@ -29,6 +30,7 @@ namespace FamiStudio
                 CheckUpdates = bool.Parse(ini["UI"]["CheckUpdates"]);
                 InstrumentStopTime = int.Parse(ini["Audio"]["InstrumentStopTime"]);
                 MidiDevice = ini["MIDI"]["Device"];
+                SquareSmoothVibrato = bool.Parse(ini["Audio"]["SquareSmoothVibrato"]);
             }
             catch
             {
@@ -54,6 +56,7 @@ namespace FamiStudio
             ini["UI"]["DpiScaling"]   = DpiScaling.ToString();
             ini["UI"]["CheckUpdates"] = CheckUpdates.ToString();
             ini["Audio"]["InstrumentStopTime"] = InstrumentStopTime.ToString();
+            ini["Audio"]["SquareSmoothVibrato"] = SquareSmoothVibrato.ToString();
             ini["MIDI"]["Device"]     = MidiDevice;
 
             Directory.CreateDirectory(GetConfigFilePath());

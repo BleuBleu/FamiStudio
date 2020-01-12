@@ -36,7 +36,7 @@ namespace FamiStudio
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
         public extern static void NesApuStopSeeking(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static bool NesApuIsSeeking(int apuIdx);
+        public extern static int NesApuIsSeeking(int apuIdx);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
 
@@ -64,6 +64,7 @@ namespace FamiStudio
         public const int APU_DMC_START  = 0x4012;
         public const int APU_DMC_LEN    = 0x4013;
         public const int APU_SND_CHN    = 0x4015;
+        public const int APU_FRAME_CNT  = 0x4017;
 
         public const int APU_EXPANSION_NONE = 0;
         public const int APU_EXPANSION_VRC6 = 1;

@@ -36,13 +36,13 @@ namespace FamiStudio
 
             var tmpNote = pattern.Notes[noteIdx];
 
-            if (tmpNote.HasJump && !NesApu.NesApuIsSeeking(apuIdx) && allowJump)
+            if (tmpNote.HasJump && !IsSeeking && allowJump)
             {
                 patternIdx = tmpNote.Jump;
                 noteIdx = 0;
             }
 
-            if (tmpNote.HasSkip && !NesApu.NesApuIsSeeking(apuIdx))
+            if (tmpNote.HasSkip && !IsSeeking)
             {
                 patternIdx++;
                 noteIdx = tmpNote.Skip;
@@ -199,6 +199,11 @@ namespace FamiStudio
             {
                 slidePitch = 0;
             }
+        }
+
+        protected bool IsSeeking
+        {
+            get { return NesApu.NesApuIsSeeking(apuIdx) != 0; }
         }
 
         public int GetSlidePitch()

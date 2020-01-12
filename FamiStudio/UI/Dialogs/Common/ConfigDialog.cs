@@ -58,13 +58,14 @@ namespace FamiStudio
 #endif
                     var idx = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
 
-                    page.AddStringList("Scaling (Requires Restart):", scalingValues, scalingValues[idx]); // 0
+                    page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[idx]); // 0
                     page.AddBoolean("Check for updates:", true); // 1
                     break;
                 }
                 case ConfigSection.Sound:
                 {
-                    page.AddIntegerRange("Stop Instruments After (sec):", Settings.InstrumentStopTime, 0, 10); // 0
+                    page.AddIntegerRange("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 0
+                    page.AddBoolean("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 1
                     break;
                 }
                 case ConfigSection.MIDI:
@@ -114,6 +115,7 @@ namespace FamiStudio
 
                 // Sound
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(0);
+                Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(1);
 
                 // MIDI
                 var pageMIDI = pages[(int)ConfigSection.MIDI];
