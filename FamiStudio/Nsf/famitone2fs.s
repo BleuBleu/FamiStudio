@@ -526,7 +526,13 @@ FamiToneMusicPause:
 .endif
 
     lda FT_CHN_NOTE+idx
+.if !.blank(pulse_prev) && (FT_SMOOTH_VIBRATO)
+    bne @nocut
+    jmp @cut
+@nocut:
+.else    
     beq @cut
+.endif
     clc
     adc FT_ENV_VALUE+env_offset+FT_ENV_NOTE_OFF
 
@@ -569,6 +575,9 @@ FamiToneMusicPause:
     clc
     adc FT_TEMP_PTR2_L
     sta reg_lo
+.if !.blank(pulse_prev) && (FT_SMOOTH_VIBRATO)
+    sta FT_TEMP_VAR2 ; need to keep the lo period in case we do the sweep trick.
+.endif
     lda FT_TEMP_VAR1
     adc FT_TEMP_PTR2_H 
     jmp @checkprevpulse
@@ -578,6 +587,9 @@ FamiToneMusicPause:
 
     lda FT_PITCH_ENV_VALUE_L+slide_offset
     adc noteTableLSB,x
+.if !.blank(pulse_prev) && (FT_SMOOTH_VIBRATO)
+    sta FT_TEMP_VAR2 ; need to keep the lo period in case we do the sweep trick.
+.endif
     sta reg_lo
     lda FT_PITCH_ENV_VALUE_H+slide_offset
     adc noteTableMSB,x
@@ -608,6 +620,8 @@ FamiToneMusicPause:
             sta APU_FRAME_CNT ; clock sweep immediately
             lda #$08
             sta reg_sweep ; disable sweep
+            lda FT_TEMP_VAR2
+            sta reg_lo ; restore lo-period.
             jmp @prev
         @hi_delta_too_big:
             stx reg_hi
