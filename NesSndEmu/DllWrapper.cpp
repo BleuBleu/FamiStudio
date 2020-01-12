@@ -71,7 +71,7 @@ extern "C" void __stdcall  NesApuStopSeeking(int apuIdx)
 	apu[apuIdx].stop_seeking();
 }
 
-extern "C" bool __stdcall  NesApuIsSeeking(int apuIdx)
+extern "C" int __stdcall  NesApuIsSeeking(int apuIdx)
 {
 	return apu[apuIdx].is_seeking();
 }
