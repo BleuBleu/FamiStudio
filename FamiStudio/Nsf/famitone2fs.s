@@ -526,13 +526,7 @@ FamiToneMusicPause:
 .endif
 
     lda FT_CHN_NOTE+idx
-.if !.blank(pulse_prev) && FT_SMOOTH_VIBRATO
-    bne @has_note
-    jmp @cut
-@has_note:
-.else    
     beq @cut
-.endif
     clc
     adc FT_ENV_VALUE+env_offset+FT_ENV_NOTE_OFF
 
@@ -595,43 +589,28 @@ FamiToneMusicPause:
     .if(!FT_SFX_ENABLE)
         .if(FT_SMOOTH_VIBRATO)
             ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
-            tay ; Y = new hi-period
+            tax ; X = new hi-period
             sec
-            sbc pulse_prev
+            sbc pulse_prev ; A = signed hi-period delta.
             beq @prev
-            sty pulse_prev
-            tay ; Y = signed hi-period delta.
-        @check_hi_delta_is_one:
-            cmp #$01
-            beq @hi_delta_is_one
-        @check_hi_delta_is_minus_one:
-            cmp #$ff
-            bne @hi_delta_too_big ; not 1 or -1, we cant use sweep.
-        @hi_delta_is_one:
-            lda #$40
-            sta APU_FRAME_CNT ; reset frame counter in case it was about to clock
-            tya 
-            bpl @pos_hi_delta
-        @neg_hi_delta:
-            lda #$00 ; be sure low 8 bits of timer period are $00
+            stx pulse_prev
+            tay 
+            iny ; we only care about -1 ($ff) and 1. Adding one means we only check of 0 or 2, we already checked for zero (so < 3).
+            cpy #$03
+            bcs @hi_delta_too_big
+            ldx #$40
+            stx APU_FRAME_CNT ; reset frame counter in case it was about to clock
+            lda _FT2SmoothVibratoLoPeriodLookup, y ; be sure low 8 bits of timer period are $ff (for positive delta), or $00 (for negative delta)
             sta reg_lo
-            lda #$8f ; sweep enabled, shift = 7, set negative flag.
+            lda _FT2SmoothVibratoSweepLookup, y ; sweep enabled, shift = 7, set negative flag or delta is negative..
             sta reg_sweep
-            jmp @run_sweep
-        @pos_hi_delta:
-            lda #$ff ; be sure low 8 bits of timer period are $ff
-            sta reg_lo
-            lda #$87 ; sweep enabled, shift = 7, set negative flag.
-            sta reg_sweep
-        @run_sweep:
             lda #$c0
             sta APU_FRAME_CNT ; clock sweep immediately
             lda #$08
             sta reg_sweep ; disable sweep
             jmp @prev
         @hi_delta_too_big:
-            lda pulse_prev
-            sta reg_hi
+            stx reg_hi
         .else
             cmp pulse_prev
             beq @prev
@@ -1764,6 +1743,15 @@ _FT2ChannelToSlide:
     .byte $03
     .byte $04
     .byte $05
+.endif
+
+.if(FT_SMOOTH_VIBRATO)
+; lookup table for the 2 registers we need to set for smooth vibrato.
+; Index 0 decrement the hi-period, index 2 increments. Index 1 is unused. 
+_FT2SmoothVibratoLoPeriodLookup:
+	.byte $00, $00, $ff
+_FT2SmoothVibratoSweepLookup:
+	.byte $8f, $00, $87
 .endif
 
 ; Precomputed volume multiplication table (rounded but never to zero unless one of the value is zero).
