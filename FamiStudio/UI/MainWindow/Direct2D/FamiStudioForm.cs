@@ -95,6 +95,7 @@ namespace FamiStudio
         public void RefreshSequencerLayout()
         {
             tableLayout.RowStyles[0].Height = (int)(sequencer.ComputeDesiredSizeY() * Direct2DTheme.MainWindowScaling);
+            PianoRoll.Invalidate();
         }
     }
 }
