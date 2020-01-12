@@ -42,7 +42,7 @@ namespace FamiStudio
                 noteIdx = 0;
             }
 
-            if (tmpNote.HasSkip && !IsSeeking)
+            if (tmpNote.HasSkip)
             {
                 patternIdx++;
                 noteIdx = tmpNote.Skip;
