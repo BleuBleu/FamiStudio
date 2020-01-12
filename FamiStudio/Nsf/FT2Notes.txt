@@ -16,7 +16,7 @@ New encoding:
 	$61            Auto slide note (followed by step size + num steps (255 = manual slide) + target note)
 	$62            Disable attack (can only happen when no instrument changes)
 	$63            Override pitch envelope (for vibrato***)
-	$64            Reset to default pitch envelope (after vibrato).
+	$64            Clear override flag.
 	$65-$6f        Free.
 	$70-$7f        Volume (like doug).
 	$80 | (n << 1) Instrument change, max 64
