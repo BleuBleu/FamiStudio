@@ -602,11 +602,11 @@ FamiToneMusicPause:
             sty pulse_prev
             tay ; Y = signed hi-period delta.
         @check_hi_delta_is_one:
-        	cmp #$01
-        	beq @hi_delta_is_one
+            cmp #$01
+            beq @hi_delta_is_one
         @check_hi_delta_is_minus_one:
-        	cmp #$ff
-        	bne @hi_delta_too_big ; not 1 or -1, we cant use sweep.
+            cmp #$ff
+            bne @hi_delta_too_big ; not 1 or -1, we cant use sweep.
         @hi_delta_is_one:
             lda #$40
             sta APU_FRAME_CNT ; reset frame counter in case it was about to clock
@@ -630,7 +630,7 @@ FamiToneMusicPause:
             sta reg_sweep ; disable sweep
             jmp @prev
         @hi_delta_too_big:
-        	lda pulse_prev
+            lda pulse_prev
             sta reg_hi
         .else
             cmp pulse_prev
