@@ -99,7 +99,7 @@ namespace FamiStudio
 
         private void ProjectExplorer_InstrumentDeleted(Instrument instrument)
         {
-            PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
+            PianoRoll.Reset();
         }
 
         private void PianoRoll_NotesPasted()
