@@ -295,6 +295,7 @@ namespace FamiStudio
             else if (buffer.IsReading)
             {
                 UpdateLastValidNote();
+                ClearNotesPastSongLength();
             }
         }
     }

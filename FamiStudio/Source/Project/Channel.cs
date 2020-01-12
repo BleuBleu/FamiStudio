@@ -442,6 +442,9 @@ namespace FamiStudio
 
             for (int i = 0; i < patternInstances.Length; i++)
                 buffer.Serialize(ref patternInstances[i], this);
+
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
+                ClearPatternsInstancesPastSongLength();
         }
     }
 }
