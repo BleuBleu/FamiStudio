@@ -24,6 +24,7 @@ namespace FamiStudio
 {
     public class ProjectExplorer : RenderControl
     {
+        const int DefaultExpansionTypeSizeX   = 4;
         const int DefaultButtonIconPosX       = 4;
         const int DefaultButtonIconPosY       = 4;
         const int DefaultButtonTextPosX       = 24;
@@ -32,8 +33,9 @@ namespace FamiStudio
         const int DefaultSubButtonSpacingX    = 20;
         const int DefaultSubButtonPosY        = 4;
         const int DefaultScrollBarSizeX       = 8;
-        const int DefaultButtonSizeY          = 24;
+        const int DefaultButtonSizeY          = 23;
 
+        int expansionTypeSizeX;
         int buttonIconPosX;
         int buttonIconPosY;
         int buttonTextPosX;
@@ -166,7 +168,10 @@ namespace FamiStudio
                 if (type == ButtonType.Song)
                     return projectExplorer.bmpSong;
                 else if (type == ButtonType.Instrument)
-                    return instrument == null || instrument.ExpansionType == Project.ExpansionNone ? projectExplorer.bmpInstrument : projectExplorer.bmpInstrumentExp;
+                {
+                    var expType = instrument != null ? instrument.ExpansionType : Project.ExpansionNone;
+                    return projectExplorer.bmpInstrument[expType];
+                }
                 return null;
             }
 
@@ -210,8 +215,7 @@ namespace FamiStudio
         RenderTheme theme;
 
         RenderBitmap   bmpSong;
-        RenderBitmap   bmpInstrument;
-        RenderBitmap   bmpInstrumentExp;
+        RenderBitmap[] bmpInstrument = new RenderBitmap[Project.ExpansionCount];
         RenderBitmap   bmpAdd;
         RenderBitmap   bmpDPCM;
         RenderBitmap   bmpArpeggio;
@@ -248,6 +252,7 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
 
+            expansionTypeSizeX   = (int)(DefaultExpansionTypeSizeX * scaling);
             buttonIconPosX       = (int)(DefaultButtonIconPosX * scaling);      
             buttonIconPosY       = (int)(DefaultButtonIconPosY * scaling);      
             buttonTextPosX       = (int)(DefaultButtonTextPosX * scaling);      
@@ -292,8 +297,8 @@ namespace FamiStudio
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
             bmpSong = g.CreateBitmapFromResource("Music");
-            bmpInstrument = g.CreateBitmapFromResource("Instrument");
-            bmpInstrumentExp = g.CreateBitmapFromResource("InstrumentExp");
+            bmpInstrument[Project.ExpansionNone] = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[Project.ExpansionVRC6] = g.CreateBitmapFromResource("InstrumentVRC6");
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
             bmpDuty[0] = g.CreateBitmapFromResource("Duty0");
@@ -331,6 +336,17 @@ namespace FamiStudio
 
                 g.PushTranslation(0, y);
                 g.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.GetColor(), buttonSizeY, 0.8f), theme.BlackBrush);
+
+                var leftPadding = 0;
+                if (App.Project.UsesExpansionAudio && (button.type == ButtonType.Instrument || button.type == ButtonType.Song))
+                {
+                    var tabColor = button.instrument != null && button.instrument.IsExpansionInstrument ? ThemeBase.DarkGreyFillColor2 : ThemeBase.LightGreyFillColor1;
+                    g.FillRectangle(1, 1, 1 + expansionTypeSizeX, buttonSizeY, g.GetVerticalGradientBrush(tabColor, buttonSizeY, 0.8f));
+                    g.PushTranslation(1 + expansionTypeSizeX, 0);
+                    g.DrawLine(0, 0, 0, buttonSizeY, theme.BlackBrush);
+                    leftPadding = expansionTypeSizeX;
+                }
+
                 g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, theme.BlackBrush, actualWidth - buttonTextNoIconPosX * 2);
 
                 if (icon != null)
@@ -341,11 +357,14 @@ namespace FamiStudio
                 var subButtons = button.GetSubButtons(out var active);
                 if (subButtons != null)
                 {
-                    for (int i = 0, x = actualWidth - subButtonSpacingX; i < subButtons.Length; i++, x -= subButtonSpacingX)
+                    for (int i = 0, x = actualWidth - subButtonSpacingX - leftPadding; i < subButtons.Length; i++, x -= subButtonSpacingX)
                     {
                         g.DrawBitmap(button.GetIcon(subButtons[i]), x, subButtonPosY, active[i] ? 1.0f : 0.2f);
                     }
                 }
+
+                if (leftPadding != 0)
+                    g.PopTransform();
 
                 g.PopTransform();
                 y += buttonSizeY;
@@ -622,7 +641,7 @@ namespace FamiStudio
                         {
                             var instrumentType = Project.ExpansionNone;
 
-                            if (App.Project.ExpansionAudio != Project.ExpansionNone)
+                            if (App.Project.UsesExpansionAudio)
                             {
                                 var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, true);
                                 dlg.Properties.AddStringList("Expansion:", Project.ExpansionNames, Project.ExpansionNames[0] ); // 0

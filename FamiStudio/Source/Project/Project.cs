@@ -41,6 +41,7 @@ namespace FamiStudio
         public int                 NextUniqueId   => nextUniqueId;
         public int                 ExpansionAudio => expansionAudio;
         public string              ExpansionAudioName => ExpansionNames[expansionAudio];
+        public bool                UsesExpansionAudio => expansionAudio != ExpansionNone;
 
         public string              Filename   { get => filename; set => filename = value; }
         public string              Name       { get => name; set => name = value; }
@@ -375,7 +376,7 @@ namespace FamiStudio
             for (int i = instruments.Count - 1; i >= 0; i--)
             {
                 var inst = instruments[i];
-                if (inst.ExpansionType != Project.ExpansionNone)
+                if (inst.IsExpansionInstrument)
                     DeleteInstrument(inst);
             }
         }

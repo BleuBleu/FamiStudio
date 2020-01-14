@@ -251,20 +251,18 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\InstrumentVRC6%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentVRC6.png" />
     <EmbeddedResource Include="Resources\VibratoSmall%402x.png" />
     <EmbeddedResource Include="Resources\VibratoSmall.png" />
     <EmbeddedResource Include="Resources\Slide%4015x.png" />
     <EmbeddedResource Include="Resources\Slide%402x.png" />
     <EmbeddedResource Include="Resources\Slide.png" />
-    <EmbeddedResource Include="Resources\SquareExp%402x.png" />
-    <EmbeddedResource Include="Resources\SquareExp.png" />
     <EmbeddedResource Include="Resources\SlideSmall%4015x.png" />
     <EmbeddedResource Include="Resources\SlideSmall%402x.png" />
     <EmbeddedResource Include="Resources\SlideSmall.png" />
     <EmbeddedResource Include="Resources\Warning%402x.png" />
     <EmbeddedResource Include="Resources\Warning.png" />
-    <EmbeddedResource Include="Resources\InstrumentExp%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentExp.png" />
     <EmbeddedResource Include="Resources\Duty4%402x.png" />
     <EmbeddedResource Include="Resources\Duty4.png" />
     <EmbeddedResource Include="Resources\Duty5%402x.png" />

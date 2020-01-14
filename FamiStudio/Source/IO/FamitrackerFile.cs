@@ -641,13 +641,13 @@ namespace FamiStudio
                     var env = instrument.Envelopes[i];
                     uint crc = env.CRC;
 
-                    if (uniqueEnvelopes[instrument.ExpansionType != Project.ExpansionNone ? 1 : 0, i].TryGetValue(crc, out var existingEnv))
+                    if (uniqueEnvelopes[instrument.IsExpansionInstrument ? 1 : 0, i].TryGetValue(crc, out var existingEnv))
                     {
                         instrument.Envelopes[i] = existingEnv;
                     }
                     else
                     {
-                        uniqueEnvelopes[instrument.ExpansionType != Project.ExpansionNone ? 1 : 0, i][crc] = env;
+                        uniqueEnvelopes[instrument.IsExpansionInstrument ? 1 : 0, i][crc] = env;
                     }
                 }
             }
@@ -807,7 +807,7 @@ namespace FamiStudio
             {
                 var instrument = project.Instruments[i];
 
-                var expIdx = instrument.ExpansionType != Project.ExpansionNone ? 1 : 0;
+                var expIdx = instrument.IsExpansionInstrument ? 1 : 0;
                 int volEnvIdx = instrument.Envelopes[Envelope.Volume].Length   > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Volume],   instrument.Envelopes[Envelope.Volume])   : -1;
                 int arpEnvIdx = instrument.Envelopes[Envelope.Arpeggio].Length > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Arpeggio], instrument.Envelopes[Envelope.Arpeggio]) : -1;
                 int pitEnvIdx = instrument.Envelopes[Envelope.Pitch].Length    > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Pitch],    instrument.Envelopes[Envelope.Pitch])    : -1;

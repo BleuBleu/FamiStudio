@@ -15,6 +15,7 @@ namespace FamiStudio
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public int ExpansionType { get => expansion; }
+        public bool IsExpansionInstrument { get => expansion != Project.ExpansionNone; }
         public Color Color { get => color; set => color = value; }
         public Envelope[] Envelopes => envelopes;
         public int DutyCycle { get => dutyCycle; set => dutyCycle = value; }

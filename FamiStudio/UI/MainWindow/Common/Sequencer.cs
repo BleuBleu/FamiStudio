@@ -27,24 +27,26 @@ namespace FamiStudio
 {
     public class Sequencer : RenderControl
     {
-        const int DefaultTrackNameSizeX     = 81;
-        const int DefaultHeaderSizeY        = 17;
-        const int DefaultPatternHeaderSizeY = 16;
-        const int DefaultNoteSizeY          = 4;
-        const int DefaultScrollMargin       = 128;
-        const int DefaultBarTextPosY        = 2;
-        const int DefaultTrackIconPosX      = 4;
-        const int DefaultTrackIconPosY      = 4;
-        const int DefaultTrackNamePosX      = 24;
-        const int DefaultTrackNamePosY      = 4;
-        const int DefaultGhostNoteOffsetX   = 16;
-        const int DefaultGhostNoteOffsetY   = 16;
-        const int DefaultPatternNamePosX    = 2;
-        const int DefaultPatternNamePosY    = 3;
+        const int DefaultExpansionsTypeSizeX = 4;
+        const int DefaultTrackNameSizeX      = 85;
+        const int DefaultHeaderSizeY         = 17;
+        const int DefaultPatternHeaderSizeY  = 16;
+        const int DefaultNoteSizeY           = 4;
+        const int DefaultScrollMargin        = 128;
+        const int DefaultBarTextPosY         = 2;
+        const int DefaultTrackIconPosX       = 4;
+        const int DefaultTrackIconPosY       = 4;
+        const int DefaultTrackNamePosX       = 24;
+        const int DefaultTrackNamePosY       = 4;
+        const int DefaultGhostNoteOffsetX    = 16;
+        const int DefaultGhostNoteOffsetY    = 16;
+        const int DefaultPatternNamePosX     = 2;
+        const int DefaultPatternNamePosY     = 3;
 
         const int MinZoomLevel = -2;
         const int MaxZoomLevel = 4;
 
+        int expansionTypeSizeX;
         int trackNameSizeX;
         int headerSizeY;
         int trackSizeY;
@@ -142,6 +144,7 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
 
+            expansionTypeSizeX = (int)(DefaultExpansionsTypeSizeX * scaling);
             trackNameSizeX     = (int)(DefaultTrackNameSizeX * scaling);
             headerSizeY        = (int)(DefaultHeaderSizeY * scaling);
             trackSizeY         = (int)(ComputeDesiredTrackSizeY() * scaling);
@@ -216,8 +219,8 @@ namespace FamiStudio
             bmpTracks[Channel.Triangle] = g.CreateBitmapFromResource("Triangle");
             bmpTracks[Channel.Noise] = g.CreateBitmapFromResource("Noise");
             bmpTracks[Channel.DPCM] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.VRC6Square1] = g.CreateBitmapFromResource("SquareExp");
-            bmpTracks[Channel.VRC6Square2] = g.CreateBitmapFromResource("SquareExp");
+            bmpTracks[Channel.VRC6Square1] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.VRC6Square2] = g.CreateBitmapFromResource("Square");
             bmpTracks[Channel.VRC6Saw] = g.CreateBitmapFromResource("Saw");
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
@@ -298,6 +301,16 @@ namespace FamiStudio
 
             g.PushTranslation(0, headerSizeY);
 
+            if (App.Project.UsesExpansionAudio)
+            {
+                for (int i = Channel.ExpansionAudioStart; i < Song.Channels.Length; i++)
+                    g.FillRectangle(0, i * trackSizeY, expansionTypeSizeX, (i + 1) * trackSizeY + 1, theme.DarkGreyFillBrush2);
+
+                g.PushTranslation(expansionTypeSizeX, 0);
+
+                g.DrawLine(0, 0, 0, Height, theme.DarkGreyLineBrush1);
+            }
+
             // Icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
                 g.DrawBitmap(bmpTracks[(int)Song.Channels[i].Type], trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
@@ -305,6 +318,9 @@ namespace FamiStudio
             // Track names
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
                 g.DrawText(Song.Channels[i].Name, i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium, trackNamePosX, y + trackNamePosY, theme.BlackBrush);
+
+            if (App.Project.UsesExpansionAudio)
+               g.PopTransform();
 
             // Ghost note icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
