@@ -71,11 +71,13 @@ namespace FamiStudio
                     if (releasePoint >= 0 && i != (int)SequenceType.SEQ_VOLUME)
                         releasePoint = -1;
 
-                    // Our loop/release logic is slightly different.
-                    if (i == (int)SequenceType.SEQ_VOLUME && loopPoint == -1 && releasePoint >= 0)
+                    // FamiTracker allows envelope with release with no loop. We dont allow that.
+                    if (i == (int)SequenceType.SEQ_VOLUME && releasePoint != -1)
                     {
-                        loopPoint = releasePoint;
-                        releasePoint++;
+                        if (loopPoint == -1)
+                            loopPoint = releasePoint;
+                        if (releasePoint != -1)
+                            releasePoint++;
                     }
 
                     Envelope env = null;

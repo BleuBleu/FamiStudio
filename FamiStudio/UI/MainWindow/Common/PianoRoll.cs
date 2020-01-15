@@ -603,7 +603,7 @@ namespace FamiStudio
             if (editMode == EditionMode.Enveloppe || 
                 editMode == EditionMode.Channel)
             {
-                var seekFrame = editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editEnvelope) : App.CurrentFrame;
+                var seekFrame = editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editInstrument, editEnvelope) : App.CurrentFrame;
                 if (seekFrame >= 0)
                 {
                     g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
@@ -1291,7 +1291,7 @@ namespace FamiStudio
                 if (env.Length > 0)
                     g.DrawLine(env.Length * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
 
-                var seekFrame = App.GetEnvelopeFrame(editEnvelope);
+                var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope);
                 if (seekFrame >= 0)
                 {
                     var seekX = seekFrame * noteSizeX - scrollX;

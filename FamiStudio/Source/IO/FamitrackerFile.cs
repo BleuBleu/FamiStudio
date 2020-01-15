@@ -29,7 +29,7 @@ namespace FamiStudio
             var project = new Project();
 
             var envelopes = new Dictionary<int, Envelope>[Project.ExpansionCount, Envelope.Max];
-            var duties = new Dictionary<int, int>();
+            var duties = new Dictionary<int, int>[Project.ExpansionCount];
             var instruments = new Dictionary<int, Instrument>();
             var dpcms = new Dictionary<int, DPCMSample>();
             var columns = new int[5] { 1, 1, 1, 1, 1 };
@@ -53,6 +53,9 @@ namespace FamiStudio
             for (int i = 0; i < envelopes.GetLength(0); i++)
                 for (int j = 0; j < envelopes.GetLength(1); j++)
                     envelopes[i, j] = new Dictionary<int, Envelope>();
+
+            for (int i = 0; i < duties.Length; i++)
+                duties[i] = new Dictionary<int, int>();
 
             DPCMSample currentDpcm = null;
             int dpcmWriteIdx = 0;
@@ -117,7 +120,7 @@ namespace FamiStudio
                     }
                     else if (type == 4)
                     {
-                        duties[idx] = int.Parse(curve[0]);
+                        duties[expansion][idx] = int.Parse(curve[0]);
                     }
                 }
                 else if (line.StartsWith("DPCMDEF"))
@@ -181,7 +184,7 @@ namespace FamiStudio
                     if (vol >= 0) instrument.Envelopes[0] = envelopes[expansion, 0][vol].Clone();
                     if (arp >= 0) instrument.Envelopes[1] = envelopes[expansion, 1][arp].Clone();
                     if (pit >= 0) instrument.Envelopes[2] = envelopes[expansion, 2][pit].Clone();
-                    if (dut >= 0) instrument.DutyCycle = duties[dut];
+                    if (dut >= 0) instrument.DutyCycle = duties[expansionType][dut];
 
                     instruments[idx] = instrument;
                 }
@@ -306,7 +309,8 @@ namespace FamiStudio
                                     pattern.Notes[rowIdx].Skip = param;
                                     break;
                                 case 'F': // Tempo
-                                    pattern.Notes[rowIdx].Speed = param;
+                                    if (param <= 0x1f) // We only support speed change for now.
+                                        pattern.Notes[rowIdx].Speed = param;
                                     break;
                                 case '4': // Vibrato
                                     pattern.Notes[rowIdx].VibratoDepth = (byte)(param & 0x0f);
@@ -334,6 +338,8 @@ namespace FamiStudio
                 foreach (var c in s.Channels)
                     c.ColorizePatterns();
             }
+
+            project.UpdateAllLastValidNotesAndVolume();
 
             return project;
         }
@@ -425,15 +431,15 @@ namespace FamiStudio
             return false;
         }
 
-        private static int FindBestMatchingNote(ushort[] noteTable, int pitch)
+        private static int FindBestMatchingNote(ushort[] noteTable, int pitch, int sign)
         {
             var bestIdx  = -1;
             var bestDiff = 99999;
 
             for (int i = 1; i < noteTable.Length; i++)
             {
-                var diff = Math.Abs(pitch - noteTable[i]);
-                if (diff < bestDiff)
+                var diff = (pitch - noteTable[i]) * sign;
+                if (diff >= 0 && diff < bestDiff)
                 {
                     bestIdx = i;
                     bestDiff = diff;
@@ -453,6 +459,7 @@ namespace FamiStudio
 
                 var lastNoteInstrument = (Instrument)null;
                 var lastNoteValue = (byte)Note.NoteInvalid;
+                var portamentoSpeed = 0;
 
                 for (int p = 0; p < s.Length; p++)
                 {
@@ -471,51 +478,58 @@ namespace FamiStudio
 
                             if (fx.param != 0)
                             {
-                                if (fx.fx == '1') slideSpeed = -fx.param;
-                                if (fx.fx == '2') slideSpeed = fx.param;
-                                if (fx.fx == '3')
-                                {
-                                    slideTarget = note.Value;
-                                    slideSpeed = fx.param;
-
-                                    // FamiTracker portamento is backward compared to us.
-                                    if (note.IsValid)
-                                    {
-                                        pattern.Notes[n].Value = lastNoteValue;
-                                        note = pattern.Notes[n];
-                                    }
-                                }
-                                if (fx.fx == 'Q')
-                                {
-                                    slideTarget = lastNoteValue + (fx.param & 0xf);
-                                    slideSpeed = -((fx.param >> 4) * 2 + 1);
-                                }
-                                if (fx.fx == 'R')
-                                {
-                                    slideTarget = lastNoteValue - (fx.param & 0xf);
-                                    slideSpeed = ((fx.param >> 4) * 2 + 1);
-                                }
-
                                 // When the effect it turned on, we need to add a note.
-                                if ((fx.fx == '1' || fx.fx == '2' || fx.fx == '3' || fx.fx == 'Q' || fx.fx == 'R') && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax && !note.IsValid)
+                                if ((fx.fx == '1' || fx.fx == '2' || fx.fx == 'Q' || fx.fx == 'R') && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax && !note.IsValid)
                                 {
                                     pattern.Notes[n].Value = lastNoteValue;
                                     pattern.Notes[n].Instrument = lastNoteInstrument;
                                     pattern.Notes[n].HasAttack = false;
                                     note = pattern.Notes[n];
                                 }
+
+                                if (fx.fx == '1') slideSpeed = -fx.param;
+                                if (fx.fx == '2') slideSpeed =  fx.param;
+                                if (fx.fx == '3')
+                                {
+                                    portamentoSpeed = fx.param;
+                                }
+                                if (fx.fx == 'Q')
+                                {
+                                    slideTarget = note.Value + (fx.param & 0xf);
+                                    slideSpeed = -((fx.param >> 4) * 2 + 1);
+                                }
+                                if (fx.fx == 'R')
+                                {
+                                    slideTarget = note.Value - (fx.param & 0xf);
+                                    slideSpeed = ((fx.param >> 4) * 2 + 1);
+                                }
+                            }
+                            else if (fx.fx == '3')
+                            {
+                                portamentoSpeed = 0;
                             }
                         }
 
                         // Create a slide note.
                         if (!note.IsSlideNote)
                         {
-                            if (note.IsMusical && slideSpeed != 0)
+                            if (note.IsMusical)
                             {
                                 var noteTable = NesApu.GetNoteTableForChannelType(c.Type, false);
                                 var pitchLimit = NesApu.GetPitchLimitForChannelType(c.Type);
 
-                                if (slideTarget != 0)
+                                // If we have a new note with auto-portamento enabled, we need to
+                                // swap the notes since our slide notes work backward compared to 
+                                // FamiTracker.
+                                if (portamentoSpeed != 0)
+                                {
+                                    if (lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax)
+                                    {
+                                        pattern.Notes[n].SlideNoteTarget = pattern.Notes[n].Value;
+                                        pattern.Notes[n].Value = lastNoteValue;
+                                    }
+                                }
+                                else if (slideTarget != 0)
                                 {
                                     var numFrames = Math.Abs((noteTable[note.Value] - noteTable[slideTarget]) / (slideSpeed * s.Speed));
                                     pattern.Notes[n].SlideNoteTarget = (byte)slideTarget;
@@ -533,6 +547,22 @@ namespace FamiStudio
                                         nn = 0;
                                     }
 
+                                    // Still to see if there is a note between the current one and the 
+                                    // next note, this could append if you add a note before the slide 
+                                    // is supposed to finish.
+                                    if (FindNextNoteForSlide(c, p, n, out var np2, out var nn2, patternFxData))
+                                    {
+                                        if (np2 < np)
+                                        {
+                                            np = np2;
+                                            nn = nn2;
+                                        }
+                                        else if (np2 == np)
+                                        {
+                                            nn = Math.Min(nn, nn2);
+                                        }
+                                    }
+
                                     // Add an extra note with no attack to stop the slide.
                                     if (!c.PatternInstances[np].Notes[nn].IsValid)
                                     {
@@ -542,14 +572,14 @@ namespace FamiStudio
                                     }
                                 }
                                 // Find the next note that would stop the slide or change the FX settings.
-                                else if (FindNextNoteForSlide(c, p, n, out var np, out var nn, patternFxData))
+                                else if (slideSpeed != 0 && FindNextNoteForSlide(c, p, n, out var np, out var nn, patternFxData))
                                 {
                                     // Compute the pitch delta and find the closest target note.
                                     var numFrames = ((np * s.PatternLength + nn) - (p * s.PatternLength + n)) * s.Speed;
 
                                     // TODO: PAL.
                                     var newNotePitch = Utils.Clamp(noteTable[note.Value] + numFrames * slideSpeed, 0, pitchLimit);
-                                    var newNote = FindBestMatchingNote(noteTable, newNotePitch);
+                                    var newNote = FindBestMatchingNote(noteTable, newNotePitch, Math.Sign(slideSpeed));
 
                                     pattern.Notes[n].SlideNoteTarget = (byte)newNote;
 
@@ -559,6 +589,7 @@ namespace FamiStudio
                                     {
                                         c.PatternInstances[np].Notes[nn].Instrument = note.Instrument;
                                         c.PatternInstances[np].Notes[nn].Value = (byte)newNote;
+                                        c.PatternInstances[np].Notes[nn].HasAttack = false;
                                     }
                                 }
                             }

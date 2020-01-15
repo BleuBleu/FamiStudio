@@ -471,7 +471,8 @@ namespace FamiStudio
         public void StopOrReleaseIntrumentNote()
         {
             if (ProjectExplorer.SelectedInstrument != null && 
-                ProjectExplorer.SelectedInstrument.HasReleaseEnvelope)
+                ProjectExplorer.SelectedInstrument.HasReleaseEnvelope &&
+                song.Channels[Sequencer.SelectedChannel].SupportsInstrument(ProjectExplorer.SelectedInstrument))
             {
                 instrumentPlayer.ReleaseNote(Sequencer.SelectedChannel);
             }
@@ -686,9 +687,12 @@ namespace FamiStudio
             }
         }
 
-        public int GetEnvelopeFrame(int envelopeIdx)
+        public int GetEnvelopeFrame(Instrument instrument, int envelopeIdx)
         {
-            return instrumentPlayer.GetEnvelopeFrame(envelopeIdx);
+            if (ProjectExplorer.SelectedInstrument == instrument)
+                return instrumentPlayer.GetEnvelopeFrame(envelopeIdx);
+            else
+                return -1;
         }
 
         private void InvalidateEverything()

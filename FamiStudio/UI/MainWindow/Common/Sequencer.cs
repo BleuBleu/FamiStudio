@@ -301,7 +301,7 @@ namespace FamiStudio
 
             g.PushTranslation(0, headerSizeY);
 
-            if (App.Project.UsesExpansionAudio)
+            if (Song.Project.UsesExpansionAudio)
             {
                 for (int i = Channel.ExpansionAudioStart; i < Song.Channels.Length; i++)
                     g.FillRectangle(0, i * trackSizeY, expansionTypeSizeX, (i + 1) * trackSizeY + 1, theme.DarkGreyFillBrush2);
@@ -319,7 +319,7 @@ namespace FamiStudio
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
                 g.DrawText(Song.Channels[i].Name, i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium, trackNamePosX, y + trackNamePosY, theme.BlackBrush);
 
-            if (App.Project.UsesExpansionAudio)
+            if (Song.Project.UsesExpansionAudio)
                g.PopTransform();
 
             // Ghost note icons
