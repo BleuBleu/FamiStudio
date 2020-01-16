@@ -89,14 +89,9 @@ namespace FamiStudio
                 }
                 else if (++playNote >= song.PatternLength)
                 {
-                    if (loopMode == LoopMode.Pattern)
-                    {
-                        playNote = 0;
-                    }
-                    else
-                    {
+                    playNote = 0;
+                    if (loopMode != LoopMode.Pattern)
                         playPattern++;
-                    }
                 }
 
                 if (playPattern >= song.Length)

@@ -122,7 +122,7 @@ namespace FamiStudio
                     NesApu.seeking = true;
                 #endif
 
-                while (playPattern * song.PatternLength + playNote != startInfo.frame)
+                while (playPattern * song.PatternLength + playNote < startInfo.frame)
                 {
                     var dummyAdvance = false;
                     if (!AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote, ref dummyAdvance))
