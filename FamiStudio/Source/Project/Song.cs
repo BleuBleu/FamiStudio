@@ -29,7 +29,7 @@ namespace FamiStudio
         public int Speed { get => speed; set => speed = value; }
         public int Length { get => songLength; }
         public int PatternLength { get => patternLength; }
-        public int BarLength { get => barLength; set => barLength = value; }
+        public int BarLength { get => barLength; }
 
         public Song()
         {
@@ -121,6 +121,14 @@ namespace FamiStudio
 
             foreach (var channel in channels)
                 channel.ClearNotesPastSongLength();
+        }
+
+        public void SetBarLength(int newBarLength)
+        {
+            if (Array.IndexOf(GenerateBarLengths(patternLength), newBarLength) >= 0)
+            {
+                barLength = newBarLength;
+            }
         }
 
         public static int[] GenerateBarLengths(int patternLen)
