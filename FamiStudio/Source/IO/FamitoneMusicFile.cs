@@ -492,6 +492,7 @@ namespace FamiStudio
 
                     if (patternLength >= 0)
                     {
+                        patternLength++;
                         isSkipping = true;
                     }
                     else
@@ -501,6 +502,7 @@ namespace FamiStudio
                         patternLength = FindEffectPosition(song, p, Note.EffectJump);
                         if (patternLength >= 0)
                         {
+                            patternLength++;
                             jumpFound = true;
                         }
                         else

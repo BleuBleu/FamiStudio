@@ -63,7 +63,7 @@ namespace FamiStudio
             audioStream.Dispose();
         }
 
-        public static bool AdvanceTempo(Song song, int speed, LoopMode loopMode, ref int tempoCounter, ref int playPattern, ref int playNote, ref int playFrame, ref bool advance)
+        public static bool AdvanceTempo(Song song, int speed, LoopMode loopMode, ref int tempoCounter, ref int playPattern, ref int playNote, ref int jumpPattern, ref int jumpNote, ref bool advance)
         {
             // Tempo/speed logic.
             tempoCounter += song.Tempo * 256 / 150; // NTSC
@@ -72,22 +72,46 @@ namespace FamiStudio
             {
                 tempoCounter -= (speed << 8);
 
-                if (++playNote == song.PatternLength)
+                if (jumpNote >= 0 || jumpPattern >= 0)
                 {
-                    playNote = 0;
-
-                    if (loopMode != LoopMode.Pattern)
+                    if (loopMode == LoopMode.Pattern)
                     {
-                        if (++playPattern == song.Length)
-                        {
-                            if (loopMode == LoopMode.None)
-                                return false;
-                            playPattern = 0;
-                        }
+                        playNote = 0;
+                    }
+                    else
+                    {
+                        playNote = Math.Min(song.PatternLength - 1, jumpNote);
+                        playPattern = jumpPattern;
+                    }
+
+                    jumpPattern = -1;
+                    jumpNote = -1;
+                }
+                else if (++playNote >= song.PatternLength)
+                {
+                    if (loopMode == LoopMode.Pattern)
+                    {
+                        playNote = 0;
+                    }
+                    else
+                    {
+                        playPattern++;
                     }
                 }
 
-                playFrame = playPattern * song.PatternLength + playNote;
+                if (playPattern >= song.Length)
+                {
+                    if (loopMode == LoopMode.None)
+                    {
+                        return false;
+                    }
+                    else if (loopMode == LoopMode.Song)
+                    {
+                        playPattern = 0;
+                        playNote = 0;
+                    }
+                }
+
                 advance = true;
             }
 

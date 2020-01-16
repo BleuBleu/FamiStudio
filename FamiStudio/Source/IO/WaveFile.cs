@@ -37,6 +37,8 @@ namespace FamiStudio
             var tempoCounter = 0;
             var playPattern = 0;
             var playNote = 0;
+            var jumpPattern = -1;
+            var jumpNote = -1;
             var speed = song.Speed;
             var wavBytes = new List<byte>();
             var apuIndex = NesApu.APU_WAV_EXPORT;
@@ -57,7 +59,7 @@ namespace FamiStudio
                 {
                     foreach (var channel in channels)
                     {
-                        channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed, false);
+                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote,  ref speed, false);
                     }
 
                     foreach (var channel in channels)
@@ -87,8 +89,7 @@ namespace FamiStudio
 
                 wavBytes.AddRange(samples);
 
-                int dummy1 = 0;
-                if (!PlayerBase.AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref dummy1, ref advance))
+                if (!PlayerBase.AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote, ref advance))
                 {
                     break;
                 }
