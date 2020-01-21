@@ -222,6 +222,7 @@ namespace FamiStudio
             bmpTracks[Channel.VRC6Square1] = g.CreateBitmapFromResource("Square");
             bmpTracks[Channel.VRC6Square2] = g.CreateBitmapFromResource("Square");
             bmpTracks[Channel.VRC6Saw] = g.CreateBitmapFromResource("Saw");
+            bmpTracks[Channel.Fds] = g.CreateBitmapFromResource("DPCM");
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
 

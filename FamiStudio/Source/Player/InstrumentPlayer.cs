@@ -42,12 +42,7 @@ namespace FamiStudio
             noteQueue.Enqueue(new PlayerNote() { channel = -1 });
             while (!noteQueue.IsEmpty) Thread.Sleep(1);
         }
-
-        public override void Initialize()
-        {
-            base.Initialize();
-        }
-
+        
         public void Start(Project project)
         {
             expansionAudio = project.ExpansionAudio;
@@ -85,9 +80,9 @@ namespace FamiStudio
             var activeChannel = -1;
             var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
 
-            NesApu.Reset(apuIndex, expansionAudio);
+            NesApu.InitAndReset(apuIndex, SampleRate, expansionAudio, dmcCallback);
             for (int i = 0; i < channels.Length; i++)
-                NesApu.NesApuEnableChannel(apuIndex, i, 0);
+                NesApu.EnableChannel(apuIndex, i, 0);
 
             while (true)
             {
@@ -123,7 +118,7 @@ namespace FamiStudio
                     }
 
                     for (int i = 0; i < channels.Length; i++)
-                        NesApu.NesApuEnableChannel(apuIndex, i, i == activeChannel ? 1 : 0);
+                        NesApu.EnableChannel(apuIndex, i, i == activeChannel ? 1 : 0);
                 }
 
                 if (lastNoteWasRelease &&
@@ -131,7 +126,7 @@ namespace FamiStudio
                     Settings.InstrumentStopTime >= 0 &&
                     DateTime.Now.Subtract(lastReleaseTime).TotalSeconds >= Settings.InstrumentStopTime)
                 {
-                    NesApu.NesApuEnableChannel(apuIndex, activeChannel, 0);
+                    NesApu.EnableChannel(apuIndex, activeChannel, 0);
                     activeChannel = -1;
                 }
 

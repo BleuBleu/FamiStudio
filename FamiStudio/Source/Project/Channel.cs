@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -16,7 +17,8 @@ namespace FamiStudio
         public const int VRC6Square1 = 5;
         public const int VRC6Square2 = 6;
         public const int VRC6Saw = 7;
-        public const int Count = 8;
+        public const int Fds = 8;
+        public const int Count = 9;
 
         private Song song;
         private Pattern[] patternInstances = new Pattern[Song.MaxLength];
@@ -38,7 +40,8 @@ namespace FamiStudio
             "DPCM",
             "Square 1", // VRC6
             "Square 2", // VRC6
-            "Saw" // VRC6
+            "Saw", // VRC6
+            "FDS" // FDS
         };
 
         public Channel()
@@ -75,6 +78,9 @@ namespace FamiStudio
 
             if (instrument.ExpansionType == Project.ExpansionVRC6 && type >= VRC6Square1 && type <= VRC6Saw)
                 return true;
+
+            //if (instrument.ExpansionType == Project.ExpansionFDS && type == Fds)
+            //    return true;
 
             return false;
         }
@@ -410,10 +416,22 @@ namespace FamiStudio
                 pattern.ClearNotesPastSongLength();
         }
 
+        public static int ChannelTypeToIndex(int type)
+        {
+            if (type < ExpansionAudioStart)
+                return type;
+            if (type >= VRC6Square1 && type <= VRC6Saw)
+                return ExpansionAudioStart + type - VRC6Square1;
+            if (type == Fds)
+                return ExpansionAudioStart;
+            Debug.Assert(false);
+            return -1;
+        }
+
 #if DEBUG
         public void Validate(Song song)
         {
-            Debug.Assert(this == song.Channels[type]);
+            Debug.Assert(this == song.GetChannelByType(type));
             Debug.Assert(this.song == song);
             foreach (var inst in patternInstances)
                 Debug.Assert(inst == null || patterns.Contains(inst));

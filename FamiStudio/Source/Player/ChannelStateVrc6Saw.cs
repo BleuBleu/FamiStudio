@@ -2,9 +2,9 @@
 
 namespace FamiStudio
 {
-    public class Vrc6SawChannelState : ChannelState
+    public class ChannelStateVrc6Saw : ChannelState
     {
-        public Vrc6SawChannelState(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
+        public ChannelStateVrc6Saw(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
         {
             maximumPeriod = NesApu.MaximumPeriod12Bit;
         }
@@ -13,7 +13,7 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, 0x00);
+                NesApu.WriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, 0x00);
             }
             else if (note.IsValid)
             {
@@ -26,9 +26,9 @@ namespace FamiStudio
                 if ((duty & 1) != 0 && volume != 0)
                     volume = (volume << 1) + 1;
 
-                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, (volume << 1)); 
-                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
-                NesApu.NesApuWriteRegister(apuIdx, NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
+                NesApu.WriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, (volume << 1)); 
+                NesApu.WriteRegister(apuIdx, NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
+                NesApu.WriteRegister(apuIdx, NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
             }
         }
     };

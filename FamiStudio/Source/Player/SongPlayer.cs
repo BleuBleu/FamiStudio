@@ -113,11 +113,11 @@ namespace FamiStudio
 
             playPosition = startInfo.frame;
 
-            NesApu.Reset(apuIndex, GetNesApuExpansionAudio(song.Project));
+            NesApu.InitAndReset(apuIndex, SampleRate, GetNesApuExpansionAudio(song.Project), dmcCallback);
 
             if (startInfo.frame != 0)
             {
-                NesApu.NesApuStartSeeking(apuIndex);
+                NesApu.StartSeeking(apuIndex);
                 #if DEBUG
                     NesApu.seeking = true;
                 #endif
@@ -139,7 +139,7 @@ namespace FamiStudio
                     }
                 }
 
-                NesApu.NesApuStopSeeking(apuIndex);
+                NesApu.StopSeeking(apuIndex);
 #if DEBUG
                 NesApu.seeking = false;
 #endif
@@ -187,7 +187,7 @@ namespace FamiStudio
                 // Mute.
                 for (int i = 0; i < channels.Length; i++) 
                 {
-                    NesApu.NesApuEnableChannel(apuIndex, i, (channelMask & (1 << i)));
+                    NesApu.EnableChannel(apuIndex, i, (channelMask & (1 << i)));
                 }
 
                 EndFrameAndQueueSamples();

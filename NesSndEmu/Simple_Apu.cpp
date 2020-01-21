@@ -3,6 +3,8 @@
 
 #include "Simple_Apu.h"
 
+#include <string.h>
+
 /* Copyright (C) 2003-2005 Shay Green. This module is free software; you
 can redistribute it and/or modify it under the terms of the GNU Lesser
 General Public License as published by the Free Software Foundation; either
@@ -42,6 +44,7 @@ blargg_err_t Simple_Apu::sample_rate( long rate )
 {
 	apu.output( &buf );
 	vrc6.output(&buf);
+	fds.output(&buf);
 	buf.clock_rate( 1789773 );
 	return buf.sample_rate( rate );
 }
@@ -52,6 +55,20 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 		apu.osc_output(idx, enable ? &buf : NULL);
 	else if (expansion == expansion_vrc6)
 		vrc6.osc_output(idx - 5, enable ? &buf : NULL);
+	else if (expansion == expansion_fds)
+		fds.output(enable ? &buf : NULL);
+}
+
+void Simple_Apu::treble_eq(int exp, double treble, int cutoff, int sample_rate)
+{
+	blip_eq_t eq(blip_eq_t(treble, cutoff, sample_rate));
+
+	if (exp == 0)
+		apu.treble_eq(eq);
+	if (expansion == expansion_vrc6)
+		vrc6.treble_eq(eq);
+	else if (expansion == expansion_fds)
+		fds.treble_eq(eq);
 }
 
 void Simple_Apu::write_register(cpu_addr_t addr, int data)
@@ -68,6 +85,10 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 			if (addr >= 0xa000 && addr <= 0xa002) shadowRegistersVrc6[3 + addr - 0xa000] = data;
 			if (addr >= 0xb000 && addr <= 0xb002) shadowRegistersVrc6[6 + addr - 0xb000] = data;
 		}
+		else if (expansion == expansion_fds)
+		{
+			shadowRegistersApu[addr - 0x4040] = data;
+		}
 	}
 	else
 	{
@@ -75,6 +96,8 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 			apu.write_register(clock(), addr, data);
 		else if (expansion == expansion_vrc6)
 			vrc6.write_register(clock(), addr, data);
+		else if (expansion == expansion_fds)
+			fds.write_register(clock(), addr, data);
 	}
 }
 
@@ -83,11 +106,9 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 void Simple_Apu::start_seeking()
 {
 	seeking = true;
-
-	for (int i = 0; i < ARRAY_COUNT(shadowRegistersApu); i++)
-		shadowRegistersApu[i] = -1;
-	for (int i = 0; i < ARRAY_COUNT(shadowRegistersVrc6); i++)
-		shadowRegistersVrc6[i] = -1;
+	memset(shadowRegistersApu,  -1, sizeof(shadowRegistersApu));
+	memset(shadowRegistersVrc6, -1, sizeof(shadowRegistersVrc6));
+	memset(shadowRegistersFds,  -1, sizeof(shadowRegistersFds));
 }
 
 void Simple_Apu::stop_seeking()
@@ -102,9 +123,17 @@ void Simple_Apu::stop_seeking()
 	{
 		for (int i = 0; i < 3; i++)
 		{
-			if (shadowRegistersVrc6[0 + i]) vrc6.write_register(clock(), 0x9000 + i, shadowRegistersVrc6[0 + i]);
-			if (shadowRegistersVrc6[3 + i]) vrc6.write_register(clock(), 0xa000 + i, shadowRegistersVrc6[3 + i]);
-			if (shadowRegistersVrc6[6 + i]) vrc6.write_register(clock(), 0xb000 + i, shadowRegistersVrc6[6 + i]);
+			if (shadowRegistersVrc6[0 + i] >= 0) vrc6.write_register(clock(), 0x9000 + i, shadowRegistersVrc6[0 + i]);
+			if (shadowRegistersVrc6[3 + i] >= 0) vrc6.write_register(clock(), 0xa000 + i, shadowRegistersVrc6[3 + i]);
+			if (shadowRegistersVrc6[6 + i] >= 0) vrc6.write_register(clock(), 0xb000 + i, shadowRegistersVrc6[6 + i]);
+		}
+	}
+	else if (expansion == expansion_fds)
+	{
+		for (int i = 0; i < ARRAY_COUNT(shadowRegistersFds); i++)
+		{
+			if (shadowRegistersFds[i] >= 0)
+				apu.write_register(clock(), 0x4040 + i, shadowRegistersFds[i]);
 		}
 	}
 
@@ -123,6 +152,8 @@ void Simple_Apu::end_frame()
 	apu.end_frame( frame_length );
 	if (expansion == expansion_vrc6)
 		vrc6.end_frame( frame_length );
+	else if (expansion == expansion_fds)
+		fds.end_frame(frame_length);
 	buf.end_frame( frame_length );
 }
 
@@ -131,6 +162,7 @@ void Simple_Apu::reset()
 	seeking = false;
 	apu.reset();
 	vrc6.reset();
+	fds.reset();
 }
 
 void Simple_Apu::set_audio_expansion(long exp)

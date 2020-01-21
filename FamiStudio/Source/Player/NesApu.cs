@@ -13,30 +13,35 @@ namespace FamiStudio
         private const string NesSndEmuDll = "NesSndEmu.so";
 #endif
 
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NesApuInit(int apuIdx, int sampleRate, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NesApuWriteRegister(int apuIdx, int addr, int data);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NesApuSamplesAvailable(int apuIdx);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NesApuReadSamples(int apuIdx, IntPtr buffer, int bufferSize);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NesApuRemoveSamples(int apuIdx, int count);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NesApuReadStatus(int apuIdx);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NesApuEndFrame(int apuIdx);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NesApuReset(int apuIdx, int expansion);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NesApuEnableChannel(int apuIdx, int idx, int enable);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NesApuStartSeeking(int apuIdx);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NesApuStopSeeking(int apuIdx);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NesApuIsSeeking(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuInit")]
+        public extern static int Init(int apuIdx, int sampleRate, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuWriteRegister")]
+        public extern static void WriteRegister(int apuIdx, int addr, int data);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSamplesAvailable")]
+        public extern static int SamplesAvailable(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuReadSamples")]
+        public extern static int ReadSamples(int apuIdx, IntPtr buffer, int bufferSize);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuRemoveSamples")]
+        public extern static void RemoveSamples(int apuIdx, int count);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuReadStatus")]
+        public extern static int ReadStatus(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuEndFrame")]
+        public extern static void EndFrame(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuReset")]
+        public extern static void Reset(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuEnableChannel")]
+        public extern static void EnableChannel(int apuIdx, int idx, int enable);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuStartSeeking")]
+        public extern static void StartSeeking(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuStopSeeking")]
+        public extern static void StopSeeking(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuIsSeeking")]
+        public extern static int IsSeeking(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuTrebleEq")]
+        public extern static void TrebleEq(int apuIdx, int expansion, double treble, int cutoff, int sample_rate);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetAudioExpansion")]
+        public extern static int GetAudioExpansion(int apuIdx);
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
 
@@ -44,6 +49,10 @@ namespace FamiStudio
         public const int APU_INSTRUMENT = 1;
         public const int APU_WAV_EXPORT = 2;
         public const int APU_COUNT      = 3;
+
+        public const int APU_EXPANSION_NONE = 0;
+        public const int APU_EXPANSION_VRC6 = 1;
+        public const int APU_EXPANSION_FDS  = 2;
 
         public const int APU_PL1_VOL    = 0x4000;
         public const int APU_PL1_SWEEP  = 0x4001;
@@ -66,19 +75,28 @@ namespace FamiStudio
         public const int APU_SND_CHN    = 0x4015;
         public const int APU_FRAME_CNT  = 0x4017;
 
-        public const int APU_EXPANSION_NONE = 0;
-        public const int APU_EXPANSION_VRC6 = 1;
+        public const int VRC6_CTRL      = 0x9003;
+        public const int VRC6_PL1_VOL   = 0x9000;
+        public const int VRC6_PL1_LO    = 0x9001;
+        public const int VRC6_PL1_HI    = 0x9002;
+        public const int VRC6_PL2_VOL   = 0xA000;
+        public const int VRC6_PL2_LO    = 0xA001;
+        public const int VRC6_PL2_HI    = 0xA002;
+        public const int VRC6_SAW_VOL   = 0xB000;
+        public const int VRC6_SAW_LO    = 0xB001;
+        public const int VRC6_SAW_HI    = 0xB002;
 
-        public const int VRC6_CTRL     = 0x9003;
-        public const int VRC6_PL1_VOL  = 0x9000;
-        public const int VRC6_PL1_LO   = 0x9001;
-        public const int VRC6_PL1_HI   = 0x9002;
-        public const int VRC6_PL2_VOL  = 0xA000;
-        public const int VRC6_PL2_LO   = 0xA001;
-        public const int VRC6_PL2_HI   = 0xA002;
-        public const int VRC6_SAW_VOL  = 0xB000;
-        public const int VRC6_SAW_LO   = 0xB001;
-        public const int VRC6_SAW_HI   = 0xB002;
+        public const int FDS_WAV_START  = 0x4040;
+        public const int FDS_VOL_ENV    = 0x4080;
+        public const int FDS_FREQ_LO    = 0x4082;
+        public const int FDS_FREQ_HI    = 0x4083;
+        public const int FDS_SWEEP_ENV  = 0x4084;
+        public const int FDS_SWEEP_BIAS = 0x4085;
+        public const int FDS_MOD_LO     = 0x4086;
+        public const int FDS_MOD_HI     = 0x4087;
+        public const int FDS_MOD_TABLE  = 0x4088;
+        public const int FDS_VOL        = 0x4089;
+        public const int FDS_ENV_SPEED  = 0x408A;
 
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;
@@ -130,13 +148,32 @@ namespace FamiStudio
             0x001e, 0x001c, 0x001a, 0x0019, 0x0017, 0x0016, 0x0015, 0x0013, 0x0012, 0x0011, 0x0010, 0x000f   // Octave 7
         };
 
+        // Taken from FamiTracker (same transpose convention)
+        public static readonly ushort[] NoteTableFds = new ushort[]
+        {
+            0x0000,
+            0x0013, 0x0014, 0x0016, 0x0017, 0x0018, 0x001a, 0x001b, 0x001d, 0x001e, 0x0020, 0x0022, 0x0024,  // Octave 0
+            0x0026, 0x0029, 0x002b, 0x002e, 0x0030, 0x0033, 0x0036, 0x0039, 0x003d, 0x0040, 0x0044, 0x0048,  // Octave 1
+            0x004d, 0x0051, 0x0056, 0x005b, 0x0061, 0x0066, 0x006c, 0x0073, 0x007a, 0x0081, 0x0089, 0x0091,  // Octave 2
+            0x0099, 0x00a2, 0x00ac, 0x00b6, 0x00c1, 0x00cd, 0x00d9, 0x00e6, 0x00f3, 0x0102, 0x0111, 0x0121,  // Octave 3
+            0x0133, 0x0145, 0x0158, 0x016d, 0x0182, 0x0199, 0x01b2, 0x01cb, 0x01e7, 0x0204, 0x0222, 0x0243,  // Octave 4
+            0x0265, 0x028a, 0x02b0, 0x02d9, 0x0304, 0x0332, 0x0363, 0x0397, 0x03cd, 0x0407, 0x0444, 0x0485,  // Octave 5
+            0x04ca, 0x0513, 0x0560, 0x05b2, 0x0609, 0x0665, 0x06c6, 0x072d, 0x079b, 0x080e, 0x0889, 0x090b,  // Octave 6
+            0x0994, 0x0a26, 0x0ac1, 0x0b64, 0x0c12, 0x0cca, 0x0d8c, 0x0e5b, 0x0f35, 0x101d, 0x1112, 0x1216,  // Octave 7
+        };
+
         public static ushort[] GetNoteTableForChannelType(int channelType, bool pal)
         {
             // TODO: PAL
-            if (channelType == Channel.VRC6Saw)
-                return NesApu.NoteTableVrc6Saw;
-            else
-                return pal ? NesApu.NoteTablePAL : NesApu.NoteTableNTSC;
+            switch (channelType)
+            {
+                case Channel.VRC6Saw:
+                    return NoteTableVrc6Saw;
+                case Channel.Fds:
+                    return NoteTableFds;
+                default:
+                    return pal ? NoteTablePAL : NoteTableNTSC;
+            }
         }
 
         public static ushort GetPitchLimitForChannelType(int channelType)
@@ -149,20 +186,36 @@ namespace FamiStudio
             return FamiStudio.StaticProject.GetSampleForAddress(addr - 0xc000);
         }
 
-        public static void Reset(int apuIdx, int expansion = APU_EXPANSION_NONE)
+        public static void InitAndReset(int apuIdx, int sampleRate, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
         {
-            NesApuReset(apuIdx, expansion);
-            NesApuWriteRegister(apuIdx, APU_SND_CHN,    0x0f); // enable channels, stop DMC
-            NesApuWriteRegister(apuIdx, APU_TRI_LINEAR, 0x80); // disable triangle length counter
-            NesApuWriteRegister(apuIdx, APU_NOISE_HI,   0x00); // load noise length
-            NesApuWriteRegister(apuIdx, APU_PL1_VOL,    0x30); // volumes to 0
-            NesApuWriteRegister(apuIdx, APU_PL2_VOL,    0x30);
-            NesApuWriteRegister(apuIdx, APU_NOISE_VOL,  0x30);
-            NesApuWriteRegister(apuIdx, APU_PL1_SWEEP,  0x08); // no sweep
-            NesApuWriteRegister(apuIdx, APU_PL2_SWEEP,  0x08);
+            Init(apuIdx, sampleRate, expansion, dmcCallback);
+            Reset(apuIdx);
+            WriteRegister(apuIdx, APU_SND_CHN,    0x0f); // enable channels, stop DMC
+            WriteRegister(apuIdx, APU_TRI_LINEAR, 0x80); // disable triangle length counter
+            WriteRegister(apuIdx, APU_NOISE_HI,   0x00); // load noise length
+            WriteRegister(apuIdx, APU_PL1_VOL,    0x30); // volumes to 0
+            WriteRegister(apuIdx, APU_PL2_VOL,    0x30);
+            WriteRegister(apuIdx, APU_NOISE_VOL,  0x30);
+            WriteRegister(apuIdx, APU_PL1_SWEEP,  0x08); // no sweep
+            WriteRegister(apuIdx, APU_PL2_SWEEP,  0x08);
+
+            // These were the default values in Nes_Snd_Emu, review eventually.
+            // FamiTracker by default has -24, 12000 respectively.
+            const double treble = -8.87;
+            const int    cutoff =  8800;
+
+            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, treble, cutoff, sampleRate);
 
             if (expansion == APU_EXPANSION_VRC6)
-                NesApuWriteRegister(apuIdx, VRC6_CTRL, 0x00);  // No halt, no octave change.
+            {
+                WriteRegister(apuIdx, VRC6_CTRL, 0x00);  // No halt, no octave change
+                TrebleEq(apuIdx, expansion, treble, cutoff, sampleRate);
+            }
+            else if (expansion == APU_EXPANSION_FDS)
+            {
+                // These are taken from FamiTracker. They smooth out the waveform extremely nicely!
+                TrebleEq(apuIdx, expansion, -48, 1000, sampleRate);
+            }
         }
     }
 }

@@ -29,7 +29,7 @@ namespace FamiStudio
 
         public void ProcessEffects(Song song, int patternIdx, int noteIdx, ref int jumpPatternIdx, ref int jumpNoteIdx, ref int speed, bool allowJump = true)
         {
-            var pattern = song.Channels[channelType].PatternInstances[patternIdx];
+            var pattern = song.GetChannelByType(channelType).PatternInstances[patternIdx];
 
             if (pattern == null)
                 return;
@@ -72,7 +72,7 @@ namespace FamiStudio
 
         public void Advance(Song song, int patternIdx, int noteIdx)
         {
-            var channel = song.Channels[channelType];
+            var channel = song.GetChannelByType(channelType);
             var pattern = channel.PatternInstances[patternIdx];
 
             if (pattern == null)
@@ -201,9 +201,14 @@ namespace FamiStudio
             }
         }
 
+        protected void WriteRegister(int reg, int data)
+        {
+            NesApu.WriteRegister(apuIdx, reg, data);
+        }
+
         protected bool IsSeeking
         {
-            get { return NesApu.NesApuIsSeeking(apuIdx) != 0; }
+            get { return NesApu.IsSeeking(apuIdx) != 0; }
         }
 
         public int GetSlidePitch()

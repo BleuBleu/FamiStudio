@@ -299,6 +299,7 @@ namespace FamiStudio
             bmpSong = g.CreateBitmapFromResource("Music");
             bmpInstrument[Project.ExpansionNone] = g.CreateBitmapFromResource("Instrument");
             bmpInstrument[Project.ExpansionVRC6] = g.CreateBitmapFromResource("InstrumentVRC6");
+            //bmpInstrument[Project.ExpansionFDS]  = g.CreateBitmapFromResource("Instrument");
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
             bmpDuty[0] = g.CreateBitmapFromResource("Duty0");
@@ -643,12 +644,13 @@ namespace FamiStudio
 
                             if (App.Project.UsesExpansionAudio)
                             {
-                                var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, true);
-                                dlg.Properties.AddStringList("Expansion:", Project.ExpansionNames, Project.ExpansionNames[0] ); // 0
+                                var expNames = new[] { Project.ExpansionNames[Project.ExpansionNone], App.Project.ExpansionAudioName };
+                                var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 240, true);
+                                dlg.Properties.AddStringList("Expansion:", expNames, Project.ExpansionNames[Project.ExpansionNone] ); // 0
                                 dlg.Properties.Build();
 
                                 if (dlg.ShowDialog() == DialogResult.OK)
-                                    instrumentType = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(0));
+                                    instrumentType = dlg.Properties.GetPropertyValue<string>(0) == Project.ExpansionNames[Project.ExpansionNone] ? Project.ExpansionNone : App.Project.ExpansionAudio;
                                 else
                                     return;
                             }
@@ -806,7 +808,7 @@ namespace FamiStudio
                 {
                     var project = App.Project;
 
-                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 250, true);
+                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 280, true);
                     dlg.Properties.AddString("Title :", project.Name, 31); // 0
                     dlg.Properties.AddString("Author :", project.Author, 31); // 1
                     dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2

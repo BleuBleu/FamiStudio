@@ -2,12 +2,12 @@
 
 namespace FamiStudio
 {
-    public class ApuSquareChannelState : ChannelState
+    public class ChannelStateSquare : ChannelState
     {
         int regOffset = 0;
         int prevPeriodHi = 1000;
 
-        public ApuSquareChannelState(int apuIdx, int channelType) : base(apuIdx, channelType)
+        public ChannelStateSquare(int apuIdx, int channelType) : base(apuIdx, channelType)
         {
             regOffset = channelType * 4;
         }
@@ -16,7 +16,7 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
+                NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
             }
             else if (note.IsValid)
             {
@@ -35,22 +35,22 @@ namespace FamiStudio
                         // Blaarg's smooth vibrato technique using the sweep to avoid resetting the phase. Cool stuff.
                         // http://forums.nesdev.com/viewtopic.php?t=231
 
-                        NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_FRAME_CNT, 0x40); // reset frame counter in case it was about to clock
-                        NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_LO + regOffset, deltaHi < 0 ? 0x00 : 0xff); // be sure low 8 bits of timer period are $FF ($00 when negative)
-                        NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_SWEEP + regOffset, deltaHi < 0 ? 0x8f : 0x87); // sweep enabled, shift = 7, set negative flag.
-                        NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_FRAME_CNT, 0xc0); // clock sweep immediately
-                        NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_SWEEP + regOffset, 0x08); // disable sweep
+                        NesApu.WriteRegister(apuIdx, NesApu.APU_FRAME_CNT, 0x40); // reset frame counter in case it was about to clock
+                        NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_LO + regOffset, deltaHi < 0 ? 0x00 : 0xff); // be sure low 8 bits of timer period are $FF ($00 when negative)
+                        NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_SWEEP + regOffset, deltaHi < 0 ? 0x8f : 0x87); // sweep enabled, shift = 7, set negative flag.
+                        NesApu.WriteRegister(apuIdx, NesApu.APU_FRAME_CNT, 0xc0); // clock sweep immediately
+                        NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_SWEEP + regOffset, 0x08); // disable sweep
                     }
                     else
                     {
-                        NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_HI + regOffset, periodHi);
+                        NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_HI + regOffset, periodHi);
                     }
 
                     prevPeriodHi = periodHi;
                 }
 
-                NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_LO + regOffset, periodLo);
-                NesApu.NesApuWriteRegister(apuIdx, NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
+                NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_LO + regOffset, periodLo);
+                NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
             }
         }
     };

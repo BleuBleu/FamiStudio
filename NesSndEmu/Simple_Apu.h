@@ -8,6 +8,7 @@
 
 #include "nes_apu/Nes_Apu.h"
 #include "nes_apu/Nes_Vrc6.h"
+#include "nes_apu/Nes_Fds.h"
 #include "nes_apu/Blip_Buffer.h"
 
 class Simple_Apu {
@@ -15,6 +16,7 @@ public:
 
 	enum { expansion_none = 0 };
 	enum { expansion_vrc6 = 1 };
+	enum { expansion_fds  = 2 };
 
 	Simple_Apu();
 	~Simple_Apu();
@@ -42,12 +44,15 @@ public:
 	void reset();
 
 	void set_audio_expansion(long exp);
+	int get_audio_expansion() const { return expansion; }
 
 	// Number of samples in buffer
 	long samples_avail() const;
 
 	void enable_channel(int, bool);
 	
+	void treble_eq(int exp, double treble, int cutoff, int sample_rate);
+
 	// Read at most 'count' samples and return number of samples actually read
 	typedef blip_sample_t sample_t;
 	long read_samples( sample_t* buf, long buf_size );
@@ -67,9 +72,11 @@ private:
 	bool seeking;
 	int  shadowRegistersApu[21];
 	int  shadowRegistersVrc6[9];
-	long expansion;
+	int  shadowRegistersFds[82];
+	int  expansion;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;
+	Nes_Fds fds;
 	Blip_Buffer buf;
 	blip_time_t time;
 	blip_time_t frame_length;

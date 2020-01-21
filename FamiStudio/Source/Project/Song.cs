@@ -164,6 +164,11 @@ namespace FamiStudio
             return null;
         }
 
+        public Channel GetChannelByType(int type)
+        {
+            return channels[Channel.ChannelTypeToIndex(type)];
+        }
+
         public Song Clone()
         {
             var saveSerializer = new ProjectSaveBuffer(project);

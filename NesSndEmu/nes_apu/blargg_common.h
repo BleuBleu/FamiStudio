@@ -176,5 +176,8 @@ const blargg_err_t blargg_success = 0;
 	#endif
 #endif
 
+#define min(a, b) (((a) < (b) ? (a) : (b)))
+#define max(a, b) (((a) > (b) ? (a) : (b)))
+
 #endif
 

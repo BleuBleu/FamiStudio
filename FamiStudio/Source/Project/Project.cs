@@ -9,18 +9,20 @@ namespace FamiStudio
         // Version 1 = FamiStudio 1.0.0
         // Version 2 = FamiStudio 1.1.0 (Project properties)
         // Version 3 = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
-        // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack ntoes)
+        // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
         public static int Version = 4;
         public static int MaxSampleSize = 0x4000;
 
         public const int ExpansionNone  = 0;
         public const int ExpansionVRC6  = 1;
+        //public const int ExpansionFDS   = 2;
         public const int ExpansionCount = 2;
 
         public static string[] ExpansionNames =
         {
             "None",
-            "VRC6"
+            "Konami VRC6",
+            //"Famicom Disk System"
         };
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
@@ -395,7 +397,10 @@ namespace FamiStudio
                 return true;
 
             if (channelType >= Channel.VRC6Square1 && channelType <= Channel.VRC6Saw)
-                return expansionAudio == Project.ExpansionVRC6;
+                return expansionAudio == ExpansionVRC6;
+
+            //if (channelType == Channel.Fds)
+            //    return expansionAudio == ExpansionFDS;
 
             Debug.Assert(false);
 

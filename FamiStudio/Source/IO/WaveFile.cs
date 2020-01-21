@@ -43,14 +43,11 @@ namespace FamiStudio
             var wavBytes = new List<byte>();
             var apuIndex = NesApu.APU_WAV_EXPORT;
             var dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
-
-            NesApu.NesApuInit(apuIndex, sampleRate, dmcCallback);
-            NesApu.Reset(apuIndex, PlayerBase.GetNesApuExpansionAudio(song.Project));
-
             var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex);
 
+            NesApu.InitAndReset(apuIndex, sampleRate, PlayerBase.GetNesApuExpansionAudio(song.Project), dmcCallback);
             for (int i = 0; i < channels.Length; i++)
-                NesApu.NesApuEnableChannel(apuIndex, i, 1);
+                NesApu.EnableChannel(apuIndex, i, 1);
 
             while (true)
             {
@@ -77,14 +74,14 @@ namespace FamiStudio
                     channel.UpdateAPU();
                 }
 
-                NesApu.NesApuEndFrame(apuIndex);
+                NesApu.EndFrame(apuIndex);
 
-                int numTotalSamples = NesApu.NesApuSamplesAvailable(apuIndex);
+                int numTotalSamples = NesApu.SamplesAvailable(apuIndex);
                 byte[] samples = new byte[numTotalSamples * 2];
 
                 fixed (byte* ptr = &samples[0])
                 {
-                    NesApu.NesApuReadSamples(apuIndex, new IntPtr(ptr), numTotalSamples);
+                    NesApu.ReadSamples(apuIndex, new IntPtr(ptr), numTotalSamples);
                 }
 
                 wavBytes.AddRange(samples);

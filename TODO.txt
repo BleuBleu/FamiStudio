@@ -1,22 +1,16 @@
 1.4.0: VRC6
 ===========
+NOW:
+x Validate FT export 100%
+x Validate instrument import 100%
+x Validate FT import 100%
+- Make sure Shovel sounds legit (intro especially)
+
 Polish:
-- Work VRC6 -> new file -> gray box over piano roll.
-
-New attack + simple slide note:
-- Slide attack management in FT export. Test Shovel when done.
-- FamiTracker slide import.
-
-Shovel Knight:
-- Noise: track has weird 1 beat offset. Might need to start envelope at zero + move.
-- Optimize! I feel like lots of patterns are almost identical
-- Optimize drum channel. Some snares look like same with volume.
-- Recheck all pattern volumes at end. Pattern re-use could end up with different volume.
+- Has it gotten slower? Take RenderDoc capture to be sure we arent drawing crazy stuff.
+x Only show None + current expansion in create instrument dialog.
 
 Testing:
-- NSF: Restest all songs, old FT2, etc.
-- NSF: Try putting multiple things at once: volume + slide, volume + jump, etc. etc. Must all work.
-- NSF: Retest volume tracks
 - Piano roll, selection, etc. Delete stuff, make sur FX and everything is consitent.
 - Retest copy paste a lot...
 - Note drawing, release, stop, from far away.
@@ -24,11 +18,16 @@ Testing:
 
 1.5.0: FDS
 ==========
-- FDS support in NesSndEmu 
+- Delayed cut + delayed note. This will allow us to to song without time = 1
+	- Delayed note delays the whole row, not just the note. Which is good i guess, it makes it behave like a real not at a tick level.
+	- What happens if you have a note at the 6th frame when running on PAL (which only has 5)???
+	- 
+x FDS support in NesSndEmu 
 - FDS "envelope" in piano roll.
 - Instrument refactoring? (base class + derived?)
 
 ========================
+
 Backlog:
 - Cleanup (merge duplicated patterns, instruments, remove unused stuff.
 - Instrument folders

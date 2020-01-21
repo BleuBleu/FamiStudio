@@ -50,10 +50,9 @@ namespace FamiStudio
         public virtual void Initialize()
         {
             dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
-            NesApu.NesApuInit(apuIndex, SampleRate, dmcCallback);
             audioStream = new AudioStream(SampleRate, 1, BufferSize, NumAudioBuffers, AudioBufferFillCallback);
         }
-
+        
         public virtual void Shutdown()
         {
             stopEvent.Set();
@@ -119,18 +118,20 @@ namespace FamiStudio
             {
                 case Channel.Square1:
                 case Channel.Square2:
-                    return new ApuSquareChannelState(apuIdx, channelType);
+                    return new ChannelStateSquare(apuIdx, channelType);
                 case Channel.Triangle:
-                    return new ApuTriangleChannelState(apuIdx, channelType);
+                    return new ChannelStateTriangle(apuIdx, channelType);
                 case Channel.Noise:
-                    return new ApuNoiseChannelState(apuIdx, channelType);
+                    return new ChannelStateNoise(apuIdx, channelType);
                 case Channel.DPCM:
-                    return new ApuDpcmChannelState(apuIdx, channelType);
+                    return new ChannelStateDpcm(apuIdx, channelType);
                 case Channel.VRC6Square1:
                 case Channel.VRC6Square2:
-                    return new Vrc6SquareChannelState(apuIdx, channelType);
+                    return new ChannelStateVrc6Square(apuIdx, channelType);
                 case Channel.VRC6Saw:
-                    return new Vrc6SawChannelState(apuIdx, channelType);
+                    return new ChannelStateVrc6Saw(apuIdx, channelType);
+                case Channel.Fds:
+                    return new ChannelStateFds(apuIdx, channelType);
             }
 
             Debug.Assert(false);
@@ -160,6 +161,8 @@ namespace FamiStudio
                     return NesApu.APU_EXPANSION_NONE;
                 case Project.ExpansionVRC6:
                     return NesApu.APU_EXPANSION_VRC6;
+                //case Project.ExpansionFDS:
+                //    return NesApu.APU_EXPANSION_FDS;
             }
 
             Debug.Assert(false);
@@ -168,14 +171,14 @@ namespace FamiStudio
 
         protected unsafe void EndFrameAndQueueSamples()
         {
-            NesApu.NesApuEndFrame(apuIndex);
+            NesApu.EndFrame(apuIndex);
 
-            int numTotalSamples = NesApu.NesApuSamplesAvailable(apuIndex);
+            int numTotalSamples = NesApu.SamplesAvailable(apuIndex);
             short[] samples = new short[numTotalSamples];
 
             fixed (short* ptr = &samples[0])
             {
-                NesApu.NesApuReadSamples(apuIndex, new IntPtr(ptr), numTotalSamples);
+                NesApu.ReadSamples(apuIndex, new IntPtr(ptr), numTotalSamples);
             }
 
             sampleQueue.Enqueue(samples);
