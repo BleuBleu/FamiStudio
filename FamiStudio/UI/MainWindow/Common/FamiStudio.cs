@@ -95,6 +95,7 @@ namespace FamiStudio
         {
             RefreshSequencerLayout();
             PianoRoll.Reset();
+            Sequencer.Reset();
         }
 
         private void ProjectExplorer_InstrumentDeleted(Instrument instrument)
