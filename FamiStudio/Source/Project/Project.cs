@@ -399,8 +399,8 @@ namespace FamiStudio
             if (channelType >= Channel.VRC6Square1 && channelType <= Channel.VRC6Saw)
                 return expansionAudio == ExpansionVRC6;
 
-            //if (channelType == Channel.Fds)
-            //    return expansionAudio == ExpansionFDS;
+            if (channelType == Channel.Fds)
+                return false; // expansionAudio == ExpansionFDS;
 
             Debug.Assert(false);
 
