@@ -144,7 +144,6 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
 
-            expansionTypeSizeX = (int)(DefaultExpansionsTypeSizeX * scaling);
             trackNameSizeX     = (int)(DefaultTrackNameSizeX * scaling);
             headerSizeY        = (int)(DefaultHeaderSizeY * scaling);
             trackSizeY         = (int)(ComputeDesiredTrackSizeY() * scaling);
@@ -161,6 +160,7 @@ namespace FamiStudio
             patternNamePosX    = (int)(DefaultPatternNamePosX * scaling);
             patternNamePosY    = (int)(DefaultPatternNamePosY * scaling);
             patternSizeX       = (int)(ScaleForZoom(Song == null ? 256 : Song.PatternLength) * scaling);
+            expansionTypeSizeX = (int)(App?.Project?.UsesExpansionAudio == true ? DefaultExpansionsTypeSizeX * scaling : 0);
         }
 
         private int GetChannelCount()
@@ -305,7 +305,7 @@ namespace FamiStudio
             if (Song.Project.UsesExpansionAudio)
             {
                 for (int i = Channel.ExpansionAudioStart; i < Song.Channels.Length; i++)
-                    g.FillRectangle(0, i * trackSizeY, expansionTypeSizeX, (i + 1) * trackSizeY + 1, theme.DarkGreyFillBrush2);
+                    g.FillRectangle(0, i * trackSizeY, expansionTypeSizeX, (i + 1) * trackSizeY + 1, theme.MediumGreyFillBrush1);
 
                 g.PushTranslation(expansionTypeSizeX, 0);
 
@@ -511,7 +511,7 @@ namespace FamiStudio
         Rectangle GetTrackIconRect(int idx)
         {
             return new Rectangle(
-                trackIconPosX,
+                trackIconPosX + expansionTypeSizeX,
                 trackIconPosY + headerSizeY + idx * trackSizeY, 
                 (int)(16 * RenderTheme.MainWindowScaling),
                 (int)(16 * RenderTheme.MainWindowScaling));

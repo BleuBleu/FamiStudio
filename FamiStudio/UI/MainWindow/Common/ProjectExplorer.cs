@@ -341,7 +341,7 @@ namespace FamiStudio
                 var leftPadding = 0;
                 if (App.Project.UsesExpansionAudio && (button.type == ButtonType.Instrument || button.type == ButtonType.Song))
                 {
-                    var tabColor = button.instrument != null && button.instrument.IsExpansionInstrument ? ThemeBase.DarkGreyFillColor2 : ThemeBase.LightGreyFillColor1;
+                    var tabColor = button.instrument != null && button.instrument.IsExpansionInstrument ? ThemeBase.MediumGreyFillColor1 : ThemeBase.LightGreyFillColor1;
                     g.FillRectangle(1, 1, 1 + expansionTypeSizeX, buttonSizeY, g.GetVerticalGradientBrush(tabColor, buttonSizeY, 0.8f));
                     g.PushTranslation(1 + expansionTypeSizeX, 0);
                     g.DrawLine(0, 0, 0, buttonSizeY, theme.BlackBrush);
