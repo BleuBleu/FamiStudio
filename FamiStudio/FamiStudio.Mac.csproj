@@ -113,13 +113,6 @@
     <Compile Include="Source\Project\Project.cs" />
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\Channel.cs" />
-    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
     <Compile Include="UI\MainWindow\OpenTK\Cursors.cs" />
     <Compile Include="UI\MainWindow\OpenTK\GLControl.cs" />
     <Compile Include="UI\MainWindow\OpenTK\GLGraphics.cs" />
