@@ -78,17 +78,22 @@
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Player\ChannelState.cs" />
-    <Compile Include="Source\Player\ApuDpcmChannelState.cs" />
+    <Compile Include="Source\Player\ChannelStateDpcm.cs" />
+    <Compile Include="Source\Player\ChannelStateFds.cs" />
+    <Compile Include="Source\Player\ChannelStateMmc5Square.cs" />
+    <Compile Include="Source\Player\ChannelStateNamco.cs" />
+    <Compile Include="Source\Player\ChannelStateSunsoftSquare.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc7.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\MIDI.cs" />
-    <Compile Include="Source\Player\ApuNoiseChannelState.cs" />
-    <Compile Include="Source\Player\Vrc6SawChannelState.cs" />
+    <Compile Include="Source\Player\ChannelStateNoise.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
-    <Compile Include="Source\Player\ApuSquareChannelState.cs" />
-    <Compile Include="Source\Player\ApuTriangleChannelState.cs" />
-    <Compile Include="Source\Player\Vrc6SquareChannelState.cs" />
+    <Compile Include="Source\Player\ChannelStateSquare.cs" />
+    <Compile Include="Source\Player\ChannelStateTriangle.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc6Square.cs" />
     <Compile Include="Source\Project\Envelope.cs" />
-    <Compile Include="Source\Utils\ClipboardUtils.cs" /> 
+    <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="UI\Dialogs\Common\ConfigDialog.cs" />
     <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
@@ -219,19 +224,18 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\PortamentoLength%4015x.png" />
-    <EmbeddedResource Include="Resources\PortamentoLength%402x.png" />
-    <EmbeddedResource Include="Resources\PortamentoLength.png" />
-    <EmbeddedResource Include="Resources\SquareExp%402x.png" />
-    <EmbeddedResource Include="Resources\SquareExp.png" />
+    <EmbeddedResource Include="Resources\InstrumentVRC6%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentVRC6.png" />
+    <EmbeddedResource Include="Resources\VibratoSmall%402x.png" />
+    <EmbeddedResource Include="Resources\VibratoSmall.png" />
+    <EmbeddedResource Include="Resources\Slide%4015x.png" />
+    <EmbeddedResource Include="Resources\Slide%402x.png" />
+    <EmbeddedResource Include="Resources\Slide.png" />
     <EmbeddedResource Include="Resources\SlideSmall%4015x.png" />
     <EmbeddedResource Include="Resources\SlideSmall%402x.png" />
     <EmbeddedResource Include="Resources\SlideSmall.png" />
-    <EmbeddedResource Include="Resources\PortamentoSmall%4015x.png" />
     <EmbeddedResource Include="Resources\Warning%402x.png" />
     <EmbeddedResource Include="Resources\Warning.png" />
-    <EmbeddedResource Include="Resources\InstrumentExp%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentExp.png" />
     <EmbeddedResource Include="Resources\Duty4%402x.png" />
     <EmbeddedResource Include="Resources\Duty4.png" />
     <EmbeddedResource Include="Resources\Duty5%402x.png" />
@@ -242,8 +246,6 @@
     <EmbeddedResource Include="Resources\Duty7.png" />
     <EmbeddedResource Include="Resources\Instrument%402x.png" />
     <EmbeddedResource Include="Resources\Instrument.png" />
-    <EmbeddedResource Include="Resources\PortamentoSmall%402x.png" />
-    <EmbeddedResource Include="Resources\PortamentoSmall.png" />
     <EmbeddedResource Include="Resources\Saw%402x.png" />
     <EmbeddedResource Include="Resources\Saw.png" />
     <EmbeddedResource Include="Resources\InstrumentOpen%402x.png" />
@@ -269,9 +271,7 @@
     <EmbeddedResource Include="Resources\ConfigUserInterface%402x.png" />
     <EmbeddedResource Include="Resources\ConfigUserInterface.png" />
     <EmbeddedResource Include="Resources\Noise%4015x.png" />
-    <EmbeddedResource Include="Resources\JumpSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
-    <EmbeddedResource Include="Resources\SpeedSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\LoopSmall%402x.png" />
     <EmbeddedResource Include="Resources\Music%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill%402x.png" />
@@ -345,9 +345,7 @@
     <None Include="Resources\FamiStudio.ico" />
     <EmbeddedResource Include="Resources\JumpSmall.png" />
     <EmbeddedResource Include="Resources\SpeedSmall.png" />
-    <EmbeddedResource Include="Resources\JumpSmallFill.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
-    <EmbeddedResource Include="Resources\SpeedSmallFill.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />
   </ItemGroup>
   <ItemGroup>
