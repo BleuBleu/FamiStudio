@@ -44,6 +44,7 @@ blargg_err_t Simple_Apu::sample_rate( long rate )
 {
 	apu.output( &buf );
 	vrc6.output(&buf);
+	vrc7.output(&buf);
 	fds.output(&buf);
 	mmc5.output(&buf);
 	buf.clock_rate( 1789773 );
@@ -62,6 +63,9 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 		{
 			case expansion_vrc6: 
 				vrc6.osc_output(idx - 5, enable ? &buf : NULL);
+				break;
+			case expansion_vrc7:
+				vrc7.output(enable ? &buf : NULL);
 				break;
 			case expansion_fds:
 				fds.output(enable ? &buf : NULL);
@@ -138,6 +142,9 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 			case expansion_vrc6:
 				vrc6.write_register(clock(), addr, data);
 				break;
+			case expansion_vrc7:
+				vrc7.write_register(clock(), addr, data);
+				break;
 			case expansion_fds:
 				fds.write_register(clock(), addr, data);
 				break;
@@ -148,8 +155,6 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 		}
 	}
 }
-
-#define ARRAY_COUNT(x) (sizeof(x) / sizeof(x[0]))
 
 void Simple_Apu::start_seeking()
 {
@@ -162,7 +167,7 @@ void Simple_Apu::start_seeking()
 
 void Simple_Apu::stop_seeking()
 {
-	for (int i = 0; i < ARRAY_COUNT(shadow_regs_apu); i++)
+	for (int i = 0; i < array_count(shadow_regs_apu); i++)
 	{
 		if (shadow_regs_apu[i] >= 0)
 			apu.write_register(clock(), Nes_Apu::shadow_reg_to_addr(i), shadow_regs_apu[i]);
@@ -171,21 +176,21 @@ void Simple_Apu::stop_seeking()
 	switch (expansion)
 	{
 		case expansion_vrc6:
-			for (int i = 0; i < ARRAY_COUNT(shadow_regs_vrc6); i++)
+			for (int i = 0; i < array_count(shadow_regs_vrc6); i++)
 			{
 				if (shadow_regs_vrc6[i] >= 0)
 					apu.write_register(clock(), Nes_Vrc6::shadow_reg_to_addr(i), shadow_regs_vrc6[i]);
 			}
 			break;
 		case expansion_fds:
-			for (int i = 0; i < ARRAY_COUNT(shadow_regs_fds); i++)
+			for (int i = 0; i < array_count(shadow_regs_fds); i++)
 			{
 				if (shadow_regs_fds[i] >= 0)
 					apu.write_register(clock(), Nes_Fds::shadow_reg_to_addr(i), shadow_regs_fds[i]);
 			}
 			break;
 		case expansion_mmc5:
-			for (int i = 0; i < ARRAY_COUNT(shadow_regs_mmc5); i++)
+			for (int i = 0; i < array_count(shadow_regs_mmc5); i++)
 			{
 				if (shadow_regs_mmc5[i] >= 0)
 					apu.write_register(clock(), Nes_Mmc5::shadow_reg_to_addr(i), shadow_regs_mmc5[i]);
@@ -213,6 +218,9 @@ void Simple_Apu::end_frame()
 	case expansion_vrc6:
 		vrc6.end_frame(frame_length);
 		break;
+	case expansion_vrc7:
+		vrc7.end_frame(frame_length);
+		break;
 	case expansion_fds:
 		fds.end_frame(frame_length);
 		break;
@@ -229,6 +237,7 @@ void Simple_Apu::reset()
 	seeking = false;
 	apu.reset();
 	vrc6.reset();
+	vrc7.reset();
 	fds.reset();
 	mmc5.reset();
 }

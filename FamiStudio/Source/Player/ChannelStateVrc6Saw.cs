@@ -13,7 +13,7 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                NesApu.WriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, 0x00);
+                WriteRegister(NesApu.VRC6_SAW_VOL, 0x00);
             }
             else if (note.IsValid)
             {
@@ -26,9 +26,9 @@ namespace FamiStudio
                 if ((duty & 1) != 0 && volume != 0)
                     volume = (volume << 1) + 1;
 
-                NesApu.WriteRegister(apuIdx, NesApu.VRC6_SAW_VOL, (volume << 1)); 
-                NesApu.WriteRegister(apuIdx, NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
-                NesApu.WriteRegister(apuIdx, NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
+                WriteRegister(NesApu.VRC6_SAW_VOL, (volume << 1)); 
+                WriteRegister(NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
+                WriteRegister(NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
             }
         }
     };

@@ -52,8 +52,9 @@ namespace FamiStudio
 
         public const int APU_EXPANSION_NONE = 0;
         public const int APU_EXPANSION_VRC6 = 1;
-        public const int APU_EXPANSION_FDS  = 2;
-        public const int APU_EXPANSION_MMC5 = 3;
+        public const int APU_EXPANSION_VRC7 = 2;
+        public const int APU_EXPANSION_FDS  = 3;
+        public const int APU_EXPANSION_MMC5 = 4;
 
         public const int APU_PL1_VOL    = 0x4000;
         public const int APU_PL1_SWEEP  = 0x4001;
@@ -86,6 +87,10 @@ namespace FamiStudio
         public const int VRC6_SAW_VOL   = 0xB000;
         public const int VRC6_SAW_LO    = 0xB001;
         public const int VRC6_SAW_HI    = 0xB002;
+
+        public const int VRC7_SILENCE   = 0xe000;
+        public const int VRC7_REG_SEL   = 0x9010;
+        public const int VRC7_REG_WRITE = 0x9030;
 
         public const int FDS_WAV_START  = 0x4040;
         public const int FDS_VOL_ENV    = 0x4080;
@@ -217,19 +222,22 @@ namespace FamiStudio
 
             TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, treble, cutoff, sampleRate);
 
-            if (expansion == APU_EXPANSION_VRC6)
+            switch (expansion)
             {
-                WriteRegister(apuIdx, VRC6_CTRL, 0x00);  // No halt, no octave change
-                TrebleEq(apuIdx, expansion, treble, cutoff, sampleRate);
-            }
-            else if (expansion == APU_EXPANSION_FDS)
-            {
-                // These are taken from FamiTracker. They smooth out the waveform extremely nicely!
-                TrebleEq(apuIdx, expansion, -48, 1000, sampleRate);
-            }
-            else if (expansion == APU_EXPANSION_MMC5)
-            {
-                WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
+                case APU_EXPANSION_VRC6:
+                    WriteRegister(apuIdx, VRC6_CTRL, 0x00);  // No halt, no octave change
+                    TrebleEq(apuIdx, expansion, treble, cutoff, sampleRate);
+                    break;
+                case APU_EXPANSION_FDS:
+                    // These are taken from FamiTracker. They smooth out the waveform extremely nicely!
+                    TrebleEq(apuIdx, expansion, -48, 1000, sampleRate);
+                    break;
+                case APU_EXPANSION_MMC5:
+                    WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
+                    break;
+                case APU_EXPANSION_VRC7:
+                    WriteRegister(apuIdx, VRC7_SILENCE, 0x00); // Enable VRC7 audio.
+                    break;
             }
         }
     }

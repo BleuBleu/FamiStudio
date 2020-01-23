@@ -135,6 +135,13 @@ namespace FamiStudio
                 case Channel.Mmc5Square1:
                 case Channel.Mmc5Square2:
                     return new ChannelStateMmc5Square(apuIdx, channelType);
+                case Channel.Vrc7Fm1:
+                case Channel.Vrc7Fm2:
+                case Channel.Vrc7Fm3:
+                case Channel.Vrc7Fm4:
+                case Channel.Vrc7Fm5:
+                case Channel.Vrc7Fm6:
+                    return new ChannelStateVrc7(apuIdx, channelType);
             }
 
             Debug.Assert(false);
@@ -165,6 +172,8 @@ namespace FamiStudio
                 case Project.ExpansionVrc6:
                     return NesApu.APU_EXPANSION_VRC6;
 #if DEV
+                case Project.ExpansionVrc7:
+                    return NesApu.APU_EXPANSION_VRC7;
                 case Project.ExpansionFds:
                     return NesApu.APU_EXPANSION_FDS;
                 case Project.ExpansionMmc5:

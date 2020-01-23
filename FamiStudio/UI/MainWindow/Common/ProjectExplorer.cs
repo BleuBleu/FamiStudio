@@ -299,7 +299,11 @@ namespace FamiStudio
             bmpSong = g.CreateBitmapFromResource("Music");
             bmpInstrument[Project.ExpansionNone] = g.CreateBitmapFromResource("Instrument");
             bmpInstrument[Project.ExpansionVrc6] = g.CreateBitmapFromResource("InstrumentVRC6");
-            //bmpInstrument[Project.ExpansionFDS]  = g.CreateBitmapFromResource("Instrument");
+#if DEV
+            bmpInstrument[Project.ExpansionVrc7] = g.CreateBitmapFromResource("InstrumentVRC6");
+            bmpInstrument[Project.ExpansionFds]  = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[Project.ExpansionMmc5] = g.CreateBitmapFromResource("Instrument");
+#endif
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
             bmpDuty[0] = g.CreateBitmapFromResource("Duty0");

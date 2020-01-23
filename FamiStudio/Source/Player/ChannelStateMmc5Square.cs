@@ -16,7 +16,7 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                NesApu.WriteRegister(apuIdx, NesApu.MMC5_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
+                WriteRegister(NesApu.MMC5_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
             }
             else if (note.IsValid)
             {
@@ -30,12 +30,12 @@ namespace FamiStudio
 
                 if (periodHi != prevPeriodHi) // Avoid resetting the sequence.
                 {
-                    NesApu.WriteRegister(apuIdx, NesApu.MMC5_PL1_HI + regOffset, periodHi);
+                    WriteRegister(NesApu.MMC5_PL1_HI + regOffset, periodHi);
                     prevPeriodHi = periodHi;
                 }
 
-                NesApu.WriteRegister(apuIdx, NesApu.MMC5_PL1_LO + regOffset, periodLo);
-                NesApu.WriteRegister(apuIdx, NesApu.MMC5_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
+                WriteRegister(NesApu.MMC5_PL1_LO + regOffset, periodLo);
+                WriteRegister(NesApu.MMC5_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
             }
         }
     };

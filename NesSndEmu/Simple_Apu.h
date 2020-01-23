@@ -8,6 +8,7 @@
 
 #include "nes_apu/Nes_Apu.h"
 #include "nes_apu/Nes_Vrc6.h"
+#include "nes_apu/Nes_Vrc7.h"
 #include "nes_apu/Nes_Fds.h"
 #include "nes_apu/Nes_Mmc5.h"
 #include "nes_apu/Blip_Buffer.h"
@@ -17,8 +18,9 @@ public:
 
 	enum { expansion_none = 0 };
 	enum { expansion_vrc6 = 1 };
-	enum { expansion_fds  = 2 };
-	enum { expansion_mmc5 = 3 };
+	enum { expansion_vrc7 = 2 };
+	enum { expansion_fds  = 3 };
+	enum { expansion_mmc5 = 4 };
 
 	Simple_Apu();
 	~Simple_Apu();
@@ -79,6 +81,7 @@ private:
 	int  expansion;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;
+	Nes_Vrc7 vrc7;
 	Nes_Fds fds;
 	Nes_Mmc5 mmc5;
 	Blip_Buffer buf;

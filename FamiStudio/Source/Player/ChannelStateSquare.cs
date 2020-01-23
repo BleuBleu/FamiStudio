@@ -16,7 +16,7 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
+                WriteRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
             }
             else if (note.IsValid)
             {
@@ -35,22 +35,22 @@ namespace FamiStudio
                         // Blaarg's smooth vibrato technique using the sweep to avoid resetting the phase. Cool stuff.
                         // http://forums.nesdev.com/viewtopic.php?t=231
 
-                        NesApu.WriteRegister(apuIdx, NesApu.APU_FRAME_CNT, 0x40); // reset frame counter in case it was about to clock
-                        NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_LO + regOffset, deltaHi < 0 ? 0x00 : 0xff); // be sure low 8 bits of timer period are $FF ($00 when negative)
-                        NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_SWEEP + regOffset, deltaHi < 0 ? 0x8f : 0x87); // sweep enabled, shift = 7, set negative flag.
-                        NesApu.WriteRegister(apuIdx, NesApu.APU_FRAME_CNT, 0xc0); // clock sweep immediately
-                        NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_SWEEP + regOffset, 0x08); // disable sweep
+                        WriteRegister(NesApu.APU_FRAME_CNT, 0x40); // reset frame counter in case it was about to clock
+                        WriteRegister(NesApu.APU_PL1_LO + regOffset, deltaHi < 0 ? 0x00 : 0xff); // be sure low 8 bits of timer period are $FF ($00 when negative)
+                        WriteRegister(NesApu.APU_PL1_SWEEP + regOffset, deltaHi < 0 ? 0x8f : 0x87); // sweep enabled, shift = 7, set negative flag.
+                        WriteRegister(NesApu.APU_FRAME_CNT, 0xc0); // clock sweep immediately
+                        WriteRegister(NesApu.APU_PL1_SWEEP + regOffset, 0x08); // disable sweep
                     }
                     else
                     {
-                        NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_HI + regOffset, periodHi);
+                        WriteRegister(NesApu.APU_PL1_HI + regOffset, periodHi);
                     }
 
                     prevPeriodHi = periodHi;
                 }
 
-                NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_LO + regOffset, periodLo);
-                NesApu.WriteRegister(apuIdx, NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
+                WriteRegister(NesApu.APU_PL1_LO + regOffset, periodLo);
+                WriteRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
             }
         }
     };

@@ -57,6 +57,12 @@
     <ClInclude Include="nes_apu\Nes_Mmc5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="nes_apu\emu2413.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nes_apu\Nes_Vrc7.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nes_apu\apu_snapshot.cpp">
@@ -93,6 +99,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nes_apu\Nes_Mmc5.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nes_apu\emu2413.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nes_apu\Nes_Vrc7.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -16,9 +16,10 @@ namespace FamiStudio
         public const int ExpansionNone  = 0;
         public const int ExpansionVrc6  = 1;
 #if DEV
-        public const int ExpansionFds   = 2;
-        public const int ExpansionMmc5  = 3;
-        public const int ExpansionCount = 4;
+        public const int ExpansionVrc7  = 2;
+        public const int ExpansionFds   = 3;
+        public const int ExpansionMmc5  = 4;
+        public const int ExpansionCount = 5;
 #else
         public const int ExpansionCount = 2;
 #endif
@@ -28,6 +29,7 @@ namespace FamiStudio
             "None",
             "Konami VRC6",
 #if DEV
+            "Konami VRC7",
             "Famicom Disk System",
             "Nintendo MMC5"
 #endif
@@ -406,18 +408,17 @@ namespace FamiStudio
 
             if (channelType >= Channel.Vrc6Square1 && channelType <= Channel.Vrc6Saw)
                 return expansionAudio == ExpansionVrc6;
-
-            if (channelType == Channel.Fds)
 #if DEV
+            if (channelType == Channel.Fds)
                 return expansionAudio == ExpansionFds;
-#else
-                return false;
-#endif
 
             if (channelType >= Channel.Mmc5Square1 && channelType <= Channel.Mmc5Square2)
-#if DEV
                 return expansionAudio == ExpansionMmc5;
+
+            if (channelType >= Channel.Vrc7Fm1 && channelType <= Channel.Vrc7Fm6)
+                return expansionAudio == ExpansionVrc7;
 #else
+            if (channelType >= Channel.Vrc7Fm1)
                 return false;
 #endif
 

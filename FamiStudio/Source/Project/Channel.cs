@@ -17,10 +17,16 @@ namespace FamiStudio
         public const int Vrc6Square1 = 5;
         public const int Vrc6Square2 = 6;
         public const int Vrc6Saw = 7;
-        public const int Fds = 8;
-        public const int Mmc5Square1 = 9;
-        public const int Mmc5Square2 = 10;
-        public const int Count = 11;
+        public const int Vrc7Fm1 = 8;
+        public const int Vrc7Fm2 = 9;
+        public const int Vrc7Fm3 = 10;
+        public const int Vrc7Fm4 = 11;
+        public const int Vrc7Fm5 = 12;
+        public const int Vrc7Fm6 = 13;
+        public const int Fds = 14;
+        public const int Mmc5Square1 = 15;
+        public const int Mmc5Square2 = 16;
+        public const int Count = 17;
 
         private Song song;
         private Pattern[] patternInstances = new Pattern[Song.MaxLength];
@@ -43,6 +49,12 @@ namespace FamiStudio
             "Square 1", // VRC6
             "Square 2", // VRC6
             "Saw", // VRC6
+            "FM 1", // VRC7
+            "FM 2", // VRC7
+            "FM 3", // VRC7
+            "FM 4", // VRC7
+            "FM 5", // VRC7
+            "FM 6", // VRC7
             "FDS", // FDS
             "Square 1", // MMC5
             "Square 2", // MMC5
@@ -84,6 +96,9 @@ namespace FamiStudio
                 return true;
 
 #if DEV
+            if (instrument.ExpansionType == Project.ExpansionVrc7 && type >= Vrc7Fm1 && type <= Vrc7Fm6)
+                return true;
+
             if (instrument.ExpansionType == Project.ExpansionFds && type == Fds)
                 return true;
 
@@ -431,6 +446,8 @@ namespace FamiStudio
                 return type;
             if (type >= Vrc6Square1 && type <= Vrc6Saw)
                 return ExpansionAudioStart + type - Vrc6Square1;
+            if (type >= Vrc7Fm1 && type <= Vrc7Fm6)
+                return ExpansionAudioStart + type - Vrc7Fm1;
             if (type == Fds)
                 return ExpansionAudioStart;
             if (type >= Mmc5Square1 && type <= Mmc5Square2)

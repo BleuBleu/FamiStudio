@@ -84,6 +84,7 @@
     <Compile Include="Source\Player\ChannelStateDpcm.cs" />
     <Compile Include="Source\Player\ChannelStateFds.cs" />
     <Compile Include="Source\Player\ChannelStateMmc5Square.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc7.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\MIDI.cs" />
     <Compile Include="Source\Player\ChannelStateNoise.cs" />

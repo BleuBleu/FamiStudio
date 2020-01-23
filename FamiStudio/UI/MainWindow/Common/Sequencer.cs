@@ -221,6 +221,12 @@ namespace FamiStudio
             bmpTracks[Channel.DPCM] = g.CreateBitmapFromResource("DPCM");
             bmpTracks[Channel.Vrc6Square1] = g.CreateBitmapFromResource("Square");
             bmpTracks[Channel.Vrc6Square2] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.Vrc7Fm1] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.Vrc7Fm2] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.Vrc7Fm3] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.Vrc7Fm4] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.Vrc7Fm5] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.Vrc7Fm6] = g.CreateBitmapFromResource("DPCM");
             bmpTracks[Channel.Vrc6Saw] = g.CreateBitmapFromResource("Saw");
             bmpTracks[Channel.Fds] = g.CreateBitmapFromResource("DPCM");
             bmpTracks[Channel.Mmc5Square1] = g.CreateBitmapFromResource("Square");
