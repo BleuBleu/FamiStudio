@@ -44,7 +44,6 @@
 
 #elif defined (__GNUC__)
 	// GNU C++
-	#define BLARGG_COMPILER_HAS_NAMESPACE 1
 	#define BLARGG_COMPILER_HAS_BOOL 1
 
 #elif defined (__MINGW32__)

@@ -264,18 +264,18 @@ static double windowed_sinc(double x) { return blackman(0.5 + 0.5 * x / (LW / 2)
 
 /* f_inp: input frequency. f_out: output frequencey, ch: number of channels */
 OPLL_RateConv *OPLL_RateConv_new(double f_inp, double f_out, int ch) {
-  OPLL_RateConv *conv = malloc(sizeof(OPLL_RateConv));
+  OPLL_RateConv *conv = (OPLL_RateConv*)malloc(sizeof(OPLL_RateConv));
   int i;
 
   conv->ch = ch;
   conv->f_ratio = f_inp / f_out;
-  conv->buf = malloc(sizeof(void *) * ch);
+  conv->buf = (int16_t**)malloc(sizeof(void *) * ch);
   for (i = 0; i < ch; i++) {
-    conv->buf[i] = malloc(sizeof(conv->buf[0][0]) * LW);
+    conv->buf[i] = (int16_t*)malloc(sizeof(conv->buf[0][0]) * LW);
   }
 
   /* create sinc_table for positive 0 <= x < LW/2 */
-  conv->sinc_table = malloc(sizeof(conv->sinc_table[0]) * SINC_RESO * LW / 2);
+  conv->sinc_table = (int16_t*)malloc(sizeof(conv->sinc_table[0]) * SINC_RESO * LW / 2);
   for (i = 0; i < SINC_RESO * LW / 2; i++) {
     const double x = (double)i / SINC_RESO;
     if (f_out < f_inp) {
