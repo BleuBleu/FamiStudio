@@ -125,13 +125,16 @@ namespace FamiStudio
                     return new ChannelStateNoise(apuIdx, channelType);
                 case Channel.DPCM:
                     return new ChannelStateDpcm(apuIdx, channelType);
-                case Channel.VRC6Square1:
-                case Channel.VRC6Square2:
+                case Channel.Vrc6Square1:
+                case Channel.Vrc6Square2:
                     return new ChannelStateVrc6Square(apuIdx, channelType);
-                case Channel.VRC6Saw:
+                case Channel.Vrc6Saw:
                     return new ChannelStateVrc6Saw(apuIdx, channelType);
                 case Channel.Fds:
                     return new ChannelStateFds(apuIdx, channelType);
+                case Channel.Mmc5Square1:
+                case Channel.Mmc5Square2:
+                    return new ChannelStateMmc5Square(apuIdx, channelType);
             }
 
             Debug.Assert(false);
@@ -159,10 +162,14 @@ namespace FamiStudio
             {
                 case Project.ExpansionNone:
                     return NesApu.APU_EXPANSION_NONE;
-                case Project.ExpansionVRC6:
+                case Project.ExpansionVrc6:
                     return NesApu.APU_EXPANSION_VRC6;
-                //case Project.ExpansionFDS:
-                //    return NesApu.APU_EXPANSION_FDS;
+#if DEV
+                case Project.ExpansionFds:
+                    return NesApu.APU_EXPANSION_FDS;
+                case Project.ExpansionMmc5:
+                    return NesApu.APU_EXPANSION_MMC5;
+#endif
             }
 
             Debug.Assert(false);

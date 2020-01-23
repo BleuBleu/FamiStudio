@@ -14,11 +14,13 @@ namespace FamiStudio
         public const int Noise = 3;
         public const int DPCM = 4;
         public const int ExpansionAudioStart = 5;
-        public const int VRC6Square1 = 5;
-        public const int VRC6Square2 = 6;
-        public const int VRC6Saw = 7;
+        public const int Vrc6Square1 = 5;
+        public const int Vrc6Square2 = 6;
+        public const int Vrc6Saw = 7;
         public const int Fds = 8;
-        public const int Count = 9;
+        public const int Mmc5Square1 = 9;
+        public const int Mmc5Square2 = 10;
+        public const int Count = 11;
 
         private Song song;
         private Pattern[] patternInstances = new Pattern[Song.MaxLength];
@@ -41,7 +43,9 @@ namespace FamiStudio
             "Square 1", // VRC6
             "Square 2", // VRC6
             "Saw", // VRC6
-            "FDS" // FDS
+            "FDS", // FDS
+            "Square 1", // MMC5
+            "Square 2", // MMC5
         };
 
         public Channel()
@@ -76,11 +80,16 @@ namespace FamiStudio
             if (instrument.ExpansionType == Project.ExpansionNone && type < ExpansionAudioStart)
                 return true;
 
-            if (instrument.ExpansionType == Project.ExpansionVRC6 && type >= VRC6Square1 && type <= VRC6Saw)
+            if (instrument.ExpansionType == Project.ExpansionVrc6 && type >= Vrc6Square1 && type <= Vrc6Saw)
                 return true;
 
-            //if (instrument.ExpansionType == Project.ExpansionFDS && type == Fds)
-            //    return true;
+#if DEV
+            if (instrument.ExpansionType == Project.ExpansionFds && type == Fds)
+                return true;
+
+            if (type >= Mmc5Square1 && type <= Mmc5Square2)
+                return true;
+#endif
 
             return false;
         }
@@ -420,10 +429,12 @@ namespace FamiStudio
         {
             if (type < ExpansionAudioStart)
                 return type;
-            if (type >= VRC6Square1 && type <= VRC6Saw)
-                return ExpansionAudioStart + type - VRC6Square1;
+            if (type >= Vrc6Square1 && type <= Vrc6Saw)
+                return ExpansionAudioStart + type - Vrc6Square1;
             if (type == Fds)
                 return ExpansionAudioStart;
+            if (type >= Mmc5Square1 && type <= Mmc5Square2)
+                return ExpansionAudioStart + type - Mmc5Square1;
             Debug.Assert(false);
             return -1;
         }

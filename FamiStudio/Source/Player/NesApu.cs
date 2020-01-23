@@ -53,6 +53,7 @@ namespace FamiStudio
         public const int APU_EXPANSION_NONE = 0;
         public const int APU_EXPANSION_VRC6 = 1;
         public const int APU_EXPANSION_FDS  = 2;
+        public const int APU_EXPANSION_MMC5 = 3;
 
         public const int APU_PL1_VOL    = 0x4000;
         public const int APU_PL1_SWEEP  = 0x4001;
@@ -97,6 +98,16 @@ namespace FamiStudio
         public const int FDS_MOD_TABLE  = 0x4088;
         public const int FDS_VOL        = 0x4089;
         public const int FDS_ENV_SPEED  = 0x408A;
+
+        public const int MMC5_PL1_VOL    = 0x5000;
+        public const int MMC5_PL1_SWEEP  = 0x5001;
+        public const int MMC5_PL1_LO     = 0x5002;
+        public const int MMC5_PL1_HI     = 0x5003;
+        public const int MMC5_PL2_VOL    = 0x5004;
+        public const int MMC5_PL2_SWEEP  = 0x5005;
+        public const int MMC5_PL2_LO     = 0x5006;
+        public const int MMC5_PL2_HI     = 0x5007;
+        public const int MMC5_SND_CHN    = 0x5015;
 
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;
@@ -167,7 +178,7 @@ namespace FamiStudio
             // TODO: PAL
             switch (channelType)
             {
-                case Channel.VRC6Saw:
+                case Channel.Vrc6Saw:
                     return NoteTableVrc6Saw;
                 case Channel.Fds:
                     return NoteTableFds;
@@ -178,7 +189,7 @@ namespace FamiStudio
 
         public static ushort GetPitchLimitForChannelType(int channelType)
         {
-            return (ushort)(channelType == Channel.VRC6Saw ? 0xfff : 0x7ff);
+            return (ushort)(channelType == Channel.Vrc6Saw ? 0xfff : 0x7ff);
         }
 
         public static int DmcReadCallback(IntPtr data, int addr)
@@ -215,6 +226,10 @@ namespace FamiStudio
             {
                 // These are taken from FamiTracker. They smooth out the waveform extremely nicely!
                 TrebleEq(apuIdx, expansion, -48, 1000, sampleRate);
+            }
+            else if (expansion == APU_EXPANSION_MMC5)
+            {
+                WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
             }
         }
     }

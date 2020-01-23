@@ -255,8 +255,8 @@ namespace FamiStudio
                 var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Volume]]);
                 var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Arpeggio]]);
                 var pitchEnvIdx    = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Pitch]]);
-                var dutyShift      = instrument.ExpansionType == Project.ExpansionVRC6 ? 4 : 6;
-                var dutyBits       = instrument.ExpansionType == Project.ExpansionVRC6 ? 0 : 0x30;
+                var dutyShift      = instrument.ExpansionType == Project.ExpansionVrc6 ? 4 : 6;
+                var dutyBits       = instrument.ExpansionType == Project.ExpansionVrc6 ? 0 : 0x30;
 
                 lines.Add($"\t{db} ${(instrument.DutyCycle << dutyShift) | dutyBits:x2} ;instrument {i:x2} ({instrument.Name})");
                 lines.Add($"\t{dw} {ll}env{volumeEnvIdx},{ll}env{arpeggioEnvIdx},{ll}env{pitchEnvIdx}");

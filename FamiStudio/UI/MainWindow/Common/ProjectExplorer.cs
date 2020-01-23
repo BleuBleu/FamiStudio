@@ -184,7 +184,7 @@ namespace FamiStudio
                     case SubButtonType.DPCM:
                         return projectExplorer.bmpDPCM;
                     case SubButtonType.DutyCycle:
-                        if (instrument.ExpansionType == Project.ExpansionVRC6)
+                        if (instrument.ExpansionType == Project.ExpansionVrc6)
                             return projectExplorer.bmpDuty[instrument.DutyCycle];
                         else
                             return projectExplorer.bmpDuty[instrument.DutyCycle * 2];
@@ -298,7 +298,7 @@ namespace FamiStudio
 
             bmpSong = g.CreateBitmapFromResource("Music");
             bmpInstrument[Project.ExpansionNone] = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[Project.ExpansionVRC6] = g.CreateBitmapFromResource("InstrumentVRC6");
+            bmpInstrument[Project.ExpansionVrc6] = g.CreateBitmapFromResource("InstrumentVRC6");
             //bmpInstrument[Project.ExpansionFDS]  = g.CreateBitmapFromResource("Instrument");
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
@@ -339,7 +339,7 @@ namespace FamiStudio
                 g.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.GetColor(), buttonSizeY, 0.8f), theme.BlackBrush);
 
                 var leftPadding = 0;
-                if (App.Project.UsesExpansionAudio && (button.type == ButtonType.Instrument || button.type == ButtonType.Song))
+                if (App.Project.NeedsExpansionInstruments && (button.type == ButtonType.Instrument || button.type == ButtonType.Song))
                 {
                     var tabColor = button.instrument != null && button.instrument.IsExpansionInstrument ? ThemeBase.MediumGreyFillColor1 : ThemeBase.LightGreyFillColor1;
                     g.FillRectangle(1, 1, 1 + expansionTypeSizeX, buttonSizeY, g.GetVerticalGradientBrush(tabColor, buttonSizeY, 0.8f));
@@ -642,7 +642,7 @@ namespace FamiStudio
                         {
                             var instrumentType = Project.ExpansionNone;
 
-                            if (App.Project.UsesExpansionAudio)
+                            if (App.Project.NeedsExpansionInstruments)
                             {
                                 var expNames = new[] { Project.ExpansionNames[Project.ExpansionNone], App.Project.ExpansionAudioName };
                                 var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 240, true);

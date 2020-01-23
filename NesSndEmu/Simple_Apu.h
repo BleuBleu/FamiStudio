@@ -9,6 +9,7 @@
 #include "nes_apu/Nes_Apu.h"
 #include "nes_apu/Nes_Vrc6.h"
 #include "nes_apu/Nes_Fds.h"
+#include "nes_apu/Nes_Mmc5.h"
 #include "nes_apu/Blip_Buffer.h"
 
 class Simple_Apu {
@@ -17,6 +18,7 @@ public:
 	enum { expansion_none = 0 };
 	enum { expansion_vrc6 = 1 };
 	enum { expansion_fds  = 2 };
+	enum { expansion_mmc5 = 3 };
 
 	Simple_Apu();
 	~Simple_Apu();
@@ -70,13 +72,15 @@ public:
 
 private:
 	bool seeking;
-	int  shadowRegistersApu[21];
-	int  shadowRegistersVrc6[9];
-	int  shadowRegistersFds[82];
+	int  shadow_regs_apu[Nes_Apu::shadow_regs_count];
+	int  shadow_regs_vrc6[Nes_Vrc6::shadow_regs_count];
+	int  shadow_regs_fds[Nes_Fds::shadow_regs_count];
+	int  shadow_regs_mmc5[Nes_Mmc5::shadow_regs_count];
 	int  expansion;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;
 	Nes_Fds fds;
+	Nes_Mmc5 mmc5;
 	Blip_Buffer buf;
 	blip_time_t time;
 	blip_time_t frame_length;

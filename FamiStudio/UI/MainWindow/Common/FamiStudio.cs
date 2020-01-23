@@ -94,8 +94,9 @@ namespace FamiStudio
         private void ProjectExplorer_ExpansionAudioChanged()
         {
             RefreshSequencerLayout();
-            PianoRoll.Reset();
             Sequencer.Reset();
+            PianoRoll.Reset();
+            PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
         }
 
         private void ProjectExplorer_InstrumentDeleted(Instrument instrument)

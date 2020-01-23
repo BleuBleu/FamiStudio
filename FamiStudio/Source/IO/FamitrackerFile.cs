@@ -84,11 +84,11 @@ namespace FamiStudio
                 {
                     var exp = int.Parse(line.Substring(9));
                     if (exp == 1)
-                        project.SetExpansionAudio(Project.ExpansionVRC6);
+                        project.SetExpansionAudio(Project.ExpansionVrc6);
                 }
                 else if (line.StartsWith("MACRO"))
                 {
-                    var expansion = line.Substring(5, 4) == "VRC6" ? Project.ExpansionVRC6 : Project.ExpansionNone;
+                    var expansion = line.Substring(5, 4) == "VRC6" ? Project.ExpansionVrc6 : Project.ExpansionNone;
                     var halves = line.Substring(line.IndexOf(' ')).Split(':');
                     var param = halves[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     var curve = halves[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -164,7 +164,7 @@ namespace FamiStudio
                 }
                 else if (line.StartsWith("INST2A03") || line.StartsWith("INSTVRC6"))
                 {
-                    var expansion = line.Substring(4, 4) == "VRC6" ? Project.ExpansionVRC6 : Project.ExpansionNone;
+                    var expansion = line.Substring(4, 4) == "VRC6" ? Project.ExpansionVrc6 : Project.ExpansionNone;
                     var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
 
                     int idx = int.Parse(param[0]);
@@ -178,7 +178,7 @@ namespace FamiStudio
                     if (!project.IsInstrumentNameUnique(name))
                         name = param[6] + "-" + j++;
 
-                    var expansionType = line.StartsWith("INSTVRC6") ? Project.ExpansionVRC6 : Project.ExpansionNone;
+                    var expansionType = line.StartsWith("INSTVRC6") ? Project.ExpansionVrc6 : Project.ExpansionNone;
                     var instrument = project.CreateInstrument(expansionType, name);
 
                     if (vol >= 0) instrument.Envelopes[0] = envelopes[expansion, 0][vol].Clone();
@@ -797,11 +797,11 @@ namespace FamiStudio
             lines.Add($"MACRO{4,8} {2,4} {-1}   -1    0 : 2");
             lines.Add($"MACRO{4,8} {3,4} {-1}   -1    0 : 3");
 
-            if (project.ExpansionAudio == Project.ExpansionVRC6)
+            if (project.ExpansionAudio == Project.ExpansionVrc6)
             {
                 for (int i = 0; i < Envelope.Max; i++)
                 {
-                    var envArray = envelopes[Project.ExpansionVRC6, i];
+                    var envArray = envelopes[Project.ExpansionVrc6, i];
                     for (int j = 0; j < envArray.Length; j++)
                     {
                         var env = envArray[j];
@@ -847,7 +847,7 @@ namespace FamiStudio
                 {
                     lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{instrument.DutyCycle,4} \"{instrument.Name}\"");
                 }
-                else if (instrument.ExpansionType == Project.ExpansionVRC6)
+                else if (instrument.ExpansionType == Project.ExpansionVrc6)
                 {
                     lines.Add($"INSTVRC6{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{instrument.DutyCycle,4} \"{instrument.Name}\"");
                 }

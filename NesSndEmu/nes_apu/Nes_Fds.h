@@ -19,6 +19,11 @@ public:
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 
+	// TODO: Cache wave table. Also, how to cache mod table?
+	enum { shadow_regs_count = 11 };
+	static int addr_to_shadow_reg(int addr);
+	static int shadow_reg_to_addr(int idx);
+
 private:
 	// noncopyable
 	Nes_Fds(const Nes_Fds&);
@@ -63,6 +68,16 @@ private:
 	void run_until(cpu_time_t);
 	void run_fds(cpu_time_t end_time);
 };
+
+inline int Nes_Fds::addr_to_shadow_reg(int addr)
+{
+	return addr >= regs_addr && addr < regs_addr + shadow_regs_count ? addr - regs_addr : -1;
+}
+
+inline int Nes_Fds::shadow_reg_to_addr(int idx)
+{
+	return regs_addr + idx;
+}
 
 #endif
 

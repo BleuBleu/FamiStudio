@@ -78,7 +78,7 @@ namespace FamiStudio
                 header.playAddr = NsfPlayAddr;
                 header.playSpeedNTSC = 16639;
                 header.playSpeedPAL = 19997;
-                header.extensionFlags = (byte)(project.ExpansionAudio == Project.ExpansionVRC6 ? 1 : 0);
+                header.extensionFlags = (byte)(project.ExpansionAudio == Project.ExpansionVrc6 ? 1 : 0);
                 header.banks[0] = 0;
                 header.banks[1] = 1;
                 header.banks[2] = 2;
@@ -104,7 +104,7 @@ namespace FamiStudio
                 string kernelBinary;
                 if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2FS)
                 {
-                    kernelBinary = project.ExpansionAudio == Project.ExpansionVRC6 ? 
+                    kernelBinary = project.ExpansionAudio == Project.ExpansionVrc6 ? 
                         "nsf_ft2_fs_vrc6.bin" :
                         "nsf_ft2_fs.bin";
                 }

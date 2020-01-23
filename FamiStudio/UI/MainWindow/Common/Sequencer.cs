@@ -219,10 +219,12 @@ namespace FamiStudio
             bmpTracks[Channel.Triangle] = g.CreateBitmapFromResource("Triangle");
             bmpTracks[Channel.Noise] = g.CreateBitmapFromResource("Noise");
             bmpTracks[Channel.DPCM] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.VRC6Square1] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.VRC6Square2] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.VRC6Saw] = g.CreateBitmapFromResource("Saw");
+            bmpTracks[Channel.Vrc6Square1] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.Vrc6Square2] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.Vrc6Saw] = g.CreateBitmapFromResource("Saw");
             bmpTracks[Channel.Fds] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.Mmc5Square1] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.Mmc5Square2] = g.CreateBitmapFromResource("Square");
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
 
@@ -302,7 +304,7 @@ namespace FamiStudio
 
             g.PushTranslation(0, headerSizeY);
 
-            if (Song.Project.UsesExpansionAudio)
+            if (Song.Project.NeedsExpansionInstruments)
             {
                 for (int i = Channel.ExpansionAudioStart; i < Song.Channels.Length; i++)
                     g.FillRectangle(0, i * trackSizeY, expansionTypeSizeX, (i + 1) * trackSizeY + 1, theme.MediumGreyFillBrush1);
@@ -320,7 +322,7 @@ namespace FamiStudio
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
                 g.DrawText(Song.Channels[i].Name, i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium, trackNamePosX, y + trackNamePosY, theme.BlackBrush);
 
-            if (Song.Project.UsesExpansionAudio)
+            if (Song.Project.NeedsExpansionInstruments)
                g.PopTransform();
 
             // Ghost note icons

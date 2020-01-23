@@ -14,15 +14,23 @@ namespace FamiStudio
         public static int MaxSampleSize = 0x4000;
 
         public const int ExpansionNone  = 0;
-        public const int ExpansionVRC6  = 1;
-        //public const int ExpansionFDS   = 2;
+        public const int ExpansionVrc6  = 1;
+#if DEV
+        public const int ExpansionFds   = 2;
+        public const int ExpansionMmc5  = 3;
+        public const int ExpansionCount = 4;
+#else
         public const int ExpansionCount = 2;
+#endif
 
         public static string[] ExpansionNames =
         {
             "None",
             "Konami VRC6",
-            //"Famicom Disk System"
+#if DEV
+            "Famicom Disk System",
+            "Nintendo MMC5"
+#endif
         };
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
@@ -396,15 +404,38 @@ namespace FamiStudio
             if (channelType <= Channel.DPCM)
                 return true;
 
-            if (channelType >= Channel.VRC6Square1 && channelType <= Channel.VRC6Saw)
-                return expansionAudio == ExpansionVRC6;
+            if (channelType >= Channel.Vrc6Square1 && channelType <= Channel.Vrc6Saw)
+                return expansionAudio == ExpansionVrc6;
 
             if (channelType == Channel.Fds)
-                return false; // expansionAudio == ExpansionFDS;
+#if DEV
+                return expansionAudio == ExpansionFds;
+#else
+                return false;
+#endif
+
+            if (channelType >= Channel.Mmc5Square1 && channelType <= Channel.Mmc5Square2)
+#if DEV
+                return expansionAudio == ExpansionMmc5;
+#else
+                return false;
+#endif
 
             Debug.Assert(false);
 
             return false;
+        }
+
+        public bool NeedsExpansionInstruments
+        {
+            get
+            {
+#if DEV
+                return expansionAudio != ExpansionNone && expansionAudio != ExpansionMmc5;
+#else
+                return expansionAudio != ExpansionNone;
+#endif
+            }
         }
 
         public bool UsesSamples

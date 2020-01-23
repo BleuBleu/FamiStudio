@@ -8,7 +8,7 @@ namespace FamiStudio
 
         public ChannelStateVrc6Square(int apuIdx, int channelType) : base(apuIdx, channelType)
         {
-            regOffset = (channelType - Channel.VRC6Square1) * 0x1000;
+            regOffset = (channelType - Channel.Vrc6Square1) * 0x1000;
             maximumPeriod = NesApu.MaximumPeriod12Bit;
         }
 
