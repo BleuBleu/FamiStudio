@@ -85,6 +85,7 @@ inline int Nes_Sunsoft::shadow_reg_to_addr(int idx)
 	//int reg_idx = idx % osc_count;
 
 	//return base_addr + addr_step * osc_idx + reg_idx;
+	return 0;
 }
 
 #endif
