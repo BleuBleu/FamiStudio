@@ -5,7 +5,7 @@ namespace FamiStudio
     public class ChannelStateSunsoftSquare : ChannelState
     {
         int channelIdx = 0;
-        int prevPeriodHi = 1000;
+        //int prevPeriodHi = 1000;
 
         public ChannelStateSunsoftSquare(int apuIdx, int channelType) : base(apuIdx, channelType)
         {
