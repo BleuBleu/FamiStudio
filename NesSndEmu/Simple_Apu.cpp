@@ -47,6 +47,8 @@ blargg_err_t Simple_Apu::sample_rate( long rate )
 	vrc7.output(&buf);
 	fds.output(&buf);
 	mmc5.output(&buf);
+	namco.output(&buf);
+	sunsoft.output(&buf);
 	buf.clock_rate( 1789773 );
 	return buf.sample_rate( rate );
 }
@@ -73,6 +75,12 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 			case expansion_mmc5:
 				mmc5.output(enable ? &buf : NULL);
 				break;
+			case expansion_namco:
+				namco.output(enable ? &buf : NULL);
+				break;
+			case expansion_sunsoft:
+				sunsoft.output(enable ? &buf : NULL);
+				break;
 		}
 	}
 }
@@ -94,6 +102,12 @@ void Simple_Apu::treble_eq(int exp, double treble, int cutoff, int sample_rate)
 			break;
 		case expansion_mmc5:
 			mmc5.treble_eq(eq);
+			break;
+		case expansion_namco:
+			namco.treble_eq(eq);
+			break;
+		case expansion_sunsoft:
+			sunsoft.treble_eq(eq);
 			break;
 	}
 }
@@ -150,6 +164,12 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 				break;
 			case expansion_mmc5:
 				mmc5.write_register(clock(), addr, data);
+				break;
+			case expansion_namco:
+				namco.write_register(clock(), addr, data);
+				break;
+			case expansion_sunsoft:
+				sunsoft.write_register(clock(), addr, data);
 				break;
 			}
 		}
@@ -227,6 +247,12 @@ void Simple_Apu::end_frame()
 	case expansion_mmc5:
 		mmc5.end_frame(frame_length);
 		break;
+	case expansion_namco:
+		namco.end_frame(frame_length);
+		break;
+	case expansion_sunsoft:
+		sunsoft.end_frame(frame_length);
+		break;
 	}
 
 	buf.end_frame( frame_length );
@@ -240,6 +266,8 @@ void Simple_Apu::reset()
 	vrc7.reset();
 	fds.reset();
 	mmc5.reset();
+	namco.reset();
+	sunsoft.reset();
 }
 
 void Simple_Apu::set_audio_expansion(long exp)

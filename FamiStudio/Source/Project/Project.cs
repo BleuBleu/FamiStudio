@@ -13,15 +13,17 @@ namespace FamiStudio
         public static int Version = 4;
         public static int MaxSampleSize = 0x4000;
 
-        public const int ExpansionNone  = 0;
-        public const int ExpansionVrc6  = 1;
-#if DEV
-        public const int ExpansionVrc7  = 2;
-        public const int ExpansionFds   = 3;
-        public const int ExpansionMmc5  = 4;
-        public const int ExpansionCount = 5;
+        public const int ExpansionNone    = 0;
+        public const int ExpansionVrc6    = 1;
+#if DEV                                 
+        public const int ExpansionVrc7    = 2;
+        public const int ExpansionFds     = 3;
+        public const int ExpansionMmc5    = 4;
+        public const int ExpansionNamco   = 5;
+        public const int ExpansionSunsoft = 6;
+        public const int ExpansionCount   = 7;
 #else
-        public const int ExpansionCount = 2;
+        public const int ExpansionCount   = 2;
 #endif
 
         public static string[] ExpansionNames =
@@ -31,7 +33,9 @@ namespace FamiStudio
 #if DEV
             "Konami VRC7",
             "Famicom Disk System",
-            "Nintendo MMC5"
+            "Nintendo MMC5",
+            "Namco 163",
+            "Sunsoft 5B"
 #endif
         };
 
@@ -403,13 +407,13 @@ namespace FamiStudio
 
         public bool IsChannelActive(int channelType)
         {
-            if (channelType <= Channel.DPCM)
+            if (channelType <= Channel.Dpcm)
                 return true;
 
             if (channelType >= Channel.Vrc6Square1 && channelType <= Channel.Vrc6Saw)
                 return expansionAudio == ExpansionVrc6;
 #if DEV
-            if (channelType == Channel.Fds)
+            if (channelType == Channel.FdsWave)
                 return expansionAudio == ExpansionFds;
 
             if (channelType >= Channel.Mmc5Square1 && channelType <= Channel.Mmc5Square2)
@@ -417,6 +421,12 @@ namespace FamiStudio
 
             if (channelType >= Channel.Vrc7Fm1 && channelType <= Channel.Vrc7Fm6)
                 return expansionAudio == ExpansionVrc7;
+
+            if (channelType >= Channel.NamcoWave1 && channelType <= Channel.NamcoWave8)
+                return expansionAudio == ExpansionNamco;
+
+            if (channelType >= Channel.SunsoftSquare1 && channelType <= Channel.SunsoftSquare3)
+                return expansionAudio == ExpansionSunsoft;
 #else
             if (channelType >= Channel.Vrc7Fm1)
                 return false;
@@ -543,7 +553,7 @@ namespace FamiStudio
 
             foreach (var song in songs)
             {
-                var channel = song.Channels[Channel.DPCM];
+                var channel = song.Channels[Channel.Dpcm];
 
                 for (int p = 0; p < song.Length; p++)
                 {

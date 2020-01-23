@@ -50,11 +50,13 @@ namespace FamiStudio
         public const int APU_WAV_EXPORT = 2;
         public const int APU_COUNT      = 3;
 
-        public const int APU_EXPANSION_NONE = 0;
-        public const int APU_EXPANSION_VRC6 = 1;
-        public const int APU_EXPANSION_VRC7 = 2;
-        public const int APU_EXPANSION_FDS  = 3;
-        public const int APU_EXPANSION_MMC5 = 4;
+        public const int APU_EXPANSION_NONE    = 0;
+        public const int APU_EXPANSION_VRC6    = 1;
+        public const int APU_EXPANSION_VRC7    = 2;
+        public const int APU_EXPANSION_FDS     = 3;
+        public const int APU_EXPANSION_MMC5    = 4;
+        public const int APU_EXPANSION_NAMCO   = 5;
+        public const int APU_EXPANSION_SUNSOFT = 6;
 
         public const int APU_PL1_VOL    = 0x4000;
         public const int APU_PL1_SWEEP  = 0x4001;
@@ -185,7 +187,7 @@ namespace FamiStudio
             {
                 case Channel.Vrc6Saw:
                     return NoteTableVrc6Saw;
-                case Channel.Fds:
+                case Channel.FdsWave:
                     return NoteTableFds;
                 default:
                     return pal ? NoteTablePAL : NoteTableNTSC;

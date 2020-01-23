@@ -867,7 +867,7 @@ namespace FamiStudio
                 if (pasteNotes)
                 {
                     note.Value = newNote.Value;
-                    note.Instrument = editChannel == Channel.DPCM || !Song.Channels[editChannel].SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
+                    note.Instrument = editChannel == Channel.Dpcm || !Song.Channels[editChannel].SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
                     note.Slide = newNote.Slide;
                     note.Flags = newNote.Flags;
                 }
@@ -1879,7 +1879,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].Value = noteValue;
-                        pattern.Notes[noteIdx].Instrument = editChannel == Channel.DPCM ? null : currentInstrument;
+                        pattern.Notes[noteIdx].Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
                         pattern.UpdateLastValidNote();
 
                         if (slide && channel.SupportsSlideNotes)
@@ -2085,7 +2085,7 @@ namespace FamiStudio
 
         public void ReplaceSelectionInstrument(Instrument instrument)
         {
-            if (editMode == EditionMode.Channel && editChannel != Channel.DPCM && IsSelectionValid())
+            if (editMode == EditionMode.Channel && editChannel != Channel.Dpcm && IsSelectionValid())
             {
                 TransformNotes(selectionFrameMin, selectionFrameMax, true, (note, idx) =>
                 {

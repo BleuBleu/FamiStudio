@@ -218,7 +218,7 @@ namespace FamiStudio
             bmpTracks[Channel.Square2] = g.CreateBitmapFromResource("Square");
             bmpTracks[Channel.Triangle] = g.CreateBitmapFromResource("Triangle");
             bmpTracks[Channel.Noise] = g.CreateBitmapFromResource("Noise");
-            bmpTracks[Channel.DPCM] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.Dpcm] = g.CreateBitmapFromResource("DPCM");
             bmpTracks[Channel.Vrc6Square1] = g.CreateBitmapFromResource("Square");
             bmpTracks[Channel.Vrc6Square2] = g.CreateBitmapFromResource("Square");
             bmpTracks[Channel.Vrc7Fm1] = g.CreateBitmapFromResource("DPCM");
@@ -228,9 +228,20 @@ namespace FamiStudio
             bmpTracks[Channel.Vrc7Fm5] = g.CreateBitmapFromResource("DPCM");
             bmpTracks[Channel.Vrc7Fm6] = g.CreateBitmapFromResource("DPCM");
             bmpTracks[Channel.Vrc6Saw] = g.CreateBitmapFromResource("Saw");
-            bmpTracks[Channel.Fds] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.FdsWave] = g.CreateBitmapFromResource("DPCM");
             bmpTracks[Channel.Mmc5Square1] = g.CreateBitmapFromResource("Square");
             bmpTracks[Channel.Mmc5Square2] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.NamcoWave1] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.NamcoWave2] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.NamcoWave3] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.NamcoWave4] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.NamcoWave5] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.NamcoWave6] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.NamcoWave7] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.NamcoWave8] = g.CreateBitmapFromResource("DPCM");
+            bmpTracks[Channel.SunsoftSquare1] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.SunsoftSquare2] = g.CreateBitmapFromResource("Square");
+            bmpTracks[Channel.SunsoftSquare3] = g.CreateBitmapFromResource("Square");
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
 

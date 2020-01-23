@@ -297,12 +297,14 @@ namespace FamiStudio
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
             bmpSong = g.CreateBitmapFromResource("Music");
-            bmpInstrument[Project.ExpansionNone] = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[Project.ExpansionVrc6] = g.CreateBitmapFromResource("InstrumentVRC6");
-#if DEV
-            bmpInstrument[Project.ExpansionVrc7] = g.CreateBitmapFromResource("InstrumentVRC6");
-            bmpInstrument[Project.ExpansionFds]  = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[Project.ExpansionMmc5] = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[Project.ExpansionNone]    = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[Project.ExpansionVrc6]    = g.CreateBitmapFromResource("InstrumentVRC6");
+#if DEV                                             
+            bmpInstrument[Project.ExpansionVrc7]    = g.CreateBitmapFromResource("InstrumentVRC6");
+            bmpInstrument[Project.ExpansionFds]     = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[Project.ExpansionMmc5]    = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[Project.ExpansionNamco]   = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[Project.ExpansionSunsoft] = g.CreateBitmapFromResource("Instrument");
 #endif
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");

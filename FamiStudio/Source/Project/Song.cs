@@ -223,7 +223,7 @@ namespace FamiStudio
             {
                 for (int p = 0; p < songLength; p++)
                 {
-                    var pattern = channels[Channel.DPCM].PatternInstances[p];
+                    var pattern = channels[Channel.Dpcm].PatternInstances[p];
                     if (pattern != null)
                     {
                         for (int i = 0; i < patternLength; i++)

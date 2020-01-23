@@ -452,7 +452,7 @@ namespace FamiStudio
             int channel = Sequencer.SelectedChannel;
             if (ProjectExplorer.SelectedInstrument == null)
             {
-                channel = Channel.DPCM;
+                channel = Channel.Dpcm;
             }
             else
             {

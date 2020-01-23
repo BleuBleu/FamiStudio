@@ -7,27 +7,6 @@ namespace FamiStudio
 {
     public class Channel
     {
-        // Channel types.
-        public const int Square1 = 0;
-        public const int Square2 = 1;
-        public const int Triangle = 2;
-        public const int Noise = 3;
-        public const int DPCM = 4;
-        public const int ExpansionAudioStart = 5;
-        public const int Vrc6Square1 = 5;
-        public const int Vrc6Square2 = 6;
-        public const int Vrc6Saw = 7;
-        public const int Vrc7Fm1 = 8;
-        public const int Vrc7Fm2 = 9;
-        public const int Vrc7Fm3 = 10;
-        public const int Vrc7Fm4 = 11;
-        public const int Vrc7Fm5 = 12;
-        public const int Vrc7Fm6 = 13;
-        public const int Fds = 14;
-        public const int Mmc5Square1 = 15;
-        public const int Mmc5Square2 = 16;
-        public const int Count = 17;
-
         private Song song;
         private Pattern[] patternInstances = new Pattern[Song.MaxLength];
         private List<Pattern> patterns = new List<Pattern>();
@@ -38,6 +17,39 @@ namespace FamiStudio
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
+
+        // Channel types.
+        public const int Square1 = 0;
+        public const int Square2 = 1;
+        public const int Triangle = 2;
+        public const int Noise = 3;
+        public const int Dpcm = 4;
+        public const int ExpansionAudioStart = 5;
+        public const int Vrc6Square1 = 5;
+        public const int Vrc6Square2 = 6;
+        public const int Vrc6Saw = 7;
+        public const int Vrc7Fm1 = 8;
+        public const int Vrc7Fm2 = 9;
+        public const int Vrc7Fm3 = 10;
+        public const int Vrc7Fm4 = 11;
+        public const int Vrc7Fm5 = 12;
+        public const int Vrc7Fm6 = 13;
+        public const int FdsWave = 14;
+        public const int Mmc5Square1 = 15;
+        public const int Mmc5Square2 = 16;
+        // public const int Mmc5Dpcm = 17; MATTT: Do we want to keep space for it?
+        public const int NamcoWave1 = 17;
+        public const int NamcoWave2 = 18;
+        public const int NamcoWave3 = 19;
+        public const int NamcoWave4 = 20;
+        public const int NamcoWave5 = 21;
+        public const int NamcoWave6 = 22;
+        public const int NamcoWave7 = 23;
+        public const int NamcoWave8 = 24;
+        public const int SunsoftSquare1 = 25;
+        public const int SunsoftSquare2 = 26;
+        public const int SunsoftSquare3 = 27;
+        public const int Count = 28;
 
         public static string[] ChannelNames =
         {
@@ -58,6 +70,17 @@ namespace FamiStudio
             "FDS", // FDS
             "Square 1", // MMC5
             "Square 2", // MMC5
+            "Wave 1", // Namco
+            "Wave 2", // Namco
+            "Wave 3", // Namco
+            "Wave 4", // Namco
+            "Wave 5", // Namco
+            "Wave 6", // Namco
+            "Wave 7", // Namco
+            "Wave 8", // Namco
+            "Square 1", // Sunsoft
+            "Square 2", // Sunsoft
+            "Square 3", // SunsoftS
         };
 
         public Channel()
@@ -84,9 +107,9 @@ namespace FamiStudio
         public bool SupportsInstrument(Instrument instrument)
         {
             if (instrument == null)
-                return type == DPCM;
+                return type == Dpcm;
 
-            if (type == DPCM)
+            if (type == Dpcm)
                 return true;
 
             if (instrument.ExpansionType == Project.ExpansionNone && type < ExpansionAudioStart)
@@ -99,25 +122,32 @@ namespace FamiStudio
             if (instrument.ExpansionType == Project.ExpansionVrc7 && type >= Vrc7Fm1 && type <= Vrc7Fm6)
                 return true;
 
-            if (instrument.ExpansionType == Project.ExpansionFds && type == Fds)
+            if (instrument.ExpansionType == Project.ExpansionFds && type == FdsWave)
                 return true;
 
             if (type >= Mmc5Square1 && type <= Mmc5Square2)
+                return true;
+
+            if (instrument.ExpansionType == Project.ExpansionNamco && type >= NamcoWave1 && type <= NamcoWave8)
+                return true;
+
+            // MATTT: Will we want special instrument for S5B? Gimmick doesnt use noise or envelopes I think.
+            if (instrument.ExpansionType == Project.ExpansionSunsoft && type >= SunsoftSquare1 && type <= SunsoftSquare3)
                 return true;
 #endif
 
             return false;
         }
 
-        public bool SupportsReleaseNotes => type != DPCM;
-        public bool SupportsSlideNotes => type != Noise && type != DPCM;
-        public bool SupportsVibrato => type != Noise && type != DPCM;
+        public bool SupportsReleaseNotes => type != Dpcm;
+        public bool SupportsSlideNotes => type != Noise && type != Dpcm;
+        public bool SupportsVibrato => type != Noise && type != Dpcm;
 
         public bool SupportsEffect(int effect)
         {
             switch (effect)
             {
-                case Note.EffectVolume:       return type != DPCM;
+                case Note.EffectVolume:       return type != Dpcm;
                 case Note.EffectVibratoSpeed: return SupportsVibrato;
                 case Note.EffectVibratoDepth: return SupportsVibrato;
             }
@@ -448,10 +478,14 @@ namespace FamiStudio
                 return ExpansionAudioStart + type - Vrc6Square1;
             if (type >= Vrc7Fm1 && type <= Vrc7Fm6)
                 return ExpansionAudioStart + type - Vrc7Fm1;
-            if (type == Fds)
+            if (type == FdsWave)
                 return ExpansionAudioStart;
             if (type >= Mmc5Square1 && type <= Mmc5Square2)
                 return ExpansionAudioStart + type - Mmc5Square1;
+            if (type >= NamcoWave1 && type <= NamcoWave8)
+                return ExpansionAudioStart + type - NamcoWave1;
+            if (type >= SunsoftSquare1 && type <= SunsoftSquare3)
+                return ExpansionAudioStart + type - SunsoftSquare1;
             Debug.Assert(false);
             return -1;
         }

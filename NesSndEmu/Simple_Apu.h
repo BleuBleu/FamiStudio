@@ -11,16 +11,20 @@
 #include "nes_apu/Nes_Vrc7.h"
 #include "nes_apu/Nes_Fds.h"
 #include "nes_apu/Nes_Mmc5.h"
+#include "nes_apu/Nes_Namco.h"
+#include "nes_apu/Nes_Sunsoft.h"
 #include "nes_apu/Blip_Buffer.h"
 
 class Simple_Apu {
 public:
 
-	enum { expansion_none = 0 };
-	enum { expansion_vrc6 = 1 };
-	enum { expansion_vrc7 = 2 };
-	enum { expansion_fds  = 3 };
-	enum { expansion_mmc5 = 4 };
+	enum { expansion_none    = 0 };
+	enum { expansion_vrc6    = 1 };
+	enum { expansion_vrc7    = 2 };
+	enum { expansion_fds     = 3 };
+	enum { expansion_mmc5    = 4 };
+	enum { expansion_namco   = 5 };
+	enum { expansion_sunsoft = 6 };
 
 	Simple_Apu();
 	~Simple_Apu();
@@ -84,6 +88,8 @@ private:
 	Nes_Vrc7 vrc7;
 	Nes_Fds fds;
 	Nes_Mmc5 mmc5;
+	Nes_Namco namco;
+	Nes_Sunsoft sunsoft;
 	Blip_Buffer buf;
 	blip_time_t time;
 	blip_time_t frame_length;

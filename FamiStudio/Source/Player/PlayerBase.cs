@@ -123,18 +123,13 @@ namespace FamiStudio
                     return new ChannelStateTriangle(apuIdx, channelType);
                 case Channel.Noise:
                     return new ChannelStateNoise(apuIdx, channelType);
-                case Channel.DPCM:
+                case Channel.Dpcm:
                     return new ChannelStateDpcm(apuIdx, channelType);
                 case Channel.Vrc6Square1:
                 case Channel.Vrc6Square2:
                     return new ChannelStateVrc6Square(apuIdx, channelType);
                 case Channel.Vrc6Saw:
                     return new ChannelStateVrc6Saw(apuIdx, channelType);
-                case Channel.Fds:
-                    return new ChannelStateFds(apuIdx, channelType);
-                case Channel.Mmc5Square1:
-                case Channel.Mmc5Square2:
-                    return new ChannelStateMmc5Square(apuIdx, channelType);
                 case Channel.Vrc7Fm1:
                 case Channel.Vrc7Fm2:
                 case Channel.Vrc7Fm3:
@@ -142,6 +137,24 @@ namespace FamiStudio
                 case Channel.Vrc7Fm5:
                 case Channel.Vrc7Fm6:
                     return new ChannelStateVrc7(apuIdx, channelType);
+                case Channel.FdsWave:
+                    return new ChannelStateFds(apuIdx, channelType);
+                case Channel.Mmc5Square1:
+                case Channel.Mmc5Square2:
+                    return new ChannelStateMmc5Square(apuIdx, channelType);
+                case Channel.NamcoWave1:
+                case Channel.NamcoWave2:
+                case Channel.NamcoWave3:
+                case Channel.NamcoWave4:
+                case Channel.NamcoWave5:
+                case Channel.NamcoWave6:
+                case Channel.NamcoWave7:
+                case Channel.NamcoWave8:
+                    return new ChannelStateNamco(apuIdx, channelType);
+                case Channel.SunsoftSquare1:
+                case Channel.SunsoftSquare2:
+                case Channel.SunsoftSquare3:
+                    return new ChannelStateSunsoftSquare(apuIdx, channelType);
             }
 
             Debug.Assert(false);
@@ -178,6 +191,10 @@ namespace FamiStudio
                     return NesApu.APU_EXPANSION_FDS;
                 case Project.ExpansionMmc5:
                     return NesApu.APU_EXPANSION_MMC5;
+                case Project.ExpansionNamco:
+                    return NesApu.APU_EXPANSION_NAMCO;
+                case Project.ExpansionSunsoft:
+                    return NesApu.APU_EXPANSION_SUNSOFT;
 #endif
             }
 

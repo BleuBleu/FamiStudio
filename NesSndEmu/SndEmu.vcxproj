@@ -139,6 +139,7 @@
     <ClInclude Include="nes_apu\Nes_Mmc5.h" />
     <ClInclude Include="nes_apu\Nes_Namco.h" />
     <ClInclude Include="nes_apu\Nes_Oscs.h" />
+    <ClInclude Include="nes_apu\Nes_Sunsoft.h" />
     <ClInclude Include="nes_apu\Nes_Vrc6.h" />
     <ClInclude Include="nes_apu\Nes_Vrc7.h" />
     <ClInclude Include="nes_apu\Nonlinear_Buffer.h" />
@@ -155,6 +156,7 @@
     <ClCompile Include="nes_apu\Nes_Mmc5.cpp" />
     <ClCompile Include="nes_apu\Nes_Namco.cpp" />
     <ClCompile Include="nes_apu\Nes_Oscs.cpp" />
+    <ClCompile Include="nes_apu\Nes_Sunsoft.cpp" />
     <ClCompile Include="nes_apu\Nes_Vrc6.cpp" />
     <ClCompile Include="nes_apu\Nes_Vrc7.cpp" />
     <ClCompile Include="nes_apu\Nonlinear_Buffer.cpp" />

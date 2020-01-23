@@ -434,7 +434,7 @@ namespace FamiStudio
                 // 0 = stop, 1 = C0 ... 96 = B7
                 if (value != 0)
                 {
-                    if (channel == Channel.DPCM)
+                    if (channel == Channel.Dpcm)
                         value = Utils.Clamp(value - Note.DPCMNoteMin, 1, 63);
                     else if (channel != Channel.Noise)
                         value = Utils.Clamp(value, 1, 96);
