@@ -243,7 +243,7 @@ namespace FamiStudio
             DrawRectangle(rect, lineBrush);
         }
 
-        public void FillConvexPath(Geometry geo, Brush brush)
+        public void FillConvexPath(Geometry geo, Brush brush, bool smooth = false)
         {
             AntiAliasing = true;
             renderTarget.FillGeometry(geo, brush);
