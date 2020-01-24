@@ -1,55 +1,3 @@
-1.4.0: VRC6 + Slides
-====================
-NOW:
-- Make sure Shovel sounds legit (intro especially)
-
-Polish:
-- Has it gotten slower? Take RenderDoc capture to be sure we arent drawing crazy stuff.
-
-Testing:
-- Piano roll, selection, etc. Delete stuff, make sur FX and everything is consitent.
-- Retest copy paste a lot...
-- Note drawing, release, stop, from far away.
-- Reset everywhere i changed to note.Clear();
-
-Trailer (~1 min) (TODO: Need to figure out what to show, need callouts)
-================
-- 00:00
-	- FamiStudio 1.4.0  [Shovel knight footage]
-	- All audio recorded live from FamiStudio. 
-	- Although not an NES game, the entire Shovel Knight soundtrack was done in FamiTracker and uses it. 
-	- Arguably some of the best chiptune ever made.
-- 00:11 
-	- First audio expansion: Konami VRC6! Give you 2 extra square channels and a sawtooth channel. [Zoom on sequencer]
-	- Enabled in the project settings. [Open project settings + zoom]
-- 00:20
-	- Slide notes!
-	- Simply hold S and drag up or down! [Show how it works]
-	- Starts a the note pitch and reaches the target pitch by the end of the note. [Callout]
-	- Will convert from/to 1xx/2xx/3xx/Qxx/Rxx when importing/exporting from FamiTracker.
-- 00:30?:
-	- Option to remove attack on notes
-	- The little black rectangle on notes now represent the attack.
-	- Hold A and click on a note to remove the attack [Show how it works]
-	- This will prevent the envelopes from restarting when a new note comes it.
-- 00:35?:
-	- Vibrato effect add vibrato without having to use a pitch envelope. [Open FX panel, change a value]
-	- Will convert from/to 4xy when importing/exporting to FamiTracker.
-- 00:40:
-	- Combining slide notes, no-attack notes, release notes and vibrato can create some very expressive melodies [Solo melody on an interesting part]
-- 00:45:
-	- Smooth vibrato:
-	- New option to work around a NES hardware bug where vibrato on the square channel will "click" around notes B0,D1,F1,A1,D2,A2 and A3 (NTSC).
-	- Based on the clever "smooth vibrato" trick by Blargg. Will work on actual hardware.
-- 00:55?
-	- Listen to this sick bass line! [Pattern time 23, solo bass + drum]
-- 01:00
-	- As usual, most of these new features will import/export to FamiTracker via the TXT format [Show, play song in FamiTracker, show Qxx + 4xx]
-
-Tweet
-=====
-Sound up! FamiStudio 1.4.0 is out! VRC6, slide notes, vibrato effect and so much more! @virtjk @YachtClubGames
-
 1.5.0: FDS + PAL
 ================
 - Delayed cut + delayed note. This will allow us to to song without time = 1
@@ -64,8 +12,10 @@ x FDS support in NesSndEmu
 ========================
 
 Backlog:
+- Mapper 031 support (export ROM directly).
 - Cleanup (merge duplicated patterns, instruments, remove unused stuff.
 - Fix crash on startup when there are no audio device 
 - Proper error messages when something fails (save, etc.)
 - Add taskbar progress bar + color to show playback state
 - Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).
+- Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
