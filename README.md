@@ -28,5 +28,6 @@ You can find me:
 
 ## Acknowledgments
 - [Shiru](https://shiru.untergrund.net/code.shtml) for the FamiTone2 library and the demo songs that are included (_After the Rain_ and _Danger Streets_)
-- [Blargg](http://www.slack.net/~ant/) for Nes_Snd_Emu and the underlying Blip_Buffer
+- [Blargg](http://www.slack.net/~ant/) for Nes_Snd_Emu and the underlying Blip_Buffer. Also for it's Smooth Vibrato tech.
+- [RainWarrior](http://rainwarrior.ca) for NSFImport and other tools.
 
