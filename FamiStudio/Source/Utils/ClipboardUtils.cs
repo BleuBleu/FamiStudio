@@ -110,18 +110,26 @@ namespace FamiStudio
                 var patChannel = patternIdNameMap[i].Item2;
                 var patName = patternIdNameMap[i].Item3;
 
-                var existingPattern = song.Channels[patChannel].GetPattern(patName);
-
-                if (existingPattern != null)
+                if (serializer.Project.IsChannelActive(patChannel))
                 {
-                    serializer.RemapId(patId, existingPattern.Id);
-                    dummyPattern.SerializeState(serializer); // Skip 
+                    var existingPattern = song.GetChannelByType(patChannel).GetPattern(patName);
+
+                    if (existingPattern != null)
+                    {
+                        serializer.RemapId(patId, existingPattern.Id);
+                        dummyPattern.SerializeState(serializer); // Skip 
+                    }
+                    else
+                    {
+                        var pattern = song.GetChannelByType(patChannel).CreatePattern(patName);
+                        serializer.RemapId(patId, pattern.Id);
+                        pattern.SerializeState(serializer);
+                    }
                 }
                 else
                 {
-                    var pattern = song.Channels[patChannel].CreatePattern(patName);
-                    serializer.RemapId(patId, pattern.Id);
-                    pattern.SerializeState(serializer);
+                    serializer.RemapId(patId, -1);
+                    dummyPattern.SerializeState(serializer); // Skip 
                 }
             }
 
@@ -191,7 +199,7 @@ namespace FamiStudio
 
                     if (!checkOnly)
                     {
-                        if (createMissing)
+                        if (createMissing && (instType == Project.ExpansionNone || instType == serializer.Project.ExpansionAudio))
                         {
                             var instrument = serializer.Project.CreateInstrument(instType, instName);
                             serializer.RemapId(instId, instrument.Id);
@@ -376,7 +384,7 @@ namespace FamiStudio
             var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
 
             LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
-            int numNonNullPatterns = LoadAndMergePatternList(serializer, song);
+            LoadAndMergePatternList(serializer, song);
 
             int numPatterns = 0;
             int numChannels = 0;
