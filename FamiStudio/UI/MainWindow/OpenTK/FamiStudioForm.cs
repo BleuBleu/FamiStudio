@@ -204,18 +204,27 @@ namespace FamiStudio
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
+            ResizeControls();
+            Invalidate();
+            OnRenderFrame(null);
+        }
 
+        private void ResizeControls()
+        {
             int toolBarHeight = (int)(40 * GLTheme.MainWindowScaling);
-            int projectExplorerWidth = (int)(260 * GLTheme.MainWindowScaling);
-            int sequencerHeight = (int)(298 * GLTheme.MainWindowScaling);
+            int projectExplorerWidth = (int)(280 * GLTheme.MainWindowScaling);
+            int sequencerHeight = (int)(sequencer.ComputeDesiredSizeY() * GLTheme.MainWindowScaling);
 
             toolbar.Move(0, 0, Width, toolBarHeight);
             projectExplorer.Move(Width - projectExplorerWidth, toolBarHeight, projectExplorerWidth, Height - toolBarHeight);
             sequencer.Move(0, toolBarHeight, Width - projectExplorerWidth, sequencerHeight);
             pianoRoll.Move(0, toolBarHeight + sequencerHeight, Width - projectExplorerWidth, Height - toolBarHeight - sequencerHeight);
+        }
 
+        public void RefreshSequencerLayout()
+        {
+            ResizeControls();
             Invalidate();
-            OnRenderFrame(null);
         }
 
         public Point PointToClient(GLControl ctrl, Point p)
@@ -408,7 +417,7 @@ namespace FamiStudio
             base.OnMouseLeave(e);
         }
 
-        protected System.Windows.Forms.Keys ToWinFormKey(Key k)
+        protected static System.Windows.Forms.Keys ToWinFormKey(Key k)
         {
             if (k >= Key.A && k <= Key.Z)
                 return System.Windows.Forms.Keys.A + (k - Key.A);
@@ -438,6 +447,21 @@ namespace FamiStudio
             Debug.WriteLine($"Unknown key pressed {k}");
 
             return System.Windows.Forms.Keys.None;
+        }
+
+        protected static Key FromWinFormKey(System.Windows.Forms.Keys k)
+        {
+            if (k >= System.Windows.Forms.Keys.A && k <= System.Windows.Forms.Keys.Z)
+                return Key.A + (k - System.Windows.Forms.Keys.A);
+
+            Debug.Assert(false);
+
+            return Key.Unknown;
+        }
+
+        public static bool IsKeyDown(System.Windows.Forms.Keys k)
+        {
+            return Keyboard.GetState().IsKeyDown(FromWinFormKey(k));
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
@@ -607,7 +631,9 @@ namespace FamiStudio
             Visible = true; 
             OnResize(EventArgs.Empty);
 
-            PlatformDialogs.InitializeGtk();
+#if FAMISTUDIO_LINUX
+            PlatformUtils.InitializeGtk();
+#endif
 
             while (true)
             {

@@ -70,6 +70,7 @@
     <Reference Include="Mono.Cairo" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
@@ -77,17 +78,25 @@
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Player\ChannelState.cs" />
-    <Compile Include="Source\Player\DPCMChannelState.cs" />
+    <Compile Include="Source\Player\ChannelStateDpcm.cs" />
+    <Compile Include="Source\Player\ChannelStateFds.cs" />
+    <Compile Include="Source\Player\ChannelStateMmc5Square.cs" />
+    <Compile Include="Source\Player\ChannelStateNamco.cs" />
+    <Compile Include="Source\Player\ChannelStateSunsoftSquare.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc7.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\MIDI.cs" />
-    <Compile Include="Source\Player\NoiseChannelState.cs" />
+    <Compile Include="Source\Player\ChannelStateNoise.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
-    <Compile Include="Source\Player\SquareChannelState.cs" />
-    <Compile Include="Source\Player\TriangleChannelState.cs" />
+    <Compile Include="Source\Player\ChannelStateSquare.cs" />
+    <Compile Include="Source\Player\ChannelStateTriangle.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc6Square.cs" />
     <Compile Include="Source\Project\Envelope.cs" />
-    <Compile Include="Source\Utils\ClipboardUtils.cs" /> 
+    <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="UI\Dialogs\Common\ConfigDialog.cs" />
+    <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
     <Content Include="libportaudio.2.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -104,13 +113,6 @@
     <Compile Include="Source\Project\Project.cs" />
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\Channel.cs" />
-    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
     <Compile Include="UI\MainWindow\OpenTK\Cursors.cs" />
     <Compile Include="UI\MainWindow\OpenTK\GLControl.cs" />
     <Compile Include="UI\MainWindow\OpenTK\GLGraphics.cs" />
@@ -132,6 +134,7 @@
     <Compile Include="UI\MainWindow\Common\Toolbar.cs" />
     <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc6.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -141,12 +144,12 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="UI\Dialogs\Gtk\PlatformDialogs.cs" />
     <Compile Include="Source\Utils\MacUtils.cs" />
     <EmbeddedResource Include="Resources\gtk_mac.rc" />
     <EmbeddedResource Include="Resources\gtk_linux.rc" />
     <Compile Include="UI\Dialogs\Gtk\CheckBoxList.cs" />
     <Compile Include="UI\Dialogs\Gtk\DomainSpin.cs" />
+    <Compile Include="UI\Dialogs\Gtk\PlatformUtils.cs" />
     <Compile Include="UI\Dialogs\Gtk\PropertyPage.cs" />
     <Compile Include="UI\Dialogs\Gtk\ColorSelector.cs" />
     <Compile Include="UI\Dialogs\Gtk\PropertyDialog.cs" />
@@ -159,9 +162,26 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportWav.png" />
+    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand10_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand12_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand16.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand16_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand20_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand20Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand24.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand24_0.png" />
     <EmbeddedResource Include="Resources\QuickSand24Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand24Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand28_0.png" />
     <EmbeddedResource Include="Resources\QuickSand40.fnt" />
     <EmbeddedResource Include="Resources\QuickSand40_0.png" />
     <EmbeddedResource Include="Resources\QuickSand40Bold.fnt" />
@@ -170,9 +190,6 @@
     <EmbeddedResource Include="Resources\QuickSand56_0.png" />
     <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand24_0.png" />
-    <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
-    <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -216,16 +233,40 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\InstrumentVRC6%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentVRC6.png" />
+    <EmbeddedResource Include="Resources\VibratoSmall%402x.png" />
+    <EmbeddedResource Include="Resources\VibratoSmall.png" />
+    <EmbeddedResource Include="Resources\Slide%4015x.png" />
+    <EmbeddedResource Include="Resources\Slide%402x.png" />
+    <EmbeddedResource Include="Resources\Slide.png" />
+    <EmbeddedResource Include="Resources\SlideSmall%4015x.png" />
+    <EmbeddedResource Include="Resources\SlideSmall%402x.png" />
+    <EmbeddedResource Include="Resources\SlideSmall.png" />
+    <EmbeddedResource Include="Resources\Warning%402x.png" />
+    <EmbeddedResource Include="Resources\Warning.png" />
+    <EmbeddedResource Include="Resources\Duty4%402x.png" />
+    <EmbeddedResource Include="Resources\Duty4.png" />
+    <EmbeddedResource Include="Resources\Duty5%402x.png" />
+    <EmbeddedResource Include="Resources\Duty5.png" />
+    <EmbeddedResource Include="Resources\Duty6%402x.png" />
+    <EmbeddedResource Include="Resources\Duty6.png" />
+    <EmbeddedResource Include="Resources\Duty7%402x.png" />
+    <EmbeddedResource Include="Resources\Duty7.png" />
+    <EmbeddedResource Include="Resources\Instrument%402x.png" />
+    <EmbeddedResource Include="Resources\Instrument.png" />
+    <EmbeddedResource Include="Resources\Saw%402x.png" />
+    <EmbeddedResource Include="Resources\Saw.png" />
     <EmbeddedResource Include="Resources\InstrumentOpen%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentOpen.png" />
     <EmbeddedResource Include="Resources\Drag%402x.png" />
-    <EmbeddedResource Include="Resources\Drag.png" /> 
+    <EmbeddedResource Include="Resources\Drag.png" />
     <EmbeddedResource Include="Resources\MouseLeft%402x.png" />
     <EmbeddedResource Include="Resources\MouseLeft.png" />
     <EmbeddedResource Include="Resources\MouseRight%402x.png" />
     <EmbeddedResource Include="Resources\MouseRight.png" />
     <EmbeddedResource Include="Resources\MouseWheel%402x.png" />
-    <EmbeddedResource Include="Resources\MouseWheel.png" /> 
+    <EmbeddedResource Include="Resources\MouseWheel.png" />
     <EmbeddedResource Include="Resources\Copy%402x.png" />
     <EmbeddedResource Include="Resources\Copy.png" />
     <EmbeddedResource Include="Resources\Cut%402x.png" />
@@ -239,9 +280,7 @@
     <EmbeddedResource Include="Resources\ConfigUserInterface%402x.png" />
     <EmbeddedResource Include="Resources\ConfigUserInterface.png" />
     <EmbeddedResource Include="Resources\Noise%4015x.png" />
-    <EmbeddedResource Include="Resources\JumpSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
-    <EmbeddedResource Include="Resources\SpeedSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\LoopSmall%402x.png" />
     <EmbeddedResource Include="Resources\Music%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill%402x.png" />
@@ -262,7 +301,6 @@
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
     <EmbeddedResource Include="Resources\JumpSmall%402x.png" />
     <EmbeddedResource Include="Resources\Noise%402x.png" />
-    <EmbeddedResource Include="Resources\Pattern%402x.png" />
     <EmbeddedResource Include="Resources\Pitch%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmall%402x.png" />
     <EmbeddedResource Include="Resources\SpeedSmall%402x.png" />
@@ -288,19 +326,11 @@
     <EmbeddedResource Include="Resources\Stop%402x.png" />
     <EmbeddedResource Include="Resources\Undo%402x.png" />
     <EmbeddedResource Include="Resources\Yes%402x.png" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand10_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand12_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand20_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand28_0.png" />
     <EmbeddedResource Include="Resources\VolumeSmall.png" />
     <EmbeddedResource Include="Resources\Export.png" />
     <EmbeddedResource Include="Resources\File.png" />
     <EmbeddedResource Include="Resources\Music.png" />
     <EmbeddedResource Include="Resources\Open.png" />
-    <EmbeddedResource Include="Resources\Pattern.png" />
     <EmbeddedResource Include="Resources\Play.png" />
     <EmbeddedResource Include="Resources\Redo.png" />
     <EmbeddedResource Include="Resources\Rewind.png" />
@@ -317,9 +347,7 @@
     <None Include="Resources\FamiStudio.ico" />
     <EmbeddedResource Include="Resources\JumpSmall.png" />
     <EmbeddedResource Include="Resources\SpeedSmall.png" />
-    <EmbeddedResource Include="Resources\JumpSmallFill.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
-    <EmbeddedResource Include="Resources\SpeedSmallFill.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />
   </ItemGroup>
   <ItemGroup>

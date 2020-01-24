@@ -7,10 +7,25 @@
 #define SIMPLE_APU_H
 
 #include "nes_apu/Nes_Apu.h"
+#include "nes_apu/Nes_Vrc6.h"
+#include "nes_apu/Nes_Vrc7.h"
+#include "nes_apu/Nes_Fds.h"
+#include "nes_apu/Nes_Mmc5.h"
+#include "nes_apu/Nes_Namco.h"
+#include "nes_apu/Nes_Sunsoft.h"
 #include "nes_apu/Blip_Buffer.h"
 
 class Simple_Apu {
 public:
+
+	enum { expansion_none    = 0 };
+	enum { expansion_vrc6    = 1 };
+	enum { expansion_vrc7    = 2 };
+	enum { expansion_fds     = 3 };
+	enum { expansion_mmc5    = 4 };
+	enum { expansion_namco   = 5 };
+	enum { expansion_sunsoft = 6 };
+
 	Simple_Apu();
 	~Simple_Apu();
 	
@@ -36,11 +51,16 @@ public:
 	// Resets
 	void reset();
 
+	void set_audio_expansion(long exp);
+	int get_audio_expansion() const { return expansion; }
+
 	// Number of samples in buffer
 	long samples_avail() const;
 
 	void enable_channel(int, bool);
 	
+	void treble_eq(int exp, double treble, int cutoff, int sample_rate);
+
 	// Read at most 'count' samples and return number of samples actually read
 	typedef blip_sample_t sample_t;
 	long read_samples( sample_t* buf, long buf_size );
@@ -51,9 +71,25 @@ public:
 	// Save/load snapshot of emulation state
 	void save_snapshot( apu_snapshot_t* out ) const;
 	void load_snapshot( apu_snapshot_t const& );
-	
+
+	void start_seeking();
+	void stop_seeking();
+	bool is_seeking() const { return seeking; }
+
 private:
+	bool seeking;
+	int  shadow_regs_apu[Nes_Apu::shadow_regs_count];
+	int  shadow_regs_vrc6[Nes_Vrc6::shadow_regs_count];
+	int  shadow_regs_fds[Nes_Fds::shadow_regs_count];
+	int  shadow_regs_mmc5[Nes_Mmc5::shadow_regs_count];
+	int  expansion;
 	Nes_Apu apu;
+	Nes_Vrc6 vrc6;
+	Nes_Vrc7 vrc7;
+	Nes_Fds fds;
+	Nes_Mmc5 mmc5;
+	Nes_Namco namco;
+	Nes_Sunsoft sunsoft;
 	Blip_Buffer buf;
 	blip_time_t time;
 	blip_time_t frame_length;

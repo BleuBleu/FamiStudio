@@ -24,13 +24,10 @@ namespace FamiStudio
         public unsafe ExportDialog(Rectangle mainWinRect, Project project)
         {
             int width  = 450;
-            int height = 390;
+            int height = 450;
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
             int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
 
-#if DEBUG
-            height += 60;
-#endif
 #if FAMISTUDIO_LINUX
             height += 30;
 #endif
@@ -70,9 +67,7 @@ namespace FamiStudio
                     page.AddString("Copyright :", project.Copyright, 31); // 2
                     page.AddStringList("Mode :", new[] { "NTSC", "PAL", "Dual" }, "NTSC"); // 3
                     page.AddStringListMulti(null, songName, null); // 4
-#if DEBUG
-                    page.AddStringList("Kernel :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 5
-#endif
+                    page.AddStringList("Engine :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 5
                     page.SetPropertyEnabled(3, false);
                     break;
                 case ExportFormat.FamiTracker:
@@ -119,7 +114,7 @@ namespace FamiStudio
 
         private void ExportWav()
         {
-            var filename = PlatformDialogs.ShowSaveFileDialog("Export Wave File", "Wave Audio File (*.wav)|*.wav");
+            var filename = PlatformUtils.ShowSaveFileDialog("Export Wave File", "Wave Audio File (*.wav)|*.wav");
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.Wav);
@@ -132,16 +127,11 @@ namespace FamiStudio
 
         private void ExportNsf()
         {
-            var filename = PlatformDialogs.ShowSaveFileDialog("Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf");
+            var filename = PlatformUtils.ShowSaveFileDialog("Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf");
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.Nsf);
-
-#if DEBUG
                 var kernel = (FamitoneMusicFile.FamiToneKernel)Enum.Parse(typeof(FamitoneMusicFile.FamiToneKernel), props.GetPropertyValue<string>(5));
-#else
-                var kernel = FamitoneMusicFile.FamiToneKernel.FamiTone2FS;
-#endif
 
                 NsfFile.Save(project, kernel, filename,
                     GetSongIds(props.GetPropertyValue<bool[]>(4)),
@@ -153,7 +143,7 @@ namespace FamiStudio
 
         private void ExportFamiTracker()
         {
-            var filename = PlatformDialogs.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt");
+            var filename = PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt");
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
@@ -194,7 +184,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = PlatformDialogs.ShowSaveFileDialog("Export FamiTone2 Code", $"FamiTone2 Assembly File (*.{ext})|*.{ext}");
+                var filename = PlatformUtils.ShowSaveFileDialog("Export FamiTone2 Code", $"FamiTone2 Assembly File (*.{ext})|*.{ext}");
                 if (filename != null)
                 {
                     FamitoneMusicFile f = new FamitoneMusicFile(FamitoneMusicFile.FamiToneKernel.FamiTone2);

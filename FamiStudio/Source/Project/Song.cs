@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace FamiStudio
@@ -10,7 +11,7 @@ namespace FamiStudio
 
         private int id;
         private Project project;
-        private Channel[] channels = new Channel[5];
+        private Channel[] channels;
         private Color color;
         private int patternLength = 256;
         private int songLength = 64;
@@ -26,17 +27,13 @@ namespace FamiStudio
         public string Name { get => name; set => name = value; }
         public int Tempo { get => tempo; set => tempo = value; }
         public int Speed { get => speed; set => speed = value; }
-        public int Length { get => songLength; set => songLength = value; }
-        public int PatternLength { get => patternLength; set => patternLength = value; }
-        public int BarLength { get => barLength; set => barLength = value; }
+        public int Length { get => songLength; }
+        public int PatternLength { get => patternLength; }
+        public int BarLength { get => barLength; }
 
         public Song()
         {
             // For serialization.
-            if (channels[0] == null)
-            {
-                CreateChannels();
-            }
         }
 
         public Song(Project project, int id, string name)
@@ -49,13 +46,21 @@ namespace FamiStudio
             CreateChannels();
         }
 
-        private void CreateChannels()
+        public void CreateChannels(bool preserve = false)
         {
-            channels[0] = new Channel(this, Channel.Square1, songLength);
-            channels[1] = new Channel(this, Channel.Square2, songLength);
-            channels[2] = new Channel(this, Channel.Triangle, songLength);
-            channels[3] = new Channel(this, Channel.Noise, songLength);
-            channels[4] = new Channel(this, Channel.DPCM, songLength);
+            int channelCount = project.GetActiveChannelCount();
+
+            if (preserve)
+                Array.Resize(ref channels, channelCount);
+            else
+                channels = new Channel[channelCount];
+
+            int idx = preserve ? Channel.ExpansionAudioStart : 0;
+            for (int i = idx; i < Channel.Count; i++)
+            {
+                if (project.IsChannelActive(i))
+                    channels[idx++] = new Channel(this, i, songLength);
+            }
         }
 
         public bool Split(int factor)
@@ -102,6 +107,30 @@ namespace FamiStudio
             return false;
         }
 
+        public void SetLength(int newLength)
+        {
+            songLength = newLength;
+
+            foreach (var channel in channels)
+                channel.ClearPatternsInstancesPastSongLength();
+        }
+
+        public void SetPatternLength(int newLength)
+        {
+            patternLength = newLength;
+
+            foreach (var channel in channels)
+                channel.ClearNotesPastSongLength();
+        }
+
+        public void SetBarLength(int newBarLength)
+        {
+            if (Array.IndexOf(GenerateBarLengths(patternLength), newBarLength) >= 0)
+            {
+                barLength = newBarLength;
+            }
+        }
+
         public static int[] GenerateBarLengths(int patternLen)
         {
             var barLengths = new List<int>();
@@ -135,6 +164,11 @@ namespace FamiStudio
             return null;
         }
 
+        public Channel GetChannelByType(int type)
+        {
+            return channels[Channel.ChannelTypeToIndex(type)];
+        }
+
         public Song Clone()
         {
             var saveSerializer = new ProjectSaveBuffer(project);
@@ -159,7 +193,7 @@ namespace FamiStudio
                 }
             }
 
-            Length = maxLength;
+            SetLength(maxLength);
         }
 
         public void RemoveEmptyPatterns()
@@ -167,6 +201,14 @@ namespace FamiStudio
             foreach (var channel in channels)
             {
                 channel.RemoveEmptyPatterns();   
+            }
+        }
+
+        public void CleanupUnusedPatterns()
+        {
+            foreach (var channel in channels)
+            {
+                channel.CleanupUnusedPatterns();
             }
         }
 
@@ -181,7 +223,7 @@ namespace FamiStudio
             {
                 for (int p = 0; p < songLength; p++)
                 {
-                    var pattern = channels[Channel.DPCM].PatternInstances[p];
+                    var pattern = channels[Channel.Dpcm].PatternInstances[p];
                     if (pattern != null)
                     {
                         for (int i = 0; i < patternLength; i++)
@@ -225,6 +267,9 @@ namespace FamiStudio
             buffer.Serialize(ref tempo);
             buffer.Serialize(ref speed);
             buffer.Serialize(ref color);
+
+            if (buffer.IsReading)
+                CreateChannels();
 
             foreach (var channel in channels)
                 channel.SerializeState(buffer);

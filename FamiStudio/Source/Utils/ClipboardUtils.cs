@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Windows.Forms;
@@ -27,10 +28,18 @@ namespace FamiStudio
 
         private static byte[] GetClipboardData(uint magic)
         {
+            byte[] buffer = null;
 #if FAMISTUDIO_WINDOWS
-            var buffer = Clipboard.GetData("FamiStudio") as byte[];
+            try
+            {
+                buffer = Clipboard.GetData("FamiStudio") as byte[];
+            }
+            catch
+            {
+                Debug.WriteLine("Random DisconnectedContext exception. Ignoring.");
+            }
 #else
-            var buffer = macClipboardData;
+            buffer = macClipboardData;
 #endif
 
             if (buffer == null || BitConverter.ToUInt32(buffer, 0) != magic)
@@ -101,18 +110,26 @@ namespace FamiStudio
                 var patChannel = patternIdNameMap[i].Item2;
                 var patName = patternIdNameMap[i].Item3;
 
-                var existingPattern = song.Channels[patChannel].GetPattern(patName);
-
-                if (existingPattern != null)
+                if (serializer.Project.IsChannelActive(patChannel))
                 {
-                    serializer.RemapId(patId, existingPattern.Id);
-                    dummyPattern.SerializeState(serializer); // Skip 
+                    var existingPattern = song.GetChannelByType(patChannel).GetPattern(patName);
+
+                    if (existingPattern != null)
+                    {
+                        serializer.RemapId(patId, existingPattern.Id);
+                        dummyPattern.SerializeState(serializer); // Skip 
+                    }
+                    else
+                    {
+                        var pattern = song.GetChannelByType(patChannel).CreatePattern(patName);
+                        serializer.RemapId(patId, pattern.Id);
+                        pattern.SerializeState(serializer);
+                    }
                 }
                 else
                 {
-                    var pattern = song.Channels[patChannel].CreatePattern(patName);
-                    serializer.RemapId(patId, pattern.Id);
-                    pattern.SerializeState(serializer);
+                    serializer.RemapId(patId, -1);
+                    dummyPattern.SerializeState(serializer); // Skip 
                 }
             }
 
@@ -127,8 +144,10 @@ namespace FamiStudio
             foreach (var inst in instruments)
             {
                 var instId = inst.Id;
+                var instType = inst.ExpansionType;
                 var instName = inst.Name;
                 serializer.Serialize(ref instId);
+                serializer.Serialize(ref instType);
                 serializer.Serialize(ref instName);
             }
 
@@ -141,14 +160,16 @@ namespace FamiStudio
             int numInstruments = 0;
             serializer.Serialize(ref numInstruments);
 
-            var instrumentIdNameMap = new List<Tuple<int, string>>();
+            var instrumentIdNameMap = new List<Tuple<int, int, string>>();
             for (int i = 0; i < numInstruments; i++)
             {
                 var instId = 0;
+                var instType = 0;
                 var instName = "";
                 serializer.Serialize(ref instId);
+                serializer.Serialize(ref instType);
                 serializer.Serialize(ref instName);
-                instrumentIdNameMap.Add(new Tuple<int, string>(instId, instName));
+                instrumentIdNameMap.Add(new Tuple<int, int, string>(instId, instType, instName));
             }
 
             var dummyInstrument = new Instrument();
@@ -158,13 +179,18 @@ namespace FamiStudio
             for (int i = 0; i < numInstruments; i++)
             {
                 var instId = instrumentIdNameMap[i].Item1;
-                var instName = instrumentIdNameMap[i].Item2;
+                var instType = instrumentIdNameMap[i].Item2;
+                var instName = instrumentIdNameMap[i].Item3;
 
                 var existingInstrument = serializer.Project.GetInstrument(instName);
 
                 if (existingInstrument != null)
                 {
-                    serializer.RemapId(instId, existingInstrument.Id);
+                    if (existingInstrument.ExpansionType == instType)
+                        serializer.RemapId(instId, existingInstrument.Id);
+                    else
+                        serializer.RemapId(instId, -1); // Incompatible expansion type, skip.
+
                     dummyInstrument.SerializeState(serializer); // Skip
                 }
                 else
@@ -173,9 +199,9 @@ namespace FamiStudio
 
                     if (!checkOnly)
                     {
-                        if (createMissing)
+                        if (createMissing && (instType == Project.ExpansionNone || instType == serializer.Project.ExpansionAudio))
                         {
-                            var instrument = serializer.Project.CreateInstrument(instName);
+                            var instrument = serializer.Project.CreateInstrument(instType, instName);
                             serializer.RemapId(instId, instrument.Id);
                             instrument.SerializeState(serializer);
                         }
@@ -358,7 +384,7 @@ namespace FamiStudio
             var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
 
             LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
-            int numNonNullPatterns = LoadAndMergePatternList(serializer, song);
+            LoadAndMergePatternList(serializer, song);
 
             int numPatterns = 0;
             int numChannels = 0;

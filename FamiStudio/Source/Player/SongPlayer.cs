@@ -14,8 +14,8 @@ namespace FamiStudio
 
     public class SongPlayer : PlayerBase
     {
-        protected int channelMask = 0x1f;
-        protected int playFrame = 0;
+        protected int channelMask = 0xffff;
+        protected int playPosition = 0;
         protected LoopMode loopMode = LoopMode.Song;
 
         struct SongPlayerStartInfo
@@ -87,8 +87,8 @@ namespace FamiStudio
 
         public int CurrentFrame
         {
-            get { return Math.Max(0, playFrame); }
-            set { playFrame = value; }
+            get { return Math.Max(0, playPosition); }
+            set { playPosition = value; }
         }
 
         public bool IsPlaying
@@ -98,55 +98,54 @@ namespace FamiStudio
 
         unsafe void PlayerThread(object o)
         {
-            var channels = new ChannelState[5]
-            {
-                new SquareChannelState(apuIndex, 0),
-                new SquareChannelState(apuIndex, 1),
-                new TriangleChannelState(apuIndex, 2),
-                new NoiseChannelState(apuIndex, 3),
-                new DPCMChannelState(apuIndex, 4) 
-            };
-
             var startInfo = (SongPlayerStartInfo)o;
             var song = startInfo.song;
 
-            bool advance = true;
-            int tempoCounter = 0;
-            int playPattern = 0;
-            int playNote = 0;
-            int speed = song.Speed;
+            var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex);
 
-            NesApu.Reset(apuIndex);
+            var advance = true;
+            var tempoCounter = 0;
+            var playPattern = 0;
+            var playNote = 0;
+            var jumpPattern = -1;
+            var jumpNote = -1;
+            var speed = song.Speed;
+
+            playPosition = startInfo.frame;
+
+            NesApu.InitAndReset(apuIndex, SampleRate, GetNesApuExpansionAudio(song.Project), dmcCallback);
 
             if (startInfo.frame != 0)
             {
-                foreach (var channel in channels)
-                    channel.StartSeeking();
+                NesApu.StartSeeking(apuIndex);
+                #if DEBUG
+                    NesApu.seeking = true;
+                #endif
 
-                while (playPattern * song.PatternLength + playNote != startInfo.frame)
+                while (playPattern * song.PatternLength + playNote < startInfo.frame)
                 {
-                    foreach (var channel in channels)
+                    var dummyAdvance = false;
+                    if (!AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote, ref dummyAdvance))
                     {
-                        channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed);
+                        break;
                     }
 
                     foreach (var channel in channels)
                     {
                         channel.Advance(song, playPattern, playNote);
+                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
                         channel.UpdateEnvelopes();
                         channel.UpdateAPU();
                     }
-
-                    int dummy1 = 0;
-                    bool dummy2 = false;
-                    if (!AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref dummy1, ref dummy2))
-                    {
-                        break;
-                    }
                 }
 
-                foreach (var channel in channels)
-                    channel.StopSeeking();
+                NesApu.StopSeeking(apuIndex);
+#if DEBUG
+                NesApu.seeking = false;
+#endif
+
+                jumpPattern = -1;
+                jumpNote = -1;
             }
 
             var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
@@ -160,20 +159,19 @@ namespace FamiStudio
                     break;
                 }
 
+                // !advance is to handle first frame.
+                if (!advance && !AdvanceTempo(song, speed, loopMode, ref tempoCounter, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote, ref advance))
+                    break;
+
                 // Advance to next note.
                 if (advance)
                 {
-                    // We process the effects before since one channel may have
-                    // a skip/jump and we need to process that first before advancing 
-                    // the song.
-                    foreach (var channel in channels)
-                    {
-                        channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed);
-                    }
+                    playPosition = playPattern * song.PatternLength + playNote;
 
                     foreach (var channel in channels)
                     {
                         channel.Advance(song, playPattern, playNote);
+                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
                     }
 
                     advance = false;
@@ -187,17 +185,12 @@ namespace FamiStudio
                 }
 
                 // Mute.
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < channels.Length; i++) 
                 {
-                    NesApu.NesApuEnableChannel(apuIndex, i, (channelMask & (1 << i)));
+                    NesApu.EnableChannel(apuIndex, i, (channelMask & (1 << i)));
                 }
 
                 EndFrameAndQueueSamples();
-
-                if (!AdvanceTempo(song, speed, loopMode, ref tempoCounter, ref playPattern, ref playNote, ref playFrame, ref advance))
-                {
-                    break;
-                }
             }
 
             audioStream.Stop();

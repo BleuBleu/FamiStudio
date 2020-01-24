@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -32,7 +33,7 @@ namespace FamiStudio
             Settings.Load();
             Cursors.Initialize();
             RenderTheme.Initialize();
-            PlatformDialogs.Initialize();
+            PlatformUtils.Initialize();
 
 #if FAMISTUDIO_WINDOWS
             PerformanceCounter.Initialize();

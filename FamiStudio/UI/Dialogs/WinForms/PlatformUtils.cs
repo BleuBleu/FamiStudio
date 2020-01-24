@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-    public static class PlatformDialogs
+    public static class PlatformUtils
     {
         public static PrivateFontCollection PrivateFontCollection;
 

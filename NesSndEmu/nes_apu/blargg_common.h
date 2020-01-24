@@ -44,7 +44,6 @@
 
 #elif defined (__GNUC__)
 	// GNU C++
-	#define BLARGG_COMPILER_HAS_NAMESPACE 1
 	#define BLARGG_COMPILER_HAS_BOOL 1
 
 #elif defined (__MINGW32__)
@@ -175,6 +174,11 @@ const blargg_err_t blargg_success = 0;
 	
 	#endif
 #endif
+
+#define min(a, b) (((a) < (b) ? (a) : (b)))
+#define max(a, b) (((a) > (b) ? (a) : (b)))
+#define clamp(x, a, b) ((x) < (a) ? (a) : ((x) > (b) ? (b) : (x)))
+#define array_count(x) (sizeof(x) / sizeof(x[0]))
 
 #endif
 

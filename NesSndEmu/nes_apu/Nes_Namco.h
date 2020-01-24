@@ -24,14 +24,17 @@ public:
 	void reset();
 	void end_frame( cpu_time_t );
 	
-	// Read/write data register is at 0x4800
+	// Read/write data register is at 0x4800 to 0x4fff.
 	enum { data_reg_addr = 0x4800 };
+	enum { reg_range = 0x800 };
 	void write_data( cpu_time_t, int );
 	int read_data();
 	
-	// Write-only address register is at 0xF800
+	// Write-only address register is at 0xF800 to 0xffff.
 	enum { addr_reg_addr = 0xF800 };
 	void write_addr( int );
+
+	void write_register( cpu_time_t, int addr, int data );
 	
 	// to do: implement save/restore
 	void save_snapshot( namco_snapshot_t* out );
@@ -80,6 +83,14 @@ inline void Nes_Namco::write_data( cpu_time_t time, int data )
 {
 	run_until( time );
 	access() = data;
+}
+
+inline void Nes_Namco::write_register(cpu_time_t time, int addr, int data)
+{
+	if (addr >= addr_reg_addr && addr < (addr_reg_addr + reg_range))
+		write_addr(data);
+	else if (addr >= data_reg_addr && addr < (data_reg_addr + reg_range))
+		write_data(time, data);
 }
 
 #endif

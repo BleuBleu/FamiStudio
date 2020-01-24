@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -81,13 +81,20 @@
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Player\ChannelState.cs" />
-    <Compile Include="Source\Player\DPCMChannelState.cs" />
+    <Compile Include="Source\Player\ChannelStateDpcm.cs" />
+    <Compile Include="Source\Player\ChannelStateFds.cs" />
+    <Compile Include="Source\Player\ChannelStateMmc5Square.cs" />
+    <Compile Include="Source\Player\ChannelStateNamco.cs" />
+    <Compile Include="Source\Player\ChannelStateSunsoftSquare.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc7.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\MIDI.cs" />
-    <Compile Include="Source\Player\NoiseChannelState.cs" />
+    <Compile Include="Source\Player\ChannelStateNoise.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
-    <Compile Include="Source\Player\SquareChannelState.cs" />
-    <Compile Include="Source\Player\TriangleChannelState.cs" />
+    <Compile Include="Source\Player\ChannelStateSquare.cs" />
+    <Compile Include="Source\Player\ChannelStateTriangle.cs" />
+    <Compile Include="Source\Player\ChannelStateVrc6Square.cs" />
     <Compile Include="Source\Project\Envelope.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
@@ -163,6 +170,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc6.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -180,7 +188,7 @@
     </Compile>
     <EmbeddedResource Include="Resources\gtk_mac.rc" />
     <EmbeddedResource Include="Resources\gtk_linux.rc" />
-    <Compile Include="UI\Dialogs\WinForms\PlatformDialogs.cs" />
+    <Compile Include="UI\Dialogs\WinForms\PlatformUtils.cs" />
     <Compile Include="UI\Dialogs\WinForms\PropertyPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -248,6 +256,30 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\InstrumentVRC6%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentVRC6.png" />
+    <EmbeddedResource Include="Resources\VibratoSmall%402x.png" />
+    <EmbeddedResource Include="Resources\VibratoSmall.png" />
+    <EmbeddedResource Include="Resources\Slide%4015x.png" />
+    <EmbeddedResource Include="Resources\Slide%402x.png" />
+    <EmbeddedResource Include="Resources\Slide.png" />
+    <EmbeddedResource Include="Resources\SlideSmall%4015x.png" />
+    <EmbeddedResource Include="Resources\SlideSmall%402x.png" />
+    <EmbeddedResource Include="Resources\SlideSmall.png" />
+    <EmbeddedResource Include="Resources\Warning%402x.png" />
+    <EmbeddedResource Include="Resources\Warning.png" />
+    <EmbeddedResource Include="Resources\Duty4%402x.png" />
+    <EmbeddedResource Include="Resources\Duty4.png" />
+    <EmbeddedResource Include="Resources\Duty5%402x.png" />
+    <EmbeddedResource Include="Resources\Duty5.png" />
+    <EmbeddedResource Include="Resources\Duty6%402x.png" />
+    <EmbeddedResource Include="Resources\Duty6.png" />
+    <EmbeddedResource Include="Resources\Duty7%402x.png" />
+    <EmbeddedResource Include="Resources\Duty7.png" />
+    <EmbeddedResource Include="Resources\Instrument%402x.png" />
+    <EmbeddedResource Include="Resources\Instrument.png" />
+    <EmbeddedResource Include="Resources\Saw%402x.png" />
+    <EmbeddedResource Include="Resources\Saw.png" />
     <EmbeddedResource Include="Resources\InstrumentOpen%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentOpen.png" />
     <EmbeddedResource Include="Resources\Drag%402x.png" />
@@ -271,9 +303,7 @@
     <EmbeddedResource Include="Resources\ConfigUserInterface%402x.png" />
     <EmbeddedResource Include="Resources\ConfigUserInterface.png" />
     <EmbeddedResource Include="Resources\Noise%4015x.png" />
-    <EmbeddedResource Include="Resources\JumpSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
-    <EmbeddedResource Include="Resources\SpeedSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\LoopSmall%402x.png" />
     <EmbeddedResource Include="Resources\Music%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill%402x.png" />
@@ -294,7 +324,6 @@
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
     <EmbeddedResource Include="Resources\JumpSmall%402x.png" />
     <EmbeddedResource Include="Resources\Noise%402x.png" />
-    <EmbeddedResource Include="Resources\Pattern%402x.png" />
     <EmbeddedResource Include="Resources\Pitch%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmall%402x.png" />
     <EmbeddedResource Include="Resources\SpeedSmall%402x.png" />
@@ -332,7 +361,6 @@
     <EmbeddedResource Include="Resources\File.png" />
     <EmbeddedResource Include="Resources\Music.png" />
     <EmbeddedResource Include="Resources\Open.png" />
-    <EmbeddedResource Include="Resources\Pattern.png" />
     <EmbeddedResource Include="Resources\Play.png" />
     <EmbeddedResource Include="Resources\Redo.png" />
     <EmbeddedResource Include="Resources\Rewind.png" />
@@ -352,9 +380,7 @@
     </Content>
     <EmbeddedResource Include="Resources\JumpSmall.png" />
     <EmbeddedResource Include="Resources\SpeedSmall.png" />
-    <EmbeddedResource Include="Resources\JumpSmallFill.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
-    <EmbeddedResource Include="Resources\SpeedSmallFill.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />
   </ItemGroup>
   <ItemGroup>

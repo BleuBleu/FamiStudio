@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Media;
 using System.Windows.Forms;
 using FamiStudio.Properties;
 
@@ -82,9 +83,14 @@ namespace FamiStudio
             public float OffsetY;
         };
 
+        DateTime warningTime;
+        string warning = "";
+
+
         string tooltip = "";
         RenderTheme theme;
         RenderBrush toolbarBrush;
+        RenderBrush warningBrush;
         RenderBitmap bmpLoopNone;
         RenderBitmap bmpLoopSong;
         RenderBitmap bmpLoopPattern;
@@ -97,6 +103,7 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
             toolbarBrush = g.CreateHorizontalGradientBrush(0, 81, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
+            warningBrush = g.CreateSolidBrush(ThemeBase.Darken(ThemeBase.CustomColors[0, 0]));
 
             bmpLoopNone = g.CreateBitmapFromResource("LoopNone");
             bmpLoopSong = g.CreateBitmapFromResource("Loop");
@@ -120,7 +127,7 @@ namespace FamiStudio
 
             buttons[ButtonNew].ToolTip    = "{MouseLeft} New Project {Ctrl} {N}";
             buttons[ButtonOpen].ToolTip   = "{MouseLeft} Open Project {Ctrl} {O}";
-            buttons[ButtonSave].ToolTip   = "{MouseLeft} Save Project {Ctrl} {S}  - {MouseRight} Save As...";
+            buttons[ButtonSave].ToolTip   = "{MouseLeft} Save Project {Ctrl} {S} - {MouseRight} Save As...";
             buttons[ButtonExport].ToolTip = "{MouseLeft} Export to various formats {Ctrl} {E}";
             buttons[ButtonCopy].ToolTip   = "{MouseLeft} Copy selection {Ctrl} {C}";
             buttons[ButtonCut].ToolTip    = "{MouseLeft} Cut selection {Ctrl} {X}";
@@ -128,7 +135,7 @@ namespace FamiStudio
             buttons[ButtonUndo].ToolTip   = "{MouseLeft} Undo {Ctrl} {Z}";
             buttons[ButtonRedo].ToolTip   = "{MouseLeft} Redo {Ctrl} {Y}";
             buttons[ButtonConfig].ToolTip = "{MouseLeft} Edit Application Settings";
-            buttons[ButtonPlay].ToolTip   = "{MouseLeft} Play/Pause {Space}\nPlay pattern loop {Ctrl} {Space}  - Play song loop {Shift} {Space}";
+            buttons[ButtonPlay].ToolTip   = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}";
             buttons[ButtonRewind].ToolTip = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonLoop].ToolTip   = "{MouseLeft} Toggle Loop Mode";
 
@@ -161,6 +168,7 @@ namespace FamiStudio
             specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseLeft"),  OffsetY = 2 * scaling };
             specialCharacters["MouseRight"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseRight"), OffsetY = 2 * scaling };
             specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseWheel"), OffsetY = 2 * scaling };
+            specialCharacters["Warning"]    = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("Warning") };
 
             for (char i = 'A'; i <= 'Z'; i++)
                 specialCharacters[i.ToString()] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
@@ -184,6 +192,20 @@ namespace FamiStudio
                     ConditionalInvalidate();
                 }
             }
+        }
+
+        public void DisplayWarning(string msg, bool beep)
+        {
+            warningTime = DateTime.Now;
+            warning = "{Warning} " + msg;
+            if (beep)
+                SystemSounds.Beep.Play();
+        }
+
+        public void Tick()
+        {
+            if (!string.IsNullOrEmpty(warning))
+                ConditionalInvalidate();
         }
 
         public void Reset()
@@ -344,10 +366,32 @@ namespace FamiStudio
             g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
             g.DrawText($"{patternIdx:D3}:{noteIdx:D3}", ThemeBase.FontHuge, timecodePosX + timecodeTextPosX, 2, theme.LightGreyFillBrush1, timecodeSizeX);
 
-            // Tooltip
-            if (!string.IsNullOrEmpty(tooltip))
+            var message = tooltip;
+            var messageBrush = theme.BlackBrush;
+            var messageFont = ThemeBase.FontMedium;
+            var messageFontCenter = ThemeBase.FontMediumCenter;
+
+            if (!string.IsNullOrEmpty(warning))
             {
-                var lines = tooltip.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                var span = DateTime.Now - warningTime;
+
+                if (span.TotalMilliseconds >= 2000)
+                {
+                    warning = "";
+                }
+                else
+                {
+                    message = (((((long)span.TotalMilliseconds) / 250) & 1) != 0) ? warning : "";
+                    messageBrush = warningBrush;
+                    messageFont = ThemeBase.FontMediumBold;
+                    messageFontCenter = ThemeBase.FontMediumBoldCenter;
+                }
+            }
+
+            // Tooltip
+            if (!string.IsNullOrEmpty(message))
+            {
+                var lines = message.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 var posY = lines.Length == 1 ? tooltipSingleLinePosY : tooltipMultiLinePosY;
 
                 for (int j = 0; j < lines.Length; j++)
@@ -378,8 +422,8 @@ namespace FamiStudio
                                 posX -= (int)scaling;
 #endif
 
-                                g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, theme.BlackBrush);
-                                g.DrawText(str, ThemeBase.FontMediumCenter, posX, posY, theme.BlackBrush, specialCharacter.Width);
+                                g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush);
+                                g.DrawText(str, messageFontCenter, posX, posY, messageBrush, specialCharacter.Width);
 
 #if !FAMISTUDIO_WINDOWS
                                 // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
@@ -389,8 +433,8 @@ namespace FamiStudio
                         }
                         else
                         {
-                            posX -= g.MeasureString(splits[i], ThemeBase.FontMedium);
-                            g.DrawText(str, ThemeBase.FontMedium, posX, posY, theme.BlackBrush);
+                            posX -= g.MeasureString(splits[i], messageFont);
+                            g.DrawText(str, messageFont, posX, posY, messageBrush);
                         }
                     }
 

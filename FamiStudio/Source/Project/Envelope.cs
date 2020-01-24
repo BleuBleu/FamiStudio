@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -16,6 +17,7 @@ namespace FamiStudio
         int length;
         int loop = -1;
         int release = -1;
+        bool relative = false;
 
         public sbyte[] Values => values;
 
@@ -74,6 +76,13 @@ namespace FamiStudio
                 }
             }
         }
+
+        public bool Relative
+        {
+            get { return relative; }
+            set { relative = value; }
+        }
+
         public void ConvertToAbsolute()
         {
             // Pitch are absolute in Famitone.
@@ -90,10 +99,40 @@ namespace FamiStudio
         public Envelope Clone()
         {
             var env = new Envelope();
-            env.Length = Length;
-            env.Loop = Loop;
-            env.Release = Release;
+            env.Length = length;
+            env.Loop = loop;
+            env.Release = release;
+            env.Relative = relative;
             values.CopyTo(env.values, 0);
+            return env;
+        }
+
+        // Based on FamiTracker, but simplified to use regular envelopes.
+        static readonly int[] VibratoSpeedLookup = new[] { 0, 64, 32, 21, 16, 13, 11, 9, 8, 7, 6, 5, 4 };
+        static readonly int[] VibratoDepthLookup = new[] { 0x01, 0x03, 0x05, 0x07, 0x09, 0x0d, 0x13, 0x17, 0x1b, 0x21, 0x2b, 0x3b, 0x57, 0x7f, 0xbf, 0xff };
+
+        public static Envelope CreateVibratoEnvelope(int speed, int depth)
+        {
+            Debug.Assert(
+                speed >= 0 && speed <= Note.VibratoSpeedMax && 
+                depth >= 0 && depth <= Note.VibratoDepthMax);
+
+            var env = new Envelope();
+
+            if (speed == 0 || depth == 0)
+            {
+                env.Length = 127;
+                env.Loop = 0;
+            }
+            else
+            {
+                env.Length = VibratoSpeedLookup[speed];
+                env.Loop = 0;
+
+                for (int i = 0; i < env.Length; i++)
+                    env.Values[i] = (sbyte)(-Math.Sin(i * 2.0f * Math.PI / env.Length) * (VibratoDepthLookup[depth] / 2));
+            }
+
             return env;
         }
 
@@ -105,6 +144,7 @@ namespace FamiStudio
                 crc = CRC32.Compute(BitConverter.GetBytes(length), crc);
                 crc = CRC32.Compute(BitConverter.GetBytes(loop), crc);
                 crc = CRC32.Compute(BitConverter.GetBytes(release), crc);
+                crc = CRC32.Compute(BitConverter.GetBytes(relative), crc);
                 crc = CRC32.Compute(values, crc);
                 return crc;
             }
@@ -147,6 +187,8 @@ namespace FamiStudio
             buffer.Serialize(ref loop);
             if (buffer.Version >= 3)
                 buffer.Serialize(ref release);
+            if (buffer.Version >= 4)
+                buffer.Serialize(ref relative);
             buffer.Serialize(ref values);
         }
     }

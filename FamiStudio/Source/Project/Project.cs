@@ -6,11 +6,38 @@ namespace FamiStudio
 {
     public class Project
     {
-        // Version 1 = 1.0.0
-        // Version 2 = 1.1.0 (Project properties)
-        // Version 3 = 1.2.0 (Volume tracks, extended notes, release envelopes)
-        public static int Version = 3;
+        // Version 1 = FamiStudio 1.0.0
+        // Version 2 = FamiStudio 1.1.0 (Project properties)
+        // Version 3 = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
+        // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
+        public static int Version = 4;
         public static int MaxSampleSize = 0x4000;
+
+        public const int ExpansionNone    = 0;
+        public const int ExpansionVrc6    = 1;
+#if DEV                                 
+        public const int ExpansionVrc7    = 2;
+        public const int ExpansionFds     = 3;
+        public const int ExpansionMmc5    = 4;
+        public const int ExpansionNamco   = 5;
+        public const int ExpansionSunsoft = 6;
+        public const int ExpansionCount   = 7;
+#else
+        public const int ExpansionCount   = 2;
+#endif
+
+        public static string[] ExpansionNames =
+        {
+            "None",
+            "Konami VRC6",
+#if DEV
+            "Konami VRC7",
+            "Famicom Disk System",
+            "Nintendo MMC5",
+            "Namco 163",
+            "Sunsoft 5B"
+#endif
+        };
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
         private List<DPCMSample> samples = new List<DPCMSample>();
@@ -21,12 +48,17 @@ namespace FamiStudio
         private string name = "Untitled";
         private string author = "Unknown";
         private string copyright = "";
+        private int expansionAudio = ExpansionNone;
 
         public List<DPCMSample>    Samples        => samples;
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
         public int                 NextUniqueId   => nextUniqueId;
+        public int                 ExpansionAudio => expansionAudio;
+        public string              ExpansionAudioName => ExpansionNames[expansionAudio];
+        public bool                UsesExpansionAudio => expansionAudio != ExpansionNone;
+
         public string              Filename   { get => filename; set => filename = value; }
         public string              Name       { get => name; set => name = value; }
         public string              Author     { get => author; set => author = value; }
@@ -37,7 +69,7 @@ namespace FamiStudio
             if (createSongAndInstrument)
             {
                 CreateSong();
-                CreateInstrument();
+                CreateInstrument(ExpansionNone);
             }
         }
 
@@ -200,14 +232,16 @@ namespace FamiStudio
             return instruments.Find(inst => inst.Name == name) == null;
         }
 
-        public Instrument CreateInstrument(string name = null)
+        public Instrument CreateInstrument(int type, string name = null)
         {
             if (name == null)
                 name = GenerateUniqueInstrumentName();
             else if (instruments.Find(inst => inst.Name == name) != null)
                 return null;
 
-            var instrument = new Instrument(GenerateUniqueId(), name);
+            Debug.Assert(type == ExpansionNone || type == expansionAudio);
+
+            var instrument = new Instrument(GenerateUniqueId(), type, name);
             instruments.Add(instrument);
             SortInstruments();
             return instrument;
@@ -220,13 +254,15 @@ namespace FamiStudio
                 foreach (var channel in song.Channels)
                 {
                     foreach (var pattern in channel.Patterns)
-                        pattern.UpdateLastValidNotesAndVolume();
+                        pattern.UpdateLastValidNote();
                 }
             }
         }
 
         public void ReplaceInstrument(Instrument instrumentOld, Instrument instrumentNew)
         {
+            Debug.Assert(instrumentNew == null || instrumentOld.ExpansionType == instrumentNew.ExpansionType);
+
             foreach (var song in songs)
             {
                 foreach (var channel in song.Channels)
@@ -293,7 +329,15 @@ namespace FamiStudio
 
         public void SortInstruments()
         {
-            instruments.Sort((i1, i2) => i1.Name.CompareTo(i2.Name));
+            instruments.Sort((i1, i2) => 
+            {
+                var expComp = i1.ExpansionType.CompareTo(i2.ExpansionType);
+
+                if (expComp != 0)
+                    return expComp;
+                else
+                    return i1.Name.CompareTo(i2.Name);
+            });
         }
 
         public bool RenameSample(DPCMSample sample, string name)
@@ -336,6 +380,75 @@ namespace FamiStudio
             songs.Sort((s1, s2) => s1.Name.CompareTo(s2.Name));
         }
 
+        public void SetExpansionAudio(int expansion)
+        {
+            expansionAudio = expansion;
+
+            foreach (var song in songs)
+            {
+                song.CreateChannels(true);
+            }
+
+            for (int i = instruments.Count - 1; i >= 0; i--)
+            {
+                var inst = instruments[i];
+                if (inst.IsExpansionInstrument)
+                    DeleteInstrument(inst);
+            }
+        }
+
+        public int GetActiveChannelCount()
+        {
+            int channelCount = 0;
+            for (int i = 0; i < Channel.Count; i++)
+                if (IsChannelActive(i)) channelCount++;
+            return channelCount;
+        }
+
+        public bool IsChannelActive(int channelType)
+        {
+            if (channelType <= Channel.Dpcm)
+                return true;
+
+            if (channelType >= Channel.Vrc6Square1 && channelType <= Channel.Vrc6Saw)
+                return expansionAudio == ExpansionVrc6;
+#if DEV
+            if (channelType == Channel.FdsWave)
+                return expansionAudio == ExpansionFds;
+
+            if (channelType >= Channel.Mmc5Square1 && channelType <= Channel.Mmc5Square2)
+                return expansionAudio == ExpansionMmc5;
+
+            if (channelType >= Channel.Vrc7Fm1 && channelType <= Channel.Vrc7Fm6)
+                return expansionAudio == ExpansionVrc7;
+
+            if (channelType >= Channel.NamcoWave1 && channelType <= Channel.NamcoWave8)
+                return expansionAudio == ExpansionNamco;
+
+            if (channelType >= Channel.SunsoftSquare1 && channelType <= Channel.SunsoftSquare3)
+                return expansionAudio == ExpansionSunsoft;
+#else
+            if (channelType >= Channel.Vrc7Fm1)
+                return false;
+#endif
+
+            Debug.Assert(false);
+
+            return false;
+        }
+
+        public bool NeedsExpansionInstruments
+        {
+            get
+            {
+#if DEV
+                return expansionAudio != ExpansionNone && expansionAudio != ExpansionMmc5;
+#else
+                return expansionAudio != ExpansionNone;
+#endif
+            }
+        }
+
         public bool UsesSamples
         {
             get
@@ -372,10 +485,21 @@ namespace FamiStudio
         {
             int size = 0;
             foreach (var sample in samples)
-            {
                 size += (sample.Data.Length + 63) & 0xffc0;
-            }
-            return size;
+            return Math.Min(MaxSampleSize, size);
+        }
+
+        public byte[] GetPackedSampleData()
+        {
+            var sampleData = new List<byte>();
+
+            foreach (var sample in samples)
+                sampleData.AddRange(sample.Data);
+
+            if (sampleData.Count > MaxSampleSize)
+                sampleData.RemoveRange(MaxSampleSize, sampleData.Count - MaxSampleSize);
+
+            return sampleData.ToArray();
         }
 
         public void RemoveAllSongsBut(int[] songIds)
@@ -429,7 +553,7 @@ namespace FamiStudio
 
             foreach (var song in songs)
             {
-                var channel = song.Channels[Channel.DPCM];
+                var channel = song.Channels[Channel.Dpcm];
 
                 for (int p = 0; p < song.Length; p++)
                 {
@@ -546,6 +670,12 @@ namespace FamiStudio
                 {
                     author = "Unknown";
                 }
+            }
+
+            // At version 4 (FamiStudio 1.4.0) we added basic expansion audio.
+            if (buffer.Version >= 4)
+            {
+                buffer.Serialize(ref expansionAudio);
             }
 
             // DPCM samples

@@ -37,25 +37,17 @@ namespace FamiStudio
             var tempoCounter = 0;
             var playPattern = 0;
             var playNote = 0;
+            var jumpPattern = -1;
+            var jumpNote = -1;
             var speed = song.Speed;
             var wavBytes = new List<byte>();
             var apuIndex = NesApu.APU_WAV_EXPORT;
             var dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
+            var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex);
 
-            NesApu.NesApuInit(apuIndex, sampleRate, dmcCallback);
-            NesApu.Reset(apuIndex);
-
-            var channels = new ChannelState[5]
-            {
-                new SquareChannelState(apuIndex, 0),
-                new SquareChannelState(apuIndex, 1),
-                new TriangleChannelState(apuIndex, 2),
-                new NoiseChannelState(apuIndex, 3),
-                new DPCMChannelState(apuIndex, 4)
-            };
-
-            for (int i = 0; i < 5; i++)
-                NesApu.NesApuEnableChannel(apuIndex, i, 1);
+            NesApu.InitAndReset(apuIndex, sampleRate, PlayerBase.GetNesApuExpansionAudio(song.Project), dmcCallback);
+            for (int i = 0; i < channels.Length; i++)
+                NesApu.EnableChannel(apuIndex, i, 1);
 
             while (true)
             {
@@ -64,7 +56,7 @@ namespace FamiStudio
                 {
                     foreach (var channel in channels)
                     {
-                        channel.ProcessEffects(song, ref playPattern, ref playNote, ref speed, false);
+                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote,  ref speed, false);
                     }
 
                     foreach (var channel in channels)
@@ -82,20 +74,19 @@ namespace FamiStudio
                     channel.UpdateAPU();
                 }
 
-                NesApu.NesApuEndFrame(apuIndex);
+                NesApu.EndFrame(apuIndex);
 
-                int numTotalSamples = NesApu.NesApuSamplesAvailable(apuIndex);
+                int numTotalSamples = NesApu.SamplesAvailable(apuIndex);
                 byte[] samples = new byte[numTotalSamples * 2];
 
                 fixed (byte* ptr = &samples[0])
                 {
-                    NesApu.NesApuReadSamples(apuIndex, new IntPtr(ptr), numTotalSamples);
+                    NesApu.ReadSamples(apuIndex, new IntPtr(ptr), numTotalSamples);
                 }
 
                 wavBytes.AddRange(samples);
 
-                int dummy1 = 0;
-                if (!PlayerBase.AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref dummy1, ref advance))
+                if (!PlayerBase.AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote, ref advance))
                 {
                     break;
                 }

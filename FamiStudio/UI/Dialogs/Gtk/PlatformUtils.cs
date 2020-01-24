@@ -10,7 +10,7 @@ using Gtk;
 
 namespace FamiStudio
 {
-    public static class PlatformDialogs
+    public static class PlatformUtils
     {
 #if FAMISTUDIO_LINUX
         [System.Runtime.InteropServices.DllImport("fontconfig.so")]
@@ -63,6 +63,10 @@ namespace FamiStudio
                     break;
                 }
             }
+
+#if FAMISTUDIO_MACOS
+            InitializeGtk();
+#endif
         }
 
         public static void InitializeGtk()

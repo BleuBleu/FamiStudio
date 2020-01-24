@@ -9,6 +9,7 @@ namespace FamiStudio
     {
         void Serialize(ref bool b);
         void Serialize(ref byte b);
+        void Serialize(ref sbyte b);
         void Serialize(ref int b, bool id = false);
         void Serialize(ref uint b);
         void Serialize(ref ulong b);
@@ -26,6 +27,7 @@ namespace FamiStudio
         int Version { get; }
         Project Project { get; }
         void InitializeList<T>(ref List<T> list, int count) where T : new();
+        void InitializeArray<T>(ref T[] array, int count) where T : new();
     };
 
     public class ProjectSaveBuffer : ProjectBuffer
@@ -56,6 +58,12 @@ namespace FamiStudio
         {
             buffer.Add(b);
             idx += sizeof(byte);
+        }
+
+        public void Serialize(ref sbyte b)
+        {
+            buffer.Add((byte)b);
+            idx += sizeof(sbyte);
         }
 
         public void Serialize(ref int i, bool id = false)
@@ -135,6 +143,10 @@ namespace FamiStudio
         {
         }
 
+        public void InitializeArray<T>(ref T[] array, int count) where T : new()
+        {
+        }
+
         public Project Project => project;
         public bool IsReading => false;
         public bool IsWriting => true;
@@ -181,6 +193,12 @@ namespace FamiStudio
         {
             b = buffer[idx];
             idx += sizeof(byte);
+        }
+
+        public void Serialize(ref sbyte b)
+        {
+            b = (sbyte)buffer[idx];
+            idx += sizeof(sbyte);
         }
 
         public void Serialize(ref int i, bool id = false)
@@ -271,6 +289,13 @@ namespace FamiStudio
             list.Clear();
             for (int i = 0; i < count; i++)
                 list.Add(new T());
+        }
+
+        public void InitializeArray<T>(ref T[] array, int count) where T : new()
+        {
+            array = new T[count];
+            for (int i = 0; i < count; i++)
+                array[i] = new T();
         }
 
         public Project Project => project;

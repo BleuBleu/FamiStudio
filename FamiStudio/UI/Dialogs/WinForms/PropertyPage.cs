@@ -52,7 +52,7 @@ namespace FamiStudio
             // Happens in design mode
             try
             {
-                font = new Font(PlatformDialogs.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
+                font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             }
             catch
             {
@@ -392,7 +392,7 @@ namespace FamiStudio
                 case PropertyType.IntegerRange:
                     return (int)(prop.control as NumericUpDown).Value;
                 case PropertyType.DomainRange:
-                    return (int)(prop.control as DomainUpDown).SelectedItem;
+                    return int.TryParse(prop.control.Text, out var val) ? val : 0;
                 case PropertyType.Boolean:
                     return (prop.control as CheckBox).Checked;
                 case PropertyType.Color:

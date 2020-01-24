@@ -128,7 +128,7 @@ Nes_Nonlinearizer::Nes_Nonlinearizer()
 	
 	double gain = 0x7fff * 1.3;
 	// don't use entire range, so any overflow will stay within table
-	int const range = half * 0.75; // to do: must match that in Nes_Apu.cpp
+	int const range = (int)(half * 0.75); // to do: must match that in Nes_Apu.cpp
 	for ( int i = 0; i < half * 2; i++ )
 	{
 		int out = i << shift;

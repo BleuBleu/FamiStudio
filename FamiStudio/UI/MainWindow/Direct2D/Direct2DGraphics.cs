@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Diagnostics;
@@ -25,6 +25,7 @@ namespace FamiStudio
         private DirectWriteFactory directWriteFactory;
         private WindowRenderTarget renderTarget;
         private Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
+        private Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
         private Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
         private StrokeStyle strokeStyle;
 
@@ -51,10 +52,12 @@ namespace FamiStudio
         public void Dispose()
         {
             foreach (var grad in verticalGradientCache.Values)
-            {
                 grad.Dispose();
-            }
             verticalGradientCache.Clear();
+
+            foreach (var grad in solidGradientCache.Values)
+                grad.Dispose();
+            solidGradientCache.Clear();
 
             if (renderTarget != null)
             {
@@ -116,6 +119,19 @@ namespace FamiStudio
             renderTarget.Transform = mat;
         }
 
+        public void PushTransform(int tx, int ty, int sx, int sy)
+        {
+            var mat = renderTarget.Transform;
+            matrixStack.Push(mat);
+            mat.M11 *= sx;
+            mat.M12 *= sy;
+            mat.M21 *= sx;
+            mat.M22 *= sy;
+            mat.M31 += tx;
+            mat.M32 += ty;
+            renderTarget.Transform = mat;
+        }
+
         public void PopTransform()
         {
             renderTarget.Transform = matrixStack.Pop();
@@ -162,6 +178,16 @@ namespace FamiStudio
             renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush);
         }
 
+        public void DrawLine(float[,] points, Brush brush)
+        {
+            for (int i = 0; i < points.GetLength(0) - 1; i++)
+            {
+                renderTarget.DrawLine(
+                    new RawVector2(points[i + 0, 0] + 0.5f, points[i + 0, 1] + 0.5f),
+                    new RawVector2(points[i + 1, 0] + 0.5f, points[i + 1, 1] + 0.5f), brush);
+            }
+        }
+
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush, float width = 1.0f)
         {
             renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush, width);
@@ -181,7 +207,7 @@ namespace FamiStudio
             DrawRectangle(new RawRectangleF(x0, y0, x1, y1), brush, width);
         }
 
-        public PathGeometry CreateConvexPath(System.Drawing.Point[] points)
+        public PathGeometry CreateConvexPath(System.Drawing.Point[] points, bool closed = true)
         {
             var geo = new PathGeometry(factory);
             var sink = geo.Open();
@@ -190,9 +216,10 @@ namespace FamiStudio
             sink.BeginFigure(new RawVector2(points[0].X, points[0].Y), FigureBegin.Filled);
             for (int i = 1; i < points.Length; i++)
                 sink.AddLine(new RawVector2(points[i].X, points[i].Y));
-            sink.AddLine(new RawVector2(points[0].X, points[0].Y));
+            if (closed)
+                sink.AddLine(new RawVector2(points[0].X, points[0].Y));
 
-            sink.EndFigure(FigureEnd.Closed);
+            sink.EndFigure(closed ? FigureEnd.Closed : FigureEnd.Open);
             sink.Close();
             sink.Dispose();
 
@@ -254,11 +281,6 @@ namespace FamiStudio
         public static RawColor4 ToRawColor4(Color color)
         {
             return new RawColor4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-        }
-
-        public Brush CreateBrush(Color color)
-        {
-            return new SolidColorBrush(renderTarget, ToRawColor4(color));
         }
 
         public Brush CreateSolidBrush(Color color)
@@ -367,6 +389,24 @@ namespace FamiStudio
         public float GetBitmapWidth(Bitmap bmp)
         {
             return bmp.Size.Width;
+        }
+
+        public Brush GetSolidBrush(Color color, float dimming, float alphaDimming)
+        {
+            Brush brush;
+            if (solidGradientCache.TryGetValue(color, out brush))
+                return brush;
+
+            Color color2 = Color.FromArgb(
+                Utils.Clamp((int)(color.A * alphaDimming), 0, 255),
+                Utils.Clamp((int)(color.R * dimming), 0, 255),
+                Utils.Clamp((int)(color.G * dimming), 0, 255),
+                Utils.Clamp((int)(color.B * dimming), 0, 255));
+
+            brush = CreateSolidBrush(color2);
+            solidGradientCache[color] = brush;
+
+            return brush;
         }
 
         public Brush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)

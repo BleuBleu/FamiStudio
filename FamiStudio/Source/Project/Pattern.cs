@@ -15,11 +15,11 @@ namespace FamiStudio
         private Color color;
         private Note[] notes = new Note[MaxLength];
 
-        private byte lastVolumeValue = Note.VolumeInvalid;
-        private byte lastValidNoteValue = Note.NoteInvalid;
-        private bool lastValidNoteReleased = false;
-        private Instrument lastValidNoteInstrument = null;
-        private byte lastValidNoteIdx = 0;
+        private int    firstValidNoteTime    = -1;
+        private int    lastValidNoteTime     = -1;
+        private int    lastEffectValuesMask  = 0;
+        private byte[] lastEffectValues      = new byte[Note.EffectCount];
+        private bool   lastValidNoteReleased = false;
 
         public int Id => id;
         public int ChannelType => channelType;
@@ -39,10 +39,10 @@ namespace FamiStudio
             this.name = n;
             this.color = ThemeBase.RandomCustomColor();
             for (int i = 0; i < notes.Length; i++)
-            {
-                notes[i].Value  = Note.NoteInvalid;
-                notes[i].Volume = Note.VolumeInvalid;
-            }
+                notes[i] = new Note(Note.NoteInvalid);
+            lastEffectValuesMask = 0;
+            for (int i = 0; i < Note.EffectCount; i++)
+                lastEffectValues[i] = 0xff;
         }
 
         public Note[] Notes
@@ -88,7 +88,7 @@ namespace FamiStudio
                 for (int i = 0; i < song.PatternLength; i++)
                 {
                     var n = notes[i];
-                    if (n.IsValid && !n.IsStop)
+                    if (n.IsMusical)
                     {
                         if (n.Value < min.Value) min = n;
                         if (n.Value > max.Value) max = n;
@@ -107,7 +107,7 @@ namespace FamiStudio
                 for (int i = 0; i < song.PatternLength; i++)
                 {
                     var n = notes[i];
-                    if (n.IsValid || n.IsStop)
+                    if (n.IsValid || n.HasVolume || n.HasSkip || n.HasSpeed || n.HasJump)
                     {
                         return true;
                     }
@@ -121,12 +121,13 @@ namespace FamiStudio
         {
             get
             {
-                for (int i = 0; i < song.PatternLength; i++)
+                for (int n = 0; n < song.PatternLength; n++)
                 {
-                    var n = notes[i];
-                    if (n.Effect != Note.EffectNone)
-                    {
-                        return true;
+                    var note = notes[n];
+                    for (int i = 0; i < Note.EffectCount; i++)
+                    { 
+                        if (note.HasValidEffectValue(i))
+                            return true;
                     }
                 }
 
@@ -134,58 +135,93 @@ namespace FamiStudio
             }
         }
 
-        public void UpdateLastValidNotesAndVolume()
+        public void UpdateLastValidNote()
         {
-            lastVolumeValue = Note.VolumeInvalid;
-            lastValidNoteValue = Note.NoteInvalid;
-            lastValidNoteIdx = 0;
-            lastValidNoteInstrument = null;
+            lastEffectValuesMask = 0;
+            for (int i = 0; i < Note.EffectCount; i++)
+                lastEffectValues[i] = 0xff;
+            lastValidNoteTime = -1;
             lastValidNoteReleased = false;
+            
+            for (int n = song.PatternLength - 1; n >= 0; n--)
+            {
+                var note = notes[n];
 
-            for (int i = song.PatternLength - 1; i >= 0; i--)
+                if (lastValidNoteTime < 0)
+                {
+                    if (note.IsRelease)
+                    {
+                        lastValidNoteReleased = true;
+                    }
+                    else
+                    {
+                        if (note.IsStop)
+                        {
+                            lastValidNoteReleased = false;
+                        }
+                        if (note.IsValid)
+                        {
+                            lastValidNoteTime = (byte)n;
+                        }
+                    }
+                }
+
+                if (note.IsMusical && note.HasAttack)
+                {
+                    lastValidNoteReleased = false;
+                }
+
+                for (int i = 0; i < Note.EffectCount; i++)
+                {
+                    var mask = 1 << i;
+                    if (note.HasValidEffectValue(i) && (lastEffectValuesMask & mask) == 0)
+                    {
+                        lastEffectValuesMask |= mask;
+                        lastEffectValues[i] = (byte)note.GetEffectValue(i);
+                    }
+                }
+            }
+
+            firstValidNoteTime = -1;
+
+            for (int i = 0; i < song.PatternLength; i++)
             {
                 var note = notes[i];
-                if (note.IsRelease)
+
+                if (note.IsValid && !note.IsRelease)
                 {
-                    lastValidNoteReleased = true;
-                }
-                else
-                {
-                    if (note.IsStop)
-                    {
-                        lastValidNoteReleased = false;
-                    }
-                    if (note.IsValid && lastValidNoteValue == Note.NoteInvalid)
-                    {
-                        lastValidNoteIdx = (byte)i;
-                        lastValidNoteValue = note.Value;
-                        lastValidNoteInstrument = note.Instrument;
-                        if (lastVolumeValue != Note.VolumeInvalid)
-                            break;
-                    }
-                }
-                if (note.HasVolume && lastVolumeValue == Note.VolumeInvalid)
-                {
-                    lastVolumeValue = note.Volume;
-                    if (lastValidNoteValue != Note.NoteInvalid)
-                        break;
+                    firstValidNoteTime = (byte)i;
+                    break;
                 }
             }
         }
 
-        public byte LastValidNoteTime
+        public int FirstValidNoteTime
         {
-            get { return lastValidNoteIdx; }
+            get { return firstValidNoteTime; }
         }
 
-        public byte LastValidNoteValue
+        public Note FirstValidNote
         {
-            get { return lastValidNoteValue; }
+            get
+            {
+                Debug.Assert(firstValidNoteTime >= 0);
+                return notes[firstValidNoteTime];
+            }
         }
 
-        public Instrument LastValidNoteInstrument
+        public int LastValidNoteTime
         {
-            get { return lastValidNoteInstrument; }
+            get { return lastValidNoteTime; }
+        }
+
+        public Note LastValidNote
+        {
+            get
+            {
+                Debug.Assert(lastValidNoteTime >= 0);
+                return notes[lastValidNoteTime];
+            }
         }
 
         public bool LastValidNoteReleased
@@ -193,23 +229,33 @@ namespace FamiStudio
             get { return lastValidNoteReleased; }
         }
 
-        public byte LastVolumeValue
+        public bool HasLastEffectValue(int effect)
         {
-            get { return lastVolumeValue; }
+            return (lastEffectValuesMask & (1 << effect)) != 0;
+        }
+
+        public byte GetLastEffectValue(int effect)
+        {
+            return lastEffectValues[effect];
+        }
+
+        public void ClearNotesPastSongLength()
+        {
+            for (int i = song.PatternLength; i < notes.Length; i++)
+                notes[i].Clear();
         }
 
 #if DEBUG
         public void Validate(Channel channel)
         {
             Debug.Assert(this.song == channel.Song);
-            Debug.Assert(lastValidNoteInstrument == null || song.Project.InstrumentExists(lastValidNoteInstrument));
-            Debug.Assert(lastValidNoteInstrument == null || song.Project.GetInstrument(lastValidNoteInstrument.Id) == lastValidNoteInstrument);
 
             for (int i = 0; i < MaxLength; i++)
             {
                 var inst = notes[i].Instrument;
                 Debug.Assert(inst == null || song.Project.InstrumentExists(inst));
                 Debug.Assert(inst == null || song.Project.GetInstrument(inst.Id) == inst);
+                Debug.Assert(inst == null || channel.SupportsInstrument(inst));
             }
         }
 #endif
@@ -239,15 +285,17 @@ namespace FamiStudio
 
             if (buffer.IsForUndoRedo)
             {
-                buffer.Serialize(ref lastVolumeValue);
-                buffer.Serialize(ref lastValidNoteIdx);
-                buffer.Serialize(ref lastValidNoteValue);
-                buffer.Serialize(ref lastValidNoteInstrument);
+                buffer.Serialize(ref firstValidNoteTime);
+                buffer.Serialize(ref lastValidNoteTime);
                 buffer.Serialize(ref lastValidNoteReleased);
+                buffer.Serialize(ref lastEffectValuesMask);
+                for (int i = 0; i < Note.EffectCount; i++)
+                    buffer.Serialize(ref lastEffectValues[i]);
             }
             else if (buffer.IsReading)
             {
-                UpdateLastValidNotesAndVolume();
+                UpdateLastValidNote();
+                ClearNotesPastSongLength();
             }
         }
     }

@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.28307.572
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FamiStudio", "FamiStudio\FamiStudio.csproj", "{20AC976F-95BC-42A4-B95C-85609728A36B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CE0D60E2-1356-4531-825F-A159850FB9D5} = {CE0D60E2-1356-4531-825F-A159850FB9D5}
+	EndProjectSection
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{73FE63B6-BCB4-4A20-BF03-D49E722FA3C4}"
 EndProject

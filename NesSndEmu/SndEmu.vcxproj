@@ -70,7 +70,12 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)FamiStudio</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)FamiStudio</OutDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -127,11 +132,16 @@
     <ClInclude Include="nes_apu\blargg_source.h" />
     <ClInclude Include="nes_apu\Blip_Buffer.h" />
     <ClInclude Include="nes_apu\Blip_Synth.h" />
+    <ClInclude Include="nes_apu\emu2413.h" />
     <ClInclude Include="nes_apu\Multi_Buffer.h" />
     <ClInclude Include="nes_apu\Nes_Apu.h" />
+    <ClInclude Include="nes_apu\Nes_Fds.h" />
+    <ClInclude Include="nes_apu\Nes_Mmc5.h" />
     <ClInclude Include="nes_apu\Nes_Namco.h" />
     <ClInclude Include="nes_apu\Nes_Oscs.h" />
+    <ClInclude Include="nes_apu\Nes_Sunsoft.h" />
     <ClInclude Include="nes_apu\Nes_Vrc6.h" />
+    <ClInclude Include="nes_apu\Nes_Vrc7.h" />
     <ClInclude Include="nes_apu\Nonlinear_Buffer.h" />
     <ClInclude Include="Simple_Apu.h" />
   </ItemGroup>
@@ -139,11 +149,16 @@
     <ClCompile Include="DllWrapper.cpp" />
     <ClCompile Include="nes_apu\apu_snapshot.cpp" />
     <ClCompile Include="nes_apu\Blip_Buffer.cpp" />
+    <ClCompile Include="nes_apu\emu2413.c" />
     <ClCompile Include="nes_apu\Multi_Buffer.cpp" />
     <ClCompile Include="nes_apu\Nes_Apu.cpp" />
+    <ClCompile Include="nes_apu\Nes_Fds.cpp" />
+    <ClCompile Include="nes_apu\Nes_Mmc5.cpp" />
     <ClCompile Include="nes_apu\Nes_Namco.cpp" />
     <ClCompile Include="nes_apu\Nes_Oscs.cpp" />
+    <ClCompile Include="nes_apu\Nes_Sunsoft.cpp" />
     <ClCompile Include="nes_apu\Nes_Vrc6.cpp" />
+    <ClCompile Include="nes_apu\Nes_Vrc7.cpp" />
     <ClCompile Include="nes_apu\Nonlinear_Buffer.cpp" />
     <ClCompile Include="Simple_Apu.cpp" />
   </ItemGroup>

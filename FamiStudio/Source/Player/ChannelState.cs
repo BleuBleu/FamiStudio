@@ -1,137 +1,219 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
     public abstract class ChannelState
     {
         protected int apuIdx;
-        protected int channelIdx;
-        protected bool seeking = false;
-        protected bool newNote = false;
+        protected int channelType;
         protected Note note;
+        protected bool pitchEnvelopeOverride = false;
+        protected Envelope[] envelopes = new Envelope[Envelope.Max];
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
         protected int duty;
-        protected int[] shadowRegisters = new int[21];
+        protected ushort[] noteTable = null;
+        protected short maximumPeriod = NesApu.MaximumPeriod11Bit;
+        protected int slideStep = 0;
+        private   int slidePitch = 0;
 
-        public ChannelState(int apu, int idx)
+        public ChannelState(int apu, int type)
         {
             apuIdx = apu;
-            channelIdx = idx;
+            channelType = type;
+            noteTable = NesApu.GetNoteTableForChannelType(channelType, false);
             note.Value = Note.NoteStop;
             note.Volume = Note.VolumeMax;
         }
 
-        public void ProcessEffects(Song song, ref int patternIdx, ref int noteIdx, ref int speed, bool allowJump = true)
+        public void ProcessEffects(Song song, int patternIdx, int noteIdx, ref int jumpPatternIdx, ref int jumpNoteIdx, ref int speed, bool allowJump = true)
         {
-            var pattern = song.Channels[channelIdx].PatternInstances[patternIdx];
+            var pattern = song.GetChannelByType(channelType).PatternInstances[patternIdx];
 
             if (pattern == null)
                 return;
 
             var tmpNote = pattern.Notes[noteIdx];
 
-            switch (tmpNote.Effect)
+            if (tmpNote.HasJump && !IsSeeking && allowJump)
             {
-                case Note.EffectJump:
-                    if (!seeking && allowJump)
-                    {
-                        patternIdx = tmpNote.EffectParam;
-                        noteIdx = 0;
-                    }
-                    break;
-                case Note.EffectSkip:
-                    if (!seeking)
-                    {
-                        patternIdx++;
-                        noteIdx = tmpNote.EffectParam;
-                    }
-                    break;
-                case Note.EffectSpeed:
-                    speed = tmpNote.EffectParam;
-                    break;
+                jumpPatternIdx = tmpNote.Jump;
+                jumpNoteIdx = 0;
+            }
+
+            if (tmpNote.HasSkip)
+            {
+                jumpPatternIdx = patternIdx + 1;
+                jumpNoteIdx = tmpNote.Skip;
+            }
+
+            if (tmpNote.HasSpeed)
+            {
+                speed = tmpNote.Speed;
+            }
+
+            if (tmpNote.HasVibrato)
+            {
+                if (tmpNote.VibratoDepth != 0 && tmpNote.VibratoDepth != 0)
+                {
+                    envelopes[Envelope.Pitch] = Envelope.CreateVibratoEnvelope(tmpNote.VibratoSpeed, tmpNote.VibratoDepth);
+                    envelopeIdx[Envelope.Pitch] = 0;
+                    envelopeValues[Envelope.Pitch] = 0;
+                    pitchEnvelopeOverride = true;
+                }
+                else
+                {
+                    envelopes[Envelope.Pitch] = null;
+                    pitchEnvelopeOverride = false;
+                }
             }
         }
 
         public void Advance(Song song, int patternIdx, int noteIdx)
         {
-            var pattern = song.Channels[channelIdx].PatternInstances[patternIdx];
+            var channel = song.GetChannelByType(channelType);
+            var pattern = channel.PatternInstances[patternIdx];
 
             if (pattern == null)
                 return;
 
-            var tmpNote = pattern.Notes[noteIdx];
-            if (tmpNote.IsValid)
+            var newNote = pattern.Notes[noteIdx];
+            if (newNote.IsValid)
             {
-                PlayNote(tmpNote);
+                slideStep = 0;
+
+                if (newNote.IsSlideNote)
+                {
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+
+                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _))
+                        newNote.Value = (byte)newNote.SlideNoteTarget;
+                }
+
+                PlayNote(newNote);
             }
-            else if (tmpNote.HasVolume)
+            else if (newNote.HasVolume)
             {
-                note.Volume = tmpNote.Volume;
+                note.Volume = newNote.Volume;
             }
         }
 
-        public void PlayNote(Note note)
+        public void PlayNote(Note newNote)
         {
-            if (!note.HasVolume)
-                note.Volume = this.note.Volume;
+            if (!newNote.HasVolume)
+                newNote.Volume = note.Volume;
 
-            if (note.IsRelease)
+            if (newNote.IsRelease)
             {
-                if (this.note.Instrument != null)
+                if (note.Instrument != null)
                 {
                     for (int j = 0; j < Envelope.Max; j++)
                     {
-                        if (this.note.Instrument.Envelopes[j].Release >= 0)
-                            envelopeIdx[j] = this.note.Instrument.Envelopes[j].Release;
+                        if (envelopes[j] != null && envelopes[j].Release >= 0)
+                            envelopeIdx[j] = envelopes[j].Release;
                     }
                 }
             }
             else
             {
-                this.note = note;
-                this.newNote = true;
+                bool instrumentChanged = note.Instrument != newNote.Instrument;
 
-                if (note.Instrument != null)
-                    duty = note.Instrument.DutyCycle;
+                note = newNote;
 
-                for (int j = 0; j < Envelope.Max; j++)
-                    envelopeIdx[j] = 0;
+                if (newNote.Instrument != null)
+                    duty = newNote.Instrument.DutyCycle;
+
+                if (instrumentChanged || note.HasAttack)
+                {
+                    for (int j = 0; j < Envelope.Max; j++)
+                    {
+                        if (j != Envelope.Pitch || !pitchEnvelopeOverride)
+                            envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
+                        envelopeIdx[j] = 0;
+                    }
+
+                    envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
+                }
             }
         }
 
         public void UpdateEnvelopes()
         {
-            var instrument = note.Instrument;
-            if (instrument == null)
-                return;
-
-            for (int j = 0; j < Envelope.Max; j++)
+            if (note.Instrument != null)
             {
-                if (instrument.Envelopes[j] == null ||
-                    instrument.Envelopes[j].Length <= 0)
+                for (int j = 0; j < Envelope.Max; j++)
                 {
-                    if (j == Envelope.Volume)
-                        envelopeValues[j] = 15;
+                    if (envelopes[j] == null ||
+                        envelopes[j].Length <= 0)
+                    {
+                        if (j == Envelope.Volume)
+                            envelopeValues[j] = 15;
+                        else
+                            envelopeValues[j] = 0;
+                        continue;
+                    }
+
+                    var env = envelopes[j];
+                    var idx = envelopeIdx[j];
+
+                    // Non-looping, relative envelope end up with -1 when done.
+                    if (idx < 0)
+                    {
+                        Debug.Assert(env.Relative);
+                        continue;
+                    }
+
+                    if (env.Relative)
+                    {
+                        Debug.Assert(j == Envelope.Pitch);
+                        envelopeValues[j] += envelopes[j].Values[idx];
+                    }
                     else
-                        envelopeValues[j] = 0;
-                    continue;
+                    {
+                        envelopeValues[j] = envelopes[j].Values[idx];
+                    }
+
+                    idx++;
+
+                    if (env.Release >= 0 && idx == env.Release)
+                        envelopeIdx[j] = env.Loop;
+                    else if (idx >= env.Length)
+                        envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : (env.Relative ? -1 : env.Length - 1);
+                    else
+                        envelopeIdx[j] = idx;
                 }
-
-                var idx = envelopeIdx[j];
-                var env = instrument.Envelopes[j];
-
-                envelopeValues[j] = instrument.Envelopes[j].Values[idx];
-
-                idx++;
-
-                if (env.Release >= 0 && idx == env.Release)
-                    envelopeIdx[j] = env.Loop;
-                else if (idx >= env.Length)
-                    envelopeIdx[j] = env.Loop >= 0 && env.Release < 0 ? env.Loop : env.Length - 1;
-                else
-                    envelopeIdx[j] = idx;
             }
+
+            if (slideStep != 0)
+            {
+                slidePitch += slideStep;
+
+                if ((slideStep > 0 && slidePitch > 0) ||
+                    (slideStep < 0 && slidePitch < 0))
+                {
+                    slidePitch = 0;
+                }
+            }
+            else
+            {
+                slidePitch = 0;
+            }
+        }
+
+        protected void WriteRegister(int reg, int data)
+        {
+            NesApu.WriteRegister(apuIdx, reg, data);
+        }
+
+        protected bool IsSeeking
+        {
+            get { return NesApu.IsSeeking(apuIdx) != 0; }
+        }
+
+        public int GetSlidePitch()
+        {
+            return slidePitch >> 1; // Remove the fraction part.
         }
 
         public int GetEnvelopeFrame(int envIdx)
@@ -139,48 +221,18 @@ namespace FamiStudio
             return envelopeIdx[envIdx];
         }
 
-        public void StartSeeking()
-        {
-            seeking = true;
-            for (int i = 0; i < shadowRegisters.Length; i++)
-                shadowRegisters[i] = -1;
-        }
-
-        public void StopSeeking()
-        {
-            seeking = false;
-            for (int i = 0; i < shadowRegisters.Length; i++)
-            {
-                if (shadowRegisters[i] >= 0)
-                    NesApu.NesApuWriteRegister(apuIdx, 0x4000 + i, shadowRegisters[i]);
-            }
-        }
-
         public void ClearNote()
         {
             note.Instrument = null;
+            for (int i = 0; i < Envelope.Max; i++)
+                envelopes[i] = null;
         }
 
         protected int MultiplyVolumes(int v0, int v1)
         {
-            return (int)Math.Ceiling((v0 / 15.0f) * (v1 / 15.0f) * 15.0f);
-        }
-
-        protected void WriteApuRegister(int register, int data)
-        {
-            if (seeking)
-            {
-                int idx = register - 0x4000;
-                // Not caching DPCM register for now.
-                if (idx < shadowRegisters.Length) 
-                {
-                    shadowRegisters[idx] = data;
-                }
-            }
-            else
-            {
-                NesApu.NesApuWriteRegister(apuIdx, register, data);
-            }
+            var vol = (int)Math.Round((v0 / 15.0f) * (v1 / 15.0f) * 15.0f);
+            if (vol == 0 && v0 != 0 && v1 != 0) return 1;
+            return vol;
         }
 
         public abstract void UpdateAPU();

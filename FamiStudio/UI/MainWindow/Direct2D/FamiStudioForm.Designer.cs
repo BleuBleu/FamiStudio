@@ -78,7 +78,7 @@
             this.projectExplorer.Location = new System.Drawing.Point(1004, 40);
             this.projectExplorer.Margin = new System.Windows.Forms.Padding(0);
             this.projectExplorer.Name = "projectExplorer";
-            this.projectExplorer.Size = new System.Drawing.Size(260, 641);
+            this.projectExplorer.Size = new System.Drawing.Size(280, 641);
             this.projectExplorer.TabIndex = 4;
             // 
             // toolbar

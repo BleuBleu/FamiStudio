@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -16,6 +17,16 @@ namespace FamiStudio
             if (val < min) return min;
             if (val > max) return max;
             return val;
+        }
+
+        public static int SignedCeil(float x)
+        {
+            return (x > 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
+        }
+
+        public static int SignedFloor(float x)
+        {
+            return (x < 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
         }
 
         public static string MakeNiceAsmName(string name)

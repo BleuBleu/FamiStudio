@@ -14,6 +14,8 @@ typedef unsigned cpu_addr_t; // 16-bit memory address
 struct apu_snapshot_t;
 class Nonlinear_Buffer;
 
+extern const unsigned char length_table[0x20];
+
 class Nes_Apu {
 public:
 	Nes_Apu();
@@ -95,6 +97,11 @@ public:
 	// accounted for (i.e. inserting CPU wait states).
 	void run_until( cpu_time_t );
 	
+	// Not caching DPCM regs.
+	enum { shadow_regs_count = 21 }; 
+	static int addr_to_shadow_reg(int addr);
+	static int shadow_reg_to_addr(int idx);
+
 // End of public interface.
 private:
 	friend class Nes_Nonlinearizer;
@@ -157,6 +164,16 @@ inline int Nes_Apu::count_dmc_reads( cpu_time_t time, cpu_time_t* last_read ) co
 {
 	return dmc.count_reads( time, last_read );
 }
-	
+
+inline int Nes_Apu::addr_to_shadow_reg(int addr)
+{
+	return addr >= start_addr && addr < start_addr + shadow_regs_count ? addr - start_addr : -1;
+}
+
+inline int Nes_Apu::shadow_reg_to_addr(int idx)
+{
+	return start_addr + idx;
+}
+
 #endif
 

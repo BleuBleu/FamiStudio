@@ -79,6 +79,19 @@ void Nes_Vrc6::write_osc( cpu_time_t time, int osc_index, int reg, int data )
 	oscs [osc_index].regs [reg] = data;
 }
 
+void Nes_Vrc6::write_register(cpu_time_t time, cpu_addr_t addr, int data)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		cpu_addr_t base = base_addr + addr_step * i;
+		if (addr >= base && addr < base + reg_count)
+		{
+			write_osc(time, i, addr - base, data);
+			break;
+		}
+	}
+}
+
 void Nes_Vrc6::end_frame( cpu_time_t time )
 {
 	if ( time > last_time )
