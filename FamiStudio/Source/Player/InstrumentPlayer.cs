@@ -16,6 +16,7 @@ namespace FamiStudio
         ChannelState[] channels;
         int[] envelopeFrames = new int[Envelope.Max];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
+        bool IsRunning => playerThread != null;
 
         public InstrumentPlayer() : base(NesApu.APU_INSTRUMENT)
         {
@@ -23,24 +24,36 @@ namespace FamiStudio
 
         public void PlayNote(int channel, Note note)
         {
-            noteQueue.Enqueue(new PlayerNote() { channel = channel, note = note });
+            if (IsRunning)
+            {
+                noteQueue.Enqueue(new PlayerNote() { channel = channel, note = note });
+            }
         }
 
         public void ReleaseNote(int channel)
         {
-            noteQueue.Enqueue(new PlayerNote() { channel = channel, note = new Note() { Value = Note.NoteRelease } });
+            if (IsRunning)
+            {
+                noteQueue.Enqueue(new PlayerNote() { channel = channel, note = new Note() { Value = Note.NoteRelease } });
+            }
         }
 
         public void StopAllNotes()
         {
-            noteQueue.Enqueue(new PlayerNote() { channel = -1 });
+            if (IsRunning)
+            {
+                noteQueue.Enqueue(new PlayerNote() { channel = -1 });
+            }
         }
 
         public void StopAllNotesAndWait()
         {
-            while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
-            noteQueue.Enqueue(new PlayerNote() { channel = -1 });
-            while (!noteQueue.IsEmpty) Thread.Sleep(1);
+            if (IsRunning)
+            {
+                while (!noteQueue.IsEmpty) noteQueue.TryDequeue(out _);
+                noteQueue.Enqueue(new PlayerNote() { channel = -1 });
+                while (!noteQueue.IsEmpty) Thread.Sleep(1);
+            }
         }
         
         public void Start(Project project)
@@ -56,7 +69,7 @@ namespace FamiStudio
 
         public void Stop()
         {
-            if (playerThread != null)
+            if (IsRunning)
             {
                 StopAllNotesAndWait();
 
