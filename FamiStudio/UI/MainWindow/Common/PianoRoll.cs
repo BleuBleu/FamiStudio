@@ -1037,7 +1037,7 @@ namespace FamiStudio
                     int slideSizeY = n0.SlideNoteTarget - n0.Value;
 
                     g.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), slideSizeX, -slideSizeY);
-                    g.FillConvexPath(slideNoteGeometry[zoomLevel - MinZoomLevel], g.GetSolidBrush(color, 1.0f, 0.2f));
+                    g.FillConvexPath(slideNoteGeometry[zoomLevel - MinZoomLevel], g.GetSolidBrush(color, 1.0f, 0.2f), true);
                     g.PopTransform();
                 }
             }

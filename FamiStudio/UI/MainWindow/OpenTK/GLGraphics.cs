@@ -495,15 +495,20 @@ namespace FamiStudio
             return new GLConvexPath(points);
         }
 
-        public void FillConvexPath(GLConvexPath geo, GLBrush brush)
+        public void FillConvexPath(GLConvexPath geo, GLBrush brush, bool smooth = false)
         {
             if (!brush.IsGradient)
             {
+                if (smooth)
+                    GL.Enable(EnableCap.PolygonSmooth);
+                GL.Enable(EnableCap.PolygonSmooth);
                 GL.Color4(brush.Color0);
                 GL.Begin(BeginMode.TriangleFan);
                 foreach (var pt in geo.Points)
                     GL.Vertex2(pt.X, pt.Y);
                 GL.End();
+                if (smooth)
+                    GL.Disable(EnableCap.PolygonSmooth);
             }
             else
             {

@@ -443,6 +443,8 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.Home;
             else if (k == Key.Delete)
                 return System.Windows.Forms.Keys.Delete;
+            else if (k == Key.Escape)
+                return System.Windows.Forms.Keys.Escape;
 
             Debug.WriteLine($"Unknown key pressed {k}");
 
