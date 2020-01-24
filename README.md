@@ -24,7 +24,8 @@ To manually fetch the packages, run `msbuild /t:Restore` on the project from the
 Please open issues contact me if you find bugs or have feature suggestion ideas. 
 You can find me:
 - On the [NESDEV Forums](https://forums.nesdev.com/) as BleuBleu 
-- On twitter [@NesBleuBleu](http://www.twitter.com/nesbleubleu)
+- On Twitter [@NesBleuBleu](http://www.twitter.com/nesbleubleu)
+- On [YouTube](https://www.youtube.com/channel/UC-dGLo2XZqXNA_aOYjaucgA?view_as=subscriber)
 
 ## Acknowledgments
 - [Shiru](https://shiru.untergrund.net/code.shtml) for the FamiTone2 library and the demo songs that are included (_After the Rain_ and _Danger Streets_)
