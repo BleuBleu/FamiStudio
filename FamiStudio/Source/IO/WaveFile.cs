@@ -43,6 +43,7 @@ namespace FamiStudio
             var wavBytes = new List<byte>();
             var apuIndex = NesApu.APU_WAV_EXPORT;
             var dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
+            var dmcCallbackHandle = GCHandle.Alloc(dmcCallback); // Needed since callback can be collected.
             var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex);
 
             NesApu.InitAndReset(apuIndex, sampleRate, PlayerBase.GetNesApuExpansionAudio(song.Project), dmcCallback);
@@ -140,6 +141,8 @@ namespace FamiStudio
                 file.Write(headerBytes, 0, headerBytes.Length);
                 file.Write(wavBytes.ToArray(), 0, wavBytes.Count);
             }
+
+            dmcCallbackHandle.Free();
         }
     }
 }
