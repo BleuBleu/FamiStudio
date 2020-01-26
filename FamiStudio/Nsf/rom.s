@@ -1,23 +1,33 @@
+; Simple FamiStudio ROM to play music on actual hardware.
+; Based off Brad's (rainwarrior.ca) CA65 template.
+
 .include "famitone2fs.s"
 
 .segment "ZEROPAGE"
-nmi_lock:       .res 1 ; prevents NMI re-entry
-nmi_count:      .res 1 ; is incremented every NMI
-nmi_ready:      .res 1 ; set to 1 to push a PPU frame update, 2 to turn rendering off next NMI
-nmt_update_len: .res 1 ; number of bytes in nmt_update buffer
-scroll_x:       .res 1 ; x scroll position
-scroll_y:       .res 1 ; y scroll position
-scroll_nmt:     .res 1 ; nametable select (0-3 = $2000,$2400,$2800,$2C00)
-temp:           .res 1 ; temporary variable
-gamepad:        .res 1
-cursor_x:       .res 1
-cursor_y:       .res 1
-temp_x:         .res 1
-temp_y:         .res 1
+nmi_lock:           .res 1 ; prevents NMI re-entry
+nmi_count:          .res 1 ; is incremented every NMI
+nmi_ready:          .res 1 ; set to 1 to push a PPU frame update, 2 to turn rendering off next NMI
+nmt_row_update_len: .res 1 ; number of bytes in nmt_row_update buffer
+nmt_col_update_len: .res 1 ; number of bytes in nmt_row_update buffer
+scroll_x:           .res 1 ; x scroll position
+scroll_y:           .res 1 ; y scroll position
+scroll_nmt:         .res 1 ; nametable select (0-3 = $2000,$2400,$2800,$2C00)
+gamepad:            .res 1
+
+; General purpose temporary vars.
+r0: .res 1
+r1: .res 1
+r2: .res 1
+r3: .res 1
+r4: .res 1
+
+; General purpose pointers.
+p0: .res 2
 
 .segment "RAM"
-nmt_update: .res 256 ; nametable update entry buffer for PPU update
-palette:    .res 32  ; palette buffer for PPU update
+nmt_col_update: .res 128 ; nametable update entry buffer for PPU update (column mode)
+nmt_row_update: .res 128 ; nametable update entry buffer for PPU update (row mode)
+palette:        .res 32  ; palette buffer for PPU update
 
 .segment "OAM"
 oam: .res 256        ; sprite OAM data to be uploaded by DMA
@@ -36,8 +46,7 @@ INES_SRAM   = 0  ; 1 = battery backed SRAM at $6000-7FFF
 .byte $0, $0, $0, $0, $0, $0, $0, $0 ; padding
 
 .segment "SONG"
-; Test song.
-.incbin "song.bin" 
+.incbin "song.bin" ; Test song, Bloody Tears.
 
 .segment "SONG_TABLE"
 
@@ -45,10 +54,10 @@ INES_SRAM   = 0  ; 1 = battery backed SRAM at $6000-7FFF
 ; General info about the project (author, etc.), 64-bytes.
 num_songs:       .byte $01
 dpcm_page_start: .byte $00
-dpcm_page_count: .byte $00
+dpcm_page_count: .byte $01 ; Test song has 1 page of DPCM.
 padding:         .res 5    ; reserved
-project_name:    .res 28 ; Project name
-project_author:  .res 28 ; Project author
+project_name:    .res 28   ; Project name
+project_author:  .res 28   ; Project author
 
 ; Up to 8 songs for now, 256 bytes.
 MAX_SONGS = 8
@@ -61,9 +70,9 @@ MAX_SONGS = 8
 ;  - 28 bytes: song name.
 song_table:
 song_page_start: .byte $00
-song_addr_start: .word $8000
-song_flags:      .byte $00
-song_name:       .res  28 ; No name for test song.
+song_addr_start: .word $8222 ; Test song has $222 bytes of DPCM, song is right after.
+song_flags:      .byte $01   ; Test song uses DPCM
+song_name:       .res  28
 
 ; the remaining 7 songs.
 .res 32 * (MAX_SONGS - 1)
@@ -78,17 +87,17 @@ song_name:       .res  28 ; No name for test song.
 .word irq
 
 .segment "CODE"
-example_palette:
-.byte $0F,$15,$26,$37 ; bg0 purple/pink
-.byte $0F,$09,$19,$29 ; bg1 green
-.byte $0F,$01,$11,$21 ; bg2 blue
-.byte $0F,$00,$10,$30 ; bg3 greyscale
-.byte $0F,$18,$28,$38 ; sp0 yellow
-.byte $0F,$14,$24,$34 ; sp1 purple
-.byte $0F,$1B,$2B,$3B ; sp2 teal
-.byte $0F,$12,$22,$32 ; sp3 marine
 
-reset:
+; Our single screen.
+screen_data_rle:
+.incbin "rom.rle"
+
+default_palette:
+.incbin "rom.pal"
+.incbin "rom.pal"
+
+.proc reset
+
 	sei       ; mask interrupts
 	lda #0
 	sta $2000 ; disable NMI
@@ -102,13 +111,13 @@ reset:
 	txs       ; initialize stack
 	; wait for first vblank
 	bit $2002
-	:
+	wait_vblank_loop:
 		bit $2002
-		bpl :-
+		bpl wait_vblank_loop
 	; clear all RAM to 0
 	lda #0
 	ldx #0
-	:
+	clear_ram_loop:
 		sta $0000, X
 		sta $0100, X
 		sta $0200, X
@@ -118,32 +127,30 @@ reset:
 		sta $0600, X
 		sta $0700, X
 		inx
-		bne :-
+		bne clear_ram_loop
 	; place all sprites offscreen at Y=255
 	lda #255
 	ldx #0
-	:
+	clear_oam_loop:
 		sta oam, X
 		inx
 		inx
 		inx
 		inx
-		bne :-
+		bne clear_oam_loop
 	; wait for second vblank
-	:
+	wait_vblank_loop2:
 		bit $2002
-		bpl :-
+		bpl wait_vblank_loop2
 	; NES is initialized, ready to begin!
 	; enable the NMI for graphical updates, and jump to our main program
 	lda #%10001000
 	sta $2000
 	jmp main
 
-;
-; nmi routine
-;
+.endproc
 
-nmi:
+.proc nmi
 	; save registers
 	pha
 	txa
@@ -153,7 +160,7 @@ nmi:
 	; prevent NMI re-entry
 	lda nmi_lock
 	beq :+
-		jmp @nmi_end
+		jmp nmi_end
 	:
 	lda #1
 	sta nmi_lock
@@ -162,7 +169,7 @@ nmi:
 	;
 	lda nmi_ready
 	bne :+ ; nmi_ready == 0 not ready to update PPU
-		jmp @ppu_update_end
+		jmp ppu_update_end
 	:
 	cmp #2 ; nmi_ready == 2 turns rendering off
 	bne :+
@@ -170,46 +177,87 @@ nmi:
 		sta $2001
 		ldx #0
 		stx nmi_ready
-		jmp @ppu_update_end
+		jmp ppu_update_end
 	:
 	; sprite OAM DMA
 	ldx #0
 	stx $2003
 	lda #>oam
 	sta $4014
+
+	; nametable update (column)
+	col_update:
+		ldx #0
+		cpx nmt_col_update_len
+		beq row_update
+		lda #%10001100
+		sta $2000 ; set vertical nametable increment
+		ldx #0
+		cpx nmt_col_update_len
+		bcs palettes
+		nmt_col_update_loop:
+			lda nmt_col_update, x
+			inx
+			sta $2006
+			lda nmt_col_update, x
+			inx
+			sta $2006
+			ldy nmt_col_update, x
+			inx
+			col_loop:
+				lda nmt_col_update, x
+				inx
+				sta $2007
+				dey
+				bne col_loop
+			cpx nmt_col_update_len
+			bcc nmt_col_update_loop
+		lda #0
+		sta nmt_col_update_len
+
+	; nametable update (row)
+	row_update:
+		lda #%10001000
+		sta $2000 ; set horizontal nametable increment
+		ldx #0
+		cpx nmt_row_update_len
+		bcs palettes
+		nmt_row_update_loop:
+			lda nmt_row_update, x
+			inx
+			sta $2006
+			lda nmt_row_update, x
+			inx
+			sta $2006
+			ldy nmt_row_update, x
+			inx
+			row_loop:
+				lda nmt_row_update, x
+				inx
+				sta $2007
+				dey
+				bne row_loop
+			cpx nmt_row_update_len
+			bcc nmt_row_update_loop
+		lda #0
+		sta nmt_row_update_len
+
 	; palettes
-	lda #%10001000
-	sta $2000 ; set horizontal nametable increment
-	lda $2002
-	lda #$3F
-	sta $2006
-	stx $2006 ; set PPU address to $3F00
-	ldx #0
-	:
-		lda palette, X
-		sta $2007
-		inx
-		cpx #32
-		bcc :-
-	; nametable update
-	ldx #0
-	cpx nmt_update_len
-	bcs @scroll
-	@nmt_update_loop:
-		lda nmt_update, X
+	palettes:
+		lda $2002
+		lda #$3F
 		sta $2006
-		inx
-		lda nmt_update, X
-		sta $2006
-		inx
-		lda nmt_update, X
-		sta $2007
-		inx
-		cpx nmt_update_len
-		bcc @nmt_update_loop
-	lda #0
-	sta nmt_update_len
-@scroll:
+		stx $2006 ; set PPU address to $3F00
+		ldx #0
+		pal_loop:
+			lda palette, X
+			sta $2007
+			inx
+			cpx #32
+			bne pal_loop
+
+
+scroll:
 	lda scroll_nmt
 	and #%00000011 ; keep only lowest 2 bits to prevent error
 	ora #%10001000
@@ -224,12 +272,12 @@ nmi:
 	; flag PPU update complete
 	ldx #0
 	stx nmi_ready
-@ppu_update_end:
+ppu_update_end:
 	; if this engine had music/sound, this would be a good place to play it
 	; unlock re-entry flag
 	lda #0
 	sta nmi_lock
-@nmi_end:
+nmi_end:
 	; restore registers and return
 	pla
 	tay
@@ -238,49 +286,47 @@ nmi:
 	pla
 	rti
 
-;
-; irq
-;
+.endproc 
 
-irq:
+.proc irq
 	rti
-
-;
-; drawing utilities
-;
+.endproc 
 
 ; ppu_update: waits until next NMI, turns rendering on (if not already), uploads OAM, palette, and nametable update to PPU
-ppu_update:
+.proc ppu_update
 	lda #1
 	sta nmi_ready
 	:
 		lda nmi_ready
 		bne :-
 	rts
+.endproc
 
 ; ppu_skip: waits until next NMI, does not update PPU
-ppu_skip:
+.proc ppu_skip
 	lda nmi_count
 	:
 		cmp nmi_count
 		beq :-
 	rts
+.endproc 
 
 ; ppu_off: waits until next NMI, turns rendering off (now safe to write PPU directly via $2007)
-ppu_off:
+.proc ppu_off
 	lda #2
 	sta nmi_ready
 	:
 		lda nmi_ready
 		bne :-
 	rts
+.endproc 
 
 ; ppu_address_tile: use with rendering off, sets memory address to tile at X/Y, ready for a $2007 write
 ;   Y =  0- 31 nametable $2000
 ;   Y = 32- 63 nametable $2400
 ;   Y = 64- 95 nametable $2800
 ;   Y = 96-127 nametable $2C00
-ppu_address_tile:
+.proc ppu_address_tile
 	lda $2002 ; reset latch
 	tya
 	lsr
@@ -294,60 +340,12 @@ ppu_address_tile:
 	asl
 	asl
 	asl
-	sta temp
+	sta r0
 	txa
-	ora temp
+	ora r0
 	sta $2006 ; low bits of Y + X
 	rts
-
-; ppu_update_tile: can be used with rendering on, sets the tile at X/Y to tile A next time you call ppu_update
-ppu_update_tile:
-	pha ; temporarily store A on stack
-	txa
-	pha ; temporarily store X on stack
-	ldx nmt_update_len
-	tya
-	lsr
-	lsr
-	lsr
-	ora #$20 ; high bits of Y + $20
-	sta nmt_update, X
-	inx
-	tya
-	asl
-	asl
-	asl
-	asl
-	asl
-	sta temp
-	pla ; recover X value (but put in A)
-	ora temp
-	sta nmt_update, X
-	inx
-	pla ; recover A value (tile)
-	sta nmt_update, X
-	inx
-	stx nmt_update_len
-	rts
-
-; ppu_update_byte: like ppu_update_tile, but X/Y makes the high/low bytes of the PPU address to write
-;    this may be useful for updating attribute tiles
-ppu_update_byte:
-	pha ; temporarily store A on stack
-	tya
-	pha ; temporarily store Y on stack
-	ldy nmt_update_len
-	txa
-	sta nmt_update, Y
-	iny
-	pla ; recover Y value (but put in Y)
-	sta nmt_update, Y
-	iny
-	pla ; recover A value (byte)
-	sta nmt_update, Y
-	iny
-	sty nmt_update_len
-	rts
+.endproc 
 
 ;
 ; gamepad
@@ -365,7 +363,7 @@ PAD_R      = $80
 ; gamepad_poll: this reads the gamepad state into the variable labelled "gamepad"
 ;   This only reads the first gamepad, and also if DPCM samples are played they can
 ;   conflict with gamepad reading, which may give incorrect results.
-gamepad_poll:
+.proc gamepad_poll
 	; strobe the gamepad to latch current button state
 	lda #1
 	sta $4016
@@ -386,8 +384,12 @@ gamepad_poll:
 		bne :-
 	sta gamepad
 	rts
+.endproc 
 
 .proc play_song
+
+	text_ptr = p0
+	song_idx_mul_32 = r0
 
 	; each song table entry is 32-bytes.
 	asl
@@ -395,6 +397,7 @@ gamepad_poll:
 	asl
 	asl
 	asl
+	sta song_idx_mul_32
 	tax
 
 	; Map the entire range for the song.
@@ -415,26 +418,26 @@ gamepad_poll:
 
 	; If the song uses DPCM, map them as well.	
 	lda song_flags, x
-	beq @samples_none
+	beq samples_none
 
 	ldy dpcm_page_start
 	lda dpcm_page_count
 
 	cmp #1
-	beq @samples_1_pages
+	beq samples_1_pages
 	cmp #2
-	beq @samples_2_pages
+	beq samples_2_pages
 
-@samples_3_pages:
+samples_3_pages:
 	sty $5004
 	iny
-@samples_2_pages:
+samples_2_pages:
 	sty $5005
 	iny
-@samples_1_pages:
+samples_1_pages:
 	sty $5006	
 
-@samples_none:
+samples_none:
 	ldy song_addr_start+1, x ; hi-byte
 	lda song_addr_start+0, x ; lo-byte
 	tax
@@ -443,19 +446,107 @@ gamepad_poll:
 	
 	lda #0
 	jsr FamiToneMusicPlay
+
+	;update title.
+	lda #<song_name
+	clc
+	adc song_idx_mul_32
+	sta text_ptr+0
+	lda #>song_name
+	adc #0
+	sta text_ptr+1
+
+	ldx #2
+	ldy #11
+	jsr draw_text
+
 	rts
 
 .endproc 
 
-;
-; main
-;
+equalizer_lookup:
+	.byte $f0, $f0, $f0, $f0 ; 0
+	.byte $f0, $f0, $f0, $b8 ; 1
+	.byte $f0, $f0, $f0, $c8 ; 2
+	.byte $f0, $f0, $b8, $c8 ; 3
+	.byte $f0, $f0, $c8, $c8 ; 4
+	.byte $f0, $b8, $c8, $c8 ; 5
+	.byte $f0, $c8, $c8, $c8 ; 6
+	.byte $b8, $c8, $c8, $c8 ; 7
+	.byte $c8, $c8, $c8, $c8 ; 8
+equalizer_color_lookup:
+	.byte $01, $02, $00, $02, $02
 
-main:
+; a = channel to update
+.proc update_equalizer
+	
+	pos_x = r0
+	color_offset = r1
+
+	tay
+	lda equalizer_color_lookup, y
+	sta color_offset
+	tya
+
+	; compute x position.
+	asl
+	asl
+	sta pos_x
+
+	; compute lookup index.
+	lda FT_CHN_NOTE_COUNTER, y
+	asl
+	asl
+	tay
+
+	; compute 2 addresses
+	ldx nmt_col_update_len
+	ora #$22
+	sta nmt_col_update,x
+	sta nmt_col_update+7,x
+	lda #$47
+	clc
+	adc pos_x
+	sta nmt_col_update+1,x
+	adc #1
+	sta nmt_col_update+8,x
+	lda #4
+	sta nmt_col_update+2,x
+	sta nmt_col_update+9,x
+
+	clc
+	lda equalizer_lookup, y
+	adc color_offset
+	sta nmt_col_update+3,x
+	sta nmt_col_update+10,x
+	lda equalizer_lookup+1, y
+	adc color_offset
+	sta nmt_col_update+4,x
+	sta nmt_col_update+11,x
+	lda equalizer_lookup+2, y
+	adc color_offset
+	sta nmt_col_update+5,x
+	sta nmt_col_update+12,x
+	lda equalizer_lookup+3, y
+	adc color_offset
+	sta nmt_col_update+6,x
+	sta nmt_col_update+13,x
+	
+	lda nmt_col_update_len
+	clc
+	adc #14
+	sta nmt_col_update_len 
+
+	rts
+
+.endproc
+
+.proc main
+
 	; setup 
 	ldx #0
 	:
-		lda example_palette, X
+		lda default_palette, X
 		sta palette, X
 		inx
 		cpx #32
@@ -463,351 +554,242 @@ main:
 	jsr setup_background
 	lda #0 ; song zero.
 	jsr play_song
-	; center the cursor
-	lda #128
-	sta cursor_x
-	lda #120
-	sta cursor_y
-	; show the screen
-	jsr draw_cursor
 	jsr ppu_update
 	; main loop
-@loop:
+loop:
 	; read gamepad
 	jsr gamepad_poll
 	; respond to gamepad state
 	lda gamepad
 	and #PAD_START
-	beq :+
-		jsr push_start
-		jmp @draw ; start trumps everything, don't check other buttons
-	:
-	jsr release_start ; releasing start restores scroll
-	lda gamepad
-	and #PAD_U
-	beq :+
-		jsr push_u
-	:
-	lda gamepad
-	and #PAD_D
-	beq :+
-		jsr push_d
-	:
-	lda gamepad
-	and #PAD_L
-	beq :+
-		jsr push_l
-	:
-	lda gamepad
-	and #PAD_R
-	beq :+
-		jsr push_r
-	:
-	lda gamepad
-	and #PAD_SELECT
-	beq :+
-		jsr push_select
-	:
-	lda gamepad
-	and #PAD_B
-	beq :+
-		jsr push_b
-	:
-	lda gamepad
-	and #PAD_A
-	beq :+
-		jsr push_a
-	:
-@draw:
-	; draw everything and finish the frame
-	jsr draw_cursor
+	;beq :+
+	;	jsr push_start
+	;	jmp @draw ; start trumps everything, don't check other buttons
+	;:
+	;jsr release_start ; releasing start restores scroll
+	;lda gamepad
+	;and #PAD_U
+	;beq :+
+	;	jsr push_u
+	;:
+	;lda gamepad
+	;and #PAD_D
+	;beq :+
+	;	jsr push_d
+	;:
+	;lda gamepad
+	;and #PAD_L
+	;beq :+
+	;	jsr push_l
+	;:
+	;lda gamepad
+	;and #PAD_R
+	;beq :+
+	;	jsr push_r
+	;:
+	;lda gamepad
+	;and #PAD_SELECT
+	;beq :+
+	;	jsr push_select
+	;:
+	;lda gamepad
+	;and #PAD_B
+	;beq :+
+	;	jsr push_b
+	;:
+	;lda gamepad
+	;and #PAD_A
+	;beq :+
+	;	jsr push_a
+	;:
+draw:
+
 	jsr FamiToneUpdate
+	
+	lda #0
+	jsr update_equalizer
+	lda #1
+	jsr update_equalizer
+	lda #2
+	jsr update_equalizer
+	lda #3
+	jsr update_equalizer
+	lda #4
+	jsr update_equalizer
+
 	jsr ppu_update
 	; keep doing this forever!
-	jmp @loop
+	jmp loop
 
-push_u:
-	dec cursor_y
-	; Y wraps at 240
-	lda cursor_y
-	cmp #240
-	bcc :+
-		lda #239
-		sta cursor_y
-	:
+.endproc 
+
+; Shiru's code.
+; x = lo byte of RLE data addr
+; y = hi byte of RLE data addr
+.proc rle_decompress
+
+	rle_lo   = r0
+	rle_high = r1
+	rle_tag  = r2
+	rle_byte = r3
+
+	stx rle_lo
+	sty rle_high
+	ldy #0
+	jsr rle_read_byte
+	sta rle_tag
+loop:
+	jsr rle_read_byte
+	cmp rle_tag
+	beq is_rle
+	sta $2007
+	sta rle_byte
+	bne loop
+is_rle:
+	jsr rle_read_byte
+	cmp #0
+	beq done
+	tax
+	lda rle_byte
+rle_loop:
+	sta $2007
+	dex
+	bne rle_loop
+	beq loop
+done: ;.4
 	rts
 
-push_d:
-	inc cursor_y
-	; Y wraps at 240
-	lda cursor_y
-	cmp #240
-	bcc :+
-		lda #0
-		sta cursor_y
-	:
+.endproc
+
+.proc rle_read_byte
+
+	rle_lo   = r0
+	rle_high = r1
+
+	lda (rle_lo),y
+	inc rle_lo
+	bne done
+	inc rle_high
+done:
 	rts
 
-push_l:
-	dec cursor_x
+.endproc
+
+; Draws text with rendering on.
+; x/y = tile position
+; p0  = pointer to text data.
+.proc draw_text
+
+	temp_x = r2
+	temp   = r3
+	
+	stx temp_x
+	ldx nmt_row_update_len
+	tya
+	lsr
+	lsr
+	lsr
+	ora #$20 ; high bits of Y + $20
+	sta nmt_row_update,x
+	inx
+	tya
+	asl
+	asl
+	asl
+	asl
+	asl
+	sta temp
+	lda temp_x
+	ora temp
+	sta nmt_row_update,x
+	inx
+	lda #28 ; all our strings have 28 characters.
+	sta nmt_row_update,x
+	inx
+
+	ldy #0
+	text_loop:
+		lda (p0),y
+		sta nmt_row_update,x
+		inx
+		iny
+		cpy #28
+		bne text_loop
+
+
+	stx nmt_row_update_len
 	rts
 
-push_r:
-	inc cursor_x
-	rts
+.endproc
 
-push_select:
-	; turn off rendering so we can manually update entire nametable
-	jsr ppu_off
-	jsr setup_background
-	; wait for user to release select before continuing
-	:
-		jsr gamepad_poll
-		lda gamepad
-		and #PAD_SELECT
-		bne :-
-	rts
+.proc setup_background
 
-push_start:
-	inc scroll_x
-	inc scroll_y
-	; Y wraps at 240
-	lda scroll_y
-	cmp #240
-	bcc :+
-		lda #0
-		sta scroll_y
-	:
-	; when X rolls over, toggle the high bit of nametable select
-	lda scroll_x
-	bne :+
-		lda scroll_nmt
-		eor #$01
-		sta scroll_nmt
-	:
-	rts
-
-release_start:
-	lda #0
-	sta scroll_x
-	sta scroll_y
-	sta scroll_nmt
-	rts
-
-push_b:
-	jsr snap_cursor
-	lda cursor_x
-	lsr
-	lsr
-	lsr
-	tax ; X = cursor_x / 8
-	lda cursor_y
-	lsr
-	lsr
-	lsr
-	tay ; Y = cursor_y / 8
-	lda #4
-	jsr ppu_update_tile ; puts tile 4 at X/Y
-	rts
-
-push_a:
-	jsr snap_cursor
-	lda cursor_x
-	lsr
-	lsr
-	lsr
-	sta temp_x ; cursor_x / 8
-	lda cursor_y
-	lsr
-	lsr
-	lsr
-	sta temp_y ; cursor_y / 8
-	; draw a ring of 8 tiles around the cursor
-	dec temp_x ; x-1
-	dec temp_y ; y-1
-	ldx temp_x
-	ldy temp_y
-	lda #5
-	jsr ppu_update_tile
-	inc temp_x ; x
-	ldx temp_x
-	ldy temp_y
-	lda #6
-	jsr ppu_update_tile
-	inc temp_x ; x+1
-	ldx temp_x
-	ldy temp_y
-	lda #5
-	jsr ppu_update_tile
-	dec temp_x
-	dec temp_x ; x-1
-	inc temp_y ; y
-	ldx temp_x
-	ldy temp_y
-	lda #6
-	jsr ppu_update_tile
-	inc temp_x
-	inc temp_x ; x+1
-	ldx temp_x
-	ldy temp_y
-	lda #6
-	jsr ppu_update_tile
-	dec temp_x
-	dec temp_x ; x-1
-	inc temp_y ; y+1
-	ldx temp_x
-	ldy temp_y
-	lda #5
-	jsr ppu_update_tile
-	inc temp_x ; x
-	ldx temp_x
-	ldy temp_y
-	lda #6
-	jsr ppu_update_tile
-	inc temp_x ; x+1
-	ldx temp_x
-	ldy temp_y
-	lda #5
-	jsr ppu_update_tile
-	rts
-
-; snap_cursor: snap cursor to nearest tile
-snap_cursor:
-	lda cursor_x
-	clc
-	adc #4
-	and #$F8
-	sta cursor_x
-	lda cursor_y
-	clc
-	adc #4
-	and #$F8
-	sta cursor_y
-	; Y wraps at 240
-	cmp #240
-	bcc :+
-		lda #0
-		sta cursor_y
-	:
-	rts
-
-draw_cursor:
-	; four sprites centred around the currently selected tile
-	; y position (note, needs to be one line higher than sprite's appearance)
-	lda cursor_y
-	sec
-	sbc #5 ; Y-5
-	sta oam+(0*4)+0
-	sta oam+(1*4)+0
-	lda cursor_y
-	clc
-	adc #3 ; Y+3
-	sta oam+(2*4)+0
-	sta oam+(3*4)+0
-	; tile
-	lda #1
-	sta oam+(0*4)+1
-	sta oam+(1*4)+1
-	sta oam+(2*4)+1
-	sta oam+(3*4)+1
-	; attributes
-	lda #%00000000 ; no flip
-	sta oam+(0*4)+2
-	lda #%01000000 ; horizontal flip
-	sta oam+(1*4)+2
-	lda #%10000000 ; vertical flip
-	sta oam+(2*4)+2
-	lda #%11000000 ; both flip
-	sta oam+(3*4)+2
-	; x position
-	lda cursor_x
-	sec
-	sbc #4 ; X-4
-	sta oam+(0*4)+3
-	sta oam+(2*4)+3
-	lda cursor_x
-	clc
-	adc #4 ; X+4
-	sta oam+(1*4)+3
-	sta oam+(3*4)+3
-	rts
-
-setup_background:
 	; first nametable, start by clearing to empty
 	lda $2002 ; reset latch
 	lda #$20
 	sta $2006
 	lda #$00
 	sta $2006
-	; empty nametable
-	lda #0
-	ldy #30 ; 30 rows
-	:
-		ldx #32 ; 32 columns
-		:
-			sta $2007
-			dex
-			bne :-
-		dey
-		bne :--
-	; set all attributes to 0
-	ldx #64 ; 64 bytes
-	:
-		sta $2007
-		dex
-		bne :-
-	; fill in an area in the middle with 1/2 checkerboard
+
+	; BG image.
+	ldx #<screen_data_rle
+	ldy #>screen_data_rle
+	jsr rle_decompress
+
+	; Add a few sprites to the FamiStudio logo.
+	lda #80
+	sta oam+3
+	lda #15
+	sta oam+0
+	lda #$81
+	sta oam+1
 	lda #1
-	ldy #8 ; start at row 8
-	:
-		pha ; temporarily store A, it will be clobbered by ppu_address_tile routine
-		ldx #8 ; start at column 8
-		jsr ppu_address_tile
-		pla ; recover A
-		; write a line of checkerboard
-		ldx #8
-		:
-			sta $2007
-			eor #$3
-			inx
-			cpx #(32-8)
-			bcc :-
-		eor #$3
+	sta oam+2
+
+	lda #72
+	sta oam+7
+	lda #23
+	sta oam+4
+	lda #$90
+	sta oam+5
+	lda #1
+	sta oam+6
+
+	lda #88
+	sta oam+11
+	lda #23
+	sta oam+8
+	lda #$92
+	sta oam+9
+	lda #1
+	sta oam+10
+
+	; Draw title
+	ldx #2
+	ldy #7
+	jsr ppu_address_tile
+
+	ldy #0
+	name_loop:
+		lda project_name,y
+		sta $2007
 		iny
-		cpy #(30-8)
-		bcc :--
-	; second nametable, fill with simple pattern
-	lda #$24
-	sta $2006
-	lda #$00
-	sta $2006
-	lda #$00
-	ldy #30
-	:
-		ldx #32
-		:
-			sta $2007
-			clc
-			adc #1
-			and #3
-			dex
-			bne :-
-		clc
-		adc #1
-		and #3
-		dey
-		bne :--
-	; 4 stripes of attribute
-	lda #0
-	ldy #4
-	:
-		ldx #16
-		:
-			sta $2007
-			dex
-			bne :-
-		clc
-		adc #%01010101
-		dey
-		bne :--
+		cpy #28
+		bne name_loop
+
+	; Draw author
+	ldx #2
+	ldy #9
+	jsr ppu_address_tile
+
+	ldy #0
+	author_loop:
+		lda project_author,y
+		sta $2007
+		iny
+		cpy #28
+		bne author_loop
+
 	rts
+
+.endproc

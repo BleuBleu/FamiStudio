@@ -1,3 +1,6 @@
+Mapper 31:
+- Song change + controls (Need gamepad fix to prevent DPCM interference).
+
 1.5.0: FDS + PAL
 ================
 - Delayed cut + delayed note. This will allow us to to song without time = 1
@@ -12,7 +15,6 @@ x FDS support in NesSndEmu
 ========================
 
 Backlog:
-- Mapper 031 support (export ROM directly).
 - Cleanup (merge duplicated patterns, instruments, remove unused stuff.
 - Fix crash on startup when there are no audio device 
 - Proper error messages when something fails (save, etc.)

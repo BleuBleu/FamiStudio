@@ -76,6 +76,9 @@ FT_CHN_RETURN_H     : .res FT_NUM_CHANNELS
 FT_CHN_REF_LEN      : .res FT_NUM_CHANNELS
 FT_CHN_DUTY         : .res FT_NUM_CHANNELS
 FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS ; DPCM(4) + Triangle(2) are unused.
+.ifdef FT_EQUALIZER
+FT_CHN_NOTE_COUNTER : .res FT_NUM_CHANNELS
+.endif
 
 ;variables and aliases
 
@@ -690,7 +693,23 @@ FamiToneMusicPause:
     sta duty
 .endif
 
-@no_new_note:
+.ifdef FT_EQUALIZER
+    .local @done
+    .local @new_note
+    @new_note:
+        ldx #channel_idx
+        lda #8
+        sta FT_CHN_NOTE_COUNTER, x
+        jmp @done
+    @no_new_note:
+        ldx #channel_idx
+        lda FT_CHN_NOTE_COUNTER, x
+        beq @done
+        dec FT_CHN_NOTE_COUNTER, x
+    @done:    
+.else
+    @no_new_note:
+.endif
 .endmacro
 
 .macro update_row_dpcm channel_idx
@@ -706,7 +725,25 @@ FamiToneMusicPause:
     bne @no_new_note    ;A is non-zero after FamiToneSampleStop
 @play_sample:
     jsr FamiToneSamplePlayM
-@no_new_note:
+
+.ifdef FT_EQUALIZER
+    .local @done
+    .local @new_note
+    @new_note:
+        ldx #channel_idx
+        lda #8
+        sta FT_CHN_NOTE_COUNTER, x
+        jmp @done
+    @no_new_note:
+        ldx #channel_idx
+        lda FT_CHN_NOTE_COUNTER, x
+        beq @done
+        dec FT_CHN_NOTE_COUNTER, x
+    @done:    
+.else
+    @no_new_note:
+.endif
+
 .endif
 .endmacro
 

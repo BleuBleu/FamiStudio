@@ -9,17 +9,10 @@ namespace FamiStudio
 {
     public static class RomFile
     {
-        // NSF memory layout
-        //   0x8000: start of code
-        //   0x8000: nsf_init
-        //   0x8060: nsf_play
-        //   0x8080: FamiTone kernel code (variable size depending on expansion)
-        //   0x8???: song table of content, 4 bytes per song:
-        //      - first page of the song (1 byte)
-        //      - address of the start of the song in page starting at 0x9000 (2 byte)
-        //      - flags (1 = use DPCM)
-        //   0x????: DPCM samples, if any.
-        //   0x????: Song data.
+        // ROM memory layout
+        //   0x8000: start of song data
+        //   0xc000: Optional DPCM samples, position will change (0xc000, 0xd000 or 0xe000) depending on size of samples (4KB to 12KB).
+        //   0xf000: Song table + sound engine + UI code + Vectors.
 
         const int RomMemoryStart     = 0x8000;
         const int RomPageSize        = 0x1000;
@@ -85,10 +78,10 @@ namespace FamiStudio
 
                     if (c >= 'A' && c <= 'Z')
                         encoded[i] = (byte)(c - 'A');
-                    else if (c >= 'a' && c <= 'a')
-                        encoded[i] = (byte)(26 + c - 'a');
+                    else if (c >= 'a' && c <= 'z')
+                        encoded[i] = (byte)(26 + (c - 'a'));
                     else if (c >= '0' && c <= '9')
-                        encoded[i] = (byte)(52 + c - '0');
+                        encoded[i] = (byte)(52 + (c - '0'));
                     else
                     {
                         if (specialCharMap.TryGetValue(c, out var val))
@@ -133,7 +126,7 @@ namespace FamiStudio
                 var projectInfo = new RomProjectInfo();
                 projectInfo.numSongs = (byte)songIds.Length;
                 Marshal.Copy(EncodeAndCenterString(name), 0, new IntPtr(projectInfo.name), 28);
-                Marshal.Copy(EncodeAndCenterString(author), 0, new IntPtr(projectInfo.name), 28);
+                Marshal.Copy(EncodeAndCenterString(author), 0, new IntPtr(projectInfo.author), 28);
 
                 var songTable = new RomSongEntry[MaxSongs];
                 for (int i = 0; i < project.Songs.Count; i++)

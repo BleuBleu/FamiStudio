@@ -1,7 +1,7 @@
 @echo [Compiling]
 @echo off
 
-..\..\..\NES\tools\bin\ca65 rom.s -g -o rom.o
+..\..\..\NES\tools\bin\ca65 rom.s -g -o rom.o -D FT_EQUALIZER
 ..\..\..\NES\tools\bin\ca65 nsf.s -g -o nsf_ft2.o
 ..\..\..\NES\tools\bin\ca65 nsf.s -g -o nsf_ft2_fs.o -D FS
 ..\..\..\NES\tools\bin\ca65 nsf.s -g -o nsf_ft2_fs_vrc6.o -D FS -D FT_VRC6_ENABLE
