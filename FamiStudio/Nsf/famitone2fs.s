@@ -18,7 +18,7 @@ FT_NTSC_SUPPORT    = 1    ;undefine to exclude NTSC support
 FT_PITCH_FIX    = 0 ;(FT_PAL_SUPPORT|FT_NTSC_SUPPORT) ;add PAL/NTSC pitch correction code only when both modes are enabled
 FT_SMOOTH_VIBRATO = 1 ; Blaarg's smooth vibrato technique
 
-.segment "FAMITONE"
+.segment "RAM"
 
 .ifdef FT_VRC6_ENABLE
 FT_NUM_ENVELOPES        = 2+2+2+2+2+2+2+2 ; DPCM envelopes [8-9] are unused. 
@@ -149,7 +149,7 @@ FT_TEMP_PTR_H  = FT_TEMP_PTR1+1
 FT_TEMP_PTR2_L = FT_TEMP_PTR2+0
 FT_TEMP_PTR2_H = FT_TEMP_PTR2+1
 
-.segment "CODE_FAMITONE"
+.segment "CODE"
 
 ;aliases for the APU registers
 APU_PL1_VOL    = $4000

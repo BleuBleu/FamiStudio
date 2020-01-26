@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -79,6 +79,7 @@
     <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
+    <Compile Include="Source\IO\RomFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Player\ChannelState.cs" />
     <Compile Include="Source\Player\ChannelStateDpcm.cs" />
@@ -171,6 +172,7 @@
     <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc6.bin" />
+    <EmbeddedResource Include="Nsf\rom.nes" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -256,6 +258,8 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\ExportRom%402x.png" />
+    <EmbeddedResource Include="Resources\ExportRom.png" />
     <EmbeddedResource Include="Resources\InstrumentVRC6%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentVRC6.png" />
     <EmbeddedResource Include="Resources\VibratoSmall%402x.png" />

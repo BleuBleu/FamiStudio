@@ -13,6 +13,7 @@ namespace FamiStudio
         {
             Wav,
             Nsf,
+            Rom,
             FamiTracker,
             FamiTone2,
             Max
@@ -53,12 +54,12 @@ namespace FamiStudio
 
         private PropertyPage CreatePropertyPage(PropertyPage page, ExportFormat format)
         {
-            var songName = GetSongNames();
+            var songNames = GetSongNames();
 
             switch (format)
             {
                 case ExportFormat.Wav:
-                    page.AddStringList("Song :", songName, songName[0]); // 0
+                    page.AddStringList("Song :", songNames, songNames[0]); // 0
                     page.AddStringList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 1
                     break;
                 case ExportFormat.Nsf:
@@ -66,19 +67,24 @@ namespace FamiStudio
                     page.AddString("Artist :", project.Author, 31); // 1
                     page.AddString("Copyright :", project.Copyright, 31); // 2
                     page.AddStringList("Mode :", new[] { "NTSC", "PAL", "Dual" }, "NTSC"); // 3
-                    page.AddStringListMulti(null, songName, null); // 4
+                    page.AddStringListMulti(null, songNames, null); // 4
                     page.AddStringList("Engine :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 5
                     page.SetPropertyEnabled(3, false);
                     break;
+                case ExportFormat.Rom:
+                    page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 0
+                    page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 1
+                    page.AddStringListMulti(null, songNames, null); // 2
+                    break;
                 case ExportFormat.FamiTracker:
-                    page.AddStringListMulti(null, songName, null); // 0
+                    page.AddStringListMulti(null, songNames, null); // 0
                     break;
                 case ExportFormat.FamiTone2:
                     page.AddStringList("Format :", Enum.GetNames(typeof(FamitoneMusicFile.OutputFormat)), Enum.GetNames(typeof(FamitoneMusicFile.OutputFormat))[0]); // 0
                     page.AddBoolean("Separate Files :", false); // 1
                     page.AddString("Song Name Pattern :", "{project}_{song}"); // 2
                     page.AddString("DMC Name Pattern :", "{project}"); // 3
-                    page.AddStringListMulti(null, songName, null); // 4
+                    page.AddStringListMulti(null, songNames, null); // 4
                     page.SetPropertyEnabled(2, false);
                     page.SetPropertyEnabled(3, false);
                     break;
@@ -138,6 +144,20 @@ namespace FamiStudio
                     props.GetPropertyValue<string>(0),
                     props.GetPropertyValue<string>(1),
                     props.GetPropertyValue<string>(2));
+            }
+        }
+
+        private void ExportRom()
+        {
+            var filename = PlatformUtils.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes");
+            if (filename != null)
+            {
+                var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
+
+                RomFile.Save(project, filename,
+                    GetSongIds(props.GetPropertyValue<bool[]>(2)),
+                    props.GetPropertyValue<string>(0),
+                    props.GetPropertyValue<string>(1));
             }
         }
 
@@ -203,6 +223,7 @@ namespace FamiStudio
                 {
                     case ExportFormat.Wav: ExportWav(); break;
                     case ExportFormat.Nsf: ExportNsf(); break;
+                    case ExportFormat.Rom: ExportRom(); break;
                     case ExportFormat.FamiTracker: ExportFamiTracker(); break;
                     case ExportFormat.FamiTone2: ExportFamiTone2(); break;
                 }

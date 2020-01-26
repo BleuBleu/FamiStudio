@@ -5,10 +5,10 @@ FT_BASE_SIZE_DEF = 140
 .segment "ZEROPAGE"
 FT_TEMP:		.res FT_TEMP_SIZE_DEF
 
-.segment "FAMITONE"
+.segment "RAM"
 FT_BASE_ADR:	.res FT_BASE_SIZE_DEF
 
-.segment "CODE_FAMITONE"
+.segment "CODE"
 
 ;settings, uncomment or put them into your main program; the latter makes possible updates easier
 
@@ -209,10 +209,10 @@ FT_MR_NOISE_V		= FT_OUT_BUF+9
 FT_MR_NOISE_F		= FT_OUT_BUF+10
 	.endif
 
-.assert FT_TEMP_SIZE_DEF = FT_TEMP_SIZE, error, "Famitone temp size mismatch."
-.assert FT_BASE_SIZE_DEF = FT_BASE_SIZE, error, "Famitone base size mismatch."
+;.assert FT_TEMP_SIZE_DEF = FT_TEMP_SIZE, error, "Famitone temp size mismatch."
+;.assert FT_BASE_SIZE_DEF = FT_BASE_SIZE, error, "Famitone base size mismatch."
 
-.out .sprintf ("Famitone base size is %d bytes.", FT_BASE_SIZE)
+;.out .sprintf ("Famitone base size is %d bytes.", FT_BASE_SIZE)
 
 ;------------------------------------------------------------------------------
 ; reset APU, initialize FamiTone
