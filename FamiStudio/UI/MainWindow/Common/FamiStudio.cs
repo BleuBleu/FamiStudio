@@ -401,7 +401,7 @@ namespace FamiStudio
                             {
                                 var name = (string)asset["name"];
 #if FAMISTUDIO_WINDOWS
-                                if (name != null && name.ToLower().Contains(".msi"))
+                                if (name != null && name.ToLower().Contains("win"))
 #else
                                 if (name != null && name.ToLower().Contains("macos"))
 #endif
