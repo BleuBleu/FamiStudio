@@ -501,7 +501,7 @@ equalizer_color_lookup:
 
 	; compute 2 addresses
 	ldx nmt_col_update_len
-	ora #$22
+	lda #$22
 	sta nmt_col_update,x
 	sta nmt_col_update+7,x
 	lda #$47
@@ -514,7 +514,6 @@ equalizer_color_lookup:
 	sta nmt_col_update+2,x
 	sta nmt_col_update+9,x
 
-	clc
 	lda equalizer_lookup, y
 	adc color_offset
 	sta nmt_col_update+3,x
@@ -532,9 +531,8 @@ equalizer_color_lookup:
 	sta nmt_col_update+6,x
 	sta nmt_col_update+13,x
 	
-	lda nmt_col_update_len
-	clc
-	adc #14
+	lda #14
+	adc nmt_col_update_len
 	sta nmt_col_update_len 
 
 	rts
