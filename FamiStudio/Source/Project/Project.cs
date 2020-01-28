@@ -15,28 +15,22 @@ namespace FamiStudio
 
         public const int ExpansionNone    = 0;
         public const int ExpansionVrc6    = 1;
-#if DEV                                 
         public const int ExpansionVrc7    = 2;
         public const int ExpansionFds     = 3;
         public const int ExpansionMmc5    = 4;
         public const int ExpansionNamco   = 5;
         public const int ExpansionSunsoft = 6;
         public const int ExpansionCount   = 7;
-#else
-        public const int ExpansionCount   = 2;
-#endif
 
         public static string[] ExpansionNames =
         {
             "None",
             "Konami VRC6",
-#if DEV
             "Konami VRC7",
             "Famicom Disk System",
             "Nintendo MMC5",
             "Namco 163",
             "Sunsoft 5B"
-#endif
         };
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
@@ -412,7 +406,7 @@ namespace FamiStudio
 
             if (channelType >= Channel.Vrc6Square1 && channelType <= Channel.Vrc6Saw)
                 return expansionAudio == ExpansionVrc6;
-#if DEV
+
             if (channelType == Channel.FdsWave)
                 return expansionAudio == ExpansionFds;
 
@@ -427,10 +421,6 @@ namespace FamiStudio
 
             if (channelType >= Channel.SunsoftSquare1 && channelType <= Channel.SunsoftSquare3)
                 return expansionAudio == ExpansionSunsoft;
-#else
-            if (channelType >= Channel.Vrc7Fm1)
-                return false;
-#endif
 
             Debug.Assert(false);
 
@@ -441,12 +431,30 @@ namespace FamiStudio
         {
             get
             {
-#if DEV
                 return expansionAudio != ExpansionNone && expansionAudio != ExpansionMmc5;
-#else
-                return expansionAudio != ExpansionNone;
-#endif
             }
+        }
+
+        public static string[] GetAllowedExpansionNames()
+        {
+            var allowedExpansions = new List<string>();
+
+            for (int i = 0; i < ExpansionCount; i++)
+            {
+                if (IsExpansionAudioAllowed(i))
+                    allowedExpansions.Add(ExpansionNames[i]);
+            }
+
+            return allowedExpansions.ToArray();
+        }
+
+        public static bool IsExpansionAudioAllowed(int expansion)
+        {
+#if DEV
+            return true;
+#else
+            return expansion == ExpansionNone || expansion == ExpansionVrc6;
+#endif
         }
 
         public bool UsesSamples

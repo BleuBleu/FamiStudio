@@ -1,5 +1,3 @@
-Mapper 31:
-- Song change + controls (Need gamepad fix to prevent DPCM interference).
 
 1.5.0: FDS + PAL
 ================
@@ -11,6 +9,9 @@ x FDS support in NesSndEmu
 - Project explorer advanced instrument params (move relative pitch env there).
 - Instrument folders
 - PAL support
+- ROM export (Mapper 31):
+	- Song change + controls (Need gamepad fix to prevent DPCM interference).
+
 
 ========================
 

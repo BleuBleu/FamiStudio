@@ -175,7 +175,7 @@ namespace FamiStudio
 
             return states;
         }
-
+        
         public static int GetNesApuExpansionAudio(Project project)
         {
             switch (project.ExpansionAudio)
@@ -184,7 +184,6 @@ namespace FamiStudio
                     return NesApu.APU_EXPANSION_NONE;
                 case Project.ExpansionVrc6:
                     return NesApu.APU_EXPANSION_VRC6;
-#if DEV
                 case Project.ExpansionVrc7:
                     return NesApu.APU_EXPANSION_VRC7;
                 case Project.ExpansionFds:
@@ -195,7 +194,6 @@ namespace FamiStudio
                     return NesApu.APU_EXPANSION_NAMCO;
                 case Project.ExpansionSunsoft:
                     return NesApu.APU_EXPANSION_SUNSOFT;
-#endif
             }
 
             Debug.Assert(false);

@@ -298,14 +298,12 @@ namespace FamiStudio
 
             bmpSong = g.CreateBitmapFromResource("Music");
             bmpInstrument[Project.ExpansionNone]    = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[Project.ExpansionVrc6]    = g.CreateBitmapFromResource("InstrumentVRC6");
-#if DEV                                             
-            bmpInstrument[Project.ExpansionVrc7]    = g.CreateBitmapFromResource("InstrumentVRC6");
-            bmpInstrument[Project.ExpansionFds]     = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[Project.ExpansionVrc6]    = g.CreateBitmapFromResource("InstrumentKonami");
+            bmpInstrument[Project.ExpansionVrc7]    = g.CreateBitmapFromResource("InstrumentKonami");
+            bmpInstrument[Project.ExpansionFds]     = g.CreateBitmapFromResource("InstrumentFds");
             bmpInstrument[Project.ExpansionMmc5]    = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[Project.ExpansionNamco]   = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[Project.ExpansionSunsoft] = g.CreateBitmapFromResource("Instrument");
-#endif
+            bmpInstrument[Project.ExpansionNamco]   = g.CreateBitmapFromResource("InstrumentNamco");
+            bmpInstrument[Project.ExpansionSunsoft] = g.CreateBitmapFromResource("InstrumentSunsoft");
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
             bmpDuty[0] = g.CreateBitmapFromResource("Duty0");

@@ -118,7 +118,6 @@ namespace FamiStudio
             if (instrument.ExpansionType == Project.ExpansionVrc6 && type >= Vrc6Square1 && type <= Vrc6Saw)
                 return true;
 
-#if DEV
             if (instrument.ExpansionType == Project.ExpansionVrc7 && type >= Vrc7Fm1 && type <= Vrc7Fm6)
                 return true;
 
@@ -134,7 +133,6 @@ namespace FamiStudio
             // MATTT: Will we want special instrument for S5B? Gimmick doesnt use noise or envelopes I think.
             if (instrument.ExpansionType == Project.ExpansionSunsoft && type >= SunsoftSquare1 && type <= SunsoftSquare3)
                 return true;
-#endif
 
             return false;
         }
