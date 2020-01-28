@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Drawing;
 
 namespace FamiStudio
@@ -20,6 +21,8 @@ namespace FamiStudio
         public Envelope[] Envelopes => envelopes;
         public int DutyCycle { get => dutyCycle; set => dutyCycle = value; }
         public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
+        public int NumActiveEnvelopes => envelopes.Count(e => e != null);
+        public bool HasReleaseEnvelope => envelopes[Envelope.Volume].Release >= 0;
 
         public Instrument()
         {
@@ -33,17 +36,36 @@ namespace FamiStudio
             this.name = name;
             this.color = ThemeBase.RandomCustomColor();
             for (int i = 0; i < Envelope.Max; i++)
-                envelopes[i] = new Envelope();
+            {
+                if (IsEnvelopeActive(i))
+                    envelopes[i] = new Envelope();
+            }
         }
 
-        public bool HasReleaseEnvelope
+        public bool IsEnvelopeActive(int envelopeType)
         {
-            get
+            if (envelopeType == Envelope.Volume ||
+                envelopeType == Envelope.Pitch  ||
+                envelopeType == Envelope.Arpeggio)
             {
-                for (int i = 0; i < Envelope.Max; i++)
-                    if (envelopes[i].Release >= 0) return true;
-                return false;
+                return expansion != Project.ExpansionVrc7;
             }
+            else if (envelopeType == Envelope.DutyCycle)
+            {
+                return expansion == Project.ExpansionNone ||
+                       expansion == Project.ExpansionVrc6;
+            }
+            else if (envelopeType == Envelope.FdsWaveform ||
+                     envelopeType == Envelope.FdsModulation)
+            {
+                return expansion == Project.ExpansionFds;
+            }
+            else if (envelopeType == Envelope.NamcoWaveform)
+            {
+                return expansion == Project.ExpansionNamco;
+            }
+
+            return false;
         }
 
         public void SerializeState(ProjectBuffer buffer)
@@ -62,7 +84,8 @@ namespace FamiStudio
             {
                 for (int i = 0; i < Envelope.Max; i++)
                 {
-                    if (envelopes[i] != null) envelopeMask = (byte)(envelopeMask | (1 << i));
+                    if (envelopes[i] != null)
+                        envelopeMask = (byte)(envelopeMask | (1 << i));
                 }
             }
             buffer.Serialize(ref envelopeMask);

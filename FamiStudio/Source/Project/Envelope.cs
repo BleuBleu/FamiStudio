@@ -8,8 +8,12 @@ namespace FamiStudio
         public const int Volume = 0;
         public const int Arpeggio = 1;
         public const int Pitch = 2;
-        public const int Max = 3;
-        public static readonly string[] EnvelopeStrings = { "Volume", "Arpeggio", "Pitch" };
+        public const int DutyCycle = 3;
+        public const int FdsWaveform = 4;
+        public const int FdsModulation = 5;
+        public const int NamcoWaveform = 6;
+        public const int Max = 7;
+        public static readonly string[] EnvelopeStrings = { "Volume", "Arpeggio", "Pitch", "Duty Cycle", "FDS Waveform", "FDS Modulation Table", "Namco Waveform" };
 
         public const int MaxLength = 256;
 

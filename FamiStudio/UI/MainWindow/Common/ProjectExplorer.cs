@@ -60,15 +60,34 @@ namespace FamiStudio
 
         enum SubButtonType
         {
+            // Let's keep this enum and Envelope.XXX values in sync for convenience.
+            VolumeEnvelope = Envelope.Volume,
+            ArpeggioEnvelope = Envelope.Arpeggio,
+            PitchEnvelope = Envelope.Pitch,
+            DutyCycle = Envelope.DutyCycle,
+            FdsWaveformEnvelope = Envelope.FdsWaveform,
+            FdsModulationEnvelope = Envelope.FdsModulation,
+            NamcoWaveformEnvelope = Envelope.NamcoWaveform,
+            EnvelopeMax = Envelope.Max,
+
+            // Other buttons
             Add,
             DPCM,
-            DutyCycle,
-            Arpeggio,
-            Pitch,
-            Volume,
             LoadInstrument,
             Max
         }
+
+        // From right to left. Looks more visually pleasing than the enum order.
+        static readonly int[] EnvelopeDisplayOrder = new int[]
+        {
+            Envelope.Arpeggio,
+            Envelope.Pitch,
+            Envelope.Volume,
+            Envelope.DutyCycle,
+            Envelope.FdsModulation,
+            Envelope.FdsWaveform,
+            Envelope.NamcoWaveform
+        };
 
         class Button
         {
@@ -101,13 +120,21 @@ namespace FamiStudio
                         }
                         else
                         {
-                            active = new[] {
-                                true,
-                                instrument.Envelopes[Envelope.Arpeggio].IsEmpty ? false : true,
-                                instrument.Envelopes[Envelope.Pitch].IsEmpty ? false : true,
-                                instrument.Envelopes[Envelope.Volume].IsEmpty ? false : true
-                            };
-                            return new[] { SubButtonType.DutyCycle, SubButtonType.Arpeggio, SubButtonType.Pitch, SubButtonType.Volume };
+                            var numEnvelopes = instrument.NumActiveEnvelopes;
+                            var buttons = new SubButtonType[numEnvelopes];
+                            active = new bool[numEnvelopes];
+
+                            for (int i = 0, j = 0; i < Envelope.Max; i++)
+                            {
+                                int idx = EnvelopeDisplayOrder[i];
+                                if (instrument.Envelopes[idx] != null)
+                                {
+                                    buttons[j] = (SubButtonType)idx;
+                                    active[j] = idx == Envelope.DutyCycle || !instrument.Envelopes[idx].IsEmpty; // MATTT
+                                    j++;
+                                }
+                            }
+                            return buttons;
                         }
                 }
 
@@ -188,17 +215,11 @@ namespace FamiStudio
                             return projectExplorer.bmpDuty[instrument.DutyCycle];
                         else
                             return projectExplorer.bmpDuty[instrument.DutyCycle * 2];
-                    case SubButtonType.Arpeggio:
-                        return projectExplorer.bmpArpeggio;
-                    case SubButtonType.Pitch:
-                        return projectExplorer.bmpPitch;
-                    case SubButtonType.Volume:
-                        return projectExplorer.bmpVolume;
                     case SubButtonType.LoadInstrument:
                         return projectExplorer.bmpLoadInstrument;
                 }
 
-                return null;
+                return projectExplorer.bmpEnvelopes[(int)sub];
             }
         }
 
@@ -215,13 +236,11 @@ namespace FamiStudio
         RenderTheme theme;
 
         RenderBitmap   bmpSong;
-        RenderBitmap[] bmpInstrument = new RenderBitmap[Project.ExpansionCount];
         RenderBitmap   bmpAdd;
         RenderBitmap   bmpDPCM;
-        RenderBitmap   bmpArpeggio;
-        RenderBitmap   bmpPitch;
-        RenderBitmap   bmpVolume;
         RenderBitmap   bmpLoadInstrument;
+        RenderBitmap[] bmpInstrument = new RenderBitmap[Project.ExpansionCount];
+        RenderBitmap[] bmpEnvelopes = new RenderBitmap[Envelope.Max];
         RenderBitmap[] bmpDuty = new RenderBitmap[8];
 
         public Song SelectedSong => selectedSong;
@@ -296,7 +315,6 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
-            bmpSong = g.CreateBitmapFromResource("Music");
             bmpInstrument[Project.ExpansionNone]    = g.CreateBitmapFromResource("Instrument");
             bmpInstrument[Project.ExpansionVrc6]    = g.CreateBitmapFromResource("InstrumentKonami");
             bmpInstrument[Project.ExpansionVrc7]    = g.CreateBitmapFromResource("InstrumentKonami");
@@ -304,8 +322,15 @@ namespace FamiStudio
             bmpInstrument[Project.ExpansionMmc5]    = g.CreateBitmapFromResource("Instrument");
             bmpInstrument[Project.ExpansionNamco]   = g.CreateBitmapFromResource("InstrumentNamco");
             bmpInstrument[Project.ExpansionSunsoft] = g.CreateBitmapFromResource("InstrumentSunsoft");
-            bmpAdd = g.CreateBitmapFromResource("Add");
-            bmpDPCM = g.CreateBitmapFromResource("DPCM");
+
+            bmpEnvelopes[Envelope.Volume]        = g.CreateBitmapFromResource("Volume");
+            bmpEnvelopes[Envelope.Arpeggio]      = g.CreateBitmapFromResource("Arpeggio");
+            bmpEnvelopes[Envelope.Pitch]         = g.CreateBitmapFromResource("Pitch");
+            bmpEnvelopes[Envelope.DutyCycle]     = g.CreateBitmapFromResource("Duty0"); // MATTT
+            bmpEnvelopes[Envelope.FdsWaveform]   = g.CreateBitmapFromResource("Wave");
+            bmpEnvelopes[Envelope.FdsModulation] = g.CreateBitmapFromResource("Wave");
+            bmpEnvelopes[Envelope.NamcoWaveform] = g.CreateBitmapFromResource("Wave");
+
             bmpDuty[0] = g.CreateBitmapFromResource("Duty0");
             bmpDuty[1] = g.CreateBitmapFromResource("Duty1");
             bmpDuty[2] = g.CreateBitmapFromResource("Duty2");
@@ -314,9 +339,10 @@ namespace FamiStudio
             bmpDuty[5] = g.CreateBitmapFromResource("Duty5");
             bmpDuty[6] = g.CreateBitmapFromResource("Duty6");
             bmpDuty[7] = g.CreateBitmapFromResource("Duty7");
-            bmpArpeggio = g.CreateBitmapFromResource("Arpeggio");
-            bmpPitch = g.CreateBitmapFromResource("Pitch");
-            bmpVolume = g.CreateBitmapFromResource("Volume");
+
+            bmpSong = g.CreateBitmapFromResource("Music");
+            bmpAdd = g.CreateBitmapFromResource("Add");
+            bmpDPCM = g.CreateBitmapFromResource("DPCM");
             bmpLoadInstrument = g.CreateBitmapFromResource("InstrumentOpen");
         }
 
@@ -490,16 +516,12 @@ namespace FamiStudio
                     }
                     else
                     {
-                        if (subButtonType == SubButtonType.Volume)
-                            tooltip = "{MouseLeft} Edit volume enveloppe - {MouseRight} Delete envelope - {Drag} Copy envelope";
-                        else if (subButtonType == SubButtonType.Pitch)
-                            tooltip = "{MouseLeft} Edit pitch enveloppe - {MouseRight} Delete envelope - {Drag} Copy envelope";
-                        else if (subButtonType == SubButtonType.Arpeggio)
-                            tooltip = "{MouseLeft} Edit arpeggio enveloppe - {MouseRight} Delete envelope - {Drag} Copy envelope";
-                        else if (subButtonType == SubButtonType.DPCM)
+                        if (subButtonType == SubButtonType.DPCM)
                             tooltip = "{MouseLeft} Edit DPCM samples";
                         else if (subButtonType == SubButtonType.DutyCycle)
                             tooltip = "{MouseLeft} Change duty cycle";
+                        else if (subButtonType < SubButtonType.EnvelopeMax)
+                            tooltip = $"{{MouseLeft}} Edit {Envelope.EnvelopeStrings[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{Drag}} Copy envelope";
                     }
                 }
             }
@@ -691,29 +713,19 @@ namespace FamiStudio
                             instrumentDrag = selectedInstrument;
                             mouseDragY = e.Y;
                         }
-                    
-                        if (subButtonType == SubButtonType.Volume)
-                        {
-                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Volume);
-                            envelopeDragIdx = Envelope.Volume;
-                        }
-                        else if (subButtonType == SubButtonType.Pitch)
-                        {
-                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Pitch);
-                            envelopeDragIdx = Envelope.Pitch;
-                        }
-                        else if (subButtonType == SubButtonType.Arpeggio)
-                        {
-                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Arpeggio);
-                            envelopeDragIdx = Envelope.Arpeggio;
-                        }
-                        else if (subButtonType == SubButtonType.DPCM)
+                   
+                        if (subButtonType == SubButtonType.DPCM)
                         {
                             InstrumentEdited?.Invoke(selectedInstrument, Envelope.Max);
                         }
                         else if (subButtonType == SubButtonType.DutyCycle)
                         {
                             selectedInstrument.DutyCycle = (selectedInstrument.DutyCycle + 1) % selectedInstrument.DutyCycleRange;
+                        }
+                        else if (subButtonType < SubButtonType.EnvelopeMax)
+                        {
+                            InstrumentEdited?.Invoke(selectedInstrument, (int)subButtonType);
+                            envelopeDragIdx = (int)subButtonType;
                         }
 
                         InstrumentSelected?.Invoke(selectedInstrument);
@@ -743,16 +755,16 @@ namespace FamiStudio
                     {
                         var instrument = button.instrument;
 
-                        if (subButtonType == SubButtonType.Arpeggio ||
-                            subButtonType == SubButtonType.Pitch ||
-                            subButtonType == SubButtonType.Volume)
+                        if (subButtonType == SubButtonType.ArpeggioEnvelope ||
+                            subButtonType == SubButtonType.PitchEnvelope ||
+                            subButtonType == SubButtonType.VolumeEnvelope)
                         {
                             int envType = Envelope.Volume;
 
                             switch (subButtonType)
                             {
-                                case SubButtonType.Arpeggio: envType = Envelope.Arpeggio; break;
-                                case SubButtonType.Pitch: envType = Envelope.Pitch;    break;
+                                case SubButtonType.ArpeggioEnvelope: envType = Envelope.Arpeggio; break;
+                                case SubButtonType.PitchEnvelope: envType = Envelope.Pitch;    break;
                             }
 
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);

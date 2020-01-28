@@ -258,6 +258,8 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Wave%402x.png" />
+    <EmbeddedResource Include="Resources\Wave.png" />
     <EmbeddedResource Include="Resources\InstrumentFds%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentFds.png" />
     <EmbeddedResource Include="Resources\InstrumentKonami%402x.png" />
