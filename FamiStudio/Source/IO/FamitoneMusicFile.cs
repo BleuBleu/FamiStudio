@@ -59,7 +59,7 @@ namespace FamiStudio
                 var env = instrument.Envelopes[Envelope.Volume];
                 if (env == null)
                 {
-                    env = new Envelope(); 
+                    env = new Envelope(Envelope.Volume); 
                     instrument.Envelopes[Envelope.Volume] = env;
                 }
                 if (env.Length == 0)

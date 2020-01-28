@@ -15,22 +15,42 @@ namespace FamiStudio
         public const int Max = 7;
         public static readonly string[] EnvelopeStrings = { "Volume", "Arpeggio", "Pitch", "Duty Cycle", "FDS Waveform", "FDS Modulation Table", "Namco Waveform" };
 
-        public const int MaxLength = 256;
-
-        sbyte[] values = new sbyte[MaxLength];
+        sbyte[] values;
         int length;
         int loop = -1;
         int release = -1;
+        int maxLength = 256;
         bool relative = false;
+        bool canResize;
 
         public sbyte[] Values => values;
+        public bool CanResize => canResize;
+
+        private Envelope()
+        {
+        }
+
+        public Envelope(int type)
+        {
+            if (type == FdsWaveform)
+                maxLength = 64;
+            else if (type == FdsModulation || type == NamcoWaveform)
+                maxLength = 32;
+            else 
+                maxLength = 256;
+
+            values = new sbyte[maxLength];
+            canResize = type != FdsWaveform && type != FdsModulation;
+            length = canResize ? 0 : maxLength;
+        }
 
         public int Length
         {
             get { return length; }
             set
             {
-                length = Utils.Clamp(value, 0, MaxLength);
+                if (canResize)
+                    length = Utils.Clamp(value, 0, maxLength);
                 if (loop >= length)
                     loop = -1;
                 if (release >= length)
@@ -48,7 +68,7 @@ namespace FamiStudio
                     if (release >= 0)
                         loop = Utils.Clamp(value, 0, release - 1);
                     else
-                        loop = Math.Min(value, MaxLength);
+                        loop = Math.Min(value, maxLength);
 
                     if (loop >= length)
                         loop = -1;
@@ -69,7 +89,7 @@ namespace FamiStudio
                 if (value >= 0)
                 {
                     if (loop >= 0)
-                        release = Utils.Clamp(value, loop + 1, MaxLength);
+                        release = Utils.Clamp(value, loop + 1, maxLength);
 
                     if (release >= length)
                         release = -1;
@@ -79,6 +99,63 @@ namespace FamiStudio
                     release = -1;
                 }
             }
+        }
+
+        readonly sbyte[] FdsModulationDeltas = new sbyte[] { 0, 1, 2, 4, 0, -4, -2, -1 };
+
+        public sbyte[] BuildFdsModulationTable()
+        {
+            // FDS modulation table is encoded on 3 bits, each value is a delta
+            // with the exception of 4 which is a reset to zero. Since the 
+            // table is written in pair, these deltas are actually double.
+
+            // 0 =  0
+            // 1 = +1
+            // 2 = +2
+            // 3 = +4
+            // 4 = reset to 0
+            // 5 = -4
+            // 6 = -2
+            // 7 = -1
+
+            var mod = new sbyte[length];
+            var prev = 0;
+
+            // Force starting at zero.
+            mod[0] = 4;
+
+            for (int i = 1; i < length; i++)
+            {
+                int val = values[i];
+
+                if (val == 0)
+                {
+                    mod[i] = 4; // Reset to zero.
+                    prev   = 0;
+                }
+                else
+                {
+                    // Find best delta (greedy algorithm, probably not best approximation of curve).
+                    int minDiff = 99999;
+
+                    for (int j = 0; j < FdsModulationDeltas.Length; j++)
+                    {
+                        if (j == 4) continue;
+
+                        // Assume the delta will be applied twice.
+                        var diff = Math.Abs((prev + FdsModulationDeltas[j] * 2) - val);
+                        if (diff < minDiff)
+                        {
+                            minDiff = diff;
+                            mod[i] = (sbyte)j;
+                        }
+                    }
+
+                    prev = prev + FdsModulationDeltas[mod[i]] * 2;
+                }
+            }
+
+            return mod;
         }
 
         public bool Relative
