@@ -100,7 +100,7 @@ namespace FamiStudio
 
                     if (type < 3)
                     {
-                        var env = new Envelope();
+                        var env = new Envelope(type);
                         env.Length = curve.Length;
 
                         // FamiTracker allows envelope with release with no loop. We dont allow that.

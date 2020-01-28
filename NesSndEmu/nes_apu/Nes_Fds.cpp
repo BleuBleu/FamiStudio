@@ -117,6 +117,9 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 {
 	require(end_time >= last_time);
 
+	if (!osc.output)
+		return;
+
 	cpu_time_t time = last_time;
 
 	time += osc.delay;

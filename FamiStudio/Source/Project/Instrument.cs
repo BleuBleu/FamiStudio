@@ -38,7 +38,7 @@ namespace FamiStudio
             for (int i = 0; i < Envelope.Max; i++)
             {
                 if (IsEnvelopeActive(i))
-                    envelopes[i] = new Envelope();
+                    envelopes[i] = new Envelope(i);
             }
         }
 
@@ -95,7 +95,7 @@ namespace FamiStudio
                 if ((envelopeMask & (1 << i)) != 0)
                 {
                     if (buffer.IsReading)
-                        envelopes[i] = new Envelope();
+                        envelopes[i] = new Envelope(i);
                     envelopes[i].SerializeState(buffer);
                 }
                 else
