@@ -22,11 +22,25 @@ New encoding:
 	$80 | (n << 1) Instrument change, max 64
 	$81 | (n << 1) Series of n empty notes (max 58 because 59 = $f7, 60 = $f9, 61 = $fb, 62 = $fd)
 	$f7            Release note (3b)
-	$f9            Repeat (3c)
+	; $f9            Repeat (3c) NOT A CODE, series of n empty notes.
 	$fb            Speed change (3d)
 	$fd            Jump (3e)
 	$ff, n, ref    Plays n notes starting at ref
-	
+
+New new encoding idea:
+
+	0x00 - 0x61 : Notes 
+	0x62 - 0x6f : Rare commands (jumps, refs, etc.)
+	0x70 - 0x7f : Volume
+	0x80 - 0xff : Bits + [payload of of N bytes depending of bits sets]
+		0x40 = Instrument change
+		0x20 = Has attack -> instrument change must have this too, silly
+		0x10 = Has pitch override (add extra byte to say if need to clear flag or not)
+		0x08 = Has slide data 
+		0x04 = Has empty notes
+		0x02 = Has speed change
+		0x01 = Has fine pitch
+
 Effects doug added in FT3/4/5:
 - 1xy/2xy      Slide up/down, useful since our pitch env are absolute. Good substitude for lack of HW sweep. DuckTables and JTS could have used that.
 - 3xx          Partamento, useful, but wait until i see a game that uses it.
