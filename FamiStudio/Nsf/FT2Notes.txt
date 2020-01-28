@@ -27,7 +27,7 @@ New encoding:
 	$fd            Jump (3e)
 	$ff, n, ref    Plays n notes starting at ref
 
-New new encoding idea:
+New new encoding idea (need to look at real data):
 
 	0x00 - 0x61 : Notes 
 	0x62 - 0x6f : Rare commands (jumps, refs, etc.)
@@ -40,6 +40,31 @@ New new encoding idea:
 		0x04 = Has empty notes
 		0x02 = Has speed change
 		0x01 = Has fine pitch
+
+Typical sequences in Shovel Knight:
+
+	; Intro, lots of volume.
+	$80,$0f,$a5, (Instrument + note + empty notes)
+	$82,$1b,$91, (Instrument + note + empty notes)
+	$22,$89,$f7,$85, (Note + empty + release + empty)
+	$20,$87,$7c,$93,$7a,$85,$79,$93,$78,$97 (note + empty + volume + empty + volume + ...)
+
+	; More typical.	
+	$25,$8f,$00, (Note + empty + stop)
+	$9c,$3f,$8f,$00, (instrument + note + empty + stop)
+	$84,$20,$8f,$00,
+	$26,$8f,$00, (note + empty + stop)
+	$26,$8f,$00,
+	$9c,$3f,$8f,$00,
+	$84,$27,$8f,$00
+	
+	; Some use of new features.
+	$62,$1b,$85 (no attach + note + empty)
+	$2e,$89,$f7,$85 (note + empty + release + empty)
+	$33,$91 (note + empty)
+	$3a,$89,$f7,$85 (note + empty + release + empty)
+	$38,$99 (note + empty)
+	$63,<(@env22),>(@env22),$8d,$f7,$63,<(@env15),>(@env15),$64  (override pitch, empty, release, override + cancel override)
 
 Effects doug added in FT3/4/5:
 - 1xy/2xy      Slide up/down, useful since our pitch env are absolute. Good substitude for lack of HW sweep. DuckTables and JTS could have used that.
