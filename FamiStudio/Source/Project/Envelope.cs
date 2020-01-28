@@ -235,6 +235,9 @@ namespace FamiStudio
         {
             get
             {
+                if (!canResize)
+                    return false;
+
                 if (length == 0)
                     return true;
 

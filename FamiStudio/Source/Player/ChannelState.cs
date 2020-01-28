@@ -99,7 +99,7 @@ namespace FamiStudio
             }
         }
 
-        public void PlayNote(Note newNote)
+        public void PlayNote(Note newNote, bool forceInstrumentChange = false)
         {
             if (!newNote.HasVolume)
                 newNote.Volume = note.Volume;
@@ -117,7 +117,7 @@ namespace FamiStudio
             }
             else
             {
-                bool instrumentChanged = note.Instrument != newNote.Instrument;
+                bool instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentChange;
 
                 note = newNote;
 
@@ -134,6 +134,11 @@ namespace FamiStudio
                     }
 
                     envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
+                }
+
+                if (instrumentChanged)
+                {
+                    LoadInstrument(note.Instrument);
                 }
             }
         }
@@ -233,6 +238,10 @@ namespace FamiStudio
             var vol = (int)Math.Round((v0 / 15.0f) * (v1 / 15.0f) * 15.0f);
             if (vol == 0 && v0 != 0 && v1 != 0) return 1;
             return vol;
+        }
+
+        protected virtual void LoadInstrument(Instrument instrument)
+        {
         }
 
         public abstract void UpdateAPU();
