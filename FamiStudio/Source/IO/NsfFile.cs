@@ -198,5 +198,47 @@ namespace FamiStudio
 
             return true;
         }
+
+#if FAMISTUDIO_WINDOWS
+        private const string NotSoFatsoDll = "NotSoFatso.dll";
+#elif FAMISTUDIO_MACOS
+        private const string NotSoFatsoDll = "NotSoFatso.dylib";
+#else
+        private const string NotSoFatsoDll = "NotSoFatso.so";
+#endif
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ApuRegWriteDelegate(ushort addr, byte data);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate int CpuFrameCompletedDelegate();
+
+        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NsfExecute")]
+        public extern static int NsfExecute(string fie, int track, [MarshalAs(UnmanagedType.FunctionPtr)] ApuRegWriteDelegate regWriteCallback, [MarshalAs(UnmanagedType.FunctionPtr)] CpuFrameCompletedDelegate frameCompletedCallback);
+
+        static byte[] RegisterValues = new byte[22];
+
+        private static void ApuRegisterWrite(ushort addr, byte data)
+        {
+            RegisterValues[addr - 0x4000] = data;
+        }
+
+        private static int CpuFrameCompleted()
+        {
+            return 1;
+        }
+
+        public static void Load(string filename)
+        {
+            var apuRegWriteCallback       = new ApuRegWriteDelegate(ApuRegisterWrite);
+            var cpuFrameCompletedCallback = new CpuFrameCompletedDelegate(CpuFrameCompleted);
+            var apuRegWriteCallbackHandle = GCHandle.Alloc(apuRegWriteCallback); // Needed since callback can be collected.
+            var cpuFrameCompletedHandle   = GCHandle.Alloc(apuRegWriteCallback); // Needed since callback can be collected.
+
+            NsfExecute(filename, 1, ApuRegisterWrite, CpuFrameCompleted);
+
+            apuRegWriteCallbackHandle.Free();
+            cpuFrameCompletedHandle.Free();
+        }
     }
 }

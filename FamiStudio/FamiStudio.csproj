@@ -258,6 +258,9 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="NotSoFatso.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="Resources\PitchSmall%402x.png" />
     <EmbeddedResource Include="Resources\PitchSmall.png" />
     <EmbeddedResource Include="Resources\Wave%402x.png" />
