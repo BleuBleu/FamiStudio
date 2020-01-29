@@ -301,7 +301,7 @@ namespace FamiStudio
             patterns.AddRange(usedPatterns);
         }
 
-        public byte GetLastValidEffectValue(int startPatternIdx, int effect)
+        public int GetLastValidEffectValue(int startPatternIdx, int effect)
         {
             for (int p = startPatternIdx; p >= 0; p--)
             {
@@ -313,7 +313,7 @@ namespace FamiStudio
                 }
             }
 
-            return (byte)Note.GetEffectDefaultValue(song, effect);
+            return Note.GetEffectDefaultValue(song, effect);
         }
 
         public bool GetLastValidNote(ref int patternIdx, out int noteIdx, out bool released)

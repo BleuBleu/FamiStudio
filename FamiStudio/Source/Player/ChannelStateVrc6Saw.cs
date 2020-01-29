@@ -17,9 +17,8 @@ namespace FamiStudio
             }
             else if (note.IsValid)
             {
-                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                var period = Math.Min(maximumPeriod, noteTable[noteVal] + GetSlidePitch() + envelopeValues[Envelope.Pitch]);
-                var volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
+                var period = GetPeriod();
+                var volume = GetVolume();
 
                 // Get hi-bit from duty, similar to FamiTracker, but taking volume into account.
                 // FamiTracker looses ability to output low volume when duty is odd.

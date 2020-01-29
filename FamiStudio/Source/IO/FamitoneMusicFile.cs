@@ -222,6 +222,10 @@ namespace FamiStudio
                 for (int i = 0; i < Envelope.Max; i++)
                 {
                     var env = instrument.Envelopes[i];
+
+                    if (env == null)
+                        continue;
+
                     var processed = 
                         ProcessEnvelope(env, 
                             i == Envelope.Volume && kernel == FamiToneKernel.FamiTone2FS, 

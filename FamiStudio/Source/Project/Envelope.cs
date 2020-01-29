@@ -179,7 +179,7 @@ namespace FamiStudio
 
         public Envelope Clone()
         {
-            var env = new Envelope();
+            var env = new Envelope(); // MATTT: We dont copy all the values here.
             env.Length = length;
             env.Loop = loop;
             env.Release = release;
@@ -198,7 +198,7 @@ namespace FamiStudio
                 speed >= 0 && speed <= Note.VibratoSpeedMax && 
                 depth >= 0 && depth <= Note.VibratoDepthMax);
 
-            var env = new Envelope();
+            var env = new Envelope(Envelope.Pitch);
 
             if (speed == 0 || depth == 0)
             {

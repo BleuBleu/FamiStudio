@@ -49,9 +49,8 @@ namespace FamiStudio
             }
             else if (note.IsValid)
             {
-                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                var period = Math.Min(maximumPeriod, noteTable[noteVal] + GetSlidePitch() + envelopeValues[Envelope.Pitch]);
-                var volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
+                var period = GetPeriod();
+                var volume = GetVolume();
 
                 WriteRegister(NesApu.FDS_FREQ_LO, (period >> 0) & 0xff);
                 WriteRegister(NesApu.FDS_FREQ_HI, (period >> 8) & 0x0f);

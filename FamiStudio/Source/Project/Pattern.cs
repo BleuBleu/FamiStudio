@@ -15,11 +15,11 @@ namespace FamiStudio
         private Color color;
         private Note[] notes = new Note[MaxLength];
 
-        private int    firstValidNoteTime    = -1;
-        private int    lastValidNoteTime     = -1;
-        private int    lastEffectValuesMask  = 0;
-        private byte[] lastEffectValues      = new byte[Note.EffectCount];
-        private bool   lastValidNoteReleased = false;
+        private int   firstValidNoteTime    = -1;
+        private int   lastValidNoteTime     = -1;
+        private int   lastEffectValuesMask  = 0;
+        private int[] lastEffectValues      = new int[Note.EffectCount];
+        private bool  lastValidNoteReleased = false;
 
         public int Id => id;
         public int ChannelType => channelType;
@@ -177,7 +177,7 @@ namespace FamiStudio
                     if (note.HasValidEffectValue(i) && (lastEffectValuesMask & mask) == 0)
                     {
                         lastEffectValuesMask |= mask;
-                        lastEffectValues[i] = (byte)note.GetEffectValue(i);
+                        lastEffectValues[i] = note.GetEffectValue(i);
                     }
                 }
             }
@@ -234,7 +234,7 @@ namespace FamiStudio
             return (lastEffectValuesMask & (1 << effect)) != 0;
         }
 
-        public byte GetLastEffectValue(int effect)
+        public int GetLastEffectValue(int effect)
         {
             return lastEffectValues[effect];
         }

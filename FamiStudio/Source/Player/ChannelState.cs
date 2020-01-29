@@ -97,12 +97,18 @@ namespace FamiStudio
             {
                 note.Volume = newNote.Volume;
             }
+            else if (newNote.HasFinePitch)
+            {
+                note.Pitch = newNote.Pitch;
+            }
         }
 
         public void PlayNote(Note newNote, bool forceInstrumentChange = false)
         {
             if (!newNote.HasVolume)
                 newNote.Volume = note.Volume;
+            if (!newNote.HasFinePitch)
+                newNote.Pitch = 0;
 
             if (newNote.IsRelease)
             {
@@ -242,6 +248,17 @@ namespace FamiStudio
 
         protected virtual void LoadInstrument(Instrument instrument)
         {
+        }
+
+        protected int GetPeriod()
+        {
+            var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
+            return Math.Min(maximumPeriod, noteTable[noteVal] + note.FinePitch + GetSlidePitch() + envelopeValues[Envelope.Pitch]);
+        }
+
+        protected int GetVolume()
+        {
+            return MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
         }
 
         public abstract void UpdateAPU();

@@ -20,9 +20,8 @@ namespace FamiStudio
             }
             else if (note.IsValid)
             {
-                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                var period = Utils.Clamp(noteTable[noteVal] + GetSlidePitch() + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
-                var volume = MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
+                var period = GetPeriod();
+                var volume = GetVolume();
 
                 var periodHi = (period >> 8) & 0x07;
                 var periodLo = period & 0xff;

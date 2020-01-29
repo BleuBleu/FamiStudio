@@ -133,7 +133,7 @@ namespace FamiStudio
         RenderBitmap bmpEffectCollapsed;
         RenderBitmap bmpSlide;
         RenderBitmap bmpSlideSmall;
-        RenderBitmap[] bmpEffects = new RenderBitmap[6];
+        RenderBitmap[] bmpEffects = new RenderBitmap[Note.EffectCount];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] releaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
@@ -397,12 +397,13 @@ namespace FamiStudio
             attackBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.BlackColor));
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
-            bmpEffects[0] = g.CreateBitmapFromResource("VolumeSmall");
-            bmpEffects[1] = g.CreateBitmapFromResource("VibratoSmall");
-            bmpEffects[2] = g.CreateBitmapFromResource("VibratoSmall");
-            bmpEffects[3] = g.CreateBitmapFromResource("LoopSmall");
-            bmpEffects[4] = g.CreateBitmapFromResource("JumpSmall");
-            bmpEffects[5] = g.CreateBitmapFromResource("SpeedSmall");
+            bmpEffects[Note.EffectVolume] = g.CreateBitmapFromResource("VolumeSmall");
+            bmpEffects[Note.EffectVibratoSpeed] = g.CreateBitmapFromResource("VibratoSmall");
+            bmpEffects[Note.EffectVibratoDepth] = g.CreateBitmapFromResource("VibratoSmall");
+            bmpEffects[Note.EffectFinePitch] = g.CreateBitmapFromResource("PitchSmall");
+            bmpEffects[Note.EffectJump] = g.CreateBitmapFromResource("LoopSmall");
+            bmpEffects[Note.EffectSkip] = g.CreateBitmapFromResource("JumpSmall");
+            bmpEffects[Note.EffectSpeed] = g.CreateBitmapFromResource("SpeedSmall");
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
             bmpSlide = g.CreateBitmapFromResource("Slide");
@@ -635,6 +636,7 @@ namespace FamiStudio
                         "Volume",
                         "Vib Speed",
                         "Vib Depth",
+                        "Pitch",
                         "Jump",
                         "Skip",
                         "Speed"
@@ -733,6 +735,7 @@ namespace FamiStudio
                 {
                     var lastFrame = -1;
                     var lastValue = channel.GetLastValidEffectValue(a.minVisiblePattern - 1, selectedEffectIdx);
+                    var minValue  = Note.GetEffectMinValue(Song, selectedEffectIdx);
                     var maxValue  = Note.GetEffectMaxValue(Song, selectedEffectIdx);
 
                     for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
@@ -751,9 +754,9 @@ namespace FamiStudio
                                     g.PushTranslation(x + i * noteSizeX - scrollX, 0);
 
                                     var frame = p * Song.PatternLength + i;
-                                    var sizeY = (float)Math.Floor(lastValue / (float)maxValue * effectPanelSizeY);
+                                    var sizeY = (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
                                     g.FillRectangle(lastFrame < 0 ? -noteSizeX * 100000 : (frame - lastFrame - 1) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
-                                    lastValue = (byte)note.GetEffectValue(selectedEffectIdx);
+                                    lastValue = note.GetEffectValue(selectedEffectIdx);
                                     lastFrame = frame;
 
                                     g.PopTransform();
@@ -763,7 +766,7 @@ namespace FamiStudio
                     }
 
                     g.PushTranslation(Math.Max(0, lastFrame * noteSizeX - scrollX), 0);
-                    var lastSizeY = (float)Math.Floor(lastValue / (float)maxValue * effectPanelSizeY);
+                    var lastSizeY = (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
                     g.FillRectangle(0, effectPanelSizeY - lastSizeY, Width, effectPanelSizeY, theme.DarkGreyFillBrush2);
                     g.PopTransform();
                 }
@@ -1428,6 +1431,13 @@ namespace FamiStudio
                 {
                     Envelope.GetMinMaxValue(editEnvelope, out int min, out int max);
                     editInstrument.Envelopes[editEnvelope].Values[idx] = (sbyte)Math.Max(min, Math.Min(max, value));
+
+                    // MATTT
+                    if (editEnvelope == Envelope.FdsModulation)
+                    {
+                        editInstrument.Envelopes[editEnvelope].BuildFdsModulationTable();
+                    }
+
                     ConditionalInvalidate();
                 }
             }

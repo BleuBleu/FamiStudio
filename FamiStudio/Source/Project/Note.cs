@@ -21,23 +21,29 @@ namespace FamiStudio
             "B"
         };
 
-        // TODO: Get rid of this effect thing. Too much like FamiTracker, that's not what we want.
         public const int EffectVolume       = 0;
         public const int EffectVibratoSpeed = 1; // 4Xy
         public const int EffectVibratoDepth = 2; // 4xY
-        public const int EffectJump         = 3; // Bxx
-        public const int EffectSkip         = 4; // Dxx
-        public const int EffectSpeed        = 5; // Fxx
-        public const int EffectCount        = 6;
+        public const int EffectFinePitch    = 3; // Pxx
+        public const int EffectJump         = 4; // Bxx
+        public const int EffectSkip         = 5; // Dxx
+        public const int EffectSpeed        = 6; // Fxx
+        public const int EffectCount        = 7;
 
-        public const int SpeedInvalid    = 0xff;
-        public const int JumpInvalid     = 0xff;
-        public const int SkipInvalid     = 0xff;
-        public const int VolumeInvalid   = 0xff;
-        public const int VolumeMax       = 0x0f;
-        public const int VibratoInvalid  = 0xf0;
-        public const int VibratoSpeedMax = 0x0c;
-        public const int VibratoDepthMax = 0x0f;
+        // TODO: Have a bitmask that tells us which effects have a valid value instead
+        // of these super-hacky arbitrary values.
+        public const int SpeedInvalid     = 0xff;
+        public const int JumpInvalid      = 0xff;
+        public const int SkipInvalid      = 0xff;
+        public const int VolumeInvalid    = 0xff;
+        public const int FinePitchInvalid = -128;
+        public const int VibratoInvalid   = 0xf0;
+
+        public const int VolumeMax        = 0x0f;
+        public const int VibratoSpeedMax  = 0x0c;
+        public const int VibratoDepthMax  = 0x0f;
+        public const int FinePitchMin     = -127;
+        public const int FinePitchMax     =  127;
 
         public const int FlagsNone       = 0x00;
         public const int FlagsNoAttack   = 0x01;
@@ -58,6 +64,7 @@ namespace FamiStudio
         public byte Jump;
         public byte Skip;
         public byte Slide;
+        public sbyte Pitch; // Fine pitch.
         public Instrument Instrument;
 
         public Note(int value)
@@ -70,6 +77,7 @@ namespace FamiStudio
             Speed = SpeedInvalid;
             Slide = 0;
             Flags = 0;
+            Pitch = FinePitchInvalid;
             Instrument = null;
         }
 
@@ -87,6 +95,7 @@ namespace FamiStudio
                 Speed = SpeedInvalid;
                 Volume = VolumeInvalid;
                 Vibrato = VibratoInvalid;
+                Pitch = FinePitchInvalid;
             }
         }
 
@@ -147,6 +156,12 @@ namespace FamiStudio
             }
         }
 
+        public sbyte FinePitch
+        {
+            get { return Pitch; }
+            set { Pitch = value; }
+        }
+
         public bool HasVolume
         {
             get { return Volume != VolumeInvalid; }
@@ -157,6 +172,12 @@ namespace FamiStudio
         {
             get { return Vibrato != VibratoInvalid; }
             set { if (!value) Vibrato = VibratoInvalid; }
+        }
+
+        public bool HasFinePitch
+        {
+            get { return Pitch != FinePitchInvalid; }
+            set { if (!value) Pitch = FinePitchInvalid; }
         }
 
         public bool HasAttack
@@ -217,6 +238,7 @@ namespace FamiStudio
                 case EffectVolume       : return HasVolume;
                 case EffectVibratoDepth : return HasVibrato;
                 case EffectVibratoSpeed : return HasVibrato;
+                case EffectFinePitch    : return HasFinePitch;
                 case EffectJump         : return HasJump;
                 case EffectSkip         : return HasSkip;
                 case EffectSpeed        : return HasSpeed;
@@ -232,6 +254,7 @@ namespace FamiStudio
                 case EffectVolume       : return Volume;
                 case EffectVibratoDepth : return VibratoDepth;
                 case EffectVibratoSpeed : return VibratoSpeed;
+                case EffectFinePitch    : return Pitch;
                 case EffectJump         : return Jump;
                 case EffectSkip         : return Skip;
                 case EffectSpeed        : return Speed;
@@ -244,12 +267,13 @@ namespace FamiStudio
         {
             switch (fx)
             {
-                case EffectVolume       : Volume       = (byte)val; break;
-                case EffectVibratoDepth : VibratoDepth = (byte)val; break;
-                case EffectVibratoSpeed : VibratoSpeed = (byte)val; break;
-                case EffectJump         : Jump         = (byte)val; break;
-                case EffectSkip         : Skip         = (byte)val; break;
-                case EffectSpeed        : Speed        = (byte)val; break;
+                case EffectVolume       : Volume       =  (byte)val; break;
+                case EffectVibratoDepth : VibratoDepth =  (byte)val; break;
+                case EffectVibratoSpeed : VibratoSpeed =  (byte)val; break;
+                case EffectFinePitch    : Pitch        = (sbyte)val; break;
+                case EffectJump         : Jump         =  (byte)val; break;
+                case EffectSkip         : Skip         =  (byte)val; break;
+                case EffectSpeed        : Speed        =  (byte)val; break;
             }
         }
         
@@ -260,6 +284,7 @@ namespace FamiStudio
                 case EffectVolume       : Volume  = VolumeInvalid;  break;
                 case EffectVibratoDepth : Vibrato = VibratoInvalid; break;
                 case EffectVibratoSpeed : Vibrato = VibratoInvalid; break;
+                case EffectFinePitch    : Pitch   = FinePitchInvalid;   break;
                 case EffectJump         : Jump    = JumpInvalid;    break;
                 case EffectSkip         : Skip    = SkipInvalid;    break;
                 case EffectSpeed        : Speed   = SpeedInvalid;   break;
@@ -274,6 +299,7 @@ namespace FamiStudio
                 case EffectVibratoDepth : 
                 case EffectVibratoSpeed :
                 case EffectSpeed:
+                case EffectFinePitch:
                     return true;
             }
 
@@ -282,6 +308,11 @@ namespace FamiStudio
         
         public static int GetEffectMinValue(Song song, int fx)
         {
+            switch (fx)
+            {
+                case EffectFinePitch:
+                    return FinePitchMin;
+            }
             return 0;
         }
 
@@ -292,6 +323,7 @@ namespace FamiStudio
                 case EffectVolume       : return VolumeMax;
                 case EffectVibratoDepth : return VibratoDepthMax;
                 case EffectVibratoSpeed : return VibratoSpeedMax;
+                case EffectFinePitch    : return FinePitchMax;
                 case EffectJump         : return Math.Min(254, song.Length);
                 case EffectSkip         : return Math.Min(254, song.PatternLength);
                 case EffectSpeed        : return 31;
@@ -323,7 +355,13 @@ namespace FamiStudio
         {
             buffer.Serialize(ref Value);
 
-            // At version 4(FamiStudio 1.4.0), we refactored the notes, added slide notes, vibrato and no-attack notes (flags).
+            // At version 5 (FamiStudio 1.5.0), we added fine pitch effect.
+            if (buffer.Version >= 5)
+            {
+                buffer.Serialize(ref Pitch);
+            }
+
+            // At version 4 (FamiStudio 1.4.0), we refactored the notes, added slide notes, vibrato and no-attack notes (flags).
             if (buffer.Version >= 4)
             {
                 buffer.Serialize(ref Jump);
