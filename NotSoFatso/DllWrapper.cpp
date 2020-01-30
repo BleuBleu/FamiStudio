@@ -1,9 +1,5 @@
-// MATTT: Remove this!
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#define max(a, b) ((a) > (b) ? (a) : (b))
-
-#include "NSF_File.h"
 #include "NSF_Core.h"
+#include "NSF_File.h"
 
 #ifdef LINUX
 #define __stdcall

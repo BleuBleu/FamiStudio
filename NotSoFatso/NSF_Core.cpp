@@ -21,8 +21,6 @@
 //  NSF_Core.cpp
 //
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 #include <stdio.h>
 #include "NSF_Core.h"
 #include "NSF_File.h"
@@ -1074,7 +1072,7 @@ CNSFCore::CNSFCore()
 	mWave_VRC6Saw.nInvertFreqCutoff = 0xFFFF;
 	mWave_MMC5Square[0].nInvertFreqCutoff = 0xFFFF;
 	mWave_MMC5Square[1].nInvertFreqCutoff = 0xFFFF;
-	memset(mWave_N106.nInvertFreqCutoff,0, 4*8*8);
+	ZeroMemory(mWave_N106.nInvertFreqCutoff,4*8*8);
 	mWave_FME07[0].nInvertFreqCutoff = 0xFFFF;
 	mWave_FME07[1].nInvertFreqCutoff = 0xFFFF;
 	mWave_FME07[2].nInvertFreqCutoff = 0xFFFF;
@@ -1703,7 +1701,7 @@ void CNSFCore::RecalculateInvertFreqs(int cutoff)
 		mWave_VRC6Saw.nInvertFreqCutoff = 0xFFFF;
 		mWave_MMC5Square[0].nInvertFreqCutoff = 0xFFFF;
 		mWave_MMC5Square[1].nInvertFreqCutoff = 0xFFFF;
-		memset(mWave_N106.nInvertFreqCutoff,0, 4*8*8);
+		ZeroMemory(mWave_N106.nInvertFreqCutoff,4*8*8);
 		mWave_FME07[0].nInvertFreqCutoff = 0xFFFF;
 		mWave_FME07[1].nInvertFreqCutoff = 0xFFFF;
 		mWave_FME07[2].nInvertFreqCutoff = 0xFFFF;

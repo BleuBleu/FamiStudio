@@ -21,6 +21,15 @@
 //  NSF_Core.h
 //
 
+typedef unsigned char  BYTE;
+typedef unsigned short WORD;
+typedef unsigned int   UINT;
+typedef const char*    LPCSTR;
+
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define ZeroMemory(p, s) memset(p, 0, s)
+
 union TWIN
 {
 	WORD						W;

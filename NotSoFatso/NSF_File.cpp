@@ -23,8 +23,6 @@
 //
 
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 #include <stdio.h>
 #include "NSF_Core.h"
 #include "NSF_File.h"
@@ -276,7 +274,7 @@ int CNSFFile::LoadFile_NSFE(FILE* file,BYTE needdata)
 			int			i;
 			for(i = 0; i < 4; i++)
 			{
-				nChunkUsed = lstrlen(ptr) + 1;
+				nChunkUsed = strlen(ptr) + 1;
 				*ar[i] = new char[nChunkUsed];
 				if(!*ar[i]) { SAFE_DELETE(buffer); return 0; }
 				memcpy(*ar[i],ptr,nChunkUsed);
@@ -301,7 +299,7 @@ int CNSFFile::LoadFile_NSFE(FILE* file,BYTE needdata)
 			int			i;
 			for(i = 0; i < nTrackCount; i++)
 			{
-				nChunkUsed = lstrlen(ptr) + 1;
+				nChunkUsed = strlen(ptr) + 1;
 				szTrackLabels[i] = new char[nChunkUsed];
 				if(!szTrackLabels[i]) { SAFE_DELETE(buffer); return 0; }
 				memcpy(szTrackLabels[i],ptr,nChunkUsed);
@@ -378,9 +376,9 @@ int CNSFFile::SaveFile_NESM(FILE* file)
 	hdr.nInitAddress =			nInitAddress;
 	hdr.nPlayAddress =			nPlayAddress;
 
-	if(szGameTitle)				memcpy(hdr.szGameTitle,szGameTitle,min(lstrlen(szGameTitle),31));
-	if(szArtist)				memcpy(hdr.szArtist   ,szArtist   ,min(lstrlen(szArtist)   ,31));
-	if(szCopyright)				memcpy(hdr.szCopyright,szCopyright,min(lstrlen(szCopyright),31));
+	if(szGameTitle)				memcpy(hdr.szGameTitle,szGameTitle,min(strlen(szGameTitle),31));
+	if(szArtist)				memcpy(hdr.szArtist   ,szArtist   ,min(strlen(szArtist)   ,31));
+	if(szCopyright)				memcpy(hdr.szCopyright,szCopyright,min(strlen(szCopyright),31));
 
 	hdr.nSpeedNTSC =			nNTSC_PlaySpeed;
 	memcpy(hdr.nBankSwitch,nBankswitch,8);
@@ -466,20 +464,20 @@ int CNSFFile::SaveFile_NSFE(FILE* file)
 	{
 		nChunkType =		CHUNKTYPE_AUTH;
 		nChunkSize =		4;
-		if(szGameTitle)		nChunkSize += lstrlen(szGameTitle);
-		if(szArtist)		nChunkSize += lstrlen(szArtist);
-		if(szCopyright)		nChunkSize += lstrlen(szCopyright);
-		if(szRipper)		nChunkSize += lstrlen(szRipper);
+		if(szGameTitle)		nChunkSize += strlen(szGameTitle);
+		if(szArtist)		nChunkSize += strlen(szArtist);
+		if(szCopyright)		nChunkSize += strlen(szCopyright);
+		if(szRipper)		nChunkSize += strlen(szRipper);
 		fwrite(&nChunkSize,4,1,file);
 		fwrite(&nChunkType,4,1,file);
 
-		if(szGameTitle)		fwrite(szGameTitle,lstrlen(szGameTitle) + 1,1,file);
+		if(szGameTitle)		fwrite(szGameTitle,strlen(szGameTitle) + 1,1,file);
 		else				fwrite("",1,1,file);
-		if(szArtist)		fwrite(szArtist,lstrlen(szArtist) + 1,1,file);
+		if(szArtist)		fwrite(szArtist,strlen(szArtist) + 1,1,file);
 		else				fwrite("",1,1,file);
-		if(szCopyright)		fwrite(szCopyright,lstrlen(szCopyright) + 1,1,file);
+		if(szCopyright)		fwrite(szCopyright,strlen(szCopyright) + 1,1,file);
 		else				fwrite("",1,1,file);
-		if(szRipper)		fwrite(szRipper,lstrlen(szRipper) + 1,1,file);
+		if(szRipper)		fwrite(szRipper,strlen(szRipper) + 1,1,file);
 		else				fwrite("",1,1,file);
 	}
 
@@ -500,7 +498,7 @@ int CNSFFile::SaveFile_NSFE(FILE* file)
 		nChunkSize =		nTrackCount;
 
 		for(int i = 0; i < nTrackCount; i++)
-			nChunkSize += lstrlen(szTrackLabels[i]);
+			nChunkSize += strlen(szTrackLabels[i]);
 
 		fwrite(&nChunkSize,4,1,file);
 		fwrite(&nChunkType,4,1,file);
@@ -508,7 +506,7 @@ int CNSFFile::SaveFile_NSFE(FILE* file)
 		for(int i = 0; i < nTrackCount; i++)
 		{
 			if(szTrackLabels[i])
-				fwrite(szTrackLabels[i],lstrlen(szTrackLabels[i]) + 1,1,file);
+				fwrite(szTrackLabels[i],strlen(szTrackLabels[i]) + 1,1,file);
 			else
 				fwrite("",1,1,file);
 		}

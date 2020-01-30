@@ -38,11 +38,6 @@
 #define					CHUNKTYPE_AUTH			'htua'
 #define					CHUNKTYPE_BANK			'KNAB'
 
-typedef unsigned char  BYTE;
-typedef unsigned short WORD;
-typedef unsigned int   UINT;
-typedef const char*    LPCSTR;
-
 struct NESM_HEADER
 {
 	UINT			nHeader;
@@ -80,7 +75,7 @@ struct NSFE_INFOCHUNK
 class CNSFFile
 {
 public:
-	CNSFFile() { memset(this,0,sizeof(CNSFFile)); }
+	CNSFFile() { ZeroMemory(this,sizeof(CNSFFile)); }
 	~CNSFFile() { Destroy(); }
 	int				LoadFile(LPCSTR path,BYTE needdata,BYTE ignoreversion);//Loads a file from a specified path.  If needdata is false,
 														//  the NSF code is not loaded, only the other information
