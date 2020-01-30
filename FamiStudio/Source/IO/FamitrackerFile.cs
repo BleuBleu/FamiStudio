@@ -883,11 +883,6 @@ namespace FamiStudio
                 song.CleanupUnusedPatterns();
                 CreateMissingPatterns(song);
 
-                // Find all the places where we need to turn of 1xx/2xx/3xx after we are done.
-                //var portamentoTransitions = new Dictionary<Pattern, List<int>>();
-                //var slideTransitions = new Dictionary<Pattern, List<int>>();
-                //FindSlideNoteTransitions(song, portamentoTransitions, slideTransitions);
-
                 lines.Add($"TRACK{song.PatternLength,4}{song.Speed,4}{song.Tempo,4} \"{song.Name}\"");
                 lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(3, song.Channels.Length))}");
                 lines.Add("");

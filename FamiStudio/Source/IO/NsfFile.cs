@@ -207,38 +207,236 @@ namespace FamiStudio
         private const string NotSoFatsoDll = "NotSoFatso.so";
 #endif
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void ApuRegWriteDelegate(ushort addr, byte data);
+        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static IntPtr NsfOpen(string file);
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int CpuFrameCompletedDelegate();
+        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static void NsfClose(IntPtr nsf);
 
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NsfExecute")]
-        public extern static int NsfExecute(string fie, int track, [MarshalAs(UnmanagedType.FunctionPtr)] ApuRegWriteDelegate regWriteCallback, [MarshalAs(UnmanagedType.FunctionPtr)] CpuFrameCompletedDelegate frameCompletedCallback);
+        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static void NsfSetTrack(IntPtr nsf, int track);
 
-        static byte[] RegisterValues = new byte[22];
+        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static void NsfRunFrame(IntPtr nsf);
 
-        private static void ApuRegisterWrite(ushort addr, byte data)
+        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static int NsfGetState(IntPtr nsf, int channel, int state, int sub);
+
+        const int STATE_VOLUME             = 0;
+        const int STATE_PERIOD             = 1;
+        const int STATE_DUTYCYCLE          = 2;
+        const int STATE_DPCMSAMPLELENGTH   = 3;
+        const int STATE_DPCMSAMPLEADDR     = 4;
+        const int STATE_DPCMSAMPLEDATA     = 5;
+        const int STATE_DPCMLOOP           = 6;
+        const int STATE_DPCMPITCH          = 7;
+        const int STATE_FDSWAVETABLE       = 8;
+        const int STATE_FDSMODULATIONTABLE = 9;
+
+        class ChannelState
         {
-            RegisterValues[addr - 0x4000] = data;
+            public int period  = -1;
+            public int note    = -1;
+            public int volume  = -1;
+            public int duty    = -1;
+            public int stopped = -1;
+        };
+
+        public static int GetBestMatchingNote(int period, ushort[] noteTable, out int finePitch)
+        {
+            int bestNote = -1;
+            int minDiff  = 9999;
+
+            for (int i = 0; i < noteTable.Length; i++)
+            {
+                var diff = Math.Abs(noteTable[i] - period);
+                if (diff < minDiff)
+                {
+                    minDiff = diff;
+                    bestNote = i;
+                }
+            }
+
+            finePitch = period - noteTable[bestNote];
+
+            return bestNote;
         }
 
-        private static int CpuFrameCompleted()
+        private static Pattern GetOrCreatePattern(Channel channel, int patternIdx)
         {
-            return 1;
+            if (channel.PatternInstances[patternIdx] == null)
+                channel.PatternInstances[patternIdx] = channel.CreatePattern();
+            return channel.PatternInstances[patternIdx];
         }
 
-        public static void Load(string filename)
+        private static void UpdateChannel(IntPtr nsf, int p, int n, Channel channel, ChannelState state)
         {
-            var apuRegWriteCallback       = new ApuRegWriteDelegate(ApuRegisterWrite);
-            var cpuFrameCompletedCallback = new CpuFrameCompletedDelegate(CpuFrameCompleted);
-            var apuRegWriteCallbackHandle = GCHandle.Alloc(apuRegWriteCallback); // Needed since callback can be collected.
-            var cpuFrameCompletedHandle   = GCHandle.Alloc(apuRegWriteCallback); // Needed since callback can be collected.
+            var channelIdx = Channel.ChannelTypeToIndex(channel.Type);
 
-            NsfExecute(filename, 1, ApuRegisterWrite, CpuFrameCompleted);
+            if (channel.Type == Channel.Dpcm)
+            {
+                var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0);
 
-            apuRegWriteCallbackHandle.Free();
-            cpuFrameCompletedHandle.Free();
+                if (len > 0)
+                {
+                    var project = channel.Song.Project;
+                    var addr = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEADDR, 0);
+                    var name = $"Sample 0x{addr:x8}";
+                    var sample = project.GetSample(name);
+
+                    if (sample == null)
+                    {
+                        var sampleData = new byte[len];
+                        for (int i = 0; i < len; i++)
+                            sampleData[i] = (byte)NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEDATA, i);
+                        sample = project.CreateDPCMSample(name, sampleData);
+                    }
+
+                    var loop  = NsfGetState(nsf, channel.Type, STATE_DPCMLOOP, 0) != 0;
+                    var pitch = NsfGetState(nsf, channel.Type, STATE_DPCMPITCH, 0);
+
+                    var note = project.FindDPCMSampleMapping(sample, pitch, loop);
+                    if (note == -1)
+                    {
+                        for (int i = Note.DPCMNoteMin + 1; i <= Note.DPCMNoteMax; i++)
+                        {
+                            if (project.GetDPCMMapping(i) == null)
+                            {
+                                note = i;
+                                project.MapDPCMSample(i, sample, pitch, loop);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (note != -1)
+                    {
+                        var pattern = GetOrCreatePattern(channel, p);
+                        pattern.Notes[n].Value = (byte)note;
+                    }
+                }
+            }
+            else
+            {
+                var period = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0);
+                var volume = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
+                var duty   = NsfGetState(nsf, channel.Type, STATE_DUTYCYCLE, 0);
+                var force  = false;
+
+                var hasVolume = channel.Type != Channel.Dpcm;
+                var hasPeriod = channel.Type != Channel.Dpcm;
+                var hasDuty   = channel.Type == Channel.Square1 || channel.Type == Channel.Square2 || channel.Type == Channel.Noise;
+
+                if (hasVolume && state.volume != volume)
+                {
+                    var pattern = GetOrCreatePattern(channel, p);
+
+                    if (volume == 0)
+                    {
+                        if (state.stopped != 1)
+                        {
+                            state.stopped = 1;
+                            pattern.Notes[n].IsStop = true;
+                        }
+                    }
+                    else
+                    {
+                        if (state.stopped == 1)
+                        {
+                            state.stopped = 0;
+                            force = true;
+                        }
+                        pattern.Notes[n].Volume = (byte)volume;
+                    }
+
+                    state.volume = volume;
+                }
+
+                if (hasPeriod && (state.period != period || force))
+                {
+                    var pattern = GetOrCreatePattern(channel, p);
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+                    var note = 0;
+                    var finePitch = 0;
+
+                    if (channel.Type == Channel.Noise)
+                        note = (period ^ 0x0f) + 32;
+                    else
+                        note = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
+
+                    if (state.note != note || force)
+                    {
+                        pattern.Notes[n].Value = (byte)note;
+                        state.note = note;
+                    }
+
+                    var pitch = (sbyte)Utils.Clamp(finePitch, Note.FinePitchMin, Note.FinePitchMax);
+
+                    if (pitch != 0)
+                        pattern.Notes[n].FinePitch = pitch;
+
+                    if (note != 0)
+                        state.stopped = 0;
+
+                    state.period = period;
+                }
+
+                if (hasDuty)
+                {
+                    var instrument = channel.Song.Project.Instruments[duty];
+
+                    if (state.duty != duty)
+                    {
+                        var pattern = GetOrCreatePattern(channel, p);
+                        pattern.Notes[n].Instrument = instrument;
+                        state.duty = duty;
+                    }
+                    else if(channel.PatternInstances[p] != null && channel.PatternInstances[p].Notes[n].IsValid)
+                    {
+                        channel.PatternInstances[p].Notes[n].Instrument = instrument;
+                    }
+                }
+                else if (channel.PatternInstances[p] != null && channel.PatternInstances[p].Notes[n].IsValid)
+                {
+                    channel.PatternInstances[p].Notes[n].Instrument = channel.Song.Project.Instruments[0];
+                }
+            }
+        }
+
+        public static Project Load(string filename)
+        {
+            var nsf = NsfOpen(filename);
+            var project = new Project();
+            var song = project.CreateSong(""); // TODO: Song name.
+            var channelStates = new ChannelState[song.Channels.Length];
+
+            song.Speed = 1;
+
+            for (int i = 0; i < song.Channels.Length; i++)
+                channelStates[i] = new ChannelState();
+
+            for (int i = 0; i < 4; i++)
+            {
+                var instrument = project.CreateInstrument(Project.ExpansionNone, $"Duty {i}");
+                instrument.DutyCycle = i;
+            }
+
+            NsfSetTrack(nsf, 0);
+
+            for (int f = 0; f < 5000; f++)
+            {
+                var p = f / song.PatternLength;
+                var n = f % song.PatternLength;
+
+                NsfRunFrame(nsf);
+
+                for (int c = 0; c < song.Channels.Length; c++)
+                    UpdateChannel(nsf, p, n, song.Channels[c], channelStates[c]);
+            }
+
+            NsfClose(nsf);
+
+            return project;
         }
     }
 }

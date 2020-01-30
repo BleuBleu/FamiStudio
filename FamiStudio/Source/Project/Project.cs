@@ -132,6 +132,11 @@ namespace FamiStudio
             return samples.Find(s => s.Id == id);
         }
 
+        public DPCMSample GetSample(string name)
+        {
+            return samples.Find(s => s.Name == name);
+        }
+
         public Pattern GetPattern(int id)
         {
             foreach (var song in songs)
@@ -203,6 +208,22 @@ namespace FamiStudio
                 return samplesMapping[note - Note.DPCMNoteMin];
             else
                 return null;
+        }
+
+        public int FindDPCMSampleMapping(DPCMSample sample, int pitch, bool loop)
+        {
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null && 
+                    samplesMapping[i].Sample == sample &&
+                    samplesMapping[i].Pitch  == pitch &&
+                    samplesMapping[i].Loop   == loop)
+                { 
+                    return i + Note.DPCMNoteMin;
+                }
+            }
+            
+            return -1;
         }
 
         public Song CreateSong(string name = null)

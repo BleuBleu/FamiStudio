@@ -276,6 +276,10 @@ namespace FamiStudio
             {
                 project = FamitrackerFile.Load(filename);
             }
+            else if (filename.ToLower().EndsWith("nsf"))
+            {
+                project = NsfFile.Load(filename);
+            }
 
             if (project != null)
             {
@@ -289,7 +293,7 @@ namespace FamiStudio
 
         public void OpenProject()
         {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt)|*.fms;*.txt|FamiStudio Files (*.fms)|*.fms|Famitracker Text Export (*.txt)|*.txt");
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf)|*.fms;*.txt;*.nsf|FamiStudio Files (*.fms)|*.fms|Famitracker Text Export (*.txt)|*.txt|NES Sound Format (*.nsf)|*.nsf");
             if (filename != null)
             {
                 OpenProject(filename);

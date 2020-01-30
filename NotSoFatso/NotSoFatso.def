@@ -1,0 +1,7 @@
+LIBRARY   NOTSOFATSO
+EXPORTS
+	NsfOpen     @1
+	NsfClose    @2
+	NsfSetTrack @3
+	NsfRunFrame @4
+	NsfGetState @5
