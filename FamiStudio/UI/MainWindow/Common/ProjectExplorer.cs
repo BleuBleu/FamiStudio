@@ -8,12 +8,14 @@ using Color = System.Drawing.Color;
 using System.Diagnostics;
 
 #if FAMISTUDIO_WINDOWS
-using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
+    using RenderBrush    = SharpDX.Direct2D1.Brush;
+    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
+    using RenderBrush    = FamiStudio.GLBrush;
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderFont     = FamiStudio.GLFont;
     using RenderControl  = FamiStudio.GLControl;
@@ -338,6 +340,7 @@ namespace FamiStudio
 
         RenderTheme theme;
 
+        RenderBrush    sliderFillBrush;
         RenderBitmap   bmpSong;
         RenderBitmap   bmpAdd;
         RenderBitmap   bmpDPCM;
@@ -478,6 +481,7 @@ namespace FamiStudio
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
             bmpLoadInstrument = g.CreateBitmapFromResource("InstrumentOpen");
+            sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
         }
 
         public void ConditionalInvalidate()
@@ -557,18 +561,15 @@ namespace FamiStudio
                 {
                     if (button.type == ButtonType.ParamSlider)
                     {
-                        var sx = actualWidth - sliderPosX;
-                        var sy = sliderPosY + sliderSizeY / 2;
-                        g.DrawLine(sx, sy, sx + sliderSizeX, sy, theme.BlackBrush);
-
                         var paramVal = button.GetParamValue();
                         var paramMin = button.GetParamMinValue();
                         var paramMax = button.GetParamMaxValue();
-                        var thumbX = (int)Math.Round((paramVal - paramMin) / (float)(paramMax - paramMin) * sliderSizeX);
+                        var valSizeX = (int)Math.Round((paramVal - paramMin) / (float)(paramMax - paramMin) * sliderSizeX);
 
                         g.DrawText(paramVal.ToString(), ThemeBase.FontMediumRight, 0, buttonTextPosY, theme.BlackBrush, actualWidth - sliderTextPosX);
-                        g.PushTranslation(sx + thumbX, sliderPosY);
-                        g.FillRectangle(-sliderThumbSizeX, 0, sliderThumbSizeX, sliderSizeY, theme.BlackBrush);
+                        g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
+                        g.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
+                        g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, theme.BlackBrush);
                         g.PopTransform();
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
