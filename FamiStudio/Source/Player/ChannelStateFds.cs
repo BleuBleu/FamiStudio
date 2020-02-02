@@ -7,7 +7,7 @@ namespace FamiStudio
     {
         private bool first = true;
 
-        public ChannelStateFds(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
+        public ChannelStateFds(int apuIdx, int channelIdx) : base(apuIdx, channelIdx, false)
         {
             maximumPeriod = NesApu.MaximumPeriod12Bit;
         }

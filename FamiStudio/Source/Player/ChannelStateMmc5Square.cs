@@ -7,7 +7,7 @@ namespace FamiStudio
         int regOffset = 0;
         int prevPeriodHi = 1000;
 
-        public ChannelStateMmc5Square(int apuIdx, int channelType) : base(apuIdx, channelType)
+        public ChannelStateMmc5Square(int apuIdx, int channelType) : base(apuIdx, channelType, false)
         {
             regOffset = (channelType - Channel.Mmc5Square1) * 4;
         }

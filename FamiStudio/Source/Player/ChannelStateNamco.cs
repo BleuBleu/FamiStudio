@@ -6,7 +6,7 @@ namespace FamiStudio
     {
         int channelIdx = 0;
 
-        public ChannelStateNamco(int apuIdx, int channelType) : base(apuIdx, channelType)
+        public ChannelStateNamco(int apuIdx, int channelType, bool pal) : base(apuIdx, channelType, pal)
         {
             channelIdx = channelType - Channel.NamcoWave1;
             //maximumPeriod = NesApu.MaximumPeriod12Bit;

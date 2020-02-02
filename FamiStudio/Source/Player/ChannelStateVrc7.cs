@@ -6,7 +6,7 @@ namespace FamiStudio
     {
         int channelIdx = 0;
 
-        public ChannelStateVrc7(int apuIdx, int channelType) : base(apuIdx, channelType)
+        public ChannelStateVrc7(int apuIdx, int channelType) : base(apuIdx, channelType, false)
         {
             channelIdx = channelType - Channel.Vrc7Fm1;
             //maximumPeriod = NesApu.MaximumPeriod12Bit;

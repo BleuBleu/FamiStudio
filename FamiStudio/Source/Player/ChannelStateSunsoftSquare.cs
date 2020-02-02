@@ -7,7 +7,7 @@ namespace FamiStudio
         int channelIdx = 0;
         //int prevPeriodHi = 1000;
 
-        public ChannelStateSunsoftSquare(int apuIdx, int channelType) : base(apuIdx, channelType)
+        public ChannelStateSunsoftSquare(int apuIdx, int channelType, bool pal) : base(apuIdx, channelType, pal)
         {
             channelIdx = channelType - Channel.SunsoftSquare1;
         }

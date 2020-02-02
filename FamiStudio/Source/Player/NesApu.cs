@@ -14,7 +14,7 @@ namespace FamiStudio
 #endif
 
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuInit")]
-        public extern static int Init(int apuIdx, int sampleRate, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
+        public extern static int Init(int apuIdx, int sampleRate, int pal, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuWriteRegister")]
         public extern static void WriteRegister(int apuIdx, int addr, int data);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSamplesAvailable")]
@@ -204,9 +204,9 @@ namespace FamiStudio
             return FamiStudio.StaticProject.GetSampleForAddress(addr - 0xc000);
         }
 
-        public static void InitAndReset(int apuIdx, int sampleRate, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
+        public static void InitAndReset(int apuIdx, int sampleRate, bool pal, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
         {
-            Init(apuIdx, sampleRate, expansion, dmcCallback);
+            Init(apuIdx, sampleRate, pal ? 1 : 0, expansion, dmcCallback);
             Reset(apuIdx);
             WriteRegister(apuIdx, APU_SND_CHN,    0x0f); // enable channels, stop DMC
             WriteRegister(apuIdx, APU_TRI_LINEAR, 0x80); // disable triangle length counter

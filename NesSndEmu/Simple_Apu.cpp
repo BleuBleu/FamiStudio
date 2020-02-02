@@ -40,8 +40,9 @@ void Simple_Apu::dmc_reader( int (*f)( void* user_data, cpu_addr_t ), void* p )
 	apu.dmc_reader( f, p );
 }
 
-blargg_err_t Simple_Apu::sample_rate( long rate )
+blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
 {
+	frame_length = pal ? 33247 : 29780;
 	apu.output( &buf );
 	vrc6.output(&buf);
 	vrc7.output(&buf);
@@ -49,7 +50,7 @@ blargg_err_t Simple_Apu::sample_rate( long rate )
 	mmc5.output(&buf);
 	namco.output(&buf);
 	sunsoft.output(&buf);
-	buf.clock_rate( 1789773 );
+	buf.clock_rate( pal ? 1662607 : 1789773 );
 	return buf.sample_rate( rate );
 }
 

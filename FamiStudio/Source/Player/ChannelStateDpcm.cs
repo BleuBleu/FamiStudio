@@ -2,7 +2,7 @@
 {
     public class ChannelStateDpcm : ChannelState
     {
-        public ChannelStateDpcm(int apuIdx, int channelIdx) : base(apuIdx, channelIdx)
+        public ChannelStateDpcm(int apuIdx, int channelIdx, bool pal) : base(apuIdx, channelIdx, pal)
         {
         }
 

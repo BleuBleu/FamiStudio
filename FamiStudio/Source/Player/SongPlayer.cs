@@ -22,6 +22,7 @@ namespace FamiStudio
         {
             public Song song;
             public int frame;
+            public bool pal;
         };
 
         public SongPlayer() : base(NesApu.APU_SONG)
@@ -39,7 +40,7 @@ namespace FamiStudio
             base.Shutdown();
         }
 
-        public void Play(Song song, int frame)
+        public void Play(Song song, int frame, bool pal)
         {
             Debug.Assert(playerThread == null);
             Debug.Assert(sampleQueue.Count == 0);
@@ -47,7 +48,7 @@ namespace FamiStudio
             stopEvent.Reset();
             frameEvent.Set();
             playerThread = new Thread(PlayerThread);
-            playerThread.Start(new SongPlayerStartInfo() { song = song, frame = frame });
+            playerThread.Start(new SongPlayerStartInfo() { song = song, frame = frame, pal = pal });
         }
 
         public void Stop()
@@ -101,7 +102,7 @@ namespace FamiStudio
             var startInfo = (SongPlayerStartInfo)o;
             var song = startInfo.song;
 
-            var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex);
+            var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex, startInfo.pal);
 
             var advance = true;
             var tempoCounter = 0;
@@ -113,7 +114,7 @@ namespace FamiStudio
 
             playPosition = startInfo.frame;
 
-            NesApu.InitAndReset(apuIndex, SampleRate, GetNesApuExpansionAudio(song.Project), dmcCallback);
+            NesApu.InitAndReset(apuIndex, SampleRate, startInfo.pal, GetNesApuExpansionAudio(song.Project), dmcCallback);
 
             if (startInfo.frame != 0)
             {

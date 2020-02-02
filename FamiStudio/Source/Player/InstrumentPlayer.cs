@@ -12,6 +12,7 @@ namespace FamiStudio
             public Note note;
         };
 
+        bool palMode = false;
         int expansionAudio = Project.ExpansionNone;
         ChannelState[] channels;
         int[] envelopeFrames = new int[Envelope.Max];
@@ -56,10 +57,11 @@ namespace FamiStudio
             }
         }
         
-        public void Start(Project project)
+        public void Start(Project project, bool pal)
         {
             expansionAudio = project.ExpansionAudio;
-            channels = PlayerBase.CreateChannelStates(project, apuIndex);
+            channels = PlayerBase.CreateChannelStates(project, apuIndex, pal);
+            palMode = pal;
 
             stopEvent.Reset();
             frameEvent.Set();
@@ -93,7 +95,7 @@ namespace FamiStudio
             var activeChannel = -1;
             var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
 
-            NesApu.InitAndReset(apuIndex, SampleRate, expansionAudio, dmcCallback);
+            NesApu.InitAndReset(apuIndex, SampleRate, palMode, expansionAudio, dmcCallback);
             for (int i = 0; i < channels.Length; i++)
                 NesApu.EnableChannel(apuIndex, i, 0);
 

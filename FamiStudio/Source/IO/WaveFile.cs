@@ -44,9 +44,10 @@ namespace FamiStudio
             var apuIndex = NesApu.APU_WAV_EXPORT;
             var dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
             var dmcCallbackHandle = GCHandle.Alloc(dmcCallback); // Needed since callback can be collected.
-            var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex);
+            var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex, false); // MATTT PAL
 
-            NesApu.InitAndReset(apuIndex, sampleRate, PlayerBase.GetNesApuExpansionAudio(song.Project), dmcCallback);
+            // MATTT: PAL HERE
+            NesApu.InitAndReset(apuIndex, sampleRate, false, PlayerBase.GetNesApuExpansionAudio(song.Project), dmcCallback);
             for (int i = 0; i < channels.Length; i++)
                 NesApu.EnableChannel(apuIndex, i, 1);
 

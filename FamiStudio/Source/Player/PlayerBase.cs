@@ -15,7 +15,10 @@ namespace FamiStudio
     public class PlayerBase
     {
         protected const int SampleRate = 44100;
-        protected const int BufferSize = 734 * sizeof(short); // 734 = ceil(SampleRate / FrameRate) = ceil(44100 / 60.0988)
+
+        // NSTC: 734 = ceil(SampleRate / FrameRate) = ceil(44100 / 60.0988).
+        // PAL:  882 = ceil(SampleRate / FrameRate) = ceil(44100 / 50.0070).
+        protected const int BufferSize = 882 * sizeof(short);
         protected const int NumAudioBuffers = 3;
 
         protected int apuIndex;
@@ -112,19 +115,19 @@ namespace FamiStudio
             return true;
         }
 
-        private static ChannelState CreateChannelState(int apuIdx, int channelType)
+        private static ChannelState CreateChannelState(int apuIdx, int channelType, bool pal)
         {
             switch (channelType)
             {
                 case Channel.Square1:
                 case Channel.Square2:
-                    return new ChannelStateSquare(apuIdx, channelType);
+                    return new ChannelStateSquare(apuIdx, channelType, pal);
                 case Channel.Triangle:
-                    return new ChannelStateTriangle(apuIdx, channelType);
+                    return new ChannelStateTriangle(apuIdx, channelType, pal);
                 case Channel.Noise:
-                    return new ChannelStateNoise(apuIdx, channelType);
+                    return new ChannelStateNoise(apuIdx, channelType, pal);
                 case Channel.Dpcm:
-                    return new ChannelStateDpcm(apuIdx, channelType);
+                    return new ChannelStateDpcm(apuIdx, channelType, pal);
                 case Channel.Vrc6Square1:
                 case Channel.Vrc6Square2:
                     return new ChannelStateVrc6Square(apuIdx, channelType);
@@ -150,18 +153,18 @@ namespace FamiStudio
                 case Channel.NamcoWave6:
                 case Channel.NamcoWave7:
                 case Channel.NamcoWave8:
-                    return new ChannelStateNamco(apuIdx, channelType);
+                    return new ChannelStateNamco(apuIdx, channelType, pal);
                 case Channel.SunsoftSquare1:
                 case Channel.SunsoftSquare2:
                 case Channel.SunsoftSquare3:
-                    return new ChannelStateSunsoftSquare(apuIdx, channelType);
+                    return new ChannelStateSunsoftSquare(apuIdx, channelType, pal);
             }
 
             Debug.Assert(false);
             return null;
         }
 
-        public static ChannelState[] CreateChannelStates(Project project, int apuIdx)
+        public static ChannelState[] CreateChannelStates(Project project, int apuIdx, bool pal)
         {
             var channelCount = project.GetActiveChannelCount();
             var states = new ChannelState[channelCount];
@@ -170,7 +173,7 @@ namespace FamiStudio
             for (int i = 0; i < Channel.Count; i++)
             {
                 if (project.IsChannelActive(i))
-                    states[idx++] = CreateChannelState(apuIdx, i);
+                    states[idx++] = CreateChannelState(apuIdx, i, pal);
             }
 
             return states;

@@ -25,6 +25,7 @@ namespace FamiStudio
         private UndoRedoManager undoRedoManager;
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
+        private bool palMode = false;
 
         private bool newReleaseAvailable = false;
         private string newReleaseString = null;
@@ -241,6 +242,7 @@ namespace FamiStudio
 
             StaticProject = project;
             song = project.Songs[0];
+            palMode = false;
 
             undoRedoManager = new UndoRedoManager(project, this);
             undoRedoManager.Updated += UndoRedoManager_Updated;
@@ -255,7 +257,7 @@ namespace FamiStudio
             UpdateTitle();
             RefreshSequencerLayout();
 
-            instrumentPlayer.Start(project);
+            instrumentPlayer.Start(project, palMode);
             //ClipboardUtils.Reset();
         }
 
@@ -365,6 +367,7 @@ namespace FamiStudio
                 midi = null;
             }
 
+            StopEverything();
             songPlayer.Shutdown();
             instrumentPlayer.Shutdown();
 
@@ -516,7 +519,22 @@ namespace FamiStudio
 
         public void StartInstrumentPlayer()
         {
-            instrumentPlayer.Start(project);
+            instrumentPlayer.Start(project, palMode);
+        }
+
+        public bool PalMode
+        {
+            get
+            {
+                return palMode;
+            }
+            set
+            {
+                Stop();
+                StopInstrumentPlayer();
+                palMode = value;
+                StartInstrumentPlayer();
+            }
         }
 
         public void KeyDown(KeyEventArgs e)
@@ -652,7 +670,7 @@ namespace FamiStudio
         {
             if (!songPlayer.IsPlaying)
             {
-                songPlayer.Play(song, songPlayer.CurrentFrame);
+                songPlayer.Play(song, songPlayer.CurrentFrame, palMode);
             }
         }
 

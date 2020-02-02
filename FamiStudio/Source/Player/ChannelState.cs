@@ -13,16 +13,18 @@ namespace FamiStudio
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
         protected int duty;
+        protected bool palMode;
         protected ushort[] noteTable = null;
         protected short maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
         private   int slidePitch = 0;
 
-        public ChannelState(int apu, int type)
+        public ChannelState(int apu, int type, bool pal)
         {
             apuIdx = apu;
             channelType = type;
-            noteTable = NesApu.GetNoteTableForChannelType(channelType, false);
+            palMode = pal;
+            noteTable = NesApu.GetNoteTableForChannelType(channelType, pal);
             note.Value = Note.NoteStop;
             note.Volume = Note.VolumeMax;
         }
@@ -85,7 +87,7 @@ namespace FamiStudio
 
                 if (newNote.IsSlideNote)
                 {
-                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, palMode);
 
                     if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _))
                         newNote.Value = (byte)newNote.SlideNoteTarget;
