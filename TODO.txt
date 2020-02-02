@@ -6,9 +6,13 @@
 - Duty cycle envelopes.
 - Fine pitch track
 - PAL support/tempo/speed:
-	- Delayed cut + delayed note. This will allow us to to song without time = 1
-		- Delayed note delays the whole row, not just the note. Which is good i guess, it makes it behave like a real not at a tick level.
-		- What happens if you have a note at the 6th frame when running on PAL (which only has 5)???
+	- PAL/NTSC button in toolbar
+	- Switch note table
+	- Test frame repetition. 
+	
+	NEW PLAN: 2 tempo modes:
+		- FamiTracker : Tracker like, tempo/speed, delayed notes/cuts. Minimal effor to support.
+		- FamiStudio  : Always 1 note = frame. Note size, PAL repetition pattern. (TEST THAT!)
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Remove jump and skip effects:
