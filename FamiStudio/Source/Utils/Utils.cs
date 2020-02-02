@@ -19,6 +19,11 @@ namespace FamiStudio
             return val;
         }
 
+        public static float Lerp(float v0, float v1, float alpha)
+        {
+            return v0 * (1.0f - alpha) + v1 * alpha;
+        }
+
         public static int SignedCeil(float x)
         {
             return (x > 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);

@@ -282,6 +282,8 @@ namespace FamiStudio
                 return projectExplorer.bmpEnvelopes[(int)sub];
             }
 
+            int testVal = 1000; // MATTT
+
             public int GetParamMinValue()
             {
                 Debug.Assert(param != ParamType.Max);
@@ -314,7 +316,7 @@ namespace FamiStudio
 
                 switch (param)
                 {
-                    case ParamType.FdsModulationSpeed: return 1000; // MATTT
+                    case ParamType.FdsModulationSpeed: return testVal; // MATTT
                     case ParamType.FdsModulationDepth: return 20;
                 }
 
@@ -324,14 +326,34 @@ namespace FamiStudio
             public void SetParamValue(int val)
             {
                 Debug.Assert(param != ParamType.Max);
+
+                testVal = val; // MATTT
             }
         }
 
+        enum CaptureOperation
+        {
+            None,
+            DragInstrument,
+            MoveSlider
+        };
+
+        static readonly bool[] captureNeedsThreshold = new[]
+        {
+            false,
+            true,
+            false
+        };
+
         int scrollY = 0;
+        int mouseLastX = 0;
         int mouseLastY = 0;
-        int mouseDragY = -1;
+        int captureMouseX = -1;
+        int captureMouseY = -1;
         int envelopeDragIdx = -1;
-        bool isDraggingInstrument = false;
+        bool captureThresholdMet = false;
+        Button sliderDragButton = null;
+        CaptureOperation captureOperation = CaptureOperation.None;
         Song selectedSong = null;
         Instrument draggedInstrument = null;
         Instrument selectedInstrument = null; // null = DPCM
@@ -417,6 +439,8 @@ namespace FamiStudio
 
         public void RefreshButtons()
         {
+            Debug.Assert(captureOperation != CaptureOperation.MoveSlider);
+
             buttons.Clear();
             buttons.Add(new Button(this) { type = ButtonType.ProjectSettings });
             buttons.Add(new Button(this) { type = ButtonType.SongHeader });
@@ -574,16 +598,8 @@ namespace FamiStudio
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
                     {
-                        g.DrawBitmap(bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY);
+                        g.DrawBitmap(button.GetParamValue() == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY);
                     }
-
-                    // sliderPosX     
-                    // sliderPosY     
-                    // sliderSizeX    
-                    // sliderSizeY    
-                    // sliderTextPosX 
-                    // checkBoxPosX   
-                    // checkBoxPosY   
                 }
                 else
                 {
@@ -633,7 +649,7 @@ namespace FamiStudio
 
         protected void UpdateCursor()
         {
-            if (isDraggingInstrument)
+            if (captureOperation == CaptureOperation.DragInstrument && captureThresholdMet)
             {
 #if !FAMISTUDIO_LINUX
                 // TODO LINUX: Cursors
@@ -749,17 +765,32 @@ namespace FamiStudio
 
             UpdateToolTip(e);
 
-            if (left && mouseDragY > 0 && !isDraggingInstrument && Math.Abs(e.Y - mouseDragY) > 5)
+            if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
-                isDraggingInstrument = true;
-                Capture = true;
+                if (Math.Abs(e.X - captureMouseX) > 4 ||
+                    Math.Abs(e.Y - captureMouseY) > 4)
+                {
+                    captureThresholdMet = true;
+                }
             }
+
+            if (captureOperation != CaptureOperation.None && captureThresholdMet)
+            {
+                if (captureOperation == CaptureOperation.MoveSlider)
+                {
+                    UpdateSliderValue(sliderDragButton, e);
+                    ConditionalInvalidate();
+                }
+            }
+
             if (middle)
             {
                 int deltaY = e.Y - mouseLastY;
                 DoScroll(deltaY);
-                mouseLastY = e.Y;
             }
+
+            mouseLastX = e.X;
+            mouseLastY = e.Y;
 
             UpdateCursor();
         }
@@ -768,7 +799,7 @@ namespace FamiStudio
         {
             base.OnMouseUp(e);
 
-            if (isDraggingInstrument)
+            if (captureOperation == CaptureOperation.DragInstrument)
             {
                 if (ClientRectangle.Contains(e.X, e.Y))
                 {
@@ -808,21 +839,32 @@ namespace FamiStudio
                 {
                     InstrumentDraggedOutside(draggedInstrument, PointToScreen(new Point(e.X, e.Y)));
                 }
-
-                Capture = false;
             }
 
-            CancelDrag();
+            draggedInstrument = null;
+            sliderDragButton = null;
+            captureOperation = CaptureOperation.None;
+            Capture = false;
         }
 
-        protected void CancelDrag()
+        private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op)
         {
-            isDraggingInstrument = false;
-            mouseDragY = -1;
-            draggedInstrument = null;
-            envelopeDragIdx = -1;
-            UpdateCursor();
+            Debug.Assert(captureOperation == CaptureOperation.None);
+            captureMouseX = e.X;
+            captureMouseY = e.Y;
+            Capture = true;
+            captureOperation = op;
+            captureThresholdMet = !captureNeedsThreshold[(int)op];
         }
+
+        //protected void CancelDrag()
+        //{
+        //    isDraggingInstrument = false;
+        //    mouseDragY = -1;
+        //    draggedInstrument = null;
+        //    envelopeDragIdx = -1;
+        //    UpdateCursor();
+        //}
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
@@ -837,9 +879,33 @@ namespace FamiStudio
             base.OnResize(e);
         }
 
+        bool UpdateSliderValue(Button button, MouseEventArgs e)
+        {
+            var buttonIdx = buttons.IndexOf(button);
+            Debug.Assert(buttonIdx >= 0);
+
+            var actualWidth = Width - scrollBarSizeX;
+            var buttonX = e.X;
+            var buttonY = e.Y - buttonIdx * buttonSizeY;
+
+            var paramMin = button.GetParamMinValue();
+            var paramMax = button.GetParamMaxValue();
+            var paramVal = Utils.Lerp(paramMin, paramMax, Utils.Clamp((buttonX - (actualWidth - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f));
+
+            button.SetParamValue((int)Math.Round(paramVal));
+
+            return (buttonX > (actualWidth - sliderPosX) &&
+                    buttonX < (actualWidth - sliderPosX + sliderSizeX) &&
+                    buttonY > (sliderPosY) &&
+                    buttonY < (sliderPosY + sliderSizeY));
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+
+            if (captureOperation != CaptureOperation.None)
+                return;
 
             bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
@@ -922,7 +988,7 @@ namespace FamiStudio
                         if (selectedInstrument != null)
                         {
                             draggedInstrument = selectedInstrument;
-                            mouseDragY = e.Y;
+                            StartCaptureOperation(e, CaptureOperation.DragInstrument);
                         }
 
                         if (subButtonType == SubButtonType.ExpandInstrument)
@@ -946,6 +1012,19 @@ namespace FamiStudio
 
                         InstrumentSelected?.Invoke(selectedInstrument);
                         ConditionalInvalidate();
+                    }
+                    else if (button.type == ButtonType.ParamSlider)
+                    {
+                        if (UpdateSliderValue(button, e))
+                        {
+                            sliderDragButton = button;
+                            StartCaptureOperation(e, CaptureOperation.MoveSlider);
+                            ConditionalInvalidate();
+                        }
+                    }
+                    else if (button.type == ButtonType.ParamCheckbox)
+                    {
+
                     }
                 }
                 else if (right)
@@ -1040,7 +1119,7 @@ namespace FamiStudio
                 {
                     var project = App.Project;
 
-                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 280, true);
+                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 300, true);
                     dlg.Properties.AddString("Title :", project.Name, 31); // 0
                     dlg.Properties.AddString("Author :", project.Author, 31); // 1
                     dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
@@ -1178,7 +1257,9 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
-                CancelDrag();
+                captureOperation = CaptureOperation.None;
+                Capture = false;
+
                 ClampScroll();
                 RefreshButtons();
                 ConditionalInvalidate();
