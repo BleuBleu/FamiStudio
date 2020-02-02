@@ -357,9 +357,9 @@ namespace FamiStudio
 
             // At version 5 (FamiStudio 1.5.0), we added fine pitch effect.
             if (buffer.Version >= 5)
-            {
                 buffer.Serialize(ref Pitch);
-            }
+            else
+                Pitch = FinePitchInvalid;
 
             // At version 4 (FamiStudio 1.4.0), we refactored the notes, added slide notes, vibrato and no-attack notes (flags).
             if (buffer.Version >= 4)

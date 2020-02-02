@@ -27,7 +27,6 @@ namespace FamiStudio
 {
     public class Sequencer : RenderControl
     {
-        const int DefaultExpansionsTypeSizeX = 4;
         const int DefaultTrackNameSizeX      = 85;
         const int DefaultHeaderSizeY         = 17;
         const int DefaultPatternHeaderSizeY  = 16;
@@ -46,7 +45,6 @@ namespace FamiStudio
         const int MinZoomLevel = -2;
         const int MaxZoomLevel = 4;
 
-        int expansionTypeSizeX;
         int trackNameSizeX;
         int headerSizeY;
         int trackSizeY;
@@ -160,7 +158,6 @@ namespace FamiStudio
             patternNamePosX    = (int)(DefaultPatternNamePosX * scaling);
             patternNamePosY    = (int)(DefaultPatternNamePosY * scaling);
             patternSizeX       = (int)(ScaleForZoom(Song == null ? 256 : Song.PatternLength) * scaling);
-            expansionTypeSizeX = (int)(App?.Project?.UsesExpansionAudio == true ? DefaultExpansionsTypeSizeX * scaling : 0);
         }
 
         private int GetChannelCount()
@@ -321,16 +318,6 @@ namespace FamiStudio
 
             g.PushTranslation(0, headerSizeY);
 
-            if (Song.Project.NeedsExpansionInstruments)
-            {
-                for (int i = Channel.ExpansionAudioStart; i < Song.Channels.Length; i++)
-                    g.FillRectangle(0, i * trackSizeY, expansionTypeSizeX, (i + 1) * trackSizeY + 1, theme.MediumGreyFillBrush1);
-
-                g.PushTranslation(expansionTypeSizeX, 0);
-
-                g.DrawLine(0, 0, 0, Height, theme.DarkGreyLineBrush1);
-            }
-
             // Icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
                 g.DrawBitmap(bmpTracks[(int)Song.Channels[i].Type], trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
@@ -338,9 +325,6 @@ namespace FamiStudio
             // Track names
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
                 g.DrawText(Song.Channels[i].Name, i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium, trackNamePosX, y + trackNamePosY, theme.BlackBrush);
-
-            if (Song.Project.NeedsExpansionInstruments)
-               g.PopTransform();
 
             // Ghost note icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
@@ -530,7 +514,7 @@ namespace FamiStudio
         Rectangle GetTrackIconRect(int idx)
         {
             return new Rectangle(
-                trackIconPosX + expansionTypeSizeX,
+                trackIconPosX,
                 trackIconPosY + headerSizeY + idx * trackSizeY, 
                 (int)(16 * RenderTheme.MainWindowScaling),
                 (int)(16 * RenderTheme.MainWindowScaling));

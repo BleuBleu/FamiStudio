@@ -261,6 +261,14 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\CheckBoxNo%402x.png" />
+    <EmbeddedResource Include="Resources\CheckBoxNo.png" />
+    <EmbeddedResource Include="Resources\CheckBoxYes%402x.png" />
+    <EmbeddedResource Include="Resources\CheckBoxYes.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpanded%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpanded.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpand%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpand.png" />
     <EmbeddedResource Include="Resources\PitchSmall%402x.png" />
     <EmbeddedResource Include="Resources\PitchSmall.png" />
     <EmbeddedResource Include="Resources\Wave%402x.png" />

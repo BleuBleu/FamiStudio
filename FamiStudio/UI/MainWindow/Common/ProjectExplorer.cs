@@ -5,9 +5,10 @@ using System.Windows.Forms;
 using System.Collections.Generic;
 using FamiStudio.Properties;
 using Color = System.Drawing.Color;
+using System.Diagnostics;
 
 #if FAMISTUDIO_WINDOWS
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
+using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
@@ -24,8 +25,10 @@ namespace FamiStudio
 {
     public class ProjectExplorer : RenderControl
     {
-        const int DefaultExpansionTypeSizeX   = 4;
+        const int DefaultExpandButtonSizeX    = 8;
         const int DefaultButtonIconPosX       = 4;
+        const int DefaultExpandButtonPosX     = 3;
+        const int DefaultExpandButtonPosY     = 8;
         const int DefaultButtonIconPosY       = 4;
         const int DefaultButtonTextPosX       = 24;
         const int DefaultButtonTextPosY       = 5;
@@ -34,16 +37,34 @@ namespace FamiStudio
         const int DefaultSubButtonPosY        = 4;
         const int DefaultScrollBarSizeX       = 8;
         const int DefaultButtonSizeY          = 23;
+        const int DefaultSliderPosX           = 100;
+        const int DefaultSliderPosY           = 4;
+        const int DefaultSliderSizeX          = 96;
+        const int DefaultSliderSizeY          = 16;
+        const int DefaultSliderThumbSizeX     = 4;
+        const int DefaultSliderTextPosX       = 110;
+        const int DefaultCheckBoxPosX         = 20;
+        const int DefaultCheckBoxPosY         = 4;
 
-        int expansionTypeSizeX;
+        int expandButtonSizeX;
         int buttonIconPosX;
         int buttonIconPosY;
         int buttonTextPosX;
         int buttonTextPosY;
         int buttonTextNoIconPosX;
+        int expandButtonPosX;
+        int expandButtonPosY;
         int subButtonSpacingX;
         int subButtonPosY;
         int buttonSizeY;
+        int sliderPosX;
+        int sliderPosY;
+        int sliderSizeX;
+        int sliderSizeY;
+        int sliderThumbSizeX;
+        int sliderTextPosX;
+        int checkBoxPosX;
+        int checkBoxPosY;
         int virtualSizeY;
         int scrollBarSizeX;
         bool needsScrollBar;
@@ -55,7 +76,22 @@ namespace FamiStudio
             Song,
             InstrumentHeader,
             Instrument,
+            ParamCheckbox,
+            ParamSlider,
             Max
+        };
+
+        enum ParamType
+        {
+            FdsModulationSpeed,
+            FdsModulationDepth,
+            Max
+        };
+
+        static readonly string[] ParamNames = 
+        {
+            "Mod Speed",
+            "Mod Depth"
         };
 
         enum SubButtonType
@@ -74,6 +110,7 @@ namespace FamiStudio
             Add,
             DPCM,
             LoadInstrument,
+            ExpandInstrument,
             Max
         }
 
@@ -92,6 +129,7 @@ namespace FamiStudio
         class Button
         {
             public ButtonType type;
+            public ParamType param = ParamType.Max;
             public Song song;
             public Instrument instrument;
             public ProjectExplorer projectExplorer;
@@ -120,9 +158,10 @@ namespace FamiStudio
                         }
                         else
                         {
-                            var numEnvelopes = instrument.NumActiveEnvelopes;
-                            var buttons = new SubButtonType[numEnvelopes];
-                            active = new bool[numEnvelopes];
+                            var expandButton = projectExplorer.ShowExpandButtons() && instrument.IsExpansionInstrument;
+                            var numSubButtons = instrument.NumActiveEnvelopes + (expandButton ? 1 : 0);
+                            var buttons = new SubButtonType[numSubButtons];
+                            active = new bool[numSubButtons];
 
                             for (int i = 0, j = 0; i < Envelope.Max; i++)
                             {
@@ -134,6 +173,13 @@ namespace FamiStudio
                                     j++;
                                 }
                             }
+
+                            if (expandButton)
+                            {
+                                buttons[numSubButtons - 1] = SubButtonType.ExpandInstrument;
+                                active[numSubButtons - 1]  = true;
+                            }
+
                             return buttons;
                         }
                 }
@@ -151,6 +197,8 @@ namespace FamiStudio
                     case ButtonType.Song: return song.Name;
                     case ButtonType.InstrumentHeader: return "Instruments";
                     case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
+                    case ButtonType.ParamCheckbox:
+                    case ButtonType.ParamSlider: return ParamNames[(int)param];
                 }
 
                 return "";
@@ -163,6 +211,8 @@ namespace FamiStudio
                     case ButtonType.SongHeader:
                     case ButtonType.InstrumentHeader: return ThemeBase.LightGreyFillColor2;
                     case ButtonType.Song: return song.Color;
+                    case ButtonType.ParamCheckbox:
+                    case ButtonType.ParamSlider:
                     case ButtonType.Instrument: return instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
                 }
 
@@ -193,7 +243,13 @@ namespace FamiStudio
             public RenderBitmap GetIcon()
             {
                 if (type == ButtonType.Song)
+                {
                     return projectExplorer.bmpSong;
+                }
+                else if (type == ButtonType.ParamCheckbox || type == ButtonType.ParamSlider)
+                {
+                    return projectExplorer.bmpParams[(int)param];
+                }
                 else if (type == ButtonType.Instrument)
                 {
                     var expType = instrument != null ? instrument.ExpansionType : Project.ExpansionNone;
@@ -217,9 +273,55 @@ namespace FamiStudio
                             return projectExplorer.bmpDuty[instrument.DutyCycle * 2];
                     case SubButtonType.LoadInstrument:
                         return projectExplorer.bmpLoadInstrument;
+                    case SubButtonType.ExpandInstrument:
+                        return projectExplorer.expandedInstrument == instrument ? projectExplorer.bmpExpanded : projectExplorer.bmpExpand;
                 }
 
                 return projectExplorer.bmpEnvelopes[(int)sub];
+            }
+
+            public int GetParamMinValue()
+            {
+                Debug.Assert(param != ParamType.Max);
+
+                switch (param)
+                {
+                    case ParamType.FdsModulationSpeed: return 0; 
+                    case ParamType.FdsModulationDepth: return 0;
+                }
+
+                return 0;
+            }
+
+            public int GetParamMaxValue()
+            {
+                Debug.Assert(param != ParamType.Max);
+
+                switch (param)
+                {
+                    case ParamType.FdsModulationSpeed: return 4095;
+                    case ParamType.FdsModulationDepth: return 255;
+                }
+
+                return 0;
+            }
+
+            public int GetParamValue()
+            {
+                Debug.Assert(param != ParamType.Max);
+
+                switch (param)
+                {
+                    case ParamType.FdsModulationSpeed: return 1000; // MATTT
+                    case ParamType.FdsModulationDepth: return 20;
+                }
+
+                return 0;
+            }
+
+            public void SetParamValue(int val)
+            {
+                Debug.Assert(param != ParamType.Max);
             }
         }
 
@@ -228,9 +330,10 @@ namespace FamiStudio
         int mouseDragY = -1;
         int envelopeDragIdx = -1;
         bool isDraggingInstrument = false;
-        Instrument instrumentDrag = null;
         Song selectedSong = null;
+        Instrument draggedInstrument = null;
         Instrument selectedInstrument = null; // null = DPCM
+        Instrument expandedInstrument = null;
         List<Button> buttons = new List<Button>();
 
         RenderTheme theme;
@@ -239,8 +342,13 @@ namespace FamiStudio
         RenderBitmap   bmpAdd;
         RenderBitmap   bmpDPCM;
         RenderBitmap   bmpLoadInstrument;
+        RenderBitmap   bmpExpand;
+        RenderBitmap   bmpExpanded;
+        RenderBitmap   bmpCheckBoxYes;
+        RenderBitmap   bmpCheckBoxNo;
         RenderBitmap[] bmpInstrument = new RenderBitmap[Project.ExpansionCount];
         RenderBitmap[] bmpEnvelopes = new RenderBitmap[Envelope.Max];
+        RenderBitmap[] bmpParams = new RenderBitmap[(int)ParamType.Max];
         RenderBitmap[] bmpDuty = new RenderBitmap[8];
 
         public Song SelectedSong => selectedSong;
@@ -271,15 +379,25 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
 
-            expansionTypeSizeX   = (int)(DefaultExpansionTypeSizeX * scaling);
+            expandButtonSizeX    = (int)(DefaultExpandButtonSizeX * scaling);
             buttonIconPosX       = (int)(DefaultButtonIconPosX * scaling);      
             buttonIconPosY       = (int)(DefaultButtonIconPosY * scaling);      
             buttonTextPosX       = (int)(DefaultButtonTextPosX * scaling);      
             buttonTextPosY       = (int)(DefaultButtonTextPosY * scaling);
             buttonTextNoIconPosX = (int)(DefaultButtonTextNoIconPosX * scaling);
+            expandButtonPosX     = (int)(DefaultExpandButtonPosX * scaling);
+            expandButtonPosY     = (int)(DefaultExpandButtonPosY * scaling);
             subButtonSpacingX    = (int)(DefaultSubButtonSpacingX * scaling);   
             subButtonPosY        = (int)(DefaultSubButtonPosY * scaling);       
             buttonSizeY          = (int)(DefaultButtonSizeY * scaling);
+            sliderPosX           = (int)(DefaultSliderPosX * scaling);
+            sliderPosY           = (int)(DefaultSliderPosY * scaling);
+            sliderSizeX          = (int)(DefaultSliderSizeX * scaling);
+            sliderSizeY          = (int)(DefaultSliderSizeY * scaling);
+            sliderThumbSizeX     = (int)(DefaultSliderThumbSizeX * scaling);
+            sliderTextPosX       = (int)(DefaultSliderTextPosX * scaling);
+            checkBoxPosX         = (int)(DefaultCheckBoxPosX * scaling);
+            checkBoxPosY         = (int)(DefaultCheckBoxPosY * scaling);
             virtualSizeY         = App?.Project == null ? Height : buttons.Count * buttonSizeY;
             needsScrollBar       = virtualSizeY > Height; 
             scrollBarSizeX       = needsScrollBar ? (int)(DefaultScrollBarSizeX * scaling) : 0;      
@@ -289,6 +407,7 @@ namespace FamiStudio
         {
             selectedSong = App.Project.Songs[0];
             selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
+            expandedInstrument = null;
             RefreshButtons();
             ConditionalInvalidate();
         }
@@ -306,7 +425,15 @@ namespace FamiStudio
             buttons.Add(new Button(this) { type = ButtonType.Instrument }); // null instrument = DPCM
 
             foreach (var instrument in App.Project.Instruments)
+            {
                 buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument });
+
+                if (instrument != null && instrument == expandedInstrument)
+                {
+                    buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.FdsModulationSpeed, instrument = instrument });
+                    buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.FdsModulationDepth, instrument = instrument });
+                }
+            }
 
             UpdateRenderCoords();
         }
@@ -340,6 +467,13 @@ namespace FamiStudio
             bmpDuty[6] = g.CreateBitmapFromResource("Duty6");
             bmpDuty[7] = g.CreateBitmapFromResource("Duty7");
 
+            bmpParams[(int)ParamType.FdsModulationSpeed] = g.CreateBitmapFromResource("Wave");
+            bmpParams[(int)ParamType.FdsModulationDepth] = g.CreateBitmapFromResource("Wave");
+
+            bmpExpand = g.CreateBitmapFromResource("InstrumentExpand");
+            bmpExpanded = g.CreateBitmapFromResource("InstrumentExpanded");
+            bmpCheckBoxYes = g.CreateBitmapFromResource("CheckBoxYes");
+            bmpCheckBoxNo = g.CreateBitmapFromResource("CheckBoxNo");
             bmpSong = g.CreateBitmapFromResource("Music");
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
@@ -351,51 +485,119 @@ namespace FamiStudio
             Invalidate();
         }
 
+        protected bool ShowExpandButtons()
+        {
+            if (App.Project.ExpansionAudio == Project.ExpansionFds  || // Modulation settings
+                App.Project.ExpansionAudio == Project.ExpansionVrc7 || // A lot of stuff
+                App.Project.ExpansionAudio == Project.ExpansionNamco)  // Wave size
+            {
+                return App.Project.Instruments.Find(i => i.ExpansionType != Project.ExpansionNone) != null;
+            }
+
+            return false;
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
-
             g.Clear(ThemeBase.DarkGreyFillColor1);
             g.DrawLine(0, 0, 0, Height, theme.BlackBrush);
 
-            int actualWidth = Width - scrollBarSizeX;
+            var showExpandButton = ShowExpandButtons();
+            var actualWidth = Width - scrollBarSizeX;
+            var firstParam = true;
+            var y = -scrollY;
 
-            int y = -scrollY;
-
-            foreach (var button in buttons)
+            for (int i = 0; i < buttons.Count; i++)
             {
+                var button = buttons[i];
                 var icon = button.GetIcon();
 
                 g.PushTranslation(0, y);
-                g.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.GetColor(), buttonSizeY, 0.8f), theme.BlackBrush);
+
+                if (button.type == ButtonType.ParamCheckbox || 
+                    button.type == ButtonType.ParamSlider)
+                {
+                    if (firstParam)
+                    {
+                        var numParamButtons = 1;
+
+                        for (int j = i + 1; j < buttons.Count; j++, numParamButtons++)
+                        {
+                            if (buttons[j].type != ButtonType.ParamCheckbox && button.type != ButtonType.ParamSlider)
+                                break;
+                        }
+
+                        g.FillAndDrawRectangle(0, 0, actualWidth, numParamButtons * buttonSizeY, g.GetVerticalGradientBrush(button.GetColor(), numParamButtons * buttonSizeY, 0.8f), theme.BlackBrush);
+                        firstParam = false;
+                    }
+                }
+                else
+                {
+                    g.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.GetColor(), buttonSizeY, 0.8f), theme.BlackBrush);
+                }
 
                 var leftPadding = 0;
-                if (App.Project.NeedsExpansionInstruments && (button.type == ButtonType.Instrument || button.type == ButtonType.Song))
+                var leftAligned = button.type == ButtonType.Instrument || button.type == ButtonType.Song || button.type == ButtonType.ParamSlider || button.type == ButtonType.ParamCheckbox;
+
+                if (showExpandButton && leftAligned)
                 {
-                    var tabColor = button.instrument != null && button.instrument.IsExpansionInstrument ? ThemeBase.MediumGreyFillColor1 : ThemeBase.LightGreyFillColor1;
-                    g.FillRectangle(1, 1, 1 + expansionTypeSizeX, buttonSizeY, g.GetVerticalGradientBrush(tabColor, buttonSizeY, 0.8f));
-                    g.PushTranslation(1 + expansionTypeSizeX, 0);
-                    g.DrawLine(0, 0, 0, buttonSizeY, theme.BlackBrush);
-                    leftPadding = expansionTypeSizeX;
+                    g.PushTranslation(1 + expandButtonSizeX, 0);
+                    leftPadding = expandButtonSizeX;
                 }
 
                 g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, theme.BlackBrush, actualWidth - buttonTextNoIconPosX * 2);
 
                 if (icon != null)
-                {
                     g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY);
-                }
-
-                var subButtons = button.GetSubButtons(out var active);
-                if (subButtons != null)
-                {
-                    for (int i = 0, x = actualWidth - subButtonSpacingX - leftPadding; i < subButtons.Length; i++, x -= subButtonSpacingX)
-                    {
-                        g.DrawBitmap(button.GetIcon(subButtons[i]), x, subButtonPosY, active[i] ? 1.0f : 0.2f);
-                    }
-                }
 
                 if (leftPadding != 0)
                     g.PopTransform();
+
+                if (button.param != ParamType.Max)
+                {
+                    if (button.type == ButtonType.ParamSlider)
+                    {
+                        var sx = actualWidth - sliderPosX;
+                        var sy = sliderPosY + sliderSizeY / 2;
+                        g.DrawLine(sx, sy, sx + sliderSizeX, sy, theme.BlackBrush);
+
+                        var paramVal = button.GetParamValue();
+                        var paramMin = button.GetParamMinValue();
+                        var paramMax = button.GetParamMaxValue();
+                        var thumbX = (int)Math.Round((paramVal - paramMin) / (float)(paramMax - paramMin) * sliderSizeX);
+
+                        g.DrawText(paramVal.ToString(), ThemeBase.FontMediumRight, 0, buttonTextPosY, theme.BlackBrush, actualWidth - sliderTextPosX);
+                        g.PushTranslation(sx + thumbX, sliderPosY);
+                        g.FillRectangle(-sliderThumbSizeX, 0, sliderThumbSizeX, sliderSizeY, theme.BlackBrush);
+                        g.PopTransform();
+                    }
+                    else if (button.type == ButtonType.ParamCheckbox)
+                    {
+                        g.DrawBitmap(bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY);
+                    }
+
+                    // sliderPosX     
+                    // sliderPosY     
+                    // sliderSizeX    
+                    // sliderSizeY    
+                    // sliderTextPosX 
+                    // checkBoxPosX   
+                    // checkBoxPosY   
+                }
+                else
+                {
+                    var subButtons = button.GetSubButtons(out var active);
+                    if (subButtons != null)
+                    {
+                        for (int j = 0, x = actualWidth - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
+                        {
+                            if (subButtons[j] == SubButtonType.ExpandInstrument)
+                                g.DrawBitmap(button.GetIcon(subButtons[j]), expandButtonPosX, expandButtonPosY);
+                            else
+                                g.DrawBitmap(button.GetIcon(subButtons[j]), x, subButtonPosY, active[j] ? 1.0f : 0.2f);
+                        }
+                    }
+                }
 
                 g.PopTransform();
                 y += buttonSizeY;
@@ -450,7 +652,15 @@ namespace FamiStudio
 
             if (buttonIndex >= 0 && buttonIndex < buttons.Count)
             {
-                var subButtons = buttons[buttonIndex].GetSubButtons(out _);
+                var button = buttons[buttonIndex];
+
+                if (ShowExpandButtons() && button.instrument != null && button.instrument.IsExpansionInstrument && x < (expandButtonPosX + expandButtonSizeX))
+                {
+                    sub = SubButtonType.ExpandInstrument;
+                    return buttonIndex;
+                }
+
+                var subButtons = button.GetSubButtons(out _);
                 if (subButtons != null)
                 {
                     y -= (buttonIndex * buttonSizeY - scrollY);
@@ -563,7 +773,7 @@ namespace FamiStudio
                 {
                     var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
-                    var instrumentSrc = instrumentDrag;
+                    var instrumentSrc = draggedInstrument;
                     var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
 
                     if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null && instrumentSrc.ExpansionType == instrumentDst.ExpansionType)
@@ -595,7 +805,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    InstrumentDraggedOutside(instrumentDrag, PointToScreen(new Point(e.X, e.Y)));
+                    InstrumentDraggedOutside(draggedInstrument, PointToScreen(new Point(e.X, e.Y)));
                 }
 
                 Capture = false;
@@ -608,7 +818,7 @@ namespace FamiStudio
         {
             isDraggingInstrument = false;
             mouseDragY = -1;
-            instrumentDrag = null;
+            draggedInstrument = null;
             envelopeDragIdx = -1;
             UpdateCursor();
         }
@@ -710,10 +920,15 @@ namespace FamiStudio
 
                         if (selectedInstrument != null)
                         {
-                            instrumentDrag = selectedInstrument;
+                            draggedInstrument = selectedInstrument;
                             mouseDragY = e.Y;
                         }
-                   
+
+                        if (subButtonType == SubButtonType.ExpandInstrument)
+                        {                         
+                            expandedInstrument = expandedInstrument == selectedInstrument ? null : selectedInstrument;
+                            RefreshButtons();
+                        }
                         if (subButtonType == SubButtonType.DPCM)
                         {
                             InstrumentEdited?.Invoke(selectedInstrument, Envelope.Max);
