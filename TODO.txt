@@ -3,22 +3,29 @@
 ================
 - FDS:
 	- Project explorer advanced instrument params (move relative pitch env there).
-- Duty cycle envelopes.
+	- FDS Wave cant be negative
+	- Values above 61 are not visible.
+	- Presets (saw, triangle, sine, square, etc.)
+	- Proper playback (remove hacks)
+	- NSF.
+	- FamiTracker import/export
 - Fine pitch track
+	- NSF
+	- FamiTracker import/export
 - PAL support/tempo/speed:
-	- PAL/NTSC button in toolbar
-	- Switch note table
-	- Test frame repetition. 
-	
-	NEW PLAN: 2 tempo modes:
+	- 2 tempo modes:
 		- FamiTracker : Tracker like, tempo/speed, delayed notes/cuts. Minimal effor to support.
 		- FamiStudio  : Always 1 note = frame. Note size, PAL repetition pattern. (TEST THAT!)
+	- Do it in FamiStudio.
+	- Fix rounding on weird tempos.
+	- Delayed notes/cuts.
+	- NSF (#defines)
+- Duty cycle envelopes.
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Remove jump and skip effects:
 	- Jump is simply a loop point
 	- Skip is a shorter pattern.
-
 
 ========================
 
@@ -26,8 +33,8 @@ Backlog:
 - Raw FDS modulation table envelope.
 - Instrument folders
 - All expansions.
-- NSF import(would need fine pitch track, anything else? We can create multiple instruments for duty).
-- Cleanup (merge duplicated patterns, instruments, remove unused stuff.
+- NSF import(would needse? We can create multiple instruments for duty).
+- Cleanup (merge duplicated patterns, instruments, r fine pitch track, anything elemove unused stuff.
 - Fix crash on startup when there are no audio device 
 - Proper error messages when something fails (save, etc.)
 - Add taskbar progress bar + color to show playback state
