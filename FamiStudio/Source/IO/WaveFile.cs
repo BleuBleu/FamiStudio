@@ -88,10 +88,11 @@ namespace FamiStudio
 
                 wavBytes.AddRange(samples);
 
-                if (!PlayerBase.AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote, ref advance))
-                {
-                    break;
-                }
+                // MATTT
+                //if (!PlayerBase.AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote, ref advance))
+                //{
+                //    break;
+                //}
             }
 
             using (var file = new FileStream(filename, FileMode.Create))

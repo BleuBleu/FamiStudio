@@ -110,6 +110,7 @@ namespace FamiStudio
             var playNote = 0;
             var jumpPattern = -1;
             var jumpNote = -1;
+            //var numFrames = 0;
             var speed = song.Speed;
 
             playPosition = startInfo.frame;
@@ -125,11 +126,8 @@ namespace FamiStudio
 
                 while (playPattern * song.PatternLength + playNote < startInfo.frame)
                 {
-                    var dummyAdvance = false;
-                    if (!AdvanceTempo(song, speed, LoopMode.None, ref tempoCounter, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote, ref dummyAdvance))
-                    {
+                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
                         break;
-                    }
 
                     foreach (var channel in channels)
                     {
@@ -160,11 +158,6 @@ namespace FamiStudio
                     break;
                 }
 
-                // !advance is to handle first frame.
-                if (!advance && !AdvanceTempo(song, speed, loopMode, ref tempoCounter, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote, ref advance))
-                    break;
-
-                // Advance to next note.
                 if (advance)
                 {
                     playPosition = playPattern * song.PatternLength + playNote;
@@ -192,6 +185,16 @@ namespace FamiStudio
                 }
 
                 EndFrameAndQueueSamples();
+
+                if (UpdateFamitrackerTempo(speed, song.Tempo, startInfo.pal, ref tempoCounter))
+                //if (UpdateFamistudioTempo(6, startInfo.pal, ref tempoCounter, ref numFrames))
+                {
+                    // Advance to next note.
+                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
+                        break;
+
+                    advance = true;
+                }
             }
 
             audioStream.Stop();

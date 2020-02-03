@@ -65,51 +65,64 @@ namespace FamiStudio
             audioStream.Dispose();
         }
 
-        public static bool AdvanceTempo(Song song, int speed, LoopMode loopMode, ref int tempoCounter, ref int playPattern, ref int playNote, ref int jumpPattern, ref int jumpNote, ref bool advance)
+        public static bool UpdateFamitrackerTempo(int speed, int tempo, bool pal, ref int tempoCounter)
         {
-            // Tempo/speed logic.
-            tempoCounter += song.Tempo * 256 / 150; // NTSC
+            // Tempo/speed logic straight from Famitracker.
+            var tempoDecrement = (tempo * 24) / speed;
+            var tempoRemainder = (tempo * 24) % speed;
 
-            if ((tempoCounter >> 8) >= speed)
+            if (tempoCounter <= 0)
             {
-                tempoCounter -= (speed << 8);
+                int ticksPerSec = pal ? 50 : 60;
+                tempoCounter += (60 * ticksPerSec) - tempoRemainder;
+            }
+            tempoCounter -= tempoDecrement;
+           
+            return tempoCounter <= 0;
+        }
 
-                if (jumpNote >= 0 || jumpPattern >= 0)
-                {
-                    if (loopMode == LoopMode.Pattern)
-                    {
-                        playNote = 0;
-                    }
-                    else
-                    {
-                        playNote = Math.Min(song.PatternLength - 1, jumpNote);
-                        playPattern = jumpPattern;
-                    }
+        public static bool UpdateFamistudioTempo(int speed, bool pal, ref int tempoCounter, ref int numFrames)
+        {
+            numFrames = (pal && (tempoCounter % speed) == (speed - 2)) ? 2 : 1;
+            tempoCounter += numFrames;
+            return true;
+        }
 
-                    jumpPattern = -1;
-                    jumpNote = -1;
-                }
-                else if (++playNote >= song.PatternLength)
+        public static bool AdvanceSong(int songLength, int patternLength, LoopMode loopMode, ref int playPattern, ref int playNote, ref int jumpPattern, ref int jumpNote)
+        {
+            if (jumpNote >= 0 || jumpPattern >= 0)
+            {
+                if (loopMode == LoopMode.Pattern)
                 {
                     playNote = 0;
-                    if (loopMode != LoopMode.Pattern)
-                        playPattern++;
                 }
-
-                if (playPattern >= song.Length)
+                else
                 {
-                    if (loopMode == LoopMode.None)
-                    {
-                        return false;
-                    }
-                    else if (loopMode == LoopMode.Song)
-                    {
-                        playPattern = 0;
-                        playNote = 0;
-                    }
+                    playNote = Math.Min(patternLength - 1, jumpNote);
+                    playPattern = jumpPattern;
                 }
 
-                advance = true;
+                jumpPattern = -1;
+                jumpNote = -1;
+            }
+            else if (++playNote >= patternLength)
+            {
+                playNote = 0;
+                if (loopMode != LoopMode.Pattern)
+                    playPattern++;
+            }
+
+            if (playPattern >= songLength)
+            {
+                if (loopMode == LoopMode.None)
+                {
+                    return false;
+                }
+                else if (loopMode == LoopMode.Song)
+                {
+                    playPattern = 0;
+                    playNote = 0;
+                }
             }
 
             return true;

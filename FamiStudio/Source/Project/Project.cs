@@ -23,6 +23,9 @@ namespace FamiStudio
         public const int ExpansionSunsoft = 6;
         public const int ExpansionCount   = 7;
 
+        //public const int MachineNSTC = 0;
+        //public const int MachinePAL  = 1;
+
         public static string[] ExpansionNames =
         {
             "None",

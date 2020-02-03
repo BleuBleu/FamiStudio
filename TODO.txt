@@ -20,6 +20,7 @@
 	- Fix rounding on weird tempos.
 	- Delayed notes/cuts.
 	- NSF (#defines)
+	- Add better tempo logic to famitone2fs.
 - Duty cycle envelopes.
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
