@@ -51,9 +51,7 @@ namespace FamiStudio
 
         protected override unsafe short[] EndFrame()
         {
-            var samples = base.EndFrame();
-
-            sampleQueue.Enqueue(samples);
+            sampleQueue.Enqueue(base.EndFrame());
 
             // Wait until we have queued as many frames as XAudio buffers to start
             // the audio thread, otherwise, we risk starving on the first frame.
@@ -69,7 +67,7 @@ namespace FamiStudio
                 }
             }
 
-            return samples;
+            return null;
         }
     };
 }

@@ -4,14 +4,6 @@ using System.Threading;
 
 namespace FamiStudio
 {
-    public enum LoopMode
-    {
-        None,
-        Song,
-        Pattern,
-        Max
-    };
-
     public class SongPlayer : AudioPlayer
     {
         struct SongPlayerStartInfo

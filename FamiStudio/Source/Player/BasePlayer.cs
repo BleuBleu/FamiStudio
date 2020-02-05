@@ -12,6 +12,14 @@ using AudioStream = FamiStudio.PortAudioStream;
 
 namespace FamiStudio
 {
+    public enum LoopMode
+    {
+        None,
+        Song,
+        Pattern,
+        Max
+    };
+
     public class BasePlayer
     {
         protected const int SampleRate = 44100;
@@ -23,7 +31,6 @@ namespace FamiStudio
 
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;
-
         protected int tempoCounter = 0;
         protected int playPattern = 0;
         protected int playNote = 0;
@@ -37,9 +44,9 @@ namespace FamiStudio
         protected int channelMask = 0xffff;
         protected int playPosition = 0;
 
-        protected BasePlayer(int apuIndex)
+        protected BasePlayer(int apu)
         {
-            this.apuIndex = apuIndex;
+            apuIndex = apu;
             dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
         }
 
