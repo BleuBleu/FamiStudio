@@ -12,9 +12,7 @@ namespace FamiStudio
             public Note note;
         };
 
-        bool palMode = false;
         int expansionAudio = Project.ExpansionNone;
-        ChannelState[] channels;
         int[] envelopeFrames = new int[Envelope.Max];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
         bool IsRunning => playerThread != null;
@@ -60,7 +58,7 @@ namespace FamiStudio
         public void Start(Project project, bool pal)
         {
             expansionAudio = project.ExpansionAudio;
-            channels = CreateChannelStates(project, apuIndex, pal);
+            channelStates = CreateChannelStates(project, apuIndex, pal);
             palMode = pal;
 
             stopEvent.Reset();
@@ -78,7 +76,7 @@ namespace FamiStudio
                 stopEvent.Set();
                 playerThread.Join();
                 playerThread = null;
-                channels = null;
+                channelStates = null;
             }
         }
 
@@ -96,7 +94,7 @@ namespace FamiStudio
             var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
 
             NesApu.InitAndReset(apuIndex, SampleRate, palMode, expansionAudio, dmcCallback);
-            for (int i = 0; i < channels.Length; i++)
+            for (int i = 0; i < channelStates.Length; i++)
                 NesApu.EnableChannel(apuIndex, i, 0);
 
             while (true)
@@ -119,7 +117,7 @@ namespace FamiStudio
                     activeChannel = lastNote.channel;
                     if (activeChannel >= 0)
                     {
-                        channels[activeChannel].PlayNote(lastNote.note);
+                        channelStates[activeChannel].PlayNote(lastNote.note);
 
                         if (lastNote.note.IsRelease)
                         {
@@ -132,7 +130,7 @@ namespace FamiStudio
                         }
                     }
 
-                    for (int i = 0; i < channels.Length; i++)
+                    for (int i = 0; i < channelStates.Length; i++)
                         NesApu.EnableChannel(apuIndex, i, i == activeChannel ? 1 : 0);
                 }
 
@@ -147,17 +145,17 @@ namespace FamiStudio
 
                 if (activeChannel >= 0)
                 {
-                    channels[activeChannel].UpdateEnvelopes();
-                    channels[activeChannel].UpdateAPU();
+                    channelStates[activeChannel].UpdateEnvelopes();
+                    channelStates[activeChannel].UpdateAPU();
 
                     for (int i = 0; i < Envelope.Max; i++)
-                        envelopeFrames[i] = channels[activeChannel].GetEnvelopeFrame(i);
+                        envelopeFrames[i] = channelStates[activeChannel].GetEnvelopeFrame(i);
                 }
                 else
                 {
                     for (int i = 0; i < Envelope.Max; i++)
                         envelopeFrames[i] = 0;
-                    foreach (var channel in channels)
+                    foreach (var channel in channelStates)
                         channel.ClearNote();
                 }
 

@@ -22,7 +22,7 @@ namespace FamiStudio
 
         protected AudioPlayer(int apuIndex) : base(apuIndex)
         {
-            this.apuIndex = apuIndex;
+            audioStream = new AudioStream(SampleRate, 1, BufferSize, NumAudioBuffers, AudioBufferFillCallback);
         }
 
         protected short[] AudioBufferFillCallback()
@@ -40,12 +40,6 @@ namespace FamiStudio
             return samples;
         }
 
-        public override void Initialize()
-        {
-            base.Initialize();
-            audioStream = new AudioStream(SampleRate, 1, BufferSize, NumAudioBuffers, AudioBufferFillCallback);
-        }
-        
         public override void Shutdown()
         {
             stopEvent.Set();

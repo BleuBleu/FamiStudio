@@ -19,8 +19,8 @@ namespace FamiStudio
         private FamiStudioForm mainForm;
         private Project project;
         private Song song;
-        private SongPlayer songPlayer;
-        private InstrumentPlayer instrumentPlayer;
+        private SongPlayer songPlayer = new SongPlayer();
+        private InstrumentPlayer instrumentPlayer = new InstrumentPlayer();
         private Midi midi;
         private UndoRedoManager undoRedoManager;
         private int ghostChannelMask = 0;
@@ -69,11 +69,6 @@ namespace FamiStudio
             ProjectExplorer.SongModified += projectExplorer_SongModified;
             ProjectExplorer.SongSelected += projectExplorer_SongSelected;
             ProjectExplorer.ExpansionAudioChanged += ProjectExplorer_ExpansionAudioChanged;
-
-            songPlayer = new SongPlayer();
-            songPlayer.Initialize();
-            instrumentPlayer = new InstrumentPlayer();
-            instrumentPlayer.Initialize();
 
             InitializeMidi();
 

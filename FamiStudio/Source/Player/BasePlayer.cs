@@ -30,24 +30,42 @@ namespace FamiStudio
         protected int jumpPattern = -1;
         protected int jumpNote = -1;
         protected int speed = 6;
+        protected bool palMode = false;
+        protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode;
+        protected int channelMask = 0xffff;
+        protected int playPosition = 0;
 
         protected BasePlayer(int apuIndex)
         {
             this.apuIndex = apuIndex;
-        }
-
-        public virtual void Initialize()
-        {
             dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
         }
-        
+
         public virtual void Shutdown()
         {
         }
 
-        public bool UpdateFamitrackerTempo(int speed, int tempo, bool pal, ref int tempoCounter)
+        public int ChannelMask
+        {
+            get { return channelMask; }
+            set { channelMask = value; }
+        }
+
+        public LoopMode Loop
+        {
+            get { return loopMode; }
+            set { loopMode = value; }
+        }
+
+        public int CurrentFrame
+        {
+            get { return Math.Max(0, playPosition); }
+            set { playPosition = value; }
+        }
+
+        public bool UpdateFamitrackerTempo(int speed, int tempo, ref int tempoCounter)
         {
             // Tempo/speed logic straight from Famitracker.
             var tempoDecrement = (tempo * 24) / speed;
@@ -55,7 +73,7 @@ namespace FamiStudio
 
             if (tempoCounter <= 0)
             {
-                int ticksPerSec = pal ? 50 : 60;
+                int ticksPerSec = palMode ? 50 : 60;
                 tempoCounter += (60 * ticksPerSec) - tempoRemainder;
             }
             tempoCounter -= tempoDecrement;
@@ -63,16 +81,21 @@ namespace FamiStudio
             return tempoCounter <= 0;
         }
 
-        public bool UpdateFamistudioTempo(int speed, bool pal, ref int tempoCounter, ref int numFrames)
+        public bool UpdateFamistudioTempo(int speed, ref int tempoCounter, ref int numFrames)
         {
-            numFrames = (pal && (tempoCounter % speed) == (speed - 2)) ? 2 : 1;
+            numFrames = (palMode && (tempoCounter % speed) == (speed - 2)) ? 2 : 1;
             tempoCounter += numFrames;
             return true;
         }
 
-        public bool BeginPlaySong(Song song, bool pal, int startNote)
+        public bool BeginPlaySong(Song s, bool pal, int startNote)
         {
-            NesApu.InitAndReset(apuIndex, SampleRate, pal, GetNesApuExpansionAudio(song.Project), dmcCallback);
+            song = s;
+            palMode = pal;
+            playPosition = startNote;
+            channelStates = CreateChannelStates(song.Project, apuIndex, palMode);
+
+            NesApu.InitAndReset(apuIndex, SampleRate, palMode, GetNesApuExpansionAudio(song.Project), dmcCallback);
 
             if (startNote != 0)
             {
@@ -115,7 +138,7 @@ namespace FamiStudio
             return true;
         }
 
-        public bool RunSongFrame()
+        public bool PlaySongFrame()
         {
             // Update envelopes + APU registers.
             foreach (var channel in channelStates)
@@ -132,36 +155,21 @@ namespace FamiStudio
 
             EndFrame();
 
-            if (UpdateFamitrackerTempo(speed, song.Tempo, startInfo.pal, ref tempoCounter))
-            //if (UpdateFamistudioTempo(6, startInfo.pal, ref tempoCounter, ref numFrames))
+            if (UpdateFamitrackerTempo(speed, song.Tempo, ref tempoCounter))
+            //if (UpdateFamistudioTempo(6, ref tempoCounter, ref numFrames))
             {
                 // Advance to next note.
                 if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
-                    break;
+                    return false;
 
-                foreach (var channel in channels)
+                foreach (var channel in channelStates)
                 {
                     channel.Advance(song, playPattern, playNote);
                     channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
                 }
             }
-        }
 
-        public bool PlaySong(Song song, bool pal, int startNote, LoopMode loopMode)
-        {
-            var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
-
-            while (true)
-            {
-                playPosition = playPattern * song.PatternLength + playNote;
-
-                int idx = WaitHandle.WaitAny(waitEvents);
-
-                if (idx == 0)
-                {
-                    break;
-                }
-            }
+            return true;
         }
 
         public bool AdvanceSong(int songLength, int patternLength, LoopMode loopMode, ref int playPattern, ref int playNote, ref int jumpPattern, ref int jumpNote)

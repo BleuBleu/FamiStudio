@@ -33,13 +33,8 @@ namespace FamiStudio
 
         public unsafe static void Save(Song song, string filename, int sampleRate)
         {
-            var samples = new List<short>();
-            var player = new WavPlayer(samples);
-
-            //var wavBytes = new byte[];
-            //player.Play();
-
-            
+            var player = new WavPlayer();
+            var samples = player.GetSongSamples(song, false); // MATTT
 
             using (var file = new FileStream(filename, FileMode.Create))
             {
@@ -81,7 +76,7 @@ namespace FamiStudio
                 //    chunkSize += (nChannels * bitsPerSample/8)
                 //    subChunk2Size += (nChannels * bitsPerSample/8)
                 header.subChunk1Size = 16;
-                header.subChunk2Size = wavBytes.Count;
+                header.subChunk2Size = samples.Length * sizeof(short);
                 header.chunkSize = 4 + (8 + header.subChunk1Size) + (8 + header.subChunk2Size);
 
                 var headerBytes = new byte[sizeof(WaveHeader)];

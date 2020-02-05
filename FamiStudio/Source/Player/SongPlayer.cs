@@ -14,10 +14,6 @@ namespace FamiStudio
 
     public class SongPlayer : AudioPlayer
     {
-        protected int channelMask = 0xffff;
-        protected int playPosition = 0;
-        protected LoopMode loopMode = LoopMode.Song;
-
         struct SongPlayerStartInfo
         {
             public Song song;
@@ -27,11 +23,6 @@ namespace FamiStudio
 
         public SongPlayer() : base(NesApu.APU_SONG)
         {
-        }
-
-        public override void Initialize()
-        {
-            base.Initialize();
         }
 
         public override void Shutdown()
@@ -74,24 +65,6 @@ namespace FamiStudio
             return false;
         }
 
-        public int ChannelMask
-        {
-            get { return channelMask; }
-            set { channelMask = value; }
-        }
-
-        public LoopMode Loop
-        {
-            get { return loopMode; }
-            set { loopMode = value; }
-        }
-
-        public int CurrentFrame
-        {
-            get { return Math.Max(0, playPosition); }
-            set { playPosition = value; }
-        }
-
         public bool IsPlaying
         {
             get { return playerThread != null; }
@@ -100,105 +73,22 @@ namespace FamiStudio
         unsafe void PlayerThread(object o)
         {
             var startInfo = (SongPlayerStartInfo)o;
-            var song = startInfo.song;
 
-            var channels = CreateChannelStates(song.Project, apuIndex, startInfo.pal);
+            if (BeginPlaySong(startInfo.song, startInfo.pal, startInfo.startNote))
+            {
+                var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
 
-            var tempoCounter = 0;
-            var playPattern = 0;
-            var playNote = 0;
-            var jumpPattern = -1;
-            var jumpNote = -1;
-            //var numFrames = 0;
-            var speed = song.Speed;
+                while (true)
+                {
+                    int idx = WaitHandle.WaitAny(waitEvents);
 
-            playPosition = startInfo.startNote;
-
-//            NesApu.InitAndReset(apuIndex, SampleRate, startInfo.pal, GetNesApuExpansionAudio(song.Project), dmcCallback);
-
-//            if (startInfo.startNote != 0)
-//            {
-//                NesApu.StartSeeking(apuIndex);
-//                #if DEBUG
-//                    NesApu.seeking = true;
-//                #endif
-
-//                while (playPattern * song.PatternLength + playNote < startInfo.startNote)
-//                {
-//                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
-//                        break; // MATTT: We should just return no?
-
-//                    foreach (var channel in channels)
-//                    {
-//                        channel.Advance(song, playPattern, playNote);
-//                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
-//                        channel.UpdateEnvelopes();
-//                        channel.UpdateAPU();
-//                    }
-//                }
-
-//                NesApu.StopSeeking(apuIndex);
-//#if DEBUG
-//                NesApu.seeking = false;
-//#endif
-
-//                jumpPattern = -1;
-//                jumpNote = -1;
-//            }
-//            else
-//            {
-//                foreach (var channel in channels)
-//                {
-//                    channel.Advance(song, 0, 0);
-//                    channel.ProcessEffects(song, 0, 0, ref jumpPattern, ref jumpNote, ref speed);
-//                }
-//            }
-
-//            var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
-
-//            while (true)
-//            {
-//                playPosition = playPattern * song.PatternLength + playNote;
-
-//                int idx = WaitHandle.WaitAny(waitEvents);
-
-//                if (idx == 0)
-//                {
-//                    break;
-//                }
-
-//                // Update envelopes + APU registers.
-//                foreach (var channel in channels)
-//                {
-//                    channel.UpdateEnvelopes();
-//                    channel.UpdateAPU();
-//                }
-
-//                // Mute.
-//                for (int i = 0; i < channels.Length; i++) 
-//                {
-//                    NesApu.EnableChannel(apuIndex, i, (channelMask & (1 << i)));
-//                }
-
-//                EndFrame();
-
-//                if (UpdateFamitrackerTempo(speed, song.Tempo, startInfo.pal, ref tempoCounter))
-//                //if (UpdateFamistudioTempo(6, startInfo.pal, ref tempoCounter, ref numFrames))
-//                {
-//                    // Advance to next note.
-//                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
-//                        break;
-
-//                    foreach (var channel in channels)
-//                    {
-//                        channel.Advance(song, playPattern, playNote);
-//                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
-//                    }
-//                }
-//            }
+                    if (idx == 0 || !PlaySongFrame())
+                        break;
+                }
+            }
 
             audioStream.Stop();
-            while (sampleQueue.TryDequeue(out _)) ;
+            while (sampleQueue.TryDequeue(out _));
         }
     };
 }

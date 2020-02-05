@@ -8,18 +8,28 @@ namespace FamiStudio
 {
     class WavPlayer : BasePlayer
     {
-        List<short> outputBuffer;
+        List<short> samples;
 
-        public WavPlayer(List<short> buffer) : base(NesApu.APU_WAV_EXPORT)
+        public WavPlayer() : base(NesApu.APU_WAV_EXPORT)
         {
-            outputBuffer = buffer;
+        }
+
+        public short[] GetSongSamples(Song song, bool pal)
+        {
+            samples = new List<short>();
+
+            if (BeginPlaySong(song, pal, 0))
+            {
+                while (PlaySongFrame());
+            }
+
+            return samples.ToArray();
         }
 
         protected override short[] EndFrame()
         {
-            var samples = base.EndFrame();
-            outputBuffer.AddRange(samples);
-            return samples;
+            samples.AddRange(base.EndFrame());
+            return null;
         }
     }
 }
