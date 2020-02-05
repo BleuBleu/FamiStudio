@@ -12,7 +12,7 @@ namespace FamiStudio
         Max
     };
 
-    public class SongPlayer : PlayerBase
+    public class SongPlayer : AudioPlayer
     {
         protected int channelMask = 0xffff;
         protected int playPosition = 0;
@@ -21,7 +21,7 @@ namespace FamiStudio
         struct SongPlayerStartInfo
         {
             public Song song;
-            public int frame;
+            public int startNote;
             public bool pal;
         };
 
@@ -48,7 +48,7 @@ namespace FamiStudio
             stopEvent.Reset();
             frameEvent.Set();
             playerThread = new Thread(PlayerThread);
-            playerThread.Start(new SongPlayerStartInfo() { song = song, frame = frame, pal = pal });
+            playerThread.Start(new SongPlayerStartInfo() { song = song, startNote = frame, pal = pal });
         }
 
         public void Stop()
@@ -102,9 +102,8 @@ namespace FamiStudio
             var startInfo = (SongPlayerStartInfo)o;
             var song = startInfo.song;
 
-            var channels = PlayerBase.CreateChannelStates(song.Project, apuIndex, startInfo.pal);
+            var channels = CreateChannelStates(song.Project, apuIndex, startInfo.pal);
 
-            var advance = true;
             var tempoCounter = 0;
             var playPattern = 0;
             var playNote = 0;
@@ -113,89 +112,90 @@ namespace FamiStudio
             //var numFrames = 0;
             var speed = song.Speed;
 
-            playPosition = startInfo.frame;
+            playPosition = startInfo.startNote;
 
-            NesApu.InitAndReset(apuIndex, SampleRate, startInfo.pal, GetNesApuExpansionAudio(song.Project), dmcCallback);
+//            NesApu.InitAndReset(apuIndex, SampleRate, startInfo.pal, GetNesApuExpansionAudio(song.Project), dmcCallback);
 
-            if (startInfo.frame != 0)
-            {
-                NesApu.StartSeeking(apuIndex);
-                #if DEBUG
-                    NesApu.seeking = true;
-                #endif
+//            if (startInfo.startNote != 0)
+//            {
+//                NesApu.StartSeeking(apuIndex);
+//                #if DEBUG
+//                    NesApu.seeking = true;
+//                #endif
 
-                while (playPattern * song.PatternLength + playNote < startInfo.frame)
-                {
-                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
-                        break;
+//                while (playPattern * song.PatternLength + playNote < startInfo.startNote)
+//                {
+//                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
+//                        break; // MATTT: We should just return no?
 
-                    foreach (var channel in channels)
-                    {
-                        channel.Advance(song, playPattern, playNote);
-                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
-                        channel.UpdateEnvelopes();
-                        channel.UpdateAPU();
-                    }
-                }
+//                    foreach (var channel in channels)
+//                    {
+//                        channel.Advance(song, playPattern, playNote);
+//                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
+//                        channel.UpdateEnvelopes();
+//                        channel.UpdateAPU();
+//                    }
+//                }
 
-                NesApu.StopSeeking(apuIndex);
-#if DEBUG
-                NesApu.seeking = false;
-#endif
+//                NesApu.StopSeeking(apuIndex);
+//#if DEBUG
+//                NesApu.seeking = false;
+//#endif
 
-                jumpPattern = -1;
-                jumpNote = -1;
-            }
+//                jumpPattern = -1;
+//                jumpNote = -1;
+//            }
+//            else
+//            {
+//                foreach (var channel in channels)
+//                {
+//                    channel.Advance(song, 0, 0);
+//                    channel.ProcessEffects(song, 0, 0, ref jumpPattern, ref jumpNote, ref speed);
+//                }
+//            }
 
-            var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
+//            var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
 
-            while (true)
-            {
-                int idx = WaitHandle.WaitAny(waitEvents);
+//            while (true)
+//            {
+//                playPosition = playPattern * song.PatternLength + playNote;
 
-                if (idx == 0)
-                {
-                    break;
-                }
+//                int idx = WaitHandle.WaitAny(waitEvents);
 
-                if (advance)
-                {
-                    playPosition = playPattern * song.PatternLength + playNote;
+//                if (idx == 0)
+//                {
+//                    break;
+//                }
 
-                    foreach (var channel in channels)
-                    {
-                        channel.Advance(song, playPattern, playNote);
-                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
-                    }
+//                // Update envelopes + APU registers.
+//                foreach (var channel in channels)
+//                {
+//                    channel.UpdateEnvelopes();
+//                    channel.UpdateAPU();
+//                }
 
-                    advance = false;
-                }
+//                // Mute.
+//                for (int i = 0; i < channels.Length; i++) 
+//                {
+//                    NesApu.EnableChannel(apuIndex, i, (channelMask & (1 << i)));
+//                }
 
-                // Update envelopes + APU registers.
-                foreach (var channel in channels)
-                {
-                    channel.UpdateEnvelopes();
-                    channel.UpdateAPU();
-                }
+//                EndFrame();
 
-                // Mute.
-                for (int i = 0; i < channels.Length; i++) 
-                {
-                    NesApu.EnableChannel(apuIndex, i, (channelMask & (1 << i)));
-                }
+//                if (UpdateFamitrackerTempo(speed, song.Tempo, startInfo.pal, ref tempoCounter))
+//                //if (UpdateFamistudioTempo(6, startInfo.pal, ref tempoCounter, ref numFrames))
+//                {
+//                    // Advance to next note.
+//                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
+//                        break;
 
-                EndFrameAndQueueSamples();
-
-                if (UpdateFamitrackerTempo(speed, song.Tempo, startInfo.pal, ref tempoCounter))
-                //if (UpdateFamistudioTempo(6, startInfo.pal, ref tempoCounter, ref numFrames))
-                {
-                    // Advance to next note.
-                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
-                        break;
-
-                    advance = true;
-                }
-            }
+//                    foreach (var channel in channels)
+//                    {
+//                        channel.Advance(song, playPattern, playNote);
+//                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
+//                    }
+//                }
+//            }
 
             audioStream.Stop();
             while (sampleQueue.TryDequeue(out _)) ;

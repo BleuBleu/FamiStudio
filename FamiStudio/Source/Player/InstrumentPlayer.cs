@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace FamiStudio
 {
-    public class InstrumentPlayer : PlayerBase
+    public class InstrumentPlayer : AudioPlayer
     {
         struct PlayerNote
         {
@@ -60,7 +60,7 @@ namespace FamiStudio
         public void Start(Project project, bool pal)
         {
             expansionAudio = project.ExpansionAudio;
-            channels = PlayerBase.CreateChannelStates(project, apuIndex, pal);
+            channels = CreateChannelStates(project, apuIndex, pal);
             palMode = pal;
 
             stopEvent.Reset();
@@ -161,7 +161,7 @@ namespace FamiStudio
                         channel.ClearNote();
                 }
 
-                EndFrameAndQueueSamples();
+                EndFrame();
             }
 
             audioStream.Stop();
