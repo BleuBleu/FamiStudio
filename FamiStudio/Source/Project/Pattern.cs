@@ -107,7 +107,7 @@ namespace FamiStudio
                 for (int i = 0; i < song.PatternLength; i++)
                 {
                     var n = notes[i];
-                    if (n.IsValid || n.HasVolume || n.HasSkip || n.HasSpeed || n.HasJump)
+                    if (n.IsValid || n.HasVolume || n.HasSpeed)
                     {
                         return true;
                     }

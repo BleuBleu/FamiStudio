@@ -451,7 +451,7 @@ namespace FamiStudio
         {
             var packedPatternBuffers = new List<List<string>>(globalPacketPatternBuffers);
             var size = 0;
-            var loopPoint = Math.Max(0, FindEffectParam(song, Note.EffectJump)) * factor;
+            var loopPoint = 0; // MATTT Math.Max(0, FindEffectParam(song, Note.EffectJump)) * factor;
             var emptyPattern = new Pattern(-1, song, 0, "");
 
             for (int c = 0; c < song.Channels.Length; c++)
@@ -491,7 +491,7 @@ namespace FamiStudio
                     }
 
                     var i = 0;
-                    var patternLength = FindEffectPosition(song, p, Note.EffectSkip);
+                    var patternLength = -1; // MATTT FindEffectPosition(song, p, Note.EffectSkip);
                     var jumpFound = false;
 
                     if (patternLength >= 0)
@@ -503,7 +503,7 @@ namespace FamiStudio
                     {
                         isSkipping = false;
 
-                        patternLength = FindEffectPosition(song, p, Note.EffectJump);
+                        patternLength = -1; // MATTT FindEffectPosition(song, p, Note.EffectJump);
                         if (patternLength >= 0)
                         {
                             patternLength++;

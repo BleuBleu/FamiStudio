@@ -5,7 +5,7 @@ namespace FamiStudio
 {
     public struct Note
     {
-        public static string[] NoteNames = 
+        public static readonly string[] NoteNames = 
         {
             "C",
             "C#",
@@ -21,20 +21,25 @@ namespace FamiStudio
             "B"
         };
 
+        public static readonly string[] EffectNames =
+        {
+            "Volume",
+            "Vib Speed",
+            "Vib Depth",
+            "Pitch",
+            "Speed"
+        };
+
         public const int EffectVolume       = 0;
         public const int EffectVibratoSpeed = 1; // 4Xy
         public const int EffectVibratoDepth = 2; // 4xY
         public const int EffectFinePitch    = 3; // Pxx
-        public const int EffectJump         = 4; // Bxx
-        public const int EffectSkip         = 5; // Dxx
-        public const int EffectSpeed        = 6; // Fxx
-        public const int EffectCount        = 7;
+        public const int EffectSpeed        = 4; // Fxx
+        public const int EffectCount        = 5;
 
         // TODO: Have a bitmask that tells us which effects have a valid value instead
         // of these super-hacky arbitrary values.
         public const int SpeedInvalid     = 0xff;
-        public const int JumpInvalid      = 0xff;
-        public const int SkipInvalid      = 0xff;
         public const int VolumeInvalid    = 0xff;
         public const int FinePitchInvalid = -128;
         public const int VibratoInvalid   = 0xf0;
@@ -61,11 +66,16 @@ namespace FamiStudio
         public byte Volume; // 0-15. 0xff = no volume change.
         public byte Vibrato; // Uses same encoding as FamiTracker
         public byte Speed;
-        public byte Jump;
-        public byte Skip;
         public byte Slide;
         public sbyte Pitch; // Fine pitch.
         public Instrument Instrument;
+
+        // As of version 5 (FamiStudio 1.5.0), these are deprecated.
+        public const int JumpInvalid = 0xff;
+        public const int SkipInvalid = 0xff;
+
+        public byte Jump;
+        public byte Skip;
 
         public Note(int value)
         {
@@ -91,7 +101,6 @@ namespace FamiStudio
             if (!preserveFx)
             {
                 Speed = SpeedInvalid;
-                Skip = SkipInvalid;
                 Speed = SpeedInvalid;
                 Volume = VolumeInvalid;
                 Vibrato = VibratoInvalid;
@@ -190,18 +199,6 @@ namespace FamiStudio
             }
         }
 
-        public bool HasJump
-        {
-            get { return Jump != JumpInvalid; }
-            set { if (!value) Jump = JumpInvalid; }
-        }
-
-        public bool HasSkip
-        {
-            get { return Skip != SkipInvalid; }
-            set { if (!value) Skip = SkipInvalid; }
-        }
-
         public bool HasSpeed
         {
             get { return Speed != SpeedInvalid; }
@@ -239,8 +236,6 @@ namespace FamiStudio
                 case EffectVibratoDepth : return HasVibrato;
                 case EffectVibratoSpeed : return HasVibrato;
                 case EffectFinePitch    : return HasFinePitch;
-                case EffectJump         : return HasJump;
-                case EffectSkip         : return HasSkip;
                 case EffectSpeed        : return HasSpeed;
             }
 
@@ -255,8 +250,6 @@ namespace FamiStudio
                 case EffectVibratoDepth : return VibratoDepth;
                 case EffectVibratoSpeed : return VibratoSpeed;
                 case EffectFinePitch    : return Pitch;
-                case EffectJump         : return Jump;
-                case EffectSkip         : return Skip;
                 case EffectSpeed        : return Speed;
             }
 
@@ -271,8 +264,6 @@ namespace FamiStudio
                 case EffectVibratoDepth : VibratoDepth =  (byte)val; break;
                 case EffectVibratoSpeed : VibratoSpeed =  (byte)val; break;
                 case EffectFinePitch    : Pitch        = (sbyte)val; break;
-                case EffectJump         : Jump         =  (byte)val; break;
-                case EffectSkip         : Skip         =  (byte)val; break;
                 case EffectSpeed        : Speed        =  (byte)val; break;
             }
         }
@@ -281,13 +272,11 @@ namespace FamiStudio
         {
             switch (fx)
             {
-                case EffectVolume       : Volume  = VolumeInvalid;  break;
-                case EffectVibratoDepth : Vibrato = VibratoInvalid; break;
-                case EffectVibratoSpeed : Vibrato = VibratoInvalid; break;
-                case EffectFinePitch    : Pitch   = FinePitchInvalid;   break;
-                case EffectJump         : Jump    = JumpInvalid;    break;
-                case EffectSkip         : Skip    = SkipInvalid;    break;
-                case EffectSpeed        : Speed   = SpeedInvalid;   break;
+                case EffectVolume       : Volume  = VolumeInvalid;    break;
+                case EffectVibratoDepth : Vibrato = VibratoInvalid;   break;
+                case EffectVibratoSpeed : Vibrato = VibratoInvalid;   break;
+                case EffectFinePitch    : Pitch   = FinePitchInvalid; break;
+                case EffectSpeed        : Speed   = SpeedInvalid;     break;
             }
         }
 
@@ -324,8 +313,6 @@ namespace FamiStudio
                 case EffectVibratoDepth : return VibratoDepthMax;
                 case EffectVibratoSpeed : return VibratoSpeedMax;
                 case EffectFinePitch    : return FinePitchMax;
-                case EffectJump         : return Math.Min(254, song.Length);
-                case EffectSkip         : return Math.Min(254, song.PatternLength);
                 case EffectSpeed        : return 31;
             }
 
@@ -364,8 +351,12 @@ namespace FamiStudio
             // At version 4 (FamiStudio 1.4.0), we refactored the notes, added slide notes, vibrato and no-attack notes (flags).
             if (buffer.Version >= 4)
             {
-                buffer.Serialize(ref Jump);
-                buffer.Serialize(ref Skip);
+                // At version 5 (FamiStudio 1.5.0), we replaced the jump/skips effects by loop points and custom pattern length.
+                if (buffer.Version < 5)
+                {
+                    buffer.Serialize(ref Jump);
+                    buffer.Serialize(ref Skip);
+                }
                 buffer.Serialize(ref Speed);
                 buffer.Serialize(ref Vibrato); 
                 buffer.Serialize(ref Flags);
@@ -379,9 +370,10 @@ namespace FamiStudio
                 buffer.Serialize(ref effectParam);
 
                 HasVibrato = false;
-                HasJump = false;
-                HasSkip = false;
                 HasSpeed = false;
+
+                Jump = JumpInvalid;
+                Skip = SkipInvalid;
 
                 switch (effect)
                 {

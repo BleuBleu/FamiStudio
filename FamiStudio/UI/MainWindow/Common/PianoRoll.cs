@@ -401,8 +401,6 @@ namespace FamiStudio
             bmpEffects[Note.EffectVibratoSpeed] = g.CreateBitmapFromResource("VibratoSmall");
             bmpEffects[Note.EffectVibratoDepth] = g.CreateBitmapFromResource("VibratoSmall");
             bmpEffects[Note.EffectFinePitch] = g.CreateBitmapFromResource("PitchSmall");
-            bmpEffects[Note.EffectJump] = g.CreateBitmapFromResource("LoopSmall");
-            bmpEffects[Note.EffectSkip] = g.CreateBitmapFromResource("JumpSmall");
             bmpEffects[Note.EffectSpeed] = g.CreateBitmapFromResource("SpeedSmall");
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
@@ -631,17 +629,6 @@ namespace FamiStudio
 
                 if (showEffectsPanel)
                 {
-                    string[] EffectNames =
-                    {
-                        "Volume",
-                        "Vib Speed",
-                        "Vib Depth",
-                        "Pitch",
-                        "Jump",
-                        "Skip",
-                        "Speed"
-                    };
-
                     g.PushTranslation(0, headerSizeY);
 
                     int effectButtonY = 0;
@@ -651,7 +638,7 @@ namespace FamiStudio
                         g.PushTranslation(0, effectButtonY);
                         g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
                         g.DrawBitmap(bmpEffects[i], effectIconPosX, effectIconPosY);
-                        g.DrawText(EffectNames[i], selectedEffectIdx == i ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
+                        g.DrawText(Note.EffectNames[i], selectedEffectIdx == i ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
                         g.PopTransform();
                     }
 

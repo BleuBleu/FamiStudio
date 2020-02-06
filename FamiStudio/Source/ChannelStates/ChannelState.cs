@@ -29,7 +29,7 @@ namespace FamiStudio
             note.Volume = Note.VolumeMax;
         }
 
-        public void ProcessEffects(Song song, int patternIdx, int noteIdx, ref int jumpPatternIdx, ref int jumpNoteIdx, ref int speed, bool allowJump = true)
+        public void ProcessEffects(Song song, int patternIdx, int noteIdx, ref int speed, bool allowJump = true)
         {
             var pattern = song.GetChannelByType(channelType).PatternInstances[patternIdx];
 
@@ -37,18 +37,6 @@ namespace FamiStudio
                 return;
 
             var tmpNote = pattern.Notes[noteIdx];
-
-            if (tmpNote.HasJump && !IsSeeking && allowJump)
-            {
-                jumpPatternIdx = tmpNote.Jump;
-                jumpNoteIdx = 0;
-            }
-
-            if (tmpNote.HasSkip)
-            {
-                jumpPatternIdx = patternIdx + 1;
-                jumpNoteIdx = tmpNote.Skip;
-            }
 
             if (tmpNote.HasSpeed)
             {

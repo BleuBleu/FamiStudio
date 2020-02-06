@@ -41,6 +41,8 @@ namespace FamiStudio
         const int DefaultGhostNoteOffsetY    = 16;
         const int DefaultPatternNamePosX     = 2;
         const int DefaultPatternNamePosY     = 3;
+        const int DefaultHeaderIconPosX      = 3;
+        const int DefaultHeaderIconPosY      = 3;
 
         const int MinZoomLevel = -2;
         const int MaxZoomLevel = 4;
@@ -61,7 +63,9 @@ namespace FamiStudio
         int patternNamePosX;
         int patternNamePosY;
         int patternSizeX;
-        
+        int headerIconPosX;
+        int headerIconPosY;
+
         int scrollX = 0;
         int zoomLevel = 1;
         int mouseLastX = 0;
@@ -103,6 +107,7 @@ namespace FamiStudio
 
         RenderBitmap[] bmpTracks = new RenderBitmap[Channel.Count];
         RenderBitmap bmpGhostNote;
+        RenderBitmap bmpLoopPoint;
 
         public delegate void TrackBarDelegate(int trackIdx, int barIdx);
         public delegate void ChannelDelegate(int channelIdx);
@@ -157,7 +162,10 @@ namespace FamiStudio
             ghostNoteOffsetY   = (int)(DefaultGhostNoteOffsetY * scaling);
             patternNamePosX    = (int)(DefaultPatternNamePosX * scaling);
             patternNamePosY    = (int)(DefaultPatternNamePosY * scaling);
-            patternSizeX       = (int)(ScaleForZoom(Song == null ? 256 : Song.PatternLength) * scaling);
+            headerIconPosX     = (int)(DefaultHeaderIconPosX * scaling);
+            headerIconPosY     = (int)(DefaultHeaderIconPosY * scaling);
+
+            patternSizeX = (int)(ScaleForZoom(Song == null ? 256 : Song.PatternLength) * scaling);
         }
 
         private int GetChannelCount()
@@ -241,6 +249,7 @@ namespace FamiStudio
             bmpTracks[Channel.SunsoftSquare3] = g.CreateBitmapFromResource("Square");
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
+            bmpLoopPoint = g.CreateBitmapFromResource("LoopSmallFill");
 
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, trackNameSizeX, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
@@ -306,6 +315,8 @@ namespace FamiStudio
             {
                 g.PushTranslation(x, 0);
                 g.DrawText(i.ToString(), ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, patternSizeX);
+                if (i == Song.LoopPoint)
+                    g.DrawBitmap(bmpLoopPoint, headerIconPosX, headerIconPosY);
                 g.PopTransform();
             }
 
@@ -634,9 +645,17 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    bool shift = ModifierKeys.HasFlag(Keys.Shift);
+                    bool shift   = ModifierKeys.HasFlag(Keys.Shift);
+                    bool setLoop = FamiStudioForm.IsKeyDown(Keys.L);
 
-                    if (pattern == null && !shift)
+                    if (left && setLoop)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                        Song.SetLoopPoint(patternIdx);
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                    }
+                    else if (pattern == null && !shift)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                         channel.PatternInstances[patternIdx] = channel.CreatePattern();
@@ -1024,14 +1043,14 @@ namespace FamiStudio
 
                 if (pattern == null)
                 {
-                    tooltip = "{MouseLeft} Add Pattern - {MouseWheel} Pan";
+                    tooltip = "{MouseLeft} Add Pattern - {L} {MouseLeft} Set Loop Point - {MouseWheel} Pan";
                 }
                 else
                 {
                     if (IsPatternSelected(channelIdx, patternIdx))
-                        tooltip = "{Drag} Move Pattern - {Ctrl} {Drag} Clone pattern {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {MouseWheel} Pan";
+                        tooltip = "{Drag} Move Pattern - {Ctrl} {Drag} Clone pattern {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {L} {MouseLeft} Set Loop Point - {MouseWheel} Pan";
                     else
-                        tooltip = "{MouseLeft} Select Pattern - {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {MouseWheel} Pan";
+                        tooltip = "{MouseLeft} Select Pattern - {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {L} {MouseLeft} Set Loop Point - {MouseWheel} Pan";
                 }
             }
             else if (IsMouseInHeader(e))

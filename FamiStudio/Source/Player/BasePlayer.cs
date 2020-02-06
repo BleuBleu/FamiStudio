@@ -34,13 +34,11 @@ namespace FamiStudio
         protected int tempoCounter = 0;
         protected int playPattern = 0;
         protected int playNote = 0;
-        protected int jumpPattern = -1;
-        protected int jumpNote = -1;
         protected int speed = 6;
         protected bool palMode = false;
         protected Song song;
         protected ChannelState[] channelStates;
-        protected LoopMode loopMode;
+        protected LoopMode loopMode = LoopMode.Song;
         protected int channelMask = 0xffff;
         protected int playPosition = 0;
 
@@ -98,6 +96,7 @@ namespace FamiStudio
         public bool BeginPlaySong(Song s, bool pal, int startNote)
         {
             song = s;
+            speed = song.Speed;
             palMode = pal;
             playPosition = startNote;
             channelStates = CreateChannelStates(song.Project, apuIndex, palMode);
@@ -113,13 +112,13 @@ namespace FamiStudio
 
                 while (playPattern * song.PatternLength + playNote < startNote)
                 {
-                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
+                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode))
                         return false;
 
                     foreach (var channel in channelStates)
                     {
                         channel.Advance(song, playPattern, playNote);
-                        channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
+                        channel.ProcessEffects(song, playPattern, playNote,ref speed);
                         channel.UpdateEnvelopes();
                         channel.UpdateAPU();
                     }
@@ -129,16 +128,13 @@ namespace FamiStudio
 #if DEBUG
                 NesApu.seeking = false;
 #endif
-
-                jumpPattern = -1;
-                jumpNote = -1;
             }
             else
             {
                 foreach (var channel in channelStates)
                 {
                     channel.Advance(song, 0, 0);
-                    channel.ProcessEffects(song, 0, 0, ref jumpPattern, ref jumpNote, ref speed);
+                    channel.ProcessEffects(song, 0, 0, ref speed);
                 }
             }
 
@@ -147,6 +143,8 @@ namespace FamiStudio
 
         public bool PlaySongFrame()
         {
+            playPosition = playPattern * song.PatternLength + playNote;
+
             // Update envelopes + APU registers.
             foreach (var channel in channelStates)
             {
@@ -166,37 +164,22 @@ namespace FamiStudio
             //if (UpdateFamistudioTempo(6, ref tempoCounter, ref numFrames))
             {
                 // Advance to next note.
-                if (!AdvanceSong(song.Length, song.PatternLength, loopMode, ref playPattern, ref playNote, ref jumpPattern, ref jumpNote))
+                if (!AdvanceSong(song.Length, song.PatternLength, loopMode))
                     return false;
 
                 foreach (var channel in channelStates)
                 {
                     channel.Advance(song, playPattern, playNote);
-                    channel.ProcessEffects(song, playPattern, playNote, ref jumpPattern, ref jumpNote, ref speed);
+                    channel.ProcessEffects(song, playPattern, playNote, ref speed);
                 }
             }
 
             return true;
         }
 
-        public bool AdvanceSong(int songLength, int patternLength, LoopMode loopMode, ref int playPattern, ref int playNote, ref int jumpPattern, ref int jumpNote)
+        public bool AdvanceSong(int songLength, int patternLength, LoopMode loopMode)
         {
-            if (jumpNote >= 0 || jumpPattern >= 0)
-            {
-                if (loopMode == LoopMode.Pattern)
-                {
-                    playNote = 0;
-                }
-                else
-                {
-                    playNote = Math.Min(patternLength - 1, jumpNote);
-                    playPattern = jumpPattern;
-                }
-
-                jumpPattern = -1;
-                jumpNote = -1;
-            }
-            else if (++playNote >= patternLength)
+            if (++playNote >= patternLength)
             {
                 playNote = 0;
                 if (loopMode != LoopMode.Pattern)
@@ -211,7 +194,7 @@ namespace FamiStudio
                 }
                 else if (loopMode == LoopMode.Song)
                 {
-                    playPattern = 0;
+                    playPattern = song.LoopPoint;
                     playNote = 0;
                 }
             }

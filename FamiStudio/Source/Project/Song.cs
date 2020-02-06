@@ -19,6 +19,9 @@ namespace FamiStudio
         private string name;
         private int tempo = 150;
         private int speed = 6;
+        private int loopPoint = 0;
+        private byte[] customPatternInstanceLengths = new byte[Song.MaxLength]; // 0 = song pattern length
+        private int[] patternInstancesStartNote = new int[Song.MaxLength];
 
         public int Id => id;
         public Project Project => project;
@@ -30,6 +33,7 @@ namespace FamiStudio
         public int Length { get => songLength; }
         public int PatternLength { get => patternLength; }
         public int BarLength { get => barLength; }
+        public int LoopPoint { get => loopPoint; }
 
         public Song()
         {
@@ -113,6 +117,12 @@ namespace FamiStudio
 
             foreach (var channel in channels)
                 channel.ClearPatternsInstancesPastSongLength();
+
+            if (loopPoint >= songLength)
+                loopPoint = 0;
+
+            for (int i = songLength; i < Song.MaxLength; i++)
+                customPatternInstanceLengths[i] = 0;
         }
 
         public void SetPatternLength(int newLength)
@@ -129,6 +139,11 @@ namespace FamiStudio
             {
                 barLength = newBarLength;
             }
+        }
+
+        public void SetLoopPoint(int loop)
+        {
+            loopPoint = Utils.Clamp(loop, 0, songLength - 1);
         }
 
         public static int[] GenerateBarLengths(int patternLen)
@@ -162,6 +177,20 @@ namespace FamiStudio
             }
 
             return null;
+        }
+
+        public void SetPatternInstanceLength(int idx, int len)
+        {
+            if (len < 0 || len >= Pattern.MaxLength)
+                customPatternInstanceLengths[idx] = 0;
+            else
+                customPatternInstanceLengths[idx] = (byte)len;
+        }
+
+        public int GetPatternInstanceLength(int idx)
+        {
+            int len = customPatternInstanceLengths[idx];
+            return len == 0 ? patternLength : len;
         }
 
         public Channel GetChannelByType(int type)
@@ -254,6 +283,63 @@ namespace FamiStudio
         }
 #endif
 
+        private void ConvertJumpSkipEffects()
+        {
+            for (int i = 0; i < songLength; i++)
+            {
+                foreach (var channel in channels)
+                {
+                    var pattern = channel.PatternInstances[i];
+
+                    if (pattern != null)
+                    {
+                        for (int j = 0; j < patternLength; j++)
+                        {
+                            // Converts old Jump effects to loop points.
+                            // The first Jump effect will give us our loop point.
+                            if (loopPoint == 0 && pattern.Notes[j].Jump != Note.JumpInvalid)
+                            {
+                                SetLoopPoint(pattern.Notes[j].Jump);
+                            }
+
+                            // Converts old Skip effects to custom pattern instances lengths.
+                            if (pattern.Notes[j].Skip != Note.SkipInvalid)
+                            {
+                                SetPatternInstanceLength(i, pattern.Notes[j].Skip + 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public int FindPatternInstanceIndex(int idx, out int noteIdx)
+        {
+            noteIdx = -1;
+
+            for (int i = 0; i < songLength; i++)
+            {
+                if (idx < patternInstancesStartNote[i])
+                {
+                    noteIdx = idx - patternInstancesStartNote[i - 1];
+                    return i - 1;
+                }
+            }
+
+            return -1;
+        }
+
+        private void UpdatePatternInstancesStartNotes()
+        {
+            patternInstancesStartNote[0] = 0;
+            for (int i = 1; i < songLength; i++)
+            {
+                int len = customPatternInstanceLengths[i];
+                Debug.Assert(len == 0 || len != patternLength);
+                patternInstancesStartNote[i] = patternInstancesStartNote[0] + (len == 0 ? patternLength : len);
+            }
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsReading)
@@ -268,11 +354,24 @@ namespace FamiStudio
             buffer.Serialize(ref speed);
             buffer.Serialize(ref color);
 
+            // At version 5 (FamiStudio 1.5.0), we replaced the jump/skips effects by loop points and custom pattern length.
+            if (buffer.Version >= 5)
+            {
+                buffer.Serialize(ref loopPoint);
+                buffer.Serialize(ref customPatternInstanceLengths);
+            }
+
             if (buffer.IsReading)
+            {
                 CreateChannels();
+                UpdatePatternInstancesStartNotes();
+            }
 
             foreach (var channel in channels)
                 channel.SerializeState(buffer);
+
+            if (buffer.Version < 5)
+                ConvertJumpSkipEffects();
         }
     }
 }

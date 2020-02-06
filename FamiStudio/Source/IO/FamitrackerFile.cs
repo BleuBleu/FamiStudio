@@ -1004,10 +1004,11 @@ namespace FamiStudio
                                 prevSlideEffect = '\0';
                             }
 
-                            if (note.HasJump)
-                                effectString += $" B{note.Jump:X2}";
-                            if (note.HasSkip)
-                                effectString += $" D{note.Skip:X2}";
+                            // MATTT
+                            //if (note.HasJump)
+                            //    effectString += $" B{note.Jump:X2}";
+                            //if (note.HasSkip)
+                            //    effectString += $" D{note.Skip:X2}";
                             if (note.HasSpeed)
                                 effectString += $" F{note.Speed:X2}";
                             if (note.HasVibrato)
