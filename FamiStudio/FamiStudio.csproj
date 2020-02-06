@@ -335,7 +335,6 @@
     <EmbeddedResource Include="Resources\ConfigUserInterface.png" />
     <EmbeddedResource Include="Resources\Noise%4015x.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
-    <EmbeddedResource Include="Resources\LoopSmall%402x.png" />
     <EmbeddedResource Include="Resources\Music%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill.png" />
@@ -401,7 +400,6 @@
     <EmbeddedResource Include="Resources\LoopPattern.png" />
     <EmbeddedResource Include="Resources\LoopNone.png" />
     <EmbeddedResource Include="Resources\Pause.png" />
-    <EmbeddedResource Include="Resources\LoopSmall.png" />
     <EmbeddedResource Include="Resources\Add.png" />
     <EmbeddedResource Include="Resources\CollapsedSmall.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall.png" />
