@@ -8,14 +8,14 @@ namespace FamiStudio
     public class Channel
     {
         private Song song;
-        private Pattern[] patternInstances = new Pattern[Song.MaxLength];
+        private PatternInstance[] patternInstances = new PatternInstance[Song.MaxLength];
         private List<Pattern> patterns = new List<Pattern>();
         private int type;
 
         public int Type => type;
         public string Name => ChannelNames[(int)type];
         public Song Song => song;
-        public Pattern[] PatternInstances => patternInstances;
+        public PatternInstance[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
 
         // Channel types.
@@ -86,12 +86,20 @@ namespace FamiStudio
         public Channel()
         {
             // For serialization
+            CreatePatternInstances();
         }
 
         public Channel(Song song, int type, int songLength)
         {
             this.song = song;
             this.type = type;
+            CreatePatternInstances();
+        }
+
+        private void CreatePatternInstances()
+        {
+            for (int i = 0; i < patternInstances.Length; i++)
+                patternInstances[i] = new PatternInstance();
         }
 
         public Pattern GetPattern(string name)
@@ -169,21 +177,19 @@ namespace FamiStudio
                 }
 
                 var newSongLength = song.Length * factor;
-                var newPatternsInstances = new Pattern[Song.MaxLength];
                 
                 for (int i = 0; i < song.Length; i++)
                 {
-                    var oldPattern = patternInstances[i];
+                    var oldPattern = patternInstances[i].Pattern;
                     if (oldPattern != null)
                     {
                         for (int j = 0; j < factor; j++)
                         {
-                            newPatternsInstances[i * factor + j] = splitPatterns[oldPattern][j];
+                            patternInstances[i * factor + j].Pattern = splitPatterns[oldPattern][j];
                         }
                     }
                 }
 
-                patternInstances = newPatternsInstances;
                 patterns = newPatterns;
             }
         }
@@ -217,9 +223,9 @@ namespace FamiStudio
         {
             for (int i = 0; i < patternInstances.Length; i++)
             {
-                if (patternInstances[i] != null && !patternInstances[i].HasAnyNotes)
+                if (patternInstances[i].Pattern != null && !patternInstances[i].Pattern.HasAnyNotes)
                 {
-                    patternInstances[i] = null;
+                    patternInstances[i].Pattern = null;
                 }
             }
 
@@ -266,7 +272,7 @@ namespace FamiStudio
 
             for (int i = 0; i < song.Length; i++)
             {
-                var pattern = PatternInstances[i];
+                var pattern = PatternInstances[i].Pattern;
                 if (pattern != null)
                 {
                     for (int j = 0; j < song.PatternLength; j++)
@@ -290,7 +296,7 @@ namespace FamiStudio
             HashSet<Pattern> usedPatterns = new HashSet<Pattern>();
             for (int i = 0; i < song.Length; i++)
             {
-                var inst = patternInstances[i];
+                var inst = patternInstances[i].Pattern;
                 if (inst != null)
                 {
                     usedPatterns.Add(inst);
@@ -348,7 +354,7 @@ namespace FamiStudio
 
         public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
         {
-            var note = patternInstances[patternIdx].Notes[noteIdx];
+            var note = patternInstances[patternIdx].Pattern.Notes[noteIdx];
 
             Debug.Assert(note.IsMusical);
 
@@ -387,7 +393,7 @@ namespace FamiStudio
 
             for (int n = noteIdx + 1; n < song.PatternLength && noteCount < maxNotes; n++, noteCount++)
             {
-                var tmpNote = patternInstances[patternIdx].Notes[n];
+                var tmpNote = patternInstances[patternIdx].Pattern.Notes[n];
                 if (tmpNote.IsMusical || tmpNote.IsStop)
                     return (patternIdx * song.PatternLength + n) - (patternIdx * song.PatternLength + noteIdx);
             }
@@ -413,7 +419,7 @@ namespace FamiStudio
             int p = patternIdx;
             int n = noteIdx;
 
-            var pattern = patternInstances[p];
+            var pattern = patternInstances[p].Pattern;
             if (pattern != null)
             {
                 while (n >= 0 && !pattern.Notes[n].IsValid) n--;
@@ -436,13 +442,13 @@ namespace FamiStudio
             p--;
             while (p >= 0)
             {
-                pattern = patternInstances[p];
-                if (pattern != null && pattern.LastValidNoteTime >= 0)
+                var patInst = patternInstances[p];
+                if (patInst.Pattern != null && patInst.LastValidNoteTime >= 0)
                 {
-                    if (pattern.LastValidNote.IsValid && 
-                        pattern.LastValidNote.Value == noteValue)
+                    if (patInst.LastValidNote.IsValid &&
+                        patInst.LastValidNote.Value == noteValue)
                     {
-                        n = pattern.LastValidNoteTime;
+                        n = patInst.LastValidNoteTime;
                         patternIdx = p;
                         noteIdx = n;
                         return true;
@@ -459,7 +465,7 @@ namespace FamiStudio
         public void ClearPatternsInstancesPastSongLength()
         {
             for (int i = song.Length; i < patternInstances.Length; i++)
-                patternInstances[i] = null;
+                patternInstances[i].Pattern = null;
         }
 
         public void ClearNotesPastSongLength()
@@ -494,7 +500,7 @@ namespace FamiStudio
             Debug.Assert(this == song.GetChannelByType(type));
             Debug.Assert(this.song == song);
             foreach (var inst in patternInstances)
-                Debug.Assert(inst == null || patterns.Contains(inst));
+                Debug.Assert(inst.Pattern == null || patterns.Contains(inst.Pattern));
             foreach (var pat in patterns)
                 pat.Validate(this);
         }

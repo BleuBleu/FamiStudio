@@ -27,6 +27,7 @@
 - Remove jump and skip effects:
 	- Jump is simply a loop point
 	- Skip is a shorter pattern.
+- BUG: Toggle attack that crosses pattern boundary probably doesnt work.
 
 ========================
 

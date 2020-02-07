@@ -219,7 +219,7 @@ namespace FamiStudio
                         if (pattern == null)
                             pattern = song.Channels[j].CreatePattern(name);
 
-                        song.Channels[j].PatternInstances[orderIdx] = pattern;
+                        song.Channels[j].PatternInstances[orderIdx].Pattern = pattern;
                     }
 
                     song.SetLength(song.Length + 1);
@@ -348,14 +348,14 @@ namespace FamiStudio
         {
             for (int n = noteIdx - 1; n >= 0; n--)
             {
-                var tmpNote = channel.PatternInstances[patternIdx].Notes[n];
+                var tmpNote = channel.PatternInstances[patternIdx].Pattern.Notes[n];
                 if (tmpNote.IsMusical || tmpNote.IsStop)
                     return tmpNote.Value;
             }
 
             for (var p = patternIdx - 1; p >= 0; p--)
             {
-                var pattern = channel.PatternInstances[p];
+                var pattern = channel.PatternInstances[p].Pattern;
                 if (pattern != null)
                 {
                     for (int n = channel.Song.PatternLength - 1; n >= 0; n--)
@@ -375,7 +375,7 @@ namespace FamiStudio
             nextPatternIdx = -1;
             nextNoteIdx = -1;
 
-            var pattern = channel.PatternInstances[patternIdx];
+            var pattern = channel.PatternInstances[patternIdx].Pattern;
             var fxData = patternFxData[pattern];
 
             for (int n = noteIdx + 1; n < channel.Song.PatternLength; n++)
@@ -402,7 +402,7 @@ namespace FamiStudio
 
             for (int p = patternIdx + 1; p < channel.Song.Length; p++)
             {
-                pattern = channel.PatternInstances[p];
+                pattern = channel.PatternInstances[p].Pattern;
                 fxData = patternFxData[pattern];
 
                 for (int n = 0; n < channel.Song.PatternLength; n++)
@@ -418,7 +418,7 @@ namespace FamiStudio
                         }
                     }
 
-                    var tmpNote = channel.PatternInstances[p].Notes[n];
+                    var tmpNote = channel.PatternInstances[p].Pattern.Notes[n];
                     if (tmpNote.IsMusical || tmpNote.IsStop || fxChanged)
                     {
                         nextPatternIdx = p;
@@ -463,7 +463,7 @@ namespace FamiStudio
 
                 for (int p = 0; p < s.Length; p++)
                 {
-                    var pattern = c.PatternInstances[p];
+                    var pattern = c.PatternInstances[p].Pattern;
                     var fxData = patternFxData[pattern];
 
                     for (int n = 0; n < s.PatternLength; n++)
@@ -564,11 +564,12 @@ namespace FamiStudio
                                     }
 
                                     // Add an extra note with no attack to stop the slide.
-                                    if (!c.PatternInstances[np].Notes[nn].IsValid)
+                                    var nextPattern = c.PatternInstances[np].Pattern;
+                                    if (!nextPattern.Notes[nn].IsValid)
                                     {
-                                        c.PatternInstances[np].Notes[nn].Instrument = note.Instrument;
-                                        c.PatternInstances[np].Notes[nn].Value = (byte)slideTarget;
-                                        c.PatternInstances[np].Notes[nn].HasAttack = false;
+                                        nextPattern.Notes[nn].Instrument = note.Instrument;
+                                        nextPattern.Notes[nn].Value = (byte)slideTarget;
+                                        nextPattern.Notes[nn].HasAttack = false;
                                     }
                                 }
                                 // Find the next note that would stop the slide or change the FX settings.
@@ -584,12 +585,13 @@ namespace FamiStudio
                                     pattern.Notes[n].SlideNoteTarget = (byte)newNote;
 
                                     // If the FX was turned off, we need to add an extra note.
-                                    if (!c.PatternInstances[np].Notes[nn].IsMusical &&
-                                        !c.PatternInstances[np].Notes[nn].IsStop)
+                                    var nextPattern = c.PatternInstances[np].Pattern;
+                                    if (!nextPattern.Notes[nn].IsMusical &&
+                                        !nextPattern.Notes[nn].IsStop)
                                     {
-                                        c.PatternInstances[np].Notes[nn].Instrument = note.Instrument;
-                                        c.PatternInstances[np].Notes[nn].Value = (byte)newNote;
-                                        c.PatternInstances[np].Notes[nn].HasAttack = false;
+                                        nextPattern.Notes[nn].Instrument = note.Instrument;
+                                        nextPattern.Notes[nn].Value = (byte)newNote;
+                                        nextPattern.Notes[nn].HasAttack = false;
                                     }
                                 }
                             }
@@ -712,14 +714,14 @@ namespace FamiStudio
 
                 for (int i = 0; i < song.Length; i++)
                 {
-                    if (channel.PatternInstances[i] == null)
+                    if (channel.PatternInstances[i].Pattern == null)
                     {
                         if (emptyPatternIdx == -1)
                         {
                             emptyPatternIdx = channel.Patterns.IndexOf(channel.CreatePattern());
                         }
 
-                        channel.PatternInstances[i] = channel.Patterns[emptyPatternIdx];
+                        channel.PatternInstances[i].Pattern = channel.Patterns[emptyPatternIdx];
                     }
                 }
             }
@@ -892,7 +894,7 @@ namespace FamiStudio
                     var line = $"ORDER {j:X2} :";
 
                     for (int k = 0; k < song.Channels.Length; k++)
-                        line += $" {song.Channels[k].Patterns.IndexOf(song.Channels[k].PatternInstances[j]):X2}";
+                        line += $" {song.Channels[k].Patterns.IndexOf(song.Channels[k].PatternInstances[j].Pattern):X2}";
 
                     lines.Add(line);
                 }
@@ -911,7 +913,7 @@ namespace FamiStudio
                     
                     for (int p = 0; p < song.Length; p++)
                     {
-                        var pattern = channel.PatternInstances[p];
+                        var pattern = channel.PatternInstances[p].Pattern;
 
                         if (patternRows.ContainsKey(pattern))
                             continue;

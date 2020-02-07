@@ -377,7 +377,7 @@ namespace FamiStudio
             {
                 for (int i = minVisiblePattern, x = minVisiblePattern * patternSizeX + trackNameSizeX - scrollX; i < maxVisiblePattern; i++, x += patternSizeX)
                 {
-                    var pattern = Song.Channels[t].PatternInstances[i];
+                    var pattern = Song.Channels[t].PatternInstances[i].Pattern;
 
                     if (pattern != null)
                     {
@@ -641,7 +641,8 @@ namespace FamiStudio
             if (inPatternZone)
             {
                 var channel = Song.Channels[channelIdx];
-                var pattern = channel.PatternInstances[patternIdx];
+                var patInst = channel.PatternInstances[patternIdx];
+                var pattern = patInst.Pattern;
 
                 if (left)
                 {
@@ -658,7 +659,7 @@ namespace FamiStudio
                     else if (pattern == null && !shift)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                        channel.PatternInstances[patternIdx] = channel.CreatePattern();
+                        patInst.Pattern = channel.CreatePattern();
                         PatternClicked?.Invoke(channelIdx, patternIdx);
                         App.UndoRedoManager.EndTransaction();
                         ClearSelection();
@@ -711,7 +712,7 @@ namespace FamiStudio
                 else if (right && pattern != null)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                    channel.PatternInstances[patternIdx] = null;
+                    channel.PatternInstances[patternIdx].Pattern = null;
                     App.UndoRedoManager.EndTransaction();
                     ClearSelection();
                     ConditionalInvalidate();
@@ -730,7 +731,7 @@ namespace FamiStudio
             {
                 for (int j = 0; j < patterns.GetLength(1); j++)
                 {
-                    patterns[i, j] = Song.Channels[minSelectedChannelIdx + j].PatternInstances[minSelectedPatternIdx + i];
+                    patterns[i, j] = Song.Channels[minSelectedChannelIdx + j].PatternInstances[minSelectedPatternIdx + i].Pattern;
                 }
             }
 
@@ -790,7 +791,7 @@ namespace FamiStudio
                         pattern.ChannelType  < Song.Channels.Length &&
                         pattern.ChannelType == Song.Channels[pattern.ChannelType].Type)
                     {
-                        Song.Channels[pattern.ChannelType].PatternInstances[i + minSelectedPatternIdx] = pattern;
+                        Song.Channels[pattern.ChannelType].PatternInstances[i + minSelectedPatternIdx].Pattern = pattern;
                     }
                 }
             }
@@ -851,10 +852,10 @@ namespace FamiStudio
                     {
                         for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                         {
-                            tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx] = Song.Channels[i].PatternInstances[j];
+                            tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx] = Song.Channels[i].PatternInstances[j].Pattern;
                             if (!copy)
                             {
-                                Song.Channels[i].PatternInstances[j] = null;
+                                Song.Channels[i].PatternInstances[j].Pattern = null;
                             }
                         }
                     }
@@ -863,7 +864,7 @@ namespace FamiStudio
                     {
                         for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                         {
-                            Song.Channels[i].PatternInstances[j + basePatternIdx - minSelectedPatternIdx] = tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx];
+                            Song.Channels[i].PatternInstances[j + basePatternIdx - minSelectedPatternIdx].Pattern = tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx];
                         }
                     }
 
@@ -898,7 +899,7 @@ namespace FamiStudio
             {
                 for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                 {
-                    Song.Channels[i].PatternInstances[j] = null;
+                    Song.Channels[i].PatternInstances[j].Pattern = null;
                 }
             }
 
@@ -1119,7 +1120,7 @@ namespace FamiStudio
             if (left && inPatternZone)
             {
                 var channel = Song.Channels[channelIdx];
-                var pattern = channel.PatternInstances[barIdx];
+                var pattern = channel.PatternInstances[barIdx].Pattern;
 
                 if (pattern != null)
                 {
@@ -1143,7 +1144,7 @@ namespace FamiStudio
                             {
                                 for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                                 {
-                                    Song.Channels[i].PatternInstances[j].Color = newColor;
+                                    Song.Channels[i].PatternInstances[j].Pattern.Color = newColor;
                                 }
                             }
                             App.UndoRedoManager.EndTransaction();

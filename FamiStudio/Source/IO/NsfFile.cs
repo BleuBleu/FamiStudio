@@ -264,9 +264,9 @@ namespace FamiStudio
 
         private static Pattern GetOrCreatePattern(Channel channel, int patternIdx)
         {
-            if (channel.PatternInstances[patternIdx] == null)
-                channel.PatternInstances[patternIdx] = channel.CreatePattern();
-            return channel.PatternInstances[patternIdx];
+            if (channel.PatternInstances[patternIdx].Pattern == null)
+                channel.PatternInstances[patternIdx].Pattern = channel.CreatePattern();
+            return channel.PatternInstances[patternIdx].Pattern;
         }
 
         private static void UpdateChannel(IntPtr nsf, int p, int n, Channel channel, ChannelState state)
@@ -391,14 +391,14 @@ namespace FamiStudio
                         pattern.Notes[n].Instrument = instrument;
                         state.duty = duty;
                     }
-                    else if(channel.PatternInstances[p] != null && channel.PatternInstances[p].Notes[n].IsValid)
+                    else if(channel.PatternInstances[p].Pattern != null && channel.PatternInstances[p].Pattern.Notes[n].IsValid)
                     {
-                        channel.PatternInstances[p].Notes[n].Instrument = instrument;
+                        channel.PatternInstances[p].Pattern.Notes[n].Instrument = instrument;
                     }
                 }
-                else if (channel.PatternInstances[p] != null && channel.PatternInstances[p].Notes[n].IsValid)
+                else if (channel.PatternInstances[p].Pattern != null && channel.PatternInstances[p].Pattern.Notes[n].IsValid)
                 {
-                    channel.PatternInstances[p].Notes[n].Instrument = channel.Song.Project.Instruments[0];
+                    channel.PatternInstances[p].Pattern.Notes[n].Instrument = channel.Song.Project.Instruments[0];
                 }
             }
         }

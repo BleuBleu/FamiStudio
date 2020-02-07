@@ -15,12 +15,6 @@ namespace FamiStudio
         private Color color;
         private Note[] notes = new Note[MaxLength];
 
-        private int   firstValidNoteTime    = -1;
-        private int   lastValidNoteTime     = -1;
-        private int   lastEffectValuesMask  = 0;
-        private int[] lastEffectValues      = new int[Note.EffectCount];
-        private bool  lastValidNoteReleased = false;
-
         public int Id => id;
         public int ChannelType => channelType;
         public Color Color { get => color; set => color = value; }
@@ -40,9 +34,6 @@ namespace FamiStudio
             this.color = ThemeBase.RandomCustomColor();
             for (int i = 0; i < notes.Length; i++)
                 notes[i] = new Note(Note.NoteInvalid);
-            lastEffectValuesMask = 0;
-            for (int i = 0; i < Note.EffectCount; i++)
-                lastEffectValues[i] = 0xff;
         }
 
         public Note[] Notes
@@ -135,110 +126,6 @@ namespace FamiStudio
             }
         }
 
-        public void UpdateLastValidNote()
-        {
-            lastEffectValuesMask = 0;
-            for (int i = 0; i < Note.EffectCount; i++)
-                lastEffectValues[i] = 0xff;
-            lastValidNoteTime = -1;
-            lastValidNoteReleased = false;
-            
-            for (int n = song.PatternLength - 1; n >= 0; n--)
-            {
-                var note = notes[n];
-
-                if (lastValidNoteTime < 0)
-                {
-                    if (note.IsRelease)
-                    {
-                        lastValidNoteReleased = true;
-                    }
-                    else
-                    {
-                        if (note.IsStop)
-                        {
-                            lastValidNoteReleased = false;
-                        }
-                        if (note.IsValid)
-                        {
-                            lastValidNoteTime = (byte)n;
-                        }
-                    }
-                }
-
-                if (note.IsMusical && note.HasAttack)
-                {
-                    lastValidNoteReleased = false;
-                }
-
-                for (int i = 0; i < Note.EffectCount; i++)
-                {
-                    var mask = 1 << i;
-                    if (note.HasValidEffectValue(i) && (lastEffectValuesMask & mask) == 0)
-                    {
-                        lastEffectValuesMask |= mask;
-                        lastEffectValues[i] = note.GetEffectValue(i);
-                    }
-                }
-            }
-
-            firstValidNoteTime = -1;
-
-            for (int i = 0; i < song.PatternLength; i++)
-            {
-                var note = notes[i];
-
-                if (note.IsValid && !note.IsRelease)
-                {
-                    firstValidNoteTime = (byte)i;
-                    break;
-                }
-            }
-        }
-
-        public int FirstValidNoteTime
-        {
-            get { return firstValidNoteTime; }
-        }
-
-        public Note FirstValidNote
-        {
-            get
-            {
-                Debug.Assert(firstValidNoteTime >= 0);
-                return notes[firstValidNoteTime];
-            }
-        }
-
-        public int LastValidNoteTime
-        {
-            get { return lastValidNoteTime; }
-        }
-
-        public Note LastValidNote
-        {
-            get
-            {
-                Debug.Assert(lastValidNoteTime >= 0);
-                return notes[lastValidNoteTime];
-            }
-        }
-
-        public bool LastValidNoteReleased
-        {
-            get { return lastValidNoteReleased; }
-        }
-
-        public bool HasLastEffectValue(int effect)
-        {
-            return (lastEffectValuesMask & (1 << effect)) != 0;
-        }
-
-        public int GetLastEffectValue(int effect)
-        {
-            return lastEffectValues[effect];
-        }
-
         public void ClearNotesPastSongLength()
         {
             for (int i = song.PatternLength; i < notes.Length; i++)
@@ -283,18 +170,8 @@ namespace FamiStudio
                 }
             }
 
-            if (buffer.IsForUndoRedo)
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
             {
-                buffer.Serialize(ref firstValidNoteTime);
-                buffer.Serialize(ref lastValidNoteTime);
-                buffer.Serialize(ref lastValidNoteReleased);
-                buffer.Serialize(ref lastEffectValuesMask);
-                for (int i = 0; i < Note.EffectCount; i++)
-                    buffer.Serialize(ref lastEffectValues[i]);
-            }
-            else if (buffer.IsReading)
-            {
-                UpdateLastValidNote();
                 ClearNotesPastSongLength();
             }
         }

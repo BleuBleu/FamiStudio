@@ -215,7 +215,7 @@ namespace FamiStudio
             {
                 for (int i = 0; i < Length; i++)
                 {
-                    if (channel.PatternInstances[i] != null)
+                    if (channel.PatternInstances[i].Pattern != null)
                     {
                         maxLength = Math.Max(maxLength, i);
                     }
@@ -252,7 +252,7 @@ namespace FamiStudio
             {
                 for (int p = 0; p < songLength; p++)
                 {
-                    var pattern = channels[Channel.Dpcm].PatternInstances[p];
+                    var pattern = channels[Channel.Dpcm].PatternInstances[p].Pattern;
                     if (pattern != null)
                     {
                         for (int i = 0; i < patternLength; i++)
@@ -289,7 +289,7 @@ namespace FamiStudio
             {
                 foreach (var channel in channels)
                 {
-                    var pattern = channel.PatternInstances[i];
+                    var pattern = channel.PatternInstances[i].Pattern;
 
                     if (pattern != null)
                     {

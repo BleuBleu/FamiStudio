@@ -272,8 +272,8 @@ namespace FamiStudio
             {
                 foreach (var channel in song.Channels)
                 {
-                    foreach (var pattern in channel.Patterns)
-                        pattern.UpdateLastValidNote();
+                    foreach (var patInst in channel.PatternInstances)
+                        patInst.UpdateLastValidNote();
                 }
             }
         }
@@ -571,7 +571,7 @@ namespace FamiStudio
                 {
                     foreach (var channel in song.Channels)
                     {
-                        var pattern = channel.PatternInstances[p];
+                        var pattern = channel.PatternInstances[p].Pattern;
                         if (pattern != null)
                         {
                             for (int i = 0; i < song.PatternLength; i++)
@@ -600,7 +600,7 @@ namespace FamiStudio
 
                 for (int p = 0; p < song.Length; p++)
                 {
-                    var pattern = channel.PatternInstances[p];
+                    var pattern = channel.PatternInstances[p].Pattern;
                     if (pattern != null)
                     {
                         for (int i = 0; i < song.PatternLength; i++)
