@@ -33,6 +33,8 @@
 		- Retest seek
 		- We dont update MaxInstanceLength in all cases (song resize, change pattern length, etc.)
 		- Handle where we change the song pattern.
+		- Truncate pattern to their maxlength.
+		- 
 - BUG: Toggle attack that crosses pattern boundary probably doesnt work.
 - Bar length -> Measure length
 

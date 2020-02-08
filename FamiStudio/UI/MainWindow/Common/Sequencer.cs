@@ -588,9 +588,10 @@ namespace FamiStudio
 
             ControlActivated?.Invoke();
 
-            bool left   = e.Button.HasFlag(MouseButtons.Left);
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
-            bool right  = e.Button.HasFlag(MouseButtons.Right);
+            bool left    = e.Button.HasFlag(MouseButtons.Left);
+            bool middle  = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+            bool right   = e.Button.HasFlag(MouseButtons.Right);
+            bool setLoop = FamiStudioForm.IsKeyDown(Keys.L);
 
             bool canCapture = captureOperation == CaptureOperation.None;
 
@@ -640,12 +641,24 @@ namespace FamiStudio
                 }
             }
 
+            bool inPatternZone = GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx);
+
             if (IsMouseInHeader(e))
             {
                 if (left)
                 {
-                    int frame = 0; // MATTT (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)patternSizeX * Song.PatternLength);
-                    App.Seek(frame);
+                    if (setLoop)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                        Song.SetLoopPoint(patternIdx);
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                    }
+                    else
+                    {
+                        int frame = 0; // MATTT (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)patternSizeX * Song.PatternLength);
+                        App.Seek(frame);
+                    }
                 }
                 else if (right && canCapture)
                 {
@@ -667,8 +680,6 @@ namespace FamiStudio
                 }
             }
 
-            bool inPatternZone = GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx);
-
             if (inPatternZone)
             {
                 var channel = Song.Channels[channelIdx];
@@ -678,7 +689,6 @@ namespace FamiStudio
                 if (left)
                 {
                     bool shift   = ModifierKeys.HasFlag(Keys.Shift);
-                    bool setLoop = FamiStudioForm.IsKeyDown(Keys.L);
 
                     if (left && setLoop)
                     {
