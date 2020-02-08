@@ -43,6 +43,7 @@ namespace FamiStudio
         const int DefaultPatternNamePosY     = 3;
         const int DefaultHeaderIconPosX      = 3;
         const int DefaultHeaderIconPosY      = 3;
+        const int DefaultHeaderIconSizeX     = 12;
 
         const int MinZoomLevel = -2;
         const int MaxZoomLevel = 4;
@@ -64,6 +65,7 @@ namespace FamiStudio
         int patternNamePosY;
         int headerIconPosX;
         int headerIconPosY;
+        int headerIconSizeX;
         float noteSizeX;
 
         int scrollX = 0;
@@ -108,6 +110,7 @@ namespace FamiStudio
         RenderBitmap[] bmpTracks = new RenderBitmap[Channel.Count];
         RenderBitmap bmpGhostNote;
         RenderBitmap bmpLoopPoint;
+        RenderBitmap bmpCustomLength;
 
         public delegate void TrackBarDelegate(int trackIdx, int barIdx);
         public delegate void ChannelDelegate(int channelIdx);
@@ -164,6 +167,7 @@ namespace FamiStudio
             patternNamePosY    = (int)(DefaultPatternNamePosY * scaling);
             headerIconPosX     = (int)(DefaultHeaderIconPosX * scaling);
             headerIconPosY     = (int)(DefaultHeaderIconPosY * scaling);
+            headerIconSizeX    = (int)(DefaultHeaderIconSizeX * scaling);
             noteSizeX          = (zoomLevel < 0 ? 1.0f / (1 << (-zoomLevel)) : 1.0f * (1 << zoomLevel)) * scaling;
         }
 
@@ -249,6 +253,7 @@ namespace FamiStudio
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
             bmpLoopPoint = g.CreateBitmapFromResource("LoopSmallFill");
+            bmpCustomLength = g.CreateBitmapFromResource("LengthSmallFill");
 
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, trackNameSizeX, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
@@ -324,8 +329,17 @@ namespace FamiStudio
                 var sx = (int)(Song.GetPatternInstanceLength(i) * noteSizeX);
                 g.PushTranslation(px, 0);
                 g.DrawText(i.ToString(), ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx);
+
+                var ix = headerIconPosX;
+                if (Song.PatternInstanceHasCustomLength(i))
+                {
+                    g.DrawBitmap(bmpCustomLength, ix, headerIconPosY, 0.5f); // MATTT: Make dark version of icon.
+                    ix += headerIconSizeX + headerIconSizeX;
+                }
                 if (i == Song.LoopPoint)
-                    g.DrawBitmap(bmpLoopPoint, headerIconPosX, headerIconPosY);
+                {
+                    g.DrawBitmap(bmpLoopPoint, ix, headerIconPosY, 0.5f); // MATTT: Make dark version of icon.
+                }
                 g.PopTransform();
             }
 
@@ -1164,10 +1178,10 @@ namespace FamiStudio
                 if (IsMouseInHeader(e))
                 {
                     var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 240);
-                    dlg.Properties.AddBoolean("Custom Pattern Length :", Song.HasCustomInstanceLength(instanceIdx));
+                    dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternInstanceHasCustomLength(instanceIdx));
                     dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternInstanceLength(instanceIdx), 16, Song.DefaultPatternLength);
                     dlg.Properties.PropertyChanged += Properties_PropertyChanged;
-                    dlg.Properties.SetPropertyEnabled(1, Song.HasCustomInstanceLength(instanceIdx));
+                    dlg.Properties.SetPropertyEnabled(1, Song.PatternInstanceHasCustomLength(instanceIdx));
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog() == DialogResult.OK)

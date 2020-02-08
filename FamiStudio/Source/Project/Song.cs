@@ -190,7 +190,7 @@ namespace FamiStudio
             UpdatePatternInstancesStartNotes();
         }
 
-        public bool HasCustomInstanceLength(int instanceIdx)
+        public bool PatternInstanceHasCustomLength(int instanceIdx)
         {
             return customPatternInstanceLengths[instanceIdx] != 0;
         }
@@ -318,7 +318,7 @@ namespace FamiStudio
                             // Converts old Skip effects to custom pattern instances lengths.
                             if (pattern.Notes[j].Skip != Note.SkipInvalid)
                             {
-                                SetPatternInstanceLength(i, pattern.Notes[j].Skip + 1);
+                                SetPatternInstanceLength(i, j + 1);
                             }
                         }
                     }
@@ -340,7 +340,7 @@ namespace FamiStudio
                 }
             }
 
-            return -1;
+            return songLength;
         }
 
         private void UpdatePatternInstancesStartNotes()

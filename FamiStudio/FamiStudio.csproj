@@ -264,6 +264,8 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\LengthSmallFill%402x.png" />
+    <EmbeddedResource Include="Resources\LengthSmallFill.png" />
     <EmbeddedResource Include="Resources\NTSC%402x.png" />
     <EmbeddedResource Include="Resources\NTSC.png" />
     <EmbeddedResource Include="Resources\PAL%402x.png" />
