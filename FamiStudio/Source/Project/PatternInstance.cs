@@ -9,21 +9,40 @@ namespace FamiStudio
 {
     public class PatternInstance
     {
-        private int length;
-
+        private Song song;
+        private int channelType;
+        private int index;
+        private Pattern pattern;
         private int firstValidNoteTime = -1;
         private int lastValidNoteTime = -1;
         private int lastEffectValuesMask = 0;
         private int[] lastEffectValues = new int[Note.EffectCount];
         private bool lastValidNoteReleased = false;
 
-        public Pattern Pattern { get; set; }
+        public int Length => song.GetPatternInstanceLength(index);
+        public int StartNote => song.GetPatternInstanceStartNote(index);
 
-        public PatternInstance()
+        public PatternInstance(Song s, int c, int idx)
         {
+            song = s;
+            channelType = c;
+            index = idx;
             lastEffectValuesMask = 0;
             for (int i = 0; i < Note.EffectCount; i++)
                 lastEffectValues[i] = 0xff;
+        }
+
+        public Pattern Pattern
+        {
+            get
+            {
+                return pattern;
+            }
+            set
+            {
+                pattern = value;
+                song.GetChannelByType(channelType).UpdatePatternsMaxInstanceLength();
+            }
         }
 
         public void UpdateLastValidNote()
@@ -39,7 +58,7 @@ namespace FamiStudio
 
             var song = Pattern.Song;
 
-            for (int n = song.PatternLength - 1; n >= 0; n--)
+            for (int n = Length - 1; n >= 0; n--)
             {
                 var note = Pattern.Notes[n];
 
@@ -80,7 +99,7 @@ namespace FamiStudio
 
             firstValidNoteTime = -1;
 
-            for (int i = 0; i < song.PatternLength; i++)
+            for (int i = 0; i < Length; i++)
             {
                 var note = Pattern.Notes[i];
 
@@ -135,10 +154,14 @@ namespace FamiStudio
             return lastEffectValues[effect];
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        public void SerializeState(ProjectBuffer buffer, Channel channel)
         {
+            buffer.Serialize(ref pattern, channel);
+
             if (buffer.IsForUndoRedo)
             {
+                buffer.Serialize(ref song);
+                buffer.Serialize(ref channelType);
                 buffer.Serialize(ref firstValidNoteTime);
                 buffer.Serialize(ref lastValidNoteTime);
                 buffer.Serialize(ref lastValidNoteReleased);

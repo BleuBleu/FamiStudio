@@ -243,7 +243,7 @@ namespace FamiStudio
 
                         //var fxData = new RowFxData[song.PatternLength];
                         if (!patternFxData.ContainsKey(pattern))
-                            patternFxData[pattern] = new RowFxData[song.PatternLength, 4];
+                            patternFxData[pattern] = new RowFxData[song.DefaultPatternLength, 4];
 
                         // Note
                         if (noteData[0] == "---")
@@ -358,7 +358,7 @@ namespace FamiStudio
                 var pattern = channel.PatternInstances[p].Pattern;
                 if (pattern != null)
                 {
-                    for (int n = channel.Song.PatternLength - 1; n >= 0; n--)
+                    for (int n = channel.Song.GetPatternInstanceLength(p) - 1; n >= 0; n--)
                     {
                         var tmpNote = pattern.Notes[n];
                         if (tmpNote.IsMusical || tmpNote.IsStop)
@@ -376,9 +376,10 @@ namespace FamiStudio
             nextNoteIdx = -1;
 
             var pattern = channel.PatternInstances[patternIdx].Pattern;
+            var patInstLen = channel.Song.GetPatternInstanceLength(patternIdx);
             var fxData = patternFxData[pattern];
 
-            for (int n = noteIdx + 1; n < channel.Song.PatternLength; n++)
+            for (int n = noteIdx + 1; n < patInstLen; n++)
             {
                 var fxChanged = false;
                 for (int i = 0; i < fxData.GetLength(1); i++)
@@ -403,9 +404,10 @@ namespace FamiStudio
             for (int p = patternIdx + 1; p < channel.Song.Length; p++)
             {
                 pattern = channel.PatternInstances[p].Pattern;
+                patInstLen = channel.Song.GetPatternInstanceLength(p);
                 fxData = patternFxData[pattern];
 
-                for (int n = 0; n < channel.Song.PatternLength; n++)
+                for (int n = 0; n < patInstLen; n++)
                 {
                     var fxChanged = false;
                     for (int i = 0; i < fxData.GetLength(1); i++)
@@ -466,7 +468,7 @@ namespace FamiStudio
                     var pattern = c.PatternInstances[p].Pattern;
                     var fxData = patternFxData[pattern];
 
-                    for (int n = 0; n < s.PatternLength; n++)
+                    for (int n = 0; n < s.GetPatternInstanceLength(p); n++)
                     {
                         var note = pattern.Notes[n];
                         var slideSpeed = 0;
@@ -536,9 +538,9 @@ namespace FamiStudio
 
                                     var nn = n + numFrames;
                                     var np = p;
-                                    while (nn >= s.PatternLength)
+                                    while (nn >= s.GetPatternInstanceLength(np))
                                     {
-                                        nn -= s.PatternLength;
+                                        nn -= s.GetPatternInstanceLength(np);
                                         np++;
                                     }
                                     if (np >= s.Length)
@@ -576,7 +578,7 @@ namespace FamiStudio
                                 else if (slideSpeed != 0 && FindNextNoteForSlide(c, p, n, out var np, out var nn, patternFxData))
                                 {
                                     // Compute the pitch delta and find the closest target note.
-                                    var numFrames = ((np * s.PatternLength + nn) - (p * s.PatternLength + n)) * s.Speed;
+                                    var numFrames = ((s.GetPatternInstanceStartNote(np) + nn) - (s.GetPatternInstanceStartNote(p) + n)) * s.Speed;
 
                                     // TODO: PAL.
                                     var newNotePitch = Utils.Clamp(noteTable[note.Value] + numFrames * slideSpeed, 0, pitchLimit);

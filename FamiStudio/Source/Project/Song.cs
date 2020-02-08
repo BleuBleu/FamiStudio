@@ -31,7 +31,7 @@ namespace FamiStudio
         public int Tempo { get => tempo; set => tempo = value; }
         public int Speed { get => speed; set => speed = value; }
         public int Length { get => songLength; }
-        public int PatternLength { get => patternLength; }
+        public int DefaultPatternLength { get => patternLength; }
         public int BarLength { get => barLength; }
         public int LoopPoint { get => loopPoint; }
 
@@ -193,6 +193,11 @@ namespace FamiStudio
             return len == 0 ? patternLength : len;
         }
 
+        public int GetPatternInstanceStartNote(int idx)
+        {
+            return patternInstancesStartNote[idx];
+        }
+
         public Channel GetChannelByType(int type)
         {
             return channels[Channel.ChannelTypeToIndex(type)];
@@ -332,11 +337,11 @@ namespace FamiStudio
         private void UpdatePatternInstancesStartNotes()
         {
             patternInstancesStartNote[0] = 0;
-            for (int i = 1; i < songLength; i++)
+            for (int i = 1; i <= songLength; i++)
             {
                 int len = customPatternInstanceLengths[i];
                 Debug.Assert(len == 0 || len != patternLength);
-                patternInstancesStartNote[i] = patternInstancesStartNote[0] + (len == 0 ? patternLength : len);
+                patternInstancesStartNote[i] = patternInstancesStartNote[i - 1] + (len == 0 ? patternLength : len);
             }
         }
 

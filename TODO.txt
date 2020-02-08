@@ -25,9 +25,14 @@
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Remove jump and skip effects:
-	- Jump is simply a loop point
+	x Jump is simply a loop point
 	- Skip is a shorter pattern.
+		- FamiTracker import/export (should we only support SHORTER patterns??? YES!)
+		- FamiTone split, etc.
+		- Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, export to FT, etc.
+		- Retest seek
 - BUG: Toggle attack that crosses pattern boundary probably doesnt work.
+- Bar length -> Measure length
 
 ========================
 

@@ -550,8 +550,9 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (ctrl)
-                        Seek(songPlayer.CurrentFrame / song.PatternLength * song.PatternLength);
+                    // MATTT
+                    //if (ctrl)
+                    //    Seek(songPlayer.CurrentFrame / song.PatternLength * song.PatternLength);
 
                     Play();
                 }
@@ -682,7 +683,7 @@ namespace FamiStudio
         {
             bool wasPlaying = songPlayer.IsPlaying;
             if (wasPlaying) Stop();
-            songPlayer.CurrentFrame = Math.Min(frame, song.Length * song.PatternLength - 1);
+            songPlayer.CurrentFrame = Math.Min(frame, song.GetPatternInstanceStartNote(song.Length) - 1);
             if (wasPlaying) Play();
             InvalidateEverything();
         }
@@ -691,7 +692,7 @@ namespace FamiStudio
         {
             bool wasPlaying = songPlayer.IsPlaying;
             if (wasPlaying) Stop();
-            songPlayer.CurrentFrame = songPlayer.CurrentFrame - (songPlayer.CurrentFrame % song.PatternLength);
+            songPlayer.CurrentFrame = song.GetPatternInstanceStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _));
             if (wasPlaying) Play();
             InvalidateEverything();
         }

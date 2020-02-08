@@ -99,7 +99,7 @@ namespace FamiStudio
         private void CreatePatternInstances()
         {
             for (int i = 0; i < patternInstances.Length; i++)
-                patternInstances[i] = new PatternInstance();
+                patternInstances[i] = new PatternInstance(song, type, i);
         }
 
         public Pattern GetPattern(string name)
@@ -163,35 +163,36 @@ namespace FamiStudio
 
         public void Split(int factor)
         {
-            if ((song.PatternLength % factor) == 0)
-            {
-                // TODO: This might generate identical patterns, need to cleanup.
-                var splitPatterns = new Dictionary<Pattern, Pattern[]>();
-                var newPatterns = new List<Pattern>();
+            // MATTT
+            //if ((song.PatternLength % factor) == 0)
+            //{
+            //    // TODO: This might generate identical patterns, need to cleanup.
+            //    var splitPatterns = new Dictionary<Pattern, Pattern[]>();
+            //    var newPatterns = new List<Pattern>();
 
-                foreach (var pattern in patterns)
-                {
-                    var splits = pattern.Split(factor);
-                    splitPatterns[pattern] = splits;
-                    newPatterns.AddRange(splits);
-                }
+            //    foreach (var pattern in patterns)
+            //    {
+            //        var splits = pattern.Split(factor);
+            //        splitPatterns[pattern] = splits;
+            //        newPatterns.AddRange(splits);
+            //    }
 
-                var newSongLength = song.Length * factor;
+            //    var newSongLength = song.Length * factor;
                 
-                for (int i = 0; i < song.Length; i++)
-                {
-                    var oldPattern = patternInstances[i].Pattern;
-                    if (oldPattern != null)
-                    {
-                        for (int j = 0; j < factor; j++)
-                        {
-                            patternInstances[i * factor + j].Pattern = splitPatterns[oldPattern][j];
-                        }
-                    }
-                }
+            //    for (int i = 0; i < song.Length; i++)
+            //    {
+            //        var oldPattern = patternInstances[i].Pattern;
+            //        if (oldPattern != null)
+            //        {
+            //            for (int j = 0; j < factor; j++)
+            //            {
+            //                patternInstances[i * factor + j].Pattern = splitPatterns[oldPattern][j];
+            //            }
+            //        }
+            //    }
 
-                patterns = newPatterns;
-            }
+            //    patterns = newPatterns;
+            //}
         }
 
         public Pattern CreatePattern(string name = null)
@@ -272,12 +273,12 @@ namespace FamiStudio
 
             for (int i = 0; i < song.Length; i++)
             {
-                var pattern = PatternInstances[i].Pattern;
-                if (pattern != null)
+                var patInst = PatternInstances[i];
+                if (patInst.Pattern != null)
                 {
-                    for (int j = 0; j < song.PatternLength; j++)
+                    for (int j = 0; j < patInst.Length; j++)
                     {
-                        var n = pattern.Notes[j];
+                        var n = patInst.Pattern.Notes[j];
                         if (n.IsValid && !n.IsStop)
                         {
                             if (n.Value < min.Value) min = n;
@@ -390,26 +391,27 @@ namespace FamiStudio
         public int FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes)
         {
             var noteCount = 0;
+            var patternLength = song.GetPatternInstanceLength(patternIdx);
 
-            for (int n = noteIdx + 1; n < song.PatternLength && noteCount < maxNotes; n++, noteCount++)
+            for (int n = noteIdx + 1; n < patternLength && noteCount < maxNotes; n++, noteCount++)
             {
                 var tmpNote = patternInstances[patternIdx].Pattern.Notes[n];
                 if (tmpNote.IsMusical || tmpNote.IsStop)
-                    return (patternIdx * song.PatternLength + n) - (patternIdx * song.PatternLength + noteIdx);
+                    return (song.GetPatternInstanceStartNote(patternIdx) + n) - (song.GetPatternInstanceStartNote(patternIdx) + noteIdx);
             }
 
             for (int p = patternIdx + 1; p < song.Length && noteCount < maxNotes; p++)
             {
                 var pattern = patternInstances[p];
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
-                    return (p * song.PatternLength + pattern.FirstValidNoteTime) - (patternIdx * song.PatternLength + noteIdx);
+                    return (song.GetPatternInstanceStartNote(p) + pattern.FirstValidNoteTime) - (song.GetPatternInstanceStartNote(patternIdx) + noteIdx);
                 else
-                    noteCount += song.PatternLength;
+                    noteCount += song.GetPatternInstanceStartNote(p);
             }
 
             // This mean we hit the end of the song.
             if (noteCount < maxNotes)
-                return (song.Length * song.PatternLength) - (patternIdx * song.PatternLength + noteIdx);
+                return song.GetPatternInstanceStartNote(song.Length) - (song.GetPatternInstanceStartNote(patternIdx) + noteIdx);
 
             return maxNotes;
         }
@@ -455,8 +457,8 @@ namespace FamiStudio
                     }
                 }
 
-                n = song.PatternLength - 1;
                 p--;
+                n = song.GetPatternInstanceLength(p) - 1;
             }
 
             return false;
@@ -506,6 +508,12 @@ namespace FamiStudio
         }
 #endif
 
+        public void UpdatePatternsMaxInstanceLength()
+        {
+            foreach (var pattern in patterns)
+                pattern.UpdateMaxInstanceLength();
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsWriting)
@@ -525,10 +533,13 @@ namespace FamiStudio
                 pattern.SerializeState(buffer);
 
             for (int i = 0; i < patternInstances.Length; i++)
-                buffer.Serialize(ref patternInstances[i], this);
+                patternInstances[i].SerializeState(buffer, this);
 
             if (buffer.IsReading && !buffer.IsForUndoRedo)
+            {
                 ClearPatternsInstancesPastSongLength();
+                UpdatePatternsMaxInstanceLength();
+            }
         }
     }
 }

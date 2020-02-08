@@ -14,11 +14,13 @@ namespace FamiStudio
         private int channelType;
         private Color color;
         private Note[] notes = new Note[MaxLength];
+        private int maxInstanceLength;
 
         public int Id => id;
         public int ChannelType => channelType;
         public Color Color { get => color; set => color = value; }
         public Song Song => song;
+        public int MaxInstanceLength => maxInstanceLength;
 
         public Pattern()
         {
@@ -49,20 +51,23 @@ namespace FamiStudio
 
         public Pattern[] Split(int factor)
         {
-            if ((song.PatternLength % factor) == 0)
-            {
-                var newPatternLength = song.PatternLength / factor;
-                var newPatterns = new Pattern[factor];
+            // MATTT
+            Debug.Assert(false);
 
-                for (int i = 0; i < factor; i++)
-                {
-                    newPatterns[i] = new Pattern(song.Project.GenerateUniqueId(), song, channelType, song.Channels[channelType].GenerateUniquePatternName(name));
-                    newPatterns[i].color = color;
-                    Array.Copy(notes, newPatternLength * i, newPatterns[i].notes, 0, newPatternLength);
-                }
+            //if ((song.PatternLength % factor) == 0)
+            //{
+            //    var newPatternLength = song.PatternLength / factor;
+            //    var newPatterns = new Pattern[factor];
 
-                return newPatterns;
-            }
+            //    for (int i = 0; i < factor; i++)
+            //    {
+            //        newPatterns[i] = new Pattern(song.Project.GenerateUniqueId(), song, channelType, song.Channels[channelType].GenerateUniquePatternName(name));
+            //        newPatterns[i].color = color;
+            //        Array.Copy(notes, newPatternLength * i, newPatterns[i].notes, 0, newPatternLength);
+            //    }
+
+            //    return newPatterns;
+            //}
 
             return new Pattern[] { this };
         }
@@ -72,11 +77,11 @@ namespace FamiStudio
             bool valid = false;
 
             min = new Note() { Value = 255 };
-            max = new Note() { Value =   0 };
+            max = new Note() { Value = 0 };
 
             if (song != null)
             {
-                for (int i = 0; i < song.PatternLength; i++)
+                for (int i = 0; i < maxInstanceLength; i++)
                 {
                     var n = notes[i];
                     if (n.IsMusical)
@@ -87,7 +92,6 @@ namespace FamiStudio
                     }
                 }
             }
-
             return valid;
         }
 
@@ -95,7 +99,7 @@ namespace FamiStudio
         {
             get
             {
-                for (int i = 0; i < song.PatternLength; i++)
+                for (int i = 0; i < maxInstanceLength; i++)
                 {
                     var n = notes[i];
                     if (n.IsValid || n.HasVolume || n.HasSpeed)
@@ -112,7 +116,7 @@ namespace FamiStudio
         {
             get
             {
-                for (int n = 0; n < song.PatternLength; n++)
+                for (int n = 0; n < maxInstanceLength; n++)
                 {
                     var note = notes[n];
                     for (int i = 0; i < Note.EffectCount; i++)
@@ -128,8 +132,20 @@ namespace FamiStudio
 
         public void ClearNotesPastSongLength()
         {
-            for (int i = song.PatternLength; i < notes.Length; i++)
+            for (int i = maxInstanceLength; i < notes.Length; i++)
                 notes[i].Clear();
+        }
+
+        public void UpdateMaxInstanceLength()
+        {
+            var channel = song.GetChannelByType(channelType);
+
+            maxInstanceLength = 0;
+            for (int i = 0; i < song.Length; i++)
+            {
+                if (channel.PatternInstances[i].Pattern == this)
+                    maxInstanceLength = Math.Max(maxInstanceLength, song.GetPatternInstanceLength(i));
+            }
         }
 
 #if DEBUG
@@ -170,10 +186,10 @@ namespace FamiStudio
                 }
             }
 
-            if (buffer.IsReading && !buffer.IsForUndoRedo)
-            {
+            if (buffer.IsForUndoRedo)
+                buffer.Serialize(ref maxInstanceLength);
+            else if (buffer.IsReading)
                 ClearNotesPastSongLength();
-            }
         }
     }
 }

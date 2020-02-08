@@ -19,7 +19,7 @@ namespace FamiStudio
         void Serialize(ref sbyte[] values);
         void Serialize(ref Song song);
         void Serialize(ref Instrument instrument);
-        void Serialize(ref PatternInstance patternInstance, Channel channel);
+        void Serialize(ref Pattern pattern, Channel channel);
         void Serialize(ref DPCMSample pattern);
         bool IsReading { get; }
         bool IsWriting { get; }
@@ -127,9 +127,9 @@ namespace FamiStudio
             Serialize(ref instrumentId);
         }
 
-        public void Serialize(ref PatternInstance patternInstance, Channel channel)
+        public void Serialize(ref Pattern pattern, Channel channel)
         {
-            int patternId = patternInstance.Pattern == null ? -1 : patternInstance.Pattern.Id;
+            int patternId = pattern == null ? -1 : pattern.Id;
             Serialize(ref patternId);
         }
 
@@ -270,11 +270,11 @@ namespace FamiStudio
             instrument = project.GetInstrument(instrumentId);
         }
 
-        public void Serialize(ref PatternInstance patternInstance, Channel channel)
+        public void Serialize(ref Pattern pattern, Channel channel)
         {
             int patternId = -1;
             Serialize(ref patternId);
-            patternInstance.Pattern = channel.GetPattern(patternId);
+            pattern = channel.GetPattern(patternId);
         }
 
         public void Serialize(ref DPCMSample sample)

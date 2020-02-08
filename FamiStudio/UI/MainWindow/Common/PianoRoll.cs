@@ -250,7 +250,7 @@ namespace FamiStudio
             octaveSizeY            = 12 * noteSizeY;
             numNotes               = numOctaves * 12;
             virtualSizeY           = numNotes * noteSizeY;
-            patternSizeX           = noteSizeX * (Song == null ? 256 : Song.PatternLength);
+            patternSizeX           = noteSizeX * (Song == null ? 256 : Song.DefaultPatternLength); // MATTT
             barSizeX               = noteSizeX * (Song == null ? 16  : Song.BarLength);
             headerAndEffectSizeY   = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
         }
@@ -578,7 +578,7 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         int patternX = p * patternSizeX - scrollX;
-                        for (int n = 0; n < Song.PatternLength; n++)
+                        for (int n = 0; n < Song.GetPatternInstanceLength(p); n++)
                         {
                             var note = pattern.Notes[n];
                             for (int i = Note.EffectCount - 1; i >= 0; i--)

@@ -377,8 +377,7 @@ namespace FamiStudio
 
             // Timecode
             int frame = App.CurrentFrame;
-            int patternIdx = frame / App.Song.PatternLength;
-            int noteIdx = frame % App.Song.PatternLength;
+            int patternIdx = App.Song.FindPatternInstanceIndex(frame, out int noteIdx);
 
             g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
             g.DrawText($"{patternIdx:D3}:{noteIdx:D3}", ThemeBase.FontHuge, timecodePosX + timecodeTextPosX, 2, theme.LightGreyFillBrush1, timecodeSizeX);

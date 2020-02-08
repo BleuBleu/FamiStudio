@@ -165,7 +165,7 @@ namespace FamiStudio
             headerIconPosX     = (int)(DefaultHeaderIconPosX * scaling);
             headerIconPosY     = (int)(DefaultHeaderIconPosY * scaling);
 
-            patternSizeX = (int)(ScaleForZoom(Song == null ? 256 : Song.PatternLength) * scaling);
+            patternSizeX = (int)(ScaleForZoom(Song == null ? 256 : Song.DefaultPatternLength) * scaling); // MATTT
         }
 
         private int GetChannelCount()
@@ -428,7 +428,7 @@ namespace FamiStudio
 
         private unsafe RenderBitmap GetPatternBitmapFromCache(RenderGraphics g, Pattern p)
         {
-            int patternSizeX = Song.PatternLength - 1;
+            int patternSizeX = p.MaxInstanceLength - 1;
             int patternSizeY = trackSizeY - patternHeaderSizeY - 1;
 
             RenderBitmap bmp;
@@ -467,7 +467,7 @@ namespace FamiStudio
 
                 Note lastValid = new Note { Value = Note.NoteInvalid };
 
-                for (int i = 0; i < Song.PatternLength - 1; i++) // TODO: We always skip the last note.
+                for (int i = 0; i < p.MaxInstanceLength - 1; i++) // TODO: We always skip the last note.
                 {
                     var n = p.Notes[i];
 
@@ -613,6 +613,7 @@ namespace FamiStudio
             {
                 if (left)
                 {
+                    Song.FindPatternInstanceIndex()
                     int frame = (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)patternSizeX * Song.PatternLength);
                     App.Seek(frame);
                 }

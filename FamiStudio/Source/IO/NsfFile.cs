@@ -425,8 +425,8 @@ namespace FamiStudio
 
             for (int f = 0; f < 5000; f++)
             {
-                var p = f / song.PatternLength;
-                var n = f % song.PatternLength;
+                var p = f / song.DefaultPatternLength;
+                var n = f % song.DefaultPatternLength;
 
                 NsfRunFrame(nsf);
 

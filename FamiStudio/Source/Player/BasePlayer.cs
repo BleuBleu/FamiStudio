@@ -110,9 +110,9 @@ namespace FamiStudio
                 NesApu.seeking = true;
 #endif
 
-                while (playPattern * song.PatternLength + playNote < startNote)
+                while (song.GetPatternInstanceLength(playPattern) + playNote < startNote)
                 {
-                    if (!AdvanceSong(song.Length, song.PatternLength, loopMode))
+                    if (!AdvanceSong(song.Length, loopMode))
                         return false;
 
                     foreach (var channel in channelStates)
@@ -143,7 +143,7 @@ namespace FamiStudio
 
         public bool PlaySongFrame()
         {
-            playPosition = playPattern * song.PatternLength + playNote;
+            playPosition = song.GetPatternInstanceLength(playPattern) + playNote;
 
             // Update envelopes + APU registers.
             foreach (var channel in channelStates)
@@ -164,7 +164,7 @@ namespace FamiStudio
             //if (UpdateFamistudioTempo(6, ref tempoCounter, ref numFrames))
             {
                 // Advance to next note.
-                if (!AdvanceSong(song.Length, song.PatternLength, loopMode))
+                if (!AdvanceSong(song.Length, loopMode))
                     return false;
 
                 foreach (var channel in channelStates)
@@ -177,9 +177,9 @@ namespace FamiStudio
             return true;
         }
 
-        public bool AdvanceSong(int songLength, int patternLength, LoopMode loopMode)
+        public bool AdvanceSong(int songLength, LoopMode loopMode)
         {
-            if (++playNote >= patternLength)
+            if (++playNote >= song.GetPatternInstanceLength(playPattern))
             {
                 playNote = 0;
                 if (loopMode != LoopMode.Pattern)

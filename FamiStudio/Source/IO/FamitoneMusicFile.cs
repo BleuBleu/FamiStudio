@@ -324,7 +324,7 @@ namespace FamiStudio
                     {
                         foreach (var p in c.Patterns)
                         {
-                            for (int n = 0; n < s.PatternLength; n++)
+                            for (int n = 0; n < p.MaxInstanceLength; n++)
                             {
                                 var note = p.Notes[n];
 
@@ -395,7 +395,7 @@ namespace FamiStudio
         {
             for (int p = 0; p < song.Length; p++)
             {
-                for (int i = 0; i < song.PatternLength; i++)
+                for (int i = 0; i < song.GetPatternInstanceLength(p); i++)
                 {
                     int fx = FindEffectParam(song, p, i, effect);
                     if (fx >= 0)
@@ -410,7 +410,7 @@ namespace FamiStudio
 
         private int FindEffectPosition(Song song, int patternIdx, int effect)
         {
-            for (int i = 0; i < song.PatternLength; i++)
+            for (int i = 0; i < song.GetPatternInstanceLength(patternIdx); i++)
             {
                 var fx = FindEffectParam(song, patternIdx, i, effect);
                 if (fx >= 0)
@@ -470,20 +470,11 @@ namespace FamiStudio
                     size += 2;
                 }
 
-                var isSkipping = false;
-
                 for (int p = 0; p < song.Length; p++)
                 {
                     var prevNoteValue = Note.NoteInvalid;
                     var pattern = channel.PatternInstances[p].Pattern == null ? emptyPattern : channel.PatternInstances[p].Pattern;
                     var patternBuffer = new List<string>();
-
-                    // If we had split the song and we find a skip to the next
-                    // pattern, we need to ignore the extra patterns we generated.
-                    if (isSkipping && (p % factor) != 0)
-                    {
-                        continue;
-                    }
 
                     if (!test && p == loopPoint)
                     {
@@ -491,30 +482,7 @@ namespace FamiStudio
                     }
 
                     var i = 0;
-                    var patternLength = -1; // MATTT FindEffectPosition(song, p, Note.EffectSkip);
-                    var jumpFound = false;
-
-                    if (patternLength >= 0)
-                    {
-                        patternLength++;
-                        isSkipping = true;
-                    }
-                    else
-                    {
-                        isSkipping = false;
-
-                        patternLength = -1; // MATTT FindEffectPosition(song, p, Note.EffectJump);
-                        if (patternLength >= 0)
-                        {
-                            patternLength++;
-                            jumpFound = true;
-                        }
-                        else
-                        {
-                            patternLength = song.PatternLength;
-                        }
-                    }
-
+                    var patternLength = song.GetPatternInstanceLength(p); // MATTT FindEffectPosition(song, p, Note.EffectSkip);
                     var numValidNotes = patternLength;
 
                     while (i < patternLength)
@@ -670,11 +638,6 @@ namespace FamiStudio
                             size += 4;
                         }
                     }
-
-                    if (jumpFound)
-                    {
-                        break;
-                    }
                 }
 
                 if (!test)
@@ -709,7 +672,7 @@ namespace FamiStudio
             {
                 foreach (var pattern in song.Channels[c].Patterns)
                 {
-                    for (int n = 0; n < song.PatternLength; n++)
+                    for (int n = 0; n < pattern.MaxInstanceLength; n++)
                     {
                         if (pattern.Notes[n].HasSpeed)
                             speedEffectCount[c]++;
@@ -728,25 +691,26 @@ namespace FamiStudio
                 }
             }
 
-            for (int factor = 1; factor <= song.PatternLength; factor++)
-            {
-                if ((song.PatternLength % factor) == 0 && 
-                    (song.PatternLength / factor) >= MinPatternLength)
-                {
-                    var splitSong = song.Clone();
-                    if (splitSong.Split(factor))
-                    {
-                        int size = OutputSong(splitSong, songIdx, speedChannel, factor, true);
+            // MATTT
+            //for (int factor = 1; factor <= song.PatternLength; factor++)
+            //{
+            //    if ((song.PatternLength % factor) == 0 && 
+            //        (song.PatternLength / factor) >= MinPatternLength)
+            //    {
+            //        var splitSong = song.Clone();
+            //        if (splitSong.Split(factor))
+            //        {
+            //            int size = OutputSong(splitSong, songIdx, speedChannel, factor, true);
 
-                        if (size < minSize)
-                        {
-                            minSize = size;
-                            bestChannel = speedChannel;
-                            bestFactor = factor;
-                        }
-                    }
-                }
-            }
+            //            if (size < minSize)
+            //            {
+            //                minSize = size;
+            //                bestChannel = speedChannel;
+            //                bestFactor = factor;
+            //            }
+            //        }
+            //    }
+            //}
 
             var bestSplitSong = song.Clone();
             bestSplitSong.Split(bestFactor);
@@ -792,7 +756,7 @@ namespace FamiStudio
                     {
                         foreach (var pattern in channel.Patterns)
                         {
-                            for (int i = 0; i < song.PatternLength; i++)
+                            for (int i = 0; i < pattern.MaxInstanceLength; i++)
                             {
                                 if (pattern.Notes[i].IsRelease)
                                 {

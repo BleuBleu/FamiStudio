@@ -567,20 +567,16 @@ namespace FamiStudio
 
             foreach (var song in songs)
             {
-                for (int p = 0; p < song.Length; p++)
+                foreach (var channel in song.Channels)
                 {
-                    foreach (var channel in song.Channels)
+                    foreach (var pattern in channel.Patterns)
                     {
-                        var pattern = channel.PatternInstances[p].Pattern;
-                        if (pattern != null)
+                        for (int i = 0; i < pattern.MaxInstanceLength ; i++)
                         {
-                            for (int i = 0; i < song.PatternLength; i++)
+                            var note = pattern.Notes[i];
+                            if (note.IsValid && !note.IsStop && note.Instrument != null)
                             {
-                                var note = pattern.Notes[i];
-                                if (note.IsValid && !note.IsStop && note.Instrument != null)
-                                {
-                                    usedInstruments.Add(note.Instrument);
-                                }
+                                usedInstruments.Add(note.Instrument);
                             }
                         }
                     }
@@ -596,14 +592,11 @@ namespace FamiStudio
 
             foreach (var song in songs)
             {
-                var channel = song.Channels[Channel.Dpcm];
-
-                for (int p = 0; p < song.Length; p++)
+                foreach (var channel in song.Channels)
                 {
-                    var pattern = channel.PatternInstances[p].Pattern;
-                    if (pattern != null)
+                    foreach (var pattern in channel.Patterns)
                     {
-                        for (int i = 0; i < song.PatternLength; i++)
+                        for (int i = 0; i < pattern.MaxInstanceLength; i++)
                         {
                             var note = pattern.Notes[i];
                             var mapping = GetDPCMMapping(note.Value);
