@@ -1160,8 +1160,8 @@ namespace FamiStudio
                     dlg.Properties.AddColoredString(song.Name, song.Color); // 0
                     dlg.Properties.AddIntegerRange("Tempo :", song.Tempo, 32, 255); // 1
                     dlg.Properties.AddIntegerRange("Speed :", song.Speed, 1, 31); // 2
-                    dlg.Properties.AddIntegerRange("Pattern Length :", song.PatternLength, 16, 256); // 3
-                    dlg.Properties.AddDomainRange("Bar Length :", GenerateBarLengths(song.PatternLength), song.BarLength); // 4
+                    dlg.Properties.AddIntegerRange("Pattern Length :", song.DefaultPatternLength, 16, 256); // 3
+                    dlg.Properties.AddDomainRange("Bar Length :", GenerateBarLengths(song.DefaultPatternLength), song.BarLength); // 4
                     dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, 128); // 5
                     dlg.Properties.AddColor(song.Color); // 6
                     dlg.Properties.Build();

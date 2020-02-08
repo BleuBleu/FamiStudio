@@ -397,21 +397,21 @@ namespace FamiStudio
             {
                 var tmpNote = patternInstances[patternIdx].Pattern.Notes[n];
                 if (tmpNote.IsMusical || tmpNote.IsStop)
-                    return (song.GetPatternInstanceStartNote(patternIdx) + n) - (song.GetPatternInstanceStartNote(patternIdx) + noteIdx);
+                    return song.GetPatternInstanceStartNote(patternIdx, n) - song.GetPatternInstanceStartNote(patternIdx, noteIdx);
             }
 
             for (int p = patternIdx + 1; p < song.Length && noteCount < maxNotes; p++)
             {
                 var pattern = patternInstances[p];
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
-                    return (song.GetPatternInstanceStartNote(p) + pattern.FirstValidNoteTime) - (song.GetPatternInstanceStartNote(patternIdx) + noteIdx);
+                    return song.GetPatternInstanceStartNote(p, pattern.FirstValidNoteTime) - song.GetPatternInstanceStartNote(patternIdx, noteIdx);
                 else
                     noteCount += song.GetPatternInstanceStartNote(p);
             }
 
             // This mean we hit the end of the song.
             if (noteCount < maxNotes)
-                return song.GetPatternInstanceStartNote(song.Length) - (song.GetPatternInstanceStartNote(patternIdx) + noteIdx);
+                return song.GetPatternInstanceStartNote(song.Length) - song.GetPatternInstanceStartNote(patternIdx, noteIdx);
 
             return maxNotes;
         }
@@ -457,7 +457,7 @@ namespace FamiStudio
                     }
                 }
 
-                p--;
+                if (--p < 0) break;
                 n = song.GetPatternInstanceLength(p) - 1;
             }
 

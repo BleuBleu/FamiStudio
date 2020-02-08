@@ -48,6 +48,7 @@ namespace FamiStudio
             this.color = Color.Azure;
 
             CreateChannels();
+            UpdatePatternInstancesStartNotes();
         }
 
         public void CreateChannels(bool preserve = false)
@@ -179,23 +180,30 @@ namespace FamiStudio
             return null;
         }
 
-        public void SetPatternInstanceLength(int idx, int len)
+        public void SetPatternInstanceLength(int instanceIdx, int len)
         {
             if (len < 0 || len >= Pattern.MaxLength)
-                customPatternInstanceLengths[idx] = 0;
+                customPatternInstanceLengths[instanceIdx] = 0;
             else
-                customPatternInstanceLengths[idx] = (byte)len;
+                customPatternInstanceLengths[instanceIdx] = (byte)len;
+
+            UpdatePatternInstancesStartNotes();
         }
 
-        public int GetPatternInstanceLength(int idx)
+        public bool HasCustomInstanceLength(int instanceIdx)
         {
-            int len = customPatternInstanceLengths[idx];
+            return customPatternInstanceLengths[instanceIdx] != 0;
+        }
+
+        public int GetPatternInstanceLength(int instanceIdx)
+        {
+            int len = customPatternInstanceLengths[instanceIdx];
             return len == 0 ? patternLength : len;
         }
 
-        public int GetPatternInstanceStartNote(int idx)
+        public int GetPatternInstanceStartNote(int instanceIdx, int note = 0)
         {
-            return patternInstancesStartNote[idx];
+            return patternInstancesStartNote[instanceIdx] + note;
         }
 
         public Channel GetChannelByType(int type)
@@ -322,6 +330,7 @@ namespace FamiStudio
         {
             noteIdx = -1;
 
+            // TODO: Binary search
             for (int i = 0; i < songLength; i++)
             {
                 if (idx < patternInstancesStartNote[i])
@@ -339,7 +348,7 @@ namespace FamiStudio
             patternInstancesStartNote[0] = 0;
             for (int i = 1; i <= songLength; i++)
             {
-                int len = customPatternInstanceLengths[i];
+                int len = customPatternInstanceLengths[i - 1];
                 Debug.Assert(len == 0 || len != patternLength);
                 patternInstancesStartNote[i] = patternInstancesStartNote[i - 1] + (len == 0 ? patternLength : len);
             }

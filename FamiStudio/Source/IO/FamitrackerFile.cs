@@ -578,7 +578,7 @@ namespace FamiStudio
                                 else if (slideSpeed != 0 && FindNextNoteForSlide(c, p, n, out var np, out var nn, patternFxData))
                                 {
                                     // Compute the pitch delta and find the closest target note.
-                                    var numFrames = ((s.GetPatternInstanceStartNote(np) + nn) - (s.GetPatternInstanceStartNote(p) + n)) * s.Speed;
+                                    var numFrames = (s.GetPatternInstanceStartNote(np, nn) - s.GetPatternInstanceStartNote(p, n)) * s.Speed;
 
                                     // TODO: PAL.
                                     var newNotePitch = Utils.Clamp(noteTable[note.Value] + numFrames * slideSpeed, 0, pitchLimit);
@@ -887,7 +887,7 @@ namespace FamiStudio
                 song.CleanupUnusedPatterns();
                 CreateMissingPatterns(song);
 
-                lines.Add($"TRACK{song.PatternLength,4}{song.Speed,4}{song.Tempo,4} \"{song.Name}\"");
+                lines.Add($"TRACK{song.DefaultPatternLength,4}{song.Speed,4}{song.Tempo,4} \"{song.Name}\"");
                 lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(3, song.Channels.Length))}");
                 lines.Add("");
 
@@ -922,7 +922,7 @@ namespace FamiStudio
 
                         var patternLines = new List<string>();
 
-                        for (int n = 0; n < song.PatternLength; n++)
+                        for (int n = 0; n < song.DefaultPatternLength; n++) // MATTT : TODO, de-instance patterns before export.
                         {
                             var note = pattern.Notes[n];
                             var noteString = GetFamiTrackerNoteName(c, note);
@@ -1043,7 +1043,7 @@ namespace FamiStudio
                 {
                     lines.Add($"PATTERN {j:X2}");
 
-                    for (int p = 0; p < song.PatternLength; p++)
+                    for (int p = 0; p < song.DefaultPatternLength; p++)// MATTT : TODO, de-instance patterns before export.
                     {
                         var line = $"ROW {p:X2}";
                         for (int c = 0; c < song.Channels.Length; c++)
