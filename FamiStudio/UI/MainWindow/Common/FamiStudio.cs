@@ -550,9 +550,8 @@ namespace FamiStudio
                 }
                 else
                 {
-                    // MATTT
-                    //if (ctrl)
-                    //    Seek(songPlayer.CurrentFrame / song.PatternLength * song.PatternLength);
+                    if (ctrl)
+                        Seek(song.GetPatternInstanceStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _)));
 
                     Play();
                 }

@@ -1865,11 +1865,10 @@ namespace FamiStudio
                             changed = true;
                         }
                     }
-                    else if (attack && channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx)) // MATTT
+                    else if (attack && channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
                     {
-                        // MATTT: Test this when note crosses pattern bound.
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[patternIdx].Pattern.Id);
-                        pattern.Notes[noteIdx].HasAttack ^= true;
+                        channel.PatternInstances[patternIdx].Pattern.Notes[noteIdx].HasAttack ^= true;
                         instance.UpdateLastValidNote();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;

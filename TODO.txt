@@ -35,7 +35,6 @@
 		- Handle where we change the song pattern.
 		- Truncate pattern to their maxlength.
 		- Make dark version of seq header icon.
-- BUG: Toggle attack that crosses pattern boundary probably doesnt work.
 - Bar length -> Measure length
 
 ========================
