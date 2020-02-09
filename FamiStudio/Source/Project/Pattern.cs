@@ -132,8 +132,12 @@ namespace FamiStudio
 
         public void ClearNotesPastSongLength()
         {
-            for (int i = maxInstanceLength; i < notes.Length; i++)
-                notes[i].Clear();
+            // Avoid clearing on initial load (before we computed the max length).
+            if (maxInstanceLength > 0) 
+            {
+                for (int i = maxInstanceLength; i < notes.Length; i++)
+                    notes[i].Clear();
+            }
         }
 
         public void UpdateMaxInstanceLength()

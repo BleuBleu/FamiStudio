@@ -357,6 +357,7 @@ namespace FamiStudio
                     buffer.Serialize(ref Jump);
                     buffer.Serialize(ref Skip);
                 }
+
                 buffer.Serialize(ref Speed);
                 buffer.Serialize(ref Vibrato); 
                 buffer.Serialize(ref Flags);
