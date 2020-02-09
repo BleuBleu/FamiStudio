@@ -728,7 +728,7 @@ namespace FamiStudio
                 song.SerializeState(buffer);
         }
 
-        public Project Clone()
+        public Project DeepClone()
         {
             var saveSerializer = new ProjectSaveBuffer(this);
             SerializeState(saveSerializer);

@@ -49,29 +49,6 @@ namespace FamiStudio
             set { name = value; }
         }
 
-        public Pattern[] Split(int factor)
-        {
-            // MATTT
-            Debug.Assert(false);
-
-            //if ((song.PatternLength % factor) == 0)
-            //{
-            //    var newPatternLength = song.PatternLength / factor;
-            //    var newPatterns = new Pattern[factor];
-
-            //    for (int i = 0; i < factor; i++)
-            //    {
-            //        newPatterns[i] = new Pattern(song.Project.GenerateUniqueId(), song, channelType, song.Channels[channelType].GenerateUniquePatternName(name));
-            //        newPatterns[i].color = color;
-            //        Array.Copy(notes, newPatternLength * i, newPatterns[i].notes, 0, newPatternLength);
-            //    }
-
-            //    return newPatterns;
-            //}
-
-            return new Pattern[] { this };
-        }
-
         public bool GetMinMaxNote(out Note min, out Note max)
         {
             bool valid = false;
@@ -150,6 +127,15 @@ namespace FamiStudio
                 if (channel.PatternInstances[i].Pattern == this)
                     maxInstanceLength = Math.Max(maxInstanceLength, song.GetPatternInstanceLength(i));
             }
+        }
+
+        public Pattern ShallowClone()
+        {
+            var channel = song.GetChannelByType(channelType);
+            var pattern = channel.CreatePattern();
+            Array.Copy(notes, pattern.notes, notes.Length);
+            UpdateMaxInstanceLength();
+            return pattern;
         }
 
 #if DEBUG

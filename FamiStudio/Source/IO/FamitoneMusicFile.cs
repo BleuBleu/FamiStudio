@@ -691,28 +691,27 @@ namespace FamiStudio
                 }
             }
 
-            // MATTT
-            //for (int factor = 1; factor <= song.PatternLength; factor++)
-            //{
-            //    if ((song.PatternLength % factor) == 0 && 
-            //        (song.PatternLength / factor) >= MinPatternLength)
-            //    {
-            //        var splitSong = song.Clone();
-            //        if (splitSong.Split(factor))
-            //        {
-            //            int size = OutputSong(splitSong, songIdx, speedChannel, factor, true);
+            for (int factor = 1; factor <= song.DefaultPatternLength; factor++)
+            {
+                if ((song.DefaultPatternLength % factor) == 0 &&
+                    (song.DefaultPatternLength / factor) >= MinPatternLength)
+                {
+                    var splitSong = song.DeepClone();
+                    if (splitSong.Split(factor))
+                    {
+                        int size = OutputSong(splitSong, songIdx, speedChannel, factor, true);
 
-            //            if (size < minSize)
-            //            {
-            //                minSize = size;
-            //                bestChannel = speedChannel;
-            //                bestFactor = factor;
-            //            }
-            //        }
-            //    }
-            //}
+                        if (size < minSize)
+                        {
+                            minSize = size;
+                            bestChannel = speedChannel;
+                            bestFactor = factor;
+                        }
+                    }
+                }
+            }
 
-            var bestSplitSong = song.Clone();
+            var bestSplitSong = song.DeepClone();
             bestSplitSong.Split(bestFactor);
 
             return OutputSong(bestSplitSong, songIdx, bestChannel, bestFactor, false);
@@ -788,7 +787,7 @@ namespace FamiStudio
         private void SetupProject(Project originalProject, int[] songIds)
         {
             // Work on a temporary copy.
-            project = originalProject.Clone();
+            project = originalProject.DeepClone();
             project.Filename = originalProject.Filename;
 
             // NULL = All songs.

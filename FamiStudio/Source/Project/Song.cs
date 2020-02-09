@@ -20,7 +20,7 @@ namespace FamiStudio
         private int tempo = 150;
         private int speed = 6;
         private int loopPoint = 0;
-        private byte[] customPatternInstanceLengths = new byte[Song.MaxLength]; // 0 = song pattern length
+        private byte[] patternInstanceLengths = new byte[Song.MaxLength]; // 0 = default song pattern length
         private int[] patternInstancesStartNote = new int[Song.MaxLength];
 
         public int Id => id;
@@ -68,20 +68,101 @@ namespace FamiStudio
             }
         }
 
+        public void DuplicateInstancesWithDifferentLengths()
+        {
+            foreach (var channel in channels)
+            {
+                channel.DuplicateInstancesWithDifferentLengths();
+            }
+        }
+
         public bool Split(int factor)
         {
+            DuplicateInstancesWithDifferentLengths();
+
             if (factor == 1)
                 return true;
 
             if ((patternLength % factor) == 0 && (songLength * factor) < MaxLength)
             {
-                foreach (var channel in channels)
-                {
-                    channel.Split(factor);
-                }
+                var newPatternInstanceLengths = new List<byte>();
+                var newChannelPatterns = new List<Pattern>();
+                var newChannelPatternInstances = new List<PatternInstance>();
+                var newPatternMap = new Dictionary<Pattern, Pattern[]>();
 
+                for (int p = 0; p < songLength; p++)
+                {
+                    var instLen = patternInstanceLengths[p];
+                    var idx = newPatternInstanceLengths.Count;
+
+                    if (instLen == 0)
+                    {
+                        newPatternInstanceLengths.AddRange(new byte[factor]);
+                    }
+                    else
+                    {
+                        var chunkLength = patternLength / factor;
+                        var cnt = (int)Math.Ceiling(instLen / (float)chunkLength);
+                        var left = (int)instLen;
+
+                        for (int i = 0; i < cnt; i++)
+                        {
+                            newPatternInstanceLengths.Add((byte)Math.Min(chunkLength, left));
+                            left -= chunkLength;
+                        }
+                    }
+
+                    foreach (var channel in channels)
+                    {
+                        if (channel.PatternInstances[p].Pattern != null)
+                        {
+                            if (newPatternMap.TryGetValue(channel.PatternInstances[p].Pattern, out var splitPatterns))
+                            {
+                                Debug.Assert(splitPatterns.Length == newPatternInstanceLengths.Count - idx);
+
+                                for (int i = 0; i < splitPatterns.Length; i++)
+                                {
+                                    var inst = new PatternInstance(this, channel.Type, idx + i);
+                                    inst.Pattern = splitPatterns[i];
+                                    newChannelPatternInstances.Add(inst);
+                                }
+                            }
+                            else
+                            {
+                                for (int i = idx; idx < newPatternInstanceLengths.Count; idx++)
+                                {
+                                    // MATTT
+                                }
+
+                                //var newPatternCount = (int)Math.Ceiling(maxInstanceLength / (float)chunkLength);
+                                //var newPatterns = new Pattern[newPatternCount];
+                                //var notesLeft = maxInstanceLength;
+
+                                //for (int i = 0; i < newPatternCount; i++)
+                                //{
+                                //    newPatterns[i] = new Pattern(song.Project.GenerateUniqueId(), song, channelType, song.Channels[channelType].GenerateUniquePatternName(name));
+                                //    newPatterns[i].color = color;
+                                //    Array.Copy(notes, chunkLength * i, newPatterns[i].notes, 0, Math.Min(chunkLength, notesLeft));
+                                //    notesLeft -= chunkLength;
+                                //}
+
+                                //return newPatterns;
+
+                                //newPatternMap[] = xxx;
+                            }
+                        }
+                        else
+                        {
+                            for (int i = idx; idx < newPatternInstanceLengths.Count; idx++)
+                            {
+                                newChannelPatternInstances.Add(new PatternInstance(this, channel.Type, i));
+                            }
+                        }
+                    }
+                }
+                                
                 patternLength /= factor;
-                barLength /= factor;
+                barLength /= factor; 
                 songLength *= factor;
 
                 if (barLength <= 1)
@@ -91,20 +172,7 @@ namespace FamiStudio
 
                 if ((patternLength % barLength) != 0)
                 {
-                    bool found = false;
-                    for (barLength = patternLength / 2; barLength >= 2; barLength--)
-                    {
-                        if (patternLength % barLength == 0)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found)
-                    {
-                        barLength = patternLength;
-                    }
+                    SetSensibleBarLength();
                 }
 
                 return true;
@@ -123,7 +191,7 @@ namespace FamiStudio
                 loopPoint = 0;
 
             for (int i = songLength; i < Song.MaxLength; i++)
-                customPatternInstanceLengths[i] = 0;
+                patternInstanceLengths[i] = 0;
         }
 
         public void SetPatternLength(int newLength)
@@ -183,21 +251,21 @@ namespace FamiStudio
         public void SetPatternInstanceLength(int instanceIdx, int len)
         {
             if (len < 0 || len >= Pattern.MaxLength)
-                customPatternInstanceLengths[instanceIdx] = 0;
+                patternInstanceLengths[instanceIdx] = 0;
             else
-                customPatternInstanceLengths[instanceIdx] = (byte)len;
+                patternInstanceLengths[instanceIdx] = (byte)len;
 
             UpdatePatternInstancesStartNotes();
         }
 
         public bool PatternInstanceHasCustomLength(int instanceIdx)
         {
-            return customPatternInstanceLengths[instanceIdx] != 0;
+            return patternInstanceLengths[instanceIdx] != 0;
         }
 
         public int GetPatternInstanceLength(int instanceIdx)
         {
-            int len = customPatternInstanceLengths[instanceIdx];
+            int len = patternInstanceLengths[instanceIdx];
             return len == 0 ? patternLength : len;
         }
 
@@ -211,7 +279,7 @@ namespace FamiStudio
             return channels[Channel.ChannelTypeToIndex(type)];
         }
 
-        public Song Clone()
+        public Song DeepClone()
         {
             var saveSerializer = new ProjectSaveBuffer(project);
             SerializeState(saveSerializer);
@@ -348,7 +416,7 @@ namespace FamiStudio
             patternInstancesStartNote[0] = 0;
             for (int i = 1; i <= songLength; i++)
             {
-                int len = customPatternInstanceLengths[i - 1];
+                int len = patternInstanceLengths[i - 1];
                 Debug.Assert(len == 0 || len != patternLength);
                 patternInstancesStartNote[i] = patternInstancesStartNote[i - 1] + (len == 0 ? patternLength : len);
             }
@@ -372,7 +440,7 @@ namespace FamiStudio
             if (buffer.Version >= 5)
             {
                 buffer.Serialize(ref loopPoint);
-                buffer.Serialize(ref customPatternInstanceLengths);
+                buffer.Serialize(ref patternInstanceLengths);
             }
 
             if (buffer.IsReading)

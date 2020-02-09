@@ -181,9 +181,9 @@ namespace FamiStudio
                     var expansionType = line.StartsWith("INSTVRC6") ? Project.ExpansionVrc6 : Project.ExpansionNone;
                     var instrument = project.CreateInstrument(expansionType, name);
 
-                    if (vol >= 0) instrument.Envelopes[0] = envelopes[expansion, 0][vol].Clone();
-                    if (arp >= 0) instrument.Envelopes[1] = envelopes[expansion, 1][arp].Clone();
-                    if (pit >= 0) instrument.Envelopes[2] = envelopes[expansion, 2][pit].Clone();
+                    if (vol >= 0) instrument.Envelopes[0] = envelopes[expansion, 0][vol].ShallowClone();
+                    if (arp >= 0) instrument.Envelopes[1] = envelopes[expansion, 1][arp].ShallowClone();
+                    if (pit >= 0) instrument.Envelopes[2] = envelopes[expansion, 2][pit].ShallowClone();
                     if (dut >= 0) instrument.DutyCycle = duties[expansionType][dut];
 
                     instruments[idx] = instrument;
@@ -761,7 +761,7 @@ namespace FamiStudio
 
         public static bool Save(Project originalProject, string filename, int[] songIds)
         {
-            var project = originalProject.Clone();
+            var project = originalProject.DeepClone();
             project.RemoveAllSongsBut(songIds);
 
             ConvertPitchEnvelopes(project);

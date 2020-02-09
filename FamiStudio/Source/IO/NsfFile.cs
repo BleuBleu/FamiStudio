@@ -60,7 +60,7 @@ namespace FamiStudio
                 if (songIds.Length == 0)
                     return false;
 
-                var project = originalProject.Clone();
+                var project = originalProject.DeepClone();
                 project.RemoveAllSongsBut(songIds);
 
                 // Header

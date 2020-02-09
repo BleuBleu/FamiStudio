@@ -161,38 +161,27 @@ namespace FamiStudio
             return true;
         }
 
-        public void Split(int factor)
+        public void DuplicateInstancesWithDifferentLengths()
         {
-            // MATTT
-            //if ((song.PatternLength % factor) == 0)
-            //{
-            //    // TODO: This might generate identical patterns, need to cleanup.
-            //    var splitPatterns = new Dictionary<Pattern, Pattern[]>();
-            //    var newPatterns = new List<Pattern>();
+            var instanceLengthMap = new Dictionary<Pattern, int>();
 
-            //    foreach (var pattern in patterns)
-            //    {
-            //        var splits = pattern.Split(factor);
-            //        splitPatterns[pattern] = splits;
-            //        newPatterns.AddRange(splits);
-            //    }
+            for (int i = 0; i < song.Length; i++)
+            {
+                var inst = patternInstances[i];
 
-            //    var newSongLength = song.Length * factor;
-                
-            //    for (int i = 0; i < song.Length; i++)
-            //    {
-            //        var oldPattern = patternInstances[i].Pattern;
-            //        if (oldPattern != null)
-            //        {
-            //            for (int j = 0; j < factor; j++)
-            //            {
-            //                patternInstances[i * factor + j].Pattern = splitPatterns[oldPattern][j];
-            //            }
-            //        }
-            //    }
+                if (inst.Pattern != null)
+                {
+                    if (instanceLengthMap.TryGetValue(inst.Pattern, out var prevLength))
+                    {
+                        if (inst.Length != prevLength)
+                            inst.Pattern = inst.Pattern.ShallowClone();
+                    }
 
-            //    patterns = newPatterns;
-            //}
+                    instanceLengthMap[inst.Pattern] = inst.Length;
+                }
+            }
+
+            UpdatePatternsMaxInstanceLength();
         }
 
         public Pattern CreatePattern(string name = null)

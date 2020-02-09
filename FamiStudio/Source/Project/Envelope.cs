@@ -177,7 +177,7 @@ namespace FamiStudio
             }
         }
 
-        public Envelope Clone()
+        public Envelope ShallowClone()
         {
             var env = new Envelope(); // MATTT: We dont copy all the values here.
             env.Length = length;

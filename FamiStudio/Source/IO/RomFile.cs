@@ -109,7 +109,7 @@ namespace FamiStudio
                 if (songIds.Length > MaxSongs)
                     Array.Resize(ref songIds, MaxSongs);
 
-                var project = originalProject.Clone();
+                var project = originalProject.DeepClone();
                 project.RemoveAllSongsBut(songIds);
                 project.SetExpansionAudio(Project.ExpansionNone);
 
