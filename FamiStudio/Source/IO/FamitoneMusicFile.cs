@@ -451,7 +451,6 @@ namespace FamiStudio
         {
             var packedPatternBuffers = new List<List<string>>(globalPacketPatternBuffers);
             var size = 0;
-            var loopPoint = 0; // MATTT Math.Max(0, FindEffectParam(song, Note.EffectJump)) * factor;
             var emptyPattern = new Pattern(-1, song, 0, "");
 
             for (int c = 0; c < song.Channels.Length; c++)
@@ -476,13 +475,13 @@ namespace FamiStudio
                     var pattern = channel.PatternInstances[p].Pattern == null ? emptyPattern : channel.PatternInstances[p].Pattern;
                     var patternBuffer = new List<string>();
 
-                    if (!test && p == loopPoint)
+                    if (!test && p == song.LoopPoint)
                     {
                         lines.Add($"{ll}song{songIdx}ch{c}loop:");
                     }
 
                     var i = 0;
-                    var patternLength = song.GetPatternInstanceLength(p); // MATTT FindEffectPosition(song, p, Note.EffectSkip);
+                    var patternLength = song.GetPatternInstanceLength(p); 
                     var numValidNotes = patternLength;
 
                     while (i < patternLength)
