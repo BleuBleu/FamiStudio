@@ -8,7 +8,8 @@
 	- Presets (saw, triangle, sine, square, etc.)
 	- Proper playback (remove hacks)
 	- NSF.
-	- FamiTracker import/export
+	- FamiTracker import/export 
+	- FamiTracker instrument import.
 - Fine pitch track
 	- NSF
 - PAL support/tempo/speed:
