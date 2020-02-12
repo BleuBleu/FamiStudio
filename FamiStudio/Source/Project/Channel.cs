@@ -96,7 +96,7 @@ namespace FamiStudio
             CreatePatternInstances();
         }
 
-        private void CreatePatternInstances()
+        public void CreatePatternInstances()
         {
             for (int i = 0; i < patternInstances.Length; i++)
                 patternInstances[i] = new PatternInstance(song, type, i);
