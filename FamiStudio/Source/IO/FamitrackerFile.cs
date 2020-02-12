@@ -31,6 +31,7 @@ namespace FamiStudio
             var envelopes = new Dictionary<int, Envelope>[Project.ExpansionCount, Envelope.Max];
             var duties = new Dictionary<int, int>[Project.ExpansionCount];
             var instruments = new Dictionary<int, Instrument>();
+            var patternLenths = new Dictionary<Pattern, byte>();
             var dpcms = new Dictionary<int, DPCMSample>();
             var columns = new int[5] { 1, 1, 1, 1, 1 };
             var patternFxData = new Dictionary<Pattern, RowFxData[,]>();
@@ -303,10 +304,10 @@ namespace FamiStudio
                             switch (fx[0])
                             {
                                 case 'B': // Jump
-                                    pattern.Notes[rowIdx].Jump = param;
+                                    song.SetLoopPoint(param);
                                     break;
                                 case 'D': // Skip
-                                    pattern.Notes[rowIdx].Skip = param;
+                                    patternLenths[pattern] = (byte)(rowIdx + 1);
                                     break;
                                 case 'F': // Tempo
                                     if (param <= 0x1f) // We only support speed change for now.
@@ -330,13 +331,24 @@ namespace FamiStudio
 
             foreach (var s in project.Songs)
             {
-                CreateSlideNotes(s, patternFxData);
+                foreach (var c in s.Channels)
+                {
+                    c.ColorizePatterns();
+
+                    for (int p = 0; p < s.Length; p++)
+                    {
+                        var pattern = c.PatternInstances[p].Pattern;
+                        if (pattern != null && patternLenths.TryGetValue(pattern, out var instLength))
+                            s.SetPatternInstanceLength(p, instLength);
+                    }
+                }
 
                 s.RemoveEmptyPatterns();
                 s.SetSensibleBarLength();
+                s.UpdatePatternInstancesStartNotes();
+                s.UpdatePatternsMaxInstanceLength();
 
-                foreach (var c in s.Channels)
-                    c.ColorizePatterns();
+                CreateSlideNotes(s, patternFxData);
             }
 
             project.UpdateAllLastValidNotesAndVolume();
@@ -466,6 +478,10 @@ namespace FamiStudio
                 for (int p = 0; p < s.Length; p++)
                 {
                     var pattern = c.PatternInstances[p].Pattern;
+
+                    if (pattern == null)
+                        continue;
+
                     var fxData = patternFxData[pattern];
 
                     for (int n = 0; n < s.GetPatternInstanceLength(p); n++)

@@ -419,13 +419,13 @@ namespace FamiStudio
             return songLength;
         }
 
-        private void UpdatePatternsMaxInstanceLength()
+        public void UpdatePatternsMaxInstanceLength()
         {
             foreach (var channel in channels)
                 channel.UpdatePatternsMaxInstanceLength();
         }
 
-        private void UpdatePatternInstancesStartNotes()
+        public void UpdatePatternInstancesStartNotes()
         {
             patternInstancesStartNote[0] = 0;
             for (int i = 1; i <= songLength; i++)

@@ -179,12 +179,14 @@ namespace FamiStudio
 
         public Envelope ShallowClone()
         {
-            var env = new Envelope(); // MATTT: We dont copy all the values here.
-            env.Length = length;
-            env.Loop = loop;
-            env.Release = release;
-            env.Relative = relative;
-            values.CopyTo(env.values, 0);
+            var env = new Envelope();
+            env.length = length;
+            env.loop = loop;
+            env.release = release;
+            env.relative = relative;
+            env.maxLength = maxLength;
+            env.canResize = canResize;
+            env.values = values.Clone() as sbyte[];
             return env;
         }
 
