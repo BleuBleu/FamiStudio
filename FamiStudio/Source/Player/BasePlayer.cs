@@ -99,6 +99,8 @@ namespace FamiStudio
             speed = song.Speed;
             palMode = pal;
             playPosition = startNote;
+            playPattern = 0;
+            playNote = 0;
             channelStates = CreateChannelStates(song.Project, apuIndex, palMode);
 
             NesApu.InitAndReset(apuIndex, SampleRate, palMode, GetNesApuExpansionAudio(song.Project), dmcCallback);
@@ -110,7 +112,7 @@ namespace FamiStudio
                 NesApu.seeking = true;
 #endif
 
-                while (song.GetPatternInstanceLength(playPattern) + playNote < startNote)
+                while (song.GetPatternInstanceStartNote(playPattern) + playNote < startNote)
                 {
                     if (!AdvanceSong(song.Length, loopMode))
                         return false;
@@ -143,7 +145,7 @@ namespace FamiStudio
 
         public bool PlaySongFrame()
         {
-            playPosition = song.GetPatternInstanceLength(playPattern) + playNote;
+            playPosition = song.GetPatternInstanceStartNote(playPattern) + playNote;
 
             // Update envelopes + APU registers.
             foreach (var channel in channelStates)

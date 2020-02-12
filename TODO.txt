@@ -30,6 +30,7 @@
 		x FamiTone split, etc.
 		- Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, export to FT, etc.
 		- Retest seek
+		- Retest slide note import/export to FamiTracker. Test a few cases.
 		- We dont update MaxInstanceLength in all cases (song resize, change pattern length, etc.)
 		- Handle where we change the song pattern length.
 		- Truncate pattern to their maxlength.
