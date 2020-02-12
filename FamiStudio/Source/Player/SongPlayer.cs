@@ -40,21 +40,8 @@ namespace FamiStudio
             {
                 stopEvent.Set();
                 playerThread.Join();
-                playerThread = null;
+                Debug.Assert(playerThread == null);
             }
-        }
-
-        public bool CheckIfEnded()
-        {
-            // This can only happen if we reached the end of the song and we 
-            // disabled looping.
-            if (playerThread != null && !playerThread.IsAlive)
-            {
-                Stop();
-                return true;
-            }
-
-            return false;
         }
 
         public bool IsPlaying
@@ -81,6 +68,8 @@ namespace FamiStudio
 
             audioStream.Stop();
             while (sampleQueue.TryDequeue(out _));
+
+            playerThread = null;
         }
     };
 }

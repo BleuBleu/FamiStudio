@@ -36,8 +36,6 @@
 		- Truncate pattern to their maxlength.
 		- Make dark version of seq header icon.
 		- What to do with bar length on shorter patterns?
-		- Tons of playback seek issues.
-- Bar length -> Measure length
 - instanceIdx -> patternIdx
 
 ========================
