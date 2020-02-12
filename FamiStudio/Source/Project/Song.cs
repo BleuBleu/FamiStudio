@@ -409,10 +409,10 @@ namespace FamiStudio
             // TODO: Binary search
             for (int i = 0; i < songLength; i++)
             {
-                if (idx < patternInstancesStartNote[i])
+                if (idx < patternInstancesStartNote[i + 1])
                 {
-                    noteIdx = idx - patternInstancesStartNote[i - 1];
-                    return i - 1;
+                    noteIdx = idx - patternInstancesStartNote[i];
+                    return i;
                 }
             }
 

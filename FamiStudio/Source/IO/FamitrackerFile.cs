@@ -313,6 +313,9 @@ namespace FamiStudio
                                     if (param <= 0x1f) // We only support speed change for now.
                                         pattern.Notes[rowIdx].Speed = param;
                                     break;
+                                case 'P': // Fine pitch
+                                    pattern.Notes[rowIdx].FinePitch = (sbyte)(0x80 - param);
+                                    break;
                                 case '4': // Vibrato
                                     pattern.Notes[rowIdx].VibratoDepth = (byte)(param & 0x0f);
                                     pattern.Notes[rowIdx].VibratoSpeed = (byte)VibratoSpeedImportLookup[param >> 4];
@@ -798,6 +801,9 @@ namespace FamiStudio
             lines.Add("COPYRIGHT       \"" + project.Copyright + "\"");
             lines.Add("");
 
+            lines.Add("# Song comment");
+            lines.Add("COMMENT         \"\"");
+
             lines.Add("# Global settings");
             lines.Add("MACHINE         0");
             lines.Add("FRAMERATE       0");
@@ -1046,6 +1052,8 @@ namespace FamiStudio
                                     effectString += $" F{note.Speed:X2}";
                                 if (note.HasVibrato)
                                     effectString += $" 4{VibratoSpeedExportLookup[note.VibratoSpeed]:X1}{note.VibratoDepth:X1}";
+                                if (note.HasFinePitch)
+                                    effectString += $" P{(byte)(-note.FinePitch + 0x80):X2}";
 
                                 while (effectString.Length < 12)
                                     effectString += " ...";
@@ -1092,6 +1100,8 @@ namespace FamiStudio
                     lines.Add("");
                 }
             }
+
+            lines.Add("# End of export");
 
             File.WriteAllLines(filename, lines);
 

@@ -11,7 +11,6 @@
 	- FamiTracker import/export
 - Fine pitch track
 	- NSF
-	- FamiTracker import/export
 - PAL support/tempo/speed:
 	- 2 tempo modes:
 		- FamiTracker : Tracker like, tempo/speed, delayed notes/cuts. Minimal effor to support.
@@ -27,15 +26,16 @@
 - Remove jump and skip effects:
 	x Jump is simply a loop point
 	- Skip is a shorter pattern.
-		- FamiTracker import/export (should we only support SHORTER patterns??? YES!)
-		- FamiTone split, etc.
+		x FamiTracker import/export (should we only support SHORTER patterns??? YES!)
+		x FamiTone split, etc.
 		- Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, export to FT, etc.
 		- Retest seek
 		- We dont update MaxInstanceLength in all cases (song resize, change pattern length, etc.)
-		- Handle where we change the song pattern.
+		- Handle where we change the song pattern length.
 		- Truncate pattern to their maxlength.
 		- Make dark version of seq header icon.
 		- What to do with bar length on shorter patterns?
+		- Tons of playback seek issues.
 - Bar length -> Measure length
 - instanceIdx -> patternIdx
 
