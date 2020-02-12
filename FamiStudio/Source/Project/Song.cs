@@ -93,9 +93,9 @@ namespace FamiStudio
                     var channel = channels[c];
 
                     oldChannelPatterns[c] = new Pattern[channel.Patterns.Count];
-                    oldChannelPatternInstances[c] = new PatternInstance[channel.PatternInstances.Length];
-
                     oldChannelPatterns[c] = channel.Patterns.ToArray();
+
+                    oldChannelPatternInstances[c] = new PatternInstance[channel.PatternInstances.Length];
                     oldChannelPatternInstances[c] = channel.PatternInstances.Clone() as PatternInstance[];
 
                     channel.Patterns.Clear();
@@ -106,17 +106,15 @@ namespace FamiStudio
                 var newLoopPoint = 0;
                 var newPatternInstanceLengths = new List<byte>();
                 var newPatternMap = new Dictionary<Pattern, Pattern[]>();
-                var chunkLength = patternLength / factor;
+                var newPatternLength = patternLength / factor;
 
                 for (int p = 0; p < songLength; p++)
                 {
                     var instLen = GetPatternInstanceLength(p);
-                    var chunkCount = (int)Math.Ceiling(instLen / (float)chunkLength);
+                    var chunkCount = (int)Math.Ceiling(instLen / (float)newPatternLength);
 
                     if (p == loopPoint)
-                    {
                         newLoopPoint = newSongLength;
-                    }
 
                     if (patternInstanceLengths[p] == 0)
                     {
@@ -124,10 +122,10 @@ namespace FamiStudio
                     }
                     else
                     {
-                        for (int i = 0, notesLeft = instLen; i < chunkCount; i++, notesLeft -= chunkLength)
+                        for (int i = 0, notesLeft = instLen; i < chunkCount; i++, notesLeft -= newPatternLength)
                         {
-                            var newLength = (byte)Math.Min(chunkLength, notesLeft);
-                            newPatternInstanceLengths.Add(newLength == chunkLength ? (byte)0 : newLength);
+                            var newLength = (byte)Math.Min(newPatternLength, notesLeft);
+                            newPatternInstanceLengths.Add(newLength == newPatternLength ? (byte)0 : newLength);
                         }
                     }
 
@@ -147,11 +145,11 @@ namespace FamiStudio
                             {
                                 splitPatterns = new Pattern[chunkCount];
 
-                                for (int i = 0, notesLeft = instLen; i < chunkCount; i++, notesLeft -= chunkLength)
+                                for (int i = 0, notesLeft = instLen; i < chunkCount; i++, notesLeft -= newPatternLength)
                                 {
                                     splitPatterns[i] = new Pattern(Project.GenerateUniqueId(), this, channel.Type, channel.GenerateUniquePatternName(pattern.Name));
                                     splitPatterns[i].Color = pattern.Color;
-                                    Array.Copy(pattern.Notes, chunkLength * i, splitPatterns[i].Notes, 0, Math.Min(chunkLength, notesLeft));
+                                    Array.Copy(pattern.Notes, newPatternLength * i, splitPatterns[i].Notes, 0, Math.Min(newPatternLength, notesLeft));
                                 }
 
                                 newPatternMap[pattern] = splitPatterns;
@@ -170,13 +168,11 @@ namespace FamiStudio
                     }
                 }
 
-                Array.Clear(patternInstanceLengths, 0, patternInstanceLengths.Length);
-                Array.Copy(newPatternInstanceLengths.ToArray(), patternInstanceLengths, newPatternInstanceLengths.Count);
-
-                patternLength /= factor;
-                barLength /= factor;
+                patternInstanceLengths = newPatternInstanceLengths.ToArray();
+                patternLength = newPatternLength;
                 songLength = newSongLength;
                 loopPoint = newLoopPoint;
+                barLength /= factor;
 
                 if (barLength <= 1)
                     barLength = 2;
@@ -184,9 +180,7 @@ namespace FamiStudio
                 if ((patternLength % barLength) != 0)
                     SetSensibleBarLength();
 
-                foreach (var channel in channels)
-                    channel.UpdatePatternsMaxInstanceLength();
-
+                UpdatePatternsMaxInstanceLength();
                 UpdatePatternInstancesStartNotes();
 
                 return true;
@@ -423,6 +417,12 @@ namespace FamiStudio
             }
 
             return songLength;
+        }
+
+        private void UpdatePatternsMaxInstanceLength()
+        {
+            foreach (var channel in channels)
+                channel.UpdatePatternsMaxInstanceLength();
         }
 
         private void UpdatePatternInstancesStartNotes()
