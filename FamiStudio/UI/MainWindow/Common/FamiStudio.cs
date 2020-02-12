@@ -729,10 +729,7 @@ namespace FamiStudio
             Sequencer.Tick();
 
             if (RealTimeUpdate)
-            {
-                songPlayer.CheckIfEnded();
                 InvalidateEverything();
-            }
 
             CheckNewReleaseDone();
         }
