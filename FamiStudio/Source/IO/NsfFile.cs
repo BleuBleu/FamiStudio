@@ -265,6 +265,7 @@ namespace FamiStudio
         {
             public int period  = -1;
             public int note    = -1;
+            public int pitch   = -1;
             public int volume  = -1;
             public int duty    = -1;
         };
@@ -387,6 +388,7 @@ namespace FamiStudio
 
                 var hasVolume = channel.Type != Channel.Dpcm;
                 var hasPeriod = channel.Type != Channel.Dpcm;
+                var hasPitch  = channel.Type != Channel.Dpcm && channel.Type != Channel.Noise;
                 var hasDuty   = channel.Type == Channel.Square1 || channel.Type == Channel.Square2 || channel.Type == Channel.Noise || channel.Type == Channel.Vrc6Square1 || channel.Type == Channel.Vrc6Square2 || channel.Type == Channel.Vrc6Saw;
 
                 if (hasVolume && state.volume != volume)
@@ -454,12 +456,15 @@ namespace FamiStudio
                         hasNote = note != 0;
                     }
 
-                    if (!stop)
+                    if (hasPitch && !stop)
                     {
                         var pitch = (sbyte)Utils.Clamp(finePitch, Note.FinePitchMin, Note.FinePitchMax);
 
-                        if (pitch != 0)
+                        if (pitch != state.pitch)
+                        {
                             pattern.Notes[n].FinePitch = pitch;
+                            state.pitch = pitch;
+                        }
                     }
 
                     state.period = period;
@@ -484,7 +489,7 @@ namespace FamiStudio
                 var name = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, i));
                 if (string.IsNullOrEmpty(name))
                 {
-                    trackNames[i] = $"Song {i}";
+                    trackNames[i] = $"Song {i+1}";
                 }
                 else
                 {

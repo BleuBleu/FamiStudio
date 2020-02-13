@@ -39,8 +39,6 @@
 		- What to do with bar length on shorter patterns?
 - instanceIdx -> patternIdx
 - Replace buggy clipboard code.
-- Song 1, not song zero in NSF dialog.
-- 
 
 ========================
 
