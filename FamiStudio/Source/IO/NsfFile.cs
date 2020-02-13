@@ -364,6 +364,7 @@ namespace FamiStudio
                 var volume = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
                 var duty   = NsfGetState(nsf, channel.Type, STATE_DUTYCYCLE, 0);
                 var force  = false;
+                var stop   = false;
 
                 // VRC6 has a much larger volume range (6-bit) than our volume (4-bit).
                 // We also use odd duties to double the volume values.
@@ -393,7 +394,10 @@ namespace FamiStudio
                     if (volume == 0)
                     {
                         if (state.volume != 0)
-                            pattern.Notes[n].IsStop = true;
+                        {
+                            stop = true;
+                            force = true;
+                        }
                     }
                     else
                     {
@@ -430,22 +434,28 @@ namespace FamiStudio
                     var note = 0;
                     var finePitch = 0;
 
-                    if (channel.Type == Channel.Noise)
-                        note = (period ^ 0x0f) + 32;
-                    else
-                        note = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
+                    if (!stop)
+                    {
+                        if (channel.Type == Channel.Noise)
+                            note = (period ^ 0x0f) + 32;
+                        else
+                            note = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
+                    }
 
                     if (state.note != note || force)
                     {
                         pattern.Notes[n].Value = (byte)note;
-                        pattern.Notes[n].Instrument = instrument;
+                        pattern.Notes[n].Instrument = stop ? null : instrument;
                         state.note = note;
                     }
 
-                    var pitch = (sbyte)Utils.Clamp(finePitch, Note.FinePitchMin, Note.FinePitchMax);
+                    if (!stop)
+                    {
+                        var pitch = (sbyte)Utils.Clamp(finePitch, Note.FinePitchMin, Note.FinePitchMax);
 
-                    if (pitch != 0)
-                        pattern.Notes[n].FinePitch = pitch;
+                        if (pitch != 0)
+                            pattern.Notes[n].FinePitch = pitch;
+                    }
 
                     state.period = period;
                 }
@@ -500,6 +510,9 @@ namespace FamiStudio
 
             for (int f = 0; f < 5000; f++)
             {
+                if (f == 1356)
+                    f = f;
+
                 var p = f / song.DefaultPatternLength;
                 var n = f % song.DefaultPatternLength;
 

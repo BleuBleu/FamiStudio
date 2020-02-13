@@ -2427,7 +2427,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			{
 				case STATE_PERIOD:    return mWave_VRC6Saw.nFreqTimer.W;
 				case STATE_DUTYCYCLE: return 0;
-				case STATE_VOLUME:    return mWave_VRC6Saw.nAccumRate;
+				case STATE_VOLUME:    return mWave_VRC6Saw.bChannelEnabled ? mWave_VRC6Saw.nAccumRate : 0;
 			}
 			break;
 		}
