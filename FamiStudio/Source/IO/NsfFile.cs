@@ -396,13 +396,13 @@ namespace FamiStudio
                         if (state.volume != 0)
                         {
                             stop = true;
-                            force = true;
+                            force |= true;
                         }
                     }
                     else
                     {
                         if (state.volume == 0)
-                            force = true;
+                            force |= true;
 
                         pattern.Notes[n].Volume = (byte)volume;
                     }
@@ -419,7 +419,7 @@ namespace FamiStudio
                     if (state.duty != duty)
                     {
                         state.duty = duty;
-                        force = state.volume != 0;
+                        force |= state.volume != 0;
                     }
                 }
                 else 
