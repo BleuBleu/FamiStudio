@@ -275,7 +275,12 @@ namespace FamiStudio
             }
             else if (filename.ToLower().EndsWith("nsf"))
             {
-                project = NsfFile.Load(filename);
+                NsfImportDialog dlg = new NsfImportDialog(filename, mainForm.Bounds);
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    project = NsfFile.Load(filename, dlg.SongIndex);
+                }
             }
 
             if (project != null)
@@ -290,7 +295,7 @@ namespace FamiStudio
 
         public void OpenProject()
         {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf)|*.fms;*.txt;*.nsf|FamiStudio Files (*.fms)|*.fms|Famitracker Text Export (*.txt)|*.txt|NES Sound Format (*.nsf)|*.nsf");
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe)|*.fms;*.txt;*.nsf;*.nsfe|FamiStudio Files (*.fms)|*.fms|Famitracker Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe");
             if (filename != null)
             {
                 OpenProject(filename);

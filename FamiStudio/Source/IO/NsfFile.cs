@@ -462,7 +462,35 @@ namespace FamiStudio
             }
         }
 
-        public static Project Load(string filename)
+        public static string[] GetSongNames(string filename)
+        {
+            var nsf = NsfOpen(filename);
+
+            if (nsf == null)
+                return null;
+
+            var trackCount = NsfGetTrackCount(nsf);
+            var trackNames = new string[trackCount];
+
+            for (int i = 0; i < trackCount; i++)
+            {
+                var name = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, i));
+                if (string.IsNullOrEmpty(name))
+                {
+                    trackNames[i] = $"Song {i}";
+                }
+                else
+                {
+                    trackNames[i] = name;
+                }
+            }
+
+            NsfClose(nsf);
+
+            return trackNames;
+        }
+
+        public static Project Load(string filename, int songIndex)
         {
             var nsf = NsfOpen(filename);
 
@@ -497,7 +525,7 @@ namespace FamiStudio
                     return null;
             }
 
-            var songName = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, 0));
+            var songName = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, songIndex));
             var song = project.CreateSong(string.IsNullOrEmpty(songName) ? null : songName); 
             var channelStates = new ChannelState[song.Channels.Length];
 
@@ -506,13 +534,10 @@ namespace FamiStudio
             for (int i = 0; i < song.Channels.Length; i++)
                 channelStates[i] = new ChannelState();
 
-            NsfSetTrack(nsf, 0);
+            NsfSetTrack(nsf, songIndex);
 
             for (int f = 0; f < 5000; f++)
             {
-                if (f == 1356)
-                    f = f;
-
                 var p = f / song.DefaultPatternLength;
                 var n = f % song.DefaultPatternLength;
 
