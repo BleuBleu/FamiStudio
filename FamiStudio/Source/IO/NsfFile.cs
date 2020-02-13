@@ -311,10 +311,11 @@ namespace FamiStudio
             return instrument;
         }
 
-        private static void UpdateChannel(IntPtr nsf, int p, int n, Channel channel, ChannelState state)
+        private static bool UpdateChannel(IntPtr nsf, int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
             var channelIdx = Channel.ChannelTypeToIndex(channel.Type);
+            var hasNote = false;
 
             if (channel.Type == Channel.Dpcm)
             {
@@ -355,6 +356,7 @@ namespace FamiStudio
                     {
                         var pattern = GetOrCreatePattern(channel, p);
                         pattern.Notes[n].Value = (byte)note;
+                        hasNote = true;
                     }
                 }
             }
@@ -447,6 +449,7 @@ namespace FamiStudio
                         pattern.Notes[n].Value = (byte)note;
                         pattern.Notes[n].Instrument = stop ? null : instrument;
                         state.note = note;
+                        hasNote = note != 0;
                     }
 
                     if (!stop)
@@ -460,6 +463,8 @@ namespace FamiStudio
                     state.period = period;
                 }
             }
+
+            return hasNote;
         }
 
         public static string[] GetSongNames(string filename)
@@ -490,7 +495,7 @@ namespace FamiStudio
             return trackNames;
         }
 
-        public static Project Load(string filename, int songIndex, int duration)
+        public static Project Load(string filename, int songIndex, int duration, int patternLength, bool removeIntroSilence)
         {
             var nsf = NsfOpen(filename);
 
@@ -529,24 +534,29 @@ namespace FamiStudio
             var song = project.CreateSong(string.IsNullOrEmpty(songName) ? null : songName); 
             var channelStates = new ChannelState[song.Channels.Length];
 
+            NsfSetTrack(nsf, songIndex);
+
             song.Speed = 1;
+            song.SetPatternLength(patternLength);
+            song.SetSensibleBarLength();
 
             for (int i = 0; i < song.Channels.Length; i++)
                 channelStates[i] = new ChannelState();
 
+            var foundFirstNote = !removeIntroSilence;
             var numFrames = duration * (NsfIsPal(nsf) != 0 ? 50 : 60);
 
-            NsfSetTrack(nsf, songIndex);
-
-            for (int f = 0; f < numFrames; f++)
+            for (int f = 0, i = 0; f < numFrames; f++)
             {
-                var p = f / song.DefaultPatternLength;
-                var n = f % song.DefaultPatternLength;
+                var p = i / song.DefaultPatternLength;
+                var n = i % song.DefaultPatternLength;
 
                 NsfRunFrame(nsf);
 
                 for (int c = 0; c < song.Channels.Length; c++)
-                    UpdateChannel(nsf, p, n, song.Channels[c], channelStates[c]);
+                    foundFirstNote |= UpdateChannel(nsf, p, n, song.Channels[c], channelStates[c]);
+
+                if (foundFirstNote) i++;
             }
 
             NsfClose(nsf);

@@ -206,6 +206,9 @@ namespace FamiStudio
         {
             patternLength = newLength;
 
+            UpdatePatternsMaxInstanceLength();
+            UpdatePatternInstancesStartNotes();
+
             foreach (var channel in channels)
                 channel.ClearNotesPastSongLength();
         }

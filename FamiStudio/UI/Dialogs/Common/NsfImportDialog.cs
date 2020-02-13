@@ -23,10 +23,10 @@ namespace FamiStudio
             if (songNames != null && songNames.Length > 0)
             {
                 dialog = new PropertyDialog(x, y, width, height);
-                dialog.Properties.AddStringList("Song:", songNames, songNames[0]);
-                dialog.Properties.AddIntegerRange("Duration (s):", 120, 1, 600);
-                dialog.Properties.AddIntegerRange("Pattern Length:", 256, 4, 256);
-                dialog.Properties.AddIntegerRange("Start frame:", 0, 0, 256);
+                dialog.Properties.AddStringList("Song:", songNames, songNames[0]); // 0
+                dialog.Properties.AddIntegerRange("Duration (s):", 120, 1, 600);   // 1
+                dialog.Properties.AddIntegerRange("Pattern Length:", 256, 4, 256); // 2
+                dialog.Properties.AddBoolean("Remove intro silence:", true);       // 3
                 dialog.Properties.Build();
             }
         }
@@ -44,6 +44,8 @@ namespace FamiStudio
         }
 
         public int SongIndex => Array.IndexOf(songNames, dialog.Properties.GetPropertyValue<string>(0));
-        public int Duration  => dialog.Properties.GetPropertyValue<int>(1);
+        public int Duration => dialog.Properties.GetPropertyValue<int>(1);
+        public int PatternLength => dialog.Properties.GetPropertyValue<int>(2);
+        public bool RemoveIntroSilence => dialog.Properties.GetPropertyValue<bool>(3);
     }
 }
