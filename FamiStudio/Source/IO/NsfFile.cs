@@ -422,7 +422,7 @@ namespace FamiStudio
                         force = state.volume != 0;
                     }
                 }
-                else if (channel.PatternInstances[p].Pattern != null && channel.PatternInstances[p].Pattern.Notes[n].IsValid)
+                else 
                 {
                     instrument = GetDutyInstrument(project, channel, 0);
                 }
