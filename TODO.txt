@@ -38,6 +38,7 @@
 		- Make dark version of seq header icon.
 		- What to do with bar length on shorter patterns?
 - instanceIdx -> patternIdx
+- Replace buggy clipboard code.
 
 ========================
 
@@ -45,7 +46,6 @@ Backlog:
 - Raw FDS modulation table envelope.
 - Instrument folders
 - All expansions.
-- NSF import(would needse? We can create multiple instruments for duty).
 - Cleanup (merge duplicated patterns, instruments, r fine pitch track, anything elemove unused stuff.
 - Fix crash on startup when there are no audio device 
 - Proper error messages when something fails (save, etc.)

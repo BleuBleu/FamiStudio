@@ -2344,7 +2344,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			{
 				case STATE_PERIOD:    return mWave_Squares.nFreqTimer[channel].W;
 				case STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_Squares.nDutyCycle[channel]);
-				case STATE_VOLUME:    return mWave_Squares.nVolume[channel];
+				case STATE_VOLUME:    return mWave_Squares.nLengthCount[channel] && mWave_Squares.bChannelEnabled[channel] ? mWave_Squares.nVolume[channel] : 0;
 			}
 			break;
 		}
@@ -2353,7 +2353,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			switch (state)
 			{
 				case STATE_PERIOD:    return mWave_TND.nTriFreqTimer.W;
-				case STATE_VOLUME:    return mWave_TND.nTriLinearLoad;
+				case STATE_VOLUME:    return mWave_TND.nTriLengthCount && mWave_TND.bTriChannelEnabled ? mWave_TND.nTriLinearLoad : 0;
 			}
 			break;
 		}
@@ -2361,7 +2361,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 		{
 			switch (state)
 			{
-				case STATE_VOLUME:    return mWave_TND.nNoiseVolume;
+			    case STATE_VOLUME:    return mWave_TND.nNoiseLengthCount && mWave_TND.bNoiseChannelEnabled ? mWave_TND.nNoiseVolume : 0;
 				case STATE_DUTYCYCLE: return mWave_TND.bNoiseRandomMode == 6 ? 1 : 0;
 				case STATE_PERIOD:    return IndexOf(NOISE_FREQ_TABLE, 16, mWave_TND.nNoiseFreqTimer);
 			}

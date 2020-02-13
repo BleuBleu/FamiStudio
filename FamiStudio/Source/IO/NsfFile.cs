@@ -448,6 +448,8 @@ namespace FamiStudio
                     {
                         pattern.Notes[n].Value = (byte)note;
                         pattern.Notes[n].Instrument = stop ? null : instrument;
+                        if (!stop)
+                            pattern.Notes[n].Volume = (byte)volume;
                         state.note = note;
                         hasNote = note != 0;
                     }
