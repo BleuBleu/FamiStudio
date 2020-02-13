@@ -17,6 +17,7 @@ namespace FamiStudio
         public Song Song => song;
         public PatternInstance[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
+        public bool IsExpansionChannel => type >= ExpansionAudioStart;
 
         // Channel types.
         public const int Square1 = 0;

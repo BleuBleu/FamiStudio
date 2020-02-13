@@ -37,6 +37,17 @@ namespace FamiStudio
             "Sunsoft 5B"
         };
 
+        public static string[] ExpansionShortNames =
+        {
+            "",
+            "VRC6",
+            "VRC7",
+            "FDS",
+            "MMC5",
+            "N163",
+            "S5B"
+        };
+
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
         private List<DPCMSample> samples = new List<DPCMSample>();
         private List<Instrument> instruments = new List<Instrument>();

@@ -2339,6 +2339,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 	{
 		case CHANNEL_SQUARE1:
 		case CHANNEL_SQUARE2:
+		{
 			switch (state)
 			{
 				case STATE_PERIOD:    return mWave_Squares.nFreqTimer[channel].W;
@@ -2346,21 +2347,28 @@ int CNSFCore::GetState(int channel, int state, int sub)
 				case STATE_VOLUME:    return mWave_Squares.nVolume[channel];
 			}
 			break;
+		}
 		case CHANNEL_TRIANGLE:
+		{
 			switch (state)
 			{
 				case STATE_PERIOD:    return mWave_TND.nTriFreqTimer.W;
 				case STATE_VOLUME:    return mWave_TND.nTriLinearLoad;
 			}
 			break;
+		}
 		case CHANNEL_NOISE:
+		{
 			switch (state)
 			{
 				case STATE_VOLUME:    return mWave_TND.nNoiseVolume;
 				case STATE_DUTYCYCLE: return mWave_TND.bNoiseRandomMode == 6 ? 1 : 0;
 				case STATE_PERIOD:    return IndexOf(NOISE_FREQ_TABLE, 16, mWave_TND.nNoiseFreqTimer);
 			}
+			break;
+		}
 		case CHANNEL_DPCM:
+		{
 			switch (state)
 			{
 				case STATE_DPCMSAMPLELENGTH: 	
@@ -2399,6 +2407,30 @@ int CNSFCore::GetState(int channel, int state, int sub)
 					return mWave_TND.pDMCDMAPtr[bank][addr];
 				}
 			}
+			break;
+		}
+		case CHANNEL_VRC6SQUARE1:
+		case CHANNEL_VRC6SQUARE2:
+		{
+			int idx = channel - CHANNEL_VRC6SQUARE1;
+			switch (state)
+			{
+				case STATE_PERIOD:    return mWave_VRC6Pulse[idx].nFreqTimer.W;
+				case STATE_DUTYCYCLE: return mWave_VRC6Pulse[idx].nDutyCycle;
+				case STATE_VOLUME:    return mWave_VRC6Pulse[idx].nVolume;
+			}
+			break;
+		}
+		case CHANNEL_VRC6SAW:
+		{
+			switch (state)
+			{
+				case STATE_PERIOD:    return mWave_VRC6Saw.nFreqTimer.W;
+				case STATE_DUTYCYCLE: return 0;
+				case STATE_VOLUME:    return mWave_VRC6Saw.nAccumRate;
+			}
+			break;
+		}
 	}
 
 	return 0;

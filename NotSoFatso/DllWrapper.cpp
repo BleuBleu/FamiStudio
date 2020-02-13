@@ -41,6 +41,42 @@ extern "C" void* __stdcall NsfOpen(const char* file)
 	}
 }
 
+extern "C" int __stdcall NsfGetTrackCount(void* nsfPtr)
+{
+	return ((NsfCoreFile*)nsfPtr)->file.nTrackCount;
+}
+
+extern "C" int __stdcall NsfIsPal(void* nsfPtr)
+{
+	return ((NsfCoreFile*)nsfPtr)->file.nIsPal;
+}
+
+extern "C" int __stdcall NsfGetExpansion(void* nsfPtr)
+{
+	return ((NsfCoreFile*)nsfPtr)->file.nChipExtensions;
+}
+
+extern "C" const char* __stdcall NsfGetTitle(void* nsfPtr)
+{
+	return ((NsfCoreFile*)nsfPtr)->file.szGameTitle;
+}
+
+extern "C" const char* __stdcall NsfGetArtist(void* nsfPtr)
+{
+	return ((NsfCoreFile*)nsfPtr)->file.szArtist;
+}
+
+extern "C" const char* __stdcall NsfGetCopyright(void* nsfPtr)
+{
+	return ((NsfCoreFile*)nsfPtr)->file.szCopyright;
+}
+
+extern "C" const char* __stdcall NsfGetTrackName(void* nsfPtr, int track)
+{
+	CNSFFile& file = ((NsfCoreFile*)nsfPtr)->file;
+	return file.szTrackLabels == NULL ? "" : file.szTrackLabels[track];
+}
+
 extern "C" void __stdcall NsfClose(void* nsfPtr)
 {
 	delete (NsfCoreFile*)nsfPtr;
