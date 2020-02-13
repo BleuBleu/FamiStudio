@@ -273,7 +273,7 @@ namespace FamiStudio
             {
                 project = FamitrackerFile.Load(filename);
             }
-            else if (filename.ToLower().EndsWith("nsf"))
+            else if (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe"))
             {
                 NsfImportDialog dlg = new NsfImportDialog(filename, mainForm.Bounds);
 
