@@ -279,7 +279,7 @@ namespace FamiStudio
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    project = NsfFile.Load(filename, dlg.SongIndex);
+                    project = NsfFile.Load(filename, dlg.SongIndex, dlg.Duration);
                 }
             }
 

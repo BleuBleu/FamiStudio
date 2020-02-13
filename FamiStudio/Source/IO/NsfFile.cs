@@ -490,7 +490,7 @@ namespace FamiStudio
             return trackNames;
         }
 
-        public static Project Load(string filename, int songIndex)
+        public static Project Load(string filename, int songIndex, int duration)
         {
             var nsf = NsfOpen(filename);
 
@@ -534,9 +534,11 @@ namespace FamiStudio
             for (int i = 0; i < song.Channels.Length; i++)
                 channelStates[i] = new ChannelState();
 
+            var numFrames = duration * (NsfIsPal(nsf) != 0 ? 50 : 60);
+
             NsfSetTrack(nsf, songIndex);
 
-            for (int f = 0; f < 5000; f++)
+            for (int f = 0; f < numFrames; f++)
             {
                 var p = f / song.DefaultPatternLength;
                 var n = f % song.DefaultPatternLength;
