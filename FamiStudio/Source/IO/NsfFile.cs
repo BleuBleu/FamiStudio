@@ -300,7 +300,8 @@ namespace FamiStudio
         private static Instrument GetDutyInstrument(Project project, Channel channel, int duty)
         {
             var expansion = channel.IsExpansionChannel ? project.ExpansionAudio : Project.ExpansionNone;
-            var name = $"{Project.ExpansionShortNames[expansion]} Duty {duty}";
+            var expPrefix = expansion == Project.ExpansionNone ? "" : Project.ExpansionShortNames[expansion] + " ";
+            var name = $"{expPrefix}Duty {duty}";
 
             var instrument = project.GetInstrument(name);
             if (instrument == null)
