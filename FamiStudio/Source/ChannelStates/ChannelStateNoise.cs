@@ -14,6 +14,7 @@
             }
             else if (note.IsValid)
             {
+                var duty = GetDuty();
                 var noteVal = (int)(((note.Value + envelopeValues[Envelope.Arpeggio]) & 0x0f) ^ 0x0f) | ((duty << 7) & 0x80);
                 var volume = GetVolume();
 

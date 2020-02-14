@@ -1424,7 +1424,7 @@ namespace FamiStudio
             {
                 if (idx >= 0 && idx < editInstrument.Envelopes[editEnvelope].Length)
                 {
-                    Envelope.GetMinMaxValue(editEnvelope, out int min, out int max);
+                    Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int min, out int max);
                     editInstrument.Envelopes[editEnvelope].Values[idx] = (sbyte)Math.Max(min, Math.Min(max, value));
 
                     // MATTT
@@ -1610,7 +1610,7 @@ namespace FamiStudio
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
 
-            Envelope.GetMinMaxValue(editEnvelope, out int minVal, out int maxVal);
+            Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int minVal, out int maxVal);
 
             for (int i = startFrameIdx; i <= endFrameIdx; i++)
                 EditEnvelope.Values[i] = function(EditEnvelope.Values[i], i - startFrameIdx);
@@ -1639,7 +1639,7 @@ namespace FamiStudio
 
         private void IncrementEnvelopeValues(int amount)
         {
-            Envelope.GetMinMaxValue(editEnvelope, out int minVal, out int maxVal);
+            Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int minVal, out int maxVal);
 
             TransformEnvelopeValues(selectionFrameMin, selectionFrameMax, (val, idx) =>
             {

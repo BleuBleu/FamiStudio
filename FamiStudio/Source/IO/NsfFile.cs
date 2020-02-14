@@ -307,7 +307,8 @@ namespace FamiStudio
             if (instrument == null)
             {
                 instrument = project.CreateInstrument(expansion, name);
-                instrument.DutyCycle = duty;
+                instrument.Envelopes[Envelope.DutyCycle].Length = 1;
+                instrument.Envelopes[Envelope.DutyCycle].Values[0] = (sbyte)duty;
             }
 
             return instrument;

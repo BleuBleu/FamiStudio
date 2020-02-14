@@ -86,7 +86,7 @@ namespace FamiStudio
                         case SequenceType.SEQ_VOLUME:    env = instrument.Envelopes[Envelope.Volume]; break;
                         case SequenceType.SEQ_PITCH:     env = instrument.Envelopes[Envelope.Pitch]; env.Relative = true; break;
                         case SequenceType.SEQ_ARPEGGIO:  env = instrument.Envelopes[Envelope.Arpeggio]; break;
-                        case SequenceType.SEQ_DUTYCYCLE: instrument.DutyCycle = seq[0]; break;
+                        case SequenceType.SEQ_DUTYCYCLE: env = instrument.Envelopes[Envelope.DutyCycle]; break;
                     }
 
                     if (env != null)

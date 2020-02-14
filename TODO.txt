@@ -2,7 +2,7 @@
 1.5.0: FDS + PAL
 ================
 - FDS:
-	- Project explorer advanced instrument params (move relative pitch env there).
+	x Project explorer advanced instrument params (move relative pitch env there).
 	- FDS Wave cant be negative
 	- Values above 61 are not visible.
 	- Presets (saw, triangle, sine, square, etc.)
@@ -22,6 +22,9 @@
 	- NSF (#defines)
 	- Add better tempo logic to famitone2fs.
 - Duty cycle envelopes.
+	- NSF
+	- Test FamiTracker import/export
+	- Test Famitone 2 export, etc.
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Remove jump and skip effects:

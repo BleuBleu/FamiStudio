@@ -171,7 +171,7 @@ namespace FamiStudio
                                 if (instrument.Envelopes[idx] != null)
                                 {
                                     buttons[j] = (SubButtonType)idx;
-                                    active[j] = idx == Envelope.DutyCycle || !instrument.Envelopes[idx].IsEmpty; // MATTT
+                                    active[j] = !instrument.Envelopes[idx].IsEmpty; 
                                     j++;
                                 }
                             }
@@ -268,11 +268,6 @@ namespace FamiStudio
                         return projectExplorer.bmpAdd;
                     case SubButtonType.DPCM:
                         return projectExplorer.bmpDPCM;
-                    case SubButtonType.DutyCycle:
-                        if (instrument.ExpansionType == Project.ExpansionVrc6)
-                            return projectExplorer.bmpDuty[instrument.DutyCycle];
-                        else
-                            return projectExplorer.bmpDuty[instrument.DutyCycle * 2];
                     case SubButtonType.LoadInstrument:
                         return projectExplorer.bmpLoadInstrument;
                     case SubButtonType.ExpandInstrument:
@@ -374,7 +369,6 @@ namespace FamiStudio
         RenderBitmap[] bmpInstrument = new RenderBitmap[Project.ExpansionCount];
         RenderBitmap[] bmpEnvelopes = new RenderBitmap[Envelope.Max];
         RenderBitmap[] bmpParams = new RenderBitmap[(int)ParamType.Max];
-        RenderBitmap[] bmpDuty = new RenderBitmap[8];
 
         public Song SelectedSong => selectedSong;
         public Instrument SelectedInstrument => selectedInstrument;
@@ -480,19 +474,10 @@ namespace FamiStudio
             bmpEnvelopes[Envelope.Volume]        = g.CreateBitmapFromResource("Volume");
             bmpEnvelopes[Envelope.Arpeggio]      = g.CreateBitmapFromResource("Arpeggio");
             bmpEnvelopes[Envelope.Pitch]         = g.CreateBitmapFromResource("Pitch");
-            bmpEnvelopes[Envelope.DutyCycle]     = g.CreateBitmapFromResource("Duty0"); // MATTT
+            bmpEnvelopes[Envelope.DutyCycle]     = g.CreateBitmapFromResource("Duty");
             bmpEnvelopes[Envelope.FdsWaveform]   = g.CreateBitmapFromResource("Wave");
             bmpEnvelopes[Envelope.FdsModulation] = g.CreateBitmapFromResource("Wave");
             bmpEnvelopes[Envelope.NamcoWaveform] = g.CreateBitmapFromResource("Wave");
-
-            bmpDuty[0] = g.CreateBitmapFromResource("Duty0");
-            bmpDuty[1] = g.CreateBitmapFromResource("Duty1");
-            bmpDuty[2] = g.CreateBitmapFromResource("Duty2");
-            bmpDuty[3] = g.CreateBitmapFromResource("Duty3");
-            bmpDuty[4] = g.CreateBitmapFromResource("Duty4");
-            bmpDuty[5] = g.CreateBitmapFromResource("Duty5");
-            bmpDuty[6] = g.CreateBitmapFromResource("Duty6");
-            bmpDuty[7] = g.CreateBitmapFromResource("Duty7");
 
             bmpParams[(int)ParamType.FdsModulationSpeed] = g.CreateBitmapFromResource("Wave");
             bmpParams[(int)ParamType.FdsModulationDepth] = g.CreateBitmapFromResource("Wave");
@@ -745,8 +730,6 @@ namespace FamiStudio
                     {
                         if (subButtonType == SubButtonType.DPCM)
                             tooltip = "{MouseLeft} Edit DPCM samples";
-                        else if (subButtonType == SubButtonType.DutyCycle)
-                            tooltip = "{MouseLeft} Change duty cycle";
                         else if (subButtonType < SubButtonType.EnvelopeMax)
                             tooltip = $"{{MouseLeft}} Edit {Envelope.EnvelopeStrings[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{Drag}} Copy envelope";
                     }
@@ -999,10 +982,6 @@ namespace FamiStudio
                         if (subButtonType == SubButtonType.DPCM)
                         {
                             InstrumentEdited?.Invoke(selectedInstrument, Envelope.Max);
-                        }
-                        else if (subButtonType == SubButtonType.DutyCycle)
-                        {
-                            selectedInstrument.DutyCycle = (selectedInstrument.DutyCycle + 1) % selectedInstrument.DutyCycleRange;
                         }
                         else if (subButtonType < SubButtonType.EnvelopeMax)
                         {

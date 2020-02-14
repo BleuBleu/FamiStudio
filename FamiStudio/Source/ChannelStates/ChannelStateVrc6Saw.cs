@@ -19,6 +19,7 @@ namespace FamiStudio
             {
                 var period = GetPeriod();
                 var volume = GetVolume();
+                var duty   = GetDuty();
 
                 // Get hi-bit from duty, similar to FamiTracker, but taking volume into account.
                 // FamiTracker looses ability to output low volume when duty is odd.

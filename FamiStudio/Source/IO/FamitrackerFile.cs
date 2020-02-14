@@ -182,10 +182,10 @@ namespace FamiStudio
                     var expansionType = line.StartsWith("INSTVRC6") ? Project.ExpansionVrc6 : Project.ExpansionNone;
                     var instrument = project.CreateInstrument(expansionType, name);
 
-                    if (vol >= 0) instrument.Envelopes[0] = envelopes[expansion, 0][vol].ShallowClone();
-                    if (arp >= 0) instrument.Envelopes[1] = envelopes[expansion, 1][arp].ShallowClone();
-                    if (pit >= 0) instrument.Envelopes[2] = envelopes[expansion, 2][pit].ShallowClone();
-                    if (dut >= 0) instrument.DutyCycle = duties[expansionType][dut];
+                    if (vol >= 0) instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, 0][vol].ShallowClone();
+                    if (arp >= 0) instrument.Envelopes[Envelope.Arpeggio]  = envelopes[expansion, 1][arp].ShallowClone();
+                    if (pit >= 0) instrument.Envelopes[Envelope.Pitch]     = envelopes[expansion, 2][pit].ShallowClone();
+                    if (dut >= 0) instrument.Envelopes[Envelope.DutyCycle] = envelopes[expansion, 3][pit].ShallowClone();
 
                     instruments[idx] = instrument;
                 }
@@ -822,10 +822,6 @@ namespace FamiStudio
                     lines.Add($"MACRO{i,8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                 }
             }
-            lines.Add($"MACRO{4,8} {0,4} {-1}   -1    0 : 0");
-            lines.Add($"MACRO{4,8} {1,4} {-1}   -1    0 : 1");
-            lines.Add($"MACRO{4,8} {2,4} {-1}   -1    0 : 2");
-            lines.Add($"MACRO{4,8} {3,4} {-1}   -1    0 : 3");
 
             if (project.ExpansionAudio == Project.ExpansionVrc6)
             {
@@ -838,15 +834,6 @@ namespace FamiStudio
                         lines.Add($"MACROVRC6{i,8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                     }
                 }
-
-                lines.Add($"MACROVRC6{4,8} {0,4} {-1}   -1    0 : 0");
-                lines.Add($"MACROVRC6{4,8} {1,4} {-1}   -1    0 : 1");
-                lines.Add($"MACROVRC6{4,8} {2,4} {-1}   -1    0 : 2");
-                lines.Add($"MACROVRC6{4,8} {3,4} {-1}   -1    0 : 3");
-                lines.Add($"MACROVRC6{4,8} {4,4} {-1}   -1    0 : 4");
-                lines.Add($"MACROVRC6{4,8} {5,4} {-1}   -1    0 : 5");
-                lines.Add($"MACROVRC6{4,8} {6,4} {-1}   -1    0 : 6");
-                lines.Add($"MACROVRC6{4,8} {7,4} {-1}   -1    0 : 7");
             }
 
             lines.Add("");
@@ -869,17 +856,18 @@ namespace FamiStudio
                 var instrument = project.Instruments[i];
 
                 var expIdx = instrument.IsExpansionInstrument ? 1 : 0;
-                int volEnvIdx = instrument.Envelopes[Envelope.Volume].Length   > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Volume],   instrument.Envelopes[Envelope.Volume])   : -1;
-                int arpEnvIdx = instrument.Envelopes[Envelope.Arpeggio].Length > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Arpeggio], instrument.Envelopes[Envelope.Arpeggio]) : -1;
-                int pitEnvIdx = instrument.Envelopes[Envelope.Pitch].Length    > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Pitch],    instrument.Envelopes[Envelope.Pitch])    : -1;
+                int volEnvIdx = instrument.Envelopes[Envelope.Volume].Length    > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Volume],    instrument.Envelopes[Envelope.Volume])    : -1;
+                int arpEnvIdx = instrument.Envelopes[Envelope.Arpeggio].Length  > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Arpeggio],  instrument.Envelopes[Envelope.Arpeggio])  : -1;
+                int pitEnvIdx = instrument.Envelopes[Envelope.Pitch].Length     > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Pitch],     instrument.Envelopes[Envelope.Pitch])     : -1;
+                int dutEnvIdx = instrument.Envelopes[Envelope.DutyCycle].Length > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.DutyCycle], instrument.Envelopes[Envelope.DutyCycle]) : -1;
 
                 if (instrument.ExpansionType == Project.ExpansionNone)
                 {
-                    lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{instrument.DutyCycle,4} \"{instrument.Name}\"");
+                    lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
                 }
                 else if (instrument.ExpansionType == Project.ExpansionVrc6)
                 {
-                    lines.Add($"INSTVRC6{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{instrument.DutyCycle,4} \"{instrument.Name}\"");
+                    lines.Add($"INSTVRC6{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
                 }
             }
 

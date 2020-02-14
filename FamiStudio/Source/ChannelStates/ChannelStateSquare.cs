@@ -14,6 +14,8 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
+            var duty = GetDuty();
+
             if (note.IsStop)
             {
                 WriteRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);

@@ -12,7 +12,6 @@ namespace FamiStudio
         protected Envelope[] envelopes = new Envelope[Envelope.Max];
         protected int[] envelopeIdx = new int[Envelope.Max];
         protected int[] envelopeValues = new int[Envelope.Max];
-        protected int duty;
         protected bool palMode;
         protected ushort[] noteTable = null;
         protected short maximumPeriod = NesApu.MaximumPeriod11Bit;
@@ -116,9 +115,6 @@ namespace FamiStudio
                 bool instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentChange;
 
                 note = newNote;
-
-                if (newNote.Instrument != null)
-                    duty = newNote.Instrument.DutyCycle;
 
                 if (instrumentChanged || note.HasAttack)
                 {
@@ -249,6 +245,11 @@ namespace FamiStudio
         protected int GetVolume()
         {
             return MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
+        }
+
+        protected int GetDuty()
+        {
+            return envelopeValues[Envelope.DutyCycle];
         }
 
         public abstract void UpdateAPU();

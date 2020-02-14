@@ -253,12 +253,17 @@ namespace FamiStudio
             }
         }
 
-        public static void GetMinMaxValue(int type, out int min, out int max)
+        public static void GetMinMaxValue(Instrument instruemnt, int type, out int min, out int max)
         {
             if (type == Volume)
             {
                 min = 0;
                 max = 15;
+            }
+            else if (type == DutyCycle)
+            {
+                min = 0;
+                max = instruemnt.ExpansionType == Project.ExpansionVrc6 ? 7 : 3;
             }
             else
             {

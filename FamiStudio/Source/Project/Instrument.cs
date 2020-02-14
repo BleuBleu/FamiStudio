@@ -11,7 +11,6 @@ namespace FamiStudio
         private int expansion = Project.ExpansionNone;
         private Envelope[] envelopes = new Envelope[Envelope.Max];
         private Color color;
-        private int dutyCycle;
 
         public int Id => id;
         public string Name { get => name; set => name = value; }
@@ -19,7 +18,6 @@ namespace FamiStudio
         public bool IsExpansionInstrument { get => expansion != Project.ExpansionNone; }
         public Color Color { get => color; set => color = value; }
         public Envelope[] Envelopes => envelopes;
-        public int DutyCycle { get => dutyCycle; set => dutyCycle = value; }
         public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[Envelope.Volume].Release >= 0;
@@ -64,6 +62,11 @@ namespace FamiStudio
             {
                 return expansion == Project.ExpansionNamco;
             }
+            else if (envelopeType == Envelope.DutyCycle)
+            {
+                return expansion == Project.ExpansionNone || 
+                       expansion == Project.ExpansionVrc6;
+            }
 
             return false;
         }
@@ -73,7 +76,11 @@ namespace FamiStudio
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
             buffer.Serialize(ref color);
-            buffer.Serialize(ref dutyCycle);
+
+            // At version 5 (FamiStudio 1.5.0) we added duty cycle envelopes.
+            var dutyCycle = 0;
+            if (buffer.Version < 5)
+                buffer.Serialize(ref dutyCycle);
 
             // At version 4 (FamiStudio 1.4.0) we added basic expansion audio (VRC6).
             if (buffer.Version >= 4)
@@ -102,6 +109,13 @@ namespace FamiStudio
                 {
                     envelopes[i] = null;
                 }
+            }
+
+            if (buffer.Version < 5)
+            {
+                envelopes[Envelope.DutyCycle] = new Envelope(Envelope.DutyCycle);
+                envelopes[Envelope.DutyCycle].Length = 1;
+                envelopes[Envelope.DutyCycle].Values[0] = (sbyte)dutyCycle;
             }
         }
     }
