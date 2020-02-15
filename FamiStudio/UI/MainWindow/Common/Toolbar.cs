@@ -22,23 +22,25 @@ namespace FamiStudio
 {
     public class Toolbar : RenderControl
     {
-        const int ButtonNew    = 0;
-        const int ButtonOpen   = 1;
-        const int ButtonSave   = 2;
-        const int ButtonExport = 3;
-        const int ButtonCopy   = 4;
-        const int ButtonCut    = 5;
-        const int ButtonPaste  = 6;
-        const int ButtonUndo   = 7;
-        const int ButtonRedo   = 8;
-        const int ButtonConfig = 9;
-        const int ButtonPlay   = 10;
-        const int ButtonRewind = 11;
-        const int ButtonLoop   = 12;
-        const int ButtonMachine   = 13;
-        const int ButtonCount  = 14;
+        const int ButtonNew       = 0;
+        const int ButtonOpen      = 1;
+        const int ButtonSave      = 2;
+        const int ButtonExport    = 3;
+        const int ButtonCopy      = 4;
+        const int ButtonCut       = 5;
+        const int ButtonPaste     = 6;
+        const int ButtonUndo      = 7;
+        const int ButtonRedo      = 8;
+        const int ButtonTransform = 9;
+        const int ButtonConfig    = 10;
+        const int ButtonPlay      = 11;
+        const int ButtonRewind    = 12;
+        const int ButtonLoop      = 13;
+        const int ButtonMachine   = 14;
+        const int ButtonHelp      = 15;
+        const int ButtonCount     = 16;
 
-        const int DefaultTimecodePosX            = 415;
+        const int DefaultTimecodePosX            = 455;
         const int DefaultTimecodePosY            = 4;
         const int DefaultTimecodeSizeX           = 160;
         const int DefaultTimecodeTextPosX        = 30;
@@ -66,6 +68,7 @@ namespace FamiStudio
         {
             public int X;
             public int Y;
+            public bool RightAligned;
             public int Size = 32;
             public string ToolTip;
             public RenderBitmap Bmp;
@@ -73,7 +76,11 @@ namespace FamiStudio
             public EmptyDelegate Click;
             public EmptyDelegate RightClick;
             public BitmapDelegate GetBitmap;
-            public bool IsPointIn(int px, int py) => px >= X && (px - X) < Size && py >= Y && (py - Y) < Size;
+            public bool IsPointIn(int px, int py, int width)
+            {
+                int x = RightAligned ? width - X : X;
+                return px >= x && (px - x) < Size && py >= Y && (py - Y) < Size;
+            }
         };
 
         class TooltipSpecialCharacter
@@ -116,35 +123,39 @@ namespace FamiStudio
             bmpNtsc = g.CreateBitmapFromResource("NTSC");
             bmpPal = g.CreateBitmapFromResource("PAL");
 
-            buttons[ButtonNew]     = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
-            buttons[ButtonOpen]    = new Button { X = 44,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
-            buttons[ButtonSave]    = new Button { X = 84,  Y = 4, Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
-            buttons[ButtonExport]  = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
-            buttons[ButtonCopy]    = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
-            buttons[ButtonCut]     = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
-            buttons[ButtonPaste]   = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
-            buttons[ButtonUndo]    = new Button { X = 284, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
-            buttons[ButtonRedo]    = new Button { X = 324, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
-            buttons[ButtonConfig]  = new Button { X = 364, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
-            buttons[ButtonPlay]    = new Button { X = 594, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
-            buttons[ButtonRewind]  = new Button { X = 634, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
-            buttons[ButtonLoop]    = new Button { X = 674, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
-            buttons[ButtonMachine] = new Button { X = 714, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap };
+            buttons[ButtonNew]       = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
+            buttons[ButtonOpen]      = new Button { X = 44,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
+            buttons[ButtonSave]      = new Button { X = 84,  Y = 4, Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
+            buttons[ButtonExport]    = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
+            buttons[ButtonCopy]      = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
+            buttons[ButtonCut]       = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
+            buttons[ButtonPaste]     = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
+            buttons[ButtonUndo]      = new Button { X = 284, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
+            buttons[ButtonRedo]      = new Button { X = 324, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
+            buttons[ButtonTransform] = new Button { X = 364, Y = 4, Bmp = g.CreateBitmapFromResource("Transform"), Click = OnTransform };
+            buttons[ButtonConfig]    = new Button { X = 404, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
+            buttons[ButtonPlay]      = new Button { X = 634, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
+            buttons[ButtonRewind]    = new Button { X = 674, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
+            buttons[ButtonLoop]      = new Button { X = 714, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[ButtonMachine]   = new Button { X = 754, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap };
+            buttons[ButtonHelp]      = new Button { X = 36,  Y = 4, Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
 
-            buttons[ButtonNew].ToolTip     = "{MouseLeft} New Project {Ctrl} {N}";
-            buttons[ButtonOpen].ToolTip    = "{MouseLeft} Open Project {Ctrl} {O}";
-            buttons[ButtonSave].ToolTip    = "{MouseLeft} Save Project {Ctrl} {S} - {MouseRight} Save As...";
-            buttons[ButtonExport].ToolTip  = "{MouseLeft} Export to various formats {Ctrl} {E}";
-            buttons[ButtonCopy].ToolTip    = "{MouseLeft} Copy selection {Ctrl} {C}";
-            buttons[ButtonCut].ToolTip     = "{MouseLeft} Cut selection {Ctrl} {X}";
-            buttons[ButtonPaste].ToolTip   = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
-            buttons[ButtonUndo].ToolTip    = "{MouseLeft} Undo {Ctrl} {Z}";
-            buttons[ButtonRedo].ToolTip    = "{MouseLeft} Redo {Ctrl} {Y}";
-            buttons[ButtonConfig].ToolTip  = "{MouseLeft} Edit Application Settings";
-            buttons[ButtonPlay].ToolTip    = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}";
-            buttons[ButtonRewind].ToolTip  = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
-            buttons[ButtonLoop].ToolTip    = "{MouseLeft} Toggle Loop Mode";
-            buttons[ButtonMachine].ToolTip = "{MouseLeft} Toggle between NTSC/PAL playback mode";
+            buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
+            buttons[ButtonOpen].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
+            buttons[ButtonSave].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S} - {MouseRight} Save As...";
+            buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}";
+            buttons[ButtonCopy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
+            buttons[ButtonCut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
+            buttons[ButtonPaste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
+            buttons[ButtonUndo].ToolTip      = "{MouseLeft} Undo {Ctrl} {Z}";
+            buttons[ButtonRedo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
+            buttons[ButtonTransform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
+            buttons[ButtonConfig].ToolTip    = "{MouseLeft} Edit Application Settings";
+            buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}";
+            buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
+            buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
+            buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
+            buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
 
             var scaling = RenderTheme.MainWindowScaling;
 
@@ -306,6 +317,11 @@ namespace FamiStudio
             return App.UndoRedoManager != null && App.UndoRedoManager.RedoScope != TransactionScope.Max;
         }
 
+        private void OnTransform()
+        {
+            App.OpenTransformDialog();
+        }
+
         private void OnConfig()
         {
             App.OpenConfigDialog();
@@ -352,6 +368,11 @@ namespace FamiStudio
             App.PalMode = !App.PalMode;
         }
 
+        public void OnHelp()
+        {
+            App.ShowHelp();
+        }
+
         private RenderBitmap OnMachineGetBitmap()
         {
             return App.PalMode ? bmpPal : bmpNtsc;
@@ -367,12 +388,13 @@ namespace FamiStudio
             // Buttons
             foreach (var btn in buttons)
             {
-                bool hover = btn.IsPointIn(pt.X, pt.Y);
+                bool hover = btn.IsPointIn(pt.X, pt.Y, Width);
                 var bmp = btn.GetBitmap != null ? btn.GetBitmap() : btn.Bmp;
                 if (bmp == null)
                     bmp = btn.Bmp;
                 bool enabled = btn.Enabled != null ? btn.Enabled() : true;
-                g.DrawBitmap(bmp, btn.X, btn.Y, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
+                int x = btn.RightAligned ? Width - btn.X : btn.X;
+                g.DrawBitmap(bmp, x, btn.Y, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
             }
 
             // Timecode
@@ -413,7 +435,7 @@ namespace FamiStudio
                 for (int j = 0; j < lines.Length; j++)
                 {
                     var splits = lines[j].Split(new char[] { '{', '}' }, StringSplitOptions.RemoveEmptyEntries);
-                    var posX = Width - 8 * RenderTheme.MainWindowScaling;
+                    var posX = Width - 40 * RenderTheme.MainWindowScaling;
 
                     for (int i = splits.Length - 1; i >= 0; i--)
                     {
@@ -470,7 +492,7 @@ namespace FamiStudio
 
             foreach (var btn in buttons)
             {
-                if (btn.IsPointIn(e.X, e.Y))
+                if (btn.IsPointIn(e.X, e.Y, Width))
                 {
                     ToolTip = btn.ToolTip;
                     return;
@@ -489,7 +511,7 @@ namespace FamiStudio
             {
                 foreach (var btn in buttons)
                 {
-                    if (btn != null && btn.IsPointIn(e.X, e.Y) && (btn.Enabled == null || btn.Enabled()))
+                    if (btn != null && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled()))
                     {
                         if (left)
                             btn.Click?.Invoke();

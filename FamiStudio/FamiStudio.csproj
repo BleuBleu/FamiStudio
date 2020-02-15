@@ -105,6 +105,7 @@
     <Compile Include="UI\Dialogs\Common\ConfigDialog.cs" />
     <Compile Include="UI\Dialogs\Common\NsfImportDialog.cs" />
     <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
+    <Compile Include="UI\Dialogs\Common\TransformDialog.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DGraphics.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DFontLoader.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />
@@ -253,6 +254,10 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\Help%402x.png" />
+    <EmbeddedResource Include="Resources\Help.png" />
+    <EmbeddedResource Include="Resources\Transform%402x.png" />
+    <EmbeddedResource Include="Resources\Transform.png" />
     <EmbeddedResource Include="Resources\Duty%402x.png" />
     <EmbeddedResource Include="Resources\Duty.png" />
     <EmbeddedResource Include="Resources\LengthSmallFill%402x.png" />

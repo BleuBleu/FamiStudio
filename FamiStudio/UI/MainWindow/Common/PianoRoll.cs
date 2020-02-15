@@ -300,12 +300,12 @@ namespace FamiStudio
 
         private void CenterEnvelopeScroll()
         {
-            var maxNumNotes = Width / noteSizeX;
+            var maxNumNotes = Width / DefaultNoteSizeX;
 
             if (editInstrument.Envelopes[editEnvelope].Length == 0)
                 zoomLevel = DefaultEnvelopeZoomLevel;
             else
-                zoomLevel = Utils.Clamp((int)Math.Log(maxNumNotes / editInstrument.Envelopes[editEnvelope].Length, 2.0), MinZoomLevel, MaxZoomLevel);
+                zoomLevel = Utils.Clamp((int)Math.Floor(Math.Log(maxNumNotes / (float)editInstrument.Envelopes[editEnvelope].Length, 2.0)), MinZoomLevel, MaxZoomLevel);
 
             UpdateRenderCoords();
 

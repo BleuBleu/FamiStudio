@@ -438,6 +438,17 @@ namespace FamiStudio
             }
         }
 
+        public void OpenTransformDialog()
+        {
+            var dlg = new TransformDialog(mainForm.Bounds);
+            dlg.ShowDialog();
+        }
+
+        public void ShowHelp()
+        {
+            Process.Start("http://www.famistudio.org/doc.html");
+        }
+
         private void UpdateTitle()
         {
             string projectFile = "New Project";
