@@ -279,6 +279,11 @@ namespace FamiStudio
                 min = 0;
                 max = instruemnt.ExpansionType == Project.ExpansionVrc6 ? 7 : 3;
             }
+            else if (type == FdsWaveform)
+            {
+                min = 0;
+                max = 63;
+            }
             else
             {
                 min = -64;

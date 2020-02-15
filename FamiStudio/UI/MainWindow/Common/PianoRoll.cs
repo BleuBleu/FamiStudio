@@ -30,12 +30,10 @@ namespace FamiStudio
     {
         const int MinZoomLevel = -3;
         const int MaxZoomLevel = 4;
+        const int DefaultEnvelopeZoomLevel = 2;
         const int ScrollMargin = 128;
 
-        const int DefaultNumOctavesChannel = 8;
-        const int DefaultBaseOctaveChannel = 0;
-        const int DefaultNumOctavesEnvelope = 7;
-        const int DefaultBaseOctaveEnvelope = 1;
+        const int DefaultNumOctaves = 8;
         const int DefaultHeaderSizeY = 17;
         const int DefaultDPCMHeaderSizeY = 17;
         const int DefaultEffectPanelSizeY = 256;
@@ -44,7 +42,7 @@ namespace FamiStudio
         const int DefaultNoteSizeY = 12;
         const int DefaultNoteAttackSizeX = 3;
         const int DefaultReleaseNoteSizeY = 8;
-        const int DefaultEnvelopeSizeY = 8;
+        const int DefaultEnvelopeSizeY = 9;
         const int DefaultEnvelopeMax = 127;
         const int DefaultWhiteKeySizeX = 85;
         const int DefaultWhiteKeySizeY = 20;
@@ -68,7 +66,6 @@ namespace FamiStudio
 
         int numNotes;
         int numOctaves;
-        int baseOctave;
         int headerSizeY;
         int headerAndEffectSizeY;
         int effectPanelSizeY;
@@ -77,7 +74,6 @@ namespace FamiStudio
         int noteSizeY;
         int noteAttackSizeX;
         int releaseNoteSizeY;
-        int envelopeSizeY;
         int envelopeMax;
         int whiteKeySizeY;
         int whiteKeySizeX;
@@ -101,6 +97,7 @@ namespace FamiStudio
         int barSizeX;
         int slideIconPosX;
         int slideIconPosY;
+        float envelopeSizeY;
 
         int ScaleForZoom(int value)
         {
@@ -197,6 +194,8 @@ namespace FamiStudio
         // Envelope edit mode.
         Instrument editInstrument = null;
         int editEnvelope;
+        int envelopeValueZoom   = 1;
+        int envelopeValueOffset = 0;
 
         public delegate void PatternChange(Pattern pattern);
         public event PatternChange PatternChanged;
@@ -216,8 +215,7 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
 
-            numOctaves             = editMode == EditionMode.Enveloppe ? DefaultNumOctavesEnvelope : DefaultNumOctavesChannel;
-            baseOctave             = editMode == EditionMode.Enveloppe ? DefaultBaseOctaveEnvelope : DefaultBaseOctaveChannel;
+            numOctaves             = DefaultNumOctaves;
             headerSizeY            = (int)((editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe ? 2 : 1) * DefaultHeaderSizeY * scaling);
             effectPanelSizeY       = (int)(DefaultEffectPanelSizeY * scaling);
             effectButtonSizeY      = (int)(DefaultEffectButtonSizeY * scaling);
@@ -225,7 +223,6 @@ namespace FamiStudio
             noteSizeY              = (int)(DefaultNoteSizeY * scaling);
             noteAttackSizeX        = (int)(DefaultNoteAttackSizeX * scaling);
             releaseNoteSizeY       = (int)(DefaultReleaseNoteSizeY * scaling);
-            envelopeSizeY          = (int)(DefaultEnvelopeSizeY * scaling);    
             envelopeMax            = (int)(DefaultEnvelopeMax * scaling);      
             whiteKeySizeY          = (int)(DefaultWhiteKeySizeY * scaling);    
             whiteKeySizeX          = (int)(DefaultWhiteKeySizeX * scaling);    
@@ -246,6 +243,7 @@ namespace FamiStudio
             octaveNameOffsetY      = (int)(DefaultOctaveNameOffsetY * scaling);
             slideIconPosX          = (int)(DefaultSlideIconPosX * scaling);
             slideIconPosY          = (int)(DefaultSlideIconPosY * scaling);
+            envelopeSizeY          = DefaultEnvelopeSizeY * envelopeValueZoom * scaling;    
             octaveSizeY            = 12 * noteSizeY;
             numNotes               = numOctaves * 12;
             virtualSizeY           = numNotes * noteSizeY;
@@ -289,13 +287,34 @@ namespace FamiStudio
             editEnvelope = envelope;
             showEffectsPanel = false;
             noteTooltip = "";
+            envelopeValueZoom = envelope == Envelope.Volume || envelope == Envelope.DutyCycle ? 4 : 1;
+            envelopeValueOffset = 0;
             Debug.Assert(editInstrument != null);
 
             ClearSelection();
             UpdateRenderCoords();
-            CenterScroll();
+            CenterEnvelopeScroll();
             ClampScroll();
             ConditionalInvalidate();
+        }
+
+        private void CenterEnvelopeScroll()
+        {
+            var maxNumNotes = Width / noteSizeX;
+
+            if (editInstrument.Envelopes[editEnvelope].Length == 0)
+                zoomLevel = DefaultEnvelopeZoomLevel;
+            else
+                zoomLevel = Utils.Clamp((int)Math.Log(maxNumNotes / editInstrument.Envelopes[editEnvelope].Length, 2.0), MinZoomLevel, MaxZoomLevel);
+
+            UpdateRenderCoords();
+
+            Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int min, out int max);
+
+            int maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
+
+            scrollX = 0;
+            scrollY = min == 0 ? 0 : maxScrollY / 2;
         }
 
         private void CenterScroll(int patternIdx = 0)
@@ -311,6 +330,8 @@ namespace FamiStudio
             showEffectsPanel = false;
             zoomLevel = 0;
             noteTooltip = "";
+            envelopeValueZoom = 1;
+            envelopeValueOffset = 0;
 
             ClearSelection();
             UpdateRenderCoords();
@@ -665,10 +686,8 @@ namespace FamiStudio
 
             if (playingNote > 0)
             {
-                int tmpNote = playingNote - (12 * baseOctave);
-
-                playOctave = (tmpNote - 1) / 12;
-                playNote   = (tmpNote - 1) - playOctave * 12;
+                playOctave = (playingNote - 1) / 12;
+                playNote   = (playingNote - 1) - playOctave * 12;
 
                 if (!IsBlackKey(playNote))
                     g.FillRectangle(GetKeyRectangle(playOctave, playNote), whiteKeyPressedBrush);
@@ -699,7 +718,7 @@ namespace FamiStudio
                         g.DrawLine(0, y, whiteKeySizeX, y, theme.DarkGreyLineBrush2);
                 }
 
-                g.DrawText("C" + (i + baseOctave), ThemeBase.FontSmall, 1, octaveBaseY - octaveNameOffsetY, theme.BlackBrush);
+                g.DrawText("C" + i, ThemeBase.FontSmall, 1, octaveBaseY - octaveNameOffsetY, theme.BlackBrush);
             }
 
             g.DrawLine(whiteKeySizeX - 1, 0, whiteKeySizeX - 1, Height, theme.DarkGreyLineBrush1);
@@ -1252,21 +1271,19 @@ namespace FamiStudio
             else if (editMode == EditionMode.Enveloppe)
             {
                 // Draw the enveloppe value backgrounds
-                const int maxValues = 126;
-                int maxVisibleValue = maxValues - Math.Min((int)Math.Floor(scrollY / (float)envelopeSizeY), maxValues);
-                int minVisibleValue = maxValues - Math.Max((int)Math.Ceiling((scrollY + Height) / (float)envelopeSizeY), 0);
+                int maxValue = 128 / envelopeValueZoom;
+                int midValue =  64 / envelopeValueZoom;
+                int maxVisibleValue = maxValue - Math.Min((int)Math.Floor(scrollY / envelopeSizeY), maxValue);
+                int minVisibleValue = maxValue - Math.Max((int)Math.Ceiling((scrollY + Height) / envelopeSizeY), 0);
 
                 var env = EditEnvelope;
-                var spacing = editEnvelope == Envelope.Arpeggio ? 12 : 16;
+                var spacing = editEnvelope == Envelope.DutyCycle ? 4 : (editEnvelope == Envelope.Arpeggio ? 12 : 16);
 
-                for (int i = minVisibleValue; i < maxVisibleValue; i++)
+                for (int i = minVisibleValue; i <= maxVisibleValue; i++)
                 {
-                    int value = i - 64;
-                    int y = (virtualSizeY - envelopeSizeY * i) - scrollY;
-                    if ((value % spacing) == 0)
-                        g.FillRectangle(0, y - envelopeSizeY, env.Length * noteSizeX - scrollX, y, value == 0 ? theme.DarkGreyLineBrush2 : theme.DarkGreyFillBrush1);
-
-                    g.DrawLine(0, y, env.Length * noteSizeX - scrollX, y, theme.DarkGreyLineBrush2);
+                    var value = i - 64;
+                    var y = (virtualSizeY - envelopeSizeY * i) - scrollY;
+                    g.DrawLine(0, y, env.Length * noteSizeX - scrollX, y, theme.DarkGreyLineBrush2, (value % spacing) == 0 ? 3 : 1);
                 }
 
                 DrawSelectionRect(g, Height);
@@ -1297,9 +1314,9 @@ namespace FamiStudio
                     for (int i = 0; i < env.Length; i++)
                     {
                         var x = i * noteSizeX - scrollX;
-                        var y = (virtualSizeY - envelopeSizeY * (env.Values[i] + 64)) - scrollY;
+                        var y = (virtualSizeY - envelopeSizeY * (env.Values[i] + midValue)) - scrollY;
                         var selected = IsEnvelopeValueSelected(i);
-                        g.FillRectangle(x, y - envelopeSizeY, x + noteSizeX, y, g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, envelopeSizeY, 0.8f));
+                        g.FillRectangle(x, y - envelopeSizeY, x + noteSizeX, y, g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, (int)envelopeSizeY, 0.8f));
                         g.DrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, theme.BlackBrush, selected ? 2 : 1);
                     }
                 }
@@ -1310,18 +1327,18 @@ namespace FamiStudio
                         int val = env.Values[i];
 
                         int x = i * noteSizeX - scrollX;
-                        int y0, y1;
+                        float y0, y1;
                         var selected = IsEnvelopeValueSelected(i);
 
                         if (val >= 0)
                         {
-                            y0 = (virtualSizeY - envelopeSizeY * (val + 64 + 1)) - scrollY;
-                            y1 = (virtualSizeY - envelopeSizeY * (64) - scrollY);
+                            y0 = (virtualSizeY - envelopeSizeY * (val + midValue + 1)) - scrollY;
+                            y1 = (virtualSizeY - envelopeSizeY * (midValue) - scrollY);
                         }
                         else
                         {
-                            y1 = (virtualSizeY - envelopeSizeY * (val + 64)) - scrollY;
-                            y0 = (virtualSizeY - envelopeSizeY * (64 + 1) - scrollY);
+                            y1 = (virtualSizeY - envelopeSizeY * (val + midValue)) - scrollY;
+                            y0 = (virtualSizeY - envelopeSizeY * (midValue + 1) - scrollY);
                         }
 
                         g.FillRectangle(x, y0, x + noteSizeX, y1, theme.LightGreyFillBrush1);
@@ -1454,7 +1471,7 @@ namespace FamiStudio
                 {
                     if (IsBlackKey(j) && PointInRectangle(GetKeyRectangle(i, j), x, y))
                     {
-                        int note = (baseOctave + i) * 12 + j + 1;
+                        int note = i * 12 + j + 1;
                         if (note != playingNote)
                         {
                             playingNote = note;
@@ -1468,7 +1485,7 @@ namespace FamiStudio
                 {
                     if (!IsBlackKey(j) && PointInRectangle(GetKeyRectangle(i, j), x, y))
                     {
-                        int note = (baseOctave + i) * 12 + j + 1;
+                        int note = i * 12 + j + 1;
                         if (note != playingNote)
                         {
                             playingNote = note;
@@ -2389,8 +2406,10 @@ namespace FamiStudio
 
         private bool GetEnvelopeValueForCoord(int x, int y, out int idx, out sbyte value)
         {
+            var maxValue = 64 / envelopeValueZoom; 
+
             idx = (x - whiteKeySizeX + scrollX) / noteSizeX;
-            value = (sbyte)(61 - Math.Min((y + scrollY - headerAndEffectSizeY - 1) / envelopeSizeY, 128)); // TODO: Why the 61 again???
+            value = (sbyte)(maxValue - Math.Min((y + scrollY - headerAndEffectSizeY - 1) / envelopeSizeY, 128)); 
 
             return (x > whiteKeySizeX && y > headerAndEffectSizeY);
         }
@@ -2405,6 +2424,8 @@ namespace FamiStudio
             buffer.Serialize(ref currentInstrument);
             buffer.Serialize(ref editInstrument);
             buffer.Serialize(ref editEnvelope);
+            buffer.Serialize(ref envelopeValueZoom);
+            buffer.Serialize(ref envelopeValueOffset);
             buffer.Serialize(ref scrollX);
             buffer.Serialize(ref scrollY);
             buffer.Serialize(ref zoomLevel);
