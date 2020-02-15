@@ -21,7 +21,6 @@
 	- NSF
 	- Test FamiTracker import/export
 	- Test Famitone 2 export, etc.
-	- Improve default zoom on envelopes, range multipiler (2x / 4x).
 	- Create a default duty envelope for all instruments.
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
@@ -49,7 +48,6 @@
 - Help button -> Documentation website.	
 - Crash when importing FamiTracker songs with > 16KB samples.
 - Test installer on Japanese machine.
-- Create email for website.
 
 ========================
 
