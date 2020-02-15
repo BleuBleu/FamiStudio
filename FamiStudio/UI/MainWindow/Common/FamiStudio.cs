@@ -271,7 +271,7 @@ namespace FamiStudio
             }
             else if (filename.ToLower().EndsWith("txt"))
             {
-                project = FamitrackerFile.Load(filename);
+                project = FamitrackerTextFile.Load(filename);
             }
             else if (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe"))
             {

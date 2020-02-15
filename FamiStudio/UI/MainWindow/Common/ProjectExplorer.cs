@@ -1102,7 +1102,7 @@ namespace FamiStudio
                     dlg.Properties.AddString("Title :", project.Name, 31); // 0
                     dlg.Properties.AddString("Author :", project.Author, 31); // 1
                     dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
-                    dlg.Properties.AddStringList("Expansion Audio:", Project.ExpansionNames, project.ExpansionAudioName); // 3
+                    dlg.Properties.AddStringList("Expansion Audio:", Project.GetAllowedExpansionNames(), project.ExpansionAudioName); // 3
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog() == DialogResult.OK)
