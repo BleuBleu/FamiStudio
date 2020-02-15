@@ -34,6 +34,7 @@ namespace FamiStudio
             Cursors.Initialize();
             RenderTheme.Initialize();
             PlatformUtils.Initialize();
+            ClipboardUtils.Initialize();
 
 #if FAMISTUDIO_WINDOWS
             PerformanceCounter.Initialize();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -15,28 +16,81 @@ namespace FamiStudio
 
 #if !FAMISTUDIO_WINDOWS
         static byte[] macClipboardData; // Cant copy between FamiStudio instance on MacOS.
+#else
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int RegisterClipboardFormat(string format);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int IsClipboardFormatAvailable(int format);
+        [DllImport("user32.dll")]
+        private static extern int OpenClipboard(int hwnd);
+        [DllImport("user32.dll")]
+        private static extern int GetClipboardData(int wFormat);
+        [DllImport("user32.dll", EntryPoint = "GetClipboardFormatNameA")]
+        private static extern int GetClipboardFormatName(int wFormat, string lpString, int nMaxCount);
+        [DllImport("kernel32.dll")]
+        private static extern int GlobalAlloc(int wFlags, int dwBytes);
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalLock(int hMem);
+        [DllImport("kernel32.dll")]
+        private static extern int GlobalUnlock(int hMem);
+        [DllImport("kernel32.dll")]
+        private static extern int GlobalSize(int mem);
+        [DllImport("user32.dll")]
+        private static extern int CloseClipboard();
+        [DllImport("user32.dll")]
+        private static extern int SetClipboardData(int wFormat, int hMem);
+        [DllImport("user32.dll")]
+        private static extern int EmptyClipboard();
+
+        const int GMEM_MOVEABLE = 2;
+
+        private static int format = -1;
 #endif
 
-        private static void SetClipboardData(byte[] data)
+        public static void Initialize()
         {
 #if FAMISTUDIO_WINDOWS
-            Clipboard.SetData("FamiStudio", data);
+            format = RegisterClipboardFormat("FamiStudio");
+#endif
+        }
+
+    private static void SetClipboardDataInternal(byte[] data)
+        {
+#if FAMISTUDIO_WINDOWS
+            var mem = GlobalAlloc(GMEM_MOVEABLE, data.Length);
+            var ptr = GlobalLock(mem);
+            Marshal.Copy(data, 0, ptr, data.Length);
+            GlobalUnlock(mem);
+
+            if (OpenClipboard(0) != 0)
+            {
+                SetClipboardData(format, mem);
+                CloseClipboard();
+            }
 #else
             macClipboardData = data;
 #endif
         }
 
-        private static byte[] GetClipboardData(uint magic)
+        private static byte[] GetClipboardDataInternal(uint magic, int maxSize = int.MaxValue)
         {
             byte[] buffer = null;
 #if FAMISTUDIO_WINDOWS
-            try
+            if (IsClipboardFormatAvailable(format) != 0)
             {
-                buffer = Clipboard.GetData("FamiStudio") as byte[];
-            }
-            catch
-            {
-                Debug.WriteLine("Random DisconnectedContext exception. Ignoring.");
+                if (OpenClipboard(0) != 0)
+                {
+                    var mem = GetClipboardData(format);
+                    if (mem != 0)
+                    {
+                        var size = Math.Min(maxSize, GlobalSize(mem));
+                        var ptr = GlobalLock(mem);
+                        buffer = new byte[size];
+                        Marshal.Copy(ptr, buffer, 0, size);
+                        GlobalUnlock(mem);
+                    }
+                    CloseClipboard();
+                }
             }
 #else
             buffer = macClipboardData;
@@ -48,9 +102,9 @@ namespace FamiStudio
             return buffer;
         }
 
-        public static bool ConstainsNotes    => GetClipboardData(MagicNumberClipboardNotes) != null;
-        public static bool ConstainsEnvelope => GetClipboardData(MagicNumberClipboardEnvelope) != null;
-        public static bool ConstainsPatterns => GetClipboardData(MagicNumberClipboardPatterns) != null;
+        public static bool ConstainsNotes    => GetClipboardDataInternal(MagicNumberClipboardNotes,    4) != null;
+        public static bool ConstainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null;
+        public static bool ConstainsPatterns => GetClipboardDataInternal(MagicNumberClipboardPatterns, 4) != null;
 
         private static void SavePatternList(ProjectSaveBuffer serializer, ICollection<Pattern> patterns)
         {
@@ -221,7 +275,7 @@ namespace FamiStudio
         {
             if (notes == null)
             {
-                SetClipboardData(null);
+                SetClipboardDataInternal(null);
                 return;
             }
 
@@ -246,12 +300,12 @@ namespace FamiStudio
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardNotes));
             clipboardData.AddRange(buffer);
 
-            SetClipboardData(clipboardData.ToArray());
+            SetClipboardDataInternal(clipboardData.ToArray());
         }
 
         public static bool ContainsMissingInstruments(Project project, bool notes)
         {
-            var buffer = GetClipboardData(notes ? MagicNumberClipboardNotes : MagicNumberClipboardPatterns);
+            var buffer = GetClipboardDataInternal(notes ? MagicNumberClipboardNotes : MagicNumberClipboardPatterns);
 
             if (buffer == null)
                 return false;
@@ -263,7 +317,7 @@ namespace FamiStudio
 
         public static Note[] LoadNotes(Project project, bool createMissingInstruments)
         {
-            var buffer = GetClipboardData(MagicNumberClipboardNotes);
+            var buffer = GetClipboardDataInternal(MagicNumberClipboardNotes);
 
             if (buffer == null)
                 return null;
@@ -291,12 +345,12 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 clipboardData.Add((byte)values[i]);
 
-            SetClipboardData(clipboardData.ToArray());
+            SetClipboardDataInternal(clipboardData.ToArray());
         }
 
         public static sbyte[] LoadEnvelopeValues()
         {
-            var buffer = GetClipboardData(MagicNumberClipboardEnvelope);
+            var buffer = GetClipboardDataInternal(MagicNumberClipboardEnvelope);
 
             if (buffer == null)
                 return null;
@@ -314,7 +368,7 @@ namespace FamiStudio
         {
             if (patterns == null)
             {
-                SetClipboardData(null);
+                SetClipboardDataInternal(null);
                 return;
             }
 
@@ -343,7 +397,7 @@ namespace FamiStudio
 
             if (uniquePatterns.Count == 0)
             {
-                SetClipboardData(null);
+                SetClipboardDataInternal(null);
                 return;
             }
 
@@ -370,12 +424,12 @@ namespace FamiStudio
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardPatterns));
             clipboardData.AddRange(buffer);
 
-            SetClipboardData(clipboardData.ToArray());
+            SetClipboardDataInternal(clipboardData.ToArray());
         }
 
         public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments)
         {
-            var buffer = GetClipboardData(MagicNumberClipboardPatterns);
+            var buffer = GetClipboardDataInternal(MagicNumberClipboardPatterns);
 
             if (buffer == null)
                 return null;
@@ -408,7 +462,7 @@ namespace FamiStudio
 
         public static void Reset()
         {
-            SetClipboardData(null);
+            SetClipboardDataInternal(null);
         }
     }
 }

@@ -42,7 +42,6 @@
 		- Make dark version of seq header icon.
 		- What to do with bar length on shorter patterns?
 - instanceIdx -> patternIdx
-- Replace buggy clipboard code.
 - NSF Import:
 	- Triangle in SMB3 has volumes of 24 (triangle has no volume!)
 	- Avoid setting the volumes on new notes. Only if state.volume == 0.

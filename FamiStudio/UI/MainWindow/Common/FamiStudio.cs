@@ -253,7 +253,6 @@ namespace FamiStudio
             RefreshSequencerLayout();
 
             instrumentPlayer.Start(project, palMode);
-            //ClipboardUtils.Reset();
         }
 
         public void OpenProject(string filename)
