@@ -103,6 +103,20 @@ namespace FamiStudio
 
         readonly sbyte[] FdsModulationDeltas = new sbyte[] { 0, 1, 2, 4, 0, -4, -2, -1 };
 
+        public void ConvertFdsModulationToAbsolute()
+        {
+            // Force starting at zero.
+            Values[0] = 0;
+
+            for (int i = 1; i < length; i++)
+            {
+                if (values[i] == 4)
+                    values[i] = 0;
+                else
+                    values[i] = (sbyte)(values[i - 1] + FdsModulationDeltas[values[i]]);
+            }
+        }
+
         public sbyte[] BuildFdsModulationTable()
         {
             // FDS modulation table is encoded on 3 bits, each value is a delta

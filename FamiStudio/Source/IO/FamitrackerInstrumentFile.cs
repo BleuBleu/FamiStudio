@@ -6,26 +6,68 @@ namespace FamiStudio
 {
     class FamitrackerInstrumentFile
     {
-        enum InstrumentType
+        static int[] InstrumentTypeLookup =
         {
-            INST_NONE = 0,
-            INST_2A03 = 1,
-            INST_VRC6 = 2,
-            INST_VRC7 = 3,
-            INST_FDS  = 4,
-            INST_N163 = 5,
-            INST_S5B  = 6
+            Project.ExpansionCount,  // INST_NONE: Should never happen.
+            Project.ExpansionNone,   // INST_2A03
+            Project.ExpansionVrc6,   // INST_VRC6
+            Project.ExpansionVrc7,   // INST_VRC7
+            Project.ExpansionFds,    // INST_FDS
+            Project.ExpansionNamco,  // INST_N163
+            Project.ExpansionSunsoft // INST_S5B
         };
-        
-        enum SequenceType
+
+        static int[] EnvelopeTypeLookup =
         {
-            SEQ_VOLUME,
-            SEQ_ARPEGGIO,
-            SEQ_PITCH,
-            SEQ_HIPITCH,
-            SEQ_DUTYCYCLE,
-            SEQ_COUNT
+            Envelope.Volume,   // SEQ_VOLUME
+            Envelope.Arpeggio, // SEQ_ARPEGGIO
+            Envelope.Pitch,    // SEQ_PITCH
+            Envelope.Max,      // SEQ_HIPITCH
+            Envelope.DutyCycle // SEQ_DUTYCYCLE
         };
+
+        const int SEQ_COUNT = 5;
+
+        private static void ReadEnvelope(byte[] bytes, ref int offset, Instrument instrument, int envType)
+        {
+            var itemCount    = BitConverter.ToInt32(bytes, offset); offset += 4;
+            var loopPoint    = BitConverter.ToInt32(bytes, offset); offset += 4;
+            var releasePoint = BitConverter.ToInt32(bytes, offset); offset += 4;
+            var setting      = BitConverter.ToInt32(bytes, offset); offset += 4;
+
+            var seq = new sbyte[itemCount];
+            for (int j = 0; j < itemCount; j++)
+                seq[j] = (sbyte)bytes[offset++];
+
+            // Skip unsupported types.
+            if (envType == Envelope.Max)
+                return;
+
+            if (releasePoint >= 0 && envType != Envelope.Volume)
+                releasePoint = -1;
+
+            // FamiTracker allows envelope with release with no loop. We dont allow that.
+            if (envType == Envelope.Volume && releasePoint != -1)
+            {
+                if (loopPoint == -1)
+                    loopPoint = releasePoint;
+                if (releasePoint != -1)
+                    releasePoint++;
+            }
+
+            Envelope env = instrument.Envelopes[envType];
+
+            if (envType == Envelope.Pitch)
+                env.Relative = true;
+
+            if (env != null)
+            {
+                env.Length  = itemCount;
+                env.Loop    = loopPoint;
+                env.Release = releasePoint;
+                Array.Copy(seq, 0, env.Values, 0, itemCount);
+            }
+        }
 
         public static Instrument CreateFromFile(Project project, string filename)
         {
@@ -36,75 +78,59 @@ namespace FamiStudio
             if (!bytes.Skip(3).Take(3).SequenceEqual(Encoding.ASCII.GetBytes("2.4")))
                 return null;
 
-            var instType = (InstrumentType)bytes[6];
+            var instType = InstrumentTypeLookup[bytes[6]];
 
             // Needs to match the current expansion audio. Our enum happens to match (-1) for now.
-            if (instType != InstrumentType.INST_2A03 && (int)(instType - 1) != project.ExpansionAudio)
+            if (instType != Project.ExpansionNone && instType != project.ExpansionAudio)
                 return null;
 
             var offset = 7;
             var nameLen = BitConverter.ToInt32(bytes, offset); offset += 4;
             var name = Encoding.ASCII.GetString(bytes, offset, nameLen); offset += nameLen;
 
-            if (bytes[offset++] != (int)SequenceType.SEQ_COUNT)
-                return null;
-
             if (project.GetInstrument(name) != null)
                 return null;
 
-            var instrument = project.CreateInstrument((int)instType - 1, name);
+            var instrument = project.CreateInstrument(instType, name);
 
-            // Envelopes
-            for (int i = 0; i < (int)SequenceType.SEQ_COUNT; i++)
+            if (instType == Project.ExpansionFds)
             {
-                if (bytes[offset++] == 1)
+                var wavEnv = instrument.Envelopes[Envelope.FdsWaveform];
+                for (int i = 0; i < wavEnv.Length; i++)
+                    wavEnv.Values[i] = (sbyte)bytes[offset++];
+
+                var modEnv = instrument.Envelopes[Envelope.FdsModulation];
+                for (int i = 0; i < modEnv.Length; i++)
+                    modEnv.Values[i] = (sbyte)bytes[offset++];
+
+                modEnv.ConvertFdsModulationToAbsolute();
+
+                // Skip mod speed/depth/delay.
+                offset += sizeof(int) * 3;
+
+                ReadEnvelope(bytes, ref offset, instrument, Envelope.Volume);
+                ReadEnvelope(bytes, ref offset, instrument, Envelope.Arpeggio);
+                ReadEnvelope(bytes, ref offset, instrument, Envelope.Pitch);
+            }
+            else
+            {
+                if (bytes[offset++] != SEQ_COUNT)
+                    return null;
+
+                // Envelopes
+                for (int i = 0; i < SEQ_COUNT; i++)
                 {
-                    var itemCount    = BitConverter.ToInt32(bytes, offset); offset += 4;
-                    var loopPoint    = BitConverter.ToInt32(bytes, offset); offset += 4;
-                    var releasePoint = BitConverter.ToInt32(bytes, offset); offset += 4;
-                    var setting      = BitConverter.ToInt32(bytes, offset); offset += 4;
-                    var seq          = new sbyte[itemCount];
-
-                    for (int j = 0; j < itemCount; j++)
-                        seq[j] = (sbyte)bytes[offset++];
-
-                    if (releasePoint >= 0 && i != (int)SequenceType.SEQ_VOLUME)
-                        releasePoint = -1;
-
-                    // FamiTracker allows envelope with release with no loop. We dont allow that.
-                    if (i == (int)SequenceType.SEQ_VOLUME && releasePoint != -1)
-                    {
-                        if (loopPoint == -1)
-                            loopPoint = releasePoint;
-                        if (releasePoint != -1)
-                            releasePoint++;
-                    }
-
-                    Envelope env = null;
-                    switch ((SequenceType)i)
-                    {
-                        case SequenceType.SEQ_VOLUME:    env = instrument.Envelopes[Envelope.Volume]; break;
-                        case SequenceType.SEQ_PITCH:     env = instrument.Envelopes[Envelope.Pitch]; env.Relative = true; break;
-                        case SequenceType.SEQ_ARPEGGIO:  env = instrument.Envelopes[Envelope.Arpeggio]; break;
-                        case SequenceType.SEQ_DUTYCYCLE: env = instrument.Envelopes[Envelope.DutyCycle]; break;
-                    }
-
-                    if (env != null)
-                    {
-                        env.Length = itemCount;
-                        env.Loop = loopPoint;
-                        env.Release = releasePoint;
-                        Array.Copy(seq, 0, env.Values, 0, itemCount);
-                    }
+                    if (bytes[offset++] == 1)
+                        ReadEnvelope(bytes, ref offset, instrument, EnvelopeTypeLookup[i]);
                 }
             }
 
             // Samples
-            if (instType == InstrumentType.INST_2A03)
+            if (instType == Project.ExpansionNone)
             {
                 // Skip over the sample mappings for now, we will load them after the actual sample data.
                 var assignedCount = BitConverter.ToInt32(bytes, offset); offset += 4;
-                var mappingOffset = offset; 
+                var mappingOffset = offset;
                 offset += assignedCount * 4;
 
                 var sampleCount = BitConverter.ToInt32(bytes, offset); offset += 4;
@@ -116,8 +142,8 @@ namespace FamiStudio
                     var sampleNameLen = BitConverter.ToInt32(bytes, offset); offset += 4;
                     var sampleName    = Encoding.ASCII.GetString(bytes, offset, sampleNameLen); offset += sampleNameLen;
                     var sampleSize    = BitConverter.ToInt32(bytes, offset); offset += 4;
-                    var sampleData    = new byte[sampleSize];
 
+                    var sampleData = new byte[sampleSize];
                     Array.Copy(bytes, offset, sampleData, 0, sampleSize); offset += sampleSize;
 
                     sampleMap[sampleIdx] = project.CreateDPCMSample(sampleName, sampleData);
