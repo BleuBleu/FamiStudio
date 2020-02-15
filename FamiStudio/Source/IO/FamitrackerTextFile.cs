@@ -221,11 +221,11 @@ namespace FamiStudio
                     //mod_delay: int[0,255] - modulator delay 
 
                     int idx = int.Parse(param[0]);
-                    var name = param[4];
+                    var name = param[5];
 
                     var j = 2;
                     while (!project.IsInstrumentNameUnique(name))
-                        name = param[4] + "-" + j++;
+                        name = param[5] + "-" + j++;
 
                     instruments[idx] = project.CreateInstrument(Project.ExpansionFds, name);
                 }
@@ -887,7 +887,7 @@ namespace FamiStudio
             lines.Add("# Global settings");
             lines.Add("MACHINE         0");
             lines.Add("FRAMERATE       0");
-            lines.Add("EXPANSION       " + project.ExpansionAudio);
+            lines.Add("EXPANSION       " + (project.ExpansionAudio != Project.ExpansionNone ? (1 << (project.ExpansionAudio - 1)) : 0));
             lines.Add("VIBRATO         1");
             lines.Add("SPLIT           21");
             lines.Add("");
@@ -935,11 +935,16 @@ namespace FamiStudio
             {
                 var instrument = project.Instruments[i];
 
-                var expIdx = instrument.IsExpansionInstrument ? 1 : 0;
-                int volEnvIdx = instrument.Envelopes[Envelope.Volume].Length    > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Volume],    instrument.Envelopes[Envelope.Volume])    : -1;
-                int arpEnvIdx = instrument.Envelopes[Envelope.Arpeggio].Length  > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Arpeggio],  instrument.Envelopes[Envelope.Arpeggio])  : -1;
-                int pitEnvIdx = instrument.Envelopes[Envelope.Pitch].Length     > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Pitch],     instrument.Envelopes[Envelope.Pitch])     : -1;
-                int dutEnvIdx = instrument.Envelopes[Envelope.DutyCycle].Length > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.DutyCycle], instrument.Envelopes[Envelope.DutyCycle]) : -1;
+                var volEnv = instrument.Envelopes[Envelope.Volume];
+                var arpEnv = instrument.Envelopes[Envelope.Arpeggio];
+                var pitEnv = instrument.Envelopes[Envelope.Pitch];
+                var dutEnv = instrument.Envelopes[Envelope.DutyCycle];
+
+                var expIdx    = instrument.IsExpansionInstrument ? 1 : 0;
+                int volEnvIdx = volEnv != null && volEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Volume],    instrument.Envelopes[Envelope.Volume])    : -1;
+                int arpEnvIdx = arpEnv != null && arpEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Arpeggio],  instrument.Envelopes[Envelope.Arpeggio])  : -1;
+                int pitEnvIdx = pitEnv != null && pitEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.Pitch],     instrument.Envelopes[Envelope.Pitch])     : -1;
+                int dutEnvIdx = dutEnv != null && dutEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, Envelope.DutyCycle], instrument.Envelopes[Envelope.DutyCycle]) : -1;
 
                 if (instrument.ExpansionType == Project.ExpansionNone)
                 {
@@ -948,6 +953,23 @@ namespace FamiStudio
                 else if (instrument.ExpansionType == Project.ExpansionVrc6)
                 {
                     lines.Add($"INSTVRC6{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
+                }
+                else if (instrument.ExpansionType == Project.ExpansionFds)
+                {
+                    // TODO: Modulation parameters.
+                    lines.Add($"INSTFDS{i,5}{0,6}{0,4}{0,4}{0,4} \"{instrument.Name}\"");
+
+                    var wavEnv = instrument.Envelopes[Envelope.FdsWaveform];
+                    lines.Add($"FDSWAVE{i,5} : {string.Join(" ", wavEnv.Values.Take(wavEnv.Length))}");
+                    var modEnv = instrument.Envelopes[Envelope.FdsModulation].BuildFdsModulationTable();
+                    lines.Add($"FDSMOD{i,6} : {string.Join(" ", modEnv.Take(modEnv.Length))}");
+
+                    for (int j = 0; j <= Envelope.Pitch; j++)
+                    {
+                        var env = instrument.Envelopes[j];
+                        if (!env.IsEmpty)
+                            lines.Add($"FDSMACRO{i,4} {j,5} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
+                    }
                 }
             }
 

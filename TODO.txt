@@ -8,7 +8,7 @@
 	- Presets (saw, triangle, sine, square, etc.)
 	- Proper playback (remove hacks)
 	- NSF.
-	- FamiTracker import/export 
+	x FamiTracker import/export 
 	x FamiTracker instrument import.
 - Fine pitch track
 	- NSF
@@ -50,7 +50,8 @@
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion
 - Help button -> Documentation website.	
-	
+- Crash when importing FamiTracker songs with > 16KB samples.
+
 ========================
 
 Backlog:
