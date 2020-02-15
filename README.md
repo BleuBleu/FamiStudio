@@ -3,6 +3,8 @@ This is the GitHub page of FamiStudio, which is intended for people wanting to v
 
 **If you are simply interested in installing FamiStudio, please visit the brand new [famistudio.org](https://famistudio.org/) or [itch.io](https://bleubleu.itch.io/famistudio).**
 
+For any questions, you can reach me at [famistudio@outlook.com](mailto:famistudio@outlook.com).
+
 ## Compiled versions
 All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section. If you are on Windows, simply download and run the .MSI installer and a shortcut to FamiStudio will be placed in your Start menu.
 
