@@ -37,14 +37,15 @@
 		- Truncate pattern to their maxlength.
 		- Make dark version of seq header icon.
 		- What to do with bar length on shorter patterns?
+	- *** When moving patterns left/right, the custom lengths dont follow. Maybe they should when selecting full rows?
 - NSF Import:
-	- Triangle in SMB3 has volumes of 24 (triangle has no volume!)
 	- Avoid setting the volumes on new notes. Only if state.volume == 0.
-	- Set correct song length.
+	- If cancel NSF dialog, dont change current project.
 - Transform dialog:
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion
 - Test installer on Japanese machine.
+* CRASH WHEN MOVING NOTES LEFT/RIGHT WITH CUSTOM PATTERN LENGTH!
 
 ========================
 

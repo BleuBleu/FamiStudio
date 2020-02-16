@@ -1609,7 +1609,7 @@ namespace FamiStudio
 
                     for (int n = n0; n <= n1; n++)
                     {
-                        pattern.Notes[n] = function(pattern.Notes[n], p * instance.Length + n - startFrameIdx);
+                        pattern.Notes[n] = function(pattern.Notes[n], Song.GetPatternInstanceStartNote(p) + n - startFrameIdx);
                     }
 
                     instance.UpdateLastValidNote();
