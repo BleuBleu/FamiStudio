@@ -172,12 +172,15 @@ namespace FamiStudio
 
         public DPCMSample CreateDPCMSample(string name, byte[] data)
         {
-            DPCMSample sample = samples.Find(s => s.Name == name);
+            var sampleSize = GetTotalSampleSize();
+            var sample = samples.Find(s => s.Name == name);
+
             if (sample != null)
             {
-                sample.Data = data;
+                if (sampleSize - sample.Data.Length + data.Length <= MaxSampleSize)
+                    sample.Data = data;
             }
-            else
+            else if (sampleSize + data.Length <= MaxSampleSize)
             {
                 sample = new DPCMSample(GenerateUniqueId(), name, data);
                 samples.Add(sample);
@@ -194,7 +197,7 @@ namespace FamiStudio
 
         public void MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
         {
-            if (NoteSupportsDPCM(note))
+            if (sample != null && NoteSupportsDPCM(note))
             {
                 note -= Note.DPCMNoteMin;
 

@@ -576,18 +576,18 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private bool GetPatternForCoord(int x, int y, out int track, out int instanceIdx)
+        private bool GetPatternForCoord(int x, int y, out int track, out int patternIdx)
         {
             var noteIdx = (int)((x - trackNameSizeX + scrollX) / noteSizeX);
 
             if (noteIdx < 0 || noteIdx > Song.GetPatternInstanceStartNote(Song.Length))
             {
                 track = -1;
-                instanceIdx = -1;
+                patternIdx = -1;
                 return false;
             }
 
-            instanceIdx = Song.FindPatternInstanceIndex(noteIdx, out _);
+            patternIdx = Song.FindPatternInstanceIndex(noteIdx, out _);
             track = (y - headerSizeY) / trackSizeY;
 
             return (x > trackNameSizeX && y > headerSizeY && track >= 0 && track < Song.Channels.Length);
@@ -1204,23 +1204,23 @@ namespace FamiStudio
             base.OnMouseDoubleClick(e);
 
             bool left = (e.Button & MouseButtons.Left) != 0;
-            bool inPatternZone = GetPatternForCoord(e.X, e.Y, out int channelIdx, out int instanceIdx);
+            bool inPatternZone = GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx);
 
             if (left)
             {
                 if (IsMouseInHeader(e))
                 {
                     var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 240);
-                    dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternInstanceHasCustomLength(instanceIdx));
-                    dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternInstanceLength(instanceIdx), 16, Song.DefaultPatternLength);
+                    dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternInstanceHasCustomLength(patternIdx));
+                    dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternInstanceLength(patternIdx), 16, Song.DefaultPatternLength);
                     dlg.Properties.PropertyChanged += Properties_PropertyChanged;
-                    dlg.Properties.SetPropertyEnabled(1, Song.PatternInstanceHasCustomLength(instanceIdx));
+                    dlg.Properties.SetPropertyEnabled(1, Song.PatternInstanceHasCustomLength(patternIdx));
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                        Song.SetPatternInstanceLength(instanceIdx, dlg.Properties.GetPropertyValue<bool>(0) ? dlg.Properties.GetPropertyValue<int>(1) : 0);
+                        Song.SetPatternInstanceLength(patternIdx, dlg.Properties.GetPropertyValue<bool>(0) ? dlg.Properties.GetPropertyValue<int>(1) : 0);
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                         PatternModified?.Invoke();
@@ -1229,7 +1229,7 @@ namespace FamiStudio
                 else if (inPatternZone)
                 {
                     var channel = Song.Channels[channelIdx];
-                    var pattern = channel.PatternInstances[instanceIdx].Pattern;
+                    var pattern = channel.PatternInstances[patternIdx].Pattern;
 
                     if (pattern != null)
                     {

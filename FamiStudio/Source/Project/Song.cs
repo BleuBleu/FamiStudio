@@ -259,30 +259,30 @@ namespace FamiStudio
             return null;
         }
 
-        public void SetPatternInstanceLength(int instanceIdx, int len)
+        public void SetPatternInstanceLength(int patternIdx, int len)
         {
             if (len < 0 || len >= Pattern.MaxLength)
-                patternInstanceLengths[instanceIdx] = 0;
+                patternInstanceLengths[patternIdx] = 0;
             else
-                patternInstanceLengths[instanceIdx] = (byte)len;
+                patternInstanceLengths[patternIdx] = (byte)len;
 
             UpdatePatternInstancesStartNotes();
         }
 
-        public bool PatternInstanceHasCustomLength(int instanceIdx)
+        public bool PatternInstanceHasCustomLength(int patternIdx)
         {
-            return patternInstanceLengths[instanceIdx] != 0;
+            return patternInstanceLengths[patternIdx] != 0;
         }
 
-        public int GetPatternInstanceLength(int instanceIdx)
+        public int GetPatternInstanceLength(int patternIdx)
         {
-            int len = patternInstanceLengths[instanceIdx];
+            int len = patternInstanceLengths[patternIdx];
             return len == 0 ? patternLength : len;
         }
 
-        public int GetPatternInstanceStartNote(int instanceIdx, int note = 0)
+        public int GetPatternInstanceStartNote(int patternIdx, int note = 0)
         {
-            return patternInstancesStartNote[instanceIdx] + note;
+            return patternInstancesStartNote[patternIdx] + note;
         }
 
         public Channel GetChannelByType(int type)

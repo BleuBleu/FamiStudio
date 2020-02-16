@@ -37,7 +37,6 @@
 		- Truncate pattern to their maxlength.
 		- Make dark version of seq header icon.
 		- What to do with bar length on shorter patterns?
-- instanceIdx -> patternIdx
 - NSF Import:
 	- Triangle in SMB3 has volumes of 24 (triangle has no volume!)
 	- Avoid setting the volumes on new notes. Only if state.volume == 0.
@@ -45,8 +44,6 @@
 - Transform dialog:
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion
-- Help button -> Documentation website.	
-- Crash when importing FamiTracker songs with > 16KB samples.
 - Test installer on Japanese machine.
 
 ========================

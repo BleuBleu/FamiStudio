@@ -1968,8 +1968,18 @@ namespace FamiStudio
             {
                 if (App.Project.NoteSupportsDPCM(noteValue))
                 {
+                    var save    = FamiStudioForm.IsKeyDown(Keys.S);
                     var mapping = App.Project.GetDPCMMapping(noteValue);
-                    if (left && mapping == null)
+
+                    if (left && save && mapping != null && mapping.Sample != null)
+                    {
+                        var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc");
+                        if (filename != null)
+                        {
+                            File.WriteAllBytes(filename, mapping.Sample.Data);
+                        }
+                    }
+                    else if (left && mapping == null)
                     {
                         var filename = PlatformUtils.ShowOpenFileDialog("Open File", "DPCM Samples (*.dmc)|*.dmc");
                         if (filename != null)
@@ -1993,7 +2003,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    PlatformUtils.MessageBox("DPCM samples are only allowed between C1 and D6", "Error", MessageBoxButtons.OK);
+                    App.DisplayWarning("DPCM samples are only allowed between C1 and D6");
                 }
             }
         }
@@ -2230,7 +2240,7 @@ namespace FamiStudio
                             if (mapping == null)
                                 tooltip = "{MouseLeft} Load DPCM sample - {MouseWheel} Pan";
                             else
-                                tooltip = "{MouseLeft}{MouseLeft} Sample properties - {MouseRight} Delete sample {MouseWheel} Pan";
+                                tooltip = "{S} {MouseLeft} Save sample to file - {MouseLeft}{MouseLeft} Sample properties - {MouseRight} Delete sample {MouseWheel} Pan";
                         }
                         else
                             tooltip = "Samples must be between C1 and D6";

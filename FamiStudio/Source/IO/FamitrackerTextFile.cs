@@ -159,10 +159,13 @@ namespace FamiStudio
                 }
                 else if (line.StartsWith("DPCM"))
                 {
-                    var param = line.Substring(6).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var s in param)
+                    if (currentDpcm != null) // Can happen if more than 16KB of samples
                     {
-                        currentDpcm.Data[dpcmWriteIdx++] = Convert.ToByte(s, 16);
+                        var param = line.Substring(6).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var s in param)
+                        {
+                            currentDpcm.Data[dpcmWriteIdx++] = Convert.ToByte(s, 16);
+                        }
                     }
                 }
                 else if (line.StartsWith("KEYDPCM"))
