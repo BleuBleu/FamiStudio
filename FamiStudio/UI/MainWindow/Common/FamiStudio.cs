@@ -440,7 +440,7 @@ namespace FamiStudio
 
         public void OpenTransformDialog()
         {
-            var dlg = new TransformDialog(mainForm.Bounds);
+            var dlg = new TransformDialog(mainForm.Bounds, this);
             dlg.ShowDialog();
         }
 
