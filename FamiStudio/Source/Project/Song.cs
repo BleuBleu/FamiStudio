@@ -261,7 +261,7 @@ namespace FamiStudio
 
         public void SetPatternInstanceLength(int patternIdx, int len)
         {
-            if (len < 0 || len >= Pattern.MaxLength)
+            if (len <= 0 || len >= Pattern.MaxLength)
                 patternInstanceLengths[patternIdx] = 0;
             else
                 patternInstanceLengths[patternIdx] = (byte)len;

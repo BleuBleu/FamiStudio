@@ -85,6 +85,7 @@ namespace FamiStudio
         bool showSelection = true;
         int captureStartX = -1;
         int captureStartY = -1;
+        bool fullColumnSelection = false;
         int minSelectedChannelIdx = -1;
         int maxSelectedChannelIdx = -1;
         int minSelectedPatternIdx = -1;
@@ -207,6 +208,7 @@ namespace FamiStudio
 
         private void ClearSelection()
         {
+            fullColumnSelection = false;
             minSelectedChannelIdx = -1;
             maxSelectedChannelIdx = -1;
             minSelectedPatternIdx = -1;
@@ -297,7 +299,7 @@ namespace FamiStudio
             // Track name background
             g.FillRectangle(0, 0, trackNameSizeX, Height, whiteKeyBrush);
 
-            if (IsSelectionValid())
+            if (IsSelectionValid() && fullColumnSelection)
             {
                 g.PushClip(trackNameSizeX, 0, Width, headerSizeY);
                 g.PushTranslation(trackNameSizeX, 0);
@@ -774,6 +776,7 @@ namespace FamiStudio
                                 maxSelectedPatternIdx = patternIdx;
                             }
 
+                            fullColumnSelection = false;
                             return;
                         }
                         else if (!IsPatternSelected(channelIdx, patternIdx) && pattern != null)
@@ -782,6 +785,7 @@ namespace FamiStudio
                             maxSelectedChannelIdx = channelIdx;
                             minSelectedPatternIdx = patternIdx;
                             maxSelectedPatternIdx = patternIdx;
+                            fullColumnSelection = false;
                         }
 
                         selectionDragAnchorPatternIdx = patternIdx;
@@ -803,8 +807,10 @@ namespace FamiStudio
             }
         }
 
-        private Pattern[,] GetSelectedPatterns()
+        private Pattern[,] GetSelectedPatterns(out PatternCopyExtraInfo[] extraInfo)
         {
+            extraInfo = null;
+
             if (!IsSelectionValid())
                 return null;
 
@@ -818,6 +824,18 @@ namespace FamiStudio
                 }
             }
 
+            if (fullColumnSelection)
+            {
+                extraInfo = new PatternCopyExtraInfo[patterns.GetLength(0)];
+
+                for (int i = 0; i < patterns.GetLength(0); i++)
+                {
+                    extraInfo[i].customLength = 
+                        Song.PatternInstanceHasCustomLength(minSelectedPatternIdx + i) ? 
+                            Song.GetPatternInstanceLength(minSelectedPatternIdx + i) : 0;
+                }
+            }
+
             return patterns;
         }
 
@@ -828,7 +846,8 @@ namespace FamiStudio
         {
             if (IsSelectionValid())
             {
-                ClipboardUtils.SavePatterns(App.Project, GetSelectedPatterns());
+                var selPatterns = GetSelectedPatterns(out var extraInfo);
+                ClipboardUtils.SavePatterns(App.Project, selPatterns, extraInfo);
             }
         }
 
@@ -836,7 +855,8 @@ namespace FamiStudio
         {
             if (IsSelectionValid())
             {
-                ClipboardUtils.SavePatterns(App.Project, GetSelectedPatterns());
+                var selPatterns = GetSelectedPatterns(out var extraInfo);
+                ClipboardUtils.SavePatterns(App.Project, selPatterns, extraInfo);
                 DeleteSelection();
             }
         }
@@ -856,12 +876,27 @@ namespace FamiStudio
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 
-            var patterns = ClipboardUtils.LoadPatterns(App.Project, Song, createMissingInstrument);
+            var patterns = ClipboardUtils.LoadPatterns(App.Project, Song, createMissingInstrument, out var extraInfo);
 
             if (patterns == null)
             {
                 App.UndoRedoManager.AbortTransaction();
                 return;
+            }
+
+            foreach (var info in extraInfo)
+            {
+                if (info.customLength != 0)
+                {
+                    bool applyCustomPatternLengths = PlatformUtils.MessageBox($"You are pasting patterns with custom lengths, do you want to apply these?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+
+                    if (applyCustomPatternLengths)
+                    {
+                        for (int i = 0; i < patterns.GetLength(0); i++)
+                            Song.SetPatternInstanceLength(i + minSelectedPatternIdx, extraInfo[i].customLength);
+                    }
+                    break;
+                }
             }
 
             for (int i = 0; i < patterns.GetLength(0); i++)
@@ -929,22 +964,16 @@ namespace FamiStudio
                     {
                         var patternIdx = Song.FindPatternInstanceIndex((int)((e.X - trackNameSizeX + scrollX) / noteSizeX), out _);
                         var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
-
-                        Pattern[,] tmpPatterns = new Pattern[maxSelectedChannelIdx - minSelectedChannelIdx + 1, maxSelectedPatternIdx - minSelectedPatternIdx + 1];
+                        var tmpPatterns = GetSelectedPatterns(out var extraInfo);
 
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
-                        for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
-                        {
-                            for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                            {
-                                tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx] = Song.Channels[i].PatternInstances[j].Pattern;
-                                if (!copy)
-                                {
-                                    Song.Channels[i].PatternInstances[j].Pattern = null;
-                                }
-                            }
-                        }
+                        bool applyCustomPatternLengths = false;
+                        if (extraInfo != null)
+                            applyCustomPatternLengths = PlatformUtils.MessageBox($"You are moving patterns with custom lengths, do you want to move these?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+
+                        if (!copy)
+                            DeleteSelection(false, applyCustomPatternLengths && !copy);
 
                         for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
                         {
@@ -952,6 +981,12 @@ namespace FamiStudio
                             {
                                 Song.Channels[i].PatternInstances[j + patternIdxDelta].Pattern = tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx];
                             }
+                        }
+
+                        if (applyCustomPatternLengths)
+                        {
+                            for (int i = 0; i < extraInfo.Length; i++)
+                                Song.SetPatternInstanceLength(i + minSelectedPatternIdx, extraInfo[i].customLength);
                         }
 
                         App.UndoRedoManager.EndTransaction();
@@ -979,9 +1014,12 @@ namespace FamiStudio
             }
         }
 
-        private void DeleteSelection()
+        private void DeleteSelection(bool trans = true, bool clearCustomPatternLengths = false)
         {
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+            if (trans)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+            }
 
             for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
             {
@@ -991,8 +1029,17 @@ namespace FamiStudio
                 }
             }
 
-            App.UndoRedoManager.EndTransaction();
-            ConditionalInvalidate();
+            if (clearCustomPatternLengths)
+            {
+                for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                    Song.SetPatternInstanceLength(j, 0);
+            }
+
+            if (trans)
+            {
+                App.UndoRedoManager.EndTransaction();
+                ConditionalInvalidate();
+            }
         }
 
 #if FAMISTUDIO_WINDOWS
@@ -1068,6 +1115,7 @@ namespace FamiStudio
 
             if (first)
             {
+                fullColumnSelection = true;
                 minSelectedPatternIdx = patternIdx;
                 maxSelectedPatternIdx = patternIdx;
                 minSelectedChannelIdx = 0;
@@ -1328,6 +1376,7 @@ namespace FamiStudio
             buffer.Serialize(ref selectedChannel);
             buffer.Serialize(ref scrollX);
             buffer.Serialize(ref zoomLevel);
+            buffer.Serialize(ref fullColumnSelection);
             buffer.Serialize(ref minSelectedChannelIdx);
             buffer.Serialize(ref maxSelectedChannelIdx);
             buffer.Serialize(ref minSelectedPatternIdx);

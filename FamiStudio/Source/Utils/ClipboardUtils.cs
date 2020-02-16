@@ -364,7 +364,7 @@ namespace FamiStudio
             return values;
         }
 
-        public static void SavePatterns(Project project, Pattern[,] patterns)
+        public static void SavePatterns(Project project, Pattern[,] patterns, PatternCopyExtraInfo[] extraInfo = null)
         {
             if (patterns == null)
             {
@@ -376,6 +376,8 @@ namespace FamiStudio
             var uniquePatterns = new HashSet<Pattern>();
             var numPatterns = patterns.GetLength(0);
             var numChannels = patterns.GetLength(1);
+
+            Debug.Assert(extraInfo == null || extraInfo.Length == numPatterns);
 
             for (int i = 0; i < numPatterns; i++)
             {
@@ -419,6 +421,21 @@ namespace FamiStudio
                 }
             }
 
+            bool hasExtraInfo = false;
+
+            if (extraInfo != null)
+            {
+                hasExtraInfo = true;
+                serializer.Serialize(ref hasExtraInfo);
+
+                for (int i = 0; i < numPatterns; i++)
+                    serializer.Serialize(ref extraInfo[i].customLength);
+            }
+            else
+            {
+                serializer.Serialize(ref hasExtraInfo);
+            }
+
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
             var clipboardData = new List<byte>();
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardPatterns));
@@ -427,12 +444,15 @@ namespace FamiStudio
             SetClipboardDataInternal(clipboardData.ToArray());
         }
 
-        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments)
+        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments, out PatternCopyExtraInfo[] extraInfo)
         {
             var buffer = GetClipboardDataInternal(MagicNumberClipboardPatterns);
 
             if (buffer == null)
+            {
+                extraInfo = null;
                 return null;
+            }
 
             var decompressedBuffer = Compression.DecompressBytes(buffer, 4);
             var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
@@ -457,6 +477,20 @@ namespace FamiStudio
                 }
             }
 
+            bool hasExtraInfo = false;
+            serializer.Serialize(ref hasExtraInfo);
+
+            if (hasExtraInfo)
+            {
+                extraInfo = new PatternCopyExtraInfo[numPatterns];
+                for (int i = 0; i < numPatterns; i++)
+                    serializer.Serialize(ref extraInfo[i].customLength);
+            }
+            else
+            {
+                extraInfo = null;
+            }
+
             return patterns;
         }
 
@@ -464,5 +498,10 @@ namespace FamiStudio
         {
             SetClipboardDataInternal(null);
         }
+    }
+
+    public struct PatternCopyExtraInfo
+    {
+        public int customLength;
     }
 }
