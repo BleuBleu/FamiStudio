@@ -138,6 +138,27 @@ namespace FamiStudio
             return pattern;
         }
 
+        public uint ComputeCRC(uint crc = 0)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(maxInstanceLength), crc);
+
+            for (int i = 0; i < maxInstanceLength; i++)
+                crc = notes[i].ComputeCRC(crc);
+
+            return crc;
+        }
+
+        public bool IdenticalTo(Pattern other)
+        {
+            for (int i = 0; i < maxInstanceLength; i++)
+            {
+                if (!notes[i].IdenticalTo(other.notes[i]))
+                    return false;
+            }
+
+            return true;
+        }
+
 #if DEBUG
         public void Validate(Channel channel)
         {

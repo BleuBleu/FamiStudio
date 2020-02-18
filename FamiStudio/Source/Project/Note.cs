@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 
 namespace FamiStudio
 {
     public struct Note
     {
-        public static readonly string[] NoteNames = 
+        public static readonly string[] NoteNames =
         {
             "C",
             "C#",
@@ -160,7 +160,7 @@ namespace FamiStudio
                 Vibrato &= 0xf0;
                 Vibrato |= value;
 
-                if (Vibrato != VibratoInvalid) 
+                if (Vibrato != VibratoInvalid)
                     VibratoSpeed = (byte)Utils.Clamp(VibratoSpeed, 0, VibratoSpeedMax);
             }
         }
@@ -227,7 +227,7 @@ namespace FamiStudio
 
             return NoteNames[note] + octave.ToString();
         }
-        
+
         public bool HasValidEffectValue(int fx)
         {
             switch (fx)
@@ -241,7 +241,7 @@ namespace FamiStudio
 
             return false;
         }
-        
+
         public int GetEffectValue(int fx)
         {
             switch (fx)
@@ -294,7 +294,7 @@ namespace FamiStudio
 
             return false;
         }
-        
+
         public static int GetEffectMinValue(Song song, int fx)
         {
             switch (fx)
@@ -318,7 +318,7 @@ namespace FamiStudio
 
             return 0;
         }
-        
+
         public static int GetEffectDefaultValue(Song song, int fx)
         {
             switch (fx)
@@ -336,6 +336,25 @@ namespace FamiStudio
             if (note < MusicalNoteMin) return MusicalNoteMin;
             if (note > MusicalNoteMax) return MusicalNoteMax;
             return note;
+        }
+
+        public uint ComputeCRC(uint crc = 0)
+        {
+            crc = CRC32.Compute(new byte[] { Value, Flags, Volume, Vibrato, Speed, Slide, (byte)Pitch }, crc);
+            crc = CRC32.Compute(BitConverter.GetBytes(Instrument == null ? -1 : Instrument.Id), crc);
+            return crc;
+        }
+
+        public bool IdenticalTo(Note other)
+        {
+            return Value      == other.Value   &&
+                   Flags      == other.Flags   &&
+                   Volume     == other.Volume  &&
+                   Vibrato    == other.Vibrato &&
+                   Speed      == other.Speed   &&
+                   Slide      == other.Slide   && 
+                   Pitch      == other.Pitch   && 
+                   Instrument == other.Instrument;
         }
 
         public void SerializeState(ProjectBuffer buffer)

@@ -112,6 +112,21 @@ namespace FamiStudio
                     if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteUnusedPatterns) || (mergeIdenticalInstruments || deleteUnusedInstruments || deleteUnusedSamples))
                     {
                         app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                        if (mergeIdenticalPatterns)
+                        {
+                            foreach (var songId in songIds)
+                            {
+                                var song = app.Project.GetSong(songId);
+                                song.MergeIdenticalPatterns();
+                            }
+                        }
+
+                        if (deleteUnusedInstruments)
+                        {
+                            app.Project.DeleteUnusedInstruments();
+                        }
+
                         app.UndoRedoManager.EndTransaction();
                     }
                 }

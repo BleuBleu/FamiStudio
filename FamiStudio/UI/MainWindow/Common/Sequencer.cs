@@ -857,7 +857,7 @@ namespace FamiStudio
             {
                 var selPatterns = GetSelectedPatterns(out var extraInfo);
                 ClipboardUtils.SavePatterns(App.Project, selPatterns, extraInfo);
-                DeleteSelection();
+                DeleteSelection(true, extraInfo != null);
             }
         }
 
@@ -884,21 +884,6 @@ namespace FamiStudio
                 return;
             }
 
-            foreach (var info in extraInfo)
-            {
-                if (info.customLength != 0)
-                {
-                    bool applyCustomPatternLengths = PlatformUtils.MessageBox($"You are pasting patterns with custom lengths, do you want to apply these?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-                    if (applyCustomPatternLengths)
-                    {
-                        for (int i = 0; i < patterns.GetLength(0); i++)
-                            Song.SetPatternInstanceLength(i + minSelectedPatternIdx, extraInfo[i].customLength);
-                    }
-                    break;
-                }
-            }
-
             for (int i = 0; i < patterns.GetLength(0); i++)
             {
                 for (int j = 0; j < patterns.GetLength(1); j++)
@@ -912,6 +897,12 @@ namespace FamiStudio
                         Song.Channels[pattern.ChannelType].PatternInstances[i + minSelectedPatternIdx].Pattern = pattern;
                     }
                 }
+            }
+
+            if (extraInfo != null)
+            {
+                for (int i = 0; i < patterns.GetLength(0); i++)
+                    Song.SetPatternInstanceLength(i + minSelectedPatternIdx, extraInfo[i].customLength);
             }
 
             App.UndoRedoManager.EndTransaction();
@@ -968,25 +959,21 @@ namespace FamiStudio
 
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
-                        bool applyCustomPatternLengths = false;
-                        if (extraInfo != null)
-                            applyCustomPatternLengths = PlatformUtils.MessageBox($"You are moving patterns with custom lengths, do you want to move these?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
-
                         if (!copy)
-                            DeleteSelection(false, applyCustomPatternLengths && !copy);
+                            DeleteSelection(false, extraInfo != null && !copy);
 
                         for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
                         {
                             for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                             {
-                                Song.Channels[i].PatternInstances[j + patternIdxDelta].Pattern = tmpPatterns[i - minSelectedChannelIdx, j - minSelectedPatternIdx];
+                                Song.Channels[i].PatternInstances[j + patternIdxDelta].Pattern = tmpPatterns[j - minSelectedPatternIdx, i - minSelectedChannelIdx];
                             }
                         }
 
-                        if (applyCustomPatternLengths)
+                        if (extraInfo != null)
                         {
-                            for (int i = 0; i < extraInfo.Length; i++)
-                                Song.SetPatternInstanceLength(i + minSelectedPatternIdx, extraInfo[i].customLength);
+                            for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                                Song.SetPatternInstanceLength(j + patternIdxDelta, extraInfo[j - minSelectedPatternIdx].customLength);
                         }
 
                         App.UndoRedoManager.EndTransaction();

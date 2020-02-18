@@ -261,7 +261,7 @@ namespace FamiStudio
 
         public void SetPatternInstanceLength(int patternIdx, int len)
         {
-            if (len <= 0 || len >= Pattern.MaxLength)
+            if (len <= 0 || len >= Pattern.MaxLength || len == patternLength)
                 patternInstanceLengths[patternIdx] = 0;
             else
                 patternInstanceLengths[patternIdx] = (byte)len;
@@ -437,6 +437,12 @@ namespace FamiStudio
                 Debug.Assert(len == 0 || len != patternLength);
                 patternInstancesStartNote[i] = patternInstancesStartNote[i - 1] + (len == 0 ? patternLength : len);
             }
+        }
+
+        public void MergeIdenticalPatterns()
+        {
+            foreach (var channel in channels)
+                channel.MergeIdenticalPatterns();
         }
 
         public void SerializeState(ProjectBuffer buffer)

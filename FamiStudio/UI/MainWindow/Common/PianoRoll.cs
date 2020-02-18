@@ -891,6 +891,7 @@ namespace FamiStudio
                 }
                 if (pasteFx)
                 {
+                    note.Pitch = newNote.Pitch;
                     note.Speed = newNote.Speed;
                     note.Vibrato = newNote.Vibrato;
                 }

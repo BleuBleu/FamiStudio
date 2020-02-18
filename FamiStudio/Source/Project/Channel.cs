@@ -504,6 +504,36 @@ namespace FamiStudio
                 pattern.UpdateMaxInstanceLength();
         }
 
+        public void MergeIdenticalPatterns()
+        {
+            var patternCrcMap = new Dictionary<uint, Pattern>();
+
+            for (int i = 0; i < patterns.Count; )
+            {
+                var pattern = patterns[i];
+                var crc = pattern.ComputeCRC();
+
+                if (patternCrcMap.TryGetValue(crc, out var matchingPattern))
+                {
+                    Debug.Assert(pattern.IdenticalTo(matchingPattern));
+
+                    patterns.RemoveAt(i);
+
+                    // MATTT: Update max instance length, last notes, etc.
+                    for (int j = 0; j < song.Length; j++)
+                    {
+                        if (patternInstances[j].Pattern == pattern)
+                            patternInstances[j].Pattern = matchingPattern;
+                    }
+                }
+                else
+                {
+                    patternCrcMap[crc] = pattern;
+                    i++;
+                }
+            }
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsWriting)

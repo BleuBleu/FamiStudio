@@ -37,13 +37,22 @@
 		- Truncate pattern to their maxlength.
 		- Make dark version of seq header icon.
 		- What to do with bar length on shorter patterns?
+	- When 2 icons (loop + custom) are in same pattern, looks like shit.
+	- Dont display icon at high zoom levels? Or at least clip them to pattern size.
 - NSF Import:
 	- Avoid setting the volumes on new notes. Only if state.volume == 0.
 - Transform dialog:
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion
 - Test installer on Japanese machine.
+
 * BUG: If select really fast in sequencer, selection makes no sense.
+* BUG: In arpeggion, negative values are offset by 1 when clicking.
+* BUG: Lots of bad last volumes in castlevania 3 saw track.
+* BUG: After rename of instrument, it some asks if you want to replace an instrument or envelope. WTF?
+* BUG: Replace instrument with drag doesnt work anymore (ask for volume envelope...)
+* BUG: When an instrument is low in the lost of instrument, the popup appears to low and you cant do anything.
+* CRASH: GetLastValidNote gets asserts. (Likely due to DeleteSelectedNotes() not calling UpdateLastValid()).
 
 ========================
 
