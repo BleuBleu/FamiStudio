@@ -292,9 +292,9 @@ namespace FamiStudio
 
         private static Pattern GetOrCreatePattern(Channel channel, int patternIdx)
         {
-            if (channel.PatternInstances[patternIdx].Pattern == null)
-                channel.PatternInstances[patternIdx].Pattern = channel.CreatePattern();
-            return channel.PatternInstances[patternIdx].Pattern;
+            if (channel.PatternInstances[patternIdx] == null)
+                channel.PatternInstances[patternIdx] = channel.CreatePattern();
+            return channel.PatternInstances[patternIdx];
         }
 
         private static Instrument GetDutyInstrument(Project project, Channel channel, int duty)

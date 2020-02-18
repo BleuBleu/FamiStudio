@@ -91,7 +91,6 @@
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
-    <Compile Include="Source\Project\PatternInstance.cs" />
     <Compile Include="Source\Utils\MIDI.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
@@ -254,6 +253,8 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\CustomPattern%402x.png" />
+    <EmbeddedResource Include="Resources\CustomPattern.png" />
     <EmbeddedResource Include="Resources\Help%402x.png" />
     <EmbeddedResource Include="Resources\Help.png" />
     <EmbeddedResource Include="Resources\Transform%402x.png" />

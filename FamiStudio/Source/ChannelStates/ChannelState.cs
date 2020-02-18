@@ -30,7 +30,7 @@ namespace FamiStudio
 
         public void ProcessEffects(Song song, int patternIdx, int noteIdx, ref int speed, bool allowJump = true)
         {
-            var pattern = song.GetChannelByType(channelType).PatternInstances[patternIdx].Pattern;
+            var pattern = song.GetChannelByType(channelType).PatternInstances[patternIdx];
 
             if (pattern == null)
                 return;
@@ -62,7 +62,7 @@ namespace FamiStudio
         public void Advance(Song song, int patternIdx, int noteIdx)
         {
             var channel = song.GetChannelByType(channelType);
-            var pattern = channel.PatternInstances[patternIdx].Pattern;
+            var pattern = channel.PatternInstances[patternIdx];
 
             if (pattern == null)
                 return;

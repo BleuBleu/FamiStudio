@@ -325,7 +325,7 @@ namespace FamiStudio
                     {
                         foreach (var p in c.Patterns)
                         {
-                            for (int n = 0; n < p.MaxInstanceLength; n++)
+                            for (int n = 0; n < p.Length; n++)
                             {
                                 var note = p.Notes[n];
 
@@ -382,7 +382,7 @@ namespace FamiStudio
         {
             foreach (var channel in song.Channels)
             {
-                var pattern = channel.PatternInstances[patternIdx].Pattern;
+                var pattern = channel.PatternInstances[patternIdx];
                 if (pattern != null && pattern.Notes[noteIdx].HasValidEffectValue(effect))
                 {
                     return pattern.Notes[noteIdx].GetEffectValue(effect);
@@ -473,7 +473,7 @@ namespace FamiStudio
                 for (int p = 0; p < song.Length; p++)
                 {
                     var prevNoteValue = Note.NoteInvalid;
-                    var pattern = channel.PatternInstances[p].Pattern == null ? emptyPattern : channel.PatternInstances[p].Pattern;
+                    var pattern = channel.PatternInstances[p] == null ? emptyPattern : channel.PatternInstances[p];
                     var patternBuffer = new List<string>();
 
                     if (!test && p == song.LoopPoint)
@@ -672,7 +672,7 @@ namespace FamiStudio
             {
                 foreach (var pattern in song.Channels[c].Patterns)
                 {
-                    for (int n = 0; n < pattern.MaxInstanceLength; n++)
+                    for (int n = 0; n < pattern.Length; n++)
                     {
                         if (pattern.Notes[n].HasSpeed)
                             speedEffectCount[c]++;
@@ -755,7 +755,7 @@ namespace FamiStudio
                     {
                         foreach (var pattern in channel.Patterns)
                         {
-                            for (int i = 0; i < pattern.MaxInstanceLength; i++)
+                            for (int i = 0; i < pattern.Length; i++)
                             {
                                 if (pattern.Notes[i].IsRelease)
                                 {

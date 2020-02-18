@@ -227,7 +227,7 @@ namespace FamiStudio
 
             return NoteNames[note] + octave.ToString();
         }
-
+        
         public bool HasValidEffectValue(int fx)
         {
             switch (fx)
@@ -241,7 +241,7 @@ namespace FamiStudio
 
             return false;
         }
-
+        
         public int GetEffectValue(int fx)
         {
             switch (fx)

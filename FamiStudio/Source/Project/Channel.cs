@@ -8,14 +8,14 @@ namespace FamiStudio
     public class Channel
     {
         private Song song;
-        private PatternInstance[] patternInstances = new PatternInstance[Song.MaxLength];
+        private Pattern[] patternInstances = new Pattern[Song.MaxLength];
         private List<Pattern> patterns = new List<Pattern>();
         private int type;
 
         public int Type => type;
         public string Name => ChannelNames[(int)type];
         public Song Song => song;
-        public PatternInstance[] PatternInstances => patternInstances;
+        public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
         public bool IsExpansionChannel => type >= ExpansionAudioStart;
 
@@ -87,20 +87,12 @@ namespace FamiStudio
         public Channel()
         {
             // For serialization
-            CreatePatternInstances();
         }
 
         public Channel(Song song, int type, int songLength)
         {
             this.song = song;
             this.type = type;
-            CreatePatternInstances();
-        }
-
-        public void CreatePatternInstances()
-        {
-            for (int i = 0; i < patternInstances.Length; i++)
-                patternInstances[i] = new PatternInstance(song, type, i);
         }
 
         public Pattern GetPattern(string name)
@@ -162,29 +154,6 @@ namespace FamiStudio
             return true;
         }
 
-        public void DuplicateInstancesWithDifferentLengths()
-        {
-            var instanceLengthMap = new Dictionary<Pattern, int>();
-
-            for (int i = 0; i < song.Length; i++)
-            {
-                var inst = patternInstances[i];
-
-                if (inst.Pattern != null)
-                {
-                    if (instanceLengthMap.TryGetValue(inst.Pattern, out var prevLength))
-                    {
-                        if (inst.Length != prevLength)
-                            inst.Pattern = inst.Pattern.ShallowClone();
-                    }
-
-                    instanceLengthMap[inst.Pattern] = inst.Length;
-                }
-            }
-
-            UpdatePatternsMaxInstanceLength();
-        }
-
         public Pattern CreatePattern(string name = null)
         {
             if (name == null)
@@ -214,9 +183,9 @@ namespace FamiStudio
         {
             for (int i = 0; i < patternInstances.Length; i++)
             {
-                if (patternInstances[i].Pattern != null && !patternInstances[i].Pattern.HasAnyNotes)
+                if (patternInstances[i] != null && !patternInstances[i].HasAnyNotes)
                 {
-                    patternInstances[i].Pattern = null;
+                    patternInstances[i] = null;
                 }
             }
 
@@ -263,12 +232,12 @@ namespace FamiStudio
 
             for (int i = 0; i < song.Length; i++)
             {
-                var patInst = PatternInstances[i];
-                if (patInst.Pattern != null)
+                var pattern = PatternInstances[i];
+                if (pattern != null)
                 {
-                    for (int j = 0; j < patInst.Length; j++)
+                    for (int j = 0; j < pattern.Length; j++)
                     {
-                        var n = patInst.Pattern.Notes[j];
+                        var n = pattern.Notes[j];
                         if (n.IsValid && !n.IsStop)
                         {
                             if (n.Value < min.Value) min = n;
@@ -287,7 +256,7 @@ namespace FamiStudio
             HashSet<Pattern> usedPatterns = new HashSet<Pattern>();
             for (int i = 0; i < song.Length; i++)
             {
-                var inst = patternInstances[i].Pattern;
+                var inst = patternInstances[i];
                 if (inst != null)
                 {
                     usedPatterns.Add(inst);
@@ -345,7 +314,7 @@ namespace FamiStudio
 
         public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
         {
-            var note = patternInstances[patternIdx].Pattern.Notes[noteIdx];
+            var note = patternInstances[patternIdx].Notes[noteIdx];
 
             Debug.Assert(note.IsMusical);
 
@@ -385,7 +354,7 @@ namespace FamiStudio
 
             for (int n = noteIdx + 1; n < patternLength && noteCount < maxNotes; n++, noteCount++)
             {
-                var tmpNote = patternInstances[patternIdx].Pattern.Notes[n];
+                var tmpNote = patternInstances[patternIdx].Notes[n];
                 if (tmpNote.IsMusical || tmpNote.IsStop)
                     return song.GetPatternInstanceStartNote(patternIdx, n) - song.GetPatternInstanceStartNote(patternIdx, noteIdx);
             }
@@ -411,7 +380,7 @@ namespace FamiStudio
             int p = patternIdx;
             int n = noteIdx;
 
-            var pattern = patternInstances[p].Pattern;
+            var pattern = patternInstances[p];
             if (pattern != null)
             {
                 while (n >= 0 && !pattern.Notes[n].IsValid) n--;
@@ -434,13 +403,13 @@ namespace FamiStudio
             p--;
             while (p >= 0)
             {
-                var patInst = patternInstances[p];
-                if (patInst.Pattern != null && patInst.LastValidNoteTime >= 0)
+                pattern = patternInstances[p];
+                if (pattern != null && pattern.LastValidNoteTime >= 0)
                 {
-                    if (patInst.LastValidNote.IsValid &&
-                        patInst.LastValidNote.Value == noteValue)
+                    if (pattern.LastValidNote.IsValid && 
+                        pattern.LastValidNote.Value == noteValue)
                     {
-                        n = patInst.LastValidNoteTime;
+                        n = pattern.LastValidNoteTime;
                         patternIdx = p;
                         noteIdx = n;
                         return true;
@@ -457,7 +426,7 @@ namespace FamiStudio
         public void ClearPatternsInstancesPastSongLength()
         {
             for (int i = song.Length; i < patternInstances.Length; i++)
-                patternInstances[i].Pattern = null;
+                patternInstances[i] = null;
         }
 
         public void ClearNotesPastSongLength()
@@ -492,22 +461,11 @@ namespace FamiStudio
             Debug.Assert(this == song.GetChannelByType(type));
             Debug.Assert(this.song == song);
             foreach (var inst in patternInstances)
-            {
-                Debug.Assert(inst.Pattern == null || patterns.Contains(inst.Pattern));
-                inst.Validate(this);
-            }
+                Debug.Assert(inst == null || patterns.Contains(inst));
             foreach (var pat in patterns)
-            {
                 pat.Validate(this);
-            }
         }
 #endif
-
-        public void UpdatePatternsMaxInstanceLength()
-        {
-            foreach (var pattern in patterns)
-                pattern.UpdateMaxInstanceLength();
-        }
 
         public void MergeIdenticalPatterns()
         {
@@ -527,8 +485,8 @@ namespace FamiStudio
                     // MATTT: Update max instance length, last notes, etc.
                     for (int j = 0; j < song.Length; j++)
                     {
-                        if (patternInstances[j].Pattern == pattern)
-                            patternInstances[j].Pattern = matchingPattern;
+                        if (patternInstances[j] == pattern)
+                            patternInstances[j] = matchingPattern;
                     }
                 }
                 else
@@ -558,13 +516,10 @@ namespace FamiStudio
                 pattern.SerializeState(buffer);
 
             for (int i = 0; i < patternInstances.Length; i++)
-                patternInstances[i].SerializeState(buffer, this);
+                buffer.Serialize(ref patternInstances[i], this);
 
             if (buffer.IsReading && !buffer.IsForUndoRedo)
-            {
                 ClearPatternsInstancesPastSongLength();
-                UpdatePatternsMaxInstanceLength();
-            }
         }
     }
 }
