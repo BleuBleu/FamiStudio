@@ -154,6 +154,29 @@ namespace FamiStudio
             return lastEffectValues[effect];
         }
 
+#if DEBUG
+        public void Validate(Channel channel)
+        {
+            int oldFirstValidNoteTime     = firstValidNoteTime;
+            int oldLastValidNoteTime      = lastValidNoteTime;
+            int oldLastEffectValuesMask   = lastEffectValuesMask;
+            bool oldLastValidNoteReleased = lastValidNoteReleased;
+
+            int[] oldLastEffectValues = new int[Note.EffectCount];
+            Array.Copy(lastEffectValues, oldLastEffectValues, Note.EffectCount);
+
+            UpdateLastValidNote();
+
+            Debug.Assert(oldFirstValidNoteTime    == firstValidNoteTime);
+            Debug.Assert(oldLastValidNoteTime     == lastValidNoteTime);
+            Debug.Assert(oldLastEffectValuesMask  == lastEffectValuesMask);
+            Debug.Assert(oldLastValidNoteReleased == lastValidNoteReleased);
+
+            for (int i = 0; i < Note.EffectCount; i++)
+                Debug.Assert(oldLastEffectValues[i] == lastEffectValues[i]);
+        }
+#endif
+
         public void SerializeState(ProjectBuffer buffer, Channel channel)
         {
             buffer.Serialize(ref pattern, channel);

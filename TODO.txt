@@ -47,11 +47,7 @@
 - Test installer on Japanese machine.
 
 * BUG: If select really fast in sequencer, selection makes no sense.
-* BUG: In arpeggion, negative values are offset by 1 when clicking.
 * BUG: Lots of bad last volumes in castlevania 3 saw track.
-* BUG: After rename of instrument, it some asks if you want to replace an instrument or envelope. WTF?
-* BUG: Replace instrument with drag doesnt work anymore (ask for volume envelope...)
-* BUG: When an instrument is low in the lost of instrument, the popup appears to low and you cant do anything.
 * CRASH: GetLastValidNote gets asserts. (Likely due to DeleteSelectedNotes() not calling UpdateLastValid()).
 
 ========================

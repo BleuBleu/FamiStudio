@@ -86,6 +86,7 @@ namespace FamiStudio
         int captureStartX = -1;
         int captureStartY = -1;
         bool fullColumnSelection = false;
+        int firstSelectedPatternIdx = -1;
         int minSelectedChannelIdx = -1;
         int maxSelectedChannelIdx = -1;
         int minSelectedPatternIdx = -1;
@@ -1103,6 +1104,7 @@ namespace FamiStudio
             if (first)
             {
                 fullColumnSelection = true;
+                firstSelectedPatternIdx = patternIdx;
                 minSelectedPatternIdx = patternIdx;
                 maxSelectedPatternIdx = patternIdx;
                 minSelectedChannelIdx = 0;
@@ -1111,9 +1113,15 @@ namespace FamiStudio
             else
             {
                 if (mouseX > captureStartX)
+                {
+                    minSelectedPatternIdx = firstSelectedPatternIdx;
                     maxSelectedPatternIdx = patternIdx;
+                }
                 else
+                {
                     minSelectedPatternIdx = patternIdx;
+                    maxSelectedPatternIdx = firstSelectedPatternIdx;
+                }
             }
 
             ConditionalInvalidate();

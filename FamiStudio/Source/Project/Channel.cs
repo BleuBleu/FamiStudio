@@ -492,9 +492,14 @@ namespace FamiStudio
             Debug.Assert(this == song.GetChannelByType(type));
             Debug.Assert(this.song == song);
             foreach (var inst in patternInstances)
+            {
                 Debug.Assert(inst.Pattern == null || patterns.Contains(inst.Pattern));
+                inst.Validate(this);
+            }
             foreach (var pat in patterns)
+            {
                 pat.Validate(this);
+            }
         }
 #endif
 

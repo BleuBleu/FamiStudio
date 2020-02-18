@@ -2417,10 +2417,10 @@ namespace FamiStudio
 
         private bool GetEnvelopeValueForCoord(int x, int y, out int idx, out sbyte value)
         {
-            var maxValue = 64 / envelopeValueZoom; 
+            var maxValue = 64 / envelopeValueZoom - 1; 
 
             idx = (x - whiteKeySizeX + scrollX) / noteSizeX;
-            value = (sbyte)(maxValue - Math.Min((y + scrollY - headerAndEffectSizeY - 1) / envelopeSizeY, 128)); 
+            value = (sbyte)(maxValue - (int)Math.Min((y + scrollY - headerAndEffectSizeY - 1) / envelopeSizeY, 128)); 
 
             return (x > whiteKeySizeX && y > headerAndEffectSizeY);
         }

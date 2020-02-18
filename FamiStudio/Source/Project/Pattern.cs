@@ -171,6 +171,10 @@ namespace FamiStudio
                 Debug.Assert(inst == null || song.Project.GetInstrument(inst.Id) == inst);
                 Debug.Assert(inst == null || channel.SupportsInstrument(inst));
             }
+
+            var oldMaxInstanceLength = maxInstanceLength;
+            UpdateMaxInstanceLength();
+            Debug.Assert(oldMaxInstanceLength == maxInstanceLength);
         }
 #endif
 

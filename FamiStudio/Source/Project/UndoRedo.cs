@@ -159,6 +159,14 @@ namespace FamiStudio
             project.Validate();
         }
 
+        public bool HasTransactionInProgress
+        {
+            get
+            {
+                return transactions.Count() > 0 && !transactions.Last().IsEnded;
+            }
+        }
+
         public TransactionScope UndoScope
         {
             get { return index > 0 ? transactions[index - 1] .Scope : TransactionScope.Max; }

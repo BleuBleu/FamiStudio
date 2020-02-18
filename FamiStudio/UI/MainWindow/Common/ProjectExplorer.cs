@@ -840,14 +840,14 @@ namespace FamiStudio
             captureThresholdMet = !captureNeedsThreshold[(int)op];
         }
 
-        //protected void CancelDrag()
-        //{
-        //    isDraggingInstrument = false;
-        //    mouseDragY = -1;
-        //    draggedInstrument = null;
-        //    envelopeDragIdx = -1;
-        //    UpdateCursor();
-        //}
+        private void AbortCaptureOperation()
+        {
+            Capture = false;
+            captureOperation = CaptureOperation.None;
+
+            if (App.UndoRedoManager.HasTransactionInProgress)
+                App.UndoRedoManager.AbortTransaction();
+        }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
@@ -970,6 +970,7 @@ namespace FamiStudio
 
                         if (selectedInstrument != null)
                         {
+                            envelopeDragIdx = -1;
                             draggedInstrument = selectedInstrument;
                             StartCaptureOperation(e, CaptureOperation.DragInstrument);
                         }
@@ -996,6 +997,7 @@ namespace FamiStudio
                     {
                         if (UpdateSliderValue(button, e))
                         {
+                            // MATTT: Transaction here.
                             sliderDragButton = button;
                             StartCaptureOperation(e, CaptureOperation.MoveSlider);
                             ConditionalInvalidate();
@@ -1092,6 +1094,9 @@ namespace FamiStudio
 
             if (buttonIdx >= 0)
             {
+                if (captureOperation != CaptureOperation.None)
+                    AbortCaptureOperation();
+
                 var button = buttons[buttonIdx];
 
                 if (button.type == ButtonType.ProjectSettings)
@@ -1182,7 +1187,7 @@ namespace FamiStudio
 
                     if (subButtonType == SubButtonType.Max)
                     {
-                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, true);
+                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, true, e.Y > Height / 2);
                         dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
                         dlg.Properties.AddColor(instrument.Color); // 1
                         dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[Envelope.Pitch].Relative); // 2
