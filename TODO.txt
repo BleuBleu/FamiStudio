@@ -26,6 +26,9 @@
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Remove jump and skip effects:
 	x Jump is simply a loop point
+	- I DONT LIKE MY DESIGN: TOO COMPLEX. REQUIREMENTS
+		1) Move things on patterns. 
+		2) When changing params, warn that it will propage to patterns in same column and de-instanciate if needed.
 	- Skip is a shorter pattern.
 		x FamiTracker import/export (should we only support SHORTER patterns??? YES!)
 		x FamiTone split, etc.
@@ -48,6 +51,7 @@
 
 * BUG: If select really fast in sequencer, selection makes no sense.
 * BUG: Lots of bad last volumes in castlevania 3 saw track.
+* BUG: Dragging patterns in sequencer does update piano roll.
 * CRASH: GetLastValidNote gets asserts. (Likely due to DeleteSelectedNotes() not calling UpdateLastValid()).
 
 ========================
