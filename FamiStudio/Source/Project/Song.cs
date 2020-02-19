@@ -20,6 +20,7 @@ namespace FamiStudio
         private int tempo = 150;
         private int speed = 6;
         private int loopPoint = 0;
+        private byte[] patternInstanceLengths = new byte[Song.MaxLength]; // 0 = default song pattern length
         private int[] patternInstancesStartNote = new int[Song.MaxLength];
 
         public int Id => id;
@@ -67,8 +68,18 @@ namespace FamiStudio
             }
         }
 
+        public void DuplicateInstancesWithDifferentLengths()
+        {
+            foreach (var channel in channels)
+            {
+                channel.DuplicateInstancesWithDifferentLengths();
+            }
+        }
+
         public bool Split(int factor)
         {
+            DuplicateInstancesWithDifferentLengths();
+
             if (factor == 1)
                 return true;
 
@@ -187,12 +198,17 @@ namespace FamiStudio
 
             if (loopPoint >= songLength)
                 loopPoint = 0;
+
+            // MATTT
+            for (int i = songLength; i < Song.MaxLength; i++)
+                patternInstanceLengths[i] = 0;
         }
 
         public void SetPatternLength(int newLength)
         {
             patternLength = newLength;
 
+            UpdatePatternsMaxInstanceLength();
             UpdatePatternInstancesStartNotes();
 
             foreach (var channel in channels)
@@ -245,28 +261,25 @@ namespace FamiStudio
             return null;
         }
 
+        public void SetPatternInstanceLength(int patternIdx, int len)
+        {
+            if (len <= 0 || len >= Pattern.MaxLength || len == patternLength)
+                patternInstanceLengths[patternIdx] = 0;
+            else
+                patternInstanceLengths[patternIdx] = (byte)len;
+
+            UpdatePatternInstancesStartNotes();
+        }
+
         public bool PatternInstanceHasCustomLength(int patternIdx)
         {
-            foreach (var channel in channels)
-            {
-                var pattern = channel.PatternInstances[patternIdx];
-                if (pattern != null && pattern.HasCustomLength)
-                    return true;
-            }
-
-            return false;
+            return patternInstanceLengths[patternIdx] != 0;
         }
 
         public int GetPatternInstanceLength(int patternIdx)
         {
-            foreach (var channel in channels)
-            {
-                var pattern = channel.PatternInstances[patternIdx];
-                if (pattern != null && pattern.HasCustomLength)
-                    return channel.PatternInstances[patternIdx].Length;
-            }
-
-            return patternLength;
+            int len = patternInstanceLengths[patternIdx];
+            return len == 0 ? patternLength : len;
         }
 
         public int GetPatternInstanceStartNote(int patternIdx, int note = 0)
@@ -386,12 +399,11 @@ namespace FamiStudio
                                 SetLoopPoint(pattern.Notes[j].Jump);
                             }
 
-                            // MATTT
-                            //// Converts old Skip effects to custom pattern instances lengths.
-                            //if (pattern.Notes[j].Skip != Note.SkipInvalid)
-                            //{
-                            //    SetPatternInstanceLength(i, j + 1);
-                            //}
+                            // Converts old Skip effects to custom pattern instances lengths.
+                            if (pattern.Notes[j].Skip != Note.SkipInvalid)
+                            {
+                                SetPatternInstanceLength(i, j + 1);
+                            }
                         }
                     }
                 }
@@ -415,11 +427,17 @@ namespace FamiStudio
             return songLength;
         }
 
+        public void UpdatePatternsMaxInstanceLength()
+        {
+            foreach (var channel in channels)
+                channel.UpdatePatternsMaxInstanceLength();
+        }
+
         public void UpdatePatternInstancesStartNotes()
         {
             patternInstancesStartNote[0] = 0;
             for (int i = 1; i <= songLength; i++)
-                patternInstancesStartNote[i] = patternInstancesStartNote[i - 1] + GetPatternInstanceLength(i);
+                patternInstancesStartNote[i] = patternInstancesStartNote[i - 1] + GetPatternInstanceLength(i - 1);
         }
 
         public void MergeIdenticalPatterns()
@@ -446,7 +464,7 @@ namespace FamiStudio
             if (buffer.Version >= 5)
             {
                 buffer.Serialize(ref loopPoint);
-                //buffer.Serialize(ref patternInstanceLengths);
+                buffer.Serialize(ref patternInstanceLengths);
             }
 
             if (buffer.IsReading)

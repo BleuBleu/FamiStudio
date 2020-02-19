@@ -387,7 +387,7 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         uniquePatterns.Add(pattern);
-                        for (int k = 0; k < pattern.Length; k++)
+                        for (int k = 0; k < pattern.MaxInstanceLength; k++)
                         {
                             var inst = pattern.Notes[k].Instrument;
                             if (inst != null)

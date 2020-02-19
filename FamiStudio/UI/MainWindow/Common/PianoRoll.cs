@@ -567,7 +567,7 @@ namespace FamiStudio
                     var pattern = Song.Channels[editChannel].PatternInstances[p];
                     if (pattern != null)
                     {
-                        int sx = pattern.Length * noteSizeX;
+                        int sx = Song.GetPatternInstanceLength(p) * noteSizeX;
                         int px = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
                         g.FillRectangle(px, headerSizeY / 2, px + sx, headerSizeY, theme.CustomColorBrushes[pattern.Color]);
                     }
@@ -598,8 +598,9 @@ namespace FamiStudio
                     var pattern = Song.Channels[editChannel].PatternInstances[p];
                     if (pattern != null)
                     {
-                        int patternX = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
-                        for (int n = 0; n < pattern.Length; n++)
+                        var patternLen = Song.GetPatternInstanceLength(p);
+                        var patternX = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
+                        for (int n = 0; n < patternLen; n++)
                         {
                             var note = pattern.Notes[n];
                             for (int i = Note.EffectCount - 1; i >= 0; i--)
@@ -750,17 +751,18 @@ namespace FamiStudio
 
                         if (pattern != null)
                         {
-                            int x = Song.GetPatternInstanceStartNote(p) * noteSizeX;
+                            var patternLen = Song.GetPatternInstanceLength(p);
+                            var x = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
 
-                            for (int i = 0; i < pattern.Length; i++)
+                            for (int i = 0; i < patternLen; i++)
                             {
-                                var note = pattern.Notes[Math.Min(i, pattern.Length - 1)];
+                                var note = pattern.Notes[Math.Min(i, patternLen - 1)];
 
                                 if (note.HasValidEffectValue(selectedEffectIdx))
                                 {
-                                    g.PushTranslation(x + i * noteSizeX - scrollX, 0);
+                                    g.PushTranslation(x + i * noteSizeX, 0);
 
-                                    var frame = p * pattern.Length + i;
+                                    var frame = Song.GetPatternInstanceStartNote(p) + i;
                                     var sizeY = (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
                                     g.FillRectangle(lastFrame < 0 ? -noteSizeX * 100000 : (frame - lastFrame - 1) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
                                     lastValue = note.GetEffectValue(selectedEffectIdx);
@@ -786,11 +788,12 @@ namespace FamiStudio
 
                     if (pattern != null)
                     {
-                        int x = Song.GetPatternInstanceStartNote(p) * noteSizeX;
+                        var patternLen = Song.GetPatternInstanceLength(p);
+                        int x = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
 
-                        for (int i = 0; i < pattern.Length; i++)
+                        for (int i = 0; i < patternLen; i++)
                         {
-                            var note = pattern.Notes[Math.Min(i, pattern.Length - 1)];
+                            var note = pattern.Notes[Math.Min(i, patternLen - 1)];
 
                             if (note.HasValidEffectValue(selectedEffectIdx))
                             {
@@ -799,7 +802,7 @@ namespace FamiStudio
                                 var effectMaxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
                                 var sizeY = (float)Math.Floor((effectValue - effectMinValue) / (float)(effectMaxValue - effectMinValue) * effectPanelSizeY);
 
-                                g.PushTranslation(x + i * noteSizeX - scrollX, 0);
+                                g.PushTranslation(x + i * noteSizeX, 0);
 
                                 if (!Note.EffectWantsPreviousValue(selectedEffectIdx))
                                     g.FillRectangle(0, 0, noteSizeX, effectPanelSizeY, theme.DarkGreyFillBrush2);
@@ -815,7 +818,7 @@ namespace FamiStudio
                             }
                         }
 
-                        g.DrawLine(x - scrollX, 0, x - scrollX, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                        g.DrawLine(x, 0, x, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
                         g.DrawLine(0, headerAndEffectSizeY - 1, Width, headerAndEffectSizeY - 1, theme.DarkGreyLineBrush1);
                     }
                 }
@@ -1164,7 +1167,9 @@ namespace FamiStudio
                                 if (pattern == null)
                                     continue;
 
-                                for (int i1 = 0; i1 < pattern.Length; i1++)
+                                var patternLen = Song.GetPatternInstanceLength(p1);
+
+                                for (int i1 = 0; i1 < patternLen; i1++)
                                 {
                                     var n1 = pattern.Notes[i1];
 
@@ -1425,7 +1430,7 @@ namespace FamiStudio
                 var newValue = (byte)Math.Round(ratio * (maxValue - minValue) + minValue);
 
                 pattern.Notes[effectNoteIdx].SetEffectValue(selectedEffectIdx, newValue);
-                pattern.UpdateLastValidNote();
+                pattern.UpdateValidNotes();
             }
 
             ConditionalInvalidate();
@@ -1593,21 +1598,22 @@ namespace FamiStudio
 
             GetSelectionRange(startFrameIdx, endFrameIdx, out int minPattern, out int maxPattern, out int minNote, out int maxNote);
 
-            for (int p = minPattern; p <= maxPattern; p++)
+            for (var p = minPattern; p <= maxPattern; p++)
             {
                 var pattern = Song.Channels[editChannel].PatternInstances[p];
 
                 if (pattern != null)
                 {
-                    int n0 = p == minPattern ? minNote : 0;
-                    int n1 = p == maxPattern ? maxNote : pattern.Length - 1;
+                    var patternLen = Song.GetPatternInstanceLength(p);
+                    var n0 = p == minPattern ? minNote : 0;
+                    var n1 = p == maxPattern ? maxNote : patternLen - 1;
 
-                    for (int n = n0; n <= n1; n++)
+                    for (var n = n0; n <= n1; n++)
                     {
                         pattern.Notes[n] = function(pattern.Notes[n], Song.GetPatternInstanceStartNote(p) + n - startFrameIdx);
                     }
 
-                    pattern.UpdateLastValidNote();
+                    pattern.UpdateValidNotes();
                     PatternChanged?.Invoke(pattern);
                 }
             }
@@ -1878,7 +1884,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[patternIdx].Id);
                         channel.PatternInstances[patternIdx].Notes[noteIdx].HasAttack ^= true;
-                        channel.PatternInstances[patternIdx].UpdateLastValidNote();
+                        channel.PatternInstances[patternIdx].UpdateValidNotes();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
@@ -1888,7 +1894,7 @@ namespace FamiStudio
                         pattern.Notes[noteIdx].Value = (byte)(ctrl ? Note.NoteStop : Note.NoteRelease);
                         pattern.Notes[noteIdx].Instrument = null;
                         pattern.Notes[noteIdx].Slide = 0;
-                        pattern.UpdateLastValidNote();
+                        pattern.UpdateValidNotes();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
@@ -1897,7 +1903,7 @@ namespace FamiStudio
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].Value = noteValue;
                         pattern.Notes[noteIdx].Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
-                        pattern.UpdateLastValidNote();
+                        pattern.UpdateValidNotes();
 
                         if (slide && channel.SupportsSlideNotes)
                         {
@@ -1922,7 +1928,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].Clear();
-                        pattern.UpdateLastValidNote();
+                        pattern.UpdateValidNotes();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
@@ -1933,7 +1939,7 @@ namespace FamiStudio
                             var foundPattern = channel.PatternInstances[patternIdx];
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, foundPattern.Id);
                             foundPattern.Notes[noteIdx].Clear();
-                            foundPattern.UpdateLastValidNote();
+                            foundPattern.UpdateValidNotes();
                             App.UndoRedoManager.EndTransaction();
                             changed = true;
                         }
@@ -1951,7 +1957,7 @@ namespace FamiStudio
                 var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                 pattern.Notes[noteIdx].ClearEffectValue(selectedEffectIdx);
-                pattern.UpdateLastValidNote();
+                pattern.UpdateValidNotes();
                 PatternChanged?.Invoke(pattern);
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();

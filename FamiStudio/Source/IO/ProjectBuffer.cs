@@ -10,6 +10,7 @@ namespace FamiStudio
         void Serialize(ref bool b);
         void Serialize(ref byte b);
         void Serialize(ref sbyte b);
+        void Serialize(ref short i);
         void Serialize(ref int b, bool id = false);
         void Serialize(ref uint b);
         void Serialize(ref ulong b);
@@ -64,6 +65,12 @@ namespace FamiStudio
         {
             buffer.Add((byte)b);
             idx += sizeof(sbyte);
+        }
+
+        public void Serialize(ref short i)
+        {
+            buffer.AddRange(BitConverter.GetBytes(i));
+            idx += sizeof(short);
         }
 
         public void Serialize(ref int i, bool id = false)
@@ -199,6 +206,12 @@ namespace FamiStudio
         {
             b = (sbyte)buffer[idx];
             idx += sizeof(sbyte);
+        }
+
+        public void Serialize(ref short i)
+        {
+            i = BitConverter.ToInt16(buffer, idx);
+            idx += sizeof(short);
         }
 
         public void Serialize(ref int i, bool id = false)

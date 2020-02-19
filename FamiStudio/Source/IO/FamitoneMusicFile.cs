@@ -325,7 +325,7 @@ namespace FamiStudio
                     {
                         foreach (var p in c.Patterns)
                         {
-                            for (int n = 0; n < p.Length; n++)
+                            for (int n = 0; n < p.MaxInstanceLength; n++)
                             {
                                 var note = p.Notes[n];
 
@@ -672,7 +672,7 @@ namespace FamiStudio
             {
                 foreach (var pattern in song.Channels[c].Patterns)
                 {
-                    for (int n = 0; n < pattern.Length; n++)
+                    for (int n = 0; n < pattern.MaxInstanceLength; n++)
                     {
                         if (pattern.Notes[n].HasSpeed)
                             speedEffectCount[c]++;
@@ -755,7 +755,7 @@ namespace FamiStudio
                     {
                         foreach (var pattern in channel.Patterns)
                         {
-                            for (int i = 0; i < pattern.Length; i++)
+                            for (int i = 0; i < pattern.MaxInstanceLength; i++)
                             {
                                 if (pattern.Notes[i].IsRelease)
                                 {

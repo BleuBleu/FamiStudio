@@ -284,7 +284,7 @@ namespace FamiStudio
                 foreach (var channel in song.Channels)
                 {
                     foreach (var pattern in channel.Patterns)
-                        pattern.UpdateLastValidNote();
+                        pattern.UpdateValidNotes();
                 }
             }
         }
@@ -585,7 +585,7 @@ namespace FamiStudio
                         var pattern = channel.PatternInstances[p];
                         if (pattern != null)
                         {
-                            for (int i = 0; i < pattern.Length; i++)
+                        for (int i = 0; i < pattern.MaxInstanceLength ; i++)
                             {
                                 var note = pattern.Notes[i];
                                 if (note.IsValid && !note.IsStop && note.Instrument != null)
@@ -614,7 +614,7 @@ namespace FamiStudio
                     var pattern = channel.PatternInstances[p];
                     if (pattern != null)
                     {
-                        for (int i = 0; i < pattern.Length; i++)
+                        for (int i = 0; i < pattern.MaxInstanceLength; i++)
                         {
                             var note = pattern.Notes[i];
                             var mapping = GetDPCMMapping(note.Value);

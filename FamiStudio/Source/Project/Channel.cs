@@ -154,6 +154,34 @@ namespace FamiStudio
             return true;
         }
 
+        // MATTT
+        public void DuplicateInstancesWithDifferentLengths()
+        {
+            var instanceLengthMap = new Dictionary<Pattern, int>();
+
+            for (int p = 0; p < song.Length; p++)
+            {
+                var pattern = patternInstances[p];
+                var patternLen = song.GetPatternInstanceLength(p);
+
+                if (pattern != null)
+                {
+                    if (instanceLengthMap.TryGetValue(pattern, out var prevLength))
+                    {
+                        if (patternLen != prevLength)
+                        {
+                            pattern = pattern.ShallowClone(); ;
+                            patternInstances[p] = pattern;
+                        }
+                    }
+
+                    instanceLengthMap[pattern] = patternLen;
+                }
+            }
+
+            UpdatePatternsMaxInstanceLength();
+        }
+
         public Pattern CreatePattern(string name = null)
         {
             if (name == null)
@@ -223,34 +251,6 @@ namespace FamiStudio
             }
         }
 
-        public bool GetMinMaxNote(out Note min, out Note max)
-        {
-            bool valid = false;
-
-            min = new Note(255);
-            max = new Note(0);
-
-            for (int i = 0; i < song.Length; i++)
-            {
-                var pattern = PatternInstances[i];
-                if (pattern != null)
-                {
-                    for (int j = 0; j < pattern.Length; j++)
-                    {
-                        var n = pattern.Notes[j];
-                        if (n.IsValid && !n.IsStop)
-                        {
-                            if (n.Value < min.Value) min = n;
-                            if (n.Value > max.Value) max = n;
-                            valid = true;
-                        }
-                    }
-                }
-            }
-
-            return valid;
-        }
-
         public void CleanupUnusedPatterns()
         {
             HashSet<Pattern> usedPatterns = new HashSet<Pattern>();
@@ -274,8 +274,9 @@ namespace FamiStudio
                 var pattern = patternInstances[p];
                 if (pattern != null)
                 {
-                    if (pattern.HasLastEffectValue(effect))
-                        return pattern.GetLastEffectValue(effect);
+                    var lastPatternNoteIdx = song.GetPatternInstanceLength(p) - 1;
+                    if (pattern.HasLastEffectValueAt(lastPatternNoteIdx, effect))
+                        return pattern.GetLastEffectValueAt(lastPatternNoteIdx, effect);
                 }
             }
 
@@ -294,15 +295,16 @@ namespace FamiStudio
                 if (pattern != null)
                 {
                     var note = new Note(Note.NoteInvalid);
+                    var lastPatternNoteIdx = song.GetPatternInstanceLength(patternIdx) - 1;
 
-                    if (pattern.LastValidNoteTime >= 0)
+                    if (pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx) >= 0)
                     {
-                        note = pattern.LastValidNote;
-                        noteIdx = pattern.LastValidNoteTime;
-                        Debug.Assert(pattern.LastValidNote.IsValid);
+                        note = pattern.GetLastValidNoteAt(lastPatternNoteIdx);
+                        noteIdx = pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx);
+                        Debug.Assert(note.IsValid);
                     }
 
-                    released = note.IsStop ? false : released || pattern.LastValidNoteReleased;
+                    released = note.IsStop ? false : released || pattern.GetLastValidNoteReleasedAt(lastPatternNoteIdx);
 
                     if (note.IsValid)
                         return true;
@@ -404,15 +406,18 @@ namespace FamiStudio
             while (p >= 0)
             {
                 pattern = patternInstances[p];
-                if (pattern != null && pattern.LastValidNoteTime >= 0)
+                if (pattern != null)
                 {
-                    if (pattern.LastValidNote.IsValid && 
-                        pattern.LastValidNote.Value == noteValue)
+                    var lastPatternNoteIdx = song.GetPatternInstanceLength(p) - 1;
+                    noteIdx = pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx);
+                    if (noteIdx >= 0)
                     {
-                        n = pattern.LastValidNoteTime;
-                        patternIdx = p;
-                        noteIdx = n;
-                        return true;
+                        var lastNote = pattern.GetLastValidNoteAt(lastPatternNoteIdx);
+                        if (lastNote.IsValid && lastNote.Value == noteValue)
+                        {
+                            patternIdx = p;
+                            return true;
+                        }
                     }
                 }
 
@@ -432,7 +437,7 @@ namespace FamiStudio
         public void ClearNotesPastSongLength()
         {
             foreach (var pattern in patterns)
-                pattern.ClearNotesPastSongLength();
+                pattern.ClearNotesPastMaxInstanceLength();
         }
 
         public static int ChannelTypeToIndex(int type)
@@ -466,6 +471,12 @@ namespace FamiStudio
                 pat.Validate(this);
         }
 #endif
+
+        public void UpdatePatternsMaxInstanceLength()
+        {
+            foreach (var pattern in patterns)
+                pattern.UpdateMaxInstanceLength();
+        }
 
         public void MergeIdenticalPatterns()
         {
@@ -519,7 +530,10 @@ namespace FamiStudio
                 buffer.Serialize(ref patternInstances[i], this);
 
             if (buffer.IsReading && !buffer.IsForUndoRedo)
+            {
                 ClearPatternsInstancesPastSongLength();
+                UpdatePatternsMaxInstanceLength();
+            }
         }
     }
 }
