@@ -111,7 +111,7 @@ namespace FamiStudio
             }
         }
 
-        public unsafe void UpdateValidNotes()
+        public unsafe void UpdateLastValidNotes()
         {
             firstValidNoteTime = -1;
             lastValidNotes[0].mask = 0;
@@ -233,7 +233,7 @@ namespace FamiStudio
             var pattern = channel.CreatePattern();
             Array.Copy(notes, pattern.notes, notes.Length);
             UpdateMaxInstanceLength();
-            UpdateValidNotes();
+            UpdateLastValidNotes();
             return pattern;
         }
 
@@ -314,7 +314,7 @@ namespace FamiStudio
             }
             else if (buffer.IsReading)
             {
-                UpdateValidNotes();
+                UpdateLastValidNotes();
                 ClearNotesPastMaxInstanceLength();
             }
         }

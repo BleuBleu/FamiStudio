@@ -1430,7 +1430,7 @@ namespace FamiStudio
                 var newValue = (byte)Math.Round(ratio * (maxValue - minValue) + minValue);
 
                 pattern.Notes[effectNoteIdx].SetEffectValue(selectedEffectIdx, newValue);
-                pattern.UpdateValidNotes();
+                pattern.UpdateLastValidNotes();
             }
 
             ConditionalInvalidate();
@@ -1613,7 +1613,7 @@ namespace FamiStudio
                         pattern.Notes[n] = function(pattern.Notes[n], Song.GetPatternInstanceStartNote(p) + n - startFrameIdx);
                     }
 
-                    pattern.UpdateValidNotes();
+                    pattern.UpdateLastValidNotes();
                     PatternChanged?.Invoke(pattern);
                 }
             }
@@ -1884,7 +1884,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[patternIdx].Id);
                         channel.PatternInstances[patternIdx].Notes[noteIdx].HasAttack ^= true;
-                        channel.PatternInstances[patternIdx].UpdateValidNotes();
+                        channel.PatternInstances[patternIdx].UpdateLastValidNotes();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
@@ -1894,7 +1894,7 @@ namespace FamiStudio
                         pattern.Notes[noteIdx].Value = (byte)(ctrl ? Note.NoteStop : Note.NoteRelease);
                         pattern.Notes[noteIdx].Instrument = null;
                         pattern.Notes[noteIdx].Slide = 0;
-                        pattern.UpdateValidNotes();
+                        pattern.UpdateLastValidNotes();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
@@ -1903,7 +1903,7 @@ namespace FamiStudio
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].Value = noteValue;
                         pattern.Notes[noteIdx].Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
-                        pattern.UpdateValidNotes();
+                        pattern.UpdateLastValidNotes();
 
                         if (slide && channel.SupportsSlideNotes)
                         {
@@ -1928,7 +1928,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes[noteIdx].Clear();
-                        pattern.UpdateValidNotes();
+                        pattern.UpdateLastValidNotes();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
@@ -1939,7 +1939,7 @@ namespace FamiStudio
                             var foundPattern = channel.PatternInstances[patternIdx];
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, foundPattern.Id);
                             foundPattern.Notes[noteIdx].Clear();
-                            foundPattern.UpdateValidNotes();
+                            foundPattern.UpdateLastValidNotes();
                             App.UndoRedoManager.EndTransaction();
                             changed = true;
                         }
@@ -1957,7 +1957,7 @@ namespace FamiStudio
                 var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                 pattern.Notes[noteIdx].ClearEffectValue(selectedEffectIdx);
-                pattern.UpdateValidNotes();
+                pattern.UpdateLastValidNotes();
                 PatternChanged?.Invoke(pattern);
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();

@@ -421,13 +421,12 @@ namespace FamiStudio
                 {
                     c.ColorizePatterns();
 
-                    // MATTT
-                    //for (int p = 0; p < s.Length; p++)
-                    //{
-                    //    var pattern = c.PatternInstances[p];
-                    //    if (pattern != null && patternLenths.TryGetValue(pattern, out var instLength))
-                    //        s.SetPatternInstanceLength(p, instLength);
-                    //}
+                    for (int p = 0; p < s.Length; p++)
+                    {
+                        var pattern = c.PatternInstances[p];
+                        if (pattern != null && patternLenths.TryGetValue(pattern, out var instLength))
+                            s.SetPatternInstanceLength(p, instLength);
+                    }
                 }
 
                 s.RemoveEmptyPatterns();

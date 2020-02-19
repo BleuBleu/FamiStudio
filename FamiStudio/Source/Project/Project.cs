@@ -284,7 +284,7 @@ namespace FamiStudio
                 foreach (var channel in song.Channels)
                 {
                     foreach (var pattern in channel.Patterns)
-                        pattern.UpdateValidNotes();
+                        pattern.UpdateLastValidNotes();
                 }
             }
         }

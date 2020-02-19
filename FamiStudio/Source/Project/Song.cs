@@ -375,8 +375,11 @@ namespace FamiStudio
             foreach (var channel in channels)
                 channel.Validate(this);
 
-            // MATTT: Validate that a full column all has same values.
-            // MATTT: Validate start notes.
+            var oldPatternInstancesStartNote = new int[MaxLength];
+            Array.Copy(patternInstancesStartNote, oldPatternInstancesStartNote, MaxLength);
+            UpdatePatternInstancesStartNotes();
+            for (int i = 0; i < MaxLength; i++)
+                Debug.Assert(oldPatternInstancesStartNote[i] == patternInstancesStartNote[i]);
         }
 #endif
 

@@ -38,19 +38,19 @@ namespace FamiStudio
         public const int FdsWave = 14;
         public const int Mmc5Square1 = 15;
         public const int Mmc5Square2 = 16;
-        // public const int Mmc5Dpcm = 17; MATTT: Do we want to keep space for it?
-        public const int NamcoWave1 = 17;
-        public const int NamcoWave2 = 18;
-        public const int NamcoWave3 = 19;
-        public const int NamcoWave4 = 20;
-        public const int NamcoWave5 = 21;
-        public const int NamcoWave6 = 22;
-        public const int NamcoWave7 = 23;
-        public const int NamcoWave8 = 24;
-        public const int SunsoftSquare1 = 25;
-        public const int SunsoftSquare2 = 26;
-        public const int SunsoftSquare3 = 27;
-        public const int Count = 28;
+        public const int Mmc5Dpcm = 17; 
+        public const int NamcoWave1 = 18;
+        public const int NamcoWave2 = 19;
+        public const int NamcoWave3 = 20;
+        public const int NamcoWave4 = 21;
+        public const int NamcoWave5 = 22;
+        public const int NamcoWave6 = 23;
+        public const int NamcoWave7 = 24;
+        public const int NamcoWave8 = 25;
+        public const int SunsoftSquare1 = 26;
+        public const int SunsoftSquare2 = 27;
+        public const int SunsoftSquare3 = 28;
+        public const int Count = 29;
 
         public static string[] ChannelNames =
         {
@@ -154,7 +154,6 @@ namespace FamiStudio
             return true;
         }
 
-        // MATTT
         public void DuplicateInstancesWithDifferentLengths()
         {
             var instanceLengthMap = new Dictionary<Pattern, int>();
@@ -478,6 +477,12 @@ namespace FamiStudio
                 pattern.UpdateMaxInstanceLength();
         }
 
+        public void UpdateLastValidNotes()
+        {
+            foreach (var pattern in patterns)
+                pattern.UpdateLastValidNotes();
+        }
+
         public void MergeIdenticalPatterns()
         {
             var patternCrcMap = new Dictionary<uint, Pattern>();
@@ -493,7 +498,6 @@ namespace FamiStudio
 
                     patterns.RemoveAt(i);
 
-                    // MATTT: Update max instance length, last notes, etc.
                     for (int j = 0; j < song.Length; j++)
                     {
                         if (patternInstances[j] == pattern)
@@ -506,6 +510,9 @@ namespace FamiStudio
                     i++;
                 }
             }
+
+            UpdateLastValidNotes();
+            UpdatePatternsMaxInstanceLength();
         }
 
         public void SerializeState(ProjectBuffer buffer)
