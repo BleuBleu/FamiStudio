@@ -14,7 +14,7 @@ namespace FamiStudio
         private int channelType;
         private Color color;
         private Note[] notes = new Note[MaxLength];
-        private int maxInstanceLength;
+        private int maxInstanceLength = MaxLength;
 
         const byte MaskTimeValid = 0x80;
         const byte MaskReleased  = 0x40;
