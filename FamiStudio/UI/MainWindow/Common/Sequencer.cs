@@ -141,9 +141,21 @@ namespace FamiStudio
             set { showSelection = value; ConditionalInvalidate(); }
         }
 
-        public int SelectedChannel => selectedChannel;
+        public int SelectedChannel
+        {
+            get { return selectedChannel; }
+            set
+            {
+                if (selectedChannel >= 0 && selectedChannel < Song.Channels.Length)
+                {
+                    selectedChannel = value;
+                    SelectedChannelChanged?.Invoke(selectedChannel);
+                    ConditionalInvalidate();
+                }
+            }
+        }
 
-        private void ConditionalInvalidate()
+        public void ConditionalInvalidate()
         {
             if (!App.RealTimeUpdate)
                 Invalidate();
@@ -293,7 +305,7 @@ namespace FamiStudio
 
             var seekX = ScaleForZoom(App.CurrentFrame) - scrollX;
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
-            var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / noteSizeX), Song.GetPatternInstanceStartNote(Song.Length));
+            var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / noteSizeX), Song.GetPatternStartNote(Song.Length));
             var minVisiblePattern = Utils.Clamp(Song.FindPatternInstanceIndex(minVisibleNoteIdx, out _) + 0, 0, Song.Length);
             var maxVisiblePattern = Utils.Clamp(Song.FindPatternInstanceIndex(maxVisibleNoteIdx, out _) + 1, 0, Song.Length);
 
@@ -305,8 +317,8 @@ namespace FamiStudio
                 g.PushClip(trackNameSizeX, 0, Width, headerSizeY);
                 g.PushTranslation(trackNameSizeX, 0);
                 g.FillRectangle(
-                    (int)(Song.GetPatternInstanceStartNote(minSelectedPatternIdx + 0) * noteSizeX) - scrollX, 0,
-                    (int)(Song.GetPatternInstanceStartNote(maxSelectedPatternIdx + 1) * noteSizeX) - scrollX, headerSizeY,
+                    (int)(Song.GetPatternStartNote(minSelectedPatternIdx + 0) * noteSizeX) - scrollX, 0,
+                    (int)(Song.GetPatternStartNote(maxSelectedPatternIdx + 1) * noteSizeX) - scrollX, headerSizeY,
                     showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
                 g.PopTransform();
                 g.PopClip();
@@ -322,27 +334,24 @@ namespace FamiStudio
             {
                 if (i != 0)
                 {
-                    var px = (int)(Song.GetPatternInstanceStartNote(i) * noteSizeX) - scrollX;
+                    var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) - scrollX;
                     g.DrawLine(px, 0, px, Height, theme.DarkGreyLineBrush1);
                 }
             }
 
             for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
             {
-                var px = (int)(Song.GetPatternInstanceStartNote(i) * noteSizeX) - scrollX;
-                var sx = (int)(Song.GetPatternInstanceLength(i) * noteSizeX);
+                var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) - scrollX;
+                var sx = (int)(Song.GetPatternLength(i) * noteSizeX);
                 g.PushTranslation(px, 0);
                 g.DrawText(i.ToString(), ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx);
 
-                var ix = headerIconPosX;
-                if (Song.PatternInstanceHasCustomLength(i))
+                if (zoomLevel >= -1)
                 {
-                    g.DrawBitmap(bmpCustomLength, ix, headerIconPosY, 0.5f); // MATTT: Make dark version of icon.
-                    ix += headerIconSizeX + headerIconSizeX;
-                }
-                if (i == Song.LoopPoint)
-                {
-                    g.DrawBitmap(bmpLoopPoint, ix, headerIconPosY, 0.5f); // MATTT: Make dark version of icon.
+                    if (i == Song.LoopPoint)
+                        g.DrawBitmap(bmpLoopPoint, headerIconPosX, headerIconPosY);
+                    if (Song.PatternHasCustomLength(i))
+                        g.DrawBitmap(bmpCustomLength, sx - headerIconSizeX - headerIconPosX, headerIconPosY);
                 }
                 g.PopTransform();
             }
@@ -378,8 +387,8 @@ namespace FamiStudio
             {
                 if ((i & 1) == 0)
                 {
-                    var px = (int)(Song.GetPatternInstanceStartNote(i) * noteSizeX) - scrollX;
-                    var sx = (int)(Song.GetPatternInstanceLength(i) * noteSizeX);
+                    var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) - scrollX;
+                    var sx = (int)(Song.GetPatternLength(i) * noteSizeX);
                     g.FillRectangle(px, 0, px + sx, Height, theme.DarkGreyFillBrush2);
                 }
             }
@@ -387,7 +396,7 @@ namespace FamiStudio
             {
                 if (i != 0)
                 {
-                    var px = (int)(Song.GetPatternInstanceStartNote(i) * noteSizeX) - scrollX;
+                    var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) - scrollX;
                     g.DrawLine(px, 0, px, Height, theme.DarkGreyLineBrush1);
                 }
             }
@@ -395,8 +404,8 @@ namespace FamiStudio
             if (IsSelectionValid())
             {
                 g.FillRectangle(
-                    (int)(Song.GetPatternInstanceStartNote(minSelectedPatternIdx + 0) * noteSizeX) - scrollX, trackSizeY * (minSelectedChannelIdx + 0),
-                    (int)(Song.GetPatternInstanceStartNote(maxSelectedPatternIdx + 1) * noteSizeX) - scrollX, trackSizeY * (maxSelectedChannelIdx + 1), 
+                    (int)(Song.GetPatternStartNote(minSelectedPatternIdx + 0) * noteSizeX) - scrollX, trackSizeY * (minSelectedChannelIdx + 0),
+                    (int)(Song.GetPatternStartNote(maxSelectedPatternIdx + 1) * noteSizeX) - scrollX, trackSizeY * (maxSelectedChannelIdx + 1), 
                     showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
             }
 
@@ -417,8 +426,8 @@ namespace FamiStudio
             {
                 for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
                 {
-                    var px = (int)(Song.GetPatternInstanceStartNote(i) * noteSizeX) + trackNameSizeX - scrollX;
-                    var sx = (int)(Song.GetPatternInstanceLength(i) * noteSizeX);
+                    var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) + trackNameSizeX - scrollX;
+                    var sx = (int)(Song.GetPatternLength(i) * noteSizeX);
                     var pattern = Song.Channels[t].PatternInstances[i];
 
                     if (pattern != null)
@@ -443,7 +452,7 @@ namespace FamiStudio
                 var pt = this.PointToClient(Cursor.Position);
                 var noteIdx = (int)((pt.X - trackNameSizeX + scrollX) / noteSizeX);
 
-                if (noteIdx >= 0 && noteIdx < Song.GetPatternInstanceStartNote(Song.Length))
+                if (noteIdx >= 0 && noteIdx < Song.GetPatternStartNote(Song.Length))
                 {
                     var patternIdx = Song.FindPatternInstanceIndex(noteIdx, out _);
                     var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
@@ -455,7 +464,7 @@ namespace FamiStudio
                         var y = j * trackSizeY;
 
                         // Center.
-                        var patternSizeX = Song.GetPatternInstanceLength(patternIdx) * noteSizeX;
+                        var patternSizeX = Song.GetPatternLength(patternIdx) * noteSizeX;
                         var anchorOffsetLeftX = patternSizeX * selectionDragAnchorPatternFraction;
                         var anchorOffsetRightX = patternSizeX * (1.0f - selectionDragAnchorPatternFraction);
 
@@ -464,7 +473,7 @@ namespace FamiStudio
                         // Left side
                         for (int p = patternIdx - 1; p >= minSelectedPatternIdx + patternIdxDelta && p >= 0; p--)
                         {
-                            patternSizeX = Song.GetPatternInstanceLength(p) * noteSizeX;
+                            patternSizeX = Song.GetPatternLength(p) * noteSizeX;
                             anchorOffsetLeftX += patternSizeX;
                             g.FillAndDrawRectangle(pt.X - anchorOffsetLeftX, y, pt.X - anchorOffsetLeftX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
                         }
@@ -472,7 +481,7 @@ namespace FamiStudio
                         // Right side
                         for (int p = patternIdx + 1; p <= maxSelectedPatternIdx + patternIdxDelta && p < Song.Length; p++)
                         {
-                            patternSizeX = Song.GetPatternInstanceLength(p) * noteSizeX;
+                            patternSizeX = Song.GetPatternLength(p) * noteSizeX;
                             g.FillAndDrawRectangle(pt.X + anchorOffsetRightX, y, pt.X + anchorOffsetRightX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
                             anchorOffsetRightX += patternSizeX;
                         }
@@ -493,7 +502,7 @@ namespace FamiStudio
 
         private unsafe RenderBitmap GetPatternBitmapFromCache(RenderGraphics g, Pattern p)
         {
-            int patternSizeX = p.MaxInstanceLength - 1;
+            int patternSizeX = Math.Max(1, p.MaxInstanceLength - 1);
             int patternSizeY = trackSizeY - patternHeaderSizeY - 1;
 
             RenderBitmap bmp;
@@ -566,7 +575,7 @@ namespace FamiStudio
         private void ClampScroll()
         {
             int minScrollX = 0;
-            int maxScrollX = Math.Max((int)(Song.GetPatternInstanceStartNote(Song.Length) * noteSizeX) - scrollMargin, 0);
+            int maxScrollX = Math.Max((int)(Song.GetPatternStartNote(Song.Length) * noteSizeX) - scrollMargin, 0);
 
             if (scrollX < minScrollX) scrollX = minScrollX;
             if (scrollX > maxScrollX) scrollX = maxScrollX;
@@ -583,7 +592,7 @@ namespace FamiStudio
         {
             var noteIdx = (int)((x - trackNameSizeX + scrollX) / noteSizeX);
 
-            if (noteIdx < 0 || noteIdx > Song.GetPatternInstanceStartNote(Song.Length))
+            if (noteIdx < 0 || noteIdx > Song.GetPatternStartNote(Song.Length))
             {
                 track = -1;
                 patternIdx = -1;
@@ -790,7 +799,7 @@ namespace FamiStudio
                         }
 
                         selectionDragAnchorPatternIdx = patternIdx;
-                        selectionDragAnchorPatternFraction = (e.X - trackNameSizeX + scrollX - (int)(Song.GetPatternInstanceStartNote(patternIdx) * noteSizeX)) / (Song.GetPatternInstanceLength(patternIdx) * noteSizeX);
+                        selectionDragAnchorPatternFraction = (e.X - trackNameSizeX + scrollX - (int)(Song.GetPatternStartNote(patternIdx) * noteSizeX)) / (Song.GetPatternLength(patternIdx) * noteSizeX);
 
                         StartCaptureOperation(e, CaptureOperation.ClickPattern);
 
@@ -804,6 +813,7 @@ namespace FamiStudio
                     App.UndoRedoManager.EndTransaction();
                     ClearSelection();
                     ConditionalInvalidate();
+                    PatternModified?.Invoke();
                 }
             }
         }
@@ -832,8 +842,8 @@ namespace FamiStudio
                 for (int i = 0; i < patterns.GetLength(0); i++)
                 {
                     extraInfo[i].customLength = 
-                        Song.PatternInstanceHasCustomLength(minSelectedPatternIdx + i) ? 
-                            Song.GetPatternInstanceLength(minSelectedPatternIdx + i) : 0;
+                        Song.PatternHasCustomLength(minSelectedPatternIdx + i) ? 
+                            Song.GetPatternLength(minSelectedPatternIdx + i) : 0;
                 }
             }
 
@@ -903,7 +913,7 @@ namespace FamiStudio
             if (extraInfo != null)
             {
                 for (int i = 0; i < patterns.GetLength(0); i++)
-                    Song.SetPatternInstanceLength(i + minSelectedPatternIdx, extraInfo[i].customLength);
+                    Song.SetPatternLength(i + minSelectedPatternIdx, extraInfo[i].customLength);
             }
 
             App.UndoRedoManager.EndTransaction();
@@ -952,7 +962,7 @@ namespace FamiStudio
                     var copy = ModifierKeys.HasFlag(Keys.Control);
                     var noteIdx = (int)((e.X - trackNameSizeX + scrollX) / noteSizeX);
 
-                    if (noteIdx >= 0 && noteIdx < Song.GetPatternInstanceStartNote(Song.Length))
+                    if (noteIdx >= 0 && noteIdx < Song.GetPatternStartNote(Song.Length))
                     {
                         var patternIdx = Song.FindPatternInstanceIndex((int)((e.X - trackNameSizeX + scrollX) / noteSizeX), out _);
                         var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
@@ -974,7 +984,7 @@ namespace FamiStudio
                         if (extraInfo != null)
                         {
                             for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                                Song.SetPatternInstanceLength(j + patternIdxDelta, extraInfo[j - minSelectedPatternIdx].customLength);
+                                Song.SetPatternLength(j + patternIdxDelta, extraInfo[j - minSelectedPatternIdx].customLength);
                         }
 
                         Song.UpdatePatternsMaxInstanceLength();
@@ -983,6 +993,7 @@ namespace FamiStudio
 
                         ClearSelection();
                         ConditionalInvalidate();
+                        PatternModified?.Invoke();
                     }
                 }
 
@@ -1022,13 +1033,14 @@ namespace FamiStudio
             if (clearCustomPatternLengths)
             {
                 for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                    Song.SetPatternInstanceLength(j, 0);
+                    Song.SetPatternLength(j, 0);
             }
 
             if (trans)
             {
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();
+                PatternModified?.Invoke();
             }
         }
 
@@ -1256,16 +1268,16 @@ namespace FamiStudio
                 if (IsMouseInHeader(e))
                 {
                     var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 240);
-                    dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternInstanceHasCustomLength(patternIdx));
-                    dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternInstanceLength(patternIdx), 16, Song.DefaultPatternLength);
+                    dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternHasCustomLength(patternIdx));
+                    dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternLength(patternIdx), 16, Song.DefaultPatternLength);
                     dlg.Properties.PropertyChanged += Properties_PropertyChanged;
-                    dlg.Properties.SetPropertyEnabled(1, Song.PatternInstanceHasCustomLength(patternIdx));
+                    dlg.Properties.SetPropertyEnabled(1, Song.PatternHasCustomLength(patternIdx));
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                        Song.SetPatternInstanceLength(patternIdx, dlg.Properties.GetPropertyValue<bool>(0) ? dlg.Properties.GetPropertyValue<int>(1) : 0);
+                        Song.SetPatternLength(patternIdx, dlg.Properties.GetPropertyValue<bool>(0) ? dlg.Properties.GetPropertyValue<int>(1) : 0);
                         Song.UpdatePatternsMaxInstanceLength();
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();

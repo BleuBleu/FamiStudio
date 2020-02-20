@@ -320,7 +320,7 @@ namespace FamiStudio
         private void CenterScroll(int patternIdx = 0)
         {
             int maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
-            scrollX = Song.GetPatternInstanceStartNote(patternIdx) * noteSizeX;
+            scrollX = Song.GetPatternStartNote(patternIdx) * noteSizeX;
             scrollY = maxScrollY / 2;
         }
 
@@ -567,8 +567,8 @@ namespace FamiStudio
                     var pattern = Song.Channels[editChannel].PatternInstances[p];
                     if (pattern != null)
                     {
-                        int sx = Song.GetPatternInstanceLength(p) * noteSizeX;
-                        int px = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
+                        int sx = Song.GetPatternLength(p) * noteSizeX;
+                        int px = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
                         g.FillRectangle(px, headerSizeY / 2, px + sx, headerSizeY, theme.CustomColorBrushes[pattern.Color]);
                     }
                 }
@@ -578,8 +578,8 @@ namespace FamiStudio
                 // Draw the header bars
                 for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                 {
-                    var sx = Song.GetPatternInstanceLength(p)    * noteSizeX;
-                    int px = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
+                    var sx = Song.GetPatternLength(p)    * noteSizeX;
+                    int px = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
                     if (p != 0)
                         g.DrawLine(px, 0, px, headerSizeY, theme.DarkGreyLineBrush1, 3.0f);
                     var pattern = Song.Channels[editChannel].PatternInstances[p];
@@ -588,7 +588,7 @@ namespace FamiStudio
                         g.DrawText(pattern.Name, ThemeBase.FontMediumCenter, px, effectNamePosY + headerSizeY / 2, theme.BlackBrush, sx);
                 }
 
-                int maxX = Song.GetPatternInstanceStartNote(a.maxVisiblePattern) * noteSizeX - scrollX;
+                int maxX = Song.GetPatternStartNote(a.maxVisiblePattern) * noteSizeX - scrollX;
                 g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
                 g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.DarkGreyLineBrush1);
 
@@ -598,8 +598,8 @@ namespace FamiStudio
                     var pattern = Song.Channels[editChannel].PatternInstances[p];
                     if (pattern != null)
                     {
-                        var patternLen = Song.GetPatternInstanceLength(p);
-                        var patternX = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
+                        var patternLen = Song.GetPatternLength(p);
+                        var patternX = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
                         for (int n = 0; n < patternLen; n++)
                         {
                             var note = pattern.Notes[n];
@@ -751,8 +751,8 @@ namespace FamiStudio
 
                         if (pattern != null)
                         {
-                            var patternLen = Song.GetPatternInstanceLength(p);
-                            var x = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
+                            var patternLen = Song.GetPatternLength(p);
+                            var x = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
 
                             for (int i = 0; i < patternLen; i++)
                             {
@@ -762,7 +762,7 @@ namespace FamiStudio
                                 {
                                     g.PushTranslation(x + i * noteSizeX, 0);
 
-                                    var frame = Song.GetPatternInstanceStartNote(p) + i;
+                                    var frame = Song.GetPatternStartNote(p) + i;
                                     var sizeY = (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
                                     g.FillRectangle(lastFrame < 0 ? -noteSizeX * 100000 : (frame - lastFrame - 1) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
                                     lastValue = note.GetEffectValue(selectedEffectIdx);
@@ -788,8 +788,8 @@ namespace FamiStudio
 
                     if (pattern != null)
                     {
-                        var patternLen = Song.GetPatternInstanceLength(p);
-                        int x = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
+                        var patternLen = Song.GetPatternLength(p);
+                        int x = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
 
                         for (int i = 0; i < patternLen; i++)
                         {
@@ -826,11 +826,11 @@ namespace FamiStudio
                 // Thick vertical bars
                 for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                 {
-                    int x = Song.GetPatternInstanceStartNote(p) * noteSizeX - scrollX;
+                    int x = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
                     if (p != 0) g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, 3.0f);
                 }
 
-                int maxX = Song.GetPatternInstanceStartNote(a.maxVisiblePattern) * noteSizeX - scrollX;
+                int maxX = Song.GetPatternStartNote(a.maxVisiblePattern) * noteSizeX - scrollX;
                 g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
 
                 int seekX = App.CurrentFrame * noteSizeX - scrollX;
@@ -1017,7 +1017,7 @@ namespace FamiStudio
 
         private bool IsNoteSelected(int patternIdx, int noteIdx)
         {
-            int absoluteNoteIdx = Song.GetPatternInstanceStartNote(patternIdx, noteIdx);
+            int absoluteNoteIdx = Song.GetPatternStartNote(patternIdx, noteIdx);
             return IsSelectionValid() && absoluteNoteIdx >= selectionFrameMin && absoluteNoteIdx <= selectionFrameMax;
         }
 
@@ -1038,7 +1038,7 @@ namespace FamiStudio
 
         private void RenderNote(RenderGraphics g, Channel channel, bool selected, Color color, int p0, int i0, Note n0, bool released, int p1, int i1)
         {
-            int x = Song.GetPatternInstanceStartNote(p0, i0) * noteSizeX - scrollX;
+            int x = Song.GetPatternStartNote(p0, i0) * noteSizeX - scrollX;
             int y = virtualSizeY - n0.Value * noteSizeY - scrollY;
             int sy = released ? releaseNoteSizeY : noteSizeY;
 
@@ -1060,7 +1060,7 @@ namespace FamiStudio
 
             g.PushTranslation(x, y);
 
-            int noteLen = Song.GetPatternInstanceStartNote(p1, i1) - Song.GetPatternInstanceStartNote(p0, i0);
+            int noteLen = Song.GetPatternStartNote(p1, i1) - Song.GetPatternStartNote(p0, i0);
             int sx = noteLen * noteSizeX;
             int iconX = slideIconPosX;
 
@@ -1093,7 +1093,7 @@ namespace FamiStudio
             if (editMode == EditionMode.Channel ||
                 editMode == EditionMode.DPCM)
             {
-                int maxX = editMode == EditionMode.Channel ? Song.GetPatternInstanceStartNote(a.maxVisiblePattern) * noteSizeX - scrollX : Width;
+                int maxX = editMode == EditionMode.Channel ? Song.GetPatternStartNote(a.maxVisiblePattern) * noteSizeX - scrollX : Width;
 
                 // Draw the note backgrounds
                 for (int i = a.minVisibleOctave; i < a.maxVisibleOctave; i++)
@@ -1117,11 +1117,11 @@ namespace FamiStudio
                     // Draw the vertical bars.
                     for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                     {
-                        int barCount = Song.GetPatternInstanceLength(p) / Song.BarLength;
+                        int barCount = Song.GetPatternLength(p) / Song.BarLength;
 
                         for (int b = 0; b < barCount; b++)
                         {
-                            int barMinX = Song.GetPatternInstanceStartNote(p) * noteSizeX + b * barSizeX - scrollX;
+                            int barMinX = Song.GetPatternStartNote(p) * noteSizeX + b * barSizeX - scrollX;
 
                             for (int t = 0; t < Song.BarLength; t++)
                             {
@@ -1167,7 +1167,7 @@ namespace FamiStudio
                                 if (pattern == null)
                                     continue;
 
-                                var patternLen = Song.GetPatternInstanceLength(p1);
+                                var patternLen = Song.GetPatternLength(p1);
 
                                 for (int i1 = 0; i1 < patternLen; i1++)
                                 {
@@ -1183,7 +1183,7 @@ namespace FamiStudio
 
                                         if (value >= a.minVisibleNote && value <= a.maxVisibleNote)
                                         {
-                                            int x = Song.GetPatternInstanceStartNote(p1, i1) * noteSizeX - scrollX;
+                                            int x = Song.GetPatternStartNote(p1, i1) * noteSizeX - scrollX;
                                             int y = virtualSizeY - value * noteSizeY - scrollY;
 
                                             var paths = n1.IsStop ? (released ? stopReleaseNoteGeometry :  stopNoteGeometry) : releaseNoteGeometry;
@@ -1204,7 +1204,7 @@ namespace FamiStudio
                                         else
                                         {
                                             i0 = i1 + 1;
-                                            if (i0 >= Song.GetPatternInstanceLength(p0))
+                                            if (i0 >= Song.GetPatternLength(p0))
                                             {
                                                 i0 = 0;
                                                 p0++;
@@ -1370,7 +1370,7 @@ namespace FamiStudio
             var a = new RenderArea();
 
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / (float)noteSizeX), 0);
-            var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / (float)noteSizeX), Song.GetPatternInstanceStartNote(Song.Length));
+            var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / (float)noteSizeX), Song.GetPatternStartNote(Song.Length));
 
             a.maxVisibleNote = numNotes - Utils.Clamp((int)Math.Floor(scrollY / (float)noteSizeY), 0, numNotes);
             a.minVisibleNote = numNotes - Utils.Clamp((int)Math.Ceiling((scrollY + Height - headerAndEffectSizeY) / (float)noteSizeY), 0, numNotes);
@@ -1544,7 +1544,7 @@ namespace FamiStudio
                 int patIdx  = Song.FindPatternInstanceIndex((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX), out _);
                 if (patIdx >= 0 && patIdx < Song.Length)
                 {
-                    SetSelection(Song.GetPatternInstanceStartNote(patIdx), Song.GetPatternInstanceStartNote(patIdx + 1) - 1);
+                    SetSelection(Song.GetPatternStartNote(patIdx), Song.GetPatternStartNote(patIdx + 1) - 1);
                     ConditionalInvalidate();
                 }
             }
@@ -1604,13 +1604,13 @@ namespace FamiStudio
 
                 if (pattern != null)
                 {
-                    var patternLen = Song.GetPatternInstanceLength(p);
+                    var patternLen = Song.GetPatternLength(p);
                     var n0 = p == minPattern ? minNote : 0;
                     var n1 = p == maxPattern ? maxNote : patternLen - 1;
 
                     for (var n = n0; n <= n1; n++)
                     {
-                        pattern.Notes[n] = function(pattern.Notes[n], Song.GetPatternInstanceStartNote(p) + n - startFrameIdx);
+                        pattern.Notes[n] = function(pattern.Notes[n], Song.GetPatternStartNote(p) + n - startFrameIdx);
                     }
 
                     pattern.UpdateLastValidNotes();
@@ -1876,7 +1876,7 @@ namespace FamiStudio
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[patternIdx].Id);
                             var op = CaptureOperation.DragSlideNoteTarget;
-                            StartCaptureOperation(e, op, Song.GetPatternInstanceStartNote(patternIdx, noteIdx));
+                            StartCaptureOperation(e, op, Song.GetPatternStartNote(patternIdx, noteIdx));
                             changed = true;
                         }
                     }
@@ -2023,7 +2023,7 @@ namespace FamiStudio
                 int maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
 
                 if (editMode == EditionMode.Channel)
-                    maxScrollX = Math.Max(Song.GetPatternInstanceStartNote(Song.Length) * noteSizeX - ScrollMargin, 0);
+                    maxScrollX = Math.Max(Song.GetPatternStartNote(Song.Length) * noteSizeX - ScrollMargin, 0);
                 else if (editMode == EditionMode.Enveloppe)
                     maxScrollX = Math.Max(EditEnvelope.Length * noteSizeX - ScrollMargin, 0);
 
@@ -2047,7 +2047,7 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe)
             {
-                int rangeMax = editMode == EditionMode.Channel ? Song.GetPatternInstanceStartNote(Song.Length) - 1 : EditEnvelope.Length - 1;
+                int rangeMax = editMode == EditionMode.Channel ? Song.GetPatternStartNote(Song.Length) - 1 : EditEnvelope.Length - 1;
 
                 if (min > rangeMax)
                 {

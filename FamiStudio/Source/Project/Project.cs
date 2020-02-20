@@ -449,6 +449,9 @@ namespace FamiStudio
             if (channelType >= Channel.Mmc5Square1 && channelType <= Channel.Mmc5Square2)
                 return expansionAudio == ExpansionMmc5;
 
+            if (channelType == Channel.Mmc5Dpcm)
+                return false;
+
             if (channelType >= Channel.Vrc7Fm1 && channelType <= Channel.Vrc7Fm6)
                 return expansionAudio == ExpansionVrc7;
 

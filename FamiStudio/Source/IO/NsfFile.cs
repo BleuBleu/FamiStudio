@@ -548,7 +548,7 @@ namespace FamiStudio
             NsfSetTrack(nsf, songIndex);
 
             song.Speed = 1;
-            song.SetPatternLength(patternLength);
+            song.SetDefaultPatternLength(patternLength);
             song.SetSensibleBarLength();
 
             for (int i = 0; i < song.Channels.Length; i++)

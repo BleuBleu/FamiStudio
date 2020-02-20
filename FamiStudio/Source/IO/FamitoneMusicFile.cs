@@ -396,7 +396,7 @@ namespace FamiStudio
         {
             for (int p = 0; p < song.Length; p++)
             {
-                for (int i = 0; i < song.GetPatternInstanceLength(p); i++)
+                for (int i = 0; i < song.GetPatternLength(p); i++)
                 {
                     int fx = FindEffectParam(song, p, i, effect);
                     if (fx >= 0)
@@ -411,7 +411,7 @@ namespace FamiStudio
 
         private int FindEffectPosition(Song song, int patternIdx, int effect)
         {
-            for (int i = 0; i < song.GetPatternInstanceLength(patternIdx); i++)
+            for (int i = 0; i < song.GetPatternLength(patternIdx); i++)
             {
                 var fx = FindEffectParam(song, patternIdx, i, effect);
                 if (fx >= 0)
@@ -482,7 +482,7 @@ namespace FamiStudio
                     }
 
                     var i = 0;
-                    var patternLength = song.GetPatternInstanceLength(p); 
+                    var patternLength = song.GetPatternLength(p); 
                     var numValidNotes = patternLength;
 
                     while (i < patternLength)

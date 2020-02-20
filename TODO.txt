@@ -17,6 +17,7 @@
 	- Delayed notes/cuts.
 	- NSF (#defines)
 	- Add better tempo logic to famitone2fs.
+	- Make bar length more flexible (for short patterns too).
 - Duty cycle envelopes.
 	- NSF
 	- Test FamiTracker import/export
@@ -30,29 +31,17 @@
 		1) Move things on patterns. 
 		2) When changing params, warn that it will propage to patterns in same column and de-instanciate if needed.
 	- Skip is a shorter pattern.
-		x FamiTracker import/export (should we only support SHORTER patterns??? YES!)
-		x FamiTone split, etc.
-		- Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, export to FT, etc.
-		- Retest seek
-		- Retest slide note import/export to FamiTracker. Test a few cases.
-		- We dont update MaxInstanceLength in all cases (song resize, change pattern length, etc.)
-		- Handle where we change the song pattern length.
-		- Truncate pattern to their maxlength.
-		- Make dark version of seq header icon.
-		- What to do with bar length on shorter patterns?
-	- When 2 icons (loop + custom) are in same pattern, looks like shit.
-	- Dont display icon at high zoom levels? Or at least clip them to pattern size.
 - NSF Import:
 	- Avoid setting the volumes on new notes. Only if state.volume == 0.
 - Transform dialog:
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion
-- Test installer on Japanese machine.
 
-* BUG: If select really fast in sequencer, selection makes no sense.
-* BUG: Lots of bad last volumes in castlevania 3 saw track.
-* BUG: Dragging patterns in sequencer does update piano roll.
-* CRASH: GetLastValidNote gets asserts. (Likely due to DeleteSelectedNotes() not calling UpdateLastValid()).
+TESTING:
+- FamiTracker import/export.
+- Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, export to FT, etc.
+- Retest slide note import/export to FamiTracker. Test a few cases.
+- Test installer on Japanese machine.
 
 ========================
 

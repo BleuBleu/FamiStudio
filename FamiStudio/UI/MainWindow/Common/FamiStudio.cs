@@ -566,7 +566,7 @@ namespace FamiStudio
                 else
                 {
                     if (ctrl)
-                        Seek(song.GetPatternInstanceStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _)));
+                        Seek(song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _)));
 
                     Play();
                 }
@@ -581,6 +581,13 @@ namespace FamiStudio
                 {
                     Seek(0);
                 }
+            }
+            if (e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D9)
+            {
+                if (ctrl)
+                    GhostChannelMask ^= (1 << (int)(e.KeyCode - Keys.D1));
+                else
+                    Sequencer.SelectedChannel = (int)(e.KeyCode - Keys.D1);
             }
             else if ((ctrl && e.KeyCode == Keys.Y) || (ctrl && shift && e.KeyCode == Keys.Z))
             {
@@ -697,7 +704,7 @@ namespace FamiStudio
         {
             bool wasPlaying = songPlayer.IsPlaying;
             if (wasPlaying) Stop();
-            songPlayer.CurrentFrame = Math.Min(frame, song.GetPatternInstanceStartNote(song.Length) - 1);
+            songPlayer.CurrentFrame = Math.Min(frame, song.GetPatternStartNote(song.Length) - 1);
             if (wasPlaying) Play();
             InvalidateEverything();
         }
@@ -706,7 +713,7 @@ namespace FamiStudio
         {
             bool wasPlaying = songPlayer.IsPlaying;
             if (wasPlaying) Stop();
-            songPlayer.CurrentFrame = song.GetPatternInstanceStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _));
+            songPlayer.CurrentFrame = song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _));
             if (wasPlaying) Play();
             InvalidateEverything();
         }
@@ -717,6 +724,7 @@ namespace FamiStudio
             set
             {
                 ghostChannelMask = value;
+                Sequencer.ConditionalInvalidate();
                 PianoRoll.ConditionalInvalidate();
             }
         }

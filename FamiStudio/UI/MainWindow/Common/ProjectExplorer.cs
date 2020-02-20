@@ -1166,7 +1166,7 @@ namespace FamiStudio
                             song.Tempo = dlg.Properties.GetPropertyValue<int>(1);
                             song.Speed = dlg.Properties.GetPropertyValue<int>(2);
                             song.SetLength(dlg.Properties.GetPropertyValue<int>(5));
-                            song.SetPatternLength(dlg.Properties.GetPropertyValue<int>(3));
+                            song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(3));
                             song.SetBarLength(dlg.Properties.GetPropertyValue<int>(4));
                             SongModified?.Invoke(song);
                             App.UndoRedoManager.EndTransaction();

@@ -161,7 +161,7 @@ namespace FamiStudio
             for (int p = 0; p < song.Length; p++)
             {
                 var pattern = patternInstances[p];
-                var patternLen = song.GetPatternInstanceLength(p);
+                var patternLen = song.GetPatternLength(p);
 
                 if (pattern != null)
                 {
@@ -273,7 +273,7 @@ namespace FamiStudio
                 var pattern = patternInstances[p];
                 if (pattern != null)
                 {
-                    var lastPatternNoteIdx = song.GetPatternInstanceLength(p) - 1;
+                    var lastPatternNoteIdx = song.GetPatternLength(p) - 1;
                     if (pattern.HasLastEffectValueAt(lastPatternNoteIdx, effect))
                         return pattern.GetLastEffectValueAt(lastPatternNoteIdx, effect);
                 }
@@ -294,7 +294,7 @@ namespace FamiStudio
                 if (pattern != null)
                 {
                     var note = new Note(Note.NoteInvalid);
-                    var lastPatternNoteIdx = song.GetPatternInstanceLength(patternIdx) - 1;
+                    var lastPatternNoteIdx = song.GetPatternLength(patternIdx) - 1;
 
                     if (pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx) >= 0)
                     {
@@ -351,27 +351,27 @@ namespace FamiStudio
         public int FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes)
         {
             var noteCount = 0;
-            var patternLength = song.GetPatternInstanceLength(patternIdx);
+            var patternLength = song.GetPatternLength(patternIdx);
 
             for (int n = noteIdx + 1; n < patternLength && noteCount < maxNotes; n++, noteCount++)
             {
                 var tmpNote = patternInstances[patternIdx].Notes[n];
                 if (tmpNote.IsMusical || tmpNote.IsStop)
-                    return song.GetPatternInstanceStartNote(patternIdx, n) - song.GetPatternInstanceStartNote(patternIdx, noteIdx);
+                    return song.GetPatternStartNote(patternIdx, n) - song.GetPatternStartNote(patternIdx, noteIdx);
             }
 
             for (int p = patternIdx + 1; p < song.Length && noteCount < maxNotes; p++)
             {
                 var pattern = patternInstances[p];
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
-                    return song.GetPatternInstanceStartNote(p, pattern.FirstValidNoteTime) - song.GetPatternInstanceStartNote(patternIdx, noteIdx);
+                    return song.GetPatternStartNote(p, pattern.FirstValidNoteTime) - song.GetPatternStartNote(patternIdx, noteIdx);
                 else
-                    noteCount += song.GetPatternInstanceStartNote(p);
+                    noteCount += song.GetPatternLength(p);
             }
 
             // This mean we hit the end of the song.
             if (noteCount < maxNotes)
-                return song.GetPatternInstanceStartNote(song.Length) - song.GetPatternInstanceStartNote(patternIdx, noteIdx);
+                return song.GetPatternStartNote(song.Length) - song.GetPatternStartNote(patternIdx, noteIdx);
 
             return maxNotes;
         }
@@ -407,7 +407,7 @@ namespace FamiStudio
                 pattern = patternInstances[p];
                 if (pattern != null)
                 {
-                    var lastPatternNoteIdx = song.GetPatternInstanceLength(p) - 1;
+                    var lastPatternNoteIdx = song.GetPatternLength(p) - 1;
                     noteIdx = pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx);
                     if (noteIdx >= 0)
                     {
@@ -421,7 +421,7 @@ namespace FamiStudio
                 }
 
                 if (--p < 0) break;
-                n = song.GetPatternInstanceLength(p) - 1;
+                n = song.GetPatternLength(p) - 1;
             }
 
             return false;
@@ -431,12 +431,6 @@ namespace FamiStudio
         {
             for (int i = song.Length; i < patternInstances.Length; i++)
                 patternInstances[i] = null;
-        }
-
-        public void ClearNotesPastSongLength()
-        {
-            foreach (var pattern in patterns)
-                pattern.ClearNotesPastMaxInstanceLength();
         }
 
         public static int ChannelTypeToIndex(int type)
