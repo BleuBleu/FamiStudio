@@ -5,6 +5,8 @@
 	- Project explorer slider micro mode (hold shift)
 	- Presets (saw, triangle, sine, square, etc.)
 	- Proper playback (remove hacks)
+	- Waveform should be centered? Nicer that way.
+	- Dont allow looping/release in wave/mod.
 	- NSF.
 - Fine pitch track
 	- NSF
@@ -22,15 +24,8 @@
 	- NSF
 	- Test FamiTracker import/export
 	- Test Famitone 2 export, etc.
-	- Create a default duty envelope for all instruments.
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
-- Remove jump and skip effects:
-	x Jump is simply a loop point
-	- I DONT LIKE MY DESIGN: TOO COMPLEX. REQUIREMENTS
-		1) Move things on patterns. 
-		2) When changing params, warn that it will propage to patterns in same column and de-instanciate if needed.
-	- Skip is a shorter pattern.
 - NSF Import:
 	- Avoid setting the volumes on new notes. Only if state.volume == 0.
 - Transform dialog:
@@ -38,6 +33,7 @@
 	- Tempo conversion
 
 TESTING:
+========
 - FamiTracker import/export.
 - Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, export to FT, etc.
 - Retest slide note import/export to FamiTracker. Test a few cases.
@@ -46,13 +42,14 @@ TESTING:
 ========================
 
 Backlog:
-P0 All expansions.
-P1 Fix crash on startup when there are no audio device (also freeze when switching audio devices)
-P1 Proper error messages when something fails (save, etc.)
-P2 Binary FTM import.
-P2 Add taskbar progress bar + color to show playback state
-P2 Raw FDS modulation table envelope.
-P2 Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
-P2 Instrument folders
-P2 Note dragging.
-P2 Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).
+=========
+- P0: All expansions.
+- P1: Fix crash on startup when there are no audio device (also freeze when switching audio devices)
+- P1: Proper error messages when something fails (save, etc.)
+- P2: Binary FTM import.
+- P2: Add taskbar progress bar + color to show playback state
+- P2: Raw FDS modulation table envelope.
+- P2: Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
+- P2: Instrument folders
+- P2: Note dragging.
+- P2: Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).

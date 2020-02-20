@@ -71,6 +71,7 @@ namespace FamiStudio
             "FDS", // FDS
             "Square 1", // MMC5
             "Square 2", // MMC5
+            "DPCM", // MMC5
             "Wave 1", // Namco
             "Wave 2", // Namco
             "Wave 3", // Namco
@@ -81,7 +82,7 @@ namespace FamiStudio
             "Wave 8", // Namco
             "Square 1", // Sunsoft
             "Square 2", // Sunsoft
-            "Square 3", // SunsoftS
+            "Square 3", // Sunsoft
         };
 
         public Channel()

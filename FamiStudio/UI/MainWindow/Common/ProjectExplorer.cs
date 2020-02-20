@@ -80,11 +80,14 @@ namespace FamiStudio
             Instrument,
             ParamCheckbox,
             ParamSlider,
+            ParamList,
             Max
         };
 
         enum ParamType
         {
+            FdsWavePreset,
+            FdsModulationPreset,
             FdsModulationSpeed,
             FdsModulationDepth,
             Max
@@ -92,6 +95,8 @@ namespace FamiStudio
 
         static readonly string[] ParamNames = 
         {
+            "Wave Preset",
+            "Mod Preset",
             "Mod Speed",
             "Mod Depth"
         };
@@ -200,7 +205,8 @@ namespace FamiStudio
                     case ButtonType.InstrumentHeader: return "Instruments";
                     case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
                     case ButtonType.ParamCheckbox:
-                    case ButtonType.ParamSlider: return ParamNames[(int)param];
+                    case ButtonType.ParamSlider:
+                    case ButtonType.ParamList: return ParamNames[(int)param];
                 }
 
                 return "";
@@ -215,6 +221,7 @@ namespace FamiStudio
                     case ButtonType.Song: return song.Color;
                     case ButtonType.ParamCheckbox:
                     case ButtonType.ParamSlider:
+                    case ButtonType.ParamList:
                     case ButtonType.Instrument: return instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
                 }
 
@@ -248,7 +255,7 @@ namespace FamiStudio
                 {
                     return projectExplorer.bmpSong;
                 }
-                else if (type == ButtonType.ParamCheckbox || type == ButtonType.ParamSlider)
+                else if (type == ButtonType.ParamCheckbox || type == ButtonType.ParamSlider || type == ButtonType.ParamList)
                 {
                     return projectExplorer.bmpParams[(int)param];
                 }
@@ -451,8 +458,10 @@ namespace FamiStudio
 
                 if (instrument != null && instrument == expandedInstrument)
                 {
-                    buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.FdsModulationSpeed, instrument = instrument });
-                    buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.FdsModulationDepth, instrument = instrument });
+                    buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.FdsWavePreset,       instrument = instrument });
+                    buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.FdsModulationPreset, instrument = instrument });
+                    buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.FdsModulationSpeed,  instrument = instrument });
+                    buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.FdsModulationDepth,  instrument = instrument });
                 }
             }
 
@@ -479,8 +488,10 @@ namespace FamiStudio
             bmpEnvelopes[Envelope.FdsModulation] = g.CreateBitmapFromResource("Wave");
             bmpEnvelopes[Envelope.NamcoWaveform] = g.CreateBitmapFromResource("Wave");
 
-            bmpParams[(int)ParamType.FdsModulationSpeed] = g.CreateBitmapFromResource("Wave");
-            bmpParams[(int)ParamType.FdsModulationDepth] = g.CreateBitmapFromResource("Wave");
+            bmpParams[(int)ParamType.FdsWavePreset]       = g.CreateBitmapFromResource("Wave");
+            bmpParams[(int)ParamType.FdsModulationPreset] = g.CreateBitmapFromResource("Wave");
+            bmpParams[(int)ParamType.FdsModulationSpeed]  = g.CreateBitmapFromResource("Wave");
+            bmpParams[(int)ParamType.FdsModulationDepth]  = g.CreateBitmapFromResource("Wave");
 
             bmpExpand = g.CreateBitmapFromResource("InstrumentExpand");
             bmpExpanded = g.CreateBitmapFromResource("InstrumentExpanded");
@@ -528,7 +539,8 @@ namespace FamiStudio
                 g.PushTranslation(0, y);
 
                 if (button.type == ButtonType.ParamCheckbox || 
-                    button.type == ButtonType.ParamSlider)
+                    button.type == ButtonType.ParamSlider   || 
+                    button.type == ButtonType.ParamList)
                 {
                     if (firstParam)
                     {
@@ -536,8 +548,12 @@ namespace FamiStudio
 
                         for (int j = i + 1; j < buttons.Count; j++, numParamButtons++)
                         {
-                            if (buttons[j].type != ButtonType.ParamCheckbox && button.type != ButtonType.ParamSlider)
+                            if (buttons[j].type != ButtonType.ParamCheckbox &&
+                                buttons[j].type != ButtonType.ParamSlider &&
+                                buttons[j].type != ButtonType.ParamList)
+                            { 
                                 break;
+                            }
                         }
 
                         g.FillAndDrawRectangle(0, 0, actualWidth, numParamButtons * buttonSizeY, g.GetVerticalGradientBrush(button.GetColor(), numParamButtons * buttonSizeY, 0.8f), theme.BlackBrush);
@@ -550,7 +566,7 @@ namespace FamiStudio
                 }
 
                 var leftPadding = 0;
-                var leftAligned = button.type == ButtonType.Instrument || button.type == ButtonType.Song || button.type == ButtonType.ParamSlider || button.type == ButtonType.ParamCheckbox;
+                var leftAligned = button.type == ButtonType.Instrument || button.type == ButtonType.Song || button.type == ButtonType.ParamSlider || button.type == ButtonType.ParamCheckbox || button.type == ButtonType.ParamList;
 
                 if (showExpandButton && leftAligned)
                 {
@@ -575,15 +591,19 @@ namespace FamiStudio
                         var paramMax = button.GetParamMaxValue();
                         var valSizeX = (int)Math.Round((paramVal - paramMin) / (float)(paramMax - paramMin) * sliderSizeX);
 
-                        g.DrawText(paramVal.ToString(), ThemeBase.FontMediumRight, 0, buttonTextPosY, theme.BlackBrush, actualWidth - sliderTextPosX);
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         g.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
                         g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, theme.BlackBrush);
+                        g.DrawText(paramVal.ToString(), ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
                     {
                         g.DrawBitmap(button.GetParamValue() == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY);
+                    }
+                    else if (button.type == ButtonType.ParamList)
+                    {
+
                     }
                 }
                 else
