@@ -218,9 +218,41 @@ namespace FamiStudio
 
         private bool ReadSequences(int idx)
         {
-            var seqCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+            var count = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
-            // ...
+            for (int i = 0; i < count; ++i)
+            {
+                var index     = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var type      = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var seqCount  = bytes[idx++];
+                var loopPoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+
+                //    Indices[i] = Index;
+                //    Types[i]   = Type;
+
+                //    CSequence* pSeq = GetSequence(Index, Type);
+
+                //    pSeq->Clear();
+                //    pSeq->SetItemCount(SeqCount < MAX_SEQUENCE_ITEMS ? SeqCount : MAX_SEQUENCE_ITEMS);
+                //    pSeq->SetLoopPoint(LoopPoint);
+
+                for (int j = 0; j < seqCount; ++j)
+                {
+                    byte val = bytes[idx++];
+                    //env.Values[j] = val;
+                }
+            }
+
+            for (int i = 0; i < count; ++i)
+            {
+                var release  = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var settings = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                //unsigned int Index = Indices[i];
+                //unsigned int Type  = Types[i];
+                //CSequence* pSeq = GetSequence(Index, Type);
+                //pSeq->SetReleasePoint(ReleasePoint);
+                //pSeq->SetSetting(Settings);
+            }
 
             return true;
         }
