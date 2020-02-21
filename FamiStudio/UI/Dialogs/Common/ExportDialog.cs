@@ -14,6 +14,7 @@ namespace FamiStudio
             Wav,
             Nsf,
             Rom,
+            Text,
             FamiTracker,
             FamiTone2,
             Max
@@ -75,6 +76,9 @@ namespace FamiStudio
                     page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 0
                     page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 1
                     page.AddStringListMulti(null, songNames, null); // 2
+                    break;
+                case ExportFormat.Text:
+                    page.AddStringListMulti(null, songNames, null); // 0
                     break;
                 case ExportFormat.FamiTracker:
                     page.AddStringListMulti(null, songNames, null); // 0
@@ -161,6 +165,16 @@ namespace FamiStudio
             }
         }
 
+        private void ExportText()
+        {
+            var filename = PlatformUtils.ShowSaveFileDialog("Export FamiStudio Text File", "FamiStudio Text Export (*.txt)|*.txt");
+            if (filename != null)
+            {
+                var props = dialog.GetPropertyPage((int)ExportFormat.Text);
+                FamistudioTextFile.Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
+            }
+        }
+
         private void ExportFamiTracker()
         {
             var filename = PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt");
@@ -224,6 +238,7 @@ namespace FamiStudio
                     case ExportFormat.Wav: ExportWav(); break;
                     case ExportFormat.Nsf: ExportNsf(); break;
                     case ExportFormat.Rom: ExportRom(); break;
+                    case ExportFormat.Text: ExportText(); break;
                     case ExportFormat.FamiTracker: ExportFamiTracker(); break;
                     case ExportFormat.FamiTone2: ExportFamiTone2(); break;
                 }

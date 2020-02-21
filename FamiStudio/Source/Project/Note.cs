@@ -70,6 +70,8 @@ namespace FamiStudio
         public sbyte Pitch; // Fine pitch.
         public Instrument Instrument;
 
+        public static readonly Note Empty = new Note(NoteInvalid);
+
         // As of version 5 (FamiStudio 1.5.0), these are deprecated.
         public const int JumpInvalid = 0xff;
         public const int SkipInvalid = 0xff;
@@ -216,9 +218,9 @@ namespace FamiStudio
         public static string GetFriendlyName(int value)
         {
             if (value == NoteStop)
-                return "Stop Note";
+                return "Stop";
             if (value == NoteRelease)
-                return "Release Note";
+                return "Release";
             if (value == NoteInvalid)
                 return "";
 
@@ -227,7 +229,22 @@ namespace FamiStudio
 
             return NoteNames[note] + octave.ToString();
         }
-        
+
+        public static int FromFriendlyName(string name)
+        {
+            if (name == "")
+                return Note.NoteInvalid;
+            if (name == "Stop")
+                return Note.NoteStop;
+            if (name == "Release")
+                return Note.NoteRelease;
+
+            var note   = Array.IndexOf(NoteNames, name.Substring(0, name.Length - 1));
+            var octave = int.Parse(name[name.Length - 1].ToString());
+
+            return octave * 12 + note + 1;
+        }
+
         public bool HasValidEffectValue(int fx)
         {
             switch (fx)
@@ -353,9 +370,11 @@ namespace FamiStudio
                    Vibrato    == other.Vibrato &&
                    Speed      == other.Speed   &&
                    Slide      == other.Slide   && 
-                   Pitch      == other.Pitch   && 
-                   Instrument == other.Instrument;
+                   Pitch      == other.Pitch   &&
+                   (!IsMusical || Instrument == other.Instrument); // Only comparing instrument if its a musical note.
         }
+
+        public bool IsEmpty => IdenticalTo(Empty);
 
         public void SerializeState(ProjectBuffer buffer)
         {

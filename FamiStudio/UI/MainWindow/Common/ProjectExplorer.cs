@@ -320,6 +320,8 @@ namespace FamiStudio
                 {
                     case ParamType.FdsModulationSpeed: return testVal; // MATTT
                     case ParamType.FdsModulationDepth: return 20;
+                    case ParamType.FdsWavePreset: return 100;
+                    case ParamType.FdsModulationPreset: return 200;
                 }
 
                 return 0;
@@ -373,6 +375,8 @@ namespace FamiStudio
         RenderBitmap   bmpExpanded;
         RenderBitmap   bmpCheckBoxYes;
         RenderBitmap   bmpCheckBoxNo;
+        RenderBitmap   bmpButtonLeft;
+        RenderBitmap   bmpButtonRight;
         RenderBitmap[] bmpInstrument = new RenderBitmap[Project.ExpansionCount];
         RenderBitmap[] bmpEnvelopes = new RenderBitmap[Envelope.Max];
         RenderBitmap[] bmpParams = new RenderBitmap[(int)ParamType.Max];
@@ -497,6 +501,8 @@ namespace FamiStudio
             bmpExpanded = g.CreateBitmapFromResource("InstrumentExpanded");
             bmpCheckBoxYes = g.CreateBitmapFromResource("CheckBoxYes");
             bmpCheckBoxNo = g.CreateBitmapFromResource("CheckBoxNo");
+            bmpButtonLeft = g.CreateBitmapFromResource("ButtonLeft");
+            bmpButtonRight = g.CreateBitmapFromResource("ButtonRight");
             bmpSong = g.CreateBitmapFromResource("Music");
             bmpAdd = g.CreateBitmapFromResource("Add");
             bmpDPCM = g.CreateBitmapFromResource("DPCM");
@@ -584,9 +590,10 @@ namespace FamiStudio
 
                 if (button.param != ParamType.Max)
                 {
+                    var paramVal = button.GetParamValue();
+
                     if (button.type == ButtonType.ParamSlider)
                     {
-                        var paramVal = button.GetParamValue();
                         var paramMin = button.GetParamMinValue();
                         var paramMax = button.GetParamMaxValue();
                         var valSizeX = (int)Math.Round((paramVal - paramMin) / (float)(paramMax - paramMin) * sliderSizeX);
@@ -599,11 +606,15 @@ namespace FamiStudio
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
                     {
-                        g.DrawBitmap(button.GetParamValue() == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY);
+                        g.DrawBitmap(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY);
                     }
                     else if (button.type == ButtonType.ParamList)
                     {
-
+                        g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
+                        g.DrawBitmap(bmpButtonLeft,  0, 0);
+                        g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0);
+                        g.DrawText(paramVal.ToString(), ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
+                        g.PopTransform();
                     }
                 }
                 else
@@ -751,7 +762,7 @@ namespace FamiStudio
                         if (subButtonType == SubButtonType.DPCM)
                             tooltip = "{MouseLeft} Edit DPCM samples";
                         else if (subButtonType < SubButtonType.EnvelopeMax)
-                            tooltip = $"{{MouseLeft}} Edit {Envelope.EnvelopeStrings[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{Drag}} Copy envelope";
+                            tooltip = $"{{MouseLeft}} Edit {Envelope.EnvelopeNames[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{Drag}} Copy envelope";
                     }
                 }
             }
@@ -826,7 +837,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            if (PlatformUtils.MessageBox($"Are you sure you want to copy the {Envelope.EnvelopeStrings[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            if (PlatformUtils.MessageBox($"Are you sure you want to copy the {Envelope.EnvelopeNames[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
                                 instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();

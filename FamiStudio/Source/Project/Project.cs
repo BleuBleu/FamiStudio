@@ -412,18 +412,21 @@ namespace FamiStudio
 
         public void SetExpansionAudio(int expansion)
         {
-            expansionAudio = expansion;
-
-            foreach (var song in songs)
+            if (expansion >= 0 && expansion < ExpansionCount)
             {
-                song.CreateChannels(true);
-            }
+                expansionAudio = expansion;
 
-            for (int i = instruments.Count - 1; i >= 0; i--)
-            {
-                var inst = instruments[i];
-                if (inst.IsExpansionInstrument)
-                    DeleteInstrument(inst);
+                foreach (var song in songs)
+                {
+                    song.CreateChannels(true);
+                }
+
+                for (int i = instruments.Count - 1; i >= 0; i--)
+                {
+                    var inst = instruments[i];
+                    if (inst.IsExpansionInstrument)
+                        DeleteInstrument(inst);
+                }
             }
         }
 

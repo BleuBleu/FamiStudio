@@ -75,6 +75,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Source\IO\FamistudioTextFile.cs" />
     <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
@@ -255,6 +256,12 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\ExportText%402x.png" />
+    <EmbeddedResource Include="Resources\ExportText.png" />
+    <EmbeddedResource Include="Resources\ButtonLeft%402x.png" />
+    <EmbeddedResource Include="Resources\ButtonLeft.png" />
+    <EmbeddedResource Include="Resources\ButtonRight%402x.png" />
+    <EmbeddedResource Include="Resources\ButtonRight.png" />
     <EmbeddedResource Include="Resources\CustomPattern%402x.png" />
     <EmbeddedResource Include="Resources\CustomPattern.png" />
     <EmbeddedResource Include="Resources\Help%402x.png" />

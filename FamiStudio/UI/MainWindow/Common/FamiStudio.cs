@@ -270,7 +270,10 @@ namespace FamiStudio
             }
             else if (filename.ToLower().EndsWith("txt"))
             {
-                project = FamitrackerTextFile.Load(filename);
+                project = FamistudioTextFile.Load(filename);
+
+                if (project == null)
+                    project = FamitrackerTextFile.Load(filename);
             }
             else if (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe"))
             {
@@ -285,6 +288,8 @@ namespace FamiStudio
             if (project != null)
             {
                 InitProject();
+
+                //FamistudioTextFile.Save(project, "d:\\toto.txt");
             }
             else
             {
@@ -294,7 +299,7 @@ namespace FamiStudio
 
         public void OpenProject()
         {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe)|*.fms;*.txt;*.nsf;*.nsfe|FamiStudio Files (*.fms)|*.fms|Famitracker Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe");
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe)|*.fms;*.txt;*.nsf;*.nsfe|FamiStudio Files (*.fms)|*.fms|Famitracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe");
             if (filename != null)
             {
                 OpenProject(filename);

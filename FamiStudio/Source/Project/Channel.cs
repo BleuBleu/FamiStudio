@@ -85,6 +85,39 @@ namespace FamiStudio
             "Square 3", // Sunsoft
         };
 
+        public static string[] ChannelExportNames =
+        {
+            "Square1",
+            "Square2",
+            "Triangle",
+            "Noise",
+            "DPCM",
+            "VRC6Square1", // VRC6
+            "VRC6Square2", // VRC6
+            "VRC6Saw", // VRC6
+            "VRC7FM1", // VRC7
+            "VRC7FM2", // VRC7
+            "VRC7FM3", // VRC7
+            "VRC7FM4", // VRC7
+            "VRC7FM5", // VRC7
+            "VRC7FM6", // VRC7
+            "FDS", // FDS
+            "MMC5Square1", // MMC5
+            "MMC5Square2", // MMC5
+            "MMC5DPCM", // MMC5
+            "NamcoWave1", // Namco
+            "NamcoWave2", // Namco
+            "NamcoWave3", // Namco
+            "NamcoWave4", // Namco
+            "NamcoWave5", // Namco
+            "NamcoWave6", // Namco
+            "NamcoWave7", // Namco
+            "NamcoWave8", // Namco
+            "SunsoftSquare1", // Sunsoft
+            "SunsoftSquare2", // Sunsoft
+            "SunsoftSquare3", // Sunsoft
+        };
+
         public Channel()
         {
             // For serialization

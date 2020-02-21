@@ -1348,7 +1348,7 @@ namespace FamiStudio
                     }
                 }
 
-                var envelopeString = Envelope.EnvelopeStrings[editEnvelope];
+                var envelopeString = Envelope.EnvelopeNames[editEnvelope];
 
                 if (editEnvelope == Envelope.Pitch)
                     envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? "Relative " : "Absolute ") + envelopeString;
