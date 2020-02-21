@@ -264,12 +264,13 @@ namespace FamiStudio
 
         public Instrument CreateInstrument(int type, string name = null)
         {
+            if (type != ExpansionNone && type != expansionAudio)
+                return null;
+
             if (name == null)
                 name = GenerateUniqueInstrumentName();
             else if (instruments.Find(inst => inst.Name == name) != null)
                 return null;
-
-            Debug.Assert(type == ExpansionNone || type == expansionAudio);
 
             var instrument = new Instrument(GenerateUniqueId(), type, name);
             instruments.Add(instrument);
@@ -436,6 +437,14 @@ namespace FamiStudio
             for (int i = 0; i < Channel.Count; i++)
                 if (IsChannelActive(i)) channelCount++;
             return channelCount;
+        }
+
+        public int[] GetActiveChannelList()
+        {
+            var activeChannels = new List<int>();
+            for (int i = 0; i < Channel.Count; i++)
+                if (IsChannelActive(i)) activeChannels.Add(i);
+            return activeChannels.ToArray();
         }
 
         public bool IsChannelActive(int channelType)
