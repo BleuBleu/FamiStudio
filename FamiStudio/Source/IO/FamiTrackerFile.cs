@@ -343,11 +343,12 @@ namespace FamiStudio
                     var note       = bytes[idx++];
                     var octave     = bytes[idx++];
                     var instrument = bytes[idx++];
-                    var volume     = bytes[idx++]; 
+                    var volume     = bytes[idx++];
 
-                    if (note != 0 || octave != 0)    pattern.Notes[n].Value  = (byte)(octave * 12 + note);
-                    if (volume != 16)                pattern.Notes[n].Volume = (byte)(volume & 0x0f);
-                    if (instrument < MaxInstruments) pattern.Notes[n].Instrument = instruments[instrument];
+                    if (channel.Type == Channel.Dpcm) instrument = MaxInstruments;
+                    if (note != 0 || octave != 0)     pattern.Notes[n].Value  = (byte)(octave * 12 + note);
+                    if (volume != 16)                 pattern.Notes[n].Volume = (byte)(volume & 0x0f);
+                    if (instrument < MaxInstruments)  pattern.Notes[n].Instrument = instruments[instrument];
 
                     var effectColumnCount = songEffectColumnCount[song][chanIdx];
 
@@ -360,16 +361,30 @@ namespace FamiStudio
                         //Note->EffParam[n]  = EffectParam;
                     }
 
-                    if (blockVersion < 5)
+                    // FDS octave
+                    if (blockVersion < 5 && project.ExpansionAudio == Project.ExpansionFds && channel.Type == Channel.FdsWave && octave < 6)
+                        octave += 2;
+                }
+            }
+
+            // Create pattern instances.
+            foreach (var kv in songFrameIndices)
+            {
+                var song = kv.Key;
+                var frameIndices = kv.Value;
+
+                for (int c = 0; c < frameIndices.GetLength(0); c++)
+                {
+                    var channel = song.Channels[c];
+
+                    for (int p = 0; p < frameIndices.GetLength(1); p++)
                     {
-                        // FDS octave
-                        if (project.ExpansionAudio == Project.ExpansionFds && channel.Type == Channel.FdsWave && octave < 6)
-                            octave += 2;
+                        var patIdx = frameIndices[c, p];
+                        channel.PatternInstances[p] = channel.Patterns[patIdx];
                     }
                 }
             }
 
-            // Need to support version 4 + 5.
             return true;
         }
 
@@ -395,7 +410,7 @@ namespace FamiStudio
                 var blockId   = Encoding.ASCII.GetString(bytes, idx, BlockNameLength).TrimEnd('\0'); idx += BlockNameLength;
                 var blockVer  = BitConverter.ToInt32(bytes, idx); idx += sizeof(uint);
                 var blockSize = BitConverter.ToInt32(bytes, idx); idx += sizeof(uint);
-                var success   = false;
+                var success   = true;
 
                 blockVersion = blockVer;
 
@@ -408,7 +423,7 @@ namespace FamiStudio
                     case "SEQUENCES"    : success = ReadSequences(idx); break;
                     case "FRAMES"       : success = ReadFrames(idx); break;
                     case "PATTERNS"     : success = ReadPatterns(idx, idx + blockSize); break;
-                    case "DPCM SAMPLES" : success = true; break;
+                    //case "DPCM SAMPLES" : break;
                 }
 
                 if (!success)
