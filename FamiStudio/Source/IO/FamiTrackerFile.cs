@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -69,13 +70,24 @@ namespace FamiStudio
             Project.ExpansionSunsoft // INST_S5B
         };
 
+        static int[] EnvelopeTypeLookup =
+        {
+            Envelope.Volume,   // SEQ_VOLUME
+            Envelope.Arpeggio, // SEQ_ARPEGGIO
+            Envelope.Pitch,    // SEQ_PITCH
+            Envelope.Max,      // SEQ_HIPITCH
+            Envelope.DutyCycle // SEQ_DUTYCYCLE
+        };
+
+        const int MaxSequences  = 128;
         const int SequenceCount = 5;
         const int OctaveRange   = 8;
 
         private Project project;
         private int blockVersion;
         private byte[] bytes;
-
+        private Envelope[,] envelopes = new Envelope[MaxSequences, SequenceCount];
+        private Dictionary<Song, byte[,]> songFrameIndices = new Dictionary<Song, byte[,]>();
         private bool ReadParams(int idx)
         {
             var expansionChip = bytes[idx++];
@@ -219,6 +231,9 @@ namespace FamiStudio
         private bool ReadSequences(int idx)
         {
             var count = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+            var indices = new int[count];
+            var types   = new int[count];
+            var loops   = new int[count];
 
             for (int i = 0; i < count; ++i)
             {
@@ -227,33 +242,83 @@ namespace FamiStudio
                 var seqCount  = bytes[idx++];
                 var loopPoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
-                //    Indices[i] = Index;
-                //    Types[i]   = Type;
+                indices[i] = index;
+                types[i]   = type;
+                loops[i]   = loopPoint;
 
-                //    CSequence* pSeq = GetSequence(Index, Type);
+                var env = new Envelope(EnvelopeTypeLookup[type]);
 
-                //    pSeq->Clear();
-                //    pSeq->SetItemCount(SeqCount < MAX_SEQUENCE_ITEMS ? SeqCount : MAX_SEQUENCE_ITEMS);
-                //    pSeq->SetLoopPoint(LoopPoint);
+                if (env.CanResize)
+                   env.Length = seqCount;
+
+                envelopes[index, type] = env;
 
                 for (int j = 0; j < seqCount; ++j)
-                {
-                    byte val = bytes[idx++];
-                    //env.Values[j] = val;
-                }
+                    env.Values[j] = (sbyte)bytes[idx++];
             }
 
             for (int i = 0; i < count; ++i)
             {
-                var release  = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
-                var settings = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
-                //unsigned int Index = Indices[i];
-                //unsigned int Type  = Types[i];
-                //CSequence* pSeq = GetSequence(Index, Type);
-                //pSeq->SetReleasePoint(ReleasePoint);
-                //pSeq->SetSetting(Settings);
+                var loopPoint      = loops[i];
+                var releasePoint   = BitConverter.ToInt32(bytes, idx); idx += sizeof(int) * 2; // Skip settings
+                var type           = types[i];
+                var famistudioType = EnvelopeTypeLookup[type];
+
+                var env = envelopes[indices[i], types[i]];
+                Debug.Assert(env != null);
+
+                if (releasePoint >= 0 && !env.CanRelease)
+                    releasePoint = -1;
+
+                // FamiTracker allows envelope with release with no loop. We dont allow that.
+                if (env.CanRelease && releasePoint != -1)
+                {
+                    if (loopPoint == -1)
+                        loopPoint = releasePoint;
+                    if (releasePoint != -1)
+                        releasePoint++;
+                }
+
+                env.Loop = loopPoint;
+                env.Release = releasePoint;
             }
 
+            return true;
+        }
+
+        private bool ReadFrames(int idx)
+        {
+            foreach (var song in project.Songs)
+            {
+                var frameCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var speed      = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var tempo      = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var patLength  = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+
+                song.SetLength(frameCount);
+                song.SetDefaultPatternLength(patLength);
+                song.Tempo = tempo;
+                song.Speed = speed;
+
+                var frameIndices = new byte[song.Channels.Length, frameCount];
+
+                for (int i = 0; i < frameCount; ++i)
+                {
+				    for (int j = 0; j < song.Channels.Length; ++j)
+                    {
+                        frameIndices[j, i] = bytes[idx++];
+				    }
+			    }
+
+                songFrameIndices[song] = frameIndices;
+            }
+
+            return true;
+        }
+
+        private bool ReadPatterns(int idx)
+        {
+            // Need to support version 4 + 5.
             return true;
         }
 
@@ -288,6 +353,8 @@ namespace FamiStudio
                     case "HEADER"      : success = ReadHeader(idx); break;
                     case "INSTRUMENTS" : success = ReadInstruments(idx); break;
                     case "SEQUENCES"   : success = ReadSequences(idx); break;
+                    case "FRAMES"      : success = ReadFrames(idx); break;
+                    case "PATTERNS"    : success = ReadPatterns(idx); break;
                 }
 
                 if (!success)

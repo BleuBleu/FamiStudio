@@ -128,11 +128,11 @@ namespace FamiStudio
                         env.Length = curve.Length;
 
                         // FamiTracker allows envelope with release with no loop. We dont allow that.
-                        if (type == Envelope.Volume && loop == -1 && rel != -1)
+                        if (env.CanRelease && loop == -1 && rel != -1)
                             loop = rel;
 
                         env.Loop = loop;
-                        env.Release = type == Envelope.Volume && rel != -1 ? rel + 1 : -1;
+                        env.Release = env.CanRelease && rel != -1 ? rel + 1 : -1;
                         env.Relative = type == 2;
 
                         for (int j = 0; j < curve.Length; j++)
@@ -248,11 +248,11 @@ namespace FamiStudio
                     env.Length = curve.Length;
 
                     // FamiTracker allows envelope with release with no loop. We dont allow that.
-                    if (type == Envelope.Volume && loop == -1 && rel != -1)
+                    if (env.CanRelease && loop == -1 && rel != -1)
                         loop = rel;
 
                     env.Loop = loop;
-                    env.Release = type == Envelope.Volume && rel != -1 ? rel + 1 : -1;
+                    env.Release = env.CanRelease && rel != -1 ? rel + 1 : -1;
                     env.Relative = type == 2;
 
                     for (int j = 0; j < curve.Length; j++)

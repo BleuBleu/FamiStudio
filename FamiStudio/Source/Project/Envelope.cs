@@ -23,9 +23,13 @@ namespace FamiStudio
         int maxLength = 256;
         bool relative = false;
         bool canResize;
+        bool canLoop;
+        bool canRelease;
 
         public sbyte[] Values => values;
         public bool CanResize => canResize;
+        public bool CanLoop => canLoop;
+        public bool CanRelease => canRelease;
 
         private Envelope()
         {
@@ -42,6 +46,8 @@ namespace FamiStudio
 
             values = new sbyte[maxLength];
             canResize = type != FdsWaveform && type != FdsModulation;
+            canRelease = type == Volume;
+            canLoop = type <= DutyCycle;
             length = canResize ? 0 : maxLength;
         }
 
@@ -64,7 +70,7 @@ namespace FamiStudio
             get { return loop; }
             set
             {
-                if (value >= 0)
+                if (value >= 0 && canLoop)
                 {
                     if (release >= 0)
                         loop = Utils.Clamp(value, 0, release - 1);
@@ -87,7 +93,7 @@ namespace FamiStudio
             get { return release; }
             set
             {
-                if (value >= 0)
+                if (value >= 0 && canRelease)
                 {
                     if (loop >= 0)
                         release = Utils.Clamp(value, loop + 1, maxLength);

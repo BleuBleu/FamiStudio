@@ -43,19 +43,19 @@ namespace FamiStudio
             if (envType == Envelope.Max)
                 return;
 
-            if (releasePoint >= 0 && envType != Envelope.Volume)
+            Envelope env = instrument.Envelopes[envType];
+
+            if (releasePoint >= 0 && !env.CanRelease)
                 releasePoint = -1;
 
             // FamiTracker allows envelope with release with no loop. We dont allow that.
-            if (envType == Envelope.Volume && releasePoint != -1)
+            if (env.CanRelease && releasePoint != -1)
             {
                 if (loopPoint == -1)
                     loopPoint = releasePoint;
                 if (releasePoint != -1)
                     releasePoint++;
             }
-
-            Envelope env = instrument.Envelopes[envType];
 
             if (envType == Envelope.Pitch)
                 env.Relative = true;

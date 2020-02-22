@@ -1820,7 +1820,7 @@ namespace FamiStudio
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
             }
-            else if (editMode == EditionMode.Enveloppe && (left || (right && editEnvelope == Envelope.Volume && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e))
+            else if (editMode == EditionMode.Enveloppe && ((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e))
             {
                 CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e, op);
