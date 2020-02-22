@@ -79,15 +79,18 @@ namespace FamiStudio
             Envelope.DutyCycle // SEQ_DUTYCYCLE
         };
 
-        const int MaxSequences  = 128;
-        const int SequenceCount = 5;
-        const int OctaveRange   = 8;
+        const int MaxInstruments = 64;
+        const int MaxSequences   = 128;
+        const int SequenceCount  = 5;
+        const int OctaveRange    = 8;
 
         private Project project;
         private int blockVersion;
         private byte[] bytes;
         private Envelope[,] envelopes = new Envelope[MaxSequences, SequenceCount];
         private Dictionary<Song, byte[,]> songFrameIndices = new Dictionary<Song, byte[,]>();
+        private Dictionary<Song, byte[]> songEffectColumnCount = new Dictionary<Song, byte[]>();
+        private Instrument[] instruments = new Instrument[MaxInstruments];
         private bool ReadParams(int idx)
         {
             var expansionChip = bytes[idx++];
@@ -135,17 +138,19 @@ namespace FamiStudio
         private bool ReadHeader(int idx)
         {
             var numSongs = bytes[idx++] + 1;
+            var chanCount = project.GetActiveChannelCount();
 
             for (int i = 0; i < numSongs; i++)
             {
                 int len = Array.IndexOf<byte>(bytes, 0, idx) - idx + 1;
                 var songName = Encoding.ASCII.GetString(bytes, idx, len).TrimEnd('\0'); idx += len;
-                project.CreateSong(songName);
+                var song = project.CreateSong(songName);
+                songEffectColumnCount[song] = new byte[chanCount];
             }
 
             var channelList = project.GetActiveChannelList();
 
-            for (int i = 0; i < project.GetActiveChannelCount(); i++)
+            for (int i = 0; i < chanCount; i++)
             {
                 var chanType = bytes[idx++];
 
@@ -153,7 +158,7 @@ namespace FamiStudio
                     return false;
 
                 for (int j = 0; j < numSongs; j++)
-                    idx++; // WriteBlockChar(m_pTracks[j]->GetEffectColumnCount(i));
+                    songEffectColumnCount[project.Songs[j]][i] = bytes[idx++];
             }
 
             return true;
@@ -223,6 +228,8 @@ namespace FamiStudio
                 // MATTT: Ensure unique.
                 if (!project.RenameInstrument(instrument, name))
                     return false;
+
+                instruments[i] = instrument;
             }
 
             return true;
@@ -316,8 +323,52 @@ namespace FamiStudio
             return true;
         }
 
-        private bool ReadPatterns(int idx)
+        private bool ReadPatterns(int idx, int maxIdx)
         {
+            while (idx < maxIdx)
+            { 
+                var songIdx = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var chanIdx = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var patIdx  = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var items   = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+
+                var song    = project.Songs[songIdx];
+                var channel = song.Channels[chanIdx];
+                var pattern = channel.CreatePattern($"{patIdx:X2}");
+
+                for (int i = 0; i < items; i++)
+                {
+                    var n = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+
+                    var note       = bytes[idx++];
+                    var octave     = bytes[idx++];
+                    var instrument = bytes[idx++];
+                    var volume     = bytes[idx++]; 
+
+                    if (note != 0 || octave != 0)    pattern.Notes[n].Value  = (byte)(octave * 12 + note);
+                    if (volume != 16)                pattern.Notes[n].Volume = (byte)(volume & 0x0f);
+                    if (instrument < MaxInstruments) pattern.Notes[n].Instrument = instruments[instrument];
+
+                    var effectColumnCount = songEffectColumnCount[song][chanIdx];
+
+                    for (int j = 0; j < effectColumnCount + 1; ++j)
+                    {
+                        var fx    = bytes[idx++];
+                        var param = bytes[idx++];
+
+                        //Note->EffNumber[n] = EffectNumber;
+                        //Note->EffParam[n]  = EffectParam;
+                    }
+
+                    if (blockVersion < 5)
+                    {
+                        // FDS octave
+                        if (project.ExpansionAudio == Project.ExpansionFds && channel.Type == Channel.FdsWave && octave < 6)
+                            octave += 2;
+                    }
+                }
+            }
+
             // Need to support version 4 + 5.
             return true;
         }
@@ -337,7 +388,9 @@ namespace FamiStudio
 
             project = new Project();
 
-            while (true)
+            while (bytes[idx + 0] != 'E' ||
+                   bytes[idx + 1] != 'N' || 
+                   bytes[idx + 2] != 'D')
             {
                 var blockId   = Encoding.ASCII.GetString(bytes, idx, BlockNameLength).TrimEnd('\0'); idx += BlockNameLength;
                 var blockVer  = BitConverter.ToInt32(bytes, idx); idx += sizeof(uint);
@@ -348,13 +401,14 @@ namespace FamiStudio
 
                 switch (blockId)
                 {
-                    case "PARAMS"      : success = ReadParams(idx); break;
-                    case "INFO"        : success = ReadInfo(idx); break;
-                    case "HEADER"      : success = ReadHeader(idx); break;
-                    case "INSTRUMENTS" : success = ReadInstruments(idx); break;
-                    case "SEQUENCES"   : success = ReadSequences(idx); break;
-                    case "FRAMES"      : success = ReadFrames(idx); break;
-                    case "PATTERNS"    : success = ReadPatterns(idx); break;
+                    case "PARAMS"       : success = ReadParams(idx); break;
+                    case "INFO"         : success = ReadInfo(idx); break;
+                    case "HEADER"       : success = ReadHeader(idx); break;
+                    case "INSTRUMENTS"  : success = ReadInstruments(idx); break;
+                    case "SEQUENCES"    : success = ReadSequences(idx); break;
+                    case "FRAMES"       : success = ReadFrames(idx); break;
+                    case "PATTERNS"     : success = ReadPatterns(idx, idx + blockSize); break;
+                    case "DPCM SAMPLES" : success = true; break;
                 }
 
                 if (!success)
@@ -363,7 +417,7 @@ namespace FamiStudio
                 idx += blockSize;
             }
 
-            return null;
+            return project;
         }
     }
 }
