@@ -380,7 +380,7 @@ namespace FamiStudio
                     for (int p = 0; p < frameIndices.GetLength(1); p++)
                     {
                         var patIdx = frameIndices[c, p];
-                        channel.PatternInstances[p] = channel.Patterns[patIdx];
+                        channel.PatternInstances[p] = channel.GetPattern($"{patIdx:X2}");
                     }
                 }
             }
