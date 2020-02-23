@@ -32,10 +32,7 @@
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion
 - Binary FTM import:
-	- Name uniqueness
 	- FDS
-	- Converge more stuff with text import (make text import not static, move stuff to base).
-	- Test test test!!! (Slides, etc.)
 - Loop point should be optional.
 
 TESTING:
@@ -44,6 +41,7 @@ TESTING:
 - Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, export to FT, etc.
 - Retest slide note import/export to FamiTracker. Test a few cases.
 - Test installer on Japanese machine.
+- FTM, test a lot. Needs to match text import (export to text and compare).
 
 ========================
 

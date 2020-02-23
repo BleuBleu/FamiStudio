@@ -31,16 +31,13 @@ namespace FamiStudio
 
         private delegate bool ReadBlockDelegate(int idx);
 
-        private Project project;
         private int blockVersion;
         private int blockSize;
         private byte[] bytes;
         private Envelope[,] envelopes = new Envelope[MaxSequences, SequenceCount];
         private Dictionary<Song, byte[]> songEffectColumnCount = new Dictionary<Song, byte[]>();
-        private Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
         private Instrument[] instruments = new Instrument[MaxInstruments];
         private DPCMSample[] samples = new DPCMSample[MaxSamples];
-        private Dictionary<Pattern, byte> patternLengths = new Dictionary<Pattern, byte>();
 
         private bool ReadParams(int idx)
         {
@@ -190,7 +187,7 @@ namespace FamiStudio
             {
                 var index = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
                 var type  = InstrumentTypeLookup[bytes[idx++]];
-                var instrument = project.CreateInstrument(type, $"{index:X2}");
+                var instrument = project.CreateInstrument(type, $"___TEMP_INSTRUMENT_NAME___{index}");
 
                 if (instrument == null)
                     return false;
@@ -206,9 +203,7 @@ namespace FamiStudio
                 var len  = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
                 var name = Encoding.ASCII.GetString(bytes, idx, len); idx += len;
 
-                // MATTT: Ensure unique.
-                if (!project.RenameInstrument(instrument, name))
-                    return false;
+                RenameInstrumentEnsureUnique(instrument, name);
 
                 instruments[i] = instrument;
             }
@@ -353,7 +348,7 @@ namespace FamiStudio
                                 if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
                                     pattern.Notes[n].Instrument = instruments[instrument];
                                 if (channel.Type == Channel.Noise)
-                                    pattern.Notes[n].Value = (byte)(octave * 12 + note);
+                                    pattern.Notes[n].Value = (byte)(octave * 12 + note + 15);
                                 else
                                     pattern.Notes[n].Value = (byte)(octave * 12 + note);
                                 break;
@@ -395,8 +390,7 @@ namespace FamiStudio
 
                 Array.Copy(bytes, idx, data, 0, size); idx += size;
 
-                // MATTT: How to ensure name uniqueness?
-                samples[i] = project.CreateDPCMSample(name, data);
+                samples[i] = CreateUniquelyNamedSample(name, data);
             }
 
             return true;
@@ -461,7 +455,7 @@ namespace FamiStudio
 
             }
 
-            FinishImport(project, patternLengths, patternFxData);
+            FinishImport();
 
             return project;
         }

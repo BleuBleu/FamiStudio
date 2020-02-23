@@ -115,15 +115,11 @@ namespace FamiStudio
 
         public Project Load(string filename)
         {
-            var project = new Project();
-
-            var envelopes = new Dictionary<int, Envelope>[Project.ExpansionCount, Envelope.Max];
-            var duties = new Dictionary<int, int>[Project.ExpansionCount];
+            var envelopes   = new Dictionary<int, Envelope>[Project.ExpansionCount, Envelope.Max];
+            var duties      = new Dictionary<int, int>[Project.ExpansionCount];
             var instruments = new Dictionary<int, Instrument>();
-            var patternLengths = new Dictionary<Pattern, byte>();
-            var dpcms = new Dictionary<int, DPCMSample>();
-            var columns = new int[5] { 1, 1, 1, 1, 1 };
-            var patternFxData = new Dictionary<Pattern, RowFxData[,]>();
+            var dpcms       = new Dictionary<int, DPCMSample>();
+            var columns     = new int[5] { 1, 1, 1, 1, 1 };
 
             for (int i = 0; i < envelopes.GetLength(0); i++)
                 for (int j = 0; j < envelopes.GetLength(1); j++)
@@ -131,6 +127,8 @@ namespace FamiStudio
 
             for (int i = 0; i < duties.Length; i++)
                 duties[i] = new Dictionary<int, int>();
+
+            project = new Project();
 
             DPCMSample currentDpcm = null;
             int dpcmWriteIdx = 0;
@@ -203,12 +201,7 @@ namespace FamiStudio
                 else if (line.StartsWith("DPCMDEF"))
                 {
                     var param = SplitStringKeepQuotes(line.Substring(7));
-                    var name = param[2];
-                    var j = 2;
-
-                    while (!project.IsDPCMSampleNameUnique(name))
-                        name = param[2] + "-" + j++;
-                    currentDpcm = project.CreateDPCMSample(name, new byte[int.Parse(param[1])]);
+                    currentDpcm = CreateUniquelyNamedSample(param[2], new byte[int.Parse(param[1])]);
                     dpcms[int.Parse(param[0])] = currentDpcm;
                     dpcmWriteIdx = 0;
                 }
@@ -252,14 +245,9 @@ namespace FamiStudio
                     int arp = int.Parse(param[2]);
                     int pit = int.Parse(param[3]);
                     int dut = int.Parse(param[5]);
-                    var name = param[6];
-
-                    var j = 2;
-                    while (!project.IsInstrumentNameUnique(name))
-                        name = param[6] + "-" + j++;
 
                     var expansionType = line.StartsWith("INSTVRC6") ? Project.ExpansionVrc6 : Project.ExpansionNone;
-                    var instrument = project.CreateInstrument(expansionType, name);
+                    var instrument = CreateUniquelyNamedInstrument(expansionType, param[6]);
 
                     if (vol >= 0) instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, 0][vol].ShallowClone();
                     if (arp >= 0) instrument.Envelopes[Envelope.Arpeggio]  = envelopes[expansion, 1][arp].ShallowClone();
@@ -279,13 +267,7 @@ namespace FamiStudio
                     //mod_delay: int[0,255] - modulator delay 
 
                     int idx = int.Parse(param[0]);
-                    var name = param[5];
-
-                    var j = 2;
-                    while (!project.IsInstrumentNameUnique(name))
-                        name = param[5] + "-" + j++;
-
-                    instruments[idx] = project.CreateInstrument(Project.ExpansionFds, name);
+                    instruments[idx] = CreateUniquelyNamedInstrument(Project.ExpansionFds, param[5]);
                 }
                 else if (line.StartsWith("FDSMACRO"))
                 {
@@ -445,7 +427,7 @@ namespace FamiStudio
                 }
             }
 
-            FinishImport(project, patternLengths, patternFxData);
+            FinishImport();
 
             return project;
         }

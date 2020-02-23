@@ -111,6 +111,10 @@ namespace FamiStudio
             public byte param;
         }
 
+        protected Project project;
+        protected Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
+        protected Dictionary<Pattern, byte> patternLengths = new Dictionary<Pattern, byte>();
+
         protected int ConvertExpansionAudio(int exp)
         {
             switch (exp)
@@ -125,6 +129,39 @@ namespace FamiStudio
             }
 
             return -1; // We dont support exotic combinations.
+        }
+
+        protected Instrument CreateUniquelyNamedInstrument(int type, string baseName)
+        {
+            string name = baseName;
+            var j = 2;
+
+            while (!project.IsInstrumentNameUnique(name))
+                name = baseName + "-" + j++;
+
+            return project.CreateInstrument(type, name);
+        }
+
+        protected void RenameInstrumentEnsureUnique(Instrument instrument, string baseName)
+        {
+            string name = baseName;
+            var j = 2;
+
+            while (!project.IsInstrumentNameUnique(name))
+                name = baseName + "-" + j++;
+
+            project.RenameInstrument(instrument, name);
+        }
+
+        protected DPCMSample CreateUniquelyNamedSample(string baseName, byte[] data)
+        {
+            string name = baseName;
+            var j = 2;
+
+            while (!project.IsDPCMSampleNameUnique(name))
+                name = baseName + "-" + j++;
+
+            return project.CreateDPCMSample(name, data);
         }
 
         protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, Dictionary<Pattern, byte> patternLengths)
@@ -426,7 +463,7 @@ namespace FamiStudio
             }
         }
 
-        protected bool FinishImport(Project project, Dictionary<Pattern, byte> patternLengths, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        protected bool FinishImport()
         {
             foreach (var s in project.Songs)
             {
