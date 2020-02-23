@@ -181,7 +181,7 @@ namespace FamiStudio
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
-                FamitrackerTextFile.Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
+                new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
             }
         }
         

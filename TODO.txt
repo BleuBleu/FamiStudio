@@ -33,10 +33,12 @@
 	- Tempo conversion
 - Binary FTM import:
 	- Finish.
+- Loop point should be optional.
+- DPCM sample colors?
 
 TESTING:
 ========
-- FamiTracker import/export.
+- FamiTracker import/export, retest Text, slides, etc. 
 - Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, export to FT, etc.
 - Retest slide note import/export to FamiTracker. Test a few cases.
 - Test installer on Japanese machine.

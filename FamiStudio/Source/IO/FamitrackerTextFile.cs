@@ -5,12 +5,9 @@ using System.Linq;
 
 namespace FamiStudio
 {
-    public class FamitrackerTextFile
+    public class FamitrackerTextFile : FamitrackerFileBase
     {
-        private static readonly int[] VibratoSpeedImportLookup = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 11, 12 };
-        private static readonly int[] VibratoSpeedExportLookup = new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15 };
-
-        private static string[] SplitStringKeepQuotes(string str)
+        private string[] SplitStringKeepQuotes(string str)
         {
             return str.Split('"').Select((element, index) => index % 2 == 0
                                                         ? element.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
@@ -18,45 +15,115 @@ namespace FamiStudio
                                   .SelectMany(element => element).ToArray();
         }
 
-        const int EXP_VRC6 = 1;
-        const int EXP_VRC7 = 2;
-        const int EXP_FDS  = 4;
-        const int EXP_MMC5 = 8;
-        const int EXP_N163 = 16;
-        const int EXP_S5B  = 32;
-
-        struct RowFxData
+        static readonly Dictionary<char, byte> TextToEffectLookup = new Dictionary<char, byte>
         {
-            public char fx;
-            public byte param;
-        }
+            { '0', Effect_Arpeggio     },
+            { '1', Effect_PortaUp      },
+            { '2', Effect_PortaDown    },
+            { '3', Effect_Portamento   },
+            { '4', Effect_Vibrato      },
+            { '7', Effect_Tremolo      },
+            { 'A', Effect_VolumeSlide  },
+            { 'B', Effect_Jump         },
+            { 'C', Effect_Halt         },
+            { 'D', Effect_Skip         },
+            { 'E', Effect_Volume       },
+            { 'F', Effect_Speed        },
+            { 'G', Effect_Delay        },
+            { 'H', Effect_Sweepup      },
+            { 'I', Effect_Sweepdown    },
+            { 'P', Effect_Pitch        },
+            { 'Q', Effect_SlideUp      },
+            { 'R', Effect_SlideDown    },
+            { 'S', Effect_NoteCut      },
+            { 'V', Effect_DutyCycle    },
+            { 'W', Effect_DpcmPitch    },
+            { 'X', Effect_Retrigger    },
+            { 'Y', Effect_SampleOffset },
+            { 'Z', Effect_Dac          },
+        };
 
-        public static Project Load(string filename)
+        static readonly Dictionary<char, int> FdsTextToEffectLookup = new Dictionary<char, int>
+        {
+            { 'H', Effect_FdsModDepth   },
+            { 'I', Effect_FdsModSpeedHi },
+            { 'J', Effect_FdsModSpeedLo },
+        };
+
+        static readonly Dictionary<byte, char> EffectToTextLookup = new Dictionary<byte, char>
+        {
+            { Effect_Arpeggio      , '0' },
+            { Effect_PortaUp       , '1' },
+            { Effect_PortaDown     , '2' },
+            { Effect_Portamento    , '3' },
+            { Effect_Vibrato       , '4' },
+            { Effect_Tremolo       , '7' },
+            { Effect_VolumeSlide   , 'A' },
+            { Effect_Jump          , 'B' },
+            { Effect_Halt          , 'C' },
+            { Effect_Skip          , 'D' },
+            { Effect_Volume        , 'E' },
+            { Effect_Speed         , 'F' },
+            { Effect_Delay         , 'G' },
+            { Effect_Sweepup       , 'H' },
+            { Effect_Sweepdown     , 'I' },
+            { Effect_Pitch         , 'P' },
+            { Effect_SlideUp       , 'Q' },
+            { Effect_SlideDown     , 'R' },
+            { Effect_NoteCut       , 'S' },
+            { Effect_DutyCycle     , 'V' },
+            { Effect_DpcmPitch     , 'W' },
+            { Effect_Retrigger     , 'X' },
+            { Effect_SampleOffset  , 'Y' },
+            { Effect_Dac           , 'Z' },
+            { Effect_FdsModDepth   , 'H' },
+            { Effect_FdsModSpeedHi , 'I' },
+            { Effect_FdsModSpeedLo , 'J' },
+        };
+
+        static readonly Dictionary<string, int> TextToNoteLookup = new Dictionary<string, int>
+        {
+            { "A-",   9 },
+            { "A#",  10 },
+            { "B-",  11 },
+            { "C-",   0 },
+            { "C#",   1 },
+            { "D-",   2 },
+            { "D#",   3 },
+            { "E-",   4 },
+            { "F-",   5 },
+            { "F#",   6 },
+            { "G-",   7 },
+            { "G#",   8 }
+        };
+
+        static readonly string[] NoteToTextLookup =
+        {
+            "C-",
+            "C#",
+            "D-",
+            "D#",
+            "E-",
+            "F-",
+            "F#",
+            "G-",
+            "G#",
+            "A-",
+            "A#",
+            "B-"
+        };
+
+        public Project Load(string filename)
         {
             var project = new Project();
 
             var envelopes = new Dictionary<int, Envelope>[Project.ExpansionCount, Envelope.Max];
             var duties = new Dictionary<int, int>[Project.ExpansionCount];
             var instruments = new Dictionary<int, Instrument>();
-            var patternLenths = new Dictionary<Pattern, byte>();
+            var patternLengths = new Dictionary<Pattern, byte>();
             var dpcms = new Dictionary<int, DPCMSample>();
             var columns = new int[5] { 1, 1, 1, 1, 1 };
             var patternFxData = new Dictionary<Pattern, RowFxData[,]>();
-            var noteLookup = new Dictionary<string, int>
-            {
-                ["A-"] = 9,
-                ["A#"] = 10,
-                ["B-"] = 11,
-                ["C-"] = 0,
-                ["C#"] = 1,
-                ["D-"] = 2,
-                ["D#"] = 3,
-                ["E-"] = 4,
-                ["F-"] = 5,
-                ["F#"] = 6,
-                ["G-"] = 7,
-                ["G#"] = 8
-            };
 
             for (int i = 0; i < envelopes.GetLength(0); i++)
                 for (int j = 0; j < envelopes.GetLength(1); j++)
@@ -91,21 +158,9 @@ namespace FamiStudio
                 else if (line.StartsWith("EXPANSION"))
                 {
                     var exp = int.Parse(line.Substring(9));
-                    var convertedExp = Project.ExpansionNone;
+                    var convertedExp = ConvertExpansionAudio(exp);
 
-                    switch (exp)
-                    {
-                        case EXP_VRC6 : convertedExp = Project.ExpansionVrc6;    break;
-                        case EXP_VRC7 : convertedExp = Project.ExpansionVrc7;    break;
-                        case EXP_FDS  : convertedExp = Project.ExpansionFds;     break;
-                        case EXP_MMC5 : convertedExp = Project.ExpansionMmc5;    break;
-                        case EXP_N163 : convertedExp = Project.ExpansionNamco;   break;
-                        case EXP_S5B  : convertedExp = Project.ExpansionSunsoft; break;
-                        default:
-                            return null; // We dont support exotic combinations.
-                    }
-
-                    if (!Project.IsExpansionAudioAllowed(convertedExp))
+                    if (convertedExp < 0 || !Project.IsExpansionAudioAllowed(convertedExp))
                         return null;
 
                     project.SetExpansionAudio(convertedExp);
@@ -315,7 +370,7 @@ namespace FamiStudio
                 else if (line.StartsWith("ROW"))
                 {
                     var channels = line.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
-                    var rowIdx = Convert.ToInt32(channels[0].Substring(4, 2), 16);
+                    var n = Convert.ToInt32(channels[0].Substring(4, 2), 16);
 
                     for (int j = 1; j <= song.Channels.Length; j++)
                     {
@@ -332,11 +387,11 @@ namespace FamiStudio
                         // Note
                         if (noteData[0] == "---")
                         {
-                            pattern.Notes[rowIdx].Value = Note.NoteStop;
+                            pattern.Notes[n].Value = Note.NoteStop;
                         }
                         else if (noteData[0] == "===")
                         {
-                            pattern.Notes[rowIdx].Value = Note.NoteRelease;
+                            pattern.Notes[n].Value = Note.NoteRelease;
                         }
                         else if (noteData[0] != "...")
                         {
@@ -348,15 +403,15 @@ namespace FamiStudio
                             }
                             else
                             {
-                                int semitone = noteLookup[noteData[0].Substring(0, 2)];
+                                int semitone = TextToNoteLookup[noteData[0].Substring(0, 2)];
                                 int octave = noteData[0][2] - '0';
                                 famitoneNote = octave * 12 + semitone + 1;
                             }
 
                             if (famitoneNote >= Note.MusicalNoteMin && famitoneNote <= Note.MusicalNoteMax)
                             {
-                                pattern.Notes[rowIdx].Value = (byte)famitoneNote;
-                                pattern.Notes[rowIdx].Instrument = j == 5 ? null : instruments[Convert.ToInt32(noteData[1], 16)];
+                                pattern.Notes[n].Value = (byte)famitoneNote;
+                                pattern.Notes[n].Instrument = j == 5 ? null : instruments[Convert.ToInt32(noteData[1], 16)];
                             }
                             else
                             {
@@ -367,49 +422,24 @@ namespace FamiStudio
                         // Volume
                         if (noteData[2] != ".")
                         {
-                            pattern.Notes[rowIdx].Volume = Convert.ToByte(noteData[2], 16);
+                            pattern.Notes[n].Volume = Convert.ToByte(noteData[2], 16);
                         }
 
                         // Read FX.
                         for (int k = 0; k < columns[j - 1]; k++)
                         {
-                            var fx = noteData[3 + k];
+                            var fxStr = noteData[3 + k];
 
-                            if (fx == "...")
+                            if (fxStr == "...")
                                 continue;
 
-                            var param = Convert.ToByte(fx.Substring(1), 16);
+                            var fx = new RowFxData();
 
-                            var fxData = patternFxData[pattern];
-                            fxData[rowIdx, k].fx = fx[0];
-                            fxData[rowIdx, k].param = param;
+                            fx.fx    = TextToEffectLookup[fxStr[0]];
+                            fx.param = Convert.ToByte(fxStr.Substring(1), 16);
+                            patternFxData[pattern][n, k] = fx;
 
-                            switch (fx[0])
-                            {
-                                case 'B': // Jump
-                                    song.SetLoopPoint(param);
-                                    break;
-                                case 'D': // Skip
-                                    patternLenths[pattern] = (byte)(rowIdx + 1);
-                                    break;
-                                case 'F': // Tempo
-                                    if (param <= 0x1f) // We only support speed change for now.
-                                        pattern.Notes[rowIdx].Speed = param;
-                                    break;
-                                case 'P': // Fine pitch
-                                    pattern.Notes[rowIdx].FinePitch = (sbyte)(0x80 - param);
-                                    break;
-                                case '4': // Vibrato
-                                    pattern.Notes[rowIdx].VibratoDepth = (byte)(param & 0x0f);
-                                    pattern.Notes[rowIdx].VibratoSpeed = (byte)VibratoSpeedImportLookup[param >> 4];
-
-                                    if (pattern.Notes[rowIdx].VibratoDepth == 0 ||
-                                        pattern.Notes[rowIdx].VibratoSpeed == 0)
-                                    {
-                                        pattern.Notes[rowIdx].Vibrato = 0;
-                                    }
-                                    break;
-                            }
+                            ApplySimpleEffects(fx, pattern, n, patternLengths);
                         }
                     }
                 }
@@ -424,7 +454,7 @@ namespace FamiStudio
                     for (int p = 0; p < s.Length; p++)
                     {
                         var pattern = c.PatternInstances[p];
-                        if (pattern != null && patternLenths.TryGetValue(pattern, out var instLength))
+                        if (pattern != null && patternLengths.TryGetValue(pattern, out var instLength))
                             s.SetPatternLength(p, instLength);
                     }
                 }
@@ -442,7 +472,7 @@ namespace FamiStudio
             return project;
         }
 
-        private static int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        private int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
             for (int n = noteIdx - 1; n >= 0; n--)
             {
@@ -468,7 +498,7 @@ namespace FamiStudio
             return Note.NoteInvalid;
         }
 
-        private static bool FindNextNoteForSlide(Channel channel, int patternIdx, int noteIdx, out int nextPatternIdx, out int nextNoteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        private bool FindNextNoteForSlide(Channel channel, int patternIdx, int noteIdx, out int nextPatternIdx, out int nextNoteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
             nextPatternIdx = -1;
             nextNoteIdx = -1;
@@ -483,7 +513,7 @@ namespace FamiStudio
                 for (int i = 0; i < fxData.GetLength(1); i++)
                 {
                     var fx = fxData[n, i];
-                    if (fx.fx == '1' || fx.fx == '2' || fx.fx == '3' || fx.fx == 'Q' || fx.fx == 'R')
+                    if (fx.fx == Effect_PortaUp || fx.fx == Effect_PortaDown || fx.fx == Effect_Portamento || fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown)
                     {
                         fxChanged = true;
                         break;
@@ -511,7 +541,7 @@ namespace FamiStudio
                     for (int i = 0; i < fxData.GetLength(1); i++)
                     {
                         var fx = fxData[n, i];
-                        if (fx.fx == '1' || fx.fx == '2' || fx.fx == '3' || fx.fx == 'Q' || fx.fx == 'R')
+                        if (fx.fx == Effect_PortaUp || fx.fx == Effect_PortaDown || fx.fx == Effect_Portamento || fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown)
                         {
                             fxChanged = true;
                             break;
@@ -531,7 +561,7 @@ namespace FamiStudio
             return false;
         }
 
-        private static int FindBestMatchingNote(ushort[] noteTable, int pitch, int sign)
+        private int FindBestMatchingNote(ushort[] noteTable, int pitch, int sign)
         {
             var bestIdx  = -1;
             var bestDiff = 99999;
@@ -549,7 +579,7 @@ namespace FamiStudio
             return bestIdx;
         }
 
-        private static void CreateSlideNotes(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        private void CreateSlideNotes(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
             // Convert slide notes + portamento to our format.
             foreach (var c in s.Channels)
@@ -583,7 +613,7 @@ namespace FamiStudio
                             if (fx.param != 0)
                             {
                                 // When the effect it turned on, we need to add a note.
-                                if ((fx.fx == '1' || fx.fx == '2' || fx.fx == 'Q' || fx.fx == 'R') && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax && !note.IsValid)
+                                if ((fx.fx == Effect_PortaUp || fx.fx == Effect_PortaDown || fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown) && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax && !note.IsValid)
                                 {
                                     pattern.Notes[n].Value = lastNoteValue;
                                     pattern.Notes[n].Instrument = lastNoteInstrument;
@@ -591,24 +621,24 @@ namespace FamiStudio
                                     note = pattern.Notes[n];
                                 }
 
-                                if (fx.fx == '1') slideSpeed = -fx.param;
-                                if (fx.fx == '2') slideSpeed =  fx.param;
-                                if (fx.fx == '3')
+                                if (fx.fx == Effect_PortaUp) slideSpeed = -fx.param;
+                                if (fx.fx == Effect_PortaDown) slideSpeed =  fx.param;
+                                if (fx.fx == Effect_Portamento)
                                 {
                                     portamentoSpeed = fx.param;
                                 }
-                                if (fx.fx == 'Q')
+                                if (fx.fx == Effect_SlideUp)
                                 {
                                     slideTarget = note.Value + (fx.param & 0xf);
                                     slideSpeed = -((fx.param >> 4) * 2 + 1);
                                 }
-                                if (fx.fx == 'R')
+                                if (fx.fx == Effect_SlideDown)
                                 {
                                     slideTarget = note.Value - (fx.param & 0xf);
                                     slideSpeed = ((fx.param >> 4) * 2 + 1);
                                 }
                             }
-                            else if (fx.fx == '3')
+                            else if (fx.fx == Effect_Portamento)
                             {
                                 portamentoSpeed = 0;
                             }
@@ -711,23 +741,7 @@ namespace FamiStudio
             }
         }
 
-        private static string[] FamiTrackerNoteNames =
-        {
-            "C-",
-            "C#",
-            "D-",
-            "D#",
-            "E-",
-            "F-",
-            "F#",
-            "G-",
-            "G#",
-            "A-",
-            "A#",
-            "B-"
-        };
-
-        private static void ConvertPitchEnvelopes(Project project)
+        private void ConvertPitchEnvelopes(Project project)
         {
             foreach (var instrument in project.Instruments)
             {
@@ -759,7 +773,7 @@ namespace FamiStudio
             }
         }
 
-        private static Envelope[,][] MergeIdenticalEnvelopes(Project project)
+        private Envelope[,][] MergeIdenticalEnvelopes(Project project)
         {
             var uniqueEnvelopes = new Dictionary<uint, Envelope>[2, Envelope.Max];
 
@@ -805,7 +819,7 @@ namespace FamiStudio
             return envelopeArray;
         }
 
-        private static void CreateMissingPatterns(Song song)
+        private void CreateMissingPatterns(Song song)
         {
             foreach (var channel in song.Channels)
             {
@@ -835,7 +849,7 @@ namespace FamiStudio
             }
         }
 
-        private static string GetFamiTrackerNoteName(int channel, Note note)
+        private string GetFamiTrackerNoteName(int channel, Note note)
         {
             if (note.IsStop)
             {
@@ -860,12 +874,12 @@ namespace FamiStudio
                     int octave = (note.Value - 1) / 12;
                     int semitone = (note.Value - 1) % 12;
 
-                    return FamiTrackerNoteNames[semitone] + octave.ToString();
+                    return NoteToTextLookup[semitone] + octave.ToString();
                 }
             }
         }
 
-        public static bool Save(Project originalProject, string filename, int[] songIds)
+        public bool Save(Project originalProject, string filename, int[] songIds)
         {
             var project = originalProject.DeepClone();
             project.RemoveAllSongsBut(songIds);
@@ -1031,7 +1045,7 @@ namespace FamiStudio
                 {
                     var channel = song.Channels[c];
                     var prevNoteValue = Note.NoteInvalid;
-                    var prevSlideEffect = '\0';
+                    var prevSlideEffect = Effect_None;
                     
                     for (int p = 0; p < song.Length; p++)
                     {
@@ -1054,7 +1068,7 @@ namespace FamiStudio
                                 var volumeString = note.HasVolume ? note.Volume.ToString("X") : ".";
                                 var instrumentString = note.IsValid && !note.IsStop ? (note.Instrument == null ? project.Instruments.Count : project.Instruments.IndexOf(note.Instrument)).ToString("X2") : "..";
                                 var effectString = "";
-                                var noAttack = !note.HasAttack && prevNoteValue == note.Value && (prevSlideEffect == '\0' || prevSlideEffect == 'Q' || prevSlideEffect == '3');
+                                var noAttack = !note.HasAttack && prevNoteValue == note.Value && (prevSlideEffect == Effect_None || prevSlideEffect == Effect_SlideUp || prevSlideEffect == Effect_Portamento);
 
                                 if (note.IsSlideNote && note.IsMusical)
                                 {
@@ -1067,8 +1081,12 @@ namespace FamiStudio
                                     // See if we can use Qxy/Rxy (slide up/down y semitones, at speed x), this is preferable.
                                     if (absNoteDelta < 16)
                                     {
-                                        if (prevSlideEffect == '1' || prevSlideEffect == '2' || prevSlideEffect == '3')
-                                            effectString += $" {prevSlideEffect}00";
+                                        if (prevSlideEffect == Effect_PortaUp   ||
+                                            prevSlideEffect == Effect_PortaDown ||
+                                            prevSlideEffect == Effect_Portamento)
+                                        {
+                                            effectString += $" {EffectToTextLookup[prevSlideEffect]}00";
+                                        }
 
                                         // FamiTracker use 2x + 1, find the number that is just above our speed.
                                         var speed = 0;
@@ -1086,7 +1104,7 @@ namespace FamiStudio
                                         else
                                             effectString += $" R{speed:X1}{absNoteDelta:X1}";
 
-                                        prevSlideEffect = 'Q';
+                                        prevSlideEffect = Effect_SlideUp;
                                     }
                                     else
                                     {
@@ -1096,12 +1114,15 @@ namespace FamiStudio
                                         // If the previous note matched too, we can use 3xx (auto-portamento).
                                         if (prevNoteValue == note.Value)
                                         {
-                                            if (prevSlideEffect == '1' || prevSlideEffect == '2')
+                                            if (prevSlideEffect == Effect_PortaUp ||
+                                                prevSlideEffect == Effect_PortaDown)
+                                            {
                                                 effectString += $" 100";
+                                            }
 
                                             noteString = GetFamiTrackerNoteName(c, new Note(note.SlideNoteTarget));
                                             effectString += $" 3{Math.Abs(ceilStepSize):X2}";
-                                            prevSlideEffect = '3';
+                                            prevSlideEffect = Effect_Portamento;
                                             noAttack = false; // Need to force attack when starting auto-portamento unfortunately.
                                         }
                                         else
@@ -1109,28 +1130,32 @@ namespace FamiStudio
                                             // We have one bit of fraction. FramiTracker does not.
                                             var floorStepSize = Utils.SignedFloor(stepSize / 2.0f);
 
-                                            if (prevSlideEffect == '3')
+                                            if (prevSlideEffect == Effect_Portamento)
                                                 effectString += $" 300";
 
                                             if (stepSize > 0)
                                             {
                                                 effectString += $" 2{ floorStepSize:X2}";
-                                                prevSlideEffect = '2';
+                                                prevSlideEffect = Effect_PortaDown;
                                             }
                                             else if (stepSize < 0)
                                             {
                                                 effectString += $" 1{-floorStepSize:X2}";
-                                                prevSlideEffect = '1';
+                                                prevSlideEffect = Effect_PortaUp;
                                             }
                                         }
                                     }
                                 }
-                                else if ((note.IsMusical || note.IsStop) && prevSlideEffect != '\0')
+                                else if ((note.IsMusical || note.IsStop) && prevSlideEffect != Effect_None)
                                 {
-                                    if (prevSlideEffect == '1' || prevSlideEffect == '2' || prevSlideEffect == '3')
-                                        effectString += $" {prevSlideEffect}00";
+                                    if (prevSlideEffect == Effect_PortaUp   ||
+                                        prevSlideEffect == Effect_PortaDown ||
+                                        prevSlideEffect == Effect_Portamento)
+                                    {
+                                        effectString += $" {EffectToTextLookup[prevSlideEffect]}00";
+                                    }
 
-                                    prevSlideEffect = '\0';
+                                    prevSlideEffect = Effect_None;
                                 }
 
                                 if (n == patternLen - 1)

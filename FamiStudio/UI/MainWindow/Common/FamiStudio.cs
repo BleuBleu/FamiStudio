@@ -270,14 +270,14 @@ namespace FamiStudio
             }
             else if (filename.ToLower().EndsWith("ftm"))
             {
-                project = new FamiTrackerFile().Load(filename);
+                project = new FamitrackerBinaryFile().Load(filename);
             }
             else if (filename.ToLower().EndsWith("txt"))
             {
                 project = FamistudioTextFile.Load(filename);
 
                 if (project == null)
-                    project = FamitrackerTextFile.Load(filename);
+                    project = new FamitrackerTextFile().Load(filename);
             }
             else if (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe"))
             {
