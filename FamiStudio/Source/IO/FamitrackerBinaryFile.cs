@@ -13,46 +13,42 @@ namespace FamiStudio
         const uint MinVersion = 0x0420;
         const uint MaxVersion = 0x0440;
 
-        const int BlockNameLength = 16;
-
         const string FileHeaderId = "FamiTracker Module";
-        const string FileEndId    = "END";
 
+        const int BlockNameLength = 16;
         const int MaxInstruments = 64;
+        const int MaxSamples     = 64;
         const int MaxSequences   = 128;
         const int SequenceCount  = 5;
         const int OctaveRange    = 8;
 
-        struct DpcmSampleInfo
+        struct BlockInfo
         {
-            public byte index;
-            public byte pitch;
+            public int offset;
+            public int size;
+            public int version;
         };
+
+        private delegate bool ReadBlockDelegate(int idx);
 
         private Project project;
         private int blockVersion;
+        private int blockSize;
         private byte[] bytes;
         private Envelope[,] envelopes = new Envelope[MaxSequences, SequenceCount];
         private Dictionary<Song, byte[]> songEffectColumnCount = new Dictionary<Song, byte[]>();
         private Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
         private Instrument[] instruments = new Instrument[MaxInstruments];
-        private DpcmSampleInfo[] sampleMapping = new DpcmSampleInfo[OctaveRange * 12];
+        private DPCMSample[] samples = new DPCMSample[MaxSamples];
+        private Dictionary<Pattern, byte> patternLengths = new Dictionary<Pattern, byte>();
 
         private bool ReadParams(int idx)
         {
-            var expansionChip = bytes[idx++];
+            var expansion = ConvertExpansionAudio(bytes[idx++]);
+            if (expansion < 0)
+                return false;
 
-            switch (expansionChip)
-            {
-                case SndChip_NONE : break;
-                case SndChip_VRC6 : project.SetExpansionAudio(Project.ExpansionVrc6);    break;
-                case SndChip_VRC7 : project.SetExpansionAudio(Project.ExpansionVrc7);    break;
-                case SndChip_FDS  : project.SetExpansionAudio(Project.ExpansionFds);     break;
-                case SndChip_MMC5 : project.SetExpansionAudio(Project.ExpansionMmc5);    break;
-                case SndChip_N163 : project.SetExpansionAudio(Project.ExpansionNamco);   break;
-                case SndChip_S5B  : project.SetExpansionAudio(Project.ExpansionSunsoft); break;
-                default: return false;
-            }
+            project.SetExpansionAudio(expansion);
 
             var numChannels = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             if (numChannels != project.GetActiveChannelCount())
@@ -111,14 +107,25 @@ namespace FamiStudio
             return true;
         }
 
-        private bool ReadInstrument2A03(ref int idx, bool readSamples)
+        private bool ReadInstrument2A03(Instrument instrument, ref int idx, bool readSamples)
         {
             idx += sizeof(int); // SEQ_COUNT
 
             for (int i = 0; i < SequenceCount; ++i)
             {
-                idx++; // GetSeqEnable(i);
-                idx++; // GetSeqIndex(i);
+                var enabled = bytes[idx++];
+                var index   = bytes[idx++];
+
+                if (enabled != 0)
+                {
+                    var envType = EnvelopeTypeLookup[i];
+
+                    if (envType != Envelope.Max)
+                    {
+                        Debug.Assert(instrument.Envelopes[envType] != null);
+                        instrument.Envelopes[envType] = envelopes[index, i];
+                    }
+                }
             }
 
             if (readSamples)
@@ -127,10 +134,19 @@ namespace FamiStudio
                 {
                     for (int j = 0; j < 12; ++j)
                     {
-                        sampleMapping[i * 12 + j].index = bytes[idx++];
-                        sampleMapping[i * 12 + j].pitch = bytes[idx++];
+                        var index = bytes[idx++];
+                        var pitch = bytes[idx++];
+
                         if (blockVersion > 5)
                             idx++; // sample delta
+
+                        if (index != 0 || pitch != 0)
+                        {
+                            var sample = samples[index - 1];
+                            if (sample != null && sample.Data != null)
+                                project.MapDPCMSample(i * 12 + j + 1, sample, pitch & 0x0f, (pitch & 0x80) != 0);
+                        }
+
                     }
                 }
             }
@@ -142,14 +158,25 @@ namespace FamiStudio
             return true;
         }
 
-        private bool ReadInstrumentVRC6(ref int idx)
+        private bool ReadInstrumentVRC6(Instrument instrument, ref int idx)
         {
             idx += sizeof(int); // SEQ_COUNT
 
             for (int i = 0; i < SequenceCount; ++i)
             {
-                idx++; // GetSeqEnable(i);
-                idx++; // GetSeqIndex(i);
+                var enabled = bytes[idx++];
+                var index   = bytes[idx++];
+
+                if (enabled != 0)
+                {
+                    var envType = EnvelopeTypeLookup[i];
+
+                    if (envType != Envelope.Max)
+                    {
+                        Debug.Assert(instrument.Envelopes[envType] != null);
+                        instrument.Envelopes[envType] = envelopes[index, i];
+                    }
+                }
             }
 
             return true;
@@ -170,8 +197,8 @@ namespace FamiStudio
 
                 switch (type)
                 {
-                    case Project.ExpansionNone: ReadInstrument2A03(ref idx, index == 0); break;
-                    case Project.ExpansionVrc6: ReadInstrumentVRC6(ref idx); break;
+                    case Project.ExpansionNone: ReadInstrument2A03(instrument, ref idx, index == 0); break;
+                    case Project.ExpansionVrc6: ReadInstrumentVRC6(instrument, ref idx); break;
                     default:
                         return false;
                 }
@@ -240,7 +267,7 @@ namespace FamiStudio
                         releasePoint++;
                 }
 
-                env.Loop = loopPoint;
+                env.Loop    = loopPoint;
                 env.Release = releasePoint;
             }
 
@@ -263,7 +290,7 @@ namespace FamiStudio
 
                 for (int i = 0; i < frameCount; ++i)
                 {
-				    for (int j = 0; j < song.Channels.Length; ++j)
+                    for (int j = 0; j < song.Channels.Length; ++j)
                     {
                         var frameIdx = bytes[idx++];
                         var name = $"{frameIdx:X2}";
@@ -280,9 +307,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool ReadPatterns(int idx, int maxIdx)
+        private bool ReadPatterns(int idx)
         {
-            var patternLenths = new Dictionary<Pattern, byte>();
+            var maxIdx = idx + blockSize;
 
             while (idx < maxIdx)
             { 
@@ -294,6 +321,11 @@ namespace FamiStudio
                 var song    = project.Songs[songIdx];
                 var channel = song.Channels[chanIdx];
                 var pattern = channel.GetPattern($"{patIdx:X2}");
+
+                // Famitracker can have patterns that arent actually used in the song. 
+                // Skip with a dummy pattern.
+                if (pattern == null)
+                    pattern = new Pattern();
 
                 var fxCount = songEffectColumnCount[song][chanIdx];
                 var fxData  = new RowFxData[song.DefaultPatternLength, fxCount + 1];
@@ -308,10 +340,22 @@ namespace FamiStudio
                     var instrument = bytes[idx++];
                     var volume     = bytes[idx++];
 
-                    if (channel.Type == Channel.Dpcm) instrument = MaxInstruments;
-                    if (note != 0 || octave != 0)     pattern.Notes[n].Value  = (byte)(octave * 12 + note);
-                    if (volume != 16)                 pattern.Notes[n].Volume = (byte)(volume & 0x0f);
-                    if (instrument < MaxInstruments)  pattern.Notes[n].Instrument = instruments[instrument];
+                    if (volume != 16)
+                        pattern.Notes[n].Volume = (byte)(volume & 0x0f);
+
+                    if (note != 0 || octave != 0)
+                    {
+                        switch (note)
+                        {
+                            case 13: pattern.Notes[n].Value = Note.NoteRelease; break;
+                            case 14: pattern.Notes[n].Value = Note.NoteStop; break;
+                            default:
+                                if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
+                                    pattern.Notes[n].Instrument = instruments[instrument];
+                                pattern.Notes[n].Value = (byte)(octave * 12 + note);
+                                break;
+                        }
+                    }
 
                     for (int j = 0; j < fxCount + 1; ++j)
                     {
@@ -320,7 +364,7 @@ namespace FamiStudio
                         fx.param = bytes[idx++];
                         fxData[n, j] = fx;
 
-                        ApplySimpleEffects(fx, pattern, n, patternLenths);
+                        ApplySimpleEffects(fx, pattern, n, patternLengths);
                     }
 
                     // FDS octave
@@ -329,13 +373,14 @@ namespace FamiStudio
                 }
             }
 
+            // TODO: Apply pattern lengths.
+
             return true;
         }
 
         private bool ReadDpcmSamples(int idx)
         {
             var count = bytes[idx++];
-            var samples = new DPCMSample[count];
 
             for (int i = 0; i < count; ++i)
             {
@@ -349,17 +394,6 @@ namespace FamiStudio
 
                 // MATTT: How to ensure name uniqueness?
                 samples[i] = project.CreateDPCMSample(name, data);
-            }
-
-            for (int i = 0; i < sampleMapping.Length; i++)
-            {
-                var mapping = sampleMapping[i];
-                if (mapping.index != 0 || mapping.pitch != 0)
-                {
-                    var sample = samples[mapping.index - 1];
-                    if (sample != null && sample.Data != null)
-                        project.MapDPCMSample(i + 1, sample, mapping.pitch & 0x0f, (mapping.pitch & 0x80) != 0);
-                }
             }
 
             return true;
@@ -378,36 +412,53 @@ namespace FamiStudio
             if (version < MinVersion || version > MaxVersion)
                 return null;
 
-            project = new Project();
+            var blockToc = new Dictionary<string, BlockInfo>();
 
             while (bytes[idx + 0] != 'E' ||
                    bytes[idx + 1] != 'N' || 
                    bytes[idx + 2] != 'D')
             {
-                var blockId   = Encoding.ASCII.GetString(bytes, idx, BlockNameLength).TrimEnd('\0'); idx += BlockNameLength;
-                var blockVer  = BitConverter.ToInt32(bytes, idx); idx += sizeof(uint);
-                var blockSize = BitConverter.ToInt32(bytes, idx); idx += sizeof(uint);
-                var success   = true;
+                var blockId     = Encoding.ASCII.GetString(bytes, idx, BlockNameLength).TrimEnd('\0'); idx += BlockNameLength;
+                var blockVer    = BitConverter.ToInt32(bytes, idx); idx += sizeof(uint);
+                var blockSize   = BitConverter.ToInt32(bytes, idx); idx += sizeof(uint);
 
-                blockVersion = blockVer;
-
-                switch (blockId)
-                {
-                    case "PARAMS"       : success = ReadParams(idx); break;
-                    case "INFO"         : success = ReadInfo(idx); break;
-                    case "HEADER"       : success = ReadHeader(idx); break;
-                    case "INSTRUMENTS"  : success = ReadInstruments(idx); break;
-                    case "SEQUENCES"    : success = ReadSequences(idx); break;
-                    case "FRAMES"       : success = ReadFrames(idx); break;
-                    case "PATTERNS"     : success = ReadPatterns(idx, idx + blockSize); break;
-                    case "DPCM SAMPLES" : success = ReadDpcmSamples(idx); break;
-                }
-
-                if (!success)
-                    return null;
+                blockToc[blockId] = new BlockInfo() { offset = idx, version = blockVer, size = blockSize };
 
                 idx += blockSize;
             }
+
+            // We read block in a specific order to minimize the amound of bookeeping we need to do.
+            var blocksToRead = new Dictionary<string, ReadBlockDelegate>
+            {
+                { "PARAMS",       ReadParams      },
+                { "INFO",         ReadInfo        },
+                { "HEADER",       ReadHeader      },
+                { "DPCM SAMPLES", ReadDpcmSamples },
+                { "SEQUENCES",    ReadSequences   },
+                { "INSTRUMENTS",  ReadInstruments },
+                { "FRAMES",       ReadFrames      },
+                { "PATTERNS",     ReadPatterns    },
+            };
+
+            project = new Project();
+
+            foreach (var kv in blocksToRead)
+            {
+                var blockName = kv.Key;
+                var blockFunc = kv.Value;
+
+                if (blockToc.TryGetValue(blockName, out var info))
+                {
+                    blockSize    = info.size;
+                    blockVersion = info.version;
+
+                    if (!blockFunc(info.offset))
+                        return null;
+                }
+
+            }
+
+            FinishImport(project, patternLengths, patternFxData);
 
             return project;
         }
