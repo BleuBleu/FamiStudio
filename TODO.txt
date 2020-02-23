@@ -34,7 +34,7 @@
 - Binary FTM import:
 	- Name uniqueness
 	- FDS
-	- Noise channel notes are wrong.
+	- Converge more stuff with text import (make text import not static, move stuff to base).
 	- Test test test!!! (Slides, etc.)
 - Loop point should be optional.
 

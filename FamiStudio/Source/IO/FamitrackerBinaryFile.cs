@@ -352,7 +352,10 @@ namespace FamiStudio
                             default:
                                 if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
                                     pattern.Notes[n].Instrument = instruments[instrument];
-                                pattern.Notes[n].Value = (byte)(octave * 12 + note);
+                                if (channel.Type == Channel.Noise)
+                                    pattern.Notes[n].Value = (byte)(octave * 12 + note);
+                                else
+                                    pattern.Notes[n].Value = (byte)(octave * 12 + note);
                                 break;
                         }
                     }
