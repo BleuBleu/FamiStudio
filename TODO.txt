@@ -32,9 +32,11 @@
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion
 - Binary FTM import:
-	- Finish.
+	- Name uniqueness
+	- FDS
+	- Noise channel notes are wrong.
+	- Test test test!!! (Slides, etc.)
 - Loop point should be optional.
-- DPCM sample colors?
 
 TESTING:
 ========
