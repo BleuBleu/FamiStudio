@@ -1326,22 +1326,23 @@ namespace FamiStudio
                 {
                     for (int i = 0; i < env.Length; i++)
                     {
+                        var center = editEnvelope == Envelope.FdsWaveform ? 32 : 0;
                         int val = env.Values[i];
 
-                        int x = i * noteSizeX - scrollX;
                         float y0, y1;
-                        var selected = IsEnvelopeValueSelected(i);
-
-                        if (val >= 0)
+                        if (val >= center)
                         {
                             y0 = (virtualSizeY - envelopeSizeY * (val + midValue + 1)) - scrollY;
-                            y1 = (virtualSizeY - envelopeSizeY * (midValue) - scrollY);
+                            y1 = (virtualSizeY - envelopeSizeY * (midValue + center) - scrollY);
                         }
                         else
                         {
                             y1 = (virtualSizeY - envelopeSizeY * (val + midValue)) - scrollY;
-                            y0 = (virtualSizeY - envelopeSizeY * (midValue + 1) - scrollY);
+                            y0 = (virtualSizeY - envelopeSizeY * (midValue + center + 1) - scrollY);
                         }
+
+                        var x = i * noteSizeX - scrollX;
+                        var selected = IsEnvelopeValueSelected(i);
 
                         g.FillRectangle(x, y0, x + noteSizeX, y1, theme.LightGreyFillBrush1);
                         g.DrawRectangle(x, y0, x + noteSizeX, y1, theme.BlackBrush, selected ? 2 : 1);
@@ -1436,23 +1437,44 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        void DrawEnvelope(MouseEventArgs e)
+        void DrawEnvelope(MouseEventArgs e, bool first = false)
         {
-            if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
+            if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx1, out sbyte val1))
             {
-                if (idx >= 0 && idx < editInstrument.Envelopes[editEnvelope].Length)
-                {
-                    Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int min, out int max);
-                    editInstrument.Envelopes[editEnvelope].Values[idx] = (sbyte)Math.Max(min, Math.Min(max, value));
+                int idx0;
+                sbyte val0;
 
-                    // MATTT
-                    if (editEnvelope == Envelope.FdsModulation)
+                if (first || !GetEnvelopeValueForCoord(mouseLastX, mouseLastY, out idx0, out val0))
+                {
+                    idx0 = idx1;
+                    val0 = val1;
+                }
+
+                Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int min, out int max);
+
+                idx0 = Utils.Clamp(idx0, 0, editInstrument.Envelopes[editEnvelope].Length - 1);
+                idx1 = Utils.Clamp(idx1, 0, editInstrument.Envelopes[editEnvelope].Length - 1);
+
+                if (idx0 != idx1)
+                {
+                    if (idx1 < idx0)
                     {
-                        editInstrument.Envelopes[editEnvelope].BuildFdsModulationTable();
+                        Utils.Swap(ref idx0, ref idx1);
+                        Utils.Swap(ref val0, ref val1);
                     }
 
-                    ConditionalInvalidate();
+                    for (int i = idx0; i <= idx1; i++)
+                    {
+                        int val = (int)Math.Round(Utils.Lerp(val0, val1, (i - idx0) / (float)(idx1 - idx0)));
+                        editInstrument.Envelopes[editEnvelope].Values[i] = (sbyte)Utils.Clamp(val, min, max);
+                    }
                 }
+                else
+                {
+                    editInstrument.Envelopes[editEnvelope].Values[idx0] = (sbyte)Utils.Clamp(val0, min, max);
+                }
+
+                ConditionalInvalidate();
             }
         }
 
@@ -1704,7 +1726,7 @@ namespace FamiStudio
             }
             else if (showSelection && IsSelectionValid())
             {
-                bool ctrl = ModifierKeys.HasFlag(Keys.Control);
+                bool ctrl  = ModifierKeys.HasFlag(Keys.Control);
                 bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
                 if (ctrl)
@@ -1831,7 +1853,7 @@ namespace FamiStudio
             {
                 StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
-                DrawEnvelope(e); 
+                DrawEnvelope(e, true); 
             }
             else if (left && editMode == EditionMode.Channel && IsMouseInEffectPanel(e))
             {
@@ -2419,7 +2441,7 @@ namespace FamiStudio
             idx = (x - whiteKeySizeX + scrollX) / noteSizeX;
             value = (sbyte)(maxValue - (int)Math.Min((y + scrollY - headerAndEffectSizeY - 1) / envelopeSizeY, 128)); 
 
-            return (x > whiteKeySizeX && y > headerAndEffectSizeY);
+            return x > whiteKeySizeX;
         }
 
         public void SerializeState(ProjectBuffer buffer)

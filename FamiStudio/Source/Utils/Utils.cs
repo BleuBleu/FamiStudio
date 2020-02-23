@@ -34,6 +34,13 @@ namespace FamiStudio
             return (x < 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
         }
 
+        public static void Swap<T>(ref T a, ref T b)
+        {
+            T t = a;
+            a = b;
+            b = t;
+        }
+
         public static string MakeNiceAsmName(string name)
         {
             string niceName = "";

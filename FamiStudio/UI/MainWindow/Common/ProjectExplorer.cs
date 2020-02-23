@@ -90,15 +90,62 @@ namespace FamiStudio
             FdsModulationPreset,
             FdsModulationSpeed,
             FdsModulationDepth,
+
+            Vrc7CarTremolo,
+            Vrc7CarVibrato,
+            Vrc7CarSustained,
+            Vrc7CarWaveRectified,
+            Vrc7CarKeyScaling,
+            Vrc7CarFreqMultiplier,
+            Vrc7CarAttack,
+            Vrc7CarDecay,
+            Vrc7CarSustain,
+            Vrc7CarRelease,
+
+            Vrc7ModTremolo,
+            Vrc7ModVibrato,
+            Vrc7ModSustained,
+            Vrc7ModWaveRectified,
+            Vrc7ModKeyScaling,
+            Vrc7ModFreqMultiplier,
+            Vrc7ModAttack,
+            Vrc7ModDecay,
+            Vrc7ModSustain,
+            Vrc7ModRelease,
+
             Max
         };
 
         static readonly string[] ParamNames = 
         {
+            // FDS
             "Wave Preset",
             "Mod Preset",
             "Mod Speed",
-            "Mod Depth"
+            "Mod Depth",
+
+            // VRC7
+            "Carrier Tremolo",
+            "Carrier Vibrato",
+            "Carrier Sustained",
+            "Carrier WaveShape",
+            "Carrier KeyScaling",
+            "Carrier FreqMultiplier",
+            "Carrier Attack",
+            "Carrier Decay",
+            "Carrier Sustain",
+            "Carrier Release",
+
+            "Modulator Tremolo",
+            "Modulator Vibrato",
+            "Modulator Sustained",
+            "Modulator WaveShape",
+            "Modulator KeyScaling",
+            "Modulator FreqMultiplier",
+            "Modulator Attack",
+            "Modulator Decay",
+            "Modulator Sustain",
+            "Modulator Release"
         };
 
         enum SubButtonType
@@ -289,13 +336,6 @@ namespace FamiStudio
             public int GetParamMinValue()
             {
                 Debug.Assert(param != ParamType.Max);
-
-                switch (param)
-                {
-                    case ParamType.FdsModulationSpeed: return 0; 
-                    case ParamType.FdsModulationDepth: return 0;
-                }
-
                 return 0;
             }
 
@@ -307,6 +347,17 @@ namespace FamiStudio
                 {
                     case ParamType.FdsModulationSpeed: return 4095;
                     case ParamType.FdsModulationDepth: return 255;
+                    case ParamType.Vrc7CarFreqMultiplier:
+                    case ParamType.Vrc7CarAttack:
+                    case ParamType.Vrc7CarDecay:
+                    case ParamType.Vrc7CarSustain:
+                    case ParamType.Vrc7CarRelease:
+                    case ParamType.Vrc7ModFreqMultiplier:
+                    case ParamType.Vrc7ModAttack:
+                    case ParamType.Vrc7ModDecay:
+                    case ParamType.Vrc7ModSustain:
+                    case ParamType.Vrc7ModRelease:
+                        return 16;
                 }
 
                 return 0;
@@ -325,6 +376,19 @@ namespace FamiStudio
                 }
 
                 return 0;
+            }
+
+            public string GetParamString()
+            {
+                Debug.Assert(param != ParamType.Max);
+
+                switch (param)
+                {
+                    case ParamType.FdsWavePreset:       return "Sine";
+                    case ParamType.FdsModulationPreset: return "Square";
+                }
+
+                return GetParamValue().ToString();
             }
 
             public void SetParamValue(int val)
@@ -462,10 +526,36 @@ namespace FamiStudio
 
                 if (instrument != null && instrument == expandedInstrument)
                 {
-                    buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.FdsWavePreset,       instrument = instrument });
-                    buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.FdsModulationPreset, instrument = instrument });
-                    buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.FdsModulationSpeed,  instrument = instrument });
-                    buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.FdsModulationDepth,  instrument = instrument });
+                    if (instrument.ExpansionType == Project.ExpansionFds)
+                    { 
+                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.FdsWavePreset,       instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.FdsModulationPreset, instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.FdsModulationSpeed,  instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.FdsModulationDepth,  instrument = instrument });
+                    }
+                    else if (instrument.ExpansionType == Project.ExpansionVrc7)
+                    {
+                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7CarTremolo,        instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7CarVibrato,        instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7CarSustained,      instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7CarWaveRectified,  instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.Vrc7CarKeyScaling,     instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarFreqMultiplier, instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarAttack,         instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarDecay,          instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarSustain,        instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarRelease,        instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7ModTremolo,        instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7ModVibrato,        instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7ModSustained,      instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7ModWaveRectified,  instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.Vrc7ModKeyScaling,     instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModFreqMultiplier, instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModAttack,         instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModDecay,          instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModSustain,        instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModRelease,        instrument = instrument });
+                    }
                 }
             }
 
@@ -591,6 +681,7 @@ namespace FamiStudio
                 if (button.param != ParamType.Max)
                 {
                     var paramVal = button.GetParamValue();
+                    var paramStr = button.GetParamString();
 
                     if (button.type == ButtonType.ParamSlider)
                     {
@@ -601,7 +692,7 @@ namespace FamiStudio
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         g.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
                         g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, theme.BlackBrush);
-                        g.DrawText(paramVal.ToString(), ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
+                        g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
@@ -613,7 +704,7 @@ namespace FamiStudio
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         g.DrawBitmap(bmpButtonLeft,  0, 0);
                         g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0);
-                        g.DrawText(paramVal.ToString(), ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
+                        g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }
                 }
@@ -898,15 +989,26 @@ namespace FamiStudio
             var buttonIdx = buttons.IndexOf(button);
             Debug.Assert(buttonIdx >= 0);
 
+            bool shift = ModifierKeys.HasFlag(Keys.Shift);
+
             var actualWidth = Width - scrollBarSizeX;
             var buttonX = e.X;
             var buttonY = e.Y - buttonIdx * buttonSizeY;
 
+            var paramVal = button.GetParamValue();
             var paramMin = button.GetParamMinValue();
             var paramMax = button.GetParamMaxValue();
-            var paramVal = Utils.Lerp(paramMin, paramMax, Utils.Clamp((buttonX - (actualWidth - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f));
 
-            button.SetParamValue((int)Math.Round(paramVal));
+            if (shift)
+            {
+                paramVal = Utils.Clamp(paramVal + (e.X - mouseLastX), paramMin, paramMax);
+            }
+            else
+            {
+                paramVal = (int)Math.Round(Utils.Lerp(paramMin, paramMax, Utils.Clamp((buttonX - (actualWidth - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
+            }
+
+            button.SetParamValue(paramVal);
 
             return (buttonX > (actualWidth - sliderPosX) &&
                     buttonX < (actualWidth - sliderPosX + sliderSizeX) &&
@@ -1221,7 +1323,8 @@ namespace FamiStudio
                         var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, true, e.Y > Height / 2);
                         dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
                         dlg.Properties.AddColor(instrument.Color); // 1
-                        dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[Envelope.Pitch].Relative); // 2
+                        if (instrument.IsEnvelopeActive(Envelope.Pitch))
+                            dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[Envelope.Pitch].Relative); // 2
                         dlg.Properties.Build();
 
                         if (dlg.ShowDialog() == DialogResult.OK)
@@ -1233,7 +1336,8 @@ namespace FamiStudio
                             if (App.Project.RenameInstrument(instrument, newName))
                             {
                                 instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
-                                instrument.Envelopes[Envelope.Pitch].Relative = dlg.Properties.GetPropertyValue<bool>(2);
+                                if (instrument.IsEnvelopeActive(Envelope.Pitch))
+                                    instrument.Envelopes[Envelope.Pitch].Relative = dlg.Properties.GetPropertyValue<bool>(2);
                                 InstrumentColorChanged?.Invoke(instrument);
                                 RefreshButtons();
                                 ConditionalInvalidate();

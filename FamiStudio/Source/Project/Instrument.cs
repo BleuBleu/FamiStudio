@@ -20,7 +20,7 @@ namespace FamiStudio
         public Envelope[] Envelopes => envelopes;
         public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
-        public bool HasReleaseEnvelope => envelopes[Envelope.Volume].Release >= 0;
+        public bool HasReleaseEnvelope => envelopes[Envelope.Volume] != null && envelopes[Envelope.Volume].Release >= 0;
 
         public Instrument()
         {

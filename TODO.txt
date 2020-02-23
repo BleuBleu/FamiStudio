@@ -2,11 +2,8 @@
 1.5.0: FDS + PAL
 ================
 - FDS:
-	- Project explorer slider micro mode (hold shift)
 	- Presets (saw, triangle, sine, square, etc.)
 	- Proper playback (remove hacks)
-	- Waveform should be centered? Nicer that way.
-	- Dont allow looping/release in wave/mod.
 	- NSF.
 - Fine pitch track
 	- NSF
@@ -30,10 +27,11 @@
 	- Avoid setting the volumes on new notes. Only if state.volume == 0.
 - Transform dialog:
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
-	- Tempo conversion
+	- Tempo conversion?
 - Binary FTM import:
 	- FDS
 - Loop point should be optional.
+- Fast mouse drag in envelope = gaps.
 
 TESTING:
 ========
