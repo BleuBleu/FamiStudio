@@ -1204,7 +1204,7 @@ namespace FamiStudio
                                         else
                                         {
                                             i0 = i1 + 1;
-                                            if (p0 >= 0 && i0 >= Song.GetPatternLength(p0))
+                                            if (p0 < 0 || i0 >= Song.GetPatternLength(p0))
                                             {
                                                 i0 = 0;
                                                 p0++;
