@@ -1,11 +1,82 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Drawing;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
     public class Instrument
     {
+        // FDS
+        public const int ParamFdsWavePreset = 0;
+        public const int ParamFdsModulationPreset = 1;
+        public const int ParamFdsModulationSpeed = 2;
+        public const int ParamFdsModulationDepth = 3;
+        public const int ParamFdsModulationDelay = 4;
+
+        // Namco
+        public const int ParamNamcoWaveSize = 5;
+        public const int ParamNamcoWavePreset = 6;
+
+        // VRC7
+        public const int ParamVrc7CarTremolo = 7;
+        public const int ParamVrc7CarVibrato = 8;
+        public const int ParamVrc7CarSustained = 9;
+        public const int ParamVrc7CarWaveRectified = 10;
+        public const int ParamVrc7CarKeyScaling = 11;
+        public const int ParamVrc7CarFreqMultiplier = 12;
+        public const int ParamVrc7CarAttack = 13;
+        public const int ParamVrc7CarDecay = 14;
+        public const int ParamVrc7CarSustain = 15;
+        public const int ParamVrc7CarRelease = 16;
+        public const int ParamVrc7ModTremolo = 17;
+        public const int ParamVrc7ModVibrato = 18;
+        public const int ParamVrc7ModSustained = 19;
+        public const int ParamVrc7ModWaveRectified = 20;
+        public const int ParamVrc7ModKeyScaling = 21;
+        public const int ParamVrc7ModFreqMultiplier = 22;
+        public const int ParamVrc7ModAttack = 23;
+        public const int ParamVrc7ModDecay = 24;
+        public const int ParamVrc7ModSustain = 25;
+        public const int ParamVrc7ModRelease = 26;
+
+        public const int ParamMax = 27;
+
+        public static readonly string[] RealTimeParamNames =
+        {
+            // FDS
+            "Wave Preset",
+            "Mod Preset",
+            "Mod Speed",
+            "Mod Depth",
+
+            // Namco
+            "Wave Size",
+            "Wave Preset",
+
+            // VRC7
+            "Carrier Tremolo",
+            "Carrier Vibrato",
+            "Carrier Sustained",
+            "Carrier WaveShape",
+            "Carrier KeyScaling",
+            "Carrier FreqMultiplier",
+            "Carrier Attack",
+            "Carrier Decay",
+            "Carrier Sustain",
+            "Carrier Release",
+            "Modulator Tremolo",
+            "Modulator Vibrato",
+            "Modulator Sustained",
+            "Modulator WaveShape",
+            "Modulator KeyScaling",
+            "Modulator FreqMultiplier",
+            "Modulator Attack",
+            "Modulator Decay",
+            "Modulator Sustain",
+            "Modulator Release"
+        };
+
         private int id;
         private string name;
         private int expansion = Project.ExpansionNone;
@@ -13,14 +84,14 @@ namespace FamiStudio
         private Color color;
 
         // FDS
-        private byte   fdsWavPreset;
-        private byte   fdsModPreset;
+        private byte   fdsWavPreset = Envelope.WavePresetSine;
+        private byte   fdsModPreset = Envelope.WavePresetFlat;
         private ushort fdsModRate;
         private byte   fdsModDepth;
         private byte   fdsModDelay;
 
         // Namco
-        private byte   namcoWavePreset;
+        private byte   namcoWavePreset = Envelope.WavePresetSine;
         private byte   namcoWaveSize;
 
         // VRC7
@@ -98,6 +169,108 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        static readonly int[] FdsParams   = new[] { ParamFdsWavePreset, ParamFdsModulationPreset, ParamFdsModulationSpeed, ParamFdsModulationDepth, ParamFdsModulationDelay };
+        static readonly int[] NamcoParams = new[] { ParamNamcoWaveSize, ParamNamcoWavePreset };
+        static readonly int[] Vrc7Params  = new[] { ParamVrc7CarTremolo, ParamVrc7CarVibrato, ParamVrc7CarSustained, ParamVrc7CarWaveRectified, ParamVrc7CarKeyScaling,
+                                                    ParamVrc7CarFreqMultiplier, ParamVrc7CarAttack, ParamVrc7CarDecay, ParamVrc7CarSustain, ParamVrc7CarRelease,
+                                                    ParamVrc7ModTremolo, ParamVrc7ModVibrato, ParamVrc7ModSustained, ParamVrc7ModWaveRectified, ParamVrc7ModKeyScaling,
+                                                    ParamVrc7ModFreqMultiplier, ParamVrc7ModAttack, ParamVrc7ModDecay, ParamVrc7ModSustain, ParamVrc7ModRelease };
+
+        public int[] GetRealTimeParams()
+        {
+            switch (expansion)
+            {
+                case Project.ExpansionFds   : return FdsParams;
+                case Project.ExpansionNamco : return NamcoParams;
+                case Project.ExpansionVrc7  : return Vrc7Params;
+            }
+
+            return null;
+        }
+
+        public int GetRealTimeParamMinValue(int param)
+        {
+            return 0;
+        }
+
+        public int GetRealTimeParamMaxValue(int param)
+        {
+            switch (param)
+            {
+                case ParamFdsWavePreset:
+                case ParamFdsModulationPreset:
+                    return Envelope.WavePresetMax - 1;
+                case ParamFdsModulationSpeed:
+                    return 4095;
+                case ParamFdsModulationDepth:
+                    return 63;
+                case ParamFdsModulationDelay:
+                    return 255;
+                case ParamVrc7CarFreqMultiplier:
+                case ParamVrc7CarAttack:
+                case ParamVrc7CarDecay:
+                case ParamVrc7CarSustain:
+                case ParamVrc7CarRelease:
+                case ParamVrc7ModFreqMultiplier:
+                case ParamVrc7ModAttack:
+                case ParamVrc7ModDecay:
+                case ParamVrc7ModSustain:
+                case ParamVrc7ModRelease:
+                    return 16;
+            }
+
+            return 0;
+        }
+
+        public int GetRealTimeParamValue(int param)
+        {
+            switch (param)
+            {
+                case ParamFdsWavePreset       : return fdsWavPreset;
+                case ParamFdsModulationPreset : return fdsModPreset;
+                case ParamFdsModulationSpeed  : return fdsModRate; 
+                case ParamFdsModulationDepth  : return fdsModDepth;
+                case ParamFdsModulationDelay  : return fdsModDelay;
+            }
+
+            return 0;
+        }
+
+        public string GetRealTimeParamString(int param)
+        {
+            switch (param)
+            {
+                case ParamFdsWavePreset       : return Envelope.PresetNames[fdsWavPreset];
+                case ParamFdsModulationPreset : return Envelope.PresetNames[fdsModPreset];
+            }
+
+            return GetRealTimeParamValue(param).ToString();
+        }
+
+        public void SetRealTimeParamValue(int param, int val)
+        {
+            var min = GetRealTimeParamMinValue(param);
+            var max = GetRealTimeParamMaxValue(param);
+
+            val = Utils.Clamp(val, min, max);
+
+            switch (param)
+            {
+                case ParamFdsWavePreset :
+                    fdsWavPreset = (byte)val;
+                    envelopes[Envelope.FdsWaveform].SetFromPreset(Envelope.FdsWaveform, val);
+                    break;
+                case ParamFdsModulationPreset :
+                    fdsModPreset = (byte)val;
+                    envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, val);
+                    break;
+                case ParamFdsModulationSpeed : fdsModRate  = (ushort)val; break;
+                case ParamFdsModulationDepth : fdsModDepth = (byte)val; break;
+                case ParamFdsModulationDelay : fdsModDelay = (byte)val; break;
+                default : Debug.Assert(false); return;
+            }
         }
 
         public void SerializeState(ProjectBuffer buffer)

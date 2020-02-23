@@ -21,8 +21,10 @@ namespace FamiStudio
         public const byte WavePresetSawtooth = 2;
         public const byte WavePresetSquare50 = 3;
         public const byte WavePresetSquare25 = 4;
-        public const byte WavePresetCustom   = 5;
-        public const byte WavePresetMax      = 6;
+        public const byte WavePresetFlat     = 5;
+        public const byte WavePresetCustom   = 6;
+        public const byte WavePresetMax      = 7;
+        public static readonly string[] PresetNames = { "Sine", "Triangle", "Sawtooth", "Square 50%", "Square 25%", "Flat", "Custom" };
 
         sbyte[] values;
         int length;
@@ -276,6 +278,10 @@ namespace FamiStudio
                 case WavePresetSquare25:
                     for (int i = 0; i < length; i++)
                         values[i] = (sbyte)(i >= length / 4 ? max : min);
+                    break;
+                case WavePresetFlat:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)((min + max) / 2);
                     break;
             }
         }

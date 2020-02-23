@@ -84,78 +84,6 @@ namespace FamiStudio
             Max
         };
 
-        enum ParamType
-        {
-            // FDS
-            FdsWavePreset,
-            FdsModulationPreset,
-            FdsModulationSpeed,
-            FdsModulationDepth,
-            
-            // Namco
-            NamcoWaveSize,
-            NamcoWavePreset,
-
-            // VRC7
-            Vrc7CarTremolo,
-            Vrc7CarVibrato,
-            Vrc7CarSustained,
-            Vrc7CarWaveRectified,
-            Vrc7CarKeyScaling,
-            Vrc7CarFreqMultiplier,
-            Vrc7CarAttack,
-            Vrc7CarDecay,
-            Vrc7CarSustain,
-            Vrc7CarRelease,
-            Vrc7ModTremolo,
-            Vrc7ModVibrato,
-            Vrc7ModSustained,
-            Vrc7ModWaveRectified,
-            Vrc7ModKeyScaling,
-            Vrc7ModFreqMultiplier,
-            Vrc7ModAttack,
-            Vrc7ModDecay,
-            Vrc7ModSustain,
-            Vrc7ModRelease,
-
-            Max
-        };
-
-        static readonly string[] ParamNames = 
-        {
-            // FDS
-            "Wave Preset",
-            "Mod Preset",
-            "Mod Speed",
-            "Mod Depth",
-
-            // Namco
-            "Wave Size",
-            "Wave Preset",
-
-            // VRC7
-            "Carrier Tremolo",
-            "Carrier Vibrato",
-            "Carrier Sustained",
-            "Carrier WaveShape",
-            "Carrier KeyScaling",
-            "Carrier FreqMultiplier",
-            "Carrier Attack",
-            "Carrier Decay",
-            "Carrier Sustain",
-            "Carrier Release",
-            "Modulator Tremolo",
-            "Modulator Vibrato",
-            "Modulator Sustained",
-            "Modulator WaveShape",
-            "Modulator KeyScaling",
-            "Modulator FreqMultiplier",
-            "Modulator Attack",
-            "Modulator Decay",
-            "Modulator Sustain",
-            "Modulator Release"
-        };
-
         enum SubButtonType
         {
             // Let's keep this enum and Envelope.XXX values in sync for convenience.
@@ -176,6 +104,42 @@ namespace FamiStudio
             Max
         }
 
+        ButtonType[] instrumentParamTypes = new[]
+        {
+            // FDS
+            ButtonType.ParamList,     // FdsWavePreset
+            ButtonType.ParamList,     // FdsModulationPreset
+            ButtonType.ParamSlider,   // FdsModulationSpeed
+            ButtonType.ParamSlider,   // FdsModulationDepth
+            ButtonType.ParamSlider,   // FdsModulationDelay
+
+            // Namco
+            ButtonType.ParamList,     // NamcoWaveSize
+            ButtonType.ParamList,     // NamcoWavePreset
+
+            // VRC7
+            ButtonType.ParamCheckbox, // Vrc7CarTremolo
+            ButtonType.ParamCheckbox, // Vrc7CarVibrato
+            ButtonType.ParamCheckbox, // Vrc7CarSustained
+            ButtonType.ParamCheckbox, // Vrc7CarWaveRectified
+            ButtonType.ParamList,     // Vrc7CarKeyScaling
+            ButtonType.ParamSlider,   // Vrc7CarFreqMultiplier
+            ButtonType.ParamSlider,   // Vrc7CarAttack
+            ButtonType.ParamSlider,   // Vrc7CarDecay
+            ButtonType.ParamSlider,   // Vrc7CarSustain
+            ButtonType.ParamSlider,   // Vrc7CarRelease
+            ButtonType.ParamCheckbox, // Vrc7ModTremolo
+            ButtonType.ParamCheckbox, // Vrc7ModVibrato
+            ButtonType.ParamCheckbox, // Vrc7ModSustained
+            ButtonType.ParamCheckbox, // Vrc7ModWaveRectified
+            ButtonType.ParamList,     // Vrc7ModKeyScaling
+            ButtonType.ParamSlider,   // Vrc7ModFreqMultiplier
+            ButtonType.ParamSlider,   // Vrc7ModAttack
+            ButtonType.ParamSlider,   // Vrc7ModDecay
+            ButtonType.ParamSlider,   // Vrc7ModSustain
+            ButtonType.ParamSlider,   // Vrc7ModRelease
+        };
+
         // From right to left. Looks more visually pleasing than the enum order.
         static readonly int[] EnvelopeDisplayOrder = new int[]
         {
@@ -191,7 +155,7 @@ namespace FamiStudio
         class Button
         {
             public ButtonType type;
-            public ParamType param = ParamType.Max;
+            public int instrumentParam = -1;
             public Song song;
             public Instrument instrument;
             public ProjectExplorer projectExplorer;
@@ -261,7 +225,7 @@ namespace FamiStudio
                     case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
                     case ButtonType.ParamCheckbox:
                     case ButtonType.ParamSlider:
-                    case ButtonType.ParamList: return ParamNames[(int)param];
+                    case ButtonType.ParamList: return Instrument.RealTimeParamNames[instrumentParam];
                 }
 
                 return "";
@@ -310,10 +274,6 @@ namespace FamiStudio
                 {
                     return projectExplorer.bmpSong;
                 }
-                else if (type == ButtonType.ParamCheckbox || type == ButtonType.ParamSlider || type == ButtonType.ParamList)
-                {
-                    return projectExplorer.bmpParams[(int)param];
-                }
                 else if (type == ButtonType.Instrument)
                 {
                     var expType = instrument != null ? instrument.ExpansionType : Project.ExpansionNone;
@@ -337,73 +297,6 @@ namespace FamiStudio
                 }
 
                 return projectExplorer.bmpEnvelopes[(int)sub];
-            }
-
-            int testVal = 1000; // MATTT
-
-            public int GetParamMinValue()
-            {
-                Debug.Assert(param != ParamType.Max);
-                return 0;
-            }
-
-            public int GetParamMaxValue()
-            {
-                Debug.Assert(param != ParamType.Max);
-
-                switch (param)
-                {
-                    case ParamType.FdsModulationSpeed: return 4095;
-                    case ParamType.FdsModulationDepth: return 255;
-                    case ParamType.Vrc7CarFreqMultiplier:
-                    case ParamType.Vrc7CarAttack:
-                    case ParamType.Vrc7CarDecay:
-                    case ParamType.Vrc7CarSustain:
-                    case ParamType.Vrc7CarRelease:
-                    case ParamType.Vrc7ModFreqMultiplier:
-                    case ParamType.Vrc7ModAttack:
-                    case ParamType.Vrc7ModDecay:
-                    case ParamType.Vrc7ModSustain:
-                    case ParamType.Vrc7ModRelease:
-                        return 16;
-                }
-
-                return 0;
-            }
-
-            public int GetParamValue()
-            {
-                Debug.Assert(param != ParamType.Max);
-
-                switch (param)
-                {
-                    case ParamType.FdsModulationSpeed: return testVal; // MATTT
-                    case ParamType.FdsModulationDepth: return 20;
-                    case ParamType.FdsWavePreset: return 100;
-                    case ParamType.FdsModulationPreset: return 200;
-                }
-
-                return 0;
-            }
-
-            public string GetParamString()
-            {
-                Debug.Assert(param != ParamType.Max);
-
-                switch (param)
-                {
-                    case ParamType.FdsWavePreset:       return "Sine";
-                    case ParamType.FdsModulationPreset: return "Square";
-                }
-
-                return GetParamValue().ToString();
-            }
-
-            public void SetParamValue(int val)
-            {
-                Debug.Assert(param != ParamType.Max);
-
-                testVal = val; // MATTT
             }
         }
 
@@ -451,7 +344,6 @@ namespace FamiStudio
         RenderBitmap   bmpButtonRight;
         RenderBitmap[] bmpInstrument = new RenderBitmap[Project.ExpansionCount];
         RenderBitmap[] bmpEnvelopes = new RenderBitmap[Envelope.Max];
-        RenderBitmap[] bmpParams = new RenderBitmap[(int)ParamType.Max];
 
         public Song SelectedSong => selectedSong;
         public Instrument SelectedInstrument => selectedInstrument;
@@ -534,40 +426,12 @@ namespace FamiStudio
 
                 if (instrument != null && instrument == expandedInstrument)
                 {
-                    if (instrument.ExpansionType == Project.ExpansionFds)
-                    { 
-                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.FdsWavePreset,       instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.FdsModulationPreset, instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.FdsModulationSpeed,  instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.FdsModulationDepth,  instrument = instrument });
-                    }
-                    else if (instrument.ExpansionType == Project.ExpansionNamco)
+                    var instrumentParams = instrument.GetRealTimeParams();
+
+                    if (instrumentParams != null)
                     {
-                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.NamcoWaveSize,         instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.NamcoWavePreset,       instrument = instrument });
-                    }
-                    else if (instrument.ExpansionType == Project.ExpansionVrc7)
-                    {
-                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7CarTremolo,        instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7CarVibrato,        instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7CarSustained,      instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7CarWaveRectified,  instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.Vrc7CarKeyScaling,     instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarFreqMultiplier, instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarAttack,         instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarDecay,          instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarSustain,        instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7CarRelease,        instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7ModTremolo,        instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7ModVibrato,        instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7ModSustained,      instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.Vrc7ModWaveRectified,  instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.Vrc7ModKeyScaling,     instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModFreqMultiplier, instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModAttack,         instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModDecay,          instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModSustain,        instrument = instrument });
-                        buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.Vrc7ModRelease,        instrument = instrument });
+                        foreach (var param in instrumentParams)
+                            buttons.Add(new Button(this) { type = instrumentParamTypes[(int)param], instrumentParam = param, instrument = instrument });
                     }
                 }
             }
@@ -595,11 +459,6 @@ namespace FamiStudio
             bmpEnvelopes[Envelope.FdsModulation] = g.CreateBitmapFromResource("Wave");
             bmpEnvelopes[Envelope.NamcoWaveform] = g.CreateBitmapFromResource("Wave");
 
-            bmpParams[(int)ParamType.FdsWavePreset]       = g.CreateBitmapFromResource("Wave");
-            bmpParams[(int)ParamType.FdsModulationPreset] = g.CreateBitmapFromResource("Wave");
-            bmpParams[(int)ParamType.FdsModulationSpeed]  = g.CreateBitmapFromResource("Wave");
-            bmpParams[(int)ParamType.FdsModulationDepth]  = g.CreateBitmapFromResource("Wave");
-
             bmpExpand = g.CreateBitmapFromResource("InstrumentExpand");
             bmpExpanded = g.CreateBitmapFromResource("InstrumentExpanded");
             bmpCheckBoxYes = g.CreateBitmapFromResource("CheckBoxYes");
@@ -620,12 +479,8 @@ namespace FamiStudio
 
         protected bool ShowExpandButtons()
         {
-            if (App.Project.ExpansionAudio == Project.ExpansionFds  || // Modulation settings
-                App.Project.ExpansionAudio == Project.ExpansionVrc7 || // A lot of stuff
-                App.Project.ExpansionAudio == Project.ExpansionNamco)  // Wave size
-            {
-                return App.Project.Instruments.Find(i => i.ExpansionType != Project.ExpansionNone) != null;
-            }
+            if (App.Project.ExpansionAudio != Project.ExpansionNone)
+                return App.Project.Instruments.Find(i => i.GetRealTimeParams() != null) != null;
 
             return false;
         }
@@ -691,15 +546,15 @@ namespace FamiStudio
                 if (leftPadding != 0)
                     g.PopTransform();
 
-                if (button.param != ParamType.Max)
+                if (button.instrumentParam >= 0)
                 {
-                    var paramVal = button.GetParamValue();
-                    var paramStr = button.GetParamString();
+                    var paramVal = button.instrument.GetRealTimeParamValue(button.instrumentParam);
+                    var paramStr = button.instrument.GetRealTimeParamString(button.instrumentParam);
 
                     if (button.type == ButtonType.ParamSlider)
                     {
-                        var paramMin = button.GetParamMinValue();
-                        var paramMax = button.GetParamMaxValue();
+                        var paramMin = button.instrument.GetRealTimeParamMinValue(button.instrumentParam);
+                        var paramMax = button.instrument.GetRealTimeParamMaxValue(button.instrumentParam);
                         var valSizeX = (int)Math.Round((paramVal - paramMin) / (float)(paramMax - paramMin) * sliderSizeX);
 
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
@@ -1008,9 +863,9 @@ namespace FamiStudio
             var buttonX = e.X;
             var buttonY = e.Y - buttonIdx * buttonSizeY;
 
-            var paramVal = button.GetParamValue();
-            var paramMin = button.GetParamMinValue();
-            var paramMax = button.GetParamMaxValue();
+            var paramVal = button.instrument.GetRealTimeParamValue(button.instrumentParam);
+            var paramMin = button.instrument.GetRealTimeParamMinValue(button.instrumentParam);
+            var paramMax = button.instrument.GetRealTimeParamMaxValue(button.instrumentParam);
 
             if (shift)
             {
@@ -1021,7 +876,7 @@ namespace FamiStudio
                 paramVal = (int)Math.Round(Utils.Lerp(paramMin, paramMax, Utils.Clamp((buttonX - (actualWidth - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
             }
 
-            button.SetParamValue(paramVal);
+            button.instrument.SetRealTimeParamValue(button.instrumentParam, paramVal);
 
             return (buttonX > (actualWidth - sliderPosX) &&
                     buttonX < (actualWidth - sliderPosX + sliderSizeX) &&
@@ -1152,6 +1007,22 @@ namespace FamiStudio
                     else if (button.type == ButtonType.ParamCheckbox)
                     {
 
+                    }
+                    else if (button.type == ButtonType.ParamList)
+                    {
+                        var actualWidth = Width - scrollBarSizeX;
+                        var buttonX = e.X;
+                        var leftButton  = buttonX > (actualWidth - sliderPosX) && buttonX < (actualWidth - sliderPosX + bmpButtonLeft.Size.Width);
+                        var rightButton = buttonX > (actualWidth - sliderPosX + sliderSizeX - bmpButtonRight.Size.Width) && buttonX < (actualWidth - sliderPosX + sliderSizeX);
+                        var delta = leftButton ? -1 : (rightButton ? 1 : 0);
+
+                        if (delta != 0)
+                        {
+                            // MATTT : Transaction.
+                            var val = button.instrument.GetRealTimeParamValue(button.instrumentParam);
+                            button.instrument.SetRealTimeParamValue(button.instrumentParam, val + delta);
+                            ConditionalInvalidate();
+                        }
                     }
                 }
                 else if (right)
