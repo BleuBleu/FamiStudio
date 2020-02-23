@@ -86,11 +86,17 @@ namespace FamiStudio
 
         enum ParamType
         {
+            // FDS
             FdsWavePreset,
             FdsModulationPreset,
             FdsModulationSpeed,
             FdsModulationDepth,
+            
+            // Namco
+            NamcoWaveSize,
+            NamcoWavePreset,
 
+            // VRC7
             Vrc7CarTremolo,
             Vrc7CarVibrato,
             Vrc7CarSustained,
@@ -101,7 +107,6 @@ namespace FamiStudio
             Vrc7CarDecay,
             Vrc7CarSustain,
             Vrc7CarRelease,
-
             Vrc7ModTremolo,
             Vrc7ModVibrato,
             Vrc7ModSustained,
@@ -124,6 +129,10 @@ namespace FamiStudio
             "Mod Speed",
             "Mod Depth",
 
+            // Namco
+            "Wave Size",
+            "Wave Preset",
+
             // VRC7
             "Carrier Tremolo",
             "Carrier Vibrato",
@@ -135,7 +144,6 @@ namespace FamiStudio
             "Carrier Decay",
             "Carrier Sustain",
             "Carrier Release",
-
             "Modulator Tremolo",
             "Modulator Vibrato",
             "Modulator Sustained",
@@ -532,6 +540,11 @@ namespace FamiStudio
                         buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.FdsModulationPreset, instrument = instrument });
                         buttons.Add(new Button(this) { type = ButtonType.ParamSlider,   param = ParamType.FdsModulationSpeed,  instrument = instrument });
                         buttons.Add(new Button(this) { type = ButtonType.ParamCheckbox, param = ParamType.FdsModulationDepth,  instrument = instrument });
+                    }
+                    else if (instrument.ExpansionType == Project.ExpansionNamco)
+                    {
+                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.NamcoWaveSize,         instrument = instrument });
+                        buttons.Add(new Button(this) { type = ButtonType.ParamList,     param = ParamType.NamcoWavePreset,       instrument = instrument });
                     }
                     else if (instrument.ExpansionType == Project.ExpansionVrc7)
                     {

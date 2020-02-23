@@ -16,6 +16,14 @@ namespace FamiStudio
         public static readonly string[] EnvelopeNames = { "Volume", "Arpeggio", "Pitch", "Duty Cycle", "FDS Waveform", "FDS Modulation Table", "Namco Waveform" };
         public static readonly string[] EnvelopeShortNames = { "Volume", "Arpeggio", "Pitch", "DutyCycle", "FDSWave", "FDSMod", "NamcoWave" };
 
+        public const byte WavePresetSine     = 0;
+        public const byte WavePresetTriangle = 1;
+        public const byte WavePresetSawtooth = 2;
+        public const byte WavePresetSquare50 = 3;
+        public const byte WavePresetSquare25 = 4;
+        public const byte WavePresetCustom   = 5;
+        public const byte WavePresetMax      = 6;
+
         sbyte[] values;
         int length;
         int loop = -1;
@@ -240,6 +248,38 @@ namespace FamiStudio
             return env;
         }
 
+        public void SetFromPreset(int type, int preset)
+        {
+            GetMinMaxValue(null, type, out var min, out var max);
+
+            switch (preset)
+            {
+                case WavePresetSine:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, (float)Math.Sin(i * 2.0f * Math.PI / length) * -0.5f + 0.5f));
+                    break;
+                case WavePresetTriangle:
+                    for (int i = 0; i < length / 2; i++)
+                    {
+                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(length / 2 - 1)));
+                        values[length - i - 1] = values[i];
+                    }
+                    break;
+                case WavePresetSawtooth:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(length - 1)));
+                    break;
+                case WavePresetSquare50:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)(i >= length / 2 ? max : min);
+                    break;
+                case WavePresetSquare25:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)(i >= length / 4 ? max : min);
+                    break;
+            }
+        }
+
         public uint CRC
         {
             get
@@ -274,7 +314,7 @@ namespace FamiStudio
             }
         }
 
-        public static void GetMinMaxValue(Instrument instruemnt, int type, out int min, out int max)
+        public static void GetMinMaxValue(Instrument instrument, int type, out int min, out int max)
         {
             if (type == Volume)
             {
@@ -284,17 +324,22 @@ namespace FamiStudio
             else if (type == DutyCycle)
             {
                 min = 0;
-                max = instruemnt.ExpansionType == Project.ExpansionVrc6 ? 7 : 3;
+                max = instrument.ExpansionType == Project.ExpansionVrc6 ? 7 : 3;
             }
             else if (type == FdsWaveform)
             {
                 min = 0;
                 max = 63;
             }
+            else if (type == NamcoWaveform)
+            {
+                min = 0;
+                max = 15;
+            }
             else
             {
                 min = -64;
-                max = 63;
+                max =  63;
             }
         }
 

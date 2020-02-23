@@ -12,11 +12,40 @@ namespace FamiStudio
         private Envelope[] envelopes = new Envelope[Envelope.Max];
         private Color color;
 
+        // FDS
+        private byte   fdsWavPreset;
+        private byte   fdsModPreset;
+        private ushort fdsModRate;
+        private byte   fdsModDepth;
+        private byte   fdsModDelay;
+
+        // Namco
+        private byte   namcoWavePreset;
+        private byte   namcoWaveSize;
+
+        // VRC7
+        struct Vrc7Unit
+        {
+            public byte tremolo;
+            public byte vibrato;
+            public byte sustained;
+            public byte waveShape;
+            public byte keyScaling;
+            public byte freqMultiplier;
+            public byte attack;
+            public byte decay;
+            public byte sustain;
+            public byte release;
+        };
+
+        private Vrc7Unit vrc7CarrierParams;
+        private Vrc7Unit vrc7ModulatorParams;
+
         public int Id => id;
         public string Name { get => name; set => name = value; }
-        public int ExpansionType { get => expansion; }
-        public bool IsExpansionInstrument { get => expansion != Project.ExpansionNone; }
         public Color Color { get => color; set => color = value; }
+        public int ExpansionType => expansion; 
+        public bool IsExpansionInstrument => expansion != Project.ExpansionNone;
         public Envelope[] Envelopes => envelopes;
         public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
@@ -111,7 +140,7 @@ namespace FamiStudio
                 }
             }
 
-            if (buffer.Version < 5)
+            if (buffer.Version < 5 && dutyCycle != 0)
             {
                 envelopes[Envelope.DutyCycle] = new Envelope(Envelope.DutyCycle);
                 envelopes[Envelope.DutyCycle].Length = 1;
