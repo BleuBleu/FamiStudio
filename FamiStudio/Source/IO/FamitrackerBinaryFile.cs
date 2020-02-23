@@ -125,13 +125,12 @@ namespace FamiStudio
             {
                 for (int i = 0; i < OctaveRange; ++i)
                 {
-                    // MATTT: I think sample loops will have 0x80 set.
                     for (int j = 0; j < 12; ++j)
                     {
                         sampleMapping[i * 12 + j].index = bytes[idx++];
                         sampleMapping[i * 12 + j].pitch = bytes[idx++];
                         if (blockVersion > 5)
-                            idx++; // GetSampleDeltaValue(i, j);
+                            idx++; // sample delta
                     }
                 }
             }
@@ -359,7 +358,7 @@ namespace FamiStudio
                 {
                     var sample = samples[mapping.index - 1];
                     if (sample != null && sample.Data != null)
-                        project.MapDPCMSample(i + 1, sample, mapping.pitch, false); // MATTT: Loop.
+                        project.MapDPCMSample(i + 1, sample, mapping.pitch & 0x0f, (mapping.pitch & 0x80) != 0);
                 }
             }
 
