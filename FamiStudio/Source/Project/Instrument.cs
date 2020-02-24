@@ -26,7 +26,7 @@ namespace FamiStudio
 
         // VRC7
         private byte   vrc7Patch = 1;
-        private byte[] vrc7PatchData = new byte[8];
+        private byte[] vrc7PatchRegs = new byte[8];
         
         public int Id => id;
         public string Name { get => name; set => name = value; }
@@ -37,6 +37,9 @@ namespace FamiStudio
         public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[Envelope.Volume] != null && envelopes[Envelope.Volume].Release >= 0;
+
+        public byte   Vrc7Patch => vrc7Patch;
+        public byte[] Vrc7PatchRegs => vrc7PatchRegs;
 
         public Instrument()
         {
@@ -343,30 +346,30 @@ namespace FamiStudio
                                                  
                 // VRC7                          
                 case ParamVrc7Patch              : return vrc7Patch;
-                case ParamVrc7CarTremolo         : return (vrc7PatchData[1] & 0x80) >> 7; 
-                case ParamVrc7CarVibrato         : return (vrc7PatchData[1] & 0x40) >> 6;
-                case ParamVrc7CarSustained       : return (vrc7PatchData[1] & 0x20) >> 5;
-                case ParamVrc7CarKeyScaling      : return (vrc7PatchData[1] & 0x10) >> 4;
-                case ParamVrc7CarFreqMultiplier  : return (vrc7PatchData[1] & 0x0f) >> 0;
-                case ParamVrc7CarKeyScalingLevel : return (vrc7PatchData[3] & 0xc0) >> 6;
-                case ParamVrc7CarWaveRectified   : return (vrc7PatchData[3] & 0x10) >> 4;
-                case ParamVrc7CarAttack          : return (vrc7PatchData[5] & 0xf0) >> 4;
-                case ParamVrc7CarDecay           : return (vrc7PatchData[5] & 0x0f) >> 0;
-                case ParamVrc7CarSustain         : return (vrc7PatchData[7] & 0xf0) >> 4;
-                case ParamVrc7CarRelease         : return (vrc7PatchData[7] & 0x0f) >> 0;
-                case ParamVrc7ModTremolo         : return (vrc7PatchData[0] & 0x80) >> 7;
-                case ParamVrc7ModVibrato         : return (vrc7PatchData[0] & 0x40) >> 6;
-                case ParamVrc7ModSustained       : return (vrc7PatchData[0] & 0x20) >> 5;
-                case ParamVrc7ModKeyScaling      : return (vrc7PatchData[0] & 0x10) >> 4; 
-                case ParamVrc7ModFreqMultiplier  : return (vrc7PatchData[0] & 0x0f) >> 0;
-                case ParamVrc7ModKeyScalingLevel : return (vrc7PatchData[2] & 0xc0) >> 6;
-                case ParamVrc7ModWaveRectified   : return (vrc7PatchData[3] & 0x08) >> 3;
-                case ParamVrc7ModAttack          : return (vrc7PatchData[4] & 0xf0) >> 4;
-                case ParamVrc7ModDecay           : return (vrc7PatchData[4] & 0x0f) >> 0;
-                case ParamVrc7ModSustain         : return (vrc7PatchData[6] & 0xf0) >> 4;
-                case ParamVrc7ModRelease         : return (vrc7PatchData[6] & 0x0f) >> 0;
-                case ParamVrc7ModLevel           : return (vrc7PatchData[2] & 0x3f) >> 0;
-                case ParamVrc7Feedback           : return (vrc7PatchData[3] & 0x07) >> 0;
+                case ParamVrc7CarTremolo         : return (vrc7PatchRegs[1] & 0x80) >> 7; 
+                case ParamVrc7CarVibrato         : return (vrc7PatchRegs[1] & 0x40) >> 6;
+                case ParamVrc7CarSustained       : return (vrc7PatchRegs[1] & 0x20) >> 5;
+                case ParamVrc7CarKeyScaling      : return (vrc7PatchRegs[1] & 0x10) >> 4;
+                case ParamVrc7CarFreqMultiplier  : return (vrc7PatchRegs[1] & 0x0f) >> 0;
+                case ParamVrc7CarKeyScalingLevel : return (vrc7PatchRegs[3] & 0xc0) >> 6;
+                case ParamVrc7CarWaveRectified   : return (vrc7PatchRegs[3] & 0x10) >> 4;
+                case ParamVrc7CarAttack          : return (vrc7PatchRegs[5] & 0xf0) >> 4;
+                case ParamVrc7CarDecay           : return (vrc7PatchRegs[5] & 0x0f) >> 0;
+                case ParamVrc7CarSustain         : return (vrc7PatchRegs[7] & 0xf0) >> 4;
+                case ParamVrc7CarRelease         : return (vrc7PatchRegs[7] & 0x0f) >> 0;
+                case ParamVrc7ModTremolo         : return (vrc7PatchRegs[0] & 0x80) >> 7;
+                case ParamVrc7ModVibrato         : return (vrc7PatchRegs[0] & 0x40) >> 6;
+                case ParamVrc7ModSustained       : return (vrc7PatchRegs[0] & 0x20) >> 5;
+                case ParamVrc7ModKeyScaling      : return (vrc7PatchRegs[0] & 0x10) >> 4; 
+                case ParamVrc7ModFreqMultiplier  : return (vrc7PatchRegs[0] & 0x0f) >> 0;
+                case ParamVrc7ModKeyScalingLevel : return (vrc7PatchRegs[2] & 0xc0) >> 6;
+                case ParamVrc7ModWaveRectified   : return (vrc7PatchRegs[3] & 0x08) >> 3;
+                case ParamVrc7ModAttack          : return (vrc7PatchRegs[4] & 0xf0) >> 4;
+                case ParamVrc7ModDecay           : return (vrc7PatchRegs[4] & 0x0f) >> 0;
+                case ParamVrc7ModSustain         : return (vrc7PatchRegs[6] & 0xf0) >> 4;
+                case ParamVrc7ModRelease         : return (vrc7PatchRegs[6] & 0x0f) >> 0;
+                case ParamVrc7ModLevel           : return (vrc7PatchRegs[2] & 0x3f) >> 0;
+                case ParamVrc7Feedback           : return (vrc7PatchRegs[3] & 0x07) >> 0;
             }
 
             return 0;
@@ -406,33 +409,33 @@ namespace FamiStudio
                 case ParamVrc7Patch             :
                     vrc7Patch = (byte)val;
                     if (vrc7Patch != 0)
-                        Array.Copy(Vrc7Patches[vrc7Patch].data, vrc7PatchData, 8);
+                        Array.Copy(Vrc7Patches[vrc7Patch].data, vrc7PatchRegs, 8);
                     break;
 
-                case ParamVrc7CarTremolo         : vrc7PatchData[1] = (byte)((vrc7PatchData[1] & (~0x80)) | ((val << 7) & 0x80)); break;
-                case ParamVrc7CarVibrato         : vrc7PatchData[1] = (byte)((vrc7PatchData[1] & (~0x40)) | ((val << 6) & 0x40)); break;
-                case ParamVrc7CarSustained       : vrc7PatchData[1] = (byte)((vrc7PatchData[1] & (~0x20)) | ((val << 5) & 0x20)); break;
-                case ParamVrc7CarKeyScaling      : vrc7PatchData[1] = (byte)((vrc7PatchData[1] & (~0x10)) | ((val << 4) & 0x10)); break;
-                case ParamVrc7CarFreqMultiplier  : vrc7PatchData[1] = (byte)((vrc7PatchData[1] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7CarKeyScalingLevel : vrc7PatchData[3] = (byte)((vrc7PatchData[3] & (~0xc0)) | ((val << 6) & 0xc0)); break;
-                case ParamVrc7CarWaveRectified   : vrc7PatchData[3] = (byte)((vrc7PatchData[3] & (~0x10)) | ((val << 4) & 0x10)); break;
-                case ParamVrc7CarAttack          : vrc7PatchData[5] = (byte)((vrc7PatchData[5] & (~0xf0)) | ((val << 4) & 0xf0)); break;
-                case ParamVrc7CarDecay           : vrc7PatchData[5] = (byte)((vrc7PatchData[5] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7CarSustain         : vrc7PatchData[7] = (byte)((vrc7PatchData[7] & (~0xf0)) | ((val << 4) & 0xf0)); break;
-                case ParamVrc7CarRelease         : vrc7PatchData[7] = (byte)((vrc7PatchData[7] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7ModTremolo         : vrc7PatchData[0] = (byte)((vrc7PatchData[0] & (~0x80)) | ((val << 7) & 0x80)); break;
-                case ParamVrc7ModVibrato         : vrc7PatchData[0] = (byte)((vrc7PatchData[0] & (~0x40)) | ((val << 6) & 0x40)); break;
-                case ParamVrc7ModSustained       : vrc7PatchData[0] = (byte)((vrc7PatchData[0] & (~0x20)) | ((val << 5) & 0x20)); break;
-                case ParamVrc7ModKeyScaling      : vrc7PatchData[0] = (byte)((vrc7PatchData[0] & (~0x10)) | ((val << 4) & 0x10)); break; 
-                case ParamVrc7ModFreqMultiplier  : vrc7PatchData[0] = (byte)((vrc7PatchData[0] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7ModKeyScalingLevel : vrc7PatchData[2] = (byte)((vrc7PatchData[2] & (~0xc0)) | ((val << 6) & 0xc0)); break;
-                case ParamVrc7ModWaveRectified   : vrc7PatchData[3] = (byte)((vrc7PatchData[3] & (~0x08)) | ((val << 3) & 0x08)); break;
-                case ParamVrc7ModAttack          : vrc7PatchData[4] = (byte)((vrc7PatchData[4] & (~0xf0)) | ((val << 4) & 0xf0)); break;
-                case ParamVrc7ModDecay           : vrc7PatchData[4] = (byte)((vrc7PatchData[4] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7ModSustain         : vrc7PatchData[6] = (byte)((vrc7PatchData[6] & (~0xf0)) | ((val << 4) & 0xf0)); break;
-                case ParamVrc7ModRelease         : vrc7PatchData[6] = (byte)((vrc7PatchData[6] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7ModLevel           : vrc7PatchData[2] = (byte)((vrc7PatchData[2] & (~0x3f)) | ((val << 0) & 0x3f)); break;
-                case ParamVrc7Feedback           : vrc7PatchData[3] = (byte)((vrc7PatchData[3] & (~0x07)) | ((val << 0) & 0x07)); break;
+                case ParamVrc7CarTremolo         : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x80)) | ((val << 7) & 0x80)); break;
+                case ParamVrc7CarVibrato         : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x40)) | ((val << 6) & 0x40)); break;
+                case ParamVrc7CarSustained       : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x20)) | ((val << 5) & 0x20)); break;
+                case ParamVrc7CarKeyScaling      : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x10)) | ((val << 4) & 0x10)); break;
+                case ParamVrc7CarFreqMultiplier  : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7CarKeyScalingLevel : vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0xc0)) | ((val << 6) & 0xc0)); break;
+                case ParamVrc7CarWaveRectified   : vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0x10)) | ((val << 4) & 0x10)); break;
+                case ParamVrc7CarAttack          : vrc7PatchRegs[5] = (byte)((vrc7PatchRegs[5] & (~0xf0)) | ((val << 4) & 0xf0)); break;
+                case ParamVrc7CarDecay           : vrc7PatchRegs[5] = (byte)((vrc7PatchRegs[5] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7CarSustain         : vrc7PatchRegs[7] = (byte)((vrc7PatchRegs[7] & (~0xf0)) | ((val << 4) & 0xf0)); break;
+                case ParamVrc7CarRelease         : vrc7PatchRegs[7] = (byte)((vrc7PatchRegs[7] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7ModTremolo         : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x80)) | ((val << 7) & 0x80)); break;
+                case ParamVrc7ModVibrato         : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x40)) | ((val << 6) & 0x40)); break;
+                case ParamVrc7ModSustained       : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x20)) | ((val << 5) & 0x20)); break;
+                case ParamVrc7ModKeyScaling      : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x10)) | ((val << 4) & 0x10)); break; 
+                case ParamVrc7ModFreqMultiplier  : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7ModKeyScalingLevel : vrc7PatchRegs[2] = (byte)((vrc7PatchRegs[2] & (~0xc0)) | ((val << 6) & 0xc0)); break;
+                case ParamVrc7ModWaveRectified   : vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0x08)) | ((val << 3) & 0x08)); break;
+                case ParamVrc7ModAttack          : vrc7PatchRegs[4] = (byte)((vrc7PatchRegs[4] & (~0xf0)) | ((val << 4) & 0xf0)); break;
+                case ParamVrc7ModDecay           : vrc7PatchRegs[4] = (byte)((vrc7PatchRegs[4] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7ModSustain         : vrc7PatchRegs[6] = (byte)((vrc7PatchRegs[6] & (~0xf0)) | ((val << 4) & 0xf0)); break;
+                case ParamVrc7ModRelease         : vrc7PatchRegs[6] = (byte)((vrc7PatchRegs[6] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7ModLevel           : vrc7PatchRegs[2] = (byte)((vrc7PatchRegs[2] & (~0x3f)) | ((val << 0) & 0x3f)); break;
+                case ParamVrc7Feedback           : vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0x07)) | ((val << 0) & 0x07)); break;
 
                 default : Debug.Assert(false); return;
             }
