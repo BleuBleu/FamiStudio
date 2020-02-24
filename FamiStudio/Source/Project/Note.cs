@@ -21,22 +21,6 @@ namespace FamiStudio
             "B"
         };
 
-        public static readonly string[] EffectNames =
-        {
-            "Volume",
-            "Vib Speed",
-            "Vib Depth",
-            "Pitch",
-            "Speed"
-        };
-
-        public const int EffectVolume       = 0;
-        public const int EffectVibratoSpeed = 1; // 4Xy
-        public const int EffectVibratoDepth = 2; // 4xY
-        public const int EffectFinePitch    = 3; // Pxx
-        public const int EffectSpeed        = 4; // Fxx
-        public const int EffectCount        = 5;
-
         // TODO: Have a bitmask that tells us which effects have a valid value instead
         // of these super-hacky arbitrary values.
         public const int SpeedInvalid     = 0xff;
@@ -244,6 +228,110 @@ namespace FamiStudio
 
             return octave * 12 + note + 1;
         }
+        
+        public static int Clamp(int note)
+        {
+            Debug.Assert(note != NoteInvalid);
+            if (note < MusicalNoteMin) return MusicalNoteMin;
+            if (note > MusicalNoteMax) return MusicalNoteMax;
+            return note;
+        }
+
+        public uint ComputeCRC(uint crc = 0)
+        {
+            crc = CRC32.Compute(new byte[] { Value, Flags, Volume, Vibrato, Speed, Slide, (byte)Pitch }, crc);
+            crc = CRC32.Compute(BitConverter.GetBytes(Instrument == null ? -1 : Instrument.Id), crc);
+            return crc;
+        }
+
+        public bool IdenticalTo(Note other)
+        {
+            return Value      == other.Value   &&
+                   Flags      == other.Flags   &&
+                   Volume     == other.Volume  &&
+                   Vibrato    == other.Vibrato &&
+                   Speed      == other.Speed   &&
+                   Slide      == other.Slide   && 
+                   Pitch      == other.Pitch   &&
+                   (!IsMusical || Instrument == other.Instrument); // Only comparing instrument if its a musical note.
+        }
+
+        public bool IsEmpty => IdenticalTo(Empty);
+
+        public void SerializeState(ProjectBuffer buffer)
+        {
+            buffer.Serialize(ref Value);
+
+            // At version 5 (FamiStudio 1.5.0), we added fine pitch effect.
+            if (buffer.Version >= 5)
+                buffer.Serialize(ref Pitch);
+            else
+                Pitch = FinePitchInvalid;
+
+            // At version 4 (FamiStudio 1.4.0), we refactored the notes, added slide notes, vibrato and no-attack notes (flags).
+            if (buffer.Version >= 4)
+            {
+                // At version 5 (FamiStudio 1.5.0), we replaced the jump/skips effects by loop points and custom pattern length.
+                if (buffer.Version < 5)
+                {
+                    buffer.Serialize(ref Jump);
+                    buffer.Serialize(ref Skip);
+                }
+
+                buffer.Serialize(ref Speed);
+                buffer.Serialize(ref Vibrato); 
+                buffer.Serialize(ref Flags);
+                buffer.Serialize(ref Slide);
+            }
+            else
+            {
+                byte effect = 0;
+                byte effectParam = 255;
+                buffer.Serialize(ref effect);
+                buffer.Serialize(ref effectParam);
+
+                HasVibrato = false;
+                HasSpeed = false;
+
+                Jump = JumpInvalid;
+                Skip = SkipInvalid;
+
+                switch (effect)
+                {
+                    case 1: Jump  = effectParam; break;
+                    case 2: Skip  = effectParam; break; 
+                    case 3: Speed = effectParam; break;
+                }
+            }
+
+            // At version 3 (FamiStudio 1.2.0), we added a volume track.
+            if (buffer.Version >= 3)
+                buffer.Serialize(ref Volume);
+            else
+                Volume = Note.VolumeInvalid;
+
+            buffer.Serialize(ref Instrument);
+        }
+
+        //
+        // TODO: Move this to a seperate class, just a way to expose param and render the effect panel.
+        //
+
+        public static readonly string[] EffectNames =
+        {
+            "Volume",
+            "Vib Speed",
+            "Vib Depth",
+            "Pitch",
+            "Speed"
+        };
+
+        public const int EffectVolume       = 0;
+        public const int EffectVibratoSpeed = 1; // 4Xy
+        public const int EffectVibratoDepth = 2; // 4xY
+        public const int EffectFinePitch    = 3; // Pxx
+        public const int EffectSpeed        = 4; // Fxx
+        public const int EffectCount        = 5;
 
         public bool HasValidEffectValue(int fx)
         {
@@ -345,90 +433,6 @@ namespace FamiStudio
             }
 
             return 0;
-        }
-
-        public static int Clamp(int note)
-        {
-            Debug.Assert(note != NoteInvalid);
-            if (note < MusicalNoteMin) return MusicalNoteMin;
-            if (note > MusicalNoteMax) return MusicalNoteMax;
-            return note;
-        }
-
-        public uint ComputeCRC(uint crc = 0)
-        {
-            crc = CRC32.Compute(new byte[] { Value, Flags, Volume, Vibrato, Speed, Slide, (byte)Pitch }, crc);
-            crc = CRC32.Compute(BitConverter.GetBytes(Instrument == null ? -1 : Instrument.Id), crc);
-            return crc;
-        }
-
-        public bool IdenticalTo(Note other)
-        {
-            return Value      == other.Value   &&
-                   Flags      == other.Flags   &&
-                   Volume     == other.Volume  &&
-                   Vibrato    == other.Vibrato &&
-                   Speed      == other.Speed   &&
-                   Slide      == other.Slide   && 
-                   Pitch      == other.Pitch   &&
-                   (!IsMusical || Instrument == other.Instrument); // Only comparing instrument if its a musical note.
-        }
-
-        public bool IsEmpty => IdenticalTo(Empty);
-
-        public void SerializeState(ProjectBuffer buffer)
-        {
-            buffer.Serialize(ref Value);
-
-            // At version 5 (FamiStudio 1.5.0), we added fine pitch effect.
-            if (buffer.Version >= 5)
-                buffer.Serialize(ref Pitch);
-            else
-                Pitch = FinePitchInvalid;
-
-            // At version 4 (FamiStudio 1.4.0), we refactored the notes, added slide notes, vibrato and no-attack notes (flags).
-            if (buffer.Version >= 4)
-            {
-                // At version 5 (FamiStudio 1.5.0), we replaced the jump/skips effects by loop points and custom pattern length.
-                if (buffer.Version < 5)
-                {
-                    buffer.Serialize(ref Jump);
-                    buffer.Serialize(ref Skip);
-                }
-
-                buffer.Serialize(ref Speed);
-                buffer.Serialize(ref Vibrato); 
-                buffer.Serialize(ref Flags);
-                buffer.Serialize(ref Slide);
-            }
-            else
-            {
-                byte effect = 0;
-                byte effectParam = 255;
-                buffer.Serialize(ref effect);
-                buffer.Serialize(ref effectParam);
-
-                HasVibrato = false;
-                HasSpeed = false;
-
-                Jump = JumpInvalid;
-                Skip = SkipInvalid;
-
-                switch (effect)
-                {
-                    case 1: Jump  = effectParam; break;
-                    case 2: Skip  = effectParam; break; 
-                    case 3: Speed = effectParam; break;
-                }
-            }
-
-            // At version 3 (FamiStudio 1.2.0), we added a volume track.
-            if (buffer.Version >= 3)
-                buffer.Serialize(ref Volume);
-            else
-                Volume = Note.VolumeInvalid;
-
-            buffer.Serialize(ref Instrument);
         }
     }
 }

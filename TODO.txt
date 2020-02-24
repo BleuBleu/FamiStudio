@@ -25,6 +25,7 @@
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - NSF Import:
 	- Avoid setting the volumes on new notes. Only if state.volume == 0.
+	- There is still something fishy with the pitches sometimes.
 - Transform dialog:
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion?
@@ -44,6 +45,7 @@ TESTING:
 - Retest slide note import/export to FamiTracker. Test a few cases.
 - Test installer on Japanese machine.
 - FTM, test a lot. Needs to match text import (export to text and compare).
+- Compare relative volume of all channels.
 
 ========================
 

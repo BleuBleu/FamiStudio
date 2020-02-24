@@ -104,42 +104,6 @@ namespace FamiStudio
             Max
         }
 
-        ButtonType[] instrumentParamTypes = new[]
-        {
-            // FDS
-            ButtonType.ParamList,     // FdsWavePreset
-            ButtonType.ParamList,     // FdsModulationPreset
-            ButtonType.ParamSlider,   // FdsModulationSpeed
-            ButtonType.ParamSlider,   // FdsModulationDepth
-            ButtonType.ParamSlider,   // FdsModulationDelay
-
-            // Namco
-            ButtonType.ParamList,     // NamcoWaveSize
-            ButtonType.ParamList,     // NamcoWavePreset
-
-            // VRC7
-            ButtonType.ParamCheckbox, // Vrc7CarTremolo
-            ButtonType.ParamCheckbox, // Vrc7CarVibrato
-            ButtonType.ParamCheckbox, // Vrc7CarSustained
-            ButtonType.ParamCheckbox, // Vrc7CarWaveRectified
-            ButtonType.ParamList,     // Vrc7CarKeyScaling
-            ButtonType.ParamSlider,   // Vrc7CarFreqMultiplier
-            ButtonType.ParamSlider,   // Vrc7CarAttack
-            ButtonType.ParamSlider,   // Vrc7CarDecay
-            ButtonType.ParamSlider,   // Vrc7CarSustain
-            ButtonType.ParamSlider,   // Vrc7CarRelease
-            ButtonType.ParamCheckbox, // Vrc7ModTremolo
-            ButtonType.ParamCheckbox, // Vrc7ModVibrato
-            ButtonType.ParamCheckbox, // Vrc7ModSustained
-            ButtonType.ParamCheckbox, // Vrc7ModWaveRectified
-            ButtonType.ParamList,     // Vrc7ModKeyScaling
-            ButtonType.ParamSlider,   // Vrc7ModFreqMultiplier
-            ButtonType.ParamSlider,   // Vrc7ModAttack
-            ButtonType.ParamSlider,   // Vrc7ModDecay
-            ButtonType.ParamSlider,   // Vrc7ModSustain
-            ButtonType.ParamSlider,   // Vrc7ModRelease
-        };
-
         // From right to left. Looks more visually pleasing than the enum order.
         static readonly int[] EnvelopeDisplayOrder = new int[]
         {
@@ -225,7 +189,7 @@ namespace FamiStudio
                     case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
                     case ButtonType.ParamCheckbox:
                     case ButtonType.ParamSlider:
-                    case ButtonType.ParamList: return Instrument.RealTimeParamNames[instrumentParam];
+                    case ButtonType.ParamList: return Instrument.GetRealTimeParamName(instrumentParam);
                 }
 
                 return "";
@@ -431,7 +395,16 @@ namespace FamiStudio
                     if (instrumentParams != null)
                     {
                         foreach (var param in instrumentParams)
-                            buttons.Add(new Button(this) { type = instrumentParamTypes[(int)param], instrumentParam = param, instrument = instrument });
+                        {
+                            var widgetType = ButtonType.ParamSlider;
+
+                            if (Instrument.IsRealTimeParamList(param))
+                                widgetType = ButtonType.ParamList;
+                            else if (Instrument.GetRealTimeParamMaxValue(param) == 1)
+                                widgetType = ButtonType.ParamCheckbox;
+
+                            buttons.Add(new Button(this) { type = widgetType, instrumentParam = param, instrument = instrument });
+                        }
                     }
                 }
             }
@@ -548,13 +521,13 @@ namespace FamiStudio
 
                 if (button.instrumentParam >= 0)
                 {
+                    var paramMin = Instrument.GetRealTimeParamMinValue(button.instrumentParam);
+                    var paramMax = Instrument.GetRealTimeParamMaxValue(button.instrumentParam);
                     var paramVal = button.instrument.GetRealTimeParamValue(button.instrumentParam);
                     var paramStr = button.instrument.GetRealTimeParamString(button.instrumentParam);
 
                     if (button.type == ButtonType.ParamSlider)
                     {
-                        var paramMin = button.instrument.GetRealTimeParamMinValue(button.instrumentParam);
-                        var paramMax = button.instrument.GetRealTimeParamMaxValue(button.instrumentParam);
                         var valSizeX = (int)Math.Round((paramVal - paramMin) / (float)(paramMax - paramMin) * sliderSizeX);
 
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
@@ -570,8 +543,8 @@ namespace FamiStudio
                     else if (button.type == ButtonType.ParamList)
                     {
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
-                        g.DrawBitmap(bmpButtonLeft,  0, 0);
-                        g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0);
+                        g.DrawBitmap(bmpButtonLeft, 0, 0, paramVal == paramMin ? 0.25f : 1.0f);
+                        g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0, paramVal == paramMax ? 0.25f : 1.0f);
                         g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }
@@ -864,8 +837,8 @@ namespace FamiStudio
             var buttonY = e.Y - buttonIdx * buttonSizeY;
 
             var paramVal = button.instrument.GetRealTimeParamValue(button.instrumentParam);
-            var paramMin = button.instrument.GetRealTimeParamMinValue(button.instrumentParam);
-            var paramMax = button.instrument.GetRealTimeParamMaxValue(button.instrumentParam);
+            var paramMin = Instrument.GetRealTimeParamMinValue(button.instrumentParam);
+            var paramMax = Instrument.GetRealTimeParamMaxValue(button.instrumentParam);
 
             if (shift)
             {
@@ -1006,7 +979,14 @@ namespace FamiStudio
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
                     {
+                        var actualWidth = Width - scrollBarSizeX;
 
+                        if (e.X >= actualWidth - checkBoxPosX)
+                        {
+                            var val = button.instrument.GetRealTimeParamValue(button.instrumentParam);
+                            button.instrument.SetRealTimeParamValue(button.instrumentParam, val == 0 ? 1 : 0);
+                            ConditionalInvalidate();
+                        }
                     }
                     else if (button.type == ButtonType.ParamList)
                     {
@@ -1016,11 +996,17 @@ namespace FamiStudio
                         var rightButton = buttonX > (actualWidth - sliderPosX + sliderSizeX - bmpButtonRight.Size.Width) && buttonX < (actualWidth - sliderPosX + sliderSizeX);
                         var delta = leftButton ? -1 : (rightButton ? 1 : 0);
 
-                        if (delta != 0)
+                        if (leftButton || rightButton)
                         {
                             // MATTT : Transaction.
                             var val = button.instrument.GetRealTimeParamValue(button.instrumentParam);
-                            button.instrument.SetRealTimeParamValue(button.instrumentParam, val + delta);
+
+                            if (rightButton)
+                                val = button.instrument.GetRealTimeParamNextValue(button.instrumentParam, val);
+                            else
+                                val = button.instrument.GetRealTimeParamPrevValue(button.instrumentParam, val);
+
+                            button.instrument.SetRealTimeParamValue(button.instrumentParam, val);
                             ConditionalInvalidate();
                         }
                     }
