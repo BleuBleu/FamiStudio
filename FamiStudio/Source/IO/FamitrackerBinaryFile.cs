@@ -125,6 +125,7 @@ namespace FamiStudio
                 }
             }
 
+            // MATTT: Read from the first instrument that has sample. Instrument 00 might not even be 2A03.
             if (readSamples)
             {
                 for (int i = 0; i < OctaveRange; ++i)
