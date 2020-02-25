@@ -7,11 +7,11 @@ namespace FamiStudio
     {
         int channelIdx = 0;
         byte vrc7Instrument = 0;
+        byte prevReg20;
 
         public ChannelStateVrc7(int apuIdx, int channelType) : base(apuIdx, channelType, false)
         {
             channelIdx = channelType - Channel.Vrc7Fm1;
-            //maximumPeriod = NesApu.MaximumPeriod12Bit;
         }
 
         protected override void LoadInstrument(Instrument instrument)
@@ -33,26 +33,40 @@ namespace FamiStudio
             }
         }
 
-        bool first = true;
-
         public override void UpdateAPU()
         {
-            if (note.IsValid)
+            if (note.IsStop)
             {
+                WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
+                WriteRegister(NesApu.VRC7_REG_WRITE, prevReg20 & ~(0x10));
+            }
+            else if (note.IsRelease)
+            {
+                WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
+                WriteRegister(NesApu.VRC7_REG_WRITE, (prevReg20 & ~(0x10)) | 0x20);
+            }
+            else if (note.IsMusical)
+            {
+                var octave = (note.Value - 1) / 12;
+                var period = NesApu.NoteTableVrc7[(note.Value - 1) % 12] >> 2;
                 var volume = 15 - GetVolume();
 
-                WriteRegister(NesApu.VRC7_REG_SEL,   0x10);
-                WriteRegister(NesApu.VRC7_REG_WRITE, 0x80);
+                var reg10 = (byte)(period & 0xff);
+                var reg20 = (byte)(0x10 | ((octave & 0x3) << 1) | ((period >> 8) & 1));
+                var reg30 = (byte)(vrc7Instrument | volume);
 
-                WriteRegister(NesApu.VRC7_REG_SEL,   0x30);
-                WriteRegister(NesApu.VRC7_REG_WRITE, vrc7Instrument | volume);
+                WriteRegister(NesApu.VRC7_REG_SEL, 0x10 + channelIdx);
+                WriteRegister(NesApu.VRC7_REG_WRITE, reg10);
+                WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
+                WriteRegister(NesApu.VRC7_REG_WRITE, reg20);
+                WriteRegister(NesApu.VRC7_REG_SEL, 0x30 + channelIdx);
+                WriteRegister(NesApu.VRC7_REG_WRITE, reg30);
 
-                WriteRegister(NesApu.VRC7_REG_SEL,   0x20);
-                WriteRegister(NesApu.VRC7_REG_WRITE, 0x15);
-
-                // To prevent from re-triggering.
-                note.IsValid = false;
+                prevReg20 = reg20;
             }
+
+            // To prevent from re-triggering.
+            note.IsValid = false;
         }
     };
 }

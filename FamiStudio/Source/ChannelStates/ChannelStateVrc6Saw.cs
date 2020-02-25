@@ -15,7 +15,7 @@ namespace FamiStudio
             {
                 WriteRegister(NesApu.VRC6_SAW_VOL, 0x00);
             }
-            else if (note.IsValid)
+            else if (note.IsMusical)
             {
                 var period = GetPeriod();
                 var volume = GetVolume();

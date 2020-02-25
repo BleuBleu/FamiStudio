@@ -12,7 +12,7 @@
             {
                 WriteRegister(NesApu.APU_NOISE_VOL, 0xf0);
             }
-            else if (note.IsValid)
+            else if (note.IsMusical)
             {
                 var duty = GetDuty();
                 var noteVal = (int)(((note.Value + envelopeValues[Envelope.Arpeggio]) & 0x0f) ^ 0x0f) | ((duty << 7) & 0x80);

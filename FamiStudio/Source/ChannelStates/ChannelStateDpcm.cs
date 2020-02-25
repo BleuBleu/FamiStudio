@@ -12,7 +12,7 @@
             {
                 WriteRegister(NesApu.APU_SND_CHN, 0x0f);
             }
-            else if (note.IsValid)
+            else if (note.IsMusical)
             {
                 WriteRegister(NesApu.APU_SND_CHN, 0x0f);
 

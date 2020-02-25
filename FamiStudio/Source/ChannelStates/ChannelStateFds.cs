@@ -47,7 +47,7 @@ namespace FamiStudio
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80); // Zero volume
                 WriteRegister(NesApu.FDS_FREQ_HI, 0x80); // Disable wave
             }
-            else if (note.IsValid)
+            else if (note.IsMusical)
             {
                 var period = GetPeriod();
                 var volume = GetVolume();

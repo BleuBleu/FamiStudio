@@ -180,6 +180,12 @@ namespace FamiStudio
             0x0994, 0x0a26, 0x0ac1, 0x0b64, 0x0c12, 0x0cca, 0x0d8c, 0x0e5b, 0x0f35, 0x101d, 0x1112, 0x1216,  // Octave 7
         };
 
+        // Taken from FamiTracker.
+        public static readonly ushort[] NoteTableVrc7 = new ushort[]
+        {
+            688, 732, 776, 820, 868, 920, 976, 1032, 1096, 1160, 1228, 1304 // All octaves
+        };
+
         public static ushort[] GetNoteTableForChannelType(int channelType, bool pal)
         {
             // TODO: PAL

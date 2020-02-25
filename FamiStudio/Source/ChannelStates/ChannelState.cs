@@ -109,6 +109,8 @@ namespace FamiStudio
                             envelopeIdx[j] = envelopes[j].Release;
                     }
                 }
+
+                note = newNote;
             }
             else
             {

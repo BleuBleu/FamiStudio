@@ -18,7 +18,7 @@ namespace FamiStudio
             //{
             //    WriteRegister(NesApu.MMC5_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
             //}
-            //else if (note.IsValid)
+            //else if (note.IsMusical)
             //{
             //    var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
             //    var period = Utils.Clamp(noteTable[noteVal] + GetSlidePitch() + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
