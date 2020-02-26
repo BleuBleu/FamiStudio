@@ -10,6 +10,8 @@ Nes_Mmc5::Nes_Mmc5()
 {
 	square1.synth = &square_synth;
 	square2.synth = &square_synth;
+	square1.min_period = 0;
+	square2.min_period = 0;
 
 	oscs[0] = &square1;
 	oscs[1] = &square2;
@@ -125,10 +127,6 @@ void Nes_Mmc5::run_until(cpu_time_t end_time)
 			time = end_time;
 		frame_delay -= time - last_time;
 
-		// MATTT: Remove period < 8 check in run(), from the wiki:
-		//        "Frequency values less than 8 do not silence the MMC5 pulse channels; 
-		//         they can output ultrasonic frequencies."
-
 		// run oscs to present
 		square1.run(last_time, time);
 		square2.run(last_time, time);
@@ -137,30 +135,10 @@ void Nes_Mmc5::run_until(cpu_time_t end_time)
 		if (time == end_time)
 			break; // no more frames to run
 
-		// MATTT: Review this, from the wiki 
-		//		  "MMC5 does not have an equivalent frame sequencer (APU $4017); envelope and 
-		//         length counter are fixed to a 240hz update rate."
-		
-		// take frame-specific actions
 		frame_delay = frame_period;
-		switch (frame++)
-		{
-		case 0:
-		case 2:
-			// clock length and sweep on frames 0 and 2
-			square1.clock_length(0x20);
-			square2.clock_length(0x20);
-			break;
 
-		case 1:
-			// frame 1 is slightly shorter
-			frame_delay -= 2;
-			break;
-
-		case 3:
-			frame = 0;
-			break;
-		}
+		square1.clock_length(0x20);
+		square2.clock_length(0x20);
 	}
 }
 

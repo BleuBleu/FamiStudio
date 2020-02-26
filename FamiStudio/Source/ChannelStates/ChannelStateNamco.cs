@@ -47,7 +47,7 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                var period = GetPeriod() << 2; // MATTT
+                var period = GetPeriod() << 3; // MATTT
                 var volume = GetVolume();
 
                 WriteRegister(NesApu.N163_ADDR, 0x78 + regOffset);

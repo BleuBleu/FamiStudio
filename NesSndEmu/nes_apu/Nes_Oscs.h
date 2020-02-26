@@ -56,10 +56,12 @@ struct Nes_Square : Nes_Envelope
 	enum { phase_range = 8 };
 	int phase;
 	int sweep_delay;
+	int min_period;
 	
 	typedef Blip_Synth<blip_good_quality,15> Synth;
 	const Synth* synth; // shared between squares
 	
+	Nes_Square() : min_period(8) {}
 	void clock_sweep( int adjust );
 	void run( cpu_time_t, cpu_time_t );
 	void reset() {
