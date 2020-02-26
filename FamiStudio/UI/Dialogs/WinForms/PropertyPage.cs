@@ -247,8 +247,15 @@ namespace FamiStudio
             cb.Text = value;
             cb.Font = font;
             cb.Enabled = values.Length > 0;
+            cb.SelectedIndexChanged += Cb_SelectedIndexChanged;
 
             return cb;
+        }
+
+        private void Cb_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int idx = GetPropertyIndex(sender as Control);
+            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
         private CheckedListBox CreateCheckedListBox(string[] values, bool[] selected)

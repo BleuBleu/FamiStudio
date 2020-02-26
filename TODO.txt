@@ -36,6 +36,7 @@
 	- Namco # tracks
 	- Sunsoft C++
 	- MMC5 C++ cleanup.
+	- C++ seek for all. Will need to refactor seeking AGAIN.
 	- 
 
 TESTING:
@@ -46,6 +47,7 @@ TESTING:
 - Test installer on Japanese machine.
 - FTM, test a lot. Needs to match text import (export to text and compare).
 - Compare relative volume of all channels.
+- MAC: Make sure namco channels dialog works. Added Combo box prop change callback.
 
 ========================
 

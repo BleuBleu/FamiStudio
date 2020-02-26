@@ -101,7 +101,7 @@ namespace FamiStudio
             playPosition = startNote;
             playPattern = 0;
             playNote = 0;
-            channelStates = CreateChannelStates(song.Project, apuIndex, palMode);
+            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palMode);
 
             NesApu.InitAndReset(apuIndex, SampleRate, palMode, GetNesApuExpansionAudio(song.Project), dmcCallback);
 
@@ -204,7 +204,7 @@ namespace FamiStudio
             return true;
         }
 
-        private ChannelState CreateChannelState(int apuIdx, int channelType, bool pal)
+        private ChannelState CreateChannelState(int apuIdx, int channelType, int expNumChannels, bool pal)
         {
             switch (channelType)
             {
@@ -242,7 +242,7 @@ namespace FamiStudio
                 case Channel.NamcoWave6:
                 case Channel.NamcoWave7:
                 case Channel.NamcoWave8:
-                    return new ChannelStateNamco(apuIdx, channelType, pal);
+                    return new ChannelStateNamco(apuIdx, channelType, expNumChannels, pal);
                 case Channel.SunsoftSquare1:
                 case Channel.SunsoftSquare2:
                 case Channel.SunsoftSquare3:
@@ -253,7 +253,7 @@ namespace FamiStudio
             return null;
         }
 
-        public ChannelState[] CreateChannelStates(Project project, int apuIdx, bool pal)
+        public ChannelState[] CreateChannelStates(Project project, int apuIdx, int expNumChannels, bool pal)
         {
             var channelCount = project.GetActiveChannelCount();
             var states = new ChannelState[channelCount];
@@ -262,7 +262,7 @@ namespace FamiStudio
             for (int i = 0; i < Channel.Count; i++)
             {
                 if (project.IsChannelActive(i))
-                    states[idx++] = CreateChannelState(apuIdx, i, pal);
+                    states[idx++] = CreateChannelState(apuIdx, i, expNumChannels, pal);
             }
 
             return states;

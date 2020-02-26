@@ -55,6 +55,7 @@ namespace FamiStudio
         private string author = "Unknown";
         private string copyright = "";
         private int expansionAudio = ExpansionNone;
+        private int expansionNumChannels = 1;
 
         public List<DPCMSample>    Samples        => samples;
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
@@ -62,6 +63,7 @@ namespace FamiStudio
         public List<Song>          Songs          => songs;
         public int                 NextUniqueId   => nextUniqueId;
         public int                 ExpansionAudio => expansionAudio;
+        public int                 ExpansionNumChannels => expansionNumChannels;
         public string              ExpansionAudioName => ExpansionNames[expansionAudio];
         public bool                UsesExpansionAudio => expansionAudio != ExpansionNone;
 
@@ -411,22 +413,28 @@ namespace FamiStudio
             songs.Sort((s1, s2) => s1.Name.CompareTo(s2.Name));
         }
 
-        public void SetExpansionAudio(int expansion)
+        public void SetExpansionAudio(int expansion, int numChannels = 1)
         {
             if (expansion >= 0 && expansion < ExpansionCount)
             {
+                var changed = expansionAudio != expansion;
+
                 expansionAudio = expansion;
+                expansionNumChannels = expansion == ExpansionNamco ? numChannels : 1;
 
                 foreach (var song in songs)
                 {
                     song.CreateChannels(true);
                 }
 
-                for (int i = instruments.Count - 1; i >= 0; i--)
+                if (changed)
                 {
-                    var inst = instruments[i];
-                    if (inst.IsExpansionInstrument)
-                        DeleteInstrument(inst);
+                    for (int i = instruments.Count - 1; i >= 0; i--)
+                    {
+                        var inst = instruments[i];
+                        if (inst.IsExpansionInstrument)
+                            DeleteInstrument(inst);
+                    }
                 }
             }
         }
@@ -468,7 +476,7 @@ namespace FamiStudio
                 return expansionAudio == ExpansionVrc7;
 
             if (channelType >= Channel.NamcoWave1 && channelType <= Channel.NamcoWave8)
-                return expansionAudio == ExpansionNamco;
+                return expansionAudio == ExpansionNamco && (channelType - Channel.NamcoWave1) < expansionNumChannels;
 
             if (channelType >= Channel.SunsoftSquare1 && channelType <= Channel.SunsoftSquare3)
                 return expansionAudio == ExpansionSunsoft;
@@ -745,6 +753,12 @@ namespace FamiStudio
             if (buffer.Version >= 4)
             {
                 buffer.Serialize(ref expansionAudio);
+            }
+
+            // At version 5 (FamiStudio 1.5.0) we added support for Namco 163.
+            if (buffer.Version >= 5)
+            {
+                buffer.Serialize(ref expansionNumChannels);
             }
 
             // DPCM samples

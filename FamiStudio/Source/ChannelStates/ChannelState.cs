@@ -14,7 +14,7 @@ namespace FamiStudio
         protected int[] envelopeValues = new int[Envelope.Max];
         protected bool palMode;
         protected ushort[] noteTable = null;
-        protected short maximumPeriod = NesApu.MaximumPeriod11Bit;
+        protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
         private   int slidePitch = 0;
 

@@ -58,7 +58,7 @@ namespace FamiStudio
         public void Start(Project project, bool pal)
         {
             expansionAudio = project.ExpansionAudio;
-            channelStates = CreateChannelStates(project, apuIndex, pal);
+            channelStates = CreateChannelStates(project, apuIndex, project.ExpansionNumChannels, pal);
             palMode = pal;
 
             stopEvent.Reset();

@@ -116,9 +116,15 @@ namespace FamiStudio
         public const int MMC5_PL2_HI     = 0x5007;
         public const int MMC5_SND_CHN    = 0x5015;
 
+        public const int N163_SILENCE    = 0xe000;
+        public const int N163_ADDR       = 0xf800;
+        public const int N163_DATA       = 0x4800;
+
+
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;
         public const int MaximumPeriod12Bit = 0xfff;
+        public const int MaximumPeriod18Bit = 0x3ffff;
 
 #if DEBUG
         public static bool seeking = false;
@@ -180,6 +186,20 @@ namespace FamiStudio
             0x0994, 0x0a26, 0x0ac1, 0x0b64, 0x0c12, 0x0cca, 0x0d8c, 0x0e5b, 0x0f35, 0x101d, 0x1112, 0x1216,  // Octave 7
         };
 
+        // Taken from FamiTracker (same transpose convention)
+        public static readonly ushort[] NoteTableNamco = new ushort[]
+        {
+            0x0000,
+            0x0047, 0x004c, 0x0050, 0x0055, 0x005a, 0x005f, 0x0065, 0x006b, 0x0072, 0x0078, 0x0080, 0x0087,  // Octave 0
+            0x008f, 0x0098, 0x00a1, 0x00aa, 0x00b5, 0x00bf, 0x00cb, 0x00d7, 0x00e4, 0x00f1, 0x0100, 0x010f,  // Octave 1
+            0x011f, 0x0130, 0x0142, 0x0155, 0x016a, 0x017f, 0x0196, 0x01ae, 0x01c8, 0x01e3, 0x0200, 0x021e,  // Octave 2
+            0x023e, 0x0260, 0x0285, 0x02ab, 0x02d4, 0x02ff, 0x032c, 0x035d, 0x0390, 0x03c6, 0x0400, 0x043d,  // Octave 3
+            0x047d, 0x04c1, 0x050a, 0x0557, 0x05a8, 0x05fe, 0x0659, 0x06ba, 0x0720, 0x078d, 0x0800, 0x087a,  // Octave 4
+            0x08fb, 0x0983, 0x0a14, 0x0aae, 0x0b50, 0x0bfd, 0x0cb3, 0x0d74, 0x0e41, 0x0f1a, 0x1000, 0x10f4,  // Octave 5
+            0x11f6, 0x1307, 0x1429, 0x155c, 0x16a1, 0x17fa, 0x1967, 0x1ae9, 0x1c83, 0x1e35, 0x2001, 0x21e8,  // Octave 6
+            0x23ec, 0x260f, 0x2852, 0x2ab8, 0x2d43, 0x2ff4, 0x32ce, 0x35d3, 0x3906, 0x3c6a, 0x4002, 0x43d1,  // Octave 7
+        };
+
         // Taken from FamiTracker.
         public static readonly ushort[] NoteTableVrc7 = new ushort[]
         {
@@ -195,6 +215,15 @@ namespace FamiStudio
                     return NoteTableVrc6Saw;
                 case Channel.FdsWave:
                     return NoteTableFds;
+                case Channel.NamcoWave1:
+                case Channel.NamcoWave2:
+                case Channel.NamcoWave3:
+                case Channel.NamcoWave4:
+                case Channel.NamcoWave5:
+                case Channel.NamcoWave6:
+                case Channel.NamcoWave7:
+                case Channel.NamcoWave8:
+                    return NoteTableNamco;
                 default:
                     return pal ? NoteTablePAL : NoteTableNTSC;
             }

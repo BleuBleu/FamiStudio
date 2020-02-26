@@ -287,7 +287,7 @@ namespace FamiStudio
             editEnvelope = envelope;
             showEffectsPanel = false;
             noteTooltip = "";
-            envelopeValueZoom = envelope == Envelope.Volume || envelope == Envelope.DutyCycle ? 4 : 1;
+            envelopeValueZoom = envelope == Envelope.Volume || envelope == Envelope.DutyCycle || envelope == Envelope.NamcoWaveform ? 4 : 1;
             envelopeValueOffset = 0;
             Debug.Assert(editInstrument != null);
 
@@ -1836,7 +1836,7 @@ namespace FamiStudio
             {
                 CaptureMouse(e);
             }
-            else if (left && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e))
+            else if (left && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e) && EditEnvelope.CanResize)
             {
                 StartCaptureOperation(e, CaptureOperation.ResizeEnvelope);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
@@ -2285,7 +2285,7 @@ namespace FamiStudio
 
 #if !FAMISTUDIO_LINUX
             // TODO LINUX: Cursors.
-            if (editMode == EditionMode.Enveloppe && (e.X > whiteKeySizeX && e.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
+            if (editMode == EditionMode.Enveloppe && EditEnvelope.CanResize && (e.X > whiteKeySizeX && e.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
                 Cursor.Current = Cursors.SizeWE;
             else if (captureOperation == CaptureOperation.ChangeEffectValue)
                 Cursor.Current = Cursors.SizeNS;

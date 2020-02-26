@@ -22,7 +22,8 @@ namespace FamiStudio
 
         // Namco
         private byte   namcoWavePreset = Envelope.WavePresetSine;
-        private byte   namcoWaveSize;
+        private byte   namcoWaveSize   = 32;
+        private byte   namcoWavePos    = 0;
 
         // VRC7
         private byte   vrc7Patch = 1;
@@ -37,8 +38,9 @@ namespace FamiStudio
         public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[Envelope.Volume] != null && envelopes[Envelope.Volume].Release >= 0;
-
-        public byte   Vrc7Patch => vrc7Patch;
+        public byte NamcoWaveSize => namcoWaveSize;
+        public byte NamcoWavePos => namcoWavePos;
+        public byte Vrc7Patch => vrc7Patch;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
 
         public Instrument()
@@ -59,6 +61,16 @@ namespace FamiStudio
             {
                 if (IsEnvelopeActive(i))
                     envelopes[i] = new Envelope(i);
+            }
+
+            if (expansion == Project.ExpansionFds)
+            {
+                envelopes[Envelope.FdsWaveform].SetFromPreset(Envelope.FdsWaveform, fdsWavPreset);
+                envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, fdsModPreset);
+            }
+            else if (expansion == Project.ExpansionNamco)
+            {
+                envelopes[Envelope.NamcoWaveform].SetFromPreset(Envelope.NamcoWaveform, namcoWavePreset);
             }
         }
 
@@ -161,37 +173,38 @@ namespace FamiStudio
         public const int ParamFdsModulationDelay = 4;
 
         // Namco
-        public const int ParamNamcoWaveSize = 5;
-        public const int ParamNamcoWavePreset = 6;
+        public const int ParamNamcoWavePreset = 5;
+        public const int ParamNamcoWaveSize = 6;
+        public const int ParamNamcoWavePos = 7;
 
         // VRC7
-        public const int ParamVrc7Patch = 7;
-        public const int ParamVrc7CarTremolo = 8;
-        public const int ParamVrc7CarVibrato = 9;
-        public const int ParamVrc7CarSustained = 10;
-        public const int ParamVrc7CarWaveRectified = 11;
-        public const int ParamVrc7CarKeyScaling = 12;
-        public const int ParamVrc7CarKeyScalingLevel = 13;
-        public const int ParamVrc7CarFreqMultiplier = 14;
-        public const int ParamVrc7CarAttack = 15;
-        public const int ParamVrc7CarDecay = 16;
-        public const int ParamVrc7CarSustain = 17;
-        public const int ParamVrc7CarRelease = 18;
-        public const int ParamVrc7ModTremolo = 19;
-        public const int ParamVrc7ModVibrato = 20;
-        public const int ParamVrc7ModSustained = 21;
-        public const int ParamVrc7ModWaveRectified = 22;
-        public const int ParamVrc7ModKeyScaling = 23;
-        public const int ParamVrc7ModKeyScalingLevel = 24;
-        public const int ParamVrc7ModFreqMultiplier = 25;
-        public const int ParamVrc7ModAttack = 26;
-        public const int ParamVrc7ModDecay = 27;
-        public const int ParamVrc7ModSustain = 28;
-        public const int ParamVrc7ModRelease = 29;
-        public const int ParamVrc7ModLevel = 30;
-        public const int ParamVrc7Feedback = 31;
+        public const int ParamVrc7Patch = 8;
+        public const int ParamVrc7CarTremolo = 9;
+        public const int ParamVrc7CarVibrato = 10;
+        public const int ParamVrc7CarSustained = 11;
+        public const int ParamVrc7CarWaveRectified = 12;
+        public const int ParamVrc7CarKeyScaling = 13;
+        public const int ParamVrc7CarKeyScalingLevel = 14;
+        public const int ParamVrc7CarFreqMultiplier = 15;
+        public const int ParamVrc7CarAttack = 16;
+        public const int ParamVrc7CarDecay = 17;
+        public const int ParamVrc7CarSustain = 18;
+        public const int ParamVrc7CarRelease = 19;
+        public const int ParamVrc7ModTremolo = 20;
+        public const int ParamVrc7ModVibrato = 21;
+        public const int ParamVrc7ModSustained = 22;
+        public const int ParamVrc7ModWaveRectified = 23;
+        public const int ParamVrc7ModKeyScaling = 24;
+        public const int ParamVrc7ModKeyScalingLevel = 25;
+        public const int ParamVrc7ModFreqMultiplier = 26;
+        public const int ParamVrc7ModAttack = 27;
+        public const int ParamVrc7ModDecay = 28;
+        public const int ParamVrc7ModSustain = 29;
+        public const int ParamVrc7ModRelease = 30;
+        public const int ParamVrc7ModLevel = 31;
+        public const int ParamVrc7Feedback = 32;
 
-        public const int ParamMax = 32;
+        public const int ParamMax = 33;
 
         static readonly RealTimeParamInfo[] RealTimeParamsInfo =
         {
@@ -203,8 +216,9 @@ namespace FamiStudio
             new RealTimeParamInfo() { name = "Mod Delay",                  max = 255 },
 
             // Namco
-            new RealTimeParamInfo() { name = "Wave Size",                  max = 7, list = true },
             new RealTimeParamInfo() { name = "Wave Preset",                max = Envelope.WavePresetMax - 1, list = true },
+            new RealTimeParamInfo() { name = "Wave Size",                  min = 4, max = 32, list = true },
+            new RealTimeParamInfo() { name = "Wave Position",              max = 124, list = true },
 
             // VRC7
             new RealTimeParamInfo() { name = "Patch",                      max = 15, list = true },
@@ -241,7 +255,7 @@ namespace FamiStudio
 
         static readonly int[] NamcoParams = new[]
         {
-            ParamNamcoWaveSize, ParamNamcoWavePreset
+            ParamNamcoWavePreset, ParamNamcoWaveSize, ParamNamcoWavePos
         };
 
         static readonly int[] Vrc7Params = new[]
@@ -341,8 +355,9 @@ namespace FamiStudio
                 case ParamFdsModulationDelay     : return fdsModDelay;
                                                  
                 // Namco                         
-                case ParamNamcoWaveSize          : return namcoWaveSize;
                 case ParamNamcoWavePreset        : return namcoWavePreset;
+                case ParamNamcoWaveSize          : return namcoWaveSize;
+                case ParamNamcoWavePos           : return namcoWavePos;
                                                  
                 // VRC7                          
                 case ParamVrc7Patch              : return vrc7Patch;
@@ -389,53 +404,68 @@ namespace FamiStudio
             switch (param)
             {
                 // FDS
-                case ParamFdsWavePreset :
+                case ParamFdsWavePreset:
                     fdsWavPreset = (byte)val;
                     envelopes[Envelope.FdsWaveform].SetFromPreset(Envelope.FdsWaveform, val);
                     break;
-                case ParamFdsModulationPreset :
+                case ParamFdsModulationPreset:
                     fdsModPreset = (byte)val;
                     envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, val);
                     break;
-                case ParamFdsModulationSpeed    : fdsModRate  = (ushort)val; break;
-                case ParamFdsModulationDepth    : fdsModDepth = (byte)val; break;
-                case ParamFdsModulationDelay    : fdsModDelay = (byte)val; break;
+                case ParamFdsModulationSpeed: fdsModRate  = (ushort)val; break;
+                case ParamFdsModulationDepth: fdsModDepth = (byte)val; break;
+                case ParamFdsModulationDelay: fdsModDelay = (byte)val; break;
 
                 // Namco
-                case ParamNamcoWaveSize         : namcoWaveSize   = (byte)val; break;
-                case ParamNamcoWavePreset       : namcoWavePreset = (byte)val; break;
+                case ParamNamcoWavePreset:
+                    namcoWavePreset = (byte)val;
+                    envelopes[Envelope.NamcoWaveform].MaxLength = namcoWaveSize;
+                    envelopes[Envelope.NamcoWaveform].SetFromPreset(Envelope.NamcoWaveform, val);
+                    break;
+                case ParamNamcoWavePos:
+                    namcoWavePos  = (byte)val;
+                    break;
+                case ParamNamcoWaveSize:
+                    namcoWaveSize = (byte)val;
+                    namcoWavePos  = (byte)(namcoWavePos & ~(namcoWaveSize - 1));
+                    if (envelopes[Envelope.NamcoWaveform].Length != namcoWaveSize && namcoWavePreset != Envelope.WavePresetCustom)
+                    {
+                        envelopes[Envelope.NamcoWaveform].MaxLength = namcoWaveSize;
+                        envelopes[Envelope.NamcoWaveform].SetFromPreset(Envelope.NamcoWaveform, namcoWavePreset);
+                    }
+                    break;
 
                 // VRC7
-                case ParamVrc7Patch             :
+                case ParamVrc7Patch:
                     vrc7Patch = (byte)val;
                     if (vrc7Patch != 0)
                         Array.Copy(Vrc7Patches[vrc7Patch].data, vrc7PatchRegs, 8);
                     break;
 
-                case ParamVrc7CarTremolo         : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x80)) | ((val << 7) & 0x80)); break;
-                case ParamVrc7CarVibrato         : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x40)) | ((val << 6) & 0x40)); break;
-                case ParamVrc7CarSustained       : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x20)) | ((val << 5) & 0x20)); break;
-                case ParamVrc7CarKeyScaling      : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x10)) | ((val << 4) & 0x10)); break;
-                case ParamVrc7CarFreqMultiplier  : vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7CarKeyScalingLevel : vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0xc0)) | ((val << 6) & 0xc0)); break;
-                case ParamVrc7CarWaveRectified   : vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0x10)) | ((val << 4) & 0x10)); break;
-                case ParamVrc7CarAttack          : vrc7PatchRegs[5] = (byte)((vrc7PatchRegs[5] & (~0xf0)) | ((val << 4) & 0xf0)); break;
-                case ParamVrc7CarDecay           : vrc7PatchRegs[5] = (byte)((vrc7PatchRegs[5] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7CarSustain         : vrc7PatchRegs[7] = (byte)((vrc7PatchRegs[7] & (~0xf0)) | ((val << 4) & 0xf0)); break;
-                case ParamVrc7CarRelease         : vrc7PatchRegs[7] = (byte)((vrc7PatchRegs[7] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7ModTremolo         : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x80)) | ((val << 7) & 0x80)); break;
-                case ParamVrc7ModVibrato         : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x40)) | ((val << 6) & 0x40)); break;
-                case ParamVrc7ModSustained       : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x20)) | ((val << 5) & 0x20)); break;
-                case ParamVrc7ModKeyScaling      : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x10)) | ((val << 4) & 0x10)); break; 
-                case ParamVrc7ModFreqMultiplier  : vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7ModKeyScalingLevel : vrc7PatchRegs[2] = (byte)((vrc7PatchRegs[2] & (~0xc0)) | ((val << 6) & 0xc0)); break;
-                case ParamVrc7ModWaveRectified   : vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0x08)) | ((val << 3) & 0x08)); break;
-                case ParamVrc7ModAttack          : vrc7PatchRegs[4] = (byte)((vrc7PatchRegs[4] & (~0xf0)) | ((val << 4) & 0xf0)); break;
-                case ParamVrc7ModDecay           : vrc7PatchRegs[4] = (byte)((vrc7PatchRegs[4] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7ModSustain         : vrc7PatchRegs[6] = (byte)((vrc7PatchRegs[6] & (~0xf0)) | ((val << 4) & 0xf0)); break;
-                case ParamVrc7ModRelease         : vrc7PatchRegs[6] = (byte)((vrc7PatchRegs[6] & (~0x0f)) | ((val << 0) & 0x0f)); break;
-                case ParamVrc7ModLevel           : vrc7PatchRegs[2] = (byte)((vrc7PatchRegs[2] & (~0x3f)) | ((val << 0) & 0x3f)); break;
-                case ParamVrc7Feedback           : vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0x07)) | ((val << 0) & 0x07)); break;
+                case ParamVrc7CarTremolo:         vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x80)) | ((val << 7) & 0x80)); break;
+                case ParamVrc7CarVibrato:         vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x40)) | ((val << 6) & 0x40)); break;
+                case ParamVrc7CarSustained:       vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x20)) | ((val << 5) & 0x20)); break;
+                case ParamVrc7CarKeyScaling:      vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x10)) | ((val << 4) & 0x10)); break;
+                case ParamVrc7CarFreqMultiplier:  vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7CarKeyScalingLevel: vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0xc0)) | ((val << 6) & 0xc0)); break;
+                case ParamVrc7CarWaveRectified:   vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0x10)) | ((val << 4) & 0x10)); break;
+                case ParamVrc7CarAttack:          vrc7PatchRegs[5] = (byte)((vrc7PatchRegs[5] & (~0xf0)) | ((val << 4) & 0xf0)); break;
+                case ParamVrc7CarDecay:           vrc7PatchRegs[5] = (byte)((vrc7PatchRegs[5] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7CarSustain:         vrc7PatchRegs[7] = (byte)((vrc7PatchRegs[7] & (~0xf0)) | ((val << 4) & 0xf0)); break;
+                case ParamVrc7CarRelease:         vrc7PatchRegs[7] = (byte)((vrc7PatchRegs[7] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7ModTremolo:         vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x80)) | ((val << 7) & 0x80)); break;
+                case ParamVrc7ModVibrato:         vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x40)) | ((val << 6) & 0x40)); break;
+                case ParamVrc7ModSustained:       vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x20)) | ((val << 5) & 0x20)); break;
+                case ParamVrc7ModKeyScaling:      vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x10)) | ((val << 4) & 0x10)); break;
+                case ParamVrc7ModFreqMultiplier:  vrc7PatchRegs[0] = (byte)((vrc7PatchRegs[0] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7ModKeyScalingLevel: vrc7PatchRegs[2] = (byte)((vrc7PatchRegs[2] & (~0xc0)) | ((val << 6) & 0xc0)); break;
+                case ParamVrc7ModWaveRectified:   vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0x08)) | ((val << 3) & 0x08)); break;
+                case ParamVrc7ModAttack:          vrc7PatchRegs[4] = (byte)((vrc7PatchRegs[4] & (~0xf0)) | ((val << 4) & 0xf0)); break;
+                case ParamVrc7ModDecay:           vrc7PatchRegs[4] = (byte)((vrc7PatchRegs[4] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7ModSustain:         vrc7PatchRegs[6] = (byte)((vrc7PatchRegs[6] & (~0xf0)) | ((val << 4) & 0xf0)); break;
+                case ParamVrc7ModRelease:         vrc7PatchRegs[6] = (byte)((vrc7PatchRegs[6] & (~0x0f)) | ((val << 0) & 0x0f)); break;
+                case ParamVrc7ModLevel:           vrc7PatchRegs[2] = (byte)((vrc7PatchRegs[2] & (~0x3f)) | ((val << 0) & 0x3f)); break;
+                case ParamVrc7Feedback:           vrc7PatchRegs[3] = (byte)((vrc7PatchRegs[3] & (~0x07)) | ((val << 0) & 0x07)); break;
 
                 default : Debug.Assert(false); return;
             }
@@ -446,11 +476,14 @@ namespace FamiStudio
             switch (param)
             {
                 // FDS
-                case ParamFdsWavePreset: return Envelope.PresetNames[fdsWavPreset];
+                case ParamFdsWavePreset:       return Envelope.PresetNames[fdsWavPreset];
                 case ParamFdsModulationPreset: return Envelope.PresetNames[fdsModPreset];
 
+                // Namco
+                case ParamNamcoWavePreset:     return Envelope.PresetNames[namcoWavePreset];
+
                 // VRC7
-                case ParamVrc7Patch: return Vrc7Patches[vrc7Patch].name;
+                case ParamVrc7Patch:           return Vrc7Patches[vrc7Patch].name;
             }
 
             return GetRealTimeParamValue(param).ToString();
@@ -458,12 +491,28 @@ namespace FamiStudio
 
         public int GetRealTimeParamPrevValue(int param, int val)
         {
-            return Utils.Clamp(val - 1, GetRealTimeParamMinValue(param), GetRealTimeParamMaxValue(param));
+            switch (param)
+            {
+                case ParamNamcoWaveSize:
+                    return val <= 4 ? 4 : val /= 2;
+                case ParamNamcoWavePos:
+                    return val == 0 ? 0 : val - namcoWaveSize;
+                default:
+                    return Utils.Clamp(val - 1, GetRealTimeParamMinValue(param), GetRealTimeParamMaxValue(param));
+            }
         }
 
         public int GetRealTimeParamNextValue(int param, int val)
         {
-            return Utils.Clamp(val + 1, GetRealTimeParamMinValue(param), GetRealTimeParamMaxValue(param));
+            switch (param)
+            {
+                case ParamNamcoWaveSize:
+                    return val >= 32 ? 32 : val *= 2;
+                case ParamNamcoWavePos:
+                    return val >= 128 - namcoWaveSize ? 128 - namcoWaveSize : val + namcoWaveSize;
+                default:
+                    return Utils.Clamp(val + 1, GetRealTimeParamMinValue(param), GetRealTimeParamMaxValue(param));
+            }
         }
     }
 }

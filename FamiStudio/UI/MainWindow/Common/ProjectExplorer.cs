@@ -542,9 +542,12 @@ namespace FamiStudio
                     }
                     else if (button.type == ButtonType.ParamList)
                     {
+                        var paramPrev = button.instrument.GetRealTimeParamPrevValue(button.instrumentParam, paramVal);
+                        var paramNext = button.instrument.GetRealTimeParamNextValue(button.instrumentParam, paramVal);
+
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
-                        g.DrawBitmap(bmpButtonLeft, 0, 0, paramVal == paramMin ? 0.25f : 1.0f);
-                        g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0, paramVal == paramMax ? 0.25f : 1.0f);
+                        g.DrawBitmap(bmpButtonLeft, 0, 0, paramVal == paramPrev ? 0.25f : 1.0f);
+                        g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0, paramVal == paramNext ? 0.25f : 1.0f);
                         g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }
@@ -1111,6 +1114,9 @@ namespace FamiStudio
                     dlg.Properties.AddString("Author :", project.Author, 31); // 1
                     dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
                     dlg.Properties.AddStringList("Expansion Audio:", Project.GetAllowedExpansionNames(), project.ExpansionAudioName); // 3
+                    dlg.Properties.AddIntegerRange("Channels:", project.ExpansionNumChannels, 1, 8); // 4 (Namco)
+                    dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionNamco);
+                    dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog() == DialogResult.OK)
@@ -1122,13 +1128,20 @@ namespace FamiStudio
                         project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
 
                         var expansion = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
-                        if (expansion != project.ExpansionAudio)
+                        var numChannels = dlg.Properties.GetPropertyValue<int>(4);
+
+                        var changedExpansion   = expansion   != project.ExpansionAudio;
+                        var changedNumChannels = numChannels != project.ExpansionNumChannels;
+
+
+                        if (changedExpansion || changedNumChannels)
                         {
                             if (project.ExpansionAudio == Project.ExpansionNone ||
+                                (!changedExpansion && changedNumChannels) || 
                                 PlatformUtils.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 App.StopInstrumentPlayer();
-                                project.SetExpansionAudio(expansion);
+                                project.SetExpansionAudio(expansion, numChannels);
                                 ExpansionAudioChanged?.Invoke();
                                 App.StartInstrumentPlayer();
                                 Reset();
@@ -1152,7 +1165,7 @@ namespace FamiStudio
                     dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, 128); // 5
                     dlg.Properties.AddColor(song.Color); // 6
                     dlg.Properties.Build();
-                    dlg.Properties.PropertyChanged += Properties_PropertyChanged;
+                    dlg.Properties.PropertyChanged += SongProperties_PropertyChanged;
 
                     if (dlg.ShowDialog() == DialogResult.OK)
                     {
@@ -1224,7 +1237,15 @@ namespace FamiStudio
             }
         }
 
-        private void Properties_PropertyChanged(PropertyPage props, int idx, object value)
+        private void ProjectProperties_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            if (idx == 3)
+            {
+                props.SetPropertyEnabled(4, (string)value == Project.ExpansionNames[Project.ExpansionNamco]);
+            }
+        }
+
+        private void SongProperties_PropertyChanged(PropertyPage props, int idx, object value)
         {
             if (idx == 3) // 3 = pattern length.
             {

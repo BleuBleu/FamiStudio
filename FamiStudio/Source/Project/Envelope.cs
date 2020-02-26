@@ -55,7 +55,7 @@ namespace FamiStudio
                 maxLength = 256;
 
             values = new sbyte[maxLength];
-            canResize = type != FdsWaveform && type != FdsModulation;
+            canResize = type != FdsWaveform && type != FdsModulation && type != NamcoWaveform;
             canRelease = type == Volume;
             canLoop = type <= DutyCycle;
             length = canResize ? 0 : maxLength;
@@ -115,6 +115,19 @@ namespace FamiStudio
                 {
                     release = -1;
                 }
+            }
+        }
+
+        public int MaxLength
+        {
+            get { return maxLength; }
+            set
+            {
+                maxLength = value;
+                if (!canResize)
+                    length = maxLength;
+                else if (length > maxLength)
+                    length = maxLength;
             }
         }
 
