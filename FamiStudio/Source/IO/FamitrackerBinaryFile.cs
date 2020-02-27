@@ -372,8 +372,6 @@ namespace FamiStudio
                 }
             }
 
-            // TODO: Apply pattern lengths.
-
             return true;
         }
 

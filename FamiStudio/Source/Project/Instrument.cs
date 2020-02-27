@@ -38,7 +38,6 @@ namespace FamiStudio
         public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[Envelope.Volume] != null && envelopes[Envelope.Volume].Release >= 0;
-        public byte Vrc7Patch => vrc7Patch;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
 
         public Instrument()
@@ -75,7 +74,7 @@ namespace FamiStudio
         public bool IsEnvelopeActive(int envelopeType)
         {
             if (envelopeType == Envelope.Volume ||
-                envelopeType == Envelope.Pitch  ||
+                envelopeType == Envelope.Pitch ||
                 envelopeType == Envelope.Arpeggio)
             {
                 return expansion != Project.ExpansionVrc7;
@@ -96,7 +95,7 @@ namespace FamiStudio
             }
             else if (envelopeType == Envelope.DutyCycle)
             {
-                return expansion == Project.ExpansionNone || 
+                return expansion == Project.ExpansionNone ||
                        expansion == Project.ExpansionVrc6;
             }
 
@@ -131,6 +130,17 @@ namespace FamiStudio
             {
                 if ((value % namcoWaveSize) == 0)
                     namcoWavePos = value;
+            }
+        }
+
+        public byte Vrc7Patch
+        {
+            get { return vrc7Patch; }
+            set
+            {
+                vrc7Patch = value;
+                if (vrc7Patch != 0)
+                    Array.Copy(Vrc7Patches[vrc7Patch].data, vrc7PatchRegs, 8);
             }
         }
 
@@ -491,9 +501,7 @@ namespace FamiStudio
 
                 // VRC7
                 case ParamVrc7Patch:
-                    vrc7Patch = (byte)val;
-                    if (vrc7Patch != 0)
-                        Array.Copy(Vrc7Patches[vrc7Patch].data, vrc7PatchRegs, 8);
+                    Vrc7Patch = (byte)val;
                     break;
 
                 case ParamVrc7CarTremolo:         vrc7PatchRegs[1] = (byte)((vrc7PatchRegs[1] & (~0x80)) | ((val << 7) & 0x80)); break;

@@ -271,6 +271,22 @@ namespace FamiStudio
 
                     instruments[idx] = instrument;
                 }
+                else if (line.StartsWith("INSTVRC7"))
+                {
+                    var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
+
+                    int idx = int.Parse(param[0]);
+                    var instrument = CreateUniquelyNamedInstrument(Project.ExpansionVrc7, param[param.Length - 1]);
+
+                    instrument.Vrc7Patch = byte.Parse(param[1]);
+                    if (instrument.Vrc7Patch == 0)
+                    {
+                        for (int j = 0; j < 8; j++)
+                            instrument.Vrc7PatchRegs[j] = Convert.ToByte(param[2 + j], 16);
+                    }
+
+                    instruments[idx] = instrument;
+                }
                 else if (line.StartsWith("INSTFDS"))
                 {
                     var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
@@ -705,6 +721,10 @@ namespace FamiStudio
                 else if (instrument.ExpansionType == Project.ExpansionVrc6)
                 {
                     lines.Add($"INSTVRC6{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
+                }
+                else if (instrument.ExpansionType == Project.ExpansionVrc7)
+                {
+                    lines.Add($"INSTVRC7{i,4}{instrument.Vrc7Patch,4} {String.Join(" ", instrument.Vrc7PatchRegs.Select(x => $"{x:X2}"))} \"{instrument.Name}\"");
                 }
                 else if (instrument.ExpansionType == Project.ExpansionNamco)
                 {
