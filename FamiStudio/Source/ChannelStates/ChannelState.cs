@@ -9,9 +9,9 @@ namespace FamiStudio
         protected int channelType;
         protected Note note = Note.Empty;
         protected bool pitchEnvelopeOverride = false;
-        protected Envelope[] envelopes = new Envelope[Envelope.Max];
-        protected int[] envelopeIdx = new int[Envelope.Max];
-        protected int[] envelopeValues = new int[Envelope.Max];
+        protected Envelope[] envelopes = new Envelope[Envelope.Count];
+        protected int[] envelopeIdx = new int[Envelope.Count];
+        protected int[] envelopeValues = new int[Envelope.Count];
         protected bool palMode;
         protected ushort[] noteTable = null;
         protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
@@ -103,7 +103,7 @@ namespace FamiStudio
             {
                 if (note.Instrument != null)
                 {
-                    for (int j = 0; j < Envelope.Max; j++)
+                    for (int j = 0; j < Envelope.Count; j++)
                     {
                         if (envelopes[j] != null && envelopes[j].Release >= 0)
                             envelopeIdx[j] = envelopes[j].Release;
@@ -120,7 +120,7 @@ namespace FamiStudio
 
                 if (instrumentChanged || note.HasAttack)
                 {
-                    for (int j = 0; j < Envelope.Max; j++)
+                    for (int j = 0; j < Envelope.Count; j++)
                     {
                         if (j != Envelope.Pitch || !pitchEnvelopeOverride)
                             envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
@@ -141,7 +141,7 @@ namespace FamiStudio
         {
             if (note.Instrument != null)
             {
-                for (int j = 0; j < Envelope.Max; j++)
+                for (int j = 0; j < Envelope.Count; j++)
                 {
                     if (envelopes[j] == null ||
                         envelopes[j].Length <= 0)
@@ -223,7 +223,7 @@ namespace FamiStudio
         public void ClearNote()
         {
             note.Instrument = null;
-            for (int i = 0; i < Envelope.Max; i++)
+            for (int i = 0; i < Envelope.Count; i++)
                 envelopes[i] = null;
         }
 

@@ -10,36 +10,34 @@ namespace FamiStudio
         private int id;
         private string name;
         private int expansion = Project.ExpansionNone;
-        private Envelope[] envelopes = new Envelope[Envelope.Max];
+        private Envelope[] envelopes = new Envelope[Envelope.Count];
         private Color color;
 
         // FDS
-        private byte   fdsWavPreset = Envelope.WavePresetSine;
-        private byte   fdsModPreset = Envelope.WavePresetFlat;
+        private byte fdsWavPreset = Envelope.WavePresetSine;
+        private byte fdsModPreset = Envelope.WavePresetFlat;
         private ushort fdsModRate;
-        private byte   fdsModDepth;
-        private byte   fdsModDelay;
+        private byte fdsModDepth;
+        private byte fdsModDelay;
 
         // Namco
-        private byte   namcoWavePreset = Envelope.WavePresetSine;
-        private byte   namcoWaveSize   = 32;
-        private byte   namcoWavePos    = 0;
+        private byte namcoWavePreset = Envelope.WavePresetSine;
+        private byte namcoWaveSize = 32;
+        private byte namcoWavePos = 0;
 
         // VRC7
-        private byte   vrc7Patch = 1;
+        private byte vrc7Patch = 1;
         private byte[] vrc7PatchRegs = new byte[8];
-        
+
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public Color Color { get => color; set => color = value; }
-        public int ExpansionType => expansion; 
+        public int ExpansionType => expansion;
         public bool IsExpansionInstrument => expansion != Project.ExpansionNone;
         public Envelope[] Envelopes => envelopes;
         public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[Envelope.Volume] != null && envelopes[Envelope.Volume].Release >= 0;
-        public byte NamcoWaveSize => namcoWaveSize;
-        public byte NamcoWavePos => namcoWavePos;
         public byte Vrc7Patch => vrc7Patch;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
 
@@ -57,7 +55,7 @@ namespace FamiStudio
             this.expansion = expansion;
             this.name = name;
             this.color = ThemeBase.RandomCustomColor();
-            for (int i = 0; i < Envelope.Max; i++)
+            for (int i = 0; i < Envelope.Count; i++)
             {
                 if (IsEnvelopeActive(i))
                     envelopes[i] = new Envelope(i);
@@ -105,6 +103,43 @@ namespace FamiStudio
             return false;
         }
 
+        public byte NamcoWavePreset
+        {
+            get { return namcoWavePreset; }
+            set
+            {
+                namcoWavePreset = value;
+                UpdateNamcoWaveEnvelope();
+            }
+        }
+
+        public byte NamcoWaveSize
+        {
+            get { return namcoWaveSize; }
+            set
+            {
+                namcoWaveSize = value;
+                namcoWavePos = (byte)(namcoWavePos & ~(namcoWaveSize - 1));
+                UpdateNamcoWaveEnvelope();
+            }
+        }
+
+        public byte NamcoWavePos
+        {
+            get { return namcoWavePos; }
+            set
+            {
+                if ((value % namcoWaveSize) == 0)
+                    namcoWavePos = value;
+            }
+        }
+
+        private void UpdateNamcoWaveEnvelope()
+        {
+            envelopes[Envelope.NamcoWaveform].MaxLength = namcoWaveSize;
+            envelopes[Envelope.NamcoWaveform].SetFromPreset(Envelope.NamcoWaveform, namcoWavePreset);
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id, true);
@@ -118,12 +153,45 @@ namespace FamiStudio
 
             // At version 4 (FamiStudio 1.4.0) we added basic expansion audio (VRC6).
             if (buffer.Version >= 4)
+            {
                 buffer.Serialize(ref expansion);
+
+                // At version 5 (FamiStudio 1.5.0) we added duty cycle envelopes.
+                if (buffer.Version >= 5)
+                {
+                    switch (expansion)
+                    {
+                        case Project.ExpansionFds:
+                            buffer.Serialize(ref fdsWavPreset);
+                            buffer.Serialize(ref fdsModPreset);
+                            buffer.Serialize(ref fdsModRate);
+                            buffer.Serialize(ref fdsModDepth); 
+                            buffer.Serialize(ref fdsModDelay);
+                            break;
+                        case Project.ExpansionNamco:
+                            buffer.Serialize(ref namcoWavePreset);
+                            buffer.Serialize(ref namcoWaveSize);
+                            buffer.Serialize(ref namcoWavePos);
+                            break;
+                        case Project.ExpansionVrc7:
+                            buffer.Serialize(ref vrc7Patch);
+                            buffer.Serialize(ref vrc7PatchRegs[0]);
+                            buffer.Serialize(ref vrc7PatchRegs[1]);
+                            buffer.Serialize(ref vrc7PatchRegs[2]);
+                            buffer.Serialize(ref vrc7PatchRegs[3]);
+                            buffer.Serialize(ref vrc7PatchRegs[4]);
+                            buffer.Serialize(ref vrc7PatchRegs[5]);
+                            buffer.Serialize(ref vrc7PatchRegs[6]);
+                            buffer.Serialize(ref vrc7PatchRegs[7]);
+                            break;
+                    }
+                }
+            }
 
             byte envelopeMask = 0;
             if (buffer.IsWriting)
             {
-                for (int i = 0; i < Envelope.Max; i++)
+                for (int i = 0; i < Envelope.Count; i++)
                 {
                     if (envelopes[i] != null)
                         envelopeMask = (byte)(envelopeMask | (1 << i));
@@ -131,7 +199,7 @@ namespace FamiStudio
             }
             buffer.Serialize(ref envelopeMask);
 
-            for (int i = 0; i < Envelope.Max; i++)
+            for (int i = 0; i < Envelope.Count; i++)
             {
                 if ((envelopeMask & (1 << i)) != 0)
                 {
@@ -405,11 +473,11 @@ namespace FamiStudio
             {
                 // FDS
                 case ParamFdsWavePreset:
-                    fdsWavPreset = (byte)val;
+                    fdsWavPreset = (byte)val; // MATTT : Create property.
                     envelopes[Envelope.FdsWaveform].SetFromPreset(Envelope.FdsWaveform, val);
                     break;
                 case ParamFdsModulationPreset:
-                    fdsModPreset = (byte)val;
+                    fdsModPreset = (byte)val; // MATTT : Create property.
                     envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, val);
                     break;
                 case ParamFdsModulationSpeed: fdsModRate  = (ushort)val; break;
@@ -417,23 +485,9 @@ namespace FamiStudio
                 case ParamFdsModulationDelay: fdsModDelay = (byte)val; break;
 
                 // Namco
-                case ParamNamcoWavePreset:
-                    namcoWavePreset = (byte)val;
-                    envelopes[Envelope.NamcoWaveform].MaxLength = namcoWaveSize;
-                    envelopes[Envelope.NamcoWaveform].SetFromPreset(Envelope.NamcoWaveform, val);
-                    break;
-                case ParamNamcoWavePos:
-                    namcoWavePos  = (byte)val;
-                    break;
-                case ParamNamcoWaveSize:
-                    namcoWaveSize = (byte)val;
-                    namcoWavePos  = (byte)(namcoWavePos & ~(namcoWaveSize - 1));
-                    if (envelopes[Envelope.NamcoWaveform].Length != namcoWaveSize && namcoWavePreset != Envelope.WavePresetCustom)
-                    {
-                        envelopes[Envelope.NamcoWaveform].MaxLength = namcoWaveSize;
-                        envelopes[Envelope.NamcoWaveform].SetFromPreset(Envelope.NamcoWaveform, namcoWavePreset);
-                    }
-                    break;
+                case ParamNamcoWavePreset: NamcoWavePreset = (byte)val; break;
+                case ParamNamcoWavePos:    NamcoWavePos    = (byte)val; break;
+                case ParamNamcoWaveSize:   NamcoWaveSize   = (byte)val; break;
 
                 // VRC7
                 case ParamVrc7Patch:

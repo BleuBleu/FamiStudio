@@ -101,7 +101,7 @@ namespace FamiStudio
             Envelope.Volume,   // SEQ_VOLUME
             Envelope.Arpeggio, // SEQ_ARPEGGIO
             Envelope.Pitch,    // SEQ_PITCH
-            Envelope.Max,      // SEQ_HIPITCH
+            Envelope.Count,    // SEQ_HIPITCH
             Envelope.DutyCycle // SEQ_DUTYCYCLE
         };
 

@@ -219,7 +219,7 @@ namespace FamiStudio
 
             foreach (var instrument in project.Instruments)
             {
-                for (int i = 0; i < Envelope.Max; i++)
+                for (int i = 0; i < Envelope.Count; i++)
                 {
                     var env = instrument.Envelopes[i];
 

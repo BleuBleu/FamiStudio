@@ -13,7 +13,7 @@ namespace FamiStudio
         };
 
         int expansionAudio = Project.ExpansionNone;
-        int[] envelopeFrames = new int[Envelope.Max];
+        int[] envelopeFrames = new int[Envelope.Count];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
         bool IsRunning => playerThread != null;
 
@@ -148,12 +148,12 @@ namespace FamiStudio
                     channelStates[activeChannel].UpdateEnvelopes();
                     channelStates[activeChannel].UpdateAPU();
 
-                    for (int i = 0; i < Envelope.Max; i++)
+                    for (int i = 0; i < Envelope.Count; i++)
                         envelopeFrames[i] = channelStates[activeChannel].GetEnvelopeFrame(i);
                 }
                 else
                 {
-                    for (int i = 0; i < Envelope.Max; i++)
+                    for (int i = 0; i < Envelope.Count; i++)
                         envelopeFrames[i] = 0;
                     foreach (var channel in channelStates)
                         channel.ClearNote();

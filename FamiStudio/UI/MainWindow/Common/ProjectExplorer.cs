@@ -94,7 +94,7 @@ namespace FamiStudio
             FdsWaveformEnvelope = Envelope.FdsWaveform,
             FdsModulationEnvelope = Envelope.FdsModulation,
             NamcoWaveformEnvelope = Envelope.NamcoWaveform,
-            EnvelopeMax = Envelope.Max,
+            EnvelopeMax = Envelope.Count,
 
             // Other buttons
             Add,
@@ -153,7 +153,7 @@ namespace FamiStudio
                             var buttons = new SubButtonType[numSubButtons];
                             active = new bool[numSubButtons];
 
-                            for (int i = 0, j = 0; i < Envelope.Max; i++)
+                            for (int i = 0, j = 0; i < Envelope.Count; i++)
                             {
                                 int idx = EnvelopeDisplayOrder[i];
                                 if (instrument.Envelopes[idx] != null)
@@ -307,7 +307,7 @@ namespace FamiStudio
         RenderBitmap   bmpButtonLeft;
         RenderBitmap   bmpButtonRight;
         RenderBitmap[] bmpInstrument = new RenderBitmap[Project.ExpansionCount];
-        RenderBitmap[] bmpEnvelopes = new RenderBitmap[Envelope.Max];
+        RenderBitmap[] bmpEnvelopes = new RenderBitmap[Envelope.Count];
 
         public Song SelectedSong => selectedSong;
         public Instrument SelectedInstrument => selectedInstrument;
@@ -959,7 +959,7 @@ namespace FamiStudio
                         }
                         if (subButtonType == SubButtonType.DPCM)
                         {
-                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Max);
+                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Count);
                         }
                         else if (subButtonType < SubButtonType.EnvelopeMax)
                         {

@@ -418,13 +418,14 @@ namespace FamiStudio
             if (expansion >= 0 && expansion < ExpansionCount)
             {
                 var changed = expansionAudio != expansion;
+                var oldNumChannels = expansionNumChannels;
 
                 expansionAudio = expansion;
                 expansionNumChannels = expansion == ExpansionNamco ? numChannels : 1;
 
                 foreach (var song in songs)
                 {
-                    song.CreateChannels(true);
+                    song.CreateChannels(true, Channel.ExpansionAudioStart + (!changed && expansion == ExpansionNamco ? oldNumChannels : 0));
                 }
 
                 if (changed)

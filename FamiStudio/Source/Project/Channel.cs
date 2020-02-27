@@ -479,6 +479,8 @@ namespace FamiStudio
                 return ExpansionAudioStart;
             if (type >= Mmc5Square1 && type <= Mmc5Square2)
                 return ExpansionAudioStart + type - Mmc5Square1;
+            if (type == Mmc5Dpcm)
+                return -1;
             if (type >= NamcoWave1 && type <= NamcoWave8)
                 return ExpansionAudioStart + type - NamcoWave1;
             if (type >= SunsoftSquare1 && type <= SunsoftSquare3)

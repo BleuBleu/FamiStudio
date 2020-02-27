@@ -48,7 +48,7 @@ namespace FamiStudio
                     instrumentLine += $" Expansion=\"{Project.ExpansionShortNames[project.ExpansionAudio]}\"";
                 lines.Add(instrumentLine);
 
-                for (int i = 0; i < Envelope.Max; i++)
+                for (int i = 0; i < Envelope.Count; i++)
                 {
                     var env = instrument.Envelopes[i];
                     if (env != null && !env.IsEmpty)

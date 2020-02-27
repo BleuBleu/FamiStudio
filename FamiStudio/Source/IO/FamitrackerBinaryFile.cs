@@ -117,7 +117,7 @@ namespace FamiStudio
                 {
                     var envType = EnvelopeTypeLookup[i];
 
-                    if (envType != Envelope.Max)
+                    if (envType != Envelope.Count)
                     {
                         Debug.Assert(instrument.Envelopes[envType] != null);
                         instrument.Envelopes[envType] = envelopes[index, i];
@@ -169,7 +169,7 @@ namespace FamiStudio
                 {
                     var envType = EnvelopeTypeLookup[i];
 
-                    if (envType != Envelope.Max)
+                    if (envType != Envelope.Count)
                     {
                         Debug.Assert(instrument.Envelopes[envType] != null);
                         instrument.Envelopes[envType] = envelopes[index, i];

@@ -51,20 +51,26 @@ namespace FamiStudio
             UpdatePatternStartNotes();
         }
 
-        public void CreateChannels(bool preserve = false)
+        public void CreateChannels(bool preserve = false, int numChannelsToPreserve = Channel.ExpansionAudioStart)
         {
             int channelCount = project.GetActiveChannelCount();
 
             if (preserve)
-                Array.Resize(ref channels, channelCount);
-            else
-                channels = new Channel[channelCount];
-
-            int idx = preserve ? Channel.ExpansionAudioStart : 0;
-            for (int i = idx; i < Channel.Count; i++)
             {
-                if (project.IsChannelActive(i))
-                    channels[idx++] = new Channel(this, i, songLength);
+                Array.Resize(ref channels, channelCount);
+                for (int i = numChannelsToPreserve; i < channels.Length; i++)
+                    channels[i] = null;
+            }
+            else
+            {
+                channels = new Channel[channelCount];
+            }
+
+            for (int i = 0; i < Channel.Count; i++)
+            {
+                var idx = Channel.ChannelTypeToIndex(i);
+                if (project.IsChannelActive(i) && channels[idx] == null)
+                    channels[idx] = new Channel(this, i, songLength);
             }
         }
 

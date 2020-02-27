@@ -22,7 +22,7 @@ namespace FamiStudio
             Envelope.Volume,   // SEQ_VOLUME
             Envelope.Arpeggio, // SEQ_ARPEGGIO
             Envelope.Pitch,    // SEQ_PITCH
-            Envelope.Max,      // SEQ_HIPITCH
+            Envelope.Count,    // SEQ_HIPITCH
             Envelope.DutyCycle // SEQ_DUTYCYCLE
         };
 
@@ -40,7 +40,7 @@ namespace FamiStudio
                 seq[j] = (sbyte)bytes[offset++];
 
             // Skip unsupported types.
-            if (envType == Envelope.Max)
+            if (envType == Envelope.Count)
                 return;
 
             Envelope env = instrument.Envelopes[envType];

@@ -9,10 +9,11 @@ namespace FamiStudio
         public const int Arpeggio = 1;
         public const int Pitch = 2;
         public const int DutyCycle = 3;
+        public const int RegularCount = 4;
         public const int FdsWaveform = 4;
         public const int FdsModulation = 5;
         public const int NamcoWaveform = 6;
-        public const int Max = 7;
+        public const int Count = 7;
         public static readonly string[] EnvelopeNames = { "Volume", "Arpeggio", "Pitch", "Duty Cycle", "FDS Waveform", "FDS Modulation Table", "Namco Waveform" };
         public static readonly string[] EnvelopeShortNames = { "Volume", "Arpeggio", "Pitch", "DutyCycle", "FDSWave", "FDSMod", "NamcoWave" };
 
