@@ -621,8 +621,7 @@ namespace FamiStudio
 
             g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
 
-            if (editMode == EditionMode.Enveloppe || 
-                editMode == EditionMode.Channel)
+            if ((editMode == EditionMode.Enveloppe && editEnvelope < Envelope.RegularCount) || (editMode == EditionMode.Channel))
             {
                 var seekFrame = editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editInstrument, editEnvelope) : App.CurrentFrame;
                 if (seekFrame >= 0)
@@ -1304,11 +1303,14 @@ namespace FamiStudio
                 if (env.Length > 0)
                     g.DrawLine(env.Length * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
 
-                var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope);
-                if (seekFrame >= 0)
+                if (editEnvelope < Envelope.RegularCount)
                 {
-                    var seekX = seekFrame * noteSizeX - scrollX;
-                    g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
+                    var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope);
+                    if (seekFrame >= 0)
+                    {
+                        var seekX = seekFrame * noteSizeX - scrollX;
+                        g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
+                    }
                 }
 
                 if (editEnvelope == Envelope.Arpeggio)
