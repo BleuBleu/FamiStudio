@@ -26,7 +26,7 @@ void Nes_Sunsoft::reset()
 
 void Nes_Sunsoft::volume( double v )
 {
-	vol = v; // MATTT
+	vol = v * 2.0f; // MATTT: Figure out real ratio.
 }
 
 void Nes_Sunsoft::reset_psg()
@@ -36,7 +36,7 @@ void Nes_Sunsoft::reset_psg()
 
 	psg = PSG_new(psg_clock, output_buffer ? output_buffer->sample_rate() : 44100);
 	PSG_reset(psg);
-	PSG_setVolumeMode(psg, 1);
+	PSG_set_quality(psg, 1);
 }
 
 void Nes_Sunsoft::output( Blip_Buffer* buf )
@@ -77,7 +77,6 @@ void Nes_Sunsoft::end_frame(cpu_time_t time)
 	for (int i = 0; i < sample_cnt; i++)
 	{
 		int sample = PSG_calc(psg);
-		//sample = clamp(sample, -3200, 3600); // MATTT
 		sample = clamp((int)(sample * vol), -32768, 32767);
 		sample_buffer[i] = (int16_t)sample;
 	}

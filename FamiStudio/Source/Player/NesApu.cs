@@ -294,6 +294,10 @@ namespace FamiStudio
                 case APU_EXPANSION_VRC7:
                     WriteRegister(apuIdx, VRC7_SILENCE, 0x00); // Enable VRC7 audio.
                     break;
+                case APU_EXPANSION_SUNSOFT:
+                    WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
+                    WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
+                    break;
             }
         }
     }

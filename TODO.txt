@@ -33,7 +33,6 @@
 	- All expansions.
 - Loop point should be optional.
 - All expansions.
-	- Channel mutings, test on all.
 	- Finigh channel code, clean.
 	- Import/export all formats.
 
