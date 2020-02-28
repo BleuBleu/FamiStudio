@@ -24,7 +24,7 @@ namespace FamiStudio
                 var volume = GetVolume();
 
                 var periodHi = (period >> 8) & 0x0f;
-                var periodLo = period & 0xff;
+                var periodLo = (period >> 0) & 0xff;
 
                 WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_LO_A + channelIdx * 2);
                 WriteRegister(NesApu.S5B_DATA, periodLo);

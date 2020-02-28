@@ -16,8 +16,7 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                var period = Utils.Clamp(noteTable[noteVal] + GetSlidePitch() + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
+                var period = GetPeriod();
 
                 WriteRegister(NesApu.APU_TRI_LO, (period >> 0) & 0xff);
                 WriteRegister(NesApu.APU_TRI_HI, (period >> 8) & 0x07);

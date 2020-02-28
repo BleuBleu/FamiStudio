@@ -26,7 +26,7 @@ namespace FamiStudio
                 var volume = GetVolume();
 
                 var periodHi = (period >> 8) & 0x07;
-                var periodLo = period & 0xff;
+                var periodLo = (period >> 0) & 0xff;
                 int deltaHi  = periodHi - prevPeriodHi;
 
                 if (deltaHi != 0) // Avoid resetting the sequence.

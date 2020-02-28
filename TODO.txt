@@ -2,8 +2,8 @@
 1.5.0: FDS + PAL
 ================
 - FDS:
-	- Dont show yellow seek bar in Waveforms.
 	- Proper playback (remove hacks)
+	- Compare with FamiTracker/emulators.
 	- NSF.
 - Fine pitch track
 	- NSF

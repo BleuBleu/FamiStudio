@@ -7,11 +7,17 @@ namespace FamiStudio
     {
         int channelIdx = 0;
         byte vrc7Instrument = 0;
-        byte prevReg20;
+        byte prevPeriodHi;
 
         public ChannelStateVrc7(int apuIdx, int channelType) : base(apuIdx, channelType, false)
         {
             channelIdx = channelType - Channel.Vrc7Fm1;
+        }
+
+        private void WriteVrc7Register(int reg, int data)
+        {
+            WriteRegister(NesApu.VRC7_REG_SEL,   reg);
+            WriteRegister(NesApu.VRC7_REG_WRITE, data);
         }
 
         protected override void LoadInstrument(Instrument instrument)
@@ -23,10 +29,7 @@ namespace FamiStudio
                 if (instrument.Vrc7Patch == 0)
                 {
                     for (byte i = 0; i < 8; i++)
-                    {
-                        WriteRegister(NesApu.VRC7_REG_SEL, i);
-                        WriteRegister(NesApu.VRC7_REG_WRITE, instrument.Vrc7PatchRegs[i]);
-                    }
+                        WriteVrc7Register(i, instrument.Vrc7PatchRegs[i]);
                 }
 
                 vrc7Instrument = (byte)(instrument.Vrc7Patch << 4);
@@ -37,15 +40,13 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                prevReg20 = (byte)(prevReg20 & ~(0x10));
-                WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
-                WriteRegister(NesApu.VRC7_REG_WRITE, prevReg20);
+                prevPeriodHi = (byte)(prevPeriodHi & ~(0x10));
+                WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi);
             }
             else if (note.IsRelease)
             {
-                prevReg20 = (byte)(prevReg20 & ~(0x10));
-                WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
-                WriteRegister(NesApu.VRC7_REG_WRITE, prevReg20 | 0x20);
+                prevPeriodHi = (byte)(prevPeriodHi & ~(0x10));
+                WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi | 0x20);
             }
             else if (note.IsMusical)
             {
@@ -53,25 +54,20 @@ namespace FamiStudio
                 var period = NesApu.NoteTableVrc7[(note.Value - 1) % 12] >> 2;
                 var volume = 15 - GetVolume();
 
-                var reg10 = (byte)(period & 0xff);
-                var reg20 = (byte)(0x10 | ((octave & 0x3) << 1) | ((period >> 8) & 1));
-                var reg30 = (byte)(vrc7Instrument | volume);
+                var periodLo = (byte)(period & 0xff);
+                var periodHi = (byte)(0x10 | ((octave & 0x3) << 1) | ((period >> 8) & 1));
 
-                if ((prevReg20 & 0x10) != 0)
+                if ((prevPeriodHi & 0x10) != 0)
                 {
-                    prevReg20 = (byte)(prevReg20 & ~(0x10));
-                    WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
-                    WriteRegister(NesApu.VRC7_REG_WRITE, prevReg20);
+                    prevPeriodHi = (byte)(prevPeriodHi & ~(0x10));
+                    WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi);
                 }
 
-                WriteRegister(NesApu.VRC7_REG_SEL, 0x10 + channelIdx);
-                WriteRegister(NesApu.VRC7_REG_WRITE, reg10);
-                WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
-                WriteRegister(NesApu.VRC7_REG_WRITE, reg20);
-                WriteRegister(NesApu.VRC7_REG_SEL, 0x30 + channelIdx);
-                WriteRegister(NesApu.VRC7_REG_WRITE, reg30);
+                WriteVrc7Register(NesApu.VRC7_REG_LO_1  + channelIdx, periodLo);
+                WriteVrc7Register(NesApu.VRC7_REG_HI_1  + channelIdx, periodHi);
+                WriteVrc7Register(NesApu.VRC7_REG_VOL_1 + channelIdx, vrc7Instrument | volume);
 
-                prevReg20 = reg20;
+                prevPeriodHi = periodHi;
             }
 
             // To prevent from re-triggering.

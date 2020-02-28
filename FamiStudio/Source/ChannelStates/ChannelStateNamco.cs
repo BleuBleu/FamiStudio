@@ -16,6 +16,12 @@ namespace FamiStudio
             maximumPeriod = NesApu.MaximumPeriod18Bit;
         }
 
+        private void WriteNamcoRegister(int reg, int data)
+        {
+            WriteRegister(NesApu.N163_ADDR, reg);
+            WriteRegister(NesApu.N163_DATA, data);
+        }
+
         protected override void LoadInstrument(Instrument instrument)
         {
             if (instrument != null)
@@ -27,13 +33,10 @@ namespace FamiStudio
                 for (int i = 0; i < wave.Length; i += 2)
                 {
                     var pair = (byte)(wave.Values[i + 1] << 4) | (byte)(wave.Values[i + 0]);
-                    WriteRegister(NesApu.N163_ADDR, instrument.NamcoWavePos + i / 2);
-                    WriteRegister(NesApu.N163_DATA, pair);
+                    WriteNamcoRegister(instrument.NamcoWavePos + i / 2, pair);
                 }
 
-                WriteRegister(NesApu.N163_ADDR, 0x7e + regOffset);
-                WriteRegister(NesApu.N163_DATA, instrument.NamcoWavePos);
-
+                WriteNamcoRegister(NesApu.N163_REG_WAVE + regOffset, instrument.NamcoWavePos);
                 waveLength = 256 - instrument.NamcoWaveSize;
             }
         }
@@ -42,23 +45,17 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                WriteRegister(NesApu.N163_ADDR, 0x7f + regOffset);
-                WriteRegister(NesApu.N163_DATA, channelMask);
+                WriteNamcoRegister(NesApu.N163_REG_VOLUME + regOffset, channelMask);
             }
             else if (note.IsMusical)
             {
                 var period = GetPeriod() << 3; // MATTT
                 var volume = GetVolume();
 
-                // MATTT: Create constants for these internal regs.
-                WriteRegister(NesApu.N163_ADDR, 0x78 + regOffset);
-                WriteRegister(NesApu.N163_DATA, period & 0xff);
-                WriteRegister(NesApu.N163_ADDR, 0x7a + regOffset);
-                WriteRegister(NesApu.N163_DATA, (period >> 8) & 0xff);
-                WriteRegister(NesApu.N163_ADDR, 0x7c + regOffset);
-                WriteRegister(NesApu.N163_DATA, waveLength);
-                WriteRegister(NesApu.N163_ADDR, 0x7f + regOffset);
-                WriteRegister(NesApu.N163_DATA, channelMask | volume);
+                WriteNamcoRegister(NesApu.N163_REG_FREQ_LO  + regOffset, (period >> 0) & 0xff);
+                WriteNamcoRegister(NesApu.N163_REG_FREQ_MID + regOffset, (period >> 8) & 0xff);
+                WriteNamcoRegister(NesApu.N163_REG_FREQ_HI  + regOffset, waveLength);
+                WriteNamcoRegister(NesApu.N163_REG_VOLUME   + regOffset, channelMask | volume);
             }
         }
     };
