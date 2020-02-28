@@ -28,9 +28,9 @@ namespace FamiStudio
                 var periodLo = period & 0xff;
 
                 // WIP
-                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_LO_A + channelIdx);
+                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_LO_A + channelIdx * 2);
                 WriteRegister(NesApu.S5B_DATA, periodLo);
-                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_HI_A + channelIdx);
+                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_HI_A + channelIdx * 2);
                 WriteRegister(NesApu.S5B_DATA, periodHi);
                 WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_VOL_A + channelIdx);
                 WriteRegister(NesApu.S5B_DATA, volume);

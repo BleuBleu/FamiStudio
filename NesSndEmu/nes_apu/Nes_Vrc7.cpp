@@ -52,6 +52,17 @@ void Nes_Vrc7::output(Blip_Buffer* buf)
 		reset_opll();
 }
 
+void Nes_Vrc7::enable_channel(int idx, bool enabled)
+{
+	if (opll)
+	{
+		if (enabled)
+			OPLL_setMask(opll, opll->mask & ~(1 << idx));
+		else
+			OPLL_setMask(opll, opll->mask |  (1 << idx));
+	}
+}
+
 void Nes_Vrc7::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 {
 	switch (addr)

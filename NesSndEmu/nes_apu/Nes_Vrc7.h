@@ -15,6 +15,7 @@ public:
 	void reset();
 	void volume(double);
 	void output(Blip_Buffer*);
+	void enable_channel(int idx, bool enabled);
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 

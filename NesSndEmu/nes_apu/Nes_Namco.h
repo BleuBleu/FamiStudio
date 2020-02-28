@@ -83,7 +83,7 @@ inline int Nes_Namco::read_data() { return access(); }
 inline void Nes_Namco::osc_output( int i, Blip_Buffer* buf )
 {
 	assert( (unsigned) i < osc_count );
-	oscs [i].output = buf;
+	oscs [osc_count - i - 1].output = buf;
 }
 
 inline void Nes_Namco::write_data( cpu_time_t time, int data )

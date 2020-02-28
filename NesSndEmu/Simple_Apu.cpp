@@ -60,14 +60,16 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 	}
 	else
 	{
+		idx -= 5;
+
 		switch (expansion)
 		{
-			case expansion_vrc6: vrc6.osc_output(idx - 5, enable ? &buf : NULL); break;
-			case expansion_vrc7: vrc7.output(enable ? &buf : NULL); break;
+			case expansion_vrc6: vrc6.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_vrc7: vrc7.enable_channel(idx, enable); break;
 			case expansion_fds: fds.output(enable ? &buf : NULL); break;
-			case expansion_mmc5: mmc5.output(enable ? &buf : NULL); break;
-			case expansion_namco: namco.output(enable ? &buf : NULL); break;
-			case expansion_sunsoft: sunsoft.output(enable ? &buf : NULL); break;
+			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_sunsoft: sunsoft.enable_channel(idx, enable); break;
 		}
 	}
 }

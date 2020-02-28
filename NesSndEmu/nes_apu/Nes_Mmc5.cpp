@@ -57,6 +57,11 @@ void Nes_Mmc5::output(Blip_Buffer* buf)
 	oscs[1]->output = buf;
 }
 
+void Nes_Mmc5::osc_output(int index, Blip_Buffer* buf)
+{
+	oscs[index]->output = buf;
+}
+
 void Nes_Mmc5::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 {
 	require(addr > 0x20); // addr must be actual address (i.e. 0x40xx)
