@@ -158,3 +158,29 @@ void Nes_Namco::run_until( cpu_time_t nes_end_time )
 	last_time = nes_end_time;
 }
 
+void Nes_Namco::start_seeking()
+{
+	memset(shadow_internal_regs, -1, sizeof(shadow_internal_regs));
+}
+
+void Nes_Namco::stop_seeking(blip_time_t& clock)
+{
+	for (int i = 0; i < array_count(shadow_internal_regs); i++)
+	{
+		if (shadow_internal_regs[i] >= 0)
+		{
+			write_register(clock += 4, addr_reg_addr, i);
+			write_register(clock += 4, data_reg_addr, shadow_internal_regs[i]);
+		}
+	}
+}
+
+void Nes_Namco::write_shadow_register(int addr, int data)
+{
+	if (addr >= addr_reg_addr && addr < (addr_reg_addr + reg_range))
+		addr_reg = data;
+	else if (addr >= data_reg_addr && addr < (data_reg_addr + reg_range))
+		shadow_internal_regs[addr_reg] = data;
+}
+
+

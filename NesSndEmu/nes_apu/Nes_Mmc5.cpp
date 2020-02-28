@@ -142,3 +142,23 @@ void Nes_Mmc5::run_until(cpu_time_t end_time)
 	}
 }
 
+void Nes_Mmc5::start_seeking()
+{
+	memset(shadow_regs, -1, sizeof(shadow_regs));
+}
+
+void Nes_Mmc5::stop_seeking(blip_time_t& clock)
+{
+	for (int i = 0; i < array_count(shadow_regs); i++)
+	{
+		if (shadow_regs[i] >= 0)
+			write_register(clock += 4, start_addr + i, shadow_regs[i]);
+	}
+}
+
+void Nes_Mmc5::write_shadow_register(int addr, int data)
+{
+	if (addr >= start_addr && addr < start_addr + shadow_regs_count)
+		shadow_regs[addr - start_addr] = data;
+}
+

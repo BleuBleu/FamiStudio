@@ -114,9 +114,6 @@ namespace FamiStudio
 
                 while (song.GetPatternStartNote(playPattern) + playNote < startNote)
                 {
-                    if (!AdvanceSong(song.Length, loopMode))
-                        return false;
-
                     foreach (var channel in channelStates)
                     {
                         channel.Advance(song, playPattern, playNote);
@@ -124,6 +121,9 @@ namespace FamiStudio
                         channel.UpdateEnvelopes();
                         channel.UpdateAPU();
                     }
+
+                    if (!AdvanceSong(song.Length, loopMode))
+                        return false;
                 }
 
                 NesApu.StopSeeking(apuIndex);
@@ -246,7 +246,7 @@ namespace FamiStudio
                 case Channel.SunsoftSquare1:
                 case Channel.SunsoftSquare2:
                 case Channel.SunsoftSquare3:
-                    return new ChannelStateSunsoftSquare(apuIdx, channelType, pal);
+                    return new ChannelStateSunsoft(apuIdx, channelType, pal);
             }
 
             Debug.Assert(false);

@@ -99,8 +99,9 @@ public:
 	
 	// Not caching DPCM regs.
 	enum { shadow_regs_count = 21 }; 
-	static int addr_to_shadow_reg(int addr);
-	static int shadow_reg_to_addr(int idx);
+	void start_seeking();
+	void stop_seeking(blip_time_t& clock);
+	void write_shadow_register(int addr, int data);
 
 // End of public interface.
 private:
@@ -131,6 +132,8 @@ private:
 	void* irq_data;
 	Nes_Square::Synth square_synth; // shared by squares
 	
+	short shadow_regs[shadow_regs_count];
+
 	void irq_changed();
 	void state_restored();
 	
@@ -163,16 +166,6 @@ inline void Nes_Apu::irq_notifier( void (*func)( void* user_data ), void* user_d
 inline int Nes_Apu::count_dmc_reads( cpu_time_t time, cpu_time_t* last_read ) const
 {
 	return dmc.count_reads( time, last_read );
-}
-
-inline int Nes_Apu::addr_to_shadow_reg(int addr)
-{
-	return addr >= start_addr && addr < start_addr + shadow_regs_count ? addr - start_addr : -1;
-}
-
-inline int Nes_Apu::shadow_reg_to_addr(int idx)
-{
-	return start_addr + idx;
 }
 
 #endif

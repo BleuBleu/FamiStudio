@@ -36,8 +36,9 @@ public:
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 
 	enum { shadow_regs_count = 9 };
-	static int addr_to_shadow_reg(int addr);
-	static int shadow_reg_to_addr(int idx);
+	void start_seeking();
+	void stop_seeking(blip_time_t& clock);
+	void write_shadow_register(int addr, int data);
 
 private:
 	// noncopyable
@@ -65,6 +66,8 @@ private:
 	Blip_Synth<blip_med_quality,31> saw_synth;
 	Blip_Synth<blip_good_quality,15> square_synth;
 	
+	short shadow_regs[shadow_regs_count];
+
 	void run_until( cpu_time_t );
 	void run_square( Vrc6_Osc& osc, cpu_time_t );
 	void run_saw( cpu_time_t );
@@ -84,25 +87,6 @@ inline void Nes_Vrc6::osc_output( int i, Blip_Buffer* buf )
 {
 	assert( (unsigned) i < osc_count );
 	oscs [i].output = buf;
-}
-
-inline int Nes_Vrc6::addr_to_shadow_reg(int addr)
-{
-	for (int i = 0; i < osc_count; i++)
-	{
-		int osc_base_addr = base_addr + addr_step * i;
-		if (addr >= osc_base_addr && addr <= osc_base_addr + reg_count)
-			return i * reg_count + (addr - osc_base_addr);
-	}
-	return -1;
-}
-
-inline int Nes_Vrc6::shadow_reg_to_addr(int idx)
-{
-	int osc_idx = idx / osc_count;
-	int reg_idx = idx % osc_count;
-
-	return base_addr + addr_step * osc_idx + reg_idx;
 }
 
 #endif

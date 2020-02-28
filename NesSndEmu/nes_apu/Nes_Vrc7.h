@@ -14,15 +14,15 @@ public:
 	// See Nes_Apu.h for reference
 	void reset();
 	void volume(double);
-	void treble_eq(blip_eq_t const&);
 	void output(Blip_Buffer*);
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 
-	// TODO: Cache wave table. Also, how to cache mod table?
-	enum { shadow_regs_count = 11 };
-	static int addr_to_shadow_reg(int addr);
-	static int shadow_reg_to_addr(int idx);
+	enum { shadow_regs_count = 1 };
+	enum { shadow_internal_regs_count = 54 };
+	void start_seeking();
+	void stop_seeking(blip_time_t& clock);
+	void write_shadow_register(int addr, int data);
 
 	enum { vrc7_clock  = 3579545 };
 	enum { reg_silence = 0xe000  };
@@ -42,17 +42,11 @@ private:
 	int16_t sample_buffer[1000]; // This is very conservative, normally would be ceil(sample_rate / frame_rate).
 	struct __OPLL* opll;
 	Blip_Buffer* output_buffer;
+
+	short shadow_regs[shadow_regs_count];
+	short shadow_internal_regs[shadow_internal_regs_count];
+
 };
-
-inline int Nes_Vrc7::addr_to_shadow_reg(int addr)
-{
-	return -1; // addr >= regs_addr && addr < regs_addr + shadow_regs_count ? addr - regs_addr : -1;
-}
-
-inline int Nes_Vrc7::shadow_reg_to_addr(int idx)
-{
-	return 0; // regs_addr + idx;
-}
 
 #endif
 

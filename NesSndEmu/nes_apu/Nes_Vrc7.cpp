@@ -86,3 +86,34 @@ void Nes_Vrc7::end_frame(cpu_time_t time)
 
 	output_buffer->mix_samples(sample_buffer, sample_cnt);
 }
+
+void Nes_Vrc7::start_seeking()
+{
+	memset(shadow_regs, -1, sizeof(shadow_regs));
+	memset(shadow_internal_regs, -1, sizeof(shadow_internal_regs));
+}
+
+void Nes_Vrc7::stop_seeking(blip_time_t& clock)
+{
+	if (shadow_regs[0] >= 0)
+		write_register(clock += 4, reg_silence, shadow_regs[0]);
+
+	for (int i = 0; i < array_count(shadow_internal_regs); i++)
+	{
+		if (shadow_internal_regs[i] >= 0)
+		{
+			write_register(clock += 4, reg_select, i);
+			write_register(clock += 4, reg_write,  shadow_internal_regs[i]);
+		}
+	}
+}
+
+void Nes_Vrc7::write_shadow_register(int addr, int data)
+{
+	switch (addr)
+	{
+		case reg_silence: shadow_regs[0] = data; break;
+		case reg_select:  reg = data; break;
+		case reg_write:   shadow_internal_regs[reg] = data; break;
+	}
+}

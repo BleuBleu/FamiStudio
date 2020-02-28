@@ -201,4 +201,45 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 	osc.last_amp = last_amp;
 }
 
+void Nes_Fds::start_seeking()
+{
+	shadow_modt_idx = 0;
+	memset(shadow_regs, -1, sizeof(shadow_regs));
+	memset(shadow_wave,  0, sizeof(shadow_wave));
+	memset(shadow_modt,  0, sizeof(shadow_modt));
+}
 
+void Nes_Fds::stop_seeking(blip_time_t& clock)
+{
+	memcpy(osc.modt, shadow_modt, modt_count);
+	memcpy(osc.wave, shadow_wave, wave_count);
+
+	for (int i = 0; i < array_count(shadow_regs); i++)
+	{
+		if (shadow_regs[i] >= 0)
+			write_register(clock += 4, regs_addr + i, shadow_regs[i]);
+	}
+}
+
+void Nes_Fds::write_shadow_register(int addr, int data)
+{
+	if (addr >= wave_addr && addr < (wave_addr + wave_count))
+	{
+		// Ignore write enable.
+		shadow_wave[addr - wave_addr] = data;
+	}
+	else if (addr >= regs_addr && addr < (regs_addr + regs_count))
+	{
+		if (addr == 0x4088)
+		{
+			// Assume we always write to mod table in batch of 32. This is true for FamiStudio.
+			shadow_modt[shadow_modt_idx + 0] = data;
+			shadow_modt[shadow_modt_idx + 1] = data;
+			shadow_modt_idx = (shadow_modt_idx + 2) % modt_count;
+		}
+		else
+		{
+			shadow_regs[addr - regs_addr] = data;
+		}
+	}
+}

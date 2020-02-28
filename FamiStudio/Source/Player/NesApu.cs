@@ -120,6 +120,25 @@ namespace FamiStudio
         public const int N163_ADDR       = 0xf800;
         public const int N163_DATA       = 0x4800;
 
+        public const int S5B_ADDR        = 0xc000;
+        public const int S5B_DATA        = 0xe000;
+
+        public const int S5B_REG_LO_A    = 0x00;
+        public const int S5B_REG_HI_A    = 0x01;
+        public const int S5B_REG_LO_B    = 0x02;
+        public const int S5B_REG_HI_B    = 0x03;
+        public const int S5B_REG_LO_C    = 0x04;
+        public const int S5B_REG_HI_C    = 0x05;
+        public const int S5B_REG_NOISE   = 0x06;
+        public const int S5B_REG_TONE    = 0x07;
+        public const int S5B_REG_VOL_A   = 0x08;
+        public const int S5B_REG_VOL_B   = 0x09;
+        public const int S5B_REG_VOL_C   = 0x0a;
+        public const int S5B_REG_ENV_LO  = 0x0b;
+        public const int S5B_REG_ENV_HI  = 0x0c;
+        public const int S5B_REG_SHAPE   = 0x0d;
+        public const int S5B_REG_IO_A    = 0x0e;
+        public const int S5B_REG_IO_B    = 0x0f;
 
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;

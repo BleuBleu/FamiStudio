@@ -78,10 +78,6 @@ public:
 
 private:
 	bool seeking;
-	int  shadow_regs_apu[Nes_Apu::shadow_regs_count];
-	int  shadow_regs_vrc6[Nes_Vrc6::shadow_regs_count];
-	int  shadow_regs_fds[Nes_Fds::shadow_regs_count];
-	int  shadow_regs_mmc5[Nes_Mmc5::shadow_regs_count];
 	int  expansion;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;

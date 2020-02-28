@@ -37,13 +37,15 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
+                prevReg20 = (byte)(prevReg20 & ~(0x10));
                 WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
-                WriteRegister(NesApu.VRC7_REG_WRITE, prevReg20 & ~(0x10));
+                WriteRegister(NesApu.VRC7_REG_WRITE, prevReg20);
             }
             else if (note.IsRelease)
             {
+                prevReg20 = (byte)(prevReg20 & ~(0x10));
                 WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
-                WriteRegister(NesApu.VRC7_REG_WRITE, (prevReg20 & ~(0x10)) | 0x20);
+                WriteRegister(NesApu.VRC7_REG_WRITE, prevReg20 | 0x20);
             }
             else if (note.IsMusical)
             {
@@ -54,6 +56,13 @@ namespace FamiStudio
                 var reg10 = (byte)(period & 0xff);
                 var reg20 = (byte)(0x10 | ((octave & 0x3) << 1) | ((period >> 8) & 1));
                 var reg30 = (byte)(vrc7Instrument | volume);
+
+                if ((prevReg20 & 0x10) != 0)
+                {
+                    prevReg20 = (byte)(prevReg20 & ~(0x10));
+                    WriteRegister(NesApu.VRC7_REG_SEL, 0x20 + channelIdx);
+                    WriteRegister(NesApu.VRC7_REG_WRITE, prevReg20);
+                }
 
                 WriteRegister(NesApu.VRC7_REG_SEL, 0x10 + channelIdx);
                 WriteRegister(NesApu.VRC7_REG_WRITE, reg10);

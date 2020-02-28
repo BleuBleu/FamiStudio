@@ -50,6 +50,7 @@ namespace FamiStudio
                 var period = GetPeriod() << 3; // MATTT
                 var volume = GetVolume();
 
+                // MATTT: Create constants for these internal regs.
                 WriteRegister(NesApu.N163_ADDR, 0x78 + regOffset);
                 WriteRegister(NesApu.N163_DATA, period & 0xff);
                 WriteRegister(NesApu.N163_ADDR, 0x7a + regOffset);

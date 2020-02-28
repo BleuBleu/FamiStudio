@@ -40,6 +40,11 @@ public:
 	void save_snapshot( namco_snapshot_t* out );
 	void load_snapshot( namco_snapshot_t const& );
 	
+	enum { shadow_internal_regs_count = 128 };
+	void start_seeking();
+	void stop_seeking(blip_time_t& clock);
+	void write_shadow_register(int addr, int data);
+
 private:
 	// noncopyable
 	Nes_Namco( const Nes_Namco& );
@@ -61,6 +66,8 @@ private:
 	BOOST::uint8_t reg [reg_count];
 	Blip_Synth<blip_good_quality,15> synth;
 	
+	short shadow_internal_regs[shadow_internal_regs_count];
+
 	BOOST::uint8_t& access();
 	void run_until( cpu_time_t );
 };

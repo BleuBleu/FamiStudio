@@ -3,8 +3,6 @@
 
 #include "Simple_Apu.h"
 
-#include <string.h>
-
 /* Copyright (C) 2003-2005 Shay Green. This module is free software; you
 can redistribute it and/or modify it under the terms of the GNU Lesser
 General Public License as published by the Free Software Foundation; either
@@ -64,24 +62,12 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 	{
 		switch (expansion)
 		{
-			case expansion_vrc6: 
-				vrc6.osc_output(idx - 5, enable ? &buf : NULL);
-				break;
-			case expansion_vrc7:
-				vrc7.output(enable ? &buf : NULL);
-				break;
-			case expansion_fds:
-				fds.output(enable ? &buf : NULL);
-				break;
-			case expansion_mmc5:
-				mmc5.output(enable ? &buf : NULL);
-				break;
-			case expansion_namco:
-				namco.output(enable ? &buf : NULL);
-				break;
-			case expansion_sunsoft:
-				sunsoft.output(enable ? &buf : NULL);
-				break;
+			case expansion_vrc6: vrc6.osc_output(idx - 5, enable ? &buf : NULL); break;
+			case expansion_vrc7: vrc7.output(enable ? &buf : NULL); break;
+			case expansion_fds: fds.output(enable ? &buf : NULL); break;
+			case expansion_mmc5: mmc5.output(enable ? &buf : NULL); break;
+			case expansion_namco: namco.output(enable ? &buf : NULL); break;
+			case expansion_sunsoft: sunsoft.output(enable ? &buf : NULL); break;
 		}
 	}
 }
@@ -90,26 +76,14 @@ void Simple_Apu::treble_eq(int exp, double treble, int cutoff, int sample_rate)
 {
 	blip_eq_t eq(blip_eq_t(treble, cutoff, sample_rate));
 
+	// TODO: VRC7 + Sunsoft eq.
 	switch (exp)
 	{
-		case expansion_none:
-			apu.treble_eq(eq);
-			break;
-		case expansion_vrc6:
-			vrc6.treble_eq(eq);
-			break;
-		case expansion_fds:
-			fds.treble_eq(eq);
-			break;
-		case expansion_mmc5:
-			mmc5.treble_eq(eq);
-			break;
-		case expansion_namco:
-			namco.treble_eq(eq);
-			break;
-		case expansion_sunsoft:
-			sunsoft.treble_eq(eq);
-			break;
+		case expansion_none: apu.treble_eq(eq); break;
+		case expansion_vrc6: vrc6.treble_eq(eq); break;
+		case expansion_fds: fds.treble_eq(eq); break;
+		case expansion_mmc5: mmc5.treble_eq(eq); break;
+		case expansion_namco: namco.treble_eq(eq); break;
 	}
 }
 
@@ -117,30 +91,20 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 {
 	if (seeking)
 	{
-		int idx = Nes_Apu::addr_to_shadow_reg(addr);
-		if (idx >= 0)
+		if (addr >= Nes_Apu::start_addr && addr <= Nes_Apu::end_addr)
 		{
-			shadow_regs_apu[idx] = data;
+			apu.write_shadow_register(addr, data);
 		}
 		else
 		{
 			switch (expansion)
 			{
-			case expansion_vrc6:
-				idx = Nes_Vrc6::addr_to_shadow_reg(addr);
-				if (idx >= 0)
-					shadow_regs_vrc6[idx] = data;
-				break;
-			case expansion_fds:
-				idx = Nes_Fds::addr_to_shadow_reg(addr);
-				if (idx >= 0)
-					shadow_regs_fds[idx] = data;
-				break;
-			case expansion_mmc5:
-				idx = Nes_Mmc5::addr_to_shadow_reg(addr);
-				if (idx >= 0)
-					shadow_regs_mmc5[idx] = data;
-				break;
+				case expansion_vrc6: vrc6.write_shadow_register(addr, data); break;
+				case expansion_vrc7: vrc7.write_shadow_register(addr, data); break;
+				case expansion_fds: fds.write_shadow_register(addr, data); break;
+				case expansion_mmc5: mmc5.write_shadow_register(addr, data); break;
+				case expansion_namco: namco.write_shadow_register(addr, data); break;
+				case expansion_sunsoft: sunsoft.write_shadow_register(addr, data); break;
 			}
 		}
 	}
@@ -154,24 +118,12 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 		{
 			switch (expansion)
 			{
-			case expansion_vrc6:
-				vrc6.write_register(clock(), addr, data);
-				break;
-			case expansion_vrc7:
-				vrc7.write_register(clock(), addr, data);
-				break;
-			case expansion_fds:
-				fds.write_register(clock(), addr, data);
-				break;
-			case expansion_mmc5:
-				mmc5.write_register(clock(), addr, data);
-				break;
-			case expansion_namco:
-				namco.write_register(clock(), addr, data);
-				break;
-			case expansion_sunsoft:
-				sunsoft.write_register(clock(), addr, data);
-				break;
+				case expansion_vrc6: vrc6.write_register(clock(), addr, data); break;
+				case expansion_vrc7: vrc7.write_register(clock(), addr, data); break;
+				case expansion_fds: fds.write_register(clock(), addr, data); break;
+				case expansion_mmc5: mmc5.write_register(clock(), addr, data); break;
+				case expansion_namco: namco.write_register(clock(), addr, data); break;
+				case expansion_sunsoft: sunsoft.write_register(clock(), addr, data); break;
 			}
 		}
 	}
@@ -180,43 +132,31 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 void Simple_Apu::start_seeking()
 {
 	seeking = true;
-	memset(shadow_regs_apu,  -1, sizeof(shadow_regs_apu));
-	memset(shadow_regs_vrc6, -1, sizeof(shadow_regs_vrc6));
-	memset(shadow_regs_fds,  -1, sizeof(shadow_regs_fds));
-	memset(shadow_regs_mmc5, -1, sizeof(shadow_regs_mmc5));
+	apu.start_seeking();
+
+	switch (expansion)
+	{
+		case expansion_vrc6: vrc6.start_seeking(); break;
+		case expansion_vrc7: vrc7.start_seeking(); break;
+		case expansion_fds: fds.start_seeking(); break;
+		case expansion_mmc5: mmc5.start_seeking(); break;
+		case expansion_namco: namco.start_seeking(); break;
+		case expansion_sunsoft: sunsoft.start_seeking(); break;
+	}
 }
 
 void Simple_Apu::stop_seeking()
 {
-	for (int i = 0; i < array_count(shadow_regs_apu); i++)
-	{
-		if (shadow_regs_apu[i] >= 0)
-			apu.write_register(clock(), Nes_Apu::shadow_reg_to_addr(i), shadow_regs_apu[i]);
-	}
+	apu.stop_seeking(time);
 
 	switch (expansion)
 	{
-		case expansion_vrc6:
-			for (int i = 0; i < array_count(shadow_regs_vrc6); i++)
-			{
-				if (shadow_regs_vrc6[i] >= 0)
-					apu.write_register(clock(), Nes_Vrc6::shadow_reg_to_addr(i), shadow_regs_vrc6[i]);
-			}
-			break;
-		case expansion_fds:
-			for (int i = 0; i < array_count(shadow_regs_fds); i++)
-			{
-				if (shadow_regs_fds[i] >= 0)
-					apu.write_register(clock(), Nes_Fds::shadow_reg_to_addr(i), shadow_regs_fds[i]);
-			}
-			break;
-		case expansion_mmc5:
-			for (int i = 0; i < array_count(shadow_regs_mmc5); i++)
-			{
-				if (shadow_regs_mmc5[i] >= 0)
-					apu.write_register(clock(), Nes_Mmc5::shadow_reg_to_addr(i), shadow_regs_mmc5[i]);
-			}
-			break;
+		case expansion_vrc6: vrc6.stop_seeking(time); break;
+		case expansion_vrc7: vrc7.stop_seeking(time); break;
+		case expansion_fds: fds.stop_seeking(time); break;
+		case expansion_mmc5: mmc5.stop_seeking(time); break;
+		case expansion_namco: namco.stop_seeking(time); break;
+		case expansion_sunsoft: sunsoft.stop_seeking(time); break;
 	}
 
 	seeking = false;
@@ -236,24 +176,12 @@ void Simple_Apu::end_frame()
 
 	switch (expansion)
 	{
-	case expansion_vrc6:
-		vrc6.end_frame(frame_length);
-		break;
-	case expansion_vrc7:
-		vrc7.end_frame(frame_length);
-		break;
-	case expansion_fds:
-		fds.end_frame(frame_length);
-		break;
-	case expansion_mmc5:
-		mmc5.end_frame(frame_length);
-		break;
-	case expansion_namco:
-		namco.end_frame(frame_length);
-		break;
-	case expansion_sunsoft:
-		sunsoft.end_frame(frame_length);
-		break;
+		case expansion_vrc6: vrc6.end_frame(frame_length); break;
+		case expansion_vrc7: vrc7.end_frame(frame_length); break;
+		case expansion_fds: fds.end_frame(frame_length); break;
+		case expansion_mmc5: mmc5.end_frame(frame_length); break;
+		case expansion_namco: namco.end_frame(frame_length); break;
+		case expansion_sunsoft: sunsoft.end_frame(frame_length); break;
 	}
 
 	buf.end_frame( frame_length );

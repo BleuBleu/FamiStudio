@@ -484,7 +484,7 @@ namespace FamiStudio
             foreach (var instrument in project.Instruments)
             {
                 var env = instrument.Envelopes[Envelope.Pitch];
-                if (!env.IsEmpty && !env.Relative)
+                if (env != null && !env.IsEmpty && !env.Relative)
                 {
                     // Make relative.
                     for (int i = env.Length - 1; i > 0; i--)
