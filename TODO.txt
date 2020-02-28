@@ -30,14 +30,12 @@
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion?
 - Binary FTM import:
-	- FDS
+	- All expansions.
 - Loop point should be optional.
 - All expansions.
-	- Namco # tracks
-	- Sunsoft C++
-	- MMC5 C++ cleanup.
-	- C++ seek for all. Will need to refactor seeking AGAIN.
-	- 
+	- Channel mutings, test on all.
+	- Finigh channel code, clean.
+	- Import/export all formats.
 
 TESTING:
 ========
