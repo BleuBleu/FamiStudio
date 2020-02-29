@@ -12,10 +12,10 @@ namespace FamiStudio
         public const int RegularCount = 4;
         public const int FdsWaveform = 4;
         public const int FdsModulation = 5;
-        public const int NamcoWaveform = 6;
+        public const int N163Waveform = 6;
         public const int Count = 7;
-        public static readonly string[] EnvelopeNames = { "Volume", "Arpeggio", "Pitch", "Duty Cycle", "FDS Waveform", "FDS Modulation Table", "Namco Waveform" };
-        public static readonly string[] EnvelopeShortNames = { "Volume", "Arpeggio", "Pitch", "DutyCycle", "FDSWave", "FDSMod", "NamcoWave" };
+        public static readonly string[] EnvelopeNames = { "Volume", "Arpeggio", "Pitch", "Duty Cycle", "FDS Waveform", "FDS Modulation Table", "N163 Waveform" };
+        public static readonly string[] EnvelopeShortNames = { "Volume", "Arpeggio", "Pitch", "DutyCycle", "FDSWave", "FDSMod", "N163Wave" };
 
         public const byte WavePresetSine     = 0;
         public const byte WavePresetTriangle = 1;
@@ -50,13 +50,13 @@ namespace FamiStudio
         {
             if (type == FdsWaveform)
                 maxLength = 64;
-            else if (type == FdsModulation || type == NamcoWaveform)
+            else if (type == FdsModulation || type == N163Waveform)
                 maxLength = 32;
             else 
                 maxLength = 256;
 
             values = new sbyte[maxLength];
-            canResize = type != FdsWaveform && type != FdsModulation && type != NamcoWaveform;
+            canResize = type != FdsWaveform && type != FdsModulation && type != N163Waveform;
             canRelease = type == Volume;
             canLoop = type <= DutyCycle;
             length = canResize ? 0 : maxLength;
@@ -351,7 +351,7 @@ namespace FamiStudio
                 min = 0;
                 max = 63;
             }
-            else if (type == NamcoWaveform)
+            else if (type == N163Waveform)
             {
                 min = 0;
                 max = 15;

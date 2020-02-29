@@ -234,19 +234,19 @@ namespace FamiStudio
                 case Channel.Mmc5Square1:
                 case Channel.Mmc5Square2:
                     return new ChannelStateMmc5Square(apuIdx, channelType);
-                case Channel.NamcoWave1:
-                case Channel.NamcoWave2:
-                case Channel.NamcoWave3:
-                case Channel.NamcoWave4:
-                case Channel.NamcoWave5:
-                case Channel.NamcoWave6:
-                case Channel.NamcoWave7:
-                case Channel.NamcoWave8:
-                    return new ChannelStateNamco(apuIdx, channelType, expNumChannels, pal);
-                case Channel.SunsoftSquare1:
-                case Channel.SunsoftSquare2:
-                case Channel.SunsoftSquare3:
-                    return new ChannelStateSunsoft(apuIdx, channelType, pal);
+                case Channel.N163Wave1:
+                case Channel.N163Wave2:
+                case Channel.N163Wave3:
+                case Channel.N163Wave4:
+                case Channel.N163Wave5:
+                case Channel.N163Wave6:
+                case Channel.N163Wave7:
+                case Channel.N163Wave8:
+                    return new ChannelStateN163(apuIdx, channelType, expNumChannels, pal);
+                case Channel.S5BSquare1:
+                case Channel.S5BSquare2:
+                case Channel.S5BSquare3:
+                    return new ChannelStateS5B(apuIdx, channelType, pal);
             }
 
             Debug.Assert(false);
@@ -282,9 +282,9 @@ namespace FamiStudio
                     return NesApu.APU_EXPANSION_FDS;
                 case Project.ExpansionMmc5:
                     return NesApu.APU_EXPANSION_MMC5;
-                case Project.ExpansionNamco:
+                case Project.ExpansionN163:
                     return NesApu.APU_EXPANSION_NAMCO;
-                case Project.ExpansionSunsoft:
+                case Project.ExpansionS5B:
                     return NesApu.APU_EXPANSION_SUNSOFT;
             }
 

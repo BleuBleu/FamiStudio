@@ -234,7 +234,7 @@ namespace FamiStudio
         };
 
         // Taken from FamiTracker (same transpose convention)
-        public static readonly ushort[] NoteTableNamco = new ushort[]
+        public static readonly ushort[] NoteTableN163 = new ushort[]
         {
             0x0000,
             0x0047, 0x004c, 0x0050, 0x0055, 0x005a, 0x005f, 0x0065, 0x006b, 0x0072, 0x0078, 0x0080, 0x0087,  // Octave 0
@@ -262,15 +262,15 @@ namespace FamiStudio
                     return NoteTableVrc6Saw;
                 case Channel.FdsWave:
                     return NoteTableFds;
-                case Channel.NamcoWave1:
-                case Channel.NamcoWave2:
-                case Channel.NamcoWave3:
-                case Channel.NamcoWave4:
-                case Channel.NamcoWave5:
-                case Channel.NamcoWave6:
-                case Channel.NamcoWave7:
-                case Channel.NamcoWave8:
-                    return NoteTableNamco;
+                case Channel.N163Wave1:
+                case Channel.N163Wave2:
+                case Channel.N163Wave3:
+                case Channel.N163Wave4:
+                case Channel.N163Wave5:
+                case Channel.N163Wave6:
+                case Channel.N163Wave7:
+                case Channel.N163Wave8:
+                    return NoteTableN163;
                 default:
                     return pal ? NoteTablePAL : NoteTableNTSC;
             }

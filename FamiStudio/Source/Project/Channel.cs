@@ -39,17 +39,17 @@ namespace FamiStudio
         public const int Mmc5Square1 = 15;
         public const int Mmc5Square2 = 16;
         public const int Mmc5Dpcm = 17; 
-        public const int NamcoWave1 = 18;
-        public const int NamcoWave2 = 19;
-        public const int NamcoWave3 = 20;
-        public const int NamcoWave4 = 21;
-        public const int NamcoWave5 = 22;
-        public const int NamcoWave6 = 23;
-        public const int NamcoWave7 = 24;
-        public const int NamcoWave8 = 25;
-        public const int SunsoftSquare1 = 26;
-        public const int SunsoftSquare2 = 27;
-        public const int SunsoftSquare3 = 28;
+        public const int N163Wave1 = 18;
+        public const int N163Wave2 = 19;
+        public const int N163Wave3 = 20;
+        public const int N163Wave4 = 21;
+        public const int N163Wave5 = 22;
+        public const int N163Wave6 = 23;
+        public const int N163Wave7 = 24;
+        public const int N163Wave8 = 25;
+        public const int S5BSquare1 = 26;
+        public const int S5BSquare2 = 27;
+        public const int S5BSquare3 = 28;
         public const int Count = 29;
 
         public static string[] ChannelNames =
@@ -72,17 +72,17 @@ namespace FamiStudio
             "Square 1", // MMC5
             "Square 2", // MMC5
             "DPCM", // MMC5
-            "Wave 1", // Namco
-            "Wave 2", // Namco
-            "Wave 3", // Namco
-            "Wave 4", // Namco
-            "Wave 5", // Namco
-            "Wave 6", // Namco
-            "Wave 7", // Namco
-            "Wave 8", // Namco
-            "Square 1", // Sunsoft
-            "Square 2", // Sunsoft
-            "Square 3", // Sunsoft
+            "Wave 1", // N163
+            "Wave 2", // N163
+            "Wave 3", // N163
+            "Wave 4", // N163
+            "Wave 5", // N163
+            "Wave 6", // N163
+            "Wave 7", // N163
+            "Wave 8", // N163
+            "Square 1", // S5B
+            "Square 2", // S5B
+            "Square 3", // S5B
         };
 
         public static string[] ChannelExportNames =
@@ -105,17 +105,17 @@ namespace FamiStudio
             "MMC5Square1", // MMC5
             "MMC5Square2", // MMC5
             "MMC5DPCM", // MMC5
-            "NamcoWave1", // Namco
-            "NamcoWave2", // Namco
-            "NamcoWave3", // Namco
-            "NamcoWave4", // Namco
-            "NamcoWave5", // Namco
-            "NamcoWave6", // Namco
-            "NamcoWave7", // Namco
-            "NamcoWave8", // Namco
-            "SunsoftSquare1", // Sunsoft
-            "SunsoftSquare2", // Sunsoft
-            "SunsoftSquare3", // Sunsoft
+            "N163Wave1", // N163
+            "N163Wave2", // N163
+            "N163Wave3", // N163
+            "N163Wave4", // N163
+            "N163Wave5", // N163
+            "N163Wave6", // N163
+            "N163Wave7", // N163
+            "N163Wave8", // N163
+            "S5BSquare1", // S5B
+            "S5BSquare2", // S5B
+            "S5BSquare3", // S5B
         };
 
         public Channel()
@@ -162,11 +162,11 @@ namespace FamiStudio
             if (type >= Mmc5Square1 && type <= Mmc5Square2)
                 return true;
 
-            if (instrument.ExpansionType == Project.ExpansionNamco && type >= NamcoWave1 && type <= NamcoWave8)
+            if (instrument.ExpansionType == Project.ExpansionN163 && type >= N163Wave1 && type <= N163Wave8)
                 return true;
 
             // MATTT: Will we want special instrument for S5B? Gimmick doesnt use noise or envelopes I think.
-            if (instrument.ExpansionType == Project.ExpansionSunsoft && type >= SunsoftSquare1 && type <= SunsoftSquare3)
+            if (instrument.ExpansionType == Project.ExpansionS5B && type >= S5BSquare1 && type <= S5BSquare3)
                 return true;
 
             return false;
@@ -481,10 +481,10 @@ namespace FamiStudio
                 return ExpansionAudioStart + type - Mmc5Square1;
             if (type == Mmc5Dpcm)
                 return -1;
-            if (type >= NamcoWave1 && type <= NamcoWave8)
-                return ExpansionAudioStart + type - NamcoWave1;
-            if (type >= SunsoftSquare1 && type <= SunsoftSquare3)
-                return ExpansionAudioStart + type - SunsoftSquare1;
+            if (type >= N163Wave1 && type <= N163Wave8)
+                return ExpansionAudioStart + type - N163Wave1;
+            if (type >= S5BSquare1 && type <= S5BSquare3)
+                return ExpansionAudioStart + type - S5BSquare1;
             Debug.Assert(false);
             return -1;
         }

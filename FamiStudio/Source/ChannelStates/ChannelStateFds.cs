@@ -5,8 +5,6 @@ namespace FamiStudio
 {
     class ChannelStateFds : ChannelState
     {
-        private bool first = true;
-
         public ChannelStateFds(int apuIdx, int channelIdx) : base(apuIdx, channelIdx, false)
         {
             maximumPeriod = NesApu.MaximumPeriod12Bit;
@@ -35,8 +33,6 @@ namespace FamiStudio
 
                 for (int i = 0; i < 0x20; ++i)
                     WriteRegister(NesApu.FDS_MOD_TABLE, mod[i] & 0xff);
-
-                first = true;
             }
         }
 
@@ -56,14 +52,18 @@ namespace FamiStudio
                 WriteRegister(NesApu.FDS_FREQ_HI, (period >> 8) & 0x0f);
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80 | (volume << 2));
 
-                if (first)
+                if (note.Instrument != null)
                 {
-                    WriteRegister(NesApu.FDS_SWEEP_BIAS, 0);
-                    WriteRegister(NesApu.FDS_MOD_LO, 20);
-                    WriteRegister(NesApu.FDS_MOD_HI,  0);
-                    WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80 | 20);
+                    Debug.Assert(note.Instrument.ExpansionType == Project.ExpansionFds);
 
-                    first = false;
+                    WriteRegister(NesApu.FDS_SWEEP_BIAS, 0); // MATTT: Only do that on new notes.
+                    WriteRegister(NesApu.FDS_MOD_LO, (note.Instrument.FdsModRate >> 0) & 0xff);
+                    WriteRegister(NesApu.FDS_MOD_HI, (note.Instrument.FdsModRate >> 8) & 0xff);
+                    WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80 | note.Instrument.FdsModDepth); // MATTT: My modulation sounds like shit.
+                }
+                else
+                {
+                    WriteRegister(NesApu.FDS_MOD_HI, 0x80);
                 }
             }
         }

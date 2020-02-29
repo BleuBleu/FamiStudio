@@ -31,6 +31,7 @@ namespace FamiStudio
 
         private delegate bool ReadBlockDelegate(int idx);
 
+        private bool samplesLoaded;
         private int blockVersion;
         private int blockSize;
         private byte[] bytes;
@@ -104,14 +105,14 @@ namespace FamiStudio
             return true;
         }
 
-        private bool ReadInstrument2A03(Instrument instrument, ref int idx, bool readSamples)
+        private void ReadCommonEnvelopes(Instrument instrument, ref int idx)
         {
             idx += sizeof(int); // SEQ_COUNT
 
             for (int i = 0; i < SequenceCount; ++i)
             {
                 var enabled = bytes[idx++];
-                var index   = bytes[idx++];
+                var index = bytes[idx++];
 
                 if (enabled != 0)
                 {
@@ -124,9 +125,42 @@ namespace FamiStudio
                     }
                 }
             }
+        }
 
-            // MATTT: Read from the first instrument that has sample. Instrument 00 might not even be 2A03.
-            if (readSamples)
+        private void ReadSingleEnvelope(Envelope env, ref int idx)
+        {
+            env.Length = bytes[idx++];
+
+            int loopPoint = bytes[idx++];
+            int releasePoint = bytes[idx++];
+
+            if (releasePoint >= 0 && !env.CanRelease)
+                releasePoint = -1;
+
+            // FamiTracker allows envelope with release with no loop. We dont allow that.
+            if (env.CanRelease && releasePoint != -1)
+            {
+                if (loopPoint == -1)
+                    loopPoint = releasePoint;
+                if (releasePoint != -1)
+                    releasePoint++;
+            }
+
+            env.Loop = loopPoint;
+            env.Release = releasePoint;
+
+            idx++; // Skip settings.
+
+            for (int i = 0; i < env.Length; i++)
+                env.Values[i] = (sbyte)bytes[idx++];
+        }
+
+        private void ReadInstrument2A03(Instrument instrument, ref int idx)
+        {
+            ReadCommonEnvelopes(instrument, ref idx);
+
+            // We only consider the first 2A03 instrument with samples. Rest is ignored.
+            if (!samplesLoaded)
             {
                 for (int i = 0; i < OctaveRange; ++i)
                 {
@@ -142,7 +176,10 @@ namespace FamiStudio
                         {
                             var sample = samples[index - 1];
                             if (sample != null && sample.Data != null)
+                            {
+                                samplesLoaded = true;
                                 project.MapDPCMSample(i * 12 + j + 1, sample, pitch & 0x0f, (pitch & 0x80) != 0);
+                            }
                         }
 
                     }
@@ -152,32 +189,69 @@ namespace FamiStudio
             {
                 idx += OctaveRange * 12 * (blockVersion > 5 ? 3 : 2);
             }
-
-            return true;
         }
 
-        private bool ReadInstrumentVRC6(Instrument instrument, ref int idx)
+        private void ReadInstrumentVRC6(Instrument instrument, ref int idx)
         {
-            idx += sizeof(int); // SEQ_COUNT
+            ReadCommonEnvelopes(instrument, ref idx);
+        }
 
-            for (int i = 0; i < SequenceCount; ++i)
+        private void ReadInstrumentVRC7(Instrument instrument, ref int idx)
+        {
+            instrument.Vrc7Patch = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+
+            if (instrument.Vrc7Patch == 0)
             {
-                var enabled = bytes[idx++];
-                var index   = bytes[idx++];
-
-                if (enabled != 0)
-                {
-                    var envType = EnvelopeTypeLookup[i];
-
-                    if (envType != Envelope.Count)
-                    {
-                        Debug.Assert(instrument.Envelopes[envType] != null);
-                        instrument.Envelopes[envType] = envelopes[index, i];
-                    }
-                }
+                for (int i = 0; i < 8; ++i)
+                    instrument.Vrc7PatchRegs[i] = bytes[idx++];
             }
+            else
+            {
+                idx += 8;
+            }
+        }
 
-            return true;
+        private void ReadInstrumentFds(Instrument instrument, ref int idx)
+        {
+            var wavEnv = instrument.Envelopes[Envelope.FdsWaveform];
+            var modEnv = instrument.Envelopes[Envelope.FdsModulation];
+
+            for (int i = 0; i < 0x40; i++)
+                wavEnv.Values[i] = (sbyte)bytes[idx++];
+
+            for (int i = 0; i < 0x20; i++)
+                wavEnv.Values[i] = (sbyte)bytes[idx++];
+
+            instrument.FdsModRate  = (ushort)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+            instrument.FdsModDepth = (byte)  BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+          /*instrument.FdsModDelay = (byte)  BitConverter.ToInt32(bytes, idx);*/ idx += sizeof(int);
+
+            ReadSingleEnvelope(instrument.Envelopes[Envelope.Volume],   ref idx);
+            ReadSingleEnvelope(instrument.Envelopes[Envelope.Arpeggio], ref idx);
+            ReadSingleEnvelope(instrument.Envelopes[Envelope.Pitch],    ref idx);
+        }
+
+        private void ReadInstrumentN163(Instrument instrument, ref int idx)
+        {
+            ReadCommonEnvelopes(instrument, ref idx);
+
+            var fileWaveSize = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+
+            instrument.N163WaveSize = (byte)fileWaveSize;
+            instrument.N163WavePos  = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+
+            var waveCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int); 
+
+            for (int j = 0; j < fileWaveSize; j++)
+                instrument.Envelopes[Envelope.N163Waveform].Values[j] = (sbyte)bytes[idx++];
+
+            // Skip any extra waves.
+            idx += (waveCount - 1) * fileWaveSize;
+        }
+
+        private void ReadInstrumentS5B(Instrument instrument, ref int idx)
+        {
+            ReadCommonEnvelopes(instrument, ref idx);
         }
 
         private bool ReadInstruments(int idx)
@@ -195,8 +269,12 @@ namespace FamiStudio
 
                 switch (type)
                 {
-                    case Project.ExpansionNone: ReadInstrument2A03(instrument, ref idx, index == 0); break;
-                    case Project.ExpansionVrc6: ReadInstrumentVRC6(instrument, ref idx); break;
+                    case Project.ExpansionNone:    ReadInstrument2A03(instrument,  ref idx); break;
+                    case Project.ExpansionVrc6:    ReadInstrumentVRC6(instrument,  ref idx); break;
+                    case Project.ExpansionVrc7:    ReadInstrumentVRC7(instrument,  ref idx); break;
+                    case Project.ExpansionFds:     ReadInstrumentFds(instrument,   ref idx); break;
+                    case Project.ExpansionN163:    ReadInstrumentN163(instrument,  ref idx); break;
+                    case Project.ExpansionS5B:     ReadInstrumentS5B(instrument,   ref idx); break;
                     default:
                         return false;
                 }

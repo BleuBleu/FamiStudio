@@ -93,7 +93,7 @@ namespace FamiStudio
             DutyCycle = Envelope.DutyCycle,
             FdsWaveformEnvelope = Envelope.FdsWaveform,
             FdsModulationEnvelope = Envelope.FdsModulation,
-            NamcoWaveformEnvelope = Envelope.NamcoWaveform,
+            N163WaveformEnvelope = Envelope.N163Waveform,
             EnvelopeMax = Envelope.Count,
 
             // Other buttons
@@ -113,7 +113,7 @@ namespace FamiStudio
             Envelope.DutyCycle,
             Envelope.FdsModulation,
             Envelope.FdsWaveform,
-            Envelope.NamcoWaveform
+            Envelope.N163Waveform
         };
 
         class Button
@@ -421,8 +421,8 @@ namespace FamiStudio
             bmpInstrument[Project.ExpansionVrc7]    = g.CreateBitmapFromResource("InstrumentKonami");
             bmpInstrument[Project.ExpansionFds]     = g.CreateBitmapFromResource("InstrumentFds");
             bmpInstrument[Project.ExpansionMmc5]    = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[Project.ExpansionNamco]   = g.CreateBitmapFromResource("InstrumentNamco");
-            bmpInstrument[Project.ExpansionSunsoft] = g.CreateBitmapFromResource("InstrumentSunsoft");
+            bmpInstrument[Project.ExpansionN163]    = g.CreateBitmapFromResource("InstrumentNamco");
+            bmpInstrument[Project.ExpansionS5B]     = g.CreateBitmapFromResource("InstrumentSunsoft");
 
             bmpEnvelopes[Envelope.Volume]        = g.CreateBitmapFromResource("Volume");
             bmpEnvelopes[Envelope.Arpeggio]      = g.CreateBitmapFromResource("Arpeggio");
@@ -430,7 +430,7 @@ namespace FamiStudio
             bmpEnvelopes[Envelope.DutyCycle]     = g.CreateBitmapFromResource("Duty");
             bmpEnvelopes[Envelope.FdsWaveform]   = g.CreateBitmapFromResource("Wave");
             bmpEnvelopes[Envelope.FdsModulation] = g.CreateBitmapFromResource("Wave");
-            bmpEnvelopes[Envelope.NamcoWaveform] = g.CreateBitmapFromResource("Wave");
+            bmpEnvelopes[Envelope.N163Waveform]  = g.CreateBitmapFromResource("Wave");
 
             bmpExpand = g.CreateBitmapFromResource("InstrumentExpand");
             bmpExpanded = g.CreateBitmapFromResource("InstrumentExpanded");
@@ -1115,7 +1115,7 @@ namespace FamiStudio
                     dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
                     dlg.Properties.AddStringList("Expansion Audio:", Project.GetAllowedExpansionNames(), project.ExpansionAudioName); // 3
                     dlg.Properties.AddIntegerRange("Channels:", project.ExpansionNumChannels, 1, 8); // 4 (Namco)
-                    dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionNamco);
+                    dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionN163);
                     dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
                     dlg.Properties.Build();
 
@@ -1241,7 +1241,7 @@ namespace FamiStudio
         {
             if (idx == 3)
             {
-                props.SetPropertyEnabled(4, (string)value == Project.ExpansionNames[Project.ExpansionNamco]);
+                props.SetPropertyEnabled(4, (string)value == Project.ExpansionNames[Project.ExpansionN163]);
             }
         }
 

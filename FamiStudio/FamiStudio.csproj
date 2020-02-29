@@ -90,8 +90,8 @@
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateFds.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateMmc5Square.cs" />
-    <Compile Include="Source\ChannelStates\ChannelStateNamco.cs" />
-    <Compile Include="Source\ChannelStates\ChannelStateSunsoft.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateN163.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateS5B.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />

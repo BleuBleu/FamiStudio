@@ -18,12 +18,12 @@ namespace FamiStudio
         private byte fdsModPreset = Envelope.WavePresetFlat;
         private ushort fdsModRate;
         private byte fdsModDepth;
-        private byte fdsModDelay;
+        //private byte fdsModDelay;
 
-        // Namco
-        private byte namcoWavePreset = Envelope.WavePresetSine;
-        private byte namcoWaveSize = 32;
-        private byte namcoWavePos = 0;
+        // N163
+        private byte n163WavePreset = Envelope.WavePresetSine;
+        private byte n163WaveSize = 32;
+        private byte n163WavePos = 0;
 
         // VRC7
         private byte vrc7Patch = 1;
@@ -65,9 +65,9 @@ namespace FamiStudio
                 envelopes[Envelope.FdsWaveform].SetFromPreset(Envelope.FdsWaveform, fdsWavPreset);
                 envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, fdsModPreset);
             }
-            else if (expansion == Project.ExpansionNamco)
+            else if (expansion == Project.ExpansionN163)
             {
-                envelopes[Envelope.NamcoWaveform].SetFromPreset(Envelope.NamcoWaveform, namcoWavePreset);
+                envelopes[Envelope.N163Waveform].SetFromPreset(Envelope.N163Waveform, n163WavePreset);
             }
         }
 
@@ -89,9 +89,9 @@ namespace FamiStudio
             {
                 return expansion == Project.ExpansionFds;
             }
-            else if (envelopeType == Envelope.NamcoWaveform)
+            else if (envelopeType == Envelope.N163Waveform)
             {
-                return expansion == Project.ExpansionNamco;
+                return expansion == Project.ExpansionN163;
             }
             else if (envelopeType == Envelope.DutyCycle)
             {
@@ -102,35 +102,31 @@ namespace FamiStudio
             return false;
         }
 
-        public byte NamcoWavePreset
+        public byte N163WavePreset
         {
-            get { return namcoWavePreset; }
+            get { return n163WavePreset; }
             set
             {
-                namcoWavePreset = value;
-                UpdateNamcoWaveEnvelope();
+                n163WavePreset = value;
+                UpdateN163WaveEnvelope();
             }
         }
 
-        public byte NamcoWaveSize
+        public byte N163WaveSize
         {
-            get { return namcoWaveSize; }
+            get { return n163WaveSize; }
             set
             {
-                namcoWaveSize = value;
-                namcoWavePos = (byte)(namcoWavePos & ~(namcoWaveSize - 1));
-                UpdateNamcoWaveEnvelope();
+                n163WaveSize = (byte)Utils.NextPowerOfTwo(value);
+                n163WavePos  = (byte)(n163WavePos & ~(n163WaveSize - 1));
+                UpdateN163WaveEnvelope();
             }
         }
 
-        public byte NamcoWavePos
+        public byte N163WavePos
         {
-            get { return namcoWavePos; }
-            set
-            {
-                if ((value % namcoWaveSize) == 0)
-                    namcoWavePos = value;
-            }
+            get { return n163WavePos; }
+            set { n163WavePos = (byte)(value & ~(n163WaveSize - 1)); }
         }
 
         public byte Vrc7Patch
@@ -144,10 +140,14 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateNamcoWaveEnvelope()
+        public ushort FdsModRate  { get => fdsModRate;  set => fdsModRate  = value; }
+        public byte   FdsModDepth { get => fdsModDepth; set => fdsModDepth = value; }
+        //public byte FdsModDelay => fdsModDelay;
+
+        private void UpdateN163WaveEnvelope()
         {
-            envelopes[Envelope.NamcoWaveform].MaxLength = namcoWaveSize;
-            envelopes[Envelope.NamcoWaveform].SetFromPreset(Envelope.NamcoWaveform, namcoWavePreset);
+            envelopes[Envelope.N163Waveform].MaxLength = n163WaveSize;
+            envelopes[Envelope.N163Waveform].SetFromPreset(Envelope.N163Waveform, n163WavePreset);
         }
 
         public void SerializeState(ProjectBuffer buffer)
@@ -176,12 +176,12 @@ namespace FamiStudio
                             buffer.Serialize(ref fdsModPreset);
                             buffer.Serialize(ref fdsModRate);
                             buffer.Serialize(ref fdsModDepth); 
-                            buffer.Serialize(ref fdsModDelay);
+                            //buffer.Serialize(ref fdsModDelay);
                             break;
-                        case Project.ExpansionNamco:
-                            buffer.Serialize(ref namcoWavePreset);
-                            buffer.Serialize(ref namcoWaveSize);
-                            buffer.Serialize(ref namcoWavePos);
+                        case Project.ExpansionN163:
+                            buffer.Serialize(ref n163WavePreset);
+                            buffer.Serialize(ref n163WaveSize);
+                            buffer.Serialize(ref n163WavePos);
                             break;
                         case Project.ExpansionVrc7:
                             buffer.Serialize(ref vrc7Patch);
@@ -248,12 +248,12 @@ namespace FamiStudio
         public const int ParamFdsModulationPreset = 1;
         public const int ParamFdsModulationSpeed = 2;
         public const int ParamFdsModulationDepth = 3;
-        public const int ParamFdsModulationDelay = 4;
+        //public const int ParamFdsModulationDelay = 4;
 
-        // Namco
-        public const int ParamNamcoWavePreset = 5;
-        public const int ParamNamcoWaveSize = 6;
-        public const int ParamNamcoWavePos = 7;
+        // N163
+        public const int ParamN163WavePreset = 5;
+        public const int ParamN163WaveSize = 6;
+        public const int ParamN163WavePos = 7;
 
         // VRC7
         public const int ParamVrc7Patch = 8;
@@ -293,7 +293,7 @@ namespace FamiStudio
             new RealTimeParamInfo() { name = "Mod Depth",                  max = 63 },
             new RealTimeParamInfo() { name = "Mod Delay",                  max = 255 },
 
-            // Namco
+            // N163
             new RealTimeParamInfo() { name = "Wave Preset",                max = Envelope.WavePresetMax - 1, list = true },
             new RealTimeParamInfo() { name = "Wave Size",                  min = 4, max = 32, list = true },
             new RealTimeParamInfo() { name = "Wave Position",              max = 124, list = true },
@@ -328,12 +328,12 @@ namespace FamiStudio
 
         static readonly int[] FdsParams = new[]
         {
-            ParamFdsWavePreset, ParamFdsModulationPreset, ParamFdsModulationSpeed, ParamFdsModulationDepth, ParamFdsModulationDelay
+            ParamFdsWavePreset, ParamFdsModulationPreset, ParamFdsModulationSpeed, ParamFdsModulationDepth //, ParamFdsModulationDelay
         };
 
-        static readonly int[] NamcoParams = new[]
+        static readonly int[] N163Params = new[]
         {
-            ParamNamcoWavePreset, ParamNamcoWaveSize, ParamNamcoWavePos
+            ParamN163WavePreset, ParamN163WaveSize, ParamN163WavePos
         };
 
         static readonly int[] Vrc7Params = new[]
@@ -404,7 +404,7 @@ namespace FamiStudio
             switch (expansion)
             {
                 case Project.ExpansionFds   : return FdsParams;
-                case Project.ExpansionNamco : return NamcoParams;
+                case Project.ExpansionN163  : return N163Params;
                 case Project.ExpansionVrc7  : return Vrc7Params;
             }
 
@@ -430,12 +430,12 @@ namespace FamiStudio
                 case ParamFdsModulationPreset    : return fdsModPreset;
                 case ParamFdsModulationSpeed     : return fdsModRate; 
                 case ParamFdsModulationDepth     : return fdsModDepth;
-                case ParamFdsModulationDelay     : return fdsModDelay;
+                //case ParamFdsModulationDelay     : return fdsModDelay;
                                                  
-                // Namco                         
-                case ParamNamcoWavePreset        : return namcoWavePreset;
-                case ParamNamcoWaveSize          : return namcoWaveSize;
-                case ParamNamcoWavePos           : return namcoWavePos;
+                // N163                         
+                case ParamN163WavePreset        : return n163WavePreset;
+                case ParamN163WaveSize          : return n163WaveSize;
+                case ParamN163WavePos           : return n163WavePos;
                                                  
                 // VRC7                          
                 case ParamVrc7Patch              : return vrc7Patch;
@@ -492,12 +492,12 @@ namespace FamiStudio
                     break;
                 case ParamFdsModulationSpeed: fdsModRate  = (ushort)val; break;
                 case ParamFdsModulationDepth: fdsModDepth = (byte)val; break;
-                case ParamFdsModulationDelay: fdsModDelay = (byte)val; break;
+                //case ParamFdsModulationDelay: fdsModDelay = (byte)val; break;
 
-                // Namco
-                case ParamNamcoWavePreset: NamcoWavePreset = (byte)val; break;
-                case ParamNamcoWavePos:    NamcoWavePos    = (byte)val; break;
-                case ParamNamcoWaveSize:   NamcoWaveSize   = (byte)val; break;
+                // N163
+                case ParamN163WavePreset: N163WavePreset = (byte)val; break;
+                case ParamN163WavePos:    N163WavePos    = (byte)val; break;
+                case ParamN163WaveSize:   N163WaveSize   = (byte)val; break;
 
                 // VRC7
                 case ParamVrc7Patch:
@@ -541,8 +541,8 @@ namespace FamiStudio
                 case ParamFdsWavePreset:       return Envelope.PresetNames[fdsWavPreset];
                 case ParamFdsModulationPreset: return Envelope.PresetNames[fdsModPreset];
 
-                // Namco
-                case ParamNamcoWavePreset:     return Envelope.PresetNames[namcoWavePreset];
+                // N163
+                case ParamN163WavePreset:     return Envelope.PresetNames[n163WavePreset];
 
                 // VRC7
                 case ParamVrc7Patch:           return Vrc7Patches[vrc7Patch].name;
@@ -555,10 +555,10 @@ namespace FamiStudio
         {
             switch (param)
             {
-                case ParamNamcoWaveSize:
+                case ParamN163WaveSize:
                     return val <= 4 ? 4 : val /= 2;
-                case ParamNamcoWavePos:
-                    return val == 0 ? 0 : val - namcoWaveSize;
+                case ParamN163WavePos:
+                    return val == 0 ? 0 : val - n163WaveSize;
                 default:
                     return Utils.Clamp(val - 1, GetRealTimeParamMinValue(param), GetRealTimeParamMaxValue(param));
             }
@@ -568,10 +568,10 @@ namespace FamiStudio
         {
             switch (param)
             {
-                case ParamNamcoWaveSize:
+                case ParamN163WaveSize:
                     return val >= 32 ? 32 : val *= 2;
-                case ParamNamcoWavePos:
-                    return val >= 128 - namcoWaveSize ? 128 - namcoWaveSize : val + namcoWaveSize;
+                case ParamN163WavePos:
+                    return val >= 128 - n163WaveSize ? 128 - n163WaveSize : val + n163WaveSize;
                 default:
                     return Utils.Clamp(val + 1, GetRealTimeParamMinValue(param), GetRealTimeParamMaxValue(param));
             }

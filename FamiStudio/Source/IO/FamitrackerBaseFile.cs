@@ -65,14 +65,14 @@ namespace FamiStudio
             Channel.Mmc5Square1,    // CHANID_MMC5_SQUARE1
             Channel.Mmc5Square2,    // CHANID_MMC5_SQUARE2
             Channel.Mmc5Dpcm,       // CHANID_MMC5_VOICE
-            Channel.NamcoWave1,     // CHANID_N163_CHAN1
-            Channel.NamcoWave2,     // CHANID_N163_CHAN2
-            Channel.NamcoWave3,     // CHANID_N163_CHAN3
-            Channel.NamcoWave4,     // CHANID_N163_CHAN4
-            Channel.NamcoWave5,     // CHANID_N163_CHAN5
-            Channel.NamcoWave6,     // CHANID_N163_CHAN6
-            Channel.NamcoWave7,     // CHANID_N163_CHAN7
-            Channel.NamcoWave8,     // CHANID_N163_CHAN8
+            Channel.N163Wave1,      // CHANID_N163_CHAN1
+            Channel.N163Wave2,      // CHANID_N163_CHAN2
+            Channel.N163Wave3,      // CHANID_N163_CHAN3
+            Channel.N163Wave4,      // CHANID_N163_CHAN4
+            Channel.N163Wave5,      // CHANID_N163_CHAN5
+            Channel.N163Wave6,      // CHANID_N163_CHAN6
+            Channel.N163Wave7,      // CHANID_N163_CHAN7
+            Channel.N163Wave8,      // CHANID_N163_CHAN8
             Channel.FdsWave,        // CHANID_FDS
             Channel.Vrc7Fm1,        // CHANID_VRC7_CH1
             Channel.Vrc7Fm2,        // CHANID_VRC7_CH2
@@ -80,9 +80,9 @@ namespace FamiStudio
             Channel.Vrc7Fm4,        // CHANID_VRC7_CH4
             Channel.Vrc7Fm5,        // CHANID_VRC7_CH5
             Channel.Vrc7Fm6,        // CHANID_VRC7_CH6
-            Channel.SunsoftSquare1, // CHANID_S5B_CH1
-            Channel.SunsoftSquare2, // CHANID_S5B_CH2
-            Channel.SunsoftSquare3  // CHANID_S5B_CH3
+            Channel.S5BSquare1,     // CHANID_S5B_CH1
+            Channel.S5BSquare2,     // CHANID_S5B_CH2
+            Channel.S5BSquare3      // CHANID_S5B_CH3
         };
 
         protected static int[] InstrumentTypeLookup =
@@ -92,8 +92,8 @@ namespace FamiStudio
             Project.ExpansionVrc6,   // INST_VRC6
             Project.ExpansionVrc7,   // INST_VRC7
             Project.ExpansionFds,    // INST_FDS
-            Project.ExpansionNamco,  // INST_N163
-            Project.ExpansionSunsoft // INST_S5B
+            Project.ExpansionN163,  // INST_N163
+            Project.ExpansionS5B // INST_S5B
         };
 
         protected static int[] EnvelopeTypeLookup =
@@ -124,8 +124,8 @@ namespace FamiStudio
                 case SndChip_VRC7 : return Project.ExpansionVrc7;
                 case SndChip_FDS  : return Project.ExpansionFds;
                 case SndChip_MMC5 : return Project.ExpansionMmc5;
-                case SndChip_N163 : return Project.ExpansionNamco;
-                case SndChip_S5B  : return Project.ExpansionSunsoft;
+                case SndChip_N163 : return Project.ExpansionN163;
+                case SndChip_S5B  : return Project.ExpansionS5B;
             }
 
             return -1; // We dont support exotic combinations.

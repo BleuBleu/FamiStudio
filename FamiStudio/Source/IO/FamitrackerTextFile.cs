@@ -167,12 +167,12 @@ namespace FamiStudio
                 else if (line.StartsWith("N163CHANNELS"))
                 {
                     var numExpChannels = int.Parse(line.Substring(12).Trim(' ', '"'));
-                    project.SetExpansionAudio(Project.ExpansionNamco, numExpChannels);
+                    project.SetExpansionAudio(Project.ExpansionN163, numExpChannels);
                 }
                 else if (line.StartsWith("MACRO"))
                 {
                     var expansion = line.StartsWith("MACROVRC6") ? Project.ExpansionVrc6  :
-                                    line.StartsWith("MACRON163") ? Project.ExpansionNamco : Project.ExpansionNone;
+                                    line.StartsWith("MACRON163") ? Project.ExpansionN163 : Project.ExpansionNone;
 
                     var halves = line.Substring(line.IndexOf(' ')).Split(':');
                     var param = halves[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -246,7 +246,7 @@ namespace FamiStudio
                 else if (line.StartsWith("INST2A03") || line.StartsWith("INSTVRC6") || line.StartsWith("INSTN163"))
                 {
                     var expansion = line.StartsWith("INSTVRC6") ? Project.ExpansionVrc6  : 
-                                    line.StartsWith("INSTN163") ? Project.ExpansionNamco : Project.ExpansionNone;
+                                    line.StartsWith("INSTN163") ? Project.ExpansionN163 : Project.ExpansionNone;
 
                     var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
 
@@ -258,10 +258,10 @@ namespace FamiStudio
 
                     var instrument = CreateUniquelyNamedInstrument(expansion, param[param.Length - 1]);
 
-                    if (expansion == Project.ExpansionNamco)
+                    if (expansion == Project.ExpansionN163)
                     {
-                        instrument.NamcoWaveSize = (byte)Utils.NextPowerOfTwo(int.Parse(param[6]));
-                        instrument.NamcoWavePos  = byte.Parse(param[7]);
+                        instrument.N163WaveSize = byte.Parse(param[6]);
+                        instrument.N163WavePos  = byte.Parse(param[7]);
                     }
 
                     if (vol >= 0 && instrument.IsEnvelopeActive(Envelope.Volume))    instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, 0][vol].ShallowClone();
@@ -350,7 +350,7 @@ namespace FamiStudio
                     // TODO: We could create different instruments for each wave.
                     if (waveIdx == 0)
                     {
-                        var env = instruments[instIdx].Envelopes[Envelope.NamcoWaveform];
+                        var env = instruments[instIdx].Envelopes[Envelope.N163Waveform];
 
                         for (int j = 3; j < param.Length; j++)
                             env.Values[j - 3] = sbyte.Parse(param[j]);
@@ -647,14 +647,14 @@ namespace FamiStudio
             lines.Add("SPLIT           21");
             lines.Add("");
 
-            if (project.ExpansionAudio == Project.ExpansionNamco)
+            if (project.ExpansionAudio == Project.ExpansionN163)
             {
                 lines.Add("# Namco 163 global settings");
                 lines.Add($"N163CHANNELS    {project.ExpansionNumChannels}");
                 lines.Add("");
 
                 // The text format always export all 8 channels, even if there are less.
-                project.SetExpansionAudio(Project.ExpansionNamco, 8);
+                project.SetExpansionAudio(Project.ExpansionN163, 8);
             }
 
             lines.Add("# Macros");
@@ -669,7 +669,7 @@ namespace FamiStudio
             }
 
             if (project.ExpansionAudio == Project.ExpansionVrc6 ||
-                project.ExpansionAudio == Project.ExpansionNamco)
+                project.ExpansionAudio == Project.ExpansionN163)
             {
                 var suffix = project.ExpansionAudio == Project.ExpansionVrc6 ? "VRC6" : "N163";
 
@@ -726,11 +726,11 @@ namespace FamiStudio
                 {
                     lines.Add($"INSTVRC7{i,4}{instrument.Vrc7Patch,4} {String.Join(" ", instrument.Vrc7PatchRegs.Select(x => $"{x:X2}"))} \"{instrument.Name}\"");
                 }
-                else if (instrument.ExpansionType == Project.ExpansionNamco)
+                else if (instrument.ExpansionType == Project.ExpansionN163)
                 {
-                    lines.Add($"INSTN163{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4}{instrument.NamcoWaveSize,4}{instrument.NamcoWavePos,4}{1,4} \"{instrument.Name}\"");
+                    lines.Add($"INSTN163{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4}{instrument.N163WaveSize,4}{instrument.N163WavePos,4}{1,4} \"{instrument.Name}\"");
 
-                    var wavEnv = instrument.Envelopes[Envelope.NamcoWaveform];
+                    var wavEnv = instrument.Envelopes[Envelope.N163Waveform];
                     lines.Add($"N163WAVE{i,4}{0,6} : {string.Join(" ", wavEnv.Values.Take(wavEnv.Length))}");
                 }
                 else if (instrument.ExpansionType == Project.ExpansionFds)

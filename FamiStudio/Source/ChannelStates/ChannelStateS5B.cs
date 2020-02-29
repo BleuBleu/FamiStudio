@@ -2,13 +2,13 @@
 
 namespace FamiStudio
 {
-    public class ChannelStateSunsoft : ChannelState
+    public class ChannelStateS5B : ChannelState
     {
         int channelIdx = 0;
 
-        public ChannelStateSunsoft(int apuIdx, int channelType, bool pal) : base(apuIdx, channelType, pal)
+        public ChannelStateS5B(int apuIdx, int channelType, bool pal) : base(apuIdx, channelType, pal)
         {
-            channelIdx = channelType - Channel.SunsoftSquare1;
+            channelIdx = channelType - Channel.S5BSquare1;
         }
 
         public override void UpdateAPU()

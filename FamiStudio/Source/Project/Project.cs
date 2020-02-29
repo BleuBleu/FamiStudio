@@ -19,8 +19,8 @@ namespace FamiStudio
         public const int ExpansionVrc7    = 2;
         public const int ExpansionFds     = 3;
         public const int ExpansionMmc5    = 4;
-        public const int ExpansionNamco   = 5;
-        public const int ExpansionSunsoft = 6;
+        public const int ExpansionN163   = 5;
+        public const int ExpansionS5B = 6;
         public const int ExpansionCount   = 7;
 
         public static string[] ExpansionNames =
@@ -421,11 +421,11 @@ namespace FamiStudio
                 var oldNumChannels = expansionNumChannels;
 
                 expansionAudio = expansion;
-                expansionNumChannels = expansion == ExpansionNamco ? numChannels : 1;
+                expansionNumChannels = expansion == ExpansionN163 ? numChannels : 1;
 
                 foreach (var song in songs)
                 {
-                    song.CreateChannels(true, Channel.ExpansionAudioStart + (!changed && expansion == ExpansionNamco ? oldNumChannels : 0));
+                    song.CreateChannels(true, Channel.ExpansionAudioStart + (!changed && expansion == ExpansionN163 ? oldNumChannels : 0));
                 }
 
                 if (changed)
@@ -476,11 +476,11 @@ namespace FamiStudio
             if (channelType >= Channel.Vrc7Fm1 && channelType <= Channel.Vrc7Fm6)
                 return expansionAudio == ExpansionVrc7;
 
-            if (channelType >= Channel.NamcoWave1 && channelType <= Channel.NamcoWave8)
-                return expansionAudio == ExpansionNamco && (channelType - Channel.NamcoWave1) < expansionNumChannels;
+            if (channelType >= Channel.N163Wave1 && channelType <= Channel.N163Wave8)
+                return expansionAudio == ExpansionN163 && (channelType - Channel.N163Wave1) < expansionNumChannels;
 
-            if (channelType >= Channel.SunsoftSquare1 && channelType <= Channel.SunsoftSquare3)
-                return expansionAudio == ExpansionSunsoft;
+            if (channelType >= Channel.S5BSquare1 && channelType <= Channel.S5BSquare3)
+                return expansionAudio == ExpansionS5B;
 
             Debug.Assert(false);
 
@@ -501,7 +501,7 @@ namespace FamiStudio
             {
                 return expansionAudio == ExpansionFds  || // Modulation settings
                        expansionAudio == ExpansionVrc7 || // A lot of stuff
-                       expansionAudio == ExpansionNamco;  // Wave size
+                       expansionAudio == ExpansionN163;  // Wave size
             }
         }
 
