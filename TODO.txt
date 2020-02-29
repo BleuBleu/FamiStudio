@@ -5,6 +5,7 @@
 	- 2 tempo modes:
 		- FamiTracker : Tracker like, tempo/speed, delayed notes/cuts. Minimal effor to support.
 		- FamiStudio  : Always 1 note = frame. Note size, PAL repetition pattern. (TEST THAT!)
+	- *** Idea: Are they the same, but famistudio mode only works at speed = 1???
 	- Do it in FamiStudio.
 	- Fix rounding on weird tempos.
 	- Delayed notes/cuts.
