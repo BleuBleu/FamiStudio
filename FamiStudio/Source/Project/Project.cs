@@ -324,6 +324,13 @@ namespace FamiStudio
             instruments.Remove(instrument);
             ReplaceInstrument(instrument, null);
         }
+        
+        public void DeleteAllInstrument()
+        {
+            foreach (var inst in instruments)
+                ReplaceInstrument(inst, null);
+            instruments.Clear();
+        }
 
         public string GenerateUniqueSongName()
         {

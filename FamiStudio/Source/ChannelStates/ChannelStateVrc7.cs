@@ -70,6 +70,7 @@ namespace FamiStudio
                 prevPeriodHi = periodHi;
             }
 
+            // MATTT: This is wrong. Prevent volume envelopes to work and stuff.
             // To prevent from re-triggering.
             note.IsValid = false;
         }

@@ -701,20 +701,16 @@ namespace FamiStudio
                     foundFirstNote |= UpdateChannel(nsf, p, n, song.Channels[c], channelStates[c]);
 
                 if (foundFirstNote)
-                {
                     f++;
-                }
                 else
-                {
-                    // MATTT: TODO Delete all instrument before the first note. 
-                }
+                    project.DeleteAllInstrument();
             }
 
             song.SetLength(p + 1);
 
             NsfClose(nsf);
 
-            //project.DeleteUnusedInstruments(); MATTT
+            project.DeleteUnusedInstruments(); 
 
             return project;
         }
