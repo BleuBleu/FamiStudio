@@ -220,7 +220,9 @@ namespace FamiStudio
                 wavEnv.Values[i] = (sbyte)bytes[idx++];
 
             for (int i = 0; i < 0x20; i++)
-                wavEnv.Values[i] = (sbyte)bytes[idx++];
+                modEnv.Values[i] = (sbyte)bytes[idx++];
+
+            modEnv.ConvertFdsModulationToAbsolute();
 
             instrument.FdsModRate  = (ushort)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             instrument.FdsModDepth = (byte)  BitConverter.ToInt32(bytes, idx); idx += sizeof(int);

@@ -18,7 +18,6 @@
 	- NSF.
 - Fine pitch track
 	- NSF
-
 - Duty cycle envelopes.
 	- NSF
 	- Test FamiTracker import/export
@@ -40,6 +39,7 @@
 	- Namco:
 		- Multi waves seems good with duty cycle envelopes... Later?
 	- VRC7
+		- Sustain should be ON by default. release = remove trigger.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - 
 

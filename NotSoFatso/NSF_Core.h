@@ -94,7 +94,13 @@ struct NSF_ADVANCEDOPTIONS
 #define CHANNEL_VRC6SQUARE1      5
 #define CHANNEL_VRC6SQUARE2      6
 #define CHANNEL_VRC6SAW          7
-#define CHANNEL_FDS              8
+#define CHANNEL_VRC7FM1          8
+#define CHANNEL_VRC7FM2          9
+#define CHANNEL_VRC7FM3          10
+#define CHANNEL_VRC7FM4          11
+#define CHANNEL_VRC7FM5          12
+#define CHANNEL_VRC7FM6          13
+#define CHANNEL_FDS              14
 							     
 #define STATE_VOLUME             0
 #define STATE_PERIOD             1
@@ -106,6 +112,11 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_DPCMPITCH          7
 #define STATE_FDSWAVETABLE       8
 #define STATE_FDSMODULATIONTABLE 9
+#define STATE_VRC7PATCH          10
+#define STATE_VRC7PATCHREG       11
+#define STATE_VRC7OCTAVE         12
+#define STATE_VRC7TRIGGER        13
+#define STATE_VRC7SUSTAIN        14
 
 #include <math.h>
 

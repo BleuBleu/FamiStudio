@@ -132,19 +132,24 @@ namespace FamiStudio
             }
         }
 
-        readonly sbyte[] FdsModulationDeltas = new sbyte[] { 0, 1, 2, 4, 0, -4, -2, -1 };
+        static readonly sbyte[] FdsModulationDeltas = new sbyte[] { 0, 1, 2, 4, 0, -4, -2, -1 };
 
         public void ConvertFdsModulationToAbsolute()
         {
-            // Force starting at zero.
-            Values[0] = 0;
+            ConvertFdsModulationToAbsolute(Values);
+        }
 
-            for (int i = 1; i < length; i++)
+        public static void ConvertFdsModulationToAbsolute(sbyte[] array)
+        {
+            // Force starting at zero.
+            array[0] = 0;
+
+            for (int i = 1; i < 32; i++)
             {
-                if (values[i] == 4)
-                    values[i] = 0;
+                if (array[i] == 4)
+                    array[i] = 0;
                 else
-                    values[i] = (sbyte)(values[i - 1] + FdsModulationDeltas[values[i]]);
+                    array[i] = (sbyte)(array[i - 1] + FdsModulationDeltas[array[i]]);
             }
         }
 

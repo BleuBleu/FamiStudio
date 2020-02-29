@@ -2333,6 +2333,8 @@ int IndexOf(const T* array, int arraySize, T val)
 	return -1;
 }
 
+extern BYTE VRC7Instrument[16][8];
+
 int CNSFCore::GetState(int channel, int state, int sub)
 {
 	switch (channel)
@@ -2426,10 +2428,37 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			switch (state)
 			{
 				case STATE_PERIOD:    return mWave_VRC6Saw.nFreqTimer.W;
-				case STATE_DUTYCYCLE: return 0;
 				case STATE_VOLUME:    return mWave_VRC6Saw.bChannelEnabled ? mWave_VRC6Saw.nAccumRate : 0;
 			}
 			break;
+		}
+		case CHANNEL_FDS:
+		{
+			switch (state)
+			{
+				case STATE_PERIOD:             return mWave_FDS.nFreq.W;
+				case STATE_VOLUME:             return mWave_FDS.bEnabled ? mWave_FDS.nVolume : 0;
+				case STATE_FDSWAVETABLE:       return mWave_FDS.nWaveTable[sub];
+				case STATE_FDSMODULATIONTABLE: return mWave_FDS.nLFO_Table[sub * 2];
+			}
+		}
+		case CHANNEL_VRC7FM1:
+		case CHANNEL_VRC7FM2:
+		case CHANNEL_VRC7FM3:
+		case CHANNEL_VRC7FM4:
+		case CHANNEL_VRC7FM5:
+		case CHANNEL_VRC7FM6:
+		{
+			int idx = channel - CHANNEL_VRC7FM1;
+			switch (state)
+			{
+				case STATE_PERIOD:       return ((VRC7Chan[1][idx] & 1) << 8) | (VRC7Chan[0][idx]);
+				case STATE_VRC7PATCH:    return (VRC7Chan[2][idx] >> 4) & 0xF;
+				case STATE_VRC7PATCHREG: return VRC7Instrument[0][sub];
+				case STATE_VRC7OCTAVE:   return (VRC7Chan[1][idx] >> 1) & 0x07;
+				case STATE_VRC7TRIGGER:  return (VRC7Chan[1][idx] >> 4) & 0x01;
+				case STATE_VRC7SUSTAIN:  return (VRC7Chan[1][idx] >> 5) & 0x01;
+			}
 		}
 	}
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -260,6 +261,11 @@ namespace FamiStudio
         const int STATE_DPCMPITCH          = 7;
         const int STATE_FDSWAVETABLE       = 8;
         const int STATE_FDSMODULATIONTABLE = 9;
+        const int STATE_VRC7PATCH          = 10;
+        const int STATE_VRC7PATCHREG       = 11;
+        const int STATE_VRC7OCTAVE         = 12;
+        const int STATE_VRC7TRIGGER        = 13;
+        const int STATE_VRC7SUSTAIN        = 14;
 
         class ChannelState
         {
@@ -268,6 +274,12 @@ namespace FamiStudio
             public int pitch   = -1;
             public int volume  = -1;
             public int duty    = -1;
+
+            public const int Vrc7StateTriggered = 1;
+            public const int Vrc7StateReleased  = 2;
+            public const int Vrc7StateStopped   = 0;
+
+            public int vrc7State = Vrc7StateStopped;
         };
 
         public static int GetBestMatchingNote(int period, ushort[] noteTable, out int finePitch)
@@ -312,6 +324,77 @@ namespace FamiStudio
             }
 
             return instrument;
+        }
+
+        private static Instrument GetFdsInstrument(Project project, sbyte[] wavEnv, sbyte[] modEnv)
+        {
+            foreach (var inst in project.Instruments)
+            {
+                if (inst.ExpansionType == Project.ExpansionFds)
+                {
+                    if (wavEnv.SequenceEqual(inst.Envelopes[Envelope.FdsWaveform].Values.Take(64)) &&
+                        modEnv.SequenceEqual(inst.Envelopes[Envelope.FdsModulation].Values.Take(32)))
+                    {
+                        return inst;
+                    }
+                }
+            }
+
+            for (int i = 1; ; i++)
+            {
+                var name = $"FDS {i}";
+                if (project.IsInstrumentNameUnique(name))
+                {
+                    var instrument = project.CreateInstrument(Project.ExpansionFds, name);
+
+                    Array.Copy(wavEnv, instrument.Envelopes[Envelope.FdsWaveform].Values,   64);
+                    Array.Copy(modEnv, instrument.Envelopes[Envelope.FdsModulation].Values, 32);
+
+                    return instrument;
+                }
+            }
+        }
+
+        private static Instrument GetVrc7Instrument(Project project, byte patch, byte[] patchRegs)
+        {
+            if (patch == 0)
+            {
+                // Custom instrument, look for a match.
+                foreach (var inst in project.Instruments)
+                {
+                    if (inst.ExpansionType == Project.ExpansionVrc7)
+                    {
+                        if (inst.Vrc7Patch == 0 && inst.Vrc7PatchRegs.SequenceEqual(patchRegs))
+                            return inst;
+                    }
+                }
+
+                for (int i = 1; ; i++)
+                {
+                    var name = $"VRC7 Custom {i}";
+                    if (project.IsInstrumentNameUnique(name))
+                    {
+                        var instrument = project.CreateInstrument(Project.ExpansionVrc7, name);
+                        instrument.Vrc7Patch = patch;
+                        Array.Copy(patchRegs, instrument.Vrc7PatchRegs, 8);
+                        return instrument;
+                    }
+                }
+            }
+            else
+            {
+                // Built-in patch, simply find by name.
+                var name = $"VRC7 {patch}";
+                var instrument = project.GetInstrument(name);
+
+                if (instrument == null)
+                {
+                    instrument = project.CreateInstrument(Project.ExpansionVrc7, name);
+                    instrument.Vrc7Patch = patch;
+                }
+
+                return instrument;
+            }
         }
 
         private static bool UpdateChannel(IntPtr nsf, int p, int n, Channel channel, ChannelState state)
@@ -361,6 +444,47 @@ namespace FamiStudio
                         pattern.Notes[n].Value = (byte)note;
                         hasNote = true;
                     }
+                }
+            }
+            else if (channel.Type >= Channel.Vrc7Fm1 && 
+                     channel.Type <= Channel.Vrc7Fm6)
+            {
+                var patch = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCH, 0);
+                var regs  = new byte[8];
+
+                if (patch == 0)
+                {
+                    for (int i = 0; i < 8; i++)
+                        regs[i] = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCHREG, i);
+                }
+
+                Instrument instrument = GetVrc7Instrument(project, patch, regs);
+
+                var period  = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0); 
+                var octave  = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
+                var trigger = NsfGetState(nsf, channel.Type, STATE_VRC7TRIGGER, 0);
+                var sustain = NsfGetState(nsf, channel.Type, STATE_VRC7SUSTAIN, 0);
+
+                if (trigger == 1 && state.vrc7State != ChannelState.Vrc7StateTriggered)
+                {
+                    var note    = GetBestMatchingNote(period << 2, NesApu.NoteTableVrc7, out var finePitch);
+                    var pattern = GetOrCreatePattern(channel, p);
+
+                    pattern.Notes[n].Value = (byte)(octave * 12 + note + 1);
+                    pattern.Notes[n].Instrument = instrument;
+
+                    state.vrc7State = ChannelState.Vrc7StateTriggered;
+                    hasNote = true;
+                }
+                else if (trigger == 0 && sustain == 1 && state.vrc7State == ChannelState.Vrc7StateTriggered)
+                {
+                    GetOrCreatePattern(channel, p).Notes[n].Value = Note.NoteRelease;
+                    state.vrc7State = ChannelState.Vrc7StateReleased;
+                }
+                else if (trigger == 0 && sustain == 0 && state.vrc7State != ChannelState.Vrc7StateStopped)
+                {
+                    GetOrCreatePattern(channel, p).Notes[n].Value = Note.NoteStop;
+                    state.vrc7State = ChannelState.Vrc7StateStopped;
                 }
             }
             else
@@ -429,6 +553,19 @@ namespace FamiStudio
                         state.duty = duty;
                         force |= state.volume != 0;
                     }
+                }
+                else if (channel.Type == Channel.FdsWave)
+                {
+                    var wavEnv = new sbyte[64];
+                    var modEnv = new sbyte[32];
+
+                    for (int i = 0; i < 64; i++)
+                        wavEnv[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_FDSWAVETABLE, i);
+                    for (int i = 0; i < 32; i++)
+                        modEnv[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONTABLE, i);
+
+                    Envelope.ConvertFdsModulationToAbsolute(modEnv);
+                    instrument = GetFdsInstrument(project, wavEnv, modEnv);
                 }
                 else 
                 {
@@ -521,21 +658,13 @@ namespace FamiStudio
 
             switch (NsfGetExpansion(nsf))
             {
-                case 0: 
-                    break;
-                case EXTSOUND_VRC6:
-                    project.SetExpansionAudio(Project.ExpansionVrc6);
-                    break;
-                case EXTSOUND_VRC7:
-                    break;
-                case EXTSOUND_FDS:
-                    break;
-                case EXTSOUND_MMC5:
-                    break;
-                case EXTSOUND_N106:
-                    break;
-                case EXTSOUND_FME07:
-                    break;
+                case EXTSOUND_VRC6:  project.SetExpansionAudio(Project.ExpansionVrc6); break;
+                case EXTSOUND_VRC7:  project.SetExpansionAudio(Project.ExpansionVrc7); break;
+                case EXTSOUND_FDS:   project.SetExpansionAudio(Project.ExpansionFds);  break;
+                case EXTSOUND_MMC5:  break;
+                case EXTSOUND_N106:  break;
+                case EXTSOUND_FME07: break;
+                case 0: break;
                 default:
                     NsfClose(nsf); // Unsupported expansion combination.
                     return null;
@@ -572,12 +701,20 @@ namespace FamiStudio
                     foundFirstNote |= UpdateChannel(nsf, p, n, song.Channels[c], channelStates[c]);
 
                 if (foundFirstNote)
+                {
                     f++;
+                }
+                else
+                {
+                    // MATTT: TODO Delete all instrument before the first note. 
+                }
             }
 
             song.SetLength(p + 1);
 
             NsfClose(nsf);
+
+            //project.DeleteUnusedInstruments(); MATTT
 
             return project;
         }
