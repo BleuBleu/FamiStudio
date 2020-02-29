@@ -69,6 +69,11 @@ namespace FamiStudio
             {
                 envelopes[Envelope.N163Waveform].SetFromPreset(Envelope.N163Waveform, n163WavePreset);
             }
+            else if (expansion == Project.ExpansionVrc7)
+            {
+                vrc7Patch = 1;
+                Array.Copy(Vrc7Patches[1].data, vrc7PatchRegs, 8);
+            }
         }
 
         public bool IsEnvelopeActive(int envelopeType)

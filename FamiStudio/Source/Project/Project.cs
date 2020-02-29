@@ -19,8 +19,8 @@ namespace FamiStudio
         public const int ExpansionVrc7    = 2;
         public const int ExpansionFds     = 3;
         public const int ExpansionMmc5    = 4;
-        public const int ExpansionN163   = 5;
-        public const int ExpansionS5B = 6;
+        public const int ExpansionN163    = 5;
+        public const int ExpansionS5B     = 6;
         public const int ExpansionCount   = 7;
 
         public static string[] ExpansionNames =

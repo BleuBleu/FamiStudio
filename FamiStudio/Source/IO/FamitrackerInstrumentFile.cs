@@ -45,6 +45,9 @@ namespace FamiStudio
 
             Envelope env = instrument.Envelopes[envType];
 
+            if (env == null)
+                return;
+
             if (releasePoint >= 0 && !env.CanRelease)
                 releasePoint = -1;
 
@@ -112,7 +115,8 @@ namespace FamiStudio
                 ReadEnvelope(bytes, ref offset, instrument, Envelope.Arpeggio);
                 ReadEnvelope(bytes, ref offset, instrument, Envelope.Pitch);
             }
-            else
+            else if (instType == Project.ExpansionNone ||
+                     instType == Project.ExpansionN163)
             {
                 if (bytes[offset++] != SEQ_COUNT)
                     return null;
@@ -123,6 +127,32 @@ namespace FamiStudio
                     if (bytes[offset++] == 1)
                         ReadEnvelope(bytes, ref offset, instrument, EnvelopeTypeLookup[i]);
                 }
+            }
+            else if (instType == Project.ExpansionVrc7)
+            {
+                instrument.Vrc7Patch = (byte)BitConverter.ToInt32(bytes, offset); offset += 4;
+
+                if (instrument.Vrc7Patch == 0)
+                {
+                    for (int i = 0; i < 8; ++i)
+                        instrument.Vrc7PatchRegs[i] = bytes[offset++];
+                }
+            }
+
+            if (instType == Project.ExpansionN163)
+            {
+                int waveSize  = BitConverter.ToInt32(bytes, offset); offset += 4;
+                int wavePos   = BitConverter.ToInt32(bytes, offset); offset += 4;
+                int waveCount = BitConverter.ToInt32(bytes, offset); offset += 4;
+
+                instrument.N163WaveSize = (byte)waveSize;
+                instrument.N163WavePos  = (byte)wavePos;
+
+                var wavEnv = instrument.Envelopes[Envelope.N163Waveform];
+
+                // Only read the first wave for now.
+                for (int j = 0; j < waveSize; j++)
+                    wavEnv.Values[j] = (sbyte)bytes[offset++];
             }
 
             // Samples

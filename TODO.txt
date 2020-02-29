@@ -37,6 +37,11 @@
 - All expansions.
 	- Finigh channel code, clean.
 	- Import/export all formats.
+	- Namco:
+		- Multi waves seems good with duty cycle envelopes... Later?
+	- VRC7
+- When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
+- 
 
 TESTING:
 ========

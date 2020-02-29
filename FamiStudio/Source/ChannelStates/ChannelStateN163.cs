@@ -33,7 +33,7 @@ namespace FamiStudio
                 for (int i = 0; i < wave.Length; i += 2)
                 {
                     var pair = (byte)(wave.Values[i + 1] << 4) | (byte)(wave.Values[i + 0]);
-                    WriteN163Register(instrument.N163WavePos + i / 2, pair);
+                    WriteN163Register(instrument.N163WavePos / 2 + i / 2, pair);
                 }
 
                 WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
