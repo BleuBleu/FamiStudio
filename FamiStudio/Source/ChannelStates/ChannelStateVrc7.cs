@@ -55,7 +55,7 @@ namespace FamiStudio
                 var volume = 15 - GetVolume();
 
                 var periodLo = (byte)(period & 0xff);
-                var periodHi = (byte)(0x10 | ((octave & 0x3) << 1) | ((period >> 8) & 1));
+                var periodHi = (byte)(0x10 | ((octave & 0x7) << 1) | ((period >> 8) & 1));
 
                 if ((prevPeriodHi & 0x10) != 0)
                 {
