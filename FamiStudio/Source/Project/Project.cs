@@ -332,6 +332,13 @@ namespace FamiStudio
             instruments.Clear();
         }
 
+        public void DeleteAllSamples()
+        {
+            for (int i = 0; i < samplesMapping.Length; i++)
+                samplesMapping[i] = null;
+            samples.Clear();
+        }
+
         public string GenerateUniqueSongName()
         {
             for (int i = 1; ; i++)

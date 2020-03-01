@@ -248,8 +248,8 @@ namespace FamiStudio
         const int EXTSOUND_VRC7  = 0x02;
         const int EXTSOUND_FDS   = 0x04;
         const int EXTSOUND_MMC5  = 0x08;
-        const int EXTSOUND_N106  = 0x10;
-        const int EXTSOUND_FME07 = 0x20;
+        const int EXTSOUND_N163  = 0x10;
+        const int EXTSOUND_S5B   = 0x20;
 
         const int STATE_VOLUME             = 0;
         const int STATE_PERIOD             = 1;
@@ -397,6 +397,17 @@ namespace FamiStudio
             }
         }
 
+        private static Instrument GetS5BInstrument(Project project)
+        {
+            foreach (var inst in project.Instruments)
+            {
+                if (inst.ExpansionType == Project.ExpansionS5B)
+                    return inst;
+            }
+
+            return project.CreateInstrument(Project.ExpansionS5B, "S5B");
+        }
+
         private static bool UpdateChannel(IntPtr nsf, int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
@@ -407,7 +418,8 @@ namespace FamiStudio
             {
                 var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0);
 
-                if (len > 0)
+                // 1-length samples are due to the fact that $4013 has a +1 baked in. 
+                if (len > 1) 
                 {
                     var addr = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEADDR, 0);
                     var name = $"Sample 0x{addr:x8}";
@@ -562,6 +574,10 @@ namespace FamiStudio
 
                     instrument = GetVrc7Instrument(project, patch, regs);
                 }
+                else if (channel.Type >= Channel.S5BSquare1 && channel.Type <= Channel.S5BSquare3)
+                {
+                    instrument = GetS5BInstrument(project);
+                }
                 else 
                 {
                     instrument = GetDutyInstrument(project, channel, 0);
@@ -656,12 +672,12 @@ namespace FamiStudio
 
             switch (NsfGetExpansion(nsf))
             {
-                case EXTSOUND_VRC6:  project.SetExpansionAudio(Project.ExpansionVrc6); break;
-                case EXTSOUND_VRC7:  project.SetExpansionAudio(Project.ExpansionVrc7); break;
-                case EXTSOUND_FDS:   project.SetExpansionAudio(Project.ExpansionFds);  break;
-                case EXTSOUND_MMC5:  project.SetExpansionAudio(Project.ExpansionMmc5); break;
-                case EXTSOUND_N106:  break;
-                case EXTSOUND_FME07: break;
+                case EXTSOUND_VRC6: project.SetExpansionAudio(Project.ExpansionVrc6); break;
+                case EXTSOUND_VRC7: project.SetExpansionAudio(Project.ExpansionVrc7); break;
+                case EXTSOUND_FDS:  project.SetExpansionAudio(Project.ExpansionFds);  break;
+                case EXTSOUND_MMC5: project.SetExpansionAudio(Project.ExpansionMmc5); break;
+                case EXTSOUND_N163: break;
+                case EXTSOUND_S5B:  project.SetExpansionAudio(Project.ExpansionS5B);  break;
                 case 0: break;
                 default:
                     NsfClose(nsf); // Unsupported expansion combination.
@@ -706,8 +722,9 @@ namespace FamiStudio
                 {
                     // Reset everything until we find our first note.
                     project.DeleteAllInstrument();
-                    //for (int c = 0; c < song.Channels.Length; c++)
-                    //    channelStates[c] = new ChannelState();
+                    project.DeleteAllSamples();
+                    for (int c = 0; c < song.Channels.Length; c++)
+                        channelStates[c] = new ChannelState();
                 }
             }
 

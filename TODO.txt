@@ -27,6 +27,8 @@
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - NSF Import:
 	- There is still something fishy with the pitches sometimes.
+	- Gimmick bass seems off by 1 octave sometimes.
+	- Gimmick speeds seems slow.
 - Transform dialog:
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion?

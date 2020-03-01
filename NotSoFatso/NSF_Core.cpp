@@ -2473,6 +2473,36 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			}
 			break;
 		}
+		case N163_WAVE1:
+		case N163_WAVE2:
+		case N163_WAVE3:
+		case N163_WAVE4:
+		case N163_WAVE5:
+		case N163_WAVE6:
+		case N163_WAVE7:
+		case N163_WAVE8:
+		{
+			int idx = channel - N163_WAVE1;
+			switch (state)
+			{
+				//case STATE_PERIOD:    return mWave_MMC5Square[idx].nFreqTimer.W;
+				//case STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_MMC5Square[idx].nDutyCycle);
+				//case STATE_VOLUME:    return mWave_MMC5Square[idx].nLengthCount && mWave_MMC5Square[idx].bChannelEnabled ? mWave_MMC5Square[idx].nVolume : 0;
+			}
+			break;
+		}
+		case S5B_SQUARE1:
+		case S5B_SQUARE2:
+		case S5B_SQUARE3:
+		{
+			int idx = channel - S5B_SQUARE1;
+			switch (state)
+			{
+				case STATE_PERIOD: return mWave_FME07[idx].nFreqTimer.W;
+				case STATE_VOLUME: return mWave_FME07[idx].bChannelEnabled ? mWave_FME07[idx].nVolume : 0;
+			}
+			break;
+		}
 	}
 
 	return 0;
