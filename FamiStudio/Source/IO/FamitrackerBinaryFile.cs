@@ -131,8 +131,8 @@ namespace FamiStudio
         {
             env.Length = bytes[idx++];
 
-            int loopPoint = bytes[idx++];
-            int releasePoint = bytes[idx++];
+            int loopPoint    = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+            int releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
             if (releasePoint >= 0 && !env.CanRelease)
                 releasePoint = -1;
@@ -146,10 +146,10 @@ namespace FamiStudio
                     releasePoint++;
             }
 
-            env.Loop = loopPoint;
+            env.Loop    = loopPoint;
             env.Release = releasePoint;
 
-            idx++; // Skip settings.
+            idx += sizeof(int);; // Skip settings.
 
             for (int i = 0; i < env.Length; i++)
                 env.Values[i] = (sbyte)bytes[idx++];

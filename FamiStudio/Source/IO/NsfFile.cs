@@ -534,7 +534,7 @@ namespace FamiStudio
                 }
                 else if (channel.Type == Channel.FdsWave)
                 {
-                    volume >>= 2;
+                    volume = Math.Min(Note.VolumeMax, volume >> 1);
                 }
 
                 var hasTrigger = true;

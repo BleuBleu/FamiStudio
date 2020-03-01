@@ -38,7 +38,7 @@ void Nes_Fds::reset()
 void Nes_Fds::volume(double v)
 {
 	// TODO: Review this. Seems kind-of right?
-	synth.volume(v * 0.25f);
+	synth.volume(v * 0.175f);
 }
 
 void Nes_Fds::treble_eq(blip_eq_t const& eq)

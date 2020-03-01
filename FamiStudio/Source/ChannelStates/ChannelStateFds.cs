@@ -50,7 +50,7 @@ namespace FamiStudio
 
                 WriteRegister(NesApu.FDS_FREQ_HI, (period >> 8) & 0x0f);
                 WriteRegister(NesApu.FDS_FREQ_LO, (period >> 0) & 0xff);
-                WriteRegister(NesApu.FDS_VOL_ENV, 0x80 | (volume << 2));
+                WriteRegister(NesApu.FDS_VOL_ENV, 0x80 | (volume << 1));
 
                 if (noteTriggered)
                     WriteRegister(NesApu.FDS_SWEEP_BIAS, 0);
