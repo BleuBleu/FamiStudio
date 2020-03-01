@@ -271,12 +271,12 @@ namespace FamiStudio
 
                 switch (type)
                 {
-                    case Project.ExpansionNone:    ReadInstrument2A03(instrument,  ref idx); break;
-                    case Project.ExpansionVrc6:    ReadInstrumentVRC6(instrument,  ref idx); break;
-                    case Project.ExpansionVrc7:    ReadInstrumentVRC7(instrument,  ref idx); break;
-                    case Project.ExpansionFds:     ReadInstrumentFds(instrument,   ref idx); break;
-                    case Project.ExpansionN163:    ReadInstrumentN163(instrument,  ref idx); break;
-                    case Project.ExpansionS5B:     ReadInstrumentS5B(instrument,   ref idx); break;
+                    case Project.ExpansionNone: ReadInstrument2A03(instrument,  ref idx); break;
+                    case Project.ExpansionVrc6: ReadInstrumentVRC6(instrument,  ref idx); break;
+                    case Project.ExpansionVrc7: ReadInstrumentVRC7(instrument,  ref idx); break;
+                    case Project.ExpansionFds:  ReadInstrumentFds(instrument,   ref idx); break;
+                    case Project.ExpansionN163: ReadInstrumentN163(instrument,  ref idx); break;
+                    case Project.ExpansionS5B:  ReadInstrumentS5B(instrument,   ref idx); break;
                     default:
                         return false;
                 }
@@ -531,7 +531,6 @@ namespace FamiStudio
                     if (!blockFunc(info.offset))
                         return null;
                 }
-
             }
 
             FinishImport();

@@ -48,8 +48,8 @@ namespace FamiStudio
                 var period = GetPeriod();
                 var volume = GetVolume();
 
-                WriteRegister(NesApu.FDS_FREQ_LO, (period >> 0) & 0xff);
                 WriteRegister(NesApu.FDS_FREQ_HI, (period >> 8) & 0x0f);
+                WriteRegister(NesApu.FDS_FREQ_LO, (period >> 0) & 0xff);
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80 | (volume << 2));
 
                 if (note.Instrument != null)
@@ -57,8 +57,8 @@ namespace FamiStudio
                     Debug.Assert(note.Instrument.ExpansionType == Project.ExpansionFds);
 
                     WriteRegister(NesApu.FDS_SWEEP_BIAS, 0); // MATTT: Only do that on new notes.
-                    WriteRegister(NesApu.FDS_MOD_LO, (note.Instrument.FdsModRate >> 0) & 0xff);
                     WriteRegister(NesApu.FDS_MOD_HI, (note.Instrument.FdsModRate >> 8) & 0xff);
+                    WriteRegister(NesApu.FDS_MOD_LO, (note.Instrument.FdsModRate >> 0) & 0xff);
                     WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80 | note.Instrument.FdsModDepth); // MATTT: My modulation sounds like shit.
                 }
                 else

@@ -14,10 +14,10 @@ namespace FamiStudio
         protected const byte SndChip_NONE = 0;
         protected const byte SndChip_VRC6 = 1;  // Konami VRCVI
         protected const byte SndChip_VRC7 = 2;  // Konami VRCVII
-        protected const byte SndChip_FDS = 4;  // Famicom Disk Sound
+        protected const byte SndChip_FDS  = 4;  // Famicom Disk Sound
         protected const byte SndChip_MMC5 = 8;  // Nintendo MMC5
         protected const byte SndChip_N163 = 16; // Namco N-106
-        protected const byte SndChip_S5B = 32; // Sunsoft 5B
+        protected const byte SndChip_S5B  = 32; // Sunsoft 5B
 
         protected const byte Effect_None = 0;
         protected const byte Effect_Speed = 1;
@@ -92,8 +92,8 @@ namespace FamiStudio
             Project.ExpansionVrc6,   // INST_VRC6
             Project.ExpansionVrc7,   // INST_VRC7
             Project.ExpansionFds,    // INST_FDS
-            Project.ExpansionN163,  // INST_N163
-            Project.ExpansionS5B // INST_S5B
+            Project.ExpansionN163,   // INST_N163
+            Project.ExpansionS5B     // INST_S5B
         };
 
         protected static int[] EnvelopeTypeLookup =

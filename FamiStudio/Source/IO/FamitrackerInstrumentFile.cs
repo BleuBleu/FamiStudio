@@ -8,13 +8,13 @@ namespace FamiStudio
     {
         static int[] InstrumentTypeLookup =
         {
-            Project.ExpansionCount,  // INST_NONE: Should never happen.
-            Project.ExpansionNone,   // INST_2A03
-            Project.ExpansionVrc6,   // INST_VRC6
-            Project.ExpansionVrc7,   // INST_VRC7
-            Project.ExpansionFds,    // INST_FDS
-            Project.ExpansionN163,   // INST_N163
-            Project.ExpansionS5B     // INST_S5B
+            Project.ExpansionCount, // INST_NONE: Should never happen.
+            Project.ExpansionNone,  // INST_2A03
+            Project.ExpansionVrc6,  // INST_VRC6
+            Project.ExpansionVrc7,  // INST_VRC7
+            Project.ExpansionFds,   // INST_FDS
+            Project.ExpansionN163,  // INST_N163
+            Project.ExpansionS5B    // INST_S5B
         };
 
         static int[] EnvelopeTypeLookup =

@@ -149,7 +149,7 @@ namespace FamiStudio
                 if (array[i] == 4)
                     array[i] = 0;
                 else
-                    array[i] = (sbyte)(array[i - 1] + FdsModulationDeltas[array[i]]);
+                    array[i] = (sbyte)(array[i - 1] + FdsModulationDeltas[array[i]] * 2);
             }
         }
 

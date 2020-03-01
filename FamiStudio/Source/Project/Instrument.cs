@@ -444,9 +444,9 @@ namespace FamiStudio
                 //case ParamFdsModulationDelay     : return fdsModDelay;
                                                  
                 // N163                         
-                case ParamN163WavePreset        : return n163WavePreset;
-                case ParamN163WaveSize          : return n163WaveSize;
-                case ParamN163WavePos           : return n163WavePos;
+                case ParamN163WavePreset         : return n163WavePreset;
+                case ParamN163WaveSize           : return n163WaveSize;
+                case ParamN163WavePos            : return n163WavePos;
                                                  
                 // VRC7                          
                 case ParamVrc7Patch              : return vrc7Patch;
