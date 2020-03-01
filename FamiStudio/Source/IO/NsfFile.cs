@@ -408,6 +408,17 @@ namespace FamiStudio
             return project.CreateInstrument(Project.ExpansionS5B, "S5B");
         }
 
+        private static DPCMSample FindMatchingSample(Project project, byte[] data)
+        {
+            foreach (var sample in project.Samples)
+            {
+                if (sample.Data.Length == data.Length && sample.Data.SequenceEqual(data))
+                    return sample;
+            }
+
+            return null;
+        }
+
         private static bool UpdateChannel(IntPtr nsf, int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
@@ -421,16 +432,17 @@ namespace FamiStudio
                 // 1-length samples are due to the fact that $4013 has a +1 baked in. 
                 if (len > 1) 
                 {
+                    len--;
                     var addr = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEADDR, 0);
-                    var name = $"Sample 0x{addr:x8}";
-                    var sample = project.GetSample(name);
 
+                    var sampleData = new byte[len];
+                    for (int i = 0; i < len; i++)
+                        sampleData[i] = (byte)NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEDATA, i);
+
+                    var sample = FindMatchingSample(project, sampleData);
                     if (sample == null)
                     {
-                        var sampleData = new byte[len];
-                        for (int i = 0; i < len; i++)
-                            sampleData[i] = (byte)NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEDATA, i);
-                        sample = project.CreateDPCMSample(name, sampleData);
+                        sample = project.CreateDPCMSample($"Sample {project.Samples.Count + 1}", sampleData);
                     }
 
                     var loop  = NsfGetState(nsf, channel.Type, STATE_DPCMLOOP, 0) != 0;
