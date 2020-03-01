@@ -532,6 +532,10 @@ namespace FamiStudio
                         duty = 0;
                     }
                 }
+                else if (channel.Type == Channel.FdsWave)
+                {
+                    volume >>= 2;
+                }
 
                 var hasTrigger = true;
                 var hasPeriod  = true;
