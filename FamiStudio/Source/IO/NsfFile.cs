@@ -239,7 +239,7 @@ namespace FamiStudio
         public extern static void NsfSetTrack(IntPtr nsf, int track);
 
         [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NsfRunFrame(IntPtr nsf);
+        public extern static int NsfRunFrame(IntPtr nsf);
 
         [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
         public extern static int NsfGetState(IntPtr nsf, int channel, int state, int sub);
@@ -473,8 +473,6 @@ namespace FamiStudio
 
                 if (len > 0) 
                 {
-                    var addr = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEADDR, 0);
-
                     var sampleData = new byte[len];
                     for (int i = 0; i < len; i++)
                         sampleData[i] = (byte)NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEDATA, i);
@@ -668,16 +666,15 @@ namespace FamiStudio
                     if (note < Note.MusicalNoteMin || note > Note.MusicalNoteMax)
                         instrument = null;
 
-                    if (state.note != note || state.instrument != instrument || force)
+                    if ((state.note != note) || (state.instrument != instrument && instrument != null) || force)
                     {
-                        Debug.Assert((byte)note != Note.NoteInvalid);
-
                         var pattern = GetOrCreatePattern(channel, p);
                         pattern.Notes[n].Value = (byte)note;
-                        pattern.Notes[n].Instrument = pattern.Notes[n].IsMusical ? instrument : null;
+                        pattern.Notes[n].Instrument = instrument;
                         state.note = note;
                         state.octave = octave;
-                        state.instrument = instrument;
+                        if (instrument != null)
+                            state.instrument = instrument;
                         hasNote = note != 0;
                     }
 
@@ -781,7 +778,12 @@ namespace FamiStudio
                 p = f / song.DefaultPatternLength;
                 n = f % song.DefaultPatternLength;
 
-                NsfRunFrame(nsf);
+                var playCalled = 0;
+                do
+                {
+                    playCalled = NsfRunFrame(nsf);
+                }
+                while (playCalled == 0);
 
                 for (int c = 0; c < song.Channels.Length; c++)
                     foundFirstNote |= UpdateChannel(p, n, song.Channels[c], channelStates[c]);

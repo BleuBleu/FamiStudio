@@ -87,9 +87,9 @@ extern "C" void __stdcall NsfSetTrack(void* nsfPtr, int track)
 	((NsfCoreFile*)nsfPtr)->core.SetTrack(track);
 }
 
-extern "C" void __stdcall NsfRunFrame(void* nsfPtr)
+extern "C" int __stdcall NsfRunFrame(void* nsfPtr)
 {
-	((NsfCoreFile*)nsfPtr)->core.RunOneFrame();
+	return ((NsfCoreFile*)nsfPtr)->core.RunOneFrame();
 }
 
 extern "C" int __stdcall NsfGetState(void* nsfPtr, int channel, int state, int sub)

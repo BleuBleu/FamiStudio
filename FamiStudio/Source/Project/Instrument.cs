@@ -132,7 +132,7 @@ namespace FamiStudio
         public byte N163WavePos
         {
             get { return n163WavePos; }
-            set { n163WavePos = (byte)(value & ~(n163WaveSize - 1)); }
+            set { n163WavePos = (byte)value; }
         }
 
         public byte Vrc7Patch
@@ -507,7 +507,7 @@ namespace FamiStudio
 
                 // N163
                 case ParamN163WavePreset: N163WavePreset = (byte)val; break;
-                case ParamN163WavePos:    N163WavePos    = (byte)val; break;
+                case ParamN163WavePos:    N163WavePos    = (byte)(val & ~(n163WaveSize - 1)); break;
                 case ParamN163WaveSize:   N163WaveSize   = (byte)val; break;
 
                 // VRC7

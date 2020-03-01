@@ -2318,7 +2318,7 @@ int CNSFCore::RunOneFrame()
 	nCPUCycle = nAPUCycle = 0;
 	bIsGeneratingSamples = 0;
 
-	return 1;
+	return nPlayCalled;
 }
 
 template <typename T>

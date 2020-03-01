@@ -230,7 +230,7 @@ protected:
 	 *	Memory Read/Write routines
 	 */
 	BYTE __fastcall		ReadMemory_RAM(WORD a)				{ return pRAM[a & 0x07FF]; }
-	BYTE __fastcall		ReadMemory_ExRAM(WORD a)			{ return pExRAM[a & 0x0FFF]; }
+	BYTE __fastcall		ReadMemory_ExRAM(WORD a)			{ nPlayCalled |= (a == 0x5007); return pExRAM[a & 0x0FFF]; }
 	BYTE __fastcall		ReadMemory_SRAM(WORD a)				{ return pSRAM[a & 0x1FFF]; }
 	BYTE __fastcall		ReadMemory_pAPU(WORD a);
 	BYTE __fastcall		ReadMemory_ROM(WORD a)				{ return pROM[(a >> 12) - 6][a & 0x0FFF]; }
@@ -314,6 +314,7 @@ protected:
 	BYTE		nMultIn_Low;	//Multiplication Register, for MMC5 chip only (5205+5206)
 	BYTE		nMultIn_High;
 
+	BYTE        nPlayCalled;
 
 	/*
 	 *	NSF Preparation Information
