@@ -2482,12 +2482,15 @@ int CNSFCore::GetState(int channel, int state, int sub)
 		case N163_WAVE7:
 		case N163_WAVE8:
 		{
-			int idx = channel - N163_WAVE1;
+			int idx = 7 - (channel - N163_WAVE1);
 			switch (state)
 			{
-				//case STATE_PERIOD:    return mWave_MMC5Square[idx].nFreqTimer.W;
-				//case STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_MMC5Square[idx].nDutyCycle);
-				//case STATE_VOLUME:    return mWave_MMC5Square[idx].nLengthCount && mWave_MMC5Square[idx].bChannelEnabled ? mWave_MMC5Square[idx].nVolume : 0;
+				case STATE_PERIOD:         return mWave_N106.nFreqReg[idx].D;
+				case STATE_VOLUME:         return mWave_N106.nVolume[idx];
+				case STATE_N163WAVEPOS:    return mWave_N106.nWavePosStart[idx];
+				case STATE_N163WAVESIZE:   return mWave_N106.nWaveSize[idx];
+				case STATE_N163WAVE:       return mWave_N106.nRAM[sub];
+				case STATE_N16NUMCHANNELS: return mWave_N106.nActiveChannels + 1;
 			}
 			break;
 		}

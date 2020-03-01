@@ -241,7 +241,7 @@ namespace FamiStudio
         protected int GetPeriod()
         {
             var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-            return Math.Min(maximumPeriod, noteTable[noteVal] + note.FinePitch + GetSlidePitch() + envelopeValues[Envelope.Pitch]);
+            return Utils.Clamp(noteTable[noteVal] + note.FinePitch + GetSlidePitch() + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
         }
 
         protected int GetVolume()

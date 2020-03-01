@@ -37,10 +37,13 @@
 	- Finigh channel code, clean.
 	- Import/export all formats.
 	- Namco:
+		- Period, figure how it related to wave length.
+		- The range of notes still feels off. Too many notes on the low end.
 		- Multi waves seems good with duty cycle envelopes... Later?
 	- VRC7
 		- Sustain should be ON by default. release = remove trigger.
 		- Note table has << 2 baked in. Make sure im ok with that.
+		- Vibrato, octave, etc.
 	- Sunsoft:
 		- See if gimmick had a differnt note table for PAL.
 	- MMC5:

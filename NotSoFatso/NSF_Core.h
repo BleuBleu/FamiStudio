@@ -131,6 +131,10 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_VRC7OCTAVE         12
 #define STATE_VRC7TRIGGER        13
 #define STATE_VRC7SUSTAIN        14
+#define STATE_N163WAVEPOS        15
+#define STATE_N163WAVESIZE       16
+#define STATE_N163WAVE           17
+#define STATE_N16NUMCHANNELS     18
 
 #include <math.h>
 

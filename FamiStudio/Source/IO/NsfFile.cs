@@ -8,7 +8,7 @@ using System.Text;
 
 namespace FamiStudio
 {
-    public static class NsfFile
+    public class NsfFile
     {
         // NSF memory layout
         //   0x8000: start of code
@@ -54,7 +54,7 @@ namespace FamiStudio
             public fixed byte programSize[3];
         };
 
-        public unsafe static bool Save(Project originalProject, FamitoneMusicFile.FamiToneKernel kernel, string filename, int[] songIds, string name, string author, string copyright)
+        public unsafe bool Save(Project originalProject, FamitoneMusicFile.FamiToneKernel kernel, string filename, int[] songIds, string name, string author, string copyright)
         {
             try
             {
@@ -266,6 +266,10 @@ namespace FamiStudio
         const int STATE_VRC7OCTAVE         = 12;
         const int STATE_VRC7TRIGGER        = 13;
         const int STATE_VRC7SUSTAIN        = 14;
+        const int STATE_N163WAVEPOS        = 15;
+        const int STATE_N163WAVESIZE       = 16;
+        const int STATE_N163WAVE           = 17;
+        const int STATE_N16NUMCHANNELS     = 18;
 
         class ChannelState
         {
@@ -274,18 +278,25 @@ namespace FamiStudio
             public const int Stopped   = 0;
 
             public int  period  = -1;
-            public int  note    = -1;
+            public int  note    =  0;
             public int  pitch   =  0;
             public int  volume  = 15;
-            public int  duty    = -1;
             public int  octave  = -1;
             public int  trigger = Stopped;
+
+            public Instrument instrument = null;
         };
 
-        public static int GetBestMatchingNote(int period, ushort[] noteTable, out int finePitch)
+        int maxNamcoChannels = 0;
+        IntPtr nsf;
+        Song song;
+        Project project;
+        ChannelState[] channelStates;
+
+        public int GetBestMatchingNote(int period, ushort[] noteTable, out int finePitch)
         {
             int bestNote = -1;
-            int minDiff  = 9999;
+            int minDiff  = 9999999;
 
             for (int i = 0; i < noteTable.Length; i++)
             {
@@ -302,14 +313,14 @@ namespace FamiStudio
             return bestNote;
         }
 
-        private static Pattern GetOrCreatePattern(Channel channel, int patternIdx)
+        private Pattern GetOrCreatePattern(Channel channel, int patternIdx)
         {
             if (channel.PatternInstances[patternIdx] == null)
                 channel.PatternInstances[patternIdx] = channel.CreatePattern();
             return channel.PatternInstances[patternIdx];
         }
 
-        private static Instrument GetDutyInstrument(Project project, Channel channel, int duty)
+        private Instrument GetDutyInstrument(Channel channel, int duty)
         {
             var expansion = channel.IsExpansionChannel && project.NeedsExpansionInstruments ? project.ExpansionAudio : Project.ExpansionNone;
             var expPrefix = expansion == Project.ExpansionNone ? "" : Project.ExpansionShortNames[expansion] + " ";
@@ -326,7 +337,7 @@ namespace FamiStudio
             return instrument;
         }
 
-        private static Instrument GetFdsInstrument(Project project, sbyte[] wavEnv, sbyte[] modEnv)
+        private Instrument GetFdsInstrument(sbyte[] wavEnv, sbyte[] modEnv)
         {
             foreach (var inst in project.Instruments)
             {
@@ -355,7 +366,7 @@ namespace FamiStudio
             }
         }
 
-        private static Instrument GetVrc7Instrument(Project project, byte patch, byte[] patchRegs)
+        private Instrument GetVrc7Instrument(byte patch, byte[] patchRegs)
         {
             if (patch == 0)
             {
@@ -397,7 +408,38 @@ namespace FamiStudio
             }
         }
 
-        private static Instrument GetS5BInstrument(Project project)
+        private Instrument GetN163Instrument(sbyte[] waveData, byte wavePos)
+        {
+            foreach (var inst in project.Instruments)
+            {
+                if (inst.ExpansionType == Project.ExpansionN163)
+                {
+                    if (inst.N163WavePos  == wavePos &&
+                        inst.N163WaveSize == waveData.Length &&
+                        waveData.SequenceEqual(inst.Envelopes[Envelope.N163Waveform].Values.Take(waveData.Length)))
+                    {
+                        return inst;
+                    }
+                }
+            }
+
+            for (int i = 1; ; i++)
+            {
+                var name = $"N163 {i}";
+                if (project.IsInstrumentNameUnique(name))
+                {
+                    var instrument = project.CreateInstrument(Project.ExpansionN163, name);
+
+                    instrument.N163WaveSize = (byte)waveData.Length;
+                    instrument.N163WavePos  = wavePos;
+                    Array.Copy(waveData, instrument.Envelopes[Envelope.N163Waveform].Values, waveData.Length);
+
+                    return instrument;
+                }
+            }
+        }
+
+        private Instrument GetS5BInstrument()
         {
             foreach (var inst in project.Instruments)
             {
@@ -408,7 +450,7 @@ namespace FamiStudio
             return project.CreateInstrument(Project.ExpansionS5B, "S5B");
         }
 
-        private static DPCMSample FindMatchingSample(Project project, byte[] data)
+        private DPCMSample FindMatchingSample(byte[] data)
         {
             foreach (var sample in project.Samples)
             {
@@ -419,7 +461,7 @@ namespace FamiStudio
             return null;
         }
 
-        private static bool UpdateChannel(IntPtr nsf, int p, int n, Channel channel, ChannelState state)
+        private bool UpdateChannel(int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
             var channelIdx = Channel.ChannelTypeToIndex(channel.Type);
@@ -437,11 +479,9 @@ namespace FamiStudio
                     for (int i = 0; i < len; i++)
                         sampleData[i] = (byte)NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEDATA, i);
 
-                    var sample = FindMatchingSample(project, sampleData);
+                    var sample = FindMatchingSample(sampleData);
                     if (sample == null)
-                    {
                         sample = project.CreateDPCMSample($"Sample {project.Samples.Count + 1}", sampleData);
-                    }
 
                     var loop  = NsfGetState(nsf, channel.Type, STATE_DPCMLOOP, 0) != 0;
                     var pitch = NsfGetState(nsf, channel.Type, STATE_DPCMPITCH, 0);
@@ -470,14 +510,13 @@ namespace FamiStudio
             }
             else
             {
-                var period      = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0);
-                var volume      = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
-                var duty        = NsfGetState(nsf, channel.Type, STATE_DUTYCYCLE, 0);
-                var force       = false;
-                var stop        = false;
-                var release     = false;
-                var octave      = -1;
-                var periodShift = 0;
+                var period  = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0);
+                var volume  = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
+                var duty    = NsfGetState(nsf, channel.Type, STATE_DUTYCYCLE, 0);
+                var force   = false;
+                var stop    = false;
+                var release = false;
+                var octave  = -1;
 
                 // VRC6 has a much larger volume range (6-bit) than our volume (4-bit).
                 // We also use odd duties to double the volume values.
@@ -518,7 +557,7 @@ namespace FamiStudio
                     }
 
                     octave = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
-                    periodShift = 2;
+                    period <<= 2; // MATTT
                 }
                 else
                 {
@@ -549,13 +588,7 @@ namespace FamiStudio
 
                 if (hasDuty)
                 {
-                    instrument = GetDutyInstrument(project, channel, duty);
-
-                    if (state.duty != duty)
-                    {
-                        state.duty = duty;
-                        force |= state.trigger != ChannelState.Stopped;
-                    }
+                    instrument = GetDutyInstrument(channel, duty);
                 }
                 else if (channel.Type == Channel.FdsWave)
                 {
@@ -568,7 +601,29 @@ namespace FamiStudio
                         modEnv[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONTABLE, i);
 
                     Envelope.ConvertFdsModulationToAbsolute(modEnv);
-                    instrument = GetFdsInstrument(project, wavEnv, modEnv);
+                    instrument = GetFdsInstrument(wavEnv, modEnv);
+                }
+                else if (channel.Type >= Channel.N163Wave1 &&
+                         channel.Type <= Channel.N163Wave8)
+                {
+                    var numChannels = NsfGetState(nsf, channel.Type, STATE_N16NUMCHANNELS, 0);
+
+                    if (numChannels >= 0 && numChannels <= 8)
+                        maxNamcoChannels = Math.Max(maxNamcoChannels, numChannels);
+
+                    var wavePos = (byte)NsfGetState(nsf, channel.Type, STATE_N163WAVEPOS,  0);
+                    var waveLen = (byte)NsfGetState(nsf, channel.Type, STATE_N163WAVESIZE, 0);
+
+                    if (waveLen > 0)
+                    {
+                        var waveData = new sbyte[waveLen];
+                        for (int i = 0; i < waveLen; i++)
+                            waveData[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_N163WAVE, wavePos + i);
+
+                        instrument = GetN163Instrument(waveData, wavePos);
+                    }
+
+                    period >>= 2; 
                 }
                 else if (channel.Type >= Channel.Vrc7Fm1 &&
                          channel.Type <= Channel.Vrc7Fm6)
@@ -582,18 +637,18 @@ namespace FamiStudio
                             regs[i] = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCHREG, i);
                     }
 
-                    instrument = GetVrc7Instrument(project, patch, regs);
+                    instrument = GetVrc7Instrument(patch, regs);
                 }
                 else if (channel.Type >= Channel.S5BSquare1 && channel.Type <= Channel.S5BSquare3)
                 {
-                    instrument = GetS5BInstrument(project);
+                    instrument = GetS5BInstrument();
                 }
                 else 
                 {
-                    instrument = GetDutyInstrument(project, channel, 0);
+                    instrument = GetDutyInstrument(channel, 0);
                 }
 
-                if ((hasPeriod && state.period != period) || (hasOctave && state.octave != octave) || force)
+                if ((hasPeriod && state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
@@ -604,19 +659,25 @@ namespace FamiStudio
                         if (channel.Type == Channel.Noise)
                             note = (period ^ 0x0f) + 32;
                         else
-                            note = (byte)GetBestMatchingNote(period << periodShift, noteTable, out finePitch);
+                            note = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
 
                         if (hasOctave)
                             note += octave * 12;
                     }
 
-                    if (state.note != note || force)
+                    if (note < Note.MusicalNoteMin || note > Note.MusicalNoteMax)
+                        instrument = null;
+
+                    if (state.note != note || state.instrument != instrument || force)
                     {
+                        Debug.Assert((byte)note != Note.NoteInvalid);
+
                         var pattern = GetOrCreatePattern(channel, p);
                         pattern.Notes[n].Value = (byte)note;
-                        pattern.Notes[n].Instrument = stop || release ? null : instrument;
+                        pattern.Notes[n].Instrument = pattern.Notes[n].IsMusical ? instrument : null;
                         state.note = note;
                         state.octave = octave;
+                        state.instrument = instrument;
                         hasNote = note != 0;
                     }
 
@@ -667,14 +728,14 @@ namespace FamiStudio
             return trackNames;
         }
 
-        public static Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence)
+        public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence)
         {
-            var nsf = NsfOpen(filename);
+            nsf = NsfOpen(filename);
 
             if (nsf == null)
                 return null;
 
-            var project = new Project();
+            project = new Project();
 
             project.Name      = Marshal.PtrToStringAnsi(NsfGetTitle(nsf));
             project.Author    = Marshal.PtrToStringAnsi(NsfGetArtist(nsf));
@@ -686,7 +747,7 @@ namespace FamiStudio
                 case EXTSOUND_VRC7: project.SetExpansionAudio(Project.ExpansionVrc7); break;
                 case EXTSOUND_FDS:  project.SetExpansionAudio(Project.ExpansionFds);  break;
                 case EXTSOUND_MMC5: project.SetExpansionAudio(Project.ExpansionMmc5); break;
-                case EXTSOUND_N163: break;
+                case EXTSOUND_N163: project.SetExpansionAudio(Project.ExpansionN163, 8); break;
                 case EXTSOUND_S5B:  project.SetExpansionAudio(Project.ExpansionS5B);  break;
                 case 0: break;
                 default:
@@ -695,8 +756,9 @@ namespace FamiStudio
             }
 
             var songName = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, songIndex));
-            var song = project.CreateSong(string.IsNullOrEmpty(songName) ? null : songName); 
-            var channelStates = new ChannelState[song.Channels.Length];
+
+            song = project.CreateSong(string.IsNullOrEmpty(songName) ? null : songName); 
+            channelStates = new ChannelState[song.Channels.Length];
 
             NsfSetTrack(nsf, songIndex);
 
@@ -722,7 +784,7 @@ namespace FamiStudio
                 NsfRunFrame(nsf);
 
                 for (int c = 0; c < song.Channels.Length; c++)
-                    foundFirstNote |= UpdateChannel(nsf, p, n, song.Channels[c], channelStates[c]);
+                    foundFirstNote |= UpdateChannel(p, n, song.Channels[c], channelStates[c]);
 
                 if (foundFirstNote)
                 {
@@ -741,6 +803,9 @@ namespace FamiStudio
             song.SetLength(p + 1);
 
             NsfClose(nsf);
+
+            if (project.ExpansionAudio == Project.ExpansionN163)
+                project.SetExpansionAudio(Project.ExpansionN163, maxNamcoChannels);
 
             song.RemoveEmptyPatterns();
             song.UpdatePatternStartNotes();

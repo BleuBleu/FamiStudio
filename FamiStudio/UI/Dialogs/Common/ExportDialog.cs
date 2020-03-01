@@ -143,7 +143,7 @@ namespace FamiStudio
                 var props = dialog.GetPropertyPage((int)ExportFormat.Nsf);
                 var kernel = (FamitoneMusicFile.FamiToneKernel)Enum.Parse(typeof(FamitoneMusicFile.FamiToneKernel), props.GetPropertyValue<string>(5));
 
-                NsfFile.Save(project, kernel, filename,
+                new NsfFile().Save(project, kernel, filename,
                     GetSongIds(props.GetPropertyValue<bool[]>(4)),
                     props.GetPropertyValue<string>(0),
                     props.GetPropertyValue<string>(1),

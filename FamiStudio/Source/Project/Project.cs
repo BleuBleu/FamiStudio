@@ -91,13 +91,10 @@ namespace FamiStudio
             int addr = 0;
             foreach (var s in samples)
             {
-                if (addr + s.Data.Length > offset)
-                {
+                if (offset >= addr && offset < addr + s.Data.Length)
                     return s.Data[offset - addr];
-                }
                 addr = (addr + s.Data.Length + 63) & 0xffc0;
             }
-            Debug.Assert(false);
             return 0x55;
         }
 
@@ -613,11 +610,12 @@ namespace FamiStudio
                         var pattern = channel.PatternInstances[p];
                         if (pattern != null)
                         {
-                        for (int i = 0; i < pattern.MaxInstanceLength ; i++)
+                            for (int i = 0; i < pattern.MaxInstanceLength ; i++)
                             {
                                 var note = pattern.Notes[i];
-                                if (note.IsValid && !note.IsStop && note.Instrument != null)
+                                if (note.Instrument != null)
                                 {
+                                    Debug.Assert(note.IsMusical);
                                     usedInstruments.Add(note.Instrument);
                                 }
                             }

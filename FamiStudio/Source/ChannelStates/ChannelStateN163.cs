@@ -49,12 +49,14 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                var period = GetPeriod() << 3; // MATTT
+                // MATTT: Pitch envelopes, slide, vibrato, etc.
+                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
+                var period = Utils.Clamp(noteTable[noteVal] << 2, 0, maximumPeriod);
                 var volume = GetVolume();
 
                 WriteN163Register(NesApu.N163_REG_FREQ_LO  + regOffset, (period >> 0) & 0xff);
                 WriteN163Register(NesApu.N163_REG_FREQ_MID + regOffset, (period >> 8) & 0xff);
-                WriteN163Register(NesApu.N163_REG_FREQ_HI  + regOffset, waveLength);
+                WriteN163Register(NesApu.N163_REG_FREQ_HI  + regOffset, waveLength  | ((period >> 16) & 0x03));
                 WriteN163Register(NesApu.N163_REG_VOLUME   + regOffset, channelMask | volume);
             }
         }
