@@ -38,7 +38,7 @@ void Nes_Fds::reset()
 void Nes_Fds::volume(double v)
 {
 	// TODO: Review this. Seems kind-of right?
-	synth.volume(v * 0.175f);
+	synth.volume(v * 0.1f);
 }
 
 void Nes_Fds::treble_eq(blip_eq_t const& eq)
@@ -87,8 +87,17 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			osc.modt[modt_count - 1] = data;
 			break;
 		case 9:
-			// TODO: Master volume support.
-			require((data & 0x03) == 0);
+			// Master volume.
+			if ((osc.regs[reg] & 0x03) != (data & 0x03))
+			{
+				switch (data & 0x03)
+				{
+					case 0: synth.volume(1.0f / 1.0f); break;
+					case 1: synth.volume(2.0f / 3.0f); break;
+					case 2: synth.volume(2.0f / 4.0f); break;
+					case 3: synth.volume(2.0f / 5.0f); break;
+				}
+			}
 			break;
 		}
 

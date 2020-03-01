@@ -2437,7 +2437,21 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			switch (state)
 			{
 				case STATE_PERIOD:             return mWave_FDS.nFreq.W;
-				case STATE_VOLUME:             return mWave_FDS.bEnabled ? mWave_FDS.nVolume : 0;
+				case STATE_VOLUME:             
+					if (mWave_FDS.bEnabled)
+					{
+						switch (mWave_FDS.nMainVolume)
+						{
+							case 0: return mWave_FDS.nVolume;
+							case 1: return (int)ceil(mWave_FDS.nVolume * 0.666f);
+							case 2: return (int)ceil(mWave_FDS.nVolume * 0.500f);
+							case 3: return (int)ceil(mWave_FDS.nVolume * 0.400f);
+						}
+					}
+					else
+					{
+						return 0;
+					}
 				case STATE_FDSWAVETABLE:       return mWave_FDS.nWaveTable[sub];
 				case STATE_FDSMODULATIONTABLE: return mWave_FDS.nLFO_Table[sub * 2];
 			}

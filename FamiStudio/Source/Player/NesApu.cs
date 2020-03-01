@@ -321,7 +321,8 @@ namespace FamiStudio
                     break;
                 case APU_EXPANSION_FDS:
                     // These are taken from FamiTracker. They smooth out the waveform extremely nicely!
-                    TrebleEq(apuIdx, expansion, -48, 1000, sampleRate);
+                    //TrebleEq(apuIdx, expansion, -48, 1000, sampleRate);
+                    TrebleEq(apuIdx, expansion, -15, 2000, sampleRate);
                     break;
                 case APU_EXPANSION_MMC5:
                     WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.

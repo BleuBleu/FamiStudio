@@ -12,11 +12,6 @@
 	- NSF (#defines)
 	- Add better tempo logic to famitone2fs.
 	- Make bar length more flexible (for short patterns too).
-- FDS:
-	- Only reset mod on new notes.
-	- Modulation doesnt sound right.
-	- Compare with FamiTracker/emulators.
-	- NSF.
 - Fine pitch track
 	- NSF
 - Duty cycle envelopes.
@@ -25,15 +20,12 @@
 	- Test Famitone 2 export, etc.
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
-- NSF Import:
-	- There is still something fishy with the pitches sometimes.
 - Transform dialog:
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
-	- Tempo conversion?
-- Binary FTM import:
-	x All expansions. TEST!
+	- Tempo conversion? Or should that be in the song properties?
 - Loop point should be optional.
 - All expansions.
+	- NSF.		
 	- Finigh channel code, clean.
 	- Import/export all formats.
 	- Namco:
@@ -48,6 +40,9 @@
 		- See if gimmick had a differnt note table for PAL.
 	- MMC5:
 		- One game seems to use PCM... 
+	- FDS:
+		- Mod delay or mod track (need mod track for NSF import probably...)
+		
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.
 - Remove VRC6 duty hack. Full volume range.
@@ -62,6 +57,7 @@ TESTING:
 - FTM, test a lot. Needs to match text import (export to text and compare).
 - Compare relative volume of all channels.
 - MAC: Make sure namco channels dialog works. Added Combo box prop change callback.
+- Binary FTM import. Try opening all the demo songs from FT.
 
 ========================
 
