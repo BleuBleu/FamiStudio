@@ -395,6 +395,11 @@ namespace FamiStudio
             new Vrc7PatchInfo() { name = "Chorus",       data = new byte[] { 0x21, 0x72, 0x0d, 0x00, 0xc1, 0xd5, 0x56, 0x06 } }  // Chorus      
         };
         
+        public static string GetVrc7PatchName(int idx)
+        {
+            return Vrc7Patches[idx].name;
+        }
+
         public static string GetRealTimeParamName(int param)
         {
             return RealTimeParamsInfo[param].name;

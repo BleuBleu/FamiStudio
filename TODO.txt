@@ -46,6 +46,8 @@
 	- MMC5:
 		- One game seems to use PCM... 
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
+- Make all I/O class non-static.
+- Remove VRC6 duty hack. Full volume range.
 
 TESTING:
 ========

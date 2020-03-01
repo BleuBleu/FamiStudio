@@ -384,7 +384,7 @@ namespace FamiStudio
             else
             {
                 // Built-in patch, simply find by name.
-                var name = $"VRC7 {patch}";
+                var name = $"VRC7 {Instrument.GetVrc7PatchName(patch)}";
                 var instrument = project.GetInstrument(name);
 
                 if (instrument == null)
@@ -427,12 +427,10 @@ namespace FamiStudio
 
             if (channel.Type == Channel.Dpcm)
             {
-                var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0);
+                var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0) - 1;
 
-                // 1-length samples are due to the fact that $4013 has a +1 baked in. 
-                if (len > 1) 
+                if (len > 0) 
                 {
-                    len--;
                     var addr = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEADDR, 0);
 
                     var sampleData = new byte[len];
