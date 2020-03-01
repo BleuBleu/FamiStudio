@@ -79,7 +79,7 @@ namespace FamiStudio
         public bool IsEnvelopeActive(int envelopeType)
         {
             if (envelopeType == Envelope.Volume ||
-                envelopeType == Envelope.Pitch ||
+                envelopeType == Envelope.Pitch  ||
                 envelopeType == Envelope.Arpeggio)
             {
                 return expansion != Project.ExpansionVrc7;
@@ -87,7 +87,8 @@ namespace FamiStudio
             else if (envelopeType == Envelope.DutyCycle)
             {
                 return expansion == Project.ExpansionNone ||
-                       expansion == Project.ExpansionVrc6;
+                       expansion == Project.ExpansionVrc6 ||
+                       expansion == Project.ExpansionMmc5;
             }
             else if (envelopeType == Envelope.FdsWaveform ||
                      envelopeType == Envelope.FdsModulation)

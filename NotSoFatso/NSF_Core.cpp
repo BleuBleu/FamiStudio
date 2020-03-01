@@ -2461,6 +2461,18 @@ int CNSFCore::GetState(int channel, int state, int sub)
 				case STATE_VRC7SUSTAIN:  return (VRC7Chan[1][idx] >> 5) & 0x01;
 			}
 		}
+		case MMC5_SQUARE1:
+		case MMC5_SQUARE2:
+		{
+			int idx = channel - MMC5_SQUARE1;
+			switch (state)
+			{
+				case STATE_PERIOD:    return mWave_MMC5Square[idx].nFreqTimer.W;
+				case STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_MMC5Square[idx].nDutyCycle);
+				case STATE_VOLUME:    return mWave_MMC5Square[idx].nLengthCount && mWave_MMC5Square[idx].bChannelEnabled ? mWave_MMC5Square[idx].nVolume : 0;
+			}
+			break;
+		}
 	}
 
 	return 0;

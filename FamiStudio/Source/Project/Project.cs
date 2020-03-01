@@ -502,16 +502,6 @@ namespace FamiStudio
             }
         }
 
-        public bool ExpansionInstrumentsHaveRealTimeParams
-        {
-            get
-            {
-                return expansionAudio == ExpansionFds  || // Modulation settings
-                       expansionAudio == ExpansionVrc7 || // A lot of stuff
-                       expansionAudio == ExpansionN163;  // Wave size
-            }
-        }
-
         public static string[] GetAllowedExpansionNames()
         {
             var allowedExpansions = new List<string>();

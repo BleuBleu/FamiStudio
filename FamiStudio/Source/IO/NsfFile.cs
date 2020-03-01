@@ -311,7 +311,7 @@ namespace FamiStudio
 
         private static Instrument GetDutyInstrument(Project project, Channel channel, int duty)
         {
-            var expansion = channel.IsExpansionChannel ? project.ExpansionAudio : Project.ExpansionNone;
+            var expansion = channel.IsExpansionChannel && project.NeedsExpansionInstruments ? project.ExpansionAudio : Project.ExpansionNone;
             var expPrefix = expansion == Project.ExpansionNone ? "" : Project.ExpansionShortNames[expansion] + " ";
             var name = $"{expPrefix}Duty {duty}";
 
@@ -446,65 +446,8 @@ namespace FamiStudio
                     }
                 }
             }
-            //else if (channel.Type >= Channel.Vrc7Fm1 && 
-            //         channel.Type <= Channel.Vrc7Fm6)
-            //{
-            //    var patch = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCH, 0);
-            //    var regs = new byte[8];
-
-            //    if (patch == 0)
-            //    {
-            //        for (int i = 0; i < 8; i++)
-            //            regs[i] = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCHREG, i);
-            //    }
-
-            //    Instrument instrument = GetVrc7Instrument(project, patch, regs);
-
-            //    var period  = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0); 
-            //    var octave  = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
-            //    var trigger = NsfGetState(nsf, channel.Type, STATE_VRC7TRIGGER, 0);
-            //    var sustain = NsfGetState(nsf, channel.Type, STATE_VRC7SUSTAIN, 0);
-
-            //    var noteVal = Note.NoteInvalid;
-
-            //    if (trigger == 1 && state.trigger != ChannelState.Triggered)
-            //    {
-            //        var note = GetBestMatchingNote(period << 2, NesApu.NoteTableVrc7, out var finePitch);
-            //        noteVal = (byte)(octave * 12 + note + 1);
-            //        state.trigger = ChannelState.Triggered;
-            //    }
-            //    else if (trigger == 0 && sustain == 1 && state.trigger == ChannelState.Triggered)
-            //    {
-            //        noteVal = Note.NoteRelease;
-            //        state.trigger = ChannelState.Released;
-            //    }
-            //    else if (trigger == 0 && sustain == 0 && state.trigger != ChannelState.Stopped)
-            //    {
-            //        noteVal = Note.NoteStop;
-            //        state.trigger = ChannelState.Stopped;
-            //    }
-
-            //    if (noteVal != Note.NoteInvalid)
-            //    {
-            //        var pattern = GetOrCreatePattern(channel, p);
-
-            //        var volume = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
-            //        if (state.volume != volume)
-            //        {
-            //            pattern.Notes[n].Volume = (byte)volume;
-            //            state.volume = volume;
-            //        }
-
-            //        pattern.Notes[n].Value = (byte)noteVal;
-            //        pattern.Notes[n].Instrument = instrument;
-            //        hasNote = true;
-            //    }
-            //}
             else
             {
-                if (/*p == 1 && n >= 16 &&*/ channel.Type == 2)
-                    p = p;
-
                 var period      = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0);
                 var volume      = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
                 var duty        = NsfGetState(nsf, channel.Type, STATE_DUTYCYCLE, 0);
@@ -536,7 +479,7 @@ namespace FamiStudio
                 var hasOctave  = channel.Type >= Channel.Vrc7Fm1 && channel.Type <= Channel.Vrc7Fm6;
                 var hasVolume  = channel.Type != Channel.Triangle;
                 var hasPitch   = channel.Type != Channel.Noise;
-                var hasDuty    = channel.Type == Channel.Square1 || channel.Type == Channel.Square2 || channel.Type == Channel.Noise || channel.Type == Channel.Vrc6Square1 || channel.Type == Channel.Vrc6Square2 || channel.Type == Channel.Vrc6Saw;
+                var hasDuty    = channel.Type == Channel.Square1 || channel.Type == Channel.Square2 || channel.Type == Channel.Noise || channel.Type == Channel.Vrc6Square1 || channel.Type == Channel.Vrc6Square2 || channel.Type == Channel.Vrc6Saw || channel.Type == Channel.Mmc5Square1 || channel.Type == Channel.Mmc5Square2;
 
                 if (channel.Type >= Channel.Vrc7Fm1 && channel.Type <= Channel.Vrc7Fm6)
                 {
@@ -716,7 +659,7 @@ namespace FamiStudio
                 case EXTSOUND_VRC6:  project.SetExpansionAudio(Project.ExpansionVrc6); break;
                 case EXTSOUND_VRC7:  project.SetExpansionAudio(Project.ExpansionVrc7); break;
                 case EXTSOUND_FDS:   project.SetExpansionAudio(Project.ExpansionFds);  break;
-                case EXTSOUND_MMC5:  break;
+                case EXTSOUND_MMC5:  project.SetExpansionAudio(Project.ExpansionMmc5); break;
                 case EXTSOUND_N106:  break;
                 case EXTSOUND_FME07: break;
                 case 0: break;
@@ -772,7 +715,11 @@ namespace FamiStudio
 
             NsfClose(nsf);
 
-            project.DeleteUnusedInstruments(); 
+            song.RemoveEmptyPatterns();
+            song.UpdatePatternStartNotes();
+            song.UpdatePatternsMaxInstanceLength();
+            project.DeleteUnusedInstruments();
+            project.UpdateAllLastValidNotesAndVolume();
 
             return project;
         }

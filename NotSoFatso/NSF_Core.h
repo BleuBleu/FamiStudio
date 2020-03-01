@@ -101,6 +101,20 @@ struct NSF_ADVANCEDOPTIONS
 #define CHANNEL_VRC7FM5          12
 #define CHANNEL_VRC7FM6          13
 #define CHANNEL_FDS              14
+#define MMC5_SQUARE1             15
+#define MMC5_SQUARE2             16
+#define MMC5_DPCM                17
+#define N163_WAVE1               18
+#define N163_WAVE2               19
+#define N163_WAVE3               20
+#define N163_WAVE4               21
+#define N163_WAVE5               22
+#define N163_WAVE6               23
+#define N163_WAVE7               24
+#define N163_WAVE8               25
+#define S5B_SQUARE1              26
+#define S5B_SQUARE2              27
+#define S5B_SQUARE3              28
 							     
 #define STATE_VOLUME             0
 #define STATE_PERIOD             1

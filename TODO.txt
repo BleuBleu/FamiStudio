@@ -41,8 +41,11 @@
 	- VRC7
 		- Sustain should be ON by default. release = remove trigger.
 		- Note table has << 2 baked in. Make sure im ok with that.
+	- Sunsoft:
+		- See if gimmick had a differnt note table for PAL.
+	- MMC5:
+		- One game seems to use PCM... 
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
-- 
 
 TESTING:
 ========
