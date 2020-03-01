@@ -12,6 +12,7 @@ namespace FamiStudio
         public ChannelStateVrc7(int apuIdx, int channelType) : base(apuIdx, channelType, false)
         {
             channelIdx = channelType - Channel.Vrc7Fm1;
+            customRelease = true;
         }
 
         private void WriteVrc7Register(int reg, int data)
@@ -48,7 +49,7 @@ namespace FamiStudio
                 prevPeriodHi = (byte)(prevPeriodHi & ~(0x10));
                 WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi | 0x20);
             }
-            else if (note.IsMusical)
+            else if (note.IsMusical && noteTriggered)
             {
                 var octave = (note.Value - 1) / 12;
                 var period = NesApu.NoteTableVrc7[(note.Value - 1) % 12] >> 2;
@@ -70,9 +71,7 @@ namespace FamiStudio
                 prevPeriodHi = periodHi;
             }
 
-            // MATTT: This is wrong. Prevent volume envelopes to work and stuff.
-            // To prevent from re-triggering.
-            note.IsValid = false;
+            base.UpdateAPU();
         }
     };
 }

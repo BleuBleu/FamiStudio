@@ -59,6 +59,8 @@ namespace FamiStudio
                 WriteN163Register(NesApu.N163_REG_FREQ_HI  + regOffset, waveLength  | ((period >> 16) & 0x03));
                 WriteN163Register(NesApu.N163_REG_VOLUME   + regOffset, channelMask | volume);
             }
+
+            base.UpdateAPU();
         }
     };
 }

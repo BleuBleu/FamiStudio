@@ -33,6 +33,8 @@ namespace FamiStudio
                 WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_VOL_A + channelIdx);
                 WriteRegister(NesApu.S5B_DATA, volume);
             }
+
+            base.UpdateAPU();
         }
     };
 }

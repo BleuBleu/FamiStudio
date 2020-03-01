@@ -30,6 +30,8 @@ namespace FamiStudio
                 WriteRegister(NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
                 WriteRegister(NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
             }
+
+            base.UpdateAPU();
         }
     };
 }

@@ -53,6 +53,8 @@ namespace FamiStudio
                 WriteRegister(NesApu.APU_PL1_LO + regOffset, periodLo);
                 WriteRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | volume);
             }
+
+            base.UpdateAPU();
         }
     };
 }

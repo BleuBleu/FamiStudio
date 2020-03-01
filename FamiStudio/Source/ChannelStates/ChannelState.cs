@@ -13,6 +13,8 @@ namespace FamiStudio
         protected int[] envelopeIdx = new int[Envelope.Count];
         protected int[] envelopeValues = new int[Envelope.Count];
         protected bool palMode;
+        protected bool customRelease = false;
+        protected bool noteTriggered = false;
         protected ushort[] noteTable = null;
         protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
@@ -101,16 +103,22 @@ namespace FamiStudio
 
             if (newNote.IsRelease)
             {
-                if (note.Instrument != null)
+                // Channels with custom release code will do their own thing.
+                if (customRelease)
                 {
-                    for (int j = 0; j < Envelope.Count; j++)
+                    note = newNote;
+                }
+                else
+                {
+                    if (note.Instrument != null)
                     {
-                        if (envelopes[j] != null && envelopes[j].Release >= 0)
-                            envelopeIdx[j] = envelopes[j].Release;
+                        for (int j = 0; j < Envelope.Count; j++)
+                        {
+                            if (envelopes[j] != null && envelopes[j].Release >= 0)
+                                envelopeIdx[j] = envelopes[j].Release;
+                        }
                     }
                 }
-
-                note = newNote;
             }
             else
             {
@@ -128,6 +136,7 @@ namespace FamiStudio
                     }
 
                     envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
+                    noteTriggered = true;
                 }
 
                 if (instrumentChanged)
@@ -254,6 +263,9 @@ namespace FamiStudio
             return envelopeValues[Envelope.DutyCycle];
         }
 
-        public abstract void UpdateAPU();
+        public virtual void UpdateAPU()
+        {
+            noteTriggered = false;
+        }
     };
 }

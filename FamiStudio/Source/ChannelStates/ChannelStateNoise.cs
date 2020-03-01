@@ -21,6 +21,8 @@
                 WriteRegister(NesApu.APU_NOISE_LO, period);
                 WriteRegister(NesApu.APU_NOISE_VOL, 0xf0 | volume);
             }
+
+            base.UpdateAPU();
         }
     }
 }

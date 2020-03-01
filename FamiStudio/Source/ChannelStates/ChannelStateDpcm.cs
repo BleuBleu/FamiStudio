@@ -12,7 +12,7 @@
             {
                 WriteRegister(NesApu.APU_SND_CHN, 0x0f);
             }
-            else if (note.IsMusical)
+            else if (note.IsMusical && noteTriggered)
             {
                 WriteRegister(NesApu.APU_SND_CHN, 0x0f);
 
@@ -25,10 +25,9 @@
                     WriteRegister(NesApu.APU_DMC_RAW, 32);
                     WriteRegister(NesApu.APU_SND_CHN, 0x1f);
                 }
-
-                // To prevent from re-triggering.
-                note.IsValid = false;
             }
+
+            base.UpdateAPU();
         }
     }
 }
