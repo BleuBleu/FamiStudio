@@ -271,6 +271,13 @@ namespace FamiStudio
                 case Channel.N163Wave7:
                 case Channel.N163Wave8:
                     return NoteTableN163;
+                case Channel.Vrc7Fm1:
+                case Channel.Vrc7Fm2:
+                case Channel.Vrc7Fm3:
+                case Channel.Vrc7Fm4:
+                case Channel.Vrc7Fm5:
+                case Channel.Vrc7Fm6:
+                    return NoteTableVrc7;
                 default:
                     return pal ? NoteTablePAL : NoteTableNTSC;
             }

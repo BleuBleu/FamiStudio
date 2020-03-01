@@ -269,17 +269,17 @@ namespace FamiStudio
 
         class ChannelState
         {
-            public int period  = -1;
-            public int note    = -1;
-            public int pitch   = -1;
-            public int volume  = -1;
-            public int duty    = -1;
+            public const int Triggered = 1;
+            public const int Released  = 2;
+            public const int Stopped   = 0;
 
-            public const int Vrc7StateTriggered = 1;
-            public const int Vrc7StateReleased  = 2;
-            public const int Vrc7StateStopped   = 0;
-
-            public int vrc7State = Vrc7StateStopped;
+            public int  period  = -1;
+            public int  note    = -1;
+            public int  pitch   =  0;
+            public int  volume  = 15;
+            public int  duty    = -1;
+            public int  octave  = -1;
+            public int  trigger = Stopped;
         };
 
         public static int GetBestMatchingNote(int period, ushort[] noteTable, out int finePitch)
@@ -446,54 +446,73 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (channel.Type >= Channel.Vrc7Fm1 && 
-                     channel.Type <= Channel.Vrc7Fm6)
-            {
-                var patch = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCH, 0);
-                var regs  = new byte[8];
+            //else if (channel.Type >= Channel.Vrc7Fm1 && 
+            //         channel.Type <= Channel.Vrc7Fm6)
+            //{
+            //    var patch = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCH, 0);
+            //    var regs = new byte[8];
 
-                if (patch == 0)
-                {
-                    for (int i = 0; i < 8; i++)
-                        regs[i] = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCHREG, i);
-                }
+            //    if (patch == 0)
+            //    {
+            //        for (int i = 0; i < 8; i++)
+            //            regs[i] = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCHREG, i);
+            //    }
 
-                Instrument instrument = GetVrc7Instrument(project, patch, regs);
+            //    Instrument instrument = GetVrc7Instrument(project, patch, regs);
 
-                var period  = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0); 
-                var octave  = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
-                var trigger = NsfGetState(nsf, channel.Type, STATE_VRC7TRIGGER, 0);
-                var sustain = NsfGetState(nsf, channel.Type, STATE_VRC7SUSTAIN, 0);
+            //    var period  = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0); 
+            //    var octave  = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
+            //    var trigger = NsfGetState(nsf, channel.Type, STATE_VRC7TRIGGER, 0);
+            //    var sustain = NsfGetState(nsf, channel.Type, STATE_VRC7SUSTAIN, 0);
 
-                if (trigger == 1 && state.vrc7State != ChannelState.Vrc7StateTriggered)
-                {
-                    var note    = GetBestMatchingNote(period << 2, NesApu.NoteTableVrc7, out var finePitch);
-                    var pattern = GetOrCreatePattern(channel, p);
+            //    var noteVal = Note.NoteInvalid;
 
-                    pattern.Notes[n].Value = (byte)(octave * 12 + note + 1);
-                    pattern.Notes[n].Instrument = instrument;
+            //    if (trigger == 1 && state.trigger != ChannelState.Triggered)
+            //    {
+            //        var note = GetBestMatchingNote(period << 2, NesApu.NoteTableVrc7, out var finePitch);
+            //        noteVal = (byte)(octave * 12 + note + 1);
+            //        state.trigger = ChannelState.Triggered;
+            //    }
+            //    else if (trigger == 0 && sustain == 1 && state.trigger == ChannelState.Triggered)
+            //    {
+            //        noteVal = Note.NoteRelease;
+            //        state.trigger = ChannelState.Released;
+            //    }
+            //    else if (trigger == 0 && sustain == 0 && state.trigger != ChannelState.Stopped)
+            //    {
+            //        noteVal = Note.NoteStop;
+            //        state.trigger = ChannelState.Stopped;
+            //    }
 
-                    state.vrc7State = ChannelState.Vrc7StateTriggered;
-                    hasNote = true;
-                }
-                else if (trigger == 0 && sustain == 1 && state.vrc7State == ChannelState.Vrc7StateTriggered)
-                {
-                    GetOrCreatePattern(channel, p).Notes[n].Value = Note.NoteRelease;
-                    state.vrc7State = ChannelState.Vrc7StateReleased;
-                }
-                else if (trigger == 0 && sustain == 0 && state.vrc7State != ChannelState.Vrc7StateStopped)
-                {
-                    GetOrCreatePattern(channel, p).Notes[n].Value = Note.NoteStop;
-                    state.vrc7State = ChannelState.Vrc7StateStopped;
-                }
-            }
+            //    if (noteVal != Note.NoteInvalid)
+            //    {
+            //        var pattern = GetOrCreatePattern(channel, p);
+
+            //        var volume = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
+            //        if (state.volume != volume)
+            //        {
+            //            pattern.Notes[n].Volume = (byte)volume;
+            //            state.volume = volume;
+            //        }
+
+            //        pattern.Notes[n].Value = (byte)noteVal;
+            //        pattern.Notes[n].Instrument = instrument;
+            //        hasNote = true;
+            //    }
+            //}
             else
             {
-                var period = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0);
-                var volume = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
-                var duty   = NsfGetState(nsf, channel.Type, STATE_DUTYCYCLE, 0);
-                var force  = false;
-                var stop   = false;
+                if (/*p == 1 && n >= 16 &&*/ channel.Type == 2)
+                    p = p;
+
+                var period      = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0);
+                var volume      = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
+                var duty        = NsfGetState(nsf, channel.Type, STATE_DUTYCYCLE, 0);
+                var force       = false;
+                var stop        = false;
+                var release     = false;
+                var octave      = -1;
+                var periodShift = 0;
 
                 // VRC6 has a much larger volume range (6-bit) than our volume (4-bit).
                 // We also use odd duties to double the volume values.
@@ -512,34 +531,53 @@ namespace FamiStudio
                     }
                 }
 
-                var hasVolume = channel.Type != Channel.Dpcm;
-                var hasPeriod = channel.Type != Channel.Dpcm;
-                var hasPitch  = channel.Type != Channel.Dpcm && channel.Type != Channel.Noise;
-                var hasDuty   = channel.Type == Channel.Square1 || channel.Type == Channel.Square2 || channel.Type == Channel.Noise || channel.Type == Channel.Vrc6Square1 || channel.Type == Channel.Vrc6Square2 || channel.Type == Channel.Vrc6Saw;
-                var setVolume = hasVolume && channel.Type != Channel.Triangle;
+                var hasTrigger = true;
+                var hasPeriod  = true;
+                var hasOctave  = channel.Type >= Channel.Vrc7Fm1 && channel.Type <= Channel.Vrc7Fm6;
+                var hasVolume  = channel.Type != Channel.Triangle;
+                var hasPitch   = channel.Type != Channel.Noise;
+                var hasDuty    = channel.Type == Channel.Square1 || channel.Type == Channel.Square2 || channel.Type == Channel.Noise || channel.Type == Channel.Vrc6Square1 || channel.Type == Channel.Vrc6Square2 || channel.Type == Channel.Vrc6Saw;
 
-                if (hasVolume && state.volume != volume)
+                if (channel.Type >= Channel.Vrc7Fm1 && channel.Type <= Channel.Vrc7Fm6)
                 {
-                    var pattern = GetOrCreatePattern(channel, p);
+                    var trigger = NsfGetState(nsf, channel.Type, STATE_VRC7TRIGGER, 0) != 0;
+                    var sustain = NsfGetState(nsf, channel.Type, STATE_VRC7SUSTAIN, 0) != 0;
+                    var triggerState = trigger ? ChannelState.Triggered : (sustain ? ChannelState.Released : ChannelState.Stopped);
 
-                    if (volume == 0)
+                    if (triggerState != state.trigger)
                     {
-                        if (state.volume != 0)
+                        stop    = triggerState == ChannelState.Stopped;
+                        release = triggerState == ChannelState.Released;
+                        force |= true;
+                        state.trigger = triggerState;
+                    }
+
+                    octave = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
+                    periodShift = 2;
+                }
+                else
+                {
+                    if (hasTrigger)
+                    {
+                        var trigger = volume != 0 ? ChannelState.Triggered : ChannelState.Stopped;
+
+                        if (trigger != state.trigger)
                         {
-                            stop = true;
+                            stop = trigger == ChannelState.Stopped;
                             force |= true;
+                            state.trigger = trigger;
                         }
                     }
-                    else
+                }
+
+                if (hasVolume)
+                {
+                    if (state.volume != volume && volume != 0)
                     {
-                        if (state.volume == 0)
-                            force |= true;
-
-                        if (setVolume)
-                            pattern.Notes[n].Volume = (byte)volume;
+                        var pattern = GetOrCreatePattern(channel, p);
+                        pattern.Notes[n].Volume = (byte)volume;
+                        state.volume = volume;
                     }
-
-                    state.volume = volume;
                 }
 
                 Instrument instrument = null;
@@ -551,7 +589,7 @@ namespace FamiStudio
                     if (state.duty != duty)
                     {
                         state.duty = duty;
-                        force |= state.volume != 0;
+                        force |= state.trigger != ChannelState.Stopped;
                     }
                 }
                 else if (channel.Type == Channel.FdsWave)
@@ -567,33 +605,49 @@ namespace FamiStudio
                     Envelope.ConvertFdsModulationToAbsolute(modEnv);
                     instrument = GetFdsInstrument(project, wavEnv, modEnv);
                 }
+                else if (channel.Type >= Channel.Vrc7Fm1 &&
+                         channel.Type <= Channel.Vrc7Fm6)
+                {
+                    var patch = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCH, 0);
+                    var regs = new byte[8];
+
+                    if (patch == 0)
+                    {
+                        for (int i = 0; i < 8; i++)
+                            regs[i] = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCHREG, i);
+                    }
+
+                    instrument = GetVrc7Instrument(project, patch, regs);
+                }
                 else 
                 {
                     instrument = GetDutyInstrument(project, channel, 0);
                 }
 
-                if (hasPeriod && (state.period != period || force))
+                if ((hasPeriod && state.period != period) || (hasOctave && state.octave != octave) || force)
                 {
-                    var pattern = GetOrCreatePattern(channel, p);
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
-                    var note = 0;
+                    var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;
 
-                    if (!stop)
+                    if (!stop && !release && state.trigger != ChannelState.Stopped)
                     {
                         if (channel.Type == Channel.Noise)
                             note = (period ^ 0x0f) + 32;
                         else
-                            note = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
+                            note = (byte)GetBestMatchingNote(period << periodShift, noteTable, out finePitch);
+
+                        if (hasOctave)
+                            note += octave * 12;
                     }
 
                     if (state.note != note || force)
                     {
+                        var pattern = GetOrCreatePattern(channel, p);
                         pattern.Notes[n].Value = (byte)note;
-                        pattern.Notes[n].Instrument = stop ? null : instrument;
-                        if (!stop && setVolume)
-                            pattern.Notes[n].Volume = (byte)volume;
+                        pattern.Notes[n].Instrument = stop || release ? null : instrument;
                         state.note = note;
+                        state.octave = octave;
                         hasNote = note != 0;
                     }
 
@@ -603,6 +657,7 @@ namespace FamiStudio
 
                         if (pitch != state.pitch)
                         {
+                            var pattern = GetOrCreatePattern(channel, p);
                             pattern.Notes[n].FinePitch = pitch;
                             state.pitch = pitch;
                         }
@@ -701,9 +756,16 @@ namespace FamiStudio
                     foundFirstNote |= UpdateChannel(nsf, p, n, song.Channels[c], channelStates[c]);
 
                 if (foundFirstNote)
+                {
                     f++;
+                }
                 else
+                {
+                    // Reset everything until we find our first note.
                     project.DeleteAllInstrument();
+                    //for (int c = 0; c < song.Channels.Length; c++)
+                    //    channelStates[c] = new ChannelState();
+                }
             }
 
             song.SetLength(p + 1);

@@ -26,7 +26,6 @@
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - NSF Import:
-	- Avoid setting the volumes on new notes. Only if state.volume == 0.
 	- There is still something fishy with the pitches sometimes.
 - Transform dialog:
 	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
@@ -41,6 +40,7 @@
 		- Multi waves seems good with duty cycle envelopes... Later?
 	- VRC7
 		- Sustain should be ON by default. release = remove trigger.
+		- Note table has << 2 baked in. Make sure im ok with that.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - 
 
