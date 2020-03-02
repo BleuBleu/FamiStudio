@@ -5,7 +5,7 @@ SETLOCAL
 
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$480 {SONGDATASTART}=$8500", "", nsf_ft2
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$980 {SONGDATASTART}=$8a00", "-D FS", nsf_ft2_fs
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$b80 {SONGDATASTART}=$8c00", "-D FS -D FT_VRC6_ENABLE", nsf_ft2_fs_vrc6
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FS -D FT_VRC6_ENABLE", nsf_ft2_fs_vrc6
 
 EXIT /B %ERRORLEVEL%
 

@@ -299,14 +299,14 @@ namespace FamiStudio
         public void Serialize(ref Pattern pattern, Channel channel)
         {
             int patternId = -1;
-            Serialize(ref patternId);
+            Serialize(ref patternId, true);
             pattern = channel.GetPattern(patternId);
         }
 
         public void Serialize(ref DPCMSample sample)
         {
             int sampleId = -1;
-            Serialize(ref sampleId);
+            Serialize(ref sampleId, true);
             sample = project.GetSample(sampleId);
         }
 

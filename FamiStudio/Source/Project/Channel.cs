@@ -181,6 +181,7 @@ namespace FamiStudio
             switch (effect)
             {
                 case Note.EffectVolume:       return type != Dpcm;
+                case Note.EffectFinePitch:    return SupportsVibrato;
                 case Note.EffectVibratoSpeed: return SupportsVibrato;
                 case Note.EffectVibratoDepth: return SupportsVibrato;
             }

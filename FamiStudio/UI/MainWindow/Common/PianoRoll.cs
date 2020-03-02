@@ -177,6 +177,7 @@ namespace FamiStudio
         bool captureThresholdMet = false;
         CaptureOperation captureOperation = CaptureOperation.None;
 
+        bool playAddedNote = false;
         bool showSelection = false;
         bool showEffectsPanel = false;
         int scrollX = 0;
@@ -1938,6 +1939,8 @@ namespace FamiStudio
                             App.UndoRedoManager.EndTransaction();
                         }
 
+                        playAddedNote = true;
+                        App.PlayInstrumentNote(noteValue);
                         changed = true;
                     }
                     else
@@ -2381,6 +2384,12 @@ namespace FamiStudio
 
                 captureOperation = CaptureOperation.None;
                 Capture = false;
+            }
+
+            if (playAddedNote)
+            {
+                App.StopIntrumentNote();
+                playAddedNote = false;
             }
         }
 

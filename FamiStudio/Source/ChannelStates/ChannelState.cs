@@ -28,6 +28,7 @@ namespace FamiStudio
             noteTable = NesApu.GetNoteTableForChannelType(channelType, pal);
             note.Value = Note.NoteStop;
             note.Volume = Note.VolumeMax;
+            note.FinePitch = 0;
         }
 
         public void ProcessEffects(Song song, int patternIdx, int noteIdx, ref int speed, bool allowJump = true)
@@ -90,7 +91,7 @@ namespace FamiStudio
             }
             else if (newNote.HasFinePitch)
             {
-                note.Pitch = newNote.Pitch;
+                note.FinePitch = newNote.FinePitch;
             }
         }
 
@@ -99,7 +100,7 @@ namespace FamiStudio
             if (!newNote.HasVolume)
                 newNote.Volume = note.Volume;
             if (!newNote.HasFinePitch)
-                newNote.Pitch = 0;
+                newNote.FinePitch = note.FinePitch;
 
             if (newNote.IsRelease)
             {

@@ -43,6 +43,7 @@ FT_PITCH_ENV_ADR_L    : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_ADR_H    : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_PTR      : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_OVERRIDE : .res FT_NUM_PITCH_ENVELOPES
+FT_FINE_PITCH         : .res FT_NUM_PITCH_ENVELOPES
 
 ;slide structure offsets, 3 bytes per slide.
 
@@ -357,6 +358,7 @@ FamiToneMusicStop:
     sta FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_H,x
     sta FT_PITCH_ENV_OVERRIDE,x
+    sta FT_FINE_PITCH,x
     lda #1
     sta FT_PITCH_ENV_PTR,x
     inx
@@ -516,6 +518,7 @@ FamiToneMusicPause:
     .local @checkprevpulse
     .local @prev
     .local @cut
+    .local @pos
     .local @zero_vol
     .local noteTableLSB
     .local noteTableMSB
@@ -558,9 +561,7 @@ FamiToneMusicPause:
 
 .ifnblank slide_offset
 
-    ldy FT_SLIDE_STEP+slide_offset
-    beq @noslide
-@slide:
+    ; Pitch = note + pitch envelope + fine pitch.
     clc
     lda FT_PITCH_ENV_VALUE_L+slide_offset
     adc noteTableLSB,x
@@ -568,6 +569,23 @@ FamiToneMusicPause:
     lda FT_PITCH_ENV_VALUE_H+slide_offset
     adc noteTableMSB,x
     sta FT_TEMP_PTR2_H
+
+    ; Sign extend fine pitch.
+    clc
+    lda FT_FINE_PITCH+slide_offset
+    adc FT_TEMP_PTR2_L
+    sta FT_TEMP_PTR2_L
+    lda FT_FINE_PITCH+slide_offset
+    and #$80
+    beq @pos
+    lda #$ff
+@pos:
+    adc FT_TEMP_PTR2_H
+    sta FT_TEMP_PTR2_H
+
+    ldy FT_SLIDE_STEP+slide_offset
+    beq @noslide
+@slide:
     lda FT_SLIDE_PITCH_H+slide_offset
     asl ; sign extend upcoming right shift.
     ror ; we have 1 bit of fraction for slides, shift right hi byte.
@@ -588,14 +606,12 @@ FamiToneMusicPause:
 
 .endif
 
-    lda FT_PITCH_ENV_VALUE_L+slide_offset
-    adc noteTableLSB,x
+    lda FT_TEMP_PTR2_L
 .if !.blank(pulse_prev) && (FT_SMOOTH_VIBRATO)
     sta FT_TEMP_VAR2 ; need to keep the lo period in case we do the sweep trick.
 .endif
     sta reg_lo
-    lda FT_PITCH_ENV_VALUE_H+slide_offset
-    adc noteTableMSB,x
+    lda FT_TEMP_PTR2_H
 
 @checkprevpulse:
 
@@ -1142,12 +1158,12 @@ FamiToneUpdate:
     FT_DISABLE_ATTACK = FT_TEMP_VAR3
 
     lda FT_CHN_REPEAT,x        ;check repeat counter
-    beq @no_repeat
+    beq no_repeat
     dec FT_CHN_REPEAT,x        ;decrease repeat counter
     clc                        ;no new note
     rts
 
-@no_repeat:
+no_repeat:
     lda #0
     sta FT_DISABLE_ATTACK
     lda FT_CHN_PTR_L,x         ;load channel pointer into temp
@@ -1156,56 +1172,71 @@ FamiToneUpdate:
     sta FT_TEMP_PTR_H
     ldy #0
 
-@read_byte:
+read_byte:
     lda (FT_TEMP_PTR1),y       ;read byte of the channel
     inc FT_TEMP_PTR_L         ;advance pointer
-    bne @check_regular_note
+    bne check_regular_note
     inc FT_TEMP_PTR_H
 
-@check_regular_note:
+check_regular_note:
     cmp #$61
-    bcs @check_special_code    ; $00 to $60 are regular notes, most common case.
-    jmp @regular_note
+    bcs check_special_code    ; $00 to $60 are regular notes, most common case.
+    jmp regular_note
 
-@check_special_code:
+check_special_code:
     ora #0
-    bpl @check_volume
-    jmp @special_code           ;bit 7 0=note 1=special code
+    bpl check_volume
+    jmp special_code           ;bit 7 0=note 1=special code
 
-@check_volume:
+check_volume:
     cmp #$70
-    bcc @check_slide
+    bcc check_slide
     and #$0f
     asl ; a LUT would be nice, but x/y are both in-use here.
     asl
     asl
     asl
     sta FT_CHN_VOLUME_TRACK,x
-    jmp @read_byte
+    jmp read_byte
 
-@check_slide:
+; TODO: Jump table, or binary search...
+check_slide:
     cmp #$61                  ; slide note (followed by num steps, step size and the target note)
-    beq @slide
+    beq slide
 
-@check_disable_attack:    
+check_disable_attack:    
     cmp #$62
-    beq @disable_attack
+    beq disable_attack
 
-@check_override_pitch_envelope:
+check_override_pitch_envelope:
     cmp #$63
-    beq @override_pitch_envelope
+    beq override_pitch_envelope
 
-;cmp #$64
-;beq @override_pitch_envelope
+check_clear_pitch_override_flag:
+    cmp #$64
+    beq clear_pitch_override_flag
 
-@clear_pitch_override_flag:
+fine_pitch:
+    stx FT_TEMP_VAR1
+    lda _FT2ChannelToPitch,x
+    tax
+    lda (FT_TEMP_PTR1),y
+    sta FT_FINE_PITCH,x
+    ldx FT_TEMP_VAR1
+    inc FT_TEMP_PTR_L
+    bne fine_pitch_jump_back
+    inc FT_TEMP_PTR_H
+    fine_pitch_jump_back:
+        jmp read_byte 
+
+clear_pitch_override_flag:
     ldy _FT2ChannelToPitch,x
     lda #0
     sta FT_PITCH_ENV_OVERRIDE,y
     ldy #0
-    jmp @read_byte 
+    jmp read_byte 
 
-@override_pitch_envelope:
+override_pitch_envelope:
     stx FT_TEMP_VAR1
     lda _FT2ChannelToPitch,x
     tax
@@ -1225,16 +1256,17 @@ FamiToneUpdate:
     lda #2
     adc FT_TEMP_PTR_L
     sta FT_TEMP_PTR_L
-    bcc @read_byte 
+    bcc override_pitch_envelope_jump_back 
     inc FT_TEMP_PTR_H
-    jmp @read_byte 
+    override_pitch_envelope_jump_back:
+        jmp read_byte 
 
-@disable_attack:
+disable_attack:
     lda #1
     sta FT_DISABLE_ATTACK    
-    jmp @read_byte 
+    jmp read_byte 
 
-@slide:
+slide:
     stx FT_TEMP_VAR1
     lda _FT2ChannelToSlide,x
     tax
@@ -1251,8 +1283,8 @@ FamiToneUpdate:
 .ifdef FT_VRC6_ENABLE
     lda FT_TEMP_VAR1
     cmp #7
-    beq @note_table_saw
-@note_table_regular:
+    beq note_table_saw
+note_table_regular:
 .endif
     sec                        ; subtract the pitch of both notes. TODO: PAL.
     lda _FT2NoteTableLSB,y
@@ -1261,15 +1293,15 @@ FamiToneUpdate:
     lda _FT2NoteTableMSB,y
     sbc _FT2NoteTableMSB,x
 .ifdef FT_VRC6_ENABLE
-    jmp @note_table_done
-@note_table_saw:
+    jmp note_table_done
+note_table_saw:
     sec
     lda _FT2SawNoteTableLSB,y
     sbc _FT2SawNoteTableLSB,x
     sta FT_TEMP_PTR2_H
     lda _FT2SawNoteTableMSB,y
     sbc _FT2SawNoteTableMSB,x
-@note_table_done:
+note_table_done:
 .endif
     ldx FT_TEMP_VAR2           ; slide index.
     sta FT_SLIDE_PITCH_H,x
@@ -1285,47 +1317,47 @@ FamiToneUpdate:
     clc
     adc FT_TEMP_PTR_L
     sta FT_TEMP_PTR_L
-    bcc @slide_done_pos
+    bcc slide_done_pos
     inc FT_TEMP_PTR_H
 
-@slide_done_pos:
+slide_done_pos:
     ldy #0
-    jmp @sec_and_done
+    jmp sec_and_done
 
-@regular_note:    
+regular_note:    
     sta FT_CHN_NOTE,x          ; store note code
     ldy _FT2ChannelToSlide,x   ; clear any previous slide on new node.
-    bmi @sec_and_done
+    bmi sec_and_done
     lda #0
     sta FT_SLIDE_STEP,y
-@sec_and_done:
+sec_and_done:
     lda FT_DISABLE_ATTACK
-    bne @no_attack
+    bne no_attack
     sec                        ;new note flag is set
-    jmp @done
-@no_attack:
+    jmp done
+no_attack:
     clc                        ;pretend there is no new note.
-    jmp @done
+    jmp done
 
-@special_code:
+special_code:
     and #$7f
     lsr a
-    bcs @set_empty_rows
+    bcs set_empty_rows
     asl a
     asl a
     sta FT_CHN_INSTRUMENT,x    ;store instrument number*4
-    jmp @read_byte 
+    jmp read_byte 
 
-@set_empty_rows:
-    cmp #$3b
-    beq @release_note
+set_empty_rows:
     cmp #$3d
-    bcc @set_repeat
-    beq @set_speed
+    beq set_speed
+    cmp #$3c
+    beq release_note
+    bcc set_repeat
     cmp #$3e
-    beq @set_loop
+    beq set_loop
 
-@set_reference:
+set_reference:
     clc                        ;remember return address+3
     lda FT_TEMP_PTR_L
     adc #3
@@ -1344,18 +1376,18 @@ FamiToneUpdate:
     lda FT_TEMP_VAR1
     sta FT_TEMP_PTR_L
     ldy #0
-    jmp @read_byte
+    jmp read_byte
 
-@set_speed:
+set_speed:
     lda (FT_TEMP_PTR1),y
     sta FT_SONG_SPEED
     inc FT_TEMP_PTR_L         ;advance pointer after reading the speed value
-    bne @jump_back
+    bne jump_back
     inc FT_TEMP_PTR_H
-@jump_back:    
-    jmp @read_byte 
+jump_back:    
+    jmp read_byte 
 
-@set_loop:
+set_loop:
     lda (FT_TEMP_PTR1),y
     sta FT_TEMP_VAR1
     iny
@@ -1364,9 +1396,9 @@ FamiToneUpdate:
     lda FT_TEMP_VAR1
     sta FT_TEMP_PTR_L
     dey
-    jmp @read_byte
+    jmp read_byte
 
-@release_note:
+release_note:
     stx <FT_TEMP_VAR1
     lda _FT2ChannelToVolumeEnvelope,x ; DPCM(5) will never have releases.
     tax
@@ -1378,25 +1410,25 @@ FamiToneUpdate:
     
     ldy #0
     lda (FT_TEMP_PTR2),y       ;read first byte of the envelope data, this contains the release index.
-    beq @env_has_no_release
+    beq env_has_no_release
 
     sta FT_ENV_PTR,x
     lda #0
     sta FT_ENV_REPEAT,x        ;need to reset envelope repeat to force update.
     
-@env_has_no_release:
+env_has_no_release:
     ldx FT_TEMP_VAR1
     clc
-    jmp @done
+    jmp done
 
-@set_repeat:
+set_repeat:
     sta FT_CHN_REPEAT,x        ;set up repeat counter, carry is clear, no new note
 
-@done:
+done:
     lda FT_CHN_REF_LEN,x       ;check reference row counter
-    beq @no_ref                ;if it is zero, there is no reference
+    beq no_ref                ;if it is zero, there is no reference
     dec FT_CHN_REF_LEN,x       ;decrease row counter
-    bne @no_ref
+    bne no_ref
 
     lda FT_CHN_RETURN_L,x      ;end of a reference, return to previous pointer
     sta FT_CHN_PTR_L,x
@@ -1404,7 +1436,7 @@ FamiToneUpdate:
     sta FT_CHN_PTR_H,x
     rts
 
-@no_ref:
+no_ref:
     lda FT_TEMP_PTR_L
     sta FT_CHN_PTR_L,x
     lda FT_TEMP_PTR_H

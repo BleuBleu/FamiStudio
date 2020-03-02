@@ -256,6 +256,20 @@ namespace FamiStudio
             songs.Remove(song);
         }
 
+        public Song DuplicateSong(Song song)
+        {
+            var saveSerializer = new ProjectSaveBuffer(this);
+            song.SerializeState(saveSerializer);
+            var newSong = CreateSong();
+            var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
+            loadSerializer.RemapId(song.Id, newSong.Id);
+            newSong.SerializeState(loadSerializer);
+#if DEBUG
+            Validate();
+#endif
+            return newSong;
+        }
+
         public bool IsInstrumentNameUnique(string name)
         {
             return instruments.Find(inst => inst.Name == name) == null;

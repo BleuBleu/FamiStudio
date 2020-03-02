@@ -26,7 +26,7 @@ namespace FamiStudio
         private int maxRepeatCount = MaxRepeatCountFT2;
 
         private const int MinPatternLength = 6;
-        private const int MaxRepeatCountFT2FS = 58; // 2 less for release notes.
+        private const int MaxRepeatCountFT2FS = 59; // 1 less for release notes.
         private const int MaxRepeatCountFT2   = 60;
         private const int MaxSongs = (256 - 5) / 14;
         private const int MaxPatterns = 128 * MaxSongs;
@@ -434,7 +434,7 @@ namespace FamiStudio
             else
             {
                 if (value == Note.NoteRelease)
-                    return (byte)value;
+                    return (byte)0xf9;
 
                 // 0 = stop, 1 = C0 ... 96 = B7
                 if (value != 0)
@@ -504,6 +504,12 @@ namespace FamiStudio
                         if (note.HasVolume)
                         {
                             patternBuffer.Add($"${(byte)(0x70 | note.Volume):x2}");
+                        }
+
+                        if (note.HasFinePitch)
+                        {
+                            patternBuffer.Add($"${0x65:x2}");
+                            patternBuffer.Add($"${note.FinePitch:x2}");
                         }
 
                         if (note.HasVibrato)
@@ -581,7 +587,7 @@ namespace FamiStudio
                             {
                                 var emptyNote = pattern.Notes[i];
 
-                                if (numEmptyNotes >= maxRepeatCount || emptyNote.IsValid || emptyNote.HasVolume || emptyNote.HasVibrato ||
+                                if (numEmptyNotes >= maxRepeatCount || emptyNote.IsValid || emptyNote.HasVolume || emptyNote.HasVibrato || emptyNote.HasFinePitch ||
                                     (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
                                 {
                                     break;
@@ -696,7 +702,7 @@ namespace FamiStudio
                 if ((song.DefaultPatternLength % factor) == 0 &&
                     (song.DefaultPatternLength / factor) >= MinPatternLength)
                 {
-                    var splitSong = song.DeepClone();
+                    var splitSong = project.DuplicateSong(song);
                     if (splitSong.Split(factor))
                     {
                         int size = OutputSong(splitSong, songIdx, speedChannel, factor, true);
@@ -708,13 +714,18 @@ namespace FamiStudio
                             bestFactor = factor;
                         }
                     }
+                    project.DeleteSong(splitSong);
                 }
             }
 
-            var bestSplitSong = song.DeepClone();
+            var bestSplitSong = project.DuplicateSong(song);
             bestSplitSong.Split(bestFactor);
 
-            return OutputSong(bestSplitSong, songIdx, bestChannel, bestFactor, false);
+            var songSize = OutputSong(bestSplitSong, songIdx, bestChannel, bestFactor, false);
+
+            project.DeleteSong(song);
+
+            return songSize;
         }
         
         private void SetupFormat(OutputFormat format)
@@ -761,10 +772,11 @@ namespace FamiStudio
                                 {
                                     pattern.Notes[i].Value = Note.NoteInvalid;
                                 }
-                                pattern.Notes[i].HasAttack   = true;
-                                pattern.Notes[i].HasVibrato  = false;
-                                pattern.Notes[i].HasVolume   = false;
-                                pattern.Notes[i].IsSlideNote = false;
+                                pattern.Notes[i].HasAttack    = true;
+                                pattern.Notes[i].HasVibrato   = false;
+                                pattern.Notes[i].HasVolume    = false;
+                                pattern.Notes[i].IsSlideNote  = false;
+                                pattern.Notes[i].HasFinePitch = false;
                             }
                         }
                     }

@@ -41,7 +41,7 @@ namespace FamiStudio
         public const int NoteStop        = 0x00;
         public const int MusicalNoteMin  = 0x01;
         public const int MusicalNoteMax  = 0x60;
-        public const int NoteRelease     = 0xf7;
+        public const int NoteRelease     = 0x80;
         public const int DPCMNoteMin     = 0x0c;
         public const int DPCMNoteMax     = 0x4b;
 
@@ -262,6 +262,10 @@ namespace FamiStudio
         {
             buffer.Serialize(ref Value);
 
+            // At version 5 (FamiStudio 1.5.0), we changed the numerical value of the release note.
+            if (buffer.Version < 5 && Value == 0xf7)
+                Value = Note.NoteRelease;
+                
             // At version 5 (FamiStudio 1.5.0), we added fine pitch effect.
             if (buffer.Version >= 5)
                 buffer.Serialize(ref Pitch);

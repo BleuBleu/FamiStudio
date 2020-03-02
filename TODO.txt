@@ -11,12 +11,12 @@
 	- NSF (#defines)
 	- Add better tempo logic to famitone2fs.
 	- Make bar length more flexible (for short patterns too).
-- Fine pitch track
-	- NSF
-- Duty cycle envelopes.
-	- NSF
-	- Test FamiTracker import/export
-	- Test Famitone 2 export, etc.
+- NSF:
+	- Fix load note function, can't increment y twice, will fail on page change.
+	- Fix the whole function, use macros.
+	- Fine pitch track
+	- Duty envelopes.
+	- Expansions
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Transform dialog:
@@ -24,7 +24,6 @@
 	- Tempo conversion? Or should that be in the song properties?
 - Loop point should be optional.
 - All expansions.
-	- NSF.		
 	- Finigh channel code, clean.
 	- Import/export all formats.
 	- Namco:
@@ -56,6 +55,7 @@ TESTING:
 - Compare relative volume of all channels.
 - MAC: Make sure namco channels dialog works. Added Combo box prop change callback.
 - Binary FTM import. Try opening all the demo songs from FT.
+- Duty cycle envelopes, make sure all import/export format support it.
 
 ========================
 

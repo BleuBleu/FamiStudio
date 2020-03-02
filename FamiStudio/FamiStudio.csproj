@@ -181,7 +181,6 @@
     <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc6.bin" />
-    <EmbeddedResource Include="Nsf\rom.nes" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -224,6 +223,7 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportWav.png" />
+    <EmbeddedResource Include="Rom\rom.nes" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

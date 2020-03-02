@@ -292,16 +292,6 @@ namespace FamiStudio
             return channels[Channel.ChannelTypeToIndex(type)];
         }
 
-        public Song DeepClone()
-        {
-            var saveSerializer = new ProjectSaveBuffer(project);
-            SerializeState(saveSerializer);
-            var newSong = new Song();
-            var loadSerializer = new ProjectLoadBuffer(project, saveSerializer.GetBuffer(), Project.Version);
-            newSong.SerializeState(loadSerializer);
-            return newSong;
-        }
-
         public void Trim()
         {
             int maxLength = 0;
@@ -454,7 +444,7 @@ namespace FamiStudio
             if (buffer.IsReading)
                 project = buffer.Project;
 
-            buffer.Serialize(ref id);
+            buffer.Serialize(ref id, true);
             buffer.Serialize(ref patternLength);
             buffer.Serialize(ref songLength);
             buffer.Serialize(ref barLength);

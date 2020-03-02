@@ -15,14 +15,14 @@ New encoding:
 	$01-$60        Notes (like doug)
 	$61            Auto slide note (followed by step size + num steps (255 = manual slide) + target note)
 	$62            Disable attack (can only happen when no instrument changes)
-	$63            Override pitch envelope (for vibrato***)
-	$64            Clear override flag.
-	$65-$6f        Free.
+	$63            Override pitch envelope (for vibrato)
+	$64            Clear pitch override flag.
+	$65            TODO: fine pitch.
+	$66-$6f        Free.
 	$70-$7f        Volume (like doug).
 	$80 | (n << 1) Instrument change, max 64
-	$81 | (n << 1) Series of n empty notes (max 58 because 59 = $f7, 60 = $f9, 61 = $fb, 62 = $fd)
-	$f7            Release note (3b)
-	; $f9            Repeat (3c) NOT A CODE, series of n empty notes.
+	$81 | (n << 1) Series of n empty notes (max 59 = $f7, 60 = $f9, 61 = $fb, 62 = $fd)
+	$f9            Release note (3b)
 	$fb            Speed change (3d)
 	$fd            Jump (3e)
 	$ff, n, ref    Plays n notes starting at ref
