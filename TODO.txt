@@ -5,7 +5,6 @@
 	- 2 tempo modes:
 		- FamiTracker : Tracker like, tempo/speed, delayed notes/cuts. Minimal effor to support.
 		- FamiStudio  : Always 1 note = frame. Note size, PAL repetition pattern. (TEST THAT!)
-	- *** Idea: Are they the same, but famistudio mode only works at speed = 1???
 	- Do it in FamiStudio.
 	- Fix rounding on weird tempos.
 	- Delayed notes/cuts.
@@ -41,12 +40,11 @@
 	- MMC5:
 		- One game seems to use PCM... 
 	- FDS:
-		- Mod delay or mod track (need mod track for NSF import probably...)
+		- Mod delay or mod track (need mod track for NSF import probably... Will need wider range on fx panel)
 		
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.
-- Remove VRC6 duty hack. Full volume range.
-- Fds volume values go very high.
+- Remove VRC6 duty hack. Full volume range. (multiplication table wont work?)
 
 TESTING:
 ========

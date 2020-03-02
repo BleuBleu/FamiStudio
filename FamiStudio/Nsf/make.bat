@@ -1,19 +1,17 @@
-@echo [Compiling]
 @echo off
+@del /q *.o *.bin *.dbg *.map
 
-..\..\..\NES\tools\bin\ca65 rom.s -g -o rom.o -D FT_EQUALIZER
-..\..\..\NES\tools\bin\ca65 nsf.s -g -o nsf_ft2.o
-..\..\..\NES\tools\bin\ca65 nsf.s -g -o nsf_ft2_fs.o -D FS
-..\..\..\NES\tools\bin\ca65 nsf.s -g -o nsf_ft2_fs_vrc6.o -D FS -D FT_VRC6_ENABLE
+SETLOCAL
 
-@del rom.nes
-@del nsf_ft2.bin
-@del nsf_ft2_fs.bin
-@del nsf_ft2_fs_vrc6.bin
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$480 {SONGDATASTART}=$8500", "", nsf_ft2
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$980 {SONGDATASTART}=$8a00", "-D FS", nsf_ft2_fs
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$b80 {SONGDATASTART}=$8c00", "-D FS -D FT_VRC6_ENABLE", nsf_ft2_fs_vrc6
 
-@echo [Linking]
-..\..\..\NES\tools\bin\ld65 -C rom.cfg -o rom.nes rom.o --mapfile rom.map --dbgfile rom.dbg
-..\..\..\NES\tools\bin\ld65 -C nsf_ft2.cfg -o nsf_ft2.bin nsf_ft2.o --mapfile nsf_ft2.map
-..\..\..\NES\tools\bin\ld65 -C nsf_ft2_fs.cfg -o nsf_ft2_fs.bin nsf_ft2_fs.o --mapfile nsf_ft2_fs.map
-..\..\..\NES\tools\bin\ld65 -C nsf_ft2_fs_vrc6.cfg -o nsf_ft2_fs_vrc6.bin nsf_ft2_fs_vrc6.o --mapfile nsf_ft2_fs_vrc6.map
+EXIT /B %ERRORLEVEL%
 
+:CompileNsfPermutation
+@echo %~4
+PatchText %~1 tmp.cfg %~2
+..\..\..\NES\tools\bin\ca65 nsf.s -g -o %~4.o %~3 
+..\..\..\NES\tools\bin\ld65 -C tmp.cfg -o %~4.bin %~4.o --mapfile %~4.map --dbgfile %~4.dbg
+EXIT /B 0
