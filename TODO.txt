@@ -12,9 +12,7 @@
 	- Add better tempo logic to famitone2fs.
 	- Make bar length more flexible (for short patterns too).
 - NSF:
-	- Fix load note function, can't increment y twice, will fail on page change.
-	- Fix the whole function, use macros.
-	- Fine pitch track
+	x Fine pitch track
 	- Duty envelopes.
 	- Expansions
 - ROM export (Mapper 31):
