@@ -20,7 +20,7 @@ FT_SMOOTH_VIBRATO = 1 ; Blaarg's smooth vibrato technique
 
 .segment "RAM"
 
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
 FT_NUM_ENVELOPES        = 2+2+2+2+2+2+2+2 ; DPCM envelopes [8-9] are unused. 
 FT_NUM_PITCH_ENVELOPES  = 6
 .else
@@ -47,7 +47,7 @@ FT_FINE_PITCH         : .res FT_NUM_PITCH_ENVELOPES
 
 ;slide structure offsets, 3 bytes per slide.
 
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
 FT_NUM_SLIDES = 6
 .else
 FT_NUM_SLIDES = 3 ;square and triangle have slide notes.
@@ -60,7 +60,7 @@ FT_SLIDE_PITCH_H : .res FT_NUM_SLIDES
 
 ;channel structure offsets, 10 bytes per channel
 
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
 FT_NUM_CHANNELS = 8
 .else
 FT_NUM_CHANNELS = 5
@@ -77,7 +77,7 @@ FT_CHN_RETURN_H     : .res FT_NUM_CHANNELS
 FT_CHN_REF_LEN      : .res FT_NUM_CHANNELS
 FT_CHN_DUTY         : .res FT_NUM_CHANNELS
 FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS ; DPCM(4) + Triangle(2) are unused.
-.ifdef FT_EQUALIZER
+.ifdef ::FT_EQUALIZER
 FT_CHN_NOTE_COUNTER : .res FT_NUM_CHANNELS
 .endif
 
@@ -87,7 +87,7 @@ FT_CH1_ENVS = 0
 FT_CH2_ENVS = 2
 FT_CH3_ENVS = 4
 FT_CH4_ENVS = 6
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
 FT_CH6_ENVS = 10
 FT_CH7_ENVS = 12
 FT_CH8_ENVS = 14
@@ -177,7 +177,7 @@ APU_DMC_LEN    = $4013
 APU_SND_CHN    = $4015
 APU_FRAME_CNT  = $4017
 
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
 VRC6_PL1_VOL   = $9000
 VRC6_PL1_LO    = $9001
 VRC6_PL1_HI    = $9002
@@ -217,29 +217,38 @@ VRC6_SAW_HI    = $b002
     FT_MR_NOISE_F  = FT_OUT_BUF+10
 .endif
 
+; increments 16 bit.
+.macro inc_16 addr
+    .local @ok
+    inc addr+0
+    bne @ok
+    inc addr+1
+@ok:
+.endmacro
+
 ;------------------------------------------------------------------------------
 ; reset APU, initialize FamiTone
 ; in: A   0 for PAL, not 0 for NTSC
 ;     X,Y pointer to music data
 ;------------------------------------------------------------------------------
 
-FamiToneInit:
+.proc FamiToneInit
 
     stx FT_SONG_LIST_L         ;store music data pointer for further use
     sty FT_SONG_LIST_H
-    stx <FT_TEMP_PTR_L
-    sty <FT_TEMP_PTR_H
+    stx FT_TEMP_PTR_L
+    sty FT_TEMP_PTR_H
 
-    .if(FT_PITCH_FIX)
+    .if(::FT_PITCH_FIX)
     tax                        ;set SZ flags for A
-    beq @pal
+    beq pal
     lda #64
-@pal:
+pal:
     .else
-    .if(FT_PAL_SUPPORT)
+    .if(::FT_PAL_SUPPORT)
     lda #0
     .endif
-    .if(FT_NTSC_SUPPORT)
+    .if(::FT_NTSC_SUPPORT)
     lda #64
     .endif
     .endif
@@ -279,15 +288,17 @@ FamiToneInit:
     sta APU_PL1_SWEEP
     sta APU_PL2_SWEEP
 
-    ;jmp FamiToneMusicStop
+    jsr FamiToneMusicStop
+    rts
 
+.endproc
 
 ;------------------------------------------------------------------------------
 ; stop music that is currently playing, if any
 ; in: none
 ;------------------------------------------------------------------------------
 
-FamiToneMusicStop:
+.proc FamiToneMusicStop
 
     lda #0
     sta FT_SONG_SPEED          ;stop music, reset pause flag
@@ -295,7 +306,7 @@ FamiToneMusicStop:
 
     ldx #0    ;initialize channel structures
 
-@set_channels:
+set_channels:
 
     lda #0
     sta FT_CHN_REPEAT,x
@@ -303,35 +314,35 @@ FamiToneMusicStop:
     sta FT_CHN_NOTE,x
     sta FT_CHN_REF_LEN,x
     sta FT_CHN_VOLUME_TRACK,x
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
     cpx #5
-    bcc @regular_inst
-@vrc6_inst:
+    bcc regular_inst
+vrc6_inst:
     lda #$0
     sta FT_CHN_DUTY,x
-    jmp @nextchannel
-@regular_inst:
+    jmp nextchannel
+regular_inst:
 .endif
     lda #$30
     sta FT_CHN_DUTY,x
 
-@nextchannel:
+nextchannel:
     inx                        ;next channel
     cpx #FT_NUM_CHANNELS
-    bne @set_channels
+    bne set_channels
 
     ldx #0    ;initialize all slides to zero
     lda #0
-@set_slides:
+set_slides:
 
     sta FT_SLIDE_STEP, x
     inx                        ;next channel
     cpx #FT_NUM_SLIDES
-    bne @set_slides
+    bne set_slides
 
     ldx #0    ;initialize all envelopes to the dummy envelope
 
-@set_envelopes:
+set_envelopes:
 
     lda #.lobyte(_FT2DummyEnvelope)
     sta FT_ENV_ADR_L,x
@@ -343,11 +354,11 @@ FamiToneMusicStop:
     sta FT_ENV_PTR,x
     inx
     cpx #FT_NUM_ENVELOPES
-    bne @set_envelopes
+    bne set_envelopes
 
     ldx #0    ;initialize all envelopes to the dummy envelope
 
-@set_pitch_envelopes:
+set_pitch_envelopes:
 
     lda #.lobyte(_FT2DummyPitchEnvelope)
     sta FT_PITCH_ENV_ADR_L,x
@@ -363,56 +374,58 @@ FamiToneMusicStop:
     sta FT_PITCH_ENV_PTR,x
     inx
     cpx #FT_NUM_PITCH_ENVELOPES
-    bne @set_pitch_envelopes
+    bne set_pitch_envelopes
 
-    jmp FamiToneSampleStop
+    jsr FamiToneSampleStop
+    rts
 
+.endproc
 
 ;------------------------------------------------------------------------------
 ; play music
 ; in: A number of subsong
 ;------------------------------------------------------------------------------
 
-FamiToneMusicPlay:
+.proc FamiToneMusicPlay
 
     ldx FT_SONG_LIST_L
-    stx <FT_TEMP_PTR_L
+    stx FT_TEMP_PTR_L
     ldx FT_SONG_LIST_H
-    stx <FT_TEMP_PTR_H
+    stx FT_TEMP_PTR_H
 
     ldy #0
     cmp (FT_TEMP_PTR1),y       ;check if there is such sub song
-    bcs @skip
+    bcs skip
 
-.if FT_NUM_CHANNELS = 5
+.if ::FT_NUM_CHANNELS = 5
     asl a                      ;multiply song number by 14
-    sta <FT_TEMP_PTR_L         ;use pointer LSB as temp variable
+    sta FT_TEMP_PTR_L         ;use pointer LSB as temp variable
     asl a
     tax
     asl a
-    adc <FT_TEMP_PTR_L
-    stx <FT_TEMP_PTR_L
-    adc <FT_TEMP_PTR_L
-.elseif FT_NUM_CHANNELS = 8
+    adc FT_TEMP_PTR_L
+    stx FT_TEMP_PTR_L
+    adc FT_TEMP_PTR_L
+.elseif ::FT_NUM_CHANNELS = 8
     asl                        ;multiply song number by 20
     asl
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
     asl
     asl
-    adc <FT_TEMP_PTR_L
+    adc FT_TEMP_PTR_L
 .endif
 
     adc #5                     ;add offset
     tay
 
     lda FT_SONG_LIST_L         ;restore pointer LSB
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
 
     jsr FamiToneMusicStop      ;stop music, initialize channels and envelopes
 
     ldx #0    ;initialize channel structures
 
-@set_channels:
+set_channels:
 
     lda (FT_TEMP_PTR1),y       ;read channel pointers
     sta FT_CHN_PTR_L,x
@@ -428,28 +441,28 @@ FamiToneMusicPlay:
     sta FT_CHN_REF_LEN,x
     lda #$f0
     sta FT_CHN_VOLUME_TRACK,x
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
     cpx #5
-    bcc @regular_inst
-@vrc6_inst:
+    bcc regular_inst
+vrc6_inst:
     lda #$0
     sta FT_CHN_DUTY,x
-    jmp @nextchannel
-@regular_inst:
+    jmp nextchannel
+regular_inst:
 .endif
     sta FT_CHN_DUTY,x
 
-@nextchannel:
+nextchannel:
     inx                        ;next channel
     cpx #FT_NUM_CHANNELS
-    bne @set_channels
+    bne set_channels
 
 
     lda FT_PAL_ADJUST          ;read tempo for PAL or NTSC
-    beq @pal
+    beq pal
     iny
     iny
-@pal:
+pal:
 
     lda (FT_TEMP_PTR1),y       ;read the tempo step
     sta FT_TEMPO_STEP_L
@@ -464,21 +477,22 @@ FamiToneMusicPlay:
     sta FT_TEMPO_ACC_H
     sta FT_SONG_SPEED          ;apply default speed, this also enables music
 
-@skip:
+skip:
     rts
 
+.endproc
 
 ;------------------------------------------------------------------------------
 ; pause and unpause current music
 ; in: A 0 or not 0 to play or pause
 ;------------------------------------------------------------------------------
 
-FamiToneMusicPause:
+.proc FamiToneMusicPause
 
     tax                        ;set SZ flags for A
-    beq @unpause
+    beq unpause
     
-@pause:
+pause:
 
     jsr FamiToneSampleStop
     
@@ -487,22 +501,23 @@ FamiToneMusicPause:
     sta FT_ENV_VALUE+FT_CH2_ENVS+FT_ENV_VOLUME_OFF
     sta FT_ENV_VALUE+FT_CH3_ENVS+FT_ENV_VOLUME_OFF
     sta FT_ENV_VALUE+FT_CH4_ENVS+FT_ENV_VOLUME_OFF
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
     sta FT_ENV_VALUE+FT_CH6_ENVS+FT_ENV_VOLUME_OFF
     sta FT_ENV_VALUE+FT_CH7_ENVS+FT_ENV_VOLUME_OFF
     sta FT_ENV_VALUE+FT_CH8_ENVS+FT_ENV_VOLUME_OFF
 .endif
     lda FT_SONG_SPEED          ;set pause flag
     ora #$80
-    bne @done
-@unpause:
+    bne done
+unpause:
     lda FT_SONG_SPEED          ;reset pause flag
     and #$7f
-@done:
+done:
     sta FT_SONG_SPEED
 
     rts
 
+.endproc
 
 ;------------------------------------------------------------------------------
 ; update FamiTone state, should be called every NMI
@@ -511,19 +526,10 @@ FamiToneMusicPause:
 
 .macro update_channel_sound idx, env_offset, slide_offset, pulse_prev, vol_ora, hi_ora, reg_hi, reg_lo, reg_vol, reg_sweep
 
-    .local @slide
-    .local @slidesign
-    .local @noslide
-    .local @sign
-    .local @checkprevpulse
-    .local @prev
-    .local @cut
-    .local @pos
-    .local @zero_vol
     .local noteTableLSB
     .local noteTableMSB
 
-.if .defined(FT_VRC6_ENABLE) && idx = 7
+.if .defined(::FT_VRC6_ENABLE) && idx = 7
     noteTableLSB = _FT2SawNoteTableLSB
     noteTableMSB = _FT2SawNoteTableMSB
 .else
@@ -532,7 +538,7 @@ FamiToneMusicPause:
 .endif
 
     lda FT_CHN_NOTE+idx
-.if !.blank(pulse_prev) && (FT_SMOOTH_VIBRATO)
+.if !.blank(pulse_prev) && (::FT_SMOOTH_VIBRATO)
     bne @nocut
     jmp @cut
 @nocut:
@@ -546,15 +552,15 @@ FamiToneMusicPause:
 
     and #$0f
     eor #$0f
-    sta <FT_TEMP_VAR1
+    sta FT_TEMP_VAR1
     lda FT_CHN_DUTY+idx
     asl a
     and #$80
-    ora <FT_TEMP_VAR1
+    ora FT_TEMP_VAR1
 
 .else
 
-    .if(FT_PITCH_FIX)
+    .if(::FT_PITCH_FIX)
     ora FT_PAL_ADJUST ; TODO: Some expansions wont need this.
     .endif
     tax
@@ -577,11 +583,11 @@ FamiToneMusicPause:
     sta FT_TEMP_PTR2_L
     lda FT_FINE_PITCH+slide_offset
     and #$80
-    beq @pos
+    beq @fine_pitch_is_positive
     lda #$ff
-@pos:
-    adc FT_TEMP_PTR2_H
-    sta FT_TEMP_PTR2_H
+    @fine_pitch_is_positive:
+        adc FT_TEMP_PTR2_H
+        sta FT_TEMP_PTR2_H
 
     ldy FT_SLIDE_STEP+slide_offset
     beq @noslide
@@ -596,7 +602,7 @@ FamiToneMusicPause:
     clc
     adc FT_TEMP_PTR2_L
     sta reg_lo
-.if !.blank(pulse_prev) && (FT_SMOOTH_VIBRATO)
+.if !.blank(pulse_prev) && (::FT_SMOOTH_VIBRATO)
     sta FT_TEMP_VAR2 ; need to keep the lo period in case we do the sweep trick.
 .endif
     lda FT_TEMP_VAR1
@@ -607,7 +613,7 @@ FamiToneMusicPause:
 .endif
 
     lda FT_TEMP_PTR2_L
-.if !.blank(pulse_prev) && (FT_SMOOTH_VIBRATO)
+.if !.blank(pulse_prev) && (::FT_SMOOTH_VIBRATO)
     sta FT_TEMP_VAR2 ; need to keep the lo period in case we do the sweep trick.
 .endif
     sta reg_lo
@@ -617,8 +623,8 @@ FamiToneMusicPause:
 
 .ifnblank pulse_prev
 
-    .if(!FT_SFX_ENABLE)
-        .if(FT_SMOOTH_VIBRATO)
+    .if(!::FT_SFX_ENABLE)
+        .if(::FT_SMOOTH_VIBRATO)
             ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
             tax ; X = new hi-period
             sec
@@ -659,7 +665,7 @@ FamiToneMusicPause:
 
 .endif ; idx = 3
 
-.if .blank(pulse_prev) || (!FT_SMOOTH_VIBRATO)
+.if .blank(pulse_prev) || (!::FT_SMOOTH_VIBRATO)
     sta reg_hi
 .endif
 
@@ -697,8 +703,6 @@ FamiToneMusicPause:
 
 .macro update_row_standard channel_idx, env_idx, duty
 
-    .local @no_new_note
-
     ldx #channel_idx
     jsr _FT2ChannelUpdate
     bcc @no_new_note
@@ -709,9 +713,7 @@ FamiToneMusicPause:
     sta duty
 .endif
 
-.ifdef FT_EQUALIZER
-    .local @done
-    .local @new_note
+.ifdef ::FT_EQUALIZER
     @new_note:
         ldx #channel_idx
         lda #8
@@ -724,12 +726,14 @@ FamiToneMusicPause:
         dec FT_CHN_NOTE_COUNTER, x
     @done:    
 .else
+    .local @no_new_note ; why do i need this?
     @no_new_note:
 .endif
+
 .endmacro
 
 .macro update_row_dpcm channel_idx
-.if(FT_DPCM_ENABLE)
+.if(::FT_DPCM_ENABLE)
     .local @play_sample
     .local @no_new_note
     ldx #channel_idx    ;process channel 5
@@ -742,7 +746,7 @@ FamiToneMusicPause:
 @play_sample:
     jsr FamiToneSamplePlayM
 
-.ifdef FT_EQUALIZER
+.ifdef ::FT_EQUALIZER
     .local @done
     .local @new_note
     @new_note:
@@ -763,9 +767,9 @@ FamiToneMusicPause:
 .endif
 .endmacro
 
-FamiToneUpdate:
+.proc FamiToneUpdate
 
-    .if(FT_THREAD)
+    .if(::FT_THREAD)
     lda FT_TEMP_PTR_L
     pha
     lda FT_TEMP_PTR_H
@@ -773,12 +777,12 @@ FamiToneUpdate:
     .endif
 
     lda FT_SONG_SPEED          ;speed 0 means that no music is playing currently
-    bmi @pause                 ;bit 7 set is the pause flag
-    bne @update
-@pause:
-    jmp @update_sound
+    bmi pause                 ;bit 7 set is the pause flag
+    bne update
+pause:
+    jmp update_sound
 
-@update:
+update:
 
     clc                        ;update frame counter that considers speed, tempo, and PAL/NTSC
     lda FT_TEMPO_ACC_L
@@ -787,12 +791,12 @@ FamiToneUpdate:
     lda FT_TEMPO_ACC_H
     adc FT_TEMPO_STEP_H
     cmp FT_SONG_SPEED
-    bcs @update_row            ;overflow, row update is needed
+    bcs update_row            ;overflow, row update is needed
     sta FT_TEMPO_ACC_H         ;no row update, skip to the envelopes update
-    jmp @update_envelopes
+    jmp update_envelopes
 
 ;----------------------------------------------------------------------------------------------------------------------
-@update_row:
+update_row:
 
     sec
     sbc FT_SONG_SPEED
@@ -803,75 +807,75 @@ FamiToneUpdate:
     update_row_standard 2, FT_CH3_ENVS, 
     update_row_standard 3, FT_CH4_ENVS, FT_CHN_DUTY+3
     update_row_dpcm 4
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
     update_row_standard 5, FT_CH6_ENVS, FT_CHN_DUTY+5
     update_row_standard 6, FT_CH7_ENVS, FT_CHN_DUTY+6
     update_row_standard 7, FT_CH8_ENVS, FT_CHN_DUTY+7
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
-@update_envelopes:
+update_envelopes:
     ldx #0    ;process 11 envelopes
 
-@env_process:
+env_process:
     lda FT_ENV_REPEAT,x
-    beq @env_read  
+    beq env_read  
     dec FT_ENV_REPEAT,x
-    bne @env_next
+    bne env_next
 
-@env_read:
+env_read:
     lda FT_ENV_ADR_L,x         ;load envelope data address into temp
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
     lda FT_ENV_ADR_H,x
-    sta <FT_TEMP_PTR_H
+    sta FT_TEMP_PTR_H
     ldy FT_ENV_PTR,x           ;load envelope pointer
 
-@env_read_value:
+env_read_value:
     lda (FT_TEMP_PTR1),y       ;read a byte of the envelope data
-    bpl @env_special           ;values below 128 used as a special code, loop or repeat
+    bpl env_special           ;values below 128 used as a special code, loop or repeat
     clc                        ;values above 128 are output value+192 (output values are signed -63..64)
     adc #256-192
     sta FT_ENV_VALUE,x         ;store the output value
     iny                        ;advance the pointer
-    bne @env_next_store_ptr    ;bra
+    bne env_next_store_ptr    ;bra
 
-@env_special:
-    bne @env_set_repeat        ;zero is the loop point, non-zero values used for the repeat counter
+env_special:
+    bne env_set_repeat        ;zero is the loop point, non-zero values used for the repeat counter
     iny                        ;advance the pointer
     lda (FT_TEMP_PTR1),y       ;read loop position
     tay                        ;use loop position
-    jmp @env_read_value        ;read next byte of the envelope
+    jmp env_read_value        ;read next byte of the envelope
 
-@env_set_repeat:
+env_set_repeat:
     iny
     sta FT_ENV_REPEAT,x        ;store the repeat counter value
 
-@env_next_store_ptr:
+env_next_store_ptr:
     tya                        ;store the envelope pointer
     sta FT_ENV_PTR,x
 
-@env_next:
+env_next:
     inx                        ;next envelope
 
     cpx #FT_NUM_ENVELOPES
-    bne @env_process
+    bne env_process
 
 ;----------------------------------------------------------------------------------------------------------------------
-@update_pitch_envelopes:
+update_pitch_envelopes:
     ldx #0
-    jmp @pitch_env_process
+    jmp pitch_env_process
 
-@pitch_relate_update_with_last_value:
+pitch_relate_update_with_last_value:
     lda FT_PITCH_ENV_REPEAT,x
     sec 
     sbc #1
     sta FT_PITCH_ENV_REPEAT,x
     and #$7f 
-    beq @pitch_env_read
+    beq pitch_env_read
     lda FT_PITCH_ENV_ADR_L,x 
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
     lda FT_PITCH_ENV_ADR_H,x
-    sta <FT_TEMP_PTR_H
+    sta FT_TEMP_PTR_H
     ldy FT_PITCH_ENV_PTR,x
     dey    
     dey
@@ -883,141 +887,141 @@ FamiToneUpdate:
     adc FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_L,x
     lda FT_TEMP_VAR2
-     bpl @pitch_relative_last_pos  
+     bpl pitch_relative_last_pos  
     lda #$ff
-@pitch_relative_last_pos:
+pitch_relative_last_pos:
     adc FT_PITCH_ENV_VALUE_H,x
     sta FT_PITCH_ENV_VALUE_H,x
-    jmp @pitch_env_next
+    jmp pitch_env_next
 
-@pitch_env_process:
+pitch_env_process:
     lda FT_PITCH_ENV_REPEAT,x
     cmp #$81
-    bcs @pitch_relate_update_with_last_value
+    bcs pitch_relate_update_with_last_value
     and #$7f
-    beq @pitch_env_read
+    beq pitch_env_read
     dec FT_PITCH_ENV_REPEAT,x
-    bne @pitch_env_next
+    bne pitch_env_next
 
-@pitch_env_read:
+pitch_env_read:
     lda FT_PITCH_ENV_ADR_L,x 
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
     lda FT_PITCH_ENV_ADR_H,x
-    sta <FT_TEMP_PTR_H
+    sta FT_TEMP_PTR_H
     ldy #0
     lda (FT_TEMP_PTR1),y
     sta FT_TEMP_VAR1 ; going to be 0 for absolute envelope, 0x80 for relative.
     ldy FT_PITCH_ENV_PTR,x
 
-@pitch_env_read_value:
+pitch_env_read_value:
     lda (FT_TEMP_PTR1),y
-    bpl @pitch_env_special 
+    bpl pitch_env_special 
     clc  
     adc #256-192
     bit FT_TEMP_VAR1
-    bmi @pitch_relative
+    bmi pitch_relative
 
-@pitch_absolute:
+pitch_absolute:
     sta FT_PITCH_ENV_VALUE_L,x
     ora #0
-    bmi @pitch_absolute_neg  
+    bmi pitch_absolute_neg  
     lda #0
-    jmp @pitch_absolute_set_value_hi
-@pitch_absolute_neg:
+    jmp pitch_absolute_set_value_hi
+pitch_absolute_neg:
     lda #$ff
-@pitch_absolute_set_value_hi:
+pitch_absolute_set_value_hi:
     sta FT_PITCH_ENV_VALUE_H,x
     iny 
-    jmp @pitch_env_next_store_ptr
+    jmp pitch_env_next_store_ptr
 
-@pitch_relative:
+pitch_relative:
     sta FT_TEMP_VAR2
     clc
     adc FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_L,x
     lda FT_TEMP_VAR2
     and #$80
-    bpl @pitch_relative_pos  
+    bpl pitch_relative_pos  
     lda #$ff
-@pitch_relative_pos:
+pitch_relative_pos:
     adc FT_PITCH_ENV_VALUE_H,x
     sta FT_PITCH_ENV_VALUE_H,x
     iny 
-    jmp @pitch_env_next_store_ptr
+    jmp pitch_env_next_store_ptr
 
-@pitch_env_special:
-    bne @pitch_env_set_repeat
+pitch_env_special:
+    bne pitch_env_set_repeat
     iny 
     lda (FT_TEMP_PTR1),y 
     tay
-    jmp @pitch_env_read_value 
+    jmp pitch_env_read_value 
 
-@pitch_env_set_repeat:
+pitch_env_set_repeat:
     iny
     ora FT_TEMP_VAR1 ; this is going to set the relative flag in the hi-bit.
     sta FT_PITCH_ENV_REPEAT,x
 
-@pitch_env_next_store_ptr:
+pitch_env_next_store_ptr:
     tya 
     sta FT_PITCH_ENV_PTR,x
 
-@pitch_env_next:
+pitch_env_next:
     inx 
 
     cpx #FT_NUM_PITCH_ENVELOPES
-    bne @pitch_env_process
+    bne pitch_env_process
 
 ;----------------------------------------------------------------------------------------------------------------------
-@update_slides:
+update_slides:
     ldx #0    ;process 3 slides
 
-@slide_process:
+slide_process:
     lda FT_SLIDE_STEP,x        ; zero repeat means no active slide.
-    beq @slide_next
+    beq slide_next
     clc                        ; add step to slide pitch (16bit + 8bit signed).
     lda FT_SLIDE_STEP,x
     adc FT_SLIDE_PITCH_L,x
     sta FT_SLIDE_PITCH_L,x
     lda FT_SLIDE_STEP,x
     and #$80
-    beq @positive_slide
+    beq positive_slide
 
-@negative_slide:
+negative_slide:
     lda #$ff
     adc FT_SLIDE_PITCH_H,x
     sta FT_SLIDE_PITCH_H,x
-    bpl @slide_next
-    jmp @clear_slide
+    bpl slide_next
+    jmp clear_slide
 
-@positive_slide:
+positive_slide:
     adc FT_SLIDE_PITCH_H,x
     sta FT_SLIDE_PITCH_H,x
-    bmi @slide_next
+    bmi slide_next
 
-@clear_slide:
+clear_slide:
     lda #0
     sta FT_SLIDE_STEP,x
 
-@slide_next:
+slide_next:
     inx                        ;next slide
     cpx #FT_NUM_SLIDES
-    bne @slide_process
+    bne slide_process
 
 ;----------------------------------------------------------------------------------------------------------------------
-@update_sound:
+update_sound:
 
     update_channel_sound 0, FT_CH1_ENVS, 0, FT_PULSE1_PREV, FT_CHN_DUTY+0, , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V, APU_PL1_SWEEP
     update_channel_sound 1, FT_CH2_ENVS, 1, FT_PULSE2_PREV, FT_CHN_DUTY+1, , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V, APU_PL2_SWEEP
     update_channel_sound 2, FT_CH3_ENVS, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
     update_channel_sound 3, FT_CH4_ENVS,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
     update_channel_sound 5, FT_CH6_ENVS, 3, , FT_CHN_DUTY+5, #$80, VRC6_PL1_HI, VRC6_PL1_LO, VRC6_PL1_VOL
     update_channel_sound 6, FT_CH7_ENVS, 4, , FT_CHN_DUTY+6, #$80, VRC6_PL2_HI, VRC6_PL2_LO, VRC6_PL2_VOL
     update_channel_sound 7, FT_CH8_ENVS, 5, , FT_CHN_DUTY+7, #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
-.if(FT_SFX_ENABLE)
+.if(::FT_SFX_ENABLE)
 
     ;process all sound effect streams
 
@@ -1046,10 +1050,10 @@ FamiToneUpdate:
     sta APU_PL1_LO
     lda FT_OUT_BUF+2    ;pulse 1 period MSB, only applied when changed
     cmp FT_PULSE1_PREV
-    beq @no_pulse1_upd
+    beq no_pulse1_upd
     sta FT_PULSE1_PREV
     sta APU_PL1_HI
-@no_pulse1_upd:
+no_pulse1_upd:
 
     lda FT_OUT_BUF+3    ;pulse 2 volume
     sta APU_PL2_VOL
@@ -1057,10 +1061,10 @@ FamiToneUpdate:
     sta APU_PL2_LO
     lda FT_OUT_BUF+5    ;pulse 2 period MSB, only applied when changed
     cmp FT_PULSE2_PREV
-    beq @no_pulse2_upd
+    beq no_pulse2_upd
     sta FT_PULSE2_PREV
     sta APU_PL2_HI
-@no_pulse2_upd:
+no_pulse2_upd:
 
     lda FT_OUT_BUF+6    ;triangle volume (plays or not)
     sta APU_TRI_LINEAR
@@ -1076,7 +1080,7 @@ FamiToneUpdate:
 
 .endif
 
-    .if(FT_THREAD)
+    .if(::FT_THREAD)
     pla
     sta FT_TEMP_PTR_H
     pla
@@ -1084,6 +1088,8 @@ FamiToneUpdate:
     .endif
 
     rts
+
+.endproc
 
 ;internal routine, sets up envelopes of a channel according to current instrument
 ;in X envelope group offset, A instrument number
@@ -1094,7 +1100,7 @@ FamiToneUpdate:
     tay
     lda FT_INSTRUMENT_H
     adc #0                     ;use carry to extend range for 64 instruments
-    sta<FT_TEMP_PTR_H
+    sta FT_TEMP_PTR_H
     lda FT_INSTRUMENT_L
     sta FT_TEMP_PTR_L
 
@@ -1174,9 +1180,7 @@ no_repeat:
 
 read_byte:
     lda (FT_TEMP_PTR1),y       ;read byte of the channel
-    inc FT_TEMP_PTR_L         ;advance pointer
-    bne check_regular_note
-    inc FT_TEMP_PTR_H
+    inc_16 FT_TEMP_PTR1
 
 check_regular_note:
     cmp #$61
@@ -1221,13 +1225,10 @@ fine_pitch:
     lda _FT2ChannelToPitch,x
     tax
     lda (FT_TEMP_PTR1),y
+    inc_16 FT_TEMP_PTR1
     sta FT_FINE_PITCH,x
     ldx FT_TEMP_VAR1
-    inc FT_TEMP_PTR_L
-    bne fine_pitch_jump_back
-    inc FT_TEMP_PTR_H
-    fine_pitch_jump_back:
-        jmp read_byte 
+    jmp read_byte 
 
 clear_pitch_override_flag:
     ldy _FT2ChannelToPitch,x
@@ -1280,7 +1281,7 @@ slide:
     ldy FT_TEMP_VAR2           ; start note
     stx FT_TEMP_VAR2           ; store slide index.    
     tax
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
     lda FT_TEMP_VAR1
     cmp #7
     beq note_table_saw
@@ -1292,7 +1293,7 @@ note_table_regular:
     sta FT_TEMP_PTR2_H
     lda _FT2NoteTableMSB,y
     sbc _FT2NoteTableMSB,x
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
     jmp note_table_done
 note_table_saw:
     sec
@@ -1369,7 +1370,7 @@ set_reference:
     sta FT_CHN_REF_LEN,x
     iny
     lda (FT_TEMP_PTR1),y       ;read 16-bit absolute address of the reference
-    sta <FT_TEMP_VAR1          ;remember in temp
+    sta FT_TEMP_VAR1          ;remember in temp
     iny
     lda (FT_TEMP_PTR1),y
     sta FT_TEMP_PTR_H
@@ -1381,10 +1382,7 @@ set_reference:
 set_speed:
     lda (FT_TEMP_PTR1),y
     sta FT_SONG_SPEED
-    inc FT_TEMP_PTR_L         ;advance pointer after reading the speed value
-    bne jump_back
-    inc FT_TEMP_PTR_H
-jump_back:    
+    inc_16 FT_TEMP_PTR1
     jmp read_byte 
 
 set_loop:
@@ -1399,7 +1397,7 @@ set_loop:
     jmp read_byte
 
 release_note:
-    stx <FT_TEMP_VAR1
+    stx FT_TEMP_VAR1
     lda _FT2ChannelToVolumeEnvelope,x ; DPCM(5) will never have releases.
     tax
 
@@ -1449,59 +1447,40 @@ no_ref:
 ; stop DPCM sample if it plays
 ;------------------------------------------------------------------------------
 
-FamiToneSampleStop:
+.proc FamiToneSampleStop
 
     lda #%00001111
     sta APU_SND_CHN
 
     rts
 
+.endproc
 
     
-    .if(FT_DPCM_ENABLE)
-
-;------------------------------------------------------------------------------
-; play DPCM sample, used by music player, could be used externally
-; in: A is number of a sample, 1..63
-;------------------------------------------------------------------------------
-
-FamiToneSamplePlayM:           ;for music (low priority)
-
-    ldx FT_DPCM_EFFECT
-    beq _FT2SamplePlay
-    tax
-    lda APU_SND_CHN
-    and #16
-    beq @not_busy
-    rts
-
-@not_busy:
-    sta FT_DPCM_EFFECT
-    txa
-    jmp _FT2SamplePlay
+.if(FT_DPCM_ENABLE)
 
 ;------------------------------------------------------------------------------
 ; play DPCM sample with higher priority, for sound effects
 ; in: A is number of a sample, 1..63
 ;------------------------------------------------------------------------------
 
-FamiToneSamplePlay:
+.proc FamiToneSamplePlay
 
     ldx #1
     stx FT_DPCM_EFFECT
 
 _FT2SamplePlay:
 
-    sta <FT_TEMP               ;sample number*3, offset in the sample table
+    sta FT_TEMP               ;sample number*3, offset in the sample table
     asl a
     clc
-    adc <FT_TEMP
+    adc FT_TEMP
     
     adc FT_DPCM_LIST_L
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
     lda #0
     adc FT_DPCM_LIST_H
-    sta <FT_TEMP_PTR_H
+    sta FT_TEMP_PTR_H
 
     lda #%00001111             ;stop DPCM
     sta APU_SND_CHN
@@ -1523,29 +1502,53 @@ _FT2SamplePlay:
 
     rts
 
-    .endif
+.endproc 
 
-    .if(FT_SFX_ENABLE)
+;------------------------------------------------------------------------------
+; play DPCM sample, used by music player, could be used externally
+; in: A is number of a sample, 1..63
+;------------------------------------------------------------------------------
+
+.proc FamiToneSamplePlayM           ;for music (low priority)
+
+    ldx FT_DPCM_EFFECT
+    beq FamiToneSamplePlay::_FT2SamplePlay
+    tax
+    lda APU_SND_CHN
+    and #16
+    beq not_busy
+    rts
+
+not_busy:
+    sta FT_DPCM_EFFECT
+    txa
+    jmp FamiToneSamplePlay::_FT2SamplePlay
+
+.endproc 
+
+.endif
+
+.if(FT_SFX_ENABLE)
 
 ;------------------------------------------------------------------------------
 ; init sound effects player, set pointer to data
 ; in: X,Y is address of sound effects data
 ;------------------------------------------------------------------------------
 
-FamiToneSfxInit:
+.proc FamiToneSfxInit
 
-    stx <FT_TEMP_PTR_L
-    sty <FT_TEMP_PTR_H
+    stx FT_TEMP_PTR_L
+    sty FT_TEMP_PTR_H
     
     ldy #0
     
     .if(FT_PITCH_FIX)
 
     lda FT_PAL_ADJUST          ;add 2 to the sound list pointer for PAL
-    bne @ntsc
+    bne ntsc
     iny
     iny
-@ntsc:
+ntsc:
 
     .endif
     
@@ -1557,23 +1560,24 @@ FamiToneSfxInit:
 
     ldx #FT_SFX_CH0            ;init all the streams
 
-@set_channels:
+set_channels:
     jsr _FT2SfxClearChannel
     txa
     clc
     adc #FT_SFX_STRUCT_SIZE
     tax
     cpx #FT_SFX_STRUCT_SIZE*FT_SFX_STREAMS
-    bne @set_channels
+    bne set_channels
 
     rts
 
+.endproc 
 
 ;internal routine, clears output buffer of a sound effect
 ;in: A is 0
 ;    X is offset of sound effect stream
 
-_FT2SfxClearChannel:
+.proc _FT2SfxClearChannel
 
     lda #0
     sta FT_SFX_PTR_H,x         ;this stops the effect
@@ -1587,6 +1591,7 @@ _FT2SfxClearChannel:
 
     rts
 
+.endproc 
 
 ;------------------------------------------------------------------------------
 ; play sound effect
@@ -1594,7 +1599,7 @@ _FT2SfxClearChannel:
 ;     X is offset of sound effect channel, should be FT_SFX_CH0..FT_SFX_CH3
 ;------------------------------------------------------------------------------
 
-FamiToneSfxPlay:
+.proc FamiToneSfxPlay
 
     asl a                      ;get offset in the effects list
     tay
@@ -1602,9 +1607,9 @@ FamiToneSfxPlay:
     jsr _FT2SfxClearChannel    ;stops the effect if it plays
 
     lda FT_SFX_ADR_L
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
     lda FT_SFX_ADR_H
-    sta <FT_TEMP_PTR_H
+    sta FT_TEMP_PTR_H
 
     lda (FT_TEMP_PTR1),y       ;read effect pointer from the table
     sta FT_SFX_PTR_L,x         ;store it
@@ -1614,110 +1619,113 @@ FamiToneSfxPlay:
 
     rts
 
+.endproc 
 
 ;internal routine, update one sound effect stream
 ;in: X is offset of sound effect stream
 
-_FT2SfxUpdate:
+.proc _FT2SfxUpdate
 
     lda FT_SFX_REPEAT,x        ;check if repeat counter is not zero
-    beq @no_repeat
+    beq no_repeat
     dec FT_SFX_REPEAT,x        ;decrement and return
-    bne @update_buf            ;just mix with output buffer
+    bne update_buf            ;just mix with output buffer
 
-@no_repeat:
+no_repeat:
     lda FT_SFX_PTR_H,x         ;check if MSB of the pointer is not zero
-    bne @sfx_active
+    bne sfx_active
     rts                        ;return otherwise, no active effect
 
-@sfx_active:
-    sta <FT_TEMP_PTR_H         ;load effect pointer into temp
+sfx_active:
+    sta FT_TEMP_PTR_H         ;load effect pointer into temp
     lda FT_SFX_PTR_L,x
-    sta <FT_TEMP_PTR_L
+    sta FT_TEMP_PTR_L
     ldy FT_SFX_OFF,x
     clc
 
-@read_byte:
+read_byte:
     lda (FT_TEMP_PTR1),y       ;read byte of effect
-    bmi @get_data              ;if bit 7 is set, it is a register write
-    beq @eof
+    bmi get_data              ;if bit 7 is set, it is a register write
+    beq eof
     iny
     sta FT_SFX_REPEAT,x        ;if bit 7 is reset, it is number of repeats
     tya
     sta FT_SFX_OFF,x
-    jmp @update_buf
+    jmp update_buf
 
-@get_data:
+get_data:
     iny
-    stx <FT_TEMP_VAR1          ;it is a register write
-    adc <FT_TEMP_VAR1          ;get offset in the effect output buffer
+    stx FT_TEMP_VAR1          ;it is a register write
+    adc FT_TEMP_VAR1          ;get offset in the effect output buffer
     tax
     lda (FT_TEMP_PTR1),y       ;read value
     iny
     sta FT_SFX_BUF-128,x       ;store into output buffer
-    ldx <FT_TEMP_VAR1
-    jmp @read_byte             ;and read next byte
+    ldx FT_TEMP_VAR1
+    jmp read_byte             ;and read next byte
 
-@eof:
+eof:
     sta FT_SFX_PTR_H,x         ;mark channel as inactive
 
-@update_buf:
+update_buf:
 
     lda FT_OUT_BUF             ;compare effect output buffer with main output buffer
     and #$0f                   ;if volume of pulse 1 of effect is higher than that of the
-    sta <FT_TEMP_VAR1          ;main buffer, overwrite the main buffer value with the new one
+    sta FT_TEMP_VAR1          ;main buffer, overwrite the main buffer value with the new one
     lda FT_SFX_BUF+0,x
     and #$0f
-    cmp <FT_TEMP_VAR1
-    bcc @no_pulse1
+    cmp FT_TEMP_VAR1
+    bcc no_pulse1
     lda FT_SFX_BUF+0,x
     sta FT_OUT_BUF+0
     lda FT_SFX_BUF+1,x
     sta FT_OUT_BUF+1
     lda FT_SFX_BUF+2,x
     sta FT_OUT_BUF+2
-@no_pulse1:
+no_pulse1:
 
     lda FT_OUT_BUF+3           ;same for pulse 2
     and #$0f
-    sta <FT_TEMP_VAR1
+    sta FT_TEMP_VAR1
     lda FT_SFX_BUF+3,x
     and #$0f
-    cmp <FT_TEMP_VAR1
-    bcc @no_pulse2
+    cmp FT_TEMP_VAR1
+    bcc no_pulse2
     lda FT_SFX_BUF+3,x
     sta FT_OUT_BUF+3
     lda FT_SFX_BUF+4,x
     sta FT_OUT_BUF+4
     lda FT_SFX_BUF+5,x
     sta FT_OUT_BUF+5
-@no_pulse2:
+no_pulse2:
 
     lda FT_SFX_BUF+6,x           ;overwrite triangle of main output buffer if it is active
-    beq @no_triangle
+    beq no_triangle
     sta FT_OUT_BUF+6
     lda FT_SFX_BUF+7,x
     sta FT_OUT_BUF+7
     lda FT_SFX_BUF+8,x
     sta FT_OUT_BUF+8
-@no_triangle:
+no_triangle:
 
     lda FT_OUT_BUF+9           ;same as for pulse 1 and 2, but for noise
     and #$0f
-    sta <FT_TEMP_VAR1
+    sta FT_TEMP_VAR1
     lda FT_SFX_BUF+9,x
     and #$0f
-    cmp <FT_TEMP_VAR1
-    bcc @no_noise
+    cmp FT_TEMP_VAR1
+    bcc no_noise
     lda FT_SFX_BUF+9,x
     sta FT_OUT_BUF+9
     lda FT_SFX_BUF+10,x
     sta FT_OUT_BUF+10
-@no_noise:
+no_noise:
 
     rts
 
-    .endif
+.endproc 
+
+.endif
 
 
 ;dummy envelope used to initialize all channels with silence
@@ -1780,7 +1788,7 @@ _FT2NoteTableMSB:
         .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
     .endif
 
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
 _FT2SawNoteTableLSB:
     .byte $00
     .byte $44, $69, $9a, $d6, $1e, $70, $cb, $30, $9e, $13, $91, $16 ; Octave 0
@@ -1809,7 +1817,7 @@ _FT2ChannelToVolumeEnvelope:
     .byte FT_CH3_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH4_ENVS+FT_ENV_VOLUME_OFF
     .byte $ff
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
     .byte FT_CH6_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH7_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH8_ENVS+FT_ENV_VOLUME_OFF
@@ -1822,7 +1830,7 @@ _FT2ChannelToSlide:
     .byte $02
     .byte $ff ; no slide for noise
     .byte $ff ; no slide for DPCM
-.ifdef FT_VRC6_ENABLE
+.ifdef ::FT_VRC6_ENABLE
     .byte $03
     .byte $04
     .byte $05
