@@ -362,6 +362,9 @@ namespace FamiStudio
 #if DEBUG
         public void Validate(Project project)
         {
+            Debug.Assert(project.Songs.Contains(this));
+            Debug.Assert(project.GetSong(id) == this);
+
             foreach (var channel in channels)
                 channel.Validate(this);
 

@@ -229,11 +229,14 @@ namespace FamiStudio
                 }
             }
 
-            if (buffer.Version < 5 && dutyCycle != 0)
+            if (buffer.Version < 5)
             {
                 envelopes[Envelope.DutyCycle] = new Envelope(Envelope.DutyCycle);
-                envelopes[Envelope.DutyCycle].Length = 1;
-                envelopes[Envelope.DutyCycle].Values[0] = (sbyte)dutyCycle;
+                if (dutyCycle != 0)
+                {
+                    envelopes[Envelope.DutyCycle].Length = 1;
+                    envelopes[Envelope.DutyCycle].Values[0] = (sbyte)dutyCycle;
+                }
             }
         }
 

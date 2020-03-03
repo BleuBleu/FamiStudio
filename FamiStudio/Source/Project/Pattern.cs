@@ -280,7 +280,7 @@ namespace FamiStudio
 
             var emptyNote = new Note(Note.NoteInvalid);
             for (int i = maxInstanceLength; i < MaxLength; i++)
-                Debug.Assert(notes[i].Equals(emptyNote));
+                Debug.Assert(notes[i].IsEmpty);
         }
 #endif
 
