@@ -15,3 +15,8 @@ packages/
 *.htm
 .DS_Store
 *.nsf
+*.ipdb
+*.iobj
+*.lib
+*.pdb
+*.exp
