@@ -1542,7 +1542,7 @@ not_busy:
     
     ldy #0
     
-    .if(FT_PITCH_FIX)
+    .if(::FT_PITCH_FIX)
 
     lda FT_PAL_ADJUST          ;add 2 to the sound list pointer for PAL
     bne ntsc
