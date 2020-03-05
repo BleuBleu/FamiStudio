@@ -15,6 +15,7 @@
 	x Fine pitch track
 	- Duty envelopes.
 	- Expansions
+	- Retest smooth vibrato
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Transform dialog:

@@ -20,9 +20,12 @@ FT_SMOOTH_VIBRATO = 1 ; Blaarg's smooth vibrato technique
 
 .segment "RAM"
 
-.ifdef ::FT_VRC6_ENABLE
-FT_NUM_ENVELOPES        = 2+2+2+2+2+2+2+2 ; DPCM envelopes [8-9] are unused. 
+.if .defined(FT_VRC6) || .defined(FT_S5B)
+FT_NUM_ENVELOPES        = 2+2+2+2+2+2+2
 FT_NUM_PITCH_ENVELOPES  = 6
+.elseif .defined(FT_MMC5)
+FT_NUM_ENVELOPES        = 2+2+2+2+2+2
+FT_NUM_PITCH_ENVELOPES  = 5
 .else
 FT_NUM_ENVELOPES        = 2+2+2+2
 FT_NUM_PITCH_ENVELOPES  = 3
@@ -47,8 +50,10 @@ FT_FINE_PITCH         : .res FT_NUM_PITCH_ENVELOPES
 
 ;slide structure offsets, 3 bytes per slide.
 
-.ifdef ::FT_VRC6_ENABLE
+.if .defined(FT_VRC6) || .defined(FT_S5B)
 FT_NUM_SLIDES = 6
+.elseif .defined(FT_MMC5)
+FT_NUM_SLIDES = 5
 .else
 FT_NUM_SLIDES = 3 ;square and triangle have slide notes.
 .endif
@@ -60,8 +65,10 @@ FT_SLIDE_PITCH_H : .res FT_NUM_SLIDES
 
 ;channel structure offsets, 10 bytes per channel
 
-.ifdef ::FT_VRC6_ENABLE
+.if .defined(FT_VRC6) || .defined(FT_S5B)
 FT_NUM_CHANNELS = 8
+.elseif .defined(FT_MMC5)
+FT_NUM_CHANNELS = 7
 .else
 FT_NUM_CHANNELS = 5
 .endif
@@ -87,10 +94,12 @@ FT_CH1_ENVS = 0
 FT_CH2_ENVS = 2
 FT_CH3_ENVS = 4
 FT_CH4_ENVS = 6
-.ifdef ::FT_VRC6_ENABLE
-FT_CH6_ENVS = 10
-FT_CH7_ENVS = 12
-FT_CH8_ENVS = 14
+.if .defined(FT_VRC6) || .defined(FT_S5B) || .defined(FT_MMC5)
+FT_CH6_ENVS = 8
+FT_CH7_ENVS = 10
+.if !.defined(FT_MMC5)
+FT_CH8_ENVS = 12
+.endif
 .endif
 
 FT_ENV_VOLUME_OFF = 0
@@ -112,6 +121,10 @@ FT_OUT_BUF:       .res 1
 FT_SONG_SPEED   = FT_CHN_INSTRUMENT+4
 FT_PULSE1_PREV  = FT_CHN_DUTY+2
 FT_PULSE2_PREV  = FT_CHN_DUTY+4
+.ifdef FT_MMC5
+FT_MMC5_PULSE1_PREV  = FT_CHN_VOLUME_TRACK+2
+FT_MMC5_PULSE2_PREV  = FT_CHN_VOLUME_TRACK+4
+.endif
 
 ; SFX Definately dont work right now.
 .if(FT_SFX_ENABLE)
@@ -179,7 +192,7 @@ APU_DMC_LEN    = $4013
 APU_SND_CHN    = $4015
 APU_FRAME_CNT  = $4017
 
-.ifdef ::FT_VRC6_ENABLE
+.ifdef ::FT_VRC6
 VRC6_PL1_VOL   = $9000
 VRC6_PL1_LO    = $9001
 VRC6_PL1_HI    = $9002
@@ -189,6 +202,40 @@ VRC6_PL2_HI    = $a002
 VRC6_SAW_VOL   = $b000
 VRC6_SAW_LO    = $b001
 VRC6_SAW_HI    = $b002
+.endif
+
+.ifdef ::FT_MMC5
+MMC5_PL1_VOL   = $5000
+MMC5_PL1_SWEEP = $5001
+MMC5_PL1_LO    = $5002
+MMC5_PL1_HI    = $5003
+MMC5_PL2_VOL   = $5004
+MMC5_PL2_SWEEP = $5005
+MMC5_PL2_LO    = $5006
+MMC5_PL2_HI    = $5007
+MMC5_PCM_MODE  = $5010
+MMC5_SND_CHN   = $5015
+.endif
+
+.ifdef ::FT_S5B
+S5B_ADDR       = $c000
+S5B_DATA       = $e000
+S5B_REG_LO_A   = $00
+S5B_REG_HI_A   = $01
+S5B_REG_LO_B   = $02
+S5B_REG_HI_B   = $03
+S5B_REG_LO_C   = $04
+S5B_REG_HI_C   = $05
+S5B_REG_NOISE  = $06
+S5B_REG_TONE   = $07
+S5B_REG_VOL_A  = $08
+S5B_REG_VOL_B  = $09
+S5B_REG_VOL_C  = $0a
+S5B_REG_ENV_LO = $0b
+S5B_REG_ENV_HI = $0c
+S5B_REG_SHAPE  = $0d
+S5B_REG_IO_A   = $0e
+S5B_REG_IO_B   = $0f
 .endif
 
 ;aliases for the APU registers in the output buffer
@@ -290,6 +337,13 @@ pal:
     sta APU_PL1_SWEEP
     sta APU_PL2_SWEEP
 
+.ifdef ::FT_MMC5
+    lda #$01
+    sta MMC5_PCM_MODE
+    lda #$03
+    sta MMC5_SND_CHN
+.endif
+
     jsr FamiToneMusicStop
     rts
 
@@ -316,7 +370,7 @@ set_channels:
     sta FT_CHN_NOTE,x
     sta FT_CHN_REF_LEN,x
     sta FT_CHN_VOLUME_TRACK,x
-.ifdef ::FT_VRC6_ENABLE
+.if .defined(::FT_VRC6) || .defined(::FT_S5B)
     cpx #5
     bcc regular_inst
 vrc6_inst:
@@ -408,6 +462,13 @@ set_pitch_envelopes:
     adc FT_TEMP_PTR_L
     stx FT_TEMP_PTR_L
     adc FT_TEMP_PTR_L
+.elseif ::FT_NUM_CHANNELS = 7
+    asl                        ;multiply song number by 18
+    sta FT_TEMP_PTR_L
+    asl
+    asl
+    asl
+    adc FT_TEMP_PTR_L    
 .elseif ::FT_NUM_CHANNELS = 8
     asl                        ;multiply song number by 20
     asl
@@ -443,7 +504,7 @@ set_channels:
     sta FT_CHN_REF_LEN,x
     lda #$f0
     sta FT_CHN_VOLUME_TRACK,x
-.ifdef ::FT_VRC6_ENABLE
+.if .defined(::FT_VRC6) || .defined(::FT_S5B)
     cpx #5
     bcc regular_inst
 vrc6_inst:
@@ -503,9 +564,13 @@ pause:
     sta FT_ENV_VALUE+FT_CH2_ENVS+FT_ENV_VOLUME_OFF
     sta FT_ENV_VALUE+FT_CH3_ENVS+FT_ENV_VOLUME_OFF
     sta FT_ENV_VALUE+FT_CH4_ENVS+FT_ENV_VOLUME_OFF
-.ifdef ::FT_VRC6_ENABLE
+.if .defined(::FT_CH6_ENVS)
     sta FT_ENV_VALUE+FT_CH6_ENVS+FT_ENV_VOLUME_OFF
+.endif
+.if .defined(::FT_CH7_ENVS)
     sta FT_ENV_VALUE+FT_CH7_ENVS+FT_ENV_VOLUME_OFF
+.endif
+.if .defined(::FT_CH8_ENVS)
     sta FT_ENV_VALUE+FT_CH8_ENVS+FT_ENV_VOLUME_OFF
 .endif
     lda FT_SONG_SPEED          ;set pause flag
@@ -521,17 +586,12 @@ done:
 
 .endproc
 
-;------------------------------------------------------------------------------
-; update FamiTone state, should be called every NMI
-; in: none
-;------------------------------------------------------------------------------
-
 .macro update_channel_sound idx, env_offset, slide_offset, pulse_prev, vol_ora, hi_ora, reg_hi, reg_lo, reg_vol, reg_sweep
 
     .local noteTableLSB
     .local noteTableMSB
 
-.if .defined(::FT_VRC6_ENABLE) && idx = 7
+.if .defined(::FT_VRC6) && idx = 7
     noteTableLSB = _FT2SawNoteTableLSB
     noteTableMSB = _FT2SawNoteTableMSB
 .else
@@ -615,7 +675,7 @@ done:
 .endif
 
     lda FT_TEMP_PTR2_L
-.if !.blank(pulse_prev) && (::FT_SMOOTH_VIBRATO)
+.if !.blank(reg_sweep) && (::FT_SMOOTH_VIBRATO)
     sta FT_TEMP_VAR2 ; need to keep the lo period in case we do the sweep trick.
 .endif
     sta reg_lo
@@ -626,7 +686,7 @@ done:
 .ifnblank pulse_prev
 
     .if(!::FT_SFX_ENABLE)
-        .if(::FT_SMOOTH_VIBRATO)
+        .if !.blank(reg_sweep) && (::FT_SMOOTH_VIBRATO)
             ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
             tax ; X = new hi-period
             sec
@@ -667,7 +727,7 @@ done:
 
 .endif ; idx = 3
 
-.if .blank(pulse_prev) || (!::FT_SMOOTH_VIBRATO)
+.if .blank(pulse_prev) || .blank(reg_sweep) || (!::FT_SMOOTH_VIBRATO)
     sta reg_hi
 .endif
 
@@ -679,7 +739,7 @@ done:
     lda _FT2VolumeTable, x 
 @cut:
 .ifnblank vol_ora
-    .if .defined(FT_VRC6_ENABLE) && idx = 7 
+    .if .defined(FT_VRC6) && idx = 7 
         ; saw channel has 6 bit volumes. 
         ; get hi-bit from duty, similar to FamiTracker, but taking volume into account.
         ; FamiTracker looses ability to output low volume when duty is odd.
@@ -769,6 +829,11 @@ done:
 .endif
 .endmacro
 
+;------------------------------------------------------------------------------
+; update FamiTone state, should be called every NMI
+; in: none
+;------------------------------------------------------------------------------
+
 .proc FamiToneUpdate
 
     .if(::FT_THREAD)
@@ -809,9 +874,13 @@ update_row:
     update_row_standard 2, FT_CH3_ENVS, 
     update_row_standard 3, FT_CH4_ENVS, FT_CHN_DUTY+3
     update_row_dpcm 4
-.ifdef ::FT_VRC6_ENABLE
+.if .defined(::FT_CH6_ENVS)
     update_row_standard 5, FT_CH6_ENVS, FT_CHN_DUTY+5
+.endif
+.if .defined(::FT_CH7_ENVS)
     update_row_standard 6, FT_CH7_ENVS, FT_CHN_DUTY+6
+.endif
+.if .defined(::FT_CH8_ENVS)
     update_row_standard 7, FT_CH8_ENVS, FT_CHN_DUTY+7
 .endif
 
@@ -1016,10 +1085,17 @@ update_sound:
     update_channel_sound 1, FT_CH2_ENVS, 1, FT_PULSE2_PREV, FT_CHN_DUTY+1, , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V, APU_PL2_SWEEP
     update_channel_sound 2, FT_CH3_ENVS, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
     update_channel_sound 3, FT_CH4_ENVS,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
-.ifdef ::FT_VRC6_ENABLE
+.ifdef ::FT_VRC6
     update_channel_sound 5, FT_CH6_ENVS, 3, , FT_CHN_DUTY+5, #$80, VRC6_PL1_HI, VRC6_PL1_LO, VRC6_PL1_VOL
     update_channel_sound 6, FT_CH7_ENVS, 4, , FT_CHN_DUTY+6, #$80, VRC6_PL2_HI, VRC6_PL2_LO, VRC6_PL2_VOL
     update_channel_sound 7, FT_CH8_ENVS, 5, , FT_CHN_DUTY+7, #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
+.endif
+.ifdef ::FT_MMC5
+    update_channel_sound 5, FT_CH6_ENVS, 3, FT_MMC5_PULSE1_PREV, FT_CHN_DUTY+5, , MMC5_PL1_HI, MMC5_PL1_LO, MMC5_PL1_VOL
+    update_channel_sound 6, FT_CH7_ENVS, 4, FT_MMC5_PULSE2_PREV, FT_CHN_DUTY+6, , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
+.endif
+.ifdef ::FT_S5B
+    ; loop
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -1283,7 +1359,7 @@ slide:
     ldy FT_TEMP_VAR2           ; start note
     stx FT_TEMP_VAR2           ; store slide index.    
     tax
-.ifdef ::FT_VRC6_ENABLE
+.ifdef ::FT_VRC6
     lda FT_TEMP_VAR1
     cmp #7
     beq note_table_saw
@@ -1295,7 +1371,7 @@ note_table_regular:
     sta FT_TEMP_PTR2_H
     lda _FT2NoteTableMSB,y
     sbc _FT2NoteTableMSB,x
-.ifdef ::FT_VRC6_ENABLE
+.ifdef ::FT_VRC6
     jmp note_table_done
 note_table_saw:
     sec
@@ -1790,7 +1866,7 @@ _FT2NoteTableMSB:
         .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
     .endif
 
-.ifdef ::FT_VRC6_ENABLE
+.ifdef FT_VRC6
 _FT2SawNoteTableLSB:
     .byte $00
     .byte $44, $69, $9a, $d6, $1e, $70, $cb, $30, $9e, $13, $91, $16 ; Octave 0
@@ -1819,7 +1895,7 @@ _FT2ChannelToVolumeEnvelope:
     .byte FT_CH3_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH4_ENVS+FT_ENV_VOLUME_OFF
     .byte $ff
-.ifdef ::FT_VRC6_ENABLE
+.ifdef ::FT_VRC6
     .byte FT_CH6_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH7_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH8_ENVS+FT_ENV_VOLUME_OFF
@@ -1832,9 +1908,13 @@ _FT2ChannelToSlide:
     .byte $02
     .byte $ff ; no slide for noise
     .byte $ff ; no slide for DPCM
-.ifdef ::FT_VRC6_ENABLE
+.if FT_NUM_SLIDES >= 4
     .byte $03
+.endif
+.if FT_NUM_SLIDES >= 5
     .byte $04
+.endif    
+.if FT_NUM_SLIDES >= 6
     .byte $05
 .endif
 
