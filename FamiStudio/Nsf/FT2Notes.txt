@@ -17,7 +17,7 @@ New encoding:
 	$62            Disable attack (can only happen when no instrument changes)
 	$63            Override pitch envelope (for vibrato)
 	$64            Clear pitch override flag.
-	$65            TODO: fine pitch.
+	$65            fine pitch.
 	$66-$6f        Free.
 	$70-$7f        Volume (like doug).
 	$80 | (n << 1) Instrument change, max 64

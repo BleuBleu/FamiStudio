@@ -4,6 +4,11 @@
 .include "famitone2.s"
 .endif
 
+.segment "HEADER"
+
+; NSF header Placeholder so that the debug info addresses matches.
+HEADER : .res 128
+
 .segment "CODE_INIT"
 
 ; [in] a = song index.

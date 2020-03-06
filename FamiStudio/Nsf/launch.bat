@@ -1,12 +1,15 @@
 @taskkill /im mesen.exe
 
-@..\..\..\NES\tools\bin\msxsl.exe %USERPROFILE%\Documents\Mesen\Debugger\rom.Workspace.xml ..\..\..\NES\tools\bin\cleandebug.xml -o %USERPROFILE%\Documents\Mesen\Debugger\rom.Workspace.xml
+@..\..\..\NES\tools\bin\msxsl.exe %USERPROFILE%\Documents\Mesen\Debugger\nsf.Workspace.xml ..\..\..\NES\tools\bin\cleandebug.xml -o %USERPROFILE%\Documents\Mesen\Debugger\nsf.Workspace.xml
 
-@findstr /V "zeropage.*type=equ @LOCAL-MACRO_SYMBOL" rom.dbg > rom.dbg.new
-@del rom.dbg
-@ren rom.dbg.new rom.dbg
+PatchNsf EnvTest.nsf nsf_ft2_fs_mmc5.bin nsf.nsf
+copy /y nsf_ft2_fs_mmc5.dbg nsf.dbg
 
-@del %USERPROFILE%\Documents\Mesen\Debugger\rom.cdl
-@del %USERPROFILE%\Documents\Mesen\RecentGames\rom.*
+@findstr /V "zeropage.*type=equ @LOCAL-MACRO_SYMBOL" nsf.dbg > nsf.dbg.new
+@del nsf.dbg
+@ren nsf.dbg.new nsf.dbg
 
-..\..\..\NES\tools\bin\Mesen.exe rom.nes
+@del %USERPROFILE%\Documents\Mesen\Debugger\nsf.cdl
+@del %USERPROFILE%\Documents\Mesen\RecentGames\nsf.*
+
+..\..\..\NES\tools\bin\Mesen.exe nsf.nsf

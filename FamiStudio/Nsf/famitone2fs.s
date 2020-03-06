@@ -338,14 +338,13 @@ pal:
     sta APU_PL2_SWEEP
 
 .ifdef ::FT_MMC5
-    lda #$01
+    lda #$00
     sta MMC5_PCM_MODE
     lda #$03
     sta MMC5_SND_CHN
 .endif
 
-    jsr FamiToneMusicStop
-    rts
+    jmp FamiToneMusicStop
 
 .endproc
 
@@ -432,8 +431,7 @@ set_pitch_envelopes:
     cpx #FT_NUM_PITCH_ENVELOPES
     bne set_pitch_envelopes
 
-    jsr FamiToneSampleStop
-    rts
+    jmp FamiToneSampleStop
 
 .endproc
 
@@ -586,7 +584,7 @@ done:
 
 .endproc
 
-.macro update_channel_sound idx, env_offset, slide_offset, pulse_prev, vol_ora, hi_ora, reg_hi, reg_lo, reg_vol, reg_sweep
+.macro FamiToneUpdateChannelSound idx, env_offset, slide_offset, pulse_prev, vol_ora, hi_ora, reg_hi, reg_lo, reg_vol, reg_sweep
 
     .local noteTableLSB
     .local noteTableMSB
@@ -763,7 +761,7 @@ done:
 
 .endmacro
 
-.macro update_row_standard channel_idx, env_idx, duty
+.macro FamiToneUpdateRowStandard channel_idx, env_idx, duty
 
     ldx #channel_idx
     jsr _FT2ChannelUpdate
@@ -794,7 +792,7 @@ done:
 
 .endmacro
 
-.macro update_row_dpcm channel_idx
+.macro FamiToneUpdateRowDpcm channel_idx
 .if(::FT_DPCM_ENABLE)
     .local @play_sample
     .local @no_new_note
@@ -829,12 +827,29 @@ done:
 .endif
 .endmacro
 
+.macro Test1 aa, bb
+    lda aa
+    ldx bb
+.endmacro 
+
+.macro Test2 aa, bb
+    lda aa
+    ldy bb
+.endmacro 
+
+.macro Outer aa, bb, cc
+    aa bb, cc
+.endmacro
+
 ;------------------------------------------------------------------------------
 ; update FamiTone state, should be called every NMI
 ; in: none
 ;------------------------------------------------------------------------------
 
 .proc FamiToneUpdate
+
+    Outer Test1, #1, #2
+    Outer Test2, #3, #4
 
     .if(::FT_THREAD)
     lda FT_TEMP_PTR_L
@@ -869,19 +884,19 @@ update_row:
     sbc FT_SONG_SPEED
     sta FT_TEMPO_ACC_H
 
-    update_row_standard 0, FT_CH1_ENVS, FT_CHN_DUTY+0
-    update_row_standard 1, FT_CH2_ENVS, FT_CHN_DUTY+1
-    update_row_standard 2, FT_CH3_ENVS, 
-    update_row_standard 3, FT_CH4_ENVS, FT_CHN_DUTY+3
-    update_row_dpcm 4
+    FamiToneUpdateRowStandard 0, FT_CH1_ENVS, FT_CHN_DUTY+0
+    FamiToneUpdateRowStandard 1, FT_CH2_ENVS, FT_CHN_DUTY+1
+    FamiToneUpdateRowStandard 2, FT_CH3_ENVS, 
+    FamiToneUpdateRowStandard 3, FT_CH4_ENVS, FT_CHN_DUTY+3
+    FamiToneUpdateRowDpcm 4
 .if .defined(::FT_CH6_ENVS)
-    update_row_standard 5, FT_CH6_ENVS, FT_CHN_DUTY+5
+    FamiToneUpdateRowStandard 5, FT_CH6_ENVS, FT_CHN_DUTY+5
 .endif
 .if .defined(::FT_CH7_ENVS)
-    update_row_standard 6, FT_CH7_ENVS, FT_CHN_DUTY+6
+    FamiToneUpdateRowStandard 6, FT_CH7_ENVS, FT_CHN_DUTY+6
 .endif
 .if .defined(::FT_CH8_ENVS)
-    update_row_standard 7, FT_CH8_ENVS, FT_CHN_DUTY+7
+    FamiToneUpdateRowStandard 7, FT_CH8_ENVS, FT_CHN_DUTY+7
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -1081,18 +1096,18 @@ slide_next:
 ;----------------------------------------------------------------------------------------------------------------------
 update_sound:
 
-    update_channel_sound 0, FT_CH1_ENVS, 0, FT_PULSE1_PREV, FT_CHN_DUTY+0, , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V, APU_PL1_SWEEP
-    update_channel_sound 1, FT_CH2_ENVS, 1, FT_PULSE2_PREV, FT_CHN_DUTY+1, , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V, APU_PL2_SWEEP
-    update_channel_sound 2, FT_CH3_ENVS, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
-    update_channel_sound 3, FT_CH4_ENVS,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
+    FamiToneUpdateChannelSound 0, FT_CH1_ENVS, 0, FT_PULSE1_PREV, FT_CHN_DUTY+0, , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V, APU_PL1_SWEEP
+    FamiToneUpdateChannelSound 1, FT_CH2_ENVS, 1, FT_PULSE2_PREV, FT_CHN_DUTY+1, , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V, APU_PL2_SWEEP
+    FamiToneUpdateChannelSound 2, FT_CH3_ENVS, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
+    FamiToneUpdateChannelSound 3, FT_CH4_ENVS,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
 .ifdef ::FT_VRC6
-    update_channel_sound 5, FT_CH6_ENVS, 3, , FT_CHN_DUTY+5, #$80, VRC6_PL1_HI, VRC6_PL1_LO, VRC6_PL1_VOL
-    update_channel_sound 6, FT_CH7_ENVS, 4, , FT_CHN_DUTY+6, #$80, VRC6_PL2_HI, VRC6_PL2_LO, VRC6_PL2_VOL
-    update_channel_sound 7, FT_CH8_ENVS, 5, , FT_CHN_DUTY+7, #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
+    FamiToneUpdateChannelSound 5, FT_CH6_ENVS, 3, , FT_CHN_DUTY+5, #$80, VRC6_PL1_HI, VRC6_PL1_LO, VRC6_PL1_VOL
+    FamiToneUpdateChannelSound 6, FT_CH7_ENVS, 4, , FT_CHN_DUTY+6, #$80, VRC6_PL2_HI, VRC6_PL2_LO, VRC6_PL2_VOL
+    FamiToneUpdateChannelSound 7, FT_CH8_ENVS, 5, , FT_CHN_DUTY+7, #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
 .endif
 .ifdef ::FT_MMC5
-    update_channel_sound 5, FT_CH6_ENVS, 3, FT_MMC5_PULSE1_PREV, FT_CHN_DUTY+5, , MMC5_PL1_HI, MMC5_PL1_LO, MMC5_PL1_VOL
-    update_channel_sound 6, FT_CH7_ENVS, 4, FT_MMC5_PULSE2_PREV, FT_CHN_DUTY+6, , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
+    FamiToneUpdateChannelSound 5, FT_CH6_ENVS, 3, FT_MMC5_PULSE1_PREV, FT_CHN_DUTY+5, , MMC5_PL1_HI, MMC5_PL1_LO, MMC5_PL1_VOL
+    FamiToneUpdateChannelSound 6, FT_CH7_ENVS, 4, FT_MMC5_PULSE2_PREV, FT_CHN_DUTY+6, , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
 .endif
 .ifdef ::FT_S5B
     ; loop
