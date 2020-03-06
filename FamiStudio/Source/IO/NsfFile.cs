@@ -121,7 +121,8 @@ namespace FamiStudio
                 // Code/sound engine
                 var nsfBinStream = typeof(NsfFile).Assembly.GetManifestResourceStream("FamiStudio.Nsf." + kernelBinary);
                 var nsfBinBuffer = new byte[nsfBinStream.Length - 128]; // Skip header.
-                nsfBinStream.Read(nsfBinBuffer, 128, nsfBinBuffer.Length);
+                nsfBinStream.Seek(128, SeekOrigin.Begin);
+                nsfBinStream.Read(nsfBinBuffer, 0, nsfBinBuffer.Length);
 
                 nsfBytes.AddRange(nsfBinBuffer);
 

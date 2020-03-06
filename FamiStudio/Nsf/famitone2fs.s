@@ -49,19 +49,10 @@ FT_PITCH_ENV_OVERRIDE : .res FT_NUM_PITCH_ENVELOPES
 FT_FINE_PITCH         : .res FT_NUM_PITCH_ENVELOPES
 
 ;slide structure offsets, 3 bytes per slide.
-
-.if .defined(FT_VRC6) || .defined(FT_S5B)
-FT_NUM_SLIDES = 6
-.elseif .defined(FT_MMC5)
-FT_NUM_SLIDES = 5
-.else
-FT_NUM_SLIDES = 3 ;square and triangle have slide notes.
-.endif
-
 FT_SLIDES:
-FT_SLIDE_STEP    : .res FT_NUM_SLIDES
-FT_SLIDE_PITCH_L : .res FT_NUM_SLIDES
-FT_SLIDE_PITCH_H : .res FT_NUM_SLIDES
+FT_SLIDE_STEP    : .res FT_NUM_PITCH_ENVELOPES
+FT_SLIDE_PITCH_L : .res FT_NUM_PITCH_ENVELOPES
+FT_SLIDE_PITCH_H : .res FT_NUM_PITCH_ENVELOPES
 
 ;channel structure offsets, 10 bytes per channel
 
@@ -344,6 +335,13 @@ pal:
     sta MMC5_SND_CHN
 .endif
 
+.ifdef ::FT_S5B
+    lda #S5B_REG_TONE
+    sta S5B_ADDR
+    lda #$38 ; No noise, just 3 tones for now.
+    sta S5B_DATA
+.endif
+
     jmp FamiToneMusicStop
 
 .endproc
@@ -392,7 +390,7 @@ set_slides:
 
     sta FT_SLIDE_STEP, x
     inx                        ;next channel
-    cpx #FT_NUM_SLIDES
+    cpx #FT_NUM_PITCH_ENVELOPES
     bne set_slides
 
     ldx #0    ;initialize all envelopes to the dummy envelope
@@ -645,17 +643,23 @@ done:
     and #$80
     beq @fine_pitch_is_positive
     lda #$ff
-    @fine_pitch_is_positive:
-        adc FT_TEMP_PTR2_H
-        sta FT_TEMP_PTR2_H
+@fine_pitch_is_positive:
+    adc FT_TEMP_PTR2_H
+    sta FT_TEMP_PTR2_H
 
+    ; Check if there is an active slide.
     ldy FT_SLIDE_STEP+slide_offset
     beq @noslide
 @slide:
     lda FT_SLIDE_PITCH_H+slide_offset
-    asl ; sign extend upcoming right shift.
+    bpl @slide_pos
+    @slide_neg:
+        sec ; sign extend upcoming right shift.
+        bcs @slide_ror
+    @slide_pos:
+        clc
+    @slide_ror:
     ror ; we have 1 bit of fraction for slides, shift right hi byte.
-    ror 
     sta FT_TEMP_VAR1
     lda FT_SLIDE_PITCH_L+slide_offset
     ror ; shift right low byte.
@@ -767,6 +771,7 @@ done:
     jsr _FT2ChannelUpdate
     bcc @no_new_note
     ldx #env_idx
+    ldy #channel_idx
     lda FT_CHN_INSTRUMENT+channel_idx
     jsr _FT2SetInstrument
 .ifnblank duty
@@ -827,19 +832,106 @@ done:
 .endif
 .endmacro
 
-.macro Test1 aa, bb
-    lda aa
-    ldx bb
-.endmacro 
+.ifdef FT_S5B
 
-.macro Test2 aa, bb
-    lda aa
-    ldy bb
-.endmacro 
+_FT2S5BRegLoTable:
+    .byte S5B_REG_LO_A, S5B_REG_LO_B, S5B_REG_LO_C
+_FT2S5BRegHiTable:
+    .byte S5B_REG_HI_A, S5B_REG_HI_B, S5B_REG_HI_C
+_FT2S5BVolTable:
+    .byte S5B_REG_VOL_A, S5B_REG_VOL_B, S5B_REG_VOL_C
+_FT2S5BEnvelopeTable:
+    .byte FT_CH6_ENVS, FT_CH7_ENVS, FT_CH8_ENVS
 
-.macro Outer aa, bb, cc
-    aa bb, cc
-.endmacro
+; y = S5B channel idx (0,1,2)
+.proc FamiToneUpdateS5BChannel
+    
+    FT_TEMP_ROR   = FT_TEMP_VAR1
+    FT_TEMP_ENV   = FT_TEMP_VAR2
+    FT_TEMP_PITCH = FT_TEMP_PTR2
+
+    lda FT_CHN_NOTE+5,y
+    bne nocut
+    ldx #0 ; this will fetch volume 0.
+    beq update_volume
+nocut:
+    ldx _FT2S5BEnvelopeTable,y
+    stx FT_TEMP_ENV
+
+    clc
+    adc FT_ENV_VALUE+FT_ENV_NOTE_OFF,x
+    tax
+
+    ; Pitch = note + pitch envelope + fine pitch.
+    clc
+    lda FT_PITCH_ENV_VALUE_L+3,y
+    adc _FT2NoteTableLSB,x
+    sta FT_TEMP_PITCH+0
+    lda FT_PITCH_ENV_VALUE_H+3,y
+    adc _FT2NoteTableMSB,x
+    sta FT_TEMP_PITCH+1
+
+    ; Sign extend fine pitch.
+    clc
+    lda FT_FINE_PITCH+3,y
+    adc FT_TEMP_PITCH+0
+    sta FT_TEMP_PITCH+0
+    lda FT_FINE_PITCH+3,y
+    and #$80
+    beq fine_pitch_is_positive
+    lda #$ff
+fine_pitch_is_positive:
+    adc FT_TEMP_PITCH+1
+    sta FT_TEMP_PITCH+1
+
+    ; Check if there is an active slide.
+    ldx FT_SLIDE_STEP+3,y
+    beq noslide
+slide:
+    lda FT_SLIDE_PITCH_H+3,y
+    bpl slide_pos
+    slide_neg:
+        sec ; sign extend upcoming right shift.
+        bcs slide_ror
+    slide_pos:
+        clc
+    slide_ror:
+    ror ; we have 1 bit of fraction for slides, shift right hi byte.
+    sta FT_TEMP_ROR
+    lda FT_SLIDE_PITCH_L+3,y
+    ror ; shift right low byte.
+    clc
+    adc FT_TEMP_PITCH+0
+    sta FT_TEMP_PITCH+0
+    lda FT_TEMP_ROR
+    adc FT_TEMP_PITCH+1 
+    sta FT_TEMP_PITCH+1 
+noslide:    
+
+    ; Write pitch
+    lda _FT2S5BRegLoTable,y
+    sta S5B_ADDR
+    lda FT_TEMP_PITCH+0
+    sta S5B_DATA
+    lda _FT2S5BRegHiTable,y
+    sta S5B_ADDR
+    lda FT_TEMP_PITCH+1
+    sta S5B_DATA
+
+    ; Update volume
+    ldx FT_TEMP_ENV
+    lda FT_ENV_VALUE+FT_ENV_VOLUME_OFF,x
+    ora FT_CHN_VOLUME_TRACK+5, y
+    tax
+update_volume:
+    lda _FT2S5BVolTable,y
+    sta S5B_ADDR
+    lda _FT2VolumeTable,x 
+    sta S5B_DATA
+
+    rts
+.endproc
+.endif
 
 ;------------------------------------------------------------------------------
 ; update FamiTone state, should be called every NMI
@@ -847,9 +939,6 @@ done:
 ;------------------------------------------------------------------------------
 
 .proc FamiToneUpdate
-
-    Outer Test1, #1, #2
-    Outer Test2, #3, #4
 
     .if(::FT_THREAD)
     lda FT_TEMP_PTR_L
@@ -1090,7 +1179,7 @@ clear_slide:
 
 slide_next:
     inx                        ;next slide
-    cpx #FT_NUM_SLIDES
+    cpx #FT_NUM_PITCH_ENVELOPES
     bne slide_process
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -1110,7 +1199,12 @@ update_sound:
     FamiToneUpdateChannelSound 6, FT_CH7_ENVS, 4, FT_MMC5_PULSE2_PREV, FT_CHN_DUTY+6, , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
 .endif
 .ifdef ::FT_S5B
-    ; loop
+    ldy #0
+    s5b_channel_loop:
+        jsr FamiToneUpdateS5BChannel
+        iny
+        cpy #3
+        bne s5b_channel_loop
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -1185,10 +1279,14 @@ no_pulse2_upd:
 .endproc
 
 ;internal routine, sets up envelopes of a channel according to current instrument
-;in X envelope group offset, A instrument number
+;in X envelope group offset, y = channel idx, A instrument number
 
 .proc _FT2SetInstrument
 
+    FT_TEMP_DUTY = FT_TEMP_VAR1
+    FT_TEMP_CHANNEL_IDX = FT_TEMP_VAR2
+
+    sty FT_TEMP_CHANNEL_IDX
     asl a                      ;instrument number is pre multiplied by 4
     tay
     lda FT_INSTRUMENT_H
@@ -1198,7 +1296,7 @@ no_pulse2_upd:
     sta FT_TEMP_PTR_L
 
     lda (FT_TEMP_PTR1),y       ;duty cycle
-    sta FT_TEMP_VAR1
+    sta FT_TEMP_DUTY
     iny
 
     lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
@@ -1222,9 +1320,7 @@ no_pulse2_upd:
     sta FT_ENV_REPEAT,x        ;reset env2 repeat counter
     sta FT_ENV_PTR,x           ;reset env2 pointer
 
-    txa
-    lsr ; the channel number is basically envelope index / 2 now...
-    tax
+    ldx FT_TEMP_CHANNEL_IDX
     lda _FT2ChannelToPitch, x
     bmi @no_pitch
     tax
@@ -1245,7 +1341,7 @@ no_pulse2_upd:
     sta FT_PITCH_ENV_ADR_H,x
 
 @no_pitch:
-    lda FT_TEMP_VAR1
+    lda FT_TEMP_DUTY
     rts
 
 .endproc
@@ -1910,9 +2006,13 @@ _FT2ChannelToVolumeEnvelope:
     .byte FT_CH3_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH4_ENVS+FT_ENV_VOLUME_OFF
     .byte $ff
-.ifdef ::FT_VRC6
+.if .defined(FT_CH6_ENVS)
     .byte FT_CH6_ENVS+FT_ENV_VOLUME_OFF
+.endif
+.if .defined(FT_CH7_ENVS)
     .byte FT_CH7_ENVS+FT_ENV_VOLUME_OFF
+.endif
+.if .defined(FT_CH8_ENVS)
     .byte FT_CH8_ENVS+FT_ENV_VOLUME_OFF
 .endif
 
@@ -1923,13 +2023,13 @@ _FT2ChannelToSlide:
     .byte $02
     .byte $ff ; no slide for noise
     .byte $ff ; no slide for DPCM
-.if FT_NUM_SLIDES >= 4
+.if FT_NUM_PITCH_ENVELOPES >= 4
     .byte $03
 .endif
-.if FT_NUM_SLIDES >= 5
+.if FT_NUM_PITCH_ENVELOPES >= 5
     .byte $04
 .endif    
-.if FT_NUM_SLIDES >= 6
+.if FT_NUM_PITCH_ENVELOPES >= 6
     .byte $05
 .endif
 

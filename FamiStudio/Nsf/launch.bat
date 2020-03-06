@@ -2,8 +2,8 @@
 
 @..\..\..\NES\tools\bin\msxsl.exe %USERPROFILE%\Documents\Mesen\Debugger\nsf.Workspace.xml ..\..\..\NES\tools\bin\cleandebug.xml -o %USERPROFILE%\Documents\Mesen\Debugger\nsf.Workspace.xml
 
-PatchNsf EnvTest.nsf nsf_ft2_fs_mmc5.bin nsf.nsf
-copy /y nsf_ft2_fs_mmc5.dbg nsf.dbg
+PatchNsf EnvTest.nsf nsf_ft2_fs_s5b.bin nsf.nsf
+copy /y nsf_ft2_fs_s5b.dbg nsf.dbg
 
 @findstr /V "zeropage.*type=equ @LOCAL-MACRO_SYMBOL" nsf.dbg > nsf.dbg.new
 @del nsf.dbg
