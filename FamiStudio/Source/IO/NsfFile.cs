@@ -108,8 +108,9 @@ namespace FamiStudio
                     switch (project.ExpansionAudio)
                     {
                         case Project.ExpansionVrc6: kernelBinary = "nsf_ft2_fs_vrc6.bin"; break;
+                        case Project.ExpansionFds:  kernelBinary = "nsf_ft2_fs_fds.bin";  break;
                         case Project.ExpansionMmc5: kernelBinary = "nsf_ft2_fs_mmc5.bin"; break;
-                        case Project.ExpansionS5B:  kernelBinary = "nsf_ft2_fs_s5b.bin"; break;
+                        case Project.ExpansionS5B:  kernelBinary = "nsf_ft2_fs_s5b.bin";  break;
                         default: kernelBinary = "nsf_ft2_fs.bin"; break;
                     }
                 }

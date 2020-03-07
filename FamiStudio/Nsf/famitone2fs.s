@@ -2,33 +2,40 @@
 
 ;settings, uncomment or put them into your main program; the latter makes possible updates easier
 
-; FT_BASE_ADR        = $0300  ;page in the RAM used for FT2 variables, should be $xx00
-; FT_TEMP            = $00    ;3 bytes in zeropage used by the library as a scratchpad
-FT_DPCM_OFF        = $c000
+; FT_BASE_ADR     = $0300  ;page in the RAM used for FT2 variables, should be $xx00
+; FT_TEMP         = $00    ;3 bytes in zeropage used by the library as a scratchpad
+FT_DPCM_OFF       = $c000
 FT_SFX_STREAMS    = 0     ;number of sound effects played at once, 1..4
-
-FT_DPCM_ENABLE = 1        ;undefine to exclude all DMC code
-FT_SFX_ENABLE = 0         ;undefine to exclude all sound effects code
-FT_THREAD    = 1          ;undefine if you are calling sound effects from the same thread as the sound update call
-
-FT_PAL_SUPPORT = 0        ;undefine to exclude PAL support
-FT_NTSC_SUPPORT    = 1    ;undefine to exclude NTSC support
+  
+FT_DPCM_ENABLE    = 1     ;undefine to exclude all DMC code
+FT_SFX_ENABLE     = 0     ;undefine to exclude all sound effects code
+FT_THREAD         = 1     ;undefine if you are calling sound effects from the same thread as the sound update call
+  
+FT_PAL_SUPPORT    = 0     ;undefine to exclude PAL support
+FT_NTSC_SUPPORT   = 1     ;undefine to exclude NTSC support
 
 ;internal defines
-FT_PITCH_FIX    = 0 ;(FT_PAL_SUPPORT|FT_NTSC_SUPPORT) ;add PAL/NTSC pitch correction code only when both modes are enabled
-FT_SMOOTH_VIBRATO = 1 ; Blaarg's smooth vibrato technique
+FT_PITCH_FIX      = 0     ;(FT_PAL_SUPPORT|FT_NTSC_SUPPORT) ;add PAL/NTSC pitch correction code only when both modes are enabled
+FT_SMOOTH_VIBRATO = 1     ; Blaarg's smooth vibrato technique
 
 .segment "RAM"
 
 .if .defined(FT_VRC6) || .defined(FT_S5B)
-FT_NUM_ENVELOPES        = 2+2+2+2+2+2+2
-FT_NUM_PITCH_ENVELOPES  = 6
+    FT_NUM_ENVELOPES        = 3+3+2+3+3+3+3
+    FT_NUM_PITCH_ENVELOPES  = 6
+    FT_NUM_CHANNELS         = 8
 .elseif .defined(FT_MMC5)
-FT_NUM_ENVELOPES        = 2+2+2+2+2+2
-FT_NUM_PITCH_ENVELOPES  = 5
+    FT_NUM_ENVELOPES        = 3+3+2+3+3+3
+    FT_NUM_PITCH_ENVELOPES  = 5
+    FT_NUM_CHANNELS         = 7
+.elseif .defined(FT_FDS)
+    FT_NUM_ENVELOPES        = 3+3+2+3+2
+    FT_NUM_PITCH_ENVELOPES  = 4
+    FT_NUM_CHANNELS         = 6
 .else
-FT_NUM_ENVELOPES        = 2+2+2+2
-FT_NUM_PITCH_ENVELOPES  = 3
+    FT_NUM_ENVELOPES        = 3+3+2+3
+    FT_NUM_PITCH_ENVELOPES  = 3
+    FT_NUM_CHANNELS         = 5
 .endif
 
 FT_ENVELOPES:
@@ -55,15 +62,6 @@ FT_SLIDE_PITCH_L : .res FT_NUM_PITCH_ENVELOPES
 FT_SLIDE_PITCH_H : .res FT_NUM_PITCH_ENVELOPES
 
 ;channel structure offsets, 10 bytes per channel
-
-.if .defined(FT_VRC6) || .defined(FT_S5B)
-FT_NUM_CHANNELS = 8
-.elseif .defined(FT_MMC5)
-FT_NUM_CHANNELS = 7
-.else
-FT_NUM_CHANNELS = 5
-.endif
-
 FT_CHANNELS:
 FT_CHN_PTR_L        : .res FT_NUM_CHANNELS
 FT_CHN_PTR_H        : .res FT_NUM_CHANNELS
@@ -73,28 +71,35 @@ FT_CHN_REPEAT       : .res FT_NUM_CHANNELS
 FT_CHN_RETURN_L     : .res FT_NUM_CHANNELS
 FT_CHN_RETURN_H     : .res FT_NUM_CHANNELS
 FT_CHN_REF_LEN      : .res FT_NUM_CHANNELS
-FT_CHN_DUTY         : .res FT_NUM_CHANNELS
-FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS ; DPCM(4) + Triangle(2) are unused.
+FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS
 .ifdef ::FT_EQUALIZER
 FT_CHN_NOTE_COUNTER : .res FT_NUM_CHANNELS
 .endif
 
 ;variables and aliases
+FT_CH0_ENVS = 0
+FT_CH1_ENVS = 3
+FT_CH2_ENVS = 6
+FT_CH3_ENVS = 8
 
-FT_CH1_ENVS = 0
-FT_CH2_ENVS = 2
-FT_CH3_ENVS = 4
-FT_CH4_ENVS = 6
-.if .defined(FT_VRC6) || .defined(FT_S5B) || .defined(FT_MMC5)
-FT_CH6_ENVS = 8
-FT_CH7_ENVS = 10
-.if !.defined(FT_MMC5)
-FT_CH8_ENVS = 12
-.endif
+.if .defined(FT_VRC6) 
+    FT_CH5_ENVS = 11
+    FT_CH6_ENVS = 14
+    FT_CH7_ENVS = 17
+.elseif .defined(FT_FDS)
+    FT_CH5_ENVS = 11
+.elseif .defined(FT_MMC5)
+    FT_CH5_ENVS = 11
+    FT_CH6_ENVS = 14
+.elseif .defined(FT_S5B)    
+    FT_CH5_ENVS = 11
+    FT_CH6_ENVS = 13
+    FT_CH7_ENVS = 15
 .endif
 
 FT_ENV_VOLUME_OFF = 0
 FT_ENV_NOTE_OFF   = 1
+FT_ENV_DUTY_OFF   = 2
 
 FT_PAL_ADJUST:    .res 1
 FT_SONG_LIST_L:   .res 1
@@ -109,12 +114,18 @@ FT_DPCM_LIST_L:   .res 1
 FT_DPCM_LIST_H:   .res 1
 FT_DPCM_EFFECT:   .res 1
 FT_OUT_BUF:       .res 1
-FT_SONG_SPEED   = FT_CHN_INSTRUMENT+4
-FT_PULSE1_PREV  = FT_CHN_DUTY+2
-FT_PULSE2_PREV  = FT_CHN_DUTY+4
+FT_PULSE1_PREV:   .res 1
+FT_PULSE2_PREV:   .res 1
+FT_SONG_SPEED     = FT_CHN_INSTRUMENT+4
 .ifdef FT_MMC5
 FT_MMC5_PULSE1_PREV  = FT_CHN_VOLUME_TRACK+2
 FT_MMC5_PULSE2_PREV  = FT_CHN_VOLUME_TRACK+4
+.endif
+
+; FDS, N163 and VRC7 have very different instrument layout and are 16-bytes, so we keep them seperate.
+.if .defined(FT_FDS) || .defined(FT_N163) || .defined(FT_VRC7) 
+FT_EXP_INSTRUMENT_L: .res 1
+FT_EXP_INSTRUMENT_H: .res 1
 .endif
 
 ; SFX Definately dont work right now.
@@ -229,6 +240,20 @@ S5B_REG_IO_A   = $0e
 S5B_REG_IO_B   = $0f
 .endif
 
+.ifdef ::FT_FDS
+FDS_WAV_START  = $4040
+FDS_VOL_ENV    = $4080
+FDS_FREQ_LO    = $4082
+FDS_FREQ_HI    = $4083
+FDS_SWEEP_ENV  = $4084
+FDS_SWEEP_BIAS = $4085
+FDS_MOD_LO     = $4086
+FDS_MOD_HI     = $4087
+FDS_MOD_TABLE  = $4088
+FDS_VOL        = $4089
+FDS_ENV_SPEED  = $408A
+.endif
+
 ;aliases for the APU registers in the output buffer
 
 .if(!FT_SFX_ENABLE) ;if sound effects are disabled, write to the APU directly
@@ -303,6 +328,16 @@ pal:
     lda (FT_TEMP_PTR1),y
     sta FT_INSTRUMENT_H
     iny
+
+    .if .defined(::FT_FDS) || .defined(::FT_N163) || .defined(::FT_VRC7) 
+        lda (FT_TEMP_PTR1),y       ;get expansion instrument list address
+        sta FT_EXP_INSTRUMENT_L
+        iny
+        lda (FT_TEMP_PTR1),y
+        sta FT_EXP_INSTRUMENT_H
+        iny
+    .endif
+
     lda (FT_TEMP_PTR1),y       ;get sample list address
     sta FT_DPCM_LIST_L
     iny
@@ -367,17 +402,6 @@ set_channels:
     sta FT_CHN_NOTE,x
     sta FT_CHN_REF_LEN,x
     sta FT_CHN_VOLUME_TRACK,x
-.if .defined(::FT_VRC6) || .defined(::FT_S5B)
-    cpx #5
-    bcc regular_inst
-vrc6_inst:
-    lda #$0
-    sta FT_CHN_DUTY,x
-    jmp nextchannel
-regular_inst:
-.endif
-    lda #$30
-    sta FT_CHN_DUTY,x
 
 nextchannel:
     inx                        ;next channel
@@ -458,6 +482,8 @@ set_pitch_envelopes:
     adc FT_TEMP_PTR_L
     stx FT_TEMP_PTR_L
     adc FT_TEMP_PTR_L
+.elseif ::FT_NUM_CHANNELS = 6
+    ; MATTT
 .elseif ::FT_NUM_CHANNELS = 7
     asl                        ;multiply song number by 18
     sta FT_TEMP_PTR_L
@@ -474,7 +500,11 @@ set_pitch_envelopes:
     adc FT_TEMP_PTR_L
 .endif
 
+.if .defined(::FT_FDS) || .defined(::FT_N163) || .defined(::FT_VRC7) 
+    adc #7                     ;add offset
+.else
     adc #5                     ;add offset
+.endif
     tay
 
     lda FT_SONG_LIST_L         ;restore pointer LSB
@@ -500,16 +530,6 @@ set_channels:
     sta FT_CHN_REF_LEN,x
     lda #$f0
     sta FT_CHN_VOLUME_TRACK,x
-.if .defined(::FT_VRC6) || .defined(::FT_S5B)
-    cpx #5
-    bcc regular_inst
-vrc6_inst:
-    lda #$0
-    sta FT_CHN_DUTY,x
-    jmp nextchannel
-regular_inst:
-.endif
-    sta FT_CHN_DUTY,x
 
 nextchannel:
     inx                        ;next channel
@@ -556,18 +576,18 @@ pause:
     jsr FamiToneSampleStop
     
     lda #0                     ;mute sound
+    sta FT_ENV_VALUE+FT_CH0_ENVS+FT_ENV_VOLUME_OFF
     sta FT_ENV_VALUE+FT_CH1_ENVS+FT_ENV_VOLUME_OFF
     sta FT_ENV_VALUE+FT_CH2_ENVS+FT_ENV_VOLUME_OFF
     sta FT_ENV_VALUE+FT_CH3_ENVS+FT_ENV_VOLUME_OFF
-    sta FT_ENV_VALUE+FT_CH4_ENVS+FT_ENV_VOLUME_OFF
+.if .defined(::FT_CH5_ENVS)
+    sta FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_VOLUME_OFF
+.endif
 .if .defined(::FT_CH6_ENVS)
     sta FT_ENV_VALUE+FT_CH6_ENVS+FT_ENV_VOLUME_OFF
 .endif
 .if .defined(::FT_CH7_ENVS)
     sta FT_ENV_VALUE+FT_CH7_ENVS+FT_ENV_VOLUME_OFF
-.endif
-.if .defined(::FT_CH8_ENVS)
-    sta FT_ENV_VALUE+FT_CH8_ENVS+FT_ENV_VOLUME_OFF
 .endif
     lda FT_SONG_SPEED          ;set pause flag
     ora #$80
@@ -582,150 +602,156 @@ done:
 
 .endproc
 
+; x = note index
+; y = slide/pitch envelope index
+.macro FamiToneComputeNoteFinalPitch pitch_env_offset, pitch_env_indexer, note_table_lsb, note_table_msb
+
+    .local pitch
+    .local tmp_ror
+    .local pos
+    .local no_slide
+
+    pitch   = FT_TEMP_PTR2
+    tmp_ror = FT_TEMP_VAR1
+ 
+    ; Pitch = note + pitch envelope + fine pitch.
+    clc
+    lda FT_PITCH_ENV_VALUE_L+pitch_env_offset pitch_env_indexer
+    adc note_table_lsb,x
+    sta pitch+0
+    lda FT_PITCH_ENV_VALUE_H+pitch_env_offset pitch_env_indexer
+    adc note_table_msb,x
+    sta pitch+1
+
+    ; Sign extend fine pitch.
+    clc
+    lda FT_FINE_PITCH+pitch_env_offset pitch_env_indexer
+    adc pitch+0
+    sta pitch+0
+    lda FT_FINE_PITCH+pitch_env_offset pitch_env_indexer
+    and #$80
+    beq pos
+    lda #$ff
+pos:
+    adc pitch+1
+    sta pitch+1
+
+    ; Check if there is an active slide.
+    ldx FT_SLIDE_STEP+pitch_env_offset pitch_env_indexer
+    beq no_slide
+
+    ; Apply slide.
+    lda FT_SLIDE_PITCH_H+pitch_env_offset pitch_env_indexer
+    cmp #$80 ; sign extend upcoming right shift.
+    ror ; we have 1 bit of fraction for slides, shift right hi byte.
+    sta tmp_ror
+    lda FT_SLIDE_PITCH_L+pitch_env_offset pitch_env_indexer
+    ror ; shift right low byte.
+    clc
+    adc pitch+0
+    sta pitch+0
+    lda tmp_ror
+    adc pitch+1 
+    sta pitch+1 
+no_slide:    
+
+.endmacro
+
 .macro FamiToneUpdateChannelSound idx, env_offset, slide_offset, pulse_prev, vol_ora, hi_ora, reg_hi, reg_lo, reg_vol, reg_sweep
 
-    .local noteTableLSB
-    .local noteTableMSB
+    .local note_table_lsb
+    .local note_table_msb
+    .local pitch
+    .local tmp
+    .local nocut
+    .local set_volume
+    .local compute_volume
+    .local hi_delta_too_big
+
+    tmp   = FT_TEMP_VAR1
+    pitch = FT_TEMP_PTR2
 
 .if .defined(::FT_VRC6) && idx = 7
-    noteTableLSB = _FT2SawNoteTableLSB
-    noteTableMSB = _FT2SawNoteTableMSB
+    note_table_lsb = _FT2SawNoteTableLSB
+    note_table_msb = _FT2SawNoteTableMSB
 .else
-    noteTableLSB = _FT2NoteTableLSB
-    noteTableMSB = _FT2NoteTableMSB
+    note_table_lsb = _FT2NoteTableLSB
+    note_table_msb = _FT2NoteTableMSB
 .endif
 
     lda FT_CHN_NOTE+idx
-.if !.blank(pulse_prev) && (::FT_SMOOTH_VIBRATO)
-    bne @nocut
-    jmp @cut
-@nocut:
-.else    
-    beq @cut
-.endif
+    bne nocut
+    jmp set_volume
+
+nocut:
     clc
     adc FT_ENV_VALUE+env_offset+FT_ENV_NOTE_OFF
 
-.if idx = 3 ;  noise channel is a bit special    
+.ifblank slide_offset ;  noise channel is a bit special    
 
     and #$0f
     eor #$0f
-    sta FT_TEMP_VAR1
-    lda FT_CHN_DUTY+idx
+    sta tmp
+    ldx FT_ENV_VALUE+env_offset+FT_ENV_DUTY_OFF
+    lda _FT2DutyLookup, x
     asl a
     and #$80
-    ora FT_TEMP_VAR1
+    ora tmp
 
 .else
 
     .if(::FT_PITCH_FIX)
-    ora FT_PAL_ADJUST ; TODO: Some expansions wont need this.
+        ora FT_PAL_ADJUST ; TODO: Some expansions wont need this.
     .endif
     tax
 
-.ifnblank slide_offset
+    FamiToneComputeNoteFinalPitch slide_offset, , note_table_lsb, note_table_msb
 
-    ; Pitch = note + pitch envelope + fine pitch.
-    clc
-    lda FT_PITCH_ENV_VALUE_L+slide_offset
-    adc noteTableLSB,x
-    sta FT_TEMP_PTR2_L
-    lda FT_PITCH_ENV_VALUE_H+slide_offset
-    adc noteTableMSB,x
-    sta FT_TEMP_PTR2_H
-
-    ; Sign extend fine pitch.
-    clc
-    lda FT_FINE_PITCH+slide_offset
-    adc FT_TEMP_PTR2_L
-    sta FT_TEMP_PTR2_L
-    lda FT_FINE_PITCH+slide_offset
-    and #$80
-    beq @fine_pitch_is_positive
-    lda #$ff
-@fine_pitch_is_positive:
-    adc FT_TEMP_PTR2_H
-    sta FT_TEMP_PTR2_H
-
-    ; Check if there is an active slide.
-    ldy FT_SLIDE_STEP+slide_offset
-    beq @noslide
-@slide:
-    lda FT_SLIDE_PITCH_H+slide_offset
-    bpl @slide_pos
-    @slide_neg:
-        sec ; sign extend upcoming right shift.
-        bcs @slide_ror
-    @slide_pos:
-        clc
-    @slide_ror:
-    ror ; we have 1 bit of fraction for slides, shift right hi byte.
-    sta FT_TEMP_VAR1
-    lda FT_SLIDE_PITCH_L+slide_offset
-    ror ; shift right low byte.
-    clc
-    adc FT_TEMP_PTR2_L
+    lda pitch+0
     sta reg_lo
-.if !.blank(pulse_prev) && (::FT_SMOOTH_VIBRATO)
-    sta FT_TEMP_VAR2 ; need to keep the lo period in case we do the sweep trick.
-.endif
-    lda FT_TEMP_VAR1
-    adc FT_TEMP_PTR2_H 
-    jmp @checkprevpulse
-@noslide:    
+    lda pitch+1
 
-.endif
+    .ifnblank pulse_prev
 
-    lda FT_TEMP_PTR2_L
-.if !.blank(reg_sweep) && (::FT_SMOOTH_VIBRATO)
-    sta FT_TEMP_VAR2 ; need to keep the lo period in case we do the sweep trick.
-.endif
-    sta reg_lo
-    lda FT_TEMP_PTR2_H
-
-@checkprevpulse:
-
-.ifnblank pulse_prev
-
-    .if(!::FT_SFX_ENABLE)
-        .if !.blank(reg_sweep) && (::FT_SMOOTH_VIBRATO)
-            ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
-            tax ; X = new hi-period
-            sec
-            sbc pulse_prev ; A = signed hi-period delta.
-            beq @prev
-            stx pulse_prev
-            tay 
-            iny ; we only care about -1 ($ff) and 1. Adding one means we only check of 0 or 2, we already checked for zero (so < 3).
-            cpy #$03
-            bcs @hi_delta_too_big
-            ldx #$40
-            stx APU_FRAME_CNT ; reset frame counter in case it was about to clock
-            lda _FT2SmoothVibratoLoPeriodLookup, y ; be sure low 8 bits of timer period are $ff (for positive delta), or $00 (for negative delta)
-            sta reg_lo
-            lda _FT2SmoothVibratoSweepLookup, y ; sweep enabled, shift = 7, set negative flag or delta is negative..
-            sta reg_sweep
-            lda #$c0
-            sta APU_FRAME_CNT ; clock sweep immediately
-            lda #$08
-            sta reg_sweep ; disable sweep
-            lda FT_TEMP_VAR2
-            sta reg_lo ; restore lo-period.
-            jmp @prev
-        @hi_delta_too_big:
-            stx reg_hi
-        .else
-            cmp pulse_prev
-            beq @prev
-            sta pulse_prev    
+        .if(!::FT_SFX_ENABLE)
+            .if !.blank(reg_sweep) && (::FT_SMOOTH_VIBRATO)
+                ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
+                tax ; X = new hi-period
+                sec
+                sbc pulse_prev ; A = signed hi-period delta.
+                beq compute_volume
+                stx pulse_prev
+                tay 
+                iny ; we only care about -1 ($ff) and 1. Adding one means we only check of 0 or 2, we already checked for zero (so < 3).
+                cpy #$03
+                bcs hi_delta_too_big
+                ldx #$40
+                stx APU_FRAME_CNT ; reset frame counter in case it was about to clock
+                lda _FT2SmoothVibratoLoPeriodLookup, y ; be sure low 8 bits of timer period are $ff (for positive delta), or $00 (for negative delta)
+                sta reg_lo
+                lda _FT2SmoothVibratoSweepLookup, y ; sweep enabled, shift = 7, set negative flag or delta is negative..
+                sta reg_sweep
+                lda #$c0
+                sta APU_FRAME_CNT ; clock sweep immediately
+                lda #$08
+                sta reg_sweep ; disable sweep
+                lda pitch+0
+                sta reg_lo ; restore lo-period.
+                jmp compute_volume
+            hi_delta_too_big:
+                stx reg_hi
+            .else
+                cmp pulse_prev
+                beq compute_volume
+                sta pulse_prev    
+            .endif
         .endif
+        
     .endif
-    
-.endif
 
-.ifnblank hi_ora
-    ora hi_ora
-.endif
+    .ifnblank hi_ora
+        ora hi_ora
+    .endif
 
 .endif ; idx = 3
 
@@ -733,39 +759,153 @@ done:
     sta reg_hi
 .endif
 
-@prev:
-
+compute_volume:
     lda FT_ENV_VALUE+env_offset+FT_ENV_VOLUME_OFF
     ora FT_CHN_VOLUME_TRACK+idx ; TODO: Triangle channel doesnt really need a volume track. Make it optional.
     tax
     lda _FT2VolumeTable, x 
-@cut:
+
+set_volume:
+
+.if idx = 0 || idx = 1 || idx = 3 || (idx >= 5 && .defined(::FT_MMC5))
+    ldx FT_ENV_VALUE+env_offset+FT_ENV_DUTY_OFF
+    ora _FT2DutyLookup, x
+.elseif idx >= 5 && .defined(::FT_VRC6)
+    ldx FT_ENV_VALUE+env_offset+FT_ENV_DUTY_OFF
+    ora _FT2Vrc6DutyLookup, x
+.endif
+
 .ifnblank vol_ora
-    .if .defined(FT_VRC6) && idx = 7 
-        ; saw channel has 6 bit volumes. 
-        ; get hi-bit from duty, similar to FamiTracker, but taking volume into account.
-        ; FamiTracker looses ability to output low volume when duty is odd.
-        beq @zero_vol
-        tax
-        lda vol_ora ; duty is already bit shifted 4 times at export.
-        and #$10
-        bne @odd_duty
-        txa
-        jmp @zero_vol
-        @odd_duty:
-        txa
-        asl
-        adc #1
-        @zero_vol:
-    .else
-        ora vol_ora
-    .endif
+    ; MATTT: VRC6 saw hack.
+    ;.if .defined(FT_VRC6) && idx = 7 
+    ;    ; saw channel has 6 bit volumes. 
+    ;    ; get hi-bit from duty, similar to FamiTracker, but taking volume into account.
+    ;    ; FamiTracker looses ability to output low volume when duty is odd.
+    ;    beq @zero_vol
+    ;    tax
+    ;    lda vol_ora ; duty is already bit shifted 4 times at export.
+    ;    and #$10
+    ;    bne @odd_duty
+    ;    txa
+    ;    jmp @zero_vol
+    ;    @odd_duty:
+    ;    txa
+    ;    asl
+    ;    adc #1
+    ;    @zero_vol:
+    ;.else
+    ;    ora vol_ora
+    ;.endif
+
+    ora vol_ora
 .endif
     sta reg_vol
 
 .endmacro
 
-.macro FamiToneUpdateRowStandard channel_idx, env_idx, duty
+.ifdef FT_S5B
+
+_FT2S5BRegLoTable:
+    .byte S5B_REG_LO_A, S5B_REG_LO_B, S5B_REG_LO_C
+_FT2S5BRegHiTable:
+    .byte S5B_REG_HI_A, S5B_REG_HI_B, S5B_REG_HI_C
+_FT2S5BVolTable:
+    .byte S5B_REG_VOL_A, S5B_REG_VOL_B, S5B_REG_VOL_C
+_FT2S5BEnvelopeTable:
+    .byte FT_CH5_ENVS, FT_CH6_ENVS, FT_CH7_ENVS
+
+; y = S5B channel idx (0,1,2)
+.proc FamiToneUpdateS5BChannel
+    
+    FT_TEMP_ENV = FT_TEMP_VAR2
+    FT_PITCH    = FT_TEMP_PTR2
+
+    lda FT_CHN_NOTE+5,y
+    bne nocut
+    ldx #0 ; this will fetch volume 0.
+    beq update_volume
+nocut:
+    ldx _FT2S5BEnvelopeTable,y
+    stx FT_TEMP_ENV
+
+    ; Read note, apply arpeggio 
+    clc
+    adc FT_ENV_VALUE+FT_ENV_NOTE_OFF,x
+    tax
+
+    FamiToneComputeNoteFinalPitch 3, {,y}, _FT2NoteTableLSB, _FT2NoteTableMSB
+
+    ; Write pitch
+    lda _FT2S5BRegLoTable,y
+    sta S5B_ADDR
+    lda FT_PITCH+0
+    sta S5B_DATA
+    lda _FT2S5BRegHiTable,y
+    sta S5B_ADDR
+    lda FT_PITCH+1
+    sta S5B_DATA
+
+    ; Read/multiply volume
+    ldx FT_TEMP_ENV
+    lda FT_ENV_VALUE+FT_ENV_VOLUME_OFF,x
+    ora FT_CHN_VOLUME_TRACK+5, y
+    tax
+
+update_volume:
+    ; Write volume
+    lda _FT2S5BVolTable,y
+    sta S5B_ADDR
+    lda _FT2VolumeTable,x 
+    sta S5B_DATA
+
+    rts
+.endproc
+.endif
+
+.ifdef FT_FDS
+.proc FamiToneUpdateFdsChannel
+   
+    pitch = FT_TEMP_PTR2
+
+    lda FT_CHN_NOTE+5
+    bne nocut
+    ldx #0 ; this will fetch volume 0.
+    beq update_volume
+nocut:
+
+    ; Read note, apply arpeggio 
+    clc
+    adc FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_NOTE_OFF
+    tax
+
+    FamiToneComputeNoteFinalPitch 3, , _FT2FdsNoteTableLSB, _FT2FdsNoteTableMSB
+
+    ; Write pitch
+    lda pitch+0
+    sta FDS_FREQ_LO
+    lda pitch+1
+    sta FDS_FREQ_HI
+
+    ; MATTT: Do modulation!
+    lda #$80
+    sta FDS_MOD_HI
+
+    ; Read/multiply volume
+    lda FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_VOLUME_OFF
+    ora FT_CHN_VOLUME_TRACK+5
+    tax
+
+update_volume:
+    lda _FT2VolumeTable,x
+    asl ; FDS volumes go from 0-63, but is clipped at 32.
+    ora #$80
+    sta FDS_VOL_ENV
+    rts
+
+.endproc
+.endif
+
+.macro FamiToneUpdateRowStandard channel_idx, env_idx
 
     ldx #channel_idx
     jsr _FT2ChannelUpdate
@@ -774,9 +914,6 @@ done:
     ldy #channel_idx
     lda FT_CHN_INSTRUMENT+channel_idx
     jsr _FT2SetInstrument
-.ifnblank duty
-    sta duty
-.endif
 
 .ifdef ::FT_EQUALIZER
     @new_note:
@@ -832,107 +969,6 @@ done:
 .endif
 .endmacro
 
-.ifdef FT_S5B
-
-_FT2S5BRegLoTable:
-    .byte S5B_REG_LO_A, S5B_REG_LO_B, S5B_REG_LO_C
-_FT2S5BRegHiTable:
-    .byte S5B_REG_HI_A, S5B_REG_HI_B, S5B_REG_HI_C
-_FT2S5BVolTable:
-    .byte S5B_REG_VOL_A, S5B_REG_VOL_B, S5B_REG_VOL_C
-_FT2S5BEnvelopeTable:
-    .byte FT_CH6_ENVS, FT_CH7_ENVS, FT_CH8_ENVS
-
-; y = S5B channel idx (0,1,2)
-.proc FamiToneUpdateS5BChannel
-    
-    FT_TEMP_ROR   = FT_TEMP_VAR1
-    FT_TEMP_ENV   = FT_TEMP_VAR2
-    FT_TEMP_PITCH = FT_TEMP_PTR2
-
-    lda FT_CHN_NOTE+5,y
-    bne nocut
-    ldx #0 ; this will fetch volume 0.
-    beq update_volume
-nocut:
-    ldx _FT2S5BEnvelopeTable,y
-    stx FT_TEMP_ENV
-
-    clc
-    adc FT_ENV_VALUE+FT_ENV_NOTE_OFF,x
-    tax
-
-    ; Pitch = note + pitch envelope + fine pitch.
-    clc
-    lda FT_PITCH_ENV_VALUE_L+3,y
-    adc _FT2NoteTableLSB,x
-    sta FT_TEMP_PITCH+0
-    lda FT_PITCH_ENV_VALUE_H+3,y
-    adc _FT2NoteTableMSB,x
-    sta FT_TEMP_PITCH+1
-
-    ; Sign extend fine pitch.
-    clc
-    lda FT_FINE_PITCH+3,y
-    adc FT_TEMP_PITCH+0
-    sta FT_TEMP_PITCH+0
-    lda FT_FINE_PITCH+3,y
-    and #$80
-    beq fine_pitch_is_positive
-    lda #$ff
-fine_pitch_is_positive:
-    adc FT_TEMP_PITCH+1
-    sta FT_TEMP_PITCH+1
-
-    ; Check if there is an active slide.
-    ldx FT_SLIDE_STEP+3,y
-    beq noslide
-slide:
-    lda FT_SLIDE_PITCH_H+3,y
-    bpl slide_pos
-    slide_neg:
-        sec ; sign extend upcoming right shift.
-        bcs slide_ror
-    slide_pos:
-        clc
-    slide_ror:
-    ror ; we have 1 bit of fraction for slides, shift right hi byte.
-    sta FT_TEMP_ROR
-    lda FT_SLIDE_PITCH_L+3,y
-    ror ; shift right low byte.
-    clc
-    adc FT_TEMP_PITCH+0
-    sta FT_TEMP_PITCH+0
-    lda FT_TEMP_ROR
-    adc FT_TEMP_PITCH+1 
-    sta FT_TEMP_PITCH+1 
-noslide:    
-
-    ; Write pitch
-    lda _FT2S5BRegLoTable,y
-    sta S5B_ADDR
-    lda FT_TEMP_PITCH+0
-    sta S5B_DATA
-    lda _FT2S5BRegHiTable,y
-    sta S5B_ADDR
-    lda FT_TEMP_PITCH+1
-    sta S5B_DATA
-
-    ; Update volume
-    ldx FT_TEMP_ENV
-    lda FT_ENV_VALUE+FT_ENV_VOLUME_OFF,x
-    ora FT_CHN_VOLUME_TRACK+5, y
-    tax
-update_volume:
-    lda _FT2S5BVolTable,y
-    sta S5B_ADDR
-    lda _FT2VolumeTable,x 
-    sta S5B_DATA
-
-    rts
-.endproc
-.endif
-
 ;------------------------------------------------------------------------------
 ; update FamiTone state, should be called every NMI
 ; in: none
@@ -973,19 +1009,31 @@ update_row:
     sbc FT_SONG_SPEED
     sta FT_TEMPO_ACC_H
 
-    FamiToneUpdateRowStandard 0, FT_CH1_ENVS, FT_CHN_DUTY+0
-    FamiToneUpdateRowStandard 1, FT_CH2_ENVS, FT_CHN_DUTY+1
-    FamiToneUpdateRowStandard 2, FT_CH3_ENVS, 
-    FamiToneUpdateRowStandard 3, FT_CH4_ENVS, FT_CHN_DUTY+3
+    FamiToneUpdateRowStandard 0, FT_CH0_ENVS
+    FamiToneUpdateRowStandard 1, FT_CH1_ENVS
+    FamiToneUpdateRowStandard 2, FT_CH2_ENVS
+    FamiToneUpdateRowStandard 3, FT_CH3_ENVS
     FamiToneUpdateRowDpcm 4
-.if .defined(::FT_CH6_ENVS)
-    FamiToneUpdateRowStandard 5, FT_CH6_ENVS, FT_CHN_DUTY+5
+
+.ifdef ::FT_VRC6
+    FamiToneUpdateRowStandard 5, FT_CH5_ENVS
+    FamiToneUpdateRowStandard 6, FT_CH6_ENVS
+    FamiToneUpdateRowStandard 7, FT_CH7_ENVS
 .endif
-.if .defined(::FT_CH7_ENVS)
-    FamiToneUpdateRowStandard 6, FT_CH7_ENVS, FT_CHN_DUTY+6
+
+.ifdef ::FT_MMC5
+    FamiToneUpdateRowStandard 5, FT_CH5_ENVS
+    FamiToneUpdateRowStandard 6, FT_CH6_ENVS
 .endif
-.if .defined(::FT_CH8_ENVS)
-    FamiToneUpdateRowStandard 7, FT_CH8_ENVS, FT_CHN_DUTY+7
+
+.ifdef ::FT_S5B
+    FamiToneUpdateRowStandard 5, FT_CH5_ENVS
+    FamiToneUpdateRowStandard 6, FT_CH6_ENVS
+    FamiToneUpdateRowStandard 7, FT_CH7_ENVS
+.endif
+
+.ifdef ::FT_FDS
+    FamiToneUpdateRowStandard 5, FT_CH5_ENVS
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -1185,19 +1233,22 @@ slide_next:
 ;----------------------------------------------------------------------------------------------------------------------
 update_sound:
 
-    FamiToneUpdateChannelSound 0, FT_CH1_ENVS, 0, FT_PULSE1_PREV, FT_CHN_DUTY+0, , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V, APU_PL1_SWEEP
-    FamiToneUpdateChannelSound 1, FT_CH2_ENVS, 1, FT_PULSE2_PREV, FT_CHN_DUTY+1, , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V, APU_PL2_SWEEP
-    FamiToneUpdateChannelSound 2, FT_CH3_ENVS, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
-    FamiToneUpdateChannelSound 3, FT_CH4_ENVS,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
+    FamiToneUpdateChannelSound 0, FT_CH0_ENVS, 0, FT_PULSE1_PREV, , , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V, APU_PL1_SWEEP
+    FamiToneUpdateChannelSound 1, FT_CH1_ENVS, 1, FT_PULSE2_PREV, , , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V, APU_PL2_SWEEP
+    FamiToneUpdateChannelSound 2, FT_CH2_ENVS, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
+    FamiToneUpdateChannelSound 3, FT_CH3_ENVS,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
+
 .ifdef ::FT_VRC6
-    FamiToneUpdateChannelSound 5, FT_CH6_ENVS, 3, , FT_CHN_DUTY+5, #$80, VRC6_PL1_HI, VRC6_PL1_LO, VRC6_PL1_VOL
-    FamiToneUpdateChannelSound 6, FT_CH7_ENVS, 4, , FT_CHN_DUTY+6, #$80, VRC6_PL2_HI, VRC6_PL2_LO, VRC6_PL2_VOL
-    FamiToneUpdateChannelSound 7, FT_CH8_ENVS, 5, , FT_CHN_DUTY+7, #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
+    FamiToneUpdateChannelSound 5, FT_CH5_ENVS, 3, , , #$80, VRC6_PL1_HI, VRC6_PL1_LO, VRC6_PL1_VOL
+    FamiToneUpdateChannelSound 6, FT_CH6_ENVS, 4, , , #$80, VRC6_PL2_HI, VRC6_PL2_LO, VRC6_PL2_VOL
+    FamiToneUpdateChannelSound 7, FT_CH7_ENVS, 5, , , #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
 .endif
+
 .ifdef ::FT_MMC5
-    FamiToneUpdateChannelSound 5, FT_CH6_ENVS, 3, FT_MMC5_PULSE1_PREV, FT_CHN_DUTY+5, , MMC5_PL1_HI, MMC5_PL1_LO, MMC5_PL1_VOL
-    FamiToneUpdateChannelSound 6, FT_CH7_ENVS, 4, FT_MMC5_PULSE2_PREV, FT_CHN_DUTY+6, , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
+    FamiToneUpdateChannelSound 5, FT_CH5_ENVS, 3, FT_MMC5_PULSE1_PREV, , , MMC5_PL1_HI, MMC5_PL1_LO, MMC5_PL1_VOL
+    FamiToneUpdateChannelSound 6, FT_CH6_ENVS, 4, FT_MMC5_PULSE2_PREV, , , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
 .endif
+
 .ifdef ::FT_S5B
     ldy #0
     s5b_channel_loop:
@@ -1205,6 +1256,10 @@ update_sound:
         iny
         cpy #3
         bne s5b_channel_loop
+.endif
+
+.ifdef ::FT_FDS
+    ;jsr FamiToneUpdateFdsChannel
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -1283,36 +1338,37 @@ no_pulse2_upd:
 
 .proc _FT2SetInstrument
 
-    FT_TEMP_DUTY = FT_TEMP_VAR1
-    FT_TEMP_CHANNEL_IDX = FT_TEMP_VAR2
+    ptr = FT_TEMP_PTR1
+    wave_ptr = FT_TEMP_PTR2
+    chan_idx = FT_TEMP_VAR2
+    exp_inst = FT_TEMP_VAR3
 
-    sty FT_TEMP_CHANNEL_IDX
-    asl a                      ;instrument number is pre multiplied by 4
+    sty chan_idx
+    asl                        ;instrument number is pre multiplied by 4
     tay
     lda FT_INSTRUMENT_H
     adc #0                     ;use carry to extend range for 64 instruments
-    sta FT_TEMP_PTR_H
+    sta ptr+1
     lda FT_INSTRUMENT_L
-    sta FT_TEMP_PTR_L
+    sta ptr+0
 
-    lda (FT_TEMP_PTR1),y       ;duty cycle
-    sta FT_TEMP_DUTY
-    iny
-
-    lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
+    ; Volume envelope
+    lda (ptr),y
     sta FT_ENV_ADR_L,x
     iny
-    lda (FT_TEMP_PTR1),y       ;instrument pointer MSB
+    lda (FT_TEMP_PTR1),y
     iny
     sta FT_ENV_ADR_H,x
-    inx                        ;next envelope
+    inx
 
-    lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
+    ; Arpeggio envelope
+    lda (FT_TEMP_PTR1),y
     sta FT_ENV_ADR_L,x
     iny
-    lda (FT_TEMP_PTR1),y       ;instrument pointer MSB
+    lda (FT_TEMP_PTR1),y
     sta FT_ENV_ADR_H,x
 
+    ; Initialize volume + arpeggio envelopes.
     lda #1
     sta FT_ENV_PTR-1,x         ;reset env1 pointer (env1 is volume and volume can have releases)
     lda #0
@@ -1320,13 +1376,37 @@ no_pulse2_upd:
     sta FT_ENV_REPEAT,x        ;reset env2 repeat counter
     sta FT_ENV_PTR,x           ;reset env2 pointer
 
-    ldx FT_TEMP_CHANNEL_IDX
+    ; Duty cycle envelope
+    lda chan_idx
+    cmp #2                     ;triangle has no duty.
+    bne duty
+.if .defined(::FT_S5B) || .defined(::FT_FDS) || .defined(::FT_VRC7) || .defined(::FT_N163)
+    cmp #5                     ;these expansions have no duty.
+    bcc duty
+.endif
+    no_duty:
+        iny
+        iny
+        bne pitch_env
+    duty:
+        inx
+        iny
+        lda (FT_TEMP_PTR1),y
+        sta FT_ENV_ADR_L,x
+        iny
+        lda (FT_TEMP_PTR1),y
+        sta FT_ENV_ADR_H,x
+        lda #0
+        sta FT_ENV_REPEAT,x        ;reset env3 repeat counter
+        sta FT_ENV_PTR,x           ;reset env3 pointer
+    pitch_env:
+    ; Pitch envelopes.
+    ldx chan_idx
     lda _FT2ChannelToPitch, x
-    bmi @no_pitch
+    bmi no_pitch
     tax
     lda FT_PITCH_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
-    bne @no_pitch
-    iny
+    bne no_pitch
     lda #1
     sta FT_PITCH_ENV_PTR,x     ;reset env3 pointer (pitch envelope have relative/absolute flag in the first byte)
     lda #0
@@ -1334,14 +1414,13 @@ no_pulse2_upd:
     sta FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_H,x
     sta FT_PITCH_ENV_OVERRIDE,x
+    iny
     lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
     sta FT_PITCH_ENV_ADR_L,x
     iny
     lda (FT_TEMP_PTR1),y       ;instrument pointer MSB
     sta FT_PITCH_ENV_ADR_H,x
-
-@no_pitch:
-    lda FT_TEMP_DUTY
+    no_pitch:
     rts
 
 .endproc
@@ -1990,30 +2069,53 @@ _FT2SawNoteTableLSB:
     .byte $1e, $1c, $1a, $19, $17, $16, $15, $13, $12, $11, $10, $0f ; Octave 7
 _FT2SawNoteTableMSB:    
     .byte $00
-    .byte $0f, $0e, $0d, $0c, $0c, $0b, $0a, $0a, $09, $09, $08, $08  ; Octave 0
-    .byte $07, $07, $06, $06, $06, $05, $05, $05, $04, $04, $04, $04  ; Octave 1
-    .byte $03, $03, $03, $03, $03, $02, $02, $02, $02, $02, $02, $02  ; Octave 2
-    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; Octave 3
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; Octave 4
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; Octave 5
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; Octave 6
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; Octave 7
+    .byte $0f, $0e, $0d, $0c, $0c, $0b, $0a, $0a, $09, $09, $08, $08 ; Octave 0
+    .byte $07, $07, $06, $06, $06, $05, $05, $05, $04, $04, $04, $04 ; Octave 1
+    .byte $03, $03, $03, $03, $03, $02, $02, $02, $02, $02, $02, $02 ; Octave 2
+    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01 ; Octave 3
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 4
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
+.endif
+
+.ifdef FT_FDS
+_FT2FdsNoteTableLSB:
+    .byte $00
+    .byte $13, $14, $16, $17, $18, $1a, $1b, $1d, $1e, $20, $22, $24 ; Octave 0
+    .byte $26, $29, $2b, $2e, $30, $33, $36, $39, $3d, $40, $44, $48 ; Octave 1
+    .byte $4d, $51, $56, $5b, $61, $66, $6c, $73, $7a, $81, $89, $91 ; Octave 2
+    .byte $99, $a2, $ac, $b6, $c1, $cd, $d9, $e6, $f3, $02, $11, $21 ; Octave 3
+    .byte $33, $45, $58, $6d, $82, $99, $b2, $cb, $e7, $04, $22, $43 ; Octave 4
+    .byte $65, $8a, $b0, $d9, $04, $32, $63, $97, $cd, $07, $44, $85 ; Octave 5
+    .byte $ca, $13, $60, $b2, $09, $65, $c6, $2d, $9b, $0e, $89, $0b ; Octave 6
+    .byte $94, $26, $c1, $64, $12, $ca, $8c, $5b, $35, $1d, $12, $16 ; Octave 7
+_FT2FdsNoteTableMSB:
+    .byte $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 0
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 1
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 2
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01 ; Octave 3
+    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02, $02 ; Octave 4
+    .byte $02, $02, $02, $02, $03, $03, $03, $03, $03, $04, $04, $04 ; Octave 5
+    .byte $04, $05, $05, $05, $06, $06, $06, $07, $07, $08, $08, $09 ; Octave 6
+    .byte $09, $0a, $0a, $0b, $0c, $0c, $0d, $0e, $0f, $10, $11, $12 ; Octave 7
 .endif
 
 _FT2ChannelToVolumeEnvelope:
+    .byte FT_CH0_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH1_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH2_ENVS+FT_ENV_VOLUME_OFF
     .byte FT_CH3_ENVS+FT_ENV_VOLUME_OFF
-    .byte FT_CH4_ENVS+FT_ENV_VOLUME_OFF
     .byte $ff
+.if .defined(FT_CH5_ENVS)
+    .byte FT_CH5_ENVS+FT_ENV_VOLUME_OFF
+.endif
 .if .defined(FT_CH6_ENVS)
     .byte FT_CH6_ENVS+FT_ENV_VOLUME_OFF
 .endif
 .if .defined(FT_CH7_ENVS)
     .byte FT_CH7_ENVS+FT_ENV_VOLUME_OFF
-.endif
-.if .defined(FT_CH8_ENVS)
-    .byte FT_CH8_ENVS+FT_ENV_VOLUME_OFF
 .endif
 
 _FT2ChannelToPitch:
@@ -2031,6 +2133,24 @@ _FT2ChannelToSlide:
 .endif    
 .if FT_NUM_PITCH_ENVELOPES >= 6
     .byte $05
+.endif
+
+_FT2DutyLookup:
+    .byte $30
+    .byte $70
+    .byte $b0
+    .byte $f0
+
+.ifdef FT_VRC6
+_FT2Vrc6DutyLookup:
+    .byte $00
+    .byte $10
+    .byte $20
+    .byte $30
+    .byte $40
+    .byte $50
+    .byte $60
+    .byte $70
 .endif
 
 .if(FT_SMOOTH_VIBRATO)

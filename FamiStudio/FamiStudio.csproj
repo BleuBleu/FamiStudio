@@ -183,6 +183,7 @@
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc6.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_mmc5.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_s5b.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_fds.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

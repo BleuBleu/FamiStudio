@@ -13,6 +13,7 @@
 	- Make bar length more flexible (for short patterns too).
 - NSF:
 	x Fine pitch track
+	- Why is _FT2SetInstrument called twice on a new note? Stop notes trigger instrument set... Not great.
 	- Duty envelopes.
 	- Expansions
 	- Retest smooth vibrato

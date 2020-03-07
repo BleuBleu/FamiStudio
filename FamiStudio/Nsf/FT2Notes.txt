@@ -27,19 +27,26 @@ New encoding:
 	$fd            Jump (3e)
 	$ff, n, ref    Plays n notes starting at ref
 
-New new encoding idea (need to look at real data):
+Instruments:
 
-	0x00 - 0x61 : Notes 
-	0x62 - 0x6f : Rare commands (jumps, refs, etc.)
-	0x70 - 0x7f : Volume
-	0x80 - 0xff : Bits + [payload of of N bytes depending of bits sets]
-		0x40 = Instrument change
-		0x20 = Has attack -> instrument change must have this too, silly
-		0x10 = Has pitch override (add extra byte to say if need to clear flag or not)
-		0x08 = Has slide data 
-		0x04 = Has empty notes
-		0x02 = Has speed change
-		0x01 = Has fine pitch
+	Base
+	- 8 bytes envelopes (vol, arp, duty, pitch)
+
+	Namco (+4 bytes)
+	- 2 byte wave env
+	- 1 byte size
+	- 1 byte pos
+
+	FDS (+8 bytes)
+	- 2 byte wave 
+	- 2 byte mod
+	- 2 byte mod speed
+	- 1 byte mod speed
+	- 1 byte mod delay
+
+	VRC7 (+3 bytes)
+	- 1-byte patch #
+	- 2-byte patch custom reg pointer.
 
 Typical sequences in Shovel Knight:
 
