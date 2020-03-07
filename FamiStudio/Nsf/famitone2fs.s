@@ -818,7 +818,7 @@ _FT2S5BEnvelopeTable:
     .byte FT_CH5_ENVS, FT_CH6_ENVS, FT_CH7_ENVS
 
 ; y = S5B channel idx (0,1,2)
-.proc FamiToneUpdateS5BChannel
+.proc FamiToneUpdateS5BChannelSound
     
     FT_TEMP_ENV = FT_TEMP_VAR2
     FT_PITCH    = FT_TEMP_PTR2
@@ -865,50 +865,7 @@ update_volume:
 .endproc
 .endif
 
-;.ifdef FT_FDS
-;.proc FamiToneUpdateFdsChannel
-   
-;    pitch = FT_TEMP_PTR2
-
-;    lda FT_CHN_NOTE+5
-;    bne nocut
-;    ldx #0 ; this will fetch volume 0.
-;    beq update_volume
-;nocut:
-
-;    ; Read note, apply arpeggio 
-;    clc
-;    adc FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_NOTE_OFF
-;    tax
-
-;    FamiToneComputeNoteFinalPitch 3, , _FT2FdsNoteTableLSB, _FT2FdsNoteTableMSB
-
-;    ; Write pitch
-;    lda pitch+0
-;    sta FDS_FREQ_LO
-;    lda pitch+1
-;    sta FDS_FREQ_HI
-
-;    ; MATTT: Do modulation!
-;    lda #$80
-;    sta FDS_MOD_HI
-
-;    ; Read/multiply volume
-;    lda FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_VOLUME_OFF
-;    ora FT_CHN_VOLUME_TRACK+5
-;    tax
-
-;update_volume:
-;    lda _FT2VolumeTable,x
-;    asl ; FDS volumes go from 0-63, but is clipped at 32.
-;    ora #$80
-;    sta FDS_VOL_ENV
-;    rts
-
-;.endproc
-;.endif
-
-.macro FamiToneUpdateRowStandard channel_idx, env_idx
+.macro FamiToneUpdateRow channel_idx, env_idx
 
     ldx #channel_idx
     jsr _FT2ChannelUpdate
@@ -1016,31 +973,31 @@ update_row:
     sbc FT_SONG_SPEED
     sta FT_TEMPO_ACC_H
 
-    FamiToneUpdateRowStandard 0, FT_CH0_ENVS
-    FamiToneUpdateRowStandard 1, FT_CH1_ENVS
-    FamiToneUpdateRowStandard 2, FT_CH2_ENVS
-    FamiToneUpdateRowStandard 3, FT_CH3_ENVS
+    FamiToneUpdateRow 0, FT_CH0_ENVS
+    FamiToneUpdateRow 1, FT_CH1_ENVS
+    FamiToneUpdateRow 2, FT_CH2_ENVS
+    FamiToneUpdateRow 3, FT_CH3_ENVS
     FamiToneUpdateRowDpcm 4
 
 .ifdef ::FT_VRC6
-    FamiToneUpdateRowStandard 5, FT_CH5_ENVS
-    FamiToneUpdateRowStandard 6, FT_CH6_ENVS
-    FamiToneUpdateRowStandard 7, FT_CH7_ENVS
+    FamiToneUpdateRow 5, FT_CH5_ENVS
+    FamiToneUpdateRow 6, FT_CH6_ENVS
+    FamiToneUpdateRow 7, FT_CH7_ENVS
 .endif
 
 .ifdef ::FT_MMC5
-    FamiToneUpdateRowStandard 5, FT_CH5_ENVS
-    FamiToneUpdateRowStandard 6, FT_CH6_ENVS
+    FamiToneUpdateRow 5, FT_CH5_ENVS
+    FamiToneUpdateRow 6, FT_CH6_ENVS
 .endif
 
 .ifdef ::FT_S5B
-    FamiToneUpdateRowStandard 5, FT_CH5_ENVS
-    FamiToneUpdateRowStandard 6, FT_CH6_ENVS
-    FamiToneUpdateRowStandard 7, FT_CH7_ENVS
+    FamiToneUpdateRow 5, FT_CH5_ENVS
+    FamiToneUpdateRow 6, FT_CH6_ENVS
+    FamiToneUpdateRow 7, FT_CH7_ENVS
 .endif
 
 .ifdef ::FT_FDS
-    FamiToneUpdateRowStandard 5, FT_CH5_ENVS
+    FamiToneUpdateRow 5, FT_CH5_ENVS
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -1265,7 +1222,7 @@ update_sound:
 .ifdef ::FT_S5B
     ldy #0
     s5b_channel_loop:
-        jsr FamiToneUpdateS5BChannel
+        jsr FamiToneUpdateS5BChannelSound
         iny
         cpy #3
         bne s5b_channel_loop
