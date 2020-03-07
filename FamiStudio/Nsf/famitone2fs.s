@@ -674,6 +674,9 @@ no_slide:
 .if .defined(::FT_VRC6) && idx = 7
     note_table_lsb = _FT2SawNoteTableLSB
     note_table_msb = _FT2SawNoteTableMSB
+.elseif .defined(::FT_FDS) && idx = 5
+    note_table_lsb = _FT2FdsNoteTableLSB
+    note_table_msb = _FT2FdsNoteTableMSB
 .else
     note_table_lsb = _FT2NoteTableLSB
     note_table_msb = _FT2NoteTableMSB
@@ -862,48 +865,48 @@ update_volume:
 .endproc
 .endif
 
-.ifdef FT_FDS
-.proc FamiToneUpdateFdsChannel
+;.ifdef FT_FDS
+;.proc FamiToneUpdateFdsChannel
    
-    pitch = FT_TEMP_PTR2
+;    pitch = FT_TEMP_PTR2
 
-    lda FT_CHN_NOTE+5
-    bne nocut
-    ldx #0 ; this will fetch volume 0.
-    beq update_volume
-nocut:
+;    lda FT_CHN_NOTE+5
+;    bne nocut
+;    ldx #0 ; this will fetch volume 0.
+;    beq update_volume
+;nocut:
 
-    ; Read note, apply arpeggio 
-    clc
-    adc FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_NOTE_OFF
-    tax
+;    ; Read note, apply arpeggio 
+;    clc
+;    adc FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_NOTE_OFF
+;    tax
 
-    FamiToneComputeNoteFinalPitch 3, , _FT2FdsNoteTableLSB, _FT2FdsNoteTableMSB
+;    FamiToneComputeNoteFinalPitch 3, , _FT2FdsNoteTableLSB, _FT2FdsNoteTableMSB
 
-    ; Write pitch
-    lda pitch+0
-    sta FDS_FREQ_LO
-    lda pitch+1
-    sta FDS_FREQ_HI
+;    ; Write pitch
+;    lda pitch+0
+;    sta FDS_FREQ_LO
+;    lda pitch+1
+;    sta FDS_FREQ_HI
 
-    ; MATTT: Do modulation!
-    lda #$80
-    sta FDS_MOD_HI
+;    ; MATTT: Do modulation!
+;    lda #$80
+;    sta FDS_MOD_HI
 
-    ; Read/multiply volume
-    lda FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_VOLUME_OFF
-    ora FT_CHN_VOLUME_TRACK+5
-    tax
+;    ; Read/multiply volume
+;    lda FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_VOLUME_OFF
+;    ora FT_CHN_VOLUME_TRACK+5
+;    tax
 
-update_volume:
-    lda _FT2VolumeTable,x
-    asl ; FDS volumes go from 0-63, but is clipped at 32.
-    ora #$80
-    sta FDS_VOL_ENV
-    rts
+;update_volume:
+;    lda _FT2VolumeTable,x
+;    asl ; FDS volumes go from 0-63, but is clipped at 32.
+;    ora #$80
+;    sta FDS_VOL_ENV
+;    rts
 
-.endproc
-.endif
+;.endproc
+;.endif
 
 .macro FamiToneUpdateRowStandard channel_idx, env_idx
 
@@ -913,7 +916,11 @@ update_volume:
     ldx #env_idx
     ldy #channel_idx
     lda FT_CHN_INSTRUMENT+channel_idx
+.if .defined(::FT_FDS) && channel_idx = 5
+    jsr _FT2SetFdsInstrument
+.else
     jsr _FT2SetInstrument
+.endif
 
 .ifdef ::FT_EQUALIZER
     @new_note:
@@ -1244,10 +1251,16 @@ update_sound:
     FamiToneUpdateChannelSound 7, FT_CH7_ENVS, 5, , , #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
 .endif
 
+.ifdef ::FT_FDS
+    FamiToneUpdateChannelSound 5, FT_CH5_ENVS, 3, , #$80, , FDS_FREQ_HI, FDS_FREQ_LO, FDS_VOL_ENV
+    ;jsr FamiToneUpdateFdsChannel
+.endif
+
 .ifdef ::FT_MMC5
     FamiToneUpdateChannelSound 5, FT_CH5_ENVS, 3, FT_MMC5_PULSE1_PREV, , , MMC5_PL1_HI, MMC5_PL1_LO, MMC5_PL1_VOL
     FamiToneUpdateChannelSound 6, FT_CH6_ENVS, 4, FT_MMC5_PULSE2_PREV, , , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
 .endif
+
 
 .ifdef ::FT_S5B
     ldy #0
@@ -1256,10 +1269,6 @@ update_sound:
         iny
         cpy #3
         bne s5b_channel_loop
-.endif
-
-.ifdef ::FT_FDS
-    ;jsr FamiToneUpdateFdsChannel
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -1380,8 +1389,8 @@ no_pulse2_upd:
     lda chan_idx
     cmp #2                     ;triangle has no duty.
     bne duty
-.if .defined(::FT_S5B) || .defined(::FT_FDS) || .defined(::FT_VRC7) || .defined(::FT_N163)
-    cmp #5                     ;these expansions have no duty.
+.if .defined(::FT_S5B)
+    cmp #5                     ;S5B has no duty.
     bcc duty
 .endif
     no_duty:
@@ -1424,6 +1433,120 @@ no_pulse2_upd:
     rts
 
 .endproc
+
+.ifdef FT_FDS
+.proc _FT2SetFdsInstrument
+
+    ptr = FT_TEMP_PTR1
+    wave_ptr = FT_TEMP_PTR2
+    tmp_y = FT_TEMP_VAR3
+
+    asl                        ;instrument number is pre multiplied by 4
+    asl
+    tay
+    lda FT_EXP_INSTRUMENT_H
+    adc #0                     ;use carry to extend range for 64 instruments
+    sta ptr+1
+    lda FT_EXP_INSTRUMENT_L
+    sta ptr+0
+
+    ; Volume envelope
+    lda (ptr),y
+    sta FT_ENV_ADR_L,x
+    iny
+    lda (FT_TEMP_PTR1),y
+    iny
+    sta FT_ENV_ADR_H,x
+    inx
+
+    ; Arpeggio envelope
+    lda (FT_TEMP_PTR1),y
+    sta FT_ENV_ADR_L,x
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta FT_ENV_ADR_H,x
+    iny
+
+    ; Initialize volume + arpeggio envelopes.
+    lda #1
+    sta FT_ENV_PTR-1,x         ;reset env1 pointer (env1 is volume and volume can have releases)
+    lda #0
+    sta FT_ENV_REPEAT-1,x      ;reset env1 repeat counter
+    sta FT_ENV_REPEAT,x        ;reset env2 repeat counter
+    sta FT_ENV_PTR,x           ;reset env2 pointer
+
+    ; Pitch envelopes.
+    ldx #3                      ; FDS is the 3rd pitch envelope
+    lda FT_PITCH_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
+    beq pitch_env
+    iny
+    iny
+    bne fds_wave
+
+    pitch_env:
+    lda #1
+    sta FT_PITCH_ENV_PTR,x     ;reset env3 pointer (pitch envelope have relative/absolute flag in the first byte)
+    lda #0
+    sta FT_PITCH_ENV_REPEAT,x  ;reset env3 repeat counter
+    sta FT_PITCH_ENV_VALUE_L,x
+    sta FT_PITCH_ENV_VALUE_H,x
+    sta FT_PITCH_ENV_OVERRIDE,x
+    lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
+    sta FT_PITCH_ENV_ADR_L,x
+    iny
+    lda (FT_TEMP_PTR1),y       ;instrument pointer MSB
+    sta FT_PITCH_ENV_ADR_H,x
+    iny
+
+    fds_wave:
+    lda #$80
+    sta FDS_VOL ; Enable wave RAM write
+
+    ; FDS Waveform
+    lda (FT_TEMP_PTR1),y
+    sta wave_ptr+0
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta wave_ptr+1
+    iny
+    sty tmp_y
+
+    ldy #0
+    wave_loop:
+        lda (wave_ptr),y
+        sta FDS_WAV_START,y
+        iny
+        cpy #64
+        bne wave_loop
+
+    ; MATTT: Temporary.
+    lda #0
+    sta FDS_VOL ; Disable RAM write.
+    sta FDS_SWEEP_BIAS
+    lda #$80
+    sta FDS_MOD_HI ; Need to disable modulation before writing.
+
+    ; FDS Modulation
+    ldy tmp_y
+    lda (FT_TEMP_PTR1),y
+    sta wave_ptr+0
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta wave_ptr+1
+    iny
+
+    ldy #0
+    mod_loop:
+        lda (wave_ptr),y
+        sta FDS_MOD_TABLE
+        iny
+        cpy #32
+        bne mod_loop
+
+    rts
+
+.endproc
+.endif
 
 ;internal routine, parses channel note data
 
@@ -1549,10 +1672,15 @@ slide:
     ldy FT_TEMP_VAR2           ; start note
     stx FT_TEMP_VAR2           ; store slide index.    
     tax
-.ifdef ::FT_VRC6
+.if .defined(::FT_VRC6)
     lda FT_TEMP_VAR1
     cmp #7
     beq note_table_saw
+note_table_regular:
+.elseif .defined(::FT_FDS)
+    lda FT_TEMP_VAR1
+    cmp #5
+    beq note_table_fds
 note_table_regular:
 .endif
     sec                        ; subtract the pitch of both notes. TODO: PAL.
@@ -1561,7 +1689,7 @@ note_table_regular:
     sta FT_TEMP_PTR2_H
     lda _FT2NoteTableMSB,y
     sbc _FT2NoteTableMSB,x
-.ifdef ::FT_VRC6
+.if .defined(::FT_VRC6)
     jmp note_table_done
 note_table_saw:
     sec
@@ -1570,6 +1698,16 @@ note_table_saw:
     sta FT_TEMP_PTR2_H
     lda _FT2SawNoteTableMSB,y
     sbc _FT2SawNoteTableMSB,x
+note_table_done:
+.elseif .defined(::FT_FDS)
+    jmp note_table_done
+note_table_fds:
+    sec
+    lda _FT2FdsNoteTableLSB,y
+    sbc _FT2FdsNoteTableLSB,x
+    sta FT_TEMP_PTR2_H
+    lda _FT2FdsNoteTableMSB,y
+    sbc _FT2FdsNoteTableMSB,x
 note_table_done:
 .endif
     ldx FT_TEMP_VAR2           ; slide index.

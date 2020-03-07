@@ -38,8 +38,8 @@ Instruments:
 	- 1 byte pos
 
 	FDS (+8 bytes)
-	- 2 byte wave 
-	- 2 byte mod
+	- 2 byte wave ptr
+	- 2 byte mod ptr
 	- 2 byte mod speed
 	- 1 byte mod speed
 	- 1 byte mod delay
