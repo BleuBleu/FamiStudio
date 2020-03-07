@@ -1210,7 +1210,6 @@ update_sound:
 
 .ifdef ::FT_FDS
     FamiToneUpdateChannelSound 5, FT_CH5_ENVS, 3, , #$80, , FDS_FREQ_HI, FDS_FREQ_LO, FDS_VOL_ENV
-    ;jsr FamiToneUpdateFdsChannel
 .endif
 
 .ifdef ::FT_MMC5

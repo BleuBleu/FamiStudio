@@ -13,10 +13,11 @@
 	- Make bar length more flexible (for short patterns too).
 - NSF:
 	x Fine pitch track
-	- Why is _FT2SetInstrument called twice on a new note? Stop notes trigger instrument set... Not great.
-	- Duty envelopes.
+	x Duty envelopes.
 	- Expansions
-	- Retest smooth vibrato
+	- Retest smooth vibrato on/off.
+	- Minor improvement: _FT2SetInstrument called on stop notes... silly.
+	- Minor improvement: Envelopes run even when we had a stop note.
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Transform dialog:
@@ -56,6 +57,7 @@ TESTING:
 - MAC: Make sure namco channels dialog works. Added Combo box prop change callback.
 - Binary FTM import. Try opening all the demo songs from FT.
 - Duty cycle envelopes, make sure all import/export format support it.
+- BUG: There are seek bugs. I you start the song on a stop note, it gets stuck.
 
 ========================
 
