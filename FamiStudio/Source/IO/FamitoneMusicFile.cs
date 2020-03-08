@@ -341,6 +341,32 @@ namespace FamiStudio
                 lines.Add("");
             }
 
+            // Write VRC7 Instruments
+            if (project.ExpansionAudio == Project.ExpansionVrc7)
+            {
+                lines.Add($"{ll}instruments_vrc7:");
+
+                for (int i = 0, j = 0; i < project.Instruments.Count; i++)
+                {
+                    var instrument = project.Instruments[i];
+
+                    if (instrument.ExpansionType == Project.ExpansionVrc7)
+                    {
+                        var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Volume]]);
+                        var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Arpeggio]]);
+                        var pitchEnvIdx    = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Pitch]]);
+
+                        lines.Add($"\t{dw} {ll}env{volumeEnvIdx},{ll}env{arpeggioEnvIdx},{ll}env{pitchEnvIdx}");
+                        lines.Add($"\t{db} ${(instrument.Vrc7Patch << 4):x2}, $00");
+                        lines.Add($"\t{db} {String.Join(",", instrument.Vrc7PatchRegs.Select(r => $"${r:x2}"))}");
+
+                        instrumentIndices[instrument] = j++;
+                    }
+                }
+
+                lines.Add("");
+            }
+
             // Write samples.
             lines.Add($"{ll}samples:");
 

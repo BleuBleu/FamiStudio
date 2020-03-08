@@ -126,6 +126,12 @@ namespace FamiStudio
                         return false;
                 }
 
+                foreach (var channel in channelStates)
+                {
+                    channel.Advance(song, playPattern, playNote);
+                    channel.ProcessEffects(song, playPattern, playNote, ref speed);
+                }
+
                 NesApu.StopSeeking(apuIndex);
 #if DEBUG
                 NesApu.seeking = false;

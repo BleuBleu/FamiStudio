@@ -376,7 +376,7 @@ namespace FamiStudio
                         // VRC7 & N163 has has very large pitch values
                         slideShift = 3;
                     }
-                    if (type == FdsWave)
+                    else if (type == FdsWave)
                     {
                         // FDS is large-ish pitch values
                         slideShift = 0;

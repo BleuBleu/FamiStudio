@@ -108,6 +108,7 @@ namespace FamiStudio
                     switch (project.ExpansionAudio)
                     {
                         case Project.ExpansionVrc6: kernelBinary = "nsf_ft2_fs_vrc6.bin"; break;
+                        case Project.ExpansionVrc7: kernelBinary = "nsf_ft2_fs_vrc7.bin"; break;
                         case Project.ExpansionFds:  kernelBinary = "nsf_ft2_fs_fds.bin";  break;
                         case Project.ExpansionMmc5: kernelBinary = "nsf_ft2_fs_mmc5.bin"; break;
                         case Project.ExpansionS5B:  kernelBinary = "nsf_ft2_fs_s5b.bin";  break;
@@ -523,20 +524,9 @@ namespace FamiStudio
                 var octave  = -1;
 
                 // VRC6 has a much larger volume range (6-bit) than our volume (4-bit).
-                // We also use odd duties to double the volume values.
                 if (channel.Type == Channel.Vrc6Saw)
                 {
-                    volume >>= 1;
-                    if (volume >= 0x10)
-                    {
-                        duty = 1;
-                        volume >>= 1;
-                        volume--;
-                    }
-                    else
-                    {
-                        duty = 0;
-                    }
+                    volume >>= 2;
                 }
                 else if (channel.Type == Channel.FdsWave)
                 {

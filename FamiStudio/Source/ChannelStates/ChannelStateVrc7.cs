@@ -41,7 +41,7 @@ namespace FamiStudio
         private int GetOctave(ref int period)
         {
             var octave = 0;
-            while (period > 0x100)
+            while (period > 0x200)
             {
                 period >>= 1;
                 octave++;
@@ -53,28 +53,25 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                prevPeriodHi = (byte)(prevPeriodHi & ~(0x10));
+                prevPeriodHi = (byte)(prevPeriodHi & ~(0x30));
                 WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi);
             }
             else if (note.IsRelease)
             {
                 prevPeriodHi = (byte)(prevPeriodHi & ~(0x10));
-                WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi | 0x20);
+                WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi);
             }
-            else if (note.IsMusical /*&& noteTriggered*/)
+            else if (note.IsMusical)
             {
                 var period  = GetPeriod(3);
                 var octave  = GetOctave(ref period);
                 var volume  = 15 - GetVolume();
 
                 var periodLo = (byte)(period & 0xff);
-                var periodHi = (byte)(0x10 | ((octave & 0x7) << 1) | ((period >> 8) & 1));
+                var periodHi = (byte)(0x30 | ((octave & 0x7) << 1) | ((period >> 8) & 1));
 
                 if (noteTriggered && (prevPeriodHi & 0x10) != 0)
-                {
-                    prevPeriodHi = (byte)(prevPeriodHi & ~(0x10));
-                    WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi);
-                }
+                    WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi & ~(0x10));
 
                 WriteVrc7Register(NesApu.VRC7_REG_LO_1  + channelIdx, periodLo);
                 WriteVrc7Register(NesApu.VRC7_REG_HI_1  + channelIdx, periodHi);

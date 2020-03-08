@@ -6,6 +6,7 @@ SETLOCAL
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$480 {SONGDATASTART}=$8500", "", nsf_ft2
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$980 {SONGDATASTART}=$8a00", "-D FS", nsf_ft2_fs
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FS -D FT_VRC6", nsf_ft2_fs_vrc6
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_VRC7", nsf_ft2_fs_vrc7
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$a80 {SONGDATASTART}=$8b00", "-D FS -D FT_MMC5", nsf_ft2_fs_mmc5
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$a80 {SONGDATASTART}=$8b00", "-D FS -D FT_S5B", nsf_ft2_fs_s5b
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$b80 {SONGDATASTART}=$8c00", "-D FS -D FT_FDS", nsf_ft2_fs_fds

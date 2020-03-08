@@ -33,19 +33,17 @@
 		- Multi waves seems good with duty cycle envelopes... Later?
 		- NSF import needs to know we scale pitch by 8.
 	- VRC7
-		- Sustain should be ON by default. release = remove trigger.
 		- Figure out whole pitch/slide thing.
 			- In FamiTracker, 1xx,2xx doesnt work well with VRC7, clamps period, doesnt change octave
 			- In FamiTracker, Qxx,Rxx works OK since can only change 1 octave at most.
 			- In FamiTracker, 3xx works, but locks the octave.
 		- Vibrato, octave, etc.
-		- Make sure no-attack works
+		- NSF: Release will be special.
 		- NSF import needs to know we scale pitch by 8.
 		- Make sure FamiTracker import/export of slides works.
 	- Sunsoft:
 		- See if gimmick had a differnt note table for PAL.
 	- MMC5:
-		- One game seems to use PCM... 
 	- FDS:
 		- Mod delay or mod track (need mod track for NSF import probably... Will need wider range on fx panel)
 		- No shift on slides.
@@ -53,7 +51,6 @@
 		- Make sure FamiTracker import/export of slides works.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.
-- Remove VRC6 duty hack. Full volume range. Default volume = 8.
 
 TESTING:
 ========
@@ -66,7 +63,12 @@ TESTING:
 - MAC: Make sure namco channels dialog works. Added Combo box prop change callback.
 - Binary FTM import. Try opening all the demo songs from FT.
 - Duty cycle envelopes, make sure all import/export format support it.
-- BUG: There are seek bugs. I you start the song on a stop note, it gets stuck.
+- Fix saw in Shovel knight.
+
+Breaking changes
+================
+- VRC6 saw duty (mention in FamiTracker compatibility section)
+- 
 
 ========================
 

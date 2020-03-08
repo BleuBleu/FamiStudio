@@ -21,12 +21,7 @@ namespace FamiStudio
                 var volume = GetVolume();
                 var duty   = GetDuty();
 
-                // Get hi-bit from duty, similar to FamiTracker, but taking volume into account.
-                // FamiTracker looses ability to output low volume when duty is odd.
-                if ((duty & 1) != 0 && volume != 0)
-                    volume = (volume << 1) + 1;
-
-                WriteRegister(NesApu.VRC6_SAW_VOL, (volume << 1)); 
+                WriteRegister(NesApu.VRC6_SAW_VOL, (volume << 2)); 
                 WriteRegister(NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
                 WriteRegister(NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
             }

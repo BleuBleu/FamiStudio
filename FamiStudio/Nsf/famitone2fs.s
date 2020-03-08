@@ -20,7 +20,11 @@ FT_SMOOTH_VIBRATO = 1     ; Blaarg's smooth vibrato technique
 
 .segment "RAM"
 
-.if .defined(FT_VRC6) || .defined(FT_S5B)
+.if .defined(FT_VRC7)
+    FT_NUM_ENVELOPES        = 3+3+2+3+2+2+2+2+2+2
+    FT_NUM_PITCH_ENVELOPES  = 9
+    FT_NUM_CHANNELS         = 11
+.elseif .defined(FT_VRC6) || .defined(FT_S5B)
     FT_NUM_ENVELOPES        = 3+3+2+3+3+3+3
     FT_NUM_PITCH_ENVELOPES  = 6
     FT_NUM_CHANNELS         = 8
@@ -72,8 +76,14 @@ FT_CHN_RETURN_L     : .res FT_NUM_CHANNELS
 FT_CHN_RETURN_H     : .res FT_NUM_CHANNELS
 FT_CHN_REF_LEN      : .res FT_NUM_CHANNELS
 FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS
-.ifdef ::FT_EQUALIZER
+.ifdef FT_EQUALIZER
 FT_CHN_NOTE_COUNTER : .res FT_NUM_CHANNELS
+.endif
+
+.ifdef FT_VRC7
+FT_CHN_PREV_HI      : .res 6
+FT_CHN_VRC7_PATCH   : .res 6
+FT_CHN_VRC7_TRIGGER : .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 .endif
 
 ;variables and aliases
@@ -83,18 +93,25 @@ FT_CH2_ENVS = 6
 FT_CH3_ENVS = 8
 
 .if .defined(FT_VRC6) 
-    FT_CH5_ENVS = 11
-    FT_CH6_ENVS = 14
-    FT_CH7_ENVS = 17
+    FT_CH5_ENVS  = 11
+    FT_CH6_ENVS  = 14
+    FT_CH7_ENVS  = 17
+.elseif .defined(FT_VRC7) 
+    FT_CH5_ENVS  = 11
+    FT_CH6_ENVS  = 13
+    FT_CH7_ENVS  = 15    
+    FT_CH8_ENVS  = 17
+    FT_CH9_ENVS  = 19
+    FT_CH10_ENVS = 21    
 .elseif .defined(FT_FDS)
-    FT_CH5_ENVS = 11
+    FT_CH5_ENVS  = 11
 .elseif .defined(FT_MMC5)
-    FT_CH5_ENVS = 11
-    FT_CH6_ENVS = 14
+    FT_CH5_ENVS  = 11
+    FT_CH6_ENVS  = 14
 .elseif .defined(FT_S5B)    
-    FT_CH5_ENVS = 11
-    FT_CH6_ENVS = 13
-    FT_CH7_ENVS = 15
+    FT_CH5_ENVS  = 11
+    FT_CH6_ENVS  = 13
+    FT_CH7_ENVS  = 15
 .endif
 
 FT_ENV_VOLUME_OFF = 0
@@ -162,6 +179,10 @@ FT_TEMP:
 FT_TEMP_VAR1 : .res 1
 FT_TEMP_VAR2 : .res 1
 FT_TEMP_VAR3 : .res 1
+.ifdef FT_VRC7
+FT_TEMP_VAR4 : .res 1
+.endif
+
 FT_TEMP_PTR1 : .res 2
 FT_TEMP_PTR2 : .res 2
 
@@ -194,7 +215,7 @@ APU_DMC_LEN    = $4013
 APU_SND_CHN    = $4015
 APU_FRAME_CNT  = $4017
 
-.ifdef ::FT_VRC6
+.ifdef FT_VRC6
 VRC6_PL1_VOL   = $9000
 VRC6_PL1_LO    = $9001
 VRC6_PL1_HI    = $9002
@@ -206,7 +227,31 @@ VRC6_SAW_LO    = $b001
 VRC6_SAW_HI    = $b002
 .endif
 
-.ifdef ::FT_MMC5
+.ifdef FT_VRC7
+VRC7_SILENCE   = $e000
+VRC7_REG_SEL   = $9010
+VRC7_REG_WRITE = $9030
+VRC7_REG_LO_1  = $10
+VRC7_REG_LO_2  = $11
+VRC7_REG_LO_3  = $12
+VRC7_REG_LO_4  = $13
+VRC7_REG_LO_5  = $14
+VRC7_REG_LO_6  = $15
+VRC7_REG_HI_1  = $20
+VRC7_REG_HI_2  = $21
+VRC7_REG_HI_3  = $22
+VRC7_REG_HI_4  = $23
+VRC7_REG_HI_5  = $24
+VRC7_REG_HI_6  = $25
+VRC7_REG_VOL_1 = $30
+VRC7_REG_VOL_2 = $31
+VRC7_REG_VOL_3 = $32
+VRC7_REG_VOL_4 = $33
+VRC7_REG_VOL_5 = $34
+VRC7_REG_VOL_6 = $35 
+.endif
+
+.ifdef FT_MMC5
 MMC5_PL1_VOL   = $5000
 MMC5_PL1_SWEEP = $5001
 MMC5_PL1_LO    = $5002
@@ -219,7 +264,7 @@ MMC5_PCM_MODE  = $5010
 MMC5_SND_CHN   = $5015
 .endif
 
-.ifdef ::FT_S5B
+.ifdef FT_S5B
 S5B_ADDR       = $c000
 S5B_DATA       = $e000
 S5B_REG_LO_A   = $00
@@ -240,7 +285,7 @@ S5B_REG_IO_A   = $0e
 S5B_REG_IO_B   = $0f
 .endif
 
-.ifdef ::FT_FDS
+.ifdef FT_FDS
 FDS_WAV_START  = $4040
 FDS_VOL_ENV    = $4080
 FDS_FREQ_LO    = $4082
@@ -290,6 +335,22 @@ FDS_ENV_SPEED  = $408A
     inc addr+1
 @ok:
 .endmacro
+
+.ifdef FT_VRC7
+.proc _FT2Vrc7WaitRegWrite
+    stx FT_TEMP_VAR4
+    ldx #$08
+    wait_loop:
+        dex
+        bne wait_loop
+        ldx FT_TEMP_VAR4
+    rts
+.endproc
+
+.proc _FT2Vrc7WaitRegSelect
+    rts
+.endproc
+.endif
 
 ;------------------------------------------------------------------------------
 ; reset APU, initialize FamiTone
@@ -362,6 +423,11 @@ pal:
     lda #$08                   ;no sweep
     sta APU_PL1_SWEEP
     sta APU_PL2_SWEEP
+
+.ifdef ::FT_VRC7
+    lda #0
+    sta VRC7_SILENCE ; Enable VRC7 audio.
+.endif
 
 .ifdef ::FT_MMC5
     lda #$00
@@ -498,6 +564,8 @@ set_pitch_envelopes:
     asl
     asl
     adc FT_TEMP_PTR_L
+.elseif ::FT_NUM_CHANNELS = 11
+    ; MATTT
 .endif
 
 .if .defined(::FT_FDS) || .defined(::FT_N163) || .defined(::FT_VRC7) 
@@ -555,6 +623,17 @@ pal:
     lda #6                     ;default speed
     sta FT_TEMPO_ACC_H
     sta FT_SONG_SPEED          ;apply default speed, this also enables music
+
+.ifdef ::FT_VRC7
+    lda #0
+    ldx #5
+    clear_vrc7_loop:
+        sta FT_CHN_PREV_HI, x
+        sta FT_CHN_VRC7_PATCH, x
+        sta FT_CHN_VRC7_TRIGGER,x
+        dex
+        bpl clear_vrc7_loop 
+.endif
 
 skip:
     rts
@@ -614,6 +693,9 @@ done:
     pitch   = FT_TEMP_PTR2
     tmp_ror = FT_TEMP_VAR1
  
+    ; MATTT: N163 + VRC7 slide shift
+    ; MATTT: FDS slide shift
+
     ; Pitch = note + pitch envelope + fine pitch.
     clc
     lda FT_PITCH_ENV_VALUE_L+pitch_env_offset pitch_env_indexer
@@ -768,43 +850,180 @@ compute_volume:
     tax
     lda _FT2VolumeTable, x 
 
+.if .defined(FT_VRC6) && idx = 7 
+    ; VRC6 saw has 6-bits
+    asl
+    asl
+.endif
+
 set_volume:
 
 .if idx = 0 || idx = 1 || idx = 3 || (idx >= 5 && .defined(::FT_MMC5))
     ldx FT_ENV_VALUE+env_offset+FT_ENV_DUTY_OFF
     ora _FT2DutyLookup, x
-.elseif idx >= 5 && .defined(::FT_VRC6)
+.elseif (idx = 5 || idx = 6) && .defined(::FT_VRC6)
     ldx FT_ENV_VALUE+env_offset+FT_ENV_DUTY_OFF
     ora _FT2Vrc6DutyLookup, x
 .endif
 
 .ifnblank vol_ora
-    ; MATTT: VRC6 saw hack.
-    ;.if .defined(FT_VRC6) && idx = 7 
-    ;    ; saw channel has 6 bit volumes. 
-    ;    ; get hi-bit from duty, similar to FamiTracker, but taking volume into account.
-    ;    ; FamiTracker looses ability to output low volume when duty is odd.
-    ;    beq @zero_vol
-    ;    tax
-    ;    lda vol_ora ; duty is already bit shifted 4 times at export.
-    ;    and #$10
-    ;    bne @odd_duty
-    ;    txa
-    ;    jmp @zero_vol
-    ;    @odd_duty:
-    ;    txa
-    ;    asl
-    ;    adc #1
-    ;    @zero_vol:
-    ;.else
-    ;    ora vol_ora
-    ;.endif
-
     ora vol_ora
 .endif
+
     sta reg_vol
 
 .endmacro
+
+.ifdef FT_VRC7
+
+_FT2Vrc7RegLoTable:
+    .byte VRC7_REG_LO_1, VRC7_REG_LO_2, VRC7_REG_LO_3, VRC7_REG_LO_4, VRC7_REG_LO_5, VRC7_REG_LO_6
+_FT2Vrc7RegHiTable:
+    .byte VRC7_REG_HI_1, VRC7_REG_HI_2, VRC7_REG_HI_3, VRC7_REG_HI_4, VRC7_REG_HI_5, VRC7_REG_HI_6
+_FT2Vrc7VolTable:
+    .byte VRC7_REG_VOL_1, VRC7_REG_VOL_2, VRC7_REG_VOL_3, VRC7_REG_VOL_4, VRC7_REG_VOL_5, VRC7_REG_VOL_6
+_FT2Vrc7EnvelopeTable:
+    .byte FT_CH5_ENVS, FT_CH6_ENVS, FT_CH7_ENVS, FT_CH8_ENVS, FT_CH9_ENVS, FT_CH10_ENVS 
+_FT2Vrc7InvertVolumeTable:
+    .byte $0f, $0e, $0d, $0c, $0b, $0a, $09, $08, $07, $06, $05, $04, $03, $02, $01, $00
+
+; y = VRC7 channel idx (0,1,2,3,4,5)
+.proc _FT2UpdateVrc7ChannelSound
+
+    tmp_env  = FT_TEMP_VAR2
+    chan_idx = FT_TEMP_VAR3
+    pitch    = FT_TEMP_PTR2
+
+    lda FT_CHN_VRC7_TRIGGER,y
+    bpl check_cut
+
+release:
+   
+    ; Untrigger note.  
+    lda _FT2Vrc7RegHiTable,y
+    sta VRC7_REG_SEL
+    jsr _FT2Vrc7WaitRegSelect
+
+    lda FT_CHN_PREV_HI, y
+    and #$ef ; remove trigger
+    sta FT_CHN_PREV_HI, y
+    sta VRC7_REG_WRITE
+    jsr _FT2Vrc7WaitRegWrite   
+
+    rts
+
+check_cut:
+
+    lda FT_CHN_NOTE+5,y
+    bne nocut
+
+cut:  
+    ; Untrigger note.  
+    lda _FT2Vrc7RegHiTable,y
+    sta VRC7_REG_SEL
+    jsr _FT2Vrc7WaitRegSelect
+
+    lda FT_CHN_PREV_HI, y
+    and #$cf ; remove trigger + sustain
+    sta FT_CHN_PREV_HI, y
+    sta VRC7_REG_WRITE
+    jsr _FT2Vrc7WaitRegWrite
+
+    rts
+
+nocut:
+    ldx _FT2Vrc7EnvelopeTable,y
+    stx tmp_env
+
+    ; Read note, apply arpeggio 
+    clc
+    adc FT_ENV_VALUE+FT_ENV_NOTE_OFF,x
+    tax
+
+    FamiToneComputeNoteFinalPitch 3, {,y}, _FT2Vrc7NoteTableLSB, _FT2Vrc7NoteTableMSB
+
+    ; Compute octave by dividing by 2 until we are <= 512 (0x100).
+    ldx #0
+    compute_octave_loop:
+        lda pitch+1
+        cmp #2
+        bcc octave_done
+        lsr
+        sta pitch+1
+        ror pitch+0
+        inx
+        jmp compute_octave_loop
+
+    octave_done:
+
+    ; Write pitch (lo)
+    lda _FT2Vrc7RegLoTable,y
+    sta VRC7_REG_SEL
+    jsr _FT2Vrc7WaitRegSelect
+
+    lda pitch+0
+    sta VRC7_REG_WRITE
+    jsr _FT2Vrc7WaitRegWrite
+
+    ; Un-trigger previous note if needed.
+    lda FT_CHN_PREV_HI, y
+    and #$10 ; set trigger.
+    beq write_hi_period
+    lda FT_CHN_VRC7_TRIGGER,y
+    beq write_hi_period
+    untrigger_prev_note:
+        lda _FT2Vrc7RegHiTable,y
+        sta VRC7_REG_SEL
+        jsr _FT2Vrc7WaitRegSelect
+
+        lda FT_CHN_PREV_HI,y
+        and #$ef ; remove trigger
+        sta VRC7_REG_WRITE
+        jsr _FT2Vrc7WaitRegWrite
+
+    write_hi_period:
+
+    ; Write pitch (hi)
+    lda _FT2Vrc7RegHiTable,y
+    sta VRC7_REG_SEL
+    jsr _FT2Vrc7WaitRegSelect
+
+    txa
+    asl
+    ora #$30
+    ora pitch+1
+    sta FT_CHN_PREV_HI, y
+    sta VRC7_REG_WRITE
+    jsr _FT2Vrc7WaitRegWrite
+
+    ; Read/multiply volume
+    ldx tmp_env
+    lda FT_ENV_VALUE+FT_ENV_VOLUME_OFF,x
+    ora FT_CHN_VOLUME_TRACK+5, y
+    tax
+
+    lda #0
+    sta FT_CHN_VRC7_TRIGGER,y
+
+update_volume:
+
+    ; Write volume
+    lda _FT2Vrc7VolTable,y
+    sta VRC7_REG_SEL
+    jsr _FT2Vrc7WaitRegSelect
+
+    lda _FT2VolumeTable,x
+    tax
+    lda _FT2Vrc7InvertVolumeTable,x
+    ora FT_CHN_VRC7_PATCH,y
+    sta VRC7_REG_WRITE
+    jsr _FT2Vrc7WaitRegWrite
+
+    rts
+
+.endproc 
+
+.endif
 
 .ifdef FT_S5B
 
@@ -818,7 +1037,7 @@ _FT2S5BEnvelopeTable:
     .byte FT_CH5_ENVS, FT_CH6_ENVS, FT_CH7_ENVS
 
 ; y = S5B channel idx (0,1,2)
-.proc FamiToneUpdateS5BChannelSound
+.proc _FT2UpdateS5BChannelSound
     
     FT_TEMP_ENV = FT_TEMP_VAR2
     FT_PITCH    = FT_TEMP_PTR2
@@ -875,6 +1094,8 @@ update_volume:
     lda FT_CHN_INSTRUMENT+channel_idx
 .if .defined(::FT_FDS) && channel_idx = 5
     jsr _FT2SetFdsInstrument
+.elseif .defined(::FT_VRC7) && channel_idx >= 5
+    jsr _FT2SetVrc7Instrument
 .else
     jsr _FT2SetInstrument
 .endif
@@ -983,6 +1204,15 @@ update_row:
     FamiToneUpdateRow 5, FT_CH5_ENVS
     FamiToneUpdateRow 6, FT_CH6_ENVS
     FamiToneUpdateRow 7, FT_CH7_ENVS
+.endif
+
+.ifdef ::FT_VRC7
+    FamiToneUpdateRow  5, FT_CH5_ENVS
+    FamiToneUpdateRow  6, FT_CH6_ENVS
+    FamiToneUpdateRow  7, FT_CH7_ENVS
+    FamiToneUpdateRow  8, FT_CH8_ENVS
+    FamiToneUpdateRow  9, FT_CH9_ENVS
+    FamiToneUpdateRow 10, FT_CH10_ENVS
 .endif
 
 .ifdef ::FT_MMC5
@@ -1217,11 +1447,19 @@ update_sound:
     FamiToneUpdateChannelSound 6, FT_CH6_ENVS, 4, FT_MMC5_PULSE2_PREV, , , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
 .endif
 
+.ifdef ::FT_VRC7
+    ldy #0
+    vrc7_channel_loop:
+        jsr _FT2UpdateVrc7ChannelSound
+        iny
+        cpy #6
+        bne vrc7_channel_loop
+.endif
 
 .ifdef ::FT_S5B
     ldy #0
     s5b_channel_loop:
-        jsr FamiToneUpdateS5BChannelSound
+        jsr _FT2UpdateS5BChannelSound
         iny
         cpy #3
         bne s5b_channel_loop
@@ -1390,13 +1628,12 @@ no_pulse2_upd:
 
 .endproc
 
-.ifdef FT_FDS
-.proc _FT2SetFdsInstrument
+.if .defined(FT_FDS) || .defined(FT_N163) || .defined(FT_VRC7) 
+.macro _FT2SetExpInstrumentBase
 
-    ptr = FT_TEMP_PTR1
-    wave_ptr = FT_TEMP_PTR2
-    tmp_y = FT_TEMP_VAR3
+    chan_idx = FT_TEMP_VAR2
 
+    sty chan_idx
     asl                        ;instrument number is pre multiplied by 4
     asl
     tay
@@ -1410,16 +1647,16 @@ no_pulse2_upd:
     lda (ptr),y
     sta FT_ENV_ADR_L,x
     iny
-    lda (FT_TEMP_PTR1),y
+    lda (ptr),y
     iny
     sta FT_ENV_ADR_H,x
     inx
 
     ; Arpeggio envelope
-    lda (FT_TEMP_PTR1),y
+    lda (ptr),y
     sta FT_ENV_ADR_L,x
     iny
-    lda (FT_TEMP_PTR1),y
+    lda (ptr),y
     sta FT_ENV_ADR_H,x
     iny
 
@@ -1437,7 +1674,7 @@ no_pulse2_upd:
     beq pitch_env
     iny
     iny
-    bne fds_wave
+    bne pitch_overriden
 
     pitch_env:
     lda #1
@@ -1447,22 +1684,70 @@ no_pulse2_upd:
     sta FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_H,x
     sta FT_PITCH_ENV_OVERRIDE,x
-    lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
+    lda (ptr),y       ;instrument pointer LSB
     sta FT_PITCH_ENV_ADR_L,x
     iny
-    lda (FT_TEMP_PTR1),y       ;instrument pointer MSB
+    lda (ptr),y       ;instrument pointer MSB
     sta FT_PITCH_ENV_ADR_H,x
     iny
 
-    fds_wave:
+    pitch_overriden:
+
+.endmacro
+.endif
+
+.ifdef FT_VRC7
+.proc _FT2SetVrc7Instrument
+
+    ptr = FT_TEMP_PTR1
+
+    _FT2SetExpInstrumentBase
+
+    lda chan_idx
+    sec
+    sbc #5
+    tax
+    lda (ptr),y
+    sta FT_CHN_VRC7_PATCH, x
+    bne done
+
+    read_custom_patch:
+    ldx #0
+    iny
+    read_patch_loop:
+        stx VRC7_REG_SEL
+        jsr _FT2Vrc7WaitRegSelect
+        lda (ptr),y
+        iny
+        sta VRC7_REG_WRITE
+        jsr _FT2Vrc7WaitRegWrite
+        inx
+        cpx #8
+        bne read_patch_loop
+
+    done:
+    rts
+
+.endproc
+.endif
+
+.ifdef FT_FDS
+.proc _FT2SetFdsInstrument
+
+    ptr = FT_TEMP_PTR1
+    wave_ptr = FT_TEMP_PTR2
+    tmp_y = FT_TEMP_VAR3
+
+    _FT2SetExpInstrumentBase
+
     lda #$80
     sta FDS_VOL ; Enable wave RAM write
 
     ; FDS Waveform
-    lda (FT_TEMP_PTR1),y
+    lda (ptr),y
     sta wave_ptr+0
     iny
-    lda (FT_TEMP_PTR1),y
+    lda (ptr),y
     sta wave_ptr+1
     iny
     sty tmp_y
@@ -1484,10 +1769,10 @@ no_pulse2_upd:
 
     ; FDS Modulation
     ldy tmp_y
-    lda (FT_TEMP_PTR1),y
+    lda (ptr),y
     sta wave_ptr+0
     iny
-    lda (FT_TEMP_PTR1),y
+    lda (ptr),y
     sta wave_ptr+1
     iny
 
@@ -1633,6 +1918,11 @@ slide:
     cmp #7
     beq note_table_saw
 note_table_regular:
+.elseif .defined(::FT_VRC7)
+    lda FT_TEMP_VAR1
+    cmp #5
+    bcs note_table_vrc7
+note_table_regular:
 .elseif .defined(::FT_FDS)
     lda FT_TEMP_VAR1
     cmp #5
@@ -1654,6 +1944,16 @@ note_table_saw:
     sta FT_TEMP_PTR2_H
     lda _FT2SawNoteTableMSB,y
     sbc _FT2SawNoteTableMSB,x
+note_table_done:
+.elseif .defined(::FT_VRC7)
+    jmp note_table_done
+note_table_vrc7:
+    sec
+    lda _FT2Vrc7NoteTableLSB,y
+    sbc _FT2Vrc7NoteTableLSB,x
+    sta FT_TEMP_PTR2_H
+    lda _FT2Vrc7NoteTableMSB,y
+    sbc _FT2Vrc7NoteTableMSB,x
 note_table_done:
 .elseif .defined(::FT_FDS)
     jmp note_table_done
@@ -1696,6 +1996,15 @@ regular_note:
 sec_and_done:
     lda FT_DISABLE_ATTACK
     bne no_attack
+.ifdef ::FT_VRC7
+    cpx #5
+    bcs vrc7_channel
+    sec                        ;new note flag is set
+    jmp done
+    vrc7_channel:
+        lda #$01
+        sta FT_CHN_VRC7_TRIGGER-5,x ; set trigger flag for VRC7
+.endif    
     sec                        ;new note flag is set
     jmp done
 no_attack:
@@ -1759,6 +2068,15 @@ set_loop:
     jmp read_byte
 
 release_note:
+
+.ifdef ::FT_VRC7
+    cpx #5
+    bcc apu_channel
+    lda #$80
+    sta FT_CHN_VRC7_TRIGGER-5,x ; set release flag for VRC7
+    apu_channel:
+.endif    
+
     stx FT_TEMP_VAR1
     lda _FT2ChannelToVolumeEnvelope,x ; DPCM(5) will never have releases.
     tax
@@ -2171,6 +2489,29 @@ _FT2SawNoteTableMSB:
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
+.endif
+
+.ifdef FT_VRC7
+_FT2Vrc7NoteTableLSB:
+    .byte $00
+    .byte $ac, $b7, $c2, $cd, $d9, $e6, $f4, $02, $12, $22, $33, $46 ; Octave 0
+    .byte $58, $6e, $84, $9a, $b2, $cc, $e8, $04, $24, $44, $66, $8c ; Octave 1
+    .byte $b0, $dc, $08, $34, $64, $98, $d0, $08, $48, $88, $cc, $18 ; Octave 2
+    .byte $60, $b8, $10, $68, $c8, $30, $a0, $10, $90, $10, $98, $30 ; Octave 3
+    .byte $c0, $70, $20, $d0, $90, $60, $40, $20, $20, $20, $30, $60 ; Octave 4
+    .byte $80, $e0, $40, $a0, $20, $c0, $80, $40, $40, $40, $60, $c0 ; Octave 5
+    .byte $00, $c0, $80, $40, $40, $80, $00, $80, $80, $80, $c0, $80 ; Octave 6
+    .byte $00, $80, $00, $80, $80, $00, $00, $00, $00, $00, $80, $00 ; Octave 7
+_FT2Vrc7NoteTableMSB:
+    .byte $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $01 ; Octave 0
+    .byte $01, $01, $01, $01, $01, $01, $01, $02, $02, $02, $02, $02 ; Octave 1
+    .byte $02, $02, $03, $03, $03, $03, $03, $04, $04, $04, $04, $05 ; Octave 2
+    .byte $05, $05, $06, $06, $06, $07, $07, $08, $08, $09, $09, $0a ; Octave 3
+    .byte $0a, $0b, $0c, $0c, $0d, $0e, $0f, $10, $11, $12, $13, $14 ; Octave 4
+    .byte $15, $16, $18, $19, $1b, $1c, $1e, $20, $22, $24, $26, $28 ; Octave 5
+    .byte $2b, $2d, $30, $33, $36, $39, $3d, $40, $44, $48, $4c, $51 ; Octave 6
+    .byte $56, $5b, $61, $66, $6c, $73, $7a, $81, $89, $91, $99, $a3 ; Octave 7    
 .endif
 
 .ifdef FT_FDS
