@@ -690,6 +690,14 @@ namespace FamiStudio
 
                     if (hasPitch && !stop)
                     {
+                        // We scale all pitches changes (slides, fine pitch, pitch envelopes) by 8 for these since
+                        // the period values are super large.
+                        if (channel.Type >= Channel.N163Wave1 && channel.Type <= Channel.N163Wave8 ||
+                            channel.Type >= Channel.Vrc7Fm1   && channel.Type <= Channel.Vrc7Fm6)
+                        {
+                            finePitch /= 8;
+                        }
+
                         var pitch = (sbyte)Utils.Clamp(finePitch, Note.FinePitchMin, Note.FinePitchMax);
 
                         if (pitch != state.pitch)

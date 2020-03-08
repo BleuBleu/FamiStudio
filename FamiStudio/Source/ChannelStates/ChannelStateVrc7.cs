@@ -13,6 +13,7 @@ namespace FamiStudio
         {
             channelIdx = channelType - Channel.Vrc7Fm1;
             customRelease = true;
+            maximumPeriod = NesApu.MaximumPeriod15Bit;
         }
 
         private void WriteVrc7Register(int reg, int data)
@@ -37,6 +38,17 @@ namespace FamiStudio
             }
         }
 
+        private int GetOctave(ref int period)
+        {
+            var octave = 0;
+            while (period > 0x100)
+            {
+                period >>= 1;
+                octave++;
+            }
+            return octave;
+        }
+
         public override void UpdateAPU()
         {
             if (note.IsStop)
@@ -49,16 +61,16 @@ namespace FamiStudio
                 prevPeriodHi = (byte)(prevPeriodHi & ~(0x10));
                 WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi | 0x20);
             }
-            else if (note.IsMusical && noteTriggered)
+            else if (note.IsMusical /*&& noteTriggered*/)
             {
-                var octave = (note.Value - 1) / 12;
-                var period = NesApu.NoteTableVrc7[(note.Value - 1) % 12] >> 2;
-                var volume = 15 - GetVolume();
+                var period  = GetPeriod(3);
+                var octave  = GetOctave(ref period);
+                var volume  = 15 - GetVolume();
 
                 var periodLo = (byte)(period & 0xff);
                 var periodHi = (byte)(0x10 | ((octave & 0x7) << 1) | ((period >> 8) & 1));
 
-                if ((prevPeriodHi & 0x10) != 0)
+                if (noteTriggered && (prevPeriodHi & 0x10) != 0)
                 {
                     prevPeriodHi = (byte)(prevPeriodHi & ~(0x10));
                     WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi);

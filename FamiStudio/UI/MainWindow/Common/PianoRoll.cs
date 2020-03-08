@@ -1044,7 +1044,7 @@ namespace FamiStudio
 
             if (n0.IsSlideNote)
             {
-                if (channel.ComputeSlideNoteParams(p0, i0, null, out _, out _, out int duration))
+                if (channel.ComputeSlideNoteParams(p0, i0, null, out _, out _, out int duration, out _))
                 {
                     int slideSizeX = duration;
                     int slideSizeY = n0.SlideNoteTarget - n0.Value;

@@ -630,7 +630,7 @@ namespace FamiStudio
                             {
                                 var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
 
-                                if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _))
+                                if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _, out _))
                                 {
                                     patternBuffer.Add($"${0x61:x2}");
                                     patternBuffer.Add($"${(byte)stepSize:x2}");

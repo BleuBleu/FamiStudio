@@ -629,7 +629,7 @@ namespace FamiStudio
                                 var note = pattern.Notes[i];
                                 if (note.Instrument != null)
                                 {
-                                    Debug.Assert(note.IsMusical);
+                                    //Debug.Assert(note.IsMusical);
                                     usedInstruments.Add(note.Instrument);
                                 }
                             }

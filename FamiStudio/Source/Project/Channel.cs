@@ -348,7 +348,7 @@ namespace FamiStudio
             return false;
         }
 
-        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
+        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration, out int slideShift)
         {
             var note = patternInstances[patternIdx].Notes[noteIdx];
 
@@ -358,6 +358,7 @@ namespace FamiStudio
             noteDuration = FindNextNoteForSlide(patternIdx, noteIdx, 256); // 256 is kind of arbitrary. 
             stepSize = 0;
             pitchDelta = 0;
+            slideShift = 0;
 
             if (noteTable == null)
             {
@@ -369,7 +370,24 @@ namespace FamiStudio
 
                 if (pitchDelta != 0)
                 {
-                    pitchDelta <<= 1; // We have 1 bit of fraction to better handle various slopes.
+                    if ((type >= Vrc7Fm1   && type <= Vrc7Fm6) ||
+                        (type >= N163Wave1 && type <= N163Wave8))
+                    {
+                        // VRC7 & N163 has has very large pitch values
+                        slideShift = 3;
+                    }
+                    if (type == FdsWave)
+                    {
+                        // FDS is large-ish pitch values
+                        slideShift = 0;
+                    }
+                    else
+                    {
+                        // For most channels, we have 1 bit of fraction to better handle slopes.
+                        slideShift = -1;
+                    }
+
+                    pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
 
                     var frameCount = noteDuration * song.Speed + 1;
                     var floatStep  = Math.Abs(pitchDelta) / (float)frameCount;

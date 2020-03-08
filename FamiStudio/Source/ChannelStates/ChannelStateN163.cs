@@ -13,7 +13,7 @@ namespace FamiStudio
         {
             regOffset = 8 * -(channelType - Channel.N163Wave1);
             channelMask = (numChannels - 1) << 4;
-            maximumPeriod = NesApu.MaximumPeriod18Bit;
+            maximumPeriod = NesApu.MaximumPeriod16Bit; // Maximum is 18-bit, but we wont go there.
         }
 
         private void WriteN163Register(int reg, int data)
@@ -49,9 +49,7 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                // MATTT: Pitch envelopes, slide, vibrato, etc.
-                var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-                var period = Utils.Clamp(noteTable[noteVal] << 2, 0, maximumPeriod);
+                var period = GetPeriod(3);
                 var volume = GetVolume();
 
                 WriteN163Register(NesApu.N163_REG_FREQ_LO  + regOffset, (period >> 0) & 0xff);

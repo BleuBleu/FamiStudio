@@ -19,6 +19,7 @@ namespace FamiStudio
         protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
         private   int slidePitch = 0;
+        private   int slideShift = 0;
 
         public ChannelState(int apu, int type, bool pal)
         {
@@ -79,7 +80,7 @@ namespace FamiStudio
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, palMode);
 
-                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _))
+                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _, out slideShift))
                         newNote.Value = (byte)newNote.SlideNoteTarget;
                 }
 
@@ -222,7 +223,7 @@ namespace FamiStudio
 
         public int GetSlidePitch()
         {
-            return slidePitch >> 1; // Remove the fraction part.
+            return slideShift < 0 ? (slidePitch >> -slideShift) : (slidePitch << slideShift); // Remove the fraction part.
         }
 
         public int GetEnvelopeFrame(int envIdx)
@@ -248,10 +249,10 @@ namespace FamiStudio
         {
         }
 
-        protected int GetPeriod()
+        protected int GetPeriod(int pitchShift = 0)
         {
             var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-            return Utils.Clamp(noteTable[noteVal] + note.FinePitch + GetSlidePitch() + envelopeValues[Envelope.Pitch], 0, maximumPeriod);
+            return Utils.Clamp(noteTable[noteVal] + ((note.FinePitch + envelopeValues[Envelope.Pitch]) << pitchShift) + GetSlidePitch(), 0, maximumPeriod);
         }
 
         protected int GetVolume()

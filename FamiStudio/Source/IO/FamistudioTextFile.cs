@@ -109,7 +109,7 @@ namespace FamiStudio
                                     // Add duration for convenience.
                                     var p = Array.IndexOf(channel.PatternInstances, pattern);
                                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
-                                    channel.ComputeSlideNoteParams(p, n, noteTable, out _, out _, out var duration);
+                                    channel.ComputeSlideNoteParams(p, n, noteTable, out _, out _, out var duration, out _);
 
                                     // MATTT: PAL here (check of channeltype).
                                     noteLine += $" SlideTarget=\"{Note.GetFriendlyName(note.SlideNoteTarget)}\" FrameCountNTSC=\"{duration}\""; 

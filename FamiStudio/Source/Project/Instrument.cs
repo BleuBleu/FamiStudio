@@ -82,7 +82,7 @@ namespace FamiStudio
                 envelopeType == Envelope.Pitch  ||
                 envelopeType == Envelope.Arpeggio)
             {
-                return expansion != Project.ExpansionVrc7;
+                return true;
             }
             else if (envelopeType == Envelope.DutyCycle)
             {
