@@ -28,13 +28,11 @@ namespace FamiStudio
             {
                 Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
 
-                var wave = instrument.Envelopes[Envelope.N163Waveform];
+                var pos  = instrument.N163WavePos / 2;
+                var wave = instrument.Envelopes[Envelope.N163Waveform].BuildN163Waveform();
 
-                for (int i = 0; i < wave.Length; i += 2)
-                {
-                    var pair = (byte)(wave.Values[i + 1] << 4) | (byte)(wave.Values[i + 0]);
-                    WriteN163Register(instrument.N163WavePos / 2 + i / 2, pair);
-                }
+                for (int i = 0; i < wave.Length; i++)
+                    WriteN163Register(pos + i, wave[i]);
 
                 WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
                 waveLength = 256 - instrument.N163WaveSize;

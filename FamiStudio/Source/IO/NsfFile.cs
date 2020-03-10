@@ -105,15 +105,10 @@ namespace FamiStudio
                 string kernelBinary;
                 if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2FS)
                 {
-                    switch (project.ExpansionAudio)
-                    {
-                        case Project.ExpansionVrc6: kernelBinary = "nsf_ft2_fs_vrc6.bin"; break;
-                        case Project.ExpansionVrc7: kernelBinary = "nsf_ft2_fs_vrc7.bin"; break;
-                        case Project.ExpansionFds:  kernelBinary = "nsf_ft2_fs_fds.bin";  break;
-                        case Project.ExpansionMmc5: kernelBinary = "nsf_ft2_fs_mmc5.bin"; break;
-                        case Project.ExpansionS5B:  kernelBinary = "nsf_ft2_fs_s5b.bin";  break;
-                        default: kernelBinary = "nsf_ft2_fs.bin"; break;
-                    }
+                    if (project.UsesExpansionAudio)
+                        kernelBinary = $"nsf_ft2_fs_{project.ExpansionAudioShortName.ToLower()}.bin";
+                    else
+                        kernelBinary = "nsf_ft2_fs.bin";
                 }
                 else
                 {

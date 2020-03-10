@@ -65,6 +65,7 @@ namespace FamiStudio
         public int                 ExpansionAudio => expansionAudio;
         public int                 ExpansionNumChannels => expansionNumChannels;
         public string              ExpansionAudioName => ExpansionNames[expansionAudio];
+        public string              ExpansionAudioShortName => ExpansionShortNames[expansionAudio];
         public bool                UsesExpansionAudio => expansionAudio != ExpansionNone;
 
         public string              Filename   { get => filename; set => filename = value; }

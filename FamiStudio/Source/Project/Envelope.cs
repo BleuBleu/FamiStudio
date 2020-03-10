@@ -208,6 +208,16 @@ namespace FamiStudio
             return mod;
         }
 
+        public byte[] BuildN163Waveform()
+        {
+            var packed = new byte[length / 2];
+
+            for (int i = 0; i < length; i += 2)
+                packed[i / 2] = (byte)((byte)(values[i + 1] << 4) | (byte)(values[i + 0]));
+
+            return packed;
+        }
+
         public bool Relative
         {
             get { return relative; }
