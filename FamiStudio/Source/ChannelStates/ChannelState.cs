@@ -21,12 +21,12 @@ namespace FamiStudio
         private   int slidePitch = 0;
         private   int slideShift = 0;
 
-        public ChannelState(int apu, int type, bool pal)
+        public ChannelState(int apu, int type, bool pal, int numN163Channels = 1)
         {
             apuIdx = apu;
             channelType = type;
             palMode = pal;
-            noteTable = NesApu.GetNoteTableForChannelType(channelType, pal);
+            noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
             note.Value = Note.NoteStop;
             note.Volume = Note.VolumeMax;
             note.FinePitch = 0;
@@ -78,8 +78,6 @@ namespace FamiStudio
 
                 if (newNote.IsSlideNote)
                 {
-                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, palMode);
-
                     if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _, out slideShift))
                         newNote.Value = (byte)newNote.SlideNoteTarget;
                 }

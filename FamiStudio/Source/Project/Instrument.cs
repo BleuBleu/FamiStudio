@@ -22,7 +22,7 @@ namespace FamiStudio
 
         // N163
         private byte n163WavePreset = Envelope.WavePresetSine;
-        private byte n163WaveSize = 32;
+        private byte n163WaveSize = 16;
         private byte n163WavePos = 0;
 
         // VRC7
@@ -67,7 +67,7 @@ namespace FamiStudio
             }
             else if (expansion == Project.ExpansionN163)
             {
-                envelopes[Envelope.N163Waveform].SetFromPreset(Envelope.N163Waveform, n163WavePreset);
+                UpdateN163WaveEnvelope();
             }
             else if (expansion == Project.ExpansionVrc7)
             {
@@ -133,6 +133,18 @@ namespace FamiStudio
         {
             get { return n163WavePos; }
             set { n163WavePos = (byte)value; }
+        }
+        
+        public int N163OctaveShift
+        {
+            get
+            {
+                if (n163WaveSize >= 32) return 3;
+                if (n163WaveSize >= 16) return 2;
+                if (n163WaveSize >=  8) return 1;
+
+                return 0;
+            }
         }
 
         public byte Vrc7Patch

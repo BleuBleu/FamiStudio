@@ -185,7 +185,14 @@
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_s5b.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_fds.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc7.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_1ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_2ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_3ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_4ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_5ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_6ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_7ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_8ch.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

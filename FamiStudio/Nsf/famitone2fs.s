@@ -29,9 +29,9 @@ FT_SMOOTH_VIBRATO = 1     ; Blaarg's smooth vibrato technique
     FT_NUM_PITCH_ENVELOPES  = 6
     FT_NUM_CHANNELS         = 8
 .elseif .defined(FT_N163) 
-    FT_NUM_ENVELOPES        = 3+3+2+3+2+2+2+2+2+2+2+2
-    FT_NUM_PITCH_ENVELOPES  = 11
-    FT_NUM_CHANNELS         = 13
+    FT_NUM_ENVELOPES        = 3+3+2+3+(FT_N163_CHN_CNT*2)
+    FT_NUM_PITCH_ENVELOPES  = 3+FT_N163_CHN_CNT
+    FT_NUM_CHANNELS         = 5+FT_N163_CHN_CNT
 .elseif .defined(FT_MMC5)
     FT_NUM_ENVELOPES        = 3+3+2+3+3+3
     FT_NUM_PITCH_ENVELOPES  = 5
@@ -153,9 +153,7 @@ FT_PULSE2_PREV:   .res 1
 FT_SONG_SPEED     = FT_CHN_INSTRUMENT+4
 
 .ifdef FT_N163
-FT_N163_CHN_TOTAL: .res 1 ; includes 5 basic channels.
-FT_N163_CHN_COUNT: .res 1
-FT_N163_CHN_MASK:  .res 1
+FT_N163_CHN_MASK  = (FT_NUM_CHANNELS - 1) << 4
 .endif
 
 .ifdef FT_MMC5
@@ -435,22 +433,6 @@ pal:
         lda (FT_TEMP_PTR1),y
         sta FT_EXP_INSTRUMENT_H
         iny
-        .ifdef ::FT_N163
-            lda (FT_TEMP_PTR1),y
-            sta FT_N163_CHN_COUNT
-            clc 
-            adc #5
-            sta FT_N163_CHN_TOTAL
-            lda FT_N163_CHN_COUNT
-            sec
-            sbc #1
-            asl
-            asl
-            asl
-            asl
-            sta FT_N163_CHN_MASK
-            iny
-        .endif
     .endif
 
     lda (FT_TEMP_PTR1),y       ;get sample list address
@@ -624,9 +606,7 @@ set_pitch_envelopes:
     ; MATTT
 .endif
 
-.if .defined(::FT_N163)
-    adc #8                     ;add offset
-.elseif .defined(::FT_FDS) || .defined(::FT_VRC7) 
+.if .defined(::FT_FDS) || .defined(::FT_VRC7) || .defined(::FT_N163)
     adc #7                     ;add offset
 .else
     adc #5                     ;add offset
@@ -1276,23 +1256,6 @@ update_volume:
 
 .endmacro
 
-.macro _FT2UpdateRowN163 channel_idx, env_idx
-
-    .local no_new_note
-
-    ldx #channel_idx
-    cpx FT_N163_CHN_TOTAL
-    bcs no_new_note
-    jsr _FT2ChannelUpdate
-    bcc no_new_note
-    ldx #env_idx
-    ldy #channel_idx
-    lda FT_CHN_INSTRUMENT+channel_idx
-    jsr _FT2SetN163Instrument
-no_new_note:
-
-.endmacro
-
 .macro _FT2UpdateRowDpcm channel_idx
 .if(::FT_DPCM_ENABLE)
     .local @play_sample
@@ -1406,14 +1369,30 @@ update_row:
 .endif
 
 .ifdef ::FT_N163
-    _FT2UpdateRowN163  5, FT_CH5_ENVS
-    _FT2UpdateRowN163  6, FT_CH6_ENVS
-    _FT2UpdateRowN163  7, FT_CH7_ENVS
-    _FT2UpdateRowN163  8, FT_CH8_ENVS
-    _FT2UpdateRowN163  9, FT_CH9_ENVS
-    _FT2UpdateRowN163 10, FT_CH10_ENVS
-    _FT2UpdateRowN163 11, FT_CH11_ENVS
-    _FT2UpdateRowN163 12, FT_CH12_ENVS
+    .if ::FT_N163_CHN_CNT >= 1
+        _FT2UpdateRow  5, FT_CH5_ENVS
+    .endif
+    .if ::FT_N163_CHN_CNT >= 2
+        _FT2UpdateRow  6, FT_CH6_ENVS
+    .endif
+    .if ::FT_N163_CHN_CNT >= 3
+        _FT2UpdateRow  7, FT_CH7_ENVS
+    .endif
+    .if ::FT_N163_CHN_CNT >= 4
+        _FT2UpdateRow  8, FT_CH8_ENVS
+    .endif
+    .if ::FT_N163_CHN_CNT >= 5
+        _FT2UpdateRow  9, FT_CH9_ENVS
+    .endif
+    .if ::FT_N163_CHN_CNT >= 6
+        _FT2UpdateRow 10, FT_CH10_ENVS
+    .endif
+    .if ::FT_N163_CHN_CNT >= 7
+        _FT2UpdateRow 11, FT_CH11_ENVS
+    .endif
+    .if ::FT_N163_CHN_CNT >= 8
+        _FT2UpdateRow 12, FT_CH12_ENVS
+    .endif
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -1647,7 +1626,7 @@ update_sound:
     n163_channel_loop:
         jsr _FT2UpdateN163ChannelSound
         iny
-        cpy FT_N163_CHN_COUNT
+        cpy FT_N163_CHN_CNT
         bne n163_channel_loop
 .endif
 
@@ -2037,6 +2016,7 @@ _FT2N163WaveTable:
     sta wave_ptr+1
 
     ; N163 wave
+    ; MATTT: Use auto-increment here.
     ldx wave_pos
     ldy #0
     wave_loop:
@@ -2817,26 +2797,175 @@ _FT2FdsNoteTableMSB:
 .endif
 
 .ifdef FT_N163
+.if FT_N163_CHN_CNT = 1
+    _FT2N163NoteTableLSB:
+        .byte $00
+        .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 0
+        .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$00,$0f ; Octave 1
+        .byte $1f,$30,$42,$55,$6a,$7f,$96,$ae,$c8,$e3,$00,$1e ; Octave 2
+        .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 3
+        .byte $7d,$c1,$0a,$57,$a8,$fe,$59,$ba,$20,$8d,$00,$7a ; Octave 4
+        .byte $fb,$83,$14,$ae,$50,$fd,$b3,$74,$41,$1a,$00,$f4 ; Octave 5
+        .byte $f6,$07,$29,$5c,$a1,$fa,$67,$e9,$83,$35,$01,$e8 ; Octave 6
+        .byte $ec,$0f,$52,$b8,$43,$f4,$ce,$d3,$06,$6a,$02,$d1 ; Octave 7
+    _FT2N163NoteTableMSB:
+        .byte $00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; Octave 0
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01 ; Octave 1
+        .byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$02,$02 ; Octave 2
+        .byte $02,$02,$02,$02,$02,$02,$03,$03,$03,$03,$04,$04 ; Octave 3
+        .byte $04,$04,$05,$05,$05,$05,$06,$06,$07,$07,$08,$08 ; Octave 4
+        .byte $08,$09,$0a,$0a,$0b,$0b,$0c,$0d,$0e,$0f,$10,$10 ; Octave 5
+        .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 6
+        .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 7
+.elseif FT_N163_CHN_CNT = 2
+    _FT2N163NoteTableLSB:
+        .byte $00
+        .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$00,$0f ; Octave 0
+        .byte $1f,$30,$42,$55,$6a,$7f,$96,$ae,$c8,$e3,$00,$1e ; Octave 1
+        .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 2
+        .byte $7d,$c1,$0a,$57,$a8,$fe,$59,$ba,$20,$8d,$00,$7a ; Octave 3
+        .byte $fb,$83,$14,$ae,$50,$fd,$b3,$74,$41,$1a,$00,$f4 ; Octave 4
+        .byte $f6,$07,$29,$5c,$a1,$fa,$67,$e9,$83,$35,$01,$e8 ; Octave 5
+        .byte $ec,$0f,$52,$b8,$43,$f4,$ce,$d3,$06,$6a,$02,$d1 ; Octave 6
+        .byte $d9,$1f,$a5,$71,$86,$e8,$9c,$a7,$0d,$d5,$05,$a2 ; Octave 7
+    _FT2N163NoteTableMSB:
+        .byte $00
+        .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01 ; Octave 0
+        .byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$02,$02 ; Octave 1
+        .byte $02,$02,$02,$02,$02,$02,$03,$03,$03,$03,$04,$04 ; Octave 2
+        .byte $04,$04,$05,$05,$05,$05,$06,$06,$07,$07,$08,$08 ; Octave 3
+        .byte $08,$09,$0a,$0a,$0b,$0b,$0c,$0d,$0e,$0f,$10,$10 ; Octave 4
+        .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 5
+        .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 6
+        .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 7
+.elseif FT_N163_CHN_CNT = 3
+    _FT2N163NoteTableLSB:
+        .byte $00
+        .byte $d7,$e4,$f1,$00,$0f,$1f,$30,$42,$56,$6a,$80,$96 ; Octave 0
+        .byte $af,$c8,$e3,$00,$1f,$3f,$61,$85,$ac,$d5,$00,$2d ; Octave 1
+        .byte $5e,$91,$c7,$01,$3e,$7e,$c3,$0b,$58,$aa,$00,$5b ; Octave 2
+        .byte $bc,$22,$8f,$02,$7c,$fd,$86,$17,$b1,$54,$00,$b7 ; Octave 3
+        .byte $78,$45,$1f,$05,$f9,$fb,$0d,$2f,$62,$a8,$01,$6e ; Octave 4
+        .byte $f1,$8b,$3e,$0a,$f2,$f7,$1a,$5e,$c5,$50,$02,$dc ; Octave 5
+        .byte $e3,$17,$7c,$15,$e4,$ee,$35,$bd,$8a,$a0,$04,$b9 ; Octave 6
+        .byte $c6,$2e,$f8,$2a,$c9,$dc,$6a,$7a,$14,$40,$08,$73 ; Octave 7
+    _FT2N163NoteTableMSB:
+        .byte $00
+        .byte $00,$00,$00,$01,$01,$01,$01,$01,$01,$01,$01,$01 ; Octave 0
+        .byte $01,$01,$01,$02,$02,$02,$02,$02,$02,$02,$03,$03 ; Octave 1
+        .byte $03,$03,$03,$04,$04,$04,$04,$05,$05,$05,$06,$06 ; Octave 2
+        .byte $06,$07,$07,$08,$08,$08,$09,$0a,$0a,$0b,$0c,$0c ; Octave 3
+        .byte $0d,$0e,$0f,$10,$10,$11,$13,$14,$15,$16,$18,$19 ; Octave 4
+        .byte $1a,$1c,$1e,$20,$21,$23,$26,$28,$2a,$2d,$30,$32 ; Octave 5
+        .byte $35,$39,$3c,$40,$43,$47,$4c,$50,$55,$5a,$60,$65 ; Octave 6
+        .byte $6b,$72,$78,$80,$87,$8f,$98,$a1,$ab,$b5,$c0,$cb ; Octave 7
+.elseif FT_N163_CHN_CNT = 4
 _FT2N163NoteTableLSB:
-    .byte $00
-    .byte $1f, $30, $42, $55, $6a, $7f, $96, $ae, $c8, $e3, $00, $1e ; Octave 0
-    .byte $3e, $60, $85, $ab, $d4, $ff, $2c, $5d, $90, $c6, $00, $3d ; Octave 1
-    .byte $7d, $c1, $0a, $57, $a8, $fe, $59, $ba, $20, $8d, $00, $7a ; Octave 2
-    .byte $fb, $83, $14, $ae, $50, $fd, $b3, $74, $41, $1a, $00, $f4 ; Octave 3
-    .byte $f6, $07, $29, $5c, $a1, $fa, $67, $e9, $83, $35, $01, $e8 ; Octave 4
-    .byte $ec, $0f, $52, $b8, $43, $f4, $ce, $d3, $06, $6a, $02, $d1 ; Octave 5
-    .byte $d8, $1e, $a4, $70, $86, $e8, $9c, $a6, $0c, $d4, $04, $a2 ; Octave 6
-    .byte $b0, $3c, $48, $e0, $0c, $d0, $38, $4c, $18, $a8, $ff, $ff ; Octave 7
-_FT2N163NoteTableMSB:
-    .byte $00
-    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02 ; Octave 0
-    .byte $02, $02, $02, $02, $02, $02, $03, $03, $03, $03, $04, $04 ; Octave 1
-    .byte $04, $04, $05, $05, $05, $05, $06, $06, $07, $07, $08, $08 ; Octave 2
-    .byte $08, $09, $0a, $0a, $0b, $0b, $0c, $0d, $0e, $0f, $10, $10 ; Octave 3
-    .byte $11, $13, $14, $15, $16, $17, $19, $1a, $1c, $1e, $20, $21 ; Octave 4
-    .byte $23, $26, $28, $2a, $2d, $2f, $32, $35, $39, $3c, $40, $43 ; Octave 5
-    .byte $47, $4c, $50, $55, $5a, $5f, $65, $6b, $72, $78, $80, $87 ; Octave 6
-    .byte $8f, $98, $a1, $aa, $b5, $bf, $cb, $d7, $e4, $f1, $ff, $ff ; Octave 7
+        .byte $00
+        .byte $1f,$30,$42,$55,$6a,$7f,$96,$ae,$c8,$e3,$00,$1e ; Octave 0
+        .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 1
+        .byte $7d,$c1,$0a,$57,$a8,$fe,$59,$ba,$20,$8d,$00,$7a ; Octave 2
+        .byte $fb,$83,$14,$ae,$50,$fd,$b3,$74,$41,$1a,$00,$f4 ; Octave 3
+        .byte $f6,$07,$29,$5c,$a1,$fa,$67,$e9,$83,$35,$01,$e8 ; Octave 4
+        .byte $ec,$0f,$52,$b8,$43,$f4,$ce,$d3,$06,$6a,$02,$d1 ; Octave 5
+        .byte $d9,$1f,$a5,$71,$86,$e8,$9c,$a7,$0d,$d5,$05,$a2 ; Octave 6
+        .byte $b2,$3e,$4b,$e3,$0c,$d0,$38,$4e,$1b,$ab,$ff,$ff ; Octave 7
+    _FT2N163NoteTableMSB:
+        .byte $00
+        .byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$02,$02 ; Octave 0
+        .byte $02,$02,$02,$02,$02,$02,$03,$03,$03,$03,$04,$04 ; Octave 1
+        .byte $04,$04,$05,$05,$05,$05,$06,$06,$07,$07,$08,$08 ; Octave 2
+        .byte $08,$09,$0a,$0a,$0b,$0b,$0c,$0d,$0e,$0f,$10,$10 ; Octave 3
+        .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 4
+        .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 5
+        .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 6
+        .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$ff,$ff ; Octave 7
+.elseif FT_N163_CHN_CNT = 5
+    _FT2N163NoteTableLSB:
+        .byte $00
+        .byte $67,$7c,$93,$ab,$c4,$df,$fc,$1a,$3a,$5c,$80,$a6 ; Octave 0
+        .byte $ce,$f9,$26,$56,$89,$bf,$f8,$34,$74,$b8,$00,$4c ; Octave 1
+        .byte $9c,$f2,$4c,$ac,$12,$7e,$f0,$69,$e9,$70,$00,$98 ; Octave 2
+        .byte $39,$e4,$99,$59,$24,$fc,$e0,$d2,$d2,$e1,$00,$31 ; Octave 3
+        .byte $73,$c9,$33,$b3,$49,$f8,$c0,$a4,$a4,$c2,$01,$62 ; Octave 4
+        .byte $e7,$93,$67,$67,$93,$f1,$81,$48,$48,$85,$03,$c5 ; Octave 5
+        .byte $cf,$26,$cf,$ce,$27,$e2,$03,$90,$91,$0b,$06,$8a ; Octave 6
+        .byte $9f,$4d,$9e,$9c,$4f,$c4,$06,$ff,$ff,$ff,$ff,$ff ; Octave 7
+    _FT2N163NoteTableMSB:
+        .byte $00
+        .byte $01,$01,$01,$01,$01,$01,$01,$02,$02,$02,$02,$02 ; Octave 0
+        .byte $02,$02,$03,$03,$03,$03,$03,$04,$04,$04,$05,$05 ; Octave 1
+        .byte $05,$05,$06,$06,$07,$07,$07,$08,$08,$09,$0a,$0a ; Octave 2
+        .byte $0b,$0b,$0c,$0d,$0e,$0e,$0f,$10,$11,$12,$14,$15 ; Octave 3
+        .byte $16,$17,$19,$1a,$1c,$1d,$1f,$21,$23,$25,$28,$2a ; Octave 4
+        .byte $2c,$2f,$32,$35,$38,$3b,$3f,$43,$47,$4b,$50,$54 ; Octave 5
+        .byte $59,$5f,$64,$6a,$71,$77,$7f,$86,$8e,$97,$a0,$a9 ; Octave 6
+        .byte $b3,$be,$c9,$d5,$e2,$ef,$fe,$ff,$ff,$ff,$ff,$ff ; Octave 7
+.elseif FT_N163_CHN_CNT = 6
+    _FT2N163NoteTableLSB:
+        .byte $00
+        .byte $af,$c8,$e3,$00,$1f,$3f,$61,$85,$ac,$d5,$00,$2d ; Octave 0
+        .byte $5e,$91,$c7,$01,$3e,$7e,$c3,$0b,$58,$aa,$00,$5b ; Octave 1
+        .byte $bc,$22,$8f,$02,$7c,$fd,$86,$17,$b1,$54,$00,$b7 ; Octave 2
+        .byte $78,$45,$1f,$05,$f9,$fb,$0d,$2f,$62,$a8,$01,$6e ; Octave 3
+        .byte $f1,$8b,$3e,$0a,$f2,$f7,$1a,$5e,$c5,$50,$02,$dc ; Octave 4
+        .byte $e3,$17,$7c,$15,$e4,$ee,$35,$bd,$8a,$a0,$04,$b9 ; Octave 5
+        .byte $c6,$2e,$f8,$2a,$c9,$dc,$6a,$7a,$14,$40,$08,$73 ; Octave 6
+        .byte $8c,$5d,$f1,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
+    _FT2N163NoteTableMSB:
+        .byte $00
+        .byte $01,$01,$01,$02,$02,$02,$02,$02,$02,$02,$03,$03 ; Octave 0
+        .byte $03,$03,$03,$04,$04,$04,$04,$05,$05,$05,$06,$06 ; Octave 1
+        .byte $06,$07,$07,$08,$08,$08,$09,$0a,$0a,$0b,$0c,$0c ; Octave 2
+        .byte $0d,$0e,$0f,$10,$10,$11,$13,$14,$15,$16,$18,$19 ; Octave 3
+        .byte $1a,$1c,$1e,$20,$21,$23,$26,$28,$2a,$2d,$30,$32 ; Octave 4
+        .byte $35,$39,$3c,$40,$43,$47,$4c,$50,$55,$5a,$60,$65 ; Octave 5
+        .byte $6b,$72,$78,$80,$87,$8f,$98,$a1,$ab,$b5,$c0,$cb ; Octave 6
+        .byte $d7,$e4,$f1,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
+.elseif FT_N163_CHN_CNT = 7
+    _FT2N163NoteTableLSB:
+        .byte $00
+        .byte $f6,$14,$34,$56,$79,$9f,$c7,$f1,$1e,$4d,$80,$b5 ; Octave 0
+        .byte $ed,$29,$69,$ac,$f3,$3e,$8e,$e3,$3c,$9b,$00,$6a ; Octave 1
+        .byte $db,$53,$d2,$58,$e6,$7d,$1d,$c6,$79,$37,$00,$d5 ; Octave 2
+        .byte $b7,$a6,$a4,$b0,$cd,$fa,$3a,$8c,$f3,$6e,$01,$ab ; Octave 3
+        .byte $6f,$4d,$48,$61,$9a,$f5,$74,$19,$e6,$dd,$02,$56 ; Octave 4
+        .byte $de,$9b,$91,$c3,$35,$eb,$e8,$32,$cc,$bb,$04,$ad ; Octave 5
+        .byte $bc,$36,$22,$86,$6b,$d6,$d1,$64,$98,$76,$09,$5b ; Octave 6
+        .byte $79,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
+    _FT2N163NoteTableMSB:
+        .byte $00
+        .byte $01,$02,$02,$02,$02,$02,$02,$02,$03,$03,$03,$03 ; Octave 0
+        .byte $03,$04,$04,$04,$04,$05,$05,$05,$06,$06,$07,$07 ; Octave 1
+        .byte $07,$08,$08,$09,$09,$0a,$0b,$0b,$0c,$0d,$0e,$0e ; Octave 2
+        .byte $0f,$10,$11,$12,$13,$14,$16,$17,$18,$1a,$1c,$1d ; Octave 3
+        .byte $1f,$21,$23,$25,$27,$29,$2c,$2f,$31,$34,$38,$3b ; Octave 4
+        .byte $3e,$42,$46,$4a,$4f,$53,$58,$5e,$63,$69,$70,$76 ; Octave 5
+        .byte $7d,$85,$8d,$95,$9e,$a7,$b1,$bc,$c7,$d3,$e0,$ed ; Octave 6
+        .byte $fb,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
+.elseif FT_N163_CHN_CNT = 8
+    _FT2N163NoteTableLSB:
+        .byte $00
+        .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 0
+        .byte $7d,$c1,$0a,$57,$a8,$fe,$59,$ba,$20,$8d,$00,$7a ; Octave 1
+        .byte $fb,$83,$14,$ae,$50,$fd,$b3,$74,$41,$1a,$00,$f4 ; Octave 2
+        .byte $f6,$07,$29,$5c,$a1,$fa,$67,$e9,$83,$35,$01,$e8 ; Octave 3
+        .byte $ec,$0f,$52,$b8,$43,$f4,$ce,$d3,$06,$6a,$02,$d1 ; Octave 4
+        .byte $d9,$1f,$a5,$71,$86,$e8,$9c,$a7,$0d,$d5,$05,$a2 ; Octave 5
+        .byte $b2,$3e,$4b,$e3,$0c,$d0,$38,$4e,$1b,$ab,$ff,$ff ; Octave 6
+        .byte $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
+    _FT2N163NoteTableMSB:
+        .byte $00
+        .byte $02,$02,$02,$02,$02,$02,$03,$03,$03,$03,$04,$04 ; Octave 0
+        .byte $04,$04,$05,$05,$05,$05,$06,$06,$07,$07,$08,$08 ; Octave 1
+        .byte $08,$09,$0a,$0a,$0b,$0b,$0c,$0d,$0e,$0f,$10,$10 ; Octave 2
+        .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 3
+        .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 4
+        .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 5
+        .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$ff,$ff ; Octave 6
+        .byte $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
+.endif
 .endif
 
 _FT2ChannelToVolumeEnvelope:

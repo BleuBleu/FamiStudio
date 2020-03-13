@@ -90,11 +90,6 @@ namespace FamiStudio
                 lines.Add($"\t{dw} {ll}instruments_{project.ExpansionAudioShortName.ToLower()}");
             }
 
-            if (project.ExpansionAudio == Project.ExpansionN163)
-            {
-                lines.Add($"\t{db} ${project.ExpansionNumChannels:x2}");
-            }
-
             lines.Add($"\t{dw} {ll}samples-3");
 
             for (int i = 0; i < project.Songs.Count; i++)
@@ -651,7 +646,7 @@ namespace FamiStudio
 
                             if (note.IsSlideNote)
                             {
-                                var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+                                var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumChannels);
 
                                 if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _, out _))
                                 {

@@ -102,18 +102,21 @@ namespace FamiStudio
 
                 List<byte> nsfBytes = new List<byte>();
 
-                string kernelBinary;
+                string kernelBinary = "nsf_ft2";
                 if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2FS)
                 {
+                    kernelBinary += "_fs";
+
                     if (project.UsesExpansionAudio)
-                        kernelBinary = $"nsf_ft2_fs_{project.ExpansionAudioShortName.ToLower()}.bin";
-                    else
-                        kernelBinary = "nsf_ft2_fs.bin";
+                    {
+                        kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
+
+                        if (project.ExpansionAudio == Project.ExpansionN163)
+                            kernelBinary += $"_{project.ExpansionNumChannels}ch";
+                    }
                 }
-                else
-                {
-                    kernelBinary = "nsf_ft2.bin";
-                }
+
+                kernelBinary += ".bin";
 
                 // Code/sound engine
                 var nsfBinStream = typeof(NsfFile).Assembly.GetManifestResourceStream("FamiStudio.Nsf." + kernelBinary);
@@ -643,7 +646,7 @@ namespace FamiStudio
 
                 if ((hasPeriod && state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
-                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, maxNamcoChannels); // MATTT: Max channels
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;
 

@@ -371,7 +371,7 @@ namespace FamiStudio
                         {
                             if (note.IsMusical)
                             {
-                                var noteTable = NesApu.GetNoteTableForChannelType(c.Type, false);
+                                var noteTable = NesApu.GetNoteTableForChannelType(c.Type, false, s.Project.ExpansionNumChannels);
                                 var pitchLimit = NesApu.GetPitchLimitForChannelType(c.Type);
 
                                 // If we have a new note with auto-portamento enabled, we need to

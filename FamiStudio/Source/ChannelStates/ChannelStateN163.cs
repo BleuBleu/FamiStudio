@@ -8,8 +8,9 @@ namespace FamiStudio
         int regOffset;
         int waveLength;
         int channelMask;
+        int octaveShift;
 
-        public ChannelStateN163(int apuIdx, int channelType, int numChannels, bool pal) : base(apuIdx, channelType, pal)
+        public ChannelStateN163(int apuIdx, int channelType, int numChannels, bool pal) : base(apuIdx, channelType, pal, numChannels)
         {
             regOffset = 8 * -(channelType - Channel.N163Wave1);
             channelMask = (numChannels - 1) << 4;
@@ -36,6 +37,7 @@ namespace FamiStudio
 
                 WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
                 waveLength = 256 - instrument.N163WaveSize;
+                octaveShift = instrument.N163OctaveShift;
             }
         }
 
@@ -49,6 +51,9 @@ namespace FamiStudio
             {
                 var period = GetPeriod(3);
                 var volume = GetVolume();
+
+                // We clamp our periods to 16-bit for convenience, expand to 18-bit.
+                period <<= 2;
 
                 WriteN163Register(NesApu.N163_REG_FREQ_LO  + regOffset, (period >> 0) & 0xff);
                 WriteN163Register(NesApu.N163_REG_FREQ_MID + regOffset, (period >> 8) & 0xff);

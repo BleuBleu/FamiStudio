@@ -103,7 +103,7 @@ namespace FamiStudio
             playNote = 0;
             channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palMode);
 
-            NesApu.InitAndReset(apuIndex, SampleRate, palMode, GetNesApuExpansionAudio(song.Project), dmcCallback);
+            NesApu.InitAndReset(apuIndex, SampleRate, palMode, GetNesApuExpansionAudio(song.Project), song.Project.ExpansionNumChannels, dmcCallback);
 
             if (startNote != 0)
             {

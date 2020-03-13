@@ -35,6 +35,7 @@ namespace FamiStudio
             RenderTheme.Initialize();
             PlatformUtils.Initialize();
             ClipboardUtils.Initialize();
+            NesApu.InitializeNoteTables();
 
 #if FAMISTUDIO_WINDOWS
             PerformanceCounter.Initialize();

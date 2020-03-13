@@ -27,8 +27,13 @@
 - All expansions.
 	- Finigh channel code, clean.
 	- Import/export all formats.
+	- Compare all channel volumes meticulously with nsfplay.
 	- Namco:
 		- Period, figure how it related to wave length.
+			- 32 -> -3 octave
+			- 16 -> -2 octave
+			- 8  -> -1 octave
+			- 4  ->  0 octave
 		- The range of notes still feels off. Too many notes on the low end.
 		- Multi waves seems good with duty cycle envelopes... Later?
 		- NSF import needs to know we scale pitch by 8.

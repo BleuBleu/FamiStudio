@@ -835,7 +835,7 @@ namespace FamiStudio
                                 if (note.IsSlideNote && note.IsMusical)
                                 {
                                     // TODO: PAL.
-                                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false);
+                                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
                                     channel.ComputeSlideNoteParams(p, n, noteTable, out _, out int stepSize, out _, out _); // MATTT: N163 & VRC7 slides.
 
                                     var absNoteDelta = Math.Abs(note.Value - note.SlideNoteTarget);
