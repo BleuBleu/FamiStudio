@@ -33,7 +33,7 @@ void Nes_Namco::reset()
 	active_osc = osc_count - 1;
 	delay = 0;
 	last_amp = 0;
-	osc_counter = 0;
+	last_time = 0;
 	
 	int i;
 	for ( i = 0; i < reg_count; i++ )
@@ -93,18 +93,15 @@ void Nes_Namco::sum_output(cpu_time_t time)
 
 void Nes_Namco::run_until(cpu_time_t end_time)
 {
+	require(end_time >= last_time);
+
 	int active_oscs = ((reg[0x7f] >> 4) & 7) + 1;
 
 	cpu_time_t time = last_time + delay;
 
 	while (time < end_time)
 	{
-		int step = osc_update_time; 
-
 		Namco_Osc& osc = oscs[active_osc];
-
-		if (!osc.output)
-			return;
 
 		BOOST::uint8_t* osc_reg = &reg[active_osc * 8 + 0x40];
 
@@ -112,7 +109,7 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 		int volume = osc_reg[7] & 15;
 		int wave_size = (8 - ((osc_reg[4] >> 2) & 7)) * 4;
 
-		if (volume && freq && wave_size)
+		if (osc.output && volume && freq && wave_size)
 		{
 			// read wave sample
 			long phase = (osc_reg[5] << 16) | (osc_reg[3] << 8) | osc_reg[1];
@@ -136,25 +133,16 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 		{
 			osc.sample = 0;
 			sum_output(time);
-			time += step;
 		}
 
-		time += step;
+		time += osc_update_time;
 
-		osc_counter += step;
-		if (osc_counter >= osc_update_time)
-		{
-			if (--active_osc < osc_count - active_oscs)
-				active_osc = osc_count - 1;
-
-			osc_counter -= osc_update_time;
-		}
-
-		time += step;
+		if (--active_osc < osc_count - active_oscs)
+			active_osc = osc_count - 1;
 	}
 
-	last_time = end_time;
 	delay = time - end_time;
+	last_time = time;
 }
 
 void Nes_Namco::start_seeking()

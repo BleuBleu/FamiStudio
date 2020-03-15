@@ -64,7 +64,6 @@ private:
 	int addr_reg;
 	int last_amp;
 	int active_osc;
-	int osc_counter;
 	long delay;
 	
 	enum { reg_count = 0x80 };
@@ -95,7 +94,8 @@ inline void Nes_Namco::osc_output( int i, Blip_Buffer* buf )
 
 inline void Nes_Namco::write_data( cpu_time_t time, int data )
 {
-	run_until( time );
+	if (time > last_time)
+		run_until( time );
 	access() = data;
 }
 
