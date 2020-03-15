@@ -30,6 +30,10 @@ Nes_Namco::~Nes_Namco()
 void Nes_Namco::reset()
 {
 	addr_reg = 0;
+	active_osc = osc_count - 1;
+	delay = 0;
+	last_amp = 0;
+	osc_counter = 0;
 	
 	int i;
 	for ( i = 0; i < reg_count; i++ )
@@ -39,13 +43,13 @@ void Nes_Namco::reset()
 	{
 		Namco_Osc& osc = oscs [i];
 		osc.delay = 0;
-		osc.last_amp = 0;
-		osc.wave_pos = 0;
+		osc.sample = 0;
 	}
 }
 
 void Nes_Namco::output( Blip_Buffer* buf )
 {
+	buffer = buf;
 	for ( int i = 0; i < osc_count; i++ )
 		osc_output( i, buf );
 }
@@ -58,24 +62,6 @@ BOOST::uint8_t& Nes_Namco::access()
 	return reg [addr];
 }
 
-/*
-void Nes_Namco::reflect_state( Tagged_Data& data )
-{
-	reflect_int16( data, 'ADDR', &addr_reg );
-	
-	static const char hex [17] = "0123456789ABCDEF";
-	int i;
-	for ( i = 0; i < reg_count; i++ )
-		reflect_int16( data, 'RG\0\0' + hex [i >> 4] * 0x100 + hex [i & 15], &reg [i] );
-	
-	for ( i = 0; i < osc_count; i++ )
-	{
-		reflect_int32( data, 'DLY0' + i, &oscs [i].delay );
-		reflect_int16( data, 'POS0' + i, &oscs [i].wave_pos );
-	}
-}
-*/
-
 void Nes_Namco::end_frame( cpu_time_t time )
 {
 	if ( time > last_time )
@@ -87,75 +73,88 @@ void Nes_Namco::end_frame( cpu_time_t time )
 
 #include BLARGG_ENABLE_OPTIMIZER
 
-void Nes_Namco::run_until( cpu_time_t nes_end_time )
+void Nes_Namco::sum_output(cpu_time_t time)
 {
-	int active_oscs = ((reg [0x7f] >> 4) & 7) + 1;
-	for ( int i = osc_count - active_oscs; i < osc_count; i++ )
+	int active_oscs = ((reg[0x7f] >> 4) & 7) + 1;
+	int sample = 0;
+
+	for (int i = osc_count - active_oscs; i < osc_count; i++)
+		sample += oscs[i].sample;
+	sample /= active_oscs; // MATTT: Compare volume with nsfplay or something.
+
+	// output impulse if amplitude changed
+	int delta = sample - last_amp;
+	if (delta)
 	{
-		Namco_Osc& osc = oscs [i];
-		Blip_Buffer* output = osc.output;
-		if ( !output )
-			continue;
-		
-		Blip_Buffer::resampled_time_t time =
-				output->resampled_time( last_time ) + osc.delay;
-		Blip_Buffer::resampled_time_t end_time = output->resampled_time( nes_end_time );
-		osc.delay = 0;
-		if ( time < end_time )
-		{
-			const BOOST::uint8_t* osc_reg = &reg [i * 8 + 0x40];
-			if ( !(osc_reg [4] & 0xe0) )
-				continue;
-			
-			int volume = osc_reg [7] & 15;
-			if ( !volume )
-				continue;
-			
-			long freq = (osc_reg [4] & 3) * 0x10000 + osc_reg [2] * 0x100L + osc_reg [0];
-			if ( !freq )
-				continue;
-			Blip_Buffer::resampled_time_t period =
-					output->resampled_duration( 983040 ) / freq * active_oscs;
-			
-			int wave_size = (8 - ((osc_reg [4] >> 2) & 7)) * 4;
-			if ( !wave_size )
-				continue;
-			
-			int last_amp = osc.last_amp;
-			int wave_pos = osc.wave_pos;
-			
-			do
-			{
-				// read wave sample
-				int addr = wave_pos + osc_reg [6];
-				int sample = reg [addr >> 1];
-				wave_pos++;
-				if ( addr & 1 )
-					sample >>= 4;
-				sample = (sample & 15) * volume;
-				
-				// output impulse if amplitude changed
-				int delta = sample - last_amp;
-				if ( delta )
-				{
-					last_amp = sample;
-					synth.offset_resampled( time, delta, output );
-				}
-				
-				// next sample
-				time += period;
-				if ( wave_pos >= wave_size )
-					wave_pos = 0;
-			}
-			while ( time < end_time );
-			
-			osc.wave_pos = wave_pos;
-			osc.last_amp = last_amp;
-		}
-		osc.delay = time - end_time;
+		last_amp = sample;
+		synth.offset(time, delta, buffer);
 	}
-	
-	last_time = nes_end_time;
+}
+
+void Nes_Namco::run_until(cpu_time_t end_time)
+{
+	int active_oscs = ((reg[0x7f] >> 4) & 7) + 1;
+
+	cpu_time_t time = last_time + delay;
+
+	while (time < end_time)
+	{
+		int step = osc_update_time; 
+
+		Namco_Osc& osc = oscs[active_osc];
+
+		if (!osc.output)
+			return;
+
+		BOOST::uint8_t* osc_reg = &reg[active_osc * 8 + 0x40];
+
+		long freq = ((osc_reg[4] & 3) << 16) | (osc_reg[2] << 8) | osc_reg[0];
+		int volume = osc_reg[7] & 15;
+		int wave_size = (8 - ((osc_reg[4] >> 2) & 7)) * 4;
+
+		if (volume && freq && wave_size)
+		{
+			// read wave sample
+			long phase = (osc_reg[5] << 16) | (osc_reg[3] << 8) | osc_reg[1];
+			phase = (phase + freq) % (wave_size << 16);
+
+			int addr = ((phase >> 16) + osc_reg[6]) & 0xff;
+			int sample = reg[addr >> 1];
+
+			if (addr & 1)
+				sample >>= 4;
+
+			osc.sample = (sample & 15) * volume;
+
+			sum_output(time);
+
+			osc_reg[5] = (phase >> 16) & 0xff;
+			osc_reg[3] = (phase >>  8) & 0xff;
+			osc_reg[1] = (phase >>  0) & 0xff;
+		}
+		else
+		{
+			osc.sample = 0;
+			sum_output(time);
+			time += step;
+		}
+
+		time += step;
+
+		osc_counter += step;
+		if (osc_counter >= osc_update_time)
+		{
+			if (--active_osc < osc_count - active_oscs)
+				active_osc = osc_count - 1;
+
+			osc_counter -= osc_update_time;
+		}
+
+		time += step;
+	}
+
+	last_time = end_time;
+	delay = time - end_time;
 }
 
 void Nes_Namco::start_seeking()

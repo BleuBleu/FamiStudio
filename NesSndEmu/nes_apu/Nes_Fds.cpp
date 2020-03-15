@@ -208,6 +208,7 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 	}
 
 	osc.last_amp = last_amp;
+	osc.delay = time - end_time;
 }
 
 void Nes_Fds::start_seeking()

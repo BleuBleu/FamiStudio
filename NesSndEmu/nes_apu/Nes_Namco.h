@@ -50,26 +50,33 @@ private:
 	Nes_Namco( const Nes_Namco& );
 	Nes_Namco& operator = ( const Nes_Namco& );
 	
+	enum { osc_update_time = 15 };
+
 	struct Namco_Osc {
 		long delay;
+		short sample;
 		Blip_Buffer* output;
-		short last_amp;
-		short wave_pos;
 	};
 	
 	Namco_Osc oscs [osc_count];
 	
 	cpu_time_t last_time;
 	int addr_reg;
+	int last_amp;
+	int active_osc;
+	int osc_counter;
+	long delay;
 	
 	enum { reg_count = 0x80 };
 	BOOST::uint8_t reg [reg_count];
 	Blip_Synth<blip_good_quality,15> synth;
-	
+	Blip_Buffer* buffer;
+
 	short shadow_internal_regs[shadow_internal_regs_count];
 
 	BOOST::uint8_t& access();
 	void run_until( cpu_time_t );
+	void sum_output(cpu_time_t );
 };
 
 inline void Nes_Namco::volume( double v ) { synth.volume( 0.10 / osc_count * v ); }
