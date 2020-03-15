@@ -20,6 +20,7 @@ namespace FamiStudio
         protected int slideStep = 0;
         private   int slidePitch = 0;
         private   int slideShift = 0;
+        private   int pitchShift = 0;
 
         public ChannelState(int apu, int type, bool pal, int numN163Channels = 1)
         {
@@ -30,6 +31,7 @@ namespace FamiStudio
             note.Value = Note.NoteStop;
             note.Volume = Note.VolumeMax;
             note.FinePitch = 0;
+            Channel.GetShiftsForType(type, numN163Channels, out pitchShift, out slideShift);
         }
 
         public void ProcessEffects(Song song, int patternIdx, int noteIdx, ref int speed, bool allowJump = true)
@@ -78,7 +80,7 @@ namespace FamiStudio
 
                 if (newNote.IsSlideNote)
                 {
-                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _, out slideShift))
+                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _))
                         newNote.Value = (byte)newNote.SlideNoteTarget;
                 }
 
@@ -218,12 +220,7 @@ namespace FamiStudio
         {
             get { return NesApu.IsSeeking(apuIdx) != 0; }
         }
-
-        public int GetSlidePitch()
-        {
-            return slideShift < 0 ? (slidePitch >> -slideShift) : (slidePitch << slideShift); // Remove the fraction part.
-        }
-
+        
         public int GetEnvelopeFrame(int envIdx)
         {
             return envelopeIdx[envIdx];
@@ -247,10 +244,12 @@ namespace FamiStudio
         {
         }
 
-        protected int GetPeriod(int pitchShift = 0)
+        protected int GetPeriod()
         {
             var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-            return Utils.Clamp(noteTable[noteVal] + ((note.FinePitch + envelopeValues[Envelope.Pitch]) << pitchShift) + GetSlidePitch(), 0, maximumPeriod);
+            var pitch = (note.FinePitch + envelopeValues[Envelope.Pitch]) << pitchShift;
+            var slide = slideShift < 0 ? (slidePitch >> -slideShift) : (slidePitch << slideShift); // Remove the fraction part.
+            return Utils.Clamp(noteTable[noteVal] + pitch + slide, 0, maximumPeriod);
         }
 
         protected int GetVolume()

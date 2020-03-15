@@ -29,30 +29,20 @@
 	- Import/export all formats.
 	- Compare all channel volumes meticulously with nsfplay.
 	- Namco:
-		- Period, figure how it related to wave length.
-			- 32 -> -3 octave
-			- 16 -> -2 octave
-			- 8  -> -1 octave
-			- 4  ->  0 octave
-		- The range of notes still feels off. Too many notes on the low end.
-		- Multi waves seems good with duty cycle envelopes... Later?
-		- NSF import needs to know we scale pitch by 8.
+		- Import/export fine pith scaling (all foramts)
+		- As we add more channels, its support to start sounding like shit. Why doesnt it?
 	- VRC7
 		- Figure out whole pitch/slide thing.
 			- In FamiTracker, 1xx,2xx doesnt work well with VRC7, clamps period, doesnt change octave
 			- In FamiTracker, Qxx,Rxx works OK since can only change 1 octave at most.
 			- In FamiTracker, 3xx works, but locks the octave.
-		- Vibrato, octave, etc.
-		- NSF: Release will be special.
-		- NSF import needs to know we scale pitch by 8.
+		- Import/export fine pith scaling (all foramts)
 		- Make sure FamiTracker import/export of slides works.
 	- Sunsoft:
 		- See if gimmick had a differnt note table for PAL.
 	- MMC5:
 	- FDS:
 		- Mod delay or mod track (need mod track for NSF import probably... Will need wider range on fx panel)
-		- No shift on slides.
-		- Does Famitracker multiply pitch envelopes? Feels like we could double them.
 		- Make sure FamiTracker import/export of slides works.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.

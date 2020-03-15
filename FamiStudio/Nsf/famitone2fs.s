@@ -46,14 +46,12 @@ FT_SMOOTH_VIBRATO = 1     ; Blaarg's smooth vibrato technique
     FT_NUM_CHANNELS         = 5
 .endif
 
-FT_ENVELOPES:
 FT_ENV_VALUE  : .res FT_NUM_ENVELOPES
 FT_ENV_REPEAT : .res FT_NUM_ENVELOPES
 FT_ENV_ADR_L  : .res FT_NUM_ENVELOPES
 FT_ENV_ADR_H  : .res FT_NUM_ENVELOPES
 FT_ENV_PTR    : .res FT_NUM_ENVELOPES
 
-FT_PITCH_ENVELOPES:
 FT_PITCH_ENV_VALUE_L  : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_VALUE_H  : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_REPEAT   : .res FT_NUM_PITCH_ENVELOPES
@@ -64,13 +62,11 @@ FT_PITCH_ENV_OVERRIDE : .res FT_NUM_PITCH_ENVELOPES
 FT_FINE_PITCH         : .res FT_NUM_PITCH_ENVELOPES
 
 ;slide structure offsets, 3 bytes per slide.
-FT_SLIDES:
 FT_SLIDE_STEP    : .res FT_NUM_PITCH_ENVELOPES
 FT_SLIDE_PITCH_L : .res FT_NUM_PITCH_ENVELOPES
 FT_SLIDE_PITCH_H : .res FT_NUM_PITCH_ENVELOPES
 
 ;channel structure offsets, 10 bytes per channel
-FT_CHANNELS:
 FT_CHN_PTR_L        : .res FT_NUM_CHANNELS
 FT_CHN_PTR_H        : .res FT_NUM_CHANNELS
 FT_CHN_NOTE         : .res FT_NUM_CHANNELS
@@ -91,7 +87,7 @@ FT_CHN_VRC7_TRIGGER : .res 6 ; bit 0 = new note triggered, bit 7 = note released
 .endif
 
 .ifdef FT_N163
-FT_CHN_N163_WAVE_LEN: .res 8
+FT_CHN_N163_WAVE_LEN: .res FT_N163_CHN_CNT
 .endif
 
 ;variables and aliases
@@ -131,6 +127,23 @@ FT_CH3_ENVS = 8
     FT_CH7_ENVS  = 15
 .endif
 
+.if .defined(FT_VRC7)
+    FT_PITCH_SHIFT = 3
+.elseif .defined(FT_N163)
+    .if FT_N163_CHN_CNT > 4
+        FT_PITCH_SHIFT = 5
+    .elseif FT_N163_CHN_CNT > 2
+        FT_PITCH_SHIFT = 4
+    .elseif FT_N163_CHN_CNT > 1
+        FT_PITCH_SHIFT = 3
+    .else
+        FT_PITCH_SHIFT = 2
+    .endif 
+.else
+    FT_PITCH_SHIFT = 0
+.endif
+
+
 FT_ENV_VOLUME_OFF = 0
 FT_ENV_NOTE_OFF   = 1
 FT_ENV_DUTY_OFF   = 2
@@ -153,7 +166,7 @@ FT_PULSE2_PREV:   .res 1
 FT_SONG_SPEED     = FT_CHN_INSTRUMENT+4
 
 .ifdef FT_N163
-FT_N163_CHN_MASK  = (FT_NUM_CHANNELS - 1) << 4
+FT_N163_CHN_MASK  = (FT_N163_CHN_CNT - 1) << 4
 .endif
 
 .ifdef FT_MMC5
@@ -655,7 +668,6 @@ pal:
     lda (FT_TEMP_PTR1),y
     sta FT_TEMPO_STEP_H
 
-
     lda #0                     ;reset tempo accumulator
     sta FT_TEMPO_ACC_L
     lda #6                     ;default speed
@@ -675,7 +687,7 @@ pal:
 
 .ifdef ::FT_N163
     lda #0
-    ldx #7
+    ldx #FT_N163_CHN_CNT
     clear_vrc7_loop:
         sta FT_CHN_N163_WAVE_LEN, x
         dex
@@ -731,36 +743,35 @@ done:
     pitch   = FT_TEMP_PTR2
     tmp_ror = FT_TEMP_VAR1
  
-    ; MATTT: N163 + VRC7 slide shift
-    ; MATTT: FDS slide shift
-
-    ; Pitch = note + pitch envelope + fine pitch.
-    clc
-    lda FT_PITCH_ENV_VALUE_L+pitch_env_offset pitch_env_indexer
-    adc note_table_lsb,x
-    sta pitch+0
-    lda FT_PITCH_ENV_VALUE_H+pitch_env_offset pitch_env_indexer
-    adc note_table_msb,x
-    sta pitch+1
-
-    ; Sign extend fine pitch.
+    ; Pitch envelope + fine pitch (sign extended)
     clc
     lda FT_FINE_PITCH+pitch_env_offset pitch_env_indexer
-    adc pitch+0
+    adc FT_PITCH_ENV_VALUE_L+pitch_env_offset pitch_env_indexer
     sta pitch+0
     lda FT_FINE_PITCH+pitch_env_offset pitch_env_indexer
     and #$80
     beq pos
     lda #$ff
 pos:
-    adc pitch+1
+    adc FT_PITCH_ENV_VALUE_H+pitch_env_offset pitch_env_indexer
     sta pitch+1
 
     ; Check if there is an active slide.
-    ldx FT_SLIDE_STEP+pitch_env_offset pitch_env_indexer
+    lda FT_SLIDE_STEP+pitch_env_offset pitch_env_indexer
     beq no_slide
 
-    ; Apply slide.
+    ; Add slide
+.if pitch_env_offset >= 3 && (.defined(::FT_VRC7) || .defined(::FT_N163))
+    ; These channels dont have fractional part for slides and have the same shift for slides + pitch.
+    clc
+    lda FT_SLIDE_PITCH_L+pitch_env_offset pitch_env_indexer
+    adc pitch+0
+    sta pitch+0
+    lda FT_SLIDE_PITCH_H+pitch_env_offset pitch_env_indexer
+    adc pitch+1
+    sta pitch+1     
+ .else
+    ; Most channels have 1 bit of fraction for slides.
     lda FT_SLIDE_PITCH_H+pitch_env_offset pitch_env_indexer
     cmp #$80 ; sign extend upcoming right shift.
     ror ; we have 1 bit of fraction for slides, shift right hi byte.
@@ -773,7 +784,41 @@ pos:
     lda tmp_ror
     adc pitch+1 
     sta pitch+1 
+.endif
+
 no_slide:    
+
+.if pitch_env_offset >= 3 && (.defined(::FT_VRC7) || .defined(::FT_N163))
+    .if ::FT_PITCH_SHIFT >= 1
+        asl pitch+0
+        rol pitch+1
+    .if ::FT_PITCH_SHIFT >= 2
+        asl pitch+0
+        rol pitch+1
+    .if ::FT_PITCH_SHIFT >= 3
+        asl pitch+0
+        rol pitch+1
+    .if ::FT_PITCH_SHIFT >= 4
+        asl pitch+0
+        rol pitch+1
+    .if ::FT_PITCH_SHIFT >= 5
+        asl pitch+0
+        rol pitch+1
+    .endif 
+    .endif
+    .endif
+    .endif
+    .endif
+.endif
+
+    ; Finally, add note pitch.
+    clc
+    lda note_table_lsb,x
+    adc pitch+0
+    sta pitch+0
+    lda note_table_msb,x
+    adc pitch+1
+    sta pitch+1   
 
 .endmacro
 
@@ -1112,12 +1157,14 @@ _FT2N163EnvelopeTable:
 ; y = N163 channel idx (0,1,2,3,4,5,6,7)
 .proc _FT2UpdateN163ChannelSound
     
-    pitch = FT_TEMP_PTR2
+    pitch    = FT_TEMP_PTR2
+    pitch_hi = FT_TEMP_VAR3
 
     lda FT_CHN_NOTE+5,y
     bne nocut
     ldx #0 ; this will fetch volume 0.
-    beq update_volume
+    bne nocut
+    jmp update_volume
 
 nocut:
 
@@ -1128,6 +1175,16 @@ nocut:
 
     ; Apply pitch envelope, fine pitch & slides
     FamiToneComputeNoteFinalPitch 3, {,y}, _FT2N163NoteTableLSB, _FT2N163NoteTableMSB
+
+    ; Convert 16-bit -> 18-bit.
+    asl pitch+0
+    rol pitch+1
+    lda #0
+    adc #0
+    sta pitch_hi
+    asl pitch+0
+    rol pitch+1
+    rol pitch_hi 
 
     ; Write pitch
     lda _FT2N163RegLoTable,y
@@ -1141,6 +1198,7 @@ nocut:
     lda _FT2N163RegHiTable,y
     sta N163_ADDR
     lda FT_CHN_N163_WAVE_LEN,y
+    ora pitch_hi
     sta N163_DATA
 
     ; Read/multiply volume
@@ -1154,7 +1212,7 @@ update_volume:
     lda _FT2N163VolTable,y
     sta N163_ADDR
     lda _FT2VolumeTable,x 
-    ora FT_N163_CHN_MASK
+    ora #FT_N163_CHN_MASK
     sta N163_DATA
     
     rts
@@ -1227,11 +1285,12 @@ update_volume:
     ldx #env_idx
     ldy #channel_idx
     lda FT_CHN_INSTRUMENT+channel_idx
-.if .defined(::FT_FDS) && channel_idx = 5
+
+.if .defined(::FT_FDS) && channel_idx >= 5
     jsr _FT2SetFdsInstrument
 .elseif .defined(::FT_VRC7) && channel_idx >= 5
     jsr _FT2SetVrc7Instrument
-.elseif .defined(::FT_N163)
+.elseif .defined(::FT_N163) && channel_idx >= 5
     jsr _FT2SetN163Instrument
 .else
     jsr _FT2SetInstrument
@@ -1626,7 +1685,7 @@ update_sound:
     n163_channel_loop:
         jsr _FT2UpdateN163ChannelSound
         iny
-        cpy FT_N163_CHN_CNT
+        cpy #FT_N163_CHN_CNT
         bne n163_channel_loop
 .endif
 
@@ -1843,7 +1902,9 @@ no_pulse2_upd:
     sta FT_ENV_PTR,x           ;reset env2 pointer
 
     ; Pitch envelopes.
-    ldx #3                      ; Expansions all start at 3rd pitch envelope
+    ldx chan_idx
+    dex
+    dex                        ; Noise + DPCM dont have pitch envelopes             
     lda FT_PITCH_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
     beq pitch_env
     iny
@@ -2016,14 +2077,13 @@ _FT2N163WaveTable:
     sta wave_ptr+1
 
     ; N163 wave
-    ; MATTT: Use auto-increment here.
-    ldx wave_pos
+    lda wave_pos
+    ora #$80
+    sta N163_ADDR
     ldy #0
     wave_loop:
-        stx N163_ADDR
         lda (wave_ptr),y
         sta N163_DATA
-        inx
         iny
         cpy wave_len
         bne wave_loop
@@ -2037,7 +2097,26 @@ _FT2N163WaveTable:
 
 .proc _FT2ChannelUpdate
 
-    FT_DISABLE_ATTACK = FT_TEMP_VAR3
+    no_attack_flag = FT_TEMP_VAR3
+    slide_delta_lo = FT_TEMP_PTR2_H
+
+.if .defined(::FT_VRC6)
+    exp_note_start = 7
+    exp_note_table_lsb = _FT2SawNoteTableLSB
+    exp_note_table_msb = _FT2SawNoteTableMSB
+.elseif .defined(::FT_VRC7)
+    exp_note_start = 5
+    exp_note_table_lsb = _FT2Vrc7NoteTableLSB
+    exp_note_table_msb = _FT2Vrc7NoteTableMSB
+.elseif .defined(::FT_N163)
+    exp_note_start = 5
+    exp_note_table_lsb = _FT2N163NoteTableLSB
+    exp_note_table_msb = _FT2N163NoteTableMSB
+.elseif .defined(::FT_FDS)
+    exp_note_start = 5
+    exp_note_table_lsb = _FT2FdsNoteTableLSB
+    exp_note_table_msb = _FT2FdsNoteTableMSB
+.endif
 
     lda FT_CHN_REPEAT,x        ;check repeat counter
     beq no_repeat
@@ -2047,7 +2126,7 @@ _FT2N163WaveTable:
 
 no_repeat:
     lda #0
-    sta FT_DISABLE_ATTACK
+    sta no_attack_flag
     lda FT_CHN_PTR_L,x         ;load channel pointer into temp
     sta FT_TEMP_PTR_L
     lda FT_CHN_PTR_H,x
@@ -2140,7 +2219,7 @@ override_pitch_envelope:
 
 disable_attack:
     lda #1
-    sta FT_DISABLE_ATTACK    
+    sta no_attack_flag    
     jmp read_byte 
 
 slide:
@@ -2157,80 +2236,76 @@ slide:
     ldy FT_TEMP_VAR2           ; start note
     stx FT_TEMP_VAR2           ; store slide index.    
     tax
-.if .defined(::FT_VRC6)
+.ifdef exp_note_start
     lda FT_TEMP_VAR1
-    cmp #7
-    beq note_table_saw
-note_table_regular:
-.elseif .defined(::FT_VRC7)
-    lda FT_TEMP_VAR1
-    cmp #5
-    bcs note_table_vrc7
-note_table_regular:
-.elseif .defined(::FT_N163)
-    lda FT_TEMP_VAR1
-    cmp #5
-    beq note_table_n163
-note_table_regular:
-.elseif .defined(::FT_FDS)
-    lda FT_TEMP_VAR1
-    cmp #5
-    beq note_table_fds
-note_table_regular:
+    cmp #exp_note_start
+    bcs note_table_expansion
 .endif
     sec                        ; subtract the pitch of both notes. TODO: PAL.
     lda _FT2NoteTableLSB,y
     sbc _FT2NoteTableLSB,x
-    sta FT_TEMP_PTR2_H
+    sta slide_delta_lo
     lda _FT2NoteTableMSB,y
     sbc _FT2NoteTableMSB,x
-.if .defined(::FT_VRC6)
+.ifdef exp_note_start
     jmp note_table_done
-note_table_saw:
+note_table_expansion:
     sec
-    lda _FT2SawNoteTableLSB,y
-    sbc _FT2SawNoteTableLSB,x
-    sta FT_TEMP_PTR2_H
-    lda _FT2SawNoteTableMSB,y
-    sbc _FT2SawNoteTableMSB,x
-note_table_done:
-.elseif .defined(::FT_VRC7)
-    jmp note_table_done
-note_table_vrc7:
-    sec
-    lda _FT2Vrc7NoteTableLSB,y
-    sbc _FT2Vrc7NoteTableLSB,x
-    sta FT_TEMP_PTR2_H
-    lda _FT2Vrc7NoteTableMSB,y
-    sbc _FT2Vrc7NoteTableMSB,x
-note_table_done:
-.elseif .defined(::FT_N163)
-    jmp note_table_done
-note_table_n163:
-    sec
-    lda _FT2N163NoteTableLSB,y
-    sbc _FT2N163NoteTableLSB,x
-    sta FT_TEMP_PTR2_H
-    lda _FT2N163NoteTableMSB,y
-    sbc _FT2N163NoteTableMSB,x
-note_table_done:
-.elseif .defined(::FT_FDS)
-    jmp note_table_done
-note_table_fds:
-    sec
-    lda _FT2FdsNoteTableLSB,y
-    sbc _FT2FdsNoteTableLSB,x
-    sta FT_TEMP_PTR2_H
-    lda _FT2FdsNoteTableMSB,y
-    sbc _FT2FdsNoteTableMSB,x
+    lda exp_note_table_lsb,y
+    sbc exp_note_table_lsb,x
+    sta slide_delta_lo
+    lda exp_note_table_msb,y
+    sbc exp_note_table_msb,x
 note_table_done:
 .endif
     ldx FT_TEMP_VAR2           ; slide index.
     sta FT_SLIDE_PITCH_H,x
-    lda FT_TEMP_PTR2_H
-    asl                        ; shift-left, we have 1 bit of fractional slide.
-    sta FT_SLIDE_PITCH_L,x
-    rol FT_SLIDE_PITCH_H,x     ; shift-left, we have 1 bit of fractional slide.
+    .if .defined(::FT_N163) || .defined(::FT_VRC7)
+        cpx #3 ; slide #3 is the first of expansion slides.
+        bcs positive_shift
+    .endif
+    negative_shift:
+        lda slide_delta_lo
+        asl                        ; shift-left, we have 1 bit of fractional slide.
+        sta FT_SLIDE_PITCH_L,x
+        rol FT_SLIDE_PITCH_H,x     ; shift-left, we have 1 bit of fractional slide.
+    .if .defined(::FT_N163) || .defined(::FT_VRC7)
+        jmp shift_done
+    positive_shift:
+        lda slide_delta_lo
+        sta FT_SLIDE_PITCH_L,x
+        .if ::FT_PITCH_SHIFT >= 1
+            lda FT_SLIDE_PITCH_H,x
+            cmp #$80
+            ror FT_SLIDE_PITCH_H,x 
+            ror FT_SLIDE_PITCH_L,x
+        .if ::FT_PITCH_SHIFT >= 2
+            lda FT_SLIDE_PITCH_H,x
+            cmp #$80
+            ror FT_SLIDE_PITCH_H,x 
+            ror FT_SLIDE_PITCH_L,x
+        .if ::FT_PITCH_SHIFT >= 3
+            lda FT_SLIDE_PITCH_H,x
+            cmp #$80
+            ror FT_SLIDE_PITCH_H,x 
+            ror FT_SLIDE_PITCH_L,x
+        .if ::FT_PITCH_SHIFT >= 4
+            lda FT_SLIDE_PITCH_H,x
+            cmp #$80
+            ror FT_SLIDE_PITCH_H,x 
+            ror FT_SLIDE_PITCH_L,x
+        .if ::FT_PITCH_SHIFT >= 5
+            lda FT_SLIDE_PITCH_H,x
+            cmp #$80
+            ror FT_SLIDE_PITCH_H,x 
+            ror FT_SLIDE_PITCH_L,x
+        .endif 
+        .endif
+        .endif
+        .endif
+        .endif
+    shift_done:
+    .endif
     ldx FT_TEMP_VAR1
     ldy #2
     lda (FT_TEMP_PTR1),y       ; re-read the target note (ugly...)
@@ -2253,7 +2328,7 @@ regular_note:
     lda #0
     sta FT_SLIDE_STEP,y
 sec_and_done:
-    lda FT_DISABLE_ATTACK
+    lda no_attack_flag
     bne no_attack
 .ifdef ::FT_VRC7
     cpx #5
@@ -2995,8 +3070,8 @@ _FT2ChannelToVolumeEnvelope:
 .if .defined(FT_CH11_ENVS)
     .byte FT_CH11_ENVS+FT_ENV_VOLUME_OFF
 .endif
-.if .defined(FT_CH13_ENVS)
-    .byte FT_CH13_ENVS+FT_ENV_VOLUME_OFF
+.if .defined(FT_CH12_ENVS)
+    .byte FT_CH12_ENVS+FT_ENV_VOLUME_OFF
 .endif
 
 _FT2ChannelToPitch:

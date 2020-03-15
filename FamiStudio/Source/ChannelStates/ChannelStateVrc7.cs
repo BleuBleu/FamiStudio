@@ -41,7 +41,7 @@ namespace FamiStudio
         private int GetOctave(ref int period)
         {
             var octave = 0;
-            while (period > 0x200)
+            while (period > 0x100)
             {
                 period >>= 1;
                 octave++;
@@ -63,7 +63,7 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                var period  = GetPeriod(3);
+                var period  = GetPeriod();
                 var octave  = GetOctave(ref period);
                 var volume  = 15 - GetVolume();
 

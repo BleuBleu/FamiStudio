@@ -49,7 +49,7 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                var period = GetPeriod(3);
+                var period = GetPeriod();
                 var volume = GetVolume();
 
                 // We clamp our periods to 16-bit for convenience, expand to 18-bit.

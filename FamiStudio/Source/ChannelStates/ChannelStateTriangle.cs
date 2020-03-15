@@ -4,7 +4,7 @@ namespace FamiStudio
 {
     public class ChannelStateTriangle : ChannelState
     {
-        public ChannelStateTriangle(int apuIdx, int channelIdx, bool pal) : base(apuIdx, channelIdx, pal)
+        public ChannelStateTriangle(int apuIdx, int channelType, bool pal) : base(apuIdx, channelType, pal)
         {
         }
 

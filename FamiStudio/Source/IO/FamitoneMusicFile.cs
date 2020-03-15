@@ -101,13 +101,7 @@ namespace FamiStudio
                 {
                     line += $"{ll}song{i}ch{chn},";
                 }
-
-                if (project.ExpansionAudio == Project.ExpansionN163)
-                {
-                    for (int chn = project.ExpansionNumChannels; chn < 8; ++chn)
-                        line += $"$0000,";
-                }
-
+ 
                 int tempoPal  = 256 * song.Tempo / (50 * 60 / 24);
                 int tempoNtsc = 256 * song.Tempo / (60 * 60 / 24);
 
@@ -242,11 +236,11 @@ namespace FamiStudio
 
                     switch (i)
                     {
-                        case Envelope.FdsModulation:
-                            processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();
-                            break;
                         case Envelope.N163Waveform:
                             processed = env.BuildN163Waveform();
+                            break;
+                        case Envelope.FdsModulation:
+                            processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();
                             break;
                         case Envelope.FdsWaveform:
                             processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
@@ -648,7 +642,7 @@ namespace FamiStudio
                             {
                                 var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumChannels);
 
-                                if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _, out _))
+                                if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _))
                                 {
                                     patternBuffer.Add($"${0x61:x2}");
                                     patternBuffer.Add($"${(byte)stepSize:x2}");

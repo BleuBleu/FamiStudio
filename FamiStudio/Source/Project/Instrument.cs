@@ -99,11 +99,6 @@ namespace FamiStudio
             {
                 return expansion == Project.ExpansionN163;
             }
-            else if (envelopeType == Envelope.DutyCycle)
-            {
-                return expansion == Project.ExpansionNone ||
-                       expansion == Project.ExpansionVrc6;
-            }
 
             return false;
         }
