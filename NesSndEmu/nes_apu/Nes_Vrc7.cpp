@@ -28,8 +28,7 @@ void Nes_Vrc7::reset()
 
 void Nes_Vrc7::volume(double v)
 {
-	// Taken from FamiTracker
-	vol = v * 4.46; 
+	vol = v * 8.76; 
 }
 
 void Nes_Vrc7::reset_opll()

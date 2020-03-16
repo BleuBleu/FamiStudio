@@ -68,17 +68,16 @@ private:
 	
 	enum { reg_count = 0x80 };
 	BOOST::uint8_t reg [reg_count];
-	Blip_Synth<blip_good_quality,15> synth;
+	Blip_Synth<blip_good_quality,225> synth;
 	Blip_Buffer* buffer;
 
 	short shadow_internal_regs[shadow_internal_regs_count];
 
 	BOOST::uint8_t& access();
 	void run_until( cpu_time_t );
-	void sum_output(cpu_time_t );
 };
 
-inline void Nes_Namco::volume( double v ) { synth.volume( 0.10 / osc_count * v ); }
+inline void Nes_Namco::volume( double v ) { synth.volume( 0.66 * v ); }
 
 inline void Nes_Namco::treble_eq( const blip_eq_t& eq ) { synth.treble_eq( eq ); }
 

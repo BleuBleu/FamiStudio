@@ -26,7 +26,7 @@ void Nes_Sunsoft::reset()
 
 void Nes_Sunsoft::volume( double v )
 {
-	vol = v * 2.0f; // MATTT: Figure out real ratio.
+	vol = v * 4.25f;
 }
 
 void Nes_Sunsoft::reset_psg()

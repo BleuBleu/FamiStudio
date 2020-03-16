@@ -933,6 +933,11 @@ compute_volume:
     tax
     lda _FT2VolumeTable, x 
 
+.if .defined(::FT_FDS) && idx = 5
+    ; FDS volume is 6-bits, but clamped to 32. Just double it.
+    asl
+.endif
+
 .if .defined(FT_VRC6) && idx = 7 
     ; VRC6 saw has 6-bits
     asl

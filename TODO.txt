@@ -27,7 +27,6 @@
 - All expansions.
 	- Finigh channel code, clean.
 	- Import/export all formats.
-	- Compare all channel volumes meticulously with nsfplay.
 	- Namco:
 		- Import/export fine pith scaling (all foramts)
 		- As we add more channels, its support to start sounding like shit. Why doesnt it?
@@ -46,6 +45,7 @@
 		- Make sure FamiTracker import/export of slides works.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.
+- BUG: oldMaxInstanceLength assert playing in megaman boss song (undo a lot).
 
 TESTING:
 ========

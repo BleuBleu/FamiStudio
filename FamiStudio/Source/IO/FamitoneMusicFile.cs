@@ -282,7 +282,7 @@ namespace FamiStudio
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Volume]]);
                     var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Arpeggio]]);
                     var pitchEnvIdx    = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Pitch]]);
-                    var dutyEnvIdx     = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.DutyCycle]]);
+                    var dutyEnvIdx     = instrument.IsEnvelopeActive(Envelope.DutyCycle) ? uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.DutyCycle]]) : uniqueEnvelopes.IndexOfKey(defaultEnvCRC);
 
                     if (kernel == FamiToneKernel.FamiTone2FS)
                     {

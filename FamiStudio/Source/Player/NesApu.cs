@@ -333,6 +333,7 @@ namespace FamiStudio
                     // This is mainly because the instrument player might not update all the channels all the time.
                     WriteRegister(apuIdx, N163_ADDR, N163_REG_VOLUME); 
                     WriteRegister(apuIdx, N163_DATA, (numExpansionChannels - 1) << 4);
+                    TrebleEq(apuIdx, expansion, -15, 4000, sampleRate);
                     break;
                 case APU_EXPANSION_SUNSOFT:
                     WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);

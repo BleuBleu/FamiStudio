@@ -73,24 +73,6 @@ void Nes_Namco::end_frame( cpu_time_t time )
 
 #include BLARGG_ENABLE_OPTIMIZER
 
-void Nes_Namco::sum_output(cpu_time_t time)
-{
-	int active_oscs = ((reg[0x7f] >> 4) & 7) + 1;
-	int sample = 0;
-
-	for (int i = osc_count - active_oscs; i < osc_count; i++)
-		sample += oscs[i].sample;
-	sample /= active_oscs; // MATTT: Compare volume with nsfplay or something.
-
-	// output impulse if amplitude changed
-	int delta = sample - last_amp;
-	if (delta)
-	{
-		last_amp = sample;
-		synth.offset(time, delta, buffer);
-	}
-}
-
 void Nes_Namco::run_until(cpu_time_t end_time)
 {
 	require(end_time >= last_time);
@@ -109,6 +91,9 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 		int volume = osc_reg[7] & 15;
 		int wave_size = (8 - ((osc_reg[4] >> 2) & 7)) * 4;
 
+		// This is not very accurate. We always do the entire 15-cycle channel update.
+		// We should only update until end_time. This will fail to emulate mid-update
+		// register changes, but in practice should be OK.
 		if (osc.output && volume && freq && wave_size)
 		{
 			// read wave sample
@@ -123,8 +108,6 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 
 			osc.sample = (sample & 15) * volume;
 
-			sum_output(time);
-
 			osc_reg[5] = (phase >> 16) & 0xff;
 			osc_reg[3] = (phase >>  8) & 0xff;
 			osc_reg[1] = (phase >>  0) & 0xff;
@@ -132,7 +115,19 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 		else
 		{
 			osc.sample = 0;
-			sum_output(time);
+		}
+
+		float sum = 0.0f;
+		for (int i = osc_count - active_oscs; i < osc_count; i++)
+			sum += oscs[i].sample;
+		int sample = (int)(sum / min(6, max(1, active_oscs)) + 0.5f); 
+
+		// output impulse if amplitude changed
+		int delta = sample - last_amp;
+		if (delta)
+		{
+			last_amp = sample;
+			synth.offset(time, delta, buffer);
 		}
 
 		time += osc_update_time;
