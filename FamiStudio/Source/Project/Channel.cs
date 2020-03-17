@@ -169,16 +169,17 @@ namespace FamiStudio
 
         public bool SupportsReleaseNotes => type != Dpcm;
         public bool SupportsSlideNotes => type != Noise && type != Dpcm;
-        public bool SupportsVibrato => type != Noise && type != Dpcm;
 
         public bool SupportsEffect(int effect)
         {
             switch (effect)
             {
                 case Note.EffectVolume:       return type != Dpcm;
-                case Note.EffectFinePitch:    return SupportsVibrato;
-                case Note.EffectVibratoSpeed: return SupportsVibrato;
-                case Note.EffectVibratoDepth: return SupportsVibrato;
+                case Note.EffectFinePitch:    return type != Noise && type != Dpcm;
+                case Note.EffectVibratoSpeed: return type != Noise && type != Dpcm;
+                case Note.EffectVibratoDepth: return type != Noise && type != Dpcm;
+                case Note.EffectFdsModDepth:  return type == FdsWave;
+                case Note.EffectFdsModSpeed:  return type == FdsWave;
             }
 
             return true;

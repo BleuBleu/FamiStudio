@@ -12,10 +12,6 @@
 	- Add better tempo logic to famitone2fs.
 	- Make bar length more flexible (for short patterns too).
 - NSF:
-	x Fine pitch track
-	x Duty envelopes.
-	- Expansions
-	- Retest smooth vibrato on/off.
 	- Minor improvement: _FT2SetInstrument called on stop notes... silly.
 	- Minor improvement: Envelopes run even when we had a stop note.
 - ROM export (Mapper 31):
@@ -42,10 +38,13 @@
 	- MMC5:
 	- FDS:
 		- Mod delay or mod track (need mod track for NSF import probably... Will need wider range on fx panel)
+			- Extend FX panel range
+			- Import/export all formats.
 		- Make sure FamiTracker import/export of slides works.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.
 - BUG: oldMaxInstanceLength assert playing in megaman boss song (undo a lot).
+- FDS mod icon + mod effect icon.
 
 TESTING:
 ========
@@ -59,6 +58,8 @@ TESTING:
 - Binary FTM import. Try opening all the demo songs from FT.
 - Duty cycle envelopes, make sure all import/export format support it.
 - Fix saw in Shovel knight.
+- Retest smooth vibrato on/off.
+- Copy paste between channels that dont support the same effects.
 
 Breaking changes
 ================

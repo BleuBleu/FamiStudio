@@ -2454,6 +2454,8 @@ int CNSFCore::GetState(int channel, int state, int sub)
 					}
 				case STATE_FDSWAVETABLE:       return mWave_FDS.nWaveTable[sub];
 				case STATE_FDSMODULATIONTABLE: return mWave_FDS.nLFO_Table[sub * 2];
+				case STATE_FDSMODULATIONDEPTH: return mWave_FDS.bLFO_On && (mWave_FDS.nSweep_Mode & 2) ? mWave_FDS.nSweep_Gain : 0;
+				case STATE_FDSMODULATIONSPEED: return mWave_FDS.bLFO_On ? mWave_FDS.nLFO_Freq.W : 0;
 			}
 		}
 		case CHANNEL_VRC7FM1:

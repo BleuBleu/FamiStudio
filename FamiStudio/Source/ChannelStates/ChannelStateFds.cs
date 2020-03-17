@@ -5,6 +5,10 @@ namespace FamiStudio
 {
     class ChannelStateFds : ChannelState
     {
+        byte   modDelayCounter;
+        ushort modDepth;
+        ushort modSpeed;
+
         public ChannelStateFds(int apuIdx, int channelIdx) : base(apuIdx, channelIdx, false)
         {
             maximumPeriod = NesApu.MaximumPeriod12Bit;
@@ -53,20 +57,36 @@ namespace FamiStudio
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80 | (volume << 1));
 
                 if (noteTriggered)
+                {
                     WriteRegister(NesApu.FDS_SWEEP_BIAS, 0);
 
-                if (note.Instrument != null)
-                {
-                    Debug.Assert(note.Instrument.ExpansionType == Project.ExpansionFds);
+                    if (note.Instrument != null)
+                    {
+                        Debug.Assert(note.Instrument.ExpansionType == Project.ExpansionFds);
+                        modDelayCounter = note.Instrument.FdsModDelay;
+                        modDepth = note.Instrument.FdsModDepth;
+                        modSpeed = note.Instrument.FdsModSpeed;
+                    }
+                    else
+                    {
+                        modDelayCounter = 0;
+                    }
+                }
+            }
 
-                    WriteRegister(NesApu.FDS_MOD_HI, (note.Instrument.FdsModRate >> 8) & 0xff);
-                    WriteRegister(NesApu.FDS_MOD_LO, (note.Instrument.FdsModRate >> 0) & 0xff);
-                    WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80 | note.Instrument.FdsModDepth); 
-                }
-                else
-                {
-                    WriteRegister(NesApu.FDS_MOD_HI, 0x80);
-                }
+            if (note.HasFdsModDepth) modDepth = note.FdsModDepth;
+            if (note.HasFdsModSpeed) modSpeed = note.FdsModSpeed;
+
+            if (modDelayCounter == 0)
+            {
+                WriteRegister(NesApu.FDS_MOD_HI, (modSpeed >> 8) & 0xff);
+                WriteRegister(NesApu.FDS_MOD_LO, (modSpeed >> 0) & 0xff);
+                WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80 | modDepth);
+            }
+            else
+            {
+                WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+                modDelayCounter--;
             }
 
             base.UpdateAPU();

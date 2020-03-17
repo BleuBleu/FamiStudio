@@ -174,6 +174,7 @@ namespace FamiStudio
         int effectNoteIdx;
         int selectionFrameMin = -1;
         int selectionFrameMax = -1;
+        int[] supportedEffects;
         bool captureThresholdMet = false;
         CaptureOperation captureOperation = CaptureOperation.None;
 
@@ -264,6 +265,7 @@ namespace FamiStudio
             editChannel = trackIdx;
             noteTooltip = "";
 
+            BuildSupportEffectList();
             ClearSelection();
             UpdateRenderCoords();
             CenterScroll(patternIdx);
@@ -277,6 +279,7 @@ namespace FamiStudio
             {
                 editChannel = trackIdx;
                 noteTooltip = "";
+                BuildSupportEffectList();
                 ConditionalInvalidate();
             }
         }
@@ -297,6 +300,23 @@ namespace FamiStudio
             CenterEnvelopeScroll();
             ClampScroll();
             ConditionalInvalidate();
+        }
+
+        private void BuildSupportEffectList()
+        {
+            int cnt = 0;
+            for (int i = 0; i < Note.EffectCount; i++)
+            {
+                if (Song.Channels[editChannel].SupportsEffect(i))
+                    cnt++;
+            }
+
+            supportedEffects = new int[cnt];
+            for (int i = 0, j = 0; i < Note.EffectCount; i++)
+            {
+                if (Song.Channels[editChannel].SupportsEffect(i))
+                    supportedEffects[j++] = i;
+            }
         }
 
         private void CenterEnvelopeScroll()
@@ -422,6 +442,8 @@ namespace FamiStudio
             bmpEffects[Note.EffectVibratoDepth] = g.CreateBitmapFromResource("VibratoSmall");
             bmpEffects[Note.EffectFinePitch] = g.CreateBitmapFromResource("PitchSmall");
             bmpEffects[Note.EffectSpeed] = g.CreateBitmapFromResource("SpeedSmall");
+            bmpEffects[Note.EffectFdsModDepth] = g.CreateBitmapFromResource("VibratoSmall");
+            bmpEffects[Note.EffectFdsModSpeed] = g.CreateBitmapFromResource("VibratoSmall");
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
             bmpSlide = g.CreateBitmapFromResource("Slide");
@@ -655,12 +677,14 @@ namespace FamiStudio
 
                     int effectButtonY = 0;
 
-                    for (int i = 0; i < Note.EffectCount; i++, effectButtonY += effectButtonSizeY)
+                    for (int i = 0; i < supportedEffects.Length; i++, effectButtonY += effectButtonSizeY)
                     {
+                        var effectIdx = supportedEffects[i];
+
                         g.PushTranslation(0, effectButtonY);
                         g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
-                        g.DrawBitmap(bmpEffects[i], effectIconPosX, effectIconPosY);
-                        g.DrawText(Note.EffectNames[i], selectedEffectIdx == i ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
+                        g.DrawBitmap(bmpEffects[effectIdx], effectIconPosX, effectIconPosY);
+                        g.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
                         g.PopTransform();
                     }
 
@@ -891,9 +915,10 @@ namespace FamiStudio
                 }
                 if (pasteFx)
                 {
-                    note.Pitch = newNote.Pitch;
-                    note.Speed = newNote.Speed;
-                    note.Vibrato = newNote.Vibrato;
+                    // MATTT: Missing effects here.
+                    note.FinePitch  = newNote.FinePitch;
+                    note.Speed      = newNote.Speed;
+                    note.RawVibrato = newNote.RawVibrato;
                 }
 
                 return note;
@@ -1425,17 +1450,13 @@ namespace FamiStudio
         {
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[effectPatternIdx];
+            var ratio    = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
+            var minValue = Note.GetEffectMinValue(Song, selectedEffectIdx);
+            var maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
+            var newValue = (byte)Math.Round(ratio * (maxValue - minValue) + minValue);
 
-            if (channel.SupportsEffect(selectedEffectIdx))
-            {
-                var ratio    = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
-                var minValue = Note.GetEffectMinValue(Song, selectedEffectIdx);
-                var maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
-                var newValue = (byte)Math.Round(ratio * (maxValue - minValue) + minValue);
-
-                pattern.Notes[effectNoteIdx].SetEffectValue(selectedEffectIdx, newValue);
-                pattern.UpdateLastValidNotes();
-            }
+            pattern.Notes[effectNoteIdx].SetEffectValue(selectedEffectIdx, newValue);
+            pattern.UpdateLastValidNotes();
 
             ConditionalInvalidate();
         }
@@ -1829,9 +1850,9 @@ namespace FamiStudio
             else if (left && IsMouseInEffectList(e))
             {
                 int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY;
-                if (effectIdx >= 0 && effectIdx < Note.EffectCount)
+                if (effectIdx >= 0 && effectIdx < supportedEffects.Length)
                 {
-                    selectedEffectIdx = effectIdx;
+                    selectedEffectIdx = supportedEffects[effectIdx];
                     ConditionalInvalidate();
                 }
             }
@@ -2477,6 +2498,7 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
+                BuildSupportEffectList();
                 UpdateRenderCoords();
                 ClampScroll();
                 ConditionalInvalidate();

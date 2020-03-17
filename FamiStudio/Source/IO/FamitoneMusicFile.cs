@@ -412,7 +412,7 @@ namespace FamiStudio
                                 {
                                     if (note.VibratoDepth == 0 || note.VibratoSpeed == 0)
                                     {
-                                        p.Notes[n].Vibrato = 0;
+                                        p.Notes[n].RawVibrato = 0;
                                         vibratoEnvelopeNames[0] = defaultPitchEnvName;
                                         continue;
                                     }
@@ -427,7 +427,7 @@ namespace FamiStudio
                                         lines.Add($"\t{db} {String.Join(",", processed.Select(i => $"${i:x2}"))}");
 
                                         uniqueEnvelopes[crc] = processed;
-                                        vibratoEnvelopeNames[note.Vibrato] = name;
+                                        vibratoEnvelopeNames[note.RawVibrato] = name;
                                     }
                                 }
                             }
@@ -591,10 +591,10 @@ namespace FamiStudio
                         if (note.HasVibrato)
                         {
                             patternBuffer.Add($"${0x63:x2}");
-                            patternBuffer.Add($"{lo}({vibratoEnvelopeNames[note.Vibrato]})");
-                            patternBuffer.Add($"{hi}({vibratoEnvelopeNames[note.Vibrato]})");
+                            patternBuffer.Add($"{lo}({vibratoEnvelopeNames[note.RawVibrato]})");
+                            patternBuffer.Add($"{hi}({vibratoEnvelopeNames[note.RawVibrato]})");
 
-                            if (note.Vibrato == 0)
+                            if (note.RawVibrato == 0)
                                 patternBuffer.Add($"${0x64:x2}");
                         }
 

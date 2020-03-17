@@ -188,7 +188,7 @@ namespace FamiStudio
                     if (pattern.Notes[n].VibratoDepth == 0 ||
                         pattern.Notes[n].VibratoSpeed == 0)
                     {
-                        pattern.Notes[n].Vibrato = 0;
+                        pattern.Notes[n].RawVibrato = 0;
                     }
                     break;
             }

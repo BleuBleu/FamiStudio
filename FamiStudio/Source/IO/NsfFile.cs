@@ -266,15 +266,17 @@ namespace FamiStudio
         const int STATE_DPCMPITCH          = 7;
         const int STATE_FDSWAVETABLE       = 8;
         const int STATE_FDSMODULATIONTABLE = 9;
-        const int STATE_VRC7PATCH          = 10;
-        const int STATE_VRC7PATCHREG       = 11;
-        const int STATE_VRC7OCTAVE         = 12;
-        const int STATE_VRC7TRIGGER        = 13;
-        const int STATE_VRC7SUSTAIN        = 14;
-        const int STATE_N163WAVEPOS        = 15;
-        const int STATE_N163WAVESIZE       = 16;
-        const int STATE_N163WAVE           = 17;
-        const int STATE_N16NUMCHANNELS     = 18;
+        const int STATE_FDSMODULATIONDEPTH = 10;
+        const int STATE_FDSMODULATIONSPEED = 11;
+        const int STATE_VRC7PATCH          = 12;
+        const int STATE_VRC7PATCHREG       = 13;
+        const int STATE_VRC7OCTAVE         = 14;
+        const int STATE_VRC7TRIGGER        = 15;
+        const int STATE_VRC7SUSTAIN        = 16;
+        const int STATE_N163WAVEPOS        = 17;
+        const int STATE_N163WAVESIZE       = 18;
+        const int STATE_N163WAVE           = 19;
+        const int STATE_N16NUMCHANNELS     = 10;
 
         class ChannelState
         {
@@ -288,6 +290,9 @@ namespace FamiStudio
             public int  volume  = 15;
             public int  octave  = -1;
             public int  trigger = Stopped;
+
+            public int fdsModDepth = 0;
+            public int fdsModSpeed = 0;
 
             public Instrument instrument = null;
         };
@@ -598,6 +603,23 @@ namespace FamiStudio
 
                     Envelope.ConvertFdsModulationToAbsolute(modEnv);
                     instrument = GetFdsInstrument(wavEnv, modEnv);
+
+                    int modDepth = NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONDEPTH, 0);
+                    int modSpeed = NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONSPEED, 0);
+
+                    if (state.fdsModDepth != modDepth)
+                    {
+                        var pattern = GetOrCreatePattern(channel, p);
+                        pattern.Notes[n].FdsModDepth = (byte)modDepth;
+                        state.fdsModDepth = modDepth;
+                    }
+
+                    if (state.fdsModSpeed != modSpeed)
+                    {
+                        var pattern = GetOrCreatePattern(channel, p);
+                        pattern.Notes[n].FdsModSpeed = (ushort)modSpeed;
+                        state.fdsModSpeed = modSpeed;
+                    }
                 }
                 else if (channel.Type >= Channel.N163Wave1 &&
                          channel.Type <= Channel.N163Wave8)
@@ -683,7 +705,7 @@ namespace FamiStudio
                         if (channel.Type >= Channel.N163Wave1 && channel.Type <= Channel.N163Wave8 ||
                             channel.Type >= Channel.Vrc7Fm1   && channel.Type <= Channel.Vrc7Fm6)
                         {
-                            finePitch /= 8;
+                            finePitch /= 8; // MATTT
                         }
 
                         var pitch = (sbyte)Utils.Clamp(finePitch, Note.FinePitchMin, Note.FinePitchMax);

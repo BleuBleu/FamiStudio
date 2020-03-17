@@ -224,7 +224,7 @@ namespace FamiStudio
 
             modEnv.ConvertFdsModulationToAbsolute();
 
-            instrument.FdsModRate  = (ushort)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+            instrument.FdsModSpeed  = (ushort)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             instrument.FdsModDepth = (byte)  BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
           /*instrument.FdsModDelay = (byte)  BitConverter.ToInt32(bytes, idx);*/ idx += sizeof(int);
 

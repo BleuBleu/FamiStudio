@@ -292,9 +292,15 @@ namespace FamiStudio
             buffer.Serialize(ref color);
             buffer.Serialize(ref song);
 
-            for (int i = 0; i < MaxLength; i++)
+            if (buffer.Version < 5)
             {
-                notes[i].SerializeState(buffer);
+                for (int i = 0; i < MaxLength; i++)
+                    notes[i].SerializeStatePreVer5(buffer);
+            }
+            else
+            {
+                for (int i = 0; i < MaxLength; i++)
+                    notes[i].SerializeState(buffer);
             }
 
             // At version 3 (FamiStudio 1.2.0), we extended the range of notes.

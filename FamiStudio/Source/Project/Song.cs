@@ -390,13 +390,13 @@ namespace FamiStudio
                         {
                             // Converts old Jump effects to loop points.
                             // The first Jump effect will give us our loop point.
-                            if (loopPoint == 0 && pattern.Notes[j].Jump != Note.JumpInvalid)
+                            if (loopPoint == 0 && pattern.Notes[j].FxJump != 0xff)
                             {
-                                SetLoopPoint(pattern.Notes[j].Jump);
+                                SetLoopPoint(pattern.Notes[j].FxJump);
                             }
 
                             // Converts old Skip effects to custom pattern instances lengths.
-                            if (pattern.Notes[j].Skip != Note.SkipInvalid)
+                            if (pattern.Notes[j].FxSkip != 0xff)
                             {
                                 SetPatternLength(i, j + 1);
                             }

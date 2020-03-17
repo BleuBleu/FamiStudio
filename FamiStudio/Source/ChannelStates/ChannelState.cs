@@ -84,25 +84,24 @@ namespace FamiStudio
                         newNote.Value = (byte)newNote.SlideNoteTarget;
                 }
 
+                if (!newNote.HasVolume      && note.HasVolume)      { newNote.Volume      = note.Volume;      }
+                if (!newNote.HasFinePitch   && note.HasFinePitch)   { newNote.FinePitch   = note.FinePitch;   }
+                if (!newNote.HasFdsModDepth && note.HasFdsModDepth) { newNote.FdsModDepth = note.FdsModDepth; }
+                if (!newNote.HasFdsModSpeed && note.HasFdsModSpeed) { newNote.FdsModSpeed = note.FdsModSpeed; }
+
                 PlayNote(newNote);
             }
-            else if (newNote.HasVolume)
-            {
-                note.Volume = newNote.Volume;
-            }
-            else if (newNote.HasFinePitch)
-            {
-                note.FinePitch = newNote.FinePitch;
+            else
+            { 
+                if (newNote.HasVolume)      { note.Volume      = newNote.Volume;      }
+                if (newNote.HasFinePitch)   { note.FinePitch   = newNote.FinePitch;   }
+                if (newNote.HasFdsModDepth) { note.FdsModDepth = newNote.FdsModDepth; }
+                if (newNote.HasFdsModSpeed) { note.FdsModSpeed = newNote.FdsModSpeed; }
             }
         }
 
         public void PlayNote(Note newNote, bool forceInstrumentChange = false)
         {
-            if (!newNote.HasVolume)
-                newNote.Volume = note.Volume;
-            if (!newNote.HasFinePitch)
-                newNote.FinePitch = note.FinePitch;
-
             if (newNote.IsRelease)
             {
                 // Channels with custom release code will do their own thing.

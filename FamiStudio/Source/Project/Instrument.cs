@@ -16,9 +16,9 @@ namespace FamiStudio
         // FDS
         private byte fdsWavPreset = Envelope.WavePresetSine;
         private byte fdsModPreset = Envelope.WavePresetFlat;
-        private ushort fdsModRate;
+        private ushort fdsModSpeed;
         private byte fdsModDepth;
-        //private byte fdsModDelay;
+        private byte fdsModDelay;
 
         // N163
         private byte n163WavePreset = Envelope.WavePresetSine;
@@ -153,9 +153,9 @@ namespace FamiStudio
             }
         }
 
-        public ushort FdsModRate  { get => fdsModRate;  set => fdsModRate  = value; }
+        public ushort FdsModSpeed { get => fdsModSpeed; set => fdsModSpeed = value; }
         public byte   FdsModDepth { get => fdsModDepth; set => fdsModDepth = value; }
-        //public byte FdsModDelay => fdsModDelay;
+        public byte FdsModDelay => fdsModDelay;
 
         private void UpdateN163WaveEnvelope()
         {
@@ -187,9 +187,9 @@ namespace FamiStudio
                         case Project.ExpansionFds:
                             buffer.Serialize(ref fdsWavPreset);
                             buffer.Serialize(ref fdsModPreset);
-                            buffer.Serialize(ref fdsModRate);
+                            buffer.Serialize(ref fdsModSpeed);
                             buffer.Serialize(ref fdsModDepth); 
-                            //buffer.Serialize(ref fdsModDelay);
+                            buffer.Serialize(ref fdsModDelay);
                             break;
                         case Project.ExpansionN163:
                             buffer.Serialize(ref n163WavePreset);
@@ -264,7 +264,7 @@ namespace FamiStudio
         public const int ParamFdsModulationPreset = 1;
         public const int ParamFdsModulationSpeed = 2;
         public const int ParamFdsModulationDepth = 3;
-        //public const int ParamFdsModulationDelay = 4;
+        public const int ParamFdsModulationDelay = 4;
 
         // N163
         public const int ParamN163WavePreset = 5;
@@ -344,7 +344,7 @@ namespace FamiStudio
 
         static readonly int[] FdsParams = new[]
         {
-            ParamFdsWavePreset, ParamFdsModulationPreset, ParamFdsModulationSpeed, ParamFdsModulationDepth //, ParamFdsModulationDelay
+            ParamFdsWavePreset, ParamFdsModulationPreset, ParamFdsModulationSpeed, ParamFdsModulationDepth, ParamFdsModulationDelay
         };
 
         static readonly int[] N163Params = new[]
@@ -449,9 +449,9 @@ namespace FamiStudio
                 // FDS
                 case ParamFdsWavePreset          : return fdsWavPreset;
                 case ParamFdsModulationPreset    : return fdsModPreset;
-                case ParamFdsModulationSpeed     : return fdsModRate; 
+                case ParamFdsModulationSpeed     : return fdsModSpeed; 
                 case ParamFdsModulationDepth     : return fdsModDepth;
-                //case ParamFdsModulationDelay     : return fdsModDelay;
+                case ParamFdsModulationDelay     : return fdsModDelay;
                                                  
                 // N163                         
                 case ParamN163WavePreset         : return n163WavePreset;
@@ -511,9 +511,9 @@ namespace FamiStudio
                     fdsModPreset = (byte)val; // MATTT : Create property.
                     envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, val);
                     break;
-                case ParamFdsModulationSpeed: fdsModRate  = (ushort)val; break;
+                case ParamFdsModulationSpeed: fdsModSpeed  = (ushort)val; break;
                 case ParamFdsModulationDepth: fdsModDepth = (byte)val; break;
-                //case ParamFdsModulationDelay: fdsModDelay = (byte)val; break;
+                case ParamFdsModulationDelay: fdsModDelay = (byte)val; break;
 
                 // N163
                 case ParamN163WavePreset: N163WavePreset = (byte)val; break;

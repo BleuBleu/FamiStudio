@@ -126,15 +126,17 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_DPCMPITCH          7
 #define STATE_FDSWAVETABLE       8
 #define STATE_FDSMODULATIONTABLE 9
-#define STATE_VRC7PATCH          10
-#define STATE_VRC7PATCHREG       11
-#define STATE_VRC7OCTAVE         12
-#define STATE_VRC7TRIGGER        13
-#define STATE_VRC7SUSTAIN        14
-#define STATE_N163WAVEPOS        15
-#define STATE_N163WAVESIZE       16
-#define STATE_N163WAVE           17
-#define STATE_N16NUMCHANNELS     18
+#define STATE_FDSMODULATIONDEPTH 10
+#define STATE_FDSMODULATIONSPEED 11
+#define STATE_VRC7PATCH          12
+#define STATE_VRC7PATCHREG       13
+#define STATE_VRC7OCTAVE         14
+#define STATE_VRC7TRIGGER        15
+#define STATE_VRC7SUSTAIN        16
+#define STATE_N163WAVEPOS        17
+#define STATE_N163WAVESIZE       18
+#define STATE_N163WAVE           19
+#define STATE_N16NUMCHANNELS     10
 
 #include <math.h>
 
