@@ -27,6 +27,7 @@
 		- Import/export fine pith scaling (all foramts)
 		- As we add more channels, its support to start sounding like shit. Why doesnt it?
 	- VRC7
+		- NSF import sketchy.
 		- Figure out whole pitch/slide thing.
 			- In FamiTracker, 1xx,2xx doesnt work well with VRC7, clamps period, doesnt change octave
 			- In FamiTracker, Qxx,Rxx works OK since can only change 1 octave at most.
@@ -45,6 +46,8 @@
 - Make all I/O class non-static.
 - BUG: oldMaxInstanceLength assert playing in megaman boss song (undo a lot).
 - FDS mod icon + mod effect icon.
+- Basic note dragging.
+- BUG: Soloing channels in VRC7 doesnt unsolo all of them?
 
 TESTING:
 ========

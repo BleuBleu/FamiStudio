@@ -535,6 +535,10 @@ namespace FamiStudio
                 {
                     volume = Math.Min(Note.VolumeMax, volume >> 1);
                 }
+                else if (channel.Type >= Channel.Vrc7Fm1 && channel.Type <= Channel.Vrc7Fm6)
+                {
+                    volume = 15 - volume;
+                }
 
                 var hasTrigger = true;
                 var hasPeriod  = true;
@@ -558,7 +562,6 @@ namespace FamiStudio
                     }
 
                     octave = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
-                    period <<= 2; // MATTT
                 }
                 else
                 {
@@ -680,7 +683,12 @@ namespace FamiStudio
                             note = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
 
                         if (hasOctave)
+                        {
+                            Debug.Assert(note <= 12);
                             note += octave * 12;
+                            period *= (1 << octave);
+                            finePitch = period - noteTable[note];
+                        }
                     }
 
                     if (note < Note.MusicalNoteMin || note > Note.MusicalNoteMax)
