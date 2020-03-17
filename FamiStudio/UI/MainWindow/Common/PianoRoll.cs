@@ -1852,7 +1852,7 @@ namespace FamiStudio
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 ResizeEnvelope(e);
             }
-            else if ((left || right) && editMode == EditionMode.Enveloppe && IsMouseInNoteArea(e))
+            else if ((left || right) && editMode == EditionMode.Enveloppe && IsMouseInNoteArea(e) && editInstrument.Envelopes[editEnvelope].Length > 0)
             {
                 StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
