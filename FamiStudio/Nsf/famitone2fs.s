@@ -579,6 +579,8 @@ set_pitch_envelopes:
 
 .proc FamiToneMusicPlay
 
+    tmp = FT_TEMP_PTR_L
+
     ldx FT_SONG_LIST_L
     stx FT_TEMP_PTR_L
     ldx FT_SONG_LIST_H
@@ -589,34 +591,81 @@ set_pitch_envelopes:
     bcs skip
 
 .if ::FT_NUM_CHANNELS = 5
-    asl a                      ;multiply song number by 14
-    sta FT_TEMP_PTR_L         ;use pointer LSB as temp variable
-    asl a
+    asl
+    sta tmp
+    asl
     tax
-    asl a
-    adc FT_TEMP_PTR_L
-    stx FT_TEMP_PTR_L
-    adc FT_TEMP_PTR_L
+    asl
+    adc tmp
+    stx tmp
+    adc tmp
 .elseif ::FT_NUM_CHANNELS = 6
-    ; MATTT
+    asl
+    asl
+    asl
+    asl
 .elseif ::FT_NUM_CHANNELS = 7
-    asl                        ;multiply song number by 18
-    sta FT_TEMP_PTR_L
+    asl
+    sta tmp
     asl
     asl
     asl
-    adc FT_TEMP_PTR_L    
+    adc tmp  
 .elseif ::FT_NUM_CHANNELS = 8
-    asl                        ;multiply song number by 20
-    asl
-    sta FT_TEMP_PTR_L
     asl
     asl
-    adc FT_TEMP_PTR_L
+    sta tmp
+    asl
+    asl
+    adc tmp
+.elseif ::FT_NUM_CHANNELS = 9
+    asl
+    sta tmp
+    asl
+    tax
+    asl
+    asl
+    adc tmp
+    stx tmp
+    adc tmp
+.elseif ::FT_NUM_CHANNELS = 10
+    asl
+    asl
+    asl
+    sta tmp
+    asl
+    adc tmp  
 .elseif ::FT_NUM_CHANNELS = 11
-    ; MATTT
+    asl
+    sta tmp
+    asl
+    asl
+    tax
+    asl
+    adc tmp
+    stx tmp
+    adc tmp
+.elseif ::FT_NUM_CHANNELS = 12
+    asl
+    asl
+    sta tmp
+    asl
+    tax
+    asl
+    adc tmp
+    stx tmp
+    adc tmp
 .elseif ::FT_NUM_CHANNELS = 13
-    ; MATTT
+    asl
+    sta tmp
+    asl
+    asl
+    asl
+    asl
+    sec
+    sbc tmp
+.else
+    .assert 0, error, "Missing song multiplier."
 .endif
 
 .if .defined(::FT_FDS) || .defined(::FT_VRC7) || .defined(::FT_N163)

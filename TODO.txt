@@ -24,6 +24,8 @@
 - Make all I/O class non-static.
 - Basic note dragging.
 - MATTT.
+- NSF:
+	- FDS modulation
 
 TESTING:
 ========
@@ -39,6 +41,7 @@ TESTING:
 - Fix saw in Shovel knight.
 - Retest smooth vibrato on/off.
 - Copy paste between channels that dont support the same effects.
+- NSF: Test multi songs with all expansions (multiplication).
 
 Breaking changes
 ================

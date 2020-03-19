@@ -160,7 +160,6 @@ namespace FamiStudio
             if (instrument.ExpansionType == Project.ExpansionN163 && type >= N163Wave1 && type <= N163Wave8)
                 return true;
 
-            // MATTT: Will we want special instrument for S5B? Gimmick doesnt use noise or envelopes I think.
             if (instrument.ExpansionType == Project.ExpansionS5B && type >= S5BSquare1 && type <= S5BSquare3)
                 return true;
 
