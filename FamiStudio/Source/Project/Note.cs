@@ -449,13 +449,13 @@ namespace FamiStudio
         {
             switch (fx)
             {
-                case EffectVolume       : Volume       =  (byte)val; break;
-                case EffectVibratoDepth : VibratoDepth =  (byte)val; break;
-                case EffectVibratoSpeed : VibratoSpeed =  (byte)val; break;
-                case EffectFinePitch    : FinePitch    = (sbyte)val; break;
-                case EffectSpeed        : Speed        =  (byte)val; break;
-                case EffectFdsModDepth  : FdsModDepth  =  (byte)val; break;
-                case EffectFdsModSpeed  : FdsModSpeed  =  (byte)val; break;
+                case EffectVolume       : Volume       =   (byte)val; break;
+                case EffectVibratoDepth : VibratoDepth =   (byte)val; break;
+                case EffectVibratoSpeed : VibratoSpeed =   (byte)val; break;
+                case EffectFinePitch    : FinePitch    =  (sbyte)val; break;
+                case EffectSpeed        : Speed        =   (byte)val; break;
+                case EffectFdsModDepth  : FdsModDepth  =   (byte)val; break;
+                case EffectFdsModSpeed  : FdsModSpeed  = (ushort)val; break;
             }
         }
         

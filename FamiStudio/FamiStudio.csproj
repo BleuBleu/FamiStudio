@@ -270,6 +270,10 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\ModSmall%402x.png" />
+    <EmbeddedResource Include="Resources\ModSmall.png" />
+    <EmbeddedResource Include="Resources\Mod%402x.png" />
+    <EmbeddedResource Include="Resources\Mod.png" />
     <EmbeddedResource Include="Resources\ExportText%402x.png" />
     <EmbeddedResource Include="Resources\ExportText.png" />
     <EmbeddedResource Include="Resources\ButtonLeft%402x.png" />

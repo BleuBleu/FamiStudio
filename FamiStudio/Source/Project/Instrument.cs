@@ -62,8 +62,8 @@ namespace FamiStudio
 
             if (expansion == Project.ExpansionFds)
             {
-                envelopes[Envelope.FdsWaveform].SetFromPreset(Envelope.FdsWaveform, fdsWavPreset);
-                envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, fdsModPreset);
+                UpdateFdsWaveEnvelope();
+                UpdateFdsModulationEnvelope();
             }
             else if (expansion == Project.ExpansionN163)
             {
@@ -101,6 +101,26 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        public byte FdsWavePreset
+        {
+            get { return fdsWavPreset; }
+            set
+            {
+                fdsWavPreset = value;
+                UpdateFdsWaveEnvelope();
+            }
+        }
+
+        public byte FdsModPreset
+        {
+            get { return fdsModPreset; }
+            set
+            {
+                fdsModPreset = value;
+                UpdateFdsModulationEnvelope();
+            }
         }
 
         public byte N163WavePreset
@@ -155,7 +175,17 @@ namespace FamiStudio
 
         public ushort FdsModSpeed { get => fdsModSpeed; set => fdsModSpeed = value; }
         public byte   FdsModDepth { get => fdsModDepth; set => fdsModDepth = value; }
-        public byte FdsModDelay => fdsModDelay;
+        public byte   FdsModDelay { get => fdsModDelay; set => fdsModDelay = value; } 
+
+        private void UpdateFdsWaveEnvelope()
+        {
+            envelopes[Envelope.FdsWaveform].SetFromPreset(Envelope.FdsWaveform, fdsWavPreset);
+        }
+
+        private void UpdateFdsModulationEnvelope()
+        {
+            envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, fdsModPreset);
+        }
 
         private void UpdateN163WaveEnvelope()
         {
@@ -504,14 +534,14 @@ namespace FamiStudio
             {
                 // FDS
                 case ParamFdsWavePreset:
-                    fdsWavPreset = (byte)val; // MATTT : Create property.
-                    envelopes[Envelope.FdsWaveform].SetFromPreset(Envelope.FdsWaveform, val);
+                    fdsWavPreset = (byte)val;
+                    UpdateFdsWaveEnvelope();
                     break;
                 case ParamFdsModulationPreset:
-                    fdsModPreset = (byte)val; // MATTT : Create property.
-                    envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, val);
+                    fdsModPreset = (byte)val;
+                    UpdateFdsModulationEnvelope();
                     break;
-                case ParamFdsModulationSpeed: fdsModSpeed  = (ushort)val; break;
+                case ParamFdsModulationSpeed: fdsModSpeed = (ushort)val; break;
                 case ParamFdsModulationDepth: fdsModDepth = (byte)val; break;
                 case ParamFdsModulationDelay: fdsModDelay = (byte)val; break;
 

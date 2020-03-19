@@ -106,6 +106,9 @@ namespace FamiStudio
                 for (int i = 0; i < modEnv.Length; i++)
                     modEnv.Values[i] = (sbyte)bytes[offset++];
 
+                instrument.FdsWavePreset = Envelope.WavePresetCustom;
+                instrument.FdsModPreset = Envelope.WavePresetCustom;
+
                 modEnv.ConvertFdsModulationToAbsolute();
 
                 // Skip mod speed/depth/delay.
@@ -145,8 +148,9 @@ namespace FamiStudio
                 int wavePos   = BitConverter.ToInt32(bytes, offset); offset += 4;
                 int waveCount = BitConverter.ToInt32(bytes, offset); offset += 4;
 
-                instrument.N163WaveSize = (byte)waveSize;
-                instrument.N163WavePos  = (byte)wavePos;
+                instrument.N163WavePreset = Envelope.WavePresetCustom;
+                instrument.N163WaveSize   = (byte)waveSize;
+                instrument.N163WavePos    = (byte)wavePos;
 
                 var wavEnv = instrument.Envelopes[Envelope.N163Waveform];
 

@@ -19,6 +19,7 @@ namespace FamiStudio
         void Serialize(ref string b);
         void Serialize(ref byte[] values);
         void Serialize(ref sbyte[] values);
+        void Serialize(ref short[] values);
         void Serialize(ref Song song);
         void Serialize(ref Instrument instrument);
         void Serialize(ref Pattern pattern, Channel channel);
@@ -127,6 +128,15 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 buffer.Add((byte)values[i]);
             idx += values.Length;
+        }
+
+        public void Serialize(ref short[] values)
+        {
+            buffer.AddRange(BitConverter.GetBytes(values.Length));
+            idx += sizeof(int);
+            for (int i = 0; i < values.Length; i++)
+                buffer.AddRange(BitConverter.GetBytes(values[i]));
+            idx += values.Length * sizeof(short);
         }
 
         public void Serialize(ref Song song)
@@ -279,6 +289,18 @@ namespace FamiStudio
             for (int i = 0; i < dest.Length; i++)
             {
                 dest[i] = (sbyte)buffer[idx++];
+            }
+        }
+
+        public void Serialize(ref short[] dest)
+        {
+            int len = BitConverter.ToInt32(buffer, idx);
+            idx += sizeof(int);
+            dest = new short[len];
+            for (int i = 0; i < dest.Length; i++)
+            {
+                dest[i] = BitConverter.ToInt16(buffer, idx);
+                idx += sizeof(short);
             }
         }
 

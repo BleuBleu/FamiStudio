@@ -297,7 +297,6 @@ namespace FamiStudio
             public Instrument instrument = null;
         };
 
-        int maxNamcoChannels = 0;
         IntPtr nsf;
         Song song;
         Project project;
@@ -371,6 +370,9 @@ namespace FamiStudio
                     Array.Copy(wavEnv, instrument.Envelopes[Envelope.FdsWaveform].Values,   64);
                     Array.Copy(modEnv, instrument.Envelopes[Envelope.FdsModulation].Values, 32);
 
+                    instrument.FdsWavePreset = Envelope.WavePresetCustom;
+                    instrument.FdsModPreset  = Envelope.WavePresetCustom;
+
                     return instrument;
                 }
             }
@@ -440,8 +442,9 @@ namespace FamiStudio
                 {
                     var instrument = project.CreateInstrument(Project.ExpansionN163, name);
 
-                    instrument.N163WaveSize = (byte)waveData.Length;
-                    instrument.N163WavePos  = wavePos;
+                    instrument.N163WavePreset = Envelope.WavePresetCustom;
+                    instrument.N163WaveSize   = (byte)waveData.Length;
+                    instrument.N163WavePos    = wavePos;
                     Array.Copy(waveData, instrument.Envelopes[Envelope.N163Waveform].Values, waveData.Length);
 
                     return instrument;
@@ -545,7 +548,7 @@ namespace FamiStudio
                 var hasOctave  = channel.Type >= Channel.Vrc7Fm1 && channel.Type <= Channel.Vrc7Fm6;
                 var hasVolume  = channel.Type != Channel.Triangle;
                 var hasPitch   = channel.Type != Channel.Noise;
-                var hasDuty    = channel.Type == Channel.Square1 || channel.Type == Channel.Square2 || channel.Type == Channel.Noise || channel.Type == Channel.Vrc6Square1 || channel.Type == Channel.Vrc6Square2 || channel.Type == Channel.Vrc6Saw || channel.Type == Channel.Mmc5Square1 || channel.Type == Channel.Mmc5Square2;
+                var hasDuty    = channel.Type == Channel.Square1 || channel.Type == Channel.Square2 || channel.Type == Channel.Noise || channel.Type == Channel.Vrc6Square1 || channel.Type == Channel.Vrc6Square2 || channel.Type == Channel.Mmc5Square1 || channel.Type == Channel.Mmc5Square2;
 
                 if (channel.Type >= Channel.Vrc7Fm1 && channel.Type <= Channel.Vrc7Fm6)
                 {
@@ -627,11 +630,6 @@ namespace FamiStudio
                 else if (channel.Type >= Channel.N163Wave1 &&
                          channel.Type <= Channel.N163Wave8)
                 {
-                    var numChannels = NsfGetState(nsf, channel.Type, STATE_N16NUMCHANNELS, 0);
-
-                    if (numChannels >= 0 && numChannels <= 8)
-                        maxNamcoChannels = Math.Max(maxNamcoChannels, numChannels);
-
                     var wavePos = (byte)NsfGetState(nsf, channel.Type, STATE_N163WAVEPOS,  0);
                     var waveLen = (byte)NsfGetState(nsf, channel.Type, STATE_N163WAVESIZE, 0);
 
@@ -671,7 +669,7 @@ namespace FamiStudio
 
                 if ((hasPeriod && state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
-                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, maxNamcoChannels); // MATTT: Max channels
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;
 
@@ -708,13 +706,11 @@ namespace FamiStudio
 
                     if (hasPitch && !stop)
                     {
-                        // We scale all pitches changes (slides, fine pitch, pitch envelopes) by 8 for these since
-                        // the period values are super large.
-                        if (channel.Type >= Channel.N163Wave1 && channel.Type <= Channel.N163Wave8 ||
-                            channel.Type >= Channel.Vrc7Fm1   && channel.Type <= Channel.Vrc7Fm6)
-                        {
-                            finePitch /= 8; // MATTT
-                        }
+                        Channel.GetShiftsForType(channel.Type, project.ExpansionNumChannels, out int pitchShift, out _);
+
+                        // We scale all pitches changes (slides, fine pitch, pitch envelopes) for
+                        // some channels with HUGE pitch values (N163, VRC7).
+                        finePitch >>= pitchShift;
 
                         var pitch = (sbyte)Utils.Clamp(finePitch, Note.FinePitchMin, Note.FinePitchMax);
 
@@ -761,12 +757,32 @@ namespace FamiStudio
             return trackNames;
         }
 
+        private int GetNumNamcoChannels(string filename, int songIndex, int numFrames)
+        {
+            var tmpNsf = NsfOpen(filename);
+
+            NsfSetTrack(tmpNsf, songIndex);
+
+            int numNamcoChannels = 1;
+            for (int i = 0; i < numFrames; i++)
+            {
+                NsfRunFrame(tmpNsf);
+                numNamcoChannels = Math.Max(numNamcoChannels, NsfGetState(tmpNsf, Channel.N163Wave1, STATE_N16NUMCHANNELS, 0));
+            }
+
+            NsfClose(tmpNsf);
+
+            return numNamcoChannels;
+        }
+
         public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence)
         {
             nsf = NsfOpen(filename);
 
             if (nsf == null)
                 return null;
+
+            var numFrames = duration * (NsfIsPal(nsf) != 0 ? 50 : 60);
 
             project = new Project();
 
@@ -780,7 +796,7 @@ namespace FamiStudio
                 case EXTSOUND_VRC7: project.SetExpansionAudio(Project.ExpansionVrc7); break;
                 case EXTSOUND_FDS:  project.SetExpansionAudio(Project.ExpansionFds);  break;
                 case EXTSOUND_MMC5: project.SetExpansionAudio(Project.ExpansionMmc5); break;
-                case EXTSOUND_N163: project.SetExpansionAudio(Project.ExpansionN163, 8); break;
+                case EXTSOUND_N163: project.SetExpansionAudio(Project.ExpansionN163, GetNumNamcoChannels(filename, songIndex, numFrames)); break;
                 case EXTSOUND_S5B:  project.SetExpansionAudio(Project.ExpansionS5B);  break;
                 case 0: break;
                 default:
@@ -803,7 +819,6 @@ namespace FamiStudio
                 channelStates[i] = new ChannelState();
 
             var foundFirstNote = !removeIntroSilence;
-            var numFrames = duration * (NsfIsPal(nsf) != 0 ? 50 : 60);
 
             var p = 0;
             var n = 0;
@@ -841,9 +856,6 @@ namespace FamiStudio
             song.SetLength(p + 1);
 
             NsfClose(nsf);
-
-            if (project.ExpansionAudio == Project.ExpansionN163)
-                project.SetExpansionAudio(Project.ExpansionN163, maxNamcoChannels);
 
             song.RemoveEmptyPatterns();
             song.UpdatePatternStartNotes();

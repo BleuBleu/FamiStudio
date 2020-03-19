@@ -19,10 +19,10 @@ namespace FamiStudio
         const byte MaskTimeValid = 0x80;
         const byte MaskReleased  = 0x40;
 
-        private short  firstValidNoteTime = -1;
-        private byte[] lastValidNoteMasks = new byte[MaxLength];
-        private byte[] lastValidNoteTimes = new byte[MaxLength];
-        private byte[] lastValidNoteEffectValues = new byte[MaxLength * Note.EffectCount];
+        private short   firstValidNoteTime = -1;
+        private byte[]  lastValidNoteMasks = new byte[MaxLength];
+        private byte[]  lastValidNoteTimes = new byte[MaxLength];
+        private short[] lastValidNoteEffectValues = new short[MaxLength * Note.EffectCount];
 
         public int Id => id;
         public int ChannelType => channelType;
@@ -156,7 +156,7 @@ namespace FamiStudio
                     if (note.HasValidEffectValue(j))
                     {
                         lastValidNoteMasks[i] |= mask;
-                        lastValidNoteEffectValues[i * Note.EffectCount + j] = (byte)note.GetEffectValue(j);
+                        lastValidNoteEffectValues[i * Note.EffectCount + j] = (short)note.GetEffectValue(j);
                     }
                 }
             }
@@ -204,7 +204,7 @@ namespace FamiStudio
             return (lastValidNoteMasks[time] & (1 << effect)) != 0;
         }
 
-        public unsafe byte GetLastEffectValueAt(int time, int effect)
+        public short GetLastEffectValueAt(int time, int effect)
         {
             Debug.Assert(HasLastEffectValueAt(time, effect));
             return lastValidNoteEffectValues[time * Note.EffectCount + effect];
@@ -319,6 +319,7 @@ namespace FamiStudio
                 buffer.Serialize(ref lastValidNoteMasks);
                 buffer.Serialize(ref lastValidNoteTimes);
                 buffer.Serialize(ref lastValidNoteEffectValues);
+                buffer.Serialize(ref maxInstanceLength);
             }
             else if (buffer.IsReading)
             {

@@ -36,7 +36,7 @@ namespace FamiStudio
         const int DefaultNumOctaves = 8;
         const int DefaultHeaderSizeY = 17;
         const int DefaultDPCMHeaderSizeY = 17;
-        const int DefaultEffectPanelSizeY = 256;
+        const int DefaultEffectPanelSizeY = 176;
         const int DefaultEffectButtonSizeY = 17;
         const int DefaultNoteSizeX = 16;
         const int DefaultNoteSizeY = 12;
@@ -304,18 +304,21 @@ namespace FamiStudio
 
         private void BuildSupportEffectList()
         {
-            int cnt = 0;
-            for (int i = 0; i < Note.EffectCount; i++)
+            if (editChannel >= 0)
             {
-                if (Song.Channels[editChannel].SupportsEffect(i))
-                    cnt++;
-            }
+                int cnt = 0;
+                for (int i = 0; i < Note.EffectCount; i++)
+                {
+                    if (Song.Channels[editChannel].SupportsEffect(i))
+                        cnt++;
+                }
 
-            supportedEffects = new int[cnt];
-            for (int i = 0, j = 0; i < Note.EffectCount; i++)
-            {
-                if (Song.Channels[editChannel].SupportsEffect(i))
-                    supportedEffects[j++] = i;
+                supportedEffects = new int[cnt];
+                for (int i = 0, j = 0; i < Note.EffectCount; i++)
+                {
+                    if (Song.Channels[editChannel].SupportsEffect(i))
+                        supportedEffects[j++] = i;
+                }
             }
         }
 
@@ -442,8 +445,8 @@ namespace FamiStudio
             bmpEffects[Note.EffectVibratoDepth] = g.CreateBitmapFromResource("VibratoSmall");
             bmpEffects[Note.EffectFinePitch] = g.CreateBitmapFromResource("PitchSmall");
             bmpEffects[Note.EffectSpeed] = g.CreateBitmapFromResource("SpeedSmall");
-            bmpEffects[Note.EffectFdsModDepth] = g.CreateBitmapFromResource("VibratoSmall");
-            bmpEffects[Note.EffectFdsModSpeed] = g.CreateBitmapFromResource("VibratoSmall");
+            bmpEffects[Note.EffectFdsModDepth] = g.CreateBitmapFromResource("ModSmall");
+            bmpEffects[Note.EffectFdsModSpeed] = g.CreateBitmapFromResource("ModSmall");
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
             bmpSlide = g.CreateBitmapFromResource("Slide");
@@ -1448,12 +1451,23 @@ namespace FamiStudio
 
         void ChangeEffectValue(MouseEventArgs e)
         {
+            bool shift = ModifierKeys.HasFlag(Keys.Shift);
+
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[effectPatternIdx];
-            var ratio    = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
             var minValue = Note.GetEffectMinValue(Song, selectedEffectIdx);
             var maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
-            var newValue = (byte)Math.Round(ratio * (maxValue - minValue) + minValue);
+
+            int newValue;
+            if (shift)
+            {
+                newValue = Utils.Clamp(pattern.Notes[effectNoteIdx].GetEffectValue(selectedEffectIdx) + (mouseLastY - e.Y), minValue, maxValue);
+            }
+            else
+            {
+                var ratio = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
+                newValue = (int)Math.Round(ratio * (maxValue - minValue) + minValue);
+            }
 
             pattern.Notes[effectNoteIdx].SetEffectValue(selectedEffectIdx, newValue);
             pattern.UpdateLastValidNotes();
@@ -1499,6 +1513,22 @@ namespace FamiStudio
                 }
 
                 ConditionalInvalidate();
+            }
+        }
+
+        private void UpdateWavePreset()
+        {
+            if (editInstrument.ExpansionType == Project.ExpansionFds)
+            {
+                if (editEnvelope == Envelope.FdsWaveform)
+                    editInstrument.FdsWavePreset = Envelope.WavePresetCustom;
+                if (editEnvelope == Envelope.FdsModulation)
+                    editInstrument.FdsModPreset  = Envelope.WavePresetCustom;
+            }
+            else if (editInstrument.ExpansionType == Project.ExpansionN163)
+            {
+                if (editEnvelope == Envelope.N163Waveform)
+                    editInstrument.N163WavePreset = Envelope.WavePresetCustom;
             }
         }
 
@@ -1679,6 +1709,7 @@ namespace FamiStudio
             for (int i = startFrameIdx; i <= endFrameIdx; i++)
                 EditEnvelope.Values[i] = function(EditEnvelope.Values[i], i - startFrameIdx);
 
+            UpdateWavePreset();
             EnvelopeChanged?.Invoke();
             App.UndoRedoManager.EndTransaction();
             ConditionalInvalidate();
@@ -2392,6 +2423,7 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.ResizeEnvelope:
                     case CaptureOperation.DrawEnvelope:
+                        UpdateWavePreset();
                         App.UndoRedoManager.EndTransaction();
                         EnvelopeChanged?.Invoke();
                         break;

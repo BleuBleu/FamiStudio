@@ -222,11 +222,14 @@ namespace FamiStudio
             for (int i = 0; i < 0x20; i++)
                 modEnv.Values[i] = (sbyte)bytes[idx++];
 
+            instrument.FdsWavePreset = Envelope.WavePresetCustom;
+            instrument.FdsModPreset  = Envelope.WavePresetCustom;
+
             modEnv.ConvertFdsModulationToAbsolute();
 
-            instrument.FdsModSpeed  = (ushort)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
-            instrument.FdsModDepth = (byte)  BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
-          /*instrument.FdsModDelay = (byte)  BitConverter.ToInt32(bytes, idx);*/ idx += sizeof(int);
+            instrument.FdsModSpeed = (ushort)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+            instrument.FdsModDepth =   (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+            instrument.FdsModDelay =   (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
             ReadSingleEnvelope(instrument.Envelopes[Envelope.Volume],   ref idx);
             ReadSingleEnvelope(instrument.Envelopes[Envelope.Arpeggio], ref idx);
@@ -239,8 +242,9 @@ namespace FamiStudio
 
             var fileWaveSize = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
-            instrument.N163WaveSize = (byte)fileWaveSize;
-            instrument.N163WavePos  = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+            instrument.N163WavePreset = Envelope.WavePresetCustom;
+            instrument.N163WaveSize   = (byte)fileWaveSize;
+            instrument.N163WavePos    = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
             var waveCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int); 
 

@@ -11,9 +11,6 @@
 	- NSF (#defines)
 	- Add better tempo logic to famitone2fs.
 	- Make bar length more flexible (for short patterns too).
-- NSF:
-	- Minor improvement: _FT2SetInstrument called on stop notes... silly.
-	- Minor improvement: Envelopes run even when we had a stop note.
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Transform dialog:
@@ -21,33 +18,12 @@
 	- Tempo conversion? Or should that be in the song properties?
 - Loop point should be optional.
 - All expansions.
-	- Finigh channel code, clean.
-	- Import/export all formats.
-	- Namco:
-		- Import/export fine pith scaling (all foramts)
-		- As we add more channels, its support to start sounding like shit. Why doesnt it?
-	- VRC7
-		- NSF import sketchy.
-		- Figure out whole pitch/slide thing.
-			- In FamiTracker, 1xx,2xx doesnt work well with VRC7, clamps period, doesnt change octave
-			- In FamiTracker, Qxx,Rxx works OK since can only change 1 octave at most.
-			- In FamiTracker, 3xx works, but locks the octave.
-		- Import/export fine pith scaling (all foramts)
-		- Make sure FamiTracker import/export of slides works.
-	- Sunsoft:
-		- See if gimmick had a differnt note table for PAL.
-	- MMC5:
-	- FDS:
-		- Mod delay or mod track (need mod track for NSF import probably... Will need wider range on fx panel)
-			- Extend FX panel range
-			- Import/export all formats.
-		- Make sure FamiTracker import/export of slides works.
+	- Import/export all formats: slides.
+	- See if gimmick had a differnt note table for PAL.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.
-- BUG: oldMaxInstanceLength assert playing in megaman boss song (undo a lot).
-- FDS mod icon + mod effect icon.
 - Basic note dragging.
-- BUG: Soloing channels in VRC7 doesnt unsolo all of them?
+- MATTT.
 
 TESTING:
 ========
@@ -67,7 +43,6 @@ TESTING:
 Breaking changes
 ================
 - VRC6 saw duty (mention in FamiTracker compatibility section)
-- 
 
 ========================
 
@@ -80,5 +55,4 @@ Backlog:
 - P2: Raw FDS modulation table envelope.
 - P2: Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
 - P2: Instrument folders
-- P2: Note dragging.
 - P2: Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).

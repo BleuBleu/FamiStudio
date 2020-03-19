@@ -260,8 +260,9 @@ namespace FamiStudio
 
                     if (expansion == Project.ExpansionN163)
                     {
-                        instrument.N163WaveSize = byte.Parse(param[6]);
-                        instrument.N163WavePos  = byte.Parse(param[7]);
+                        instrument.N163WavePreset = Envelope.WavePresetCustom;
+                        instrument.N163WaveSize   = byte.Parse(param[6]);
+                        instrument.N163WavePos    = byte.Parse(param[7]);
                     }
 
                     if (vol >= 0 && instrument.IsEnvelopeActive(Envelope.Volume))    instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, 0][vol].ShallowClone();
@@ -291,14 +292,25 @@ namespace FamiStudio
                 {
                     var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
 
-                    // MATTT
-                    //mod_enable: int[0,1] - 0 for modulator disabled, 1 for enabled 
-                    //mod_speed: int[0,4905] - modulator speed 
-                    //mod_depth: int[0,63] - modulator depth 
-                    //mod_delay: int[0,255] - modulator delay 
+                    int idx       = int.Parse(param[0]);
+                    int modEnable = int.Parse(param[1]);
+                    int modSpeed  = int.Parse(param[2]);
+                    int modDepth  = int.Parse(param[3]);
+                    int modDelay  = int.Parse(param[4]);
 
-                    int idx = int.Parse(param[0]);
+                    if (modEnable == 0)
+                    {
+                        modSpeed = 0;
+                        modDepth = 0;
+                        modDelay = 0;
+                    }
+
                     instruments[idx] = CreateUniquelyNamedInstrument(Project.ExpansionFds, param[5]);
+                    instruments[idx].FdsModSpeed   = (ushort)modSpeed;
+                    instruments[idx].FdsModDepth   = (byte)modDepth;
+                    instruments[idx].FdsModDelay   = (byte)modDelay;
+                    instruments[idx].FdsWavePreset = Envelope.WavePresetCustom;
+                    instruments[idx].FdsModPreset  = Envelope.WavePresetCustom;
                 }
                 else if (line.StartsWith("FDSMACRO"))
                 {
@@ -735,8 +747,9 @@ namespace FamiStudio
                 }
                 else if (instrument.ExpansionType == Project.ExpansionFds)
                 {
-                    // TODO: Modulation parameters.
-                    lines.Add($"INSTFDS{i,5}{0,6}{0,4}{0,4}{0,4} \"{instrument.Name}\"");
+                    int modEnable = instrument.FdsModDepth > 0 && instrument.FdsModSpeed > 0 ? 1 : 0;
+
+                    lines.Add($"INSTFDS{i,5}{modEnable,6}{instrument.FdsModSpeed,4}{instrument.FdsModDepth,4}{instrument.FdsModDelay,4} \"{instrument.Name}\"");
 
                     var wavEnv = instrument.Envelopes[Envelope.FdsWaveform];
                     lines.Add($"FDSWAVE{i,5} : {string.Join(" ", wavEnv.Values.Take(wavEnv.Length))}");

@@ -429,7 +429,7 @@ namespace FamiStudio
             bmpEnvelopes[Envelope.Pitch]         = g.CreateBitmapFromResource("Pitch");
             bmpEnvelopes[Envelope.DutyCycle]     = g.CreateBitmapFromResource("Duty");
             bmpEnvelopes[Envelope.FdsWaveform]   = g.CreateBitmapFromResource("Wave");
-            bmpEnvelopes[Envelope.FdsModulation] = g.CreateBitmapFromResource("Wave");
+            bmpEnvelopes[Envelope.FdsModulation] = g.CreateBitmapFromResource("Mod");
             bmpEnvelopes[Envelope.N163Waveform]  = g.CreateBitmapFromResource("Wave");
 
             bmpExpand = g.CreateBitmapFromResource("InstrumentExpand");

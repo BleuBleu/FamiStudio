@@ -677,7 +677,7 @@ namespace FamiStudio
                     {
                         // Toggle Solo
                         if (App.ChannelMask == bit)
-                            App.ChannelMask = 0xff;
+                            App.ChannelMask = 0xffff;
                         else
                             App.ChannelMask = bit;
                     }
@@ -739,7 +739,7 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    bool shift   = ModifierKeys.HasFlag(Keys.Shift);
+                    bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
                     if (left && setLoop)
                     {
