@@ -193,8 +193,9 @@ namespace FamiStudio
                         if (j == 4) continue;
 
                         // Assume the delta will be applied twice.
-                        var diff = Math.Abs((prev + FdsModulationDeltas[j] * 2) - val);
-                        if (diff < minDiff)
+                        var newVal = prev + FdsModulationDeltas[j] * 2;
+                        var diff = Math.Abs(newVal - val);
+                        if (diff < minDiff && newVal >= -64 && newVal <= 63)
                         {
                             minDiff = diff;
                             mod[i] = (sbyte)j;

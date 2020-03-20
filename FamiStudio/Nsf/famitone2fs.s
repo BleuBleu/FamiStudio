@@ -76,6 +76,9 @@ FT_CHN_RETURN_L     : .res FT_NUM_CHANNELS
 FT_CHN_RETURN_H     : .res FT_NUM_CHANNELS
 FT_CHN_REF_LEN      : .res FT_NUM_CHANNELS
 FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS
+.if .defined(FT_N163) || .defined(FT_VRC7) || .defined(FT_FDS)
+FT_CHN_INST_CHANGED : .res FT_NUM_CHANNELS-5
+.endif
 .ifdef FT_EQUALIZER
 FT_CHN_NOTE_COUNTER : .res FT_NUM_CHANNELS
 .endif
@@ -172,6 +175,12 @@ FT_N163_CHN_MASK  = (FT_N163_CHN_CNT - 1) << 4
 .ifdef FT_MMC5
 FT_MMC5_PULSE1_PREV  = FT_CHN_VOLUME_TRACK+2
 FT_MMC5_PULSE2_PREV  = FT_CHN_VOLUME_TRACK+4
+.endif
+
+.ifdef FT_FDS
+FT_FDS_MOD_SPEED: .res 2
+FT_FDS_MOD_DEPTH: .res 1
+FT_FDS_MOD_DELAY: .res 1
 .endif
 
 ; FDS, N163 and VRC7 have very different instrument layout and are 16-bytes, so we keep them seperate.
@@ -734,6 +743,23 @@ pal:
         bpl clear_vrc7_loop 
 .endif
 
+.ifdef FT_FDS
+    lda #0
+    sta FT_FDS_MOD_SPEED+0
+    sta FT_FDS_MOD_SPEED+1
+    sta FT_FDS_MOD_DEPTH
+    sta FT_FDS_MOD_DELAY
+.endif
+
+.ifdef FT_CHN_INST_CHANGED
+    lda #0
+    ldx #(FT_NUM_CHANNELS-5)
+    clear_inst_changed_loop:
+        sta FT_CHN_INST_CHANGED, x
+        dex
+        bpl clear_inst_changed_loop 
+.endif
+
 .ifdef ::FT_N163
     lda #0
     ldx #FT_N163_CHN_CNT
@@ -888,9 +914,6 @@ no_slide:
 .if .defined(::FT_VRC6) && idx = 7
     note_table_lsb = _FT2SawNoteTableLSB
     note_table_msb = _FT2SawNoteTableMSB
-.elseif .defined(::FT_FDS) && idx = 5
-    note_table_lsb = _FT2FdsNoteTableLSB
-    note_table_msb = _FT2FdsNoteTableMSB
 .else
     note_table_lsb = _FT2NoteTableLSB
     note_table_msb = _FT2NoteTableMSB
@@ -982,11 +1005,6 @@ compute_volume:
     tax
     lda _FT2VolumeTable, x 
 
-.if .defined(::FT_FDS) && idx = 5
-    ; FDS volume is 6-bits, but clamped to 32. Just double it.
-    asl
-.endif
-
 .if .defined(FT_VRC6) && idx = 7 
     ; VRC6 saw has 6-bits
     asl
@@ -1010,6 +1028,62 @@ set_volume:
     sta reg_vol
 
 .endmacro
+
+.ifdef FT_FDS
+
+.proc FamiToneUpdateFdsChannelSound
+
+    pitch = FT_TEMP_PTR2
+
+    lda FT_CHN_NOTE+5
+    bne nocut
+    jmp set_volume
+
+nocut:
+    clc
+    adc FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_NOTE_OFF
+    tax
+
+    FamiToneComputeNoteFinalPitch 3, , _FT2FdsNoteTableLSB, _FT2FdsNoteTableMSB
+
+    lda pitch+0
+    sta FDS_FREQ_LO
+    lda pitch+1
+    sta FDS_FREQ_HI
+
+check_mod_delay:
+    lda FT_FDS_MOD_DELAY
+    beq zero_delay
+    dec FT_FDS_MOD_DELAY
+    lda #$80
+    sta FDS_MOD_HI
+    bne compute_volume
+
+zero_delay:
+    lda FT_FDS_MOD_SPEED+1
+    sta FDS_MOD_HI
+    lda FT_FDS_MOD_SPEED+0
+    sta FDS_MOD_LO
+    lda FT_FDS_MOD_DEPTH
+    ora #$80
+    sta FDS_SWEEP_ENV
+
+compute_volume:
+    lda FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_VOLUME_OFF
+    ora FT_CHN_VOLUME_TRACK+5 
+    tax
+    lda _FT2VolumeTable, x 
+    asl ; FDS volume is 6-bits, but clamped to 32. Just double it.
+
+set_volume:
+    ora #$80
+    sta FDS_VOL_ENV
+
+    rts 
+
+.endproc
+
+.endif
 
 .ifdef FT_VRC7
 
@@ -1716,13 +1790,13 @@ update_sound:
     FamiToneUpdateChannelSound 7, FT_CH7_ENVS, 5, , , #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
 .endif
 
-.ifdef ::FT_FDS
-    FamiToneUpdateChannelSound 5, FT_CH5_ENVS, 3, , #$80, , FDS_FREQ_HI, FDS_FREQ_LO, FDS_VOL_ENV
-.endif
-
 .ifdef ::FT_MMC5
     FamiToneUpdateChannelSound 5, FT_CH5_ENVS, 3, FT_MMC5_PULSE1_PREV, , , MMC5_PL1_HI, MMC5_PL1_LO, MMC5_PL1_VOL
     FamiToneUpdateChannelSound 6, FT_CH6_ENVS, 4, FT_MMC5_PULSE2_PREV, , , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
+.endif
+
+.ifdef ::FT_FDS
+    jsr FamiToneUpdateFdsChannelSound
 .endif
 
 .ifdef ::FT_VRC7
@@ -2029,49 +2103,83 @@ no_pulse2_upd:
 
     _FT2SetExpInstrumentBase
 
-    lda #$80
-    sta FDS_VOL ; Enable wave RAM write
-
-    ; FDS Waveform
-    lda (ptr),y
-    sta wave_ptr+0
-    iny
-    lda (ptr),y
-    sta wave_ptr+1
-    iny
-    sty tmp_y
-
-    ldy #0
-    wave_loop:
-        lda (wave_ptr),y
-        sta FDS_WAV_START,y
-        iny
-        cpy #64
-        bne wave_loop
-
-    ; MATTT: Temporary.
     lda #0
-    sta FDS_VOL ; Disable RAM write.
     sta FDS_SWEEP_BIAS
-    lda #$80
-    sta FDS_MOD_HI ; Need to disable modulation before writing.
 
-    ; FDS Modulation
-    ldy tmp_y
-    lda (ptr),y
-    sta wave_ptr+0
+    lda FT_CHN_INST_CHANGED
+    bne write_fds_wave
+
+    iny ; Skip wave + mod envelope.
     iny
-    lda (ptr),y
-    sta wave_ptr+1
+    iny
     iny
 
-    ldy #0
-    mod_loop:
-        lda (wave_ptr),y
-        sta FDS_MOD_TABLE
+    jmp load_mod_param
+
+    write_fds_wave:
+
+        lda #$80
+        sta FDS_VOL ; Enable wave RAM write
+
+        ; FDS Waveform
+        lda (ptr),y
+        sta wave_ptr+0
         iny
-        cpy #32
-        bne mod_loop
+        lda (ptr),y
+        sta wave_ptr+1
+        iny
+        sty tmp_y
+
+        ldy #0
+        wave_loop:
+            lda (wave_ptr),y
+            sta FDS_WAV_START,y
+            iny
+            cpy #64
+            bne wave_loop
+
+        lda #$80
+        sta FDS_MOD_HI ; Need to disable modulation before writing.
+        lda #0
+        sta FDS_VOL ; Disable RAM write.
+        sta FDS_SWEEP_BIAS
+
+        ; FDS Modulation
+        ldy tmp_y
+        lda (ptr),y
+        sta wave_ptr+0
+        iny
+        lda (ptr),y
+        sta wave_ptr+1
+        iny
+        sty tmp_y
+
+        ldy #0
+        mod_loop:
+            lda (wave_ptr),y
+            sta FDS_MOD_TABLE
+            iny
+            cpy #32
+            bne mod_loop
+
+        lda #0
+        sta FT_CHN_INST_CHANGED
+
+        ldy tmp_y
+
+    load_mod_param:
+
+        lda (ptr),y
+        sta FT_FDS_MOD_SPEED+0
+        iny
+        lda (ptr),y
+        sta FT_FDS_MOD_SPEED+1
+        iny
+        lda (ptr),y
+        sta FT_FDS_MOD_DEPTH
+        iny
+        lda (ptr),y
+        sta FT_FDS_MOD_DELAY
 
     rts
 
@@ -2384,13 +2492,13 @@ regular_note:
 sec_and_done:
     lda no_attack_flag
     bne no_attack
-.ifdef ::FT_VRC7
+.if .defined(::FT_VRC7)
     cpx #5
     bcs vrc7_channel
     sec                        ;new note flag is set
     jmp done
     vrc7_channel:
-        lda #$01
+        lda #1
         sta FT_CHN_VRC7_TRIGGER-5,x ; set trigger flag for VRC7
 .endif    
     sec                        ;new note flag is set
@@ -2406,6 +2514,14 @@ special_code:
     asl a
     asl a
     sta FT_CHN_INSTRUMENT,x    ;store instrument number*4
+
+.if .defined(FT_N163) || .defined(FT_VRC7) || .defined(FT_FDS)
+    cpx #5
+    bcc regular_channel
+        lda #1
+        sta FT_CHN_INST_CHANGED-5, x
+    regular_channel:
+.endif
     jmp read_byte 
 
 set_empty_rows:

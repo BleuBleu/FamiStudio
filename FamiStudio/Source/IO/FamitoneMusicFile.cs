@@ -329,8 +329,8 @@ namespace FamiStudio
                             var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.FdsWaveform]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.FdsModulation]]);
 
-                            lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}, {ll}env{fdsModEnvIdx}");
-                            lines.Add($"\t{db} $00, $00, $00, $00, $00, $00");
+                            lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}, {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
+                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00, $00");
                         }
                         else if (instrument.ExpansionType == Project.ExpansionN163)
                         {

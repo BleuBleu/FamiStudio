@@ -23,25 +23,28 @@
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.
 - Basic note dragging.
+- FamiStudio text export, finish.
 - MATTT.
 - NSF:
+	- FDS Master volume.
 	- FDS modulation
+	- Dont reload VRC7, N163 + FDS instrument every note.
+- BUG: Moving notes with arrows enables some effects. Copy paste too.
+- BUG: Seeking in FDS sometimes doesnt work (zelda)
+- Finish FamiStudio text export.
 
 TESTING:
 ========
 - FamiTracker import/export, retest Text, slides, etc. 
-- Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, export to FT, etc.
-- Retest slide note import/export to FamiTracker. Test a few cases.
+- Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, etc.
 - Test installer on Japanese machine.
 - FTM, test a lot. Needs to match text import (export to text and compare).
-- Compare relative volume of all channels.
 - MAC: Make sure namco channels dialog works. Added Combo box prop change callback.
 - Binary FTM import. Try opening all the demo songs from FT.
 - Duty cycle envelopes, make sure all import/export format support it.
 - Fix saw in Shovel knight.
 - Retest smooth vibrato on/off.
 - Copy paste between channels that dont support the same effects.
-- NSF: Test multi songs with all expansions (multiplication).
 
 Breaking changes
 ================
