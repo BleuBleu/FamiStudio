@@ -131,6 +131,10 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 	if (!osc.output)
 		return;
 
+	// Code here is kind of a mix of Disch/NotSoFatso + NSFPlay.
+	bool mod_on = osc.mod_period() && !(osc.regs[7] & 0x80);
+	bool wav_on = osc.wav_period() && !(osc.regs[3] & 0x80) && !(osc.regs[9] & 0x80);
+
 	cpu_time_t time = last_time;
 
 	time += osc.delay;
@@ -140,10 +144,6 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 	while (time < end_time)
 	{
 		int sub_step = min(16, end_time - time);
-
-		// Code here is kind of a mix of Disch/NotSoFatso + NSFPlay.
-		bool mod_on = osc.mod_period() && !(osc.regs[7] & 0x80);
-		bool wav_on = osc.wav_period() && !(osc.regs[3] & 0x80) && !(osc.regs[9] & 0x80);
 
 		// Modulation
 		if (mod_on)
@@ -205,10 +205,12 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 
 		int delta = amp - last_amp;
 		if (delta)
+		{
 			synth.offset(time, delta, osc.output);
+			last_amp = amp;
+		}
 
 		time += sub_step;
-		last_amp = amp;
 	}
 
 	osc.last_amp = last_amp;
