@@ -23,15 +23,13 @@ void Nes_Fds::reset()
 	memset(&osc.wave, 0, sizeof(osc.wave));
 	memset(&osc.modt, 0, sizeof(osc.modt));
 	memset(&osc.regs, 0, sizeof(osc.regs));
-	osc.mod_count = 0;
+	osc.mod_pos = 0;
 	osc.mod_phase = 0;
-	osc.wav_count = 0;
-	osc.sweep_bias = 0;
+	osc.mod_pos = 0;
 	osc.delay = 0;
 	osc.last_amp = 0;
 	osc.phase = 0;
 	osc.volume_env = 0x20;
-	osc.volume = 0x20;
 	osc.regs[10] = 0xff;
 }
 
@@ -72,12 +70,17 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			// TODO: Volume envelope support.
 			require(data & 0x80);
 			osc.volume_env = data & 0x3f;
-			if (osc.phase == 0) 
-				osc.volume = min(osc.volume_env, 0x20); 
 			break;
 		case 4:
 			// TODO: Sweep envelope support.
 			require(data & 0x80);
+			break;
+		case 5:
+			osc.mod_pos = data & 0x7f;
+			break;
+		case 7:
+			if (data & 0x80) 
+				osc.mod_phase = osc.mod_phase & 0x3F0000; 
 			break;
 		case 8:
 			// TODO: Ring buffer? I cant imagine that's of the hardware does it.
@@ -91,7 +94,7 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			{
 				switch (data & 0x03)
 				{
-					case 0: synth.volume(1.0f / 1.0f); break;
+					case 0: synth.volume(2.0f / 2.0f); break;
 					case 1: synth.volume(2.0f / 3.0f); break;
 					case 2: synth.volume(2.0f / 4.0f); break;
 					case 3: synth.volume(2.0f / 5.0f); break;
@@ -136,72 +139,74 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 
 	while (time < end_time)
 	{
-		int amp = 0;
-		int sub_step = end_time - time;
+		int sub_step = min(16, end_time - time);
 
-		// Code here is mostly adapted from Disch / NotSoFatso
+		// Code here is kind of a mix of Disch/NotSoFatso + NSFPlay.
 		bool mod_on = osc.mod_period() && !(osc.regs[7] & 0x80);
 		bool wav_on = osc.wav_period() && !(osc.regs[3] & 0x80) && !(osc.regs[9] & 0x80);
 
-		if (mod_on) sub_step = (int)min(sub_step, (osc.mod_count + 1));
-		if (wav_on) sub_step = (int)min(sub_step, (osc.wav_count + 1));
-
 		// Modulation
-		int sub_freq = 0;
 		if (mod_on)
 		{
-			osc.mod_count -= sub_step;
-			if (osc.mod_count <= 0)
+			const int modulation_table[8] = { 0,1,2,4,0,-4,-2,-1 };
+
+			int start_pos = osc.mod_phase >> 16;
+			osc.mod_phase += (sub_step * osc.mod_period());
+			int end_pos = osc.mod_phase >> 16;
+
+			osc.mod_phase = osc.mod_phase & 0x3fffff;
+
+			for (int p = start_pos; p < end_pos; ++p)
 			{
-				const int modulation_table[8] = { 0,1,2,4,0,-4,-2,-1 };
-
-				osc.mod_count += 65536.0f / osc.mod_period();
-				osc.sweep_bias = osc.modt[osc.mod_phase] == 4 ? 0 : osc.sweep_bias + modulation_table[osc.modt[osc.mod_phase]];
-				osc.mod_phase  = (osc.mod_phase + 1) & 0x3f;
+				int wv = osc.modt[p & 0x3f];
+				osc.mod_pos = wv == 4 ? 0 : osc.mod_pos + modulation_table[wv];
+				osc.mod_pos &= 0x7f;
 			}
-
-			while (osc.sweep_bias >  63) osc.sweep_bias -= 128;
-			while (osc.sweep_bias < -64) osc.sweep_bias += 128;
-
-			// Mysterious modulation calulation...
-			int sweep_gain = osc.regs[4] & 0x3f; // TODO: Sweep envelopes.
-			
-			int mod = osc.sweep_bias * sweep_gain;
-			if (mod & 0x0f) 
-				mod = (mod >> 4) + (osc.sweep_bias < 0 ? -1 : 2);
-			else
-				mod = (mod >> 4);
-
-			if (mod >  193) mod -= 258;
-			if (mod <  -64) mod += 256;
-
-			sub_freq = (osc.wav_period() * mod) >> 6;
 		}
 
 		// Wave generation
 		if (wav_on)
 		{
-			amp = (osc.wave[osc.phase] * osc.volume); 
-			if (sub_freq + osc.wav_period() > 0)
+			int mod = 0;
+			int sweep_gain = osc.regs[4] & 0x3f; // TODO: Sweep envelopes.
+
+			if (sweep_gain)
 			{
-				osc.wav_count -= sub_step;
-				if (osc.wav_count <= 0)
-				{
-					osc.wav_count += 65536.0f / (sub_freq + osc.wav_period());
-					osc.phase = (osc.phase + 1) & 0x3f;
-					if (osc.phase == 0)
-						osc.volume = min(osc.volume_env, 0x20);
-				}
+				int pos = (osc.mod_pos < 64) ? osc.mod_pos : (osc.mod_pos - 128);
+
+				while (pos >= 64) pos -= 128;
+				while (pos < -64) pos += 128;
+
+				int temp = pos * sweep_gain;
+				int rem = temp & 0xf;
+				temp >>= 4;
+				if ((rem > 0) && ((temp & 0x80) == 0))
+					temp += pos < 0 ? -1 : 2;
+
+				while (temp >= 192) temp -= 256;
+				while (temp <  -64) temp += 256;
+
+				temp *= osc.wav_period();
+				rem = temp & 0x3f;
+				temp >>= 6;
+				if (rem >= 32)
+					temp++;
+
+				mod = temp;
 			}
-			else
-			{
-				osc.wav_count = osc.mod_count;
-			}
+
+			int f = osc.wav_period() + mod;
+			osc.phase = osc.phase + (sub_step * f);
+			osc.phase = osc.phase & 0x3fffff;
 		}
+		
+		int volume = min(osc.volume_env, 0x20);
+		int amp = osc.wave[(osc.phase >> 16) & 0x3f] * volume;
 
 		int delta = amp - last_amp;
 		if (delta)
 			synth.offset(time, delta, osc.output);
+
 		time += sub_step;
 		last_amp = amp;
 	}

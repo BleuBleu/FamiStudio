@@ -41,15 +41,12 @@ private:
 		BOOST::uint8_t modt[modt_count];
 		BOOST::uint8_t regs[regs_count];
 		Blip_Buffer* output;
-		float mod_count;
+		unsigned int mod_pos;
 		int mod_phase;
-		int sweep_bias;
-		float wav_count;
 		int delay;
 		int last_amp;
 		int phase;
 		int volume_env;
-		int volume;
 
 		int wav_period() const 
 		{
@@ -63,7 +60,7 @@ private:
 
 	Fds_Osc osc;
 	cpu_time_t last_time;
-	Blip_Synth<blip_good_quality,1023> synth;
+	Blip_Synth<blip_good_quality,2016> synth;
 
 	short shadow_regs[shadow_regs_count];
 	BOOST::uint8_t shadow_wave[modt_count];
