@@ -789,6 +789,10 @@ namespace FamiStudio
                     InstrumentDraggedOutside(draggedInstrument, PointToScreen(new Point(e.X, e.Y)));
                 }
             }
+            else if (captureOperation == CaptureOperation.MoveSlider)
+            {
+                App.UndoRedoManager.EndTransaction();
+            }
 
             draggedInstrument = null;
             sliderDragButton = null;
@@ -974,7 +978,8 @@ namespace FamiStudio
                     {
                         if (UpdateSliderValue(button, e))
                         {
-                            // MATTT: Transaction here.
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, selectedInstrument.Id);
+
                             sliderDragButton = button;
                             StartCaptureOperation(e, CaptureOperation.MoveSlider);
                             ConditionalInvalidate();
@@ -986,8 +991,10 @@ namespace FamiStudio
 
                         if (e.X >= actualWidth - checkBoxPosX)
                         {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, selectedInstrument.Id);
                             var val = button.instrument.GetRealTimeParamValue(button.instrumentParam);
                             button.instrument.SetRealTimeParamValue(button.instrumentParam, val == 0 ? 1 : 0);
+                            App.UndoRedoManager.EndTransaction();
                             ConditionalInvalidate();
                         }
                     }
@@ -1001,7 +1008,8 @@ namespace FamiStudio
 
                         if (leftButton || rightButton)
                         {
-                            // MATTT : Transaction.
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, selectedInstrument.Id);
+
                             var val = button.instrument.GetRealTimeParamValue(button.instrumentParam);
 
                             if (rightButton)
@@ -1010,6 +1018,8 @@ namespace FamiStudio
                                 val = button.instrument.GetRealTimeParamPrevValue(button.instrumentParam, val);
 
                             button.instrument.SetRealTimeParamValue(button.instrumentParam, val);
+
+                            App.UndoRedoManager.EndTransaction();
                             ConditionalInvalidate();
                         }
                     }
@@ -1263,6 +1273,7 @@ namespace FamiStudio
         {
             buffer.Serialize(ref selectedSong);
             buffer.Serialize(ref selectedInstrument);
+            buffer.Serialize(ref expandedInstrument);
             buffer.Serialize(ref scrollY);
 
             if (buffer.IsReading)
