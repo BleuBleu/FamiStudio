@@ -903,6 +903,7 @@ namespace FamiStudio
         {
             TransformNotes(startFrameIdx, startFrameIdx + notes.Length - 1, doTransaction, (note, idx) =>
             {
+                var channel = Song.Channels[editChannel];
                 var newNote = notes[idx];
 
                 if (pasteNotes)
@@ -914,14 +915,23 @@ namespace FamiStudio
                 }
                 if (pasteVolume)
                 {
-                    note.Volume = newNote.Volume;
+                    note.HasVolume = false;
+
+                    if (channel.SupportsEffect(Note.EffectVolume) && newNote.HasVolume) note.Volume = newNote.Volume; 
                 }
                 if (pasteFx)
                 {
-                    // MATTT: Missing effects here.
-                    note.FinePitch  = newNote.FinePitch;
-                    note.Speed      = newNote.Speed;
-                    note.RawVibrato = newNote.RawVibrato;
+                    note.HasSpeed = false;
+                    note.HasFinePitch = false;
+                    note.HasVibrato = false;
+                    note.HasFdsModSpeed = false;
+                    note.HasFdsModDepth = false;
+
+                    if (channel.SupportsEffect(Note.EffectSpeed)        && newNote.HasSpeed)       note.Speed       = newNote.Speed;
+                    if (channel.SupportsEffect(Note.EffectFinePitch)    && newNote.HasFinePitch)   note.FinePitch   = newNote.FinePitch;
+                    if (channel.SupportsEffect(Note.EffectVibratoDepth) && newNote.HasVibrato)     note.RawVibrato  = newNote.RawVibrato;
+                    if (channel.SupportsEffect(Note.EffectFdsModSpeed)  && newNote.HasFdsModSpeed) note.FdsModSpeed = newNote.FdsModSpeed;
+                    if (channel.SupportsEffect(Note.EffectFdsModDepth)  && newNote.HasFdsModDepth) note.FdsModDepth = newNote.FdsModDepth;
                 }
 
                 return note;

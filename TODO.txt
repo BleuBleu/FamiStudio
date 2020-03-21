@@ -25,7 +25,6 @@
 - Basic note dragging.
 - FamiStudio text export, finish.
 - MATTT.
-- BUG: Moving notes with arrows enables some effects. Copy paste too.
 - BUG: Seeking in FDS sometimes doesnt work (zelda)
 - Finish FamiStudio text export.
 - Missing tooltip (make channel active, ghost, sliders fine, effect fine, etc.)
@@ -41,7 +40,6 @@ TESTING:
 - Duty cycle envelopes, make sure all import/export format support it.
 - Fix saw in Shovel knight.
 - Retest smooth vibrato on/off.
-- Copy paste between channels that dont support the same effects.
 
 Breaking changes
 ================
