@@ -45,7 +45,35 @@ namespace FamiStudio
             {
                 var instrumentLine = $"\tInstrument Name=\"{instrument.Name}\"";
                 if (instrument.IsExpansionInstrument)
+                {
                     instrumentLine += $" Expansion=\"{Project.ExpansionShortNames[project.ExpansionAudio]}\"";
+
+                    if (instrument.ExpansionType == Project.ExpansionFds)
+                    {
+                        instrumentLine += $" FdsWavePreset=\"{Envelope.PresetNames[instrument.FdsWavePreset]}\"";
+                        instrumentLine += $" FdsModPreset=\"{Envelope.PresetNames[instrument.FdsModPreset]}\"";
+                        if (instrument.FdsMasterVolume != 0) instrumentLine += $" FdsMasterVolume=\"{instrument.FdsMasterVolume}\"";
+                        if (instrument.FdsModSpeed     != 0) instrumentLine += $" FdsModSpeed=\"{instrument.FdsModSpeed}\"";
+                        if (instrument.FdsModDepth     != 0) instrumentLine += $" FdsModDepth=\"{instrument.FdsModDepth}\"";
+                        if (instrument.FdsModDelay     != 0) instrumentLine += $" FdsModDelay=\"{instrument.FdsModDelay}\"";
+                    }
+                    else if (instrument.ExpansionType == Project.ExpansionN163)
+                    {
+                        instrumentLine += $" N163WavePreset=\"{Envelope.PresetNames[instrument.N163WavePreset]}\"";
+                        instrumentLine += $" N163WaveSize=\"{instrument.N163WaveSize}\"";
+                        instrumentLine += $" N163WavePos=\"{instrument.N163WavePos}\"";
+                    }
+                    else if (instrument.ExpansionType == Project.ExpansionVrc7)
+                    {
+                        instrumentLine += $" Vrc7Patch=\"{instrument.Vrc7Patch}\"";
+
+                        if (instrument.Vrc7Patch == 0)
+                        {
+                            for (int i = 0; i < 8; i++)
+                                instrumentLine += $" Vrc7Reg{i}=\"{instrument.Vrc7PatchRegs[i]}\"";
+                        }
+                    }
+                }
                 lines.Add(instrumentLine);
 
                 for (int i = 0; i < Envelope.Count; i++)
@@ -99,11 +127,13 @@ namespace FamiStudio
                                     if (note.Instrument != null)
                                         noteLine += $" Instrument=\"{note.Instrument.Name}\"";
                                 }
-                                if (!note.HasAttack)   noteLine += $" Attack=\"{false.ToString()}\"";
-                                if (note.HasVolume)    noteLine += $" Volume=\"{note.Volume}\"";
-                                if (note.HasVibrato)   noteLine += $" VibratoSpeed=\"{note.VibratoSpeed}\" VibratoDepth=\"{note.VibratoDepth}\"";
-                                if (note.HasSpeed)     noteLine += $" Speed=\"{note.Speed}\"";
-                                if (note.HasFinePitch) noteLine += $" FinePitch=\"{note.FinePitch}\"";
+                                if (!note.HasAttack)     noteLine += $" Attack=\"{false.ToString()}\"";
+                                if (note.HasVolume)      noteLine += $" Volume=\"{note.Volume}\"";
+                                if (note.HasVibrato)     noteLine += $" VibratoSpeed=\"{note.VibratoSpeed}\" VibratoDepth=\"{note.VibratoDepth}\"";
+                                if (note.HasSpeed)       noteLine += $" Speed=\"{note.Speed}\"";
+                                if (note.HasFinePitch)   noteLine += $" FinePitch=\"{note.FinePitch}\"";
+                                if (note.HasFdsModSpeed) noteLine += $" FdsModSpeed=\"{note.FdsModSpeed}\"";
+                                if (note.HasFdsModDepth) noteLine += $" FdsModDepth=\"{note.FdsModDepth}\"";
                                 if (note.IsMusical && note.IsSlideNote)
                                 {
                                     // Add duration for convenience.
@@ -206,6 +236,36 @@ namespace FamiStudio
                         case "Instrument":
                         {
                             instrument = project.CreateInstrument(parameters.TryGetValue("Expansion", out _) ? project.ExpansionAudio : Project.ExpansionNone, parameters["Name"]);
+
+                            if (instrument.ExpansionType == Project.ExpansionFds)
+                            {
+                                if (parameters.TryGetValue("FdsWavePreset",   out var wavPresetStr))    instrument.FdsWavePreset   = (byte)Array.IndexOf(Envelope.PresetNames, wavPresetStr);
+                                if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsWavePreset   = (byte)Array.IndexOf(Envelope.PresetNames, modPresetStr);
+                                if (parameters.TryGetValue("FdsMasterVolume", out var masterVolumeStr)) instrument.FdsMasterVolume = byte.Parse(masterVolumeStr);
+                                if (parameters.TryGetValue("FdsModSpeed",     out var fdsModSpeedStr))  instrument.FdsModSpeed     = ushort.Parse(fdsModSpeedStr);
+                                if (parameters.TryGetValue("FdsModDepth",     out var fdsModDepthStr))  instrument.FdsModDepth     = byte.Parse(fdsModDepthStr);
+                                if (parameters.TryGetValue("FdsModDelay",     out var fdsModDelayStr))  instrument.FdsModDelay     = byte.Parse(fdsModDelayStr);
+                            }
+                            else if (instrument.ExpansionType == Project.ExpansionN163)
+                            {
+                                 if (parameters.TryGetValue("N163WavePreset", out var wavPresetStr))    instrument.N163WavePreset = (byte)Array.IndexOf(Envelope.PresetNames, wavPresetStr);
+                                 if (parameters.TryGetValue("N163WaveSize",   out var n163WavSizeStr))  instrument.N163WaveSize   = byte.Parse(n163WavSizeStr);
+                                 if (parameters.TryGetValue("N163WavePos",    out var n163WavPosStr))   instrument.N163WavePos    = byte.Parse(n163WavPosStr);
+                            }
+                            else if (instrument.ExpansionType == Project.ExpansionVrc7)
+                            {
+                                if (parameters.TryGetValue("Vrc7Patch", out var vrc7PatchStr)) instrument.Vrc7Patch = byte.Parse(vrc7PatchStr);
+
+                                if (instrument.Vrc7Patch == 0)
+                                {
+                                    for (int i = 0; i < 8; i++)
+                                    {
+                                        if (parameters.TryGetValue($"Vrc7Reg{i}", out var regStr))
+                                           instrument.Vrc7PatchRegs[i] = byte.Parse(regStr);
+                                    }
+                                }
+                            }
+
                             break;
                         }
                         case "Envelope":
