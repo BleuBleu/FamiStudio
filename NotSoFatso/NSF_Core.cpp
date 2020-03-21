@@ -2437,25 +2437,12 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			switch (state)
 			{
 				case STATE_PERIOD:             return mWave_FDS.nFreq.W;
-				case STATE_VOLUME:             
-					if (mWave_FDS.bEnabled)
-					{
-						switch (mWave_FDS.nMainVolume)
-						{
-							case 0: return mWave_FDS.nVolume;
-							case 1: return (int)ceil(mWave_FDS.nVolume * 0.666f);
-							case 2: return (int)ceil(mWave_FDS.nVolume * 0.500f);
-							case 3: return (int)ceil(mWave_FDS.nVolume * 0.400f);
-						}
-					}
-					else
-					{
-						return 0;
-					}
+				case STATE_VOLUME:             return mWave_FDS.bEnabled ? mWave_FDS.nVolume : 0;
 				case STATE_FDSWAVETABLE:       return mWave_FDS.nWaveTable[sub];
 				case STATE_FDSMODULATIONTABLE: return mWave_FDS.nLFO_Table[sub * 2];
 				case STATE_FDSMODULATIONDEPTH: return mWave_FDS.bLFO_On && (mWave_FDS.nSweep_Mode & 2) ? mWave_FDS.nSweep_Gain : 0;
 				case STATE_FDSMODULATIONSPEED: return mWave_FDS.bLFO_On ? mWave_FDS.nLFO_Freq.W : 0;
+				case STATE_FDSMASTERVOLUME:    return mWave_FDS.nMainVolume;
 			}
 		}
 		case CHANNEL_VRC7FM1:
@@ -2501,12 +2488,12 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			int idx = 7 - (channel - N163_WAVE1);
 			switch (state)
 			{
-				case STATE_PERIOD:         return mWave_N106.nFreqReg[idx].D;
-				case STATE_VOLUME:         return mWave_N106.nVolume[idx];
-				case STATE_N163WAVEPOS:    return mWave_N106.nWavePosStart[idx];
-				case STATE_N163WAVESIZE:   return mWave_N106.nWaveSize[idx];
-				case STATE_N163WAVE:       return mWave_N106.nRAM[sub];
-				case STATE_N16NUMCHANNELS: return mWave_N106.nActiveChannels + 1;
+				case STATE_PERIOD:          return mWave_N106.nFreqReg[idx].D;
+				case STATE_VOLUME:          return mWave_N106.nVolume[idx];
+				case STATE_N163WAVEPOS:     return mWave_N106.nWavePosStart[idx];
+				case STATE_N163WAVESIZE:    return mWave_N106.nWaveSize[idx];
+				case STATE_N163WAVE:        return mWave_N106.nRAM[sub];
+				case STATE_N163NUMCHANNELS: return mWave_N106.nActiveChannels + 1;
 			}
 			break;
 		}

@@ -268,15 +268,16 @@ namespace FamiStudio
         const int STATE_FDSMODULATIONTABLE = 9;
         const int STATE_FDSMODULATIONDEPTH = 10;
         const int STATE_FDSMODULATIONSPEED = 11;
-        const int STATE_VRC7PATCH          = 12;
-        const int STATE_VRC7PATCHREG       = 13;
-        const int STATE_VRC7OCTAVE         = 14;
-        const int STATE_VRC7TRIGGER        = 15;
-        const int STATE_VRC7SUSTAIN        = 16;
-        const int STATE_N163WAVEPOS        = 17;
-        const int STATE_N163WAVESIZE       = 18;
-        const int STATE_N163WAVE           = 19;
-        const int STATE_N16NUMCHANNELS     = 10;
+        const int STATE_FDSMASTERVOLUME    = 12;
+        const int STATE_VRC7PATCH          = 13;
+        const int STATE_VRC7PATCHREG       = 14;
+        const int STATE_VRC7OCTAVE         = 15;
+        const int STATE_VRC7TRIGGER        = 16;
+        const int STATE_VRC7SUSTAIN        = 17;
+        const int STATE_N163WAVEPOS        = 18;
+        const int STATE_N163WAVESIZE       = 19;
+        const int STATE_N163WAVE           = 20;
+        const int STATE_N163NUMCHANNELS    = 21;
 
         class ChannelState
         {
@@ -346,13 +347,14 @@ namespace FamiStudio
             return instrument;
         }
 
-        private Instrument GetFdsInstrument(sbyte[] wavEnv, sbyte[] modEnv)
+        private Instrument GetFdsInstrument(sbyte[] wavEnv, sbyte[] modEnv, byte masterVolume)
         {
             foreach (var inst in project.Instruments)
             {
                 if (inst.ExpansionType == Project.ExpansionFds)
                 {
-                    if (wavEnv.SequenceEqual(inst.Envelopes[Envelope.FdsWaveform].Values.Take(64)) &&
+                    if (inst.FdsMasterVolume == masterVolume &&
+                        wavEnv.SequenceEqual(inst.Envelopes[Envelope.FdsWaveform].Values.Take(64)) &&
                         modEnv.SequenceEqual(inst.Envelopes[Envelope.FdsModulation].Values.Take(32)))
                     {
                         return inst;
@@ -370,8 +372,9 @@ namespace FamiStudio
                     Array.Copy(wavEnv, instrument.Envelopes[Envelope.FdsWaveform].Values,   64);
                     Array.Copy(modEnv, instrument.Envelopes[Envelope.FdsModulation].Values, 32);
 
-                    instrument.FdsWavePreset = Envelope.WavePresetCustom;
-                    instrument.FdsModPreset  = Envelope.WavePresetCustom;
+                    instrument.FdsMasterVolume = masterVolume;
+                    instrument.FdsWavePreset   = Envelope.WavePresetCustom;
+                    instrument.FdsModPreset    = Envelope.WavePresetCustom;
 
                     return instrument;
                 }
@@ -608,7 +611,10 @@ namespace FamiStudio
                         modEnv[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONTABLE, i);
 
                     Envelope.ConvertFdsModulationToAbsolute(modEnv);
-                    instrument = GetFdsInstrument(wavEnv, modEnv);
+
+                    var masterVolume = (byte)NsfGetState(nsf, channel.Type, STATE_FDSMASTERVOLUME, 0);
+
+                    instrument = GetFdsInstrument(wavEnv, modEnv, masterVolume);
 
                     int modDepth = NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONDEPTH, 0);
                     int modSpeed = NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONSPEED, 0);
@@ -767,7 +773,7 @@ namespace FamiStudio
             for (int i = 0; i < numFrames; i++)
             {
                 NsfRunFrame(tmpNsf);
-                numNamcoChannels = Math.Max(numNamcoChannels, NsfGetState(tmpNsf, Channel.N163Wave1, STATE_N16NUMCHANNELS, 0));
+                numNamcoChannels = Math.Max(numNamcoChannels, NsfGetState(tmpNsf, Channel.N163Wave1, STATE_N163NUMCHANNELS, 0));
             }
 
             NsfClose(tmpNsf);
@@ -806,7 +812,7 @@ namespace FamiStudio
 
             var songName = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, songIndex));
 
-            song = project.CreateSong(string.IsNullOrEmpty(songName) ? null : songName); 
+            song = project.CreateSong(string.IsNullOrEmpty(songName) ? $"Song {songIndex + 1}" : songName); 
             channelStates = new ChannelState[song.Channels.Length];
 
             NsfSetTrack(nsf, songIndex);

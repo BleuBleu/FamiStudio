@@ -14,6 +14,7 @@ namespace FamiStudio
         private Color color;
 
         // FDS
+        private byte fdsMasterVolume = 0;
         private byte fdsWavPreset = Envelope.WavePresetSine;
         private byte fdsModPreset = Envelope.WavePresetFlat;
         private ushort fdsModSpeed;
@@ -173,9 +174,10 @@ namespace FamiStudio
             }
         }
 
-        public ushort FdsModSpeed { get => fdsModSpeed; set => fdsModSpeed = value; }
-        public byte   FdsModDepth { get => fdsModDepth; set => fdsModDepth = value; }
-        public byte   FdsModDelay { get => fdsModDelay; set => fdsModDelay = value; } 
+        public ushort FdsModSpeed     { get => fdsModSpeed;     set => fdsModSpeed = value; }
+        public byte   FdsModDepth     { get => fdsModDepth;     set => fdsModDepth = value; }
+        public byte   FdsModDelay     { get => fdsModDelay;     set => fdsModDelay = value; } 
+        public byte   FdsMasterVolume { get => fdsMasterVolume; set => fdsMasterVolume = value; }
 
         private void UpdateFdsWaveEnvelope()
         {
@@ -215,6 +217,7 @@ namespace FamiStudio
                     switch (expansion)
                     {
                         case Project.ExpansionFds:
+                            buffer.Serialize(ref fdsMasterVolume);
                             buffer.Serialize(ref fdsWavPreset);
                             buffer.Serialize(ref fdsModPreset);
                             buffer.Serialize(ref fdsModSpeed);
@@ -290,49 +293,51 @@ namespace FamiStudio
         };
 
         // FDS
-        public const int ParamFdsWavePreset = 0;
-        public const int ParamFdsModulationPreset = 1;
-        public const int ParamFdsModulationSpeed = 2;
-        public const int ParamFdsModulationDepth = 3;
-        public const int ParamFdsModulationDelay = 4;
+        public const int ParamFdsMasterVolume = 0;
+        public const int ParamFdsWavePreset = 1;
+        public const int ParamFdsModulationPreset = 2;
+        public const int ParamFdsModulationSpeed = 3;
+        public const int ParamFdsModulationDepth = 4;
+        public const int ParamFdsModulationDelay = 5;
 
         // N163
-        public const int ParamN163WavePreset = 5;
-        public const int ParamN163WaveSize = 6;
-        public const int ParamN163WavePos = 7;
+        public const int ParamN163WavePreset = 6;
+        public const int ParamN163WaveSize = 7;
+        public const int ParamN163WavePos = 8;
 
         // VRC7
-        public const int ParamVrc7Patch = 8;
-        public const int ParamVrc7CarTremolo = 9;
-        public const int ParamVrc7CarVibrato = 10;
-        public const int ParamVrc7CarSustained = 11;
-        public const int ParamVrc7CarWaveRectified = 12;
-        public const int ParamVrc7CarKeyScaling = 13;
-        public const int ParamVrc7CarKeyScalingLevel = 14;
-        public const int ParamVrc7CarFreqMultiplier = 15;
-        public const int ParamVrc7CarAttack = 16;
-        public const int ParamVrc7CarDecay = 17;
-        public const int ParamVrc7CarSustain = 18;
-        public const int ParamVrc7CarRelease = 19;
-        public const int ParamVrc7ModTremolo = 20;
-        public const int ParamVrc7ModVibrato = 21;
-        public const int ParamVrc7ModSustained = 22;
-        public const int ParamVrc7ModWaveRectified = 23;
-        public const int ParamVrc7ModKeyScaling = 24;
-        public const int ParamVrc7ModKeyScalingLevel = 25;
-        public const int ParamVrc7ModFreqMultiplier = 26;
-        public const int ParamVrc7ModAttack = 27;
-        public const int ParamVrc7ModDecay = 28;
-        public const int ParamVrc7ModSustain = 29;
-        public const int ParamVrc7ModRelease = 30;
-        public const int ParamVrc7ModLevel = 31;
-        public const int ParamVrc7Feedback = 32;
+        public const int ParamVrc7Patch = 9;
+        public const int ParamVrc7CarTremolo = 10;
+        public const int ParamVrc7CarVibrato = 11;
+        public const int ParamVrc7CarSustained = 12;
+        public const int ParamVrc7CarWaveRectified = 13;
+        public const int ParamVrc7CarKeyScaling = 14;
+        public const int ParamVrc7CarKeyScalingLevel = 15;
+        public const int ParamVrc7CarFreqMultiplier = 16;
+        public const int ParamVrc7CarAttack = 17;
+        public const int ParamVrc7CarDecay = 18;
+        public const int ParamVrc7CarSustain = 19;
+        public const int ParamVrc7CarRelease = 20;
+        public const int ParamVrc7ModTremolo = 21;
+        public const int ParamVrc7ModVibrato = 22;
+        public const int ParamVrc7ModSustained = 23;
+        public const int ParamVrc7ModWaveRectified = 24;
+        public const int ParamVrc7ModKeyScaling = 25;
+        public const int ParamVrc7ModKeyScalingLevel = 26;
+        public const int ParamVrc7ModFreqMultiplier = 27;
+        public const int ParamVrc7ModAttack = 28;
+        public const int ParamVrc7ModDecay = 29;
+        public const int ParamVrc7ModSustain = 30;
+        public const int ParamVrc7ModRelease = 31;
+        public const int ParamVrc7ModLevel = 32;
+        public const int ParamVrc7Feedback = 33;
 
-        public const int ParamMax = 33;
+        public const int ParamMax = 34;
 
         static readonly RealTimeParamInfo[] RealTimeParamsInfo =
         {
             // FDS
+            new RealTimeParamInfo() { name = "Master Volume",              max = 3, list = true },
             new RealTimeParamInfo() { name = "Wave Preset",                max = Envelope.WavePresetMax - 1, list = true },
             new RealTimeParamInfo() { name = "Mod Preset",                 max = Envelope.WavePresetMax - 1, list = true },
             new RealTimeParamInfo() { name = "Mod Speed",                  max = 4095 },
@@ -372,9 +377,14 @@ namespace FamiStudio
             new RealTimeParamInfo() { name = "Feedback",                   max = 7 }
         };
 
+        static readonly string[] FdsVolumeStrings =
+        {
+            "100%", "66%", "50%", "40%"
+        };
+
         static readonly int[] FdsParams = new[]
         {
-            ParamFdsWavePreset, ParamFdsModulationPreset, ParamFdsModulationSpeed, ParamFdsModulationDepth, ParamFdsModulationDelay
+            ParamFdsMasterVolume, ParamFdsWavePreset, ParamFdsModulationPreset, ParamFdsModulationSpeed, ParamFdsModulationDepth, ParamFdsModulationDelay
         };
 
         static readonly int[] N163Params = new[]
@@ -477,6 +487,7 @@ namespace FamiStudio
             switch (param)
             {
                 // FDS
+                case ParamFdsMasterVolume        : return fdsMasterVolume;
                 case ParamFdsWavePreset          : return fdsWavPreset;
                 case ParamFdsModulationPreset    : return fdsModPreset;
                 case ParamFdsModulationSpeed     : return fdsModSpeed; 
@@ -541,6 +552,7 @@ namespace FamiStudio
                     fdsModPreset = (byte)val;
                     UpdateFdsModulationEnvelope();
                     break;
+                case ParamFdsMasterVolume: fdsMasterVolume = (byte)val; break;
                 case ParamFdsModulationSpeed: fdsModSpeed = (ushort)val; break;
                 case ParamFdsModulationDepth: fdsModDepth = (byte)val; break;
                 case ParamFdsModulationDelay: fdsModDelay = (byte)val; break;
@@ -589,6 +601,7 @@ namespace FamiStudio
             switch (param)
             {
                 // FDS
+                case ParamFdsMasterVolume:     return FdsVolumeStrings[fdsMasterVolume];
                 case ParamFdsWavePreset:       return Envelope.PresetNames[fdsWavPreset];
                 case ParamFdsModulationPreset: return Envelope.PresetNames[fdsModPreset];
 

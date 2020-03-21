@@ -441,6 +441,9 @@ namespace FamiStudio
 
         public void SetExpansionAudio(int expansion, int numChannels = 1)
         {
+            if (expansion == ExpansionN163 && numChannels == 0)
+                expansion = ExpansionNone;
+
             if (expansion >= 0 && expansion < ExpansionCount)
             {
                 var changed = expansionAudio != expansion;

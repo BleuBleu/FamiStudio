@@ -26,12 +26,12 @@ namespace FamiStudio
                 Debug.Assert(wav.Length == 0x40);
                 Debug.Assert(mod.Length == 0x20);
 
-                WriteRegister(NesApu.FDS_VOL, 0x80);
+                WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
 
                 for (int i = 0; i < 0x40; ++i)
                     WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff);
 
-                WriteRegister(NesApu.FDS_VOL, 0x00);
+                WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
                 WriteRegister(NesApu.FDS_MOD_HI, 0x80);
                 WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
 

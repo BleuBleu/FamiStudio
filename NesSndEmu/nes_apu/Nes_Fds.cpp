@@ -6,7 +6,7 @@
 
 #include BLARGG_SOURCE_BEGIN
 
-Nes_Fds::Nes_Fds()
+Nes_Fds::Nes_Fds() : vol(1.0f)
 {
 	output(NULL);
 	volume(1.0);
@@ -35,7 +35,22 @@ void Nes_Fds::reset()
 
 void Nes_Fds::volume(double v)
 {
-	synth.volume(v * 0.13f);
+	vol = v;
+	update_volume();
+}
+
+void Nes_Fds::update_volume()
+{
+	float masterVolume = 1.0f;
+
+	switch (osc.regs[9] & 0x03)
+	{
+		case 1: masterVolume = 2.0f / 3.0f; break;
+		case 2: masterVolume = 2.0f / 4.0f; break;
+		case 3: masterVolume = 2.0f / 5.0f; break;
+	}
+
+	synth.volume(vol * masterVolume * 0.13f);
 }
 
 void Nes_Fds::treble_eq(blip_eq_t const& eq)
@@ -88,22 +103,14 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			osc.modt[modt_count - 2] = data;
 			osc.modt[modt_count - 1] = data;
 			break;
-		case 9:
-			// Master volume.
-			if ((osc.regs[reg] & 0x03) != (data & 0x03))
-			{
-				switch (data & 0x03)
-				{
-					case 0: synth.volume(2.0f / 2.0f); break;
-					case 1: synth.volume(2.0f / 3.0f); break;
-					case 2: synth.volume(2.0f / 4.0f); break;
-					case 3: synth.volume(2.0f / 5.0f); break;
-				}
-			}
-			break;
 		}
 
 		osc.regs[reg] = data;
+
+		if (reg == 9)
+		{
+			update_volume();
+		}
 	}
 }
 
