@@ -20,3 +20,4 @@ packages/
 *.lib
 *.pdb
 *.exp
+*.suo

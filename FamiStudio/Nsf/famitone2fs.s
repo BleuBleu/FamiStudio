@@ -1120,6 +1120,9 @@ _FT2Vrc7InvertVolumeTable:
     chan_idx = FT_TEMP_VAR3
     pitch    = FT_TEMP_PTR2
 
+    lda #0
+    sta FT_CHN_INST_CHANGED,y
+
     lda FT_CHN_VRC7_TRIGGER,y
     bpl check_cut
 
@@ -1359,6 +1362,9 @@ update_volume:
     ora #FT_N163_CHN_MASK
     sta N163_DATA
     
+    lda #0
+    sta FT_CHN_INST_CHANGED,y
+
     rts
 
 .endproc
@@ -2086,6 +2092,10 @@ no_pulse2_upd:
     sec
     sbc #5
     tax
+
+    lda FT_CHN_INST_CHANGED,x
+    beq done
+
     lda (ptr),y
     sta FT_CHN_VRC7_PATCH, x
     bne done
@@ -2248,6 +2258,9 @@ _FT2N163WaveTable:
 
     _FT2SetExpInstrumentBase
 
+    lda FT_CHN_INST_CHANGED,x
+    beq done
+
     ; Wave position
     lda chan_idx
     sec
@@ -2290,6 +2303,7 @@ _FT2N163WaveTable:
         cpy wave_len
         bne wave_loop
 
+    done:
     rts
 
 .endproc
