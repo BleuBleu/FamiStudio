@@ -329,8 +329,9 @@ namespace FamiStudio
                             var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.FdsWaveform]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.FdsModulation]]);
 
+                            lines.Add($"\t{db} {instrument.FdsMasterVolume}");
                             lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}, {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
-                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00, $00");
+                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00");
                         }
                         else if (instrument.ExpansionType == Project.ExpansionN163)
                         {
@@ -598,6 +599,19 @@ namespace FamiStudio
                                 patternBuffer.Add($"${0x64:x2}");
                         }
 
+                        if (note.HasFdsModSpeed)
+                        {
+                            patternBuffer.Add($"${0x66:x2}");
+                            patternBuffer.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
+                            patternBuffer.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
+                        }
+
+                        if (note.HasFdsModDepth)
+                        {
+                            patternBuffer.Add($"${0x67:x2}");
+                            patternBuffer.Add($"${note.FdsModDepth:x2}");
+                        }
+
                         if (note.IsValid)
                         {
                             // Instrument change.
@@ -663,7 +677,7 @@ namespace FamiStudio
                             {
                                 var emptyNote = pattern.Notes[i];
 
-                                if (numEmptyNotes >= maxRepeatCount || emptyNote.IsValid || emptyNote.HasVolume || emptyNote.HasVibrato || emptyNote.HasFinePitch ||
+                                if (numEmptyNotes >= maxRepeatCount || emptyNote.IsValid || emptyNote.HasVolume || emptyNote.HasVibrato || emptyNote.HasFinePitch || emptyNote.HasFdsModSpeed || emptyNote.HasFdsModDepth ||
                                     (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
                                 {
                                     break;

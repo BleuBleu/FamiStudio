@@ -26,5 +26,6 @@ EXIT /B %ERRORLEVEL%
 PatchText %~1 tmp.cfg %~2
 ..\..\..\NES\tools\bin\ca65 nsf.s -g -o %~4.o %~3 
 ..\..\..\NES\tools\bin\ld65 -C tmp.cfg -o %~4.bin %~4.o --mapfile %~4.map --dbgfile %~4.dbg
+PrintCodeSize %~4.map
 del tmp.cfg
 EXIT /B 0

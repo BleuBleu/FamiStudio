@@ -9,7 +9,7 @@ FT_SFX_STREAMS    = 0     ;number of sound effects played at once, 1..4
   
 FT_DPCM_ENABLE    = 1     ;undefine to exclude all DMC code
 FT_SFX_ENABLE     = 0     ;undefine to exclude all sound effects code
-FT_THREAD         = 1     ;undefine if you are calling sound effects from the same thread as the sound update call
+FT_THREAD         = 0     ;undefine if you are calling sound effects from the same thread as the sound update call
   
 FT_PAL_SUPPORT    = 0     ;undefine to exclude PAL support
 FT_NTSC_SUPPORT   = 1     ;undefine to exclude NTSC support
@@ -181,6 +181,7 @@ FT_MMC5_PULSE2_PREV  = FT_CHN_VOLUME_TRACK+4
 FT_FDS_MOD_SPEED: .res 2
 FT_FDS_MOD_DEPTH: .res 1
 FT_FDS_MOD_DELAY: .res 1
+FT_FDS_OVERRIDE_FLAGS: .res 1 ; Bit 7 = mod speed overriden, bit 6 mod depth overriden
 .endif
 
 ; FDS, N163 and VRC7 have very different instrument layout and are 16-bytes, so we keep them seperate.
@@ -385,11 +386,23 @@ FDS_ENV_SPEED  = $408A
     FT_MR_NOISE_F  = FT_OUT_BUF+10
 .endif
 
-; increments 16 bit.
+; increments 16-bit.
 .macro inc_16 addr
     .local @ok
     inc addr+0
     bne @ok
+    inc addr+1
+@ok:
+.endmacro
+
+; add 8-bit to a 16-bit (unsigned).
+.macro add_16_8 addr, val
+    .local @ok
+    clc
+    lda val
+    adc addr+0
+    sta addr+0
+    bcc @ok
     inc addr+1
 @ok:
 .endmacro
@@ -749,6 +762,7 @@ pal:
     sta FT_FDS_MOD_SPEED+1
     sta FT_FDS_MOD_DEPTH
     sta FT_FDS_MOD_DELAY
+    sta FT_FDS_OVERRIDE_FLAGS
 .endif
 
 .ifdef FT_CHN_INST_CHANGED
@@ -1078,6 +1092,8 @@ compute_volume:
 set_volume:
     ora #$80
     sta FDS_VOL_ENV
+    lda #0
+    sta FT_FDS_OVERRIDE_FLAGS
 
     rts 
 
@@ -2097,9 +2113,10 @@ no_pulse2_upd:
 .ifdef FT_FDS
 .proc _FT2SetFdsInstrument
 
-    ptr      = FT_TEMP_PTR1
-    wave_ptr = FT_TEMP_PTR2
-    tmp_y    = FT_TEMP_VAR3
+    ptr        = FT_TEMP_PTR1
+    wave_ptr   = FT_TEMP_PTR2
+    master_vol = FT_TEMP_VAR2
+    tmp_y      = FT_TEMP_VAR3
 
     _FT2SetExpInstrumentBase
 
@@ -2109,7 +2126,8 @@ no_pulse2_upd:
     lda FT_CHN_INST_CHANGED
     bne write_fds_wave
 
-    iny ; Skip wave + mod envelope.
+    iny ; Skip master volume + wave + mod envelope.
+    iny
     iny
     iny
     iny
@@ -2118,7 +2136,11 @@ no_pulse2_upd:
 
     write_fds_wave:
 
-        lda #$80
+        lda (ptr),y
+        sta master_vol
+        iny
+
+        ora #$80
         sta FDS_VOL ; Enable wave RAM write
 
         ; FDS Waveform
@@ -2140,8 +2162,9 @@ no_pulse2_upd:
 
         lda #$80
         sta FDS_MOD_HI ; Need to disable modulation before writing.
-        lda #0
+        lda master_vol
         sta FDS_VOL ; Disable RAM write.
+        lda #0
         sta FDS_SWEEP_BIAS
 
         ; FDS Modulation
@@ -2169,17 +2192,34 @@ no_pulse2_upd:
 
     load_mod_param:
 
-        lda (ptr),y
-        sta FT_FDS_MOD_SPEED+0
-        iny
-        lda (ptr),y
-        sta FT_FDS_MOD_SPEED+1
-        iny
-        lda (ptr),y
-        sta FT_FDS_MOD_DEPTH
-        iny
-        lda (ptr),y
-        sta FT_FDS_MOD_DELAY
+        check_mod_speed:
+            bit FT_FDS_OVERRIDE_FLAGS
+            bmi mod_speed_overriden
+
+            load_mod_speed:
+                lda (ptr),y
+                sta FT_FDS_MOD_SPEED+0
+                iny
+                lda (ptr),y
+                sta FT_FDS_MOD_SPEED+1
+                jmp check_mod_depth
+
+            mod_speed_overriden:
+                iny
+
+        check_mod_depth:
+            iny
+            bit FT_FDS_OVERRIDE_FLAGS
+            bvs mod_depth_overriden
+
+            load_mod_depth:
+                lda (ptr),y
+                sta FT_FDS_MOD_DEPTH
+
+            mod_depth_overriden:
+                iny
+                lda (ptr),y
+                sta FT_FDS_MOD_DELAY
 
     rts
 
@@ -2306,12 +2346,14 @@ check_regular_note:
 
 check_special_code:
     ora #0
-    bpl check_volume
+    bpl check_volume_track
     jmp special_code           ;bit 7 0=note 1=special code
 
-check_volume:
+check_volume_track:
     cmp #$70
-    bcc check_slide
+    bcc special_code_6x
+
+volume_track:    
     and #$0f
     asl ; a LUT would be nice, but x/y are both in-use here.
     asl
@@ -2320,22 +2362,42 @@ check_volume:
     sta FT_CHN_VOLUME_TRACK,x
     jmp read_byte
 
-; TODO: Jump table, or binary search...
-check_slide:
-    cmp #$61                  ; slide note (followed by num steps, step size and the target note)
-    beq slide
+special_code_6x:
+    stx FT_TEMP_VAR1
+    and #$0f
+    tax
+    lda special_code_jmp_lo-1,x
+    sta FT_TEMP_PTR2+0
+    lda special_code_jmp_hi-1,x
+    sta FT_TEMP_PTR2+1
+    ldx FT_TEMP_VAR1
+    jmp (FT_TEMP_PTR2)
 
-check_disable_attack:    
-    cmp #$62
-    beq disable_attack
+.ifdef ::FT_FDS
 
-check_override_pitch_envelope:
-    cmp #$63
-    beq override_pitch_envelope
+fds_mod_depth:    
+    lda (FT_TEMP_PTR1),y
+    inc_16 FT_TEMP_PTR1
+    sta FT_FDS_MOD_DEPTH
+    lda #$40
+    ora FT_FDS_OVERRIDE_FLAGS
+    sta FT_FDS_OVERRIDE_FLAGS
+    jmp read_byte
 
-check_clear_pitch_override_flag:
-    cmp #$64
-    beq clear_pitch_override_flag
+fds_mod_speed:
+    lda (FT_TEMP_PTR1),y
+    sta FT_FDS_MOD_SPEED+0
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta FT_FDS_MOD_SPEED+1
+    add_16_8 FT_TEMP_PTR1, #2
+    lda #$80
+    ora FT_FDS_OVERRIDE_FLAGS
+    sta FT_FDS_OVERRIDE_FLAGS
+    dey
+    jmp read_byte
+
+.endif
 
 fine_pitch:
     stx FT_TEMP_VAR1
@@ -2370,14 +2432,8 @@ override_pitch_envelope:
     sta FT_PITCH_ENV_PTR,x
     sta FT_PITCH_ENV_OVERRIDE,x
     ldx FT_TEMP_VAR1
-    clc
-    lda #2
-    adc FT_TEMP_PTR_L
-    sta FT_TEMP_PTR_L
-    bcc override_pitch_envelope_jump_back 
-    inc FT_TEMP_PTR_H
-    override_pitch_envelope_jump_back:
-        jmp read_byte 
+    add_16_8 FT_TEMP_PTR1, #2
+    jmp read_byte 
 
 disable_attack:
     lda #1
@@ -2472,12 +2528,7 @@ note_table_done:
     ldy #2
     lda (FT_TEMP_PTR1),y       ; re-read the target note (ugly...)
     sta FT_CHN_NOTE,x          ; store note code
-    lda #3
-    clc
-    adc FT_TEMP_PTR_L
-    sta FT_TEMP_PTR_L
-    bcc slide_done_pos
-    inc FT_TEMP_PTR_H
+    add_16_8 FT_TEMP_PTR1, #3
 
 slide_done_pos:
     ldy #0
@@ -2626,6 +2677,27 @@ no_ref:
     rts
 
 .endproc
+
+special_code_jmp_lo:
+    .byte <_FT2ChannelUpdate::slide
+    .byte <_FT2ChannelUpdate::disable_attack
+    .byte <_FT2ChannelUpdate::override_pitch_envelope
+    .byte <_FT2ChannelUpdate::clear_pitch_override_flag
+    .byte <_FT2ChannelUpdate::fine_pitch
+.ifdef ::FT_FDS        
+    .byte <_FT2ChannelUpdate::fds_mod_speed
+    .byte <_FT2ChannelUpdate::fds_mod_depth
+.endif        
+special_code_jmp_hi:
+    .byte >_FT2ChannelUpdate::slide
+    .byte >_FT2ChannelUpdate::disable_attack
+    .byte >_FT2ChannelUpdate::override_pitch_envelope
+    .byte >_FT2ChannelUpdate::clear_pitch_override_flag
+    .byte >_FT2ChannelUpdate::fine_pitch
+.ifdef ::FT_FDS        
+    .byte >_FT2ChannelUpdate::fds_mod_speed
+    .byte >_FT2ChannelUpdate::fds_mod_depth
+.endif
 
 ;------------------------------------------------------------------------------
 ; stop DPCM sample if it plays

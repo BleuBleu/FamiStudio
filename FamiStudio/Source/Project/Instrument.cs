@@ -229,6 +229,7 @@ namespace FamiStudio
                             buffer.Serialize(ref n163WaveSize);
                             buffer.Serialize(ref n163WavePos);
                             break;
+
                         case Project.ExpansionVrc7:
                             buffer.Serialize(ref vrc7Patch);
                             buffer.Serialize(ref vrc7PatchRegs[0]);
