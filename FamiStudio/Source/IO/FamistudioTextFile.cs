@@ -325,8 +325,10 @@ namespace FamiStudio
                             if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr))  pattern.Notes[time].VibratoDepth    = byte.Parse(vibDepthStr);
                             if (parameters.TryGetValue("FinePitch",    out var finePitchStr)) pattern.Notes[time].FinePitch       = sbyte.Parse(finePitchStr);
                             if (parameters.TryGetValue("SlideTarget",  out var slideStr))     pattern.Notes[time].SlideNoteTarget = (byte)Note.FromFriendlyName(valueStr);
+                            if (parameters.TryGetValue("FdsModSpeed",  out var modSpeedStr))  pattern.Notes[time].FdsModSpeed     = ushort.Parse(modSpeedStr);
+                            if (parameters.TryGetValue("FdsModDepth",  out var modDepthStr))  pattern.Notes[time].FdsModDepth     = byte.Parse(modDepthStr);
 
-                                break;
+                            break;
                         }
                         case "PatternInstance":
                         {

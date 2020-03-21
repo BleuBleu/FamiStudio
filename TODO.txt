@@ -1,6 +1,5 @@
-
-1.5.0: FDS + PAL
-================
+1.5.0: All expansions + PAL
+============================
 - PAL support/tempo/speed:
 	- 2 tempo modes:
 		- FamiTracker : Tracker like, tempo/speed, delayed notes/cuts. Minimal effor to support.
@@ -23,10 +22,7 @@
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.
 - Basic note dragging.
-- FamiStudio text export, finish.
 - MATTT.
-- BUG: Seeking in FDS sometimes doesnt work (zelda)
-- Finish FamiStudio text export.
 - Missing tooltip (make channel active, ghost, sliders fine, effect fine, etc.)
 
 TESTING:
