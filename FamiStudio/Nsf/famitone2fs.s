@@ -2258,14 +2258,15 @@ _FT2N163WaveTable:
 
     _FT2SetExpInstrumentBase
 
-    lda FT_CHN_INST_CHANGED,x
-    beq done
-
     ; Wave position
     lda chan_idx
     sec
     sbc #5
     tax
+
+    lda FT_CHN_INST_CHANGED,x
+    beq done
+
     lda _FT2N163WaveTable, x
     sta N163_ADDR
     lda (ptr),y
@@ -2580,7 +2581,7 @@ special_code:
     asl a
     sta FT_CHN_INSTRUMENT,x    ;store instrument number*4
 
-.if .defined(FT_N163) || .defined(FT_VRC7) || .defined(FT_FDS)
+.if .defined(::FT_N163) || .defined(::FT_VRC7) || .defined(::FT_FDS)
     cpx #5
     bcc regular_channel
         lda #1

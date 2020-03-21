@@ -25,8 +25,6 @@
 - Basic note dragging.
 - FamiStudio text export, finish.
 - MATTT.
-- NSF:
-	- Dont reload VRC7, N163 + FDS instrument every note.
 - BUG: Moving notes with arrows enables some effects. Copy paste too.
 - BUG: Seeking in FDS sometimes doesnt work (zelda)
 - Finish FamiStudio text export.
