@@ -131,7 +131,7 @@ namespace FamiStudio
 
         public byte Volume
         {
-            get { return FxVolume; }
+            get { Debug.Assert(HasVolume); return FxVolume; }
             set { Debug.Assert(value >= 0 && value <= VolumeMax); FxVolume = value; HasVolume = true; }
         }
 
@@ -147,7 +147,7 @@ namespace FamiStudio
 
         public byte VibratoSpeed
         {
-            get { return (byte)(FxVibrato >> 4); }
+            get { Debug.Assert(HasVibrato); return (byte)(FxVibrato >> 4); }
             set
             {
                 Debug.Assert(value >= 0 && value <= VibratoSpeedMax);
@@ -160,7 +160,7 @@ namespace FamiStudio
 
         public byte VibratoDepth
         {
-            get { return (byte)(FxVibrato & 0x0f); }
+            get { Debug.Assert(HasVibrato); return (byte)(FxVibrato & 0x0f); }
             set
             {
                 Debug.Assert(value >= 0 && value <= VibratoDepthMax);
@@ -177,25 +177,25 @@ namespace FamiStudio
 
         public sbyte FinePitch
         {
-            get { return FxFinePitch; }
+            get { Debug.Assert(HasFinePitch); return FxFinePitch; }
             set { FxFinePitch = value; HasFinePitch = true; }
         }
 
         public byte Speed
         {
-            get { return FxSpeed; }
+            get { Debug.Assert(HasSpeed); return FxSpeed; }
             set { Debug.Assert(value >= 0 && value <= 31); FxSpeed = value; HasSpeed = true; }
         }
 
         public byte FdsModDepth
         {
-            get { return FxFdsModDepth; }
+            get { Debug.Assert(HasFdsModDepth); return FxFdsModDepth; }
             set { Debug.Assert(value >= 0 && value <= 63); FxFdsModDepth = value; HasFdsModDepth = true; }
         }
 
         public ushort FdsModSpeed
         {
-            get { return FxFdsModSpeed; }
+            get { Debug.Assert(HasFdsModSpeed); return FxFdsModSpeed; }
             set { Debug.Assert(value >= 0 && value <= 4096); FxFdsModSpeed = value; HasFdsModSpeed = true; }
         }
 
@@ -293,8 +293,20 @@ namespace FamiStudio
 
         public uint ComputeCRC(uint crc = 0)
         {
-            // MATTT: Missing fields and ignore inative effects.
-            crc = CRC32.Compute(new byte[] { Value, Flags, Volume, FxVibrato, Speed, Slide, (byte)FxFinePitch }, crc);
+            crc = CRC32.Compute(
+                new byte[] {
+                    Value,
+                    Flags,
+                    Slide,
+                    (byte)(HasVolume      ? FxVolume      : 0),
+                    (byte)(HasVibrato     ? FxVibrato     : 0),
+                    (byte)(HasSpeed       ? FxSpeed       : 0),
+                    (byte)(HasFinePitch   ? FxFinePitch   : 0),
+                    (byte)(HasFdsModDepth ? FxFdsModDepth : 0)
+                }, 
+                crc);
+            crc = CRC32.Compute(BitConverter.GetBytes(EffectMask), crc);
+            crc = CRC32.Compute(BitConverter.GetBytes(HasFdsModSpeed ? FdsModSpeed : (ushort)0), crc);
             crc = CRC32.Compute(BitConverter.GetBytes(Instrument == null ? -1 : Instrument.Id), crc);
             return crc;
         }

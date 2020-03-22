@@ -24,6 +24,7 @@
 - Basic note dragging.
 - MATTT.
 - Missing tooltip (make channel active, ghost, sliders fine, effect fine, etc.)
+- BUG: Validate error when changing volume in Shovel Knight.
 
 TESTING:
 ========

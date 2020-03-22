@@ -53,7 +53,8 @@ namespace FamiStudio
         const int DefaultEffectNamePosX = 17;
         const int DefaultEffectNamePosY = 2;
         const int DefaultEffectIconSizeX = 12;
-        const int DefaultEffectValueTextOffsetY = 12;
+        const int DefaultEffectValuePosTextOffsetY = 12;
+        const int DefaultEffectValueNegTextOffsetY = 3;
         const int DefaultBigTextPosX = 10;
         const int DefaultBigTextPosY = 10;
         const int DefaultTooltipTextPosX = 10;
@@ -84,7 +85,8 @@ namespace FamiStudio
         int effectNamePosX;
         int effectNamePosY;
         int effectIconSizeX;
-        int effectValueTextOffsetY;
+        int effectValuePosTextOffsetY;
+        int effectValueNegTextOffsetY;
         int bigTextPosX;
         int bigTextPosY;
         int tooltipTextPosX;
@@ -123,6 +125,7 @@ namespace FamiStudio
         RenderBrush selectionBgInvisibleBrush;
         RenderBrush selectionNoteBrush;
         RenderBrush attackBrush;
+        RenderBrush iconTransparentBrush;
         RenderBitmap bmpLoop;
         RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
@@ -217,40 +220,41 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
 
-            numOctaves             = DefaultNumOctaves;
-            headerSizeY            = (int)((editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe ? 2 : 1) * DefaultHeaderSizeY * scaling);
-            effectPanelSizeY       = (int)(DefaultEffectPanelSizeY * scaling);
-            effectButtonSizeY      = (int)(DefaultEffectButtonSizeY * scaling);
-            noteSizeX              = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
-            noteSizeY              = (int)(DefaultNoteSizeY * scaling);
-            noteAttackSizeX        = (int)(DefaultNoteAttackSizeX * scaling);
-            releaseNoteSizeY       = (int)(DefaultReleaseNoteSizeY * scaling);
-            envelopeMax            = (int)(DefaultEnvelopeMax * scaling);      
-            whiteKeySizeY          = (int)(DefaultWhiteKeySizeY * scaling);    
-            whiteKeySizeX          = (int)(DefaultWhiteKeySizeX * scaling);    
-            blackKeySizeY          = (int)(DefaultBlackKeySizeY * scaling);    
-            blackKeySizeX          = (int)(DefaultBlackKeySizeX * scaling);
-            effectIconPosX         = (int)(DefaultEffectIconPosX * scaling);
-            effectIconPosY         = (int)(DefaultEffectIconPosY * scaling);
-            effectNamePosX         = (int)(DefaultEffectNamePosX * scaling);
-            effectNamePosY         = (int)(DefaultEffectNamePosY * scaling);
-            effectIconSizeX        = (int)(DefaultEffectIconSizeX * scaling);
-            effectValueTextOffsetY = (int)(DefaultEffectValueTextOffsetY * scaling);
-            bigTextPosX            = (int)(DefaultBigTextPosX * scaling);
-            bigTextPosY            = (int)(DefaultBigTextPosY * scaling);
-            tooltipTextPosX        = (int)(DefaultTooltipTextPosX * scaling);
-            tooltipTextPosY        = (int)(DefaultTooltipTextPosY * scaling);
-            dpcmTextPosX           = (int)(DefaultDPCMTextPosX * scaling);
-            dpcmTextPosY           = (int)(DefaultDPCMTextPosY * scaling);
-            octaveNameOffsetY      = (int)(DefaultOctaveNameOffsetY * scaling);
-            slideIconPosX          = (int)(DefaultSlideIconPosX * scaling);
-            slideIconPosY          = (int)(DefaultSlideIconPosY * scaling);
-            envelopeSizeY          = DefaultEnvelopeSizeY * envelopeValueZoom * scaling;    
-            octaveSizeY            = 12 * noteSizeY;
-            numNotes               = numOctaves * 12;
-            virtualSizeY           = numNotes * noteSizeY;
-            barSizeX               = noteSizeX * (Song == null ? 16  : Song.BarLength);
-            headerAndEffectSizeY   = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
+            numOctaves                = DefaultNumOctaves;
+            headerSizeY               = (int)((editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe ? 2 : 1) * DefaultHeaderSizeY * scaling);
+            effectPanelSizeY          = (int)(DefaultEffectPanelSizeY * scaling);
+            effectButtonSizeY         = (int)(DefaultEffectButtonSizeY * scaling);
+            noteSizeX                 = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
+            noteSizeY                 = (int)(DefaultNoteSizeY * scaling);
+            noteAttackSizeX           = (int)(DefaultNoteAttackSizeX * scaling);
+            releaseNoteSizeY          = (int)(DefaultReleaseNoteSizeY * scaling);
+            envelopeMax               = (int)(DefaultEnvelopeMax * scaling);      
+            whiteKeySizeY             = (int)(DefaultWhiteKeySizeY * scaling);    
+            whiteKeySizeX             = (int)(DefaultWhiteKeySizeX * scaling);    
+            blackKeySizeY             = (int)(DefaultBlackKeySizeY * scaling);    
+            blackKeySizeX             = (int)(DefaultBlackKeySizeX * scaling);
+            effectIconPosX            = (int)(DefaultEffectIconPosX * scaling);
+            effectIconPosY            = (int)(DefaultEffectIconPosY * scaling);
+            effectNamePosX            = (int)(DefaultEffectNamePosX * scaling);
+            effectNamePosY            = (int)(DefaultEffectNamePosY * scaling);
+            effectIconSizeX           = (int)(DefaultEffectIconSizeX * scaling);
+            effectValuePosTextOffsetY = (int)(DefaultEffectValuePosTextOffsetY * scaling);
+            effectValueNegTextOffsetY = (int)(DefaultEffectValueNegTextOffsetY * scaling);
+            bigTextPosX              = (int)(DefaultBigTextPosX * scaling);
+            bigTextPosY              = (int)(DefaultBigTextPosY * scaling);
+            tooltipTextPosX          = (int)(DefaultTooltipTextPosX * scaling);
+            tooltipTextPosY          = (int)(DefaultTooltipTextPosY * scaling);
+            dpcmTextPosX             = (int)(DefaultDPCMTextPosX * scaling);
+            dpcmTextPosY             = (int)(DefaultDPCMTextPosY * scaling);
+            octaveNameOffsetY        = (int)(DefaultOctaveNameOffsetY * scaling);
+            slideIconPosX            = (int)(DefaultSlideIconPosX * scaling);
+            slideIconPosY            = (int)(DefaultSlideIconPosY * scaling);
+            envelopeSizeY            = DefaultEnvelopeSizeY * envelopeValueZoom * scaling;    
+            octaveSizeY              = 12 * noteSizeY;
+            numNotes                 = numOctaves * 12;
+            virtualSizeY             = numNotes * noteSizeY;
+            barSizeX                 = noteSizeX * (Song == null ? 16  : Song.BarLength);
+            headerAndEffectSizeY     = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
         }
 
         public Instrument CurrentInstrument
@@ -438,6 +442,7 @@ namespace FamiStudio
             selectionBgInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, ThemeBase.LightGreyFillColor1));
             selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
             attackBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.BlackColor));
+            iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, ThemeBase.LightGreyFillColor2));
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
             bmpEffects[Note.EffectVolume] = g.CreateBitmapFromResource("VolumeSmall");
@@ -631,12 +636,41 @@ namespace FamiStudio
                             var note = pattern.Notes[n];
                             for (int i = Note.EffectCount - 1; i >= 0; i--)
                             {
+                                if (showEffectsPanel && i == selectedEffectIdx)
+                                    continue;
+
                                 if (note.HasValidEffectValue(i))
                                 {
                                     int iconX = patternX + n * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2;
                                     int iconY = headerSizeY / 2 + effectIconPosY;
+                                    g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, showEffectsPanel ? iconTransparentBrush : theme.LightGreyFillBrush2);
+                                    g.DrawBitmap(bmpEffects[i], iconX, iconY, showEffectsPanel ? 0.3f : 1.0f);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // When showing the effect panel, make sure to draw the selectd effect icons on top of everything.
+                if (showEffectsPanel)
+                {
+                    for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
+                    {
+                        var pattern = Song.Channels[editChannel].PatternInstances[p];
+                        if (pattern != null)
+                        {
+                            var patternLen = Song.GetPatternLength(p);
+                            var patternX = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
+                            for (int n = 0; n < patternLen; n++)
+                            {
+                                var note = pattern.Notes[n];
+                                if (note.HasValidEffectValue(selectedEffectIdx))
+                                {
+                                    int iconX = patternX + n * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2;
+                                    int iconY = headerSizeY / 2 + effectIconPosY;
                                     g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.LightGreyFillBrush2);
-                                    g.DrawBitmap(bmpEffects[i], iconX, iconY);
+                                    g.DrawBitmap(bmpEffects[selectedEffectIdx], iconX, iconY);
                                     break;
                                 }
                             }
@@ -839,7 +873,12 @@ namespace FamiStudio
 
                                 var text = effectValue.ToString();
                                 if ((text.Length <= 2 && zoomLevel >= 0) || zoomLevel > 0)
-                                    g.DrawText(text, ThemeBase.FontSmallCenter, 0, effectPanelSizeY - effectValueTextOffsetY, theme.BlackBrush, noteSizeX);
+                                {
+                                    if (sizeY < effectPanelSizeY / 2)
+                                        g.DrawText(text, ThemeBase.FontSmallCenter, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, theme.LightGreyFillBrush1, noteSizeX);
+                                    else
+                                        g.DrawText(text, ThemeBase.FontSmallCenter, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, theme.BlackBrush, noteSizeX);
+                                }
 
                                 g.PopTransform();
                             }
@@ -1423,7 +1462,6 @@ namespace FamiStudio
 
             RenderHeader(g, a);
             RenderEffectList(g);
-            //RenderEnvelopeHeader(g);
             RenderEffectPanel(g, a);
             RenderPiano(g, a);
             RenderNotes(g, a);
