@@ -1429,6 +1429,12 @@ update_volume:
 
 .macro _FT2UpdateRow channel_idx, env_idx
 
+    .local @no_new_note
+.ifdef ::FT_EQUALIZER
+    .local @new_note
+    .local @done
+.endif
+
     ldx #channel_idx
     jsr _FT2ChannelUpdate
     bcc @no_new_note

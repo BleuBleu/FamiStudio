@@ -1,7 +1,7 @@
 ; Simple FamiStudio ROM to play music on actual hardware.
 ; Based off Brad's (rainwarrior.ca) CA65 template.
 
-.include "famitone2fs.s"
+.include "../Nsf/famitone2fs.s"
 
 .segment "ZEROPAGE"
 nmi_lock:           .res 1 ; prevents NMI re-entry
@@ -255,7 +255,6 @@ default_palette:
 			inx
 			cpx #32
 			bne pal_loop
-
 
 scroll:
 	lda scroll_nmt
