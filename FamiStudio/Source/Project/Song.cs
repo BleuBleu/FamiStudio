@@ -474,6 +474,13 @@ namespace FamiStudio
 
             if (buffer.Version < 5)
                 ConvertJumpSkipEffects();
+
+            // Needs to be done after converting the jump/skip effects.
+            if (buffer.IsReading)
+            {
+                foreach (var channel in channels)
+                    channel.UpdatePatternsMaxInstanceLength();
+            }
         }
     }
 }
