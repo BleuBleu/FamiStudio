@@ -22,10 +22,9 @@
 - Make all I/O class non-static.
 - Basic note dragging.
 	- Dragging release/stop with note will be confusing. Will cut other notes unpredictably.
-	- But what about multiple notes?
+	- But what about mul tiple notes?
 - MATTT.
 - Missing tooltip (make channel active, ghost, sliders fine, effect fine, etc.)
-- BUG: Validate error when changing volume in Shovel Knight.
 
 TESTING:
 ========
