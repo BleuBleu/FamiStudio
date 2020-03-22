@@ -22,7 +22,6 @@
 	- Dragging release/stop with note will be confusing. Will cut other notes unpredictably.
 	- But what about mul tiple notes?
 - MATTT.
-- Missing tooltip (make channel active, ghost, sliders fine, effect fine, etc.)
 
 TESTING:
 ========

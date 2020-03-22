@@ -1209,9 +1209,9 @@ namespace FamiStudio
                 if (GetTrackIconForPos(e) >= 0)
                     tooltip = "{MouseLeft} Mute Channel - {MouseRight} Solo Channel";
                 else if (GetTrackGhostForPos(e) >= 0)
-                    tooltip = "{MouseLeft} Toggle channel for display";
+                    tooltip = $"{{MouseLeft}} Make channel active {{Ctrl}} {{{(e.Y - headerSizeY) / trackSizeY}}}";
                 else
-                    tooltip = "{MouseLeft} Make channel active";
+                    tooltip = $"{{MouseLeft}} Make channel active {{{(e.Y - headerSizeY) / trackSizeY}}}";
             }
 
             App.ToolTip = tooltip;

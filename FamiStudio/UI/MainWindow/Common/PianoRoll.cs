@@ -1508,6 +1508,9 @@ namespace FamiStudio
             int newValue;
             if (shift)
             {
+                if (!pattern.Notes[effectNoteIdx].HasValidEffectValue(selectedEffectIdx))
+                    pattern.Notes[effectNoteIdx].SetEffectValue(selectedEffectIdx, Note.GetEffectDefaultValue(Song, selectedEffectIdx));
+
                 newValue = Utils.Clamp(pattern.Notes[effectNoteIdx].GetEffectValue(selectedEffectIdx) + (mouseLastY - e.Y), minValue, maxValue);
             }
             else
@@ -2324,7 +2327,7 @@ namespace FamiStudio
             }
             else if (IsMouseInEffectPanel(e))
             {
-                tooltip = "{MouseLeft} Set effect value - {MouseRight} Clear effect value - {MouseWheel} Pan";
+                tooltip = "{MouseLeft} Set effect value - {Shift} {MouseLeft} Set effect value (fine) - {MouseRight} Clear effect value - {MouseWheel} Pan";
             }
             else if (IsMouseInNoteArea(e))
             {

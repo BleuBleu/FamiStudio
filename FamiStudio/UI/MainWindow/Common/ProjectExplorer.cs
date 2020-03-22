@@ -683,6 +683,19 @@ namespace FamiStudio
                 {
                     tooltip = "{MouseLeft}{MouseLeft} Project properties";
                 }
+                else if (buttonType == ButtonType.ParamCheckbox && e.X >= Width - scrollBarSizeX - checkBoxPosX)
+                {
+                    tooltip = "{MouseLeft} Toggle value";
+                }
+                else if (buttonType == ButtonType.ParamSlider && e.X >= Width - scrollBarSizeX - sliderPosX)
+                {
+                    tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)";
+                    
+                }
+                else if (buttonType == ButtonType.ParamList && e.X >= Width - scrollBarSizeX - sliderPosX)
+                {
+                    tooltip = "{MouseLeft} Change value";
+                }
                 else if (buttonType == ButtonType.Instrument)
                 {
                     if (subButtonType == SubButtonType.Max)

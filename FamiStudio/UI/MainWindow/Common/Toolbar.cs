@@ -190,6 +190,8 @@ namespace FamiStudio
 
             for (char i = 'A'; i <= 'Z'; i++)
                 specialCharacters[i.ToString()] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
+            for (char i = '0'; i <= '9'; i++)
+                specialCharacters[i.ToString()] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
 
             foreach (var specialChar in specialCharacters.Values)
             {
