@@ -523,29 +523,7 @@ namespace FamiStudio
                 return expansionAudio != ExpansionNone && expansionAudio != ExpansionMmc5;
             }
         }
-
-        public static string[] GetAllowedExpansionNames()
-        {
-            var allowedExpansions = new List<string>();
-
-            for (int i = 0; i < ExpansionCount; i++)
-            {
-                if (IsExpansionAudioAllowed(i))
-                    allowedExpansions.Add(ExpansionNames[i]);
-            }
-
-            return allowedExpansions.ToArray();
-        }
-
-        public static bool IsExpansionAudioAllowed(int expansion)
-        {
-#if DEV
-            return true;
-#else
-            return expansion == ExpansionNone || expansion == ExpansionVrc6;
-#endif
-        }
-
+        
         public bool UsesSamples
         {
             get

@@ -1136,7 +1136,7 @@ namespace FamiStudio
                     dlg.Properties.AddString("Title :", project.Name, 31); // 0
                     dlg.Properties.AddString("Author :", project.Author, 31); // 1
                     dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
-                    dlg.Properties.AddStringList("Expansion Audio:", Project.GetAllowedExpansionNames(), project.ExpansionAudioName); // 3
+                    dlg.Properties.AddStringList("Expansion Audio:", Project.ExpansionNames, project.ExpansionAudioName); // 3
                     dlg.Properties.AddIntegerRange("Channels:", project.ExpansionNumChannels, 1, 8); // 4 (Namco)
                     dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionN163);
                     dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;

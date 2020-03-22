@@ -159,7 +159,7 @@ namespace FamiStudio
                     var exp = int.Parse(line.Substring(9));
                     var convertedExp = ConvertExpansionAudio(exp);
 
-                    if (convertedExp < 0 || !Project.IsExpansionAudioAllowed(convertedExp))
+                    if (convertedExp < 0)
                         return null;
 
                     project.SetExpansionAudio(convertedExp);
