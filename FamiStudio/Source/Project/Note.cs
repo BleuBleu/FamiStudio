@@ -52,8 +52,6 @@ namespace FamiStudio
         private byte   FxFdsModDepth;
         private ushort FxFdsModSpeed;
 
-        public static readonly Note Empty = new Note(NoteInvalid);
-
         // As of version 5 (FamiStudio 1.5.0), these are deprecated and are only kepth around
         // for migration.
         public byte FxJump;
@@ -291,42 +289,7 @@ namespace FamiStudio
             return note;
         }
 
-        public uint ComputeCRC(uint crc = 0)
-        {
-            crc = CRC32.Compute(
-                new byte[] {
-                    Value,
-                    Flags,
-                    Slide,
-                    (byte)(HasVolume      ? FxVolume      : 0),
-                    (byte)(HasVibrato     ? FxVibrato     : 0),
-                    (byte)(HasSpeed       ? FxSpeed       : 0),
-                    (byte)(HasFinePitch   ? FxFinePitch   : 0),
-                    (byte)(HasFdsModDepth ? FxFdsModDepth : 0)
-                }, 
-                crc);
-            crc = CRC32.Compute(BitConverter.GetBytes(EffectMask), crc);
-            crc = CRC32.Compute(BitConverter.GetBytes(HasFdsModSpeed ? FdsModSpeed : (ushort)0), crc);
-            crc = CRC32.Compute(BitConverter.GetBytes(Instrument == null ? -1 : Instrument.Id), crc);
-            return crc;
-        }
-
-        public bool IdenticalTo(Note other)
-        {
-            return Value       == other.Value       &&
-                   Flags       == other.Flags       &&
-                   Slide       == other.Slide       && 
-                   EffectMask  == other.EffectMask  &&
-                   (!HasVolume      || FxVolume      == other.FxVolume)      &&
-                   (!HasVibrato     || FxVibrato     == other.FxVibrato)     &&
-                   (!HasSpeed       || FxSpeed       == other.FxSpeed)       &&
-                   (!HasFinePitch   || FxFinePitch   == other.FxFinePitch)   &&
-                   (!HasFdsModDepth || FxFdsModDepth == other.FxFdsModDepth) &&
-                   (!HasFdsModSpeed || FxFdsModSpeed == other.FxFdsModSpeed) &&
-                   (!IsMusical      || Instrument    == other.Instrument); // Only comparing instrument if its a musical note.
-        }
-
-        public bool IsEmpty => IdenticalTo(Empty);
+        public bool IsEmpty => Value == Note.NoteInvalid && Flags == 0 && Slide == 0 && EffectMask == 0;
 
         // Serialization for notes before version 5 (before FamiStudio 1.5.0)
         public void SerializeStatePreVer5(ProjectBuffer buffer)

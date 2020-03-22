@@ -615,6 +615,28 @@ namespace FamiStudio
             DeleteUnusedSamples();
         }
 
+        public void MergeIdenticalInstruments()
+        {
+            var instrumentCrcMap = new Dictionary<uint, Instrument>();
+
+            for (int i = 0; i < instruments.Count;)
+            {
+                var inst = instruments[i];
+                var crc = inst.ComputeCRC();
+
+                if (instrumentCrcMap.TryGetValue(crc, out var matchingInstrument))
+                {
+                    ReplaceInstrument(inst, matchingInstrument);
+                    instruments.RemoveAt(i);
+                }
+                else
+                {
+                    instrumentCrcMap[crc] = inst;
+                    i++;
+                }
+            }
+        }
+
         public void DeleteUnusedInstruments()
         {
             var usedInstruments = new HashSet<Instrument>();

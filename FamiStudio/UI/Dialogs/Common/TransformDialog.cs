@@ -104,12 +104,12 @@ namespace FamiStudio
                     var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
 
                     var mergeIdenticalPatterns    = props.GetPropertyValue<bool>(0);
-                    var deleteUnusedPatterns      = props.GetPropertyValue<bool>(1);
+                    var deleteEmptyPatterns       = props.GetPropertyValue<bool>(1);
                     var mergeIdenticalInstruments = props.GetPropertyValue<bool>(2);
                     var deleteUnusedInstruments   = props.GetPropertyValue<bool>(3);
                     var deleteUnusedSamples       = props.GetPropertyValue<bool>(4);
 
-                    if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteUnusedPatterns) || (mergeIdenticalInstruments || deleteUnusedInstruments || deleteUnusedSamples))
+                    if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns || mergeIdenticalInstruments || deleteUnusedInstruments || deleteUnusedSamples))
                     {
                         app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -122,9 +122,28 @@ namespace FamiStudio
                             }
                         }
 
+                        if (deleteEmptyPatterns)
+                        {
+                            foreach (var songId in songIds)
+                            {
+                                var song = app.Project.GetSong(songId);
+                                song.RemoveEmptyPatterns();
+                            }
+                        }
+
+                        if (mergeIdenticalInstruments)
+                        {
+                            app.Project.MergeIdenticalInstruments();
+                        }
+
                         if (deleteUnusedInstruments)
                         {
                             app.Project.DeleteUnusedInstruments();
+                        }
+
+                        if (deleteUnusedSamples)
+                        {
+                            app.Project.DeleteUnusedSamples();
                         }
 
                         app.UndoRedoManager.EndTransaction();

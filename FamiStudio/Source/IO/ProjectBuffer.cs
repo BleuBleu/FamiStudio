@@ -81,7 +81,7 @@ namespace FamiStudio
             idx += sizeof(ushort);
         }
 
-    public void Serialize(ref int i, bool id = false)
+        public void Serialize(ref int i, bool id = false)
         {
             buffer.AddRange(BitConverter.GetBytes(i));
             idx += sizeof(int);
@@ -352,4 +352,125 @@ namespace FamiStudio
         public bool IsForUndoRedo => undoRedo;
         public int Version => version;
     }
+    
+    public class ProjectCrcBuffer : ProjectBuffer
+    {
+        private uint crc = 0;
+
+        public ProjectCrcBuffer(uint crc = 0)
+        {
+            this.crc = crc;
+        }
+
+        public uint CRC => crc;
+
+        public void Serialize(ref bool b)
+        {
+            crc = CRC32.Compute((byte)(b ? 1 : 0), crc);
+        }
+
+        public void Serialize(ref byte b)
+        {
+            crc = CRC32.Compute(b, crc);
+        }
+
+        public void Serialize(ref sbyte b)
+        {
+            crc = CRC32.Compute((byte)b, crc);
+        }
+
+        public void Serialize(ref short i)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref ushort i)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref int i, bool id = false)
+        {
+            // Ignore IDs for CRC
+            if (!id)
+                crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref uint i)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref ulong i)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref System.Drawing.Color b)
+        {
+            // Ignore colors for CRC
+        }
+
+        public void Serialize(ref string str)
+        {
+            // Ignore names for CRC
+        }
+
+        public void Serialize(ref byte[] values)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(values.Length), crc);
+            crc = CRC32.Compute(values, crc);
+        }
+
+        public void Serialize(ref sbyte[] values)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(values.Length), crc);
+            crc = CRC32.Compute(values, crc);
+        }
+
+        public void Serialize(ref short[] values)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(values.Length), crc);
+            for (int i = 0; i < values.Length; i++)
+                crc = CRC32.Compute(BitConverter.GetBytes(values[i]), crc);
+        }
+
+        public void Serialize(ref Song song)
+        {
+            int songId = song == null ? -1 : song.Id;
+            Serialize(ref songId);
+        }
+
+        public void Serialize(ref Instrument instrument)
+        {
+            int instrumentId = instrument == null ? -1 : instrument.Id;
+            Serialize(ref instrumentId);
+        }
+
+        public void Serialize(ref Pattern pattern, Channel channel)
+        {
+            int patternId = pattern == null ? -1 : pattern.Id;
+            Serialize(ref patternId);
+        }
+
+        public void Serialize(ref DPCMSample sample)
+        {
+            int sampleId = sample == null ? -1 : sample.Id;
+            Serialize(ref sampleId);
+        }
+
+        public void InitializeList<T>(ref List<T> list, int count) where T : new()
+        {
+        }
+
+        public void InitializeArray<T>(ref T[] array, int count) where T : new()
+        {
+        }
+
+        public Project Project => null;
+        public bool IsReading => false;
+        public bool IsWriting => true;
+        public bool IsForUndoRedo => false;
+        public int Version => Project.Version;
+    };
 }

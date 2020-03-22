@@ -450,7 +450,14 @@ namespace FamiStudio
         public void OpenTransformDialog()
         {
             var dlg = new TransformDialog(mainForm.Bounds, this);
-            dlg.ShowDialog();
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                Sequencer.Reset();
+                PianoRoll.Reset();
+                ProjectExplorer.RefreshButtons();
+                InvalidateEverything(true);
+            }
         }
 
         public void ShowHelp()
@@ -746,12 +753,13 @@ namespace FamiStudio
                 return -1;
         }
 
-        private void InvalidateEverything()
+        private void InvalidateEverything(bool projectExplorer = false)
         {
             ToolBar.Invalidate();
             Sequencer.Invalidate();
             PianoRoll.Invalidate();
-            //projectExplorer.Invalidate();
+            if (projectExplorer)
+                ProjectExplorer.Invalidate();
         }
 
         public void Tick()

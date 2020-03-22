@@ -13,7 +13,6 @@
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - Transform dialog:
-	- Cleanup (merge duplicated patterns, instruments, fine pitch track, anything elemove unused stuff.)
 	- Tempo conversion? Or should that be in the song properties?
 - Loop point should be optional.
 - All expansions.
@@ -22,6 +21,8 @@
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Make all I/O class non-static.
 - Basic note dragging.
+	- Dragging release/stop with note will be confusing. Will cut other notes unpredictably.
+	- But what about multiple notes?
 - MATTT.
 - Missing tooltip (make channel active, ghost, sliders fine, effect fine, etc.)
 - BUG: Validate error when changing volume in Shovel Knight.

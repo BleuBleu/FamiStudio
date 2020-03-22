@@ -562,8 +562,6 @@ namespace FamiStudio
 
                 if (patternCrcMap.TryGetValue(crc, out var matchingPattern))
                 {
-                    Debug.Assert(pattern.IdenticalTo(matchingPattern));
-
                     patterns.RemoveAt(i);
 
                     for (int j = 0; j < song.Length; j++)

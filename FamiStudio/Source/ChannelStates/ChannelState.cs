@@ -7,7 +7,7 @@ namespace FamiStudio
     {
         protected int apuIdx;
         protected int channelType;
-        protected Note note = Note.Empty;
+        protected Note note = new Note(Note.NoteInvalid);
         protected bool pitchEnvelopeOverride = false;
         protected Envelope[] envelopes = new Envelope[Envelope.Count];
         protected int[] envelopeIdx = new int[Envelope.Count];

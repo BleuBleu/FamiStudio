@@ -195,6 +195,13 @@ namespace FamiStudio
             envelopes[Envelope.N163Waveform].SetFromPreset(Envelope.N163Waveform, n163WavePreset);
         }
 
+        public uint ComputeCRC(uint crc = 0)
+        {
+            var serializer = new ProjectCrcBuffer(crc);
+            SerializeState(serializer);
+            return serializer.CRC;
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id, true);

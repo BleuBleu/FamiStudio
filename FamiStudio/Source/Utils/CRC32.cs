@@ -30,6 +30,15 @@
             }
         }
 
+        static public uint Compute(byte val, uint initial = 0)
+        {
+            GenerateTable();
+
+            uint c = initial ^ 0xFFFFFFFF;
+            c = table[(c ^ val) & 0xFF] ^ (c >> 8);
+            return c ^ 0xFFFFFFFF;
+        }
+
         static public uint Compute(byte[] data, uint initial = 0)
         {
             GenerateTable();
