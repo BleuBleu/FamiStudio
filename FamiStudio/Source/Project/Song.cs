@@ -98,11 +98,10 @@ namespace FamiStudio
                 {
                     var channel = channels[c];
 
-                    oldChannelPatterns[c] = new Pattern[channel.Patterns.Count];
                     oldChannelPatterns[c] = channel.Patterns.ToArray();
-
-                    oldChannelPatternInstances[c] = new Pattern[channel.PatternInstances.Length];
                     oldChannelPatternInstances[c] = channel.PatternInstances.Clone() as Pattern[];
+
+                    Array.Clear(channel.PatternInstances, 0, channel.PatternInstances.Length);
 
                     channel.Patterns.Clear();
                 }
