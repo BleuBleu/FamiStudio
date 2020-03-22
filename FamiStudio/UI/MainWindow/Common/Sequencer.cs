@@ -1205,11 +1205,23 @@ namespace FamiStudio
             else if (IsMouseInTrackName(e))
             {
                 if (GetTrackIconForPos(e) >= 0)
+                {
                     tooltip = "{MouseLeft} Mute Channel - {MouseRight} Solo Channel";
+                }
                 else if (GetTrackGhostForPos(e) >= 0)
-                    tooltip = $"{{MouseLeft}} Make channel active {{Ctrl}} {{{(e.Y - headerSizeY) / trackSizeY}}}";
+                {
+                    tooltip = "{MouseLeft} Toggle channel display";
+                    int idx = (e.Y - headerSizeY) / trackSizeY + 1;
+                    if (idx >= 1 && idx <= 9)
+                        tooltip += $" {{Ctrl}} {{{idx}}}";
+                }
                 else
-                    tooltip = $"{{MouseLeft}} Make channel active {{{(e.Y - headerSizeY) / trackSizeY}}}";
+                {
+                    tooltip = "{MouseLeft} Make channel active";
+                    int idx = (e.Y - headerSizeY) / trackSizeY + 1;
+                    if (idx >= 1 && idx <= 9)
+                        tooltip += $" {{{idx}}}";
+                }
             }
 
             App.ToolTip = tooltip;
