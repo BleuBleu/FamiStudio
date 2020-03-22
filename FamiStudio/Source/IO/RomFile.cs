@@ -23,14 +23,15 @@ namespace FamiStudio
         const int RomMinSize         = 0x8000; // Minimum PRG size is 32KB.
         const int RomHeaderLength    = 16;     // INES header size.
         const int RomHeaderPrgOffset = 4;      // Offset of the PRG page count in INES header.
-        const int MaxSongs           = 8;
         const int MaxDpcmPages       = 3;
+
+        public const int MaxSongs = 8;
 
         // 64 bytes header.
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         unsafe struct RomProjectInfo
         {
-            public byte numSongs;
+            public byte maxSong;
             public byte dpcmPageStart;
             public byte dpcmPageCount;
             public fixed byte reserved[5];
@@ -124,7 +125,7 @@ namespace FamiStudio
 
                 // Build project info + song table of content.
                 var projectInfo = new RomProjectInfo();
-                projectInfo.numSongs = (byte)songIds.Length;
+                projectInfo.maxSong = (byte)(songIds.Length - 1);
                 Marshal.Copy(EncodeAndCenterString(name), 0, new IntPtr(projectInfo.name), 28);
                 Marshal.Copy(EncodeAndCenterString(author), 0, new IntPtr(projectInfo.author), 28);
 

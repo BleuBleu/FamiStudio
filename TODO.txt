@@ -11,8 +11,6 @@
 	- Add better tempo logic to famitone2fs.
 	- Make bar length more flexible (for short patterns too).
 	- Tempo conversion (song properties or transform dialog).
-- ROM export (Mapper 31):
-	- Song change + controls (Need gamepad fix to prevent DPCM interference).
 - All expansions.
 	- Import/export all formats: slides.
 	- See if gimmick had a differnt note table for PAL.

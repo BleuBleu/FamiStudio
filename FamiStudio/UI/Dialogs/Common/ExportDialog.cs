@@ -153,13 +153,20 @@ namespace FamiStudio
 
         private void ExportRom()
         {
+            var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(2));
+
+            if (songIds.Length > RomFile.MaxSongs)
+            {
+                PlatformUtils.MessageBox("Please select 8 songs or less.", "ROM Export", MessageBoxButtons.OK);
+                return;
+            }
+
             var filename = PlatformUtils.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes");
             if (filename != null)
             {
-                var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
-
                 RomFile.Save(project, filename,
-                    GetSongIds(props.GetPropertyValue<bool[]>(2)),
+                    songIds,
                     props.GetPropertyValue<string>(0),
                     props.GetPropertyValue<string>(1));
             }

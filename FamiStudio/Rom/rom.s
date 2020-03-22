@@ -13,6 +13,9 @@ scroll_x:           .res 1 ; x scroll position
 scroll_y:           .res 1 ; y scroll position
 scroll_nmt:         .res 1 ; nametable select (0-3 = $2000,$2400,$2800,$2C00)
 gamepad:            .res 1
+gamepad_previous:   .res 1
+gamepad_pressed:    .res 1
+song_index:         .res 1
 
 ; General purpose temporary vars.
 r0: .res 1
@@ -25,6 +28,7 @@ r4: .res 1
 p0: .res 2
 
 .segment "RAM"
+; TODO: These 2 arent actually used at the same time... unify.
 nmt_col_update: .res 128 ; nametable update entry buffer for PPU update (column mode)
 nmt_row_update: .res 128 ; nametable update entry buffer for PPU update (row mode)
 palette:        .res 32  ; palette buffer for PPU update
@@ -52,7 +56,7 @@ INES_SRAM   = 0  ; 1 = battery backed SRAM at $6000-7FFF
 
 ; Will be overwritten by FamiStudio.
 ; General info about the project (author, etc.), 64-bytes.
-num_songs:       .byte $01
+max_song:        .byte $01
 dpcm_page_start: .byte $00
 dpcm_page_count: .byte $01 ; Test song has 1 page of DPCM.
 padding:         .res 5    ; reserved
@@ -247,8 +251,8 @@ default_palette:
 		lda $2002
 		lda #$3F
 		sta $2006
-		stx $2006 ; set PPU address to $3F00
 		ldx #0
+		stx $2006 ; set PPU address to $3F00
 		pal_loop:
 			lda palette, X
 			sta $2007
@@ -359,9 +363,6 @@ PAD_D      = $20
 PAD_L      = $40
 PAD_R      = $80
 
-; gamepad_poll: this reads the gamepad state into the variable labelled "gamepad"
-;   This only reads the first gamepad, and also if DPCM samples are played they can
-;   conflict with gamepad reading, which may give incorrect results.
 .proc gamepad_poll
 	; strobe the gamepad to latch current button state
 	lda #1
@@ -384,6 +385,27 @@ PAD_R      = $80
 	sta gamepad
 	rts
 .endproc 
+
+.proc gamepad_poll_dpcm_safe
+	
+	lda gamepad
+	sta gamepad_previous
+	jsr gamepad_poll
+	reread:
+	    pha
+	    jsr gamepad_poll
+	    pla
+	    cmp gamepad
+	    bne reread
+
+	toggle:
+	eor gamepad_previous
+	and gamepad
+	sta gamepad_pressed
+
+	rts
+
+.endproc
 
 .proc play_song
 
@@ -540,65 +562,58 @@ equalizer_color_lookup:
 
 .proc main
 
-	; setup 
 	ldx #0
-	:
+	palette_loop:
 		lda default_palette, X
 		sta palette, X
 		inx
 		cpx #32
-		bcc :-
+		bcc palette_loop
+	
 	jsr setup_background
+
 	lda #0 ; song zero.
+	sta song_index
 	jsr play_song
+
 	jsr ppu_update
-	; main loop
+
 loop:
-	; read gamepad
-	jsr gamepad_poll
-	; respond to gamepad state
-	lda gamepad
-	and #PAD_START
-	;beq :+
-	;	jsr push_start
-	;	jmp @draw ; start trumps everything, don't check other buttons
-	;:
-	;jsr release_start ; releasing start restores scroll
-	;lda gamepad
-	;and #PAD_U
-	;beq :+
-	;	jsr push_u
-	;:
-	;lda gamepad
-	;and #PAD_D
-	;beq :+
-	;	jsr push_d
-	;:
-	;lda gamepad
-	;and #PAD_L
-	;beq :+
-	;	jsr push_l
-	;:
-	;lda gamepad
-	;and #PAD_R
-	;beq :+
-	;	jsr push_r
-	;:
-	;lda gamepad
-	;and #PAD_SELECT
-	;beq :+
-	;	jsr push_select
-	;:
-	;lda gamepad
-	;and #PAD_B
-	;beq :+
-	;	jsr push_b
-	;:
-	;lda gamepad
-	;and #PAD_A
-	;beq :+
-	;	jsr push_a
-	;:
+
+	jsr gamepad_poll_dpcm_safe
+	
+	check_right:
+		lda gamepad_pressed
+		and #PAD_R
+		beq check_left
+
+		; dont go beyond last song.
+		lda song_index
+		cmp max_song
+		beq draw
+
+		; next song.
+		clc
+		adc #1
+		sta song_index
+		jsr play_song
+		jmp draw_done ; Intentionally skipping equalizer update to keep NMI update small.
+
+	check_left:
+		lda gamepad_pressed
+		and #PAD_L
+		beq draw
+
+		; dont go below zero
+		lda song_index
+		beq draw
+
+		sec
+		sbc #1
+		sta song_index
+		jsr play_song
+		jmp draw_done ; Intentionally skipping equalizer update to keep NMI update small.
+
 draw:
 
 	jsr FamiToneUpdate
@@ -614,8 +629,9 @@ draw:
 	lda #4
 	jsr update_equalizer
 
+draw_done:
+
 	jsr ppu_update
-	; keep doing this forever!
 	jmp loop
 
 .endproc 
