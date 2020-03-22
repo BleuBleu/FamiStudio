@@ -10,16 +10,14 @@
 	- NSF (#defines)
 	- Add better tempo logic to famitone2fs.
 	- Make bar length more flexible (for short patterns too).
+	- Tempo conversion (song properties or transform dialog).
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
-- Transform dialog:
-	- Tempo conversion? Or should that be in the song properties?
 - Loop point should be optional.
 - All expansions.
 	- Import/export all formats: slides.
 	- See if gimmick had a differnt note table for PAL.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
-- Make all I/O class non-static.
 - Basic note dragging.
 	- Dragging release/stop with note will be confusing. Will cut other notes unpredictably.
 	- But what about mul tiple notes?

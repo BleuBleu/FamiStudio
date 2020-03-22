@@ -4,11 +4,11 @@ using System.IO.Compression;
 
 namespace FamiStudio
 {
-    public static class ProjectFile
+    public class ProjectFile
     {
         const uint MagicNumber = 0x21534D46; // FMS!
 
-        public static Project Load(string filename)
+        public Project Load(string filename)
         {
             try
             {
@@ -48,7 +48,7 @@ namespace FamiStudio
             }
         }
 
-        public static bool Save(Project project, string filename)
+        public bool Save(Project project, string filename)
         {
             try
             {

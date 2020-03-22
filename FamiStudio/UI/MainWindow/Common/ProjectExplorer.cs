@@ -934,7 +934,7 @@ namespace FamiStudio
                             if (filename != null)
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                                var instrument = FamitrackerInstrumentFile.CreateFromFile(App.Project, filename);
+                                var instrument = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename);
                                 if (instrument == null)
                                     App.UndoRedoManager.AbortTransaction();
                                 else

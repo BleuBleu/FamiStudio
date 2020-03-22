@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    public static class FamistudioTextFile
+    public class FamistudioTextFile
     {
-        public static bool Save(Project originalProject, string filename, int[] songIds)
+        public bool Save(Project originalProject, string filename, int[] songIds)
         {
             var project = originalProject.DeepClone();
             project.RemoveAllSongsBut(songIds);
@@ -165,7 +165,7 @@ namespace FamiStudio
             return true;
         }
 
-        private static string[] SplitStringKeepQuotes(string str)
+        private string[] SplitStringKeepQuotes(string str)
         {
             return str.Split('"').Select((element, index) => index % 2 == 0
                                                         ? element.Split(new[] { ' ', '=' }, StringSplitOptions.RemoveEmptyEntries)
@@ -173,7 +173,7 @@ namespace FamiStudio
                                   .SelectMany(element => element).ToArray();
         }
 
-        private static string SplitLine(string line, ref Dictionary<string, string> parameters)
+        private string SplitLine(string line, ref Dictionary<string, string> parameters)
         {
             var splits = SplitStringKeepQuotes(line);
 
@@ -188,7 +188,7 @@ namespace FamiStudio
             return null;
         }
 
-        public static Project Load(string filename)
+        public Project Load(string filename)
         {
             try
             {

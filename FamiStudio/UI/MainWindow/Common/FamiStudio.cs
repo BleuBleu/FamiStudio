@@ -266,7 +266,7 @@ namespace FamiStudio
 
             if (filename.ToLower().EndsWith("fms"))
             {
-                project = ProjectFile.Load(filename);
+                project = new ProjectFile().Load(filename);
             }
             else if (filename.ToLower().EndsWith("ftm"))
             {
@@ -274,7 +274,7 @@ namespace FamiStudio
             }
             else if (filename.ToLower().EndsWith("txt"))
             {
-                project = FamistudioTextFile.Load(filename);
+                project = new FamistudioTextFile().Load(filename);
 
                 if (project == null)
                     project = new FamitrackerTextFile().Load(filename);
@@ -319,7 +319,7 @@ namespace FamiStudio
                 string filename = PlatformUtils.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms");
                 if (filename != null)
                 {
-                    success = ProjectFile.Save(project, filename);
+                    success = new ProjectFile().Save(project, filename);
                     if (success)
                     {
                         UpdateTitle();
@@ -328,7 +328,7 @@ namespace FamiStudio
             }
             else
             {
-                success = ProjectFile.Save(project, project.Filename);
+                success = new ProjectFile().Save(project, project.Filename);
             }
 
             if (success)

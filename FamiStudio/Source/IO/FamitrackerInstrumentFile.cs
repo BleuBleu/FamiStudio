@@ -6,7 +6,7 @@ namespace FamiStudio
 {
     class FamitrackerInstrumentFile
     {
-        static int[] InstrumentTypeLookup =
+        readonly static int[] InstrumentTypeLookup =
         {
             Project.ExpansionCount, // INST_NONE: Should never happen.
             Project.ExpansionNone,  // INST_2A03
@@ -17,7 +17,7 @@ namespace FamiStudio
             Project.ExpansionS5B    // INST_S5B
         };
 
-        static int[] EnvelopeTypeLookup =
+        readonly static int[] EnvelopeTypeLookup =
         {
             Envelope.Volume,   // SEQ_VOLUME
             Envelope.Arpeggio, // SEQ_ARPEGGIO
@@ -28,7 +28,7 @@ namespace FamiStudio
 
         const int SEQ_COUNT = 5;
 
-        private static void ReadEnvelope(byte[] bytes, ref int offset, Instrument instrument, int envType)
+        private void ReadEnvelope(byte[] bytes, ref int offset, Instrument instrument, int envType)
         {
             var itemCount    = BitConverter.ToInt32(bytes, offset); offset += 4;
             var loopPoint    = BitConverter.ToInt32(bytes, offset); offset += 4;
@@ -72,7 +72,7 @@ namespace FamiStudio
             }
         }
 
-        public static Instrument CreateFromFile(Project project, string filename)
+        public Instrument CreateFromFile(Project project, string filename)
         {
             var bytes = System.IO.File.ReadAllBytes(filename);
 
