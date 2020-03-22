@@ -13,7 +13,6 @@
 	- Tempo conversion (song properties or transform dialog).
 - ROM export (Mapper 31):
 	- Song change + controls (Need gamepad fix to prevent DPCM interference).
-- Loop point should be optional.
 - All expansions.
 	- Import/export all formats: slides.
 	- See if gimmick had a differnt note table for PAL.

@@ -198,11 +198,19 @@ namespace FamiStudio
             {
                 if (loopMode == LoopMode.None)
                 {
-                    return false;
+                    if (song.LoopPoint >= 0)
+                    {
+                        playPattern = song.LoopPoint;
+                        playNote = 0;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 else if (loopMode == LoopMode.Song)
                 {
-                    playPattern = song.LoopPoint;
+                    playPattern = Math.Max(0, song.LoopPoint);
                     playNote = 0;
                 }
             }

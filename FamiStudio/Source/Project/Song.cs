@@ -225,7 +225,7 @@ namespace FamiStudio
 
         public void SetLoopPoint(int loop)
         {
-            loopPoint = Utils.Clamp(loop, 0, songLength - 1);
+            loopPoint = Math.Min(loop, songLength - 1);
         }
 
         public static int[] GenerateBarLengths(int patternLen)

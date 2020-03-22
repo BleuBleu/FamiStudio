@@ -935,7 +935,7 @@ namespace FamiStudio
 
                                 if (n == patternLen - 1)
                                 {
-                                    if (p == song.Length - 1)
+                                    if (p == song.Length - 1 && song.LoopPoint >= 0)
                                         effectString += $" B{song.LoopPoint:X2}";
                                     else if (patternLen != song.DefaultPatternLength)
                                         effectString += $" D00";

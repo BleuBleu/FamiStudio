@@ -346,13 +346,11 @@ namespace FamiStudio
                 g.PushTranslation(px, 0);
                 g.DrawText(i.ToString(), ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx);
 
-                if (zoomLevel >= -1)
-                {
-                    if (i == Song.LoopPoint)
-                        g.DrawBitmap(bmpLoopPoint, headerIconPosX, headerIconPosY);
-                    if (Song.PatternHasCustomLength(i))
-                        g.DrawBitmap(bmpCustomLength, sx - headerIconSizeX - headerIconPosX, headerIconPosY);
-                }
+                if (i == Song.LoopPoint)
+                    g.DrawBitmap(bmpLoopPoint, headerIconPosX, headerIconPosY);
+                if (Song.PatternHasCustomLength(i))
+                    g.DrawBitmap(bmpCustomLength, sx - headerIconSizeX - headerIconPosX, headerIconPosY);
+
                 g.PopTransform();
             }
 
@@ -702,7 +700,7 @@ namespace FamiStudio
                     if (setLoop)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                        Song.SetLoopPoint(patternIdx);
+                        Song.SetLoopPoint(Song.LoopPoint == patternIdx ? -1 : patternIdx);
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                     }
