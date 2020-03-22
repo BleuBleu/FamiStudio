@@ -102,6 +102,9 @@ namespace FamiStudio
 
         public void PlayNote(Note newNote, bool forceInstrumentChange = false)
         {
+            if (!newNote.HasFinePitch)
+                newNote.FinePitch = 0;
+
             if (newNote.IsRelease)
             {
                 // Channels with custom release code will do their own thing.

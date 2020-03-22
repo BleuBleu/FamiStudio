@@ -671,7 +671,6 @@ namespace FamiStudio
                                     int iconY = headerSizeY / 2 + effectIconPosY;
                                     g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.LightGreyFillBrush2);
                                     g.DrawBitmap(bmpEffects[selectedEffectIdx], iconX, iconY);
-                                    break;
                                 }
                             }
                         }
