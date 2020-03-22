@@ -295,7 +295,7 @@ namespace FamiStudio
             editEnvelope = envelope;
             showEffectsPanel = false;
             noteTooltip = "";
-            envelopeValueZoom = envelope == Envelope.Volume || envelope == Envelope.DutyCycle || envelope == Envelope.N163Waveform ? 4 : 1;
+            envelopeValueZoom = envelope == Envelope.Volume || envelope == Envelope.DutyCycle || envelope == Envelope.N163Waveform ? 2 : 1;
             envelopeValueOffset = 0;
             Debug.Assert(editInstrument != null);
 
