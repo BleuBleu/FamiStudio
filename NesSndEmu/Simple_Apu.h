@@ -77,6 +77,7 @@ public:
 	bool is_seeking() const { return seeking; }
 
 private:
+	bool pal_mode;
 	bool seeking;
 	int  expansion;
 	Nes_Apu apu;

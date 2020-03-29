@@ -21,6 +21,7 @@ static int null_dmc_reader( void*, cpu_addr_t )
 
 Simple_Apu::Simple_Apu()
 {
+	pal_mode = false;
 	seeking = false;
 	time = 0;
 	frame_length = 29780;
@@ -40,6 +41,7 @@ void Simple_Apu::dmc_reader( int (*f)( void* user_data, cpu_addr_t ), void* p )
 
 blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
 {
+	pal_mode = pal;
 	frame_length = pal ? 33247 : 29780;
 	apu.output( &buf );
 	vrc6.output(&buf);
@@ -192,7 +194,7 @@ void Simple_Apu::end_frame()
 void Simple_Apu::reset()
 {
 	seeking = false;
-	apu.reset();
+	apu.reset(pal_mode);
 	vrc6.reset();
 	vrc7.reset();
 	fds.reset();
