@@ -114,6 +114,7 @@ namespace FamiStudio
         protected Project project;
         protected Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
         protected Dictionary<Pattern, byte> patternLengths = new Dictionary<Pattern, byte>();
+        protected int barLength = -1;
 
         protected int ConvertExpansionAudio(int exp)
         {
@@ -176,19 +177,20 @@ namespace FamiStudio
                     break;
                 case Effect_Speed:
                     if (fx.param <= 0x1f) // We only support speed change for now.
-                        pattern.Notes[n].Speed = fx.param;
+                        pattern.GetOrCreateNoteAt(n).Speed = Math.Max((byte)1, (byte)fx.param);
                     break;
                 case Effect_Pitch:
-                    pattern.Notes[n].FinePitch = (sbyte)(0x80 - fx.param);
+                    pattern.GetOrCreateNoteAt(n).FinePitch = (sbyte)(0x80 - fx.param);
                     break;
                 case Effect_Vibrato:
-                    pattern.Notes[n].VibratoDepth = (byte)(fx.param & 0x0f);
-                    pattern.Notes[n].VibratoSpeed = (byte)VibratoSpeedImportLookup[fx.param >> 4];
+                    var note = pattern.GetOrCreateNoteAt(n);
+                    note.VibratoDepth = (byte)(fx.param & 0x0f);
+                    note.VibratoSpeed = (byte)VibratoSpeedImportLookup[fx.param >> 4];
 
-                    if (pattern.Notes[n].VibratoDepth == 0 ||
-                        pattern.Notes[n].VibratoSpeed == 0)
+                    if (note.VibratoDepth == 0 ||
+                        note.VibratoSpeed == 0)
                     {
-                        pattern.Notes[n].RawVibrato = 0;
+                        note.RawVibrato = 0;
                     }
                     break;
             }
@@ -196,23 +198,25 @@ namespace FamiStudio
         
         private int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
-            for (int n = noteIdx - 1; n >= 0; n--)
+            var pattern = channel.PatternInstances[patternIdx];
+
+            for (var it = pattern.GetNoteIterator(0, noteIdx, true); !it.Done; it.Next())
             {
-                var tmpNote = channel.PatternInstances[patternIdx].Notes[n];
-                if (tmpNote.IsMusical || tmpNote.IsStop)
-                    return tmpNote.Value;
+                var note = it.CurrentNote;
+                if (note.IsMusical || note.IsStop)
+                    return note.Value;
             }
 
             for (var p = patternIdx - 1; p >= 0; p--)
             {
-                var pattern = channel.PatternInstances[p];
+                pattern = channel.PatternInstances[p];
                 if (pattern != null)
                 {
-                    for (int n = channel.Song.GetPatternLength(p) - 1; n >= 0; n--)
+                    for (var it = pattern.GetNoteIterator(0, channel.Song.GetPatternLength(p), true); !it.Done; it.Next())
                     {
-                        var tmpNote = pattern.Notes[n];
-                        if (tmpNote.IsMusical || tmpNote.IsStop)
-                            return tmpNote.Value;
+                        var note = it.CurrentNote;
+                        if (note.IsMusical || note.IsStop)
+                            return note.Value;
                     }
                 }
             }
@@ -223,59 +227,81 @@ namespace FamiStudio
         private bool FindNextNoteForSlide(Channel channel, int patternIdx, int noteIdx, out int nextPatternIdx, out int nextNoteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
             nextPatternIdx = -1;
-            nextNoteIdx = -1;
+            nextNoteIdx    = -1;
 
             var pattern = channel.PatternInstances[patternIdx];
-            var patternLen = channel.Song.GetPatternLength(patternIdx);
-            var fxData = patternFxData[pattern];
 
-            for (int n = noteIdx + 1; n < patternLen; n++)
+            if (pattern == null || !patternFxData.ContainsKey(pattern))
+                return false;
+
+            var patternLen = channel.Song.GetPatternLength(patternIdx);
+            var fxData     = patternFxData[pattern];
+
+            for (var it = pattern.GetNoteIterator(noteIdx + 1, patternLen); !it.Done; it.Next())
             {
+                var time = it.CurrentTime;
+                var note = it.CurrentNote;
+
                 var fxChanged = false;
                 for (int i = 0; i < fxData.GetLength(1); i++)
                 {
-                    var fx = fxData[n, i];
-                    if (fx.fx == Effect_PortaUp || fx.fx == Effect_PortaDown || fx.fx == Effect_Portamento || fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown)
+                    var fx = fxData[time, i];
+
+                    if (fx.fx == Effect_PortaUp    || 
+                        fx.fx == Effect_PortaDown  ||
+                        fx.fx == Effect_Portamento ||
+                        fx.fx == Effect_SlideUp    ||
+                        fx.fx == Effect_SlideDown)
                     {
                         fxChanged = true;
                         break;
                     }
                 }
 
-                var tmpNote = pattern.Notes[n];
-                if (tmpNote.IsMusical || tmpNote.IsStop || fxChanged)
+                if (note != null && note.IsValid || fxChanged)
                 {
                     nextPatternIdx = patternIdx;
-                    nextNoteIdx = n;
+                    nextNoteIdx = time;
                     return true;
                 }
             }
 
             for (int p = patternIdx + 1; p < channel.Song.Length; p++)
             {
-                pattern = channel.PatternInstances[p];
+                pattern    = channel.PatternInstances[p];
                 patternLen = channel.Song.GetPatternLength(p);
-                fxData = patternFxData[pattern];
 
-                for (int n = 0; n < patternLen; n++)
+                if (pattern != null && patternFxData.ContainsKey(pattern))
                 {
-                    var fxChanged = false;
-                    for (int i = 0; i < fxData.GetLength(1); i++)
-                    {
-                        var fx = fxData[n, i];
-                        if (fx.fx == Effect_PortaUp || fx.fx == Effect_PortaDown || fx.fx == Effect_Portamento || fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown)
-                        {
-                            fxChanged = true;
-                            break;
-                        }
-                    }
+                    fxData = patternFxData[pattern];
 
-                    var tmpNote = channel.PatternInstances[p].Notes[n];
-                    if (tmpNote.IsMusical || tmpNote.IsStop || fxChanged)
+                    for (var it = pattern.GetNoteIterator(0, patternLen); !it.Done; it.Next())
                     {
-                        nextPatternIdx = p;
-                        nextNoteIdx = n;
-                        return true;
+                        var time = it.CurrentTime;
+                        var note = it.CurrentNote;
+
+                        var fxChanged = false;
+                        for (int i = 0; i < fxData.GetLength(1); i++)
+                        {
+                            var fx = fxData[time, i];
+
+                            if (fx.fx == Effect_PortaUp    || 
+                                fx.fx == Effect_PortaDown  || 
+                                fx.fx == Effect_Portamento || 
+                                fx.fx == Effect_SlideUp    ||
+                                fx.fx == Effect_SlideDown)
+                            {
+                                fxChanged = true;
+                                break;
+                            }
+                        }
+
+                        if (note != null && note.IsValid || fxChanged)
+                        {
+                            nextPatternIdx = p;
+                            nextNoteIdx = time;
+                            return true;
+                        }
                     }
                 }
             }
@@ -309,6 +335,7 @@ namespace FamiStudio
                 if (!c.SupportsSlideNotes)
                     continue;
 
+                var songSpeed = s.FamitrackerSpeed;
                 var lastNoteInstrument = (Instrument)null;
                 var lastNoteValue = (byte)Note.NoteInvalid;
                 var portamentoSpeed = 0;
@@ -317,15 +344,27 @@ namespace FamiStudio
                 {
                     var pattern = c.PatternInstances[p];
 
-                    if (pattern == null)
+                    if (pattern == null || !patternFxData.ContainsKey(pattern))
                         continue;
 
                     var fxData = patternFxData[pattern];
+                    var patternLen = s.GetPatternLength(p);
 
-                    for (int n = 0; n < s.GetPatternLength(p); n++)
+                    for (var it = pattern.GetNoteIterator(0, patternLen); !it.Done; it.Next())
                     {
-                        var note = pattern.Notes[n];
-                        var slideSpeed = 0;
+                        var n    = it.CurrentTime;
+                        var note = it.CurrentNote;
+
+                        // Look for speed changes.
+                        foreach (var c2 in s.Channels)
+                        {
+                            var pattern2 = c2.PatternInstances[p];
+
+                            if (pattern2 != null && pattern2.Notes.TryGetValue(n, out var note2) && note2.HasSpeed)
+                                songSpeed = note2.Speed;
+                        }
+
+                        var slideSpeed  = 0;
                         var slideTarget = 0;
 
                         for (int i = 0; i < fxData.GetLength(1); i++)
@@ -335,15 +374,25 @@ namespace FamiStudio
                             if (fx.param != 0)
                             {
                                 // When the effect it turned on, we need to add a note.
-                                if ((fx.fx == Effect_PortaUp || fx.fx == Effect_PortaDown || fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown) && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax && !note.IsValid)
+                                if ((fx.fx == Effect_PortaUp  || 
+                                     fx.fx == Effect_PortaDown ||
+                                     fx.fx == Effect_SlideUp   ||
+                                     fx.fx == Effect_SlideDown) &&
+                                    lastNoteValue >= Note.MusicalNoteMin && 
+                                    lastNoteValue <= Note.MusicalNoteMax && (note == null || !note.IsValid))
                                 {
-                                    pattern.Notes[n].Value = lastNoteValue;
-                                    pattern.Notes[n].Instrument = lastNoteInstrument;
-                                    pattern.Notes[n].HasAttack = false;
-                                    note = pattern.Notes[n];
+                                    if (note == null)
+                                    {
+                                        note = pattern.GetOrCreateNoteAt(n);
+                                        it.Resync();
+                                    }
+
+                                    note.Value      = lastNoteValue;
+                                    note.Instrument = lastNoteInstrument;
+                                    note.HasAttack  = false;
                                 }
 
-                                if (fx.fx == Effect_PortaUp) slideSpeed = -fx.param;
+                                if (fx.fx == Effect_PortaUp)   slideSpeed = -fx.param;
                                 if (fx.fx == Effect_PortaDown) slideSpeed =  fx.param;
                                 if (fx.fx == Effect_Portamento)
                                 {
@@ -366,29 +415,38 @@ namespace FamiStudio
                             }
                         }
 
+                        var currentNoteValue      = note != null ? note.Value      : (byte)Note.NoteInvalid;
+                        var currentNoteInstrument = note != null ? note.Instrument : null;
+
                         // Create a slide note.
-                        if (!note.IsSlideNote)
+                        if (note != null && !note.IsSlideNote)
                         {
                             if (note.IsMusical)
                             {
-                                var noteTable = NesApu.GetNoteTableForChannelType(c.Type, false, s.Project.ExpansionNumChannels);
-                                var pitchLimit = NesApu.GetPitchLimitForChannelType(c.Type);
+                                var slideSource = note.Value;
+                                var noteTable   = NesApu.GetNoteTableForChannelType(c.Type, false, s.Project.ExpansionNumChannels);
+                                var pitchLimit  = NesApu.GetPitchLimitForChannelType(c.Type);
 
                                 // If we have a new note with auto-portamento enabled, we need to
                                 // swap the notes since our slide notes work backward compared to 
                                 // FamiTracker.
                                 if (portamentoSpeed != 0)
                                 {
-                                    if (lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax)
+                                    // Ignore notes with no attach since we created them to handle a previous slide.
+                                    if (note.HasAttack && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax)
                                     {
-                                        pattern.Notes[n].SlideNoteTarget = pattern.Notes[n].Value;
-                                        pattern.Notes[n].Value = lastNoteValue;
+                                        slideSpeed  = portamentoSpeed;
+                                        slideTarget = note.Value;
+                                        slideSource = lastNoteValue;
+                                        note.Value  = lastNoteValue;
                                     }
                                 }
-                                else if (slideTarget != 0)
+
+                                if (slideTarget != 0)
                                 {
-                                    var numFrames = Math.Abs((noteTable[note.Value] - noteTable[slideTarget]) / (slideSpeed * s.Speed));
-                                    pattern.Notes[n].SlideNoteTarget = (byte)slideTarget;
+                                    // TODO: We assume a tempo of 150 here. This is wrong.
+                                    var numFrames = Math.Max(1, Math.Abs((noteTable[slideSource] - noteTable[slideTarget]) / (slideSpeed * songSpeed)));
+                                    note.SlideNoteTarget = (byte)slideTarget;
 
                                     var nn = n + numFrames;
                                     var np = p;
@@ -419,44 +477,50 @@ namespace FamiStudio
                                         }
                                     }
 
-                                    // Add an extra note with no attack to stop the slide.
-                                    var nextPattern = c.PatternInstances[np];
-                                    if (!nextPattern.Notes[nn].IsValid)
+                                    if (np < s.Length)
                                     {
-                                        nextPattern.Notes[nn].Instrument = note.Instrument;
-                                        nextPattern.Notes[nn].Value = (byte)slideTarget;
-                                        nextPattern.Notes[nn].HasAttack = false;
+                                        // Add an extra note with no attack to stop the slide.
+                                        var nextPattern = c.PatternInstances[np];
+                                        if (!nextPattern.Notes.TryGetValue(nn, out var nextNote) || !nextNote.IsValid)
+                                        {
+                                            nextNote = nextPattern.GetOrCreateNoteAt(nn);
+                                            nextNote.Instrument = note.Instrument;
+                                            nextNote.Value = (byte)slideTarget;
+                                            nextNote.HasAttack = false;
+                                            it.Resync();
+                                        }
                                     }
                                 }
                                 // Find the next note that would stop the slide or change the FX settings.
                                 else if (slideSpeed != 0 && FindNextNoteForSlide(c, p, n, out var np, out var nn, patternFxData))
                                 {
                                     // Compute the pitch delta and find the closest target note.
-                                    var numFrames = (s.GetPatternStartNote(np, nn) - s.GetPatternStartNote(p, n)) * s.Speed;
+                                    var numFrames = (s.GetPatternStartNote(np, nn) - s.GetPatternStartNote(p, n)) * songSpeed;
 
                                     // TODO: PAL.
-                                    var newNotePitch = Utils.Clamp(noteTable[note.Value] + numFrames * slideSpeed, 0, pitchLimit);
+                                    var newNotePitch = Utils.Clamp(noteTable[slideSource] + numFrames * slideSpeed, 0, pitchLimit);
                                     var newNote = FindBestMatchingNote(noteTable, newNotePitch, Math.Sign(slideSpeed));
 
-                                    pattern.Notes[n].SlideNoteTarget = (byte)newNote;
+                                    note.SlideNoteTarget = (byte)newNote;
 
                                     // If the FX was turned off, we need to add an extra note.
                                     var nextPattern = c.PatternInstances[np];
-                                    if (!nextPattern.Notes[nn].IsMusical &&
-                                        !nextPattern.Notes[nn].IsStop)
+                                    if (!nextPattern.Notes.TryGetValue(nn, out var nextNote) || !nextNote.IsValid)
                                     {
-                                        nextPattern.Notes[nn].Instrument = note.Instrument;
-                                        nextPattern.Notes[nn].Value = (byte)newNote;
-                                        nextPattern.Notes[nn].HasAttack = false;
+                                        nextNote = nextPattern.GetOrCreateNoteAt(nn);
+                                        nextNote.Instrument = note.Instrument;
+                                        nextNote.Value = (byte)newNote;
+                                        nextNote.HasAttack = false;
+                                        it.Resync();
                                     }
                                 }
                             }
                         }
 
-                        if (note.IsMusical || note.IsStop)
+                        if (note != null && (note.IsMusical || note.IsStop))
                         {
-                            lastNoteValue = note.Value;
-                            lastNoteInstrument = note.Instrument;
+                            lastNoteValue      = currentNoteValue;
+                            lastNoteInstrument = currentNoteInstrument;
                         }
                     }
                 }
@@ -475,16 +539,24 @@ namespace FamiStudio
                     {
                         var pattern = c.PatternInstances[p];
                         if (pattern != null && patternLengths.TryGetValue(pattern, out var instLength))
-                            s.SetPatternLength(p, instLength);
+                        {
+                            if (instLength < s.GetPatternLength(p))
+                                s.SetPatternLength(p, instLength);
+                        }
                     }
                 }
 
-                s.RemoveEmptyPatterns();
-                s.SetSensibleBarLength();
+                s.ClearNotesPastMaxInstanceLength();
                 s.UpdatePatternStartNotes();
-                s.UpdatePatternsMaxInstanceLength();
+
+                if (barLength == -1)
+                    s.SetSensibleBarLength();
+                else
+                    s.SetBarLength(barLength);
 
                 CreateSlideNotes(s, patternFxData);
+
+                s.RemoveEmptyPatterns();
             }
 
             project.UpdateAllLastValidNotesAndVolume();

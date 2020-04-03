@@ -97,7 +97,7 @@ namespace FamiStudio
             // Songs
             foreach (var song in project.Songs)
             {
-                lines.Add($"\tSong Name=\"{song.Name}\" Length=\"{song.Length}\" PatternLength=\"{song.DefaultPatternLength}\" BarLength=\"{song.BarLength}\" Tempo=\"{song.Tempo}\" Speed=\"{song.Speed}\" LoopPoint=\"{song.LoopPoint}\"");
+                lines.Add($"\tSong Name=\"{song.Name}\" Length=\"{song.Length}\" PatternLength=\"{song.DefaultPatternLength}\" BarLength=\"{song.BarLength}\" Tempo=\"{song.FamitrackerTempo}\" Speed=\"{song.FamitrackerSpeed}\" LoopPoint=\"{song.LoopPoint}\"");
 
                 for (int i = 0; i < song.Length; i++)
                 {
@@ -113,13 +113,13 @@ namespace FamiStudio
                     {
                         lines.Add($"\t\t\tPattern Name=\"{pattern.Name}\"");
 
-                        for (int n = 0; n < Pattern.MaxLength; n++)
+                        foreach (var kv in pattern.Notes)
                         {
-                            var note = pattern.Notes[n];
+                            var note = kv.Value;
 
                             if (!note.IsEmpty)
                             {
-                                var noteLine = $"\t\t\t\tNote Time=\"{n}\"";
+                                var noteLine = $"\t\t\t\tNote Time=\"{kv.Key}\"";
 
                                 if (note.IsValid)
                                 {
@@ -139,7 +139,7 @@ namespace FamiStudio
                                     // Add duration for convenience.
                                     var p = Array.IndexOf(channel.PatternInstances, pattern);
                                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
-                                    channel.ComputeSlideNoteParams(p, n, noteTable, out _, out _, out var duration);
+                                    channel.ComputeSlideNoteParams(note, p, kv.Key, noteTable, out _, out _, out var duration);
 
                                     // MATTT: PAL here (check of channeltype).
                                     noteLine += $" SlideTarget=\"{Note.GetFriendlyName(note.SlideNoteTarget)}\" FrameCountNTSC=\"{duration}\""; 
@@ -293,8 +293,8 @@ namespace FamiStudio
                             song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]));
                             song.SetBarLength(int.Parse(parameters["BarLength"]));
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
-                            song.Tempo = int.Parse(parameters["Tempo"]);
-                            song.Speed = int.Parse(parameters["Speed"]);
+                            song.FamitrackerTempo = int.Parse(parameters["Tempo"]);
+                            song.FamitrackerSpeed = int.Parse(parameters["Speed"]);
                             break;
                         }
                         case "PatternInstanceParams":
@@ -316,17 +316,18 @@ namespace FamiStudio
                         case "Note":
                         {
                             var time = int.Parse(parameters["Time"]);
+                            var note = pattern.GetOrCreateNoteAt(time);
 
-                            if (parameters.TryGetValue("Value",        out var valueStr))     pattern.Notes[time].Value           = (byte)Note.FromFriendlyName(valueStr);
-                            if (parameters.TryGetValue("Instrument",   out var instStr))      pattern.Notes[time].Instrument      = project.GetInstrument(instStr);
-                            if (parameters.TryGetValue("Attack",       out var attackStr))    pattern.Notes[time].HasAttack       = bool.Parse(attackStr);
-                            if (parameters.TryGetValue("Volume",       out var volumeStr))    pattern.Notes[time].Volume          = byte.Parse(volumeStr);
-                            if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr))  pattern.Notes[time].VibratoSpeed    = byte.Parse(vibSpeedStr);
-                            if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr))  pattern.Notes[time].VibratoDepth    = byte.Parse(vibDepthStr);
-                            if (parameters.TryGetValue("FinePitch",    out var finePitchStr)) pattern.Notes[time].FinePitch       = sbyte.Parse(finePitchStr);
-                            if (parameters.TryGetValue("SlideTarget",  out var slideStr))     pattern.Notes[time].SlideNoteTarget = (byte)Note.FromFriendlyName(valueStr);
-                            if (parameters.TryGetValue("FdsModSpeed",  out var modSpeedStr))  pattern.Notes[time].FdsModSpeed     = ushort.Parse(modSpeedStr);
-                            if (parameters.TryGetValue("FdsModDepth",  out var modDepthStr))  pattern.Notes[time].FdsModDepth     = byte.Parse(modDepthStr);
+                            if (parameters.TryGetValue("Value",        out var valueStr))     note.Value           = (byte)Note.FromFriendlyName(valueStr);
+                            if (parameters.TryGetValue("Instrument",   out var instStr))      note.Instrument      = project.GetInstrument(instStr);
+                            if (parameters.TryGetValue("Attack",       out var attackStr))    note.HasAttack       = bool.Parse(attackStr);
+                            if (parameters.TryGetValue("Volume",       out var volumeStr))    note.Volume          = byte.Parse(volumeStr);
+                            if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr))  note.VibratoSpeed    = byte.Parse(vibSpeedStr);
+                            if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr))  note.VibratoDepth    = byte.Parse(vibDepthStr);
+                            if (parameters.TryGetValue("FinePitch",    out var finePitchStr)) note.FinePitch       = sbyte.Parse(finePitchStr);
+                            if (parameters.TryGetValue("SlideTarget",  out var slideStr))     note.SlideNoteTarget = (byte)Note.FromFriendlyName(valueStr);
+                            if (parameters.TryGetValue("FdsModSpeed",  out var modSpeedStr))  note.FdsModSpeed     = ushort.Parse(modSpeedStr);
+                            if (parameters.TryGetValue("FdsModDepth",  out var modDepthStr))  note.FdsModDepth     = byte.Parse(modDepthStr);
 
                             break;
                         }

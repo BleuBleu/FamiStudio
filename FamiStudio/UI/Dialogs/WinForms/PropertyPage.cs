@@ -263,9 +263,7 @@ namespace FamiStudio
             var listBox = new PaddedCheckedListBox();
 
             for (int i = 0; i < values.Length; i++)
-            {
                 listBox.Items.Add(values[i], selected != null ? selected[i] : true);
-            }
 
             listBox.IntegralHeight = false;
             listBox.Font = font;
@@ -274,6 +272,15 @@ namespace FamiStudio
             listBox.SelectionMode = SelectionMode.One;
 
             return listBox;
+        }
+
+        public void UpdateMultiStringList(int idx, string[] values, bool[] selected)
+        {
+            var listBox = (properties[idx].control as PaddedCheckedListBox);
+
+            listBox.Items.Clear();
+            for (int i = 0; i < values.Length; i++)
+                listBox.Items.Add(values[i], selected != null ? selected[i] : true);
         }
 
         public void AddColoredString(string value, Color color)
@@ -294,6 +301,17 @@ namespace FamiStudio
                     type = PropertyType.String,
                     label = CreateLabel(label),
                     control = CreateTextBox(value, maxLength)
+                });
+        }
+
+        public void AddLabel(string label, string value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.String,
+                    label = CreateLabel(label),
+                    control = CreateLabel(value)
                 });
         }
 
@@ -318,6 +336,14 @@ namespace FamiStudio
                 });
         }
 
+        public void UpdateIntegerRange(int idx, int min, int max)
+        {
+            var upDown = (properties[idx].control as NumericUpDown);
+
+            upDown.Minimum = min;
+            upDown.Maximum = max;
+        }
+
         public void AddDomainRange(string label, int[] values, int value)
         {
             properties.Add(
@@ -337,6 +363,11 @@ namespace FamiStudio
             upDown.Items.AddRange(values);
             upDown.Text = " "; // Workaround refresh bug.
             upDown.SelectedItem = value;
+        }
+
+        public void SetLabelText(int idx, string text)
+        {
+            (properties[idx].control as Label).Text = text;
         }
 
         public void AddBoolean(string label, bool value)

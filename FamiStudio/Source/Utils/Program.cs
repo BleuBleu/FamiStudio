@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -29,6 +31,18 @@ namespace FamiStudio
             }
             catch { }
 #endif
+
+            //Pattern p = new Pattern();
+            //p.GetOrCreateNoteAt(10);
+            //p.GetOrCreateNoteAt(20);
+            //p.GetOrCreateNoteAt(30);
+            //p.GetOrCreateNoteAt(50);
+            //p.GetOrCreateNoteAt(75);
+
+            //for (var e = new NoteIterator(p, 80, 85, false); !e.Done; e.Next())
+            //{
+            //    Debug.WriteLine($"{e.CurrentTime} = {e.CurrentNote}");
+            //}
 
             Settings.Load();
             Cursors.Initialize();

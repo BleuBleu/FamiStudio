@@ -434,7 +434,7 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 crc = CRC32.Compute(BitConverter.GetBytes(values[i]), crc);
         }
-
+        
         public void Serialize(ref Song song)
         {
             int songId = song == null ? -1 : song.Id;

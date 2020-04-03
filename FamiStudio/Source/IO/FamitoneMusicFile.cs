@@ -102,8 +102,8 @@ namespace FamiStudio
                     line += $"{ll}song{i}ch{chn},";
                 }
  
-                int tempoPal  = 256 * song.Tempo / (50 * 60 / 24);
-                int tempoNtsc = 256 * song.Tempo / (60 * 60 / 24);
+                int tempoPal  = 256 * song.FamitrackerTempo / (50 * 60 / 24);
+                int tempoNtsc = 256 * song.FamitrackerTempo / (60 * 60 / 24);
 
                 line += $"{tempoPal},{tempoNtsc}";
                 lines.Add(line);
@@ -282,10 +282,11 @@ namespace FamiStudio
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Volume]]);
                     var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Arpeggio]]);
                     var pitchEnvIdx    = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Pitch]]);
-                    var dutyEnvIdx     = instrument.IsEnvelopeActive(Envelope.DutyCycle) ? uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.DutyCycle]]) : uniqueEnvelopes.IndexOfKey(defaultEnvCRC);
 
                     if (kernel == FamiToneKernel.FamiTone2FS)
                     {
+                        var dutyEnvIdx = instrument.IsEnvelopeActive(Envelope.DutyCycle) ? uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.DutyCycle]]) : uniqueEnvelopes.IndexOfKey(defaultEnvCRC);
+
                         lines.Add($"\t{dw} {ll}env{volumeEnvIdx},{ll}env{arpeggioEnvIdx},{ll}env{dutyEnvIdx},{ll}env{pitchEnvIdx}");
                     }
                     else
@@ -405,15 +406,13 @@ namespace FamiStudio
                     {
                         foreach (var p in c.Patterns)
                         {
-                            for (int n = 0; n < p.MaxInstanceLength; n++)
+                            foreach (var note in p.Notes.Values)
                             {
-                                var note = p.Notes[n];
-
                                 if (note.HasVibrato)
                                 {
                                     if (note.VibratoDepth == 0 || note.VibratoSpeed == 0)
                                     {
-                                        p.Notes[n].RawVibrato = 0;
+                                        note.RawVibrato = 0;
                                         vibratoEnvelopeNames[0] = defaultPitchEnvName;
                                         continue;
                                     }
@@ -460,9 +459,12 @@ namespace FamiStudio
             foreach (var channel in song.Channels)
             {
                 var pattern = channel.PatternInstances[patternIdx];
-                if (pattern != null && pattern.Notes[noteIdx].HasValidEffectValue(effect))
+
+                if (pattern != null && 
+                    pattern.Notes.TryGetValue(noteIdx, out var note) && 
+                    note.HasValidEffectValue(effect))
                 {
-                    return pattern.Notes[noteIdx].GetEffectValue(effect);
+                    return note.GetEffectValue(effect);
                 }
             }
 
@@ -530,6 +532,7 @@ namespace FamiStudio
             var packedPatternBuffers = new List<List<string>>(globalPacketPatternBuffers);
             var size = 0;
             var emptyPattern = new Pattern(-1, song, 0, "");
+            var emptyNote = new Note(Note.NoteInvalid);
 
             for (int c = 0; c < song.Channels.Length; c++)
             {
@@ -543,7 +546,7 @@ namespace FamiStudio
                 if (isSpeedChannel)
                 {
                     if (!test)
-                        lines.Add($"\t{db} $fb, ${song.Speed:x2}");
+                        lines.Add($"\t{db} $fb, ${song.FamitrackerSpeed:x2}");
                     size += 2;
                 }
 
@@ -558,17 +561,20 @@ namespace FamiStudio
                         lines.Add($"{ll}song{songIdx}ch{c}loop:");
                     }
 
-                    var i = 0;
                     var patternLength = song.GetPatternLength(p); 
                     var numValidNotes = patternLength;
-
-                    while (i < patternLength)
+                    
+                    for (var it = pattern.GetNoteIterator(0, patternLength); !it.Done; )
                     {
-                        var note = pattern.Notes[i];
+                        var time = it.CurrentTime;
+                        var note = it.CurrentNote;
+
+                        if (note == null)
+                            note = emptyNote;
 
                         if (isSpeedChannel)
                         {
-                            var speed = FindEffectParam(song, p, i, Note.EffectSpeed);
+                            var speed = FindEffectParam(song, p, time, Note.EffectSpeed);
                             if (speed >= 0)
                             {
                                 patternBuffer.Add($"${0xfb:x2}");
@@ -576,7 +582,7 @@ namespace FamiStudio
                             }
                         }
 
-                        i++;
+                        it.Next();
 
                         if (note.HasVolume)
                         {
@@ -635,17 +641,17 @@ namespace FamiStudio
                             if (kernel == FamiToneKernel.FamiTone2)
                             {
                                 // Note -> Empty -> Note special encoding.
-                                if (i < patternLength - 1)
+                                if (time < patternLength - 2)
                                 {
-                                    var nextNote1 = pattern.Notes[i + 0];
-                                    var nextNote2 = pattern.Notes[i + 1];
+                                    pattern.Notes.TryGetValue(time + 1, out var nextNote1);
+                                    pattern.Notes.TryGetValue(time + 2, out var nextNote2);
 
-                                    var valid1 = nextNote1.IsValid || (isSpeedChannel && FindEffectParam(song, p, i + 0, Note.EffectSpeed) >= 0);
-                                    var valid2 = nextNote2.IsValid || (isSpeedChannel && FindEffectParam(song, p, i + 1, Note.EffectSpeed) >= 0);
+                                    var valid1 = (nextNote1 != null && nextNote1.IsValid) || (isSpeedChannel && FindEffectParam(song, p, time + 1, Note.EffectSpeed) >= 0);
+                                    var valid2 = (nextNote2 != null && nextNote2.IsValid) || (isSpeedChannel && FindEffectParam(song, p, time + 2, Note.EffectSpeed) >= 0);
 
                                     if (!valid1 && valid2)
                                     {
-                                        i++;
+                                        it.Next();
                                         numValidNotes--;
                                         numNotes = 1;
                                     }
@@ -656,7 +662,7 @@ namespace FamiStudio
                             {
                                 var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumChannels);
 
-                                if (channel.ComputeSlideNoteParams(p, i - 1, noteTable, out _, out int stepSize, out _))
+                                if (channel.ComputeSlideNoteParams(note, p, time, noteTable, out _, out int stepSize, out _))
                                 {
                                     patternBuffer.Add($"${0x61:x2}");
                                     patternBuffer.Add($"${(byte)stepSize:x2}");
@@ -673,18 +679,28 @@ namespace FamiStudio
                         {
                             int numEmptyNotes = 0;
 
-                            while (i < patternLength)
+                            while (!it.Done)
                             {
-                                var emptyNote = pattern.Notes[i];
+                                time = it.CurrentTime;
+                                note = it.CurrentNote;
 
-                                if (numEmptyNotes >= maxRepeatCount || emptyNote.IsValid || emptyNote.HasVolume || emptyNote.HasVibrato || emptyNote.HasFinePitch || emptyNote.HasFdsModSpeed || emptyNote.HasFdsModDepth ||
-                                    (isSpeedChannel && FindEffectParam(song, p, i, Note.EffectSpeed) >= 0))
+                                if (note == null)
+                                    note = emptyNote;
+
+                                if (numEmptyNotes >= maxRepeatCount || 
+                                    note.IsValid        ||
+                                    note.HasVolume      || 
+                                    note.HasVibrato     ||
+                                    note.HasFinePitch   ||
+                                    note.HasFdsModSpeed || 
+                                    note.HasFdsModDepth ||
+                                    (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
                                 {
                                     break;
                                 }
 
-                                i++;
                                 numEmptyNotes++;
+                                it.Next();
                             }
 
                             numValidNotes -= numEmptyNotes;
@@ -768,9 +784,9 @@ namespace FamiStudio
             {
                 foreach (var pattern in song.Channels[c].Patterns)
                 {
-                    for (int n = 0; n < pattern.MaxInstanceLength; n++)
+                    foreach (var note in pattern.Notes.Values)
                     {
-                        if (pattern.Notes[n].HasSpeed)
+                        if (note.HasSpeed)
                             speedEffectCount[c]++;
                     }
                 }
@@ -856,17 +872,16 @@ namespace FamiStudio
                     {
                         foreach (var pattern in channel.Patterns)
                         {
-                            for (int i = 0; i < pattern.MaxInstanceLength; i++)
+                            foreach (var note in pattern.Notes.Values)
                             {
-                                if (pattern.Notes[i].IsRelease)
-                                {
-                                    pattern.Notes[i].Value = Note.NoteInvalid;
-                                }
-                                pattern.Notes[i].HasAttack    = true;
-                                pattern.Notes[i].HasVibrato   = false;
-                                pattern.Notes[i].HasVolume    = false;
-                                pattern.Notes[i].IsSlideNote  = false;
-                                pattern.Notes[i].HasFinePitch = false;
+                                if (note.IsRelease)
+                                    note.Value = Note.NoteInvalid;
+
+                                note.HasAttack    = true;
+                                note.HasVibrato   = false;
+                                note.HasVolume    = false;
+                                note.IsSlideNote  = false;
+                                note.HasFinePitch = false;
                             }
                         }
                     }

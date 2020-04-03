@@ -155,14 +155,14 @@ namespace FamiStudio
                 patternIdNameMap.Add(new Tuple<int, int, string>(patId, patChannel, patName));
             }
 
-            var dummyPattern = new Pattern();
+            var dummyPattern = new Pattern(); // MATTT: Test this, arrays will be null here.
 
             // Match patterns by name, create missing ones and remap IDs.
             for (int i = 0; i < numPatterns; i++)
             {
-                var patId = patternIdNameMap[i].Item1;
+                var patId      = patternIdNameMap[i].Item1;
                 var patChannel = patternIdNameMap[i].Item2;
-                var patName = patternIdNameMap[i].Item3;
+                var patName    = patternIdNameMap[i].Item3;
 
                 if (serializer.Project.IsChannelActive(patChannel))
                 {
@@ -232,7 +232,7 @@ namespace FamiStudio
             // Match instruments by name, create missing ones and remap IDs.
             for (int i = 0; i < numInstruments; i++)
             {
-                var instId = instrumentIdNameMap[i].Item1;
+                var instId   = instrumentIdNameMap[i].Item1;
                 var instType = instrumentIdNameMap[i].Item2;
                 var instName = instrumentIdNameMap[i].Item3;
 
@@ -282,18 +282,23 @@ namespace FamiStudio
             var instruments = new HashSet<Instrument>();
             foreach (var note in notes)
             {
-                if (note.Instrument != null)
+                if (note != null && note.Instrument != null)
                     instruments.Add(note.Instrument);
             }
 
             var serializer = new ProjectSaveBuffer(null);
 
             SaveInstrumentList(serializer, instruments);
-
-            int numNotes = notes.Length;
+            
+            var numNotes = notes.Length;
             serializer.Serialize(ref numNotes);
             foreach (var note in notes)
-                note.SerializeState(serializer);
+            {
+                if (note == null)
+                    Note.EmptyNote.SerializeState(serializer);
+                else
+                    note.SerializeState(serializer);
+            }
             
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
             var clipboardData = new List<byte>();
@@ -330,7 +335,13 @@ namespace FamiStudio
             serializer.Serialize(ref numNotes);
             var notes = new Note[numNotes];
             for (int i = 0; i < numNotes; i++)
-                notes[i].SerializeState(serializer);
+            {
+                var note = new Note();
+                note.SerializeState(serializer);
+
+                if (!note.IsEmpty)
+                    notes[i] = note;
+            }
 
             project.SortInstruments();
 
@@ -387,9 +398,9 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         uniquePatterns.Add(pattern);
-                        for (int k = 0; k < pattern.MaxInstanceLength; k++)
+                        foreach (var n in pattern.Notes.Values)
                         {
-                            var inst = pattern.Notes[k].Instrument;
+                            var inst = n.Instrument;
                             if (inst != null)
                                 uniqueInstruments.Add(inst);
                         }

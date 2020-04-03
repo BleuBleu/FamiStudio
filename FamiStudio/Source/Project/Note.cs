@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public struct Note
+    public class Note
     {
         public static readonly string[] NoteNames =
         {
@@ -38,10 +38,12 @@ namespace FamiStudio
         public const int DPCMNoteMin     = 0x0c;
         public const int DPCMNoteMax     = 0x4b;
 
-        public byte   Value; // (0 = stop, 1 = C0 ... 96 = B7).
-        public byte   Flags;
-        public byte   Slide;
-        public ushort EffectMask;
+        public readonly static Note EmptyNote = new Note();
+
+        public byte       Value = NoteInvalid; // (0 = stop, 1 = C0 ... 96 = B7).
+        public byte       Flags;
+        public byte       Slide;
+        public ushort     EffectMask;
         public Instrument Instrument;
 
         // Effects.
@@ -54,24 +56,16 @@ namespace FamiStudio
 
         // As of version 5 (FamiStudio 1.5.0), these are deprecated and are only kepth around
         // for migration.
-        public byte FxJump;
-        public byte FxSkip;
+        public byte FxJump = 0xff;
+        public byte FxSkip = 0xff;
+
+        public Note()
+        {
+        }
 
         public Note(int value)
         {
             Value = (byte)value;
-            FxJump = 0;
-            FxSkip = 0;
-            Slide = 0;
-            Flags = 0;
-            Instrument = null;
-            EffectMask = 0;
-            FxVolume = 0;
-            FxVibrato = 0;
-            FxSpeed = 0;
-            FxFinePitch = 0;
-            FxFdsModDepth = 0;
-            FxFdsModSpeed = 0;
         }
 
         public void Clear(bool preserveFx = true)
@@ -182,7 +176,7 @@ namespace FamiStudio
         public byte Speed
         {
             get { Debug.Assert(HasSpeed); return FxSpeed; }
-            set { Debug.Assert(value >= 0 && value <= 31); FxSpeed = value; HasSpeed = true; }
+            set { Debug.Assert(value > 0 && value <= 31); FxSpeed = value; HasSpeed = true; }
         }
 
         public byte FdsModDepth
@@ -289,7 +283,13 @@ namespace FamiStudio
             return note;
         }
 
+        public Note Clone()
+        {
+            return (Note)MemberwiseClone();
+        }
+
         public bool IsEmpty => Value == Note.NoteInvalid && Flags == 0 && Slide == 0 && EffectMask == 0;
+        public bool HasJumpOrSkip => FxJump != 0xff || FxSkip != 0xff;
 
         // Serialization for notes before version 5 (before FamiStudio 1.5.0)
         public void SerializeStatePreVer5(ProjectBuffer buffer)
@@ -484,7 +484,7 @@ namespace FamiStudio
             switch (fx)
             {
                 case EffectVolume : return VolumeMax;
-                case EffectSpeed  : return song.Speed;
+                case EffectSpeed  : return song.FamitrackerSpeed;
             }
 
             return 0;

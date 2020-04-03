@@ -10,7 +10,7 @@ namespace FamiStudio
         // Version 2 = FamiStudio 1.1.0 (Project properties)
         // Version 3 = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
         // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
-        // Version 5 = FamiStudio 1.5.0 (FDS, fine pitch track)
+        // Version 5 = FamiStudio 1.5.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
         public static int Version = 5;
         public static int MaxSampleSize = 0x4000;
 
@@ -22,6 +22,9 @@ namespace FamiStudio
         public const int ExpansionN163    = 5;
         public const int ExpansionS5B     = 6;
         public const int ExpansionCount   = 7;
+
+        public const int TempoFamiStudio  = 0;
+        public const int TempoFamiTracker = 1;
 
         public static string[] ExpansionNames =
         {
@@ -54,6 +57,8 @@ namespace FamiStudio
         private string name = "Untitled";
         private string author = "Unknown";
         private string copyright = "";
+        //private int tempoMode = TempoFamiStudio;
+        private int tempoMode = TempoFamiTracker;
         private int expansionAudio = ExpansionNone;
         private int expansionNumChannels = 1;
 
@@ -61,17 +66,17 @@ namespace FamiStudio
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
-        public int                 NextUniqueId   => nextUniqueId;
         public int                 ExpansionAudio => expansionAudio;
         public int                 ExpansionNumChannels => expansionNumChannels;
         public string              ExpansionAudioName => ExpansionNames[expansionAudio];
         public string              ExpansionAudioShortName => ExpansionShortNames[expansionAudio];
         public bool                UsesExpansionAudio => expansionAudio != ExpansionNone;
 
-        public string              Filename   { get => filename; set => filename = value; }
-        public string              Name       { get => name; set => name = value; }
-        public string              Author     { get => author; set => author = value; }
-        public string              Copyright  { get => copyright; set => copyright = value; }
+        public string Filename   { get => filename; set => filename = value; }
+        public string Name       { get => name; set => name = value; }
+        public string Author     { get => author; set => author = value; }
+        public string Copyright  { get => copyright; set => copyright = value; }
+        public int    TempoMode  { get => tempoMode; set => tempoMode = value; }
 
         public Project(bool createSongAndInstrument = false)
         {
@@ -299,7 +304,7 @@ namespace FamiStudio
                 foreach (var channel in song.Channels)
                 {
                     foreach (var pattern in channel.Patterns)
-                        pattern.UpdateLastValidNotes();
+                        pattern.ClearLastValidNoteCache();
                 }
             }
         }
@@ -314,14 +319,14 @@ namespace FamiStudio
                 {
                     foreach (var pattern in channel.Patterns)
                     {
-                        for (int i = 0; i < Pattern.MaxLength; i++)
+                        foreach (var note in pattern.Notes.Values)
                         {
-                            if (pattern.Notes[i].Instrument == instrumentOld)
+                            if (note.Instrument == instrumentOld)
                             {
                                 if (instrumentNew == null)
-                                    pattern.Notes[i].Value = Note.NoteInvalid;
+                                    note.Value = Note.NoteInvalid;
 
-                                pattern.Notes[i].Instrument = instrumentNew;
+                                note.Instrument = instrumentNew;
                             }
                         }
                     }
@@ -628,9 +633,8 @@ namespace FamiStudio
                         var pattern = channel.PatternInstances[p];
                         if (pattern != null)
                         {
-                            for (int i = 0; i < pattern.MaxInstanceLength ; i++)
+                            foreach (var note in pattern.Notes.Values)
                             {
-                                var note = pattern.Notes[i];
                                 if (note.Instrument != null)
                                 {
                                     //Debug.Assert(note.IsMusical);
@@ -658,9 +662,8 @@ namespace FamiStudio
                     var pattern = channel.PatternInstances[p];
                     if (pattern != null)
                     {
-                        for (int i = 0; i < pattern.MaxInstanceLength; i++)
+                        foreach (var note in pattern.Notes.Values)
                         {
-                            var note = pattern.Notes[i];
                             var mapping = GetDPCMMapping(note.Value);
                             if (note.IsValid && !note.IsStop && note.Instrument == null && mapping != null && mapping.Sample != null)
                             {
@@ -776,10 +779,15 @@ namespace FamiStudio
                 buffer.Serialize(ref expansionAudio);
             }
 
-            // At version 5 (FamiStudio 1.5.0) we added support for Namco 163.
+            // At version 5 (FamiStudio 1.5.0) we added support for Namco 163 and advanced tempo mode.
             if (buffer.Version >= 5)
             {
                 buffer.Serialize(ref expansionNumChannels);
+                buffer.Serialize(ref tempoMode);
+            }
+            else
+            {
+                tempoMode = TempoFamiTracker;
             }
 
             // DPCM samples

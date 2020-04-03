@@ -35,7 +35,10 @@ namespace FamiStudio
         protected int playPattern = 0;
         protected int playNote = 0;
         protected int speed = 6;
+        protected int palFramePattern = 0;
+        protected bool famitrackerTempo = true;
         protected bool palMode = false;
+        protected bool firstFrame = false;
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
@@ -70,37 +73,64 @@ namespace FamiStudio
             set { playPosition = value; }
         }
 
-        public bool UpdateFamitrackerTempo(int speed, int tempo, ref int tempoCounter)
+        public int GetNumFramesToRun()
         {
-            // Tempo/speed logic straight from Famitracker.
-            var tempoDecrement = (tempo * 24) / speed;
-            var tempoRemainder = (tempo * 24) % speed;
-
-            if (tempoCounter <= 0)
+            if (famitrackerTempo)
             {
-                int ticksPerSec = palMode ? 50 : 60;
-                tempoCounter += (60 * ticksPerSec) - tempoRemainder;
+                return 1;
             }
-            tempoCounter -= tempoDecrement;
-           
-            return tempoCounter <= 0;
+            else
+            {
+                if (tempoCounter <= 0)
+                {
+                    tempoCounter = 11;
+                    palFramePattern = 0x104 << 1;
+                }
+                tempoCounter--;
+                palFramePattern >>= 1;
+
+                return palMode && ((palFramePattern & 1) != 0) ? 2 : 1;
+            }
         }
 
-        public bool UpdateFamistudioTempo(int speed, ref int tempoCounter, ref int numFrames)
+        public bool UpdateTempo(int speed, int tempo)
         {
-            numFrames = (palMode && (tempoCounter % speed) == (speed - 2)) ? 2 : 1;
-            tempoCounter += numFrames;
-            return true;
+            if (famitrackerTempo)
+            {
+                // Tempo/speed logic straight from Famitracker.
+                var tempoDecrement = (tempo * 24) / speed;
+                var tempoRemainder = (tempo * 24) % speed;
+
+                if (tempoCounter <= 0)
+                {
+                    int ticksPerSec = palMode ? 50 : 60;
+                    tempoCounter += (60 * ticksPerSec) - tempoRemainder;
+                }
+                tempoCounter -= tempoDecrement;
+
+                return tempoCounter <= 0;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        public void UpdateTempo()
+        {
+
         }
 
         public bool BeginPlaySong(Song s, bool pal, int startNote)
         {
             song = s;
-            speed = song.Speed;
+            speed = song.FamitrackerSpeed;
             palMode = pal;
             playPosition = startNote;
             playPattern = 0;
             playNote = 0;
+            tempoCounter = 0;
+            firstFrame = true;
             channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palMode);
 
             NesApu.InitAndReset(apuIndex, SampleRate, palMode, GetNesApuExpansionAudio(song.Project), song.Project.ExpansionNumChannels, dmcCallback);
@@ -126,24 +156,10 @@ namespace FamiStudio
                         return false;
                 }
 
-                foreach (var channel in channelStates)
-                {
-                    channel.Advance(song, playPattern, playNote);
-                    channel.ProcessEffects(song, playPattern, playNote, ref speed);
-                }
-
                 NesApu.StopSeeking(apuIndex);
 #if DEBUG
                 NesApu.seeking = false;
 #endif
-            }
-            else
-            {
-                foreach (var channel in channelStates)
-                {
-                    channel.Advance(song, 0, 0);
-                    channel.ProcessEffects(song, 0, 0, ref speed);
-                }
             }
 
             return true;
@@ -151,13 +167,33 @@ namespace FamiStudio
 
         public bool PlaySongFrame()
         {
-            playPosition = song.GetPatternStartNote(playPattern) + playNote;
+            int numFrames = GetNumFramesToRun();
 
-            // Update envelopes + APU registers.
-            foreach (var channel in channelStates)
+            for (int i = 0; i < numFrames; i++)
             {
-                channel.UpdateEnvelopes();
-                channel.UpdateAPU();
+                if (firstFrame || UpdateTempo(speed, song.FamitrackerTempo))
+                //if (UpdateFamistudioTempo(6, ref tempoCounter, ref numFrames))
+                {
+                    // Advance to next note.
+                    if (!firstFrame && !AdvanceSong(song.Length, loopMode))
+                        return false;
+
+                    foreach (var channel in channelStates)
+                    {
+                        channel.Advance(song, playPattern, playNote);
+                        channel.ProcessEffects(song, playPattern, playNote, ref speed);
+                    }
+
+                    playPosition = song.GetPatternStartNote(playPattern) + playNote;
+                    firstFrame = false;
+                }
+
+                // Update envelopes + APU registers.
+                foreach (var channel in channelStates)
+                {
+                    channel.UpdateEnvelopes();
+                    channel.UpdateAPU();
+                }
             }
 
             // Mute.
@@ -167,20 +203,6 @@ namespace FamiStudio
             }
 
             EndFrame();
-
-            if (UpdateFamitrackerTempo(speed, song.Tempo, ref tempoCounter))
-            //if (UpdateFamistudioTempo(6, ref tempoCounter, ref numFrames))
-            {
-                // Advance to next note.
-                if (!AdvanceSong(song.Length, loopMode))
-                    return false;
-
-                foreach (var channel in channelStates)
-                {
-                    channel.Advance(song, playPattern, playNote);
-                    channel.ProcessEffects(song, playPattern, playNote, ref speed);
-                }
-            }
 
             return true;
         }

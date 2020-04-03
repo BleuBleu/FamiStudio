@@ -13,6 +13,7 @@ namespace FamiStudio
         enum TransformOperation
         {
             Cleanup,
+            Split,
             Tempo,
             Max
         };
@@ -20,6 +21,7 @@ namespace FamiStudio
         readonly string[] ConfigSectionNames =
         {
             "Cleanup",
+            "Split",
             "Tempo",
             ""
         };
@@ -67,6 +69,10 @@ namespace FamiStudio
                     page.AddBoolean("Delete unused samples:", true);       // 4
                     page.AddStringListMulti(null, GetSongNames(), null);   // 5
                     break;
+                case TransformOperation.Split:
+                    page.AddIntegerRange("Split Patterns in :", 2, 2, 4);  // 0
+                    page.AddStringListMulti(null, GetSongNames(), null);   // 5
+                    break;
                 case TransformOperation.Tempo:
                     break;
             }
@@ -90,6 +96,79 @@ namespace FamiStudio
             return songIds.ToArray();
         }
 
+        private void Cleanup()
+        {
+            var props = dialog.GetPropertyPage((int)TransformOperation.Cleanup);
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
+
+            var mergeIdenticalPatterns    = props.GetPropertyValue<bool>(0);
+            var deleteEmptyPatterns       = props.GetPropertyValue<bool>(1);
+            var mergeIdenticalInstruments = props.GetPropertyValue<bool>(2);
+            var deleteUnusedInstruments   = props.GetPropertyValue<bool>(3);
+            var deleteUnusedSamples       = props.GetPropertyValue<bool>(4);
+
+            if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns || mergeIdenticalInstruments || deleteUnusedInstruments || deleteUnusedSamples))
+            {
+                app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                if (mergeIdenticalPatterns)
+                {
+                    foreach (var songId in songIds)
+                    {
+                        var song = app.Project.GetSong(songId);
+                        song.MergeIdenticalPatterns();
+                    }
+                }
+
+                if (deleteEmptyPatterns)
+                {
+                    foreach (var songId in songIds)
+                    {
+                        var song = app.Project.GetSong(songId);
+                        song.RemoveEmptyPatterns();
+                    }
+                }
+
+                if (mergeIdenticalInstruments)
+                {
+                    app.Project.MergeIdenticalInstruments();
+                }
+
+                if (deleteUnusedInstruments)
+                {
+                    app.Project.DeleteUnusedInstruments();
+                }
+
+                if (deleteUnusedSamples)
+                {
+                    app.Project.DeleteUnusedSamples();
+                }
+
+                app.UndoRedoManager.EndTransaction();
+            }
+        }
+
+        private void Split()
+        {
+            var props = dialog.GetPropertyPage((int)TransformOperation.Split);
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(1));
+
+            if (songIds.Length > 0)
+            {
+                var factor = props.GetPropertyValue<int>(0);
+
+                app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                foreach (var songId in songIds)
+                {
+                    var song = app.Project.GetSong(songId);
+                    song.Split(factor);
+                }
+
+                app.UndoRedoManager.EndTransaction();
+            }
+        }
+
         public DialogResult ShowDialog()
         {
             var dialogResult = dialog.ShowDialog();
@@ -98,56 +177,10 @@ namespace FamiStudio
             {
                 var operation = (TransformOperation)dialog.SelectedIndex;
 
-                if (operation == TransformOperation.Cleanup)
+                switch (operation)
                 {
-                    var props = dialog.GetPropertyPage((int)TransformOperation.Cleanup);
-                    var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
-
-                    var mergeIdenticalPatterns    = props.GetPropertyValue<bool>(0);
-                    var deleteEmptyPatterns       = props.GetPropertyValue<bool>(1);
-                    var mergeIdenticalInstruments = props.GetPropertyValue<bool>(2);
-                    var deleteUnusedInstruments   = props.GetPropertyValue<bool>(3);
-                    var deleteUnusedSamples       = props.GetPropertyValue<bool>(4);
-
-                    if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns || mergeIdenticalInstruments || deleteUnusedInstruments || deleteUnusedSamples))
-                    {
-                        app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                        if (mergeIdenticalPatterns)
-                        {
-                            foreach (var songId in songIds)
-                            {
-                                var song = app.Project.GetSong(songId);
-                                song.MergeIdenticalPatterns();
-                            }
-                        }
-
-                        if (deleteEmptyPatterns)
-                        {
-                            foreach (var songId in songIds)
-                            {
-                                var song = app.Project.GetSong(songId);
-                                song.RemoveEmptyPatterns();
-                            }
-                        }
-
-                        if (mergeIdenticalInstruments)
-                        {
-                            app.Project.MergeIdenticalInstruments();
-                        }
-
-                        if (deleteUnusedInstruments)
-                        {
-                            app.Project.DeleteUnusedInstruments();
-                        }
-
-                        if (deleteUnusedSamples)
-                        {
-                            app.Project.DeleteUnusedSamples();
-                        }
-
-                        app.UndoRedoManager.EndTransaction();
-                    }
+                    case TransformOperation.Cleanup: Cleanup(); break;
+                    case TransformOperation.Split:   Split();   break;
                 }
             }
 

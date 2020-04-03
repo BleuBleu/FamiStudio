@@ -516,8 +516,7 @@ namespace FamiStudio
 
                     if (note != -1)
                     {
-                        var pattern = GetOrCreatePattern(channel, p);
-                        pattern.Notes[n].Value = (byte)note;
+                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Value = (byte)note;
                         hasNote = true;
                     }
                 }
@@ -588,8 +587,7 @@ namespace FamiStudio
                 {
                     if (state.volume != volume && volume != 0)
                     {
-                        var pattern = GetOrCreatePattern(channel, p);
-                        pattern.Notes[n].Volume = (byte)volume;
+                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Volume = (byte)volume;
                         state.volume = volume;
                     }
                 }
@@ -621,15 +619,13 @@ namespace FamiStudio
 
                     if (state.fdsModDepth != modDepth)
                     {
-                        var pattern = GetOrCreatePattern(channel, p);
-                        pattern.Notes[n].FdsModDepth = (byte)modDepth;
+                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModDepth = (byte)modDepth;
                         state.fdsModDepth = modDepth;
                     }
 
                     if (state.fdsModSpeed != modSpeed)
                     {
-                        var pattern = GetOrCreatePattern(channel, p);
-                        pattern.Notes[n].FdsModSpeed = (ushort)modSpeed;
+                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FdsModSpeed = (ushort)modSpeed;
                         state.fdsModSpeed = modSpeed;
                     }
                 }
@@ -701,8 +697,9 @@ namespace FamiStudio
                     if ((state.note != note) || (state.instrument != instrument && instrument != null) || force)
                     {
                         var pattern = GetOrCreatePattern(channel, p);
-                        pattern.Notes[n].Value = (byte)note;
-                        pattern.Notes[n].Instrument = instrument;
+                        var newNote = pattern.GetOrCreateNoteAt(n);
+                        newNote.Value = (byte)note;
+                        newNote.Instrument = instrument;
                         state.note = note;
                         state.octave = octave;
                         if (instrument != null)
@@ -722,8 +719,7 @@ namespace FamiStudio
 
                         if (pitch != state.pitch)
                         {
-                            var pattern = GetOrCreatePattern(channel, p);
-                            pattern.Notes[n].FinePitch = pitch;
+                            var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).FinePitch = pitch;
                             state.pitch = pitch;
                         }
                     }
@@ -817,7 +813,7 @@ namespace FamiStudio
 
             NsfSetTrack(nsf, songIndex);
 
-            song.Speed = 1;
+            song.FamitrackerSpeed = 1;
             song.SetDefaultPatternLength(patternLength);
             song.SetSensibleBarLength();
 
@@ -865,7 +861,6 @@ namespace FamiStudio
 
             song.RemoveEmptyPatterns();
             song.UpdatePatternStartNotes();
-            song.UpdatePatternsMaxInstanceLength();
             project.SortInstruments();
             project.DeleteUnusedInstruments();
             project.UpdateAllLastValidNotesAndVolume();

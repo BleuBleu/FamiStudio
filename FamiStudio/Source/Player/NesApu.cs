@@ -284,6 +284,7 @@ namespace FamiStudio
 
         public static ushort GetPitchLimitForChannelType(int channelType)
         {
+            // MATTT This is incomplete.
             return (ushort)(channelType == Channel.Vrc6Saw ? 0xfff : 0x7ff);
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -100,7 +101,7 @@ namespace FamiStudio
             return zoomLevel < 0 ? value / (1 << (-zoomLevel)) : value * (1 << zoomLevel);
         }
 
-        Dictionary<int, RenderBitmap> patternBitmapCache = new Dictionary<int, RenderBitmap>();
+        Dictionary<int, List<RenderBitmap>> patternBitmapCache = new Dictionary<int, List<RenderBitmap>>();
 
         RenderTheme theme;
         RenderBrush seekBarBrush;
@@ -343,13 +344,22 @@ namespace FamiStudio
             {
                 var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) - scrollX;
                 var sx = (int)(Song.GetPatternLength(i) * noteSizeX);
+
                 g.PushTranslation(px, 0);
-                g.DrawText(i.ToString(), ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx);
+
+                g.PushClip(1, 0, sx, Height);
+                var text = i.ToString();
+                if (Song.PatternHasCustomLength(i))
+                    text += "*";
+                g.DrawText(text, ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx);
+
+                //if (Song.PatternHasCustomLength(i))
+                //    g.DrawBitmap(bmpCustomLength, sx - headerIconSizeX - headerIconPosX, headerIconPosY);
+
+                g.PopClip();
 
                 if (i == Song.LoopPoint)
                     g.DrawBitmap(bmpLoopPoint, headerIconPosX, headerIconPosY);
-                if (Song.PatternHasCustomLength(i))
-                    g.DrawBitmap(bmpCustomLength, sx - headerIconSizeX - headerIconPosX, headerIconPosY);
 
                 g.PopTransform();
             }
@@ -424,19 +434,20 @@ namespace FamiStudio
             {
                 for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
                 {
+                    var patternLen = Song.GetPatternLength(i);
                     var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) + trackNameSizeX - scrollX;
-                    var sx = (int)(Song.GetPatternLength(i) * noteSizeX);
+                    var sx = (int)(patternLen * noteSizeX);
                     var pattern = Song.Channels[t].PatternInstances[i];
 
                     if (pattern != null)
                     {
-                        var bmp = GetPatternBitmapFromCache(g, pattern);
+                        var bmp = GetPatternBitmapFromCache(g, pattern, patternLen);
 
                         g.PushTranslation(px, py);
                         g.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY - 1, 0.9f));
                         g.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, theme.DarkGreyLineBrush1);
                         g.PushClip(0, 0, sx, trackSizeY);
-                        g.DrawBitmap(bmp, 1, 1 + patternHeaderSizeY, (int)(pattern.MaxInstanceLength * noteSizeX) - 1, bmp.Size.Height, 1.0f);
+                        g.DrawBitmap(bmp, 1.5f, 1.5f + patternHeaderSizeY, ((sx - 1) / (float)sx) * bmp.Size.Width * noteSizeX, bmp.Size.Height, 1.0f);
                         g.DrawText(pattern.Name, ThemeBase.FontSmall, patternNamePosX, patternNamePosY, theme.BlackBrush);
                         g.PopClip();
                         g.PopTransform();
@@ -498,74 +509,84 @@ namespace FamiStudio
             patternBitmapCache.Remove(pattern.Id);
         }
 
-        private unsafe RenderBitmap GetPatternBitmapFromCache(RenderGraphics g, Pattern p)
+        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, uint[] data)
         {
-            int patternSizeX = Math.Max(1, p.MaxInstanceLength - 1);
+            var scaleY = (patternSizeY - noteSizeY) / (float)patternSizeY;
+            var y = Math.Min((int)Math.Round((note.Value - minNote) / (float)(maxNote - minNote) * scaleY * patternSizeY), patternSizeY - noteSizeY);
+            var instrument = note.Instrument;
+            var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
+
+            for (int j = 0; j < noteSizeY; j++)
+                for (int x = t0; x < t1; x++)
+                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = (uint)color.ToArgb();
+        }
+
+        private RenderBitmap GetPatternBitmapFromCache(RenderGraphics g, Pattern p, int patternLen)
+        {
+            int patternSizeX = Math.Max(1, patternLen);
             int patternSizeY = trackSizeY - patternHeaderSizeY - 1;
 
             RenderBitmap bmp;
 
-            if (patternBitmapCache.TryGetValue(p.Id, out bmp))
+            if (patternBitmapCache.TryGetValue(p.Id, out var list))
             {
-                if (bmp.Size.Width == patternSizeX)
-                {
+                bmp = list.FirstOrDefault(b => b.Size.Width == patternSizeX);
+
+                if (bmp != null)
                     return bmp;
-                }
-                else
-                {
-                    patternBitmapCache.Remove(p.Id);
-                    bmp.Dispose();
-                    bmp = null;
-                }
             }
 
             uint[] data = new uint[patternSizeX * patternSizeY];
 
-            Note minNote;
-            Note maxNote;
+            int minNote;
+            int maxNote;
 
             if (p.GetMinMaxNote(out minNote, out maxNote))
             {
-                if (maxNote.Value == minNote.Value)
+                if (maxNote == minNote)
                 {
-                    minNote.Value = (byte)(minNote.Value - 5);
-                    maxNote.Value = (byte)(maxNote.Value + 5);
+                    minNote = (byte)(minNote - 5);
+                    maxNote = (byte)(maxNote + 5);
                 }
                 else
                 {
-                    minNote.Value = (byte)(minNote.Value - 2);
-                    maxNote.Value = (byte)(maxNote.Value + 2);
+                    minNote = (byte)(minNote - 2);
+                    maxNote = (byte)(maxNote + 2);
                 }
 
-                Note lastValid = new Note { Value = Note.NoteInvalid };
+                int lastTime = 0;
+                Note lastValid = null;
 
-                for (int i = 0; i < p.MaxInstanceLength - 1; i++) // TODO: We always skip the last note.
+                foreach (var kv in p.Notes)
                 {
-                    var n = p.Notes[i];
+                    var note = kv.Value;
 
-                    if (n.IsMusical)
-                        lastValid = p.Notes[i];
+                    if (kv.Key >= patternLen)
+                        break;
 
-                    if (lastValid.IsValid)
+                    if (note.IsMusical || note.IsStop)
                     {
-                        float scaleY = (patternSizeY - noteSizeY) / (float)patternSizeY;
+                        if (lastValid != null && lastValid.IsValid)
+                            DrawPatternBitmapNote(lastTime, kv.Key, lastValid, patternSizeX, patternSizeY, minNote, maxNote, data);
 
-                        int x = i;
-                        int y = Math.Min((int)Math.Round((lastValid.Value - minNote.Value) / (float)(maxNote.Value - minNote.Value) * scaleY * patternSizeY), patternSizeY - noteSizeY);
-
-                        var instrument = lastValid.Instrument;
-                        var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
-
-                        for (int j = 0; j < noteSizeY; j++)
-                        {
-                            data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = (uint)color.ToArgb();
-                        }
+                        lastTime  = kv.Key;
+                        lastValid = note.IsStop ? null : note;
                     }
                 }
+
+                if (lastValid != null && lastValid.IsValid)
+                    DrawPatternBitmapNote(lastTime, patternLen, lastValid, patternSizeX, patternSizeY, minNote, maxNote, data);
             }
 
             bmp = g.CreateBitmap(patternSizeX, patternSizeY, data);
-            patternBitmapCache[p.Id] = bmp;
+
+            if (!patternBitmapCache.TryGetValue(p.Id, out list))
+            {
+                list = new List<RenderBitmap>();
+                patternBitmapCache[p.Id] = list;
+            }
+
+            list.Add(bmp);
 
             return bmp;
         }
@@ -750,7 +771,6 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                         channel.PatternInstances[patternIdx] = channel.CreatePattern();
-                        channel.UpdatePatternsMaxInstanceLength();
                         PatternClicked?.Invoke(channelIdx, patternIdx);
                         App.UndoRedoManager.EndTransaction();
                         ClearSelection();
@@ -984,8 +1004,6 @@ namespace FamiStudio
                             for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                                 Song.SetPatternLength(j + patternIdxDelta, extraInfo[j - minSelectedPatternIdx].customLength);
                         }
-
-                        Song.UpdatePatternsMaxInstanceLength();
 
                         App.UndoRedoManager.EndTransaction();
 
@@ -1266,6 +1284,79 @@ namespace FamiStudio
             UpdateCursor();
         }
 
+        private void EditPatternCustomSettings(Point pt, int patternIdx)
+        {
+            var dlg = new PropertyDialog(PointToScreen(pt), 240);
+
+            if (Song.Project.TempoMode == Project.TempoFamiTracker)
+            {
+                dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternHasCustomLength(patternIdx)); // 0
+                dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternLength(patternIdx), 1, Pattern.MaxLength); // 1
+            }
+            else
+            {
+                //dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternHasCustomLength(patternIdx)); // 0
+                //dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternLength(patternIdx), 16, Song.DefaultPatternLength); // 1
+            }
+
+            dlg.Properties.PropertyChanged += Properties_PropertyChanged;
+            dlg.Properties.SetPropertyEnabled(1, Song.PatternHasCustomLength(patternIdx));
+            dlg.Properties.Build();
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                Song.SetPatternLength(patternIdx, dlg.Properties.GetPropertyValue<bool>(0) ? dlg.Properties.GetPropertyValue<int>(1) : 0);
+                App.UndoRedoManager.EndTransaction();
+                ConditionalInvalidate();
+                PatternModified?.Invoke();
+            }
+        }
+
+        private void EditPatternProperties(Point pt, Pattern pattern)
+        {
+            bool multiplePatternSelected = (maxSelectedChannelIdx != minSelectedChannelIdx) || (minSelectedPatternIdx != maxSelectedPatternIdx);
+
+            var dlg = new PropertyDialog(PointToScreen(pt), 160);
+            dlg.Properties.AddColoredString(pattern.Name, pattern.Color);
+            dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
+            dlg.Properties.AddColor(pattern.Color);
+            dlg.Properties.Build();
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+
+                var newName = dlg.Properties.GetPropertyValue<string>(0);
+                var newColor = dlg.Properties.GetPropertyValue<Color>(1);
+
+                if (multiplePatternSelected)
+                {
+                    for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
+                    {
+                        for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                        {
+                            Song.Channels[i].PatternInstances[j].Color = newColor;
+                        }
+                    }
+                    App.UndoRedoManager.EndTransaction();
+                }
+                else if (Song.Channels[selectedChannel].RenamePattern(pattern, newName))
+                {
+                    pattern.Color = newColor;
+                    App.UndoRedoManager.EndTransaction();
+                }
+                else
+                {
+                    App.UndoRedoManager.AbortTransaction();
+                    SystemSounds.Beep.Play();
+                }
+
+                ConditionalInvalidate();
+                PatternModified?.Invoke();
+            }
+        }
+
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             base.OnMouseDoubleClick(e);
@@ -1275,73 +1366,18 @@ namespace FamiStudio
 
             if (left)
             {
+                var pt = new Point(e.X, e.Y);
+
                 if (IsMouseInHeader(e))
                 {
-                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 240);
-                    dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternHasCustomLength(patternIdx));
-                    dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternLength(patternIdx), 16, Song.DefaultPatternLength);
-                    dlg.Properties.PropertyChanged += Properties_PropertyChanged;
-                    dlg.Properties.SetPropertyEnabled(1, Song.PatternHasCustomLength(patternIdx));
-                    dlg.Properties.Build();
-
-                    if (dlg.ShowDialog() == DialogResult.OK)
-                    {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                        Song.SetPatternLength(patternIdx, dlg.Properties.GetPropertyValue<bool>(0) ? dlg.Properties.GetPropertyValue<int>(1) : 0);
-                        Song.UpdatePatternsMaxInstanceLength();
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
-                        PatternModified?.Invoke();
-                    }
+                    EditPatternCustomSettings(pt, patternIdx);
                 }
                 else if (inPatternZone)
                 {
-                    var channel = Song.Channels[channelIdx];
-                    var pattern = channel.PatternInstances[patternIdx];
+                    var pattern = Song.Channels[channelIdx].PatternInstances[patternIdx];
 
                     if (pattern != null)
-                    {
-                        bool multiplePatternSelected = (maxSelectedChannelIdx != minSelectedChannelIdx) || (minSelectedPatternIdx != maxSelectedPatternIdx);
-
-                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160);
-                        dlg.Properties.AddColoredString(pattern.Name, pattern.Color);
-                        dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
-                        dlg.Properties.AddColor(pattern.Color);
-                        dlg.Properties.Build();
-
-                        if (dlg.ShowDialog() == DialogResult.OK)
-                        {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-
-                            var newName = dlg.Properties.GetPropertyValue<string>(0);
-                            var newColor = dlg.Properties.GetPropertyValue<Color>(1);
-
-                            if (multiplePatternSelected)
-                            {
-                                for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
-                                {
-                                    for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                                    {
-                                        Song.Channels[i].PatternInstances[j].Color = newColor;
-                                    }
-                                }
-                                App.UndoRedoManager.EndTransaction();
-                            }
-                            else if (Song.Channels[selectedChannel].RenamePattern(pattern, newName))
-                            {
-                                pattern.Color = newColor;
-                                App.UndoRedoManager.EndTransaction();
-                            }
-                            else
-                            {
-                                App.UndoRedoManager.AbortTransaction();
-                                SystemSounds.Beep.Play();
-                            }
-
-                            ConditionalInvalidate();
-                            PatternModified?.Invoke();
-                        }
-                    }
+                        EditPatternProperties(pt, pattern);
                 }
             }
         }

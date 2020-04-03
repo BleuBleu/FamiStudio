@@ -1,34 +1,37 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 
 namespace FamiStudio
 {
-    public class Pattern
+    public unsafe class Pattern
     {
-        public const int MaxLength = 256;
+        public const int MaxLength = 2048;
+
+        private class LastValidNoteData
+        {
+            public bool released = false;
+            public int time = -1;
+            public int effectMask = 0;
+            public int[] effectValues = new int[Note.EffectCount];
+        }
 
         private int id;
         private string name;
         private Song song;
         private int channelType;
         private Color color;
-        private Note[] notes = new Note[MaxLength];
-        private int maxInstanceLength = MaxLength;
-
-        const byte MaskTimeValid = 0x80;
-        const byte MaskReleased  = 0x40;
-
-        private short   firstValidNoteTime = -1;
-        private byte[]  lastValidNoteMasks = new byte[MaxLength];
-        private byte[]  lastValidNoteTimes = new byte[MaxLength];
-        private short[] lastValidNoteEffectValues = new short[MaxLength * Note.EffectCount];
+        private SortedList<int, Note> notes = new SortedList<int, Note>();
+        private int firstValidNoteTime = int.MinValue;
+        private SortedList<int, LastValidNoteData> lastValidNoteCache = new SortedList<int, LastValidNoteData>();
 
         public int Id => id;
         public int ChannelType => channelType;
         public Color Color { get => color; set => color = value; }
         public Song Song => song;
-        public int MaxInstanceLength => maxInstanceLength;
+        public SortedList<int, Note> Notes => notes;
 
         public Pattern()
         {
@@ -42,37 +45,29 @@ namespace FamiStudio
             this.channelType = channelType;
             this.name = n;
             this.color = ThemeBase.RandomCustomColor();
-            for (int i = 0; i < notes.Length; i++)
-                notes[i] = new Note(Note.NoteInvalid);
         }
-
-        public Note[] Notes
-        {
-            get { return notes; }
-        }
-
+        
         public string Name
         {
             get { return name; }
             set { name = value; }
         }
 
-        public bool GetMinMaxNote(out Note min, out Note max)
+        public bool GetMinMaxNote(out int min, out int max)
         {
             bool valid = false;
 
-            min = new Note() { Value = 255 };
-            max = new Note() { Value =   0 };
+            min = 255;
+            max = 0;
 
             if (song != null)
             {
-                for (int i = 0; i < maxInstanceLength; i++)
+                foreach (var n in notes.Values)
                 {
-                    var n = notes[i];
                     if (n.IsMusical)
                     {
-                        if (n.Value < min.Value) min = n;
-                        if (n.Value > max.Value) max = n;
+                        if (n.Value < min) min = n.Value;
+                        if (n.Value > max) max = n.Value;
                         valid = true;
                     }
                 }
@@ -85,9 +80,8 @@ namespace FamiStudio
         {
             get
             {
-                for (int i = 0; i < maxInstanceLength; i++)
+                foreach (var n in notes.Values)
                 {
-                    var n = notes[i];
                     if (n.IsValid)
                     {
                         return true;
@@ -96,7 +90,7 @@ namespace FamiStudio
                     {
                         for (int j = 0; j < Note.EffectCount; j++)
                         {
-                            if (n.HasValidEffectValue(i))
+                            if (n.HasValidEffectValue(j))
                                 return true;
                         }
                     }
@@ -106,137 +100,196 @@ namespace FamiStudio
             }
         }
 
-        public unsafe void UpdateLastValidNotes()
+        public unsafe void ClearLastValidNoteCache()
         {
-            firstValidNoteTime = -1;
-            lastValidNoteMasks[0] = 0;
-            lastValidNoteTimes[0] = 0;
-            for (int j = 0; j < Note.EffectCount; j++)
-                lastValidNoteEffectValues[j] = 0;
+            lastValidNoteCache.Clear();
+            firstValidNoteTime = int.MinValue;
+        }
 
-            for (int i = 0; i < maxInstanceLength; i++)
+        private int GetCachedFirstValidNoteTime()
+        {
+            if (firstValidNoteTime == int.MinValue)
             {
-                var note = notes[i];
+                firstValidNoteTime = -1;
 
-                if (i > 0)
+                foreach (var kv in notes)
                 {
-                    lastValidNoteMasks[i] = lastValidNoteMasks[i - 1];
-                    lastValidNoteTimes[i] = lastValidNoteTimes[i - 1];
-                    Array.Copy(lastValidNoteEffectValues, (i - 1) * Note.EffectCount, lastValidNoteEffectValues, i * Note.EffectCount, Note.EffectCount);
+                    var note = kv.Value;
+                    if (note != null && note.IsValid && !note.IsRelease)
+                    {
+                        firstValidNoteTime = kv.Key;
+                        break;
+                    }
                 }
+            }
 
-                if (firstValidNoteTime < 0 && note.IsValid && !note.IsRelease)
-                {
-                    firstValidNoteTime = (short)i;
-                }
+            return firstValidNoteTime;
+        }
+
+        private LastValidNoteData GetCachedLastValidNoteData(int endTime)
+        {
+            if (lastValidNoteCache.TryGetValue(endTime, out var lastValidData))
+                return lastValidData;
+
+            lastValidData = new LastValidNoteData();
+
+            foreach (var kv in notes)
+            {
+                var i    = kv.Key;
+                var note = kv.Value;
+
+                if (i >= endTime)
+                    break;
 
                 if (note.IsRelease)
                 {
-                    lastValidNoteMasks[i] |= MaskReleased;
+                    lastValidData.released = true;
                 }
                 else
                 {
                     if (note.IsStop)
                     {
-                        lastValidNoteMasks[i] &= unchecked((byte)(~(MaskReleased | MaskTimeValid)));
+                        lastValidData.released = false;
+                        lastValidData.time = -1;
                     }
                     if (note.IsValid)
                     {
-                        lastValidNoteMasks[i] |= MaskTimeValid;
-                        lastValidNoteTimes[i] = (byte)i;
+                        lastValidData.time = i;
                     }
                 }
 
                 if (note.IsMusical && note.HasAttack)
-                    lastValidNoteMasks[i] &= unchecked((byte)(~MaskReleased));
+                {
+                    lastValidData.released = false;
+                }
 
                 for (int j = 0; j < Note.EffectCount; j++)
                 {
-                    byte mask = (byte)(1 << j);
                     if (note.HasValidEffectValue(j))
                     {
-                        lastValidNoteMasks[i] |= mask;
-                        lastValidNoteEffectValues[i * Note.EffectCount + j] = (short)note.GetEffectValue(j);
+                        lastValidData.effectMask |= (1 << j);
+                        lastValidData.effectValues[j] = note.GetEffectValue(j);
                     }
                 }
             }
 
-            for (int i = maxInstanceLength; i < MaxLength; i++)
-            {
-                lastValidNoteMasks[i] = lastValidNoteMasks[maxInstanceLength - 1];
-                lastValidNoteTimes[i] = lastValidNoteTimes[maxInstanceLength - 1];
-                Array.Copy(lastValidNoteEffectValues, (maxInstanceLength - 1) * Note.EffectCount, lastValidNoteEffectValues, i * Note.EffectCount, Note.EffectCount);
-            }
+            lastValidNoteCache[endTime] = lastValidData;
+            return lastValidData;
         }
 
         public int FirstValidNoteTime
         {
-            get { return firstValidNoteTime; }
+            get
+            {
+                return GetCachedFirstValidNoteTime();
+            }
         }
 
         public Note FirstValidNote
         {
             get
             {
-                Debug.Assert(firstValidNoteTime >= 0);
-                return notes[firstValidNoteTime];
+                Debug.Assert(GetCachedFirstValidNoteTime() >= 0);
+                return notes[GetCachedFirstValidNoteTime()];
             }
         }
 
         public int GetLastValidNoteTimeAt(int time)
         {
-            return (lastValidNoteMasks[time] & MaskTimeValid) != 0 ? lastValidNoteTimes[time] : -1;
+            var lastData = GetCachedLastValidNoteData(time);
+            return lastData.time >= 0? lastData.time : -1;
         }
 
         public Note GetLastValidNoteAt(int time)
         {
-            Debug.Assert((lastValidNoteMasks[time] & MaskTimeValid) != 0);
-            return notes[lastValidNoteTimes[time]];
+            var lastData = GetCachedLastValidNoteData(time);
+            return notes[lastData.time];
         }
 
         public bool GetLastValidNoteReleasedAt(int time)
         {
-            return (lastValidNoteMasks[time] & MaskReleased) != 0;
+            var lastData = GetCachedLastValidNoteData(time);
+            return lastData.released;
         }
 
         public bool HasLastEffectValueAt(int time, int effect)
         {
-            return (lastValidNoteMasks[time] & (1 << effect)) != 0;
+            var lastData = GetCachedLastValidNoteData(time);
+            return (lastData.effectMask & (1 << effect)) != 0;
         }
 
-        public short GetLastEffectValueAt(int time, int effect)
+        public int GetLastEffectValueAt(int time, int effect)
         {
             Debug.Assert(HasLastEffectValueAt(time, effect));
-            return lastValidNoteEffectValues[time * Note.EffectCount + effect];
+            var lastData = GetCachedLastValidNoteData(time);
+            return lastData.effectValues[effect];
         }
 
         public void ClearNotesPastMaxInstanceLength()
         {
-            for (int i = maxInstanceLength; i < notes.Length; i++)
-                notes[i].Clear();
+            var maxInstanceLength = GetMaxInstanceLength();
+
+            if (maxInstanceLength == -1)
+                return;
+
+            var keys = notes.Keys;
+            var vals = notes.Values;
+
+            for (int i = keys.Count - 1; i >= 0; i--)
+            {
+                if (keys[i] >= maxInstanceLength)
+                    notes.Remove(keys[i]);
+                else
+                    break;
+            }
         }
 
-        public void UpdateMaxInstanceLength()
+        public void SetNoteAt(int time, Note note)
+        {
+            if (note == null || 
+                note.IsEmpty)
+            {
+                notes.Remove(time);
+            }
+            else
+            {
+                notes[time] = note;
+            }
+        }
+
+        public Note GetOrCreateNoteAt(int time)
+        {
+            if (Notes.TryGetValue(time, out var note))
+                return note;
+
+            note = new Note();
+            notes[time] = note;
+            return note;
+        }
+
+        public int GetMaxInstanceLength()
         {
             var channel = song.GetChannelByType(channelType);
 
-            maxInstanceLength = 0;
+            var maxInstanceLength = -1;
             for (int i = 0; i < song.Length; i++)
             {
                 if (channel.PatternInstances[i] == this)
                     maxInstanceLength = Math.Max(maxInstanceLength, song.GetPatternLength(i));
             }
 
-            ClearNotesPastMaxInstanceLength();
+            return maxInstanceLength;
         }
 
         public Pattern ShallowClone()
         {
             var channel = song.GetChannelByType(channelType);
             var pattern = channel.CreatePattern();
-            Array.Copy(notes, pattern.notes, notes.Length);
-            UpdateMaxInstanceLength();
-            UpdateLastValidNotes();
+
+            foreach (var kv in notes)
+                pattern.Notes[kv.Key] = kv.Value.Clone();
+
+            ClearLastValidNoteCache();
             return pattern;
         }
 
@@ -247,26 +300,86 @@ namespace FamiStudio
             return serializer.CRC;
         }
 
+        public void DeleteNotesBetween(int idx0, int idx1)
+        {
+            var keys = notes.Keys;
+            var vals = notes.Values;
+
+            for (int i = keys.Count - 1; i >= 0; i--)
+            {
+                if (keys[i] >= idx0 && keys[i] < idx1)
+                    notes.Remove(keys[i]);
+            }
+        }
+
+        public void RemoveEmptyNotes(bool trim = true)
+        {
+            var keys = notes.Keys;
+            var vals = notes.Values;
+
+            for (int i = vals.Count - 1; i >= 0; i--)
+            {
+                var note = vals[i];
+                if (note == null || note.IsEmpty && !note.HasJumpOrSkip)
+                    notes.Remove(keys[i]);
+            }
+
+            if (trim)
+                notes.TrimExcess();
+        }
+
+        public int BinarySearchList(IList<int> list, int value, bool roundUp = false)
+        {
+            if (list.Count == 0)
+                return -1;
+
+            int lo = 0;
+            int hi = list.Count - 1;
+
+            while (lo < hi)
+            {
+                int m = (hi + lo) / 2;
+
+                if (list[m] < value)
+                    lo = m + 1;
+                else
+                    hi = m - 1;
+            }
+
+            if (roundUp)
+            {
+                if (list[lo] < value) lo++;
+            }
+            else
+            {
+                if (list[lo] > value) lo--;
+            }
+
+            return Utils.Clamp(lo, 0, list.Count - 1);
+        }
+
+        public NoteIterator GetNoteIterator(int startIdx, int endIdx, bool reverse = false)
+        {
+            return new NoteIterator(this, startIdx, endIdx, reverse);
+        }
+
 #if DEBUG
         public void Validate(Channel channel)
         {
             Debug.Assert(this.song == channel.Song);
 
-            for (int i = 0; i < MaxLength; i++)
+            foreach (var note in notes.Values)
             {
-                var inst = notes[i].Instrument;
+                Debug.Assert(note != null);
+                Debug.Assert(!note.IsEmpty);
+
+                var inst = note.Instrument;
                 Debug.Assert(inst == null || song.Project.InstrumentExists(inst));
                 Debug.Assert(inst == null || song.Project.GetInstrument(inst.Id) == inst);
                 Debug.Assert(inst == null || channel.SupportsInstrument(inst));
             }
 
-            var oldMaxInstanceLength = maxInstanceLength;
-            UpdateMaxInstanceLength();
-            Debug.Assert(oldMaxInstanceLength == maxInstanceLength);
-
-            var emptyNote = new Note(Note.NoteInvalid);
-            for (int i = maxInstanceLength; i < MaxLength; i++)
-                Debug.Assert(notes[i].IsEmpty);
+            // MATTT: Validate last data here.
         }
 #endif
 
@@ -280,37 +393,121 @@ namespace FamiStudio
 
             if (buffer.Version < 5)
             {
-                for (int i = 0; i < MaxLength; i++)
-                    notes[i].SerializeStatePreVer5(buffer);
+                // At version 5 (FamiStudio 1.5.0), we moved to a sparse data structure for notes.
+                for (int i = 0; i < 256; i++)
+                {
+                    var note = new Note();
+                    note.SerializeStatePreVer5(buffer);
+                    SetNoteAt(i, note);
+                }
             }
             else
             {
-                for (int i = 0; i < MaxLength; i++)
-                    notes[i].SerializeState(buffer);
+                if (buffer.IsReading)
+                    notes = new SortedList<int, Note>();
+
+                if (buffer.IsWriting)
+                    RemoveEmptyNotes(false);
+                else
+                    notes = new SortedList<int, Note>();
+
+                int notesCount = notes.Count;
+                buffer.Serialize(ref notesCount);
+
+                if (buffer.IsWriting)
+                {
+                    foreach (var kv in notes)
+                    {
+                        var time = (short)kv.Key;
+                        buffer.Serialize(ref time);
+                        kv.Value.SerializeState(buffer);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < notesCount; i++)
+                    {
+                        short time = 0;
+                        buffer.Serialize(ref time);
+                        var note = new Note();
+                        note.SerializeState(buffer);
+                        notes[time] = note;
+                    }
+                }
             }
 
             // At version 3 (FamiStudio 1.2.0), we extended the range of notes.
             if (buffer.Version < 3 && channelType != Channel.Noise)
             {
-                for (int i = 0; i < MaxLength; i++)
+                foreach (var note in notes.Values)
                 {
-                    if (!notes[i].IsStop && notes[i].IsValid)
-                        notes[i].Value += 12;
+                    if (!note.IsStop && note.IsValid)
+                        note.Value += 12;
                 }
             }
 
-            if (buffer.IsForUndoRedo)
+            if (buffer.IsReading)
             {
-                buffer.Serialize(ref firstValidNoteTime);
-                buffer.Serialize(ref lastValidNoteMasks);
-                buffer.Serialize(ref lastValidNoteTimes);
-                buffer.Serialize(ref lastValidNoteEffectValues);
-                buffer.Serialize(ref maxInstanceLength);
-            }
-            else if (buffer.IsReading)
-            {
-                UpdateLastValidNotes();
+                ClearLastValidNoteCache();
                 ClearNotesPastMaxInstanceLength();
+            }
+        }
+    }
+
+    public class NoteIterator
+    {
+        private bool reverse;
+        private int listIdx;
+        private int noteIdx0;
+        private int noteIdx1;
+        private Pattern pattern;
+
+        public NoteIterator(Pattern p, int i0, int i1, bool rev)
+        {
+            Debug.Assert(i0 <= i1);
+
+            reverse = rev;
+            pattern = p;
+
+            // When going forward, goes from i0   to i1-1
+            // When going reverse, goes from i1-1 to i0
+            if (reverse)
+            {
+                reverse = true;
+                noteIdx0 = i1 - 1;
+                noteIdx1 = i0;
+            }
+            else
+            {
+                noteIdx0 = i0;
+                noteIdx1 = i1;
+            }
+
+            Resync();
+        }
+
+        public int  CurrentTime => noteIdx0;
+        public Note CurrentNote => listIdx >= 0 && pattern.Notes.Keys[listIdx] == noteIdx0? pattern.Notes.Values[listIdx] : null;
+        public bool Done => reverse ? noteIdx0 < noteIdx1 : noteIdx0 >= noteIdx1;
+
+        public void Resync()
+        {
+            listIdx = pattern.BinarySearchList(pattern.Notes.Keys, noteIdx0, !reverse);
+        }
+
+        public void Next()
+        {
+            if (!reverse)
+            {
+                noteIdx0++;
+                if (listIdx >= 0 && noteIdx0 > pattern.Notes.Keys[listIdx] && listIdx < pattern.Notes.Values.Count - 1)
+                    listIdx++;
+            }
+            else
+            {
+                noteIdx0--;
+                if (listIdx >= 0 && noteIdx0 < pattern.Notes.Keys[listIdx] && listIdx > 0)
+                    listIdx--;
             }
         }
     }

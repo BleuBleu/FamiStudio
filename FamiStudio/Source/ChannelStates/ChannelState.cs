@@ -41,26 +41,27 @@ namespace FamiStudio
             if (pattern == null)
                 return;
 
-            var tmpNote = pattern.Notes[noteIdx];
-
-            if (tmpNote.HasSpeed)
+            if (pattern.Notes.TryGetValue(noteIdx, out var tmpNote))
             {
-                speed = tmpNote.Speed;
-            }
-
-            if (tmpNote.HasVibrato)
-            {
-                if (tmpNote.VibratoDepth != 0 && tmpNote.VibratoDepth != 0)
+                if (tmpNote.HasSpeed)
                 {
-                    envelopes[Envelope.Pitch] = Envelope.CreateVibratoEnvelope(tmpNote.VibratoSpeed, tmpNote.VibratoDepth);
-                    envelopeIdx[Envelope.Pitch] = 0;
-                    envelopeValues[Envelope.Pitch] = 0;
-                    pitchEnvelopeOverride = true;
+                    speed = tmpNote.Speed;
                 }
-                else
+
+                if (tmpNote.HasVibrato)
                 {
-                    envelopes[Envelope.Pitch] = null;
-                    pitchEnvelopeOverride = false;
+                    if (tmpNote.VibratoDepth != 0 && tmpNote.VibratoDepth != 0)
+                    {
+                        envelopes[Envelope.Pitch] = Envelope.CreateVibratoEnvelope(tmpNote.VibratoSpeed, tmpNote.VibratoDepth);
+                        envelopeIdx[Envelope.Pitch] = 0;
+                        envelopeValues[Envelope.Pitch] = 0;
+                        pitchEnvelopeOverride = true;
+                    }
+                    else
+                    {
+                        envelopes[Envelope.Pitch] = null;
+                        pitchEnvelopeOverride = false;
+                    }
                 }
             }
         }
@@ -73,37 +74,41 @@ namespace FamiStudio
             if (pattern == null)
                 return;
 
-            var newNote = pattern.Notes[noteIdx];
-            if (newNote.IsValid)
-            {
-                slideStep = 0;
-
-                if (newNote.IsSlideNote)
-                {
-                    if (channel.ComputeSlideNoteParams(patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _))
-                        newNote.Value = (byte)newNote.SlideNoteTarget;
-                }
-
-                if (!newNote.HasVolume      && note.HasVolume)      { newNote.Volume      = note.Volume;      }
-                if (!newNote.HasFinePitch   && note.HasFinePitch)   { newNote.FinePitch   = note.FinePitch;   }
-                if (!newNote.HasFdsModDepth && note.HasFdsModDepth) { newNote.FdsModDepth = note.FdsModDepth; }
-                if (!newNote.HasFdsModSpeed && note.HasFdsModSpeed) { newNote.FdsModSpeed = note.FdsModSpeed; }
-
-                PlayNote(newNote);
-            }
-            else
+            if (pattern.Notes.TryGetValue(noteIdx, out var newNote))
             { 
-                if (newNote.HasVolume)      { note.Volume      = newNote.Volume;      }
-                if (newNote.HasFinePitch)   { note.FinePitch   = newNote.FinePitch;   }
-                if (newNote.HasFdsModDepth) { note.FdsModDepth = newNote.FdsModDepth; }
-                if (newNote.HasFdsModSpeed) { note.FdsModSpeed = newNote.FdsModSpeed; }
+                newNote = newNote.Clone();
+
+                if (newNote.IsValid)
+                {
+                    slideStep = 0;
+
+                    if (newNote.IsSlideNote)
+                    {
+                        if (channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, noteTable, out slidePitch, out slideStep, out _))
+                            newNote.Value = (byte)newNote.SlideNoteTarget;
+                    }
+
+                    if (!newNote.HasVolume      && note.HasVolume)      { newNote.Volume      = note.Volume;      }
+                    if (!newNote.HasFinePitch   && note.HasFinePitch)   { newNote.FinePitch   = note.FinePitch;   }
+                    if (!newNote.HasFdsModDepth && note.HasFdsModDepth) { newNote.FdsModDepth = note.FdsModDepth; }
+                    if (!newNote.HasFdsModSpeed && note.HasFdsModSpeed) { newNote.FdsModSpeed = note.FdsModSpeed; }
+
+                    PlayNote(newNote);
+                }
+                else
+                { 
+                    if (newNote.HasVolume)      { note.Volume      = newNote.Volume;      }
+                    if (newNote.HasFinePitch)   { note.FinePitch   = newNote.FinePitch;   }
+                    if (newNote.HasFdsModDepth) { note.FdsModDepth = newNote.FdsModDepth; }
+                    if (newNote.HasFdsModSpeed) { note.FdsModSpeed = newNote.FdsModSpeed; }
+                }
             }
         }
 
         public void PlayNote(Note newNote, bool forceInstrumentChange = false)
         {
             if (!newNote.HasFinePitch)
-                newNote.FinePitch = 0;
+                 newNote.FinePitch = 0;
 
             if (newNote.IsRelease)
             {

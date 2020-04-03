@@ -117,7 +117,6 @@ namespace FamiStudio
         public Project Load(string filename)
         {
             var envelopes   = new Dictionary<int, Envelope>[Project.ExpansionCount, Envelope.Count];
-            var duties      = new Dictionary<int, int>[Project.ExpansionCount];
             var instruments = new Dictionary<int, Instrument>();
             var dpcms       = new Dictionary<int, DPCMSample>();
             var columns     = new int[5] { 1, 1, 1, 1, 1 };
@@ -126,10 +125,8 @@ namespace FamiStudio
                 for (int j = 0; j < envelopes.GetLength(1); j++)
                     envelopes[i, j] = new Dictionary<int, Envelope>();
 
-            for (int i = 0; i < duties.Length; i++)
-                duties[i] = new Dictionary<int, int>();
-
             project = new Project();
+            project.TempoMode = Project.TempoFamiTracker;
 
             DPCMSample currentDpcm = null;
             int dpcmWriteIdx = 0;
@@ -183,9 +180,11 @@ namespace FamiStudio
                     var loop = int.Parse(param[2]);
                     var rel  = int.Parse(param[3]);
 
-                    if (type < 3)
+                    var famistudioType = EnvelopeTypeLookup[type];
+
+                    if (famistudioType < Envelope.Count)
                     {
-                        var env = new Envelope(type);
+                        var env = new Envelope(famistudioType);
                         env.Length = curve.Length;
 
                         // FamiTracker allows envelope with release with no loop. We dont allow that.
@@ -194,16 +193,12 @@ namespace FamiStudio
 
                         env.Loop = loop;
                         env.Release = env.CanRelease && rel != -1 ? rel + 1 : -1;
-                        env.Relative = type == 2;
+                        env.Relative = famistudioType == Envelope.Pitch;
 
                         for (int j = 0; j < curve.Length; j++)
                             env.Values[j] = sbyte.Parse(curve[j]);
 
-                        envelopes[expansion, type][idx] = env;
-                    }
-                    else if (type == 4)
-                    {
-                        duties[expansion][idx] = int.Parse(curve[0]);
+                        envelopes[expansion, famistudioType][idx] = env;
                     }
                 }
                 else if (line.StartsWith("DPCMDEF"))
@@ -265,10 +260,10 @@ namespace FamiStudio
                         instrument.N163WavePos    = byte.Parse(param[7]);
                     }
 
-                    if (vol >= 0 && instrument.IsEnvelopeActive(Envelope.Volume))    instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, 0][vol].ShallowClone();
-                    if (arp >= 0 && instrument.IsEnvelopeActive(Envelope.Arpeggio))  instrument.Envelopes[Envelope.Arpeggio]  = envelopes[expansion, 1][arp].ShallowClone();
-                    if (pit >= 0 && instrument.IsEnvelopeActive(Envelope.Pitch))     instrument.Envelopes[Envelope.Pitch]     = envelopes[expansion, 2][pit].ShallowClone();
-                    if (dut >= 0 && instrument.IsEnvelopeActive(Envelope.DutyCycle)) instrument.Envelopes[Envelope.DutyCycle] = envelopes[expansion, 3][pit].ShallowClone();
+                    if (vol >= 0 && instrument.IsEnvelopeActive(Envelope.Volume))    instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, Envelope.Volume][vol].ShallowClone();
+                    if (arp >= 0 && instrument.IsEnvelopeActive(Envelope.Arpeggio))  instrument.Envelopes[Envelope.Arpeggio]  = envelopes[expansion, Envelope.Arpeggio][arp].ShallowClone();
+                    if (pit >= 0 && instrument.IsEnvelopeActive(Envelope.Pitch))     instrument.Envelopes[Envelope.Pitch]     = envelopes[expansion, Envelope.Pitch][pit].ShallowClone();
+                    if (dut >= 0 && instrument.IsEnvelopeActive(Envelope.DutyCycle)) instrument.Envelopes[Envelope.DutyCycle] = envelopes[expansion, Envelope.DutyCycle][dut].ShallowClone();
 
                     instruments[idx] = instrument;
                 }
@@ -323,7 +318,9 @@ namespace FamiStudio
                     var loop = int.Parse(param[2]);
                     var rel  = int.Parse(param[3]);
 
-                    var env = instruments[inst].Envelopes[type];
+                    var famistudioType = EnvelopeTypeLookup[type];
+
+                    var env = instruments[inst].Envelopes[famistudioType];
 
                     env.Length = curve.Length;
 
@@ -333,7 +330,7 @@ namespace FamiStudio
 
                     env.Loop = loop;
                     env.Release = env.CanRelease && rel != -1 ? rel + 1 : -1;
-                    env.Relative = type == 2;
+                    env.Relative = famistudioType == Envelope.Pitch;
 
                     for (int j = 0; j < curve.Length; j++)
                         env.Values[j] = sbyte.Parse(curve[j]);
@@ -375,8 +372,8 @@ namespace FamiStudio
                     song = project.CreateSong(param[3]);
                     song.SetLength(0);
                     song.SetDefaultPatternLength(int.Parse(param[0]));
-                    song.Speed = int.Parse(param[1]);
-                    song.Tempo = int.Parse(param[2]);
+                    song.FamitrackerSpeed = int.Parse(param[1]);
+                    song.FamitrackerTempo = int.Parse(param[2]);
                     columns = new int[song.Channels.Length];
                 }
                 else if (line.StartsWith("COLUMNS"))
@@ -428,11 +425,11 @@ namespace FamiStudio
                         // Note
                         if (noteData[0] == "---")
                         {
-                            pattern.Notes[n].Value = Note.NoteStop;
+                            pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop;
                         }
                         else if (noteData[0] == "===")
                         {
-                            pattern.Notes[n].Value = Note.NoteRelease;
+                            pattern.GetOrCreateNoteAt(n).Value = Note.NoteRelease;
                         }
                         else if (noteData[0] != "...")
                         {
@@ -451,8 +448,9 @@ namespace FamiStudio
 
                             if (famitoneNote >= Note.MusicalNoteMin && famitoneNote <= Note.MusicalNoteMax)
                             {
-                                pattern.Notes[n].Value = (byte)famitoneNote;
-                                pattern.Notes[n].Instrument = j == 5 ? null : instruments[Convert.ToInt32(noteData[1], 16)];
+                                var note = pattern.GetOrCreateNoteAt(n);
+                                note.Value = (byte)famitoneNote;
+                                note.Instrument = j == 5 ? null : instruments[Convert.ToInt32(noteData[1], 16)];
                             }
                             else
                             {
@@ -463,7 +461,7 @@ namespace FamiStudio
                         // Volume
                         if (noteData[2] != ".")
                         {
-                            pattern.Notes[n].Volume = Convert.ToByte(noteData[2], 16);
+                            pattern.GetOrCreateNoteAt(n).Volume = Convert.ToByte(noteData[2], 16);
                         }
 
                         // Read FX.
@@ -796,7 +794,7 @@ namespace FamiStudio
                 song.CleanupUnusedPatterns();
                 song.DuplicateInstancesWithDifferentLengths();
 
-                lines.Add($"TRACK{song.DefaultPatternLength,4}{song.Speed,4}{song.Tempo,4} \"{song.Name}\"");
+                lines.Add($"TRACK{song.DefaultPatternLength,4}{song.FamitrackerSpeed,4}{song.FamitrackerTempo,4} \"{song.Name}\"");
                 lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(3, song.Channels.Length))}");
                 lines.Add("");
 
@@ -832,96 +830,29 @@ namespace FamiStudio
 
                         var patternLines = new List<string>();
 
-                        for (int n = 0; n < song.DefaultPatternLength; n++)
+                        //for (int n = 0; n < song.DefaultPatternLength; n++)
+                        for (var it = pattern.GetNoteIterator(0, patternLen); !it.Done; it.Next())
                         {
                             var line = " : ... .. . ... ... ...";
 
-                            if (n < patternLen)
+                            var time = it.CurrentTime;
+                            var note = it.CurrentNote;
+                            var noteString = GetFamiTrackerNoteName(c, note);
+                            var volumeString = note.HasVolume ? note.Volume.ToString("X") : ".";
+                            var instrumentString = note.IsValid && !note.IsStop ? (note.Instrument == null ? project.Instruments.Count : project.Instruments.IndexOf(note.Instrument)).ToString("X2") : "..";
+                            var effectString = "";
+                            var noAttack = !note.HasAttack && prevNoteValue == note.Value && (prevSlideEffect == Effect_None || prevSlideEffect == Effect_SlideUp || prevSlideEffect == Effect_Portamento);
+
+                            if (note.IsSlideNote && note.IsMusical)
                             {
-                                var note = pattern.Notes[n];
-                                var noteString = GetFamiTrackerNoteName(c, note);
-                                var volumeString = note.HasVolume ? note.Volume.ToString("X") : ".";
-                                var instrumentString = note.IsValid && !note.IsStop ? (note.Instrument == null ? project.Instruments.Count : project.Instruments.IndexOf(note.Instrument)).ToString("X2") : "..";
-                                var effectString = "";
-                                var noAttack = !note.HasAttack && prevNoteValue == note.Value && (prevSlideEffect == Effect_None || prevSlideEffect == Effect_SlideUp || prevSlideEffect == Effect_Portamento);
+                                // TODO: PAL.
+                                var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
+                                channel.ComputeSlideNoteParams(note, p, time, noteTable, out _, out int stepSize, out _); // MATTT: N163 & VRC7 slides.
 
-                                if (note.IsSlideNote && note.IsMusical)
-                                {
-                                    // TODO: PAL.
-                                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
-                                    channel.ComputeSlideNoteParams(p, n, noteTable, out _, out int stepSize, out _); // MATTT: N163 & VRC7 slides.
+                                var absNoteDelta = Math.Abs(note.Value - note.SlideNoteTarget);
 
-                                    var absNoteDelta = Math.Abs(note.Value - note.SlideNoteTarget);
-
-                                    // See if we can use Qxy/Rxy (slide up/down y semitones, at speed x), this is preferable.
-                                    if (absNoteDelta < 16)
-                                    {
-                                        if (prevSlideEffect == Effect_PortaUp   ||
-                                            prevSlideEffect == Effect_PortaDown ||
-                                            prevSlideEffect == Effect_Portamento)
-                                        {
-                                            effectString += $" {EffectToTextLookup[prevSlideEffect]}00";
-                                        }
-
-                                        // FamiTracker use 2x + 1, find the number that is just above our speed.
-                                        var speed = 0;
-                                        for (int x = 14; x >= 0; x--)
-                                        {
-                                            if ((2 * x + 1) < Math.Abs(stepSize / 2.0f))
-                                            {
-                                                speed = x + 1;
-                                                break;
-                                            }
-                                        }
-
-                                        if (note.SlideNoteTarget > note.Value)
-                                            effectString += $" Q{speed:X1}{absNoteDelta:X1}";
-                                        else
-                                            effectString += $" R{speed:X1}{absNoteDelta:X1}";
-
-                                        prevSlideEffect = Effect_SlideUp;
-                                    }
-                                    else
-                                    {
-                                        // We have one bit of fraction. FramiTracker does not.
-                                        var ceilStepSize = Utils.SignedCeil(stepSize / 2.0f);
-
-                                        // If the previous note matched too, we can use 3xx (auto-portamento).
-                                        if (prevNoteValue == note.Value)
-                                        {
-                                            if (prevSlideEffect == Effect_PortaUp ||
-                                                prevSlideEffect == Effect_PortaDown)
-                                            {
-                                                effectString += $" 100";
-                                            }
-
-                                            noteString = GetFamiTrackerNoteName(c, new Note(note.SlideNoteTarget));
-                                            effectString += $" 3{Math.Abs(ceilStepSize):X2}";
-                                            prevSlideEffect = Effect_Portamento;
-                                            noAttack = false; // Need to force attack when starting auto-portamento unfortunately.
-                                        }
-                                        else
-                                        {
-                                            // We have one bit of fraction. FramiTracker does not.
-                                            var floorStepSize = Utils.SignedFloor(stepSize / 2.0f);
-
-                                            if (prevSlideEffect == Effect_Portamento)
-                                                effectString += $" 300";
-
-                                            if (stepSize > 0)
-                                            {
-                                                effectString += $" 2{ floorStepSize:X2}";
-                                                prevSlideEffect = Effect_PortaDown;
-                                            }
-                                            else if (stepSize < 0)
-                                            {
-                                                effectString += $" 1{-floorStepSize:X2}";
-                                                prevSlideEffect = Effect_PortaUp;
-                                            }
-                                        }
-                                    }
-                                }
-                                else if ((note.IsMusical || note.IsStop) && prevSlideEffect != Effect_None)
+                                // See if we can use Qxy/Rxy (slide up/down y semitones, at speed x), this is preferable.
+                                if (absNoteDelta < 16)
                                 {
                                     if (prevSlideEffect == Effect_PortaUp   ||
                                         prevSlideEffect == Effect_PortaDown ||
@@ -930,38 +861,104 @@ namespace FamiStudio
                                         effectString += $" {EffectToTextLookup[prevSlideEffect]}00";
                                     }
 
-                                    prevSlideEffect = Effect_None;
-                                }
+                                    // FamiTracker use 2x + 1, find the number that is just above our speed.
+                                    var speed = 0;
+                                    for (int x = 14; x >= 0; x--)
+                                    {
+                                        if ((2 * x + 1) < Math.Abs(stepSize / 2.0f))
+                                        {
+                                            speed = x + 1;
+                                            break;
+                                        }
+                                    }
 
-                                if (n == patternLen - 1)
+                                    if (note.SlideNoteTarget > note.Value)
+                                        effectString += $" Q{speed:X1}{absNoteDelta:X1}";
+                                    else
+                                        effectString += $" R{speed:X1}{absNoteDelta:X1}";
+
+                                    prevSlideEffect = Effect_SlideUp;
+                                }
+                                else
                                 {
-                                    if (p == song.Length - 1 && song.LoopPoint >= 0)
-                                        effectString += $" B{song.LoopPoint:X2}";
-                                    else if (patternLen != song.DefaultPatternLength)
-                                        effectString += $" D00";
+                                    // We have one bit of fraction. FramiTracker does not.
+                                    var ceilStepSize = Utils.SignedCeil(stepSize / 2.0f);
+
+                                    // If the previous note matched too, we can use 3xx (auto-portamento).
+                                    if (prevNoteValue == note.Value)
+                                    {
+                                        if (prevSlideEffect == Effect_PortaUp ||
+                                            prevSlideEffect == Effect_PortaDown)
+                                        {
+                                            effectString += $" 100";
+                                        }
+
+                                        noteString = GetFamiTrackerNoteName(c, new Note(note.SlideNoteTarget));
+                                        effectString += $" 3{Math.Abs(ceilStepSize):X2}";
+                                        prevSlideEffect = Effect_Portamento;
+                                        noAttack = false; // Need to force attack when starting auto-portamento unfortunately.
+                                    }
+                                    else
+                                    {
+                                        // We have one bit of fraction. FramiTracker does not.
+                                        var floorStepSize = Utils.SignedFloor(stepSize / 2.0f);
+
+                                        if (prevSlideEffect == Effect_Portamento)
+                                            effectString += $" 300";
+
+                                        if (stepSize > 0)
+                                        {
+                                            effectString += $" 2{ floorStepSize:X2}";
+                                            prevSlideEffect = Effect_PortaDown;
+                                        }
+                                        else if (stepSize < 0)
+                                        {
+                                            effectString += $" 1{-floorStepSize:X2}";
+                                            prevSlideEffect = Effect_PortaUp;
+                                        }
+                                    }
                                 }
-
-                                if (note.HasSpeed)
-                                    effectString += $" F{note.Speed:X2}";
-                                if (note.HasVibrato)
-                                    effectString += $" 4{VibratoSpeedExportLookup[note.VibratoSpeed]:X1}{note.VibratoDepth:X1}";
-                                if (note.HasFinePitch)
-                                    effectString += $" P{(byte)(-note.FinePitch + 0x80):X2}";
-
-                                while (effectString.Length < 12)
-                                    effectString += " ...";
-
-                                if (noAttack)
-                                {
-                                    noteString = "...";
-                                    instrumentString = "..";
-                                }
-
-                                line = $" : {noteString} {instrumentString} {volumeString}{effectString}";
-
-                                if (note.IsMusical || note.IsStop)
-                                    prevNoteValue = note.IsSlideNote ? note.SlideNoteTarget : note.Value;
                             }
+                            else if ((note.IsMusical || note.IsStop) && prevSlideEffect != Effect_None)
+                            {
+                                if (prevSlideEffect == Effect_PortaUp   ||
+                                    prevSlideEffect == Effect_PortaDown ||
+                                    prevSlideEffect == Effect_Portamento)
+                                {
+                                    effectString += $" {EffectToTextLookup[prevSlideEffect]}00";
+                                }
+
+                                prevSlideEffect = Effect_None;
+                            }
+
+                            if (time == patternLen - 1)
+                            {
+                                if (p == song.Length - 1 && song.LoopPoint >= 0)
+                                    effectString += $" B{song.LoopPoint:X2}";
+                                else if (patternLen != song.DefaultPatternLength)
+                                    effectString += $" D00";
+                            }
+
+                            if (note.HasSpeed)
+                                effectString += $" F{note.Speed:X2}";
+                            if (note.HasVibrato)
+                                effectString += $" 4{VibratoSpeedExportLookup[note.VibratoSpeed]:X1}{note.VibratoDepth:X1}";
+                            if (note.HasFinePitch)
+                                effectString += $" P{(byte)(-note.FinePitch + 0x80):X2}";
+
+                            while (effectString.Length < 12)
+                                effectString += " ...";
+
+                            if (noAttack)
+                            {
+                                noteString = "...";
+                                instrumentString = "..";
+                            }
+
+                            line = $" : {noteString} {instrumentString} {volumeString}{effectString}";
+
+                            if (note.IsMusical || note.IsStop)
+                                prevNoteValue = note.IsSlideNote ? note.SlideNoteTarget : note.Value;
 
                             patternLines.Add(line);
                         }

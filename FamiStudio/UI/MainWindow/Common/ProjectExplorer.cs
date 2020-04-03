@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Drawing;
 using System.Media;
 using System.Windows.Forms;
@@ -1104,15 +1105,220 @@ namespace FamiStudio
             }
         }
 
-        private int[] GenerateBarLengths(int patternLen)
+        private void EditProjectProperties(Point pt)
         {
-            var barLengths = Song.GenerateBarLengths(patternLen);
+            var project = App.Project;
 
-#if !FAMISTUDIO_WINDOWS
-            Array.Reverse(barLengths);
-#endif
+            var dlg = new PropertyDialog(PointToScreen(pt), 300, true);
+            dlg.Properties.AddString("Title :", project.Name, 31); // 0
+            dlg.Properties.AddString("Author :", project.Author, 31); // 1
+            dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
+            dlg.Properties.AddStringList("Expansion Audio :", Project.ExpansionNames, project.ExpansionAudioName); // 3
+            dlg.Properties.AddIntegerRange("Channels :", project.ExpansionNumChannels, 1, 8); // 4 (Namco)
+            dlg.Properties.AddStringList("Tempo Mode :", new[] { "FamiStudio", "FamiTracker" }, "FamiStudio"); // 5
+            dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionN163);
+            dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
+            dlg.Properties.Build();
 
-            return barLengths;
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                project.Name = dlg.Properties.GetPropertyValue<string>(0);
+                project.Author = dlg.Properties.GetPropertyValue<string>(1);
+                project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
+
+                var expansion = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
+                var numChannels = dlg.Properties.GetPropertyValue<int>(4);
+
+                var changedExpansion = expansion != project.ExpansionAudio;
+                var changedNumChannels = numChannels != project.ExpansionNumChannels;
+
+
+                if (changedExpansion || changedNumChannels)
+                {
+                    if (project.ExpansionAudio == Project.ExpansionNone ||
+                        (!changedExpansion && changedNumChannels) ||
+                        PlatformUtils.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        App.StopInstrumentPlayer();
+                        project.SetExpansionAudio(expansion, numChannels);
+                        ExpansionAudioChanged?.Invoke();
+                        App.StartInstrumentPlayer();
+                        Reset();
+                    }
+                }
+
+                App.UndoRedoManager.EndTransaction();
+                ConditionalInvalidate();
+            }
+        }
+
+        private void EditSongProperties(Point pt, Song song)
+        {
+            var dlg = new PropertyDialog(PointToScreen(pt), 220, true);
+            dlg.Properties.AddColoredString(song.Name, song.Color); // 0
+            dlg.Properties.AddColor(song.Color); // 1
+            dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, 128); // 2
+
+            if (song.Project.TempoMode == Project.TempoFamiTracker)
+            {
+                dlg.Properties.AddIntegerRange("Tempo :", song.FamitrackerTempo, 32, 255); // 3
+                dlg.Properties.AddIntegerRange("Speed :", song.FamitrackerSpeed, 1, 31); // 4
+                dlg.Properties.AddIntegerRange("Pattern Length :", song.DefaultPatternLength, 16, 256); // 5
+                dlg.Properties.AddIntegerRange("Bar Length :", song.BarLength, 2, song.DefaultPatternLength); // 6
+            }
+            else
+            {
+                dlg.Properties.AddIntegerRange("Frames per Note : ", 6, 3, 16); // 3
+                dlg.Properties.AddIntegerRange("Notes per Pattern : ", 16, 2, 64); // 4
+                dlg.Properties.AddIntegerRange("Notes per Bar : ", 4, 2, 32); // 5
+                dlg.Properties.AddLabel("BPM :", Song.ComputeBPM(6).ToString()); // 6 MATTT hardcoded values
+                dlg.Properties.AddLabel("PAL Error :", $"{Song.ComputePalError((int)6):0.##} %"); // 7 MATTT hardcoded values
+                dlg.Properties.AddStringListMulti("PAL Skip Frame :", new[] { "1", "2", "3", "4", "5", "6" }, null); // 8
+                dlg.ValidateProperties += SongProperties_ValidateProperties;
+            }
+
+            dlg.Properties.Build();
+            dlg.Properties.PropertyChanged += SongProperties_PropertyChanged;
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                App.Stop();
+                App.Seek(0);
+
+                var newName = dlg.Properties.GetPropertyValue<string>(0);
+
+                if (App.Project.RenameSong(song, newName))
+                {
+                    song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+
+                    if (song.Project.TempoMode == Project.TempoFamiTracker)
+                    {
+                        song.FamitrackerTempo = dlg.Properties.GetPropertyValue<int>(3);
+                        song.FamitrackerSpeed = dlg.Properties.GetPropertyValue<int>(4);
+                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(5));
+                        song.SetBarLength(dlg.Properties.GetPropertyValue<int>(6));
+                    }
+                    else
+                    {
+                        var newNoteLength = dlg.Properties.GetPropertyValue<int>(3);
+
+                        if (newNoteLength != song.NoteLength)
+                        {
+                            var convertTempo = PlatformUtils.MessageBox($"You changed the note length, do you want FamiStudio to attempt convert the tempo?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                            song.SetNoteLength(newNoteLength, convertTempo);
+                        }
+
+                        var skipFrames = dlg.Properties.GetPropertyValue<bool[]>(8);
+                        var palSkipPattern = 0;
+                        for (int i = 0; i < skipFrames.Length; i++)
+                        {
+                            if (skipFrames[i])
+                                palSkipPattern |= (1 << i);
+                        }
+
+                        song.PalFrameSkipPattern = palSkipPattern;
+                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(4) * song.NoteLength);
+                        song.SetBarLength(dlg.Properties.GetPropertyValue<int>(5) * song.NoteLength);
+                    }
+
+                    song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
+                    SongModified?.Invoke(song);
+                    App.UndoRedoManager.EndTransaction();
+                    RefreshButtons();
+                }
+                else
+                {
+                    App.UndoRedoManager.AbortTransaction();
+                    SystemSounds.Beep.Play();
+                }
+
+                ConditionalInvalidate();
+            }
+        }
+
+        private bool SongProperties_ValidateProperties(PropertyDialog dlg)
+        {
+            var noteLength = dlg.Properties.GetPropertyValue<int>(3);
+            var palSkipFrames = dlg.Properties.GetPropertyValue<bool[]>(8);
+            var numPalSkipFrames = noteLength - Song.PalNoteLengthLookup[noteLength];
+
+            if (numPalSkipFrames != palSkipFrames.Count(b => b == true))
+            {
+                PlatformUtils.MessageBox($"Please selected exactly {numPalSkipFrames} PAL skip frames.", "PAL Skip Frames", MessageBoxButtons.OK);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void SongProperties_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            if (selectedSong.Project.TempoMode == Project.TempoFamiTracker)
+            {
+                // MATTT : Change bar length.
+                if (idx == 5) // 5 = pattern length.
+                {
+                    props.UpdateIntegerRange(6, 2, (int)value);
+                }
+            }
+            else
+            {
+                if (idx == 3) // 3 = Note length
+                {
+                    int noteLength = (int)value;
+
+                    props.SetLabelText(6, Song.ComputeBPM(noteLength).ToString());
+                    props.SetLabelText(7, $"{Song.ComputePalError(noteLength):0.##} %");
+
+                    var palSkipPattern = Song.GetDefaultPalFrameSkipPattern(noteLength);
+                    var labels = new string[noteLength];
+                    var checkBoxes = new bool[noteLength];
+                    for (int i = 0; i < noteLength; i++)
+                    {
+                        labels[i] = i.ToString();
+                        checkBoxes[i] = (palSkipPattern & (1 << i)) != 0;
+                    }
+
+                    props.UpdateMultiStringList(8, labels, checkBoxes);
+                }
+            }
+        }
+
+        private void EditInstrumentProperties(Point pt, Instrument instrument)
+        {
+            var dlg = new PropertyDialog(PointToScreen(pt), 160, true, pt.Y > Height / 2);
+            dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
+            dlg.Properties.AddColor(instrument.Color); // 1
+            if (instrument.IsEnvelopeActive(Envelope.Pitch))
+                dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[Envelope.Pitch].Relative); // 2
+            dlg.Properties.Build();
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                var newName = dlg.Properties.GetPropertyValue<string>(0);
+
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                if (App.Project.RenameInstrument(instrument, newName))
+                {
+                    instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                    if (instrument.IsEnvelopeActive(Envelope.Pitch))
+                        instrument.Envelopes[Envelope.Pitch].Relative = dlg.Properties.GetPropertyValue<bool>(2);
+                    InstrumentColorChanged?.Invoke(instrument);
+                    RefreshButtons();
+                    ConditionalInvalidate();
+                    App.UndoRedoManager.EndTransaction();
+                }
+                else
+                {
+                    App.UndoRedoManager.AbortTransaction();
+                    SystemSounds.Beep.Play();
+                }
+            }
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -1127,135 +1333,19 @@ namespace FamiStudio
                     AbortCaptureOperation();
 
                 var button = buttons[buttonIdx];
+                var pt = new Point(e.X, e.Y);
 
                 if (button.type == ButtonType.ProjectSettings)
                 {
-                    var project = App.Project;
-
-                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 300, true);
-                    dlg.Properties.AddString("Title :", project.Name, 31); // 0
-                    dlg.Properties.AddString("Author :", project.Author, 31); // 1
-                    dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
-                    dlg.Properties.AddStringList("Expansion Audio:", Project.ExpansionNames, project.ExpansionAudioName); // 3
-                    dlg.Properties.AddIntegerRange("Channels:", project.ExpansionNumChannels, 1, 8); // 4 (Namco)
-                    dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionN163);
-                    dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
-                    dlg.Properties.Build();
-
-                    if (dlg.ShowDialog() == DialogResult.OK)
-                    {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                        project.Name = dlg.Properties.GetPropertyValue<string>(0);
-                        project.Author = dlg.Properties.GetPropertyValue<string>(1);
-                        project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
-
-                        var expansion = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
-                        var numChannels = dlg.Properties.GetPropertyValue<int>(4);
-
-                        var changedExpansion   = expansion   != project.ExpansionAudio;
-                        var changedNumChannels = numChannels != project.ExpansionNumChannels;
-
-
-                        if (changedExpansion || changedNumChannels)
-                        {
-                            if (project.ExpansionAudio == Project.ExpansionNone ||
-                                (!changedExpansion && changedNumChannels) || 
-                                PlatformUtils.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                            {
-                                App.StopInstrumentPlayer();
-                                project.SetExpansionAudio(expansion, numChannels);
-                                ExpansionAudioChanged?.Invoke();
-                                App.StartInstrumentPlayer();
-                                Reset();
-                            }
-                        }
-
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
-                    }
+                    EditProjectProperties(pt);
                 }
                 else if (button.type == ButtonType.Song)
                 {
-                    var song = button.song;
-
-                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 200, true);
-                    dlg.Properties.AddColoredString(song.Name, song.Color); // 0
-                    dlg.Properties.AddIntegerRange("Tempo :", song.Tempo, 32, 255); // 1
-                    dlg.Properties.AddIntegerRange("Speed :", song.Speed, 1, 31); // 2
-                    dlg.Properties.AddIntegerRange("Pattern Length :", song.DefaultPatternLength, 16, 256); // 3
-                    dlg.Properties.AddDomainRange("Bar Length :", GenerateBarLengths(song.DefaultPatternLength), song.BarLength); // 4
-                    dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, 128); // 5
-                    dlg.Properties.AddColor(song.Color); // 6
-                    dlg.Properties.Build();
-                    dlg.Properties.PropertyChanged += SongProperties_PropertyChanged;
-
-                    if (dlg.ShowDialog() == DialogResult.OK)
-                    {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                        App.Stop();
-                        App.Seek(0);
-
-                        var newName = dlg.Properties.GetPropertyValue<string>(0);
-
-                        if (App.Project.RenameSong(song, newName))
-                        {
-                            song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(6);
-                            song.Tempo = dlg.Properties.GetPropertyValue<int>(1);
-                            song.Speed = dlg.Properties.GetPropertyValue<int>(2);
-                            song.SetLength(dlg.Properties.GetPropertyValue<int>(5));
-                            song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(3));
-                            song.SetBarLength(dlg.Properties.GetPropertyValue<int>(4));
-                            SongModified?.Invoke(song);
-                            App.UndoRedoManager.EndTransaction();
-                            RefreshButtons();
-                        }
-                        else
-                        {
-                            App.UndoRedoManager.AbortTransaction();
-                            SystemSounds.Beep.Play();
-                        }
-
-                        ConditionalInvalidate();
-                    }
+                    EditSongProperties(pt, button.song);
                 }
-                else if (button.type == ButtonType.Instrument && button.instrument != null)
+                else if (button.type == ButtonType.Instrument && button.instrument != null && subButtonType == SubButtonType.Max)
                 {
-                    var instrument = button.instrument;
-
-                    if (subButtonType == SubButtonType.Max)
-                    {
-                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, true, e.Y > Height / 2);
-                        dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
-                        dlg.Properties.AddColor(instrument.Color); // 1
-                        if (instrument.IsEnvelopeActive(Envelope.Pitch))
-                            dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[Envelope.Pitch].Relative); // 2
-                        dlg.Properties.Build();
-
-                        if (dlg.ShowDialog() == DialogResult.OK)
-                        {
-                            var newName  = dlg.Properties.GetPropertyValue<string>(0);
-
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                            if (App.Project.RenameInstrument(instrument, newName))
-                            {
-                                instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
-                                if (instrument.IsEnvelopeActive(Envelope.Pitch))
-                                    instrument.Envelopes[Envelope.Pitch].Relative = dlg.Properties.GetPropertyValue<bool>(2);
-                                InstrumentColorChanged?.Invoke(instrument);
-                                RefreshButtons();
-                                ConditionalInvalidate();
-                                App.UndoRedoManager.EndTransaction();
-                            }
-                            else
-                            {
-                                App.UndoRedoManager.AbortTransaction();
-                                SystemSounds.Beep.Play();
-                            }
-                        }
-                    }
+                    EditInstrumentProperties(pt, button.instrument);
                 }
             }
         }
@@ -1265,20 +1355,6 @@ namespace FamiStudio
             if (idx == 3)
             {
                 props.SetPropertyEnabled(4, (string)value == Project.ExpansionNames[Project.ExpansionN163]);
-            }
-        }
-
-        private void SongProperties_PropertyChanged(PropertyPage props, int idx, object value)
-        {
-            if (idx == 3) // 3 = pattern length.
-            {
-                var barLengths = GenerateBarLengths((int)value);
-                var barIdx = Array.IndexOf(barLengths, selectedSong.BarLength);
-
-                if (barIdx == -1)
-                    barIdx = barLengths.Length - 1;
-
-                props.UpdateDomainRange(4, barLengths, barLengths[barIdx]); // 4 = bar length.
             }
         }
 

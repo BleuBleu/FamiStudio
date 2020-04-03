@@ -38,7 +38,7 @@ namespace FamiStudio
         public const int FdsWave = 14;
         public const int Mmc5Square1 = 15;
         public const int Mmc5Square2 = 16;
-        public const int Mmc5Dpcm = 17; 
+        public const int Mmc5Dpcm = 17;
         public const int N163Wave1 = 18;
         public const int N163Wave2 = 19;
         public const int N163Wave3 = 20;
@@ -173,12 +173,13 @@ namespace FamiStudio
         {
             switch (effect)
             {
-                case Note.EffectVolume:       return type != Dpcm;
-                case Note.EffectFinePitch:    return type != Noise && type != Dpcm;
+                case Note.EffectVolume: return type != Dpcm;
+                case Note.EffectFinePitch: return type != Noise && type != Dpcm;
                 case Note.EffectVibratoSpeed: return type != Noise && type != Dpcm;
                 case Note.EffectVibratoDepth: return type != Noise && type != Dpcm;
-                case Note.EffectFdsModDepth:  return type == FdsWave;
-                case Note.EffectFdsModSpeed:  return type == FdsWave;
+                case Note.EffectFdsModDepth: return type == FdsWave;
+                case Note.EffectFdsModSpeed: return type == FdsWave;
+                case Note.EffectSpeed: return song.Project.TempoMode == Project.TempoFamiTracker;
             }
 
             return true;
@@ -207,8 +208,6 @@ namespace FamiStudio
                     instanceLengthMap[pattern] = patternLen;
                 }
             }
-
-            UpdatePatternsMaxInstanceLength();
         }
 
         public Pattern CreatePattern(string name = null)
@@ -296,6 +295,12 @@ namespace FamiStudio
             patterns.AddRange(usedPatterns);
         }
 
+        public void ClearNotesPastMaxInstanceLength()
+        {
+            foreach (var pattern in patterns)
+                pattern.ClearNotesPastMaxInstanceLength();
+        }
+
         public int GetLastValidEffectValue(int startPatternIdx, int effect)
         {
             for (int p = startPatternIdx; p >= 0; p--)
@@ -312,7 +317,7 @@ namespace FamiStudio
             return Note.GetEffectDefaultValue(song, effect);
         }
 
-        public bool GetLastValidNote(ref int patternIdx, out int noteIdx, out bool released)
+        public bool GetLastValidNote(ref int patternIdx, ref Note lastValidNote, out int noteIdx, out bool released)
         {
             noteIdx = -1;
             released = false;
@@ -328,7 +333,7 @@ namespace FamiStudio
 
                     if (pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx) >= 0)
                     {
-                        note = pattern.GetLastValidNoteAt(lastPatternNoteIdx);
+                        note    = pattern.GetLastValidNoteAt(lastPatternNoteIdx);
                         noteIdx = pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx);
                         Debug.Assert(note.IsValid);
                     }
@@ -336,7 +341,10 @@ namespace FamiStudio
                     released = note.IsStop ? false : released || pattern.GetLastValidNoteReleasedAt(lastPatternNoteIdx);
 
                     if (note.IsValid)
+                    {
+                        lastValidNote = note;
                         return true;
+                    }
                 }
             }
 
@@ -383,10 +391,8 @@ namespace FamiStudio
             }
         }
 
-        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
+        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
         {
-            var note = patternInstances[patternIdx].Notes[noteIdx];
-
             Debug.Assert(note.IsMusical);
 
             // Find the next note to calculate the slope.
@@ -408,7 +414,8 @@ namespace FamiStudio
                 {
                     pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
 
-                    var frameCount = noteDuration * song.Speed + 1;
+                    // MATTT: We use the default speed here, not the current speed. This is wrong.
+                    var frameCount = noteDuration * song.FamitrackerSpeed + 1;
                     var floatStep  = Math.Abs(pitchDelta) / (float)frameCount;
 
                     stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
@@ -424,17 +431,19 @@ namespace FamiStudio
         {
             var noteCount = 0;
             var patternLength = song.GetPatternLength(patternIdx);
+            var pattern = patternInstances[patternIdx];
 
-            for (int n = noteIdx + 1; n < patternLength && noteCount < maxNotes; n++, noteCount++)
+            for (var it = pattern.GetNoteIterator(noteIdx + 1, patternLength); !it.Done && noteCount < maxNotes; it.Next(), noteCount++)
             {
-                var tmpNote = patternInstances[patternIdx].Notes[n];
-                if (tmpNote.IsMusical || tmpNote.IsStop)
-                    return song.GetPatternStartNote(patternIdx, n) - song.GetPatternStartNote(patternIdx, noteIdx);
+                var time = it.CurrentTime;
+                var note = it.CurrentNote;
+                if (note != null && (note.IsMusical || note.IsStop))
+                    return song.GetPatternStartNote(patternIdx, time) - song.GetPatternStartNote(patternIdx, noteIdx);
             }
 
             for (int p = patternIdx + 1; p < song.Length && noteCount < maxNotes; p++)
             {
-                var pattern = patternInstances[p];
+                pattern = patternInstances[p];
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
                     return song.GetPatternStartNote(p, pattern.FirstValidNoteTime) - song.GetPatternStartNote(patternIdx, noteIdx);
                 else
@@ -456,20 +465,28 @@ namespace FamiStudio
             var pattern = patternInstances[p];
             if (pattern != null)
             {
-                while (n >= 0 && !pattern.Notes[n].IsValid) n--;
+                int  prevTime = -1;
+                Note prevNote = null;
 
-                if (n >= 0)
+                foreach (var kv in pattern.Notes)
                 {
-                    if (pattern.Notes[n].Value == noteValue)
+                    var time = kv.Key;
+                    if (time > noteIdx)
+                        break;
+
+                    var note = kv.Value;
+                    if (note.IsValid)
                     {
-                        patternIdx = p;
-                        noteIdx = n;
-                        return true;
+                        prevTime = time;
+                        prevNote = note;
                     }
-                    else
-                    {
-                        return false;
-                    }
+                }
+
+                if (prevNote != null && prevNote.Value == noteValue)
+                {
+                    patternIdx = p;
+                    noteIdx    = prevTime;
+                    return true;
                 }
             }
 
@@ -493,7 +510,6 @@ namespace FamiStudio
                 }
 
                 if (--p < 0) break;
-                n = song.GetPatternLength(p) - 1;
             }
 
             return false;
@@ -539,18 +555,12 @@ namespace FamiStudio
         }
 #endif
 
-        public void UpdatePatternsMaxInstanceLength()
+        public void ClearPatternsLastValidNotesCache()
         {
             foreach (var pattern in patterns)
-                pattern.UpdateMaxInstanceLength();
+                pattern.ClearLastValidNoteCache();
         }
-
-        public void UpdateLastValidNotes()
-        {
-            foreach (var pattern in patterns)
-                pattern.UpdateLastValidNotes();
-        }
-
+        
         public void MergeIdenticalPatterns()
         {
             var patternCrcMap = new Dictionary<uint, Pattern>();
@@ -577,8 +587,7 @@ namespace FamiStudio
                 }
             }
 
-            UpdateLastValidNotes();
-            UpdatePatternsMaxInstanceLength();
+            ClearPatternsLastValidNotesCache();
         }
 
         public void SerializeState(ProjectBuffer buffer)
