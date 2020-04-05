@@ -2601,15 +2601,23 @@ namespace FamiStudio
                 {
                     if (keepFx)
                     {
-                        if (kv.Value.IsMusical)
+                        var oldNote = kv.Value;
+
+                        if (oldNote.IsValid)
                         {
-                            var oldNote = kv.Value;
                             var newNote = pattern.GetOrCreateNoteAt(n);
 
-                            newNote.Value = (byte)Utils.Clamp(oldNote.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
-                            newNote.Instrument = oldNote.Instrument;
-                            newNote.Slide = oldNote.Slide;
-                            newNote.Flags = oldNote.Flags;
+                            if (!newNote.IsRelease && !newNote.IsStop)
+                            {
+                                newNote.Value = (byte)Utils.Clamp(oldNote.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                                newNote.Instrument = oldNote.Instrument;
+                                newNote.Slide = oldNote.Slide;
+                                newNote.Flags = oldNote.Flags;
+                            }
+                            else
+                            {
+                                newNote.Value = oldNote.Value;
+                            }
                         }
                     }
                     else
