@@ -50,9 +50,9 @@ namespace FamiStudio
             stateAfter = CaptureState();
         }
 
-        public void Undo()
+        public void Undo(bool serializeAppState = true)
         {
-            RestoreState(stateBefore);
+            RestoreState(stateBefore, serializeAppState);
         }
 
         public void Redo()
@@ -65,7 +65,7 @@ namespace FamiStudio
             get { return stateAfter != null; }
         }
 
-        private void Serialize(ProjectBuffer buffer)
+        private void Serialize(ProjectBuffer buffer, bool serializeAppState = true)
         {
             switch (scope)
             {
@@ -89,7 +89,8 @@ namespace FamiStudio
                     break;
             }
 
-            app.SerializeState(buffer); 
+            if (serializeAppState)
+                app.SerializeState(buffer); 
         }
 
         private byte[] CaptureState()
@@ -99,10 +100,10 @@ namespace FamiStudio
             return Compression.CompressBytes(buffer.GetBuffer(), CompressionLevel.Fastest);
         }
 
-        private void RestoreState(byte[] state)
+        private void RestoreState(byte[] state, bool serializeAppState = true)
         {
             var buffer = new ProjectLoadBuffer(project, Compression.DecompressBytes(state), Project.Version, true);
-            Serialize(buffer);
+            Serialize(buffer, serializeAppState);
         }
     };
 
@@ -156,6 +157,14 @@ namespace FamiStudio
             transactions.RemoveAt(transactions.Count - 1);
             index--;
             Updated?.Invoke();
+            project.Validate();
+        }
+
+        public void RestoreTransaction(bool serializeAppState = true)
+        {
+            Debug.Assert(!transactions.Last().IsEnded);
+            Debug.Assert(index == transactions.Count);
+            transactions[transactions.Count - 1].Undo(serializeAppState);
             project.Validate();
         }
 

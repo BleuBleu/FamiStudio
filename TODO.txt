@@ -25,8 +25,7 @@
 	- See if gimmick had a differnt note table for PAL.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Basic note dragging.
-	- Dragging release/stop with note will be confusing. Will cut other notes unpredictably.
-	- But what about multiple notes?	
+	- Is the single note dragging too confusing?
 - MATTT.
 - Piano roll: Look at everything that uses alpha => SLOOOOOW!
 - BUG: When importing FTM with no instrument on a note, instrument still plays. Should be null
@@ -49,6 +48,8 @@ TESTING:
 - Retest smooth vibrato on/off.
 - Make sure that when there is no loop point, NSF stops.
 - Test long pattern > 256 a lot.
+- Test change active channel (press 1...5) while a transaction is happening.
+- Test everything about note dragging, edge cases, interrupt while dragging, end of song, etc....
 
 Breaking changes
 ================

@@ -300,7 +300,7 @@ namespace FamiStudio
             return serializer.CRC;
         }
 
-        public void DeleteNotesBetween(int idx0, int idx1)
+        public void DeleteNotesBetween(int idx0, int idx1, bool preserveFx = false)
         {
             var keys = notes.Keys;
             var vals = notes.Values;
@@ -308,7 +308,19 @@ namespace FamiStudio
             for (int i = keys.Count - 1; i >= 0; i--)
             {
                 if (keys[i] >= idx0 && keys[i] < idx1)
-                    notes.Remove(keys[i]);
+                {
+                    if (preserveFx)
+                    {
+                        var note = vals[i];
+                        note.Clear(true);
+                        if (note.IsEmpty)
+                            notes.Remove(keys[i]);
+                    }
+                    else
+                    {
+                        notes.Remove(keys[i]);
+                    }
+                }
             }
         }
 
@@ -368,8 +380,13 @@ namespace FamiStudio
         {
             Debug.Assert(this.song == channel.Song);
 
-            foreach (var note in notes.Values)
+            foreach (var kv in notes)
             {
+                var time = kv.Key;
+                var note = kv.Value;
+
+                Debug.Assert(time >= 0);
+                Debug.Assert(time < MaxLength);
                 Debug.Assert(note != null);
                 Debug.Assert(!note.IsEmpty);
 

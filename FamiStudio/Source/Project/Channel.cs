@@ -210,6 +210,51 @@ namespace FamiStudio
             }
         }
 
+        // Inputs are absolute note indices from beginning of song.
+        public void DeleteNotesBetween(int minFrame, int maxFrame, bool preserveFx = false)
+        {
+            var patternIdxMin = Song.FindPatternInstanceIndex(minFrame, out var patternNoteIdxMin);
+            var patternIdxMax = Song.FindPatternInstanceIndex(maxFrame, out var patternNoteIdxMax);
+
+            if (patternIdxMin == patternIdxMax)
+            {
+                var pattern = patternInstances[patternIdxMin];
+                if (pattern != null)
+                {
+                    pattern.DeleteNotesBetween(patternNoteIdxMin, patternNoteIdxMax, preserveFx);
+                    pattern.ClearLastValidNoteCache();
+                }
+            }
+            else
+            {
+                for (int p = patternIdxMin; p <= patternIdxMax; p++)
+                {
+                    var pattern = patternInstances[p];
+
+                    if (pattern != null)
+                    {
+                        if (p == patternIdxMin)
+                        {
+                            pattern.DeleteNotesBetween(patternNoteIdxMin, Pattern.MaxLength, preserveFx);
+                        }
+                        else if (p == patternIdxMax)
+                        {
+                            pattern.DeleteNotesBetween(0, patternNoteIdxMax, preserveFx);
+                        }
+                        else
+                        {
+                            if (preserveFx)
+                                pattern.DeleteNotesBetween(0, Pattern.MaxLength, true);
+                            else
+                                pattern.Notes.Clear();
+                        }
+
+                        pattern.ClearLastValidNoteCache();
+                    }
+                }
+            }
+        }
+
         public Pattern CreatePattern(string name = null)
         {
             if (name == null)
@@ -497,12 +542,13 @@ namespace FamiStudio
                 if (pattern != null)
                 {
                     var lastPatternNoteIdx = song.GetPatternLength(p) - 1;
-                    noteIdx = pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx);
-                    if (noteIdx >= 0)
+                    n = pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx);
+                    if (n >= 0)
                     {
                         var lastNote = pattern.GetLastValidNoteAt(lastPatternNoteIdx);
                         if (lastNote.IsValid && lastNote.Value == noteValue)
                         {
+                            noteIdx = n;
                             patternIdx = p;
                             return true;
                         }
