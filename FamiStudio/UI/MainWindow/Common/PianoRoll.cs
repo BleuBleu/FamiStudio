@@ -2607,7 +2607,7 @@ namespace FamiStudio
                         {
                             var newNote = pattern.GetOrCreateNoteAt(n);
 
-                            if (!newNote.IsRelease && !newNote.IsStop)
+                            if (!oldNote.IsRelease && !oldNote.IsStop)
                             {
                                 newNote.Value = (byte)Utils.Clamp(oldNote.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
                                 newNote.Instrument = oldNote.Instrument;
