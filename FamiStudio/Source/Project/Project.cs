@@ -57,8 +57,8 @@ namespace FamiStudio
         private string name = "Untitled";
         private string author = "Unknown";
         private string copyright = "";
-        //private int tempoMode = TempoFamiStudio;
-        private int tempoMode = TempoFamiTracker;
+        private int tempoMode = TempoFamiStudio;
+        //private int tempoMode = TempoFamiTracker;
         private int expansionAudio = ExpansionNone;
         private int expansionNumChannels = 1;
 

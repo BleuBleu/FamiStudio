@@ -33,8 +33,8 @@ namespace FamiStudio
         private int famitrackerSpeed = 6;
 
         // These are for FamiStudio tempo mode
-        private int noteLength = 6;
-        private int palFrameSkipPattern = 0x4;
+        private int noteLength = 10;
+        private int palFrameSkipPattern = GetDefaultPalFrameSkipPattern(10);
 
         public int Id => id;
         public Project Project => project;
@@ -60,16 +60,15 @@ namespace FamiStudio
 
             if (project.TempoMode == Project.TempoFamiStudio)
             {
-                noteLength = 6;
+                noteLength = 10;
                 palFrameSkipPattern = GetDefaultPalFrameSkipPattern(noteLength);
                 barLength = noteLength * 4;
             }
             else
             {
-                // These match the default FamiTracker settings.
                 famitrackerTempo = 150;
-                famitrackerSpeed = 6;
-                barLength = 16;
+                famitrackerSpeed = 10;
+                barLength = 4;
             }
 
             patternLength = barLength * 4;

@@ -2344,7 +2344,7 @@ namespace FamiStudio
         {
             selectionFrameMin = -1;
             selectionFrameMax = -1;
-            // DRAGGG: Abort capture op here.
+            // MATTT: Abort capture op here.
         }
 
         private void UpdateSelection(int mouseX, bool first = false)

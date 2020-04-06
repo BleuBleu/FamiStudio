@@ -124,6 +124,7 @@ namespace FamiStudio
         public bool BeginPlaySong(Song s, bool pal, int startNote)
         {
             song = s;
+            famitrackerTempo = song.Project.TempoMode == Project.TempoFamiTracker;
             speed = song.FamitrackerSpeed;
             palMode = pal;
             playPosition = startNote;

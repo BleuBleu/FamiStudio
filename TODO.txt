@@ -5,13 +5,19 @@
 		- Do custom note lenght IMMEDIATELY. otherwise a bitch to retrofit.
 		- Ask to convert when changing note length.
 	x Make bar length more flexible (for short patterns too).
-	- Allow custom patterns to be longer.
-	- Only allow PAL when no expansion used.
+	x Allow custom patterns to be longer.
+	x Only allow PAL when no expansion used.
 	- Specify tempo changes in pattern.
 	- Note resize, tempo change.
 	- Hookup playback correctly.
-	
-	- Delayed notes/stop notes? Or just do conversion on FT import?
+		- Read frame skip at each pattern with custom tempo.
+		- Patterns cant display shorter than 16 pixels.
+	- PAL frame skip pattern in PAL frames?
+	- Zoom level or sequencer should be the same for FamiTracker & FamiStudio tempo.
+		- Pattern bitmap should be in #notes, would be consistent.
+		- Need some kind of zoom bias. 
+			
+	x NO Delayed notes/stop notes? Or just do conversion on FT import?
 	- Slides with odd tempo.
 	
 	- NSF: Fix rounding on weird tempos (any better ways of doing this???).
@@ -19,13 +25,13 @@
 	- Add better tempo logic to famitone2fs.
 	- Tempo conversion ? *only possible if tempo = 150 and if NOT USING CRAZY SPEED CHANGE... FUCK* (song properties or transform dialog) ?
 	- Import/export formats.
-	- GGSound + FT2 FS tempo versions.
+	
+	x GGSound + FT2 FS tempo versions.
+	
 - All expansions.
 	- Import/export all formats: slides.
 	- See if gimmick had a differnt note table for PAL.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
-- Basic note dragging.
-	- Is the single note dragging too confusing?
 - MATTT.
 - Piano roll: Look at everything that uses alpha => SLOOOOOW!
 - BUG: When importing FTM with no instrument on a note, instrument still plays. Should be null
@@ -47,7 +53,8 @@ TESTING:
 - Fix saw in Shovel knight.
 - Retest smooth vibrato on/off.
 - Make sure that when there is no loop point, NSF stops.
-- Test long pattern > 256 a lot.
+- Test long pattern > 256 a lot. They will fail to export to FamiTracker.
+- Test split of pattern longer than default.
 - Test change active channel (press 1...5) while a transaction is happening.
 - Test everything about note dragging, edge cases, interrupt while dragging, end of song, etc....
 

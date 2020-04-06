@@ -1083,7 +1083,7 @@ namespace FamiStudio
                             if (PlatformUtils.MessageBox($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 bool selectNewInstrument = instrument == selectedInstrument;
-                                App.StopInstrumentNoteAndWait();
+                                App.StopEverything();
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                                 App.Project.DeleteInstrument(instrument);
                                 if (selectNewInstrument)
@@ -1134,14 +1134,13 @@ namespace FamiStudio
                 var changedExpansion = expansion != project.ExpansionAudio;
                 var changedNumChannels = numChannels != project.ExpansionNumChannels;
 
-
                 if (changedExpansion || changedNumChannels)
                 {
                     if (project.ExpansionAudio == Project.ExpansionNone ||
                         (!changedExpansion && changedNumChannels) ||
                         PlatformUtils.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
-                        App.StopInstrumentPlayer();
+                        App.StopEverything();
                         project.SetExpansionAudio(expansion, numChannels);
                         ExpansionAudioChanged?.Invoke();
                         App.StartInstrumentPlayer();

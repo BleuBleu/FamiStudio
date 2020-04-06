@@ -89,6 +89,9 @@ namespace FamiStudio
 
         private void ProjectExplorer_ExpansionAudioChanged()
         {
+            if (Project.ExpansionAudio != Project.ExpansionNone)
+                palMode = false;
+
             RefreshSequencerLayout();
             Sequencer.Reset();
             PianoRoll.Reset();
@@ -527,15 +530,10 @@ namespace FamiStudio
             instrumentPlayer.StopAllNotes();
         }
 
-        public void StopInstrumentNoteAndWait()
-        {
-            instrumentPlayer.StopAllNotesAndWait();
-        }
-
         public void StopEverything()
         {
             Stop();
-            StopInstrumentNoteAndWait();
+            StopInstrumentPlayer();
         }
 
         public void StopInstrumentPlayer()

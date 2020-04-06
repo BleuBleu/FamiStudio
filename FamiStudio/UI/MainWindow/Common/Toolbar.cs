@@ -112,16 +112,17 @@ namespace FamiStudio
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
+
             toolbarBrush = g.CreateHorizontalGradientBrush(0, 81, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             warningBrush = g.CreateSolidBrush(ThemeBase.Darken(ThemeBase.CustomColors[0, 0]));
 
-            bmpLoopNone = g.CreateBitmapFromResource("LoopNone");
-            bmpLoopSong = g.CreateBitmapFromResource("Loop");
+            bmpLoopNone    = g.CreateBitmapFromResource("LoopNone");
+            bmpLoopSong    = g.CreateBitmapFromResource("Loop");
             bmpLoopPattern = g.CreateBitmapFromResource("LoopPattern");
-            bmpPlay = g.CreateBitmapFromResource("Play");
-            bmpPause = g.CreateBitmapFromResource("Pause");
-            bmpNtsc = g.CreateBitmapFromResource("NTSC");
-            bmpPal = g.CreateBitmapFromResource("PAL");
+            bmpPlay        = g.CreateBitmapFromResource("Play");
+            bmpPause       = g.CreateBitmapFromResource("Pause");
+            bmpNtsc        = g.CreateBitmapFromResource("NTSC");
+            bmpPal         = g.CreateBitmapFromResource("PAL");
 
             buttons[ButtonNew]       = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { X = 44,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
@@ -137,7 +138,7 @@ namespace FamiStudio
             buttons[ButtonPlay]      = new Button { X = 634, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
             buttons[ButtonRewind]    = new Button { X = 674, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]      = new Button { X = 714, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
-            buttons[ButtonMachine]   = new Button { X = 754, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap };
+            buttons[ButtonMachine]   = new Button { X = 754, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
             buttons[ButtonHelp]      = new Button { X = 36,  Y = 4, Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
 
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
@@ -365,19 +366,24 @@ namespace FamiStudio
             return null;
         }
 
-        public void OnMachine()
+        private void OnMachine()
         {
             App.PalMode = !App.PalMode;
         }
 
-        public void OnHelp()
+        private bool OnMachineEnabled()
         {
-            App.ShowHelp();
+            return App.Project.ExpansionAudio == Project.ExpansionNone;
         }
 
         private RenderBitmap OnMachineGetBitmap()
         {
             return App.PalMode ? bmpPal : bmpNtsc;
+        }
+
+        private void OnHelp()
+        {
+            App.ShowHelp();
         }
 
         protected override void OnRender(RenderGraphics g)

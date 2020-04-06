@@ -47,7 +47,7 @@ namespace FamiStudio
         const int DefaultHeaderIconSizeX     = 12;
 
         const int MinZoomLevel = -2;
-        const int MaxZoomLevel = 4;
+        const int MaxZoomLevel =  4;
 
         int trackNameSizeX;
         int headerSizeY;
@@ -70,6 +70,7 @@ namespace FamiStudio
         float noteSizeX;
 
         int scrollX = 0;
+        int zoomBias = 0;
         int zoomLevel = 1;
         int mouseLastX = 0;
         int mouseLastY = 0;
@@ -98,7 +99,14 @@ namespace FamiStudio
         
         int ScaleForZoom(int value)
         {
-            return zoomLevel < 0 ? value / (1 << (-zoomLevel)) : value * (1 << zoomLevel);
+            var actualZoom = zoomLevel + zoomBias;
+            return actualZoom < 0 ? value / (1 << (-actualZoom)) : value * (1 << actualZoom);
+        }
+
+        float ScaleForZoom(float value)
+        {
+            var actualZoom = zoomLevel + zoomBias;
+            return actualZoom < 0 ? value / (1 << (-actualZoom)) : value * (1 << actualZoom);
         }
 
         Dictionary<int, List<RenderBitmap>> patternBitmapCache = new Dictionary<int, List<RenderBitmap>>();
@@ -166,6 +174,8 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
 
+            zoomBias = Song != null ? 6 - (int)Math.Log(Song.DefaultPatternLength, 2.0) : 0;
+
             trackNameSizeX     = (int)(DefaultTrackNameSizeX * scaling);
             headerSizeY        = (int)(DefaultHeaderSizeY * scaling);
             trackSizeY         = (int)(ComputeDesiredTrackSizeY() * scaling);
@@ -184,7 +194,7 @@ namespace FamiStudio
             headerIconPosX     = (int)(DefaultHeaderIconPosX * scaling);
             headerIconPosY     = (int)(DefaultHeaderIconPosY * scaling);
             headerIconSizeX    = (int)(DefaultHeaderIconSizeX * scaling);
-            noteSizeX          = (zoomLevel < 0 ? 1.0f / (1 << (-zoomLevel)) : 1.0f * (1 << zoomLevel)) * scaling;
+            noteSizeX          = ScaleForZoom(1.0f) * scaling;
         }
 
         private int GetChannelCount()
@@ -447,7 +457,7 @@ namespace FamiStudio
                         g.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY - 1, 0.9f));
                         g.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, theme.DarkGreyLineBrush1);
                         g.PushClip(0, 0, sx, trackSizeY);
-                        g.DrawBitmap(bmp, 1.5f, 1.5f + patternHeaderSizeY, ((sx - 1) / (float)sx) * bmp.Size.Width * noteSizeX, bmp.Size.Height, 1.0f);
+                        g.DrawBitmap(bmp, 1.5f, 1.5f + patternHeaderSizeY, sx - 1, bmp.Size.Height, 1.0f);
                         g.DrawText(pattern.Name, ThemeBase.FontSmall, patternNamePosX, patternNamePosY, theme.BlackBrush);
                         g.PopClip();
                         g.PopTransform();
@@ -509,12 +519,14 @@ namespace FamiStudio
             patternBitmapCache.Remove(pattern.Id);
         }
 
-        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, uint[] data)
+        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, float scaleX, float scaleY, uint[] data)
         {
-            var scaleY = (patternSizeY - noteSizeY) / (float)patternSizeY;
             var y = Math.Min((int)Math.Round((note.Value - minNote) / (float)(maxNote - minNote) * scaleY * patternSizeY), patternSizeY - noteSizeY);
             var instrument = note.Instrument;
             var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
+
+            t0 = (int)(t0 * scaleX);
+            t1 = (int)(t1 * scaleX);
 
             for (int j = 0; j < noteSizeY; j++)
                 for (int x = t0; x < t1; x++)
@@ -522,9 +534,14 @@ namespace FamiStudio
         }
 
         private RenderBitmap GetPatternBitmapFromCache(RenderGraphics g, Pattern p, int patternLen)
-        {
-            int patternSizeX = Math.Max(1, patternLen);
+        { 
+            int numNotes = Song.Project.TempoMode == Project.TempoFamiTracker ? patternLen : patternLen / Song.NoteLength; // MATTT: Use custom note length from pattern.
+
+            int patternSizeX = Math.Max(1, numNotes);
             int patternSizeY = trackSizeY - patternHeaderSizeY - 1;
+
+            var scaleX = patternSizeX / (float)patternLen;
+            var scaleY = (patternSizeY - noteSizeY) / (float)patternSizeY;
 
             RenderBitmap bmp;
 
@@ -567,7 +584,7 @@ namespace FamiStudio
                     if (note.IsMusical || note.IsStop)
                     {
                         if (lastValid != null && lastValid.IsValid)
-                            DrawPatternBitmapNote(lastTime, kv.Key, lastValid, patternSizeX, patternSizeY, minNote, maxNote, data);
+                            DrawPatternBitmapNote(lastTime, kv.Key, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleX, scaleY, data);
 
                         lastTime  = kv.Key;
                         lastValid = note.IsStop ? null : note;
@@ -575,7 +592,7 @@ namespace FamiStudio
                 }
 
                 if (lastValid != null && lastValid.IsValid)
-                    DrawPatternBitmapNote(lastTime, patternLen, lastValid, patternSizeX, patternSizeY, minNote, maxNote, data);
+                    DrawPatternBitmapNote(lastTime, patternLen, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleX, scaleY, data);
             }
 
             bmp = g.CreateBitmap(patternSizeX, patternSizeY, data);
@@ -1416,6 +1433,7 @@ namespace FamiStudio
 
         public void SongModified()
         {
+            UpdateRenderCoords();
             InvalidatePatternCache();
             ClearSelection();
             ClampScroll();
