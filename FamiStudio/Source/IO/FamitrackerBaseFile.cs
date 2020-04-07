@@ -560,6 +560,7 @@ namespace FamiStudio
             }
 
             project.UpdateAllLastValidNotesAndVolume();
+            project.Validate();
 
             return true;
         }

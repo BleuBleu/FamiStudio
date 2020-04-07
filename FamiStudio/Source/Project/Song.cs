@@ -115,17 +115,18 @@ namespace FamiStudio
             if (factor == 1)
                 return true;
 
+            // MATTT: Make sure that makes sense with FamiStudio tempo, we dont want to split notes in 1/2.
             if ((patternLength % factor) == 0 && (songLength * factor) < MaxLength)
             {
-                var oldChannelPatterns = new Pattern[channels.Length][];
-                var oldChannelPatternInstances = new Pattern[channels.Length][];
+                var oldChannelPatterns  = new Pattern[channels.Length][];
+                var oldChannelInstances = new Pattern[channels.Length][];
 
                 for (int c = 0; c < channels.Length; c++)
                 {
                     var channel = channels[c];
 
-                    oldChannelPatterns[c] = channel.Patterns.ToArray();
-                    oldChannelPatternInstances[c] = channel.PatternInstances.Clone() as Pattern[];
+                    oldChannelPatterns[c]  = channel.Patterns.ToArray();
+                    oldChannelInstances[c] = channel.PatternInstances.Clone() as Pattern[];
 
                     Array.Clear(channel.PatternInstances, 0, channel.PatternInstances.Length);
 
@@ -140,8 +141,8 @@ namespace FamiStudio
 
                 for (int p = 0; p < songLength; p++)
                 {
-                    var instLen = GetPatternLength(p);
-                    var chunkCount = (int)Math.Ceiling(instLen / (float)newPatternLength);
+                    var patternLen = GetPatternLength(p);
+                    var chunkCount = (int)Math.Ceiling(patternLen / (float)newPatternLength);
 
                     if (p == loopPoint)
                         newLoopPoint = newSongLength;
@@ -152,7 +153,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        for (int i = 0, notesLeft = instLen; i < chunkCount; i++, notesLeft -= newPatternLength)
+                        for (int i = 0, notesLeft = patternLen; i < chunkCount; i++, notesLeft -= newPatternLength)
                         {
                             var newLength = (byte)Math.Min(newPatternLength, notesLeft);
                             newPatternCustomSettings.Add(new PatternCustomSetting() { patternLength = newLength == newPatternLength ? (byte)0 : newLength });
@@ -164,7 +165,7 @@ namespace FamiStudio
                     for (int c = 0; c < channels.Length; c++)
                     {
                         var channel = channels[c];
-                        var pattern = oldChannelPatternInstances[c][p];
+                        var pattern = oldChannelInstances[c][p];
 
                         if (pattern != null)
                         {
@@ -174,7 +175,7 @@ namespace FamiStudio
                             {
                                 splitPatterns = new Pattern[chunkCount];
 
-                                for (int i = 0, notesLeft = instLen; i < chunkCount; i++, notesLeft -= newPatternLength)
+                                for (int i = 0, notesLeft = patternLen; i < chunkCount; i++, notesLeft -= newPatternLength)
                                 {
                                     splitPatterns[i] = new Pattern(Project.GenerateUniqueId(), this, channel.Type, channel.GenerateUniquePatternName(pattern.Name));
                                     splitPatterns[i].Color = pattern.Color;
@@ -260,6 +261,23 @@ namespace FamiStudio
         public void SetLoopPoint(int loop)
         {
             loopPoint = Math.Min(loop, songLength - 1);
+        }
+
+        public bool IsEmpty
+        {
+            get
+            {
+                foreach (var channel in channels)
+                {
+                    foreach (var pattern in channel.Patterns)
+                    {
+                        if (!pattern.IsEmpty)
+                            return false;
+                    }
+                }
+
+                return true;
+            }
         }
 
         public static int[] GenerateBarLengths(int patternLen)
@@ -586,7 +604,9 @@ namespace FamiStudio
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
 
-            var uniqueNotes = new HashSet<Note>();
+            var uniqueNotes    = new HashSet<Note>();
+            var uniquePatterns = new HashSet<Pattern>();
+
             foreach (var channel in channels)
             {
                 channel.Validate(this);
@@ -601,6 +621,9 @@ namespace FamiStudio
                         Debug.Assert(!uniqueNotes.Contains(note));
                         uniqueNotes.Add(note);
                     }
+
+                    Debug.Assert(!uniquePatterns.Contains(pattern));
+                    uniquePatterns.Add(pattern);
                 }
             }
 
@@ -672,6 +695,38 @@ namespace FamiStudio
         {
             foreach (var channel in channels)
                 channel.MergeIdenticalPatterns();
+        }
+
+        public void ConvertToFamiStudioTempo()
+        {
+            int newNoteLength    = famitrackerSpeed;
+            int newBarLength     = barLength * newNoteLength;
+            int newPatternLength = patternLength * newNoteLength;
+
+            // MATTT: Custom pattern tempo.
+            foreach (var channel in channels)
+            {
+                foreach (var pattern in channel.Patterns)
+                {
+                    var notesCopy = new SortedList<int, Note>(pattern.Notes);
+
+                    pattern.Notes.Clear();
+                    foreach (var kv in notesCopy)
+                    {
+                        var note = kv.Value;
+                        note.ClearEffectValue(Note.EffectSpeed);
+                        pattern.Notes[kv.Key * newNoteLength] = note;
+                    }
+
+                    pattern.ClearLastValidNoteCache();
+                }
+            }
+
+            noteLength    = newNoteLength;
+            barLength     = newBarLength;
+            patternLength = newPatternLength;
+
+            UpdatePatternStartNotes();
         }
 
         public void SerializeState(ProjectBuffer buffer)

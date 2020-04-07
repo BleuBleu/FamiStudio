@@ -76,7 +76,6 @@ namespace FamiStudio
         public string Name       { get => name; set => name = value; }
         public string Author     { get => author; set => author = value; }
         public string Copyright  { get => copyright; set => copyright = value; }
-        public int    TempoMode  { get => tempoMode; set => tempoMode = value; }
 
         public Project(bool createSongAndInstrument = false)
         {
@@ -546,6 +545,33 @@ namespace FamiStudio
             }
         }
 
+        public int TempoMode
+        {
+            get
+            {
+                return tempoMode;
+            }
+            set
+            {
+                Debug.Assert(AreSongsEmpty);
+                tempoMode = value;
+            }
+        }
+
+        public bool AreSongsEmpty
+        {
+            get
+            {
+                foreach (var song in songs)
+                {
+                    if (!song.IsEmpty)
+                        return false;
+                }
+
+                return true;
+            }
+        }
+
         public void CleanupUnusedSamples()
         {
             var usedSamples = new HashSet<DPCMSample>();
@@ -618,6 +644,16 @@ namespace FamiStudio
                     i++;
                 }
             }
+        }
+
+        public void ConvertToFamiStudioTempo()
+        {
+            Debug.Assert(tempoMode == TempoFamiTracker);
+
+            foreach (var song in songs)
+                song.ConvertToFamiStudioTempo();
+
+            tempoMode = TempoFamiStudio;
         }
 
         public void DeleteUnusedInstruments()

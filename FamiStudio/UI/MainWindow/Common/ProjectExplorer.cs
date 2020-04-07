@@ -1108,6 +1108,7 @@ namespace FamiStudio
         private void EditProjectProperties(Point pt)
         {
             var project = App.Project;
+            var tempoModeStrings = new[] { "FamiStudio", "FamiTracker" };
 
             var dlg = new PropertyDialog(PointToScreen(pt), 300, true);
             dlg.Properties.AddString("Title :", project.Name, 31); // 0
@@ -1115,7 +1116,7 @@ namespace FamiStudio
             dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
             dlg.Properties.AddStringList("Expansion Audio :", Project.ExpansionNames, project.ExpansionAudioName); // 3
             dlg.Properties.AddIntegerRange("Channels :", project.ExpansionNumChannels, 1, 8); // 4 (Namco)
-            dlg.Properties.AddStringList("Tempo Mode :", new[] { "FamiStudio", "FamiTracker" }, "FamiStudio"); // 5
+            dlg.Properties.AddStringList("Tempo Mode :", tempoModeStrings, tempoModeStrings[project.TempoMode]); // 5
             dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionN163);
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             dlg.Properties.Build();
@@ -1128,10 +1129,12 @@ namespace FamiStudio
                 project.Author = dlg.Properties.GetPropertyValue<string>(1);
                 project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
 
+                var tempoMode = Array.IndexOf(tempoModeStrings, dlg.Properties.GetPropertyValue<string>(5));
                 var expansion = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
                 var numChannels = dlg.Properties.GetPropertyValue<int>(4);
 
-                var changedExpansion = expansion != project.ExpansionAudio;
+                var changedTempoMode   = tempoMode != project.TempoMode;
+                var changedExpansion   = expansion != project.ExpansionAudio;
                 var changedNumChannels = numChannels != project.ExpansionNumChannels;
 
                 if (changedExpansion || changedNumChannels)
@@ -1146,6 +1149,27 @@ namespace FamiStudio
                         App.StartInstrumentPlayer();
                         Reset();
                     }
+                }
+
+                if (changedTempoMode)
+                {
+                    App.StopEverything();
+                    if (tempoMode == Project.TempoFamiStudio)
+                    {
+                        if (!project.AreSongsEmpty)
+                            PlatformUtils.MessageBox($"Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.", "Change tempo mode", MessageBoxButtons.OK);
+                        project.ConvertToFamiStudioTempo();
+                    }
+                    else if (tempoMode == Project.TempoFamiTracker)
+                    {
+                        if (!project.AreSongsEmpty)
+                            PlatformUtils.MessageBox($"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
+                        //project.ConvertToFamiTrackerTempo(); MATTT
+                    }
+
+                    ExpansionAudioChanged?.Invoke(); // MATTT : Rename this event.
+                    App.StartInstrumentPlayer();
+                    Reset();
                 }
 
                 App.UndoRedoManager.EndTransaction();

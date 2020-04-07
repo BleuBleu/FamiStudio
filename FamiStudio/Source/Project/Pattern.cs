@@ -177,6 +177,20 @@ namespace FamiStudio
             return lastValidData;
         }
 
+        public bool IsEmpty
+        {
+            get
+            {
+                foreach (var note in notes.Values)
+                {
+                    if (!note.IsEmpty)
+                        return false;
+                }
+
+                return true;
+            }
+        }
+
         public int FirstValidNoteTime
         {
             get

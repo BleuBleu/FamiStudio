@@ -13,9 +13,7 @@
 		- Read frame skip at each pattern with custom tempo.
 		- Patterns cant display shorter than 16 pixels.
 	- PAL frame skip pattern in PAL frames?
-	- Zoom level or sequencer should be the same for FamiTracker & FamiStudio tempo.
-		- Pattern bitmap should be in #notes, would be consistent.
-		- Need some kind of zoom bias. 
+	- Display BPM for FamiTracker tempo as well.
 			
 	x NO Delayed notes/stop notes? Or just do conversion on FT import?
 	- Slides with odd tempo.
@@ -23,10 +21,10 @@
 	- NSF: Fix rounding on weird tempos (any better ways of doing this???).
 	- NSF (#defines)
 	- Add better tempo logic to famitone2fs.
-	- Tempo conversion ? *only possible if tempo = 150 and if NOT USING CRAZY SPEED CHANGE... FUCK* (song properties or transform dialog) ?
+	- Tempo conversion : Will ignore all speed change and assume 150 tempo. Give warning.
 	- Import/export formats.
 	
-	x GGSound + FT2 FS tempo versions.
+	- FT2 FS tempo version. (Rename Famitone2FS to FamiStudio).
 	
 - All expansions.
 	- Import/export all formats: slides.
