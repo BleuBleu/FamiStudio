@@ -587,7 +587,8 @@ namespace FamiStudio
             }
             else if (e.KeyCode == Keys.Home)
             {
-                Song.Split(2);
+                //Song.Split(2);
+                Project.ConvertToFamiStudioTempo();
                 Project.Validate();
 
                 /*

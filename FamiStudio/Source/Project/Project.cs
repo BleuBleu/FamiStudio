@@ -656,6 +656,15 @@ namespace FamiStudio
             tempoMode = TempoFamiStudio;
         }
 
+        public void ConvertToFamiTrackerTempo()
+        {
+            Debug.Assert(tempoMode == TempoFamiStudio);
+
+            // MATTT: Undone
+
+            tempoMode = TempoFamiTracker;
+        }
+
         public void DeleteUnusedInstruments()
         {
             var usedInstruments = new HashSet<Instrument>();

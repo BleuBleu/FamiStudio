@@ -34,7 +34,10 @@ namespace FamiStudio
         protected int tempoCounter = 0;
         protected int playPattern = 0;
         protected int playNote = 0;
-        protected int speed = 6;
+        protected int famitrackerSpeed = 6;
+        protected int patternNoteLength = 0;
+        protected int patternPalFramePattern = 0;
+        protected int palNoteCount = 0;
         protected int palFramePattern = 0;
         protected bool famitrackerTempo = true;
         protected bool palMode = false;
@@ -81,15 +84,18 @@ namespace FamiStudio
             }
             else
             {
-                if (tempoCounter <= 0)
+                if (palNoteCount <= 0)
                 {
-                    tempoCounter = 11;
-                    palFramePattern = 0x104 << 1;
+                    palNoteCount    = patternNoteLength;
+                    palFramePattern = patternPalFramePattern;
                 }
-                tempoCounter--;
-                palFramePattern >>= 1;
 
-                return palMode && ((palFramePattern & 1) != 0) ? 2 : 1;
+                var numFrames = palMode && ((palFramePattern & 1) != 0) ? 2 : 1;
+
+                palFramePattern >>= numFrames;
+                palNoteCount -= numFrames;
+
+                return numFrames;
             }
         }
 
@@ -125,7 +131,11 @@ namespace FamiStudio
         {
             song = s;
             famitrackerTempo = song.Project.TempoMode == Project.TempoFamiTracker;
-            speed = song.FamitrackerSpeed;
+            famitrackerSpeed = song.FamitrackerSpeed;
+            patternPalFramePattern = Song.GetDefaultPalFrameSkipPattern(s.NoteLength);
+            patternNoteLength = song.NoteLength;
+            palNoteCount = patternNoteLength;
+            palFramePattern = patternPalFramePattern;
             palMode = pal;
             playPosition = startNote;
             playPattern = 0;
@@ -148,7 +158,7 @@ namespace FamiStudio
                     foreach (var channel in channelStates)
                     {
                         channel.Advance(song, playPattern, playNote);
-                        channel.ProcessEffects(song, playPattern, playNote,ref speed);
+                        channel.ProcessEffects(song, playPattern, playNote,ref famitrackerSpeed);
                         channel.UpdateEnvelopes();
                         channel.UpdateAPU();
                     }
@@ -172,7 +182,7 @@ namespace FamiStudio
 
             for (int i = 0; i < numFrames; i++)
             {
-                if (firstFrame || UpdateTempo(speed, song.FamitrackerTempo))
+                if (firstFrame || UpdateTempo(famitrackerSpeed, song.FamitrackerTempo))
                 //if (UpdateFamistudioTempo(6, ref tempoCounter, ref numFrames))
                 {
                     // Advance to next note.
@@ -182,7 +192,7 @@ namespace FamiStudio
                     foreach (var channel in channelStates)
                     {
                         channel.Advance(song, playPattern, playNote);
-                        channel.ProcessEffects(song, playPattern, playNote, ref speed);
+                        channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
                     }
 
                     playPosition = song.GetPatternStartNote(playPattern) + playNote;

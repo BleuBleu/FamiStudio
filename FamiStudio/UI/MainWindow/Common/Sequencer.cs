@@ -519,14 +519,11 @@ namespace FamiStudio
             patternBitmapCache.Remove(pattern.Id);
         }
 
-        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, float scaleX, float scaleY, uint[] data)
+        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, float scaleY, uint[] data)
         {
             var y = Math.Min((int)Math.Round((note.Value - minNote) / (float)(maxNote - minNote) * scaleY * patternSizeY), patternSizeY - noteSizeY);
             var instrument = note.Instrument;
             var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
-
-            t0 = (int)(t0 * scaleX);
-            t1 = (int)(t1 * scaleX);
 
             for (int j = 0; j < noteSizeY; j++)
                 for (int x = t0; x < t1; x++)
@@ -535,12 +532,9 @@ namespace FamiStudio
 
         private RenderBitmap GetPatternBitmapFromCache(RenderGraphics g, Pattern p, int patternLen)
         { 
-            int numNotes = Song.Project.TempoMode == Project.TempoFamiTracker ? patternLen : patternLen / Song.NoteLength; // MATTT: Use custom note length from pattern.
-
-            int patternSizeX = Math.Max(1, numNotes);
+            int patternSizeX = Math.Max(1, patternLen);
             int patternSizeY = trackSizeY - patternHeaderSizeY - 1;
 
-            var scaleX = patternSizeX / (float)patternLen;
             var scaleY = (patternSizeY - noteSizeY) / (float)patternSizeY;
 
             RenderBitmap bmp;
@@ -584,7 +578,7 @@ namespace FamiStudio
                     if (note.IsMusical || note.IsStop)
                     {
                         if (lastValid != null && lastValid.IsValid)
-                            DrawPatternBitmapNote(lastTime, kv.Key, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleX, scaleY, data);
+                            DrawPatternBitmapNote(lastTime, kv.Key, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, data);
 
                         lastTime  = kv.Key;
                         lastValid = note.IsStop ? null : note;
@@ -592,7 +586,7 @@ namespace FamiStudio
                 }
 
                 if (lastValid != null && lastValid.IsValid)
-                    DrawPatternBitmapNote(lastTime, patternLen, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleX, scaleY, data);
+                    DrawPatternBitmapNote(lastTime, patternLen, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, data);
             }
 
             bmp = g.CreateBitmap(patternSizeX, patternSizeY, data);

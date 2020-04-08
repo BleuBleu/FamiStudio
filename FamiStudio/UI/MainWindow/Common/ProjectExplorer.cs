@@ -1164,7 +1164,7 @@ namespace FamiStudio
                     {
                         if (!project.AreSongsEmpty)
                             PlatformUtils.MessageBox($"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
-                        //project.ConvertToFamiTrackerTempo(); MATTT
+                        project.ConvertToFamiTrackerTempo();
                     }
 
                     ExpansionAudioChanged?.Invoke(); // MATTT : Rename this event.
@@ -1175,6 +1175,19 @@ namespace FamiStudio
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();
             }
+        }
+
+        private string[] GetPalSkipFrameString(int noteLength, int skipPattern, out bool[] bools)
+        {
+            var strings = new string[noteLength];
+            bools = new bool[noteLength];
+            for (int i = 0; i < noteLength; i++)
+            {
+                strings[i] = i.ToString();
+                bools[i] = (skipPattern & (1 << i)) != 0;
+            }
+
+            return strings;
         }
 
         private void EditSongProperties(Point pt, Song song)
@@ -1190,15 +1203,18 @@ namespace FamiStudio
                 dlg.Properties.AddIntegerRange("Speed :", song.FamitrackerSpeed, 1, 31); // 4
                 dlg.Properties.AddIntegerRange("Pattern Length :", song.DefaultPatternLength, 16, 256); // 5
                 dlg.Properties.AddIntegerRange("Bar Length :", song.BarLength, 2, song.DefaultPatternLength); // 6
+                dlg.Properties.AddLabel("BPM :", song.BPM.ToString()); // 7
             }
             else
             {
-                dlg.Properties.AddIntegerRange("Frames per Note : ", 6, 3, 16); // 3
-                dlg.Properties.AddIntegerRange("Notes per Pattern : ", 16, 2, 64); // 4
-                dlg.Properties.AddIntegerRange("Notes per Bar : ", 4, 2, 32); // 5
-                dlg.Properties.AddLabel("BPM :", Song.ComputeBPM(6).ToString()); // 6 MATTT hardcoded values
-                dlg.Properties.AddLabel("PAL Error :", $"{Song.ComputePalError((int)6):0.##} %"); // 7 MATTT hardcoded values
-                dlg.Properties.AddStringListMulti("PAL Skip Frame :", new[] { "1", "2", "3", "4", "5", "6" }, null); // 8
+                var palSkipStrings = GetPalSkipFrameString(song.NoteLength, song.PalFrameSkipPattern, out var palSkipBools);
+
+                dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, 1, 16); // 3
+                dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.DefaultPatternLength / song.NoteLength, 2, 64); // 4
+                dlg.Properties.AddIntegerRange("Notes per Bar : ", song.BarLength / song.NoteLength, 2, 32); // 5
+                dlg.Properties.AddLabel("BPM :", song.BPM.ToString()); // 6
+                dlg.Properties.AddLabel("PAL Error :", $"{Song.ComputePalError(song.NoteLength):0.##} %"); // 7
+                dlg.Properties.AddStringListMulti("PAL Skip Frame :", palSkipStrings, palSkipBools); // 8
                 dlg.ValidateProperties += SongProperties_ValidateProperties;
             }
 
@@ -1282,8 +1298,15 @@ namespace FamiStudio
         {
             if (selectedSong.Project.TempoMode == Project.TempoFamiTracker)
             {
+                if (idx == 3 || idx == 4) // 3/4 = Tempo/Speed
+                {
+                    var tempo = props.GetPropertyValue<int>(3);
+                    var speed = props.GetPropertyValue<int>(4);
+
+                    props.SetLabelText(7, Song.ComputeFamiTrackerBPM(speed, tempo).ToString());
+                }
                 // MATTT : Change bar length.
-                if (idx == 5) // 5 = pattern length.
+                else if (idx == 5) // 5 = pattern length.
                 {
                     props.UpdateIntegerRange(6, 2, (int)value);
                 }
@@ -1294,19 +1317,13 @@ namespace FamiStudio
                 {
                     int noteLength = (int)value;
 
-                    props.SetLabelText(6, Song.ComputeBPM(noteLength).ToString());
+                    props.SetLabelText(6, Song.ComputeFamiStudioBPM(noteLength).ToString());
                     props.SetLabelText(7, $"{Song.ComputePalError(noteLength):0.##} %");
 
                     var palSkipPattern = Song.GetDefaultPalFrameSkipPattern(noteLength);
-                    var labels = new string[noteLength];
-                    var checkBoxes = new bool[noteLength];
-                    for (int i = 0; i < noteLength; i++)
-                    {
-                        labels[i] = i.ToString();
-                        checkBoxes[i] = (palSkipPattern & (1 << i)) != 0;
-                    }
+                    var palSkipStrings = GetPalSkipFrameString(noteLength, palSkipPattern, out var palSkipBools);
 
-                    props.UpdateMultiStringList(8, labels, checkBoxes);
+                    props.UpdateMultiStringList(8, palSkipStrings, palSkipBools);
                 }
             }
         }

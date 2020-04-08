@@ -521,9 +521,9 @@ namespace FamiStudio
         public readonly static int[] PalNoteLengthLookup = new[]
         {
             0,  // 0 (unused)
-            1,  // 1 (unused)
-            2,  // 2 (unused)
-            2,  // 3
+            1,  // 1 (terrible)
+            2,  // 2 (terrible)
+            3,  // 3 (terrible)
             3,  // 4
             4,  // 5
             5,  // 6
@@ -539,9 +539,25 @@ namespace FamiStudio
             14  // 16
         };
 
-        public static int ComputeBPM(int noteLength)
+        public static int ComputeFamiTrackerBPM(int speed, int tempo)
+        {
+            return tempo * 6 / speed;
+        }
+
+        public static int ComputeFamiStudioBPM(int noteLength)
         {
             return 900 / noteLength;
+        }
+
+        public int BPM
+        {
+            get
+            {
+                if (project.TempoMode == Project.TempoFamiStudio)
+                    return ComputeFamiStudioBPM(noteLength);
+                else
+                    return ComputeFamiTrackerBPM(famitrackerSpeed, famitrackerTempo);
+            }
         }
         
         public static float ComputePalError(int noteLength)
