@@ -861,7 +861,6 @@ namespace FamiStudio
 
             song.RemoveEmptyPatterns();
             song.UpdatePatternStartNotes();
-            project.SortInstruments();
             project.DeleteUnusedInstruments();
             project.UpdateAllLastValidNotesAndVolume();
 

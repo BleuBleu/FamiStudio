@@ -692,6 +692,7 @@ namespace FamiStudio
             }
 
             instruments = new List<Instrument>(usedInstruments);
+            SortInstruments();
         }
 
         public void DeleteUnusedSamples()

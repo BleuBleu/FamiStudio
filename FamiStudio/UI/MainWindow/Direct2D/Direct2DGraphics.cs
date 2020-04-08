@@ -28,7 +28,6 @@ namespace FamiStudio
         private Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
         private Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
         private StrokeStyle strokeStyleMiter;
-        private StrokeStyle strokeStyleDashed;
 
         public Factory Factory => factory;
         public WindowRenderTarget RenderTarget => renderTarget;
@@ -48,7 +47,6 @@ namespace FamiStudio
             renderTarget.AntialiasMode = AntialiasMode.Aliased;
 
             strokeStyleMiter  = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
-            strokeStyleDashed = new StrokeStyle(factory, new StrokeStyleProperties() { DashStyle = DashStyle.Dash });
         }
 
         public void Dispose()
@@ -195,11 +193,6 @@ namespace FamiStudio
             renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush, width);
         }
 
-        public void DrawDashedLine(float x0, float y0, float x1, float y1, Brush brush)
-        {
-            renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush, 1.0f, strokeStyleDashed);
-        }
-
         public void DrawRectangle(RawRectangleF rect, Brush brush, float width = 1.0f)
         {
             rect.Left += 0.5f;
@@ -293,6 +286,15 @@ namespace FamiStudio
         public Brush CreateSolidBrush(Color color)
         {
             return new SolidColorBrush(renderTarget, ToRawColor4(color));
+        }
+
+        public Brush CreateBitmapBrush(Bitmap bmp, bool wrapX, bool wrapY)
+        {
+            return new BitmapBrush(renderTarget, bmp, new BitmapBrushProperties
+            {
+                ExtendModeX = wrapX ? ExtendMode.Wrap : ExtendMode.Clamp,
+                ExtendModeY = wrapY ? ExtendMode.Wrap : ExtendMode.Clamp
+            });
         }
 
         public Brush CreateHorizontalGradientBrush(float x0, float x1, Color color0, Color color1)

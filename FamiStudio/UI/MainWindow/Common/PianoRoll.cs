@@ -127,6 +127,7 @@ namespace FamiStudio
         RenderBrush selectionNoteBrush;
         RenderBrush attackBrush;
         RenderBrush iconTransparentBrush;
+        RenderBrush dashedLineBrush;
         RenderBitmap bmpLoop;
         RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
@@ -459,6 +460,7 @@ namespace FamiStudio
             selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
             attackBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.BlackColor));
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, ThemeBase.LightGreyFillColor2));
+            dashedLineBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
             bmpEffects[Note.EffectVolume] = g.CreateBitmapFromResource("VolumeSmall");
@@ -1267,7 +1269,7 @@ namespace FamiStudio
                                 else if (i % noteLength == 0)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush2);
                                 else if (zoomLevel >= -1)
-                                    g.DrawDashedLine(x, 0, x, Height, theme.DarkGreyLineBrush3);
+                                    g.DrawLine(x, 0, x, Height, dashedLineBrush /*theme.DarkGreyLineBrush3*/);
                             }
                         }
                         else
