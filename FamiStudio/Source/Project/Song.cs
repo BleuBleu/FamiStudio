@@ -15,6 +15,14 @@ namespace FamiStudio
             public int noteLength;          // 0 = default song note length (only used by FamiStudio tempo)
             public int barLength;           // 0 = default song bar length (only used by FamiStudio tempo)
             public int palFrameSkipPattern; // 0 = default from song (only used by FamiStudio tempo)
+
+            public void Clear()
+            {
+                patternLength = 0;
+                noteLength = 0;
+                barLength = 0;
+                palFrameSkipPattern = 0;
+            }
         };
 
         private int id;
@@ -325,6 +333,7 @@ namespace FamiStudio
 
         public void ClearPatternCustomSettings(int patternIdx)
         {
+            patternCustomSettings[patternIdx].Clear();
             UpdatePatternStartNotes();
         }
 
@@ -332,22 +341,21 @@ namespace FamiStudio
         {
             Debug.Assert(customPatternLength > 0 && customPatternLength < Pattern.MaxLength);
 
+            patternCustomSettings[patternIdx].Clear();
+
             if (project.TempoMode == Project.TempoFamiTracker)
             {
                 Debug.Assert(customNoteLength == 0);
                 Debug.Assert(customBarLength  == 0);
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
-                patternCustomSettings[patternIdx].barLength = 0;
-                patternCustomSettings[patternIdx].noteLength = 0;
-                patternCustomSettings[patternIdx].palFrameSkipPattern = 0;
             }
             else
             {
                 Debug.Assert(customPatternLength % customNoteLength == 0);
                 Debug.Assert(customNoteLength != 0);
                 Debug.Assert(customBarLength != 0);
-                Debug.Assert(Utils.NumberOfSetBits(customPalPattern) == PalNoteLengthLookup[customNoteLength]);
+                Debug.Assert(Utils.NumberOfSetBits(customPalPattern) == (customNoteLength - PalNoteLengthLookup[customNoteLength]));
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
                 patternCustomSettings[patternIdx].barLength = customBarLength;
