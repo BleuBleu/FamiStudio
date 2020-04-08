@@ -101,7 +101,7 @@ namespace FamiStudio
 
                 for (int i = 0; i < song.Length; i++)
                 {
-                    if (song.PatternHasCustomLength(i))
+                    if (song.PatternHasCustomSettings(i))
                         lines.Add($"\t\tPatternInstanceParams Time=\"{i}\" Length=\"{song.GetPatternLength(i)}\"");
                 }
 
@@ -299,7 +299,7 @@ namespace FamiStudio
                         }
                         case "PatternInstanceParams":
                         {
-                            song.SetPatternLength(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]));
+                            song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]));
                             break;
                         }
                         case "Channel":

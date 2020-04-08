@@ -11,10 +11,11 @@ namespace FamiStudio
 
         struct PatternCustomSetting
         {
-            public byte patternLength; // 0 = default song pattern length
-            public byte noteLength;    // 0 = default song note length (only used by FamiStudio tempo)
-            public byte barLength;     // 0 = default song bar length (only used by FamiStudio tempo)
-        }
+            public int patternLength;       // 0 = default song pattern length
+            public int noteLength;          // 0 = default song note length (only used by FamiStudio tempo)
+            public int barLength;           // 0 = default song bar length (only used by FamiStudio tempo)
+            public int palFrameSkipPattern; // 0 = default from song (only used by FamiStudio tempo)
+        };
 
         private int id;
         private Project project;
@@ -247,7 +248,7 @@ namespace FamiStudio
             barLength = Math.Min(barLength, patternLength);
 
             for (int i = 0; i < songLength; i++)
-                SetPatternLength(i, patternCustomSettings[i].patternLength);
+                SetPatternCustomSettings(i, patternCustomSettings[i].patternLength);
 
             UpdatePatternStartNotes();
         }
@@ -322,19 +323,58 @@ namespace FamiStudio
             return null;
         }
 
-        public void SetPatternLength(int patternIdx, int len)
+        public void ClearPatternCustomSettings(int patternIdx)
         {
-            if (len <= 0 || len >= Pattern.MaxLength)
-                patternCustomSettings[patternIdx].patternLength = 0;
+            UpdatePatternStartNotes();
+        }
+
+        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customNoteLength = 0, int customBarLength = 0, int customPalPattern = 0)
+        {
+            Debug.Assert(customPatternLength > 0 && customPatternLength < Pattern.MaxLength);
+
+            if (project.TempoMode == Project.TempoFamiTracker)
+            {
+                Debug.Assert(customNoteLength == 0);
+                Debug.Assert(customBarLength  == 0);
+
+                patternCustomSettings[patternIdx].patternLength = customPatternLength;
+                patternCustomSettings[patternIdx].barLength = 0;
+                patternCustomSettings[patternIdx].noteLength = 0;
+                patternCustomSettings[patternIdx].palFrameSkipPattern = 0;
+            }
             else
-                patternCustomSettings[patternIdx].patternLength = (byte)len;
+            {
+                Debug.Assert(customPatternLength % customNoteLength == 0);
+                Debug.Assert(customNoteLength != 0);
+                Debug.Assert(customBarLength != 0);
+                Debug.Assert(Utils.NumberOfSetBits(customPalPattern) == PalNoteLengthLookup[customNoteLength]);
+
+                patternCustomSettings[patternIdx].patternLength = customPatternLength;
+                patternCustomSettings[patternIdx].barLength = customBarLength;
+                patternCustomSettings[patternIdx].noteLength = customNoteLength;
+                patternCustomSettings[patternIdx].palFrameSkipPattern = customPalPattern;
+            }
 
             UpdatePatternStartNotes();
         }
 
-        public bool PatternHasCustomLength(int patternIdx)
+        public bool PatternHasCustomSettings(int patternIdx)
         {
             return patternCustomSettings[patternIdx].patternLength != 0;
+        }
+
+        public int GetPatternNoteLength(int patternIdx)
+        {
+            Debug.Assert(project.TempoMode == Project.TempoFamiStudio);
+            int len = patternCustomSettings[patternIdx].noteLength;
+            return len == 0 ? noteLength : len;
+        }
+
+        public int GetPatternBarLength(int patternIdx)
+        {
+            Debug.Assert(project.TempoMode == Project.TempoFamiStudio);
+            int len = patternCustomSettings[patternIdx].barLength;
+            return len == 0 ? barLength : len;
         }
 
         public int GetPatternLength(int patternIdx)
@@ -675,7 +715,7 @@ namespace FamiStudio
                             // Converts old Skip effects to custom pattern instances lengths.
                             if (note.FxSkip != 0xff)
                             {
-                                SetPatternLength(i, kv.Key + 1);
+                                SetPatternCustomSettings(i, kv.Key + 1);
                             }
                         }
                     }
@@ -769,6 +809,7 @@ namespace FamiStudio
                     buffer.Serialize(ref patternCustomSettings[i].patternLength);
                     buffer.Serialize(ref patternCustomSettings[i].noteLength);
                     buffer.Serialize(ref patternCustomSettings[i].barLength);
+                    buffer.Serialize(ref patternCustomSettings[i].palFrameSkipPattern);
                 }
             }
 

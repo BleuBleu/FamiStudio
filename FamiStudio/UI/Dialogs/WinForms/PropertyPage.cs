@@ -44,6 +44,7 @@ namespace FamiStudio
         public event PropertyWantsCloseDelegate PropertyWantsClose;
 
         public int LayoutHeight => layoutHeight;
+        public int PropertyCount => properties.Count;
 
         public PropertyPage()
         {
@@ -415,7 +416,16 @@ namespace FamiStudio
 
         public void SetPropertyEnabled(int idx, bool enabled)
         {
-            properties[idx].control.Enabled = enabled;
+            var label = properties[idx].control as Label;
+
+            if (label != null)
+            {
+                label.ForeColor = enabled ? ThemeBase.LightGreyFillColor2 : ThemeBase.MediumGreyFillColor1;
+            }
+            else
+            {
+                properties[idx].control.Enabled = enabled;
+            }
         }
 
         public object GetPropertyValue(int idx)

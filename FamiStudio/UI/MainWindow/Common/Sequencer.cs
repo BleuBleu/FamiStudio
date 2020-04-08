@@ -359,7 +359,7 @@ namespace FamiStudio
 
                 g.PushClip(1, 0, sx, Height);
                 var text = i.ToString();
-                if (Song.PatternHasCustomLength(i))
+                if (Song.PatternHasCustomSettings(i))
                     text += "*";
                 g.DrawText(text, ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx);
 
@@ -871,7 +871,7 @@ namespace FamiStudio
                 for (int i = 0; i < patterns.GetLength(0); i++)
                 {
                     extraInfo[i].customLength = 
-                        Song.PatternHasCustomLength(minSelectedPatternIdx + i) ? 
+                        Song.PatternHasCustomSettings(minSelectedPatternIdx + i) ? 
                             Song.GetPatternLength(minSelectedPatternIdx + i) : 0;
                 }
             }
@@ -942,7 +942,7 @@ namespace FamiStudio
             if (extraInfo != null)
             {
                 for (int i = 0; i < patterns.GetLength(0); i++)
-                    Song.SetPatternLength(i + minSelectedPatternIdx, extraInfo[i].customLength);
+                    Song.SetPatternCustomSettings(i + minSelectedPatternIdx, extraInfo[i].customLength);
             }
 
             App.UndoRedoManager.EndTransaction();
@@ -1013,7 +1013,7 @@ namespace FamiStudio
                         if (extraInfo != null)
                         {
                             for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                                Song.SetPatternLength(j + patternIdxDelta, extraInfo[j - minSelectedPatternIdx].customLength);
+                                Song.SetPatternCustomSettings(j + patternIdxDelta, extraInfo[j - minSelectedPatternIdx].customLength);
                         }
 
                         App.UndoRedoManager.EndTransaction();
@@ -1060,7 +1060,7 @@ namespace FamiStudio
             if (clearCustomPatternLengths)
             {
                 for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                    Song.SetPatternLength(j, 0);
+                    Song.SetPatternCustomSettings(j, 0);
             }
 
             if (trans)
@@ -1229,7 +1229,7 @@ namespace FamiStudio
             }
             else if (IsMouseInHeader(e))
             {
-                tooltip = "{MouseLeft} Seek - {MouseLeft}{MouseLeft} Change Pattern Length - {MouseRight} Select Colume - {MouseWheel} Pan";
+                tooltip = "{MouseLeft} Seek - {MouseLeft}{MouseLeft} Customize Pattern - {MouseRight} Select Colume - {MouseWheel} Pan";
             }
             else if (IsMouseInTrackName(e))
             {
@@ -1298,26 +1298,62 @@ namespace FamiStudio
         private void EditPatternCustomSettings(Point pt, int patternIdx)
         {
             var dlg = new PropertyDialog(PointToScreen(pt), 240);
+            var song = Song;
 
-            if (Song.Project.TempoMode == Project.TempoFamiTracker)
+            dlg.Properties.AddBoolean("Custom Pattern :", song.PatternHasCustomSettings(patternIdx)); // 0
+
+            if (song.Project.TempoMode == Project.TempoFamiTracker)
             {
-                dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternHasCustomLength(patternIdx)); // 0
-                dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternLength(patternIdx), 1, Pattern.MaxLength); // 1
+                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx), 1, Pattern.MaxLength); // 1
+                dlg.Properties.AddIntegerRange("Notes Per Bar :", 6, 1, Pattern.MaxLength); // 2
             }
             else
             {
-                //dlg.Properties.AddBoolean("Custom Pattern Length :", Song.PatternHasCustomLength(patternIdx)); // 0
-                //dlg.Properties.AddIntegerRange("Pattern Length :", Song.GetPatternLength(patternIdx), 16, Song.DefaultPatternLength); // 1
+                var noteLength = song.GetPatternNoteLength(patternIdx);
+
+                dlg.Properties.AddIntegerRange("Frames Per Notes:", noteLength, 1, Pattern.MaxLength); // 1
+                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx) / noteLength, 1, Pattern.MaxLength); // 2
+                dlg.Properties.AddIntegerRange("Notes Per Bar :", song.GetPatternBarLength(patternIdx) / noteLength, 1, Pattern.MaxLength); // 3
+                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiStudioBPM(noteLength).ToString()); // 4 MATTT
+                dlg.Properties.AddLabel("PAL Error :", $"{Song.ComputePalError(noteLength):0.##} %"); // 5 MATTT
+                dlg.Properties.AddStringListMulti("PAL Skip Frame :", new[] { "1" }, null); // 6 MATTT
             }
 
+            var enabled = song.PatternHasCustomSettings(patternIdx);
+            for (var i = 1; i < dlg.Properties.PropertyCount; i++)
+                dlg.Properties.SetPropertyEnabled(i, enabled);
+
             dlg.Properties.PropertyChanged += Properties_PropertyChanged;
-            dlg.Properties.SetPropertyEnabled(1, Song.PatternHasCustomLength(patternIdx));
             dlg.Properties.Build();
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                Song.SetPatternLength(patternIdx, dlg.Properties.GetPropertyValue<bool>(0) ? dlg.Properties.GetPropertyValue<int>(1) : 0);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
+
+                var custom = dlg.Properties.GetPropertyValue<bool>(0);
+
+                if (custom)
+                {
+                    if (song.Project.TempoMode == Project.TempoFamiTracker)
+                    {
+                        var patternLength = dlg.Properties.GetPropertyValue<int>(1);
+
+                        song.SetPatternCustomSettings(patternIdx, patternLength);
+                    }
+                    else
+                    {
+                        var noteLength    = dlg.Properties.GetPropertyValue<int>(1);
+                        var patternLength = dlg.Properties.GetPropertyValue<int>(2) * noteLength;
+                        var barLength     = dlg.Properties.GetPropertyValue<int>(3) * noteLength;
+
+                        song.SetPatternCustomSettings(patternIdx, patternLength, noteLength, barLength, 1); // MATTT
+                    }
+                }
+                else
+                {
+                    song.ClearPatternCustomSettings(patternIdx);
+                }
+
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();
                 PatternModified?.Invoke();
@@ -1397,7 +1433,8 @@ namespace FamiStudio
         {
             if (idx == 0)
             {
-                props.SetPropertyEnabled(1, (bool)value);
+                for (var i = 1; i < props.PropertyCount; i++)
+                    props.SetPropertyEnabled(i, (bool)value);
             }
         }
 

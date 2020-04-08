@@ -1252,20 +1252,22 @@ namespace FamiStudio
                     for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                     {
                         var patternLen = Song.GetPatternLength(p);
+                        var barLength = Song.GetPatternBarLength(p);
 
                         if (Song.Project.TempoMode == Project.TempoFamiStudio)
                         {
+                            var noteLength = Song.GetPatternNoteLength(p);
+
                             for (int i = p == 0 ? 1 : 0; i < patternLen; i++)
                             {
                                 int x = (Song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
 
-                                if (i % Song.BarLength == 0) 
+                                if (i % barLength == 0) 
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, i == 0 ? 3.0f : 1.0f);
-                                else if (i % Song.NoteLength == 0)
+                                else if (i % noteLength == 0)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush2);
                                 else if (zoomLevel >= -1)
                                     g.DrawDashedLine(x, 0, x, Height, theme.DarkGreyLineBrush3);
-                                    //g.DrawDashedLine(x, 0, x, Height, frameLineBrush);
                             }
                         }
                         else
@@ -1274,7 +1276,7 @@ namespace FamiStudio
                             {
                                 int x = (Song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
 
-                                if (i % Song.BarLength == 0)
+                                if (i % barLength == 0)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, i == 0 ? 3.0f : 1.0f);
                                 else if (zoomLevel >= -1)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush2);

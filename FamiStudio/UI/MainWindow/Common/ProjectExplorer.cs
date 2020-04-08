@@ -1201,8 +1201,8 @@ namespace FamiStudio
             {
                 dlg.Properties.AddIntegerRange("Tempo :", song.FamitrackerTempo, 32, 255); // 3
                 dlg.Properties.AddIntegerRange("Speed :", song.FamitrackerSpeed, 1, 31); // 4
-                dlg.Properties.AddIntegerRange("Pattern Length :", song.DefaultPatternLength, 16, 256); // 5
-                dlg.Properties.AddIntegerRange("Bar Length :", song.BarLength, 2, song.DefaultPatternLength); // 6
+                dlg.Properties.AddIntegerRange("Notes per Pattern :", song.DefaultPatternLength, 16, 256); // 5
+                dlg.Properties.AddIntegerRange("Notes per Bar :", song.BarLength, 2, song.DefaultPatternLength); // 6
                 dlg.Properties.AddLabel("BPM :", song.BPM.ToString()); // 7
             }
             else

@@ -541,7 +541,7 @@ namespace FamiStudio
                         if (pattern != null && patternLengths.TryGetValue(pattern, out var instLength))
                         {
                             if (instLength < s.GetPatternLength(p))
-                                s.SetPatternLength(p, instLength);
+                                s.SetPatternCustomSettings(p, instLength);
                         }
                     }
                 }
