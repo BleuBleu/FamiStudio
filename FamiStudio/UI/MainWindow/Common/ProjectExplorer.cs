@@ -1061,20 +1061,10 @@ namespace FamiStudio
                     {
                         var instrument = button.instrument;
 
-                        if (subButtonType == SubButtonType.ArpeggioEnvelope ||
-                            subButtonType == SubButtonType.PitchEnvelope ||
-                            subButtonType == SubButtonType.VolumeEnvelope)
+                        if (subButtonType < SubButtonType.EnvelopeMax)
                         {
-                            int envType = Envelope.Volume;
-
-                            switch (subButtonType)
-                            {
-                                case SubButtonType.ArpeggioEnvelope: envType = Envelope.Arpeggio; break;
-                                case SubButtonType.PitchEnvelope: envType = Envelope.Pitch;    break;
-                            }
-
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);
-                            instrument.Envelopes[envType].Length = 0;
+                            instrument.Envelopes[(int)subButtonType].Length = 0;
                             App.UndoRedoManager.EndTransaction();
                             ConditionalInvalidate();
                         }
