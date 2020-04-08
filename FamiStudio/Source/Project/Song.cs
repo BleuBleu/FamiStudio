@@ -255,9 +255,6 @@ namespace FamiStudio
             patternLength = newLength;
             barLength = Math.Min(barLength, patternLength);
 
-            for (int i = 0; i < songLength; i++)
-                SetPatternCustomSettings(i, patternCustomSettings[i].patternLength);
-
             UpdatePatternStartNotes();
         }
 
@@ -373,15 +370,15 @@ namespace FamiStudio
 
         public int GetPatternNoteLength(int patternIdx)
         {
-            Debug.Assert(project.TempoMode == Project.TempoFamiStudio);
             int len = patternCustomSettings[patternIdx].noteLength;
+            Debug.Assert(project.TempoMode == Project.TempoFamiStudio || len == 0);
             return len == 0 ? noteLength : len;
         }
 
         public int GetPatternBarLength(int patternIdx)
         {
-            Debug.Assert(project.TempoMode == Project.TempoFamiStudio);
             int len = patternCustomSettings[patternIdx].barLength;
+            Debug.Assert(project.TempoMode == Project.TempoFamiStudio || len == 0);
             return len == 0 ? barLength : len;
         }
 
@@ -445,7 +442,6 @@ namespace FamiStudio
         {
             get
             {
-                Debug.Assert(project.TempoMode == Project.TempoFamiStudio);
                 return noteLength;
             }
         }

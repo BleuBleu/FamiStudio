@@ -346,7 +346,7 @@ namespace FamiStudio
             for (int i = vals.Count - 1; i >= 0; i--)
             {
                 var note = vals[i];
-                if (note == null || note.IsEmpty && !note.HasJumpOrSkip)
+                if (note == null || note.IsEmpty)
                     notes.Remove(keys[i]);
             }
 
@@ -429,7 +429,10 @@ namespace FamiStudio
                 {
                     var note = new Note();
                     note.SerializeStatePreVer5(buffer);
-                    SetNoteAt(i, note);
+
+                    // Note using SetNoteAt to preserve jumps/skips
+                    if (!note.IsEmpty || note.HasJumpOrSkip)
+                        notes[i] = note;
                 }
             }
             else

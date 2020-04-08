@@ -1305,7 +1305,6 @@ namespace FamiStudio
             if (song.Project.TempoMode == Project.TempoFamiTracker)
             {
                 dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx), 1, Pattern.MaxLength); // 1
-                dlg.Properties.AddIntegerRange("Notes Per Bar :", 6, 1, Pattern.MaxLength); // 2
             }
             else
             {

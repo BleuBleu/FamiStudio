@@ -373,7 +373,7 @@ namespace FamiStudio
 
         private bool OnMachineEnabled()
         {
-            return App.Project.ExpansionAudio == Project.ExpansionNone;
+            return App.Project != null && App.Project.ExpansionAudio == Project.ExpansionNone;
         }
 
         private RenderBitmap OnMachineGetBitmap()
