@@ -54,7 +54,19 @@ Breaking changes
 ================
 - VRC6 saw duty (mention in FamiTracker compatibility section)
 
-========================
+1.5.0 Trailer
+=============
+- ROM export
+- All expansions
+- Fine pitch track
+- NSF import
+- Tempo/PAL support
+- Custom pattern length/tempo + loop points
+- Duty cycle envelopes
+- Transform dialog
+- Binary FTM import
+- FamiStudio text import/export
+- Note dragging + audio preview
 
 Backlog:
 =========
