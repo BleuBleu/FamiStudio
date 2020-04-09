@@ -179,7 +179,7 @@ namespace FamiStudio
                 case Note.EffectVibratoDepth: return type != Noise && type != Dpcm;
                 case Note.EffectFdsModDepth: return type == FdsWave;
                 case Note.EffectFdsModSpeed: return type == FdsWave;
-                case Note.EffectSpeed: return song.Project.TempoMode == Project.TempoFamiTracker;
+                case Note.EffectSpeed: return song.UsesFamiTrackerTempo;
             }
 
             return true;
@@ -436,7 +436,7 @@ namespace FamiStudio
             }
         }
 
-        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
+        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
         {
             Debug.Assert(note.IsMusical);
 
@@ -459,8 +459,7 @@ namespace FamiStudio
                 {
                     pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
 
-                    // MATTT: We use the default speed here, not the current speed. This is wrong.
-                    var frameCount = noteDuration * song.FamitrackerSpeed + 1;
+                    var frameCount = song.UsesFamiTrackerTempo ? Math.Floor(noteDuration * famitrackerSpeed * (song.FamitrackerTempo / 150.0f) + 1) : noteDuration + 1;
                     var floatStep  = Math.Abs(pitchDelta) / (float)frameCount;
 
                     stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);

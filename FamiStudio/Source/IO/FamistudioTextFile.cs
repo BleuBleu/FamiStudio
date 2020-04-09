@@ -97,7 +97,7 @@ namespace FamiStudio
             // Songs
             foreach (var song in project.Songs)
             {
-                lines.Add($"\tSong Name=\"{song.Name}\" Length=\"{song.Length}\" PatternLength=\"{song.DefaultPatternLength}\" BarLength=\"{song.BarLength}\" Tempo=\"{song.FamitrackerTempo}\" Speed=\"{song.FamitrackerSpeed}\" LoopPoint=\"{song.LoopPoint}\"");
+                lines.Add($"\tSong Name=\"{song.Name}\" Length=\"{song.Length}\" PatternLength=\"{song.PatternLength}\" BarLength=\"{song.BarLength}\" Tempo=\"{song.FamitrackerTempo}\" Speed=\"{song.FamitrackerSpeed}\" LoopPoint=\"{song.LoopPoint}\"");
 
                 for (int i = 0; i < song.Length; i++)
                 {
@@ -139,7 +139,9 @@ namespace FamiStudio
                                     // Add duration for convenience.
                                     var p = Array.IndexOf(channel.PatternInstances, pattern);
                                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
-                                    channel.ComputeSlideNoteParams(note, p, kv.Key, noteTable, out _, out _, out var duration);
+
+                                    // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed.
+                                    channel.ComputeSlideNoteParams(note, p, kv.Key, song.FamitrackerSpeed, noteTable, out _, out _, out var duration); 
 
                                     // MATTT: PAL here (check of channeltype).
                                     noteLine += $" SlideTarget=\"{Note.GetFriendlyName(note.SlideNoteTarget)}\" FrameCountNTSC=\"{duration}\""; 

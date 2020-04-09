@@ -481,7 +481,7 @@ namespace FamiStudio
                     pattern = new Pattern();
 
                 var fxCount = songEffectColumnCount[song][chanIdx];
-                var fxData  = new RowFxData[song.DefaultPatternLength, fxCount + 1];
+                var fxData  = new RowFxData[song.PatternLength, fxCount + 1];
                 patternFxData[pattern] = fxData;
 
                 for (int i = 0; i < items; i++)

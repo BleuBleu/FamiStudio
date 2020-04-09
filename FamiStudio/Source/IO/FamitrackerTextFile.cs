@@ -420,7 +420,7 @@ namespace FamiStudio
 
                         //var fxData = new RowFxData[song.PatternLength];
                         if (!patternFxData.ContainsKey(pattern))
-                            patternFxData[pattern] = new RowFxData[song.DefaultPatternLength, 4];
+                            patternFxData[pattern] = new RowFxData[song.PatternLength, 4];
 
                         // Note
                         if (noteData[0] == "---")
@@ -794,7 +794,7 @@ namespace FamiStudio
                 song.CleanupUnusedPatterns();
                 song.DuplicateInstancesWithDifferentLengths();
 
-                lines.Add($"TRACK{song.DefaultPatternLength,4}{song.FamitrackerSpeed,4}{song.FamitrackerTempo,4} \"{song.Name}\"");
+                lines.Add($"TRACK{song.PatternLength,4}{song.FamitrackerSpeed,4}{song.FamitrackerTempo,4} \"{song.Name}\"");
                 lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(3, song.Channels.Length))}");
                 lines.Add("");
 
@@ -847,7 +847,9 @@ namespace FamiStudio
                             {
                                 // TODO: PAL.
                                 var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
-                                channel.ComputeSlideNoteParams(note, p, time, noteTable, out _, out int stepSize, out _); // MATTT: N163 & VRC7 slides.
+
+                                // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed.
+                                channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, noteTable, out _, out int stepSize, out _); // MATTT: N163 & VRC7 slides.
 
                                 var absNoteDelta = Math.Abs(note.Value - note.SlideNoteTarget);
 
@@ -935,7 +937,7 @@ namespace FamiStudio
                             {
                                 if (p == song.Length - 1 && song.LoopPoint >= 0)
                                     effectString += $" B{song.LoopPoint:X2}";
-                                else if (patternLen != song.DefaultPatternLength)
+                                else if (patternLen != song.PatternLength)
                                     effectString += $" D00";
                             }
 
@@ -971,7 +973,7 @@ namespace FamiStudio
                 {
                     lines.Add($"PATTERN {j:X2}");
 
-                    for (int p = 0; p < song.DefaultPatternLength; p++)
+                    for (int p = 0; p < song.PatternLength; p++)
                     {
                         var line = $"ROW {p:X2}";
                         for (int c = 0; c < song.Channels.Length; c++)

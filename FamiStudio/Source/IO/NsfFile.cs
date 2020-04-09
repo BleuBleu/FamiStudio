@@ -828,8 +828,8 @@ namespace FamiStudio
 
             for (int i = 0; i < numFrames; i++)
             {
-                p = f / song.DefaultPatternLength;
-                n = f % song.DefaultPatternLength;
+                p = f / song.PatternLength;
+                n = f % song.PatternLength;
 
                 var playCalled = 0;
                 do

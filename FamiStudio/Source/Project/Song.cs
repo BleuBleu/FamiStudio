@@ -51,9 +51,13 @@ namespace FamiStudio
         public Color Color { get => color; set => color = value; }
         public string Name { get => name; set => name = value; }
         public int Length { get => songLength; }
-        public int DefaultPatternLength { get => patternLength; }
+        public int PatternLength { get => patternLength; }
         public int BarLength { get => barLength; }
         public int LoopPoint { get => loopPoint; }
+        public bool UsesFamiStudioTempo  => project.UsesFamiStudioTempo;
+        public bool UsesFamiTrackerTempo => project.UsesFamiTrackerTempo;
+        public int FamitrackerTempo { get => famitrackerTempo; set => famitrackerTempo = value; }
+        public int FamitrackerSpeed { get => famitrackerSpeed; set => famitrackerSpeed = value; }
 
         public Song()
         {
@@ -67,7 +71,14 @@ namespace FamiStudio
             this.name = name;
             this.color = Color.Azure;
 
-            if (project.TempoMode == Project.TempoFamiStudio)
+            SetDefaultsForTempoMode(project.TempoMode);
+            CreateChannels();
+            UpdatePatternStartNotes();
+        }
+
+        public void SetDefaultsForTempoMode(int tempoMode)
+        {
+            if (tempoMode == Project.TempoFamiStudio)
             {
                 noteLength = 10;
                 palFrameSkipPattern = GetDefaultPalFrameSkipPattern(noteLength);
@@ -81,9 +92,6 @@ namespace FamiStudio
             }
 
             patternLength = barLength * 4;
-
-            CreateChannels();
-            UpdatePatternStartNotes();
         }
 
         public void CreateChannels(bool preserve = false, int numChannelsToPreserve = Channel.ExpansionAudioStart)
@@ -303,7 +311,7 @@ namespace FamiStudio
 
         public void SetSensibleBarLength()
         {
-            if (project.TempoMode == Project.TempoFamiTracker)
+            if (UsesFamiTrackerTempo)
             {
                 var barLengths = GenerateBarLengths(patternLength);
                 barLength = barLengths[barLengths.Length / 2];
@@ -340,7 +348,7 @@ namespace FamiStudio
 
             patternCustomSettings[patternIdx].Clear();
 
-            if (project.TempoMode == Project.TempoFamiTracker)
+            if (project.UsesFamiTrackerTempo)
             {
                 Debug.Assert(customNoteLength == 0);
                 Debug.Assert(customBarLength  == 0);
@@ -371,15 +379,22 @@ namespace FamiStudio
         public int GetPatternNoteLength(int patternIdx)
         {
             int len = patternCustomSettings[patternIdx].noteLength;
-            Debug.Assert(project.TempoMode == Project.TempoFamiStudio || len == 0);
+            Debug.Assert(UsesFamiStudioTempo || len == 0);
             return len == 0 ? noteLength : len;
         }
 
         public int GetPatternBarLength(int patternIdx)
         {
             int len = patternCustomSettings[patternIdx].barLength;
-            Debug.Assert(project.TempoMode == Project.TempoFamiStudio || len == 0);
+            Debug.Assert(UsesFamiStudioTempo || len == 0);
             return len == 0 ? barLength : len;
+        }
+
+        public int GetPatternPalFrameSkip(int patternIdx)
+        {
+            int len = patternCustomSettings[patternIdx].palFrameSkipPattern;
+            Debug.Assert(UsesFamiStudioTempo || len == 0);
+            return len == 0 ? palFrameSkipPattern : len;
         }
 
         public int GetPatternLength(int patternIdx)
@@ -458,58 +473,79 @@ namespace FamiStudio
             return 2;
         }
 
-        public void SetNoteLength(int newNoteLength, bool convert)
+        public void ResizePatternNotes(int p, int newNoteLength, HashSet<Pattern> processedPatterns = null)
         {
-            // MATTT: Handle custom pattern note lengths and stuff.
+            Debug.Assert(UsesFamiStudioTempo);
+
+            var oldPatternLength = GetPatternLength(p);
+            var oldNoteLength    = GetPatternNoteLength(p);
+
+            foreach (var channel in channels)
+            { 
+                var pattern = channel.PatternInstances[p];
+
+                if (pattern == null || (processedPatterns != null && processedPatterns.Contains(pattern)))
+                    continue;
+
+                var oldNotes = new SortedList<int, Note>();
+
+                foreach (var kv in pattern.Notes)
+                    oldNotes[kv.Key] = kv.Value.Clone();
+
+                pattern.Notes.Clear();
+
+                // Resize the pattern while applying some kind of priority in case we
+                // 2 notes append to map to the same note (when shortening notes). 
+                //
+                // From highest to lowest:
+                //   1) Note attacks and stop notes.
+                //   2) Release notes
+                //   3) Anything else that is not an empty note.
+                //   4) Empty note.
+
+                // TODO: Merge notes/slide + fx seperately.
+                for (int i = 0; i < oldPatternLength / oldNoteLength; i++)
+                {
+                    for (int j = 0; j < oldNoteLength; j++)
+                    {
+                        int oldIdx = i * oldNoteLength + j;
+                        int newIdx = i * newNoteLength + (int)Math.Round(j / (float)(oldNoteLength - 1) * (newNoteLength - 1));
+
+                        oldNotes.TryGetValue(oldIdx, out var oldNote);
+                        pattern.Notes.TryGetValue(newIdx, out var newNote);
+
+                        if (oldNote == null)
+                            continue;
+
+                        int oldPriority = GetNoteResizePriority(oldNote);
+                        int newPriority = GetNoteResizePriority(newNote);
+
+                        if (oldPriority < newPriority)
+                            pattern.SetNoteAt(newIdx, oldNote);
+                    }
+                }
+
+                pattern.ClearLastValidNoteCache();
+
+                if (processedPatterns != null)
+                    processedPatterns.Add(pattern);
+            }
+        }
+
+        public void ResizeNotes(int newNoteLength, bool convert)
+        {
+            Debug.Assert(UsesFamiStudioTempo);
+
             if (convert)
             {
                 Debug.Assert(patternLength % noteLength == 0);
 
-                foreach (var channel in channels)
+                var processedPatterns = new HashSet<Pattern>();
+
+                for (int p = 0; p < songLength; p++)
                 {
-                    // MATTT custom pattern length.
-                    foreach (var pattern in channel.Patterns)
-                    {
-                        var oldNotes = new SortedList<int, Note>();
-
-                        foreach (var kv in pattern.Notes)
-                            oldNotes[kv.Key] = kv.Value.Clone();
-
-                        pattern.Notes.Clear();
-
-                        // Resize the pattern while applying some kind of priority in case we
-                        // 2 notes append to map to the same note (when shortening notes). 
-                        //
-                        // From highest to lowest:
-                        //   1) Note attacks and stop notes.
-                        //   2) Release notes
-                        //   3) Anything else that is not an empty note.
-                        //   4) Empty note.
-
-                        // TODO: Merge notes/slide + fx seperately.
-                        for (int i = 0; i < patternLength / noteLength; i++)
-                        {
-                            for (int j = 0; j < noteLength; j++)
-                            {
-                                int oldIdx = i * noteLength + j;
-                                int newIdx = i * newNoteLength + (int)Math.Round(j / (float)(noteLength - 1) * (newNoteLength - 1));
-
-                                oldNotes.TryGetValue(oldIdx, out var oldNote);
-                                pattern.Notes.TryGetValue(newIdx, out var newNote);
-
-                                if (oldNote == null)
-                                    continue;
-
-                                int oldPriority = GetNoteResizePriority(oldNote);
-                                int newPriority = GetNoteResizePriority(newNote);
-
-                                if (oldPriority < newPriority)
-                                    pattern.SetNoteAt(newIdx, oldNote);
-                            }
-                        }
-
-                        pattern.ClearLastValidNoteCache();
-                    }
+                    if (!PatternHasCustomSettings(p))
+                        ResizePatternNotes(p, newNoteLength, processedPatterns);
                 }
             }
 
@@ -520,46 +556,17 @@ namespace FamiStudio
         {
             get
             {
-                Debug.Assert(project.TempoMode == Project.TempoFamiStudio);
+                Debug.Assert(UsesFamiStudioTempo);
                 return palFrameSkipPattern;
             }
             set
             {
-                Debug.Assert(project.TempoMode == Project.TempoFamiStudio);
+                Debug.Assert(UsesFamiStudioTempo);
                 Debug.Assert(Utils.NumberOfSetBits(value) == (noteLength - PalNoteLengthLookup[noteLength]));
                 palFrameSkipPattern = value;
             }
         }
         
-        public int FamitrackerTempo
-        {
-            get
-            {
-                // Debug.Assert(project.TempoMode == Project.TempoFamiTracker); MATTT
-                return famitrackerTempo;
-            }
-            set
-            {
-                Debug.Assert(project.TempoMode == Project.TempoFamiTracker);
-                famitrackerTempo = value;
-            }
-        }
-
-
-        public int FamitrackerSpeed
-        {
-            get
-            {
-                // Debug.Assert(project.TempoMode == Project.TempoFamiTracker); MATTT
-                return famitrackerSpeed;
-            }
-            set
-            {
-                //Debug.Assert(project.TempoMode == Project.TempoFamiTracker);
-                famitrackerSpeed = value;
-            }
-        }
-
         // For a given number of NTSC frames (60Hz), the number of PAL frames (50Hz)
         // that minimizes the tempo error.
         public readonly static int[] PalNoteLengthLookup = new[]
@@ -597,7 +604,7 @@ namespace FamiStudio
         {
             get
             {
-                if (project.TempoMode == Project.TempoFamiStudio)
+                if (UsesFamiStudioTempo)
                     return ComputeFamiStudioBPM(noteLength);
                 else
                     return ComputeFamiTrackerBPM(famitrackerSpeed, famitrackerTempo);

@@ -662,7 +662,8 @@ namespace FamiStudio
                             {
                                 var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumChannels);
 
-                                if (channel.ComputeSlideNoteParams(note, p, time, noteTable, out _, out int stepSize, out _))
+                                // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed.
+                                if (channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, noteTable, out _, out int stepSize, out _))
                                 {
                                     patternBuffer.Add($"${0x61:x2}");
                                     patternBuffer.Add($"${(byte)stepSize:x2}");
@@ -803,10 +804,10 @@ namespace FamiStudio
                 }
             }
 
-            for (int factor = 1; factor <= song.DefaultPatternLength; factor++)
+            for (int factor = 1; factor <= song.PatternLength; factor++)
             {
-                if ((song.DefaultPatternLength % factor) == 0 &&
-                    (song.DefaultPatternLength / factor) >= MinPatternLength)
+                if ((song.PatternLength % factor) == 0 &&
+                    (song.PatternLength / factor) >= MinPatternLength)
                 {
                     var splitSong = project.DuplicateSong(song);
                     if (splitSong.Split(factor))

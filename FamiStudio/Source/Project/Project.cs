@@ -58,7 +58,6 @@ namespace FamiStudio
         private string author = "Unknown";
         private string copyright = "";
         private int tempoMode = TempoFamiStudio;
-        //private int tempoMode = TempoFamiTracker;
         private int expansionAudio = ExpansionNone;
         private int expansionNumChannels = 1;
 
@@ -71,6 +70,8 @@ namespace FamiStudio
         public string              ExpansionAudioName => ExpansionNames[expansionAudio];
         public string              ExpansionAudioShortName => ExpansionShortNames[expansionAudio];
         public bool                UsesExpansionAudio => expansionAudio != ExpansionNone;
+        public bool                UsesFamiStudioTempo  => tempoMode == TempoFamiStudio;
+        public bool                UsesFamiTrackerTempo => tempoMode == TempoFamiTracker;
 
         public string Filename   { get => filename; set => filename = value; }
         public string Name       { get => name; set => name = value; }
@@ -648,7 +649,7 @@ namespace FamiStudio
 
         public void ConvertToFamiStudioTempo()
         {
-            Debug.Assert(tempoMode == TempoFamiTracker);
+            Debug.Assert(UsesFamiTrackerTempo);
 
             foreach (var song in songs)
                 song.ConvertToFamiStudioTempo();
@@ -656,11 +657,26 @@ namespace FamiStudio
             tempoMode = TempoFamiStudio;
         }
 
-        public void ConvertToFamiTrackerTempo()
+        public void ConvertToFamiTrackerTempo(bool setDefaults)
         {
-            Debug.Assert(tempoMode == TempoFamiStudio);
+            Debug.Assert(UsesFamiStudioTempo);
 
-            // MATTT: Undone
+            if (setDefaults)
+            {
+                foreach (var song in songs)
+                {
+                    song.SetDefaultsForTempoMode(Project.TempoFamiTracker);
+                    song.UpdatePatternStartNotes();
+                }
+            }
+            else
+            {
+                foreach (var song in songs)
+                {
+                    song.FamitrackerTempo = 150;
+                    song.FamitrackerSpeed = 1;
+                }
+            }
 
             tempoMode = TempoFamiTracker;
         }
