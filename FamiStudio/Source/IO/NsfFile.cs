@@ -54,12 +54,21 @@ namespace FamiStudio
             public fixed byte programSize[3];
         };
 
-        public unsafe bool Save(Project originalProject, FamitoneMusicFile.FamiToneKernel kernel, string filename, int[] songIds, string name, string author, string copyright)
+        public enum NsfMode
         {
-            try
+            NTSC,
+            PAL,
+            Dual
+        };
+
+        public unsafe bool Save(Project originalProject, FamitoneMusicFile.FamiToneKernel kernel, string filename, int[] songIds, string name, string author, string copyright, NsfMode mode)
+        {
+            //try
             {
                 if (songIds.Length == 0)
                     return false;
+
+                Debug.Assert(!originalProject.UsesExpansionAudio || mode == NsfMode.NTSC);
 
                 var project = originalProject.DeepClone();
                 project.RemoveAllSongsBut(songIds);
@@ -79,6 +88,7 @@ namespace FamiStudio
                 header.playAddr = NsfPlayAddr;
                 header.playSpeedNTSC = 16639;
                 header.playSpeedPAL = 19997;
+                header.palNtscFlags = (byte)mode;
                 header.extensionFlags = (byte)(project.ExpansionAudio == Project.ExpansionNone ? 0 : 1 << (project.ExpansionAudio - 1));
                 header.banks[0] = 0;
                 header.banks[1] = 1;
@@ -106,14 +116,21 @@ namespace FamiStudio
                 if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2FS)
                 {
                     kernelBinary += "_fs";
+                }
 
-                    if (project.UsesExpansionAudio)
-                    {
-                        kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
+                switch (mode)
+                {
+                    case NsfMode.NTSC: kernelBinary += "_ntsc"; break;
+                    case NsfMode.PAL:  kernelBinary += "_pal";  break;
+                    case NsfMode.Dual: kernelBinary += "_dual"; break;
+                }
 
-                        if (project.ExpansionAudio == Project.ExpansionN163)
-                            kernelBinary += $"_{project.ExpansionNumChannels}ch";
-                    }
+                if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2FS && project.UsesExpansionAudio)
+                { 
+                    kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
+
+                    if (project.ExpansionAudio == Project.ExpansionN163)
+                        kernelBinary += $"_{project.ExpansionNumChannels}ch";
                 }
 
                 kernelBinary += ".bin";
@@ -197,10 +214,10 @@ namespace FamiStudio
 
                 File.WriteAllBytes(filename, nsfBytes.ToArray());
             }
-            catch
-            {
-                return false;
-            }
+            //catch
+            //{
+            //    return false;
+            //}
 
             return true;
         }

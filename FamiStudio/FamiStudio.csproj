@@ -178,21 +178,25 @@
     <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyDialog.resx">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc6.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_mmc5.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_s5b.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_fds.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc7.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_1ch.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_2ch.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_3ch.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_4ch.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_5ch.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_6ch.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_7ch.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_8ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_fds.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_mmc5.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_n163_1ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_n163_2ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_n163_3ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_n163_4ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_n163_5ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_n163_6ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_n163_7ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_n163_8ch.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_s5b.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_vrc6.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_vrc7.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_pal.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_pal.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

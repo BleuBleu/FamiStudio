@@ -10,12 +10,12 @@ FT_SFX_STREAMS    = 0     ;number of sound effects played at once, 1..4
 FT_DPCM_ENABLE    = 1     ;undefine to exclude all DMC code
 FT_SFX_ENABLE     = 0     ;undefine to exclude all sound effects code
 FT_THREAD         = 0     ;undefine if you are calling sound effects from the same thread as the sound update call
-  
-FT_PAL_SUPPORT    = 0     ;undefine to exclude PAL support
-FT_NTSC_SUPPORT   = 1     ;undefine to exclude NTSC support
+
+;FT_PAL_SUPPORT = 0         ;undefine to exclude PAL support
+;FT_NTSC_SUPPORT = 1        ;undefine to exclude NTSC support
 
 ;internal defines
-FT_PITCH_FIX      = 0     ;(FT_PAL_SUPPORT|FT_NTSC_SUPPORT) ;add PAL/NTSC pitch correction code only when both modes are enabled
+FT_PITCH_FIX      = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
 FT_SMOOTH_VIBRATO = 1     ; Blaarg's smooth vibrato technique
 
 .segment "RAM"
@@ -439,14 +439,14 @@ FDS_ENV_SPEED  = $408A
     .if(::FT_PITCH_FIX)
     tax                        ;set SZ flags for A
     beq pal
-    lda #64
+    lda #97
 pal:
     .else
     .if(::FT_PAL_SUPPORT)
     lda #0
     .endif
     .if(::FT_NTSC_SUPPORT)
-    lda #64
+    lda #97
     .endif
     .endif
     sta FT_PAL_ADJUST
@@ -955,7 +955,8 @@ nocut:
 .else
 
     .if(::FT_PITCH_FIX)
-        ora FT_PAL_ADJUST ; TODO: Some expansions wont need this.
+        clc
+        adc FT_PAL_ADJUST
     .endif
     tax
 

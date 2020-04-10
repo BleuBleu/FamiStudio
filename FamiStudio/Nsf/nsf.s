@@ -1,3 +1,10 @@
+.ifndef FT_PAL_SUPPORT
+	FT_PAL_SUPPORT  = 0
+.endif
+.ifndef FT_NTSC_SUPPORT
+	FT_NTSC_SUPPORT = 0
+.endif
+
 .ifdef FS
 .include "famitone2fs.s"
 .else
@@ -19,6 +26,11 @@ HEADER : .res 128
 	;   - start addr in page starting at $9000 (2-byte)
 	;   - flags (3 low bits = num dpcm pages)
 	
+.if ::FT_PAL_SUPPORT && ::FT_NTSC_SUPPORT
+	mode = FT_TEMP_VAR1
+	stx FT_TEMP_VAR1
+.endif	
+
 	asl
 	asl
 	tax
@@ -69,7 +81,15 @@ HEADER : .res 128
 	ldy SONG_TABLE+2, x ; hi-byte
 	lda SONG_TABLE+1, x ; lo-byte
 	tax
+
+.if ::FT_PAL_SUPPORT && ::FT_NTSC_SUPPORT
+	lda mode
+	eor #1
+.elseif ::FT_PAL_SUPPORT
+	lda #0 ; PAL
+.else
 	lda #1 ; NTSC
+.endif
 	jsr FamiToneInit
 	
 	lda #0

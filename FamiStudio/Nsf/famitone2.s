@@ -21,12 +21,11 @@ FT_DPCM_ENABLE = 1			;undefine to exclude all DMC code
 FT_SFX_ENABLE = 0			;undefine to exclude all sound effects code
 FT_THREAD	= 1			;undefine if you are calling sound effects from the same thread as the sound update call
 
-FT_PAL_SUPPORT = 0			;undefine to exclude PAL support
-FT_NTSC_SUPPORT	= 1		;undefine to exclude NTSC support
-
+;FT_PAL_SUPPORT = 0			;undefine to exclude PAL support
+;FT_NTSC_SUPPORT = 1		;undefine to exclude NTSC support
 
 ;internal defines
-FT_PITCH_FIX    = 0 ;(FT_PAL_SUPPORT|FT_NTSC_SUPPORT) ;add PAL/NTSC pitch correction code only when both modes are enabled
+FT_PITCH_FIX    = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
 
 
 ;zero page variables

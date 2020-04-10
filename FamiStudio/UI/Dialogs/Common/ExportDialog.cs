@@ -78,10 +78,10 @@ namespace FamiStudio
                     page.AddString("Name :", project.Name, 31); // 0
                     page.AddString("Artist :", project.Author, 31); // 1
                     page.AddString("Copyright :", project.Copyright, 31); // 2
-                    page.AddStringList("Mode :", new[] { "NTSC", "PAL", "Dual" }, "NTSC"); // 3
+                    page.AddStringList("Mode :", Enum.GetNames(typeof(NsfFile.NsfMode)), Enum.GetNames(typeof(NsfFile.NsfMode))[0]); // 3
                     page.AddStringListMulti(null, songNames, null); // 4
                     page.AddStringList("Engine :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 5
-                    page.SetPropertyEnabled(3, false);
+                    page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
                     break;
                 case ExportFormat.Rom:
                     page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 0
@@ -151,14 +151,16 @@ namespace FamiStudio
             var filename = PlatformUtils.ShowSaveFileDialog("Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf");
             if (filename != null)
             {
-                var props = dialog.GetPropertyPage((int)ExportFormat.Nsf);
+                var props  = dialog.GetPropertyPage((int)ExportFormat.Nsf);
                 var kernel = (FamitoneMusicFile.FamiToneKernel)Enum.Parse(typeof(FamitoneMusicFile.FamiToneKernel), props.GetPropertyValue<string>(5));
+                var mode   = (NsfFile.NsfMode)Enum.Parse(typeof(NsfFile.NsfMode), props.GetPropertyValue<string>(3));
 
                 new NsfFile().Save(project, kernel, filename,
                     GetSongIds(props.GetPropertyValue<bool[]>(4)),
                     props.GetPropertyValue<string>(0),
                     props.GetPropertyValue<string>(1),
-                    props.GetPropertyValue<string>(2));
+                    props.GetPropertyValue<string>(2),
+                    mode);
             }
         }
 
