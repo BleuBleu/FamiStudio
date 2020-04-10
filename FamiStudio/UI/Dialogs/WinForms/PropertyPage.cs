@@ -33,10 +33,11 @@ namespace FamiStudio
             public Control control;
         };
 
-        int layoutHeight;
-        Font font;
-        Bitmap colorBitmap;
-        List<Property> properties = new List<Property>();
+        private int layoutHeight;
+        private Font font;
+        private Bitmap colorBitmap;
+        private List<Property> properties = new List<Property>();
+        private object userData;
 
         public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
         public event PropertyChangedDelegate PropertyChanged;
@@ -45,6 +46,7 @@ namespace FamiStudio
 
         public int LayoutHeight => layoutHeight;
         public int PropertyCount => properties.Count;
+        public object UserData { get => userData; set => userData = value; }
 
         public PropertyPage()
         {
@@ -337,12 +339,13 @@ namespace FamiStudio
                 });
         }
 
-        public void UpdateIntegerRange(int idx, int min, int max)
+        public void UpdateIntegerRange(int idx, int value, int min, int max)
         {
             var upDown = (properties[idx].control as NumericUpDown);
 
             upDown.Minimum = min;
             upDown.Maximum = max;
+            upDown.Value = value;
         }
 
         public void AddDomainRange(string label, int[] values, int value)

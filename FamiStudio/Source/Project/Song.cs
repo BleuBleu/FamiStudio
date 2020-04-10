@@ -10,19 +10,20 @@ namespace FamiStudio
         public const int MaxLength = 256;
         public const int MaxNoteLength = 16;
 
-        struct PatternCustomSetting
+        class PatternCustomSetting
         {
-            public int patternLength;       // 0 = default song pattern length
-            public int noteLength;          // 0 = default song note length (only used by FamiStudio tempo)
-            public int barLength;           // 0 = default song bar length (only used by FamiStudio tempo)
-            public int palFrameSkipPattern; // 0 = default from song (only used by FamiStudio tempo)
+            public int   patternLength;
+            public int   noteLength;
+            public int   barLength;
+            public int[] palSkipFrames = new int[2];
 
             public void Clear()
             {
                 patternLength = 0;
                 noteLength = 0;
                 barLength = 0;
-                palFrameSkipPattern = 0;
+                palSkipFrames[0] = 0;
+                palSkipFrames[1] = 0;
             }
         };
 
@@ -43,8 +44,8 @@ namespace FamiStudio
         private int famitrackerSpeed = 6;
 
         // These are for FamiStudio tempo mode
-        private int noteLength = 10;
-        private int palFrameSkipPattern = GetDefaultPalFrameSkipPattern(10);
+        private int   noteLength = 10;
+        private int[] palSkipFrames = new int[2];
 
         public int Id => id;
         public Project Project => project;
@@ -59,10 +60,12 @@ namespace FamiStudio
         public bool UsesFamiTrackerTempo => project.UsesFamiTrackerTempo;
         public int FamitrackerTempo { get => famitrackerTempo; set => famitrackerTempo = value; }
         public int FamitrackerSpeed { get => famitrackerSpeed; set => famitrackerSpeed = value; }
+        public int[] PalSkipFrames => palSkipFrames;
 
         public Song()
         {
             // For serialization.
+            CreateCustomSettings();
         }
 
         public Song(Project project, int id, string name)
@@ -72,6 +75,8 @@ namespace FamiStudio
             this.name = name;
             this.color = Color.Azure;
 
+            CreateCustomSettings();
+            GetDefaultPalSkipFrames(noteLength, palSkipFrames);
             SetDefaultsForTempoMode(project.TempoMode);
             CreateChannels();
             UpdatePatternStartNotes();
@@ -82,7 +87,7 @@ namespace FamiStudio
             if (tempoMode == Project.TempoFamiStudio)
             {
                 noteLength = 10;
-                palFrameSkipPattern = GetDefaultPalFrameSkipPattern(noteLength);
+                GetDefaultPalSkipFrames(noteLength, palSkipFrames);
                 barLength = noteLength * 4;
             }
             else
@@ -93,6 +98,12 @@ namespace FamiStudio
             }
 
             patternLength = barLength * 4;
+        }
+
+        private void CreateCustomSettings()
+        {
+            for (int i = 0; i < patternCustomSettings.Length; i++)
+                patternCustomSettings[i] = new PatternCustomSetting();
         }
 
         public void CreateChannels(bool preserve = false, int numChannelsToPreserve = Channel.ExpansionAudioStart)
@@ -328,7 +339,7 @@ namespace FamiStudio
             UpdatePatternStartNotes();
         }
 
-        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customNoteLength = 0, int customBarLength = 0, int customPalPattern = 0)
+        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customNoteLength = 0, int customBarLength = 0, int[] palSkipFrames = null)
         {
             Debug.Assert(customPatternLength > 0 && customPatternLength < Pattern.MaxLength);
 
@@ -346,12 +357,13 @@ namespace FamiStudio
                 Debug.Assert(customPatternLength % customNoteLength == 0);
                 Debug.Assert(customNoteLength != 0);
                 Debug.Assert(customBarLength != 0);
-                Debug.Assert(Utils.NumberOfSetBits(customPalPattern) == (customNoteLength - PalNoteLengthLookup[customNoteLength]));
+                Debug.Assert(palSkipFrames.Length == 2);
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
                 patternCustomSettings[patternIdx].barLength = customBarLength;
                 patternCustomSettings[patternIdx].noteLength = customNoteLength;
-                patternCustomSettings[patternIdx].palFrameSkipPattern = customPalPattern;
+                patternCustomSettings[patternIdx].palSkipFrames[0] = palSkipFrames[0];
+                patternCustomSettings[patternIdx].palSkipFrames[1] = palSkipFrames[1];
             }
 
             UpdatePatternStartNotes();
@@ -376,11 +388,11 @@ namespace FamiStudio
             return len == 0 ? barLength : len;
         }
 
-        public int GetPatternPalFrameSkip(int patternIdx)
+        public int[] GetPatternPalSkipFrames(int patternIdx)
         {
-            int len = patternCustomSettings[patternIdx].palFrameSkipPattern;
+            int len = patternCustomSettings[patternIdx].patternLength;
             Debug.Assert(UsesFamiStudioTempo || len == 0);
-            return len == 0 ? palFrameSkipPattern : len;
+            return len == 0 ? palSkipFrames : patternCustomSettings[patternIdx].palSkipFrames;
         }
 
         public int GetPatternLength(int patternIdx)
@@ -539,21 +551,6 @@ namespace FamiStudio
             noteLength = newNoteLength;
         }
 
-        public int PalFrameSkipPattern
-        {
-            get
-            {
-                Debug.Assert(UsesFamiStudioTempo);
-                return palFrameSkipPattern;
-            }
-            set
-            {
-                Debug.Assert(UsesFamiStudioTempo);
-                Debug.Assert(Utils.NumberOfSetBits(value) == (noteLength - PalNoteLengthLookup[noteLength]));
-                palFrameSkipPattern = value;
-            }
-        }
-        
         // For a given number of NTSC frames (60Hz), the number of PAL frames (50Hz)
         // that minimizes the tempo error.
         public readonly static int[] PalNoteLengthLookup = new[]
@@ -606,22 +603,28 @@ namespace FamiStudio
             return diff * 100.0f / Math.Max(ntsc, pal);
         }
 
-        public static int GetDefaultPalFrameSkipPattern(int noteLength)
+        public static int GetNumPalSkipFrames(int noteLength)
         {
-            int numSkipFrames = noteLength - PalNoteLengthLookup[noteLength];
+            return noteLength - PalNoteLengthLookup[noteLength];
+        }
+
+        public static void GetDefaultPalSkipFrames(int noteLength, int[] frames)
+        {
+            int numSkipFrames = GetNumPalSkipFrames(noteLength);
+
+            Debug.Assert(numSkipFrames >= 0 && numSkipFrames <= 2);
+
+            frames[0] = -1;
+            frames[1] = -1;
 
             // By default, put the skip frames in the middle of the notes, this is
             // where its least likely to have anything interesting (attacks tend
             // to be at the beginning, stop notes at the end).
-            int pattern = 0;
             for (int i = 0; i < numSkipFrames; i++)
             {
                 float ratio = (i + 0.5f) / (numSkipFrames);
-                int note = (int)Math.Round(ratio * (noteLength - 1));
-                pattern |= (1 << note);
+                frames[i] = (int)Math.Round(ratio * (noteLength - 1));
             }
-
-            return pattern;
         }
 
         public bool UsesDpcm
@@ -686,6 +689,10 @@ namespace FamiStudio
             UpdatePatternStartNotes();
             for (int i = 0; i < MaxLength; i++)
                 Debug.Assert(oldPatternInstancesStartNote[i] == patternStartNote[i]);
+
+            var numSkipFrames = (palSkipFrames[0] >= 0 ? 1 : 0) + (palSkipFrames[1] >= 0 ? 1 : 0);
+            Debug.Assert(numSkipFrames == GetNumPalSkipFrames(noteLength));
+            Debug.Assert(numSkipFrames != 2 || palSkipFrames[0] != palSkipFrames[1]);
         }
 #endif
 
@@ -802,15 +809,20 @@ namespace FamiStudio
             {
                 buffer.Serialize(ref loopPoint);
                 buffer.Serialize(ref noteLength);
-                buffer.Serialize(ref palFrameSkipPattern);
+                buffer.Serialize(ref palSkipFrames[0]);
+                buffer.Serialize(ref palSkipFrames[1]);
 
-                for (int i = 0; i < MaxLength; i++)
+                for (int i = 0; i < songLength; i++)
                 {
                     buffer.Serialize(ref patternCustomSettings[i].patternLength);
                     buffer.Serialize(ref patternCustomSettings[i].noteLength);
                     buffer.Serialize(ref patternCustomSettings[i].barLength);
-                    buffer.Serialize(ref patternCustomSettings[i].palFrameSkipPattern);
+                    buffer.Serialize(ref patternCustomSettings[i].palSkipFrames[0]);
+                    buffer.Serialize(ref patternCustomSettings[i].palSkipFrames[1]);
                 }
+
+                for (int i = songLength; i < MaxLength; i++)
+                    patternCustomSettings[i].Clear();
             }
 
             if (buffer.IsReading)

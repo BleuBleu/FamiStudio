@@ -77,30 +77,6 @@ namespace FamiStudio
             return niceName;
         }
 
-        public static string[] GetPalSkipFrameString(int noteLength, int skipPattern, out bool[] bools)
-        {
-            var strings = new string[noteLength];
-            bools = new bool[noteLength];
-            for (int i = 0; i < noteLength; i++)
-            {
-                strings[i] = i.ToString();
-                bools[i] = (skipPattern & (1 << i)) != 0;
-            }
-
-            return strings;
-        }
-
-        public static int GetPalSkipFrameBits(bool[] bools)
-        {
-            var palSkipPattern = 0;
-            for (int i = 0; i < bools.Length; i++)
-            {
-                if (bools[i])
-                    palSkipPattern |= (1 << i);
-            }
-            return palSkipPattern;
-        }
-
         public static int[] GetFactors(int n, int start)
         {
             var factors = new List<int>();

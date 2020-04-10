@@ -36,9 +36,9 @@ namespace FamiStudio
         protected int playNote = 0;
         protected int famitrackerSpeed = 6;
         protected int patternNoteLength = 0;
-        protected int patternPalFramePattern = 0;
         protected int palNoteCount = 0;
-        protected int palFramePattern = 0;
+        protected int palSkipFrame1 = -1;
+        protected int palSkipFrame2 = -1;
         protected bool famitrackerTempo = true;
         protected bool palMode = false;
         protected bool firstFrame = false;
@@ -76,26 +76,18 @@ namespace FamiStudio
             set { playPosition = value; }
         }
 
-        public int GetNumFramesToRun()
+        public bool UpdateFrameSkip()
         {
             if (famitrackerTempo)
             {
-                return 1;
+                return false;
             }
             else
             {
+                palNoteCount--;
                 if (palNoteCount <= 0)
-                {
-                    palNoteCount    = patternNoteLength;
-                    palFramePattern = patternPalFramePattern;
-                }
-
-                var numFrames = palMode && ((palFramePattern & 1) != 0) ? 2 : 1;
-
-                palFramePattern >>= numFrames;
-                palNoteCount -= numFrames;
-
-                return numFrames;
+                    palNoteCount = patternNoteLength;
+                return palMode && (palNoteCount == palSkipFrame1 || palNoteCount == palSkipFrame2);
             }
         }
 
@@ -125,9 +117,11 @@ namespace FamiStudio
         private void ResetFamiStudioTempo()
         {
             patternNoteLength = song.GetPatternNoteLength(playPattern);
-            patternPalFramePattern = song.GetPatternPalFrameSkip(playPattern);
             palNoteCount = patternNoteLength;
-            palFramePattern = patternPalFramePattern;
+
+            var palSkipFrames = song.GetPatternPalSkipFrames(playPattern);
+            palSkipFrame1 = (patternNoteLength - palSkipFrames[0] - 1);
+            palSkipFrame2 = (patternNoteLength - palSkipFrames[1] - 1);
         }
 
         public bool BeginPlaySong(Song s, bool pal, int startNote)
@@ -178,9 +172,7 @@ namespace FamiStudio
 
         public bool PlaySongFrame()
         {
-            int numFrames = GetNumFramesToRun();
-
-            for (int i = 0; i < numFrames; i++)
+            do
             {
                 if (firstFrame || UpdateTempo(famitrackerSpeed, song.FamitrackerTempo))
                 {
@@ -205,6 +197,7 @@ namespace FamiStudio
                     channel.UpdateAPU();
                 }
             }
+            while (UpdateFrameSkip());
 
             // Mute.
             for (int i = 0; i < channelStates.Length; i++)

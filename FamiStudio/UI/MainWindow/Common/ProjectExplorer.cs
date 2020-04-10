@@ -1169,6 +1169,8 @@ namespace FamiStudio
         private void EditSongProperties(Point pt, Song song)
         {
             var dlg = new PropertyDialog(PointToScreen(pt), 220, true);
+
+            dlg.Properties.UserData = song;
             dlg.Properties.AddColoredString(song.Name, song.Color); // 0
             dlg.Properties.AddColor(song.Color); // 1
             dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, 128); // 2
@@ -1183,15 +1185,20 @@ namespace FamiStudio
             }
             else
             {
-                var palSkipStrings = Utils.GetPalSkipFrameString(song.NoteLength, song.PalFrameSkipPattern, out var palSkipBools);
-
                 dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, 1, Song.MaxNoteLength); // 3
                 dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 2, 64); // 4
                 dlg.Properties.AddIntegerRange("Notes per Bar : ", song.BarLength / song.NoteLength, 2, 32); // 5
                 dlg.Properties.AddLabel("BPM :", song.BPM.ToString()); // 6
-                dlg.Properties.AddLabel("PAL Error :", $"{Song.ComputePalError(song.NoteLength):0.##} %"); // 7
-                dlg.Properties.AddStringListMulti("PAL Skip Frames :", palSkipStrings, palSkipBools); // 8
-                dlg.ValidateProperties += SongProperties_ValidateProperties;
+
+                if (!song.Project.UsesExpansionAudio)
+                {
+                    dlg.Properties.AddLabel("PAL Error :", $"{Song.ComputePalError(song.NoteLength):0.##} %"); // 7
+                    dlg.Properties.AddIntegerRange("PAL Skip Frame 1 : ", song.PalSkipFrames[0], -1, song.NoteLength - 1); // 8
+                    dlg.Properties.AddIntegerRange("PAL Skip Frame 2 : ", song.PalSkipFrames[1], -1, song.NoteLength - 1); // 9
+                    dlg.Properties.SetPropertyEnabled(8, Song.GetNumPalSkipFrames(song.NoteLength) >= 1);
+                    dlg.Properties.SetPropertyEnabled(9, Song.GetNumPalSkipFrames(song.NoteLength) >= 2);
+                    dlg.ValidateProperties += SongProperties_ValidateProperties;
+                }
             }
 
             dlg.Properties.Build();
@@ -1227,7 +1234,16 @@ namespace FamiStudio
                             song.ResizeNotes(newNoteLength, convertTempo);
                         }
                         
-                        song.PalFrameSkipPattern = Utils.GetPalSkipFrameBits(dlg.Properties.GetPropertyValue<bool[]>(8));
+                        if (!song.Project.UsesExpansionAudio)
+                        {
+                            song.PalSkipFrames[0] = dlg.Properties.GetPropertyValue<int>(8);
+                            song.PalSkipFrames[1] = dlg.Properties.GetPropertyValue<int>(9);
+                        }
+                        else
+                        {
+                            Song.GetDefaultPalSkipFrames(newNoteLength, song.PalSkipFrames);
+                        }
+
                         song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(4) * song.NoteLength);
                         song.SetBarLength(dlg.Properties.GetPropertyValue<int>(5) * song.NoteLength);
                     }
@@ -1249,13 +1265,16 @@ namespace FamiStudio
 
         private bool SongProperties_ValidateProperties(PropertyDialog dlg)
         {
+            var song = dlg.Properties.UserData as Song;
             var noteLength = dlg.Properties.GetPropertyValue<int>(3);
-            var palSkipFrames = dlg.Properties.GetPropertyValue<bool[]>(8);
-            var numPalSkipFrames = noteLength - Song.PalNoteLengthLookup[noteLength];
+            var frame1 = dlg.Properties.GetPropertyValue<int>(8);
+            var frame2 = dlg.Properties.GetPropertyValue<int>(9);
+            var numPalSkipFrames = (frame1 >= 0 ? 1 : 0) + (frame2 >= 0 ? 1 : 0);
+            var expectedCount = Song.GetNumPalSkipFrames(noteLength);
 
-            if (numPalSkipFrames != palSkipFrames.Count(b => b == true))
+            if ((expectedCount > 0 && frame1 == frame2) || (numPalSkipFrames != expectedCount))
             {
-                PlatformUtils.MessageBox($"Please selected exactly {numPalSkipFrames} PAL skip frames.", "PAL Skip Frames", MessageBoxButtons.OK);
+                PlatformUtils.MessageBox($"PAL skip frames must be positive and different.", "PAL Skip Frames", MessageBoxButtons.OK);
                 return false;
             }
 
@@ -1264,6 +1283,8 @@ namespace FamiStudio
 
         private void SongProperties_PropertyChanged(PropertyPage props, int idx, object value)
         {
+            var song = props.UserData as Song;
+
             if (selectedSong.UsesFamiTrackerTempo)
             {
                 if (idx == 3 || idx == 4) // 3/4 = Tempo/Speed
@@ -1276,7 +1297,7 @@ namespace FamiStudio
                 // MATTT : Change bar length.
                 else if (idx == 5) // 5 = pattern length.
                 {
-                    props.UpdateIntegerRange(6, 2, (int)value);
+                    props.UpdateIntegerRange(6, 0, 2, (int)value);
                 }
             }
             else
@@ -1284,14 +1305,19 @@ namespace FamiStudio
                 if (idx == 3) // 3 = Note length
                 {
                     int noteLength = (int)value;
-
                     props.SetLabelText(6, Song.ComputeFamiStudioBPM(noteLength).ToString());
-                    props.SetLabelText(7, $"{Song.ComputePalError(noteLength):0.##} %");
 
-                    var palSkipPattern = Song.GetDefaultPalFrameSkipPattern(noteLength);
-                    var palSkipStrings = Utils.GetPalSkipFrameString(noteLength, palSkipPattern, out var palSkipBools);
+                    if (!song.Project.UsesExpansionAudio)
+                    {
+                        var frames = new int[2];
+                        Song.GetDefaultPalSkipFrames(noteLength, frames);
 
-                    props.UpdateMultiStringList(8, palSkipStrings, palSkipBools);
+                        props.SetLabelText(7, $"{Song.ComputePalError(noteLength):0.##} %");
+                        props.UpdateIntegerRange(8, frames[0], -1, noteLength - 1);
+                        props.UpdateIntegerRange(9, frames[1], -1, noteLength - 1);
+                        props.SetPropertyEnabled(8, Song.GetNumPalSkipFrames(noteLength) >= 1);
+                        props.SetPropertyEnabled(9, Song.GetNumPalSkipFrames(noteLength) >= 2);
+                    }
                 }
             }
         }

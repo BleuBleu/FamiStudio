@@ -116,6 +116,14 @@ namespace FamiStudio
                 if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2FS)
                 {
                     kernelBinary += "_fs";
+
+                    if (project.UsesExpansionAudio)
+                    {
+                        kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
+
+                        if (project.ExpansionAudio == Project.ExpansionN163)
+                            kernelBinary += $"_{project.ExpansionNumChannels}ch";
+                    }
                 }
 
                 switch (mode)
@@ -125,12 +133,9 @@ namespace FamiStudio
                     case NsfMode.Dual: kernelBinary += "_dual"; break;
                 }
 
-                if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2FS && project.UsesExpansionAudio)
-                { 
-                    kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
-
-                    if (project.ExpansionAudio == Project.ExpansionN163)
-                        kernelBinary += $"_{project.ExpansionNumChannels}ch";
+                if (project.UsesFamiStudioTempo)
+                {
+                    kernelBinary += "_tempo";
                 }
 
                 kernelBinary += ".bin";
