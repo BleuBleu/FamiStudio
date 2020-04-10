@@ -96,6 +96,7 @@ namespace FamiStudio
             Project.ExpansionS5B     // INST_S5B
         };
 
+        // FamiTracker -> FamiStudio
         protected static int[] EnvelopeTypeLookup =
         {
             Envelope.Volume,   // SEQ_VOLUME
@@ -103,6 +104,16 @@ namespace FamiStudio
             Envelope.Pitch,    // SEQ_PITCH
             Envelope.Count,    // SEQ_HIPITCH
             Envelope.DutyCycle // SEQ_DUTYCYCLE
+        };
+
+        // FamiStudio -> FamiTracker
+        protected static int[] ReverseEnvelopeTypeLookup =
+        {
+             0, // SEQ_VOLUME
+             1, // SEQ_ARPEGGIO
+             2, // SEQ_PITCH
+             4, // SEQ_HIPITCH
+            -1  // SEQ_DUTYCYCLE
         };
 
         protected struct RowFxData
@@ -167,6 +178,8 @@ namespace FamiStudio
 
         protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, Dictionary<Pattern, byte> patternLengths)
         {
+            Note note = null;
+
             switch (fx.fx)
             {
                 case Effect_Jump:
@@ -183,7 +196,7 @@ namespace FamiStudio
                     pattern.GetOrCreateNoteAt(n).FinePitch = (sbyte)(0x80 - fx.param);
                     break;
                 case Effect_Vibrato:
-                    var note = pattern.GetOrCreateNoteAt(n);
+                    note = pattern.GetOrCreateNoteAt(n);
                     note.VibratoDepth = (byte)(fx.param & 0x0f);
                     note.VibratoSpeed = (byte)VibratoSpeedImportLookup[fx.param >> 4];
 
@@ -192,6 +205,21 @@ namespace FamiStudio
                     {
                         note.RawVibrato = 0;
                     }
+                    break;
+                case Effect_FdsModSpeedHi:
+                    // TODO: If both hi/lo effects arent in a pair, this is likely not going to work.
+                    note = pattern.GetOrCreateNoteAt(n);
+                    if (!note.HasFdsModSpeed) note.FdsModSpeed = 0;
+                    note.FdsModSpeed = (ushort)(((note.FdsModSpeed) & 0x00ff) | (fx.param << 8));
+                    break;
+                case Effect_FdsModSpeedLo:
+                    // TODO: If both hi/lo effects arent in a pair, this is likely not going to work.
+                    note = pattern.GetOrCreateNoteAt(n);
+                    if (!note.HasFdsModSpeed) note.FdsModSpeed = 0;
+                    note.FdsModSpeed = (ushort)(((note.FdsModSpeed) & 0xff00) | (fx.param << 0));
+                    break;
+                case Effect_FdsModDepth:
+                    pattern.GetOrCreateNoteAt(n).FdsModDepth = fx.param;
                     break;
             }
         }

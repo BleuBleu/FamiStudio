@@ -474,7 +474,11 @@ namespace FamiStudio
 
                             var fx = new RowFxData();
 
-                            fx.fx    = TextToEffectLookup[fxStr[0]];
+                            if (project.ExpansionAudio == Project.ExpansionFds && FdsTextToEffectLookup.TryGetValue(fxStr[0], out var fdsFx))
+                                fx.fx = (byte)fdsFx;
+                            else
+                                fx.fx = TextToEffectLookup[fxStr[0]];
+
                             fx.param = Convert.ToByte(fxStr.Substring(1), 16);
                             patternFxData[pattern][n, k] = fx;
 
@@ -567,6 +571,22 @@ namespace FamiStudio
             return envelopeArray;
         }
 
+        private void TruncateLongPatterns(Song song)
+        {
+            if (song.PatternLength > 256)
+                song.SetDefaultPatternLength(256);
+
+            // FamiTracker can only shorten patterns using skips.
+            // We allow patterns to be longer than the default, so we will truncate those.
+            for (int i = 0; i < song.Length; i++)
+            {
+                if (song.GetPatternLength(i) > song.PatternLength)
+                    song.ClearPatternCustomSettings(i);
+            }
+
+            song.DeleteNotesPastMaxInstanceLength();
+        }
+
         private void CreateMissingPatterns(Song song)
         {
             foreach (var channel in song.Channels)
@@ -632,6 +652,9 @@ namespace FamiStudio
             var project = originalProject.DeepClone();
             project.RemoveAllSongsBut(songIds);
 
+            if (project.UsesFamiStudioTempo)
+                project.ConvertToFamiTrackerTempo(false);
+
             ConvertPitchEnvelopes(project);
             var envelopes = MergeIdenticalEnvelopes(project);
 
@@ -654,7 +677,7 @@ namespace FamiStudio
             lines.Add("FRAMERATE       0");
             lines.Add("EXPANSION       " + (project.ExpansionAudio != Project.ExpansionNone ? (1 << (project.ExpansionAudio - 1)) : 0));
             lines.Add("VIBRATO         1");
-            lines.Add("SPLIT           21");
+            lines.Add("SPLIT           32");
             lines.Add("");
 
             if (project.ExpansionAudio == Project.ExpansionN163)
@@ -674,7 +697,7 @@ namespace FamiStudio
                 for (int j = 0; j < envArray.Length; j++)
                 {
                     var env = envArray[j];
-                    lines.Add($"MACRO{i,8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
+                    lines.Add($"MACRO{ReverseEnvelopeTypeLookup[i],8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                 }
             }
 
@@ -745,9 +768,7 @@ namespace FamiStudio
                 }
                 else if (instrument.ExpansionType == Project.ExpansionFds)
                 {
-                    int modEnable = instrument.FdsModDepth > 0 && instrument.FdsModSpeed > 0 ? 1 : 0;
-
-                    lines.Add($"INSTFDS{i,5}{modEnable,6}{instrument.FdsModSpeed,4}{instrument.FdsModDepth,4}{instrument.FdsModDelay,4} \"{instrument.Name}\"");
+                    lines.Add($"INSTFDS{i,5}{1,6}{instrument.FdsModSpeed,4}{instrument.FdsModDepth,4}{instrument.FdsModDelay,4} \"{instrument.Name}\"");
 
                     var wavEnv = instrument.Envelopes[Envelope.FdsWaveform];
                     lines.Add($"FDSWAVE{i,5} : {string.Join(" ", wavEnv.Values.Take(wavEnv.Length))}");
@@ -790,6 +811,7 @@ namespace FamiStudio
             {
                 var song = project.Songs[i];
 
+                TruncateLongPatterns(song);
                 CreateMissingPatterns(song);
                 song.CleanupUnusedPatterns();
                 song.DuplicateInstancesWithDifferentLengths();
@@ -830,13 +852,17 @@ namespace FamiStudio
 
                         var patternLines = new List<string>();
 
-                        //for (int n = 0; n < song.DefaultPatternLength; n++)
-                        for (var it = pattern.GetNoteIterator(0, patternLen); !it.Done; it.Next())
+                        for (var it = pattern.GetNoteIterator(0, song.PatternLength); !it.Done; it.Next())
                         {
-                            var line = " : ... .. . ... ... ...";
-
                             var time = it.CurrentTime;
                             var note = it.CurrentNote;
+
+                            // Keeps the code a lot simpler.
+                            if (note == null)
+                                note = Note.EmptyNote;
+
+                            var line = " : ... .. . ... ... ...";
+
                             var noteString = GetFamiTrackerNoteName(c, note);
                             var volumeString = note.HasVolume ? note.Volume.ToString("X") : ".";
                             var instrumentString = note.IsValid && !note.IsStop ? (note.Instrument == null ? project.Instruments.Count : project.Instruments.IndexOf(note.Instrument)).ToString("X2") : "..";
@@ -947,6 +973,13 @@ namespace FamiStudio
                                 effectString += $" 4{VibratoSpeedExportLookup[note.VibratoSpeed]:X1}{note.VibratoDepth:X1}";
                             if (note.HasFinePitch)
                                 effectString += $" P{(byte)(-note.FinePitch + 0x80):X2}";
+                            if (note.HasFdsModDepth)
+                                effectString += $" H{note.FdsModDepth:X2}";
+                            if (note.HasFdsModSpeed)
+                            {
+                                effectString += $" I{(note.FdsModSpeed >> 8) & 0xff:X2}";
+                                effectString += $" J{(note.FdsModSpeed >> 0) & 0xff:X2}";
+                            }
 
                             while (effectString.Length < 12)
                                 effectString += " ...";

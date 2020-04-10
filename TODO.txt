@@ -26,15 +26,13 @@
 	- Import/export all formats: slides.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - MATTT.
-- Piano roll: Look at everything that uses alpha => SLOOOOOW!
-- BUG: When importing FTM with no instrument on a note, instrument still plays. Should be null
 - BUG: Once I hit a bug where i could drag notes without clicking on them???
 
 TESTING:
 ========
+- Test installer on Japanese machine.
 - FamiTracker import/export, retest Text, slides, etc. 
 - Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, etc.
-- Test installer on Japanese machine.
 - FTM, test a lot. Needs to match text import (export to text and compare).
 - MAC: 
 	- Make sure namco channels dialog works. Added Combo box prop change callback.
@@ -44,11 +42,11 @@ TESTING:
 	- ValidateDelegate
 	- 0.5 pixel offset for pattern bitmaps.
 - Binary FTM import. Try opening all the demo songs from FT.
-- Duty cycle envelopes, make sure all import/export format support it.
+x Duty cycle envelopes, make sure all import/export format support it.
 - Fix saw in Shovel knight.
 - Retest smooth vibrato on/off.
 - Make sure that when there is no loop point, NSF stops.
-- Test long pattern > 256 a lot. They will fail to export to FamiTracker.
+- Test long pattern > 256 a lot. 
 - Test split of pattern longer than default.
 - Test change active channel (press 1...5) while a transaction is happening.
 - Test everything about note dragging, edge cases, interrupt while dragging, end of song, etc....

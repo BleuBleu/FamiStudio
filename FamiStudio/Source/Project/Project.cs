@@ -774,6 +774,8 @@ namespace FamiStudio
 
             foreach (var song in Songs)
                 song.Validate(this);
+
+            Debug.Assert(Note.EmptyNote.IsEmpty);
 #endif
         }
 
