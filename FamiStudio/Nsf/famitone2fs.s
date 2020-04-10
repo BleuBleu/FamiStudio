@@ -11,8 +11,15 @@ FT_DPCM_ENABLE    = 1     ;undefine to exclude all DMC code
 FT_SFX_ENABLE     = 0     ;undefine to exclude all sound effects code
 FT_THREAD         = 0     ;undefine if you are calling sound effects from the same thread as the sound update call
 
-;FT_PAL_SUPPORT = 0         ;undefine to exclude PAL support
-;FT_NTSC_SUPPORT = 1        ;undefine to exclude NTSC support
+.ifndef FT_PAL_SUPPORT
+    FT_PAL_SUPPORT = 0
+.endif
+.ifndef FT_NTSC_SUPPORT
+    FT_NTSC_SUPPORT = 0
+.endif
+.ifndef FT_FAMISTUDIO_TEMPO
+    FT_FAMISTUDIO_TEMPO = 0
+.endif
 
 ;internal defines
 FT_PITCH_FIX      = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
@@ -156,10 +163,17 @@ FT_SONG_LIST_L:   .res 1
 FT_SONG_LIST_H:   .res 1
 FT_INSTRUMENT_L:  .res 1
 FT_INSTRUMENT_H:  .res 1
+.if !FT_FAMISTUDIO_TEMPO
 FT_TEMPO_STEP_L:  .res 1
 FT_TEMPO_STEP_H:  .res 1
 FT_TEMPO_ACC_L:   .res 1
 FT_TEMPO_ACC_H:   .res 1
+.elseif FT_PAL_SUPPORT
+FT_TEMPO_SKIP_FRAME1:  .res 1
+FT_TEMPO_SKIP_FRAME2:  .res 1
+FT_TEMPO_NOTE_LENGTH:  .res 1
+FT_TEMPO_NOTE_COUNTER: .res 1
+.endif
 FT_DPCM_LIST_L:   .res 1
 FT_DPCM_LIST_H:   .res 1
 FT_DPCM_EFFECT:   .res 1
@@ -726,7 +740,7 @@ nextchannel:
     cpx #FT_NUM_CHANNELS
     bne set_channels
 
-
+.if !::FT_FAMISTUDIO_TEMPO
     lda FT_PAL_ADJUST          ;read tempo for PAL or NTSC
     beq pal
     iny
@@ -744,6 +758,18 @@ pal:
     lda #6                     ;default speed
     sta FT_TEMPO_ACC_H
     sta FT_SONG_SPEED          ;apply default speed, this also enables music
+.elseif ::FT_PAL_SUPPORT
+    lda (FT_TEMP_PTR1),y
+    sta FT_TEMPO_NOTE_COUNTER
+    sta FT_TEMPO_NOTE_LENGTH
+    sta FT_SONG_SPEED          ; simply so the song isnt considered paused.
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta FT_TEMPO_SKIP_FRAME1
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta FT_TEMPO_SKIP_FRAME2
+.endif
 
 .ifdef ::FT_VRC7
     lda #0
@@ -1527,8 +1553,10 @@ update_volume:
 pause:
     jmp update_sound
 
+;----------------------------------------------------------------------------------------------------------------------
 update:
 
+.if !::FT_FAMISTUDIO_TEMPO 
     clc                        ;update frame counter that considers speed, tempo, and PAL/NTSC
     lda FT_TEMPO_ACC_L
     adc FT_TEMPO_STEP_L
@@ -1540,12 +1568,11 @@ update:
     sta FT_TEMPO_ACC_H         ;no row update, skip to the envelopes update
     jmp update_envelopes
 
-;----------------------------------------------------------------------------------------------------------------------
 update_row:
-
     sec
     sbc FT_SONG_SPEED
     sta FT_TEMPO_ACC_H
+.endif
 
     ; TODO: Turn most of these in loops, no reasons to be macros.
     _FT2UpdateRow 0, FT_CH0_ENVS
@@ -1853,6 +1880,28 @@ update_sound:
         iny
         cpy #3
         bne s5b_channel_loop
+.endif
+
+; Run update twice sometimes so that PAL keeps up with NTSC
+.if ::FT_FAMISTUDIO_TEMPO && ::FT_PAL_SUPPORT
+    lda FT_PAL_ADJUST ; On NTSC, just play 1 note per frame.
+    bne check_done
+    dec FT_TEMPO_NOTE_COUNTER
+    bne check_frame1
+    lda FT_TEMPO_NOTE_LENGTH
+    sta FT_TEMPO_NOTE_COUNTER
+
+    ; We support notes up to 16 length, which mean we have up to 2 frames to skip.
+    check_frame1:
+        lda FT_TEMPO_NOTE_COUNTER
+        cmp FT_TEMPO_SKIP_FRAME1
+        bne check_frame2
+        jmp update
+    check_frame2:
+        cmp FT_TEMPO_SKIP_FRAME2
+        bne check_done
+        jmp update
+    check_done:
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------

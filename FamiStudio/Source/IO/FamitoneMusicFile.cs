@@ -113,6 +113,7 @@ namespace FamiStudio
                 }
                 else
                 {
+                    lines.Add(line);
                     lines.Add($"\t{db} {song.NoteLength}, {song.NoteLength - song.PalSkipFrames[0] - 1}, {song.NoteLength - song.PalSkipFrames[1] - 1}, 0");
                 }
             }

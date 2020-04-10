@@ -1,10 +1,3 @@
-.ifndef FT_PAL_SUPPORT
-	FT_PAL_SUPPORT  = 0
-.endif
-.ifndef FT_NTSC_SUPPORT
-	FT_NTSC_SUPPORT = 0
-.endif
-
 .ifdef FS
 .include "famitone2fs.s"
 .else
