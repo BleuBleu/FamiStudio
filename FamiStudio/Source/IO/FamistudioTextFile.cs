@@ -16,11 +16,11 @@ namespace FamiStudio
 
             var lines = new List<string>();
 
-            string projectLine = "Project Version=\"1.5.0\"";
+            string projectLine = $"Project Version=\"1.5.0\" TempoMode=\"{Project.TempoModeNames[project.TempoMode]}\"";
 
-            if (project.Name      != "") projectLine += $" Name=\"{project.Name}\"";
-            if (project.Author    != "") projectLine += $" Author=\"{project.Author}\"";
-            if (project.Copyright != "") projectLine += $" Copyright=\"{project.Copyright}\"";
+            if (project.Name      != "")    projectLine += $" Name=\"{project.Name}\"";
+            if (project.Author    != "")    projectLine += $" Author=\"{project.Author}\"";
+            if (project.Copyright != "")    projectLine += $" Copyright=\"{project.Copyright}\"";
             if (project.UsesExpansionAudio) projectLine += $" Expansion=\"{Project.ExpansionShortNames[project.ExpansionAudio]}\"";
 
             lines.Add(projectLine);
@@ -97,12 +97,34 @@ namespace FamiStudio
             // Songs
             foreach (var song in project.Songs)
             {
-                lines.Add($"\tSong Name=\"{song.Name}\" Length=\"{song.Length}\" PatternLength=\"{song.PatternLength}\" BarLength=\"{song.BarLength}\" Tempo=\"{song.FamitrackerTempo}\" Speed=\"{song.FamitrackerSpeed}\" LoopPoint=\"{song.LoopPoint}\"");
+                var songStr = $"\tSong Name=\"{song.Name}\" Length=\"{song.Length}\" LoopPoint=\"{song.LoopPoint}\"";
+
+                if (song.UsesFamiTrackerTempo)
+                    songStr += $" PatternLength=\"{song.PatternLength}\" BarLength=\"{song.BarLength}\" FamiTrackerTempo=\"{song.FamitrackerTempo}\" FamiTrackerSpeed=\"{song.FamitrackerSpeed}\"";
+                else
+                    songStr += $" PatternLength=\"{song.PatternLength / song.NoteLength}\" BarLength=\"{song.BarLength / song.NoteLength}\" NoteLength=\"{song.NoteLength}\" PalSkipPattern=\"{song.PalFrameSkipPattern:x2}\"";
+
+                lines.Add(songStr);
 
                 for (int i = 0; i < song.Length; i++)
                 {
                     if (song.PatternHasCustomSettings(i))
-                        lines.Add($"\t\tPatternInstanceParams Time=\"{i}\" Length=\"{song.GetPatternLength(i)}\"");
+                    {
+                        var patternLength = song.GetPatternLength(i);
+
+                        if (song.UsesFamiTrackerTempo)
+                        {
+                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength}\"");
+                        }
+                        else
+                        {
+                            var noteLength    = song.GetPatternNoteLength(i);
+                            var barLength     = song.GetPatternBarLength(i);
+                            var palSkipFrames = song.GetPatternPalFrameSkip(i);
+
+                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength / noteLength}\" NoteLength=\"{barLength}\" BarLength=\"{barLength / noteLength}\" PalSkipPattern=\"{palSkipFrames:x2}\"");
+                        }
+                    }
                 }
 
                 foreach (var channel in song.Channels)
@@ -215,6 +237,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Author", out var author)) project.Author = author;
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
                             if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudio(Array.IndexOf(Project.ExpansionShortNames, expansion));
+                            if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = Array.IndexOf(Project.TempoModeNames, tempoMode);
                             break;
                         }
                         case "DPCMSample":
@@ -292,16 +315,40 @@ namespace FamiStudio
                         {
                             song = project.CreateSong(parameters["Name"]);
                             song.SetLength(int.Parse(parameters["Length"]));
-                            song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]));
                             song.SetBarLength(int.Parse(parameters["BarLength"]));
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
-                            song.FamitrackerTempo = int.Parse(parameters["Tempo"]);
-                            song.FamitrackerSpeed = int.Parse(parameters["Speed"]);
+
+                            if (song.UsesFamiTrackerTempo)
+                            {
+                                song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]));
+                                song.FamitrackerTempo = int.Parse(parameters["FamiTrackerTempo"]);
+                                song.FamitrackerSpeed = int.Parse(parameters["FamiTrackerSpeed"]);
+                            }
+                            else
+                            {
+                                var noteLength = int.Parse(parameters["NoteLength"]);
+                                song.ResizeNotes(noteLength, false);
+                                song.SetBarLength(int.Parse(parameters["BarLength"]) * noteLength);
+                                song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]) * noteLength);
+                                song.PalFrameSkipPattern = Convert.ToInt32(parameters["PalSkipPattern"], 16);
+                            }
                             break;
                         }
-                        case "PatternInstanceParams":
+                        case "PatternCustomSettings":
                         {
-                            song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]));
+                            if (project.UsesFamiTrackerTempo)
+                            {
+                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]));
+                            }
+                            else
+                            {
+                                var patternLength = int.Parse(parameters["Length"]);
+                                var noteLength = int.Parse(parameters["NoteLength"]);
+                                var barLength = int.Parse(parameters["BarLength"]);
+                                var palSkipFrame = Convert.ToInt32(parameters["PalSkipPattern"], 16);
+
+                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, noteLength, barLength * noteLength, palSkipFrame);
+                            }
                             break;
                         }
                         case "Channel":

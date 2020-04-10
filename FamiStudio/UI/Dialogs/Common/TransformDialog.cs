@@ -111,6 +111,11 @@ namespace FamiStudio
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
+                foreach (var songId in songIds)
+                {
+                    app.Project.GetSong(songId).DeleteNotesPastMaxInstanceLength();
+                }
+
                 if (mergeIdenticalPatterns)
                 {
                     foreach (var songId in songIds)
@@ -125,7 +130,7 @@ namespace FamiStudio
                     foreach (var songId in songIds)
                     {
                         var song = app.Project.GetSong(songId);
-                        song.RemoveEmptyPatterns();
+                        song.DeleteEmptyPatterns();
                     }
                 }
 

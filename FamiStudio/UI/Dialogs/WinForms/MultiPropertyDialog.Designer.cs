@@ -38,10 +38,10 @@
             // 
             this.panelProps.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelProps.Location = new System.Drawing.Point(125, 5);
+            this.panelProps.Location = new System.Drawing.Point(165, 5);
             this.panelProps.Margin = new System.Windows.Forms.Padding(0);
             this.panelProps.Name = "panelProps";
-            this.panelProps.Size = new System.Drawing.Size(318, 326);
+            this.panelProps.Size = new System.Drawing.Size(278, 326);
             this.panelProps.TabIndex = 20;
             // 
             // panelTabs
@@ -49,7 +49,7 @@
             this.panelTabs.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
             this.panelTabs.Location = new System.Drawing.Point(5, 5);
             this.panelTabs.Name = "panelTabs";
-            this.panelTabs.Size = new System.Drawing.Size(120, 326);
+            this.panelTabs.Size = new System.Drawing.Size(160, 326);
             this.panelTabs.TabIndex = 21;
             // 
             // buttonYes

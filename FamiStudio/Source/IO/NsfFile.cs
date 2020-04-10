@@ -808,14 +808,13 @@ namespace FamiStudio
 
             var songName = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, songIndex));
 
-            song = project.CreateSong(string.IsNullOrEmpty(songName) ? $"Song {songIndex + 1}" : songName); 
+            song = project.CreateSong(string.IsNullOrEmpty(songName) ? $"Song {songIndex + 1}" : songName);
             channelStates = new ChannelState[song.Channels.Length];
 
             NsfSetTrack(nsf, songIndex);
 
-            song.FamitrackerSpeed = 1;
+            song.ResizeNotes(1, false);
             song.SetDefaultPatternLength(patternLength);
-            song.SetSensibleBarLength();
 
             for (int i = 0; i < song.Channels.Length; i++)
                 channelStates[i] = new ChannelState();
@@ -859,7 +858,10 @@ namespace FamiStudio
 
             NsfClose(nsf);
 
-            song.RemoveEmptyPatterns();
+            var noteLength = Utils.GetFactors(song.PatternLength, Song.MaxNoteLength).First();
+            song.ResizeNotes(noteLength, false);
+            song.SetSensibleBarLength();
+            song.DeleteEmptyPatterns();
             song.UpdatePatternStartNotes();
             project.DeleteUnusedInstruments();
             project.UpdateAllLastValidNotesAndVolume();

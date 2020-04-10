@@ -26,6 +26,12 @@ namespace FamiStudio
         public const int TempoFamiStudio  = 0;
         public const int TempoFamiTracker = 1;
 
+        public static string [] TempoModeNames = 
+        {
+            "FamiStudio",
+            "FamiTracker"
+        };
+
         public static string[] ExpansionNames =
         {
             "None",

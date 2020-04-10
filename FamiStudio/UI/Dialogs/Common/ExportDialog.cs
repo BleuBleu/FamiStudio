@@ -20,12 +20,23 @@ namespace FamiStudio
             Max
         };
 
+        string[] ExportFormatNames =
+        {
+            "Wave",
+            "NSF",
+            "ROM",
+            "FamiStudio Text",
+            "FamiTracker Text",
+            "FamiTone2",
+            ""
+        };
+
         Project project;
         MultiPropertyDialog dialog;
 
         public unsafe ExportDialog(Rectangle mainWinRect, Project project)
         {
-            int width  = 450;
+            int width  = 500;
             int height = 450;
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
             int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
@@ -40,7 +51,7 @@ namespace FamiStudio
             for (int i = 0; i < (int)ExportFormat.Max; i++)
             {
                 var format = (ExportFormat)i;
-                var page = dialog.AddPropertyPage(format.ToString(), "Export" + format.ToString());
+                var page = dialog.AddPropertyPage(ExportFormatNames[i], "Export" + format.ToString());
                 CreatePropertyPage(page, format);
             }
         }

@@ -1312,7 +1312,7 @@ namespace FamiStudio
                 var palFrameSkip   = song.GetPatternPalFrameSkip(patternIdx);
                 var palSkipStrings = Utils.GetPalSkipFrameString(noteLength, palFrameSkip, out var palSkipBools);
 
-                dlg.Properties.AddIntegerRange("Frames Per Notes:", noteLength, 1, Pattern.MaxLength); // 1
+                dlg.Properties.AddIntegerRange("Frames Per Notes:", noteLength, 1, Song.MaxNoteLength); // 1
                 dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx) / noteLength, 1, Pattern.MaxLength); // 2
                 dlg.Properties.AddIntegerRange("Notes Per Bar :", song.GetPatternBarLength(patternIdx) / noteLength, 1, Pattern.MaxLength); // 3
                 dlg.Properties.AddLabel("BPM :", Song.ComputeFamiStudioBPM(noteLength).ToString()); // 4
@@ -1359,7 +1359,7 @@ namespace FamiStudio
 
                     if (noteLength != song.GetPatternNoteLength(patternIdx))
                     {
-                        var convertTempo = PlatformUtils.MessageBox($"You changed the note length for this pattern, do you want FamiStudio to attempt convert the tempo?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                        var convertTempo = PlatformUtils.MessageBox($"You changed the note length for this pattern, do you want FamiStudio to attempt convert the tempo by resizing notes?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
                         song.ResizePatternNotes(patternIdx, noteLength);
                     }
 

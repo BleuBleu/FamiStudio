@@ -546,7 +546,7 @@ namespace FamiStudio
                     }
                 }
 
-                s.ClearNotesPastMaxInstanceLength();
+                s.DeleteNotesPastMaxInstanceLength();
                 s.UpdatePatternStartNotes();
 
                 if (barLength == -1)
@@ -556,7 +556,7 @@ namespace FamiStudio
 
                 CreateSlideNotes(s, patternFxData);
 
-                s.RemoveEmptyPatterns();
+                s.DeleteEmptyPatterns();
             }
 
             project.UpdateAllLastValidNotesAndVolume();

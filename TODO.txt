@@ -40,6 +40,7 @@ TESTING:
 	- Make sure namco channels dialog works. Added Combo box prop change callback.
 	- Make sure instrument properties window pops UP when Y > 1/2 height
 	- New functions to update some controls.
+	- Export dialog label sizes.
 	- ValidateDelegate
 	- 0.5 pixel offset for pattern bitmaps.
 - Binary FTM import. Try opening all the demo songs from FT.

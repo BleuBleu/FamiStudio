@@ -1098,7 +1098,6 @@ namespace FamiStudio
         private void EditProjectProperties(Point pt)
         {
             var project = App.Project;
-            var tempoModeStrings = new[] { "FamiStudio", "FamiTracker" };
 
             var dlg = new PropertyDialog(PointToScreen(pt), 300, true);
             dlg.Properties.AddString("Title :", project.Name, 31); // 0
@@ -1106,7 +1105,7 @@ namespace FamiStudio
             dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
             dlg.Properties.AddStringList("Expansion Audio :", Project.ExpansionNames, project.ExpansionAudioName); // 3
             dlg.Properties.AddIntegerRange("Channels :", project.ExpansionNumChannels, 1, 8); // 4 (Namco)
-            dlg.Properties.AddStringList("Tempo Mode :", tempoModeStrings, tempoModeStrings[project.TempoMode]); // 5
+            dlg.Properties.AddStringList("Tempo Mode :", Project.TempoModeNames, Project.TempoModeNames[project.TempoMode]); // 5
             dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionN163);
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             dlg.Properties.Build();
@@ -1119,7 +1118,7 @@ namespace FamiStudio
                 project.Author = dlg.Properties.GetPropertyValue<string>(1);
                 project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
 
-                var tempoMode = Array.IndexOf(tempoModeStrings, dlg.Properties.GetPropertyValue<string>(5));
+                var tempoMode = Array.IndexOf(Project.TempoModeNames, dlg.Properties.GetPropertyValue<string>(5));
                 var expansion = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
                 var numChannels = dlg.Properties.GetPropertyValue<int>(4);
 
@@ -1186,7 +1185,7 @@ namespace FamiStudio
             {
                 var palSkipStrings = Utils.GetPalSkipFrameString(song.NoteLength, song.PalFrameSkipPattern, out var palSkipBools);
 
-                dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, 1, 16); // 3
+                dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, 1, Song.MaxNoteLength); // 3
                 dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 2, 64); // 4
                 dlg.Properties.AddIntegerRange("Notes per Bar : ", song.BarLength / song.NoteLength, 2, 32); // 5
                 dlg.Properties.AddLabel("BPM :", song.BPM.ToString()); // 6
@@ -1224,7 +1223,7 @@ namespace FamiStudio
 
                         if (newNoteLength != song.NoteLength)
                         {
-                            var convertTempo = PlatformUtils.MessageBox($"You changed the note length, do you want FamiStudio to attempt convert the tempo?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                            var convertTempo = PlatformUtils.MessageBox($"You changed the note length, do you want FamiStudio to attempt convert the tempo by resizing notes?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
                             song.ResizeNotes(newNoteLength, convertTempo);
                         }
                         

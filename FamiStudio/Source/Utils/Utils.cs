@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FamiStudio
@@ -98,6 +99,24 @@ namespace FamiStudio
                     palSkipPattern |= (1 << i);
             }
             return palSkipPattern;
+        }
+
+        public static int[] GetFactors(int n, int start)
+        {
+            var factors = new List<int>();
+
+            for (int i = start; i >= 2; i--)
+            {
+                if (n % i == 0)
+                    factors.Add(i);
+            }
+
+            return factors.ToArray();
+        }
+
+        public static int[] GetFactors(int n)
+        {
+            return GetFactors(n, n);
         }
     }
 }

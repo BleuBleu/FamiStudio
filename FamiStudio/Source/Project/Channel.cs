@@ -280,7 +280,7 @@ namespace FamiStudio
             }
         }
 
-        public void RemoveEmptyPatterns()
+        public void DeleteEmptyPatterns()
         {
             for (int i = 0; i < patternInstances.Length; i++)
             {
@@ -290,7 +290,7 @@ namespace FamiStudio
                 }
             }
 
-            CleanupUnusedPatterns();
+            DeleteUnusedPatterns();
         }
 
         public bool RenamePattern(Pattern pattern, string name)
@@ -324,7 +324,7 @@ namespace FamiStudio
             }
         }
 
-        public void CleanupUnusedPatterns()
+        public void DeleteUnusedPatterns()
         {
             HashSet<Pattern> usedPatterns = new HashSet<Pattern>();
             for (int i = 0; i < song.Length; i++)
@@ -340,7 +340,7 @@ namespace FamiStudio
             patterns.AddRange(usedPatterns);
         }
 
-        public void ClearNotesPastMaxInstanceLength()
+        public void DeleteNotesPastMaxInstanceLength()
         {
             foreach (var pattern in patterns)
                 pattern.ClearNotesPastMaxInstanceLength();
@@ -638,7 +638,7 @@ namespace FamiStudio
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsWriting)
-                CleanupUnusedPatterns();
+                DeleteUnusedPatterns();
 
             int patternCount = patterns.Count;
 

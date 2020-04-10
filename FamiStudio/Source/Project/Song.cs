@@ -8,6 +8,7 @@ namespace FamiStudio
     public class Song
     {
         public const int MaxLength = 256;
+        public const int MaxNoteLength = 16;
 
         struct PatternCustomSetting
         {
@@ -294,26 +295,11 @@ namespace FamiStudio
             }
         }
 
-        public static int[] GenerateBarLengths(int patternLen)
-        {
-            var barLengths = new List<int>();
-
-            for (int i = patternLen; i >= 2; i--)
-            {
-                if (patternLen % i == 0)
-                {
-                    barLengths.Add(i);
-                }
-            }
-
-            return barLengths.ToArray();
-        }
-
         public void SetSensibleBarLength()
         {
             if (UsesFamiTrackerTempo)
             {
-                var barLengths = GenerateBarLengths(patternLength);
+                var barLengths = Utils.GetFactors(patternLength);
                 barLength = barLengths[barLengths.Length / 2];
             }
             else
@@ -430,22 +416,22 @@ namespace FamiStudio
             SetLength(maxLength);
         }
 
-        public void RemoveEmptyPatterns()
+        public void DeleteEmptyPatterns()
         {
             foreach (var channel in channels)
-                channel.RemoveEmptyPatterns();   
+                channel.DeleteEmptyPatterns();   
         }
 
         public void CleanupUnusedPatterns()
         {
             foreach (var channel in channels)
-                channel.CleanupUnusedPatterns();
+                channel.DeleteUnusedPatterns();
         }
 
-        public void ClearNotesPastMaxInstanceLength()
+        public void DeleteNotesPastMaxInstanceLength()
         {
             foreach (var channel in channels)
-                channel.ClearNotesPastMaxInstanceLength();
+                channel.DeleteNotesPastMaxInstanceLength();
         }
 
         public override string ToString()
@@ -535,6 +521,7 @@ namespace FamiStudio
         public void ResizeNotes(int newNoteLength, bool convert)
         {
             Debug.Assert(UsesFamiStudioTempo);
+            Debug.Assert(newNoteLength > 0 && newNoteLength <= MaxNoteLength);
 
             if (convert)
             {
@@ -810,10 +797,12 @@ namespace FamiStudio
             buffer.Serialize(ref famitrackerSpeed);
             buffer.Serialize(ref color);
 
-            // At version 5 (FamiStudio 1.5.0), we replaced the jump/skips effects by loop points and custom pattern length.
+            // At version 5 (FamiStudio 1.5.0), we replaced the jump/skips effects by loop points and custom pattern length and we added a new tempo mode.
             if (buffer.Version >= 5)
             {
                 buffer.Serialize(ref loopPoint);
+                buffer.Serialize(ref noteLength);
+                buffer.Serialize(ref palFrameSkipPattern);
 
                 for (int i = 0; i < MaxLength; i++)
                 {
