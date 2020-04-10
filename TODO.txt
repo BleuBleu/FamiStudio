@@ -2,34 +2,23 @@
 ============================
 - OPERATION TEMPO/PAL NSF:
 
-	- First to PAL/NTSC.
-
 	- Expansions: 
-		- NTSC only: 2 tempo modes = 2 x n
+		- Do they need tempo mode? Just export at speed 1, tempo 150. No speed change.
 	- Non-expansions:
 		- PAL/NTSC/Dual + 2 tempo modes = 6
 
+	- FamiStudio Tempo
+		- Intead of 307/256, notelength + pal skip pattern (3 bytes + 1 empty)
+		- Tempo logic
+		- Reuse speed change code + 3 bytes.
+		
+	- What about when exporting to FamiTone2? Add a variant field.
+
 - PAL support/tempo/speed:
-	- Basic FamiStudio tempo implementation, all UI works, render piano roll.
-		- Do custom note lenght IMMEDIATELY. otherwise a bitch to retrofit.
-		- Ask to convert when changing note length.
-	x Make bar length more flexible (for short patterns too).
-	x Allow custom patterns to be longer.
-	x Only allow PAL when no expansion used.
-	x Specify tempo changes in pattern.
-	x Note resize, tempo change.
-	x Hookup playback correctly.
-		x Read frame skip at each pattern with custom tempo.
-		x Patterns cant display shorter than 16 pixels.
-	x Slides with odd tempo. 
-	x Slides in FamiStudio tempo
 	- Copy paste between differente tempos?
-	
-	- NSF: Fix rounding on weird tempos (any better ways of doing this???).
 	- NSF (#defines)
-	- Add better tempo logic to famitone2fs.
 	- Import/export formats.
-	- FT2 FS tempo version. (Rename Famitone2FS to FamiStudio).
+	- FT2 FS tempo version. (Rename Famitone2FS ==> FamiStudio).
 
 - All expansions.
 	- Import/export all formats: slides.

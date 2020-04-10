@@ -101,12 +101,20 @@ namespace FamiStudio
                 {
                     line += $"{ll}song{i}ch{chn},";
                 }
- 
-                int tempoPal  = 256 * song.FamitrackerTempo / (50 * 60 / 24);
-                int tempoNtsc = 256 * song.FamitrackerTempo / (60 * 60 / 24);
 
-                line += $"{tempoPal},{tempoNtsc}";
-                lines.Add(line);
+                // MATTT: For regular FamiTone2, we probably want our special version. And give option.
+                if (song.UsesFamiTrackerTempo)
+                {
+                    int tempoPal  = 256 * song.FamitrackerTempo / (50 * 60 / 24);
+                    int tempoNtsc = 256 * song.FamitrackerTempo / (60 * 60 / 24);
+
+                    line += $"{tempoPal},{tempoNtsc}";
+                    lines.Add(line);
+                }
+                else
+                {
+                    lines.Add($"\t{db} {song.NoteLength}, {song.NoteLength - song.PalSkipFrames[0] - 1}, {song.NoteLength - song.PalSkipFrames[1] - 1}, 0");
+                }
             }
 
             lines.Add("");

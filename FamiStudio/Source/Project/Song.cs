@@ -178,7 +178,8 @@ namespace FamiStudio
 
                     if (patternCustomSettings[p].patternLength == 0)
                     {
-                        newPatternCustomSettings.AddRange(new PatternCustomSetting[chunkCount]);
+                        for (int i = 0; i < chunkCount;i++)
+                            newPatternCustomSettings.Add(new PatternCustomSetting());
                     }
                     else
                     {
@@ -233,8 +234,10 @@ namespace FamiStudio
                     }
                 }
 
+                while (newPatternCustomSettings.Count != MaxLength)
+                    newPatternCustomSettings.Add(new PatternCustomSetting());
+
                 patternCustomSettings = newPatternCustomSettings.ToArray();
-                Array.Resize(ref patternCustomSettings, MaxLength);
 
                 patternLength = newPatternLength;
                 songLength = newSongLength;
