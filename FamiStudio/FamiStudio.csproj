@@ -183,14 +183,6 @@
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_dual_tempo.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_fds_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_mmc5_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_1c_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_2c_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_3c_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_4c_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_5c_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_6c_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_7c_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_8c_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_tempo.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_pal.bin" />
@@ -200,6 +192,14 @@
     <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc7_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_ft2_pal.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_8ch_ntsc.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

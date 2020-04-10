@@ -20,14 +20,14 @@ CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$a80 {SONGDATASTART}=$8b00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_MMC5", nsf_ft2_fs_mmc5_ntsc
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$a80 {SONGDATASTART}=$8b00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_S5B", nsf_ft2_fs_s5b_ntsc
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_FDS", nsf_ft2_fs_fds_ntsc
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=1", nsf_ft2_fs_n163_1c_ntsc
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=2", nsf_ft2_fs_n163_2c_ntsc
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=3", nsf_ft2_fs_n163_3c_ntsc
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=4", nsf_ft2_fs_n163_4c_ntsc
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=5", nsf_ft2_fs_n163_5c_ntsc
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=6", nsf_ft2_fs_n163_6c_ntsc
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=7", nsf_ft2_fs_n163_7c_ntsc
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=8", nsf_ft2_fs_n163_8c_ntsc
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=1", nsf_ft2_fs_n163_1ch_ntsc
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=2", nsf_ft2_fs_n163_2ch_ntsc
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=3", nsf_ft2_fs_n163_3ch_ntsc
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=4", nsf_ft2_fs_n163_4ch_ntsc
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=5", nsf_ft2_fs_n163_5ch_ntsc
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=6", nsf_ft2_fs_n163_6ch_ntsc
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=7", nsf_ft2_fs_n163_7ch_ntsc
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FS -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=8", nsf_ft2_fs_n163_8ch_ntsc
 
 EXIT /B %ERRORLEVEL%
 

@@ -1,25 +1,12 @@
 1.5.0: All expansions + PAL
 ============================
-- OPERATION TEMPO/PAL NSF:
-
-	- Expansions: 
-		- Do they need tempo mode? Just export at speed 1, tempo 150. No speed change.
-	- Non-expansions:
-		- PAL/NTSC/Dual + 2 tempo modes = 6
-
-	- FamiStudio Tempo
-		- Intead of 307/256, notelength + pal skip pattern (3 bytes + 1 empty)
-		- Tempo logic
-		- Reuse speed change code + 3 bytes.
-		
-	- What about when exporting to FamiTone2? Add a variant field.
 
 - PAL support/tempo/speed:
 	- Copy paste between differente tempos?
-	- NSF (#defines)
+	- Add note length change to famistudio tempo
+	- Create all permutations (will double #).
+	- ASM export. rename FamiTone2FS and add variant to FamiTone2 export. Add Github repo. What we call "ft2" in NSF will be this version.
 	- Import/export formats.
-	- FT2 FS tempo version. (Rename Famitone2FS ==> FamiStudio).
-
 - All expansions.
 	- Import/export all formats: slides.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
