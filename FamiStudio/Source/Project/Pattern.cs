@@ -251,7 +251,7 @@ namespace FamiStudio
 
             for (int i = keys.Count - 1; i >= 0; i--)
             {
-                if (keys[i] >= maxInstanceLength)
+                if (keys[i] < 0 || keys[i] >= maxInstanceLength)
                     notes.Remove(keys[i]);
                 else
                     break;

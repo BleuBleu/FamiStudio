@@ -2,8 +2,10 @@
 ============================
 
 - PAL support/tempo/speed:
+	- BUG: If resize pattern from length = 1, Nan, negative numbers, shit...
+	- BUG: Split doesnt understand FamiSTudio tempo.
 	- Copy paste between differente tempos?
-	- Add note length change to famistudio tempo
+	x Add note length change to famistudio tempo
 	- Create all permutations (will double #).
 	- ASM export. rename FamiTone2FS and add variant to FamiTone2 export. Add Github repo. What we call "ft2" in NSF will be this version.
 	- Import/export formats.
@@ -12,6 +14,7 @@
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - MATTT.
 - BUG: Once I hit a bug where i could drag notes without clicking on them???
+- Show asterix in piano roll for custom pattern settings?
 
 TESTING:
 ========

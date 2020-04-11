@@ -2646,6 +2646,39 @@ special_code:
 .endif
     jmp read_byte 
 
+set_speed:
+.if ::FT_FAMISTUDIO_TEMPO 
+    .if ::FT_PAL_SUPPORT
+        lda (FT_TEMP_PTR1),y
+        sta FT_TEMPO_NOTE_COUNTER
+        sta FT_TEMPO_NOTE_LENGTH
+        iny
+        lda (FT_TEMP_PTR1),y
+        sta FT_TEMPO_SKIP_FRAME1
+        iny
+        lda (FT_TEMP_PTR1),y
+        sta FT_TEMPO_SKIP_FRAME2
+        ldy #0
+    .endif
+    add_16_8 FT_TEMP_PTR1, #3
+.else
+    lda (FT_TEMP_PTR1),y
+    sta FT_SONG_SPEED
+    inc_16 FT_TEMP_PTR1
+.endif
+    jmp read_byte 
+
+set_loop:
+    lda (FT_TEMP_PTR1),y
+    sta FT_TEMP_VAR1
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta FT_TEMP_PTR_H
+    lda FT_TEMP_VAR1
+    sta FT_TEMP_PTR_L
+    dey
+    jmp read_byte
+
 set_empty_rows:
     cmp #$3d
     beq set_speed
@@ -2674,23 +2707,6 @@ set_reference:
     lda FT_TEMP_VAR1
     sta FT_TEMP_PTR_L
     ldy #0
-    jmp read_byte
-
-set_speed:
-    lda (FT_TEMP_PTR1),y
-    sta FT_SONG_SPEED
-    inc_16 FT_TEMP_PTR1
-    jmp read_byte 
-
-set_loop:
-    lda (FT_TEMP_PTR1),y
-    sta FT_TEMP_VAR1
-    iny
-    lda (FT_TEMP_PTR1),y
-    sta FT_TEMP_PTR_H
-    lda FT_TEMP_VAR1
-    sta FT_TEMP_PTR_L
-    dey
     jmp read_byte
 
 release_note:

@@ -12,9 +12,9 @@ namespace FamiStudio
 
         class PatternCustomSetting
         {
-            public int   patternLength;
-            public int   noteLength;
-            public int   barLength;
+            public int patternLength;
+            public int noteLength;
+            public int barLength;
             public int[] palSkipFrames = new int[2];
 
             public void Clear()
@@ -36,7 +36,7 @@ namespace FamiStudio
         private int barLength = 24;
         private string name;
         private int loopPoint = 0;
-        private PatternCustomSetting[] patternCustomSettings = new PatternCustomSetting[Song.MaxLength]; 
+        private PatternCustomSetting[] patternCustomSettings = new PatternCustomSetting[Song.MaxLength];
         private int[] patternStartNote = new int[Song.MaxLength];
 
         // These are specific to FamiTracker tempo mode
@@ -44,7 +44,7 @@ namespace FamiStudio
         private int famitrackerSpeed = 6;
 
         // These are for FamiStudio tempo mode
-        private int   noteLength = 10;
+        private int noteLength = 10;
         private int[] palSkipFrames = new int[2];
 
         public int Id => id;
@@ -56,7 +56,7 @@ namespace FamiStudio
         public int PatternLength { get => patternLength; }
         public int BarLength { get => barLength; }
         public int LoopPoint { get => loopPoint; }
-        public bool UsesFamiStudioTempo  => project.UsesFamiStudioTempo;
+        public bool UsesFamiStudioTempo => project.UsesFamiStudioTempo;
         public bool UsesFamiTrackerTempo => project.UsesFamiTrackerTempo;
         public int FamitrackerTempo { get => famitrackerTempo; set => famitrackerTempo = value; }
         public int FamitrackerSpeed { get => famitrackerSpeed; set => famitrackerSpeed = value; }
@@ -147,14 +147,14 @@ namespace FamiStudio
             // MATTT: Make sure that makes sense with FamiStudio tempo, we dont want to split notes in 1/2.
             if ((patternLength % factor) == 0 && (songLength * factor) < MaxLength)
             {
-                var oldChannelPatterns  = new Pattern[channels.Length][];
+                var oldChannelPatterns = new Pattern[channels.Length][];
                 var oldChannelInstances = new Pattern[channels.Length][];
 
                 for (int c = 0; c < channels.Length; c++)
                 {
                     var channel = channels[c];
 
-                    oldChannelPatterns[c]  = channel.Patterns.ToArray();
+                    oldChannelPatterns[c] = channel.Patterns.ToArray();
                     oldChannelInstances[c] = channel.PatternInstances.Clone() as Pattern[];
 
                     Array.Clear(channel.PatternInstances, 0, channel.PatternInstances.Length);
@@ -178,7 +178,7 @@ namespace FamiStudio
 
                     if (patternCustomSettings[p].patternLength == 0)
                     {
-                        for (int i = 0; i < chunkCount;i++)
+                        for (int i = 0; i < chunkCount; i++)
                             newPatternCustomSettings.Add(new PatternCustomSetting());
                     }
                     else
@@ -351,7 +351,7 @@ namespace FamiStudio
             if (project.UsesFamiTrackerTempo)
             {
                 Debug.Assert(customNoteLength == 0);
-                Debug.Assert(customBarLength  == 0);
+                Debug.Assert(customBarLength == 0);
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
             }
@@ -434,7 +434,7 @@ namespace FamiStudio
         public void DeleteEmptyPatterns()
         {
             foreach (var channel in channels)
-                channel.DeleteEmptyPatterns();   
+                channel.DeleteEmptyPatterns();
         }
 
         public void CleanupUnusedPatterns()
@@ -482,7 +482,7 @@ namespace FamiStudio
             var oldNoteLength    = GetPatternNoteLength(p);
 
             foreach (var channel in channels)
-            { 
+            {
                 var pattern = channel.PatternInstances[p];
 
                 if (pattern == null || (processedPatterns != null && processedPatterns.Contains(pattern)))
@@ -597,13 +597,13 @@ namespace FamiStudio
                     return ComputeFamiTrackerBPM(famitrackerSpeed, famitrackerTempo);
             }
         }
-        
+
         public static float ComputePalError(int noteLength)
         {
             float ntsc = (1000.0f / 60.0988f) * noteLength;
-            float pal  = (1000.0f / 50.0070f) * PalNoteLengthLookup[noteLength];
-            float diff = Math.Abs(ntsc - pal);
-            return diff * 100.0f / Math.Max(ntsc, pal);
+            float pal = (1000.0f / 50.0070f) * PalNoteLengthLookup[noteLength];
+            float diff = pal - ntsc;
+            return ((Math.Max(ntsc, pal) / Math.Min(ntsc, pal) - 1) * 100.0f) * Math.Sign(diff);
         }
 
         public static int GetNumPalSkipFrames(int noteLength)
@@ -664,7 +664,7 @@ namespace FamiStudio
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
 
-            var uniqueNotes    = new HashSet<Note>();
+            var uniqueNotes = new HashSet<Note>();
             var uniquePatterns = new HashSet<Pattern>();
 
             foreach (var channel in channels)
@@ -693,9 +693,12 @@ namespace FamiStudio
             for (int i = 0; i < MaxLength; i++)
                 Debug.Assert(oldPatternInstancesStartNote[i] == patternStartNote[i]);
 
-            var numSkipFrames = (palSkipFrames[0] >= 0 ? 1 : 0) + (palSkipFrames[1] >= 0 ? 1 : 0);
-            Debug.Assert(numSkipFrames == GetNumPalSkipFrames(noteLength));
-            Debug.Assert(numSkipFrames != 2 || palSkipFrames[0] != palSkipFrames[1]);
+            if (project.UsesFamiStudioTempo)
+            {
+                var numSkipFrames = (palSkipFrames[0] >= 0 ? 1 : 0) + (palSkipFrames[1] >= 0 ? 1 : 0);
+                Debug.Assert(numSkipFrames == GetNumPalSkipFrames(noteLength));
+                Debug.Assert(numSkipFrames != 2 || palSkipFrames[0] != palSkipFrames[1]);
+            }
         }
 #endif
 
@@ -763,11 +766,10 @@ namespace FamiStudio
 
         public void ConvertToFamiStudioTempo()
         {
-            int newNoteLength    = famitrackerSpeed;
-            int newBarLength     = barLength * newNoteLength;
+            int newNoteLength = famitrackerSpeed;
+            int newBarLength = barLength * newNoteLength;
             int newPatternLength = patternLength * newNoteLength;
 
-            // MATTT: Custom pattern tempo.
             foreach (var channel in channels)
             {
                 foreach (var pattern in channel.Patterns)
@@ -786,11 +788,24 @@ namespace FamiStudio
                 }
             }
 
+            for (int p = 0; p < songLength; p++)
+            {
+                if (PatternHasCustomSettings(p))
+                {
+                    patternCustomSettings[p].noteLength    = famitrackerSpeed;
+                    patternCustomSettings[p].patternLength = patternCustomSettings[p].patternLength / famitrackerSpeed * famitrackerSpeed;
+                    patternCustomSettings[p].barLength     = Math.Min(patternCustomSettings[p].barLength / famitrackerSpeed, 1);
+                    GetDefaultPalSkipFrames(famitrackerSpeed, patternCustomSettings[p].palSkipFrames); 
+                }
+            }
+
             noteLength    = newNoteLength;
             barLength     = newBarLength;
             patternLength = newPatternLength;
 
+            GetDefaultPalSkipFrames(noteLength, palSkipFrames);
             UpdatePatternStartNotes();
+            DeleteNotesPastMaxInstanceLength();
         }
 
         public void SerializeState(ProjectBuffer buffer)

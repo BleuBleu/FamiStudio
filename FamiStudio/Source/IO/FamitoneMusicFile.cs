@@ -114,7 +114,7 @@ namespace FamiStudio
                 else
                 {
                     lines.Add(line);
-                    lines.Add($"\t{db} {song.NoteLength}, {song.NoteLength - song.PalSkipFrames[0] - 1}, {song.NoteLength - song.PalSkipFrames[1] - 1}, 0");
+                    lines.Add($"\t{db} {song.NoteLength}, {(song.PalSkipFrames[0] < 0 ? 0xff : song.NoteLength - song.PalSkipFrames[0] - 1)}, {(song.PalSkipFrames[1] < 0 ? 0xff : song.NoteLength - song.PalSkipFrames[1] - 1)}, 0");
                 }
             }
 
@@ -552,7 +552,7 @@ namespace FamiStudio
                 var isSpeedChannel = c == speedChannel;
                 var instrument = (Instrument)null;
 
-                if (isSpeedChannel)
+                if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
                     if (!test)
                         lines.Add($"\t{db} $fb, ${song.FamitrackerSpeed:x2}");
@@ -568,6 +568,17 @@ namespace FamiStudio
                     if (!test && p == song.LoopPoint)
                     {
                         lines.Add($"{ll}song{songIdx}ch{c}loop:");
+                    }
+
+                    if (isSpeedChannel && project.UsesFamiStudioTempo && song.PatternHasCustomSettings(p))
+                    {
+                        if (!test)
+                        {
+                            var noteLength = song.GetPatternNoteLength(p);
+                            var skipFrames = song.GetPatternPalSkipFrames(p);
+                            lines.Add($"\t{db} $fb, ${noteLength:x2}, ${(skipFrames[0] < 0 ? 0xff : noteLength - skipFrames[0] - 1):x2}, ${(skipFrames[1] < 0 ? 0xff : noteLength - skipFrames[1] - 1):x2}");
+                        }
+                        size += 4;
                     }
 
                     var patternLength = song.GetPatternLength(p); 
@@ -833,6 +844,8 @@ namespace FamiStudio
                     project.DeleteSong(splitSong);
                 }
             }
+
+            bestFactor = 1; // MATTT: Need to fix Split() for famistudio tempo.
 
             var bestSplitSong = project.DuplicateSong(song);
             bestSplitSong.Split(bestFactor);

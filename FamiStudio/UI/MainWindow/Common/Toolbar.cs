@@ -358,7 +358,7 @@ namespace FamiStudio
         {
             switch (App.LoopMode)
             {
-                case LoopMode.None: return bmpLoopNone;
+                case LoopMode.LoopPoint: return bmpLoopNone;
                 case LoopMode.Song: return bmpLoopSong;
                 case LoopMode.Pattern: return bmpLoopPattern;
             }

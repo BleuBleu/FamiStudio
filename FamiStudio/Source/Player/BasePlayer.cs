@@ -14,9 +14,10 @@ namespace FamiStudio
 {
     public enum LoopMode
     {
-        None,
+        LoopPoint,
         Song,
         Pattern,
+        None,
         Max
     };
 
@@ -120,8 +121,8 @@ namespace FamiStudio
             palNoteCount = patternNoteLength;
 
             var palSkipFrames = song.GetPatternPalSkipFrames(playPattern);
-            palSkipFrame1 = (patternNoteLength - palSkipFrames[0] - 1);
-            palSkipFrame2 = (patternNoteLength - palSkipFrames[1] - 1);
+            palSkipFrame1 = palSkipFrames[0] < 0 ? -1 : (patternNoteLength - palSkipFrames[0] - 1);
+            palSkipFrame2 = palSkipFrames[1] < 0 ? -1 : (patternNoteLength - palSkipFrames[1] - 1);
         }
 
         public bool BeginPlaySong(Song s, bool pal, int startNote)
@@ -224,7 +225,7 @@ namespace FamiStudio
 
             if (playPattern >= songLength)
             {
-                if (loopMode == LoopMode.None)
+                if (loopMode == LoopMode.LoopPoint)
                 {
                     if (song.LoopPoint >= 0)
                     {
@@ -232,7 +233,7 @@ namespace FamiStudio
                         playNote = 0;
                         ResetFamiStudioTempo();
                     }
-                    else
+                    else 
                     {
                         return false;
                     }
@@ -242,6 +243,10 @@ namespace FamiStudio
                     playPattern = Math.Max(0, song.LoopPoint);
                     playNote = 0;
                     ResetFamiStudioTempo();
+                }
+                else if (loopMode == LoopMode.None)
+                {
+                    return false;
                 }
             }
 

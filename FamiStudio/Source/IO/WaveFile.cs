@@ -34,6 +34,7 @@ namespace FamiStudio
         public unsafe static void Save(Song song, string filename, int sampleRate)
         {
             var player = new WavPlayer();
+            player.Loop = LoopMode.None;
             var samples = player.GetSongSamples(song, false); // MATTT: PAL
 
             using (var file = new FileStream(filename, FileMode.Create))

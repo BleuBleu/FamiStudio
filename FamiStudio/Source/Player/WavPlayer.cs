@@ -8,7 +8,7 @@ namespace FamiStudio
 
         public WavPlayer() : base(NesApu.APU_WAV_EXPORT)
         {
-            loopMode = LoopMode.None;
+            loopMode = LoopMode.LoopPoint;
         }
 
         public short[] GetSongSamples(Song song, bool pal)

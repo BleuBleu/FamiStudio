@@ -1374,7 +1374,8 @@ namespace FamiStudio
                     if (noteLength != song.GetPatternNoteLength(patternIdx))
                     {
                         var convertTempo = PlatformUtils.MessageBox($"You changed the note length for this pattern, do you want FamiStudio to attempt convert the tempo by resizing notes?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
-                        song.ResizePatternNotes(patternIdx, noteLength);
+                        if (convertTempo)
+                            song.ResizePatternNotes(patternIdx, noteLength);
                     }
 
                     if (custom)
