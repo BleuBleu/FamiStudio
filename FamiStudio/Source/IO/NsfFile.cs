@@ -112,7 +112,7 @@ namespace FamiStudio
 
                 List<byte> nsfBytes = new List<byte>();
 
-                string kernelBinary = "nsf_";
+                string kernelBinary = "nsf";
                 if (kernel == FamitoneMusicFile.FamiToneKernel.FamiStudio)
                 {
                     kernelBinary += "_famistudio";

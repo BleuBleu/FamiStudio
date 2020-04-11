@@ -3,9 +3,6 @@
 
 - PAL support/tempo/speed:
 	- Copy paste between differente tempos?
-	x Add note length change to famistudio tempo
-	- Create all permutations (will double #).
-	- ASM export. rename FamiTone2FS and add variant to FamiTone2 export. Add Github repo. What we call "ft2" in NSF will be this version.
 	- Import/export formats.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - MATTT.

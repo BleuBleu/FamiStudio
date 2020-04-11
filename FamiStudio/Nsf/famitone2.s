@@ -27,6 +27,9 @@ FT_THREAD	= 1			;undefine if you are calling sound effects from the same thread 
 .ifndef FT_NTSC_SUPPORT
     FT_NTSC_SUPPORT = 0
 .endif
+.ifndef FT_FAMISTUDIO_TEMPO
+    FT_FAMISTUDIO_TEMPO = 0
+.endif
 
 ;internal defines
 FT_PITCH_FIX    = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
@@ -124,10 +127,17 @@ FT_SONG_LIST_L	= FT_VARS+1
 FT_SONG_LIST_H	= FT_VARS+2
 FT_INSTRUMENT_L = FT_VARS+3
 FT_INSTRUMENT_H = FT_VARS+4
+.if(!FT_FAMISTUDIO_TEMPO)
 FT_TEMPO_STEP_L	= FT_VARS+5
 FT_TEMPO_STEP_H	= FT_VARS+6
 FT_TEMPO_ACC_L	= FT_VARS+7
 FT_TEMPO_ACC_H	= FT_VARS+8
+.elseif(FT_PAL_SUPPORT)
+FT_TEMPO_SKIP_FRAME1	= FT_VARS+5
+FT_TEMPO_SKIP_FRAME2	= FT_VARS+6
+FT_TEMPO_NOTE_LENGTH	= FT_VARS+7
+FT_TEMPO_NOTE_COUNTER	= FT_VARS+8
+.endif
 FT_SONG_SPEED	= FT_CH5_INSTRUMENT
 FT_PULSE1_PREV	= FT_CH3_DUTY
 FT_PULSE2_PREV	= FT_CH5_DUTY
@@ -212,10 +222,7 @@ FT_MR_NOISE_V		= FT_OUT_BUF+9
 FT_MR_NOISE_F		= FT_OUT_BUF+10
 	.endif
 
-;.assert FT_TEMP_SIZE_DEF = FT_TEMP_SIZE, error, "Famitone temp size mismatch."
-;.assert FT_BASE_SIZE_DEF = FT_BASE_SIZE, error, "Famitone base size mismatch."
 
-;.out .sprintf ("Famitone base size is %d bytes.", FT_BASE_SIZE)
 
 ;------------------------------------------------------------------------------
 ; reset APU, initialize FamiTone
@@ -383,7 +390,7 @@ FamiToneMusicPlay:
 	cpx #.lobyte(FT_CHANNELS)+FT_CHANNELS_ALL
 	bne @set_channels
 
-
+.if(!FT_FAMISTUDIO_TEMPO)
 	lda FT_PAL_ADJUST		;read tempo for PAL or NTSC
 	beq @pal
 	iny
@@ -402,6 +409,21 @@ FamiToneMusicPlay:
 	lda #6					;default speed
 	sta FT_TEMPO_ACC_H
 	sta FT_SONG_SPEED		;apply default speed, this also enables music
+.elseif(FT_PAL_SUPPORT)
+    lda (FT_TEMP_PTR),y
+    sta FT_TEMPO_NOTE_COUNTER
+    sta FT_TEMPO_NOTE_LENGTH
+    sta FT_SONG_SPEED          ; simply so the song isnt considered paused.
+    iny
+    lda (FT_TEMP_PTR),y
+    sta FT_TEMPO_SKIP_FRAME1
+    iny
+    lda (FT_TEMP_PTR),y
+    sta FT_TEMPO_SKIP_FRAME2
+.else
+    lda #6
+    sta FT_SONG_SPEED
+.endif
 
 @skip:
 	rts
@@ -460,6 +482,7 @@ FamiToneUpdate:
 
 @update:
 
+.if(!FT_FAMISTUDIO_TEMPO)
 	clc						;update frame counter that considers speed, tempo, and PAL/NTSC
 	lda FT_TEMPO_ACC_L
 	adc FT_TEMPO_STEP_L
@@ -476,7 +499,7 @@ FamiToneUpdate:
 	sec
 	sbc FT_SONG_SPEED
 	sta FT_TEMPO_ACC_H
-
+.endif
 
 	ldx #.lobyte(FT_CH1_VARS)	;process channel 1
 	jsr _FT2ChannelUpdate
@@ -696,6 +719,27 @@ FamiToneUpdate:
 	ora #$f0
 	sta FT_MR_NOISE_V
 
+; Run update twice sometimes so that PAL keeps up with NTSC
+.if(FT_FAMISTUDIO_TEMPO && FT_PAL_SUPPORT)
+	lda FT_PAL_ADJUST ; On NTSC, just play 1 note per frame.
+	bne @check_done
+	dec FT_TEMPO_NOTE_COUNTER
+	bne @check_frame1
+	lda FT_TEMPO_NOTE_LENGTH
+	sta FT_TEMPO_NOTE_COUNTER
+
+	; We support notes up to 16 length, which mean we have up to 2 frames to skip.
+	@check_frame1:
+		lda FT_TEMPO_NOTE_COUNTER
+		cmp FT_TEMPO_SKIP_FRAME1
+		bne @check_frame2
+		jmp @update
+	@check_frame2:
+		cmp FT_TEMPO_SKIP_FRAME2
+		bne @check_done
+		jmp @update
+	@check_done:
+.endif
 
 	.if(FT_SFX_ENABLE)
 
@@ -896,10 +940,30 @@ _FT2ChannelUpdate:
 	jmp @read_byte
 
 @set_speed:
+.if(FT_FAMISTUDIO_TEMPO)
+	.if(FT_PAL_SUPPORT)
+		lda (FT_TEMP_PTR),y
+		sta FT_TEMPO_NOTE_COUNTER
+		sta FT_TEMPO_NOTE_LENGTH
+		iny
+		lda (FT_TEMP_PTR),y
+		sta FT_TEMPO_SKIP_FRAME1
+		iny
+		lda (FT_TEMP_PTR),y
+		sta FT_TEMPO_SKIP_FRAME2
+		ldy #0
+	.endif
+	clc
+	lda #3
+	adc <FT_TEMP_PTR_L
+	sta <FT_TEMP_PTR_L
+	bcc @read_byte
+.else
 	lda (FT_TEMP_PTR),y
 	sta FT_SONG_SPEED
 	inc <FT_TEMP_PTR_L		;advance pointer after reading the speed value
 	bne @read_byte
+.endif
 	inc <FT_TEMP_PTR_H
 	bne @read_byte ;bra
 
