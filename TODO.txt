@@ -2,7 +2,6 @@
 ============================
 
 - PAL support/tempo/speed:
-	- Copy paste between differente tempos?
 	- Import/export formats.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - MATTT.
@@ -34,7 +33,7 @@ Breaking changes
 ================
 - VRC6 saw duty (mention in FamiTracker compatibility section)
 
-1.5.0 Trailer
+2.0.0 Trailer
 =============
 - ROM export
 - All expansions

@@ -507,6 +507,7 @@ namespace FamiStudio
                 customSettings = new Song.PatternCustomSetting[numPatterns];
                 for (int i = 0; i < numPatterns; i++)
                 {
+                    customSettings[i] = new Song.PatternCustomSetting();
                     serializer.Serialize(ref customSettings[i].useCustomSettings);
                     serializer.Serialize(ref customSettings[i].patternLength);
                     serializer.Serialize(ref customSettings[i].noteLength);
