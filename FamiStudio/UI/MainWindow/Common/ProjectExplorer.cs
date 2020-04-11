@@ -1263,12 +1263,12 @@ namespace FamiStudio
             }
         }
 
-        private bool SongProperties_ValidateProperties(PropertyDialog dlg)
+        private bool SongProperties_ValidateProperties(PropertyPage props)
         {
-            var song = dlg.Properties.UserData as Song;
-            var noteLength = dlg.Properties.GetPropertyValue<int>(3);
-            var frame1 = dlg.Properties.GetPropertyValue<int>(8);
-            var frame2 = dlg.Properties.GetPropertyValue<int>(9);
+            var song = props.UserData as Song;
+            var noteLength = props.GetPropertyValue<int>(3);
+            var frame1 = props.GetPropertyValue<int>(8);
+            var frame2 = props.GetPropertyValue<int>(9);
             var numPalSkipFrames = (frame1 >= 0 ? 1 : 0) + (frame2 >= 0 ? 1 : 0);
             var expectedCount = Song.GetNumPalSkipFrames(noteLength);
 

@@ -28,14 +28,17 @@ namespace FamiStudio
             public Widget control;
         };
 
-        System.Drawing.Color color;
-        Pixbuf colorBitmap;
-        List<Property> properties = new List<Property>();
+        private object userData;
+        private System.Drawing.Color color;
+        private Pixbuf colorBitmap;
+        private List<Property> properties = new List<Property>();
 
         public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
         public event PropertyChangedDelegate PropertyChanged;
         public delegate void PropertyWantsCloseDelegate(int idx);
         public event PropertyWantsCloseDelegate PropertyWantsClose;
+        public new object UserData { get => userData; set => userData = value; }
+        public int PropertyCount => properties.Count;
 
         public PropertyPage() : base(1, 1, false)
         {
@@ -262,6 +265,17 @@ namespace FamiStudio
                 });
         }
 
+        public void AddLabel(string label, string value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Boolean,
+                    label = CreateLabel(label),
+                    control = CreateLabel(value)
+                });
+        }
+
         public void AddBoolean(string label, bool value)
         {
             properties.Add(
@@ -302,6 +316,19 @@ namespace FamiStudio
                     label = CreateLabel(label),
                     control = CreateNumericUpDown(value, min, max)
                 });
+        }
+
+        public void UpdateIntegerRange(int idx, int min, int max)
+        {
+            var spin = (properties[idx].control as SpinButton);
+            spin.SetRange(min, max);
+        }
+
+        public void UpdateIntegerRange(int idx, int value, int min, int max)
+        {
+            var spin = (properties[idx].control as SpinButton);
+            spin.SetRange(min, max);
+            spin.Value = value;
         }
 
         public void AddDomainRange(string label, int[] values, int value)
@@ -347,6 +374,11 @@ namespace FamiStudio
         public void SetPropertyEnabled(int idx, bool enabled)
         {
             properties[idx].control.Sensitive = enabled;
+        }
+
+        public void SetLabelText(int idx, string text)
+        {
+            (properties[idx].control as Label).Text = text;
         }
 
         public object GetPropertyValue(int idx)

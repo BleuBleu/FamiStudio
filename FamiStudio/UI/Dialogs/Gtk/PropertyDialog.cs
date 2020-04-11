@@ -7,18 +7,23 @@ namespace FamiStudio
 {
     public class PropertyDialog : Window
     {
+        public delegate bool ValidateDelegate(PropertyPage props);
+        public event ValidateDelegate ValidateProperties;
+
         private PropertyPage propertyPage = new PropertyPage();
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false) : base(WindowType.Toplevel)
+        public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = width;
 
             if (leftAlign)
                 pt.X -= width;
+            if (topAlign)
+                pt.Y -= HeightRequest;
 
             Move(pt.X, pt.Y);
         }
@@ -77,19 +82,22 @@ namespace FamiStudio
 
         private void ButtonYes_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
-            result = System.Windows.Forms.DialogResult.OK;
+            if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
+                result = System.Windows.Forms.DialogResult.OK;
         }
 
         private void propertyPage_PropertyWantsClose(int idx)
         {
-            result = System.Windows.Forms.DialogResult.OK;
+            if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
+                result = System.Windows.Forms.DialogResult.OK;
         }
 
         protected override bool OnKeyPressEvent(Gdk.EventKey evnt)
         {
             if (evnt.Key == Gdk.Key.Return)
             {
-                result = System.Windows.Forms.DialogResult.OK;
+                if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
+                    result = System.Windows.Forms.DialogResult.OK;
             }
             else if (evnt.Key == Gdk.Key.Escape)
             {

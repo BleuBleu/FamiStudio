@@ -116,10 +116,20 @@ namespace FamiStudio
         public float GradientSizeY = 0.0f;
         public Color Color0;
         public Color Color1;
+        public GLBitmap Bitmap;
+        public bool BitmapTileX;
+        public bool BitmapTileY;
 
         public GLBrush(Color color)
         {
             Color0 = color;
+        }
+
+        public GLBrush(GLBitmap bmp, bool tileX, bool tileY)
+        {
+            Bitmap = bmp;
+            BitmapTileX = tileX;
+            BitmapTileY = tileY;
         }
 
         public GLBrush(Color color0, Color color1, float sizeX, float sizeY)
@@ -131,6 +141,7 @@ namespace FamiStudio
         }
 
         public bool IsGradient => GradientSizeX > 0 || GradientSizeY > 0;
+        public bool IsBitmap => Bitmap != null;
     }
 
     public class GLBitmap : IDisposable
@@ -609,6 +620,11 @@ namespace FamiStudio
         public GLBrush CreateSolidBrush(Color color)
         {
             return new GLBrush(color);
+        }
+
+        public GLBrush CreateBitmapBrush(GLBitmap bmp, bool tileX, bool tileY)
+        {
+            return new GLBrush(bmp, tileX, tileY);
         }
 
         public GLBrush CreateHorizontalGradientBrush(float x0, float x1, Color color0, Color color1)
