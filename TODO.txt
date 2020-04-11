@@ -1,6 +1,6 @@
 1.5.0: All expansions + PAL
 ============================
-
+ 
 - PAL support/tempo/speed:
 	- Import/export formats.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
