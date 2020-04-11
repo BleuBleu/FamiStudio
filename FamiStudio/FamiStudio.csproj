@@ -33,7 +33,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FAMISTUDIO_WINDOWS;DEV</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FAMISTUDIO_WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -54,7 +54,7 @@
     <NoWarn>
     </NoWarn>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>7</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
@@ -123,13 +123,6 @@
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\Channel.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DTheme.cs" />
-    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
     <Compile Include="UI\MainWindow\Direct2D\Cursors.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
@@ -419,13 +412,6 @@
     <EmbeddedResource Include="Resources\Stop%402x.png" />
     <EmbeddedResource Include="Resources\Undo%402x.png" />
     <EmbeddedResource Include="Resources\Yes%402x.png" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand10_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand12_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand20_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand28_0.png" />
     <EmbeddedResource Include="Resources\VolumeSmall.png" />
     <EmbeddedResource Include="Resources\Export.png" />
     <EmbeddedResource Include="Resources\File.png" />
