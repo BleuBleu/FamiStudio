@@ -1,8 +1,16 @@
 1.5.0: All expansions + PAL
 ============================
- 
-- PAL support/tempo/speed:
-	- Import/export formats.
+ - MAC: 
+	- Make NSF import work.
+ 	- Add instrument dialog is truncated.
+ 	- Make sure topAlign work (window pops UP when Y > 1/2 height).
+ 	- Some text in checklist box is very faint.
+ 	- Make sure Namco channels dialog works. Added Combo box prop change callback.
+ 	- New functions to update some controls.
+ 	- Export dialog label sizes.
+ 	- Test validateDelegate
+	- 0.5 pixel offset for pattern bitmaps.
+	
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - MATTT.
 - BUG: Once I hit a bug where i could drag notes without clicking on them???
@@ -13,13 +21,6 @@ TESTING:
 - FamiTracker import/export, retest Text, slides, etc. 
 - Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, etc.
 - FTM, test a lot. Needs to match text import (export to text and compare).
-- MAC: 
-	- Make sure namco channels dialog works. Added Combo box prop change callback.
-	- Make sure instrument properties window pops UP when Y > 1/2 height
-	- New functions to update some controls.
-	- Export dialog label sizes.
-	- ValidateDelegate
-	- 0.5 pixel offset for pattern bitmaps.
 - Binary FTM import. Try opening all the demo songs from FT.
 x Duty cycle envelopes, make sure all import/export format support it.
 - Fix saw in Shovel knight.
