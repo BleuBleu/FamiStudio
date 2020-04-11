@@ -7,7 +7,7 @@ namespace FamiStudio
 {
     public partial class PropertyDialog : Form
     {
-        public delegate bool ValidateDelegate(PropertyDialog dlg);
+        public delegate bool ValidateDelegate(PropertyPage props);
         public event ValidateDelegate ValidateProperties;
 
         public PropertyPage Properties => propertyPage;
@@ -96,7 +96,7 @@ namespace FamiStudio
 
         private void buttonYes_Click(object sender, EventArgs e)
         {
-            if (ValidateProperties == null || ValidateProperties.Invoke(this))
+            if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
             {
                 DialogResult = DialogResult.OK;
                 Close();

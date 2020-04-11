@@ -79,7 +79,7 @@ public:
 	///////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////
 
-	__forceinline void ClockMajor()		//decay
+	FORCEINLINE void ClockMajor()		//decay
 	{
 		static int i = 0;
 		for(i = 0; i < 2; i++)
@@ -103,7 +103,7 @@ public:
 		}
 	}
 
-	__forceinline void CheckSweepForcedSilence(register int i)
+	FORCEINLINE void CheckSweepForcedSilence(register int i)
 	{
 		if(nFreqTimer[i].W < 8){	bSweepForceSilence[i] = 1; return; }
 		if(!bSweepMode[i] && (( nFreqTimer[i].W + (nFreqTimer[i].W >> nSweepShift[i])) >= 0x0800))
@@ -112,7 +112,7 @@ public:
 		bSweepForceSilence[i] = 0;
 	}
 
-	__forceinline void ClockMinor()		//sweep / length
+	FORCEINLINE void ClockMinor()		//sweep / length
 	{
 		static int i = 0;
 		for(i = 0; i < 2; i++)
@@ -136,7 +136,7 @@ public:
 		}
 	}
 
-	__forceinline void DoTicks(int ticks)
+	FORCEINLINE void DoTicks(int ticks)
 	{
 		register int mn;
 		register BYTE out;
@@ -201,13 +201,13 @@ public:
 		}
 	}
 
-	__forceinline void Mix_Mono(int& mix,int downsample)
+	FORCEINLINE void Mix_Mono(int& mix,int downsample)
 	{
 		mix += (nMixL / downsample);
 		nMixL = 0;
 	}
 	
-	__forceinline void Mix_Stereo(int& mixL,int& mixR,int downsample)
+	FORCEINLINE void Mix_Stereo(int& mixL,int& mixR,int downsample)
 	{
 		mixL += (nMixL / downsample);
 		mixR += (nMixR / downsample);

@@ -25,10 +25,19 @@ typedef unsigned char  BYTE;
 typedef unsigned short WORD;
 typedef unsigned int   UINT;
 typedef const char*    LPCSTR;
+typedef long long      INT64;
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define ZeroMemory(p, s) memset(p, 0, s)
+
+#ifdef _MSC_VER
+#define FORCEINLINE __forceinline
+#define FASTCALL __fastcall
+#else
+#define FORCEINLINE inline
+#define FASTCALL
+#endif
 
 union TWIN
 {
@@ -153,8 +162,8 @@ struct NSF_ADVANCEDOPTIONS
 class CNSFCore;
 class CNSFFile;
 
-typedef BYTE (__fastcall CNSFCore::*ReadProc)(WORD);
-typedef void (__fastcall CNSFCore::*WriteProc)(WORD,BYTE);
+typedef BYTE (FASTCALL CNSFCore::*ReadProc)(WORD);
+typedef void (FASTCALL CNSFCore::*WriteProc)(WORD,BYTE);
 typedef void (__cdecl *ApuRegWriteCallback)(WORD addr, BYTE data);
 
 class CNSFCore
@@ -226,34 +235,34 @@ protected:
 	void	RecalcSilenceTracker();
 	void	RecalculateInvertFreqs(int cutoff);
 
-	void __forceinline WaitForSamples() { /*while(bIsGeneratingSamples) sleep(5);*/ }
+	void FORCEINLINE WaitForSamples() { /*while(bIsGeneratingSamples) sleep(5);*/ }
 
 protected:
 	/*
 	 *	Memory Read/Write routines
 	 */
-	BYTE __fastcall		ReadMemory_RAM(WORD a)				{ return pRAM[a & 0x07FF]; }
-	BYTE __fastcall		ReadMemory_ExRAM(WORD a)			{ nPlayCalled |= (a == 0x5007); return pExRAM[a & 0x0FFF]; }
-	BYTE __fastcall		ReadMemory_SRAM(WORD a)				{ return pSRAM[a & 0x1FFF]; }
-	BYTE __fastcall		ReadMemory_pAPU(WORD a);
-	BYTE __fastcall		ReadMemory_ROM(WORD a)				{ return pROM[(a >> 12) - 6][a & 0x0FFF]; }
-	BYTE __fastcall		ReadMemory_Default(WORD a)			{ return (a >> 8); }
+	BYTE FASTCALL		ReadMemory_RAM(WORD a)				{ return pRAM[a & 0x07FF]; }
+	BYTE FASTCALL		ReadMemory_ExRAM(WORD a)			{ nPlayCalled |= (a == 0x5007); return pExRAM[a & 0x0FFF]; }
+	BYTE FASTCALL		ReadMemory_SRAM(WORD a)				{ return pSRAM[a & 0x1FFF]; }
+	BYTE FASTCALL		ReadMemory_pAPU(WORD a);
+	BYTE FASTCALL		ReadMemory_ROM(WORD a)				{ return pROM[(a >> 12) - 6][a & 0x0FFF]; }
+	BYTE FASTCALL		ReadMemory_Default(WORD a)			{ return (a >> 8); }
 
-	BYTE __fastcall		ReadMemory_N106(WORD a);
+	BYTE FASTCALL		ReadMemory_N106(WORD a);
 
 
-	void __fastcall		WriteMemory_RAM(WORD a,BYTE v)		{ pRAM[a & 0x07FF] = v; }
-	void __fastcall		WriteMemory_ExRAM(WORD a,BYTE v);
-	void __fastcall		WriteMemory_SRAM(WORD a,BYTE v)		{ pSRAM[a & 0x1FFF] = v; }
-	void __fastcall		WriteMemory_pAPU(WORD a,BYTE v);
-	void __fastcall		WriteMemory_FDSRAM(WORD a,BYTE v)	{ pROM[(a >> 12) - 6][a & 0x0FFF] = v; }
-	void __fastcall		WriteMemory_Default(WORD a,BYTE v)	{ }
+	void FASTCALL		WriteMemory_RAM(WORD a,BYTE v)		{ pRAM[a & 0x07FF] = v; }
+	void FASTCALL		WriteMemory_ExRAM(WORD a,BYTE v);
+	void FASTCALL		WriteMemory_SRAM(WORD a,BYTE v)		{ pSRAM[a & 0x1FFF] = v; }
+	void FASTCALL		WriteMemory_pAPU(WORD a,BYTE v);
+	void FASTCALL		WriteMemory_FDSRAM(WORD a,BYTE v)	{ pROM[(a >> 12) - 6][a & 0x0FFF] = v; }
+	void FASTCALL		WriteMemory_Default(WORD a,BYTE v)	{ }
 
-	void __fastcall		WriteMemory_VRC6(WORD a,BYTE v);
-	void __fastcall		WriteMemory_MMC5(WORD a,BYTE v);
-	void __fastcall		WriteMemory_N106(WORD a,BYTE v);
-	void __fastcall		WriteMemory_VRC7(WORD a,BYTE v);
-	void __fastcall		WriteMemory_FME07(WORD a,BYTE v);
+	void FASTCALL		WriteMemory_VRC6(WORD a,BYTE v);
+	void FASTCALL		WriteMemory_MMC5(WORD a,BYTE v);
+	void FASTCALL		WriteMemory_N106(WORD a,BYTE v);
+	void FASTCALL		WriteMemory_VRC7(WORD a,BYTE v);
+	void FASTCALL		WriteMemory_FME07(WORD a,BYTE v);
 
 	/*
 	 *	Emulation
@@ -452,12 +461,12 @@ protected:
 	 *	Sound Filter
 	 */
 
-	__int64		nFilterAccL;
-	__int64		nFilterAccR;
-	__int64		nFilterAcc2L;
-	__int64		nFilterAcc2R;
-	__int64		nHighPass;
-	__int64		nLowPass;
+	INT64		nFilterAccL;
+	INT64		nFilterAccR;
+	INT64		nFilterAcc2L;
+	INT64		nFilterAcc2R;
+	INT64		nHighPass;
+	INT64		nLowPass;
 
 	int			nHighPassBase;
 	int			nLowPassBase;

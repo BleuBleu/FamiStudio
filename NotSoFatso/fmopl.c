@@ -49,7 +49,11 @@
 // added to ensure the declaraction of the INLINE macro.  For me, it wasn't previously defined
 //		-Disch
 #ifndef INLINE
-#define INLINE __forceinline
+#ifdef _MSC_VER
+	#define INLINE __forceinline
+#else
+	#define INLINE inline
+#endif
 #endif
 
 // This is a constant used when determining if it's safe for the channel to be inverted without

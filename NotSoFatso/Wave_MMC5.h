@@ -77,7 +77,7 @@ public:
 	///////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////
 
-	__forceinline void ClockMajor()		//decay
+	FORCEINLINE void ClockMajor()		//decay
 	{
 		if(nDecayCount)
 			nDecayCount--;
@@ -97,13 +97,13 @@ public:
 		}
 	}
 
-	__forceinline void ClockMinor()		//length
+	FORCEINLINE void ClockMinor()		//length
 	{
 		if(bLengthEnabled && nLengthCount)
 			nLengthCount--;
 	}
 
-	__forceinline void DoTicks(int ticks,BYTE mix)
+	FORCEINLINE void DoTicks(int ticks,BYTE mix)
 	{
 		register int mn;
 
@@ -136,13 +136,13 @@ public:
 		}
 	}
 
-	__forceinline void Mix_Mono(int& mix,int downsample)
+	FORCEINLINE void Mix_Mono(int& mix,int downsample)
 	{
 		mix += (nMixL / downsample);
 		nMixL = 0;
 	}
 	
-	__forceinline void Mix_Stereo(int& mixL,int& mixR,int downsample)
+	FORCEINLINE void Mix_Stereo(int& mixL,int& mixR,int downsample)
 	{
 		mixL += (nMixL / downsample);
 		mixR += (nMixR / downsample);
@@ -171,19 +171,19 @@ public:
 	///////////////////////////////////////////////////////////////////
 
 
-	__forceinline void DoTicks(int ticks)
+	FORCEINLINE void DoTicks(int ticks)
 	{
 		nMixL += nOutputTable_L[nOutput] * ticks;
 		nMixR += nOutputTable_R[nOutput] * (bInvert ? -ticks : ticks);
 	}
 
-	__forceinline void Mix_Mono(int& mix,int downsample)
+	FORCEINLINE void Mix_Mono(int& mix,int downsample)
 	{
 		mix += (nMixL / downsample);
 		nMixL = 0;
 	}
 	
-	__forceinline void Mix_Stereo(int& mixL,int& mixR,int downsample)
+	FORCEINLINE void Mix_Stereo(int& mixL,int& mixR,int downsample)
 	{
 		mixL += (nMixL / downsample);
 		mixR += (nMixR / downsample);

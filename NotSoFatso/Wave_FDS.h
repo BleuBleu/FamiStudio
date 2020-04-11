@@ -88,7 +88,7 @@ public:
 	///////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////
 
-	__forceinline void DoTicks(int ticks,BYTE mix)
+	FORCEINLINE void DoTicks(int ticks,BYTE mix)
 	{
 		int mn;
 		float freq;
@@ -216,13 +216,13 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	//  Mixing
 
-	__forceinline void Mix_Mono(int& mix,int downsample)
+	FORCEINLINE void Mix_Mono(int& mix,int downsample)
 	{
 		mix += (nMixL / downsample);
 		nMixL = 0;
 	}
 	
-	__forceinline void Mix_Stereo(int& mixL,int& mixR,int downsample)
+	FORCEINLINE void Mix_Stereo(int& mixL,int& mixR,int downsample)
 	{
 		mixL += (nMixL / downsample);
 		mixR += (nMixR / downsample);

@@ -141,7 +141,7 @@ public:
 	///////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////
 
-	__forceinline void ClockMajor()		// decay (noise), linear (tri)
+	FORCEINLINE void ClockMajor()		// decay (noise), linear (tri)
 	{
 		//noise's decay
 		if(nNoiseDecayCount)
@@ -171,7 +171,7 @@ public:
 			bTriLinearHalt = 0;
 	}
 
-	__forceinline void ClockMinor()		//length
+	FORCEINLINE void ClockMinor()		//length
 	{
 		if(bNoiseLengthEnabled && nNoiseLengthCount)
 			nNoiseLengthCount--;
@@ -180,7 +180,7 @@ public:
 			nTriLengthCount--;
 	}
 
-	__forceinline int DoTicks(int ticks)		//returns number of burned cycles (burned by DMC's DMA)
+	FORCEINLINE int DoTicks(int ticks)		//returns number of burned cycles (burned by DMC's DMA)
 	{
 		register int mn;
 		register int out;
@@ -322,13 +322,13 @@ public:
 		return burnedcycles;
 	}
 	
-	__forceinline void Mix_Mono(int& mix,int downsample)
+	FORCEINLINE void Mix_Mono(int& mix,int downsample)
 	{
 		mix += (nMixL / downsample);
 		nMixL = 0;
 	}
 	
-	__forceinline void Mix_Stereo(int& mixL,int& mixR,int downsample)
+	FORCEINLINE void Mix_Stereo(int& mixL,int& mixR,int downsample)
 	{
 		mixL += (nMixL / downsample);
 		mixR += (nMixR / downsample);

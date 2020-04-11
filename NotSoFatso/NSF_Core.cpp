@@ -66,7 +66,7 @@ const WORD NOISE_FREQ_TABLE[0x10] = {
 //		Read Memory Procs
 //
 
-BYTE __fastcall CNSFCore::ReadMemory_pAPU(WORD a)
+BYTE FASTCALL CNSFCore::ReadMemory_pAPU(WORD a)
 {
 	EmulateAPU(1);
 
@@ -99,7 +99,7 @@ BYTE __fastcall CNSFCore::ReadMemory_pAPU(WORD a)
 	return 0x40;
 }
 
-BYTE __fastcall CNSFCore::ReadMemory_N106(WORD a)
+BYTE FASTCALL CNSFCore::ReadMemory_N106(WORD a)
 {
 	if(a != 0x4800)
 		return ReadMemory_pAPU(a);
@@ -116,7 +116,7 @@ BYTE __fastcall CNSFCore::ReadMemory_N106(WORD a)
 //		Write Memory Procs
 //
 
-void __fastcall CNSFCore::WriteMemory_ExRAM(WORD a,BYTE v)
+void FASTCALL CNSFCore::WriteMemory_ExRAM(WORD a,BYTE v)
 {
 	if(a < 0x5FF6)				//Invalid
 		return;
@@ -136,7 +136,7 @@ void __fastcall CNSFCore::WriteMemory_ExRAM(WORD a,BYTE v)
 		mWave_TND.pDMCDMAPtr[a - 2] = pROM[a];
 }
 
-void __fastcall CNSFCore::WriteMemory_pAPU(WORD a,BYTE v)
+void FASTCALL CNSFCore::WriteMemory_pAPU(WORD a,BYTE v)
 {
 	EmulateAPU(1);
 
@@ -468,7 +468,7 @@ void __fastcall CNSFCore::WriteMemory_pAPU(WORD a,BYTE v)
 	}
 }
 
-void __fastcall CNSFCore::WriteMemory_VRC6(WORD a,BYTE v)
+void FASTCALL CNSFCore::WriteMemory_VRC6(WORD a,BYTE v)
 {
 	EmulateAPU(1);
 
@@ -535,7 +535,7 @@ void __fastcall CNSFCore::WriteMemory_VRC6(WORD a,BYTE v)
 	}
 }
 
-void __fastcall CNSFCore::WriteMemory_MMC5(WORD a,BYTE v)
+void FASTCALL CNSFCore::WriteMemory_MMC5(WORD a,BYTE v)
 {
 	if((a <= 0x5015) && !bPALMode)
 	{
@@ -627,7 +627,7 @@ multiply:
 		WriteMemory_ExRAM(a,v);
 }
 
-void __fastcall CNSFCore::WriteMemory_N106(WORD a,BYTE v)
+void FASTCALL CNSFCore::WriteMemory_N106(WORD a,BYTE v)
 {
 	if(a < 0x4800)
 	{
@@ -755,7 +755,7 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 	int tick;
 
 	int mixL, mixR;
-	__int64 diff;
+	INT64 diff;
 	int dif;
 
 	if(bFade && nSilentSampleMax && (nSilentSamples >= nSilentSampleMax))
@@ -896,7 +896,7 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 					mixL += nSmAccL;
 				}
 
-				diff = ((__int64)mixL << 25) - nFilterAccL;
+				diff = ((INT64)mixL << 25) - nFilterAccL;
 				if(bHighPassEnabled)
 					nFilterAccL += (diff * nHighPass) >> 16;
 				if(bLowPassEnabled)
@@ -967,7 +967,7 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 					mixR += nSmAccR;
 				}
 
-				diff = ((__int64)mixL << 25) - nFilterAccL;
+				diff = ((INT64)mixL << 25) - nFilterAccL;
 				if(bHighPassEnabled)
 					nFilterAccL += (diff * nHighPass) >> 16;
 				if(bLowPassEnabled)
@@ -979,7 +979,7 @@ void CNSFCore::EmulateAPU(BYTE bBurnCPUCycles)
 					mixL = (int)(diff >> 23);
 
 				
-				diff = ((__int64)mixR << 25) - nFilterAccR;
+				diff = ((INT64)mixR << 25) - nFilterAccR;
 				if(bHighPassEnabled)
 					nFilterAccR += (diff * nHighPass) >> 16;
 				if(bLowPassEnabled)
@@ -1765,8 +1765,8 @@ void CNSFCore::RecalcFilter()
 {
 	if(!nSampleRate) return;
 
-	nHighPass = ((__int64)nHighPassBase << 16) / nSampleRate;
-	nLowPass = ((__int64)nLowPassBase << 16) / nSampleRate;
+	nHighPass = ((INT64)nHighPassBase << 16) / nSampleRate;
+	nLowPass = ((INT64)nLowPassBase << 16) / nSampleRate;
 
 	if(nHighPass > (1<<16)) nHighPass = 1<<16;
 	if(nLowPass > (1<<16)) nLowPass = 1<<16;

@@ -86,7 +86,7 @@ public:
 	///////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////
 
-	__forceinline void DoTicks(int ticks,BYTE* mix)
+	FORCEINLINE void DoTicks(int ticks,BYTE* mix)
 	{
 		register int mn;
 		register int i;
@@ -167,7 +167,7 @@ public:
 		}
 	}
 
-	__forceinline void Mix_Mono(int& mix,int downsample)
+	FORCEINLINE void Mix_Mono(int& mix,int downsample)
 	{
 		register int i;
 		for(i = 0; i < 8; i++)
@@ -177,7 +177,7 @@ public:
 		}
 	}
 	
-	__forceinline void Mix_Stereo(int& mixL,int& mixR,int downsample)
+	FORCEINLINE void Mix_Stereo(int& mixL,int& mixR,int downsample)
 	{
 		register int i;
 		for(i = 0; i < 8; i++)
