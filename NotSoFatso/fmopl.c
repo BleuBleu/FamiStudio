@@ -508,20 +508,20 @@ static int OPLOpenTable( void )
 	double pom;
 
 	/* allocate dynamic tables */
-	if( (TL_TABLE = malloc(TL_MAX*2*sizeof(INT32))) == NULL)
+	if( (TL_TABLE = (INT32*)malloc(TL_MAX*2*sizeof(INT32))) == NULL)
 		return 0;
-	if( (SIN_TABLE = malloc(SIN_ENT*4 *sizeof(INT32 *))) == NULL)
+	if( (SIN_TABLE = (INT32**)malloc(SIN_ENT*4 *sizeof(INT32 *))) == NULL)
 	{
 		free(TL_TABLE);
 		return 0;
 	}
-	if( (AMS_TABLE = malloc(AMS_ENT*2 *sizeof(INT32))) == NULL)
+	if( (AMS_TABLE = (INT32*)malloc(AMS_ENT*2 *sizeof(INT32))) == NULL)
 	{
 		free(TL_TABLE);
 		free(SIN_TABLE);
 		return 0;
 	}
-	if( (VIB_TABLE = malloc(VIB_ENT*2 *sizeof(INT32))) == NULL)
+	if( (VIB_TABLE = (INT32*)malloc(VIB_ENT*2 *sizeof(INT32))) == NULL)
 	{
 		free(TL_TABLE);
 		free(SIN_TABLE);
@@ -930,7 +930,7 @@ FM_OPL *OPLCreate(int type, int clock, int rate)
 	state_size += sizeof(OPL_CH)*max_ch;
 
 	/* allocate memory block */
-	ptr = malloc(state_size);
+	ptr = (char*)malloc(state_size);
 	if(ptr==NULL) return NULL;
 	/* clear */
 	memset(ptr,0,state_size);
