@@ -10,7 +10,7 @@
 
 static Simple_Apu apu[3];
 
-extern "C" int __stdcall NesApuInit(int apuIdx, long sampleRate, int pal, int expansion, int (__cdecl *dmcReadFunc)(void* user_data, cpu_addr_t))
+extern "C" int __stdcall NesApuInit(int apuIdx, int sampleRate, int pal, int expansion, int (__cdecl *dmcReadFunc)(void* user_data, cpu_addr_t))
 {
 	if (apu[apuIdx].sample_rate(sampleRate, pal))
 		return -1;
