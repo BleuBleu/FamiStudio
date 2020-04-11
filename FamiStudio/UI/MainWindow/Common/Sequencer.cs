@@ -847,9 +847,9 @@ namespace FamiStudio
             }
         }
 
-        private Pattern[,] GetSelectedPatterns(out PatternCopyExtraInfo[] extraInfo)
+        private Pattern[,] GetSelectedPatterns(out Song.PatternCustomSetting[] customSettings)
         {
-            extraInfo = null;
+            customSettings = null;
 
             if (!IsSelectionValid())
                 return null;
@@ -866,14 +866,10 @@ namespace FamiStudio
 
             if (fullColumnSelection)
             {
-                extraInfo = new PatternCopyExtraInfo[patterns.GetLength(0)];
+                customSettings = new Song.PatternCustomSetting[patterns.GetLength(0)];
 
                 for (int i = 0; i < patterns.GetLength(0); i++)
-                {
-                    extraInfo[i].customLength = 
-                        Song.PatternHasCustomSettings(minSelectedPatternIdx + i) ? 
-                            Song.GetPatternLength(minSelectedPatternIdx + i) : 0;
-                }
+                    customSettings[i] = Song.GetPatternCustomSettings(minSelectedPatternIdx + i).Clone();
             }
 
             return patterns;
@@ -886,8 +882,8 @@ namespace FamiStudio
         {
             if (IsSelectionValid())
             {
-                var selPatterns = GetSelectedPatterns(out var extraInfo);
-                ClipboardUtils.SavePatterns(App.Project, selPatterns, extraInfo);
+                var selPatterns = GetSelectedPatterns(out var customSettings);
+                ClipboardUtils.SavePatterns(App.Project, selPatterns, customSettings);
             }
         }
 
@@ -895,9 +891,9 @@ namespace FamiStudio
         {
             if (IsSelectionValid())
             {
-                var selPatterns = GetSelectedPatterns(out var extraInfo);
-                ClipboardUtils.SavePatterns(App.Project, selPatterns, extraInfo);
-                DeleteSelection(true, extraInfo != null);
+                var selPatterns = GetSelectedPatterns(out var customSettings);
+                ClipboardUtils.SavePatterns(App.Project, selPatterns, customSettings);
+                DeleteSelection(true, customSettings != null);
             }
         }
 
@@ -916,7 +912,7 @@ namespace FamiStudio
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 
-            var patterns = ClipboardUtils.LoadPatterns(App.Project, Song, createMissingInstrument, out var extraInfo);
+            var patterns = ClipboardUtils.LoadPatterns(App.Project, Song, createMissingInstrument, out var customSettings);
 
             if (patterns == null)
             {
@@ -939,10 +935,24 @@ namespace FamiStudio
                 }
             }
 
-            if (extraInfo != null)
+            if (customSettings != null)
             {
                 for (int i = 0; i < patterns.GetLength(0); i++)
-                    Song.SetPatternCustomSettings(i + minSelectedPatternIdx, extraInfo[i].customLength);
+                {
+                    if (customSettings[i].useCustomSettings)
+                    {
+                        Song.SetPatternCustomSettings(
+                            i + minSelectedPatternIdx, 
+                            customSettings[i].patternLength,
+                            customSettings[i].noteLength,
+                            customSettings[i].barLength,
+                            customSettings[i].palSkipFrames);
+                    }
+                    else
+                    {
+                        Song.ClearPatternCustomSettings(i + minSelectedPatternIdx);
+                    }
+                }
             }
 
             App.UndoRedoManager.EndTransaction();
@@ -995,12 +1005,12 @@ namespace FamiStudio
                     {
                         var patternIdx = Song.FindPatternInstanceIndex((int)((e.X - trackNameSizeX + scrollX) / noteSizeX), out _);
                         var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
-                        var tmpPatterns = GetSelectedPatterns(out var extraInfo);
+                        var tmpPatterns = GetSelectedPatterns(out var customSettings);
 
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
                         if (!copy)
-                            DeleteSelection(false, extraInfo != null && !copy);
+                            DeleteSelection(false, customSettings != null && !copy);
 
                         for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
                         {
@@ -1010,10 +1020,26 @@ namespace FamiStudio
                             }
                         }
 
-                        if (extraInfo != null)
+                        if (customSettings != null)
                         {
                             for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                                Song.SetPatternCustomSettings(j + patternIdxDelta, extraInfo[j - minSelectedPatternIdx].customLength);
+                            {
+                                var settings = customSettings[j - minSelectedPatternIdx];
+
+                                if (settings.useCustomSettings)
+                                {
+                                    Song.SetPatternCustomSettings(
+                                        j + patternIdxDelta, 
+                                        customSettings[j - minSelectedPatternIdx].patternLength,
+                                        customSettings[j - minSelectedPatternIdx].noteLength,
+                                        customSettings[j - minSelectedPatternIdx].barLength,
+                                        customSettings[j - minSelectedPatternIdx].palSkipFrames);
+                                }
+                                else
+                                {
+                                    Song.ClearPatternCustomSettings(j + patternIdxDelta);
+                                }
+                            }
                         }
 
                         App.UndoRedoManager.EndTransaction();
@@ -1042,7 +1068,7 @@ namespace FamiStudio
             }
         }
 
-        private void DeleteSelection(bool trans = true, bool clearCustomPatternLengths = false)
+        private void DeleteSelection(bool trans = true, bool clearCustomSettings = false)
         {
             if (trans)
             {
@@ -1057,10 +1083,10 @@ namespace FamiStudio
                 }
             }
 
-            if (clearCustomPatternLengths)
+            if (clearCustomSettings)
             {
                 for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
-                    Song.SetPatternCustomSettings(j, 0);
+                    Song.ClearPatternCustomSettings(j);
             }
 
             if (trans)

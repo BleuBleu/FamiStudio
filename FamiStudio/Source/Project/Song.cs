@@ -10,7 +10,7 @@ namespace FamiStudio
         public const int MaxLength = 256;
         public const int MaxNoteLength = 16;
 
-        class PatternCustomSetting
+        public class PatternCustomSetting
         {
             public bool useCustomSettings;
             public int  patternLength;
@@ -26,6 +26,18 @@ namespace FamiStudio
                 barLength = 0;
                 palSkipFrames[0] = 0;
                 palSkipFrames[1] = 0;
+            }
+
+            public PatternCustomSetting Clone()
+            {
+                var clone = new PatternCustomSetting();
+                clone.useCustomSettings = useCustomSettings;
+                clone.patternLength = patternLength;
+                clone.noteLength = noteLength;
+                clone.barLength = barLength;
+                clone.palSkipFrames[0] = palSkipFrames[0];
+                clone.palSkipFrames[1] = palSkipFrames[1];
+                return clone;
             }
         };
 
@@ -379,6 +391,11 @@ namespace FamiStudio
             }
 
             UpdatePatternStartNotes();
+        }
+
+        public PatternCustomSetting GetPatternCustomSettings(int patternIdx)
+        {
+            return patternCustomSettings[patternIdx];
         }
 
         public bool PatternHasCustomSettings(int patternIdx)

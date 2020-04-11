@@ -375,7 +375,7 @@ namespace FamiStudio
             return values;
         }
 
-        public static void SavePatterns(Project project, Pattern[,] patterns, PatternCopyExtraInfo[] extraInfo = null)
+        public static void SavePatterns(Project project, Pattern[,] patterns, Song.PatternCustomSetting[] customSettings = null)
         {
             if (patterns == null)
             {
@@ -388,7 +388,7 @@ namespace FamiStudio
             var numPatterns = patterns.GetLength(0);
             var numChannels = patterns.GetLength(1);
 
-            Debug.Assert(extraInfo == null || extraInfo.Length == numPatterns);
+            Debug.Assert(customSettings == null || customSettings.Length == numPatterns);
 
             for (int i = 0; i < numPatterns; i++)
             {
@@ -432,19 +432,28 @@ namespace FamiStudio
                 }
             }
 
-            bool hasExtraInfo = false;
+            var hasCustomSettings = false;
+            var tempoMode = project.TempoMode;
 
-            if (extraInfo != null)
+            if (customSettings != null)
             {
-                hasExtraInfo = true;
-                serializer.Serialize(ref hasExtraInfo);
+                hasCustomSettings = true;
+                serializer.Serialize(ref hasCustomSettings);
+                serializer.Serialize(ref tempoMode);
 
                 for (int i = 0; i < numPatterns; i++)
-                    serializer.Serialize(ref extraInfo[i].customLength);
+                {
+                    serializer.Serialize(ref customSettings[i].useCustomSettings);
+                    serializer.Serialize(ref customSettings[i].patternLength);
+                    serializer.Serialize(ref customSettings[i].noteLength);
+                    serializer.Serialize(ref customSettings[i].barLength);
+                    serializer.Serialize(ref customSettings[i].palSkipFrames[0]);
+                    serializer.Serialize(ref customSettings[i].palSkipFrames[1]);
+                }
             }
             else
             {
-                serializer.Serialize(ref hasExtraInfo);
+                serializer.Serialize(ref hasCustomSettings);
             }
 
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
@@ -455,13 +464,13 @@ namespace FamiStudio
             SetClipboardDataInternal(clipboardData.ToArray());
         }
 
-        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments, out PatternCopyExtraInfo[] extraInfo)
+        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments, out Song.PatternCustomSetting[] customSettings)
         {
             var buffer = GetClipboardDataInternal(MagicNumberClipboardPatterns);
 
             if (buffer == null)
             {
-                extraInfo = null;
+                customSettings = null;
                 return null;
             }
 
@@ -488,18 +497,27 @@ namespace FamiStudio
                 }
             }
 
-            bool hasExtraInfo = false;
-            serializer.Serialize(ref hasExtraInfo);
+            var tempoMode = 0;
+            var hasCustomSettings = false;
+            serializer.Serialize(ref hasCustomSettings);
+            serializer.Serialize(ref tempoMode);
 
-            if (hasExtraInfo)
+            if (hasCustomSettings && tempoMode == project.TempoMode)
             {
-                extraInfo = new PatternCopyExtraInfo[numPatterns];
+                customSettings = new Song.PatternCustomSetting[numPatterns];
                 for (int i = 0; i < numPatterns; i++)
-                    serializer.Serialize(ref extraInfo[i].customLength);
+                {
+                    serializer.Serialize(ref customSettings[i].useCustomSettings);
+                    serializer.Serialize(ref customSettings[i].patternLength);
+                    serializer.Serialize(ref customSettings[i].noteLength);
+                    serializer.Serialize(ref customSettings[i].barLength);
+                    serializer.Serialize(ref customSettings[i].palSkipFrames[0]);
+                    serializer.Serialize(ref customSettings[i].palSkipFrames[1]);
+                }
             }
             else
             {
-                extraInfo = null;
+                customSettings = null;
             }
 
             return patterns;
@@ -509,10 +527,5 @@ namespace FamiStudio
         {
             SetClipboardDataInternal(null);
         }
-    }
-
-    public struct PatternCopyExtraInfo
-    {
-        public int customLength;
     }
 }

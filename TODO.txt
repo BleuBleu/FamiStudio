@@ -28,7 +28,6 @@ x Duty cycle envelopes, make sure all import/export format support it.
 - Make sure that when there is no loop point, NSF stops.
 - Test long pattern > 256 a lot. 
 - Test split of pattern longer than default.
-- Test change active channel (press 1...5) while a transaction is happening.
 - Test everything about note dragging, edge cases, interrupt while dragging, end of song, etc....
 
 Breaking changes

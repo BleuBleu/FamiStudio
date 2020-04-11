@@ -294,6 +294,7 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
             {
+                AbortCaptureOperation();
                 editChannel = trackIdx;
                 noteTooltip = "";
                 BuildSupportEffectList();
@@ -412,6 +413,7 @@ namespace FamiStudio
 
         public void Reset()
         {
+            AbortCaptureOperation();
             showEffectsPanel = false;
             scrollX = 0;
             scrollY = 0;
@@ -1134,6 +1136,8 @@ namespace FamiStudio
 
         public void Paste()
         {
+            AbortCaptureOperation();
+
             if (editMode == EditionMode.Channel)
                 PasteNotes();
             else if (editMode == EditionMode.Enveloppe)
@@ -1144,6 +1148,8 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
             {
+                AbortCaptureOperation();
+
                 var dlg = new PasteSpecialDialog(App.MainWindowBounds);
 
                 if (dlg.ShowDialog() == DialogResult.OK)
@@ -1781,6 +1787,112 @@ namespace FamiStudio
             captureNoteValue = numNotes - Utils.Clamp((e.Y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, numNotes);
         }
 
+        private void UpdateCaptureOperation(MouseEventArgs e)
+        {
+            if (captureOperation != CaptureOperation.None && !captureThresholdMet)
+            {
+                if (Math.Abs(e.X - captureMouseX) > 4 ||
+                    Math.Abs(e.Y - captureMouseY) > 4)
+                {
+                    captureThresholdMet = true;
+                }
+            }
+
+            if (captureOperation != CaptureOperation.None && captureThresholdMet)
+            {
+                switch (captureOperation)
+                {
+                    case CaptureOperation.DragLoop:
+                    case CaptureOperation.DragRelease:
+                    case CaptureOperation.ResizeEnvelope:
+                        ResizeEnvelope(e);
+                        break;
+                    case CaptureOperation.PlayPiano:
+                        PlayPiano(e.X, e.Y);
+                        break;
+                    case CaptureOperation.ChangeEffectValue:
+                        ChangeEffectValue(e);
+                        break;
+                    case CaptureOperation.DrawEnvelope:
+                        DrawEnvelope(e);
+                        break;
+                    case CaptureOperation.Select:
+                        UpdateSelection(e.X);
+                        break;
+                    case CaptureOperation.DragSlideNoteTarget:
+                    case CaptureOperation.CreateDragSlideNoteTarget:
+                        UpdateSlideNoteTarget(e);
+                        break;
+                    case CaptureOperation.DragNote:
+                    case CaptureOperation.DragNewNote:
+                    case CaptureOperation.DragSelection:
+                        UpdateNoteDrag(e);
+                        break;
+                }
+            }
+        }
+
+        private void EndCaptureOperation(MouseEventArgs e)
+        {
+            if (captureOperation != CaptureOperation.None)
+            {
+                var patternIdx = Song.FindPatternInstanceIndex(captureNoteIdx, out var noteIdx);
+
+                switch (captureOperation)
+                {
+                    case CaptureOperation.DragLoop:
+                    case CaptureOperation.DragRelease:
+                    case CaptureOperation.ChangeEffectValue:
+                    case CaptureOperation.CreateDragSlideNoteTarget:
+                        App.UndoRedoManager.EndTransaction();
+                        break;
+                    case CaptureOperation.PlayPiano:
+                        App.StopOrReleaseIntrumentNote();
+                        playingNote = -1;
+                        ConditionalInvalidate();
+                        break;
+                    case CaptureOperation.ResizeEnvelope:
+                    case CaptureOperation.DrawEnvelope:
+                        UpdateWavePreset();
+                        App.UndoRedoManager.EndTransaction();
+                        EnvelopeChanged?.Invoke();
+                        break;
+                    case CaptureOperation.DragSlideNoteTarget:
+                        if (!captureThresholdMet)
+                            Song.Channels[editChannel].PatternInstances[patternIdx].GetOrCreateNoteAt(noteIdx).IsSlideNote ^= true;
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                        break;
+                    case CaptureOperation.DragNote:
+                    case CaptureOperation.DragNewNote:
+                    case CaptureOperation.DragSelection:
+                        UpdateNoteDrag(e, !captureThresholdMet);
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                        App.StopIntrumentNote();
+                        break;
+                }
+
+                captureOperation = CaptureOperation.None;
+                Capture = false;
+            }
+        }
+
+        private void AbortCaptureOperation()
+        {
+            if (captureOperation != CaptureOperation.None)
+            {
+                if (App.UndoRedoManager.HasTransactionInProgress)
+                    App.UndoRedoManager.AbortTransaction();
+
+                ConditionalInvalidate();
+                App.StopIntrumentNote();
+
+                captureOperation = CaptureOperation.None;
+                Capture = false;
+            }
+        }
+
         private void GetSelectionRange(int minFrameIdx, int maxFrameIdx, out int minPattern, out int maxPattern, out int minNote, out int maxNote)
         {
             minPattern = Song.FindPatternInstanceIndex(minFrameIdx, out minNote);
@@ -1920,6 +2032,9 @@ namespace FamiStudio
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
+            if (captureOperation != CaptureOperation.None)
+                return;
+
             if (e.KeyCode == Keys.Escape)
             {
                 ClearSelection();
@@ -2296,7 +2411,7 @@ namespace FamiStudio
             ClampScroll();
         }
 
-        public void ClampScroll()
+        private void ClampScroll()
         {
             if (Song != null)
             {
@@ -2679,47 +2794,7 @@ namespace FamiStudio
                 Cursor.Current = Cursors.Default;
 #endif
 
-            if (captureOperation != CaptureOperation.None && !captureThresholdMet)
-            {
-                if (Math.Abs(e.X - captureMouseX) > 4 ||
-                    Math.Abs(e.Y - captureMouseY) > 4)
-                {
-                    captureThresholdMet = true;
-                }
-            }
-
-            if (captureOperation != CaptureOperation.None && captureThresholdMet)
-            {
-                switch (captureOperation)
-                {
-                    case CaptureOperation.DragLoop:
-                    case CaptureOperation.DragRelease:
-                    case CaptureOperation.ResizeEnvelope:
-                        ResizeEnvelope(e);
-                        break;
-                    case CaptureOperation.PlayPiano:
-                        PlayPiano(e.X, e.Y);
-                        break;
-                    case CaptureOperation.ChangeEffectValue:
-                        ChangeEffectValue(e);
-                        break;
-                    case CaptureOperation.DrawEnvelope:
-                        DrawEnvelope(e);
-                        break;
-                    case CaptureOperation.Select:
-                        UpdateSelection(e.X);
-                        break;
-                    case CaptureOperation.DragSlideNoteTarget:
-                    case CaptureOperation.CreateDragSlideNoteTarget:
-                        UpdateSlideNoteTarget(e);
-                        break;
-                    case CaptureOperation.DragNote:
-                    case CaptureOperation.DragNewNote:
-                    case CaptureOperation.DragSelection:
-                        UpdateNoteDrag(e);
-                        break;
-                }
-            }
+            UpdateCaptureOperation(e);
 
             if (middle)
             {
@@ -2731,54 +2806,16 @@ namespace FamiStudio
             mouseLastX = e.X;
             mouseLastY = e.Y;
         }
-        
+
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
 
             bool middle = e.Button.HasFlag(MouseButtons.Middle);
 
-            if (captureOperation != CaptureOperation.None && !middle)
+            if (!middle)
             {
-                var patternIdx = Song.FindPatternInstanceIndex(captureNoteIdx, out var noteIdx);
-
-                switch (captureOperation)
-                {
-                    case CaptureOperation.DragLoop:
-                    case CaptureOperation.DragRelease:
-                    case CaptureOperation.ChangeEffectValue:
-                    case CaptureOperation.CreateDragSlideNoteTarget:
-                        App.UndoRedoManager.EndTransaction();
-                        break;
-                    case CaptureOperation.PlayPiano:
-                        App.StopOrReleaseIntrumentNote();
-                        playingNote = -1;
-                        ConditionalInvalidate();
-                        break;
-                    case CaptureOperation.ResizeEnvelope:
-                    case CaptureOperation.DrawEnvelope:
-                        UpdateWavePreset();
-                        App.UndoRedoManager.EndTransaction();
-                        EnvelopeChanged?.Invoke();
-                        break;
-                    case CaptureOperation.DragSlideNoteTarget:
-                        if (!captureThresholdMet)
-                            Song.Channels[editChannel].PatternInstances[patternIdx].GetOrCreateNoteAt(noteIdx).IsSlideNote ^= true;
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
-                        break;
-                    case CaptureOperation.DragNote:
-                    case CaptureOperation.DragNewNote:
-                    case CaptureOperation.DragSelection:
-                        UpdateNoteDrag(e, !captureThresholdMet);
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
-                        App.StopIntrumentNote();
-                        break;
-                }
-
-                captureOperation = CaptureOperation.None;
-                Capture = false;
+                EndCaptureOperation(e);
             }
         }
 
