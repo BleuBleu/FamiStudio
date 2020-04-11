@@ -313,7 +313,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.String,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label) : null,
                     control = CreateLabel(value)
                 });
         }
@@ -337,6 +337,14 @@ namespace FamiStudio
                     label = CreateLabel(label),
                     control = CreateNumericUpDown(value, min, max)
                 });
+        }
+
+        public void UpdateIntegerRange(int idx, int min, int max)
+        {
+            var upDown = (properties[idx].control as NumericUpDown);
+
+            upDown.Minimum = min;
+            upDown.Maximum = max;
         }
 
         public void UpdateIntegerRange(int idx, int value, int min, int max)

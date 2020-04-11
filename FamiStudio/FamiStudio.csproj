@@ -178,28 +178,6 @@
     <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyDialog.resx">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Nsf\nsf_ft2_dual.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_dual.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_dual_tempo.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_fds_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_mmc5_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_ntsc_tempo.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_pal.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_pal_tempo.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_s5b_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc6_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc7_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_pal.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_1ch_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_2ch_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_3ch_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_4ch_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_5ch_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_6ch_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_7ch_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_n163_8ch_ntsc.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -448,7 +426,9 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Nsf\" />
+  </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

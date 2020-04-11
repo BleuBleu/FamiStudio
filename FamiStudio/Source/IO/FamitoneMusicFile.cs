@@ -22,7 +22,7 @@ namespace FamiStudio
         private Dictionary<byte, string> vibratoEnvelopeNames = new Dictionary<byte, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
 
-        private FamiToneKernel kernel = FamiToneKernel.FamiTone2FS;
+        private FamiToneKernel kernel = FamiToneKernel.FamiStudio;
 
         private int maxRepeatCount = MaxRepeatCountFT2;
 
@@ -35,8 +35,9 @@ namespace FamiStudio
 
         public enum FamiToneKernel
         {
-            FamiTone2FS,
-            FamiTone2
+            FamiTone2,   // Stock FamiTone2
+            FamiTone2FS, // Stock FamiTone2 + FamiStudio tempo support.
+            FamiStudio   // Heavily modified version that supports every FamiStudio feature.
         };
 
         public enum OutputFormat
@@ -49,7 +50,7 @@ namespace FamiStudio
         public FamitoneMusicFile(FamiToneKernel kernel)
         {
             this.kernel = kernel;
-            this.maxRepeatCount = kernel == FamiToneKernel.FamiTone2FS ? MaxRepeatCountFT2FS : MaxRepeatCountFT2;
+            this.maxRepeatCount = kernel == FamiToneKernel.FamiStudio ? MaxRepeatCountFT2FS : MaxRepeatCountFT2;
         }
 
         private void CleanupEnvelopes()
@@ -226,7 +227,7 @@ namespace FamiStudio
 
             uniqueEnvelopes.Add(defaultEnvCRC, defaultEnv);
 
-            if (kernel == FamiToneKernel.FamiTone2FS)
+            if (kernel == FamiToneKernel.FamiStudio)
                 uniqueEnvelopes.Add(defaultPitchEnvCRC, defaultPitchEnv);
 
             foreach (var instrument in project.Instruments)
@@ -238,7 +239,7 @@ namespace FamiStudio
                     if (env == null)
                         continue;
 
-                    if (kernel == FamiToneKernel.FamiTone2 && i == Envelope.DutyCycle)
+                    if (kernel != FamiToneKernel.FamiStudio && i == Envelope.DutyCycle)
                         continue;
 
                     byte[] processed;
@@ -256,14 +257,14 @@ namespace FamiStudio
                             break;
                         default:
                             processed = ProcessEnvelope(env,
-                                i == Envelope.Volume && kernel == FamiToneKernel.FamiTone2FS,
-                                i == Envelope.Pitch  && kernel == FamiToneKernel.FamiTone2FS);
+                                i == Envelope.Volume && kernel == FamiToneKernel.FamiStudio,
+                                i == Envelope.Pitch  && kernel == FamiToneKernel.FamiStudio);
                             break;
                     }
 
                     if (processed == null)
                     {
-                        if (kernel == FamiToneKernel.FamiTone2FS && i == Envelope.Pitch)
+                        if (kernel == FamiToneKernel.FamiStudio && i == Envelope.Pitch)
                             instrumentEnvelopes[env] = defaultPitchEnvCRC;
                         else
                             instrumentEnvelopes[env] = defaultEnvCRC;
@@ -292,7 +293,7 @@ namespace FamiStudio
                     var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Arpeggio]]);
                     var pitchEnvIdx    = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.Pitch]]);
 
-                    if (kernel == FamiToneKernel.FamiTone2FS)
+                    if (kernel == FamiToneKernel.FamiStudio)
                     {
                         var dutyEnvIdx = instrument.IsEnvelopeActive(Envelope.DutyCycle) ? uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[Envelope.DutyCycle]]) : uniqueEnvelopes.IndexOfKey(defaultEnvCRC);
 
@@ -406,7 +407,7 @@ namespace FamiStudio
             }
 
             // Write the unique vibrato envelopes.
-            if (kernel == FamiToneKernel.FamiTone2FS)
+            if (kernel == FamiToneKernel.FamiStudio)
             {
                 // Create all the unique vibrato envelopes.
                 foreach (var s in project.Songs)
@@ -513,7 +514,7 @@ namespace FamiStudio
 
         private byte EncodeNoteValue(int channel, int value, int numNotes = 0)
         {
-            if (kernel == FamiToneKernel.FamiTone2)
+            if (kernel != FamiToneKernel.FamiStudio)
             {
                 // 0 = stop, 1 = C-1 ... 63 = D-6
                 if (value != 0 && channel != Channel.Noise) value = Math.Max(1, value - 12); 
@@ -551,6 +552,8 @@ namespace FamiStudio
                 var channel = song.Channels[c];
                 var isSpeedChannel = c == speedChannel;
                 var instrument = (Instrument)null;
+                var previousNoteLength = song.NoteLength;
+                var previousSkipFrames = song.PalSkipFrames;
 
                 if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
@@ -570,15 +573,24 @@ namespace FamiStudio
                         lines.Add($"{ll}song{songIdx}ch{c}loop:");
                     }
 
-                    if (isSpeedChannel && project.UsesFamiStudioTempo && song.PatternHasCustomSettings(p))
+                    if (isSpeedChannel && project.UsesFamiStudioTempo)
                     {
-                        if (!test)
-                        {
-                            var noteLength = song.GetPatternNoteLength(p);
-                            var skipFrames = song.GetPatternPalSkipFrames(p);
-                            lines.Add($"\t{db} $fb, ${noteLength:x2}, ${(skipFrames[0] < 0 ? 0xff : noteLength - skipFrames[0] - 1):x2}, ${(skipFrames[1] < 0 ? 0xff : noteLength - skipFrames[1] - 1):x2}");
+                        var noteLength = song.GetPatternNoteLength(p);
+                        var skipFrames = song.GetPatternPalSkipFrames(p);
+
+                        if (noteLength    != previousNoteLength    ||
+                            skipFrames[0] != previousSkipFrames[0] ||
+                            skipFrames[1] != previousSkipFrames[1])
+                        { 
+                            if (!test)
+                            {
+                                lines.Add($"\t{db} $fb, ${noteLength:x2}, ${(skipFrames[0] < 0 ? 0xff : noteLength - skipFrames[0] - 1):x2}, ${(skipFrames[1] < 0 ? 0xff : noteLength - skipFrames[1] - 1):x2}");
+                                previousNoteLength = noteLength;
+                                previousSkipFrames = skipFrames;
+                            }
+
+                            size += 4;
                         }
-                        size += 4;
                     }
 
                     var patternLength = song.GetPatternLength(p); 
@@ -658,7 +670,7 @@ namespace FamiStudio
 
                             int numNotes = 0;
 
-                            if (kernel == FamiToneKernel.FamiTone2)
+                            if (kernel != FamiToneKernel.FamiStudio)
                             {
                                 // Note -> Empty -> Note special encoding.
                                 if (time < patternLength - 2)
@@ -845,8 +857,6 @@ namespace FamiStudio
                 }
             }
 
-            bestFactor = 1; // MATTT: Need to fix Split() for famistudio tempo.
-
             var bestSplitSong = project.DuplicateSong(song);
             bestSplitSong.Split(bestFactor);
 
@@ -887,7 +897,7 @@ namespace FamiStudio
 
         private void RemoveUnsupportedFeatures()
         {
-            if (kernel == FamiToneKernel.FamiTone2)
+            if (kernel != FamiToneKernel.FamiStudio)
             {
                 foreach (var song in project.Songs)
                 {
@@ -929,6 +939,11 @@ namespace FamiStudio
             // Work on a temporary copy.
             project = originalProject.DeepClone();
             project.Filename = originalProject.Filename;
+
+            if (kernel == FamiToneKernel.FamiTone2 && project.UsesFamiStudioTempo)
+            {
+                project.ConvertToFamiTrackerTempo(false);
+            }
 
             // NULL = All songs.
             if (songIds != null)

@@ -587,11 +587,13 @@ namespace FamiStudio
             }
             else if (e.KeyCode == Keys.Home)
             {
-                //Song.Split(2);
-                Project.ConvertToFamiStudioTempo();
-                Project.Validate();
-
                 /*
+                // MATTT: Remove this.
+                undoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
+                Song.Split(2);
+                undoRedoManager.EndTransaction();
+                */
+
                 if (ctrl)
                 {
                     SeekCurrentPattern();
@@ -600,7 +602,6 @@ namespace FamiStudio
                 {
                     Seek(0);
                 }
-                */
             }
             if (e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D9)
             {

@@ -769,6 +769,9 @@ pal:
     iny
     lda (FT_TEMP_PTR1),y
     sta FT_TEMPO_SKIP_FRAME2
+.else
+    lda #6
+    sta FT_SONG_SPEED
 .endif
 
 .ifdef ::FT_VRC7

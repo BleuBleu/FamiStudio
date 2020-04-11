@@ -173,7 +173,7 @@ namespace FamiStudio
                     var song = project.Songs[i];
                     int page = songDataBytes.Count / RomPageSize;
                     int addr = RomMemoryStart + (songDataBytes.Count & (RomPageSize - 1));
-                    var songBytes = new FamitoneMusicFile(FamitoneMusicFile.FamiToneKernel.FamiTone2FS).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr);
+                    var songBytes = new FamitoneMusicFile(FamitoneMusicFile.FamiToneKernel.FamiStudio).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr);
 
                     songTable[i].page = (byte)(page);
                     songTable[i].address = (ushort)(addr);

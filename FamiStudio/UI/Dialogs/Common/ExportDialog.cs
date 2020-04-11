@@ -80,7 +80,9 @@ namespace FamiStudio
                     page.AddString("Copyright :", project.Copyright, 31); // 2
                     page.AddStringList("Mode :", Enum.GetNames(typeof(NsfFile.NsfMode)), Enum.GetNames(typeof(NsfFile.NsfMode))[0]); // 3
                     page.AddStringListMulti(null, songNames, null); // 4
+#if DEBUG
                     page.AddStringList("Engine :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 5
+#endif
                     page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
                     break;
                 case ExportFormat.Rom:
@@ -95,13 +97,14 @@ namespace FamiStudio
                     page.AddStringListMulti(null, songNames, null); // 0
                     break;
                 case ExportFormat.FamiTone2:
-                    page.AddStringList("Format :", Enum.GetNames(typeof(FamitoneMusicFile.OutputFormat)), Enum.GetNames(typeof(FamitoneMusicFile.OutputFormat))[0]); // 0
-                    page.AddBoolean("Separate Files :", false); // 1
-                    page.AddString("Song Name Pattern :", "{project}_{song}"); // 2
-                    page.AddString("DMC Name Pattern :", "{project}"); // 3
-                    page.AddStringListMulti(null, songNames, null); // 4
-                    page.SetPropertyEnabled(2, false);
+                    page.AddStringList("Variant :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 0
+                    page.AddStringList("Format :", Enum.GetNames(typeof(FamitoneMusicFile.OutputFormat)), Enum.GetNames(typeof(FamitoneMusicFile.OutputFormat))[0]); // 1
+                    page.AddBoolean("Separate Files :", false); // 2
+                    page.AddString("Song Name Pattern :", "{project}_{song}"); // 3
+                    page.AddString("DMC Name Pattern :", "{project}"); // 4
+                    page.AddStringListMulti(null, songNames, null); // 5
                     page.SetPropertyEnabled(3, false);
+                    page.SetPropertyEnabled(4, false);
                     break;
             }
 
@@ -113,10 +116,10 @@ namespace FamiStudio
 
         private void Page_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            if (props == dialog.GetPropertyPage((int)ExportFormat.FamiTone2) && idx == 1)
+            if (props == dialog.GetPropertyPage((int)ExportFormat.FamiTone2) && idx == 2)
             {
-                props.SetPropertyEnabled(2, (bool)value);
                 props.SetPropertyEnabled(3, (bool)value);
+                props.SetPropertyEnabled(4, (bool)value);
             }
         }
 
@@ -152,8 +155,12 @@ namespace FamiStudio
             if (filename != null)
             {
                 var props  = dialog.GetPropertyPage((int)ExportFormat.Nsf);
-                var kernel = (FamitoneMusicFile.FamiToneKernel)Enum.Parse(typeof(FamitoneMusicFile.FamiToneKernel), props.GetPropertyValue<string>(5));
                 var mode   = (NsfFile.NsfMode)Enum.Parse(typeof(NsfFile.NsfMode), props.GetPropertyValue<string>(3));
+#if DEBUG
+                var kernel = (FamitoneMusicFile.FamiToneKernel)Enum.Parse(typeof(FamitoneMusicFile.FamiToneKernel), props.GetPropertyValue<string>(5));
+#else
+                var kernel = FamitoneMusicFile.FamiToneKernel.FamiStudio;
+#endif
 
                 new NsfFile().Save(project, kernel, filename,
                     GetSongIds(props.GetPropertyValue<bool[]>(4)),
@@ -208,13 +215,15 @@ namespace FamiStudio
         private void ExportFamiTone2()
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.FamiTone2);
-            var formatString = props.GetPropertyValue<string>(0);
+            var kernelString = props.GetPropertyValue<string>(0);
+            var formatString = props.GetPropertyValue<string>(1);
             var ext = formatString == "CA65" ? "s" : "asm";
-            var separate = props.GetPropertyValue<bool>(1);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(4));
+            var separate = props.GetPropertyValue<bool>(2);
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
+            var kernel = (FamitoneMusicFile.FamiToneKernel)Enum.Parse(typeof(FamitoneMusicFile.FamiToneKernel), kernelString);
             var exportFormat = (FamitoneMusicFile.OutputFormat)Enum.Parse(typeof(FamitoneMusicFile.OutputFormat), formatString);
-            var songNamePattern = props.GetPropertyValue<string>(2);
-            var dpcmNamePattern = props.GetPropertyValue<string>(3);
+            var songNamePattern = props.GetPropertyValue<string>(3);
+            var dpcmNamePattern = props.GetPropertyValue<string>(4);
 
             if (separate)
             {
@@ -231,7 +240,7 @@ namespace FamiStudio
                         var songFilename = Path.Combine(folderBrowserDialog.SelectedPath, Utils.MakeNiceAsmName(formattedSongName) + "." + ext);
                         var dpcmFilename = Path.Combine(folderBrowserDialog.SelectedPath, Utils.MakeNiceAsmName(formattedDpcmName) + ".dmc");
 
-                        FamitoneMusicFile f = new FamitoneMusicFile(FamitoneMusicFile.FamiToneKernel.FamiTone2);
+                        FamitoneMusicFile f = new FamitoneMusicFile(kernel);
                         f.Save(project, new int[] { songId }, exportFormat, true, songFilename, dpcmFilename);
                     }
                 }
@@ -241,7 +250,7 @@ namespace FamiStudio
                 var filename = PlatformUtils.ShowSaveFileDialog("Export FamiTone2 Code", $"FamiTone2 Assembly File (*.{ext})|*.{ext}");
                 if (filename != null)
                 {
-                    FamitoneMusicFile f = new FamitoneMusicFile(FamitoneMusicFile.FamiToneKernel.FamiTone2);
+                    FamitoneMusicFile f = new FamitoneMusicFile(kernel);
                     f.Save(project, songIds, exportFormat, false, filename, Path.ChangeExtension(filename, ".dmc"));
                 }
             }

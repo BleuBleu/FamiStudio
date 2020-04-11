@@ -112,10 +112,10 @@ namespace FamiStudio
 
                 List<byte> nsfBytes = new List<byte>();
 
-                string kernelBinary = "nsf_ft2";
-                if (kernel == FamitoneMusicFile.FamiToneKernel.FamiTone2FS)
+                string kernelBinary = "nsf_";
+                if (kernel == FamitoneMusicFile.FamiToneKernel.FamiStudio)
                 {
-                    kernelBinary += "_fs";
+                    kernelBinary += "_famistudio";
 
                     if (project.UsesExpansionAudio)
                     {
@@ -124,6 +124,10 @@ namespace FamiStudio
                         if (project.ExpansionAudio == Project.ExpansionN163)
                             kernelBinary += $"_{project.ExpansionNumChannels}ch";
                     }
+                }
+                else
+                {
+                    kernelBinary += "_famitone2";
                 }
 
                 switch (mode)
