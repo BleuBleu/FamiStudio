@@ -178,6 +178,44 @@
     <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyDialog.resx">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_dual_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_fds_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_fds_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_mmc5_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_mmc5_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_1ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_2ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_3ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_4ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_5ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_6ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_7ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_8ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_8ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_pal.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_pal_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_s5b_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_s5b_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc6_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc6_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc7_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc7_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_dual_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_pal_tempo.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -426,9 +464,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Nsf\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

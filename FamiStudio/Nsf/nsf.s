@@ -1,7 +1,7 @@
 .ifdef FAMISTUDIO
 .include "famistudio.s"
 .else
-.include "famitone2fs.s"
+.include "famitone2.s"
 .endif
 
 .segment "HEADER"
