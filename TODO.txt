@@ -1,12 +1,12 @@
 1.5.0: All expansions + PAL
 ============================
 - Why do we clear the selection when moving patterns in sequencer?
-- Clip tooltips to an area, or measure strings and omit some..
+- Clip tooltips to an area, or measure strings and omit some.
 - MATTT.
 - BUG (RARE): Once I hit a bug where i could drag notes without clicking on them???
 - POLISH: When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Feature request from GitHub: Snap to 1/2, 1/4, etc.
-
+- Transform dialog = cleanup...
 - Slide note VS. PAL not done in ASM (not tested on PC either...)
 
 TESTING:
@@ -32,8 +32,8 @@ Breaking changes
 ================
 - VRC6 saw duty (mention in FamiTracker compatibility section)
 
-2.0.0 Trailer
-=============
+2.0.0 Trailer (teaser + trailer?)
+=================================
 - ROM export
 - All expansions
 - Fine pitch track
@@ -45,9 +45,12 @@ Breaking changes
 - Binary FTM import
 - FamiStudio text import/export
 - Note dragging + audio preview
+- New documentation
+- New hands-on tutorial
 
 2.0.0 Documentation
 ===================
+- Switch to MkDocs
 - Add tempo table like FamiTracker.
 - 
 

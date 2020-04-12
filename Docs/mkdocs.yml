@@ -1,0 +1,6 @@
+site_name: FamiStudio Documentation
+pages:
+- Home: 'index.md'   
+extra_css:
+    - css/extra.css    
+theme: slate

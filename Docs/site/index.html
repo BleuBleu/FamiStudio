@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="None">
+        
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>FamiStudio Documentation</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/darcula.min.css">
+        <link href="css/extra.css" rel="stylesheet">
+
+        <script src="js/jquery-1.10.2.min.js" defer></script>
+        <script src="js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body class="homepage">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href=".">FamiStudio Documentation</a>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#installation" class="nav-link">Installation</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#windows" class="nav-link">Windows</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#macos" class="nav-link">MacOS</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#concepts" class="nav-link">Concepts</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#main-window" class="nav-link">Main Window</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#keyboard-shortcuts" class="nav-link">Keyboard shortcuts</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#toolbar" class="nav-link">Toolbar</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#playingpausing-the-song" class="nav-link">Playing/pausing the song</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#changing-the-looping-mode" class="nav-link">Changing the looping mode</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#saving-the-project" class="nav-link">Saving the project</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#exporting-to-various-formats" class="nav-link">Exporting to various formats</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#configuration-dialog" class="nav-link">Configuration dialog</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#project-explorer" class="nav-link">Project Explorer</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#addingremoving-songs-and-instruments" class="nav-link">Adding/removing songs and instruments</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-project-properties" class="nav-link">Editing project properties</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-song-attributes" class="nav-link">Editing song attributes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-song-properties" class="nav-link">Editing song properties</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#replacing-an-instrument-by-another" class="nav-link">Replacing an instrument by another</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-envelopes" class="nav-link">Editing envelopes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#copying-envelopes" class="nav-link">Copying envelopes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#deleting-envelopes" class="nav-link">Deleting envelopes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#sequencer" class="nav-link">Sequencer</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#seeking" class="nav-link">Seeking</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-patterns" class="nav-link">Editing patterns</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#addingremoving-patterns" class="nav-link">Adding/removing patterns</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#movingcopying-patterns" class="nav-link">Moving/copying patterns</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#cutcopypasting-patterns" class="nav-link">Cut/copy/pasting patterns</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#mutingsoloing-channels" class="nav-link">Muting/soloing channels</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#force-display-channel" class="nav-link">Force display channel</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#piano-roll" class="nav-link">Piano Roll</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#seeking_1" class="nav-link">Seeking</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#adding-and-deleting-notes" class="nav-link">Adding and deleting notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#stop-release-notes" class="nav-link">Stop &amp; Release notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#note-attack" class="nav-link">Note attack</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#slide-notes" class="nav-link">Slide notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#selecting-and-editing-notes" class="nav-link">Selecting and editing notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#cutting-copying-and-pasting-notes" class="nav-link">Cutting, copying and pasting notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#special-paste" class="nav-link">Special paste</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-volume-tracks-effects" class="nav-link">Editing volume tracks &amp; effects</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#volume-track" class="nav-link">Volume track</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#vibrato-depth-speed" class="nav-link">Vibrato depth &amp; speed.</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-instrument-envelopes" class="nav-link">Editing instrument envelopes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-dpcm-samples" class="nav-link">Editing DPCM samples</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="installation">Installation</h1>
+<p>Depending on how you download FamiStudio, you might get scary warnings the first time you try to install or run it.</p>
+<h2 id="windows">Windows</h2>
+<p>On Windows, SmartScreen might say "Windows protected your PC".</p>
+<p><img alt="" src="images/SmartScreen1.png#center" /></p>
+<p>To bypass the warning, simply click "More Info" and then "Run Anyway".</p>
+<p><img alt="" src="images/SmartScreen2.png#center" /></p>
+<h2 id="macos">MacOS</h2>
+<p>On MacOS, GateKeeper is a bit more agressive. At first it will look like you simply cannot run it and it will give you the option to throw FamiStudio in the recycling bin.</p>
+<p><img alt="" src="images/GateKeeper1.png#center" /></p>
+<p>To bypass this warning, open the "Security and Privacy" settings and look for the warning saying that FamiStudio was blocked. </p>
+<p><img alt="" src="images/GateKeeper2.png#center" /></p>
+<p>Click "Open Anyway" and then you will have the option to launch it.</p>
+<p><img alt="" src="images/GateKeeper3.png#center" /></p>
+<h1 id="concepts">Concepts</h1>
+<p>A FamiStudio project contains:</p>
+<ul>
+<li>A list of Songs</li>
+<li>A list of Instruments</li>
+<li>A list of DPCM samples</li>
+</ul>
+<p>Songs are made of Patterns, which are on one of the five Channels supported by the NES. Patterns contain Notes which are played by an Instrument (DPCM samples do not require an instrument). Instruments may have some of their attributes (pitch, volume, arpeggio) modulated by Envelopes.</p>
+<p>Most of the operations are performed with the mouse. In general:</p>
+<ul>
+<li>The <strong>left mouse button</strong> adds stuff, double-clicking something edits properties (songs, patterns, instruments, DPCM)</li>
+<li>The <strong>right mouse button</strong> removes stuff</li>
+<li>The <strong>middle mouse button</strong> pans when you press it and zooms and you use the mouse wheel.</li>
+</ul>
+<p>If you are working on a trackpad, all actions requiring the middle mouse buttons can be done with Alt+Left click. </p>
+<h1 id="main-window">Main Window</h1>
+<p>The UI was designed to be a simple as possible, there are almost no context menus.</p>
+<p>The main window has 4 main components:</p>
+<ul>
+<li>The Toolbar (on top)</li>
+<li>The Project Explorer (on the right) is where you add/remove/edit songs and instruments.</li>
+<li>The Sequencer (below the toolbar) is where you schedule your patterns on one of the 5 channels. It gives a high-level view of the song.</li>
+<li>The Piano Roll (below the sequencer) is where you edit your patterns.</li>
+</ul>
+<p><img alt="" src="images/MainWindow.png#center" /></p>
+<p>At any given moment there is always:</p>
+<ul>
+<li>A selected channel, in bold in the sequencer</li>
+<li>A selected song, in bold in the project explorer song list</li>
+<li>A selected instrument, in bold in the project explorer instrument list.</li>
+</ul>
+<p>The sequencer and piano roll will display the information for the currently selected song. The piano roll will play notes for the currently selected instrument, and output it on the currently selected channel.</p>
+<h2 id="keyboard-shortcuts">Keyboard shortcuts</h2>
+<p>Keyboard shortcuts or special actions are always displayed as tooltips in the upper-right corner of the toolbar. Please keep an eye on it to learn new functionalities.</p>
+<p><img alt="" src="images/Tooltip.png#center" /></p>
+<p>Here is a list of useful keyboard shortcuts:</p>
+<ul>
+<li><strong>Space</strong>: Play/stop the stop<ul>
+<li><strong>Ctrl+Space</strong>: Plays from beginning of current pattern and switch to pattern loop mode.</li>
+<li><strong>Shift+Space</strong>: Plays from current position and reverts back to song loop mode and </li>
+</ul>
+</li>
+<li><strong>Home</strong>: Seeks back to beginning of the song.<ul>
+<li><strong>Ctrl+Home</strong>: Seeks to beginning of the current pattern.</li>
+</ul>
+</li>
+<li><strong>Ctrl+Z</strong>: Undo</li>
+<li><strong>Ctrl+Y</strong>: Redo</li>
+<li><strong>Ctrl+N</strong>: New project</li>
+<li><strong>Ctrl+S</strong>: Save</li>
+<li><strong>Ctrl+E</strong>: Export</li>
+<li><strong>Ctrl+O</strong>: Open</li>
+<li><strong>Delete</strong>: Delete selected patterns or notes.</li>
+<li><strong>Escape</strong>: Deselects patterns or notes, stops any sound that is stuck playing.</li>
+</ul>
+<p>Some keyboard shortcuts specific to the piano roll:</p>
+<ul>
+<li><strong>Ctrl+Click</strong>: Adds a stop note.</li>
+<li><strong>Shift+Click</strong>: Adds a release note.</li>
+<li><strong>S+Click</strong> (and drag): Creates or edit a slide note.</li>
+<li><strong>A+Click</strong>: Toggles the attack of a note.</li>
+</ul>
+<h1 id="toolbar">Toolbar</h1>
+<p>The main toolbar contains your usual stuff: file operation, undo/redo, timecode and play control.</p>
+<h2 id="playingpausing-the-song">Playing/pausing the song</h2>
+<p>Besides the toolbar, space bar is used to play/pause the song. Ctrl-space plays in pattern loop mode, Shift-space plays in song loop mode.</p>
+<h2 id="changing-the-looping-mode">Changing the looping mode</h2>
+<p>There are 3 looping modes:</p>
+<ul>
+<li><strong>Song</strong>: loops the entire song</li>
+<li><strong>Pattern</strong>: loops at the end of the current pattern</li>
+<li><strong>None</strong>: stops at the end of the song</li>
+</ul>
+<h2 id="saving-the-project">Saving the project</h2>
+<p>Clicking on the icon save the project, right-clicking is a "save as..." and will prompt you for a new filename.</p>
+<h2 id="exporting-to-various-formats">Exporting to various formats</h2>
+<h3 id="wave-file-wav">Wave File (*.wav)</h3>
+<p>Only a single song can be exported at a time. You can choose the sample rate, it is recommended to stick to 44.1KHz if you want the soung to be exactly as you hear it in FamiStudio. Lower sample rate might lack high frequencies.</p>
+<p>When exporting to WAV, the song will simply play once fully, all jump effects will be ignored.</p>
+<p><img alt="" src="images/ExportWav.png#center" /></p>
+<h3 id="nintendo-sound-format-nsf">Nintendo Sound Format (*.nsf)</h3>
+<p>Export to NSF is very basic for now.</p>
+<p><img alt="" src="images/ExportNsf.png#center" /></p>
+<p>Some limitations worth mentioning:</p>
+<ul>
+<li>If the song does not use sample, the maximum song size is between 24KB and 28KB.</li>
+<li>If the song uses samples, the maximum song size is between 8KB and 24KB depending on the size of the samples.</li>
+</ul>
+<p>Note that these size are not printed anywhere and are not related to the size of the *.fms file. Best to simply try and see if it works.</p>
+<h3 id="famitracker-text-txt">FamiTracker Text (*.txt)</h3>
+<p>You can export songs to FamiTracker using their Text Export format.</p>
+<p><img alt="" src="images/ExportFamiTracker.png#center" /></p>
+<p>There are some limitations:</p>
+<ul>
+<li>Pitch envelopes with looping sections will be modified on export so that the looping part sums to zero. This is done to prevent pitch from drifting up/down every time the envelope looks. The reason for this is that FamiTracker's pitch envelopes are relative while FamiStudio's are absolute.</li>
+<li>Instruments using both pitch and arpeggio envlopes at the same time will not sound correct in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker re-triggers the pitch envelope at each arpeggio notes (probably the more sensible way), while FamiStudio simply runs both at the same time.</li>
+</ul>
+<h3 id="famitone2-assembly-code-s-asm-dmc">FamiTone2 Assembly Code (<em>.s, </em>.asm, *.dmc)</h3>
+<p>Exporting to FamiTone2 works in the same way as the command line tools provided by Shiru.</p>
+<p><img alt="" src="images/ExportFamiTone2.png#center" /></p>
+<p>When exporting file in seperate files, you can specific a name format template for each song. The {project} and {song} macros are available.</p>
+<p>When exporting as a single file (non-seperate), you will be prompt to name the output assembly file. If any of the exported songs uses DPCM samples, a .dmc file of the same name will also be outputted.</p>
+<h2 id="configuration-dialog">Configuration dialog</h2>
+<p>Clicking the gear icon opens the configuration dialog. This dialog is fairly new and has very few settings at the moment.</p>
+<h3 id="user-interface-configuration">User Interface Configuration</h3>
+<p><img alt="" src="images/ConfigUI.png#center" /></p>
+<ul>
+<li><strong>Scaling</strong>: By default, FamiStudio will use the scaling of your primary monitor on Windows (100%, 150% and 200% are support) and on macOS it will choose between 100% or 200% depending on if you have a retina display or not. This behavior can be overriden by a scaling of your choosing. This requires restarting the app.</li>
+<li><strong>Check for updates</strong>: At startup FamiStudio checks for new version online. This can be disabled.</li>
+</ul>
+<h3 id="sound-configuration">Sound Configuration</h3>
+<p><img alt="" src="images/ConfigSong.png#center" /></p>
+<ul>
+<li><strong>Stop instrument after</strong>: When instruments have release notes, there is no way for FamiStudio to know when to stop the notes. This allows stopping any sound after a specified number of seconds. This only applies to MIDI or when previewing instruments on the piano roll and has no impact on the actual song.</li>
+<li><strong>Prevent popping on square channels</strong>: The NES had a bug where the phase of square channels will reset around some notes (A-3, A-2, D-2, A-1, F-1, D-1, and B-0 on NTSC, or A#3, A#2, D#2, A#1, F#1, D#1, and C-0 on PAL), resulting in audible clicks or pops. This option will work around that bug using the Smooth Vibrato technique by Blargg, resulting in smooth pitch changes. Note that this option will not carry over to FamiTracker if you export.</li>
+</ul>
+<h3 id="midi-configuration">MIDI Configuration</h3>
+<p><img alt="" src="images/ConfigMIDI.png#center" /></p>
+<ul>
+<li><strong>Device</strong>: Allows choosing the MIDI device to use for previewing instruments.</li>
+</ul>
+<h1 id="project-explorer">Project Explorer</h1>
+<p>The project explorer displays the list of songs and instruments in the current project.</p>
+<p><img alt="" src="images/ProjectExplorer.png#center" /></p>
+<p>Each instrument (except DPCM samples) has 4 buttons :</p>
+<ul>
+<li>The volume envelope</li>
+<li>The pitch envelope</li>
+<li>The arpeggio envelope</li>
+<li>The duty cycle, four possible settings, eight settings on VRC6 (only useful for the Square channel but has effects on some others).</li>
+</ul>
+<p>If an instrument has no envelope for a particular type, it will appear dimmed.</p>
+<h2 id="addingremoving-songs-and-instruments">Adding/removing songs and instruments</h2>
+<p>You can add a song or instrument by pressing the "+" sign, and you can delete a song or instrument by right-clicking on it. Deleting an instrument will delete all notes used by that instrument. Note that there always needs to be at least one song in a project.</p>
+<h2 id="editing-project-properties">Editing project properties</h2>
+<p>Double-clicking on project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information are used when exporting to NSF, for example.</p>
+<p>The project properties is also where you select your expansion audio. Expansion will add extra channels on top of the default 5 that the NES supported. Note that changing the expansion audio in a project will delete all data (patterns, notes, instrument) related to the previous expansion.</p>
+<p>List of expansions supported (will grow in the future):</p>
+<ul>
+<li><strong>Konami VRC6</strong>: Adds 2 square channels and a Sawtooth channel. The square channels are better quality than the stock square as they give more control over the duty cycle and dont suffer for the phase reset bug. The Sawtooth channel will sound slightly differently if using odd duty cycles (1, 3, 5 &amp; 7).</li>
+</ul>
+<p><img alt="" src="images/EditProject.png#center" /></p>
+<h2 id="editing-song-attributes">Editing song attributes</h2>
+<p>Double-clicking on the a song will allow you to change its name, color and other attributes. Names must be unique.</p>
+<p>Some song properties worth mentioning:</p>
+<ul>
+<li><strong>Speed</strong>: How much the timer is increment each frame, values other than 150 might create uneven notes</li>
+<li><strong>Tempo</strong>: How many frames to wait before advancing to the next note (at least when then tempo is 150)</li>
+<li><strong>Pattern Length</strong>: Number of notes in a pattern</li>
+<li><strong>Bar length</strong>: Will draw a thicker line in the piano roll at every bar. Must be a divider of the pattern length. Simply a visual aid, does not affect the audio in any way</li>
+<li><strong>Song length</strong>: The number of patterns in the song</li>
+</ul>
+<p><img alt="" src="images/EditSong.png#center" /></p>
+<h2 id="editing-song-properties">Editing song properties</h2>
+<p>Double-clicking on an instrument works similarly.</p>
+<ul>
+<li><strong>Relative pitch</strong> : By default, FamiStudio's pitch envelope are absolute. Meaning that the envelope values are the pitch you are going to hear, this is especially useful for vibrato where you can draw a simple sine wave. It is sometimes useful to have relative pitch envelope to create pitches that rapidly ascend or decend (useful for bassdrum sounds). This is how FamiTracker handles pitch envelopes.</li>
+</ul>
+<p><img alt="" src="images/EditInstrument.png#center" /></p>
+<h2 id="replacing-an-instrument-by-another">Replacing an instrument by another</h2>
+<p>Clicking on an instrument name and dragging it over another instrument will allow you to replace all notes of the first instrument by the second. This is useful prior to deleting an instrument.</p>
+<h2 id="editing-envelopes">Editing envelopes</h2>
+<p>Clicking on an envelope button will start editing it in the piano roll. The duty cycle button will cycle between the 4 possible settings: 12.5%, 25%, 50% and inverted 25% since FamiTone2 does not support duty cycle envelopes. For more info on how to edit or delete envelopes, please refer to the piano roll section.</p>
+<h2 id="copying-envelopes">Copying envelopes</h2>
+<p>Clicking on an envelope button and dragging it on another instrument will copy that envelope from the first to the second. Note that unlike FamiTracker, envelopes are not explicitly shared between instruments. Identical envelopes will be combined when exporting to FamiTone2, but it is your responsibility to optimize the content and ensure that you limit the number of unique envelopes.</p>
+<h2 id="deleting-envelopes">Deleting envelopes</h2>
+<p>Right-clicking on the icon of an envelope deletes it.</p>
+<h1 id="sequencer">Sequencer</h1>
+<p>The sequencer is where you organize the high-level structure of the song: which patterns play and when they play. The thumbnails of the patterns in the sequencer are by no mean accurate.
+Sequencer</p>
+<h2 id="seeking">Seeking</h2>
+<p>Clicking in the timeline (header) of the sequencer will move the play position.</p>
+<h2 id="editing-patterns">Editing patterns</h2>
+<p>Clicking a pattern selects it and opens the piano roll for the current channel at the location of the pattern. Double-clicking a pattern allows renaming and changing its color (pattern names need to be unique per channel).</p>
+<p><img alt="" src="images/EditPattern.png#center" /></p>
+<p>You can select multiple patterns by right-cliking and dragging in the header bar of the Sequencer. To un-select everything, simply press Esc. When multiple patterns are selected, only the color can be edited.</p>
+<p><img alt="" src="images/PatternSelection2.png#center" /></p>
+<p>You can select multiple patterns in a rectangular grid, first select a pattern and shift-clicking to a second pattern.</p>
+<p><img alt="" src="images/SquareSelection.png#center" /></p>
+<h2 id="addingremoving-patterns">Adding/removing patterns</h2>
+<p>You can add a new pattern by left-clicking on an empty space. Right-clicking deletes.</p>
+<h2 id="movingcopying-patterns">Moving/copying patterns</h2>
+<p>When one or multiple patterns are selected, dragging them will move them in the timeline. While dragging, holding Ctrl will copy a of the pattern(s). Note that when copying a pattern, it creates an instance of the same pattern, so modifying one instance will modify all of them.</p>
+<h2 id="cutcopypasting-patterns">Cut/copy/pasting patterns</h2>
+<p>When one or multiple patterns are selected, press CTRL+C (or CTRL+X for cut). Move the selection somewhere else and paste with CTRL+V.</p>
+<h2 id="mutingsoloing-channels">Muting/soloing channels</h2>
+<p>Left-clicking on the icon of a channel (Square, triangle, noise, DPCM) will toggle mute. Right-clicking will toggle solo.</p>
+<h2 id="force-display-channel">Force display channel</h2>
+<p>Clicking the tiny square icon next to the channel name will force display it in the piano roll.</p>
+<p><img alt="" src="images/ForceDisplayButton.png#center" /></p>
+<p>Channels that are force displayed and are not the current channel will appear dimmed in the piano roll. This is useful when harmonizing between multiple channels, or editing drum patterns.</p>
+<p><img alt="" src="images/ForceDisplayPianoRoll.png#center" /></p>
+<h1 id="piano-roll">Piano Roll</h1>
+<p>The piano roll is where you editing the actual notes of the song, the instrument envelopes, as well as some special effects.</p>
+<p><img alt="" src="images/PianoRoll.png#center" /></p>
+<p>You can also use it to preview instrument by clicking on the keyboard. The currently selected instrument (in the project explorer) will play on the currently selected channel (in the sequencer).</p>
+<h2 id="seeking_1">Seeking</h2>
+<p>Clicking in the timeline (header) of the piano roll will move the play position.</p>
+<h2 id="adding-and-deleting-notes">Adding and deleting notes</h2>
+<p>Clicking a pattern in the sequencer will scroll the piano roll to its location. Left-clicking in the piano roll will add a note of the currently selected instrument. Right-clicking deletes a note.</p>
+<h2 id="stop-release-notes">Stop &amp; Release notes</h2>
+<p>Using Ctrl+click will add a stop note. Stops notes are displayed as little triangles. Although they are displayed next to the note preceding them, they actually have no pitch or instrument, they simply stop the sound. Stop notes are important because on the NES, a note will play indefinitely unless you tell it to stop.</p>
+<p><img alt="" src="images/StopNote.png#center" /></p>
+<p>Using Shift+click will add a release notes. Release notes are shown as making the note thinner and triggers the envelope to jump to the release point. Release envelopes are useful to nicely fade out a note when its release, while preserving other effects like vibrato. There is no point to adding a release note to an instrument that does not have a release envelope.</p>
+<p><img alt="" src="images/ReleaseNote.png#center" /></p>
+<p>Hovering the mouse in the piano roll will display the location and note in the toolbar. Hovering over a note will display which instrument it uses.</p>
+<h2 id="note-attack">Note attack</h2>
+<p>By default, notes will have an "attack" which mean they will restart their envelopes (volume, pitch, etc.) from the beginning. This is represented by the little dark rectangle on the left of each note. This can be toggled for a particular note by hold the A key and clicking on a note. Note that if a note does not use the same instrument as the previous one, the attack will still play, even if disabled. Also please note that this will generally not carry over to FamiTracker, besides specific use cases around slide notes.</p>
+<p>In this example, the first note will have an attack, while the second one will not.</p>
+<p><img alt="" src="images/NoAttack.png#center" /></p>
+<p>Since envelopes are not resetted, this means that if a note was released, it will remain released if the subsequent notes have no attack.</p>
+<p><img alt="" src="images/NoAttackReleased.png#center" /></p>
+<h2 id="slide-notes">Slide notes</h2>
+<p>Slide notes are notes that start at a given pitch (the pitch of the note) and slowly change to hit a target pitch which is represented by where the triangle ends. In this example, the attack of the second note has been disabled.</p>
+<p><img alt="" src="images/SlideNote.png#center" /></p>
+<p>Slide notes garantees that the target pitch will be reached by the end of the note (end of the triangle) but this might happen a bit earlier than the visual repesentation suggests. Especially in the higher pitches. This is due to the fact that the pitch calculations are all integer-based (with 1-bit of fraction) and it is often impossible to get the exact required slope to reach the pitch at the exact time. This will be somewhat worse when exporting to FamiTracker since FamiTracker does not have the 1-bit of fraction FamiStudio has.</p>
+<p>When importing from FamiTracker, all possible slide effects (1xx, 2xx, 3xx, Qxx and Rxx) will be converted to slide notes. Sometimes attack will be disabled as well to mimic the same behavior. This in an inherently imperfect process since they approaches are so different. For this reason, importing/exporting slide notes with FamiTracker should be considered a lossy process.</p>
+<p>When exporting to FamiTracker, FamiStudio will do its very best to choose which FamiTracker effect to use. Here are the general rules:</p>
+<ul>
+<li>If the slide note and its target are within 16 semitones, Qxx/Rxx (note slide up/down) will be favored as it is the most similar effect to what we are doing.</li>
+<li>Otherwise, if the previous note has the same pitch as the slide note, 3xx (auto-portamento) will be used.</li>
+<li>Finally, if none of these conditions are satisfied, 1xx/2xx (slide up/down) will be used. This is not ideal since the pitch might not exactly match the target note.</li>
+</ul>
+<h2 id="selecting-and-editing-notes">Selecting and editing notes</h2>
+<p>You can select notes by right-clicking and dragging in the header of the piano roll. Selected notes will appear with a thick silver border. Once notes are selected, then can be moved using the arrows keys (up, down, left and right). Holding CTRL while doing so will make the notes move by larger increments.</p>
+<p><img alt="" src="images/SelectNotes.png#center" /></p>
+<h2 id="cutting-copying-and-pasting-notes">Cutting, copying and pasting notes</h2>
+<p>Much like the sequencer, selcted notes can be copy (or cut) by pressing CTRL+C (or CTRL+X). You can then move the selection somewhere else and paste the notes with CTRL+V.</p>
+<h2 id="special-paste">Special paste</h2>
+<p>If you want to paste notes, without their associated effets or volume track (or vice-versa). You can use a "special paste" by pressing CTRL+SHIFT+V. This will open a popup dialog asking you to choose what you want to paste.</p>
+<p><img alt="" src="images/PasteSpecial.png#center" /></p>
+<h2 id="editing-volume-tracks-effects">Editing volume tracks &amp; effects</h2>
+<p>The effect panel can be opened by clicking the little triangle at the top-left of the piano roll. Right now, only a handful of effects are supported:</p>
+<ul>
+<li><strong>Volume</strong>: The overall volume of the channel.</li>
+<li><strong>Vib Speed</strong>: Vibrato speed, used in conjuction with vibrato depth to create a vibrato effect.</li>
+<li><strong>Vib Depth</strong>: Vibrato depth, used in conjuction with vibrato speed to create a vibrato effect.</li>
+<li><strong>Volume</strong>: Each channel can have a volume track.</li>
+<li><strong>Jump</strong>: Jumps back to a previous pattern in the song. The effect value is the pattern index to jump to</li>
+<li><strong>Skip</strong>: Skips to the next pattern, at the note specified by the effect value</li>
+<li><strong>Speed</strong>: Changes the speed of the song</li>
+</ul>
+<p>Effects are edited by selecting and effect and dragging up or down to change the value. Right-clicking on an effect value deletes it.</p>
+<p><img alt="" src="images/Effect.png#center" /></p>
+<h2 id="volume-track">Volume track</h2>
+<p>The volume tracks dictates how loud the current channel should play. This volume is combined with volume envelope by multiplication (50% volume track x 50% envelope volume = 25% total volume). It is much more efficient to use volume envelopes wherever possible and only use volume tracks to control the global volume of the song.</p>
+<p><img alt="" src="images/VolumeTrack.png#center" /></p>
+<h2 id="vibrato-depth-speed">Vibrato depth &amp; speed.</h2>
+<p>Vibrato depth and speed are used to add vibrato to a portion of the song without having to bother creating a new instrument. Please note that vibrato will temporarely override any pitch envelope on the current instrument. When vibrato is disabled (by setting depth or speed, or both to zero), the instrument will essentially have no pitch envelope until a new note is played.</p>
+<p><img alt="" src="images/Vibrato.png#center" /></p>
+<p>The depth values for the vibrato are indentical to FamiTracker but the speeds are slightly different. The way FamiTracker implements vibrato, while clever, is flawed as it undersamples the vibrato curve at high speed, leading to aliasing which ends up with a low-frequency tone that has a "ringing" sound to it. Here is a table relating the speeds in FamiStudio and FamiTracker (this is applied automatically when importing/exporting):</p>
+<table>
+<thead>
+<tr>
+<th>FamiTracker speed</th>
+<th>FamiTracker period</th>
+<th>FamiStudio speed</th>
+<th>FamiStudio period</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>64</td>
+<td>1</td>
+<td>64</td>
+</tr>
+<tr>
+<td>2</td>
+<td>32</td>
+<td>2</td>
+<td>32</td>
+</tr>
+<tr>
+<td>3</td>
+<td>21.3</td>
+<td>3</td>
+<td>21</td>
+</tr>
+<tr>
+<td>4</td>
+<td>16</td>
+<td>4</td>
+<td>16</td>
+</tr>
+<tr>
+<td>5</td>
+<td>12.8</td>
+<td>5</td>
+<td>13</td>
+</tr>
+<tr>
+<td>6</td>
+<td>10.7</td>
+<td>6</td>
+<td>11</td>
+</tr>
+<tr>
+<td>7</td>
+<td>9.1</td>
+<td>7</td>
+<td>9</td>
+</tr>
+<tr>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+</tr>
+<tr>
+<td>9</td>
+<td>7.1</td>
+<td>9</td>
+<td>7</td>
+</tr>
+<tr>
+<td>10</td>
+<td>6.4</td>
+<td>10</td>
+<td>6</td>
+</tr>
+<tr>
+<td>11</td>
+<td>5.8</td>
+<td>10</td>
+<td>6</td>
+</tr>
+<tr>
+<td>12</td>
+<td>5.3</td>
+<td>11</td>
+<td>5</td>
+</tr>
+<tr>
+<td>13</td>
+<td>4.9</td>
+<td>11</td>
+<td>5</td>
+</tr>
+<tr>
+<td>14</td>
+<td>4.6</td>
+<td>11</td>
+<td>5</td>
+</tr>
+<tr>
+<td>15</td>
+<td>4.3</td>
+<td>12</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<h2 id="editing-instrument-envelopes">Editing instrument envelopes</h2>
+<p>Clicking on an envelope icon in the project explorer will open the envelope of that instrument in the piano roll. The length of the envelope can be changed by left-clicking (and potentially dragging) in the timeline of the piano roll. Setting the length of an envelope to zero will disable it.</p>
+<p><img alt="" src="images/EditEnvelope.png#center" /></p>
+<p>The loop point of an envelope can be set by right-clicking in the timeline. Volume tracks are also allowed to have release envelopes. Release envelopes are played when a release note is encountered and terminates the loop by jumping to the release point. This is useful for fading out notes smoothly. The release point is set by right-dragging from the rightmost side of the envelope.</p>
+<p><img alt="" src="images/EditEnvelopeRelease.png#center" /></p>
+<h2 id="editing-dpcm-samples">Editing DPCM samples</h2>
+<p>Clicking on the little icon next to the DPCM samples in the project explorer will open the piano roll in DPCM edition mode.</p>
+<p><img alt="" src="images/EditDPCM.png#center" /></p>
+<p>Clicking anywhere on a note that does not have a DPCM sample associated will prompt you to open a .DMC file. No DMC edition tool is provided, you can use FamiTracker, RJDMC or any other tool. DPCM samples are assumed to have unique names and 2 samples with the same name will be assume to be the same. Double-clicking on an existing sample edits its pitch and toggle loop. Note that only notes between C1 and D6 are allowed to have DPCM samples.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js" defer></script>
+        <script src="search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 1.1
+Build Date UTC : 2020-04-12 12:57:37
+-->

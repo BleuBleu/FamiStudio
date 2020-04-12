@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css?family=Quicksand:400');
+@import url('https://fonts.googleapis.com/css?family=Quicksand:700');
+body {
+  font-family: 'Quicksand';
+  background-color: #212529;
+  color: #C6CDDA;
+}
+h1 {
+  color: #C6CDDA;
+}
+h2 {
+  color: #C6CDDA;
+  font-size: 22px;  
+}
+h3 {
+  color: #C6CDDA;
+  font-size: 20px;  
+}
+h1:after
+{
+    content:' ';
+    display:block;
+    border:1px solid #C6CDDA;
+}
+img[src*="#center"] {
+    display: block;
+    margin: 0 auto;
+}
+.bs-sidebar.affix {
+}
+.navbar-expand-md .navbar-collapse {
+    overflow-y: scroll;
+    max-height: 85vh;
+    line-height: 1.0;
+    font-size: 14px;
+}
