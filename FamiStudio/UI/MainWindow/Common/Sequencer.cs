@@ -155,7 +155,7 @@ namespace FamiStudio
             get { return selectedChannel; }
             set
             {
-                if (selectedChannel >= 0 && selectedChannel < Song.Channels.Length)
+                if (value >= 0 && value < Song.Channels.Length)
                 {
                     selectedChannel = value;
                     SelectedChannelChanged?.Invoke(selectedChannel);
@@ -1446,8 +1446,8 @@ namespace FamiStudio
                 if (!song.Project.UsesExpansionAudio && song.Project.UsesFamiStudioTempo)
                 {
                     var noteLength = props.GetPropertyValue<int>(1);
-                    props.SetPropertyEnabled(6, Song.GetNumPalSkipFrames(noteLength) >= 1);
-                    props.SetPropertyEnabled(7, Song.GetNumPalSkipFrames(noteLength) >= 2);
+                    props.SetPropertyEnabled(6, (bool)value && Song.GetNumPalSkipFrames(noteLength) >= 1);
+                    props.SetPropertyEnabled(7, (bool)value && Song.GetNumPalSkipFrames(noteLength) >= 2);
                 }
             }
             else if (Song.UsesFamiStudioTempo && idx == 1)
@@ -1466,6 +1466,13 @@ namespace FamiStudio
                     props.SetLabelText(5, $"{Song.ComputePalError(noteLength):0.##} %");
                     props.UpdateIntegerRange(6, frames[0], -1, noteLength - 1);
                     props.UpdateIntegerRange(7, frames[1], -1, noteLength - 1);
+
+                    if (!song.Project.UsesExpansionAudio)
+                    {
+                        var custom = props.GetPropertyValue<bool>(0);
+                        props.SetPropertyEnabled(6, custom && Song.GetNumPalSkipFrames(noteLength) >= 1);
+                        props.SetPropertyEnabled(7, custom && Song.GetNumPalSkipFrames(noteLength) >= 2);
+                    }
                 }
             }
         }
