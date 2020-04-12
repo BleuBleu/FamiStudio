@@ -1328,28 +1328,28 @@ namespace FamiStudio
             var enabled = song.PatternHasCustomSettings(patternIdx);
 
             dlg.Properties.UserData = song;
-            dlg.Properties.AddBoolean("Custom Pattern :", song.PatternHasCustomSettings(patternIdx)); // 0
+            dlg.Properties.AddBoolean("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
 
             if (song.UsesFamiTrackerTempo)
             {
-                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx), 1, Pattern.MaxLength); // 1
+                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx), 1, Pattern.MaxLength, CommonTooltips.NotesPerPattern); // 1
             }
             else
             {
                 var noteLength   = song.GetPatternNoteLength(patternIdx);
 
-                dlg.Properties.AddIntegerRange("Frames Per Notes:", noteLength, 1, Song.MaxNoteLength); // 1
-                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx) / noteLength, 1, Pattern.MaxLength / noteLength); // 2
-                dlg.Properties.AddIntegerRange("Notes Per Bar :", song.GetPatternBarLength(patternIdx) / noteLength, 1, Pattern.MaxLength); // 3
-                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiStudioBPM(noteLength).ToString()); // 4
+                dlg.Properties.AddIntegerRange("Frames Per Notes:", noteLength, 1, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 1
+                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx) / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 2
+                dlg.Properties.AddIntegerRange("Notes Per Bar :", song.GetPatternBarLength(patternIdx) / noteLength, 1, Pattern.MaxLength, CommonTooltips.NotesPerBar); // 3
+                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiStudioBPM(noteLength).ToString(), CommonTooltips.BPM); // 4
 
                 if (!song.Project.UsesExpansionAudio)
                 {
                     var skipFrames = song.GetPatternPalSkipFrames(patternIdx);
 
-                    dlg.Properties.AddLabel("PAL Error :", $"{Song.ComputePalError(song.NoteLength):0.##} %"); // 5
-                    dlg.Properties.AddIntegerRange("PAL Skip Frame 1 : ", skipFrames[0], -1, noteLength - 1); // 6
-                    dlg.Properties.AddIntegerRange("PAL Skip Frame 2 : ", skipFrames[1], -1, noteLength - 1); // 7
+                    dlg.Properties.AddLabel("PAL Error :", $"{Song.ComputePalError(song.NoteLength):0.##} %", CommonTooltips.PalError); // 5
+                    dlg.Properties.AddIntegerRange("PAL Skip Frame 1 : ", skipFrames[0], -1, noteLength - 1, CommonTooltips.PalSkipFrame); // 6
+                    dlg.Properties.AddIntegerRange("PAL Skip Frame 2 : ", skipFrames[1], -1, noteLength - 1, CommonTooltips.PalSkipFrame); // 7
                     dlg.Properties.SetPropertyEnabled(6, enabled && Song.GetNumPalSkipFrames(noteLength) >= 1);
                     dlg.Properties.SetPropertyEnabled(7, enabled && Song.GetNumPalSkipFrames(noteLength) >= 2);
                     dlg.ValidateProperties += PatternCustomSettings_ValidateProperties;

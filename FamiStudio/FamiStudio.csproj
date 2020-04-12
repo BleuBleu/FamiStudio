@@ -110,6 +110,7 @@
     <Compile Include="UI\Dialogs\Common\NsfImportDialog.cs" />
     <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
     <Compile Include="UI\Dialogs\Common\TransformDialog.cs" />
+    <Compile Include="UI\MainWindow\Common\CommonTooltips.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DGraphics.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DFontLoader.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />

@@ -630,7 +630,7 @@ namespace FamiStudio
             float ntsc = (1000.0f / 60.0988f) * noteLength;
             float pal = (1000.0f / 50.0070f) * PalNoteLengthLookup[noteLength];
             float diff = pal - ntsc;
-            return ((Math.Max(ntsc, pal) / Math.Min(ntsc, pal) - 1) * 100.0f) * Math.Sign(diff);
+            return ((Math.Max(ntsc, pal) / Math.Min(ntsc, pal) - 1) * 100.0f) * -Math.Sign(diff);
         }
 
         public static int GetNumPalSkipFrames(int noteLength)

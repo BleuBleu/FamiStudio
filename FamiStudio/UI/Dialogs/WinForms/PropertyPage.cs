@@ -104,7 +104,7 @@ namespace FamiStudio
             return colorBitmap;
         }
 
-        private Label CreateLabel(string str)
+        private Label CreateLabel(string str, string tooltip = null)
         {
             var label = new Label();
 
@@ -113,6 +113,7 @@ namespace FamiStudio
             label.AutoSize = true;
             label.ForeColor = ThemeBase.LightGreyFillColor2;
             label.BackColor = BackColor;
+            toolTip.SetToolTip(label, tooltip);
 
             return label;
         }
@@ -192,7 +193,7 @@ namespace FamiStudio
                 ChangeColor(sender as PictureBox, e.X, e.Y);
         }
 
-        private NumericUpDown CreateNumericUpDown(int value, int min, int max)
+        private NumericUpDown CreateNumericUpDown(int value, int min, int max, string tooltip = null)
         {
             var upDown = new NumericUpDown();
 
@@ -201,6 +202,7 @@ namespace FamiStudio
             upDown.Maximum = max;
             upDown.Text = value.ToString();
             upDown.ValueChanged += UpDown_ValueChanged;
+            toolTip.SetToolTip(upDown, tooltip);
 
             return upDown;
         }
@@ -222,7 +224,7 @@ namespace FamiStudio
             return upDown;
         }
 
-        private CheckBox CreateCheckBox(bool value, string text = "")
+        private CheckBox CreateCheckBox(bool value, string text = "", string tooltip = null)
         {
             var cb = new CheckBox();
 
@@ -231,6 +233,7 @@ namespace FamiStudio
             cb.Font = font;
             cb.ForeColor = ThemeBase.LightGreyFillColor2;
             cb.CheckedChanged += Cb_CheckedChanged;
+            toolTip.SetToolTip(cb, tooltip);
 
             return cb;
         }
@@ -241,7 +244,7 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
-        private ComboBox CreateDropDownList(string[] values, string value)
+        private ComboBox CreateDropDownList(string[] values, string value, string tooltip = null)
         {
             var cb = new ComboBox();
 
@@ -251,6 +254,7 @@ namespace FamiStudio
             cb.Font = font;
             cb.Enabled = values.Length > 0;
             cb.SelectedIndexChanged += Cb_SelectedIndexChanged;
+            toolTip.SetToolTip(cb, tooltip);
 
             return cb;
         }
@@ -307,14 +311,14 @@ namespace FamiStudio
                 });
         }
 
-        public void AddLabel(string label, string value)
+        public void AddLabel(string label, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.String,
-                    label = label != null ? CreateLabel(label) : null,
-                    control = CreateLabel(value)
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateLabel(value, tooltip)
                 });
         }
 
@@ -328,14 +332,14 @@ namespace FamiStudio
                 });
         }
 
-        public void AddIntegerRange(string label, int value, int min, int max)
+        public void AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.IntegerRange,
-                    label = CreateLabel(label),
-                    control = CreateNumericUpDown(value, min, max)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateNumericUpDown(value, min, max, tooltip)
                 });
         }
 
@@ -382,14 +386,14 @@ namespace FamiStudio
             (properties[idx].control as Label).Text = text;
         }
 
-        public void AddBoolean(string label, bool value)
+        public void AddBoolean(string label, bool value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    label = CreateLabel(label),
-                    control = CreateCheckBox(value)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateCheckBox(value, "", tooltip)
                 });
         }
 
@@ -403,14 +407,14 @@ namespace FamiStudio
                 });
         }
 
-        public void AddStringList(string label, string[] values, string value)
+        public void AddStringList(string label, string[] values, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.StringList,
-                    label = CreateLabel(label),
-                    control = CreateDropDownList(values, value)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateDropDownList(values, value, tooltip)
                 });
         }
 
