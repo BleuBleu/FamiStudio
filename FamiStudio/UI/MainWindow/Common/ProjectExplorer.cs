@@ -1383,6 +1383,12 @@ namespace FamiStudio
                 {
                     EditInstrumentProperties(pt, button.instrument);
                 }
+                else
+                {
+                    // When pressing multiple times on mac, it creates click -> dbl click -> click -> dbl click sequences which
+                    // makes the project explorer feel very sluggish. Interpret dbl click as clicks helps a lot.
+                    OnMouseDown(e);
+                }
             }
         }
 
