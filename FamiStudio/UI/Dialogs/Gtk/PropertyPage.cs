@@ -93,12 +93,13 @@ namespace FamiStudio
             return colorBitmap;
         }
 
-        private Label CreateLabel(string str)
+        private Label CreateLabel(string str, string tooltip = null)
         {
             var label = new Label();
 
             label.Text = str;
             label.SetAlignment(0.0f, 0.5f);
+            label.TooltipText = tooltip;
 
             return label;
         }
@@ -125,11 +126,12 @@ namespace FamiStudio
             return textBox;
         }
 
-        private CheckButton CreateCheckBox(bool value, string text = null)
+        private CheckButton CreateCheckBox(bool value, string text = null, string tooltip = null)
         {
             var cb = new CheckButton();
             cb.Active = value;
             cb.Label = text;
+            cb.TooltipText = tooltip;
             cb.Toggled += Cb_Toggled;
 
             return cb;
@@ -203,11 +205,12 @@ namespace FamiStudio
             ChangeColor(o as ColorSelector, (int)e.X, (int)e.Y);
         }
 
-        private SpinButton CreateNumericUpDown(int value, int min, int max)
+        private SpinButton CreateNumericUpDown(int value, int min, int max, string tooltip = null)
         {
             var upDown = new SpinButton(min, max, 1);
 
             upDown.Value = value;
+            upDown.TooltipText = tooltip;
             upDown.ValueChanged += UpDown_ValueChanged1;
 
             return upDown;
@@ -224,7 +227,7 @@ namespace FamiStudio
             return new DomainSpinButton(values, value);
         }
 
-        private ComboBox CreateDropDownList(string[] values, string value)
+        private ComboBox CreateDropDownList(string[] values, string value, string tooltip = null)
         {
             var cb = ComboBox.NewText();
 
@@ -236,7 +239,9 @@ namespace FamiStudio
             }
 
             cb.Sensitive = values.Length > 0;
+            cb.TooltipText = tooltip;
             cb.Changed += Cb_Changed;
+
             return cb;
         }
 
@@ -272,25 +277,25 @@ namespace FamiStudio
                 });
         }
 
-        public void AddLabel(string label, string value)
+        public void AddLabel(string label, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    label = CreateLabel(label),
-                    control = CreateLabel(value)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateLabel(value, tooltip)
                 });
         }
 
-        public void AddBoolean(string label, bool value)
+        public void AddBoolean(string label, bool value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    label = CreateLabel(label),
-                    control = CreateCheckBox(value)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateCheckBox(value, tooltip)
                 });
         }
 
@@ -314,14 +319,14 @@ namespace FamiStudio
                 });
         }
 
-        public void AddIntegerRange(string label, int value, int min, int max)
+        public void AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.IntegerRange,
-                    label = CreateLabel(label),
-                    control = CreateNumericUpDown(value, min, max)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateNumericUpDown(value, min, max, tooltip)
                 });
         }
 
@@ -356,14 +361,14 @@ namespace FamiStudio
             spin.UpdateValues(values, value);
         }
 
-        public void AddStringList(string label, string[] values, string value)
+        public void AddStringList(string label, string[] values, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.StringList,
-                    label = CreateLabel(label),
-                    control = CreateDropDownList(values, value)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateDropDownList(values, value, tooltip)
                 });
         }
 
