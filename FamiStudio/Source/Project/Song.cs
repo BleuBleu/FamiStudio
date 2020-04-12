@@ -10,6 +10,9 @@ namespace FamiStudio
         public const int MaxLength = 256;
         public const int MaxNoteLength = 16;
 
+        public const int NativeTempoNTSC = 150;
+        public const int NativeTempoPAL  = 125;
+
         public class PatternCustomSetting
         {
             public bool useCustomSettings;
@@ -106,7 +109,7 @@ namespace FamiStudio
             }
             else
             {
-                famitrackerTempo = 150;
+                famitrackerTempo = Song.NativeTempoNTSC;
                 famitrackerSpeed = 10;
                 barLength = 4;
             }

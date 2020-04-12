@@ -1,13 +1,13 @@
 1.5.0: All expansions + PAL
 ============================
 - Why do we clear the selection when moving patterns in sequencer?
-- Clip tooltips to an area.
+- Clip tooltips to an area, or measure strings and omit some..
 - MATTT.
-- BUG: The pal skip frames controls don't enable/disable when enabling custom settings.
 - BUG (RARE): Once I hit a bug where i could drag notes without clicking on them???
-- POLISH: Add tooltips for tempo stuff.
 - POLISH: When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - Feature request from GitHub: Snap to 1/2, 1/4, etc.
+
+- Slide note VS. PAL not done in ASM (not tested on PC either...)
 
 TESTING:
 ========
@@ -22,7 +22,11 @@ x Duty cycle envelopes, make sure all import/export format support it.
 - Make sure that when there is no loop point, NSF stops.
 - Test long pattern > 256 a lot. 
 - Test split of pattern longer than default.
-- Test everything about note dragging, edge cases, interrupt while dragging, end of song, etc....
+- Test everything about note dragging, edge cases, interrupt while dragging, end of song, etc.
+
+Demo songs
+==========
+- Convert almost all to FamiStudio tempo.
 
 Breaking changes
 ================
@@ -41,6 +45,11 @@ Breaking changes
 - Binary FTM import
 - FamiStudio text import/export
 - Note dragging + audio preview
+
+2.0.0 Documentation
+===================
+- Add tempo table like FamiTracker.
+- 
 
 Backlog:
 =========

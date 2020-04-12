@@ -436,7 +436,7 @@ namespace FamiStudio
             }
         }
 
-        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
+        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, int famitrackerBaseTempo, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
         {
             Debug.Assert(note.IsMusical);
 
@@ -459,7 +459,7 @@ namespace FamiStudio
                 {
                     pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
 
-                    var frameCount = song.UsesFamiTrackerTempo ? Math.Floor(noteDuration * famitrackerSpeed * (song.FamitrackerTempo / 150.0f) + 1) : noteDuration + 1;
+                    var frameCount = song.UsesFamiTrackerTempo ? Math.Floor(noteDuration * (famitrackerSpeed * famitrackerBaseTempo / (float)song.FamitrackerTempo) + 1) : noteDuration + 1;
                     var floatStep  = Math.Abs(pitchDelta) / (float)frameCount;
 
                     stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);

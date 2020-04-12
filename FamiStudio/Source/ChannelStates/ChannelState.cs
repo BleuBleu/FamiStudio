@@ -66,7 +66,7 @@ namespace FamiStudio
             }
         }
 
-        public void Advance(Song song, int patternIdx, int noteIdx, int famitrackerSpeed)
+        public void Advance(Song song, int patternIdx, int noteIdx, int famitrackerSpeed, int famitrackerBaseTempo)
         {
             var channel = song.GetChannelByType(channelType);
             var pattern = channel.PatternInstances[patternIdx];
@@ -84,7 +84,7 @@ namespace FamiStudio
 
                     if (newNote.IsSlideNote)
                     {
-                        if (channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, noteTable, out slidePitch, out slideStep, out _))
+                        if (channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, famitrackerBaseTempo, noteTable, out slidePitch, out slideStep, out _))
                             newNote.Value = (byte)newNote.SlideNoteTarget;
                     }
 

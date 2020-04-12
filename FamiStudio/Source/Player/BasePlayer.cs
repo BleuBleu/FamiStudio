@@ -36,6 +36,7 @@ namespace FamiStudio
         protected int playPattern = 0;
         protected int playNote = 0;
         protected int famitrackerSpeed = 6;
+        protected int famitrackerNativeTempo = Song.NativeTempoNTSC;
         protected int patternNoteLength = 0;
         protected int palNoteCount = 0;
         protected int palSkipFrame1 = -1;
@@ -130,6 +131,7 @@ namespace FamiStudio
             song = s;
             famitrackerTempo = song.UsesFamiTrackerTempo;
             famitrackerSpeed = song.FamitrackerSpeed;
+            famitrackerNativeTempo = pal ? Song.NativeTempoPAL : Song.NativeTempoNTSC;
             palMode = pal;
             playPosition = startNote;
             playPattern = 0;
@@ -152,7 +154,7 @@ namespace FamiStudio
                 {
                     foreach (var channel in channelStates)
                     {
-                        channel.Advance(song, playPattern, playNote, famitrackerSpeed);
+                        channel.Advance(song, playPattern, playNote, famitrackerSpeed, famitrackerNativeTempo);
                         channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
                         channel.UpdateEnvelopes();
                         channel.UpdateAPU();
@@ -183,7 +185,7 @@ namespace FamiStudio
 
                     foreach (var channel in channelStates)
                     {
-                        channel.Advance(song, playPattern, playNote, famitrackerSpeed);
+                        channel.Advance(song, playPattern, playNote, famitrackerSpeed, famitrackerNativeTempo);
                         channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
                     }
 

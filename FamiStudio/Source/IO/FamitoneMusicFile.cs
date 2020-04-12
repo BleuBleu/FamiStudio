@@ -695,7 +695,8 @@ namespace FamiStudio
                                 var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumChannels);
 
                                 // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed.
-                                if (channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, noteTable, out _, out int stepSize, out _))
+                                // MATTT: Slide notes in PAL have not been done in ASM.
+                                if (channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, Song.NativeTempoNTSC, noteTable, out _, out int stepSize, out _))
                                 {
                                     patternBuffer.Add($"${0x61:x2}");
                                     patternBuffer.Add($"${(byte)stepSize:x2}");

@@ -1186,7 +1186,8 @@ namespace FamiStudio
 
             if (n0.IsSlideNote)
             {
-                if (channel.ComputeSlideNoteParams(n0, p0, i0, Song.FamitrackerSpeed, null, out _, out _, out int duration))
+                // MATTT: We assume NTSC here.
+                if (channel.ComputeSlideNoteParams(n0, p0, i0, Song.FamitrackerSpeed, Song.NativeTempoNTSC, null, out _, out _, out int duration))
                 {
                     int slideSizeX = duration;
                     int slideSizeY = n0.SlideNoteTarget - n0.Value;

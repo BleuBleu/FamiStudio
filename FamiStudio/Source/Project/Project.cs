@@ -682,7 +682,7 @@ namespace FamiStudio
             {
                 foreach (var song in songs)
                 {
-                    song.FamitrackerTempo = 150;
+                    song.FamitrackerTempo = Song.NativeTempoNTSC;
                     song.FamitrackerSpeed = 1;
                 }
             }

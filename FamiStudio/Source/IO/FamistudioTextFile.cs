@@ -160,18 +160,7 @@ namespace FamiStudio
                                 if (note.HasFinePitch)   noteLine += $" FinePitch=\"{note.FinePitch}\"";
                                 if (note.HasFdsModSpeed) noteLine += $" FdsModSpeed=\"{note.FdsModSpeed}\"";
                                 if (note.HasFdsModDepth) noteLine += $" FdsModDepth=\"{note.FdsModDepth}\"";
-                                if (note.IsMusical && note.IsSlideNote)
-                                {
-                                    // Add duration for convenience.
-                                    var p = Array.IndexOf(channel.PatternInstances, pattern);
-                                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
-
-                                    // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed.
-                                    channel.ComputeSlideNoteParams(note, p, kv.Key, song.FamitrackerSpeed, noteTable, out _, out _, out var duration); 
-
-                                    // MATTT: PAL here (check of channeltype).
-                                    noteLine += $" SlideTarget=\"{Note.GetFriendlyName(note.SlideNoteTarget)}\" FrameCountNTSC=\"{duration}\""; 
-                                }
+                                if (note.IsMusical && note.IsSlideNote) noteLine += $" SlideTarget=\"{Note.GetFriendlyName(note.SlideNoteTarget)}\""; 
 
                                 lines.Add(noteLine);
                             }

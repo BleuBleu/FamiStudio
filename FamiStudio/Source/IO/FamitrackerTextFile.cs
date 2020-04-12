@@ -875,7 +875,8 @@ namespace FamiStudio
                                 var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
 
                                 // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed.
-                                channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, noteTable, out _, out int stepSize, out _); // MATTT: N163 & VRC7 slides.
+                                // MATTT: We assume NTSC here.
+                                channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, Song.NativeTempoNTSC, noteTable, out _, out int stepSize, out _); // MATTT: N163 & VRC7 slides.
 
                                 var absNoteDelta = Math.Abs(note.Value - note.SlideNoteTarget);
 
