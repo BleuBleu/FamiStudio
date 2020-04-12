@@ -1,20 +1,6 @@
 1.5.0: All expansions + PAL
 ============================
- - MAC: 
-	x Make NSF import work.
-	x Divide by zero in LoRT FTM (bar length = 0).
- 	x Add instrument dialog is truncated.
- 	x Make sure topAlign work (window pops UP when Y > 1/2 height).
- 	x Some text in checklist box is very faint.
- 	x Make sure Namco channels dialog works. Added Combo box prop change callback.
- 	x New functions to update some controls.
- 	x Export dialog label sizes.
- 	x Test validateDelegate (Focus glitch, infinite loop).
-	x 0.5 pixel offset for pattern bitmaps.
-	- Dashes lines.
-	- Test hi-dpi.	
-	x Changing left/right real time values is super slow. Why???
-
+- Clip tooltips to an area.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - MATTT.
 - BUG: Once I hit a bug where i could drag notes without clicking on them???
