@@ -1,5 +1,10 @@
 1.5.0: All expansions + PAL
 ============================
+- MAC:
+	- Strange middle mouse panning issues in Sequencer.
+	- Also if start drag in sequencer and hover over piano roll, doesn't capture. Weird.
+
+- Feature request from GitHub: Snap to 1/2, 1/4, etc.
 - Clip tooltips to an area.
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - MATTT.
