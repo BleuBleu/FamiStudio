@@ -412,7 +412,7 @@ namespace FamiStudio
         public int GetPatternBarLength(int patternIdx)
         {
             var settings = patternCustomSettings[patternIdx];
-            return settings.useCustomSettings ? settings.barLength : barLength;
+            return settings.useCustomSettings && UsesFamiStudioTempo ? settings.barLength : barLength;
         }
 
         public int[] GetPatternPalSkipFrames(int patternIdx)

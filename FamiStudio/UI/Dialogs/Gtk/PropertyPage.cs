@@ -125,7 +125,7 @@ namespace FamiStudio
             return textBox;
         }
 
-        private CheckButton CreateCheckBox(bool value, string text = "")
+        private CheckButton CreateCheckBox(bool value, string text = null)
         {
             var cb = new CheckButton();
             cb.Active = value;
@@ -236,7 +236,14 @@ namespace FamiStudio
             }
 
             cb.Sensitive = values.Length > 0;
+            cb.Changed += Cb_Changed;
             return cb;
+        }
+
+        private void Cb_Changed(object sender, EventArgs e)
+        {
+            int idx = GetPropertyIndex(sender as Widget);
+            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
         private CheckBoxList CreateCheckedListBox(string[] values, bool[] selected)

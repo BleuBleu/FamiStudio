@@ -10,6 +10,9 @@ namespace FamiStudio
         public delegate bool ValidateDelegate(PropertyPage props);
         public event ValidateDelegate ValidateProperties;
 
+        private bool leftAlign = false;
+        private bool topAlign  = false;
+
         private PropertyPage propertyPage = new PropertyPage();
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
@@ -20,10 +23,8 @@ namespace FamiStudio
             Init();
             WidthRequest = width;
 
-            if (leftAlign)
-                pt.X -= width;
-            if (topAlign)
-                pt.Y -= HeightRequest;
+            this.leftAlign = leftAlign;
+            this.topAlign  = topAlign;
 
             Move(pt.X, pt.Y);
         }
@@ -110,6 +111,15 @@ namespace FamiStudio
         public System.Windows.Forms.DialogResult ShowDialog()
         {
             Show();
+
+            if (topAlign || leftAlign)
+            {
+                GetPosition(out var x, out var y);
+                if (leftAlign) x -= Allocation.Width;
+                if (topAlign)  y -= Allocation.Height;
+                Move(x, y);
+            }
+
 #if FAMISTUDIO_MACOS
             MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
 #endif

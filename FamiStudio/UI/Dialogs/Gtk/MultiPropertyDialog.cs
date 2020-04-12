@@ -46,7 +46,7 @@ namespace FamiStudio
 
             buttonsVBox = new VBox();
             buttonsVBox.Show();
-            buttonsVBox.WidthRequest = 120;
+            buttonsVBox.WidthRequest = 160;
 
             var buttonsVBoxPadding = new Alignment(0.0f, 0.0f, 0.0f, 0.0f);
             buttonsVBoxPadding.RightPadding = 5;
@@ -55,7 +55,7 @@ namespace FamiStudio
 
             propsVBox = new VBox();
             propsVBox.Show();
-            propsVBox.HeightRequest = 250;
+            propsVBox.HeightRequest = 210;
 
             mainHbox = new HBox();
             mainHbox.Show();

@@ -106,7 +106,7 @@ namespace FamiStudio
         }
 
         // From right to left. Looks more visually pleasing than the enum order.
-        static readonly int[] EnvelopeDisplayOrder = new int[]
+        static readonly int[] EnvelopeDisplayOrder =
         {
             Envelope.Arpeggio,
             Envelope.Pitch,
@@ -926,7 +926,7 @@ namespace FamiStudio
                             if (App.Project.NeedsExpansionInstruments)
                             {
                                 var expNames = new[] { Project.ExpansionNames[Project.ExpansionNone], App.Project.ExpansionAudioName };
-                                var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 240, true);
+                                var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 260, true);
                                 dlg.Properties.AddStringList("Expansion:", expNames, Project.ExpansionNames[Project.ExpansionNone] ); // 0
                                 dlg.Properties.Build();
 
@@ -1099,7 +1099,7 @@ namespace FamiStudio
         {
             var project = App.Project;
 
-            var dlg = new PropertyDialog(PointToScreen(pt), 300, true);
+            var dlg = new PropertyDialog(PointToScreen(pt), 320, true);
             dlg.Properties.AddString("Title :", project.Name, 31); // 0
             dlg.Properties.AddString("Author :", project.Author, 31); // 1
             dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2

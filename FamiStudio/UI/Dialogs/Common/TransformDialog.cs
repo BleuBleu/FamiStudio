@@ -33,7 +33,7 @@ namespace FamiStudio
         public unsafe TransformDialog(Rectangle mainWinRect, FamiStudio famistudio)
         {
             int width = 450;
-            int height = 300;
+            int height = 400;
             int x = mainWinRect.Left + (mainWinRect.Width - width) / 2;
             int y = mainWinRect.Top + (mainWinRect.Height - height) / 2;
 

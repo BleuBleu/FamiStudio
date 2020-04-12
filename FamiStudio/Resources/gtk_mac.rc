@@ -5,9 +5,9 @@
 
 style "check"
 {
-    fg[NORMAL] = "#C6CDDA" # LightGreyFillColor2
-    fg[ACTIVE] = "#C6CDDA" # LightGreyFillColor2
-    fg[PRELIGHT] = "#C6CDDA" # DarkGreyFillColor2
+    fg[NORMAL] = "#2A3033" # LightGreyFillColor2
+    fg[ACTIVE] = "#4A5053" # LightGreyFillColor2 + 0x20
+    fg[PRELIGHT] = "#3A4043" # DarkGreyFillColor2 + 0x10
 }
 
 style "spin"
