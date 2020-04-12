@@ -105,6 +105,7 @@
     <Compile Include="UI\Dialogs\Common\NsfImportDialog.cs" />
     <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
     <Compile Include="UI\Dialogs\Common\TransformDialog.cs" />
+    <Compile Include="UI\MainWindow\Common\CommonTooltips.cs" />
     <Content Include="libportaudio.2.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
