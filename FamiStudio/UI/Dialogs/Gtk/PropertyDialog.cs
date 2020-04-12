@@ -76,6 +76,31 @@ namespace FamiStudio
             SkipTaskbarHint = true;
         }
 
+        private bool RunValidation()
+        {
+            if (ValidateProperties == null)
+                return true;
+
+#if FAMISTUDIO_MACOS
+            MacUtils.RemoveNSWindowAlwaysOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
+#endif
+            // Validation might display messages boxes, need to work around z-ordering issues.
+            bool valid = ValidateProperties.Invoke(propertyPage);
+
+#if FAMISTUDIO_MACOS
+            // This fixes some super weird focus issues.
+            if (!valid)
+            {
+                Hide();
+                Show();
+            }
+
+            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
+#endif
+
+            return valid;
+        }
+
         private void ButtonNo_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
             result = System.Windows.Forms.DialogResult.Cancel;
@@ -83,13 +108,13 @@ namespace FamiStudio
 
         private void ButtonYes_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
-            if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
+            if (RunValidation())
                 result = System.Windows.Forms.DialogResult.OK;
         }
 
         private void propertyPage_PropertyWantsClose(int idx)
         {
-            if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
+            if (RunValidation())
                 result = System.Windows.Forms.DialogResult.OK;
         }
 
@@ -97,7 +122,7 @@ namespace FamiStudio
         {
             if (evnt.Key == Gdk.Key.Return)
             {
-                if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
+                if (RunValidation())
                     result = System.Windows.Forms.DialogResult.OK;
             }
             else if (evnt.Key == Gdk.Key.Escape)

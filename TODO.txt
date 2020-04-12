@@ -9,10 +9,11 @@
  	x Make sure Namco channels dialog works. Added Combo box prop change callback.
  	x New functions to update some controls.
  	x Export dialog label sizes.
- 	- Test validateDelegate (Focus glitch, infinite loop).
+ 	x Test validateDelegate (Focus glitch, infinite loop).
 	x 0.5 pixel offset for pattern bitmaps.
+	- Dashes lines.
 	- Test hi-dpi.	
-	- Changing left/right real time values is super slow. Why???
+	x Changing left/right real time values is super slow. Why???
 
 - When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
 - MATTT.
