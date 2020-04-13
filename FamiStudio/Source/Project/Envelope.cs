@@ -238,6 +238,12 @@ namespace FamiStudio
             }
         }
 
+        public void ConvertToRelative()
+        {
+            for (int j = length - 1; j > 0; j--)
+                values[j] = (sbyte)(values[j] - values[j - 1]);
+        }
+
         public Envelope ShallowClone()
         {
             var env = new Envelope();

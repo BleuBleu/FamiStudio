@@ -622,7 +622,7 @@ namespace FamiStudio
         {
             var noteIdx = (int)((x - trackNameSizeX + scrollX) / noteSizeX);
 
-            if (noteIdx < 0 || noteIdx > Song.GetPatternStartNote(Song.Length))
+            if (noteIdx < 0 || noteIdx >= Song.GetPatternStartNote(Song.Length))
             {
                 track = -1;
                 patternIdx = -1;
@@ -1248,9 +1248,9 @@ namespace FamiStudio
                 else
                 {
                     if (IsPatternSelected(channelIdx, patternIdx))
-                        tooltip = "{Drag} Move Pattern - {Ctrl} {Drag} Clone pattern {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {L} {MouseLeft} Set Loop Point - {MouseWheel} Pan";
+                        tooltip = "{Drag} Move Pattern - {Ctrl} {Drag} Clone pattern {MouseLeft}{MouseLeft} Pattern properties - {MouseWheel} Pan\n{MouseRight} Delete Pattern - {L} {MouseLeft} Set Loop Point";
                     else
-                        tooltip = "{MouseLeft} Select Pattern - {MouseLeft}{MouseLeft} Pattern properties - {MouseRight} Delete Pattern - {L} {MouseLeft} Set Loop Point - {MouseWheel} Pan";
+                        tooltip = "{MouseLeft} Select Pattern - {MouseLeft}{MouseLeft} Pattern properties - {MouseWheel} Pan\n{MouseRight} Delete Pattern - {L} {MouseLeft} Set Loop Point";
                 }
             }
             else if (IsMouseInHeader(e))
@@ -1532,7 +1532,7 @@ namespace FamiStudio
             {
                 var pt = new Point(e.X, e.Y);
 
-                if (IsMouseInHeader(e))
+                if (IsMouseInHeader(e) && patternIdx >= 0)
                 {
                     EditPatternCustomSettings(pt, patternIdx);
                 }

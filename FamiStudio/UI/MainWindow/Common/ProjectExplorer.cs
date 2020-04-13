@@ -704,7 +704,7 @@ namespace FamiStudio
                         if (buttons[buttonIdx].instrument == null)
                             tooltip = "{MouseLeft} Select instrument";
                         else
-                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{MouseLeft} Instrument properties - {MouseRight} Delete instrument - {Drag} Replace instrument";
+                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{MouseLeft} Instrument properties\n{MouseRight} Delete instrument - {Drag} Replace instrument";
                     }
                     else
                     {
@@ -1173,14 +1173,14 @@ namespace FamiStudio
             dlg.Properties.UserData = song;
             dlg.Properties.AddColoredString(song.Name, song.Color); // 0
             dlg.Properties.AddColor(song.Color); // 1
-            dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, 128, CommonTooltips.SongLength); // 2
+            dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, Song.MaxLength, CommonTooltips.SongLength); // 2
 
             if (song.UsesFamiTrackerTempo)
             {
                 dlg.Properties.AddIntegerRange("Tempo :", song.FamitrackerTempo, 32, 255, CommonTooltips.Tempo); // 3
                 dlg.Properties.AddIntegerRange("Speed :", song.FamitrackerSpeed, 1, 31, CommonTooltips.Speed); // 4
                 dlg.Properties.AddIntegerRange("Notes per Pattern :", song.PatternLength, 16, 256, CommonTooltips.NotesPerPattern); // 5
-                dlg.Properties.AddIntegerRange("Notes per Bar :", song.BarLength, 2, song.PatternLength, CommonTooltips.NotesPerBar); // 6
+                dlg.Properties.AddIntegerRange("Notes per Bar :", song.BarLength, 2, 256, CommonTooltips.NotesPerBar); // 6
                 dlg.Properties.AddLabel("BPM :", song.BPM.ToString(), CommonTooltips.BPM); // 7
             }
             else
@@ -1285,41 +1285,30 @@ namespace FamiStudio
         {
             var song = props.UserData as Song;
 
-            if (selectedSong.UsesFamiTrackerTempo)
+            if (selectedSong.UsesFamiTrackerTempo && (idx == 3 || idx == 4)) // 3/4 = Tempo/Speed
             {
-                if (idx == 3 || idx == 4) // 3/4 = Tempo/Speed
-                {
-                    var tempo = props.GetPropertyValue<int>(3);
-                    var speed = props.GetPropertyValue<int>(4);
+                var tempo = props.GetPropertyValue<int>(3);
+                var speed = props.GetPropertyValue<int>(4);
 
-                    props.SetLabelText(7, Song.ComputeFamiTrackerBPM(speed, tempo).ToString());
-                }
-                // MATTT : Change bar length.
-                else if (idx == 5) // 5 = pattern length.
-                {
-                    props.UpdateIntegerRange(6, 0, 2, (int)value);
-                }
+                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(speed, tempo).ToString());
             }
-            else
+            else if (idx == 3) // 3 = Note length
             {
-                if (idx == 3) // 3 = Note length
+                int noteLength = (int)value;
+
+                props.UpdateIntegerRange(4, 1, Pattern.MaxLength / noteLength);
+                props.SetLabelText(6, Song.ComputeFamiStudioBPM(noteLength).ToString());
+
+                if (!song.Project.UsesExpansionAudio)
                 {
-                    int noteLength = (int)value;
+                    var frames = new int[2];
+                    Song.GetDefaultPalSkipFrames(noteLength, frames);
 
-                    props.UpdateIntegerRange(4, 1, Pattern.MaxLength / noteLength);
-                    props.SetLabelText(6, Song.ComputeFamiStudioBPM(noteLength).ToString());
-
-                    if (!song.Project.UsesExpansionAudio)
-                    {
-                        var frames = new int[2];
-                        Song.GetDefaultPalSkipFrames(noteLength, frames);
-
-                        props.SetLabelText(7, $"{Song.ComputePalError(noteLength):0.##} %");
-                        props.UpdateIntegerRange(8, frames[0], -1, noteLength - 1);
-                        props.UpdateIntegerRange(9, frames[1], -1, noteLength - 1);
-                        props.SetPropertyEnabled(8, Song.GetNumPalSkipFrames(noteLength) >= 1);
-                        props.SetPropertyEnabled(9, Song.GetNumPalSkipFrames(noteLength) >= 2);
-                    }
+                    props.SetLabelText(7, $"{Song.ComputePalError(noteLength):0.##} %");
+                    props.UpdateIntegerRange(8, frames[0], -1, noteLength - 1);
+                    props.UpdateIntegerRange(9, frames[1], -1, noteLength - 1);
+                    props.SetPropertyEnabled(8, Song.GetNumPalSkipFrames(noteLength) >= 1);
+                    props.SetPropertyEnabled(9, Song.GetNumPalSkipFrames(noteLength) >= 2);
                 }
             }
         }
@@ -1343,7 +1332,27 @@ namespace FamiStudio
                 {
                     instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
                     if (instrument.IsEnvelopeActive(Envelope.Pitch))
-                        instrument.Envelopes[Envelope.Pitch].Relative = dlg.Properties.GetPropertyValue<bool>(2);
+                    {
+                        var newRelative = dlg.Properties.GetPropertyValue<bool>(2);
+                        if (instrument.Envelopes[Envelope.Pitch].Relative != newRelative)
+                        {
+                            if (!instrument.Envelopes[Envelope.Pitch].IsEmpty)
+                            {
+                                if (newRelative)
+                                {
+                                    if (PlatformUtils.MessageBox("Do you want to try to convert the pitch envelope from absolute to relative?", "Pitch Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                                        instrument.Envelopes[Envelope.Pitch].ConvertToRelative();
+                                }
+                                else
+                                {
+                                    if (PlatformUtils.MessageBox("Do you want to try to convert the pitch envelope from relative to absolute?", "Pitch Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                                        instrument.Envelopes[Envelope.Pitch].ConvertToAbsolute();
+                                }
+                            }
+
+                            instrument.Envelopes[Envelope.Pitch].Relative = newRelative;
+                        }
+                    }
                     InstrumentColorChanged?.Invoke(instrument);
                     RefreshButtons();
                     ConditionalInvalidate();

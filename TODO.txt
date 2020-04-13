@@ -1,7 +1,6 @@
 1.5.0: All expansions + PAL
 ============================
 - Why do we clear the selection when moving patterns in sequencer?
-- Clip tooltips to an area, or measure strings and omit some.
 - MATTT.
 - BUG (RARE): Once I hit a bug where i could drag notes without clicking on them???
 - POLISH: When a mismatching channel is selected (expansions VS. none), pick first one. Less frustrating.
@@ -50,7 +49,19 @@ Breaking changes
 
 2.0.0 Documentation
 ===================
-- Switch to MkDocs
+x Switch to MkDocs
+- Subdivide different way:
+	- Basics + UI (what is what, tooltip, double-click props, play, pause, seek)
+	- You first song
+	- Import/Export to various formats
+	- Editing instruments
+	- Editing patterns
+	- Editing notres
+	- Tempo management
+	- Expansion audio
+	- FamiStudio text format doc.
+	- Configuration
+
 - Add tempo table like FamiTracker.
 - 
 

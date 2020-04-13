@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -16,7 +17,8 @@ namespace FamiStudio
 
             var lines = new List<string>();
 
-            string projectLine = $"Project Version=\"1.5.0\" TempoMode=\"{Project.TempoModeNames[project.TempoMode]}\"";
+            var versionString = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
+            var projectLine = $"Project Version=\"{versionString}\" TempoMode=\"{Project.TempoModeNames[project.TempoMode]}\"";
 
             if (project.Name      != "")    projectLine += $" Name=\"{project.Name}\"";
             if (project.Author    != "")    projectLine += $" Author=\"{project.Author}\"";

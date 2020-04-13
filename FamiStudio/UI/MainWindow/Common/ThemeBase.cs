@@ -63,7 +63,7 @@ namespace FamiStudio
             new RenderFontDefinition() { Name = "QuickSand", Size = 16, Alignment = 2 }, // MediumBigRight
             new RenderFontDefinition() { Name = "QuickSand", Size = 20 }, // Big
             new RenderFontDefinition() { Name = "QuickSand", Size = 20, Bold = true }, // BigBold
-            new RenderFontDefinition() { Name = "QuickSand", Size = 28 } // Huge
+            new RenderFontDefinition() { Name = "QuickSand", Size = 28, Alignment = 1 } // Huge
         };
 
         protected static RenderFont[] Fonts = new RenderFont[(int)RenderFontStyle.Max];

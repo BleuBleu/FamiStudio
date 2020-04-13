@@ -465,7 +465,7 @@ namespace FamiStudio
 
         public void ShowHelp()
         {
-            Process.Start("http://www.famistudio.org/doc.html");
+            Process.Start("http://www.famistudio.org/doc/index.html");
         }
 
         private void UpdateTitle()

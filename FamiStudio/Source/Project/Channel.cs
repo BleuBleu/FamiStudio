@@ -218,16 +218,19 @@ namespace FamiStudio
 
             if (patternIdxMin == patternIdxMax)
             {
-                var pattern = patternInstances[patternIdxMin];
-                if (pattern != null)
+                if (patternIdxMin < song.Length)
                 {
-                    pattern.DeleteNotesBetween(patternNoteIdxMin, patternNoteIdxMax, preserveFx);
-                    pattern.ClearLastValidNoteCache();
+                    var pattern = patternInstances[patternIdxMin];
+                    if (pattern != null)
+                    {
+                        pattern.DeleteNotesBetween(patternNoteIdxMin, patternNoteIdxMax, preserveFx);
+                        pattern.ClearLastValidNoteCache();
+                    }
                 }
             }
             else
             {
-                for (int p = patternIdxMin; p <= patternIdxMax; p++)
+                for (int p = patternIdxMin; p <= patternIdxMax && p < song.Length; p++)
                 {
                     var pattern = patternInstances[p];
 

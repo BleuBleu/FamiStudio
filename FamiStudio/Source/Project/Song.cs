@@ -54,7 +54,7 @@ namespace FamiStudio
         private string name;
         private int loopPoint = 0;
         private PatternCustomSetting[] patternCustomSettings = new PatternCustomSetting[Song.MaxLength];
-        private int[] patternStartNote = new int[Song.MaxLength];
+        private int[] patternStartNote = new int[Song.MaxLength + 1];
 
         // These are specific to FamiTracker tempo mode
         private int famitrackerTempo = 150;
@@ -717,10 +717,10 @@ namespace FamiStudio
                 }
             }
 
-            var oldPatternInstancesStartNote = new int[MaxLength];
-            Array.Copy(patternStartNote, oldPatternInstancesStartNote, MaxLength);
+            var oldPatternInstancesStartNote = new int[patternStartNote.Length];
+            Array.Copy(patternStartNote, oldPatternInstancesStartNote, patternStartNote.Length);
             UpdatePatternStartNotes();
-            for (int i = 0; i < MaxLength; i++)
+            for (int i = 0; i < patternStartNote.Length; i++)
                 Debug.Assert(oldPatternInstancesStartNote[i] == patternStartNote[i]);
 
             if (project.UsesFamiStudioTempo)

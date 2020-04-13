@@ -35,6 +35,17 @@ namespace FamiStudio
             return (x < 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
         }
 
+        public static int NumDecimalDigits(int n)
+        {
+            int digits = 1;
+            while (n >= 10)
+            {
+                n /= 10;
+                digits++;
+            }
+            return digits;
+        }
+
         public static void Swap<T>(ref T a, ref T b)
         {
             T t = a;

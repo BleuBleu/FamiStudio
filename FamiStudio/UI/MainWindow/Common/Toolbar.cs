@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Media;
 using System.Windows.Forms;
 using FamiStudio.Properties;
@@ -40,10 +41,9 @@ namespace FamiStudio
         const int ButtonHelp      = 15;
         const int ButtonCount     = 16;
 
-        const int DefaultTimecodePosX            = 455;
+        const int DefaultTimecodePosX            = 404;
         const int DefaultTimecodePosY            = 4;
         const int DefaultTimecodeSizeX           = 160;
-        const int DefaultTimecodeTextPosX        = 30;
         const int DefaultTooltipSingleLinePosY   = 12;
         const int DefaultTooltipMultiLinePosY    = 4;
         const int DefaultTooltipLineSizeY        = 17;
@@ -53,7 +53,6 @@ namespace FamiStudio
         int timecodePosX;
         int timecodePosY;
         int timecodeSizeX;
-        int timecodeTextPosX;
         int tooltipSingleLinePosY;
         int tooltipMultiLinePosY;
         int tooltipLineSizeY;
@@ -125,20 +124,20 @@ namespace FamiStudio
             bmpPal         = g.CreateBitmapFromResource("PAL");
 
             buttons[ButtonNew]       = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
-            buttons[ButtonOpen]      = new Button { X = 44,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
-            buttons[ButtonSave]      = new Button { X = 84,  Y = 4, Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
-            buttons[ButtonExport]    = new Button { X = 124, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
-            buttons[ButtonCopy]      = new Button { X = 164, Y = 4, Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
-            buttons[ButtonCut]       = new Button { X = 204, Y = 4, Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
-            buttons[ButtonPaste]     = new Button { X = 244, Y = 4, Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
-            buttons[ButtonUndo]      = new Button { X = 284, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
-            buttons[ButtonRedo]      = new Button { X = 324, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
-            buttons[ButtonTransform] = new Button { X = 364, Y = 4, Bmp = g.CreateBitmapFromResource("Transform"), Click = OnTransform };
-            buttons[ButtonConfig]    = new Button { X = 404, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
-            buttons[ButtonPlay]      = new Button { X = 634, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
-            buttons[ButtonRewind]    = new Button { X = 674, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
-            buttons[ButtonLoop]      = new Button { X = 714, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
-            buttons[ButtonMachine]   = new Button { X = 754, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
+            buttons[ButtonOpen]      = new Button { X = 40,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
+            buttons[ButtonSave]      = new Button { X = 76,  Y = 4, Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
+            buttons[ButtonExport]    = new Button { X = 112, Y = 4, Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
+            buttons[ButtonCopy]      = new Button { X = 148, Y = 4, Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
+            buttons[ButtonCut]       = new Button { X = 184, Y = 4, Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
+            buttons[ButtonPaste]     = new Button { X = 220, Y = 4, Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
+            buttons[ButtonUndo]      = new Button { X = 256, Y = 4, Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
+            buttons[ButtonRedo]      = new Button { X = 292, Y = 4, Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
+            buttons[ButtonTransform] = new Button { X = 328, Y = 4, Bmp = g.CreateBitmapFromResource("Transform"), Click = OnTransform };
+            buttons[ButtonConfig]    = new Button { X = 364, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
+            buttons[ButtonPlay]      = new Button { X = 572, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
+            buttons[ButtonRewind]    = new Button { X = 608, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
+            buttons[ButtonLoop]      = new Button { X = 644, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[ButtonMachine]   = new Button { X = 680, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
             buttons[ButtonHelp]      = new Button { X = 36,  Y = 4, Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
 
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
@@ -171,7 +170,6 @@ namespace FamiStudio
             timecodePosX            = (int)(DefaultTimecodePosX            * scaling);
             timecodePosY            = (int)(DefaultTimecodePosY            * scaling);
             timecodeSizeX           = (int)(DefaultTimecodeSizeX           * scaling);
-            timecodeTextPosX        = (int)(DefaultTimecodeTextPosX        * scaling);
             tooltipSingleLinePosY   = (int)(DefaultTooltipSingleLinePosY   * scaling);
             tooltipMultiLinePosY    = (int)(DefaultTooltipMultiLinePosY    * scaling);
             tooltipLineSizeY        = (int)(DefaultTooltipLineSizeY        * scaling);
@@ -410,7 +408,26 @@ namespace FamiStudio
             int patternIdx = App.Song.FindPatternInstanceIndex(frame, out int noteIdx);
 
             g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
-            g.DrawText($"{patternIdx:D3}:{noteIdx:D3}", ThemeBase.FontHuge, timecodePosX + timecodeTextPosX, 2, theme.LightGreyFillBrush1, timecodeSizeX);
+
+            var numPatternDigits = Utils.NumDecimalDigits(App.Song.Length - 1);
+            var numNoteDigits    = Utils.NumDecimalDigits(App.Song.GetPatternLength(patternIdx) - 1);
+
+            var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
+            var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
+
+            var patternString = patternIdx.ToString("D" + numPatternDigits);
+            var noteString    = noteIdx.ToString("D" + numNoteDigits);
+
+            var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
+
+            for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
+                g.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+
+            g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+            charPosX += colonSizeX;
+
+            for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
+                g.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
 
             var message = tooltip;
             var messageBrush = theme.BlackBrush;

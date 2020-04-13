@@ -215,13 +215,15 @@ namespace FamiStudio
 
         public bool AdvanceSong(int songLength, LoopMode loopMode)
         {
+            bool resetTempo = false;
+
             if (++playNote >= song.GetPatternLength(playPattern))
             {
                 playNote = 0;
                 if (loopMode != LoopMode.Pattern)
                 {
                     playPattern++;
-                    ResetFamiStudioTempo();
+                    resetTempo = true;
                 }
             }
 
@@ -233,7 +235,7 @@ namespace FamiStudio
                     {
                         playPattern = song.LoopPoint;
                         playNote = 0;
-                        ResetFamiStudioTempo();
+                        resetTempo = true;
                     }
                     else 
                     {
@@ -244,13 +246,16 @@ namespace FamiStudio
                 {
                     playPattern = Math.Max(0, song.LoopPoint);
                     playNote = 0;
-                    ResetFamiStudioTempo();
+                    resetTempo = true;
                 }
                 else if (loopMode == LoopMode.None)
                 {
                     return false;
                 }
             }
+
+            if (resetTempo)
+                ResetFamiStudioTempo();
 
             return true;
         }
