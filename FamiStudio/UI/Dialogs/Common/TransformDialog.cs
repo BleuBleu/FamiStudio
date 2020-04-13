@@ -13,16 +13,12 @@ namespace FamiStudio
         enum TransformOperation
         {
             Cleanup,
-            Split,
-            Tempo,
             Max
         };
 
         readonly string[] ConfigSectionNames =
         {
             "Cleanup",
-            "Split",
-            "Tempo",
             ""
         };
 
@@ -43,7 +39,7 @@ namespace FamiStudio
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
                 var section = (TransformOperation)i;
-                var page = dialog.AddPropertyPage(ConfigSectionNames[i], "ExportNsf"); // MATTT
+                var page = dialog.AddPropertyPage(ConfigSectionNames[i], "Clean");
                 CreatePropertyPage(page, section);
             }
         }
@@ -68,12 +64,6 @@ namespace FamiStudio
                     page.AddBoolean("Delete unused instruments:", true);   // 3
                     page.AddBoolean("Delete unused samples:", true);       // 4
                     page.AddStringListMulti(null, GetSongNames(), null);   // 5
-                    break;
-                case TransformOperation.Split:
-                    page.AddIntegerRange("Split Patterns in :", 2, 2, 4);  // 0
-                    page.AddStringListMulti(null, GetSongNames(), null);   // 5
-                    break;
-                case TransformOperation.Tempo:
                     break;
             }
 
@@ -153,27 +143,6 @@ namespace FamiStudio
             }
         }
 
-        private void Split()
-        {
-            var props = dialog.GetPropertyPage((int)TransformOperation.Split);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(1));
-
-            if (songIds.Length > 0)
-            {
-                var factor = props.GetPropertyValue<int>(0);
-
-                app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                foreach (var songId in songIds)
-                {
-                    var song = app.Project.GetSong(songId);
-                    song.Split(factor);
-                }
-
-                app.UndoRedoManager.EndTransaction();
-            }
-        }
-
         public DialogResult ShowDialog()
         {
             var dialogResult = dialog.ShowDialog();
@@ -185,7 +154,6 @@ namespace FamiStudio
                 switch (operation)
                 {
                     case TransformOperation.Cleanup: Cleanup(); break;
-                    case TransformOperation.Split:   Split();   break;
                 }
             }
 
