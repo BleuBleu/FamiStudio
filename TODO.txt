@@ -3,7 +3,6 @@
 - Why do we clear the selection when moving patterns in sequencer?
 - MATTT.
 - BUG (RARE): Once I hit a bug where i could drag notes without clicking on them???
-- Transform dialog = cleanup... + icon
 - Slide note VS. PAL not done in ASM (not tested on PC either...)
 
 TESTING:
