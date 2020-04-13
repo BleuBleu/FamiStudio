@@ -11,7 +11,6 @@ namespace FamiStudio
 
         public ChannelStateFds(int apuIdx, int channelIdx) : base(apuIdx, channelIdx, false)
         {
-            maximumPeriod = NesApu.MaximumPeriod12Bit;
         }
 
         protected override void LoadInstrument(Instrument instrument)

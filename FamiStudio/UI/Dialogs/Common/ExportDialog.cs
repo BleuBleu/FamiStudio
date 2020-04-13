@@ -78,7 +78,7 @@ namespace FamiStudio
                     page.AddString("Name :", project.Name, 31); // 0
                     page.AddString("Artist :", project.Author, 31); // 1
                     page.AddString("Copyright :", project.Copyright, 31); // 2
-                    page.AddStringList("Mode :", Enum.GetNames(typeof(NsfFile.NsfMode)), Enum.GetNames(typeof(NsfFile.NsfMode))[0]); // 3
+                    page.AddStringList("Mode :", Enum.GetNames(typeof(MachineType)), Enum.GetNames(typeof(MachineType))[0]); // 3
                     page.AddStringListMulti(null, songNames, null); // 4
 #if DEBUG
                     page.AddStringList("Engine :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 5
@@ -155,7 +155,7 @@ namespace FamiStudio
             if (filename != null)
             {
                 var props  = dialog.GetPropertyPage((int)ExportFormat.Nsf);
-                var mode   = (NsfFile.NsfMode)Enum.Parse(typeof(NsfFile.NsfMode), props.GetPropertyValue<string>(3));
+                var mode   = (MachineType)Enum.Parse(typeof(MachineType), props.GetPropertyValue<string>(3));
 #if DEBUG
                 var kernel = (FamitoneMusicFile.FamiToneKernel)Enum.Parse(typeof(FamitoneMusicFile.FamiToneKernel), props.GetPropertyValue<string>(5));
 #else
@@ -241,7 +241,7 @@ namespace FamiStudio
                         var dpcmFilename = Path.Combine(folderBrowserDialog.SelectedPath, Utils.MakeNiceAsmName(formattedDpcmName) + ".dmc");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel);
-                        f.Save(project, new int[] { songId }, exportFormat, true, songFilename, dpcmFilename);
+                        f.Save(project, new int[] { songId }, exportFormat, true, songFilename, dpcmFilename, MachineType.Dual);
                     }
                 }
             }
@@ -251,7 +251,7 @@ namespace FamiStudio
                 if (filename != null)
                 {
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel);
-                    f.Save(project, songIds, exportFormat, false, filename, Path.ChangeExtension(filename, ".dmc"));
+                    f.Save(project, songIds, exportFormat, false, filename, Path.ChangeExtension(filename, ".dmc"), MachineType.Dual);
                 }
             }
         }

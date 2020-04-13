@@ -13,7 +13,6 @@ namespace FamiStudio
         {
             channelIdx = channelType - Channel.Vrc7Fm1;
             customRelease = true;
-            maximumPeriod = NesApu.MaximumPeriod15Bit;
         }
 
         private void WriteVrc7Register(int reg, int data)

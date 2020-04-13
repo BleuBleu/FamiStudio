@@ -1186,7 +1186,6 @@ namespace FamiStudio
 
             if (n0.IsSlideNote)
             {
-                // MATTT: We assume NTSC here.
                 if (channel.ComputeSlideNoteParams(n0, p0, i0, Song.FamitrackerSpeed, Song.NativeTempoNTSC, null, out _, out _, out int duration))
                 {
                     int slideSizeX = duration;
@@ -2464,7 +2463,6 @@ namespace FamiStudio
         {
             selectionFrameMin = -1;
             selectionFrameMax = -1;
-            // MATTT: Abort capture op here.
         }
 
         private void UpdateSelection(int mouseX, bool first = false)

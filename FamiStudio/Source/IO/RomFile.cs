@@ -126,7 +126,7 @@ namespace FamiStudio
                 // Build project info + song table of content.
                 var projectInfo = new RomProjectInfo();
                 projectInfo.maxSong = (byte)(songIds.Length - 1);
-                Marshal.Copy(EncodeAndCenterString(name), 0, new IntPtr(projectInfo.name), 28);
+                Marshal.Copy(EncodeAndCenterString(name),   0, new IntPtr(projectInfo.name),   28);
                 Marshal.Copy(EncodeAndCenterString(author), 0, new IntPtr(projectInfo.author), 28);
 
                 var songTable = new RomSongEntry[MaxSongs];
@@ -173,7 +173,7 @@ namespace FamiStudio
                     var song = project.Songs[i];
                     int page = songDataBytes.Count / RomPageSize;
                     int addr = RomMemoryStart + (songDataBytes.Count & (RomPageSize - 1));
-                    var songBytes = new FamitoneMusicFile(FamitoneMusicFile.FamiToneKernel.FamiStudio).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr);
+                    var songBytes = new FamitoneMusicFile(FamitoneMusicFile.FamiToneKernel.FamiStudio).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, MachineType.NTSC);
 
                     songTable[i].page = (byte)(page);
                     songTable[i].address = (ushort)(addr);

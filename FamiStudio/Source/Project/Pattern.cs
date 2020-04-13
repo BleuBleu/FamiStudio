@@ -409,8 +409,6 @@ namespace FamiStudio
                 Debug.Assert(inst == null || song.Project.GetInstrument(inst.Id) == inst);
                 Debug.Assert(inst == null || channel.SupportsInstrument(inst));
             }
-
-            // MATTT: Validate last data here.
         }
 #endif
 

@@ -284,8 +284,32 @@ namespace FamiStudio
 
         public static ushort GetPitchLimitForChannelType(int channelType)
         {
-            // MATTT This is incomplete.
-            return (ushort)(channelType == Channel.Vrc6Saw ? 0xfff : 0x7ff);
+            switch (channelType)
+            {
+                case Channel.FdsWave:
+                case Channel.Vrc6Saw:
+                case Channel.Vrc6Square1:
+                case Channel.Vrc6Square2:
+                    return NesApu.MaximumPeriod12Bit;
+                case Channel.Vrc7Fm1:
+                case Channel.Vrc7Fm2:
+                case Channel.Vrc7Fm3:
+                case Channel.Vrc7Fm4:
+                case Channel.Vrc7Fm5:
+                case Channel.Vrc7Fm6:
+                    return NesApu.MaximumPeriod15Bit;
+                case Channel.N163Wave1:
+                case Channel.N163Wave2:
+                case Channel.N163Wave3:
+                case Channel.N163Wave4:
+                case Channel.N163Wave5:
+                case Channel.N163Wave6:
+                case Channel.N163Wave7:
+                case Channel.N163Wave8:
+                    return NesApu.MaximumPeriod16Bit;
+            }
+
+            return NesApu.MaximumPeriod11Bit;
         }
 
         public static int DmcReadCallback(IntPtr data, int addr)

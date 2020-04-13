@@ -54,21 +54,14 @@ namespace FamiStudio
             public fixed byte programSize[3];
         };
 
-        public enum NsfMode
-        {
-            NTSC,
-            PAL,
-            Dual
-        };
-
-        public unsafe bool Save(Project originalProject, FamitoneMusicFile.FamiToneKernel kernel, string filename, int[] songIds, string name, string author, string copyright, NsfMode mode)
+        public unsafe bool Save(Project originalProject, FamitoneMusicFile.FamiToneKernel kernel, string filename, int[] songIds, string name, string author, string copyright, MachineType mode)
         {
             //try
             {
                 if (songIds.Length == 0)
                     return false;
 
-                Debug.Assert(!originalProject.UsesExpansionAudio || mode == NsfMode.NTSC);
+                Debug.Assert(!originalProject.UsesExpansionAudio || mode == MachineType.NTSC);
 
                 var project = originalProject.DeepClone();
                 project.RemoveAllSongsBut(songIds);
@@ -132,9 +125,9 @@ namespace FamiStudio
 
                 switch (mode)
                 {
-                    case NsfMode.NTSC: kernelBinary += "_ntsc"; break;
-                    case NsfMode.PAL:  kernelBinary += "_pal";  break;
-                    case NsfMode.Dual: kernelBinary += "_dual"; break;
+                    case MachineType.NTSC: kernelBinary += "_ntsc"; break;
+                    case MachineType.PAL:  kernelBinary += "_pal";  break;
+                    case MachineType.Dual: kernelBinary += "_dual"; break;
                 }
 
                 if (project.UsesFamiStudioTempo)
@@ -201,7 +194,7 @@ namespace FamiStudio
                     var firstPage = nsfBytes.Count < NsfPageSize;
                     int page = nsfBytes.Count / NsfPageSize + (firstPage ? 1 : 0);
                     int addr = NsfMemoryStart + (firstPage ? 0 : NsfPageSize ) + (nsfBytes.Count & (NsfPageSize - 1));
-                    var songBytes = new FamitoneMusicFile(kernel).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr);
+                    var songBytes = new FamitoneMusicFile(kernel).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, mode);
 
                     // If we introduced padding for the samples, we can try to squeeze a song in there.
                     if (songBytes.Length < dpcmPadding)

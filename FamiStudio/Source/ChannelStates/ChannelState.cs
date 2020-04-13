@@ -27,6 +27,7 @@ namespace FamiStudio
             apuIdx = apu;
             channelType = type;
             palMode = pal;
+            maximumPeriod = NesApu.GetPitchLimitForChannelType(channelType);
             noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
             note.Value = Note.NoteStop;
             note.Volume = Note.VolumeMax;

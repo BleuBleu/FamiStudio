@@ -871,12 +871,11 @@ namespace FamiStudio
 
                             if (note.IsSlideNote && note.IsMusical)
                             {
-                                // TODO: PAL.
                                 var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
 
-                                // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed.
-                                // MATTT: We assume NTSC here.
-                                channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, Song.NativeTempoNTSC, noteTable, out _, out int stepSize, out _); // MATTT: N163 & VRC7 slides.
+                                // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed. Also we assume NTSC here.
+                                // MATTT: stepSize here needs to be tweaked for N163 & VRC7 slides.
+                                channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, Song.NativeTempoNTSC, noteTable, out _, out int stepSize, out _); 
 
                                 var absNoteDelta = Math.Abs(note.Value - note.SlideNoteTarget);
 

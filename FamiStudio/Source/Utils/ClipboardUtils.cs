@@ -155,7 +155,7 @@ namespace FamiStudio
                 patternIdNameMap.Add(new Tuple<int, int, string>(patId, patChannel, patName));
             }
 
-            var dummyPattern = new Pattern(); // MATTT: Test this, arrays will be null here.
+            var dummyPattern = new Pattern();
 
             // Match patterns by name, create missing ones and remap IDs.
             for (int i = 0; i < numPatterns; i++)

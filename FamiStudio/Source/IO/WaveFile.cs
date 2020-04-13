@@ -35,7 +35,7 @@ namespace FamiStudio
         {
             var player = new WavPlayer();
             player.Loop = LoopMode.None;
-            var samples = player.GetSongSamples(song, false); // MATTT: PAL
+            var samples = player.GetSongSamples(song, false);
 
             using (var file = new FileStream(filename, FileMode.Create))
             {

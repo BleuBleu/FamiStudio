@@ -14,7 +14,6 @@ namespace FamiStudio
         {
             regOffset = 8 * -(channelType - Channel.N163Wave1);
             channelMask = (numChannels - 1) << 4;
-            maximumPeriod = NesApu.MaximumPeriod16Bit; // Maximum is 18-bit, but we wont go there.
         }
 
         private void WriteN163Register(int reg, int data)

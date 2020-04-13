@@ -1,4 +1,5 @@
-;FamiTone2 v1.12
+; FamiStudio NSF driver, heavily customized version of FamiTone2. 
+; Terrible code. Not for the faint of hearth.
 
 ;settings, uncomment or put them into your main program; the latter makes possible updates easier
 

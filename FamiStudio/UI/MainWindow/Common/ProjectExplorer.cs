@@ -327,7 +327,7 @@ namespace FamiStudio
         public event InstrumentPointDelegate InstrumentDraggedOutside;
         public event SongDelegate SongModified;
         public event SongDelegate SongSelected;
-        public event EmptyDelegate ExpansionAudioChanged;
+        public event EmptyDelegate ProjectModified;
 
         public ProjectExplorer()
         {
@@ -1134,7 +1134,7 @@ namespace FamiStudio
                     {
                         App.StopEverything();
                         project.SetExpansionAudio(expansion, numChannels);
-                        ExpansionAudioChanged?.Invoke();
+                        ProjectModified?.Invoke();
                         App.StartInstrumentPlayer();
                         Reset();
                     }
@@ -1156,7 +1156,7 @@ namespace FamiStudio
                         project.ConvertToFamiTrackerTempo(project.AreSongsEmpty);
                     }
 
-                    ExpansionAudioChanged?.Invoke(); // MATTT : Rename this event.
+                    ProjectModified?.Invoke();
                     App.StartInstrumentPlayer();
                     Reset();
                 }

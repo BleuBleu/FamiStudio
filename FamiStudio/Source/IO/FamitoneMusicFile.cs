@@ -6,6 +6,13 @@ using System.Linq;
 
 namespace FamiStudio
 {
+    public enum MachineType
+    {
+        NTSC,
+        PAL,
+        Dual
+    };
+
     public class FamitoneMusicFile
     {
         private Project project;
@@ -18,6 +25,7 @@ namespace FamiStudio
         private string lo = ".lobyte";
         private string hi = ".hibyte";
 
+        private MachineType machine = MachineType.NTSC;
         private List<List<string>> globalPacketPatternBuffers = new List<List<string>>();
         private Dictionary<byte, string> vibratoEnvelopeNames = new Dictionary<byte, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
@@ -103,7 +111,6 @@ namespace FamiStudio
                     line += $"{ll}song{i}ch{chn},";
                 }
 
-                // MATTT: For regular FamiTone2, we probably want our special version. And give option.
                 if (song.UsesFamiTrackerTempo)
                 {
                     int tempoPal  = 256 * song.FamitrackerTempo / (50 * 60 / 24);
@@ -550,6 +557,7 @@ namespace FamiStudio
                     lines.Add($"\n{ll}song{songIdx}ch{c}:");
 
                 var channel = song.Channels[c];
+                var currentSpeed = song.FamitrackerSpeed;
                 var isSpeedChannel = c == speedChannel;
                 var instrument = (Instrument)null;
                 var previousNoteLength = song.NoteLength;
@@ -604,11 +612,12 @@ namespace FamiStudio
                         if (note == null)
                             note = emptyNote;
 
-                        if (isSpeedChannel)
+                        if (isSpeedChannel && song.UsesFamiTrackerTempo)
                         {
                             var speed = FindEffectParam(song, p, time, Note.EffectSpeed);
                             if (speed >= 0)
                             {
+                                currentSpeed = speed;
                                 patternBuffer.Add($"${0xfb:x2}");
                                 patternBuffer.Add($"${(byte)speed:x2}");
                             }
@@ -692,12 +701,22 @@ namespace FamiStudio
 
                             if (note.IsSlideNote)
                             {
-                                var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumChannels);
+                                var noteTableNtsc = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumChannels);
+                                var noteTablePal  = NesApu.GetNoteTableForChannelType(channel.Type, true,  song.Project.ExpansionNumChannels);
 
-                                // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed.
-                                // MATTT: Slide notes in PAL have not been done in ASM.
-                                if (channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, Song.NativeTempoNTSC, noteTable, out _, out int stepSize, out _))
+                                var found = true;
+                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTableNtsc, out _, out int stepSizeNtsc, out _);
+                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTablePal,  out _, out int stepSizePal,  out _);
+
+                                if (song.Project.UsesExpansionAudio || machine == MachineType.NTSC)
+                                    stepSizePal = stepSizeNtsc;
+                                else if (machine == MachineType.PAL)
+                                    stepSizeNtsc = stepSizePal;
+
+                                if (found)
                                 {
+                                    // Take the (signed) maximum of both notes so that we are garantee to reach our note.
+                                    var stepSize = Math.Max(Math.Abs(stepSizeNtsc), Math.Abs(stepSizePal)) * Math.Sign(stepSizeNtsc);
                                     patternBuffer.Add($"${0x61:x2}");
                                     patternBuffer.Add($"${(byte)stepSize:x2}");
                                     patternBuffer.Add($"${EncodeNoteValue(c, note.Value):x2}");
@@ -963,8 +982,9 @@ namespace FamiStudio
             project.DeleteUnusedInstruments(); 
         }
 
-        public bool Save(Project originalProject, int[] songIds, OutputFormat format, bool separateSongs, string filename, string dmcFilename)
+        public bool Save(Project originalProject, int[] songIds, OutputFormat format, bool separateSongs, string filename, string dmcFilename, MachineType machine)
         {
+            this.machine = machine;
             SetupProject(originalProject, songIds);
             SetupFormat(format);
             CleanupEnvelopes();
@@ -1085,7 +1105,7 @@ namespace FamiStudio
         }
 
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
-        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmOffset)
+        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmOffset, MachineType machine)
         {
             var tempFolder = Path.Combine(Path.GetTempPath(), "FamiStudio");
 
@@ -1100,7 +1120,7 @@ namespace FamiStudio
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, OutputFormat.ASM6, false, tempAsmFilename, tempDmcFilename);
+            Save(project, songIds, OutputFormat.ASM6, false, tempAsmFilename, tempDmcFilename, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }

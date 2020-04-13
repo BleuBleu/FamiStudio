@@ -68,7 +68,7 @@ namespace FamiStudio
             ProjectExplorer.InstrumentDraggedOutside += ProjectExplorer_InstrumentDraggedOutside;
             ProjectExplorer.SongModified += projectExplorer_SongModified;
             ProjectExplorer.SongSelected += projectExplorer_SongSelected;
-            ProjectExplorer.ExpansionAudioChanged += ProjectExplorer_ExpansionAudioChanged;
+            ProjectExplorer.ProjectModified += ProjectExplorer_ProjectModified;
 
             InitializeMidi();
 
@@ -87,7 +87,7 @@ namespace FamiStudio
             }
         }
 
-        private void ProjectExplorer_ExpansionAudioChanged()
+        private void ProjectExplorer_ProjectModified()
         {
             if (Project.ExpansionAudio != Project.ExpansionNone)
                 palMode = false;
@@ -587,13 +587,6 @@ namespace FamiStudio
             }
             else if (e.KeyCode == Keys.Home)
             {
-                /*
-                // MATTT: Remove this.
-                undoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
-                Song.Split(2);
-                undoRedoManager.EndTransaction();
-                */
-
                 if (ctrl)
                 {
                     SeekCurrentPattern();

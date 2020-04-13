@@ -6,7 +6,6 @@ namespace FamiStudio
     {
         public ChannelStateVrc6Saw(int apuIdx, int channelType) : base(apuIdx, channelType, false)
         {
-            maximumPeriod = NesApu.MaximumPeriod12Bit;
         }
 
         public override void UpdateAPU()
