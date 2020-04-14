@@ -1016,7 +1016,9 @@ namespace FamiStudio
                         {
                             for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                             {
-                                Song.Channels[i].PatternInstances[j + patternIdxDelta] = tmpPatterns[j - minSelectedPatternIdx, i - minSelectedChannelIdx];
+                                var nj = j + patternIdxDelta;
+                                if (nj >= 0 && nj < Song.Length)
+                                    Song.Channels[i].PatternInstances[nj] = tmpPatterns[j - minSelectedPatternIdx, i - minSelectedChannelIdx];
                             }
                         }
 
@@ -1026,25 +1028,31 @@ namespace FamiStudio
                             {
                                 var settings = customSettings[j - minSelectedPatternIdx];
 
-                                if (settings.useCustomSettings)
+                                var nj = j + patternIdxDelta;
+                                if (nj >= 0 && nj < Song.Length)
                                 {
-                                    Song.SetPatternCustomSettings(
-                                        j + patternIdxDelta, 
-                                        customSettings[j - minSelectedPatternIdx].patternLength,
-                                        customSettings[j - minSelectedPatternIdx].noteLength,
-                                        customSettings[j - minSelectedPatternIdx].barLength,
-                                        customSettings[j - minSelectedPatternIdx].palSkipFrames);
-                                }
-                                else
-                                {
-                                    Song.ClearPatternCustomSettings(j + patternIdxDelta);
+                                    if (settings.useCustomSettings)
+                                    {
+                                        Song.SetPatternCustomSettings(
+                                            nj,
+                                            customSettings[j - minSelectedPatternIdx].patternLength,
+                                            customSettings[j - minSelectedPatternIdx].noteLength,
+                                            customSettings[j - minSelectedPatternIdx].barLength,
+                                            customSettings[j - minSelectedPatternIdx].palSkipFrames);
+                                    }
+                                    else
+                                    {
+                                        Song.ClearPatternCustomSettings(nj);
+                                    }
                                 }
                             }
                         }
 
                         App.UndoRedoManager.EndTransaction();
 
-                        ClearSelection();
+                        minSelectedPatternIdx = Utils.Clamp(minSelectedPatternIdx + patternIdxDelta, 0, Song.Length - 1);
+                        maxSelectedPatternIdx = Utils.Clamp(maxSelectedPatternIdx + patternIdxDelta, 0, Song.Length - 1);
+
                         ConditionalInvalidate();
                         PatternModified?.Invoke();
                     }
@@ -1091,6 +1099,7 @@ namespace FamiStudio
 
             if (trans)
             {
+                ClearSelection();
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();
                 PatternModified?.Invoke();
