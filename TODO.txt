@@ -1,7 +1,6 @@
 1.5.0: All expansions + PAL
 ============================
 - Last MATTT : slide note export to FamiTracker.
-- When dragging a note from over/under, does it make sense?
 
 TESTING:
 ========

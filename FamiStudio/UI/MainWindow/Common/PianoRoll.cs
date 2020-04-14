@@ -2272,9 +2272,10 @@ namespace FamiStudio
 
                             channel.PatternInstances[patternIdx].Notes.TryGetValue(noteIdx, out var note);
 
-                            bool validNote = note != null && (note.IsMusical || note.IsStop || note.IsRelease);
+                            bool stopOrRelease = note != null && (note.IsStop || note.IsRelease);
+                            bool musicalNote   = note != null && (note.IsMusical);
 
-                            if (validNote || channel.FindPreviousMatchingNote(noteValue, ref prevPatternIdx, ref prevNoteIdx))
+                            if (stopOrRelease || (musicalNote && note.Value == noteValue) || channel.FindPreviousMatchingNote(noteValue, ref prevPatternIdx, ref prevNoteIdx))
                             {
                                 if (IsNoteSelected(prevPatternIdx, prevNoteIdx))
                                 {
