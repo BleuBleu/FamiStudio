@@ -493,26 +493,31 @@ namespace FamiStudio
                     var instrument = bytes[idx++];
                     var volume     = bytes[idx++];
 
-                    if (volume != 16)
-                        pattern.GetOrCreateNoteAt(n).Volume = (byte)(volume & 0x0f);
-                    
-                    if (blockVersion < 5 && project.ExpansionAudio == Project.ExpansionFds && channel.Type == Channel.FdsWave && octave < 6 && octave != 0)
-                        octave += 2;
-
-                    if (note != 0 && octave != 0)
+                    // This happens when some patterns are longer than the song pattern length.
+                    // The TNMT song from FamiTracker has this.
+                    if (n < song.PatternLength)
                     {
-                        switch (note)
+                        if (volume != 16)
+                            pattern.GetOrCreateNoteAt(n).Volume = (byte)(volume & 0x0f);
+
+                        if (blockVersion < 5 && project.ExpansionAudio == Project.ExpansionFds && channel.Type == Channel.FdsWave && octave < 6 && octave != 0)
+                            octave += 2;
+
+                        if (note != 0 && octave != 0)
                         {
-                            case 13: pattern.GetOrCreateNoteAt(n).Value = Note.NoteRelease; break;
-                            case 14: pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop; break;
-                            default:
-                                if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
-                                    pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];
-                                if (channel.Type == Channel.Noise)
-                                    pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note + 15);
-                                else
-                                    pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note);
-                                break;
+                            switch (note)
+                            {
+                                case 13: pattern.GetOrCreateNoteAt(n).Value = Note.NoteRelease; break;
+                                case 14: pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop; break;
+                                default:
+                                    if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
+                                        pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];
+                                    if (channel.Type == Channel.Noise)
+                                        pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note + 15);
+                                    else
+                                        pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note);
+                                    break;
+                            }
                         }
                     }
 
@@ -521,7 +526,10 @@ namespace FamiStudio
                         RowFxData fx;
                         fx.fx    = bytes[idx++];
                         fx.param = bytes[idx++];
-                        fxData[n, j] = fx;
+
+                        // See comment above.
+                        if (n < song.PatternLength)
+                            fxData[n, j] = fx;
 
                         ApplySimpleEffects(fx, pattern, n, patternLengths);
                     }

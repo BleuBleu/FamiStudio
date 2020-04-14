@@ -1,9 +1,9 @@
 1.5.0: All expansions + PAL
 ============================
+- Last MATTT : slide note export to FamiTracker.
 - Why do we clear the selection when moving patterns in sequencer?
-- MATTT.
-- BUG (RARE): Once I hit a bug where i could drag notes without clicking on them???
-- Slide note VS. PAL not done in ASM (not tested on PC either...)
+- When dragging a note from over/under, does it make sense?
+- Default pan Y of envelopes is stupid.
 
 TESTING:
 ========
@@ -13,7 +13,6 @@ TESTING:
 - FTM, test a lot. Needs to match text import (export to text and compare).
 - Binary FTM import. Try opening all the demo songs from FT.
 x Duty cycle envelopes, make sure all import/export format support it.
-- Fix saw in Shovel knight.
 - Retest smooth vibrato on/off.
 - Make sure that when there is no loop point, NSF stops.
 - Test long pattern > 256 a lot. 
@@ -22,6 +21,7 @@ x Duty cycle envelopes, make sure all import/export format support it.
 
 Demo songs
 ==========
+- Fix saw in Shovel knight.
 - Convert almost all to FamiStudio tempo.
 
 Breaking changes
