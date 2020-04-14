@@ -295,6 +295,11 @@ namespace FamiStudio
         public void SerializeStatePreVer5(ProjectBuffer buffer)
         {
             buffer.Serialize(ref Value);
+            
+            // At version 5 (FamiStudio 1.5.0) we refactored the note effects.
+            const int SpeedInvalid   = 0xff;
+            const int VolumeInvalid  = 0xff;
+            const int VibratoInvalid = 0xf0;
 
             // At version 5 (FamiStudio 1.5.0), we changed the numerical value of the release note.
             if (Value == 0xf7)
@@ -317,6 +322,10 @@ namespace FamiStudio
                 buffer.Serialize(ref effect);
                 buffer.Serialize(ref effectParam);
 
+                FxVolume  = VolumeInvalid;
+                FxVibrato = VibratoInvalid;
+                FxSpeed   = SpeedInvalid;
+
                 switch (effect)
                 {
                     case 1: FxJump  = effectParam; break;
@@ -330,11 +339,6 @@ namespace FamiStudio
                 buffer.Serialize(ref FxVolume);
 
             buffer.Serialize(ref Instrument);
-
-            // At version 5 (FamiStudio 1.5.0) we refactored the note effects.
-            const int SpeedInvalid   = 0xff;
-            const int VolumeInvalid  = 0xff;
-            const int VibratoInvalid = 0xf0;
 
             if (FxVolume  != VolumeInvalid)  EffectMask |= EffectVolumeMask;
             if (FxSpeed   != SpeedInvalid)   EffectMask |= EffectSpeedMask;

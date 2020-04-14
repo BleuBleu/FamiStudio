@@ -9,12 +9,12 @@ TESTING:
 - FamiTracker import/export, retest Text, slides, etc. 
 - Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, etc.
 - FTM, test a lot. Needs to match text import (export to text and compare).
+- Export a bunch of stuff to NSF. Test test test.
 - Retest smooth vibrato on/off.
 - Make sure that when there is no loop point, NSF stops.
 - Test long pattern > 256 a lot. 
 - Test split of pattern longer than default.
 - Test everything about note dragging, edge cases, interrupt while dragging, end of song, etc.
-- Open super old FamiStudio 1.0 songs.
 
 Demo songs
 ==========
