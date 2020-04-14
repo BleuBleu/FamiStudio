@@ -516,7 +516,8 @@ namespace FamiStudio
 
         public void NotifyPatternChange(Pattern pattern)
         {
-            patternBitmapCache.Remove(pattern.Id);
+            if (pattern != null)
+                patternBitmapCache.Remove(pattern.Id);
         }
 
         private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, float scaleY, uint[] data)
@@ -1345,7 +1346,7 @@ namespace FamiStudio
             }
             else
             {
-                var noteLength   = song.GetPatternNoteLength(patternIdx);
+                var noteLength = song.GetPatternNoteLength(patternIdx);
 
                 dlg.Properties.AddIntegerRange("Frames Per Notes:", noteLength, 1, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 1
                 dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx) / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 2
@@ -1465,19 +1466,18 @@ namespace FamiStudio
 
                 props.UpdateIntegerRange(2, 1, Pattern.MaxLength / noteLength);
                 props.SetLabelText(4, Song.ComputeFamiStudioBPM(noteLength).ToString());
-                props.SetLabelText(5, $"{Song.ComputePalError(noteLength):0.##} %");
 
                 if (!song.Project.UsesExpansionAudio)
                 {
                     var frames = new int[2];
                     Song.GetDefaultPalSkipFrames(noteLength, frames);
 
-                    props.SetLabelText(5, $"{Song.ComputePalError(noteLength):0.##} %");
-                    props.UpdateIntegerRange(6, frames[0], -1, noteLength - 1);
-                    props.UpdateIntegerRange(7, frames[1], -1, noteLength - 1);
-
                     if (!song.Project.UsesExpansionAudio)
                     {
+                        props.SetLabelText(5, $"{Song.ComputePalError(noteLength):0.##} %");
+                        props.UpdateIntegerRange(6, frames[0], -1, noteLength - 1);
+                        props.UpdateIntegerRange(7, frames[1], -1, noteLength - 1);
+
                         var custom = props.GetPropertyValue<bool>(0);
                         props.SetPropertyEnabled(6, custom && Song.GetNumPalSkipFrames(noteLength) >= 1);
                         props.SetPropertyEnabled(7, custom && Song.GetNumPalSkipFrames(noteLength) >= 2);

@@ -215,6 +215,8 @@ namespace FamiStudio
         int envelopeValueZoom   = 1;
         int envelopeValueOffset = 0;
 
+        public delegate void ManyPatternChange();
+        public event ManyPatternChange ManyPatternChanged;
         public delegate void PatternChange(Pattern pattern);
         public event PatternChange PatternChanged;
         public delegate void EnvelopeResize();
@@ -1843,7 +1845,7 @@ namespace FamiStudio
                     case CaptureOperation.DragNote:
                     case CaptureOperation.DragNewNote:
                     case CaptureOperation.DragSelection:
-                        UpdateNoteDrag(e);
+                        UpdateNoteDrag(e, false);
                         break;
                 }
             }
@@ -1883,7 +1885,7 @@ namespace FamiStudio
                     case CaptureOperation.DragNote:
                     case CaptureOperation.DragNewNote:
                     case CaptureOperation.DragSelection:
-                        UpdateNoteDrag(e, !captureThresholdMet);
+                        UpdateNoteDrag(e, true, !captureThresholdMet);
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                         App.StopIntrumentNote();
@@ -1907,6 +1909,8 @@ namespace FamiStudio
 
                 captureOperation = CaptureOperation.None;
                 Capture = false;
+
+                ManyPatternChanged?.Invoke();
             }
         }
 
@@ -2123,7 +2127,12 @@ namespace FamiStudio
                 }
             }
         }
-        
+
+        private void ShowInstrumentError()
+        {
+            App.DisplayWarning("Selected instrument is incompatible with channel!");
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -2218,6 +2227,8 @@ namespace FamiStudio
                 if (pattern == null)
                     return;
 
+                var supportsInstrument = channel.SupportsInstrument(currentInstrument);
+
                 if (left)
                 {
                     var ctrl   = ModifierKeys.HasFlag(Keys.Control);
@@ -2254,9 +2265,9 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
-                    else if (channel.SupportsInstrument(currentInstrument))
+                    else if (slide && channel.SupportsSlideNotes)
                     {
-                        if (slide && channel.SupportsSlideNotes)
+                        if (supportsInstrument)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                             var note = pattern.GetOrCreateNoteAt(noteIdx);
@@ -2267,50 +2278,57 @@ namespace FamiStudio
                         }
                         else
                         {
-                            var prevPatternIdx = patternIdx;
-                            var prevNoteIdx    = noteIdx;
+                            ShowInstrumentError();
+                        }
+                    }
+                    else
+                    {
+                        var prevPatternIdx = patternIdx;
+                        var prevNoteIdx    = noteIdx;
 
-                            channel.PatternInstances[patternIdx].Notes.TryGetValue(noteIdx, out var note);
+                        channel.PatternInstances[patternIdx].Notes.TryGetValue(noteIdx, out var note);
 
-                            bool stopOrRelease = note != null && (note.IsStop || note.IsRelease);
-                            bool musicalNote   = note != null && (note.IsMusical);
+                        bool stopOrRelease = note != null && (note.IsStop || note.IsRelease);
+                        bool musicalNote   = note != null && (note.IsMusical);
 
-                            if (stopOrRelease || (musicalNote && note.Value == noteValue) || channel.FindPreviousMatchingNote(noteValue, ref prevPatternIdx, ref prevNoteIdx))
+                        if (stopOrRelease || (musicalNote && note.Value == noteValue) || channel.FindPreviousMatchingNote(noteValue, ref prevPatternIdx, ref prevNoteIdx))
+                        {
+                            if (IsNoteSelected(prevPatternIdx, prevNoteIdx))
                             {
-                                if (IsNoteSelected(prevPatternIdx, prevNoteIdx))
-                                {
-                                    bool multiplePatterns = Song.FindPatternInstanceIndex(selectionFrameMin, out _) != 
-                                                            Song.FindPatternInstanceIndex(selectionFrameMax, out _);
+                                bool multiplePatterns = Song.FindPatternInstanceIndex(selectionFrameMin, out _) != 
+                                                        Song.FindPatternInstanceIndex(selectionFrameMax, out _);
 
-                                    if (multiplePatterns)
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, Song.Id, editChannel);
-                                    else
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-
-                                    StartCaptureOperation(e, CaptureOperation.DragSelection);
-
-                                    var absPrevNoteIdx = Song.GetPatternStartNote(prevPatternIdx, prevNoteIdx);
-
-                                    dragNotes = GetSparseSelectedNotes(selectionFrameMin);
-
-                                    dragFrameMin = selectionFrameMin;
-                                    dragFrameMax = selectionFrameMax;
-                                }
+                                if (multiplePatterns)
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
                                 else
-                                {
                                     App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                                    StartCaptureOperation(e, CaptureOperation.DragNote);
 
-                                    var absPrevNoteIdx = Song.GetPatternStartNote(prevPatternIdx, prevNoteIdx);
+                                StartCaptureOperation(e, CaptureOperation.DragSelection);
 
-                                    dragFrameMin = absPrevNoteIdx;
-                                    dragFrameMax = absPrevNoteIdx;
+                                var absPrevNoteIdx = Song.GetPatternStartNote(prevPatternIdx, prevNoteIdx);
 
-                                    dragNotes.Clear();
-                                    dragNotes[absPrevNoteIdx] = channel.PatternInstances[prevPatternIdx].Notes[prevNoteIdx].Clone();
-                                }
+                                dragNotes = GetSparseSelectedNotes(selectionFrameMin);
+
+                                dragFrameMin = selectionFrameMin;
+                                dragFrameMax = selectionFrameMax;
                             }
                             else
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                                StartCaptureOperation(e, CaptureOperation.DragNote);
+
+                                var absPrevNoteIdx = Song.GetPatternStartNote(prevPatternIdx, prevNoteIdx);
+
+                                dragFrameMin = absPrevNoteIdx;
+                                dragFrameMax = absPrevNoteIdx;
+
+                                dragNotes.Clear();
+                                dragNotes[absPrevNoteIdx] = channel.PatternInstances[prevPatternIdx].Notes[prevNoteIdx].Clone();
+                            }
+                        }
+                        else
+                        {
+                            if (supportsInstrument)
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                                 StartCaptureOperation(e, CaptureOperation.DragNewNote);
@@ -2326,17 +2344,17 @@ namespace FamiStudio
                                 dragNotes.Clear();
                                 dragNotes[Song.GetPatternStartNote(patternIdx, noteIdx)] = newNote;
                             }
-
-                            UpdateNoteDrag(e);
+                            else
+                            {
+                                ShowInstrumentError();
+                            }
                         }
 
-                        changed = true;
+                        UpdateNoteDrag(e, false);
                     }
-                    else
-                    {
-                        App.DisplayWarning("Selected instrument is incompatible with channel!");
-                    }
-                }
+
+                    changed = true;
+                  }
                 else if (right)
                 {
                     if (pattern.Notes.TryGetValue(noteIdx, out var note) && (note.IsStop || note.IsRelease))
@@ -2674,11 +2692,11 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateNoteDrag(MouseEventArgs e, bool createNote = false)
+        private void UpdateNoteDrag(MouseEventArgs e, bool final, bool createNote = false)
         {
             Debug.Assert(
                 App.UndoRedoManager.UndoScope == TransactionScope.Pattern ||
-                App.UndoRedoManager.UndoScope == TransactionScope.Song);
+                App.UndoRedoManager.UndoScope == TransactionScope.Channel);
 
             App.UndoRedoManager.RestoreTransaction(false);
 
@@ -2706,7 +2724,7 @@ namespace FamiStudio
                 if (multiplePatterns)
                 {
                     App.UndoRedoManager.AbortTransaction();
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id, editChannel);
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
                 }
             }
 
@@ -2789,6 +2807,20 @@ namespace FamiStudio
                     note.Value = noteValue;
                     note.Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
                 }
+            }
+
+            if (final)
+            {
+                int p0, p1;
+
+                p0 = Song.FindPatternInstanceIndex(dragFrameMin + 0, out _);
+                p1 = Song.FindPatternInstanceIndex(dragFrameMax + 1, out _);
+                for (int p = p0; p <= p1; p++)
+                    PatternChanged?.Invoke(channel.PatternInstances[p]);
+                p0 = Song.FindPatternInstanceIndex(dragFrameMin + deltaNoteIdx + 0, out _);
+                p1 = Song.FindPatternInstanceIndex(dragFrameMax + deltaNoteIdx + 1, out _);
+                for (int p = p0; p <= p1; p++)
+                    PatternChanged?.Invoke(channel.PatternInstances[p]);
             }
 
             App.Project.Validate();

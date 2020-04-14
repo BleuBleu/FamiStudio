@@ -57,6 +57,7 @@ namespace FamiStudio
             Sequencer.PatternModified += Sequencer_PatternModified;
             Sequencer.PatternsPasted += PianoRoll_NotesPasted;
             PianoRoll.PatternChanged += pianoRoll_PatternChanged;
+            PianoRoll.ManyPatternChanged += PianoRoll_ManyPatternChanged;
             PianoRoll.EnvelopeChanged += pianoRoll_EnvelopeChanged;
             PianoRoll.ControlActivated += PianoRoll_ControlActivated;
             PianoRoll.NotesPasted += PianoRoll_NotesPasted;
@@ -86,7 +87,7 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
         }
-
+        
         private void ProjectExplorer_ProjectModified()
         {
             if (Project.ExpansionAudio != Project.ExpansionNone)
@@ -780,6 +781,12 @@ namespace FamiStudio
         private void pianoRoll_PatternChanged(Pattern pattern)
         {
             Sequencer.NotifyPatternChange(pattern);
+            Sequencer.Invalidate();
+        }
+
+        private void PianoRoll_ManyPatternChanged()
+        {
+            Sequencer.InvalidatePatternCache();
             Sequencer.Invalidate();
         }
 

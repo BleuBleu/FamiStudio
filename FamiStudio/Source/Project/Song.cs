@@ -824,7 +824,7 @@ namespace FamiStudio
                 {
                     patternCustomSettings[p].noteLength    = famitrackerSpeed;
                     patternCustomSettings[p].patternLength = patternCustomSettings[p].patternLength / famitrackerSpeed * famitrackerSpeed;
-                    patternCustomSettings[p].barLength     = Math.Min(patternCustomSettings[p].barLength / famitrackerSpeed, 1);
+                    patternCustomSettings[p].barLength     = Math.Max(patternCustomSettings[p].barLength / famitrackerSpeed, 1);
                     GetDefaultPalSkipFrames(famitrackerSpeed, patternCustomSettings[p].palSkipFrames); 
                 }
             }

@@ -1,6 +1,7 @@
 1.5.0: All expansions + PAL
 ============================
 - Last MATTT : slide note export to FamiTracker.
+- ROM: Needs to say 2.0.0
 
 TESTING:
 ========
@@ -8,18 +9,15 @@ TESTING:
 - FamiTracker import/export, retest Text, slides, etc. 
 - Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, etc.
 - FTM, test a lot. Needs to match text import (export to text and compare).
-- Binary FTM import. Try opening all the demo songs from FT.
-x Duty cycle envelopes, make sure all import/export format support it.
 - Retest smooth vibrato on/off.
 - Make sure that when there is no loop point, NSF stops.
 - Test long pattern > 256 a lot. 
 - Test split of pattern longer than default.
 - Test everything about note dragging, edge cases, interrupt while dragging, end of song, etc.
+- Open super old FamiStudio 1.0 songs.
 
 Demo songs
 ==========
-- Fix saw in Shovel knight.
-- Convert almost all to FamiStudio tempo.
 
 Breaking changes
 ================
@@ -46,8 +44,11 @@ Breaking changes
 x Switch to MkDocs
 - Subdivide different way:
 	- Basics + UI (what is what, tooltip, double-click props, play, pause, seek)
-	- You first song
-	- Import/Export to various formats
+		- You first song (video)
+	- Export to various formats
+		- NSF Import
+		- FamiTracker compatibility.
+		- FamiTone2 export.
 	- Editing instruments
 	- Editing patterns
 	- Editing notres
@@ -55,9 +56,7 @@ x Switch to MkDocs
 	- Expansion audio
 	- FamiStudio text format doc.
 	- Configuration
-
 - Add tempo table like FamiTracker.
-- 
 
 Backlog:
 =========
