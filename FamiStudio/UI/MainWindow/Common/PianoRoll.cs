@@ -356,10 +356,12 @@ namespace FamiStudio
 
             Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int min, out int max);
 
-            int maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
-
+            int midY = virtualSizeY - ((min + max) / 2 + 64 / envelopeValueZoom) * (virtualSizeY / (128 / envelopeValueZoom));
+            
             scrollX = 0;
-            scrollY = min == 0 ? 0 : maxScrollY / 2;
+            scrollY = midY - Height / 2;
+
+            ClampScroll();
         }
 
         private void CenterScroll(int patternIdx = 0)
