@@ -3,7 +3,6 @@
 - Last MATTT : slide note export to FamiTracker.
 - Why do we clear the selection when moving patterns in sequencer?
 - When dragging a note from over/under, does it make sense?
-- Default pan Y of envelopes is stupid.
 
 TESTING:
 ========

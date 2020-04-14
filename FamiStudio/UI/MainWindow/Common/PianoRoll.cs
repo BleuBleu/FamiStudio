@@ -366,9 +366,24 @@ namespace FamiStudio
 
         private void CenterScroll(int patternIdx = 0)
         {
-            int maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
+            var maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
+
             scrollX = Song.GetPatternStartNote(patternIdx) * noteSizeX;
             scrollY = maxScrollY / 2;
+
+            var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
+            if (pattern != null)
+            {
+                if (pattern.FirstValidNoteTime >= 0)
+                {
+                    var firstNote = pattern.FirstValidNote;
+                    if (firstNote.IsMusical)
+                    {
+                        int noteY = virtualSizeY - firstNote.Value * noteSizeY;
+                        scrollY = noteY - Height / 2;
+                    }
+                }
+            }
         }
 
         public void StartEditDPCMSamples()
