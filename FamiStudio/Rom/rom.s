@@ -392,6 +392,7 @@ PAD_R      = $80
 	sta gamepad_previous
 	jsr gamepad_poll
 	reread:
+		lda gamepad
 	    pha
 	    jsr gamepad_poll
 	    pla

@@ -849,6 +849,9 @@ namespace FamiStudio
                 p = f / song.PatternLength;
                 n = f % song.PatternLength;
 
+                if (p >= Song.MaxLength - 1)
+                    break;
+
                 var playCalled = 0;
                 do
                 {

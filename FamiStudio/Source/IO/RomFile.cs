@@ -118,7 +118,13 @@ namespace FamiStudio
                 var codeBytes   = new byte[RomCodeSize + RomTileSize];
 
                 // Load ROM header (16 bytes) + code/tiles (12KB).
-                var romBinStream = typeof(RomFile).Assembly.GetManifestResourceStream("FamiStudio.Rom.rom.nes");
+                Stream romBinStream = null;
+
+                if (project.UsesFamiStudioTempo)
+                    romBinStream = typeof(RomFile).Assembly.GetManifestResourceStream("FamiStudio.Rom.rom_tempo.nes");
+                else
+                    romBinStream = typeof(RomFile).Assembly.GetManifestResourceStream("FamiStudio.Rom.rom.nes");
+
                 romBinStream.Read(headerBytes, 0, RomHeaderLength);
                 romBinStream.Seek(-RomCodeSize - RomTileSize, SeekOrigin.End);
                 romBinStream.Read(codeBytes, 0, RomCodeSize + RomTileSize);
@@ -181,6 +187,8 @@ namespace FamiStudio
 
                     songDataBytes.AddRange(songBytes);
                 }
+
+                //File.WriteAllBytes("D:\\debug.bin", songDataBytes.ToArray());
 
                 int numPrgBanks = RomMinSize / RomPrgBankSize;
 
