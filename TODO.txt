@@ -5,10 +5,7 @@
 TESTING:
 ========
 - Test installer on Japanese machine.
-- FamiTracker import/export, retest Text, slides, etc. 
 - Retest slide notes, etc. Everything that crosses boundary, with various pattern sizes, etc.
-- FTM, test a lot. Needs to match text import (export to text and compare).
-- Export a bunch of stuff to NSF. Test test test.
 - Make sure that when there is no loop point, NSF stops.
 - Test long pattern > 256 a lot. 
 - Test split of pattern longer than default.

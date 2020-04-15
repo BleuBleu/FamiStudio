@@ -362,8 +362,6 @@ namespace FamiStudio
             
             scrollX = 0;
             scrollY = midY - Height / 2;
-
-            ClampScroll();
         }
 
         private void CenterScroll(int patternIdx = 0)
@@ -382,7 +380,7 @@ namespace FamiStudio
                     if (firstNote.IsMusical)
                     {
                         int noteY = virtualSizeY - firstNote.Value * noteSizeY;
-                        scrollY = noteY - Height / 2;
+                        scrollY = noteY - (Height - headerAndEffectSizeY) / 2;
                     }
                 }
             }
