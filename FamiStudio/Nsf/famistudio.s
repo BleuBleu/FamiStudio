@@ -24,7 +24,7 @@ FT_THREAD         = 0     ;undefine if you are calling sound effects from the sa
 
 ;internal defines
 FT_PITCH_FIX      = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
-FT_SMOOTH_VIBRATO = 1     ; Blaarg's smooth vibrato technique
+FT_SMOOTH_VIBRATO = 1    ; Blaarg's smooth vibrato technique
 
 .segment "RAM"
 
@@ -999,7 +999,7 @@ nocut:
     .ifnblank pulse_prev
 
         .if(!::FT_SFX_ENABLE)
-            .if !.blank(reg_sweep) && (::FT_SMOOTH_VIBRATO)
+            .if (!.blank(reg_sweep)) && (::FT_SMOOTH_VIBRATO)
                 ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
                 tax ; X = new hi-period
                 sec
