@@ -207,6 +207,7 @@
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportWav.png" />
     <EmbeddedResource Include="Rom\rom.nes" />
+    <EmbeddedResource Include="Rom\rom_tempo.nes" />
     <EmbeddedResource Include="Resources\QuickSand10.fnt" />
     <EmbeddedResource Include="Resources\QuickSand10_0.png" />
     <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
@@ -271,6 +272,8 @@
     <Content Include="NotSoFatso.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\Clean%402x.png" />
+    <EmbeddedResource Include="Resources\Clean.png" />
     <EmbeddedResource Include="Resources\Dash%402x.png" />
     <EmbeddedResource Include="Resources\Dash.png" />
     <EmbeddedResource Include="Resources\ModSmall%402x.png" />
