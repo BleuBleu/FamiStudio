@@ -370,6 +370,8 @@ namespace FamiStudio
                 var lastNoteValue = (byte)Note.NoteInvalid;
                 var portamentoSpeed = 0;
                 var slideSpeed = 0;
+                var slideShift = c.IsN163WaveChannel ? 2 : 0;
+                var slideSign  = c.IsN163WaveChannel || c.IsFdsWaveChannel ? -1 : 1; // Inverted channels.
 
                 for (int p = 0; p < s.Length; p++)
                 {
@@ -428,14 +430,14 @@ namespace FamiStudio
                             if (fx.fx == Effect_PortaUp)
                             {
                                 // If we have a Qxx/Rxx on the same row as a 1xx/2xx, things get weird.
-                                if (slideTarget == 0) 
-                                    slideSpeed = -fx.param;
+                                if (slideTarget == 0)
+                                    slideSpeed = (-fx.param * slideSign) << slideShift;
                             }
                             if (fx.fx == Effect_PortaDown)
                             {
                                 // If we have a Qxx/Rxx on the same row as a 1xx/2xx, things get weird.
                                 if (slideTarget == 0)
-                                    slideSpeed =  fx.param;
+                                    slideSpeed = ( fx.param * slideSign) << slideShift;
                             }
                             if (fx.fx == Effect_Portamento)
                             {
@@ -444,12 +446,12 @@ namespace FamiStudio
                             if (fx.fx == Effect_SlideUp)
                             {
                                 slideTarget = note.Value + (fx.param & 0xf);
-                                slideSpeed = -((fx.param >> 4) * 2 + 1);
+                                slideSpeed = (-((fx.param >> 4) * 2 + 1)) << slideShift;
                             }
                             if (fx.fx == Effect_SlideDown)
                             {
                                 slideTarget = note.Value - (fx.param & 0xf);
-                                slideSpeed = ((fx.param >> 4) * 2 + 1);
+                                slideSpeed =  (((fx.param >> 4) * 2 + 1)) << slideShift;
                             }
                         }
 
@@ -477,10 +479,16 @@ namespace FamiStudio
                                     }
                                 }
 
+                                // Our implementation of VRC7 pitches is quite different from FamiTracker.
+                                // Compensate for larger pitches in higher octaves by shifting. We cant shift by 
+                                // a large amount because the period is 9-bit and FamiTracker is restricted to 
+                                // this for slides (octave never changes).
+                                var octaveSlideShift = c.IsVrc7FmChannel && note.Value >= 12 ? 1 : 0;
+
                                 if (slideTarget != 0)
                                 {
                                     // TODO: We assume a tempo of 150 here. This is wrong.
-                                    var numFrames = Math.Max(1, Math.Abs((noteTable[slideSource] - noteTable[slideTarget]) / (slideSpeed * songSpeed)));
+                                    var numFrames = Math.Max(1, Math.Abs((noteTable[slideSource] - noteTable[slideTarget]) / ((slideSpeed << octaveSlideShift) * songSpeed)));
                                     note.SlideNoteTarget = (byte)slideTarget;
 
                                     var nn = n + numFrames;
@@ -536,7 +544,7 @@ namespace FamiStudio
                                     var numFrames = (s.GetPatternStartNote(np, nn) - s.GetPatternStartNote(p, n)) * songSpeed;
 
                                     // TODO: PAL.
-                                    var newNotePitch = Utils.Clamp(noteTable[slideSource] + numFrames * slideSpeed, 0, pitchLimit);
+                                    var newNotePitch = Utils.Clamp(noteTable[slideSource] + numFrames * (slideSpeed << octaveSlideShift), 0, pitchLimit);
                                     var newNote = FindBestMatchingNote(noteTable, newNotePitch, Math.Sign(slideSpeed));
 
                                     note.SlideNoteTarget = (byte)newNote;

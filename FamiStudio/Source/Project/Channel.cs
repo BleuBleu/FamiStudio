@@ -118,6 +118,10 @@ namespace FamiStudio
             "S5BSquare3", // S5B
         };
 
+        public bool IsFdsWaveChannel  => type == Channel.FdsWave;
+        public bool IsN163WaveChannel => type >= Channel.N163Wave1 && type <= Channel.N163Wave8;
+        public bool IsVrc7FmChannel   => type >= Channel.Vrc7Fm1 && type <= Channel.Vrc7Fm6;
+
         public Channel(Song song, int type, int songLength)
         {
             this.song = song;
@@ -456,7 +460,7 @@ namespace FamiStudio
             {
                 GetShiftsForType(type, song.Project.ExpansionNumChannels, out _, out var slideShift);
 
-                pitchDelta = (int)noteTable[note.Value] - (int)noteTable[note.SlideNoteTarget];
+                pitchDelta = noteTable[note.Value] - noteTable[note.SlideNoteTarget];
 
                 if (pitchDelta != 0)
                 {
@@ -472,6 +476,18 @@ namespace FamiStudio
 
                 return false;
             }
+        }
+
+        public float ComputeRawSlideNoteParams(int noteValue, int slideTarget, int patternIdx, int noteIdx, int famitrackerSpeed, int famitrackerBaseTempo, ushort[] noteTable)
+        {
+            Debug.Assert(noteValue >= Note.MusicalNoteMin && noteValue <= Note.MusicalNoteMax);
+
+            // Find the next note to calculate the slope.
+            var noteDuration = FindNextNoteForSlide(patternIdx, noteIdx, 256); // 256 is kind of arbitrary. 
+            var pitchDelta = noteTable[noteValue] - noteTable[slideTarget];
+            var frameCount = song.UsesFamiTrackerTempo ? Math.Floor(noteDuration * (famitrackerSpeed * famitrackerBaseTempo / (float)song.FamitrackerTempo) + 1) : noteDuration + 1;
+
+            return (float)(pitchDelta / frameCount);
         }
 
         public int FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes)

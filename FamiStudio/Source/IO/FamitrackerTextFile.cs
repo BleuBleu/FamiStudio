@@ -680,6 +680,8 @@ namespace FamiStudio
             lines.Add("SPLIT           32");
             lines.Add("");
 
+            var realNumExpansionChannels = project.ExpansionNumChannels;
+
             if (project.ExpansionAudio == Project.ExpansionN163)
             {
                 lines.Add("# Namco 163 global settings");
@@ -871,13 +873,32 @@ namespace FamiStudio
 
                             if (note.IsSlideNote && note.IsMusical)
                             {
-                                var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, project.ExpansionNumChannels);
+                                var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, false, realNumExpansionChannels);
+
+                                var noteValue   = note.Value;
+                                var slideTarget = note.SlideNoteTarget;
+
+                                // FamiTracker only has 12-pitches and doesnt change the octave when doing 
+                                // slides. This helps make the slides more compatible, but its not great.
+                                if (channel.IsVrc7FmChannel)
+                                {
+                                    while (noteValue >= 12 && slideTarget >= 12)
+                                    {
+                                        noteValue   -= 12;
+                                        slideTarget -= 12;
+                                    }
+                                }
 
                                 // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed. Also we assume NTSC here.
-                                // MATTT: stepSize here needs to be tweaked for N163 & VRC7 slides.
-                                channel.ComputeSlideNoteParams(note, p, time, song.FamitrackerSpeed, Song.NativeTempoNTSC, noteTable, out _, out int stepSize, out _); 
+                                var stepSizeFloat = channel.ComputeRawSlideNoteParams(noteValue, slideTarget, p, time, song.FamitrackerSpeed, Song.NativeTempoNTSC, noteTable);
 
-                                var absNoteDelta = Math.Abs(note.Value - note.SlideNoteTarget);
+                                if (channel.IsN163WaveChannel)
+                                {
+                                    stepSizeFloat /= 4.0f;
+                                }
+
+                                // Undo any kind of shifting we had done. This will kill the 1-bit of fraction we have on most channel.
+                                var absNoteDelta  = Math.Abs(note.Value - note.SlideNoteTarget);
 
                                 // See if we can use Qxy/Rxy (slide up/down y semitones, at speed x), this is preferable.
                                 if (absNoteDelta < 16)
@@ -893,7 +914,7 @@ namespace FamiStudio
                                     var speed = 0;
                                     for (int x = 14; x >= 0; x--)
                                     {
-                                        if ((2 * x + 1) < Math.Abs(stepSize / 2.0f))
+                                        if ((2 * x + 1) < Math.Abs(stepSizeFloat))
                                         {
                                             speed = x + 1;
                                             break;
@@ -910,7 +931,7 @@ namespace FamiStudio
                                 else
                                 {
                                     // We have one bit of fraction. FramiTracker does not.
-                                    var ceilStepSize = Utils.SignedCeil(stepSize / 2.0f);
+                                    var ceilStepSize = Utils.SignedCeil(stepSizeFloat);
 
                                     // If the previous note matched too, we can use 3xx (auto-portamento).
                                     if (prevNoteValue == note.Value)
@@ -922,26 +943,29 @@ namespace FamiStudio
                                         }
 
                                         noteString = GetFamiTrackerNoteName(c, new Note(note.SlideNoteTarget));
-                                        effectString += $" 3{Math.Abs(ceilStepSize):X2}";
+                                        effectString += $" 3{Math.Min(0xff, Math.Abs(ceilStepSize)):X2}";
                                         prevSlideEffect = Effect_Portamento;
                                         noAttack = false; // Need to force attack when starting auto-portamento unfortunately.
                                     }
                                     else
                                     {
-                                        // We have one bit of fraction. FramiTracker does not.
-                                        var floorStepSize = Utils.SignedFloor(stepSize / 2.0f);
+                                        // Inverted channels.
+                                        if (channel.IsFdsWaveChannel || channel.IsN163WaveChannel)
+                                            stepSizeFloat = -stepSizeFloat;
+
+                                        var floorStepSize = Utils.SignedFloor(stepSizeFloat);
 
                                         if (prevSlideEffect == Effect_Portamento)
                                             effectString += $" 300";
 
-                                        if (stepSize > 0)
+                                        if (stepSizeFloat > 0)
                                         {
-                                            effectString += $" 2{ floorStepSize:X2}";
+                                            effectString += $" 2{Math.Min(0xff, floorStepSize):X2}";
                                             prevSlideEffect = Effect_PortaDown;
                                         }
-                                        else if (stepSize < 0)
+                                        else if (stepSizeFloat < 0)
                                         {
-                                            effectString += $" 1{-floorStepSize:X2}";
+                                            effectString += $" 1{Math.Min(0xff, -floorStepSize):X2}";
                                             prevSlideEffect = Effect_PortaUp;
                                         }
                                     }
