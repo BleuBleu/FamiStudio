@@ -357,6 +357,8 @@ namespace FamiStudio
 
         private void CreateSlideNotes(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
+            var processedPatterns = new HashSet<Pattern>();
+
             // Convert slide notes + portamento to our format.
             foreach (var c in s.Channels)
             {
@@ -367,13 +369,16 @@ namespace FamiStudio
                 var lastNoteInstrument = (Instrument)null;
                 var lastNoteValue = (byte)Note.NoteInvalid;
                 var portamentoSpeed = 0;
+                var slideSpeed = 0;
 
                 for (int p = 0; p < s.Length; p++)
                 {
                     var pattern = c.PatternInstances[p];
 
-                    if (pattern == null || !patternFxData.ContainsKey(pattern))
+                    if (pattern == null || !patternFxData.ContainsKey(pattern) || processedPatterns.Contains(pattern))
                         continue;
+
+                    processedPatterns.Add(pattern);
 
                     var fxData = patternFxData[pattern];
                     var patternLen = s.GetPatternLength(p);
@@ -392,7 +397,6 @@ namespace FamiStudio
                                 songSpeed = note2.Speed;
                         }
 
-                        var slideSpeed  = 0;
                         var slideTarget = 0;
 
                         for (int i = 0; i < fxData.GetLength(1); i++)
@@ -402,7 +406,7 @@ namespace FamiStudio
                             if (fx.param != 0)
                             {
                                 // When the effect it turned on, we need to add a note.
-                                if ((fx.fx == Effect_PortaUp  || 
+                                if ((fx.fx == Effect_PortaUp   || 
                                      fx.fx == Effect_PortaDown ||
                                      fx.fx == Effect_SlideUp   ||
                                      fx.fx == Effect_SlideDown) &&
@@ -419,32 +423,31 @@ namespace FamiStudio
                                     note.Instrument = lastNoteInstrument;
                                     note.HasAttack  = false;
                                 }
-
-                                if (fx.fx == Effect_PortaUp)   slideSpeed = -fx.param;
-                                if (fx.fx == Effect_PortaDown) slideSpeed =  fx.param;
-                                if (fx.fx == Effect_Portamento)
-                                {
-                                    portamentoSpeed = fx.param;
-                                }
-                                if (fx.fx == Effect_SlideUp)
-                                {
-                                    slideTarget = note.Value + (fx.param & 0xf);
-                                    slideSpeed = -((fx.param >> 4) * 2 + 1);
-                                }
-                                if (fx.fx == Effect_SlideDown)
-                                {
-                                    slideTarget = note.Value - (fx.param & 0xf);
-                                    slideSpeed = ((fx.param >> 4) * 2 + 1);
-                                }
                             }
-                            else if (fx.fx == Effect_Portamento)
+
+                            if (fx.fx == Effect_PortaUp)
                             {
-                                portamentoSpeed = 0;
+                                slideSpeed = -fx.param;
+                            }
+                            if (fx.fx == Effect_PortaDown)
+                            {
+                                slideSpeed =  fx.param;
+                            }
+                            if (fx.fx == Effect_Portamento)
+                            {
+                                portamentoSpeed = fx.param;
+                            }
+                            if (fx.fx == Effect_SlideUp)
+                            {
+                                slideTarget = note.Value + (fx.param & 0xf);
+                                slideSpeed = -((fx.param >> 4) * 2 + 1);
+                            }
+                            if (fx.fx == Effect_SlideDown)
+                            {
+                                slideTarget = note.Value - (fx.param & 0xf);
+                                slideSpeed = ((fx.param >> 4) * 2 + 1);
                             }
                         }
-
-                        var currentNoteValue      = note != null ? note.Value      : (byte)Note.NoteInvalid;
-                        var currentNoteInstrument = note != null ? note.Instrument : null;
 
                         // Create a slide note.
                         if (note != null && !note.IsSlideNote)
@@ -460,7 +463,7 @@ namespace FamiStudio
                                 // FamiTracker.
                                 if (portamentoSpeed != 0)
                                 {
-                                    // Ignore notes with no attach since we created them to handle a previous slide.
+                                    // Ignore notes with no attack since we created them to handle a previous slide.
                                     if (note.HasAttack && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax)
                                     {
                                         slideSpeed  = portamentoSpeed;
@@ -518,6 +521,9 @@ namespace FamiStudio
                                             it.Resync();
                                         }
                                     }
+
+                                    // 3xx, Qxx and Rxx stops when its done.
+                                    slideSpeed = 0;
                                 }
                                 // Find the next note that would stop the slide or change the FX settings.
                                 else if (slideSpeed != 0 && FindNextNoteForSlide(c, p, n, out var np, out var nn, patternFxData))
@@ -547,8 +553,8 @@ namespace FamiStudio
 
                         if (note != null && (note.IsMusical || note.IsStop))
                         {
-                            lastNoteValue      = currentNoteValue;
-                            lastNoteInstrument = currentNoteInstrument;
+                            lastNoteValue      = note.IsSlideNote ? note.SlideNoteTarget : note.Value;
+                            lastNoteInstrument = note.Instrument;
                         }
                     }
                 }

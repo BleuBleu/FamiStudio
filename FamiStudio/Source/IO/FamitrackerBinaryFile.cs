@@ -298,7 +298,7 @@ namespace FamiStudio
 
                 RenameInstrumentEnsureUnique(instrument, name);
 
-                instruments[i] = instrument;
+                instruments[index] = instrument;
             }
 
             return true;
