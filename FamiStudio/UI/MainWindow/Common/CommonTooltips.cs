@@ -5,7 +5,11 @@ namespace FamiStudio
     public static class CommonTooltips
     {
         // Custom pattern.
+#if FAMISTUDIO_MACOS
+        public readonly static string CustomPattern = null;
+#else
         public readonly static string CustomPattern = "Enable to use different length or tempo parameter for this pattern.";
+#endif
 
         // Project properties.
         public readonly static string ExpansionAudio = "Expansion audio chip to use. This will add extra audio channels and disable any PAL support.";
