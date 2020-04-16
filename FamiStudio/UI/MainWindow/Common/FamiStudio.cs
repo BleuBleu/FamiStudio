@@ -817,7 +817,10 @@ namespace FamiStudio
             PianoRoll.SerializeState(buffer);
 
             if (buffer.IsReading)
+            {
+                RefreshSequencerLayout();
                 mainForm.Invalidate();
+            }
         }
 
         private void projectExplorer_InstrumentSelected(Instrument instrument)

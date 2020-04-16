@@ -193,6 +193,7 @@ namespace FamiStudio
         // Note dragging support.
         int dragFrameMin = -1;
         int dragFrameMax = -1;
+        int dragLastNoteValue = -1;
         SortedList<int, Note> dragNotes = new SortedList<int, Note>();
 
         bool showSelection = false;
@@ -2286,8 +2287,9 @@ namespace FamiStudio
 
                         channel.PatternInstances[patternIdx].Notes.TryGetValue(noteIdx, out var note);
 
-                        bool stopOrRelease = note != null && (note.IsStop || note.IsRelease);
-                        bool musicalNote   = note != null && (note.IsMusical);
+                        var stopOrRelease = note != null && (note.IsStop || note.IsRelease);
+                        var musicalNote   = note != null && (note.IsMusical);
+                        var dragStarted = false;
 
                         if (stopOrRelease || (musicalNote && note.Value == noteValue) || channel.FindPreviousMatchingNote(noteValue, ref prevPatternIdx, ref prevNoteIdx))
                         {
@@ -2309,6 +2311,7 @@ namespace FamiStudio
 
                                 dragFrameMin = selectionFrameMin;
                                 dragFrameMax = selectionFrameMax;
+                                dragStarted = true;
                             }
                             else
                             {
@@ -2322,6 +2325,7 @@ namespace FamiStudio
 
                                 dragNotes.Clear();
                                 dragNotes[absPrevNoteIdx] = channel.PatternInstances[prevPatternIdx].Notes[prevNoteIdx].Clone();
+                                dragStarted = true;
                             }
                         }
                         else
@@ -2341,6 +2345,7 @@ namespace FamiStudio
 
                                 dragNotes.Clear();
                                 dragNotes[Song.GetPatternStartNote(patternIdx, noteIdx)] = newNote;
+                                dragStarted = true;
                             }
                             else
                             {
@@ -2348,11 +2353,15 @@ namespace FamiStudio
                             }
                         }
 
-                        UpdateNoteDrag(e, false);
+                        if (dragStarted)
+                        {
+                            dragLastNoteValue = -1;
+                            UpdateNoteDrag(e, false);
+                        }
                     }
 
                     changed = true;
-                  }
+                }
                 else if (right)
                 {
                     if (pattern.Notes.TryGetValue(noteIdx, out var note) && (note.IsStop || note.IsRelease))
@@ -2693,8 +2702,9 @@ namespace FamiStudio
         private void UpdateNoteDrag(MouseEventArgs e, bool final, bool createNote = false)
         {
             Debug.Assert(
-                App.UndoRedoManager.UndoScope == TransactionScope.Pattern ||
-                App.UndoRedoManager.UndoScope == TransactionScope.Channel);
+                App.UndoRedoManager.HasTransactionInProgress && (
+                    App.UndoRedoManager.UndoScope == TransactionScope.Pattern ||
+                    App.UndoRedoManager.UndoScope == TransactionScope.Channel));
 
             App.UndoRedoManager.RestoreTransaction(false);
 
@@ -2788,10 +2798,12 @@ namespace FamiStudio
                 selectionFrameMax = Utils.Clamp(newDragFrameMax, 0, Song.GetPatternStartNote(Song.Length) - 1);
             }
 
-            if (captureOperation == CaptureOperation.DragNote ||
-                captureOperation == CaptureOperation.DragNewNote)
+            if (dragLastNoteValue != noteValue && 
+                (captureOperation == CaptureOperation.DragNote ||
+                 captureOperation == CaptureOperation.DragNewNote))
             {
                 App.PlayInstrumentNote(noteValue);
+                dragLastNoteValue = noteValue;
             }
 
             if (createNote && deltaNoteIdx == 0 && deltaNoteValue == 0)
