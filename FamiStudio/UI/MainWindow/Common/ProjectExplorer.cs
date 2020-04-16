@@ -1379,7 +1379,7 @@ namespace FamiStudio
                     AbortCaptureOperation();
 
                 var button = buttons[buttonIdx];
-                var pt = new Point(e.X, e.Y);
+                var pt = new Point(e.X, e.Y);   
 
                 if (button.type == ButtonType.ProjectSettings)
                 {

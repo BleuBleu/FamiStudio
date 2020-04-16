@@ -240,6 +240,7 @@ namespace FamiStudio
 
             cb.Sensitive = values.Length > 0;
             cb.TooltipText = tooltip;
+            cb.WidthRequest = 125;
             cb.Changed += Cb_Changed;
 
             return cb;
