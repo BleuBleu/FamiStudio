@@ -427,11 +427,15 @@ namespace FamiStudio
 
                             if (fx.fx == Effect_PortaUp)
                             {
-                                slideSpeed = -fx.param;
+                                // If we have a Qxx/Rxx on the same row as a 1xx/2xx, things get weird.
+                                if (slideTarget == 0) 
+                                    slideSpeed = -fx.param;
                             }
                             if (fx.fx == Effect_PortaDown)
                             {
-                                slideSpeed =  fx.param;
+                                // If we have a Qxx/Rxx on the same row as a 1xx/2xx, things get weird.
+                                if (slideTarget == 0)
+                                    slideSpeed =  fx.param;
                             }
                             if (fx.fx == Effect_Portamento)
                             {
