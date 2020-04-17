@@ -349,13 +349,14 @@ namespace FamiStudio
 
         private void OnLoop()
         {
-            App.LoopMode = (LoopMode)(((int)App.LoopMode + 1) % (int)LoopMode.Max);
+            App.LoopMode = (LoopMode)(((int)App.LoopMode + 1) % 3);
         }
 
         private RenderBitmap OnLoopGetBitmap()
         {
             switch (App.LoopMode)
             {
+                case LoopMode.None:
                 case LoopMode.LoopPoint: return bmpLoopNone;
                 case LoopMode.Song: return bmpLoopSong;
                 case LoopMode.Pattern: return bmpLoopPattern;

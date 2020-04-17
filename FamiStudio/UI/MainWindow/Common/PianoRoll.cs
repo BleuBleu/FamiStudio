@@ -2359,6 +2359,7 @@ namespace FamiStudio
                         {
                             dragLastNoteValue = -1;
                             UpdateNoteDrag(e, false);
+                            ConditionalInvalidate();
                         }
                     }
 

@@ -254,7 +254,6 @@ namespace FamiStudio
 
         public static ushort[] GetNoteTableForChannelType(int channelType, bool pal, int numN163Channels)
         {
-            // TODO: PAL
             switch (channelType)
             {
                 case Channel.Vrc6Saw:

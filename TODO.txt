@@ -1,6 +1,7 @@
-1.5.0: All expansions + PAL
-============================
+2.0.0
+=====
 
+- BUG: Paste doesnt replace the last note (or volume?)
 - CRASH: Rare crash in erika #3
 
 TESTING:
@@ -24,6 +25,7 @@ Breaking changes
 - Binary FTM import
 - FamiStudio text import/export
 - Note dragging + audio preview
+- Quick channel switch (1,2,3,4,5) + (CTRL 1,2,3,4,5)
 - New documentation
 - New hands-on tutorial
 
@@ -38,12 +40,12 @@ x Switch to MkDocs
 		- NSF Import
 		- FamiTracker compatibility.
 		- FamiTone2 export.
+		- FamiStudio text format doc.
 	- Editing instruments
 	- Editing patterns
-	- Editing notres
+	- Editing notes
 	- Tempo management
-	- Expansion audio
-	- FamiStudio text format doc.
+	- Expansion audio, detail for each
 	- Configuration
 - Add tempo table like FamiTracker.
 
