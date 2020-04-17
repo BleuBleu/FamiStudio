@@ -2562,12 +2562,19 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel && editChannel != Channel.Dpcm && IsSelectionValid())
             {
-                TransformNotes(selectionFrameMin, selectionFrameMax, true, (note, idx) =>
+                if (Song.Channels[editChannel].SupportsInstrument(instrument))
                 {
-                    if (note != null && note.IsMusical)
-                        note.Instrument = instrument;
-                    return note;
-                });
+                    TransformNotes(selectionFrameMin, selectionFrameMax, true, (note, idx) =>
+                    {
+                        if (note != null && note.IsMusical)
+                            note.Instrument = instrument;
+                        return note;
+                    });
+                }
+                else
+                {
+                    ShowInstrumentError();
+                }
             }
         }
 

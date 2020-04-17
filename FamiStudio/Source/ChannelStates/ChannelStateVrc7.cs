@@ -27,13 +27,16 @@ namespace FamiStudio
             {
                 Debug.Assert(instrument.ExpansionType == Project.ExpansionVrc7);
 
-                if (instrument.Vrc7Patch == 0)
+                if (instrument.ExpansionType == Project.ExpansionVrc7)
                 {
-                    for (byte i = 0; i < 8; i++)
-                        WriteVrc7Register(i, instrument.Vrc7PatchRegs[i]);
-                }
+                    if (instrument.Vrc7Patch == 0)
+                    {
+                        for (byte i = 0; i < 8; i++)
+                            WriteVrc7Register(i, instrument.Vrc7PatchRegs[i]);
+                    }
 
-                vrc7Instrument = (byte)(instrument.Vrc7Patch << 4);
+                    vrc7Instrument = (byte)(instrument.Vrc7Patch << 4);
+                }
             }
         }
 

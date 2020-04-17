@@ -19,23 +19,26 @@ namespace FamiStudio
             {
                 Debug.Assert(instrument.ExpansionType == Project.ExpansionFds);
 
-                var wav = instrument.Envelopes[Envelope.FdsWaveform];
-                var mod = instrument.Envelopes[Envelope.FdsModulation].BuildFdsModulationTable();
+                if (instrument.ExpansionType == Project.ExpansionFds)
+                {
+                    var wav = instrument.Envelopes[Envelope.FdsWaveform];
+                    var mod = instrument.Envelopes[Envelope.FdsModulation].BuildFdsModulationTable();
 
-                Debug.Assert(wav.Length == 0x40);
-                Debug.Assert(mod.Length == 0x20);
+                    Debug.Assert(wav.Length == 0x40);
+                    Debug.Assert(mod.Length == 0x20);
 
-                WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
+                    WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
 
-                for (int i = 0; i < 0x40; ++i)
-                    WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff);
+                    for (int i = 0; i < 0x40; ++i)
+                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff);
 
-                WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
-                WriteRegister(NesApu.FDS_MOD_HI, 0x80);
-                WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
+                    WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
+                    WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+                    WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
 
-                for (int i = 0; i < 0x20; ++i)
-                    WriteRegister(NesApu.FDS_MOD_TABLE, mod[i] & 0xff);
+                    for (int i = 0; i < 0x20; ++i)
+                        WriteRegister(NesApu.FDS_MOD_TABLE, mod[i] & 0xff);
+                }
             }
         }
 

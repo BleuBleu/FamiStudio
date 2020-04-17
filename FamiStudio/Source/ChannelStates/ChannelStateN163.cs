@@ -26,17 +26,22 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
+                Debug.Assert(instrument.ExpansionType == Project.ExpansionN163);
 
-                var pos  = instrument.N163WavePos / 2;
-                var wave = instrument.Envelopes[Envelope.N163Waveform].BuildN163Waveform();
+                if (instrument.ExpansionType == Project.ExpansionN163)
+                {
+                    Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
 
-                for (int i = 0; i < wave.Length; i++)
-                    WriteN163Register(pos + i, wave[i]);
+                    var pos = instrument.N163WavePos / 2;
+                    var wave = instrument.Envelopes[Envelope.N163Waveform].BuildN163Waveform();
 
-                WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
-                waveLength = 256 - instrument.N163WaveSize;
-                octaveShift = instrument.N163OctaveShift;
+                    for (int i = 0; i < wave.Length; i++)
+                        WriteN163Register(pos + i, wave[i]);
+
+                    WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
+                    waveLength = 256 - instrument.N163WaveSize;
+                    octaveShift = instrument.N163OctaveShift;
+                }
             }
         }
 

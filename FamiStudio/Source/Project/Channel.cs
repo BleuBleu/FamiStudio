@@ -545,11 +545,18 @@ namespace FamiStudio
                     }
                 }
 
-                if (prevNote != null && prevNote.Value == noteValue)
+                if (prevNote != null)
                 {
-                    patternIdx = p;
-                    noteIdx    = prevTime;
-                    return true;
+                    if (prevNote.Value == noteValue)
+                    {
+                        patternIdx = p;
+                        noteIdx = prevTime;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -564,11 +571,18 @@ namespace FamiStudio
                     if (n >= 0)
                     {
                         var lastNote = pattern.GetLastValidNoteAt(lastPatternNoteIdx);
-                        if (lastNote.IsValid && lastNote.Value == noteValue)
+                        if (lastNote.IsValid)
                         {
-                            noteIdx = n;
-                            patternIdx = p;
-                            return true;
+                            if (lastNote.Value == noteValue)
+                            {
+                                noteIdx = n;
+                                patternIdx = p;
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
                         }
                     }
                 }

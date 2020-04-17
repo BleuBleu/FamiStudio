@@ -1,6 +1,8 @@
 1.5.0: All expansions + PAL
 ============================
 
+- CRASH: Rare crash in erika #3
+
 TESTING:
 ========
 - Test installer on Japanese machine.
@@ -28,6 +30,7 @@ Breaking changes
 2.0.0 Documentation
 ===================
 x Switch to MkDocs
+- Left side panel looks like ass on Safari.
 - Subdivide different way:
 	- Basics + UI (what is what, tooltip, double-click props, play, pause, seek)
 		- You first song (video)
