@@ -2315,7 +2315,9 @@ namespace FamiStudio
                             }
                             else
                             {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                                var prevPattern = channel.PatternInstances[prevPatternIdx];
+
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, prevPattern.Id);
                                 StartCaptureOperation(e, CaptureOperation.DragNote);
 
                                 var absPrevNoteIdx = Song.GetPatternStartNote(prevPatternIdx, prevNoteIdx);
