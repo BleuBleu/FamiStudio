@@ -1961,7 +1961,7 @@ namespace FamiStudio
                             newNotes[it.CurrentTime] = transformedNote;
                     }
 
-                    pattern.DeleteNotesBetween(n0, n1);
+                    pattern.DeleteNotesBetween(n0, n1 + 1);
 
                     foreach (var kv in newNotes)
                         pattern.SetNoteAt(kv.Key, kv.Value);
