@@ -432,16 +432,14 @@ namespace FamiStudio
                 }
             }
 
-            var hasCustomSettings = false;
+            var hasCustomSettings = customSettings != null;
             var tempoMode = project.TempoMode;
 
             serializer.Serialize(ref hasCustomSettings);
             serializer.Serialize(ref tempoMode);
 
-            if (customSettings != null)
+            if (hasCustomSettings)
             {
-                hasCustomSettings = true;
-
                 for (int i = 0; i < numPatterns; i++)
                 {
                     serializer.Serialize(ref customSettings[i].useCustomSettings);
