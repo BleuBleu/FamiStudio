@@ -880,8 +880,12 @@ namespace FamiStudio
 
             NsfClose(nsf);
 
-            var noteLength = Utils.GetFactors(song.PatternLength, Song.MaxNoteLength).First();
-            song.ResizeNotes(noteLength, false);
+            var factors = Utils.GetFactors(song.PatternLength, Song.MaxNoteLength);
+            if (factors.Length > 0 && factors[0] <= Song.MaxNoteLength)
+                song.ResizeNotes(factors[0], false);
+            else
+                song.ResizeNotes(1, false);
+
             song.SetSensibleBarLength();
             song.DeleteEmptyPatterns();
             song.UpdatePatternStartNotes();
