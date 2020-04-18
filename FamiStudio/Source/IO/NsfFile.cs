@@ -171,7 +171,7 @@ namespace FamiStudio
                     }
 
                     var dpcmPageStart = (nsfBytes.Count) / NsfPageSize;
-                    var dpcmPageEnd   = (nsfBytes.Count + totalSampleSize) / NsfPageSize;
+                    var dpcmPageEnd   = (nsfBytes.Count + totalSampleSize - 1) / NsfPageSize;
                     var dpcmPageCount = dpcmPageEnd - dpcmPageStart + 1;
 
                     // Otherwise we will allocate at least a full page for the samples and use the following mapping:
