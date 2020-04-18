@@ -32,10 +32,14 @@ FT_SMOOTH_VIBRATO = 1    ; Blaarg's smooth vibrato technique
     FT_NUM_ENVELOPES        = 3+3+2+3+2+2+2+2+2+2
     FT_NUM_PITCH_ENVELOPES  = 9
     FT_NUM_CHANNELS         = 11
-.elseif .defined(FT_VRC6) || .defined(FT_S5B)
+.elseif .defined(FT_VRC6)
     FT_NUM_ENVELOPES        = 3+3+2+3+3+3+3
     FT_NUM_PITCH_ENVELOPES  = 6
     FT_NUM_CHANNELS         = 8
+.elseif .defined(FT_S5B)
+    FT_NUM_ENVELOPES        = 3+3+2+3+2+2+2
+    FT_NUM_PITCH_ENVELOPES  = 6
+    FT_NUM_CHANNELS         = 8    
 .elseif .defined(FT_N163) 
     FT_NUM_ENVELOPES        = 3+3+2+3+(FT_N163_CHN_CNT*2)
     FT_NUM_PITCH_ENVELOPES  = 3+FT_N163_CHN_CNT
@@ -1423,8 +1427,10 @@ _FT2S5BEnvelopeTable:
     beq update_volume
 
 nocut:
+    
     ; Read note, apply arpeggio 
     clc
+    ldx _FT2S5BEnvelopeTable,y
     adc FT_ENV_VALUE+FT_ENV_NOTE_OFF,x
     tax
 
@@ -2025,8 +2031,10 @@ no_pulse2_upd:
     ; Duty cycle envelope
     lda chan_idx
     cmp #2                     ;triangle has no duty.
+.if !.defined(::FT_S5B)
     bne duty
-.if .defined(::FT_S5B)
+.else
+    beq no_duty
     cmp #5                     ;S5B has no duty.
     bcc duty
 .endif

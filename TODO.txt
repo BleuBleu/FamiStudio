@@ -1,8 +1,11 @@
 2.0.0
 =====
 
-- BUG: Paste doesnt replace the last note (or volume?)
+- Gimmick:
+	- Relook at all the channels, make sur no error
+- TODO: Copy DPCM doesnt copy the samples.
 - CRASH: Rare crash in erika #3
+- Make sure all try/catch are enabled.
 
 TESTING:
 ========
@@ -12,13 +15,14 @@ Breaking changes
 ================
 - VRC6 saw duty (mention in FamiTracker compatibility section)
 
-2.0.0 Trailer (teaser + trailer?)
-=================================
+2.0.0 Trailer
+=============
 - ROM export
 - All expansions
 - Fine pitch track
 - NSF import
-- Tempo/PAL support
+- Advance Tempo
+- PAL support
 - Custom pattern length/tempo + loop points
 - Duty cycle envelopes
 - Transform dialog
