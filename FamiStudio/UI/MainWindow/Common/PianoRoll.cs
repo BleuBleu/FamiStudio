@@ -1994,15 +1994,19 @@ namespace FamiStudio
 
         private void TransposeNotes(int amount)
         {
+            var processedNotes = new HashSet<Note>();
+
             TransformNotes(selectionFrameMin, selectionFrameMax, true, (note, idx) =>
             {
-                if (note != null && note.IsMusical)
+                if (note != null && note.IsMusical && !processedNotes.Contains(note))
                 {
                     int value = note.Value + amount;
                     if (value < Note.MusicalNoteMin || value > Note.MusicalNoteMax)
                         note.Clear();
                     else
                         note.Value = (byte)value;
+
+                    processedNotes.Add(note);
                 }
 
                 return note;
