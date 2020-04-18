@@ -576,9 +576,14 @@ namespace FamiStudio
                     var pattern = channel.PatternInstances[p] == null ? emptyPattern : channel.PatternInstances[p];
                     var patternBuffer = new List<string>();
 
-                    if (!test && p == song.LoopPoint)
+                    if (p == song.LoopPoint)
                     {
-                        lines.Add($"{ll}song{songIdx}ch{c}loop:");
+                        if (!test)
+                            lines.Add($"{ll}song{songIdx}ch{c}loop:");
+
+                        // Clear stored instrument to force a reset. We might be looping
+                        // to a section where the instrument was set from a previous pattern.
+                        instrument = null;
                     }
 
                     if (isSpeedChannel && project.UsesFamiStudioTempo)
