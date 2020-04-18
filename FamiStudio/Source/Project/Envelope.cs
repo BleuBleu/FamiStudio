@@ -280,7 +280,7 @@ namespace FamiStudio
                 env.Loop = 0;
 
                 for (int i = 0; i < env.Length; i++)
-                    env.Values[i] = (sbyte)(-Math.Sin(i * 2.0f * Math.PI / env.Length) * (VibratoDepthLookup[depth] / 2));
+                    env.Values[i] = (sbyte)Math.Round(-Math.Sin(i * 2.0f * Math.PI / env.Length) * (VibratoDepthLookup[depth] / 2));
             }
 
             return env;
