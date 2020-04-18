@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -249,6 +250,17 @@ namespace FamiStudio
             }
             
             return -1;
+        }
+
+        public DPCMSample FindMatchingSample(byte[] data)
+        {
+            foreach (var sample in samples)
+            {
+                if (sample.Data.Length == data.Length && sample.Data.SequenceEqual(data))
+                    return sample;
+            }
+
+            return null;
         }
 
         public Song CreateSong(string name = null)

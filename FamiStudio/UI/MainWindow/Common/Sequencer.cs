@@ -909,17 +909,19 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var mergeInstruments = ClipboardUtils.ContainsMissingInstruments(App.Project, false);
+            var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, false, out var missingSamples);
 
             bool createMissingInstrument = false;
-            if (mergeInstruments)
-            {
+            if (missingInstruments)
                 createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
-            }
 
-            App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Song, Song.Id);
+            bool createMissingSamples = false;
+            if (missingSamples)
+                createMissingSamples = PlatformUtils.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
-            var patterns = ClipboardUtils.LoadPatterns(App.Project, Song, createMissingInstrument, out var customSettings);
+            App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingSamples ? TransactionScope.Project : TransactionScope.Song, Song.Id);
+
+            var patterns = ClipboardUtils.LoadPatterns(App.Project, Song, createMissingInstrument, createMissingSamples, out var customSettings);
 
             if (patterns == null)
             {

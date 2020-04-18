@@ -3,7 +3,6 @@
 
 - Gimmick:
 	- Relook at all the channels, make sur no error
-- TODO: Copy DPCM doesnt copy the samples.
 - CRASH: Rare crash in erika #3
 - Make sure all try/catch are enabled.
 

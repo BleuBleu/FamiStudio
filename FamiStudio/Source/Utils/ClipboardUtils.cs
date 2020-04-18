@@ -209,6 +209,66 @@ namespace FamiStudio
                 inst.SerializeState(serializer);
         }
 
+        private static void SaveSampleList(ProjectSaveBuffer serializer, IDictionary<int, DPCMSampleMapping> mappings)
+        {
+            int numMappings = mappings.Count;
+            serializer.Serialize(ref numMappings);
+
+            foreach (var kv in mappings)
+            {
+                var note    = kv.Key;
+                var mapping = kv.Value;
+
+                serializer.Serialize(ref note);
+                mapping.SerializeState(serializer);
+
+                var sampleName = mapping.Sample.Name;
+                var sampleData = mapping.Sample.Data;
+
+                serializer.Serialize(ref sampleName);
+                serializer.Serialize(ref sampleData);
+            }
+        }
+
+        private static bool LoadAndMergeSampleList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
+        {
+            int numMappings = 0;
+            serializer.Serialize(ref numMappings);
+
+            bool needMerge = false;
+            for (int i = 0; i < numMappings; i++)
+            {
+                int note = 0;
+                serializer.Serialize(ref note);
+
+                var mapping = new DPCMSampleMapping();
+                mapping.SerializeState(serializer);
+
+                string sampleName = null;
+                byte[] sampleData = null;
+
+                serializer.Serialize(ref sampleName);
+                serializer.Serialize(ref sampleData);
+
+                if (serializer.Project.GetDPCMMapping(note) == null)
+                {
+                    needMerge = true;
+
+                    if (!checkOnly && createMissing)
+                    {
+                        var sample = serializer.Project.FindMatchingSample(sampleData);
+
+                        if (sample == null)
+                            sample = serializer.Project.CreateDPCMSample(sampleName, sampleData);
+
+                        serializer.Project.MapDPCMSample(note, sample, mapping.Pitch, mapping.Loop);
+                    }
+                }
+            }
+
+            return needMerge;
+        }
+
         private static bool LoadAndMergeInstrumentList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
         {
             int numInstruments = 0;
@@ -271,7 +331,7 @@ namespace FamiStudio
             return needMerge;
         }
 
-        public static void SaveNotes(Project project, Note[] notes)
+        public static void SaveNotes(Project project, Note[] notes, bool dpcm)
         {
             if (notes == null)
             {
@@ -279,15 +339,32 @@ namespace FamiStudio
                 return;
             }
 
+            var serializer = new ProjectSaveBuffer(null);
             var instruments = new HashSet<Instrument>();
-            foreach (var note in notes)
+            var samples = new Dictionary<int, DPCMSampleMapping>();
+
+            if (dpcm)
             {
-                if (note != null && note.Instrument != null)
-                    instruments.Add(note.Instrument);
+                foreach (var note in notes)
+                {
+                    if (note != null)
+                    {
+                        var mapping = project.GetDPCMMapping(note.Value);
+                        if (mapping != null && mapping.Sample != null)
+                            samples[note.Value] = mapping;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var note in notes)
+                {
+                    if (note != null && note.Instrument != null)
+                        instruments.Add(note.Instrument);
+                }
             }
 
-            var serializer = new ProjectSaveBuffer(null);
-
+            SaveSampleList(serializer, samples);
             SaveInstrumentList(serializer, instruments);
             
             var numNotes = notes.Length;
@@ -308,19 +385,26 @@ namespace FamiStudio
             SetClipboardDataInternal(clipboardData.ToArray());
         }
 
-        public static bool ContainsMissingInstruments(Project project, bool notes)
+        public static bool ContainsMissingSamples(Project project, bool notes)
+        {
+            return false;
+        }
+
+        public static bool ContainsMissingInstrumentsOrSamples(Project project, bool notes, out bool missingSamples)
         {
             var buffer = GetClipboardDataInternal(notes ? MagicNumberClipboardNotes : MagicNumberClipboardPatterns);
 
+            missingSamples = false;
             if (buffer == null)
                 return false;
 
             var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version);
 
+            missingSamples = LoadAndMergeSampleList(serializer, true);
             return LoadAndMergeInstrumentList(serializer, true);
         }
 
-        public static Note[] LoadNotes(Project project, bool createMissingInstruments)
+        public static Note[] LoadNotes(Project project, bool createMissingInstruments, bool createMissingSamples)
         {
             var buffer = GetClipboardDataInternal(MagicNumberClipboardNotes);
 
@@ -329,6 +413,7 @@ namespace FamiStudio
 
             var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version);
 
+            LoadAndMergeSampleList(serializer, false, createMissingSamples);
             LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
 
             int numNotes = 0;
@@ -385,6 +470,7 @@ namespace FamiStudio
 
             var uniqueInstruments = new HashSet<Instrument>();
             var uniquePatterns = new HashSet<Pattern>();
+            var uniqueDPCMMappings = new Dictionary<int, DPCMSampleMapping>();
             var numPatterns = patterns.GetLength(0);
             var numChannels = patterns.GetLength(1);
 
@@ -398,11 +484,23 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         uniquePatterns.Add(pattern);
-                        foreach (var n in pattern.Notes.Values)
+                        if (pattern.ChannelType == Channel.Dpcm)
                         {
-                            var inst = n.Instrument;
-                            if (inst != null)
-                                uniqueInstruments.Add(inst);
+                            foreach (var n in pattern.Notes.Values)
+                            {
+                                var mapping = project.GetDPCMMapping(n.Value);
+                                if (mapping != null && mapping.Sample != null)
+                                    uniqueDPCMMappings[n.Value] = mapping;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var n in pattern.Notes.Values)
+                            {
+                                var inst = n.Instrument;
+                                if (inst != null)
+                                    uniqueInstruments.Add(inst);
+                            }
                         }
                     }
                 }
@@ -416,6 +514,7 @@ namespace FamiStudio
 
             var serializer = new ProjectSaveBuffer(null);
 
+            SaveSampleList(serializer, uniqueDPCMMappings);
             SaveInstrumentList(serializer, uniqueInstruments);
             SavePatternList(serializer, uniquePatterns);
 
@@ -459,7 +558,7 @@ namespace FamiStudio
             SetClipboardDataInternal(clipboardData.ToArray());
         }
 
-        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments, out Song.PatternCustomSetting[] customSettings)
+        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments, bool createMissingSamples, out Song.PatternCustomSetting[] customSettings)
         {
             var buffer = GetClipboardDataInternal(MagicNumberClipboardPatterns);
 
@@ -472,6 +571,7 @@ namespace FamiStudio
             var decompressedBuffer = Compression.DecompressBytes(buffer, 4);
             var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
 
+            LoadAndMergeSampleList(serializer, false, createMissingSamples);
             LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
             LoadAndMergePatternList(serializer, song);
 

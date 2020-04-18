@@ -1002,7 +1002,7 @@ namespace FamiStudio
 
         private void CopyNotes()
         {
-            ClipboardUtils.SaveNotes(App.Project, GetSelectedNotes(false));
+            ClipboardUtils.SaveNotes(App.Project, GetSelectedNotes(false), editChannel == Channel.Dpcm);
         }
 
         private void CutNotes()
@@ -1063,17 +1063,19 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var mergeInstruments = ClipboardUtils.ContainsMissingInstruments(App.Project, true);
+            var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, true, out var missingSamples);
 
             bool createMissingInstrument = false;
-            if (mergeInstruments)
-            {
+            if (missingInstruments)
                 createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
-            }
 
-            App.UndoRedoManager.BeginTransaction(createMissingInstrument ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
+            bool createMissingSamples = false;
+            if (missingSamples && editChannel == Channel.Dpcm)
+                createMissingSamples = PlatformUtils.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
-            var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument);
+            App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
+
+            var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument, createMissingSamples);
 
             if (notes == null)
             {
