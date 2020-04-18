@@ -435,11 +435,12 @@ namespace FamiStudio
             var hasCustomSettings = false;
             var tempoMode = project.TempoMode;
 
+            serializer.Serialize(ref hasCustomSettings);
+            serializer.Serialize(ref tempoMode);
+
             if (customSettings != null)
             {
                 hasCustomSettings = true;
-                serializer.Serialize(ref hasCustomSettings);
-                serializer.Serialize(ref tempoMode);
 
                 for (int i = 0; i < numPatterns; i++)
                 {
@@ -450,10 +451,6 @@ namespace FamiStudio
                     serializer.Serialize(ref customSettings[i].palSkipFrames[0]);
                     serializer.Serialize(ref customSettings[i].palSkipFrames[1]);
                 }
-            }
-            else
-            {
-                serializer.Serialize(ref hasCustomSettings);
             }
 
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);

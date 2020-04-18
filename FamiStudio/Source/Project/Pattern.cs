@@ -481,7 +481,10 @@ namespace FamiStudio
             if (buffer.IsReading)
             {
                 ClearLastValidNoteCache();
-                ClearNotesPastMaxInstanceLength();
+
+                // This can happen when pasting from an expansion to another. We wont find the channel.
+                if (buffer.Project.IsChannelActive(channelType))
+                    ClearNotesPastMaxInstanceLength();
             }
         }
     }

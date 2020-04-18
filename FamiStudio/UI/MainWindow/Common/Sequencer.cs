@@ -933,11 +933,10 @@ namespace FamiStudio
                 {
                     var pattern = patterns[i, j];
 
-                    if (pattern != null && (i + minSelectedPatternIdx) < Song.Length &&
-                        pattern.ChannelType  < Song.Channels.Length &&
-                        pattern.ChannelType == Song.Channels[pattern.ChannelType].Type)
+                    if (pattern != null && (i + minSelectedPatternIdx) < Song.Length && Song.Project.IsChannelActive(pattern.ChannelType))
                     {
-                        Song.Channels[pattern.ChannelType].PatternInstances[i + minSelectedPatternIdx] = pattern;
+                        var channelIdx = Channel.ChannelTypeToIndex(pattern.ChannelType);
+                        Song.Channels[channelIdx].PatternInstances[i + minSelectedPatternIdx] = pattern;
                     }
                 }
             }
