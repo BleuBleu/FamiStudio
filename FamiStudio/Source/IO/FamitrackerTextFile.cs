@@ -842,6 +842,7 @@ namespace FamiStudio
                 {
                     var channel = song.Channels[c];
                     var prevNoteValue = Note.NoteInvalid;
+                    var prevInstrument = (Instrument)null;
                     var prevSlideEffect = Effect_None;
                     
                     for (int p = 0; p < song.Length; p++)
@@ -934,7 +935,8 @@ namespace FamiStudio
                                     var ceilStepSize = Utils.SignedCeil(stepSizeFloat);
 
                                     // If the previous note matched too, we can use 3xx (auto-portamento).
-                                    if (prevNoteValue == note.Value)
+                                    // Avoid using portamento on instrument with relative pitch envelopes, their previous pitch isnt reliable.
+                                    if (prevNoteValue == note.Value && (prevInstrument == null || prevInstrument.Envelopes[Envelope.Pitch].IsEmpty || !prevInstrument.Envelopes[Envelope.Pitch].Relative))
                                     {
                                         if (prevSlideEffect == Effect_PortaUp ||
                                             prevSlideEffect == Effect_PortaDown)
@@ -953,20 +955,20 @@ namespace FamiStudio
                                         if (channel.IsFdsWaveChannel || channel.IsN163WaveChannel)
                                             stepSizeFloat = -stepSizeFloat;
 
-                                        var floorStepSize = Utils.SignedFloor(stepSizeFloat);
+                                        var absFloorStepSize = Math.Abs(Utils.SignedFloor(stepSizeFloat));
 
                                         if (prevSlideEffect == Effect_Portamento)
                                             effectString += $" 300";
 
-                                        if (stepSizeFloat > 0)
+                                        if (note.SlideNoteTarget > note.Value)
                                         {
-                                            effectString += $" 2{Math.Min(0xff, floorStepSize):X2}";
-                                            prevSlideEffect = Effect_PortaDown;
-                                        }
-                                        else if (stepSizeFloat < 0)
-                                        {
-                                            effectString += $" 1{Math.Min(0xff, -floorStepSize):X2}";
+                                            effectString += $" 1{Math.Min(0xff, absFloorStepSize):X2}";
                                             prevSlideEffect = Effect_PortaUp;
+                                        }
+                                        else if (note.SlideNoteTarget < note.Value)
+                                        {
+                                            effectString += $" 2{Math.Min(0xff, absFloorStepSize):X2}";
+                                            prevSlideEffect = Effect_PortaDown;
                                         }
                                     }
                                 }
@@ -1017,7 +1019,11 @@ namespace FamiStudio
                             line = $" : {noteString} {instrumentString} {volumeString}{effectString}";
 
                             if (note.IsMusical || note.IsStop)
+                            {
                                 prevNoteValue = note.IsSlideNote ? note.SlideNoteTarget : note.Value;
+                                if (note.IsMusical)
+                                    prevInstrument = note.Instrument;
+                            }
 
                             patternLines.Add(line);
                         }

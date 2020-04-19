@@ -160,7 +160,7 @@ namespace FamiStudio
                         channel.UpdateAPU();
                     }
 
-                    if (!AdvanceSong(song.Length, loopMode))
+                    if (!AdvanceSong(song.Length, LoopMode.None))
                         return false;
                 }
 
