@@ -506,7 +506,7 @@ namespace FamiStudio
 
             var oldPatternLength = GetPatternLength(p);
             var oldNoteLength    = GetPatternNoteLength(p);
-            var ratio = (float)(oldNoteLength - 1) * (newNoteLength - 1);
+            var ratio = (float)(oldNoteLength - 1) / (newNoteLength - 1);
 
             if (ratio == 0.0f)
                 ratio = 1.0f;
