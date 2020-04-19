@@ -1082,6 +1082,7 @@ namespace FamiStudio
                                 SongSelected?.Invoke(selectedSong);
                                 InstrumentDeleted?.Invoke(instrument);
                                 App.UndoRedoManager.EndTransaction();
+                                App.StartInstrumentPlayer();
                                 RefreshButtons();
                                 ConditionalInvalidate();
                             }
