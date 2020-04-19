@@ -687,8 +687,7 @@ namespace FamiStudio
         {
             if (on)
             {
-                // In MIDI: 60 = C4, In Famitone 37 = C4, but in 1.2.0 we extended the range, so C4 is now 49.
-                PlayInstrumentNote(Math.Max(1, Math.Min(n - 11, 63)));
+                PlayInstrumentNote(Utils.Clamp(n - 11, Note.MusicalNoteMin, Note.MusicalNoteMax));
                 lastMidiNote = n;
             }
             else if (n == lastMidiNote)
