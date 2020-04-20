@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Editing Notes - FamiStudio Documentation</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/darcula.min.css">
+        <link href="../css/extra.css" rel="stylesheet">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">FamiStudio Documentation</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Welcome</a>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../basics/" class="dropdown-item">Basics</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active">Editing Notes</a>
+</li>
+                                    
+<li>
+    <a href="../sequencer/" class="dropdown-item">Editing Patterns</a>
+</li>
+                                    
+<li>
+    <a href="../instruments/" class="dropdown-item">Editing Instruments</a>
+</li>
+                                    
+<li>
+    <a href="../song/" class="dropdown-item">Editing Songs & Project</a>
+</li>
+                                    
+<li>
+    <a href="../importexport/" class="dropdown-item">Importing & Exporting Your Songs</a>
+</li>
+                                    
+<li>
+    <a href="../expansion/" class="dropdown-item">Using Expansion Audio</a>
+</li>
+                                    
+<li>
+    <a href="../cleanup/" class="dropdown-item">Cleaning-up your Project</a>
+</li>
+                                    
+<li>
+    <a href="../config/" class="dropdown-item">Configuring FamiStudio</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../basics/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../sequencer/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#editing-notes" class="nav-link">Editing Notes</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#seeking" class="nav-link">Seeking</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#adding-and-deleting-notes" class="nav-link">Adding and deleting notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#stop-release-notes" class="nav-link">Stop &amp; Release notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#note-attack" class="nav-link">Note attack</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#slide-notes" class="nav-link">Slide notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#selecting-and-editing-notes" class="nav-link">Selecting and editing notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#cutting-copying-and-pasting-notes" class="nav-link">Cutting, copying and pasting notes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#special-paste" class="nav-link">Special paste</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-volume-tracks-effects" class="nav-link">Editing volume tracks &amp; effects</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#volume-track" class="nav-link">Volume track</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#vibrato-depth-speed" class="nav-link">Vibrato depth &amp; speed.</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="editing-notes">Editing Notes</h1>
+<p>The Piano Roll is where you editing the actual notes of the song, the instrument envelopes, as well as some special effects.</p>
+<p><img alt="" src="../images/PianoRoll.png#center" /></p>
+<p>You can also use it to preview instrument by clicking on the keyboard. The currently selected instrument (in the project explorer) will play on the currently selected channel (in the sequencer).</p>
+<h2 id="seeking">Seeking</h2>
+<p>Clicking in the timeline (header) of the piano roll will move the play position.</p>
+<h2 id="adding-and-deleting-notes">Adding and deleting notes</h2>
+<p>Clicking a pattern in the sequencer will scroll the piano roll to its location. Left-clicking in the piano roll will add a note of the currently selected instrument. Holding the mouse when clicking will allow you to drag the note and will give audio feedback. You cannot add a note where the is not a pattern created.</p>
+<p>Right-clicking deletes a note.</p>
+<h2 id="stop-release-notes">Stop &amp; Release notes</h2>
+<p>Using Ctrl+click will add a stop note. Stops notes are displayed as little triangles. Although they are displayed next to the note preceding them, they actually have no pitch or instrument, they simply stop the sound. Stop notes are important because on the NES, a note will play indefinitely unless you tell it to stop.</p>
+<p><img alt="" src="../images/StopNote.png#center" /></p>
+<p>Using Shift+click will add a release notes. Release notes are shown as making the note thinner and triggers the envelope to jump to the release point. Release envelopes are useful to nicely fade out a note when its release, while preserving other effects like vibrato. There is no point to adding a release note to an instrument that does not have a release envelope.</p>
+<p><img alt="" src="../images/ReleaseNote.png#center" /></p>
+<p>Hovering the mouse in the piano roll will display the location and note in the toolbar. Hovering over a note will display which instrument it uses.</p>
+<h2 id="note-attack">Note attack</h2>
+<p>By default, notes will have an "attack" which mean they will restart their envelopes (volume, pitch, etc.) from the beginning. This is represented by the little dark rectangle on the left of each note. This can be toggled for a particular note by hold the A key and clicking on a note. Note that if a note does not use the same instrument as the previous one, the attack will still play, even if disabled. Also please note that this will generally not carry over to FamiTracker, besides specific use cases around slide notes.</p>
+<p>In this example, the first note will have an attack, while the second one will not.</p>
+<p><img alt="" src="../images/NoAttack.png#center" /></p>
+<p>Since envelopes are not resetted, this means that if a note was released, it will remain released if the subsequent notes have no attack.</p>
+<p><img alt="" src="../images/NoAttackReleased.png#center" /></p>
+<h2 id="slide-notes">Slide notes</h2>
+<p>Slide notes are notes that start at a given pitch (the pitch of the note) and slowly change to hit a target pitch which is represented by where the triangle ends. In this example, the attack of the second note has been disabled.</p>
+<p><img alt="" src="../images/SlideNote.png#center" /></p>
+<p>Slide notes garantees that the target pitch will be reached by the end of the note (end of the triangle) but this might happen a bit earlier than the visual repesentation suggests. Especially in the higher pitches. This is due to the fact that the pitch calculations are all integer-based (with 1-bit of fraction) and it is often impossible to get the exact required slope to reach the pitch at the exact time. </p>
+<h2 id="selecting-and-editing-notes">Selecting and editing notes</h2>
+<p>You can select notes by right-clicking and dragging in the header of the piano roll. Selected notes will appear with a thick silver border. Once notes are selected, then can be moved using the arrows keys (up, down, left and right). Holding CTRL while doing so will make the notes move by larger increments.</p>
+<p><img alt="" src="../images/SelectNotes.png#center" /></p>
+<h2 id="cutting-copying-and-pasting-notes">Cutting, copying and pasting notes</h2>
+<p>Much like the sequencer, selcted notes can be copy (or cut) by pressing CTRL+C (or CTRL+X). You can then move the selection somewhere else and paste the notes with CTRL+V.</p>
+<h2 id="special-paste">Special paste</h2>
+<p>If you want to paste notes, without their associated effets or volume track (or vice-versa). You can use a "special paste" by pressing CTRL+SHIFT+V. This will open a popup dialog asking you to choose what you want to paste.</p>
+<p><img alt="" src="../images/PasteSpecial.png#center" /></p>
+<h2 id="editing-volume-tracks-effects">Editing volume tracks &amp; effects</h2>
+<p>The effect panel can be opened by clicking the little triangle at the top-left of the piano roll. Right now, only a handful of effects are supported:</p>
+<ul>
+<li><strong>Volume</strong>: The overall volume of the channel.</li>
+<li><strong>Vib Speed</strong>: Vibrato speed, used in conjuction with vibrato depth to create a vibrato effect.</li>
+<li><strong>Vib Depth</strong>: Vibrato depth, used in conjuction with vibrato speed to create a vibrato effect.</li>
+<li><strong>FDS Speed</strong>: Famicom Disk System audio modulation speed (FDS audio expansion only).</li>
+<li><strong>FDS Depth</strong>: Famicom Disk System audio modulation depth (FDS audio expansion only).</li>
+<li><strong>Speed</strong>: Changes the speed of the song (FamiTracker tempo mode only)</li>
+</ul>
+<p>Effects are edited by selecting and effect and dragging up or down to change the value. Right-clicking on an effect value deletes it. </p>
+<p>For effects that have huge values (such as FDS Depth), you can hold Shift to fine tune the exact value (a movement of 1 pixel will change the value by 1).</p>
+<p><img alt="" src="../images/Effect.png#center" /></p>
+<h2 id="volume-track">Volume track</h2>
+<p>The volume tracks dictates how loud the current channel should play. This volume is combined with volume envelope by multiplication (50% volume track x 50% envelope volume = 25% total volume). It is much more efficient to use volume envelopes wherever possible and only use volume tracks to control the global volume of the song.</p>
+<p><img alt="" src="../images/VolumeTrack.png#center" /></p>
+<h2 id="vibrato-depth-speed">Vibrato depth &amp; speed.</h2>
+<p>Vibrato depth and speed are used to add vibrato to a portion of the song without having to bother creating a new instrument. Please note that vibrato will temporarely override any pitch envelope on the current instrument. When vibrato is disabled (by setting depth or speed, or both to zero), the instrument will essentially have no pitch envelope until a new note is played.</p>
+<p><img alt="" src="../images/Vibrato.png#center" /></p>
+<p>The depth values for the vibrato are indentical to FamiTracker but the speeds are slightly different. The way FamiTracker implements vibrato, while clever, is flawed as it undersamples the vibrato curve at high speed, leading to aliasing which ends up with a low-frequency tone that has a "ringing" sound to it. Please see the <a href="../importexport/">Import/Export</a> for a table that maps between FamiStudio and FamiTracker.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

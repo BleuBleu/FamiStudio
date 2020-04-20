@@ -7,14 +7,18 @@ body {
 }
 h1 {
   color: #C6CDDA;
+  font-size: 30px;    
+  font-weight: bold;
 }
 h2 {
   color: #C6CDDA;
   font-size: 22px;  
+  font-weight: bold;
 }
 h3 {
   color: #C6CDDA;
   font-size: 20px;  
+  font-weight: bold;
 }
 h1:after
 {
@@ -25,12 +29,4 @@ h1:after
 img[src*="#center"] {
     display: block;
     margin: 0 auto;
-}
-.bs-sidebar.affix {
-}
-.navbar-expand-md .navbar-collapse {
-    overflow-y: scroll;
-    max-height: 85vh;
-    line-height: 1.0;
-    font-size: 14px;
 }

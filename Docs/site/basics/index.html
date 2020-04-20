@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Basics - FamiStudio Documentation</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/darcula.min.css">
+        <link href="../css/extra.css" rel="stylesheet">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">FamiStudio Documentation</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Welcome</a>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="./" class="dropdown-item active">Basics</a>
+</li>
+                                    
+<li>
+    <a href="../pianoroll/" class="dropdown-item">Editing Notes</a>
+</li>
+                                    
+<li>
+    <a href="../sequencer/" class="dropdown-item">Editing Patterns</a>
+</li>
+                                    
+<li>
+    <a href="../instruments/" class="dropdown-item">Editing Instruments</a>
+</li>
+                                    
+<li>
+    <a href="../song/" class="dropdown-item">Editing Songs & Project</a>
+</li>
+                                    
+<li>
+    <a href="../importexport/" class="dropdown-item">Importing & Exporting Your Songs</a>
+</li>
+                                    
+<li>
+    <a href="../expansion/" class="dropdown-item">Using Expansion Audio</a>
+</li>
+                                    
+<li>
+    <a href="../cleanup/" class="dropdown-item">Cleaning-up your Project</a>
+</li>
+                                    
+<li>
+    <a href="../config/" class="dropdown-item">Configuring FamiStudio</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href=".." class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../pianoroll/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#concepts" class="nav-link">Concepts</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#main-window" class="nav-link">Main Window</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#toolbar" class="nav-link">Toolbar</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#tooltip" class="nav-link">Tooltip</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#playingpausing-the-song" class="nav-link">Playing/pausing the song</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#changing-the-looping-mode" class="nav-link">Changing the looping mode</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#saving-the-project" class="nav-link">Saving the project</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#exporting-to-various-formats" class="nav-link">Exporting to various formats</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#cleanup-dialog" class="nav-link">Cleanup dialog</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#configuration-dialog" class="nav-link">Configuration dialog</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#project-explorer" class="nav-link">Project Explorer</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#sequencer" class="nav-link">Sequencer</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#piano-roll" class="nav-link">Piano Roll</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#keyboard-shortcuts" class="nav-link">Keyboard shortcuts</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="concepts">Concepts</h1>
+<p>A FamiStudio project contains:</p>
+<ul>
+<li>A list of Songs</li>
+<li>A list of Instruments</li>
+<li>A list of DPCM samples</li>
+</ul>
+<p>Songs are made of Patterns, which are on one of the five Channels supported by the NES. Patterns contain Notes which are played by an Instrument (DPCM samples do not require an instrument). Instruments may have some of their attributes (pitch, volume, arpeggio) modulated by Envelopes.</p>
+<p>Most of the operations are performed with the mouse. In general:</p>
+<ul>
+<li>The <strong>left mouse button</strong> adds stuff, double-clicking something edits properties (songs, patterns, instruments, DPCM)</li>
+<li>The <strong>right mouse button</strong> removes stuff. Right clicking in the header of the Sequencer or Piano Roll selects.</li>
+<li>The <strong>middle mouse button</strong> pans when you press it and zooms and you use the mouse wheel.</li>
+</ul>
+<p>If you are working on a trackpad, all actions requiring pressing the middle mouse buttons can be done with Alt+Left click. </p>
+<h1 id="main-window">Main Window</h1>
+<p>The UI was designed to be a simple as possible, there are almost no context menus.</p>
+<p>The main window has 4 main components:</p>
+<ul>
+<li>The Toolbar (on top)</li>
+<li>The Project Explorer (on the right) is where you add/remove/edit songs and instruments.</li>
+<li>The Sequencer (below the toolbar) is where you schedule your patterns on one of the 5 channels. It gives a high-level view of the song.</li>
+<li>The Piano Roll (below the sequencer) is where you edit your patterns.</li>
+</ul>
+<p><img alt="" src="../images/MainWindow.png#center" /></p>
+<p>At any given moment there is always:</p>
+<ul>
+<li>A selected channel, in bold in the sequencer</li>
+<li>A selected song, in bold in the project explorer song list</li>
+<li>A selected instrument, in bold in the project explorer instrument list.</li>
+</ul>
+<p>The sequencer and piano roll will display the information for the currently selected song. When pressing the keys on the piano roll, it will play notes for the currently selected instrument, and output it on the currently selected channel. The same applies if you have a MIDI keyboard connected.</p>
+<h1 id="toolbar">Toolbar</h1>
+<p>The main toolbar contains your usual stuff: file operation, undo/redo, timecode and play control.</p>
+<p><img alt="" src="../images/Toolbar.png#center" /></p>
+<h2 id="tooltip">Tooltip</h2>
+<p>Keyboard shortcuts or special actions are always displayed as tooltips in the upper-right corner of the toolbar. Please keep an eye on it to learn new functionalities.</p>
+<p><img alt="" src="../images/Tooltip.png#center" /></p>
+<h2 id="playingpausing-the-song">Playing/pausing the song</h2>
+<p>Besides the toolbar, space bar is used to play/pause the song. Ctrl-space plays in pattern loop mode, Shift-space plays in song loop mode.</p>
+<h2 id="changing-the-looping-mode">Changing the looping mode</h2>
+<p>There are 3 looping modes:</p>
+<ul>
+<li><strong>Song</strong>: loops the entire song</li>
+<li><strong>Pattern</strong>: loops at the end of the current pattern</li>
+<li><strong>None</strong>: stops at the end of the song</li>
+</ul>
+<h2 id="saving-the-project">Saving the project</h2>
+<p>Clicking on the icon save the project, right-clicking is a "save as..." and will prompt you for a new filename.</p>
+<h2 id="exporting-to-various-formats">Exporting to various formats</h2>
+<p>Please see the <a href="../importexport/">Import/Export</a> section for details on how to export to various formats.</p>
+<h2 id="cleanup-dialog">Cleanup dialog</h2>
+<p>Please see the <a href="../cleanup/">Cleanup</a> section for details on how to cleanup your project.</p>
+<h2 id="configuration-dialog">Configuration dialog</h2>
+<p>Please see the <a href="../config/">Configuration</a> section for details on how to configure FamiStudio.</p>
+<h1 id="project-explorer">Project Explorer</h1>
+<p>The project explorer displays the list of songs and instruments in the current project.</p>
+<p><img alt="" src="../images/ProjectExplorer.png#center" /></p>
+<p>For more details on what you can do with the Project Explorer, please check out these sections:
+* <a href="../song/">Editing Songs &amp; Project</a>
+* <a href="../instruments/">Editing Instruments</a></p>
+<h1 id="sequencer">Sequencer</h1>
+<p>The sequencer is where you organize the high-level structure of the song: which patterns play and when they play. The thumbnails of the patterns in the sequencer are by no mean accurate. Please visit the <a href="../sequencer/">Editing Patterns</a> section for more details.</p>
+<p><img alt="" src="../images/Sequencer.png#center" /></p>
+<h1 id="piano-roll">Piano Roll</h1>
+<p>The piano roll is where you editing the actual notes of the song, the instrument envelopes, as well as some special effects.</p>
+<p><img alt="" src="../images/PianoRoll.png#center" /></p>
+<p>Please check out the <a href="../pianoroll/">Editing Notes</a> section for more details.</p>
+<h1 id="keyboard-shortcuts">Keyboard shortcuts</h1>
+<p>Here is a list of useful keyboard shortcuts:</p>
+<ul>
+<li><strong>Space</strong>: Play/stop the stop</li>
+<li><strong>Ctrl+Space</strong>: Plays from beginning of current pattern and switch to pattern loop mode.</li>
+<li><strong>Shift+Space</strong>: Plays from current position and reverts back to song loop mode and </li>
+<li><strong>Home</strong>: Seeks back to beginning of the song.</li>
+<li><strong>Esc</strong>: Stops any stop, clears the selection.</li>
+<li><strong>Ctrl+Home</strong>: Seeks to beginning of the current pattern.</li>
+<li><strong>Ctrl+Z</strong>: Undo</li>
+<li><strong>Ctrl+Y</strong>: Redo</li>
+<li><strong>Ctrl+N</strong>: New project</li>
+<li><strong>Ctrl+S</strong>: Save</li>
+<li><strong>Ctrl+E</strong>: Export</li>
+<li><strong>Ctrl+O</strong>: Open</li>
+<li><strong>Delete</strong>: Delete selected patterns or notes.</li>
+<li><strong>Escape</strong>: Deselects patterns or notes, stops any sound that is stuck playing.</li>
+<li><strong>1...5</strong>: Changes the active channel (more than 5 if you have expansion audio enabled).</li>
+<li><strong>Ctrl+1...5</strong>: Force display a channel. (more than 5 if you have expansion audio enabled).</li>
+</ul>
+<p>Some keyboard shortcuts specific to the sequencer:</p>
+<ul>
+<li><strong>L+Click</strong>: Sets the loop point at the clicked pattern.</li>
+</ul>
+<p>Some keyboard shortcuts specific to the piano roll:</p>
+<ul>
+<li><strong>Ctrl+Click</strong>: Adds a stop note.</li>
+<li><strong>Shift+Click</strong>: Adds a release note.</li>
+<li><strong>S+Click</strong> (and drag): Creates or edit a slide note.</li>
+<li><strong>A+Click</strong>: Toggles the attack of a note.</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

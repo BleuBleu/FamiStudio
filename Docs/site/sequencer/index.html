@@ -4,27 +4,27 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="None">
         
         
-        <link rel="shortcut icon" href="img/favicon.ico">
-        <title>FamiStudio Documentation</title>
-        <link href="css/bootstrap.min.css" rel="stylesheet">
-        <link href="css/font-awesome.min.css" rel="stylesheet">
-        <link href="css/base.css" rel="stylesheet">
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Editing Patterns - FamiStudio Documentation</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/darcula.min.css">
-        <link href="css/extra.css" rel="stylesheet">
+        <link href="../css/extra.css" rel="stylesheet">
 
-        <script src="js/jquery-1.10.2.min.js" defer></script>
-        <script src="js/bootstrap.min.js" defer></script>
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
 
-    <body class="homepage">
+    <body>
         <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href=".">FamiStudio Documentation</a>
+                <a class="navbar-brand" href="..">FamiStudio Documentation</a>
                 <!-- Expander button -->
                 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
@@ -34,47 +34,47 @@
                 <div id="navbar-collapse" class="navbar-collapse collapse">
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
-                            <li class="navitem active">
-                                <a href="." class="nav-link">Welcome</a>
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Welcome</a>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li>
-    <a href="basics/" class="dropdown-item">Basics</a>
+    <a href="../basics/" class="dropdown-item">Basics</a>
 </li>
                                     
 <li>
-    <a href="pianoroll/" class="dropdown-item">Editing Notes</a>
+    <a href="../pianoroll/" class="dropdown-item">Editing Notes</a>
 </li>
                                     
 <li>
-    <a href="sequencer/" class="dropdown-item">Editing Patterns</a>
+    <a href="./" class="dropdown-item active">Editing Patterns</a>
 </li>
                                     
 <li>
-    <a href="instruments/" class="dropdown-item">Editing Instruments</a>
+    <a href="../instruments/" class="dropdown-item">Editing Instruments</a>
 </li>
                                     
 <li>
-    <a href="song/" class="dropdown-item">Editing Songs & Project</a>
+    <a href="../song/" class="dropdown-item">Editing Songs & Project</a>
 </li>
                                     
 <li>
-    <a href="importexport/" class="dropdown-item">Importing & Exporting Your Songs</a>
+    <a href="../importexport/" class="dropdown-item">Importing & Exporting Your Songs</a>
 </li>
                                     
 <li>
-    <a href="expansion/" class="dropdown-item">Using Expansion Audio</a>
+    <a href="../expansion/" class="dropdown-item">Using Expansion Audio</a>
 </li>
                                     
 <li>
-    <a href="cleanup/" class="dropdown-item">Cleaning-up your Project</a>
+    <a href="../cleanup/" class="dropdown-item">Cleaning-up your Project</a>
 </li>
                                     
 <li>
-    <a href="config/" class="dropdown-item">Configuring FamiStudio</a>
+    <a href="../config/" class="dropdown-item">Configuring FamiStudio</a>
 </li>
                                 </ul>
                             </li>
@@ -87,12 +87,12 @@
                             </a>
                         </li>
                             <li class="nav-item">
-                                <a rel="prev" class="nav-link disabled">
+                                <a rel="prev" href="../pianoroll/" class="nav-link">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a rel="next" href="basics/" class="nav-link">
+                                <a rel="next" href="../instruments/" class="nav-link">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -114,23 +114,33 @@
     <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
         <ul class="nav flex-column">
             
-            <li class="nav-item" data-level="1"><a href="#welcome" class="nav-link">Welcome</a>
+            <li class="nav-item" data-level="1"><a href="#editing-patterns" class="nav-link">Editing Patterns</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#seeking" class="nav-link">Seeking</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            
-            <li class="nav-item" data-level="1"><a href="#your-first-famistudio-song" class="nav-link">Your first FamiStudio song</a>
+            <li class="nav-item" data-level="2"><a href="#editing-patterns_1" class="nav-link">Editing patterns</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            
-            <li class="nav-item" data-level="1"><a href="#installation" class="nav-link">Installation</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="2"><a href="#windows" class="nav-link">Windows</a>
+            <li class="nav-item" data-level="2"><a href="#addingremoving-patterns" class="nav-link">Adding/removing patterns</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="2"><a href="#macos" class="nav-link">MacOS</a>
+            <li class="nav-item" data-level="2"><a href="#movingcopying-patterns" class="nav-link">Moving/copying patterns</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#cutcopypasting-patterns" class="nav-link">Cut/copy/pasting patterns</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#mutingsoloing-channels" class="nav-link">Muting/soloing channels</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#force-display-channel" class="nav-link">Force display channel</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -141,28 +151,33 @@
 </div></div>
                     <div class="col-md-9" role="main">
 
-<h1 id="welcome">Welcome</h1>
-<p>Welcome to the FamiStudio documentation. Please use the <strong>User Guide</strong> menu above to navigate the the various sections of the documentation or use the <strong>Search</strong> button to search for a specific topic.</p>
-<h1 id="your-first-famistudio-song">Your first FamiStudio song</h1>
-<p>The quickest way of getting started with FamiStudio is simply to follow this tutorial video step by step. It will walk you through the creation a simple song, from beginning to end.</p>
-<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
-    <iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/FArr3aUvvn4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
-
-<h1 id="installation">Installation</h1>
-<p>Depending on how you download FamiStudio, you might get scary warnings the first time you try to install or run it.</p>
-<h2 id="windows">Windows</h2>
-<p>On Windows, SmartScreen might say "Windows protected your PC".</p>
-<p><img alt="" src="images/SmartScreen1.png#center" /></p>
-<p>To bypass the warning, simply click "More Info" and then "Run Anyway".</p>
-<p><img alt="" src="images/SmartScreen2.png#center" /></p>
-<h2 id="macos">MacOS</h2>
-<p>On MacOS, GateKeeper is a bit more agressive. At first it will look like you simply cannot run it and it will give you the option to throw FamiStudio in the recycling bin.</p>
-<p><img alt="" src="images/GateKeeper1.png#center" /></p>
-<p>To bypass this warning, open the "Security and Privacy" settings and look for the warning saying that FamiStudio was blocked. </p>
-<p><img alt="" src="images/GateKeeper2.png#center" /></p>
-<p>Click "Open Anyway" and then you will have the option to launch it.</p>
-<p><img alt="" src="images/GateKeeper3.png#center" /></p></div>
+<h1 id="editing-patterns">Editing Patterns</h1>
+<p>The Sequencer is where you decide which pattern plays when. A pattern is a small portion of a song (usually of fixed length) that is likely to be repeated. </p>
+<p>Patterns are laid out on one of the five channels that NES support (more if you have expansion audio enabled).</p>
+<p><img alt="" src="../images/Sequencer.png#center" /></p>
+<h2 id="seeking">Seeking</h2>
+<p>Clicking in the timeline (header) of the sequencer will move the play position.</p>
+<h2 id="editing-patterns_1">Editing patterns</h2>
+<p>Clicking a pattern selects it and opens the piano roll for the current channel at the location of the pattern. Double-clicking a pattern allows renaming and changing its color (pattern names need to be unique per channel).</p>
+<p><img alt="" src="../images/EditPattern.png#center" /></p>
+<p>You can select multiple patterns by right-cliking and dragging in the header bar of the Sequencer. To un-select everything, simply press Esc. When multiple patterns are selected, only the color can be edited.</p>
+<p><img alt="" src="../images/PatternSelection2.png#center" /></p>
+<p>You can select multiple patterns in a rectangular grid, first select a pattern and shift-clicking to a second pattern.</p>
+<p><img alt="" src="../images/SquareSelection.png#center" /></p>
+<h2 id="addingremoving-patterns">Adding/removing patterns</h2>
+<p>You can add a new pattern by left-clicking on an empty space. Right-clicking deletes.</p>
+<h2 id="movingcopying-patterns">Moving/copying patterns</h2>
+<p>When one or multiple patterns are selected, dragging them will move them in the timeline. While dragging, holding Ctrl will copy a of the pattern(s). Note that when copying a pattern, it creates an instance of the same pattern, so modifying one instance will modify all of them.</p>
+<h2 id="cutcopypasting-patterns">Cut/copy/pasting patterns</h2>
+<p>When one or multiple patterns are selected, press CTRL+C (or CTRL+X for cut). Move the selection somewhere else and paste with CTRL+V.</p>
+<h2 id="mutingsoloing-channels">Muting/soloing channels</h2>
+<p>Left-clicking on the icon of a channel (Square, triangle, noise, DPCM) will toggle mute. Right-clicking will toggle solo.</p>
+<h2 id="force-display-channel">Force display channel</h2>
+<p>Clicking the tiny square icon next to the channel name will force display it in the piano roll.</p>
+<p><img alt="" src="../images/ForceDisplayButton.png#center" /></p>
+<p>Channels that are force displayed and are not the current channel will appear dimmed in the piano roll. This is useful when harmonizing between multiple channels, or editing drum patterns.</p>
+<p><img alt="" src="../images/ForceDisplayPianoRoll.png#center" /></p>
+<p>This can also achieved with the keyboard by pressing Ctrl + 1...5 (the number of the channel).</p></div>
             </div>
         </div>
 
@@ -171,11 +186,11 @@
             <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>
-            var base_url = ".",
+            var base_url = "..",
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
-        <script src="js/base.js" defer></script>
-        <script src="search/main.js" defer></script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -243,8 +258,3 @@
 
     </body>
 </html>
-
-<!--
-MkDocs version : 1.1
-Build Date UTC : 2020-04-20 15:20:02
--->

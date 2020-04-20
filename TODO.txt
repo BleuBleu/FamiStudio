@@ -1,6 +1,7 @@
 2.0.0
 =====
 
+- VRC7 distortion???
 - Gimmick:
 	- Relook at all the channels, make sur no error
 - CRASH: Rare crash in erika #3
@@ -32,25 +33,40 @@ Breaking changes
 - New documentation
 - New hands-on tutorial
 
+Tutorial series
+===============
+- First song
+- Import/export
+- Advanced tempo management & PAL
+- Expansion audio
+
 2.0.0 Documentation
 ===================
 x Switch to MkDocs
-- Left side panel looks like ass on Safari.
 - Subdivide different way:
-	- Basics + UI (what is what, tooltip, double-click props, play, pause, seek)
-		- You first song (video)
-	- Export to various formats
+	x Welcome
+		x Your first FamiStudio Song
+		x Installation
+	- Basics:  
+	- Editing notes
+		- Need to mention subdivision, frames, etc.
+	- Editing instruments
+		- Need to give link to expansion audio.
+	- Editing patterns 
+		- Need to show custom patterns + loop point.
+	- Editing song & project:
+		x Tempo + table.
+	- Import/Export from/to various formats
 		- NSF Import
 		- FamiTracker compatibility.
 		- FamiTone2 export.
-		- FamiStudio text format doc.
-	- Editing instruments
-	- Editing patterns
-	- Editing notes
-	- Tempo management
-	- Expansion audio, detail for each
+		- FamiStudio text format doc. ****
+	x Expansion audio
+		x Show all settings in project explorer.
 	- Configuration
-- Add tempo table like FamiTracker.
+	x Cleanup
+- Add links to video tutorial when they are done.
+- Update sitemap.
 
 Backlog:
 =========

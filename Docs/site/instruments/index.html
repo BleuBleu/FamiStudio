@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Editing Instruments - FamiStudio Documentation</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/darcula.min.css">
+        <link href="../css/extra.css" rel="stylesheet">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">FamiStudio Documentation</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Welcome</a>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../basics/" class="dropdown-item">Basics</a>
+</li>
+                                    
+<li>
+    <a href="../pianoroll/" class="dropdown-item">Editing Notes</a>
+</li>
+                                    
+<li>
+    <a href="../sequencer/" class="dropdown-item">Editing Patterns</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active">Editing Instruments</a>
+</li>
+                                    
+<li>
+    <a href="../song/" class="dropdown-item">Editing Songs & Project</a>
+</li>
+                                    
+<li>
+    <a href="../importexport/" class="dropdown-item">Importing & Exporting Your Songs</a>
+</li>
+                                    
+<li>
+    <a href="../expansion/" class="dropdown-item">Using Expansion Audio</a>
+</li>
+                                    
+<li>
+    <a href="../cleanup/" class="dropdown-item">Cleaning-up your Project</a>
+</li>
+                                    
+<li>
+    <a href="../config/" class="dropdown-item">Configuring FamiStudio</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../sequencer/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../song/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#editing-instruments" class="nav-link">Editing Instruments</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#editing-instrument-properties" class="nav-link">Editing instrument properties</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#addingremoving-songs-and-instruments" class="nav-link">Adding/removing songs and instruments</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#replacing-an-instrument-by-another" class="nav-link">Replacing an instrument by another</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-envelopes" class="nav-link">Editing envelopes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#copying-envelopes" class="nav-link">Copying envelopes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#deleting-envelopes" class="nav-link">Deleting envelopes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-instrument-envelopes" class="nav-link">Editing instrument envelopes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-dpcm-samples" class="nav-link">Editing DPCM samples</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="editing-instruments">Editing Instruments</h1>
+<p>The project explorer displays the list of songs and instruments in the current project. This section is only going to cover editing of instruments. Please refer to the <a href="../song/">Editing Songs &amp; Project</a> section to learn how to edit project and song properties.</p>
+<p><img alt="" src="../images/ProjectExplorer.png#center" /></p>
+<p>Most instrument (except DPCM samples) has 4 buttons :</p>
+<ul>
+<li>The duty cycle envelope</li>
+<li>The volume envelope</li>
+<li>The pitch envelope</li>
+<li>The arpeggio envelope</li>
+</ul>
+<p>If an instrument currently has no envelope for a particular type, it will appear dimmed.</p>
+<h2 id="editing-instrument-properties">Editing instrument properties</h2>
+<p>Double-clicking on an instrument will show its properties.</p>
+<ul>
+<li><strong>Relative pitch</strong> : By default, FamiStudio's pitch envelope are absolute. Meaning that the envelope values are the pitch you are going to hear, this is especially useful for vibrato where you can draw a simple sine wave. It is sometimes useful to have relative pitch envelope to create pitches that rapidly ascend or decend (useful for bassdrum sounds). This is how FamiTracker handles pitch envelopes.</li>
+</ul>
+<p><img alt="" src="../images/EditInstrument.png#center" /></p>
+<h2 id="addingremoving-songs-and-instruments">Adding/removing songs and instruments</h2>
+<p>You can add a song or instrument by pressing the "+" sign, and you can delete a song or instrument by right-clicking on it. Deleting an instrument will delete all notes used by that instrument. Note that there always needs to be at least one song in a project.</p>
+<h2 id="replacing-an-instrument-by-another">Replacing an instrument by another</h2>
+<p>Clicking on an instrument name and dragging it over another instrument will allow you to replace all notes of the first instrument by the second. This is useful prior to deleting an instrument.</p>
+<h2 id="editing-envelopes">Editing envelopes</h2>
+<p>Clicking on an envelope button will start editing it in the piano roll. The duty cycle button will cycle between the 4 possible settings: 12.5%, 25%, 50% and inverted 25% since FamiTone2 does not support duty cycle envelopes. For more info on how to edit or delete envelopes, please refer to the piano roll section.</p>
+<h2 id="copying-envelopes">Copying envelopes</h2>
+<p>Clicking on an envelope button and dragging it on another instrument will copy that envelope from the first to the second. Note that unlike FamiTracker, envelopes are not explicitly shared between instruments. Identical envelopes will be combined when exporting to FamiTone2, but it is your responsibility to optimize the content and ensure that you limit the number of unique envelopes.</p>
+<h2 id="deleting-envelopes">Deleting envelopes</h2>
+<p>Right-clicking on the icon of an envelope deletes it.</p>
+<h2 id="editing-instrument-envelopes">Editing instrument envelopes</h2>
+<p>Clicking on an envelope icon in the project explorer will open the envelope of that instrument in the piano roll. The length of the envelope can be changed by left-clicking (and potentially dragging) in the timeline of the piano roll. Setting the length of an envelope to zero will disable it.</p>
+<p><img alt="" src="../images/EditEnvelope.png#center" /></p>
+<p>The loop point of an envelope can be set by right-clicking in the timeline. Volume tracks are also allowed to have release envelopes. Release envelopes are played when a release note is encountered and terminates the loop by jumping to the release point. This is useful for fading out notes smoothly. The release point is set by right-dragging from the rightmost side of the envelope.</p>
+<p><img alt="" src="../images/EditEnvelopeRelease.png#center" /></p>
+<h2 id="editing-dpcm-samples">Editing DPCM samples</h2>
+<p>Clicking on the little icon next to the DPCM samples in the project explorer will open the piano roll in DPCM edition mode.</p>
+<p><img alt="" src="../images/EditDPCM.png#center" /></p>
+<p>Clicking anywhere on a note that does not have a DPCM sample associated will prompt you to open a .DMC file. No DMC edition tool is provided, you can use FamiTracker, RJDMC or any other tool. DPCM samples are assumed to have unique names and 2 samples with the same name will be assume to be the same. Double-clicking on an existing sample edits its pitch and toggle loop. Note that only notes between C1 and D6 are allowed to have DPCM samples.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

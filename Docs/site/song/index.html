@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Editing Songs & Project - FamiStudio Documentation</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/darcula.min.css">
+        <link href="../css/extra.css" rel="stylesheet">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">FamiStudio Documentation</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Welcome</a>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../basics/" class="dropdown-item">Basics</a>
+</li>
+                                    
+<li>
+    <a href="../pianoroll/" class="dropdown-item">Editing Notes</a>
+</li>
+                                    
+<li>
+    <a href="../sequencer/" class="dropdown-item">Editing Patterns</a>
+</li>
+                                    
+<li>
+    <a href="../instruments/" class="dropdown-item">Editing Instruments</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active">Editing Songs & Project</a>
+</li>
+                                    
+<li>
+    <a href="../importexport/" class="dropdown-item">Importing & Exporting Your Songs</a>
+</li>
+                                    
+<li>
+    <a href="../expansion/" class="dropdown-item">Using Expansion Audio</a>
+</li>
+                                    
+<li>
+    <a href="../cleanup/" class="dropdown-item">Cleaning-up your Project</a>
+</li>
+                                    
+<li>
+    <a href="../config/" class="dropdown-item">Configuring FamiStudio</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../instruments/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../importexport/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#editing-project-song-properties" class="nav-link">Editing Project &amp; Song properties</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#editing-project-properties" class="nav-link">Editing project properties</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#editing-song-properties" class="nav-link">Editing song properties</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="editing-project-song-properties">Editing Project &amp; Song properties</h1>
+<p>The project explorer displays the name of the project, the list of songs and instruments in the current project. </p>
+<p><img alt="" src="../images/ProjectExplorer.png#center" /></p>
+<h2 id="editing-project-properties">Editing project properties</h2>
+<p>Double-clicking on project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information are used when exporting to NSF, for example.</p>
+<p><img alt="" src="../images/EditProject.png#center" /></p>
+<p>The project properties is also where you select your <a href="../expansion/">Expansion Audio</a>. Expansion will add extra channels on top of the default 5 that the NES supported. Note that changing the expansion audio in a project will delete all data (patterns, notes, instrument) related to the previous expansion.</p>
+<p>Please visit the <a href="../expansion/">Expansion Audio</a> section for more detail about each expansion.</p>
+<p>The tempo mode will affect how the tempo of you songs is calculated, how much control you have over the notes of your song and how your song plays on PAL systems. Note that changing the tempo mode when you have songs created is possible, but not recommended, the conversion is quite crude at the moment.</p>
+<h3 id="famistudio-tempo-mode-default">FamiStudio tempo mode (default)</h3>
+<p>In this mode, you always have control over every single frame of the song (1/60th of a second). You will be able to choose a <strong>Note Length</strong> which has a fixed number a frame (1/60th of a second). More frames means a slower tempo. </p>
+<p>On PAL systems (which frames last 1/50th), the sound engine will skip over 1 or 2 frames to keep up the pace with NTSC. This will lead to a small error in playback speed, but a very predictable behavior.</p>
+<p>This table shows the relation between the number of NTSC frames, number of PAL frames and the tempo error generated.</p>
+<table>
+<thead>
+<tr>
+<th>Number of NTSC frames (1/60 sec)</th>
+<th>Number of PAL frames (1/50 sec)</th>
+<th>NTSC time (ms)</th>
+<th>PAL time (ms)</th>
+<th>Diff</th>
+<th>% Error</th>
+<th>BPM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>16.64</td>
+<td>20.00</td>
+<td>3.357933</td>
+<td>-20.18%</td>
+<td>900.0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+<td>33.28</td>
+<td>39.99</td>
+<td>6.715866</td>
+<td>-20.18%</td>
+<td>450.0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>3</td>
+<td>49.92</td>
+<td>59.99</td>
+<td>10.0738</td>
+<td>-20.18%</td>
+<td>300.0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>3</td>
+<td>66.56</td>
+<td>59.99</td>
+<td>-6.56547</td>
+<td>10.94%</td>
+<td>225.0</td>
+</tr>
+<tr>
+<td>5</td>
+<td>4</td>
+<td>83.20</td>
+<td>79.99</td>
+<td>-3.20754</td>
+<td>4.01%</td>
+<td>180.0</td>
+</tr>
+<tr>
+<td>6</td>
+<td>5</td>
+<td>99.84</td>
+<td>99.99</td>
+<td>0.150398</td>
+<td>-0.15%</td>
+<td>150.0</td>
+</tr>
+<tr>
+<td>7</td>
+<td>6</td>
+<td>116.47</td>
+<td>119.98</td>
+<td>3.508331</td>
+<td>-3.01%</td>
+<td>128.6</td>
+</tr>
+<tr>
+<td>8</td>
+<td>7</td>
+<td>133.11</td>
+<td>139.98</td>
+<td>6.866264</td>
+<td>-5.16%</td>
+<td>112.5</td>
+</tr>
+<tr>
+<td>9</td>
+<td>8</td>
+<td>149.75</td>
+<td>159.98</td>
+<td>10.2242</td>
+<td>-6.83%</td>
+<td>100.0</td>
+</tr>
+<tr>
+<td>10</td>
+<td>8</td>
+<td>166.39</td>
+<td>159.98</td>
+<td>-6.41507</td>
+<td>4.01%</td>
+<td>90.0</td>
+</tr>
+<tr>
+<td>11</td>
+<td>9</td>
+<td>183.03</td>
+<td>179.97</td>
+<td>-3.05714</td>
+<td>1.70%</td>
+<td>81.8</td>
+</tr>
+<tr>
+<td>12</td>
+<td>10</td>
+<td>199.67</td>
+<td>199.97</td>
+<td>0.300796</td>
+<td>-0.15%</td>
+<td>75.0</td>
+</tr>
+<tr>
+<td>13</td>
+<td>11</td>
+<td>216.31</td>
+<td>219.97</td>
+<td>3.658729</td>
+<td>-1.69%</td>
+<td>69.2</td>
+</tr>
+<tr>
+<td>14</td>
+<td>12</td>
+<td>232.95</td>
+<td>239.97</td>
+<td>7.016662</td>
+<td>-3.01%</td>
+<td>64.3</td>
+</tr>
+<tr>
+<td>15</td>
+<td>13</td>
+<td>249.59</td>
+<td>259.96</td>
+<td>10.37459</td>
+<td>-4.16%</td>
+<td>60.0</td>
+</tr>
+<tr>
+<td>16</td>
+<td>14</td>
+<td>266.23</td>
+<td>279.96</td>
+<td>13.73253</td>
+<td>-5.16%</td>
+<td>56.3</td>
+</tr>
+</tbody>
+</table>
+<p>Note that BPM values outside of the ones in this table can be created by putting multiples notes into a larger one. </p>
+<p>For example, Gimmick! uses a 11 frames per note, but puts 2 notes inside it. One of 5 frames and one of 6 frames. This creates an approximate tempo of 163.6 BPM and the different note lengths is not audible.</p>
+<p><img alt="" src="../images/GimmickNote.png#center" /></p>
+<p>The FamiTracker documentation has a <a href="http://famitracker.com/wiki/index.php?title=Common_tempo_values">handy chart</a> for these. Note that you are limited to 16 frames per note a the moment.</p>
+<h3 id="famitracker-tempo-mode">FamiTracker tempo mode</h3>
+<p>This mode is mostly for compatibility with FamiTracker. It uses the speed/tempo paradigm. Please check out the <a href="http://famitracker.com/wiki/index.php?title=Fxx">FamiTracker documentation</a> for a detailed explanation on how the playback speed is affected. If you import a FamiTracker Text or FTM file, it will be in this tempo mode. </p>
+<p>Only use this mode if you have specific compatibility needs with FamiTracker (such as exporting to an audio engine that only supports this tempo mode), as it will not receive any future improvement. When using this tempo mode, the <em>Speed</em> effect will be available in the effect panel.</p>
+<p>Delayed notes and delayed cuts are not supported and will likely never be.</p>
+<h2 id="editing-song-properties">Editing song properties</h2>
+<p>Double-clicking on the a song will allow you to change its name, color and other attributes. Names must be unique.</p>
+<p>This dialog will look very different depending on:</p>
+<ul>
+<li>The <strong>Tempo Mode</strong> of the current project.</li>
+<li>If the project uses expansion audio or not. Expansion audio cannot run on PAL, so all PAL-related information will be hidden.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>FamiStudio Tempo</th>
+<th>FamiTracker tempo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="" src="../images/EditSong.png#center" /></td>
+<td><img alt="" src="../images/EditSongFamiTracker.png#center" /></td>
+</tr>
+</tbody>
+</table>
+<p>Common properties:</p>
+<ul>
+<li><strong>Song length</strong>: The number of patterns in the song</li>
+<li><strong>Notes Per Pattern</strong>: Default number of notes in a pattern. Pattern length can be customized on a per-pattern basis in the Sequencer.</li>
+<li><strong>Notes Per Bar</strong>: Number of notes in a bar. The piano roll will draw a darker line at every bar. Simply a visual aid, does not affect the audio in any way</li>
+</ul>
+<p>Properties unique FamiTracker tempo mode:</p>
+<ul>
+<li><strong>Speed</strong>: How much the timer is increment each frame, values other than 150 might create uneven notes</li>
+<li><strong>Tempo</strong>: How many frames to wait before advancing to the next note (at least when using the integral tempo or 150)</li>
+</ul>
+<p>Properties unique FamiStudio tempo mode:</p>
+<ul>
+<li><strong>Frames Per Notes</strong>: How many frames (1/60th) in a typical notes. Values between 5 and 16 are recommended as they create the least error on PAL system.</li>
+<li><strong>PAL Skip Frame 1</strong>: Which frame will be skipped on PAL system. To keep up with NTSC, PAL will advance twice in one frame, once per note (twice in Frames Per Notes &gt;= 10).</li>
+<li><strong>PAL Skip Frame 2</strong>: Second frame to skip on PAL system. Only applies when Frames Per Notes &gt;= 10.</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

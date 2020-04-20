@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Importing & Exporting Your Songs - FamiStudio Documentation</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/darcula.min.css">
+        <link href="../css/extra.css" rel="stylesheet">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">FamiStudio Documentation</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Welcome</a>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../basics/" class="dropdown-item">Basics</a>
+</li>
+                                    
+<li>
+    <a href="../pianoroll/" class="dropdown-item">Editing Notes</a>
+</li>
+                                    
+<li>
+    <a href="../sequencer/" class="dropdown-item">Editing Patterns</a>
+</li>
+                                    
+<li>
+    <a href="../instruments/" class="dropdown-item">Editing Instruments</a>
+</li>
+                                    
+<li>
+    <a href="../song/" class="dropdown-item">Editing Songs & Project</a>
+</li>
+                                    
+<li>
+    <a href="./" class="dropdown-item active">Importing & Exporting Your Songs</a>
+</li>
+                                    
+<li>
+    <a href="../expansion/" class="dropdown-item">Using Expansion Audio</a>
+</li>
+                                    
+<li>
+    <a href="../cleanup/" class="dropdown-item">Cleaning-up your Project</a>
+</li>
+                                    
+<li>
+    <a href="../config/" class="dropdown-item">Configuring FamiStudio</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../song/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../expansion/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#exporting-songs" class="nav-link">Exporting Songs</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#wave-file-wav" class="nav-link">Wave File (*.wav)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#nintendo-sound-format-nsf" class="nav-link">Nintendo Sound Format (*.nsf)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#famitracker-text-txt" class="nav-link">FamiTracker Text (*.txt)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#famitone2-assembly-code-s-asm-dmc" class="nav-link">FamiTone2 Assembly Code (.s, .asm, *.dmc)</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#importing-songs" class="nav-link">Importing Songs</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="exporting-songs">Exporting Songs</h1>
+<h2 id="wave-file-wav">Wave File (*.wav)</h2>
+<p>Only a single song can be exported at a time. You can choose the sample rate, it is recommended to stick to 44.1KHz if you want the soung to be exactly as you hear it in FamiStudio. Lower sample rate might lack high frequencies.</p>
+<p>When exporting to WAV, the song will simply play once fully, all jump effects will be ignored.</p>
+<p><img alt="" src="../images/ExportWav.png#center" /></p>
+<h2 id="nintendo-sound-format-nsf">Nintendo Sound Format (*.nsf)</h2>
+<p>Export to NSF is very basic for now.</p>
+<p><img alt="" src="../images/ExportNsf.png#center" /></p>
+<p>Some limitations worth mentioning:</p>
+<ul>
+<li>If the song does not use sample, the maximum song size is between 24KB and 28KB.</li>
+<li>If the song uses samples, the maximum song size is between 8KB and 24KB depending on the size of the samples.</li>
+</ul>
+<p>Note that these size are not printed anywhere and are not related to the size of the *.fms file. Best to simply try and see if it works.</p>
+<h2 id="famitracker-text-txt">FamiTracker Text (*.txt)</h2>
+<p>You can export songs to FamiTracker using their Text Export format.</p>
+<p><img alt="" src="../images/ExportFamiTracker.png#center" /></p>
+<p>There are some limitations:</p>
+<ul>
+<li>Pitch envelopes with looping sections will be modified on export so that the looping part sums to zero. This is done to prevent pitch from drifting up/down every time the envelope looks. The reason for this is that FamiTracker's pitch envelopes are relative while FamiStudio's are absolute.</li>
+<li>Instruments using both pitch and arpeggio envlopes at the same time will not sound correct in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker re-triggers the pitch envelope at each arpeggio notes (probably the more sensible way), while FamiStudio simply runs both at the same time.</li>
+</ul>
+<p>... FIX THIS ...</p>
+<p>This will be somewhat worse when exporting to FamiTracker since FamiTracker does not have the 1-bit of fraction FamiStudio has.</p>
+<p>When importing from FamiTracker, all possible slide effects (1xx, 2xx, 3xx, Qxx and Rxx) will be converted to slide notes. Sometimes attack will be disabled as well to mimic the same behavior. This in an inherently imperfect process since they approaches are so different. For this reason, importing/exporting slide notes with FamiTracker should be considered a lossy process.</p>
+<p>When exporting to FamiTracker, FamiStudio will do its very best to choose which FamiTracker effect to use. Here are the general rules:</p>
+<ul>
+<li>If the slide note and its target are within 16 semitones, Qxx/Rxx (note slide up/down) will be favored as it is the most similar effect to what we are doing.</li>
+<li>Otherwise, if the previous note has the same pitch as the slide note, 3xx (auto-portamento) will be used.</li>
+<li>Finally, if none of these conditions are satisfied, 1xx/2xx (slide up/down) will be used. This is not ideal since the pitch might not exactly match the target note.</li>
+</ul>
+<p>... AND THIS...</p>
+<p>Here is a table relating the speeds in FamiStudio and FamiTracker (this is applied automatically when importing/exporting):</p>
+<table>
+<thead>
+<tr>
+<th>FamiTracker speed</th>
+<th>FamiTracker period</th>
+<th>FamiStudio speed</th>
+<th>FamiStudio period</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>64</td>
+<td>1</td>
+<td>64</td>
+</tr>
+<tr>
+<td>2</td>
+<td>32</td>
+<td>2</td>
+<td>32</td>
+</tr>
+<tr>
+<td>3</td>
+<td>21.3</td>
+<td>3</td>
+<td>21</td>
+</tr>
+<tr>
+<td>4</td>
+<td>16</td>
+<td>4</td>
+<td>16</td>
+</tr>
+<tr>
+<td>5</td>
+<td>12.8</td>
+<td>5</td>
+<td>13</td>
+</tr>
+<tr>
+<td>6</td>
+<td>10.7</td>
+<td>6</td>
+<td>11</td>
+</tr>
+<tr>
+<td>7</td>
+<td>9.1</td>
+<td>7</td>
+<td>9</td>
+</tr>
+<tr>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+</tr>
+<tr>
+<td>9</td>
+<td>7.1</td>
+<td>9</td>
+<td>7</td>
+</tr>
+<tr>
+<td>10</td>
+<td>6.4</td>
+<td>10</td>
+<td>6</td>
+</tr>
+<tr>
+<td>11</td>
+<td>5.8</td>
+<td>10</td>
+<td>6</td>
+</tr>
+<tr>
+<td>12</td>
+<td>5.3</td>
+<td>11</td>
+<td>5</td>
+</tr>
+<tr>
+<td>13</td>
+<td>4.9</td>
+<td>11</td>
+<td>5</td>
+</tr>
+<tr>
+<td>14</td>
+<td>4.6</td>
+<td>11</td>
+<td>5</td>
+</tr>
+<tr>
+<td>15</td>
+<td>4.3</td>
+<td>12</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<h2 id="famitone2-assembly-code-s-asm-dmc">FamiTone2 Assembly Code (<em>.s, </em>.asm, *.dmc)</h2>
+<p>Exporting to FamiTone2 works in the same way as the command line tools provided by Shiru.</p>
+<p><img alt="" src="../images/ExportFamiTone2.png#center" /></p>
+<p>When exporting file in seperate files, you can specific a name format template for each song. The {project} and {song} macros are available.</p>
+<p>When exporting as a single file (non-seperate), you will be prompt to name the output assembly file. If any of the exported songs uses DPCM samples, a .dmc file of the same name will also be outputted.</p>
+<h1 id="importing-songs">Importing Songs</h1></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
