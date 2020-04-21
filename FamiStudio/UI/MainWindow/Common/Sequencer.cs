@@ -775,7 +775,7 @@ namespace FamiStudio
                     if (left && setLoop)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                        Song.SetLoopPoint(patternIdx);
+                        Song.SetLoopPoint(Song.LoopPoint == patternIdx ? -1 : patternIdx);
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                     }
@@ -1272,7 +1272,7 @@ namespace FamiStudio
             }
             else if (IsMouseInHeader(e))
             {
-                tooltip = "{MouseLeft} Seek - {MouseLeft}{MouseLeft} Customize Pattern - {MouseRight} Select Colume - {MouseWheel} Pan";
+                tooltip = "{MouseLeft} Seek - {MouseLeft}{MouseLeft} Customize Pattern - {MouseRight} Select Colume - {L} {MouseLeft} Set Loop Point - {MouseWheel} Pan";
             }
             else if (IsMouseInTrackName(e))
             {
