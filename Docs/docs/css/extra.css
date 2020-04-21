@@ -26,7 +26,16 @@ h1:after
     display:block;
     border:1px solid #C6CDDA;
 }
+h2:after
+{
+    content:' ';
+    display:block;
+    border-bottom:1px solid #C6CDDA;
+}
 img[src*="#center"] {
     display: block;
     margin: 0 auto;
+}
+th {
+    text-align: center;
 }

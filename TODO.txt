@@ -1,9 +1,10 @@
 2.0.0
 =====
 
-- VRC7 distortion???
+- BUG: VRC7 distortion???
 - Gimmick:
 	- Relook at all the channels, make sur no error
+	- There is a volume 15 somewhere.
 - CRASH: Rare crash in erika #3
 - Make sure all try/catch are enabled.
 
@@ -35,36 +36,16 @@ Breaking changes
 
 Tutorial series
 ===============
-- First song
+x First song
+	- Insert of dashed line
+	- Duty cycle
+	- ROM export.
 - Import/export
 - Advanced tempo management & PAL
 - Expansion audio
 
 2.0.0 Documentation
 ===================
-x Switch to MkDocs
-- Subdivide different way:
-	x Welcome
-		x Your first FamiStudio Song
-		x Installation
-	- Basics:  
-	- Editing notes
-		- Need to mention subdivision, frames, etc.
-	- Editing instruments
-		- Need to give link to expansion audio.
-	- Editing patterns 
-		- Need to show custom patterns + loop point.
-	- Editing song & project:
-		x Tempo + table.
-	- Import/Export from/to various formats
-		- NSF Import
-		- FamiTracker compatibility.
-		- FamiTone2 export.
-		- FamiStudio text format doc. ****
-	x Expansion audio
-		x Show all settings in project explorer.
-	- Configuration
-	x Cleanup
 - Add links to video tutorial when they are done.
 - Update sitemap.
 

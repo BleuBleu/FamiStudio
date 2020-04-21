@@ -71,6 +71,7 @@ The effect panel can be opened by clicking the little triangle at the top-left o
 * **Volume**: The overall volume of the channel.
 * **Vib Speed**: Vibrato speed, used in conjuction with vibrato depth to create a vibrato effect.
 * **Vib Depth**: Vibrato depth, used in conjuction with vibrato speed to create a vibrato effect.
+* **Pitch**: Allow tweaking the fine-pitch of a channel.
 * **FDS Speed**: Famicom Disk System audio modulation speed (FDS audio expansion only).
 * **FDS Depth**: Famicom Disk System audio modulation depth (FDS audio expansion only).
 * **Speed**: Changes the speed of the song (FamiTracker tempo mode only)
@@ -79,18 +80,20 @@ Effects are edited by selecting and effect and dragging up or down to change the
 
 For effects that have huge values (such as FDS Depth), you can hold Shift to fine tune the exact value (a movement of 1 pixel will change the value by 1).
 
-![](images/Effect.png#center)
+![](images/VolumeTrack.png#center)
 
 ## Volume track
 
 The volume tracks dictates how loud the current channel should play. This volume is combined with volume envelope by multiplication (50% volume track x 50% envelope volume = 25% total volume). It is much more efficient to use volume envelopes wherever possible and only use volume tracks to control the global volume of the song.
 
-![](images/VolumeTrack.png#center)
-
 ## Vibrato depth & speed.
 
 Vibrato depth and speed are used to add vibrato to a portion of the song without having to bother creating a new instrument. Please note that vibrato will temporarely override any pitch envelope on the current instrument. When vibrato is disabled (by setting depth or speed, or both to zero), the instrument will essentially have no pitch envelope until a new note is played.
 
-![](images/Vibrato.png#center)
-
 The depth values for the vibrato are indentical to FamiTracker but the speeds are slightly different. The way FamiTracker implements vibrato, while clever, is flawed as it undersamples the vibrato curve at high speed, leading to aliasing which ends up with a low-frequency tone that has a "ringing" sound to it. Please see the [Import/Export](importexport.md) for a table that maps between FamiStudio and FamiTracker.
+
+## Pitch 
+
+Controls the global pitch of the track. Can be used to make an entire channel slightly out of tune.
+
+

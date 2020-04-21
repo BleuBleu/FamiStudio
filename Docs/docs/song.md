@@ -1,10 +1,8 @@
-# Editing Project & Song properties
+# Editing project properties
 
 The project explorer displays the name of the project, the list of songs and instruments in the current project. 
 
 ![](images/ProjectExplorer.png#center)
-
-## Editing project properties
 
 Double-clicking on project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information are used when exporting to NSF, for example.
 
@@ -16,15 +14,25 @@ Please visit the [Expansion Audio](expansion.md) section for more detail about e
 
 The tempo mode will affect how the tempo of you songs is calculated, how much control you have over the notes of your song and how your song plays on PAL systems. Note that changing the tempo mode when you have songs created is possible, but not recommended, the conversion is quite crude at the moment.
 
+## Tempo Modes
+
 ### FamiStudio tempo mode (default) 
 
-In this mode, you always have control over every single frame of the song (1/60th of a second). You will be able to choose a **Note Length** which has a fixed number a frame (1/60th of a second). More frames means a slower tempo. 
+In this mode, you always have control over every single frame (1/60th of a second of the song) and you always edit in NTSC. You will be able to choose a **Note Length** which has a fixed number a frame (1/60s). More frames means a slower tempo. 
 
-On PAL systems (which frames last 1/50th), the sound engine will skip over 1 or 2 frames to keep up the pace with NTSC. This will lead to a small error in playback speed, but a very predictable behavior.
+For example, in the image below, we have a 7 NTSC frames (1/60th of a sec) per note. On PAL system, it takes only 6 frames (1/50th of a sec) to cover approximately the same amount of time. 
+
+![](images/NtscPalFrames.png#center)
+
+Since our song is edited and stored as NTSC and we want to faitfully play it back on PAL systems, the solution is to run 2 NTSC frames, once every notes (twice if notes are >= 10 frames long). You can choose which of the frames will be skipped in the tempo settings. Note that the frame is not really skipped but merely run extremely fast. In the exemple below, on PAL systems, frame #2 is will almost impossible to hear since its sound will immediately be replaced by frame #3.
+
+![](images/PalSkipFrames.png#center)
+
+This will lead to a small error in playback speed on PAL system, but a very predictable behavior. 
 
 This table shows the relation between the number of NTSC frames, number of PAL frames and the tempo error generated.
 
-Number of NTSC frames (1/60 sec) | Number of PAL frames (1/50 sec) | NTSC time (ms) | PAL time (ms) | Diff | % Error | BPM
+Number of NTSC frames (1/60 sec) | Number of PAL frames (1/50 sec) | NTSC time (ms) | PAL time (ms) | Diff (ms) | Error (%) | BPM
 --- | --- | --- | --- | --- | --- | ---
 1 | 1 | 16.64 | 20.00 | 3.357933 | -20.18% | 900.0 
 2 | 2 | 33.28 | 39.99 | 6.715866 | -20.18% | 450.0 
@@ -57,9 +65,9 @@ This mode is mostly for compatibility with FamiTracker. It uses the speed/tempo 
 
 Only use this mode if you have specific compatibility needs with FamiTracker (such as exporting to an audio engine that only supports this tempo mode), as it will not receive any future improvement. When using this tempo mode, the *Speed* effect will be available in the effect panel.
 
-Delayed notes and delayed cuts are not supported and will likely never be.
+Delayed notes and delayed cuts are not supported and will likely never be as they are inherentely a tracker-centric feature.
 
-## Editing song properties
+# Editing song properties
 
 Double-clicking on the a song will allow you to change its name, color and other attributes. Names must be unique.
 
