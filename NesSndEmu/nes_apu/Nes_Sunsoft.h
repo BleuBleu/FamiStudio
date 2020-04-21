@@ -17,6 +17,7 @@ public:
 	void output( Blip_Buffer* );
 	void enable_channel(int idx, bool enabled);
 	void end_frame( cpu_time_t );
+	void mix_samples(blip_sample_t* sample_buffer, long sample_cnt);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	
 	enum { psg_clock  = 1789773 };
@@ -38,7 +39,6 @@ private:
 
 	int reg;
 	double vol;
-	int16_t sample_buffer[1000]; // This is very conservative, normally would be ceil(sample_rate / frame_rate).
 	struct __PSG* psg;
 	Blip_Buffer* output_buffer;
 

@@ -68,20 +68,18 @@ void Nes_Sunsoft::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 
 void Nes_Sunsoft::end_frame(cpu_time_t time)
 {
+}
+
+void Nes_Sunsoft::mix_samples(blip_sample_t* sample_buffer, long sample_cnt)
+{
 	if (!output_buffer)
 		return;
-
-	int sample_cnt = output_buffer->count_samples(time);
-	require(sample_cnt < array_count(sample_buffer));
 
 	for (int i = 0; i < sample_cnt; i++)
 	{
 		int sample = PSG_calc(psg);
-		sample = clamp((int)(sample * vol), -32768, 32767);
-		sample_buffer[i] = (int16_t)sample;
+		sample_buffer[i] = clamp((int16_t)(sample_buffer[i] + (int)(sample * vol)), -32768, 32767);
 	}
-
-	output_buffer->mix_samples(sample_buffer, sample_cnt);
 }
 
 void Nes_Sunsoft::start_seeking()

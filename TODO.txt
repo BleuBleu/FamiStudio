@@ -1,12 +1,12 @@
 2.0.0
 =====
 
-- BUG: VRC7 distortion???
 - Gimmick:
 	- Relook at all the channels, make sur no error
 	- There is a volume 15 somewhere.
 - CRASH: Rare crash in erika #3
 - Make sure all try/catch are enabled.
+- MAC: Recompile NesSndEmu.
 
 TESTING:
 ========

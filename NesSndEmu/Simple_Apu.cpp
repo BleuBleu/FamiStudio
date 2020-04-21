@@ -215,7 +215,14 @@ long Simple_Apu::samples_avail() const
 
 long Simple_Apu::read_samples( sample_t* p, long s )
 {
-	return buf.read_samples( p, s );
+	long count = buf.read_samples( p, s );
+
+	if (expansion == expansion_vrc7)
+		vrc7.mix_samples(p, s);
+	else if (expansion == expansion_sunsoft)
+		sunsoft.mix_samples(p, s);
+
+	return count;
 }
 
 void Simple_Apu::remove_samples(long s)
