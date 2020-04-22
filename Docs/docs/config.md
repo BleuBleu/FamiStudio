@@ -1,5 +1,7 @@
 # Configuring FamiStudio
 
+The configuration dialog is accessed from the main toolbar.
+
 ## Configuration Dialog
 
 The configuration dialog dialog is accessed from the toolbar.

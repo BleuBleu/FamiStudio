@@ -84,11 +84,11 @@ When changing the values of the sliders with huge values (such as the Mod Speed)
 
 ### Namco 163
 
-The N163 instruments have an extra envelope and a few extra parameter.
+The N163 instruments have an extra envelope and a few extra parameter. Note that FamiStudio's current implementation of N163 only supports a single waveform per instrument, unlike FamiTracker which has many.
 
 ![](images/N163.png#center)
 
-The extra envelopes are:
+Extra envelope:
 
 * **Waveform** : The waveform of the instrument. It will of a fixed length, as speficied by the "Wave Size" parameter.
 

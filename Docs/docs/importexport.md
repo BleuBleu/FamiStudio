@@ -46,7 +46,9 @@ There are some limitations:
 	* If the slide note and its target are within 16 semitones, Qxx/Rxx (note slide up/down) will be favored as it is the most similar effect to what we are doing.
 	* Otherwise, if the previous note has the same pitch as the slide note, 3xx (auto-portamento) will be used.
 	* Finally, if none of these conditions are satisfied, 1xx/2xx (slide up/down) will be used. This is not ideal since the pitch might not exactly match the target note.<br><br>
-	
+
+* Slide notes of VRC7 will definately not export perfectly due to the different way in which both applications handle VRC7 pitches.
+
 * Vibrato effect might sound slightly different once exported to FamiTracker. The speed values in FamiStudio are slightly different than FamiTracker. Here is a table relating the speeds in FamiStudio and FamiTracker (this is applied automatically when importing/exporting):
 
 FamiTracker speed | FamiTracker period | FamiStudio speed | FamiStudio period
@@ -120,7 +122,7 @@ Here is an example of a very short file:
 			PatternInstance Time="1" Pattern="Melody1"
 
 
-The possible types of objects and the are:
+The possible types of objects and their attributes:
 
 Object | Attributes | Mandatory | Description
 --- | --- | --- | ---
@@ -211,14 +213,15 @@ Note that only a small subset of features is supported. Only the following effec
 * Bxx (Jump) : Will be converted to loop point. 
 * Dxx (Skip) : Will be converted to a custom pattern length.
 * Fxx (Speed) : Only speed is supported.
-* Pxx (Fine pitch) : Same.
-* Hxx (FDS Modulation depth) : Same.
-* Ixx/Jxx (FDS Modulation speed) : Same.
+* Pxx (Fine pitch) : Fully supported.
+* Hxx (FDS Modulation depth) : Fully supported.
+* Ixx/Jxx (FDS Modulation speed) : Fully supported, but combined in one 16-bit value.
 
 Besides effects, there are also other limitations:
 
 * Namco 163 instrument can only have a single waveform. Any other waveform than zero will be ignored.
 * Namco 163 instrument only support wave size 4, 8, 16 and 32 and wave positions that are multiples of these sizes. Other values might lead to undefined behaviors.
+* VRC7 1xx/2xx/3xx/Qxx/Rxx effects will likely not sound like FamiTracker and will need manual corrections.
 
 When importing from FamiTracker, all possible slide effects (1xx, 2xx, 3xx, Qxx and Rxx) will be converted to slide notes. Sometimes attack will be disabled as well to mimic the same behavior. This in an inherently imperfect process since they approaches are so different. For this reason, importing/exporting slide notes with FamiTracker should be considered a **lossy** process.
 
@@ -228,7 +231,7 @@ The FamiStudio text format is support, please see the documentation above for th
 
 ## Nintendo Sound Format
 
-NSF (and NSFE) files can be imported in FamiStudio. When opening and NSF file, you will be presented a dialog box.
+NSF (and NSFE) files can be imported in FamiStudio. This includes NSF with expansion audio. When opening and NSF file, you will be presented a dialog box.
 
 ![](images/ImportNsf.png#center)
 
@@ -242,6 +245,6 @@ In the example below, we can imagine that the notes on the right were all using 
 
 ![](images/NsfMess.png#center)
 
-
+Only features that are supported by FamiStudio will be imported. Things like hardware sweeps & advanced DPCM manipulations will all be ignored.
 
 
