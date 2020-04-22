@@ -238,7 +238,7 @@ NSF file are essentially programs designed to run on actual hardware. They will 
 
 That being said, NSF can still be extremely useful to reverse engineer how songs were made. In fact, this is how most of the Demo Songs that come with FamiStudio were made. 
 
-In the example below, we can imagine that the notes on the left were all using an instrument with decreasing volume. The notes of the left were clearly using a vibrato effect or a pitch envelope. 
+In the example below, we can imagine that the notes on the right were all using the same instrument with decreasing volume. The notes of the left were clearly using a vibrato effect or a pitch envelope. 
 
 ![](images/NsfMess.png#center)
 

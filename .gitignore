@@ -12,6 +12,7 @@ obj/
 Debug/
 Release/
 packages/
+site/
 *.htm
 .DS_Store
 *.nsf

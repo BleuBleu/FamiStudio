@@ -99,8 +99,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="475.47504"
-     inkscape:cy="442.28016"
+     inkscape:cx="486.78477"
+     inkscape:cy="353.65447"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -139,7 +139,10 @@
        width="170"
        height="85"
        x="5"
-       y="87" />
+       y="87"
+       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames.png"
+       inkscape:export-xdpi="71.86721"
+       inkscape:export-ydpi="71.86721" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:0.5,0.5;stroke-dashoffset:0"
        d="M 10,147 V 112"
@@ -596,7 +599,10 @@
        width="130"
        height="65"
        x="5"
-       y="192" />
+       y="192"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames.png"
+       inkscape:export-xdpi="71.86721"
+       inkscape:export-ydpi="71.86721" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.50000001, 0.50000001;stroke-dashoffset:0;stroke-opacity:1"
        d="M 10,252 V 217"
@@ -686,7 +692,7 @@
        inkscape:export-xdpi="71.86721"
        inkscape:export-ydpi="71.86721" />
     <rect
-       style="fill:#212529;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#ffe44f;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect4616-9-8-5-58"
        width="20"
        height="8"
@@ -895,7 +901,7 @@
          style="font-size:5.29166651px;fill:#c6cdda;fill-opacity:1;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none">1</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#c6cdda;fill-opacity:1;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none"
+       style="font-style:normal;font-weight:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;"
        x="55.420181"
        y="240.92366"
        id="text4904-3-0-9-2"
@@ -906,7 +912,7 @@
          id="tspan4902-0-7-7-6"
          x="55.420181"
          y="240.92366"
-         style="font-size:5.29166651px;fill:#c6cdda;fill-opacity:1;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none">2-3</tspan></text>
+         style="font-size:5.29166651px;fill:#000000;fill-opacity:1;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;">2-3</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:5.29166651px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#c6cdda;fill-opacity:1;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none"
