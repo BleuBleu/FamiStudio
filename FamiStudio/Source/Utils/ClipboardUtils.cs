@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -15,28 +16,81 @@ namespace FamiStudio
 
 #if !FAMISTUDIO_WINDOWS
         static byte[] macClipboardData; // Cant copy between FamiStudio instance on MacOS.
+#else
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int RegisterClipboardFormat(string format);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int IsClipboardFormatAvailable(int format);
+        [DllImport("user32.dll")]
+        private static extern int OpenClipboard(int hwnd);
+        [DllImport("user32.dll")]
+        private static extern int GetClipboardData(int wFormat);
+        [DllImport("user32.dll", EntryPoint = "GetClipboardFormatNameA")]
+        private static extern int GetClipboardFormatName(int wFormat, string lpString, int nMaxCount);
+        [DllImport("kernel32.dll")]
+        private static extern int GlobalAlloc(int wFlags, int dwBytes);
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalLock(int hMem);
+        [DllImport("kernel32.dll")]
+        private static extern int GlobalUnlock(int hMem);
+        [DllImport("kernel32.dll")]
+        private static extern int GlobalSize(int mem);
+        [DllImport("user32.dll")]
+        private static extern int CloseClipboard();
+        [DllImport("user32.dll")]
+        private static extern int SetClipboardData(int wFormat, int hMem);
+        [DllImport("user32.dll")]
+        private static extern int EmptyClipboard();
+
+        const int GMEM_MOVEABLE = 2;
+
+        private static int format = -1;
 #endif
 
-        private static void SetClipboardData(byte[] data)
+        public static void Initialize()
         {
 #if FAMISTUDIO_WINDOWS
-            Clipboard.SetData("FamiStudio", data);
+            format = RegisterClipboardFormat("FamiStudio");
+#endif
+        }
+
+    private static void SetClipboardDataInternal(byte[] data)
+        {
+#if FAMISTUDIO_WINDOWS
+            var mem = GlobalAlloc(GMEM_MOVEABLE, data.Length);
+            var ptr = GlobalLock(mem);
+            Marshal.Copy(data, 0, ptr, data.Length);
+            GlobalUnlock(mem);
+
+            if (OpenClipboard(0) != 0)
+            {
+                SetClipboardData(format, mem);
+                CloseClipboard();
+            }
 #else
             macClipboardData = data;
 #endif
         }
 
-        private static byte[] GetClipboardData(uint magic)
+        private static byte[] GetClipboardDataInternal(uint magic, int maxSize = int.MaxValue)
         {
             byte[] buffer = null;
 #if FAMISTUDIO_WINDOWS
-            try
+            if (IsClipboardFormatAvailable(format) != 0)
             {
-                buffer = Clipboard.GetData("FamiStudio") as byte[];
-            }
-            catch
-            {
-                Debug.WriteLine("Random DisconnectedContext exception. Ignoring.");
+                if (OpenClipboard(0) != 0)
+                {
+                    var mem = GetClipboardData(format);
+                    if (mem != 0)
+                    {
+                        var size = Math.Min(maxSize, GlobalSize(mem));
+                        var ptr = GlobalLock(mem);
+                        buffer = new byte[size];
+                        Marshal.Copy(ptr, buffer, 0, size);
+                        GlobalUnlock(mem);
+                    }
+                    CloseClipboard();
+                }
             }
 #else
             buffer = macClipboardData;
@@ -48,9 +102,9 @@ namespace FamiStudio
             return buffer;
         }
 
-        public static bool ConstainsNotes    => GetClipboardData(MagicNumberClipboardNotes) != null;
-        public static bool ConstainsEnvelope => GetClipboardData(MagicNumberClipboardEnvelope) != null;
-        public static bool ConstainsPatterns => GetClipboardData(MagicNumberClipboardPatterns) != null;
+        public static bool ConstainsNotes    => GetClipboardDataInternal(MagicNumberClipboardNotes,    4) != null;
+        public static bool ConstainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null;
+        public static bool ConstainsPatterns => GetClipboardDataInternal(MagicNumberClipboardPatterns, 4) != null;
 
         private static void SavePatternList(ProjectSaveBuffer serializer, ICollection<Pattern> patterns)
         {
@@ -106,9 +160,9 @@ namespace FamiStudio
             // Match patterns by name, create missing ones and remap IDs.
             for (int i = 0; i < numPatterns; i++)
             {
-                var patId = patternIdNameMap[i].Item1;
+                var patId      = patternIdNameMap[i].Item1;
                 var patChannel = patternIdNameMap[i].Item2;
-                var patName = patternIdNameMap[i].Item3;
+                var patName    = patternIdNameMap[i].Item3;
 
                 if (serializer.Project.IsChannelActive(patChannel))
                 {
@@ -155,6 +209,66 @@ namespace FamiStudio
                 inst.SerializeState(serializer);
         }
 
+        private static void SaveSampleList(ProjectSaveBuffer serializer, IDictionary<int, DPCMSampleMapping> mappings)
+        {
+            int numMappings = mappings.Count;
+            serializer.Serialize(ref numMappings);
+
+            foreach (var kv in mappings)
+            {
+                var note    = kv.Key;
+                var mapping = kv.Value;
+
+                serializer.Serialize(ref note);
+                mapping.SerializeState(serializer);
+
+                var sampleName = mapping.Sample.Name;
+                var sampleData = mapping.Sample.Data;
+
+                serializer.Serialize(ref sampleName);
+                serializer.Serialize(ref sampleData);
+            }
+        }
+
+        private static bool LoadAndMergeSampleList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
+        {
+            int numMappings = 0;
+            serializer.Serialize(ref numMappings);
+
+            bool needMerge = false;
+            for (int i = 0; i < numMappings; i++)
+            {
+                int note = 0;
+                serializer.Serialize(ref note);
+
+                var mapping = new DPCMSampleMapping();
+                mapping.SerializeState(serializer);
+
+                string sampleName = null;
+                byte[] sampleData = null;
+
+                serializer.Serialize(ref sampleName);
+                serializer.Serialize(ref sampleData);
+
+                if (serializer.Project.GetDPCMMapping(note) == null)
+                {
+                    needMerge = true;
+
+                    if (!checkOnly && createMissing)
+                    {
+                        var sample = serializer.Project.FindMatchingSample(sampleData);
+
+                        if (sample == null)
+                            sample = serializer.Project.CreateDPCMSample(sampleName, sampleData);
+
+                        serializer.Project.MapDPCMSample(note, sample, mapping.Pitch, mapping.Loop);
+                    }
+                }
+            }
+
+            return needMerge;
+        }
+
         private static bool LoadAndMergeInstrumentList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
         {
             int numInstruments = 0;
@@ -178,7 +292,7 @@ namespace FamiStudio
             // Match instruments by name, create missing ones and remap IDs.
             for (int i = 0; i < numInstruments; i++)
             {
-                var instId = instrumentIdNameMap[i].Item1;
+                var instId   = instrumentIdNameMap[i].Item1;
                 var instType = instrumentIdNameMap[i].Item2;
                 var instName = instrumentIdNameMap[i].Item3;
 
@@ -217,66 +331,102 @@ namespace FamiStudio
             return needMerge;
         }
 
-        public static void SaveNotes(Project project, Note[] notes)
+        public static void SaveNotes(Project project, Note[] notes, bool dpcm)
         {
             if (notes == null)
             {
-                SetClipboardData(null);
+                SetClipboardDataInternal(null);
                 return;
             }
 
+            var serializer = new ProjectSaveBuffer(null);
             var instruments = new HashSet<Instrument>();
-            foreach (var note in notes)
+            var samples = new Dictionary<int, DPCMSampleMapping>();
+
+            if (dpcm)
             {
-                if (note.Instrument != null)
-                    instruments.Add(note.Instrument);
+                foreach (var note in notes)
+                {
+                    if (note != null)
+                    {
+                        var mapping = project.GetDPCMMapping(note.Value);
+                        if (mapping != null && mapping.Sample != null)
+                            samples[note.Value] = mapping;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var note in notes)
+                {
+                    if (note != null && note.Instrument != null)
+                        instruments.Add(note.Instrument);
+                }
             }
 
-            var serializer = new ProjectSaveBuffer(null);
-
+            SaveSampleList(serializer, samples);
             SaveInstrumentList(serializer, instruments);
-
-            int numNotes = notes.Length;
+            
+            var numNotes = notes.Length;
             serializer.Serialize(ref numNotes);
             foreach (var note in notes)
-                note.SerializeState(serializer);
+            {
+                if (note == null)
+                    Note.EmptyNote.SerializeState(serializer);
+                else
+                    note.SerializeState(serializer);
+            }
             
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
             var clipboardData = new List<byte>();
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardNotes));
             clipboardData.AddRange(buffer);
 
-            SetClipboardData(clipboardData.ToArray());
+            SetClipboardDataInternal(clipboardData.ToArray());
         }
 
-        public static bool ContainsMissingInstruments(Project project, bool notes)
+        public static bool ContainsMissingSamples(Project project, bool notes)
         {
-            var buffer = GetClipboardData(notes ? MagicNumberClipboardNotes : MagicNumberClipboardPatterns);
+            return false;
+        }
 
+        public static bool ContainsMissingInstrumentsOrSamples(Project project, bool notes, out bool missingSamples)
+        {
+            var buffer = GetClipboardDataInternal(notes ? MagicNumberClipboardNotes : MagicNumberClipboardPatterns);
+
+            missingSamples = false;
             if (buffer == null)
                 return false;
 
             var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version);
 
+            missingSamples = LoadAndMergeSampleList(serializer, true);
             return LoadAndMergeInstrumentList(serializer, true);
         }
 
-        public static Note[] LoadNotes(Project project, bool createMissingInstruments)
+        public static Note[] LoadNotes(Project project, bool createMissingInstruments, bool createMissingSamples)
         {
-            var buffer = GetClipboardData(MagicNumberClipboardNotes);
+            var buffer = GetClipboardDataInternal(MagicNumberClipboardNotes);
 
             if (buffer == null)
                 return null;
 
             var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version);
 
+            LoadAndMergeSampleList(serializer, false, createMissingSamples);
             LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
 
             int numNotes = 0;
             serializer.Serialize(ref numNotes);
             var notes = new Note[numNotes];
             for (int i = 0; i < numNotes; i++)
-                notes[i].SerializeState(serializer);
+            {
+                var note = new Note();
+                note.SerializeState(serializer);
+
+                if (!note.IsEmpty)
+                    notes[i] = note;
+            }
 
             project.SortInstruments();
 
@@ -291,12 +441,12 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 clipboardData.Add((byte)values[i]);
 
-            SetClipboardData(clipboardData.ToArray());
+            SetClipboardDataInternal(clipboardData.ToArray());
         }
 
         public static sbyte[] LoadEnvelopeValues()
         {
-            var buffer = GetClipboardData(MagicNumberClipboardEnvelope);
+            var buffer = GetClipboardDataInternal(MagicNumberClipboardEnvelope);
 
             if (buffer == null)
                 return null;
@@ -310,18 +460,21 @@ namespace FamiStudio
             return values;
         }
 
-        public static void SavePatterns(Project project, Pattern[,] patterns)
+        public static void SavePatterns(Project project, Pattern[,] patterns, Song.PatternCustomSetting[] customSettings = null)
         {
             if (patterns == null)
             {
-                SetClipboardData(null);
+                SetClipboardDataInternal(null);
                 return;
             }
 
             var uniqueInstruments = new HashSet<Instrument>();
             var uniquePatterns = new HashSet<Pattern>();
+            var uniqueDPCMMappings = new Dictionary<int, DPCMSampleMapping>();
             var numPatterns = patterns.GetLength(0);
             var numChannels = patterns.GetLength(1);
+
+            Debug.Assert(customSettings == null || customSettings.Length == numPatterns);
 
             for (int i = 0; i < numPatterns; i++)
             {
@@ -331,11 +484,23 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         uniquePatterns.Add(pattern);
-                        for (int k = 0; k < pattern.Song.PatternLength; k++)
+                        if (pattern.ChannelType == Channel.Dpcm)
                         {
-                            var inst = pattern.Notes[k].Instrument;
-                            if (inst != null)
-                                uniqueInstruments.Add(inst);
+                            foreach (var n in pattern.Notes.Values)
+                            {
+                                var mapping = project.GetDPCMMapping(n.Value);
+                                if (mapping != null && mapping.Sample != null)
+                                    uniqueDPCMMappings[n.Value] = mapping;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var n in pattern.Notes.Values)
+                            {
+                                var inst = n.Instrument;
+                                if (inst != null)
+                                    uniqueInstruments.Add(inst);
+                            }
                         }
                     }
                 }
@@ -343,12 +508,13 @@ namespace FamiStudio
 
             if (uniquePatterns.Count == 0)
             {
-                SetClipboardData(null);
+                SetClipboardDataInternal(null);
                 return;
             }
 
             var serializer = new ProjectSaveBuffer(null);
 
+            SaveSampleList(serializer, uniqueDPCMMappings);
             SaveInstrumentList(serializer, uniqueInstruments);
             SavePatternList(serializer, uniquePatterns);
 
@@ -365,24 +531,47 @@ namespace FamiStudio
                 }
             }
 
+            var hasCustomSettings = customSettings != null;
+            var tempoMode = project.TempoMode;
+
+            serializer.Serialize(ref hasCustomSettings);
+            serializer.Serialize(ref tempoMode);
+
+            if (hasCustomSettings)
+            {
+                for (int i = 0; i < numPatterns; i++)
+                {
+                    serializer.Serialize(ref customSettings[i].useCustomSettings);
+                    serializer.Serialize(ref customSettings[i].patternLength);
+                    serializer.Serialize(ref customSettings[i].noteLength);
+                    serializer.Serialize(ref customSettings[i].barLength);
+                    serializer.Serialize(ref customSettings[i].palSkipFrames[0]);
+                    serializer.Serialize(ref customSettings[i].palSkipFrames[1]);
+                }
+            }
+
             var buffer = Compression.CompressBytes(serializer.GetBuffer(), CompressionLevel.Fastest);
             var clipboardData = new List<byte>();
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardPatterns));
             clipboardData.AddRange(buffer);
 
-            SetClipboardData(clipboardData.ToArray());
+            SetClipboardDataInternal(clipboardData.ToArray());
         }
 
-        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments)
+        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments, bool createMissingSamples, out Song.PatternCustomSetting[] customSettings)
         {
-            var buffer = GetClipboardData(MagicNumberClipboardPatterns);
+            var buffer = GetClipboardDataInternal(MagicNumberClipboardPatterns);
 
             if (buffer == null)
+            {
+                customSettings = null;
                 return null;
+            }
 
             var decompressedBuffer = Compression.DecompressBytes(buffer, 4);
             var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
 
+            LoadAndMergeSampleList(serializer, false, createMissingSamples);
             LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
             LoadAndMergePatternList(serializer, song);
 
@@ -403,12 +592,36 @@ namespace FamiStudio
                 }
             }
 
+            var tempoMode = 0;
+            var hasCustomSettings = false;
+            serializer.Serialize(ref hasCustomSettings);
+            serializer.Serialize(ref tempoMode);
+
+            if (hasCustomSettings && tempoMode == project.TempoMode)
+            {
+                customSettings = new Song.PatternCustomSetting[numPatterns];
+                for (int i = 0; i < numPatterns; i++)
+                {
+                    customSettings[i] = new Song.PatternCustomSetting();
+                    serializer.Serialize(ref customSettings[i].useCustomSettings);
+                    serializer.Serialize(ref customSettings[i].patternLength);
+                    serializer.Serialize(ref customSettings[i].noteLength);
+                    serializer.Serialize(ref customSettings[i].barLength);
+                    serializer.Serialize(ref customSettings[i].palSkipFrames[0]);
+                    serializer.Serialize(ref customSettings[i].palSkipFrames[1]);
+                }
+            }
+            else
+            {
+                customSettings = null;
+            }
+
             return patterns;
         }
 
         public static void Reset()
         {
-            SetClipboardData(null);
+            SetClipboardDataInternal(null);
         }
     }
 }

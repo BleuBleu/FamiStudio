@@ -91,7 +91,7 @@ void Nes_Square::run( cpu_time_t time, cpu_time_t end_time )
 		offset = 0;
 	
 	const int timer_period = (period + 1) * 2;
-	if ( volume == 0 || period < 8 || (period + offset) >= 0x800 )
+	if ( volume == 0 || period < min_period || (period + offset) >= 0x800 )
 	{
 		if ( last_amp ) {
 			synth->offset( time, -last_amp, output );

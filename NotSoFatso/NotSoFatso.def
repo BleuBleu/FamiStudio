@@ -1,0 +1,15 @@
+LIBRARY   NOTSOFATSO
+EXPORTS
+	NsfOpen          @1
+	NsfGetTrackCount @2
+	NsfIsPal         @3
+	NsfGetExpansion  @4
+	NsfGetTitle      @5
+	NsfGetArtist     @6
+	NsfGetCopyright  @7
+	NsfGetTrackName  @8
+	NsfClose         @9
+	NsfSetTrack      @10
+	NsfRunFrame      @11
+	NsfGetState      @12
+

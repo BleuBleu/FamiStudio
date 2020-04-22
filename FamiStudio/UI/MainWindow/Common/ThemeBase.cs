@@ -63,7 +63,7 @@ namespace FamiStudio
             new RenderFontDefinition() { Name = "QuickSand", Size = 16, Alignment = 2 }, // MediumBigRight
             new RenderFontDefinition() { Name = "QuickSand", Size = 20 }, // Big
             new RenderFontDefinition() { Name = "QuickSand", Size = 20, Bold = true }, // BigBold
-            new RenderFontDefinition() { Name = "QuickSand", Size = 28 } // Huge
+            new RenderFontDefinition() { Name = "QuickSand", Size = 28, Alignment = 1 } // Huge
         };
 
         protected static RenderFont[] Fonts = new RenderFont[(int)RenderFontStyle.Max];
@@ -85,6 +85,7 @@ namespace FamiStudio
 
         public static Color DarkGreyLineColor1    = Color.FromArgb(  0,   0,   0);
         public static Color DarkGreyLineColor2    = Color.FromArgb( 33,  37,  41);
+        public static Color DarkGreyLineColor3    = Color.FromArgb( 38,  42,  46);
         public static Color DarkGreyFillColor1    = Color.FromArgb( 42,  48,  51);
         public static Color DarkGreyFillColor2    = Color.FromArgb( 49,  55,  61);
         public static Color MediumGreyFillColor1  = Color.FromArgb( 86,  91, 105);
@@ -101,6 +102,7 @@ namespace FamiStudio
         public RenderBrush MediumGreyFillBrush1 { get; protected set; }
         public RenderBrush DarkGreyLineBrush1   { get; protected set; }
         public RenderBrush DarkGreyLineBrush2   { get; protected set; }
+        public RenderBrush DarkGreyLineBrush3   { get; protected set; }
         public RenderBrush DarkGreyFillBrush1   { get; protected set; }
         public RenderBrush DarkGreyFillBrush2   { get; protected set; }
 
@@ -170,6 +172,7 @@ namespace FamiStudio
             MediumGreyFillBrush1 = g.CreateSolidBrush(MediumGreyFillColor1);
             DarkGreyLineBrush1 = g.CreateSolidBrush(DarkGreyLineColor1);
             DarkGreyLineBrush2 = g.CreateSolidBrush(DarkGreyLineColor2);
+            DarkGreyLineBrush3 = g.CreateSolidBrush(DarkGreyLineColor3);
             DarkGreyFillBrush1 = g.CreateSolidBrush(DarkGreyFillColor1);
             DarkGreyFillBrush2 = g.CreateSolidBrush(DarkGreyFillColor2);
 

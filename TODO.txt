@@ -1,21 +1,62 @@
-1.5.0: FDS + PAL
-================
-- Delayed cut + delayed note. This will allow us to to song without time = 1
-	- Delayed note delays the whole row, not just the note. Which is good i guess, it makes it behave like a real not at a tick level.
-	- What happens if you have a note at the 6th frame when running on PAL (which only has 5)???
-x FDS support in NesSndEmu 
-- FDS "envelope" in piano roll.
-- Project explorer advanced instrument params (move relative pitch env there).
-- Instrument folders
-- PAL support
+2.0.0
+=====
 
-========================
+- Gimmick:
+	- Relook at all the channels, make sur no error
+	- There is a volume 15 somewhere.
+- CRASH: Rare crash in erika #3
+- Make sure all try/catch are enabled.
+- MAC: Recompile NesSndEmu.
+
+TESTING:
+========
+- Test installer on Japanese machine.
+
+Breaking changes
+================
+- VRC6 saw duty (mention in FamiTracker compatibility section)
+
+2.0.0 Trailer
+=============
+- ROM export
+- All expansions
+- Fine pitch track
+- NSF import
+- Advance Tempo
+- PAL support
+- Custom pattern length/tempo + loop points
+- Duty cycle envelopes
+- Transform dialog
+- Binary FTM import
+- FamiStudio text import/export
+- Note dragging + audio preview
+- Quick channel switch (1,2,3,4,5) + (CTRL 1,2,3,4,5)
+- New documentation
+- New hands-on tutorial
+
+Tutorial series
+===============
+x First song
+	- Insert of dashed line
+	- Duty cycle
+	- ROM export.
+- Import/export
+- Advanced tempo management & PAL
+- Expansion audio
+
+2.0.0 Documentation
+===================
+- Add links to video tutorial when they are done.
+- Update sitemap.
 
 Backlog:
-- Mapper 031 support (export ROM directly).
-- Cleanup (merge duplicated patterns, instruments, remove unused stuff.
-- Fix crash on startup when there are no audio device 
-- Proper error messages when something fails (save, etc.)
-- Add taskbar progress bar + color to show playback state
-- Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).
-- Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
+=========
+- P1: Feature request from GitHub: Snap to 1/2, 1/4, etc.
+- P1: Fix crash on startup when there are no audio device (also freeze when switching audio devices)
+- P1: Proper error messages when something fails (save, etc.)
+- P1: Command line processing
+- P2: Add taskbar progress bar + color to show playback state
+- P2: Raw FDS modulation table envelope.
+- P2: Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
+- P2: Instrument folders
+- P2: Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).

@@ -8,25 +8,67 @@ namespace FamiStudio
         public const int Volume = 0;
         public const int Arpeggio = 1;
         public const int Pitch = 2;
-        public const int Max = 3;
-        public static readonly string[] EnvelopeStrings = { "Volume", "Arpeggio", "Pitch" };
+        public const int DutyCycle = 3;
+        public const int RegularCount = 4;
+        public const int FdsWaveform = 4;
+        public const int FdsModulation = 5;
+        public const int N163Waveform = 6;
+        public const int Count = 7;
+        public static readonly string[] EnvelopeNames = { "Volume", "Arpeggio", "Pitch", "Duty Cycle", "FDS Waveform", "FDS Modulation Table", "N163 Waveform" };
+        public static readonly string[] EnvelopeShortNames = { "Volume", "Arpeggio", "Pitch", "DutyCycle", "FDSWave", "FDSMod", "N163Wave" };
 
-        public const int MaxLength = 256;
+        public const byte WavePresetSine     = 0;
+        public const byte WavePresetTriangle = 1;
+        public const byte WavePresetSawtooth = 2;
+        public const byte WavePresetSquare50 = 3;
+        public const byte WavePresetSquare25 = 4;
+        public const byte WavePresetFlat     = 5;
+        public const byte WavePresetCustom   = 6;
+        public const byte WavePresetMax      = 7;
+        public static readonly string[] PresetNames = { "Sine", "Triangle", "Sawtooth", "Square 50%", "Square 25%", "Flat", "Custom" };
 
-        sbyte[] values = new sbyte[MaxLength];
+        sbyte[] values;
         int length;
         int loop = -1;
         int release = -1;
+        int maxLength = 256;
         bool relative = false;
+        bool canResize;
+        bool canLoop;
+        bool canRelease;
 
         public sbyte[] Values => values;
+        public bool CanResize => canResize;
+        public bool CanLoop => canLoop;
+        public bool CanRelease => canRelease;
+
+        private Envelope()
+        {
+        }
+
+        public Envelope(int type)
+        {
+            if (type == FdsWaveform)
+                maxLength = 64;
+            else if (type == FdsModulation || type == N163Waveform)
+                maxLength = 32;
+            else 
+                maxLength = 256;
+
+            values = new sbyte[maxLength];
+            canResize = type != FdsWaveform && type != FdsModulation && type != N163Waveform;
+            canRelease = type == Volume;
+            canLoop = type <= DutyCycle;
+            length = canResize ? 0 : maxLength;
+        }
 
         public int Length
         {
             get { return length; }
             set
             {
-                length = Utils.Clamp(value, 0, MaxLength);
+                if (canResize)
+                    length = Utils.Clamp(value, 0, maxLength);
                 if (loop >= length)
                     loop = -1;
                 if (release >= length)
@@ -39,12 +81,12 @@ namespace FamiStudio
             get { return loop; }
             set
             {
-                if (value >= 0)
+                if (value >= 0 && canLoop)
                 {
                     if (release >= 0)
                         loop = Utils.Clamp(value, 0, release - 1);
                     else
-                        loop = Math.Min(value, MaxLength);
+                        loop = Math.Min(value, maxLength);
 
                     if (loop >= length)
                         loop = -1;
@@ -62,10 +104,10 @@ namespace FamiStudio
             get { return release; }
             set
             {
-                if (value >= 0)
+                if (value >= 0 && canRelease)
                 {
                     if (loop >= 0)
-                        release = Utils.Clamp(value, loop + 1, MaxLength);
+                        release = Utils.Clamp(value, loop + 1, maxLength);
 
                     if (release >= length)
                         release = -1;
@@ -75,6 +117,106 @@ namespace FamiStudio
                     release = -1;
                 }
             }
+        }
+
+        public int MaxLength
+        {
+            get { return maxLength; }
+            set
+            {
+                maxLength = value;
+                if (!canResize)
+                    length = maxLength;
+                else if (length > maxLength)
+                    length = maxLength;
+            }
+        }
+
+        static readonly sbyte[] FdsModulationDeltas = new sbyte[] { 0, 1, 2, 4, 0, -4, -2, -1 };
+
+        public void ConvertFdsModulationToAbsolute()
+        {
+            ConvertFdsModulationToAbsolute(Values);
+        }
+
+        public static void ConvertFdsModulationToAbsolute(sbyte[] array)
+        {
+            // Force starting at zero.
+            array[0] = 0;
+
+            for (int i = 1; i < 32; i++)
+            {
+                if (array[i] == 4)
+                    array[i] = 0;
+                else
+                    array[i] = (sbyte)(array[i - 1] + FdsModulationDeltas[array[i]] * 2);
+            }
+        }
+
+        public sbyte[] BuildFdsModulationTable()
+        {
+            // FDS modulation table is encoded on 3 bits, each value is a delta
+            // with the exception of 4 which is a reset to zero. Since the 
+            // table is written in pair, these deltas are actually double.
+
+            // 0 =  0
+            // 1 = +1
+            // 2 = +2
+            // 3 = +4
+            // 4 = reset to 0
+            // 5 = -4
+            // 6 = -2
+            // 7 = -1
+
+            var mod = new sbyte[length];
+            var prev = 0;
+
+            // Force starting at zero.
+            mod[0] = 4;
+
+            for (int i = 1; i < length; i++)
+            {
+                int val = values[i];
+
+                if (val == 0)
+                {
+                    mod[i] = 4; // Reset to zero.
+                    prev   = 0;
+                }
+                else
+                {
+                    // Find best delta (greedy algorithm, probably not best approximation of curve).
+                    int minDiff = 99999;
+
+                    for (int j = 0; j < FdsModulationDeltas.Length; j++)
+                    {
+                        if (j == 4) continue;
+
+                        // Assume the delta will be applied twice.
+                        var newVal = prev + FdsModulationDeltas[j] * 2;
+                        var diff = Math.Abs(newVal - val);
+                        if (diff < minDiff && newVal >= -64 && newVal <= 63)
+                        {
+                            minDiff = diff;
+                            mod[i] = (sbyte)j;
+                        }
+                    }
+
+                    prev = prev + FdsModulationDeltas[mod[i]] * 2;
+                }
+            }
+
+            return mod;
+        }
+
+        public byte[] BuildN163Waveform()
+        {
+            var packed = new byte[length / 2];
+
+            for (int i = 0; i < length; i += 2)
+                packed[i / 2] = (byte)((byte)(values[i + 1] << 4) | (byte)(values[i + 0]));
+
+            return packed;
         }
 
         public bool Relative
@@ -96,14 +238,22 @@ namespace FamiStudio
             }
         }
 
-        public Envelope Clone()
+        public void ConvertToRelative()
+        {
+            for (int j = length - 1; j > 0; j--)
+                values[j] = (sbyte)(values[j] - values[j - 1]);
+        }
+
+        public Envelope ShallowClone()
         {
             var env = new Envelope();
-            env.Length = length;
-            env.Loop = loop;
-            env.Release = release;
-            env.Relative = relative;
-            values.CopyTo(env.values, 0);
+            env.length = length;
+            env.loop = loop;
+            env.release = release;
+            env.relative = relative;
+            env.maxLength = maxLength;
+            env.canResize = canResize;
+            env.values = values.Clone() as sbyte[];
             return env;
         }
 
@@ -117,7 +267,7 @@ namespace FamiStudio
                 speed >= 0 && speed <= Note.VibratoSpeedMax && 
                 depth >= 0 && depth <= Note.VibratoDepthMax);
 
-            var env = new Envelope();
+            var env = new Envelope(Envelope.Pitch);
 
             if (speed == 0 || depth == 0)
             {
@@ -130,10 +280,46 @@ namespace FamiStudio
                 env.Loop = 0;
 
                 for (int i = 0; i < env.Length; i++)
-                    env.Values[i] = (sbyte)(-Math.Sin(i * 2.0f * Math.PI / env.Length) * (VibratoDepthLookup[depth] / 2));
+                    env.Values[i] = (sbyte)Math.Round(-Math.Sin(i * 2.0f * Math.PI / env.Length) * (VibratoDepthLookup[depth] / 2));
             }
 
             return env;
+        }
+
+        public void SetFromPreset(int type, int preset)
+        {
+            GetMinMaxValue(null, type, out var min, out var max);
+
+            switch (preset)
+            {
+                case WavePresetSine:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, (float)Math.Sin(i * 2.0f * Math.PI / length) * -0.5f + 0.5f));
+                    break;
+                case WavePresetTriangle:
+                    for (int i = 0; i < length / 2; i++)
+                    {
+                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(length / 2 - 1)));
+                        values[length - i - 1] = values[i];
+                    }
+                    break;
+                case WavePresetSawtooth:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(length - 1)));
+                    break;
+                case WavePresetSquare50:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)(i >= length / 2 ? max : min);
+                    break;
+                case WavePresetSquare25:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)(i >= length / 4 ? max : min);
+                    break;
+                case WavePresetFlat:
+                    for (int i = 0; i < length; i++)
+                        values[i] = (sbyte)((min + max) / 2);
+                    break;
+            }
         }
 
         public uint CRC
@@ -154,6 +340,9 @@ namespace FamiStudio
         {
             get
             {
+                if (!canResize)
+                    return false;
+
                 if (length == 0)
                     return true;
 
@@ -167,9 +356,24 @@ namespace FamiStudio
             }
         }
 
-        public static void GetMinMaxValue(int type, out int min, out int max)
+        public static void GetMinMaxValue(Instrument instrument, int type, out int min, out int max)
         {
             if (type == Volume)
+            {
+                min = 0;
+                max = 15;
+            }
+            else if (type == DutyCycle)
+            {
+                min = 0;
+                max = instrument.ExpansionType == Project.ExpansionVrc6 ? 7 : 3;
+            }
+            else if (type == FdsWaveform)
+            {
+                min = 0;
+                max = 63;
+            }
+            else if (type == N163Waveform)
             {
                 min = 0;
                 max = 15;
@@ -177,7 +381,7 @@ namespace FamiStudio
             else
             {
                 min = -64;
-                max = 63;
+                max =  63;
             }
         }
 

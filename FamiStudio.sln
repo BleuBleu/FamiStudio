@@ -12,6 +12,8 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NesSndEmu", "NesSndEmu\SndEmu.vcxproj", "{CE0D60E2-1356-4531-825F-A159850FB9D5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NotSoFatso", "NotSoFatso\NotSoFatso.vcxproj", "{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,13 @@ Global
 		{CE0D60E2-1356-4531-825F-A159850FB9D5}.Release|Any CPU.ActiveCfg = Release|Win32
 		{CE0D60E2-1356-4531-825F-A159850FB9D5}.Release|x64.ActiveCfg = Release|x64
 		{CE0D60E2-1356-4531-825F-A159850FB9D5}.Release|x86.ActiveCfg = Release|Win32
+		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Debug|x64.ActiveCfg = Debug|Win32
+		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Debug|x86.ActiveCfg = Debug|Win32
+		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|Any CPU.ActiveCfg = Release|Win32
+		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|x64.ActiveCfg = Release|Win32
+		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|x86.ActiveCfg = Release|Win32
+		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

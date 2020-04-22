@@ -10,6 +10,8 @@ namespace FamiStudio
         void Serialize(ref bool b);
         void Serialize(ref byte b);
         void Serialize(ref sbyte b);
+        void Serialize(ref short i);
+        void Serialize(ref ushort i);
         void Serialize(ref int b, bool id = false);
         void Serialize(ref uint b);
         void Serialize(ref ulong b);
@@ -17,6 +19,7 @@ namespace FamiStudio
         void Serialize(ref string b);
         void Serialize(ref byte[] values);
         void Serialize(ref sbyte[] values);
+        void Serialize(ref short[] values);
         void Serialize(ref Song song);
         void Serialize(ref Instrument instrument);
         void Serialize(ref Pattern pattern, Channel channel);
@@ -66,6 +69,18 @@ namespace FamiStudio
             idx += sizeof(sbyte);
         }
 
+        public void Serialize(ref short i)
+        {
+            buffer.AddRange(BitConverter.GetBytes(i));
+            idx += sizeof(short);
+        }
+
+        public void Serialize(ref ushort i)
+        {
+            buffer.AddRange(BitConverter.GetBytes(i));
+            idx += sizeof(ushort);
+        }
+
         public void Serialize(ref int i, bool id = false)
         {
             buffer.AddRange(BitConverter.GetBytes(i));
@@ -113,6 +128,15 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 buffer.Add((byte)values[i]);
             idx += values.Length;
+        }
+
+        public void Serialize(ref short[] values)
+        {
+            buffer.AddRange(BitConverter.GetBytes(values.Length));
+            idx += sizeof(int);
+            for (int i = 0; i < values.Length; i++)
+                buffer.AddRange(BitConverter.GetBytes(values[i]));
+            idx += values.Length * sizeof(short);
         }
 
         public void Serialize(ref Song song)
@@ -201,6 +225,18 @@ namespace FamiStudio
             idx += sizeof(sbyte);
         }
 
+        public void Serialize(ref short i)
+        {
+            i = BitConverter.ToInt16(buffer, idx);
+            idx += sizeof(short);
+        }
+
+        public void Serialize(ref ushort i)
+        {
+            i = BitConverter.ToUInt16(buffer, idx);
+            idx += sizeof(ushort);
+        }
+
         public void Serialize(ref int i, bool id = false)
         {
             i = BitConverter.ToInt32(buffer, idx);
@@ -256,6 +292,18 @@ namespace FamiStudio
             }
         }
 
+        public void Serialize(ref short[] dest)
+        {
+            int len = BitConverter.ToInt32(buffer, idx);
+            idx += sizeof(int);
+            dest = new short[len];
+            for (int i = 0; i < dest.Length; i++)
+            {
+                dest[i] = BitConverter.ToInt16(buffer, idx);
+                idx += sizeof(short);
+            }
+        }
+
         public void Serialize(ref Song song)
         {
             int songId = -1;
@@ -273,14 +321,14 @@ namespace FamiStudio
         public void Serialize(ref Pattern pattern, Channel channel)
         {
             int patternId = -1;
-            Serialize(ref patternId);
+            Serialize(ref patternId, true);
             pattern = channel.GetPattern(patternId);
         }
 
         public void Serialize(ref DPCMSample sample)
         {
             int sampleId = -1;
-            Serialize(ref sampleId);
+            Serialize(ref sampleId, true);
             sample = project.GetSample(sampleId);
         }
 
@@ -304,4 +352,125 @@ namespace FamiStudio
         public bool IsForUndoRedo => undoRedo;
         public int Version => version;
     }
+    
+    public class ProjectCrcBuffer : ProjectBuffer
+    {
+        private uint crc = 0;
+
+        public ProjectCrcBuffer(uint crc = 0)
+        {
+            this.crc = crc;
+        }
+
+        public uint CRC => crc;
+
+        public void Serialize(ref bool b)
+        {
+            crc = CRC32.Compute((byte)(b ? 1 : 0), crc);
+        }
+
+        public void Serialize(ref byte b)
+        {
+            crc = CRC32.Compute(b, crc);
+        }
+
+        public void Serialize(ref sbyte b)
+        {
+            crc = CRC32.Compute((byte)b, crc);
+        }
+
+        public void Serialize(ref short i)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref ushort i)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref int i, bool id = false)
+        {
+            // Ignore IDs for CRC
+            if (!id)
+                crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref uint i)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref ulong i)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref System.Drawing.Color b)
+        {
+            // Ignore colors for CRC
+        }
+
+        public void Serialize(ref string str)
+        {
+            // Ignore names for CRC
+        }
+
+        public void Serialize(ref byte[] values)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(values.Length), crc);
+            crc = CRC32.Compute(values, crc);
+        }
+
+        public void Serialize(ref sbyte[] values)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(values.Length), crc);
+            crc = CRC32.Compute(values, crc);
+        }
+
+        public void Serialize(ref short[] values)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(values.Length), crc);
+            for (int i = 0; i < values.Length; i++)
+                crc = CRC32.Compute(BitConverter.GetBytes(values[i]), crc);
+        }
+        
+        public void Serialize(ref Song song)
+        {
+            int songId = song == null ? -1 : song.Id;
+            Serialize(ref songId);
+        }
+
+        public void Serialize(ref Instrument instrument)
+        {
+            int instrumentId = instrument == null ? -1 : instrument.Id;
+            Serialize(ref instrumentId);
+        }
+
+        public void Serialize(ref Pattern pattern, Channel channel)
+        {
+            int patternId = pattern == null ? -1 : pattern.Id;
+            Serialize(ref patternId);
+        }
+
+        public void Serialize(ref DPCMSample sample)
+        {
+            int sampleId = sample == null ? -1 : sample.Id;
+            Serialize(ref sampleId);
+        }
+
+        public void InitializeList<T>(ref List<T> list, int count) where T : new()
+        {
+        }
+
+        public void InitializeArray<T>(ref T[] array, int count) where T : new()
+        {
+        }
+
+        public Project Project => null;
+        public bool IsReading => false;
+        public bool IsWriting => true;
+        public bool IsForUndoRedo => false;
+        public int Version => Project.Version;
+    };
 }

@@ -132,6 +132,7 @@
 #else
 	#include <stddef.h>
 	#include <assert.h>
+	#include <string.h>
 #endif
 
 // blargg_err_t (NULL on success, otherwise error string)

@@ -8,32 +8,81 @@ namespace FamiStudio
     public class Song
     {
         public const int MaxLength = 256;
+        public const int MaxNoteLength = 16;
+
+        public const int NativeTempoNTSC = 150;
+        public const int NativeTempoPAL  = 125;
+
+        public class PatternCustomSetting
+        {
+            public bool useCustomSettings;
+            public int  patternLength;
+            public int  noteLength;
+            public int  barLength;
+            public int[] palSkipFrames = new int[2];
+
+            public void Clear()
+            {
+                useCustomSettings = false;
+                patternLength = 0;
+                noteLength = 0;
+                barLength = 0;
+                palSkipFrames[0] = 0;
+                palSkipFrames[1] = 0;
+            }
+
+            public PatternCustomSetting Clone()
+            {
+                var clone = new PatternCustomSetting();
+                clone.useCustomSettings = useCustomSettings;
+                clone.patternLength = patternLength;
+                clone.noteLength = noteLength;
+                clone.barLength = barLength;
+                clone.palSkipFrames[0] = palSkipFrames[0];
+                clone.palSkipFrames[1] = palSkipFrames[1];
+                return clone;
+            }
+        };
 
         private int id;
         private Project project;
         private Channel[] channels;
         private Color color;
-        private int patternLength = 256;
-        private int songLength = 64;
-        private int barLength = 16;
+        private int patternLength = 96;
+        private int songLength = 16;
+        private int barLength = 24;
         private string name;
-        private int tempo = 150;
-        private int speed = 6;
+        private int loopPoint = 0;
+        private PatternCustomSetting[] patternCustomSettings = new PatternCustomSetting[Song.MaxLength];
+        private int[] patternStartNote = new int[Song.MaxLength + 1];
+
+        // These are specific to FamiTracker tempo mode
+        private int famitrackerTempo = 150;
+        private int famitrackerSpeed = 6;
+
+        // These are for FamiStudio tempo mode
+        private int noteLength = 10;
+        private int[] palSkipFrames = new int[2];
 
         public int Id => id;
         public Project Project => project;
         public Channel[] Channels => channels;
         public Color Color { get => color; set => color = value; }
         public string Name { get => name; set => name = value; }
-        public int Tempo { get => tempo; set => tempo = value; }
-        public int Speed { get => speed; set => speed = value; }
         public int Length { get => songLength; }
         public int PatternLength { get => patternLength; }
         public int BarLength { get => barLength; }
+        public int LoopPoint { get => loopPoint; }
+        public bool UsesFamiStudioTempo => project.UsesFamiStudioTempo;
+        public bool UsesFamiTrackerTempo => project.UsesFamiTrackerTempo;
+        public int FamitrackerTempo { get => famitrackerTempo; set => famitrackerTempo = value; }
+        public int FamitrackerSpeed { get => famitrackerSpeed; set => famitrackerSpeed = value; }
+        public int[] PalSkipFrames => palSkipFrames;
 
         public Song()
         {
             // For serialization.
+            CreateCustomSettings();
         }
 
         public Song(Project project, int id, string name)
@@ -43,113 +92,259 @@ namespace FamiStudio
             this.name = name;
             this.color = Color.Azure;
 
+            CreateCustomSettings();
+            GetDefaultPalSkipFrames(noteLength, palSkipFrames);
+            SetDefaultsForTempoMode(project.TempoMode);
             CreateChannels();
+            UpdatePatternStartNotes();
         }
 
-        public void CreateChannels(bool preserve = false)
+        public void SetDefaultsForTempoMode(int tempoMode)
+        {
+            if (tempoMode == Project.TempoFamiStudio)
+            {
+                noteLength = 10;
+                GetDefaultPalSkipFrames(noteLength, palSkipFrames);
+                barLength = noteLength * 4;
+            }
+            else
+            {
+                famitrackerTempo = Song.NativeTempoNTSC;
+                famitrackerSpeed = 10;
+                barLength = 4;
+            }
+
+            patternLength = barLength * 4;
+        }
+
+        private void CreateCustomSettings()
+        {
+            for (int i = 0; i < patternCustomSettings.Length; i++)
+                patternCustomSettings[i] = new PatternCustomSetting();
+        }
+
+        public void CreateChannels(bool preserve = false, int numChannelsToPreserve = Channel.ExpansionAudioStart)
         {
             int channelCount = project.GetActiveChannelCount();
 
             if (preserve)
-                Array.Resize(ref channels, channelCount);
-            else
-                channels = new Channel[channelCount];
-
-            int idx = preserve ? Channel.ExpansionAudioStart : 0;
-            for (int i = idx; i < Channel.Count; i++)
             {
-                if (project.IsChannelActive(i))
-                    channels[idx++] = new Channel(this, i, songLength);
+                Array.Resize(ref channels, channelCount);
+                for (int i = numChannelsToPreserve; i < channels.Length; i++)
+                    channels[i] = null;
+            }
+            else
+            {
+                channels = new Channel[channelCount];
+            }
+
+            for (int i = 0; i < Channel.Count; i++)
+            {
+                var idx = Channel.ChannelTypeToIndex(i);
+                if (project.IsChannelActive(i) && channels[idx] == null)
+                    channels[idx] = new Channel(this, i, songLength);
+            }
+        }
+
+        public void DuplicateInstancesWithDifferentLengths()
+        {
+            foreach (var channel in channels)
+            {
+                channel.DuplicateInstancesWithDifferentLengths();
             }
         }
 
         public bool Split(int factor)
         {
+            DuplicateInstancesWithDifferentLengths();
+
             if (factor == 1)
                 return true;
 
-            if ((patternLength % factor) == 0 && (songLength * factor) < MaxLength)
+            var numNotes = patternLength / (UsesFamiStudioTempo ? noteLength : 1);
+
+            if ((numNotes % factor) == 0 && (songLength * factor) < MaxLength)
             {
-                foreach (var channel in channels)
+                var oldChannelPatterns  = new Pattern[channels.Length][];
+                var oldChannelInstances = new Pattern[channels.Length][];
+
+                for (int c = 0; c < channels.Length; c++)
                 {
-                    channel.Split(factor);
+                    var channel = channels[c];
+
+                    oldChannelPatterns[c]  = channel.Patterns.ToArray();
+                    oldChannelInstances[c] = channel.PatternInstances.Clone() as Pattern[];
+
+                    Array.Clear(channel.PatternInstances, 0, channel.PatternInstances.Length);
+
+                    channel.Patterns.Clear();
                 }
 
-                patternLength /= factor;
-                barLength /= factor;
-                songLength *= factor;
+                var newSongLength = 0;
+                var newLoopPoint = 0;
+                var newPatternCustomSettings = new List<PatternCustomSetting>();
+                var newPatternMap = new Dictionary<Pattern, Pattern[]>();
+                var newNumNotes = numNotes / factor;
 
-                if (barLength <= 1)
+                for (int p = 0; p < songLength; p++)
                 {
-                    barLength = 2;
-                }
+                    var patternLen        = GetPatternLength(p);
+                    var patternSkipFrames = UsesFamiStudioTempo ? GetPatternPalSkipFrames(p) : palSkipFrames;
+                    var patternBarLength  = UsesFamiStudioTempo ? GetPatternBarLength(p)  : barLength;
+                    var patternNoteLength = UsesFamiStudioTempo ? GetPatternNoteLength(p) : 1;
+                    var patternNumNotes   = patternLen / patternNoteLength;
+                    var patternNewLen     = newNumNotes * patternNoteLength;
 
-                if ((patternLength % barLength) != 0)
-                {
-                    bool found = false;
-                    for (barLength = patternLength / 2; barLength >= 2; barLength--)
+                    var chunkCount = (int)Math.Ceiling(patternLen / (float)patternNewLen);
+
+                    if (p == loopPoint)
+                        newLoopPoint = newSongLength;
+
+                    if (patternCustomSettings[p].patternLength == 0)
                     {
-                        if (patternLength % barLength == 0)
+                        for (int i = 0; i < chunkCount; i++)
+                            newPatternCustomSettings.Add(new PatternCustomSetting());
+                    }
+                    else
+                    {
+                        for (int i = 0, notesLeft = patternLen; i < chunkCount; i++, notesLeft -= patternNewLen)
                         {
-                            found = true;
-                            break;
+                            var customSettings = new PatternCustomSetting();
+                            customSettings.useCustomSettings = true;
+                            customSettings.patternLength = Math.Min(patternNewLen, notesLeft);
+                            customSettings.barLength = patternBarLength;
+                            customSettings.noteLength = patternNoteLength;
+                            customSettings.palSkipFrames[0] = patternSkipFrames[0];
+                            customSettings.palSkipFrames[1] = patternSkipFrames[1];
+                            newPatternCustomSettings.Add(customSettings);
                         }
                     }
 
-                    if (!found)
+                    newSongLength += chunkCount;
+
+                    for (int c = 0; c < channels.Length; c++)
                     {
-                        barLength = patternLength;
+                        var channel = channels[c];
+                        var pattern = oldChannelInstances[c][p];
+
+                        if (pattern != null)
+                        {
+                            Pattern[] splitPatterns = null;
+
+                            if (!newPatternMap.TryGetValue(pattern, out splitPatterns))
+                            {
+                                splitPatterns = new Pattern[chunkCount];
+
+                                for (int i = 0, notesLeft = patternLen; i < chunkCount; i++, notesLeft -= patternNewLen)
+                                {
+                                    splitPatterns[i] = new Pattern(Project.GenerateUniqueId(), this, channel.Type, channel.GenerateUniquePatternName(pattern.Name));
+                                    splitPatterns[i].Color = pattern.Color;
+
+                                    var noteIdx0 = (i + 0) * patternNewLen;
+                                    var noteIdx1 = noteIdx0 + Math.Min(patternNewLen, notesLeft);
+
+                                    foreach (var kv in pattern.Notes)
+                                    {
+                                        if (kv.Key >= noteIdx0 && kv.Key < noteIdx1)
+                                            splitPatterns[i].SetNoteAt(kv.Key - noteIdx0, kv.Value.Clone());
+                                    }
+
+                                    splitPatterns[i].ClearLastValidNoteCache();
+                                }
+
+                                newPatternMap[pattern] = splitPatterns;
+                                channel.Patterns.AddRange(splitPatterns);
+                            }
+
+                            Debug.Assert(splitPatterns.Length == chunkCount);
+
+                            for (int i = 0; i < splitPatterns.Length; i++)
+                                channel.PatternInstances[newPatternCustomSettings.Count - chunkCount + i] = splitPatterns[i];
+                        }
                     }
                 }
 
+                while (newPatternCustomSettings.Count != MaxLength)
+                    newPatternCustomSettings.Add(new PatternCustomSetting());
+
+                patternCustomSettings = newPatternCustomSettings.ToArray();
+
+                patternLength = (patternLength / (UsesFamiStudioTempo ? noteLength : 1)) / factor * (UsesFamiStudioTempo ? noteLength : 1);
+                songLength = newSongLength;
+                loopPoint = newLoopPoint;
+
+                UpdatePatternStartNotes();
+
                 return true;
             }
+
             return false;
         }
 
         public void SetLength(int newLength)
         {
+            Debug.Assert(newLength <= MaxLength);
+
             songLength = newLength;
 
             foreach (var channel in channels)
                 channel.ClearPatternsInstancesPastSongLength();
+
+            if (loopPoint >= songLength)
+                loopPoint = 0;
+
+            UpdatePatternStartNotes();
         }
 
-        public void SetPatternLength(int newLength)
+        public void SetDefaultPatternLength(int newLength)
         {
             patternLength = newLength;
+            barLength = Math.Min(barLength, patternLength);
 
-            foreach (var channel in channels)
-                channel.ClearNotesPastSongLength();
+            UpdatePatternStartNotes();
         }
 
         public void SetBarLength(int newBarLength)
         {
-            if (Array.IndexOf(GenerateBarLengths(patternLength), newBarLength) >= 0)
-            {
+            if (barLength < patternLength)
                 barLength = newBarLength;
-            }
         }
 
-        public static int[] GenerateBarLengths(int patternLen)
+        public void SetLoopPoint(int loop)
         {
-            var barLengths = new List<int>();
+            loopPoint = Math.Min(loop, songLength - 1);
+        }
 
-            for (int i = patternLen; i >= 2; i--)
+        public bool IsEmpty
+        {
+            get
             {
-                if (patternLen % i == 0)
+                foreach (var channel in channels)
                 {
-                    barLengths.Add(i);
+                    foreach (var pattern in channel.Patterns)
+                    {
+                        if (!pattern.IsEmpty)
+                            return false;
+                    }
                 }
-            }
 
-            return barLengths.ToArray();
+                return true;
+            }
         }
 
         public void SetSensibleBarLength()
         {
-            var barLengths = GenerateBarLengths(patternLength);
-            barLength = barLengths[barLengths.Length / 2];
+            if (UsesFamiTrackerTempo)
+            {
+                var barLengths = Utils.GetFactors(patternLength);
+                barLength = barLengths[barLengths.Length / 2];
+            }
+            else
+            {
+                barLength = noteLength * 4;
+                while (barLength > patternLength)
+                    barLength /= 2;
+            }
         }
 
         public Pattern GetPattern(int id)
@@ -164,19 +359,85 @@ namespace FamiStudio
             return null;
         }
 
+        public void ClearPatternCustomSettings(int patternIdx)
+        {
+            patternCustomSettings[patternIdx].Clear();
+            UpdatePatternStartNotes();
+        }
+
+        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customNoteLength = 0, int customBarLength = 0, int[] palSkipFrames = null)
+        {
+            Debug.Assert(customPatternLength > 0 && customPatternLength < Pattern.MaxLength);
+
+            patternCustomSettings[patternIdx].Clear();
+            patternCustomSettings[patternIdx].useCustomSettings = true;
+
+            if (project.UsesFamiTrackerTempo)
+            {
+                Debug.Assert(customNoteLength == 0);
+                Debug.Assert(customBarLength == 0);
+
+                patternCustomSettings[patternIdx].patternLength = customPatternLength;
+            }
+            else
+            {
+                Debug.Assert(customPatternLength % customNoteLength == 0);
+                Debug.Assert(customNoteLength != 0);
+                Debug.Assert(customBarLength != 0);
+                Debug.Assert(palSkipFrames.Length == 2);
+
+                patternCustomSettings[patternIdx].patternLength = customPatternLength;
+                patternCustomSettings[patternIdx].barLength = customBarLength;
+                patternCustomSettings[patternIdx].noteLength = customNoteLength;
+                patternCustomSettings[patternIdx].palSkipFrames[0] = palSkipFrames[0];
+                patternCustomSettings[patternIdx].palSkipFrames[1] = palSkipFrames[1];
+            }
+
+            UpdatePatternStartNotes();
+        }
+
+        public PatternCustomSetting GetPatternCustomSettings(int patternIdx)
+        {
+            return patternCustomSettings[patternIdx];
+        }
+
+        public bool PatternHasCustomSettings(int patternIdx)
+        {
+            return patternCustomSettings[patternIdx].useCustomSettings;
+        }
+
+        public int GetPatternNoteLength(int patternIdx)
+        {
+            var settings = patternCustomSettings[patternIdx];
+            return settings.useCustomSettings ? settings.noteLength : noteLength;
+        }
+
+        public int GetPatternBarLength(int patternIdx)
+        {
+            var settings = patternCustomSettings[patternIdx];
+            return settings.useCustomSettings && UsesFamiStudioTempo ? settings.barLength : barLength;
+        }
+
+        public int[] GetPatternPalSkipFrames(int patternIdx)
+        {
+            var settings = patternCustomSettings[patternIdx];
+            return settings.useCustomSettings ? settings.palSkipFrames : palSkipFrames;
+        }
+
+        public int GetPatternLength(int patternIdx)
+        {
+            var settings = patternCustomSettings[patternIdx];
+            return settings.useCustomSettings ? settings.patternLength : patternLength;
+        }
+
+        public int GetPatternStartNote(int patternIdx, int note = 0)
+        {
+            return patternStartNote[patternIdx] + note;
+        }
+
         public Channel GetChannelByType(int type)
         {
             return channels[Channel.ChannelTypeToIndex(type)];
-        }
-
-        public Song Clone()
-        {
-            var saveSerializer = new ProjectSaveBuffer(project);
-            SerializeState(saveSerializer);
-            var newSong = new Song();
-            var loadSerializer = new ProjectLoadBuffer(project, saveSerializer.GetBuffer(), Project.Version);
-            newSong.SerializeState(loadSerializer);
-            return newSong;
         }
 
         public void Trim()
@@ -196,25 +457,207 @@ namespace FamiStudio
             SetLength(maxLength);
         }
 
-        public void RemoveEmptyPatterns()
+        public void DeleteEmptyPatterns()
         {
             foreach (var channel in channels)
-            {
-                channel.RemoveEmptyPatterns();   
-            }
+                channel.DeleteEmptyPatterns();
         }
 
         public void CleanupUnusedPatterns()
         {
             foreach (var channel in channels)
-            {
-                channel.CleanupUnusedPatterns();
-            }
+                channel.DeleteUnusedPatterns();
+        }
+
+        public void DeleteNotesPastMaxInstanceLength()
+        {
+            foreach (var channel in channels)
+                channel.DeleteNotesPastMaxInstanceLength();
         }
 
         public override string ToString()
         {
             return name;
+        }
+
+        public int NoteLength
+        {
+            get
+            {
+                return noteLength;
+            }
+        }
+
+        private int GetNoteResizePriority(Note note)
+        {
+            if (note == null || note.IsEmpty)
+                return 3;
+            if (note.IsMusical || note.IsStop)
+                return 0;
+            if (note.IsRelease)
+                return 1;
+
+            return 2;
+        }
+
+        public void ResizePatternNotes(int p, int newNoteLength, HashSet<Pattern> processedPatterns = null)
+        {
+            Debug.Assert(UsesFamiStudioTempo);
+
+            var oldPatternLength = GetPatternLength(p);
+            var oldNoteLength    = GetPatternNoteLength(p);
+            var ratio = (float)(oldNoteLength - 1) / (newNoteLength - 1);
+
+            if (ratio == 0.0f)
+                ratio = 1.0f;
+
+            foreach (var channel in channels)
+            {
+                var pattern = channel.PatternInstances[p];
+
+                if (pattern == null || (processedPatterns != null && processedPatterns.Contains(pattern)))
+                    continue;
+
+                var oldNotes = new SortedList<int, Note>();
+
+                foreach (var kv in pattern.Notes)
+                    oldNotes[kv.Key] = kv.Value.Clone();
+
+                pattern.Notes.Clear();
+
+                // Resize the pattern while applying some kind of priority in case we
+                // 2 notes append to map to the same note (when shortening notes). 
+                //
+                // From highest to lowest:
+                //   1) Note attacks and stop notes.
+                //   2) Release notes
+                //   3) Anything else that is not an empty note.
+                //   4) Empty note.
+
+                // TODO: Merge notes/slide + fx seperately.
+                for (int i = 0; i < oldPatternLength / oldNoteLength; i++)
+                {
+                    for (int j = 0; j < oldNoteLength; j++)
+                    {
+                        var oldIdx = i * oldNoteLength + j;
+                        var newIdx = i * newNoteLength + (int)Math.Round(j / ratio);
+
+                        oldNotes.TryGetValue(oldIdx, out var oldNote);
+                        pattern.Notes.TryGetValue(newIdx, out var newNote);
+
+                        if (oldNote == null)
+                            continue;
+
+                        int oldPriority = GetNoteResizePriority(oldNote);
+                        int newPriority = GetNoteResizePriority(newNote);
+
+                        if (oldPriority < newPriority)
+                            pattern.SetNoteAt(newIdx, oldNote);
+                    }
+                }
+
+                pattern.ClearLastValidNoteCache();
+
+                if (processedPatterns != null)
+                    processedPatterns.Add(pattern);
+            }
+        }
+
+        public void ResizeNotes(int newNoteLength, bool convert)
+        {
+            Debug.Assert(UsesFamiStudioTempo);
+            Debug.Assert(newNoteLength > 0 && newNoteLength <= MaxNoteLength);
+
+            if (convert)
+            {
+                Debug.Assert(patternLength % noteLength == 0);
+
+                var processedPatterns = new HashSet<Pattern>();
+
+                for (int p = 0; p < songLength; p++)
+                {
+                    if (!PatternHasCustomSettings(p))
+                        ResizePatternNotes(p, newNoteLength, processedPatterns);
+                }
+            }
+
+            noteLength = newNoteLength;
+        }
+
+        // For a given number of NTSC frames (60Hz), the number of PAL frames (50Hz)
+        // that minimizes the tempo error.
+        public readonly static int[] PalNoteLengthLookup = new[]
+        {
+            0,  // 0 (unused)
+            1,  // 1 (terrible)
+            2,  // 2 (terrible)
+            3,  // 3 (terrible)
+            3,  // 4
+            4,  // 5
+            5,  // 6
+            6,  // 7
+            7,  // 8
+            8,  // 9
+            8,  // 10
+            9,  // 11
+            10, // 12
+            11, // 13
+            12, // 14
+            13, // 15
+            14  // 16
+        };
+
+        public static int ComputeFamiTrackerBPM(int speed, int tempo)
+        {
+            return tempo * 6 / speed;
+        }
+
+        public static int ComputeFamiStudioBPM(int noteLength)
+        {
+            return 900 / noteLength;
+        }
+
+        public int BPM
+        {
+            get
+            {
+                if (UsesFamiStudioTempo)
+                    return ComputeFamiStudioBPM(noteLength);
+                else
+                    return ComputeFamiTrackerBPM(famitrackerSpeed, famitrackerTempo);
+            }
+        }
+
+        public static float ComputePalError(int noteLength)
+        {
+            float ntsc = (1000.0f / 60.0988f) * noteLength;
+            float pal = (1000.0f / 50.0070f) * PalNoteLengthLookup[noteLength];
+            float diff = pal - ntsc;
+            return ((Math.Max(ntsc, pal) / Math.Min(ntsc, pal) - 1) * 100.0f) * -Math.Sign(diff);
+        }
+
+        public static int GetNumPalSkipFrames(int noteLength)
+        {
+            return noteLength - PalNoteLengthLookup[noteLength];
+        }
+
+        public static void GetDefaultPalSkipFrames(int noteLength, int[] frames)
+        {
+            int numSkipFrames = GetNumPalSkipFrames(noteLength);
+
+            Debug.Assert(numSkipFrames >= 0 && numSkipFrames <= 2);
+
+            frames[0] = -1;
+            frames[1] = -1;
+
+            // By default, put the skip frames in the middle of the notes, this is
+            // where its least likely to have anything interesting (attacks tend
+            // to be at the beginning, stop notes at the end).
+            for (int i = 0; i < numSkipFrames; i++)
+            {
+                float ratio = (i + 0.5f) / (numSkipFrames);
+                frames[i] = (int)Math.Round(ratio * (noteLength - 1));
+            }
         }
 
         public bool UsesDpcm
@@ -226,9 +669,8 @@ namespace FamiStudio
                     var pattern = channels[Channel.Dpcm].PatternInstances[p];
                     if (pattern != null)
                     {
-                        for (int i = 0; i < patternLength; i++)
+                        foreach (var note in pattern.Notes.Values)
                         {
-                            var note = pattern.Notes[i];
                             if (note.IsValid && !note.IsStop)
                             {
                                 var mapping = project.GetDPCMMapping(note.Value);
@@ -249,30 +691,200 @@ namespace FamiStudio
 #if DEBUG
         public void Validate(Project project)
         {
+            Debug.Assert(project.Songs.Contains(this));
+            Debug.Assert(project.GetSong(id) == this);
+
+            var uniqueNotes = new HashSet<Note>();
+            var uniquePatterns = new HashSet<Pattern>();
+
             foreach (var channel in channels)
+            {
                 channel.Validate(this);
+
+                // This is extremely heavy handed, but it is important. 
+                // Notes used to be struct and they got changed to classes later on.
+                // Its important to never assign the same note to 2 places in the song.
+                foreach (var pattern in channel.Patterns)
+                {
+                    foreach (var note in pattern.Notes.Values)
+                    {
+                        Debug.Assert(!uniqueNotes.Contains(note));
+                        uniqueNotes.Add(note);
+                    }
+
+                    Debug.Assert(!uniquePatterns.Contains(pattern));
+                    uniquePatterns.Add(pattern);
+                }
+            }
+
+            var oldPatternInstancesStartNote = new int[patternStartNote.Length];
+            Array.Copy(patternStartNote, oldPatternInstancesStartNote, patternStartNote.Length);
+            UpdatePatternStartNotes();
+            for (int i = 0; i < patternStartNote.Length; i++)
+                Debug.Assert(oldPatternInstancesStartNote[i] == patternStartNote[i]);
+
+            if (project.UsesFamiStudioTempo)
+            {
+                var numSkipFrames = (palSkipFrames[0] >= 0 ? 1 : 0) + (palSkipFrames[1] >= 0 ? 1 : 0);
+                Debug.Assert(numSkipFrames == GetNumPalSkipFrames(noteLength));
+                Debug.Assert(numSkipFrames != 2 || palSkipFrames[0] != palSkipFrames[1]);
+            }
         }
 #endif
+
+        private void ConvertJumpSkipEffects()
+        {
+            for (int i = 0; i < songLength; i++)
+            {
+                foreach (var channel in channels)
+                {
+                    var pattern = channel.PatternInstances[i];
+
+                    if (pattern != null)
+                    {
+                        foreach (var kv in pattern.Notes)
+                        {
+                            var note = kv.Value;
+
+                            // Converts old Jump effects to loop points.
+                            // The first Jump effect will give us our loop point.
+                            if (loopPoint == 0 && note.FxJump != 0xff)
+                            {
+                                SetLoopPoint(note.FxJump);
+                            }
+
+                            // Converts old Skip effects to custom pattern instances lengths.
+                            if (note.FxSkip != 0xff)
+                            {
+                                SetPatternCustomSettings(i, kv.Key + 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public int FindPatternInstanceIndex(int idx, out int noteIdx)
+        {
+            noteIdx = -1;
+
+            // TODO: Binary search
+            for (int i = 0; i < songLength; i++)
+            {
+                if (idx < patternStartNote[i + 1])
+                {
+                    noteIdx = idx - patternStartNote[i];
+                    return i;
+                }
+            }
+
+            return songLength;
+        }
+
+        public void UpdatePatternStartNotes()
+        {
+            patternStartNote[0] = 0;
+            for (int i = 1; i <= songLength; i++)
+                patternStartNote[i] = patternStartNote[i - 1] + GetPatternLength(i - 1);
+        }
+
+        public void MergeIdenticalPatterns()
+        {
+            foreach (var channel in channels)
+                channel.MergeIdenticalPatterns();
+        }
+
+        public void ConvertToFamiStudioTempo()
+        {
+            int newNoteLength = famitrackerSpeed;
+            int newBarLength = barLength * newNoteLength;
+            int newPatternLength = patternLength * newNoteLength;
+
+            foreach (var channel in channels)
+            {
+                foreach (var pattern in channel.Patterns)
+                {
+                    var notesCopy = new SortedList<int, Note>(pattern.Notes);
+
+                    pattern.Notes.Clear();
+                    foreach (var kv in notesCopy)
+                    {
+                        var note = kv.Value;
+                        note.ClearEffectValue(Note.EffectSpeed);
+                        pattern.Notes[kv.Key * newNoteLength] = note;
+                    }
+
+                    pattern.ClearLastValidNoteCache();
+                }
+            }
+
+            for (int p = 0; p < songLength; p++)
+            {
+                if (PatternHasCustomSettings(p))
+                {
+                    patternCustomSettings[p].noteLength    = famitrackerSpeed;
+                    patternCustomSettings[p].patternLength = patternCustomSettings[p].patternLength / famitrackerSpeed * famitrackerSpeed;
+                    patternCustomSettings[p].barLength     = Math.Max(patternCustomSettings[p].barLength / famitrackerSpeed, 1);
+                    GetDefaultPalSkipFrames(famitrackerSpeed, patternCustomSettings[p].palSkipFrames); 
+                }
+            }
+
+            noteLength    = newNoteLength;
+            barLength     = newBarLength;
+            patternLength = newPatternLength;
+
+            GetDefaultPalSkipFrames(noteLength, palSkipFrames);
+            UpdatePatternStartNotes();
+            DeleteNotesPastMaxInstanceLength();
+        }
 
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsReading)
                 project = buffer.Project;
 
-            buffer.Serialize(ref id);
+            buffer.Serialize(ref id, true);
             buffer.Serialize(ref patternLength);
             buffer.Serialize(ref songLength);
             buffer.Serialize(ref barLength);
             buffer.Serialize(ref name);
-            buffer.Serialize(ref tempo);
-            buffer.Serialize(ref speed);
+            buffer.Serialize(ref famitrackerTempo);
+            buffer.Serialize(ref famitrackerSpeed);
             buffer.Serialize(ref color);
 
+            // At version 5 (FamiStudio 1.5.0), we replaced the jump/skips effects by loop points and custom pattern length and we added a new tempo mode.
+            if (buffer.Version >= 5)
+            {
+                buffer.Serialize(ref loopPoint);
+                buffer.Serialize(ref noteLength);
+                buffer.Serialize(ref palSkipFrames[0]);
+                buffer.Serialize(ref palSkipFrames[1]);
+
+                for (int i = 0; i < songLength; i++)
+                {
+                    buffer.Serialize(ref patternCustomSettings[i].useCustomSettings);
+                    buffer.Serialize(ref patternCustomSettings[i].patternLength);
+                    buffer.Serialize(ref patternCustomSettings[i].noteLength);
+                    buffer.Serialize(ref patternCustomSettings[i].barLength);
+                    buffer.Serialize(ref patternCustomSettings[i].palSkipFrames[0]);
+                    buffer.Serialize(ref patternCustomSettings[i].palSkipFrames[1]);
+                }
+
+                for (int i = songLength; i < MaxLength; i++)
+                    patternCustomSettings[i].Clear();
+            }
+
             if (buffer.IsReading)
+            {
                 CreateChannels();
+                UpdatePatternStartNotes();
+            }
 
             foreach (var channel in channels)
                 channel.SerializeState(buffer);
+
+            if (buffer.Version < 5)
+                ConvertJumpSkipEffects();
         }
     }
 }

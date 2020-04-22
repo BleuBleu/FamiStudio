@@ -33,10 +33,11 @@ namespace FamiStudio
             public Control control;
         };
 
-        int layoutHeight;
-        Font font;
-        Bitmap colorBitmap;
-        List<Property> properties = new List<Property>();
+        private int layoutHeight;
+        private Font font;
+        private Bitmap colorBitmap;
+        private List<Property> properties = new List<Property>();
+        private object userData;
 
         public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
         public event PropertyChangedDelegate PropertyChanged;
@@ -44,6 +45,8 @@ namespace FamiStudio
         public event PropertyWantsCloseDelegate PropertyWantsClose;
 
         public int LayoutHeight => layoutHeight;
+        public int PropertyCount => properties.Count;
+        public object UserData { get => userData; set => userData = value; }
 
         public PropertyPage()
         {
@@ -101,7 +104,7 @@ namespace FamiStudio
             return colorBitmap;
         }
 
-        private Label CreateLabel(string str)
+        private Label CreateLabel(string str, string tooltip = null)
         {
             var label = new Label();
 
@@ -110,6 +113,7 @@ namespace FamiStudio
             label.AutoSize = true;
             label.ForeColor = ThemeBase.LightGreyFillColor2;
             label.BackColor = BackColor;
+            toolTip.SetToolTip(label, tooltip);
 
             return label;
         }
@@ -189,7 +193,7 @@ namespace FamiStudio
                 ChangeColor(sender as PictureBox, e.X, e.Y);
         }
 
-        private NumericUpDown CreateNumericUpDown(int value, int min, int max)
+        private NumericUpDown CreateNumericUpDown(int value, int min, int max, string tooltip = null)
         {
             var upDown = new NumericUpDown();
 
@@ -198,6 +202,7 @@ namespace FamiStudio
             upDown.Maximum = max;
             upDown.Text = value.ToString();
             upDown.ValueChanged += UpDown_ValueChanged;
+            toolTip.SetToolTip(upDown, tooltip);
 
             return upDown;
         }
@@ -219,7 +224,7 @@ namespace FamiStudio
             return upDown;
         }
 
-        private CheckBox CreateCheckBox(bool value, string text = "")
+        private CheckBox CreateCheckBox(bool value, string text = "", string tooltip = null)
         {
             var cb = new CheckBox();
 
@@ -228,6 +233,7 @@ namespace FamiStudio
             cb.Font = font;
             cb.ForeColor = ThemeBase.LightGreyFillColor2;
             cb.CheckedChanged += Cb_CheckedChanged;
+            toolTip.SetToolTip(cb, tooltip);
 
             return cb;
         }
@@ -238,7 +244,7 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
-        private ComboBox CreateDropDownList(string[] values, string value)
+        private ComboBox CreateDropDownList(string[] values, string value, string tooltip = null)
         {
             var cb = new ComboBox();
 
@@ -247,8 +253,16 @@ namespace FamiStudio
             cb.Text = value;
             cb.Font = font;
             cb.Enabled = values.Length > 0;
+            cb.SelectedIndexChanged += Cb_SelectedIndexChanged;
+            toolTip.SetToolTip(cb, tooltip);
 
             return cb;
+        }
+
+        private void Cb_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int idx = GetPropertyIndex(sender as Control);
+            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
         private CheckedListBox CreateCheckedListBox(string[] values, bool[] selected)
@@ -256,9 +270,7 @@ namespace FamiStudio
             var listBox = new PaddedCheckedListBox();
 
             for (int i = 0; i < values.Length; i++)
-            {
                 listBox.Items.Add(values[i], selected != null ? selected[i] : true);
-            }
 
             listBox.IntegralHeight = false;
             listBox.Font = font;
@@ -267,6 +279,15 @@ namespace FamiStudio
             listBox.SelectionMode = SelectionMode.One;
 
             return listBox;
+        }
+
+        public void UpdateMultiStringList(int idx, string[] values, bool[] selected)
+        {
+            var listBox = (properties[idx].control as PaddedCheckedListBox);
+
+            listBox.Items.Clear();
+            for (int i = 0; i < values.Length; i++)
+                listBox.Items.Add(values[i], selected != null ? selected[i] : true);
         }
 
         public void AddColoredString(string value, Color color)
@@ -290,6 +311,17 @@ namespace FamiStudio
                 });
         }
 
+        public void AddLabel(string label, string value, string tooltip = null)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.String,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateLabel(value, tooltip)
+                });
+        }
+
         public void AddColor(Color color)
         {
             properties.Add(
@@ -300,15 +332,32 @@ namespace FamiStudio
                 });
         }
 
-        public void AddIntegerRange(string label, int value, int min, int max)
+        public void AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.IntegerRange,
-                    label = CreateLabel(label),
-                    control = CreateNumericUpDown(value, min, max)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateNumericUpDown(value, min, max, tooltip)
                 });
+        }
+
+        public void UpdateIntegerRange(int idx, int min, int max)
+        {
+            var upDown = (properties[idx].control as NumericUpDown);
+
+            upDown.Minimum = min;
+            upDown.Maximum = max;
+        }
+
+        public void UpdateIntegerRange(int idx, int value, int min, int max)
+        {
+            var upDown = (properties[idx].control as NumericUpDown);
+
+            upDown.Minimum = min;
+            upDown.Maximum = max;
+            upDown.Value = value;
         }
 
         public void AddDomainRange(string label, int[] values, int value)
@@ -332,14 +381,19 @@ namespace FamiStudio
             upDown.SelectedItem = value;
         }
 
-        public void AddBoolean(string label, bool value)
+        public void SetLabelText(int idx, string text)
+        {
+            (properties[idx].control as Label).Text = text;
+        }
+
+        public void AddBoolean(string label, bool value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    label = CreateLabel(label),
-                    control = CreateCheckBox(value)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateCheckBox(value, "", tooltip)
                 });
         }
 
@@ -353,14 +407,14 @@ namespace FamiStudio
                 });
         }
 
-        public void AddStringList(string label, string[] values, string value)
+        public void AddStringList(string label, string[] values, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.StringList,
-                    label = CreateLabel(label),
-                    control = CreateDropDownList(values, value)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateDropDownList(values, value, tooltip)
                 });
         }
 
@@ -377,7 +431,16 @@ namespace FamiStudio
 
         public void SetPropertyEnabled(int idx, bool enabled)
         {
-            properties[idx].control.Enabled = enabled;
+            var label = properties[idx].control as Label;
+
+            if (label != null)
+            {
+                label.ForeColor = enabled ? ThemeBase.LightGreyFillColor2 : ThemeBase.MediumGreyFillColor1;
+            }
+            else
+            {
+                properties[idx].control.Enabled = enabled;
+            }
         }
 
         public object GetPropertyValue(int idx)

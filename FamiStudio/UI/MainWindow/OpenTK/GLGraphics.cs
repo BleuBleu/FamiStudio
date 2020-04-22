@@ -116,10 +116,21 @@ namespace FamiStudio
         public float GradientSizeY = 0.0f;
         public Color Color0;
         public Color Color1;
+        public GLBitmap Bitmap;
 
         public GLBrush(Color color)
         {
             Color0 = color;
+        }
+
+        public GLBrush(GLBitmap bmp, bool tileX, bool tileY)
+        {
+            Bitmap = bmp;
+            Color0 = Color.FromArgb(255, 255, 255, 255);
+
+            GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)(tileX ? All.MirroredRepeat : All.ClampToEdge));
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)(tileY ? All.MirroredRepeat : All.ClampToEdge));
         }
 
         public GLBrush(Color color0, Color color1, float sizeX, float sizeY)
@@ -131,6 +142,7 @@ namespace FamiStudio
         }
 
         public bool IsGradient => GradientSizeX > 0 || GradientSizeY > 0;
+        public bool IsBitmap => Bitmap != null;
     }
 
     public class GLBitmap : IDisposable
@@ -374,11 +386,30 @@ namespace FamiStudio
             else
 #endif
             {
-                GL.LineWidth(width);
-                GL.Begin(BeginMode.Lines);
-                GL.Vertex2(x0, y0);
-                GL.Vertex2(x1, y1);
-                GL.End();
+                if (brush.IsBitmap)
+                {
+                    GL.Enable(EnableCap.Texture2D);
+                    GL.BindTexture(TextureTarget.Texture2D, brush.Bitmap.Id);
+                    GL.LineWidth(width);
+                    GL.Begin(BeginMode.Lines);
+
+                    var size = brush.Bitmap.Size;
+                    GL.TexCoord2((x0 + 0.5f) / size.Width, (y0 + 0.5f) / size.Height);
+                    GL.Vertex2(x0, y0);
+                    GL.TexCoord2((x1 + 0.5f) / size.Width, (y1 + 0.5f) / size.Height);
+                    GL.Vertex2(x1, y1);
+
+                    GL.End();
+                    GL.Disable(EnableCap.Texture2D);
+                }
+                else
+                {
+                    GL.LineWidth(width);
+                    GL.Begin(BeginMode.Lines);
+                    GL.Vertex2(x0, y0);
+                    GL.Vertex2(x1, y1);
+                    GL.End();
+                }
             }
             GL.PopMatrix();
         }
@@ -609,6 +640,11 @@ namespace FamiStudio
         public GLBrush CreateSolidBrush(Color color)
         {
             return new GLBrush(color);
+        }
+
+        public GLBrush CreateBitmapBrush(GLBitmap bmp, bool tileX, bool tileY)
+        {
+            return new GLBrush(bmp, tileX, tileY);
         }
 
         public GLBrush CreateHorizontalGradientBrush(float x0, float x1, Color color0, Color color1)

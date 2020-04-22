@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -34,6 +36,8 @@ namespace FamiStudio
             Cursors.Initialize();
             RenderTheme.Initialize();
             PlatformUtils.Initialize();
+            ClipboardUtils.Initialize();
+            NesApu.InitializeNoteTables();
 
 #if FAMISTUDIO_WINDOWS
             PerformanceCounter.Initialize();

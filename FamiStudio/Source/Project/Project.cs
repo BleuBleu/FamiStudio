@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -10,33 +11,48 @@ namespace FamiStudio
         // Version 2 = FamiStudio 1.1.0 (Project properties)
         // Version 3 = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
         // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
-        public static int Version = 4;
+        // Version 5 = FamiStudio 1.5.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
+        public static int Version = 5;
         public static int MaxSampleSize = 0x4000;
 
         public const int ExpansionNone    = 0;
         public const int ExpansionVrc6    = 1;
-#if DEV                                 
         public const int ExpansionVrc7    = 2;
         public const int ExpansionFds     = 3;
         public const int ExpansionMmc5    = 4;
-        public const int ExpansionNamco   = 5;
-        public const int ExpansionSunsoft = 6;
+        public const int ExpansionN163    = 5;
+        public const int ExpansionS5B     = 6;
         public const int ExpansionCount   = 7;
-#else
-        public const int ExpansionCount   = 2;
-#endif
+
+        public const int TempoFamiStudio  = 0;
+        public const int TempoFamiTracker = 1;
+
+        public static string [] TempoModeNames = 
+        {
+            "FamiStudio",
+            "FamiTracker"
+        };
 
         public static string[] ExpansionNames =
         {
             "None",
             "Konami VRC6",
-#if DEV
             "Konami VRC7",
             "Famicom Disk System",
             "Nintendo MMC5",
             "Namco 163",
             "Sunsoft 5B"
-#endif
+        };
+
+        public static string[] ExpansionShortNames =
+        {
+            "",
+            "VRC6",
+            "VRC7",
+            "FDS",
+            "MMC5",
+            "N163",
+            "S5B"
         };
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
@@ -48,21 +64,26 @@ namespace FamiStudio
         private string name = "Untitled";
         private string author = "Unknown";
         private string copyright = "";
+        private int tempoMode = TempoFamiStudio;
         private int expansionAudio = ExpansionNone;
+        private int expansionNumChannels = 1;
 
         public List<DPCMSample>    Samples        => samples;
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
-        public int                 NextUniqueId   => nextUniqueId;
         public int                 ExpansionAudio => expansionAudio;
+        public int                 ExpansionNumChannels => expansionNumChannels;
         public string              ExpansionAudioName => ExpansionNames[expansionAudio];
+        public string              ExpansionAudioShortName => ExpansionShortNames[expansionAudio];
         public bool                UsesExpansionAudio => expansionAudio != ExpansionNone;
+        public bool                UsesFamiStudioTempo  => tempoMode == TempoFamiStudio;
+        public bool                UsesFamiTrackerTempo => tempoMode == TempoFamiTracker;
 
-        public string              Filename   { get => filename; set => filename = value; }
-        public string              Name       { get => name; set => name = value; }
-        public string              Author     { get => author; set => author = value; }
-        public string              Copyright  { get => copyright; set => copyright = value; }
+        public string Filename   { get => filename; set => filename = value; }
+        public string Name       { get => name; set => name = value; }
+        public string Author     { get => author; set => author = value; }
+        public string Copyright  { get => copyright; set => copyright = value; }
 
         public Project(bool createSongAndInstrument = false)
         {
@@ -83,13 +104,10 @@ namespace FamiStudio
             int addr = 0;
             foreach (var s in samples)
             {
-                if (addr + s.Data.Length > offset)
-                {
+                if (offset >= addr && offset < addr + s.Data.Length)
                     return s.Data[offset - addr];
-                }
                 addr = (addr + s.Data.Length + 63) & 0xffc0;
             }
-            Debug.Assert(false);
             return 0x55;
         }
 
@@ -137,6 +155,11 @@ namespace FamiStudio
             return samples.Find(s => s.Id == id);
         }
 
+        public DPCMSample GetSample(string name)
+        {
+            return samples.Find(s => s.Name == name);
+        }
+
         public Pattern GetPattern(int id)
         {
             foreach (var song in songs)
@@ -158,12 +181,15 @@ namespace FamiStudio
 
         public DPCMSample CreateDPCMSample(string name, byte[] data)
         {
-            DPCMSample sample = samples.Find(s => s.Name == name);
+            var sampleSize = GetTotalSampleSize();
+            var sample = samples.Find(s => s.Name == name);
+
             if (sample != null)
             {
-                sample.Data = data;
+                if (sampleSize - sample.Data.Length + data.Length <= MaxSampleSize)
+                    sample.Data = data;
             }
-            else
+            else if (sampleSize + data.Length <= MaxSampleSize)
             {
                 sample = new DPCMSample(GenerateUniqueId(), name, data);
                 samples.Add(sample);
@@ -180,7 +206,7 @@ namespace FamiStudio
 
         public void MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
         {
-            if (NoteSupportsDPCM(note))
+            if (sample != null && NoteSupportsDPCM(note))
             {
                 note -= Note.DPCMNoteMin;
 
@@ -210,6 +236,33 @@ namespace FamiStudio
                 return null;
         }
 
+        public int FindDPCMSampleMapping(DPCMSample sample, int pitch, bool loop)
+        {
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null && 
+                    samplesMapping[i].Sample == sample &&
+                    samplesMapping[i].Pitch  == pitch &&
+                    samplesMapping[i].Loop   == loop)
+                { 
+                    return i + Note.DPCMNoteMin;
+                }
+            }
+            
+            return -1;
+        }
+
+        public DPCMSample FindMatchingSample(byte[] data)
+        {
+            foreach (var sample in samples)
+            {
+                if (sample.Data.Length == data.Length && sample.Data.SequenceEqual(data))
+                    return sample;
+            }
+
+            return null;
+        }
+
         public Song CreateSong(string name = null)
         {
             if (name == null)
@@ -227,6 +280,20 @@ namespace FamiStudio
             songs.Remove(song);
         }
 
+        public Song DuplicateSong(Song song)
+        {
+            var saveSerializer = new ProjectSaveBuffer(this);
+            song.SerializeState(saveSerializer);
+            var newSong = CreateSong();
+            var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
+            loadSerializer.RemapId(song.Id, newSong.Id);
+            newSong.SerializeState(loadSerializer);
+#if DEBUG
+            Validate();
+#endif
+            return newSong;
+        }
+
         public bool IsInstrumentNameUnique(string name)
         {
             return instruments.Find(inst => inst.Name == name) == null;
@@ -234,12 +301,13 @@ namespace FamiStudio
 
         public Instrument CreateInstrument(int type, string name = null)
         {
+            if (type != ExpansionNone && type != expansionAudio)
+                return null;
+
             if (name == null)
                 name = GenerateUniqueInstrumentName();
             else if (instruments.Find(inst => inst.Name == name) != null)
                 return null;
-
-            Debug.Assert(type == ExpansionNone || type == expansionAudio);
 
             var instrument = new Instrument(GenerateUniqueId(), type, name);
             instruments.Add(instrument);
@@ -254,7 +322,7 @@ namespace FamiStudio
                 foreach (var channel in song.Channels)
                 {
                     foreach (var pattern in channel.Patterns)
-                        pattern.UpdateLastValidNote();
+                        pattern.ClearLastValidNoteCache();
                 }
             }
         }
@@ -269,14 +337,14 @@ namespace FamiStudio
                 {
                     foreach (var pattern in channel.Patterns)
                     {
-                        for (int i = 0; i < Pattern.MaxLength; i++)
+                        foreach (var note in pattern.Notes.Values)
                         {
-                            if (pattern.Notes[i].Instrument == instrumentOld)
+                            if (note.Instrument == instrumentOld)
                             {
                                 if (instrumentNew == null)
-                                    pattern.Notes[i].Value = Note.NoteInvalid;
+                                    note.Value = Note.NoteInvalid;
 
-                                pattern.Notes[i].Instrument = instrumentNew;
+                                note.Instrument = instrumentNew;
                             }
                         }
                     }
@@ -290,6 +358,20 @@ namespace FamiStudio
         {
             instruments.Remove(instrument);
             ReplaceInstrument(instrument, null);
+        }
+        
+        public void DeleteAllInstrument()
+        {
+            foreach (var inst in instruments)
+                ReplaceInstrument(inst, null);
+            instruments.Clear();
+        }
+
+        public void DeleteAllSamples()
+        {
+            for (int i = 0; i < samplesMapping.Length; i++)
+                samplesMapping[i] = null;
+            samples.Clear();
         }
 
         public string GenerateUniqueSongName()
@@ -380,20 +462,36 @@ namespace FamiStudio
             songs.Sort((s1, s2) => s1.Name.CompareTo(s2.Name));
         }
 
-        public void SetExpansionAudio(int expansion)
+        public void SetExpansionAudio(int expansion, int numChannels = 1)
         {
-            expansionAudio = expansion;
+            if (expansion == ExpansionN163 && numChannels == 0)
+                expansion = ExpansionNone;
 
-            foreach (var song in songs)
+            if (expansion >= 0 && expansion < ExpansionCount)
             {
-                song.CreateChannels(true);
-            }
+                var changed = expansionAudio != expansion;
+                var oldNumChannels = expansionNumChannels;
 
-            for (int i = instruments.Count - 1; i >= 0; i--)
-            {
-                var inst = instruments[i];
-                if (inst.IsExpansionInstrument)
-                    DeleteInstrument(inst);
+                expansionAudio = expansion;
+                expansionNumChannels = expansion == ExpansionN163 ? numChannels : 1;
+
+                foreach (var song in songs)
+                {
+                    song.CreateChannels(true, Channel.ExpansionAudioStart + (!changed && expansion == ExpansionN163 ? oldNumChannels : 0));
+
+                    if (UsesFamiStudioTempo)
+                        Song.GetDefaultPalSkipFrames(song.NoteLength, song.PalSkipFrames);
+                }
+
+                if (changed)
+                {
+                    for (int i = instruments.Count - 1; i >= 0; i--)
+                    {
+                        var inst = instruments[i];
+                        if (inst.IsExpansionInstrument)
+                            DeleteInstrument(inst);
+                    }
+                }
             }
         }
 
@@ -405,6 +503,14 @@ namespace FamiStudio
             return channelCount;
         }
 
+        public int[] GetActiveChannelList()
+        {
+            var activeChannels = new List<int>();
+            for (int i = 0; i < Channel.Count; i++)
+                if (IsChannelActive(i)) activeChannels.Add(i);
+            return activeChannels.ToArray();
+        }
+
         public bool IsChannelActive(int channelType)
         {
             if (channelType <= Channel.Dpcm)
@@ -412,25 +518,24 @@ namespace FamiStudio
 
             if (channelType >= Channel.Vrc6Square1 && channelType <= Channel.Vrc6Saw)
                 return expansionAudio == ExpansionVrc6;
-#if DEV
+
             if (channelType == Channel.FdsWave)
                 return expansionAudio == ExpansionFds;
 
             if (channelType >= Channel.Mmc5Square1 && channelType <= Channel.Mmc5Square2)
                 return expansionAudio == ExpansionMmc5;
 
+            if (channelType == Channel.Mmc5Dpcm)
+                return false;
+
             if (channelType >= Channel.Vrc7Fm1 && channelType <= Channel.Vrc7Fm6)
                 return expansionAudio == ExpansionVrc7;
 
-            if (channelType >= Channel.NamcoWave1 && channelType <= Channel.NamcoWave8)
-                return expansionAudio == ExpansionNamco;
+            if (channelType >= Channel.N163Wave1 && channelType <= Channel.N163Wave8)
+                return expansionAudio == ExpansionN163 && (channelType - Channel.N163Wave1) < expansionNumChannels;
 
-            if (channelType >= Channel.SunsoftSquare1 && channelType <= Channel.SunsoftSquare3)
-                return expansionAudio == ExpansionSunsoft;
-#else
-            if (channelType >= Channel.Vrc7Fm1)
-                return false;
-#endif
+            if (channelType >= Channel.S5BSquare1 && channelType <= Channel.S5BSquare3)
+                return expansionAudio == ExpansionS5B;
 
             Debug.Assert(false);
 
@@ -441,14 +546,10 @@ namespace FamiStudio
         {
             get
             {
-#if DEV
                 return expansionAudio != ExpansionNone && expansionAudio != ExpansionMmc5;
-#else
-                return expansionAudio != ExpansionNone;
-#endif
             }
         }
-
+        
         public bool UsesSamples
         {
             get
@@ -463,6 +564,33 @@ namespace FamiStudio
                 }
 
                 return false;
+            }
+        }
+
+        public int TempoMode
+        {
+            get
+            {
+                return tempoMode;
+            }
+            set
+            {
+                Debug.Assert(AreSongsEmpty);
+                tempoMode = value;
+            }
+        }
+
+        public bool AreSongsEmpty
+        {
+            get
+            {
+                foreach (var song in songs)
+                {
+                    if (!song.IsEmpty)
+                        return false;
+                }
+
+                return true;
             }
         }
 
@@ -518,6 +646,62 @@ namespace FamiStudio
             DeleteUnusedSamples();
         }
 
+        public void MergeIdenticalInstruments()
+        {
+            var instrumentCrcMap = new Dictionary<uint, Instrument>();
+
+            for (int i = 0; i < instruments.Count;)
+            {
+                var inst = instruments[i];
+                var crc = inst.ComputeCRC();
+
+                if (instrumentCrcMap.TryGetValue(crc, out var matchingInstrument))
+                {
+                    ReplaceInstrument(inst, matchingInstrument);
+                    instruments.RemoveAt(i);
+                }
+                else
+                {
+                    instrumentCrcMap[crc] = inst;
+                    i++;
+                }
+            }
+        }
+
+        public void ConvertToFamiStudioTempo()
+        {
+            Debug.Assert(UsesFamiTrackerTempo);
+
+            foreach (var song in songs)
+                song.ConvertToFamiStudioTempo();
+
+            tempoMode = TempoFamiStudio;
+        }
+
+        public void ConvertToFamiTrackerTempo(bool setDefaults)
+        {
+            Debug.Assert(UsesFamiStudioTempo);
+
+            if (setDefaults)
+            {
+                foreach (var song in songs)
+                {
+                    song.SetDefaultsForTempoMode(Project.TempoFamiTracker);
+                    song.UpdatePatternStartNotes();
+                }
+            }
+            else
+            {
+                foreach (var song in songs)
+                {
+                    song.FamitrackerTempo = Song.NativeTempoNTSC;
+                    song.FamitrackerSpeed = 1;
+                }
+            }
+
+            tempoMode = TempoFamiTracker;
+        }
+
         public void DeleteUnusedInstruments()
         {
             var usedInstruments = new HashSet<Instrument>();
@@ -531,11 +715,11 @@ namespace FamiStudio
                         var pattern = channel.PatternInstances[p];
                         if (pattern != null)
                         {
-                            for (int i = 0; i < song.PatternLength; i++)
+                            foreach (var note in pattern.Notes.Values)
                             {
-                                var note = pattern.Notes[i];
-                                if (note.IsValid && !note.IsStop && note.Instrument != null)
+                                if (note.Instrument != null)
                                 {
+                                    //Debug.Assert(note.IsMusical);
                                     usedInstruments.Add(note.Instrument);
                                 }
                             }
@@ -545,6 +729,7 @@ namespace FamiStudio
             }
 
             instruments = new List<Instrument>(usedInstruments);
+            SortInstruments();
         }
 
         public void DeleteUnusedSamples()
@@ -560,9 +745,8 @@ namespace FamiStudio
                     var pattern = channel.PatternInstances[p];
                     if (pattern != null)
                     {
-                        for (int i = 0; i < song.PatternLength; i++)
+                        foreach (var note in pattern.Notes.Values)
                         {
-                            var note = pattern.Notes[i];
                             var mapping = GetDPCMMapping(note.Value);
                             if (note.IsValid && !note.IsStop && note.Instrument == null && mapping != null && mapping.Sample != null)
                             {
@@ -605,6 +789,8 @@ namespace FamiStudio
 
             foreach (var song in Songs)
                 song.Validate(this);
+
+            Debug.Assert(Note.EmptyNote.IsEmpty);
 #endif
         }
 
@@ -678,6 +864,17 @@ namespace FamiStudio
                 buffer.Serialize(ref expansionAudio);
             }
 
+            // At version 5 (FamiStudio 1.5.0) we added support for Namco 163 and advanced tempo mode.
+            if (buffer.Version >= 5)
+            {
+                buffer.Serialize(ref expansionNumChannels);
+                buffer.Serialize(ref tempoMode);
+            }
+            else
+            {
+                tempoMode = TempoFamiTracker;
+            }
+
             // DPCM samples
             SerializeDPCMState(buffer);
 
@@ -692,7 +889,7 @@ namespace FamiStudio
                 song.SerializeState(buffer);
         }
 
-        public Project Clone()
+        public Project DeepClone()
         {
             var saveSerializer = new ProjectSaveBuffer(this);
             SerializeState(saveSerializer);

@@ -27,7 +27,7 @@ namespace FamiStudio
         private Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
         private Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
         private Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
-        private StrokeStyle strokeStyle;
+        private StrokeStyle strokeStyleMiter;
 
         public Factory Factory => factory;
         public WindowRenderTarget RenderTarget => renderTarget;
@@ -46,7 +46,7 @@ namespace FamiStudio
             renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
             renderTarget.AntialiasMode = AntialiasMode.Aliased;
 
-            strokeStyle = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
+            strokeStyleMiter  = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
         }
 
         public void Dispose()
@@ -264,7 +264,7 @@ namespace FamiStudio
             AntiAliasing = true;
             renderTarget.FillGeometry(geo, fillBrush);
             PushTranslation(0.5f, 0.5f);
-            renderTarget.DrawGeometry(geo, lineBrush, lineWidth, strokeStyle);
+            renderTarget.DrawGeometry(geo, lineBrush, lineWidth, strokeStyleMiter);
             PopTransform();
             AntiAliasing = false;
         }
@@ -286,6 +286,15 @@ namespace FamiStudio
         public Brush CreateSolidBrush(Color color)
         {
             return new SolidColorBrush(renderTarget, ToRawColor4(color));
+        }
+
+        public Brush CreateBitmapBrush(Bitmap bmp, bool wrapX, bool wrapY)
+        {
+            return new BitmapBrush(renderTarget, bmp, new BitmapBrushProperties
+            {
+                ExtendModeX = wrapX ? ExtendMode.Wrap : ExtendMode.Clamp,
+                ExtendModeY = wrapY ? ExtendMode.Wrap : ExtendMode.Clamp
+            });
         }
 
         public Brush CreateHorizontalGradientBrush(float x0, float x1, Color color0, Color color1)

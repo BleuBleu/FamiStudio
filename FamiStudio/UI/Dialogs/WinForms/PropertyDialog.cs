@@ -7,20 +7,22 @@ namespace FamiStudio
 {
     public partial class PropertyDialog : Form
     {
+        public delegate bool ValidateDelegate(PropertyPage props);
+        public event ValidateDelegate ValidateProperties;
+
         public PropertyPage Properties => propertyPage;
+        private bool top = false;
 
-        public PropertyDialog(Point pt, int width, bool leftAlign = false)
+        public PropertyDialog(Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
+            top = topAlign;
             width = (int)(width * Direct2DTheme.DialogScaling);
-            
-            if (pt.X >= 0 && pt.Y >= 0)
-            {
-                if (leftAlign)
-                    pt.X -= width;
 
-                StartPosition = FormStartPosition.Manual;
-                Location = pt;
-            }
+            if (leftAlign)
+                pt.X -= width;
+
+            StartPosition = FormStartPosition.Manual;
+            Location = pt;
 
             Init();
 
@@ -67,8 +69,11 @@ namespace FamiStudio
             buttonYes.Top  = propertyPage.Bottom + 0;
             buttonNo.Left  = propertyPage.Right - buttonNo.Width - 5;
             buttonNo.Top   = propertyPage.Bottom + 0;
+
+            if (top)
+                Location = new Point(Location.X, Location.Y - Height);
         }
-        
+
         private void propertyPage_PropertyWantsClose(int idx)
         {
             DialogResult = DialogResult.OK;
@@ -91,8 +96,11 @@ namespace FamiStudio
 
         private void buttonYes_Click(object sender, EventArgs e)
         {
-            DialogResult = DialogResult.OK;
-            Close();
+            if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
+            {
+                DialogResult = DialogResult.OK;
+                Close();
+            }
         }
 
         private void buttonNo_Click(object sender, EventArgs e)

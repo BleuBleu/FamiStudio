@@ -15,18 +15,68 @@ New encoding:
 	$01-$60        Notes (like doug)
 	$61            Auto slide note (followed by step size + num steps (255 = manual slide) + target note)
 	$62            Disable attack (can only happen when no instrument changes)
-	$63            Override pitch envelope (for vibrato***)
-	$64            Clear override flag.
-	$65-$6f        Free.
+	$63            Override pitch envelope (for vibrato)
+	$64            Clear pitch override flag.
+	$65            fine pitch.
+	$66            FDS mod speed
+	$67            FDS mod depth
+	$68-$6f        Free.
 	$70-$7f        Volume (like doug).
 	$80 | (n << 1) Instrument change, max 64
-	$81 | (n << 1) Series of n empty notes (max 58 because 59 = $f7, 60 = $f9, 61 = $fb, 62 = $fd)
-	$f7            Release note (3b)
-	$f9            Repeat (3c)
+	$81 | (n << 1) Series of n empty notes (max 59 = $f7, 60 = $f9, 61 = $fb, 62 = $fd)
+	$f9            Release note (3b)
 	$fb            Speed change (3d)
 	$fd            Jump (3e)
 	$ff, n, ref    Plays n notes starting at ref
+
+Instruments:
+
+	Base
+	- 6 bytes envelopes (vol, arp, pitch)
+	- 2 bytes duty envelope, if applicable.
 	
+	Namco (+4 bytes)
+	- 2 byte wave env
+	- 1 byte size
+	- 1 byte pos
+
+	FDS (+9 bytes)
+	- 2 byte wave ptr
+	- 2 byte mod ptr
+	- 2 byte mod speed
+	- 1 byte mod speed
+	- 1 byte mod delay
+	- 1 byte master volume
+
+	VRC7 (+9 bytes)
+	- 1-byte patch #
+	- 8-byte patch custom regs.
+
+Typical sequences in Shovel Knight:
+
+	; Intro, lots of volume.
+	$80,$0f,$a5, (Instrument + note + empty notes)
+	$82,$1b,$91, (Instrument + note + empty notes)
+	$22,$89,$f7,$85, (Note + empty + release + empty)
+	$20,$87,$7c,$93,$7a,$85,$79,$93,$78,$97 (note + empty + volume + empty + volume + ...)
+
+	; More typical.	
+	$25,$8f,$00, (Note + empty + stop)
+	$9c,$3f,$8f,$00, (instrument + note + empty + stop)
+	$84,$20,$8f,$00,
+	$26,$8f,$00, (note + empty + stop)
+	$26,$8f,$00,
+	$9c,$3f,$8f,$00,
+	$84,$27,$8f,$00
+	
+	; Some use of new features.
+	$62,$1b,$85 (no attach + note + empty)
+	$2e,$89,$f7,$85 (note + empty + release + empty)
+	$33,$91 (note + empty)
+	$3a,$89,$f7,$85 (note + empty + release + empty)
+	$38,$99 (note + empty)
+	$63,<(@env22),>(@env22),$8d,$f7,$63,<(@env15),>(@env15),$64  (override pitch, empty, release, override + cancel override)
+
 Effects doug added in FT3/4/5:
 - 1xy/2xy      Slide up/down, useful since our pitch env are absolute. Good substitude for lack of HW sweep. DuckTables and JTS could have used that.
 - 3xx          Partamento, useful, but wait until i see a game that uses it.

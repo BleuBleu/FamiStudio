@@ -97,5 +97,21 @@ namespace FamiStudio
             tableLayout.RowStyles[0].Height = (int)(sequencer.ComputeDesiredSizeY() * Direct2DTheme.MainWindowScaling);
             PianoRoll.Invalidate();
         }
+
+        private void FamiStudioForm_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+        }
+
+        private void FamiStudioForm_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length > 0)
+                    FamiStudio.OpenProject(files[0]);
+            }
+        }
     }
 }

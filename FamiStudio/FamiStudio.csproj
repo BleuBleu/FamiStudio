@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -40,6 +40,7 @@
     <NoWarn>
     </NoWarn>
     <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -53,6 +54,7 @@
     <NoWarn>
     </NoWarn>
     <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
@@ -73,53 +75,55 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Source\IO\FamistudioTextFile.cs" />
+    <Compile Include="Source\IO\FamitrackerBaseFile.cs" />
+    <Compile Include="Source\IO\FamitrackerBinaryFile.cs" />
     <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
+    <Compile Include="Source\IO\RomFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
-    <Compile Include="Source\Player\ChannelState.cs" />
-    <Compile Include="Source\Player\ChannelStateDpcm.cs" />
-    <Compile Include="Source\Player\ChannelStateFds.cs" />
-    <Compile Include="Source\Player\ChannelStateMmc5Square.cs" />
-    <Compile Include="Source\Player\ChannelStateNamco.cs" />
-    <Compile Include="Source\Player\ChannelStateSunsoftSquare.cs" />
-    <Compile Include="Source\Player\ChannelStateVrc7.cs" />
+    <Compile Include="Source\ChannelStates\ChannelState.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateFds.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateMmc5Square.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateN163.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateS5B.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
+    <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
-    <Compile Include="Source\Player\MIDI.cs" />
-    <Compile Include="Source\Player\ChannelStateNoise.cs" />
-    <Compile Include="Source\Player\ChannelStateVrc6Saw.cs" />
+    <Compile Include="Source\Player\WavPlayer.cs" />
+    <Compile Include="Source\Utils\MIDI.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
-    <Compile Include="Source\Player\ChannelStateSquare.cs" />
-    <Compile Include="Source\Player\ChannelStateTriangle.cs" />
-    <Compile Include="Source\Player\ChannelStateVrc6Square.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateSquare.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateTriangle.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateVrc6Square.cs" />
     <Compile Include="Source\Project\Envelope.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="UI\Dialogs\Common\ConfigDialog.cs" />
+    <Compile Include="UI\Dialogs\Common\NsfImportDialog.cs" />
     <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
+    <Compile Include="UI\Dialogs\Common\TransformDialog.cs" />
+    <Compile Include="UI\MainWindow\Common\CommonTooltips.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DGraphics.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DFontLoader.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />
-    <Compile Include="Source\IO\FamitrackerFile.cs" />
+    <Compile Include="Source\IO\FamitrackerTextFile.cs" />
     <Compile Include="Source\Project\Instrument.cs" />
     <Compile Include="Source\Player\NesApu.cs" />
     <Compile Include="Source\Project\Note.cs" />
     <Compile Include="Source\Project\Pattern.cs" />
-    <Compile Include="Source\Player\PlayerBase.cs" />
+    <Compile Include="Source\Player\BasePlayer.cs" />
     <Compile Include="Source\Project\Project.cs" />
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\Channel.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DTheme.cs" />
-    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
     <Compile Include="UI\MainWindow\Direct2D\Cursors.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
@@ -168,9 +172,44 @@
     <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyDialog.resx">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Nsf\nsf_ft2.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs.bin" />
-    <EmbeddedResource Include="Nsf\nsf_ft2_fs_vrc6.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_dual_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_fds_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_fds_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_mmc5_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_mmc5_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_1ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_2ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_3ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_4ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_5ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_6ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_7ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_8ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_8ch_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_pal.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_pal_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_s5b_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_s5b_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc6_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc6_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc7_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc7_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_dual_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc_tempo.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_pal_tempo.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -213,6 +252,8 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportWav.png" />
+    <EmbeddedResource Include="Rom\rom.nes" />
+    <EmbeddedResource Include="Rom\rom_tempo.nes" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -241,23 +282,62 @@
     <EmbeddedResource Include="Resources\Volume.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Duty0.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Duty1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Duty2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Duty3.png" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\InstrumentVRC6%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentVRC6.png" />
+    <Content Include="NotSoFatso.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <EmbeddedResource Include="Resources\Clean%402x.png" />
+    <EmbeddedResource Include="Resources\Clean.png" />
+    <EmbeddedResource Include="Resources\Dash%402x.png" />
+    <EmbeddedResource Include="Resources\Dash.png" />
+    <EmbeddedResource Include="Resources\ModSmall%402x.png" />
+    <EmbeddedResource Include="Resources\ModSmall.png" />
+    <EmbeddedResource Include="Resources\Mod%402x.png" />
+    <EmbeddedResource Include="Resources\Mod.png" />
+    <EmbeddedResource Include="Resources\ExportText%402x.png" />
+    <EmbeddedResource Include="Resources\ExportText.png" />
+    <EmbeddedResource Include="Resources\ButtonLeft%402x.png" />
+    <EmbeddedResource Include="Resources\ButtonLeft.png" />
+    <EmbeddedResource Include="Resources\ButtonRight%402x.png" />
+    <EmbeddedResource Include="Resources\ButtonRight.png" />
+    <EmbeddedResource Include="Resources\CustomPattern%402x.png" />
+    <EmbeddedResource Include="Resources\CustomPattern.png" />
+    <EmbeddedResource Include="Resources\Help%402x.png" />
+    <EmbeddedResource Include="Resources\Help.png" />
+    <EmbeddedResource Include="Resources\Transform%402x.png" />
+    <EmbeddedResource Include="Resources\Transform.png" />
+    <EmbeddedResource Include="Resources\Duty%402x.png" />
+    <EmbeddedResource Include="Resources\Duty.png" />
+    <EmbeddedResource Include="Resources\LengthSmallFill%402x.png" />
+    <EmbeddedResource Include="Resources\LengthSmallFill.png" />
+    <EmbeddedResource Include="Resources\NTSC%402x.png" />
+    <EmbeddedResource Include="Resources\NTSC.png" />
+    <EmbeddedResource Include="Resources\PAL%402x.png" />
+    <EmbeddedResource Include="Resources\PAL.png" />
+    <EmbeddedResource Include="Resources\CheckBoxNo%402x.png" />
+    <EmbeddedResource Include="Resources\CheckBoxNo.png" />
+    <EmbeddedResource Include="Resources\CheckBoxYes%402x.png" />
+    <EmbeddedResource Include="Resources\CheckBoxYes.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpanded%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpanded.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpand%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpand.png" />
+    <EmbeddedResource Include="Resources\PitchSmall%402x.png" />
+    <EmbeddedResource Include="Resources\PitchSmall.png" />
+    <EmbeddedResource Include="Resources\Wave%402x.png" />
+    <EmbeddedResource Include="Resources\Wave.png" />
+    <EmbeddedResource Include="Resources\InstrumentFds%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentFds.png" />
+    <EmbeddedResource Include="Resources\InstrumentKonami%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentKonami.png" />
+    <EmbeddedResource Include="Resources\InstrumentNamco%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentNamco.png" />
+    <EmbeddedResource Include="Resources\InstrumentSunsoft%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentSunsoft.png" />
+    <EmbeddedResource Include="Resources\ExportRom%402x.png" />
+    <EmbeddedResource Include="Resources\ExportRom.png" />
     <EmbeddedResource Include="Resources\VibratoSmall%402x.png" />
     <EmbeddedResource Include="Resources\VibratoSmall.png" />
     <EmbeddedResource Include="Resources\Slide%4015x.png" />
@@ -268,14 +348,6 @@
     <EmbeddedResource Include="Resources\SlideSmall.png" />
     <EmbeddedResource Include="Resources\Warning%402x.png" />
     <EmbeddedResource Include="Resources\Warning.png" />
-    <EmbeddedResource Include="Resources\Duty4%402x.png" />
-    <EmbeddedResource Include="Resources\Duty4.png" />
-    <EmbeddedResource Include="Resources\Duty5%402x.png" />
-    <EmbeddedResource Include="Resources\Duty5.png" />
-    <EmbeddedResource Include="Resources\Duty6%402x.png" />
-    <EmbeddedResource Include="Resources\Duty6.png" />
-    <EmbeddedResource Include="Resources\Duty7%402x.png" />
-    <EmbeddedResource Include="Resources\Duty7.png" />
     <EmbeddedResource Include="Resources\Instrument%402x.png" />
     <EmbeddedResource Include="Resources\Instrument.png" />
     <EmbeddedResource Include="Resources\Saw%402x.png" />
@@ -304,7 +376,6 @@
     <EmbeddedResource Include="Resources\ConfigUserInterface.png" />
     <EmbeddedResource Include="Resources\Noise%4015x.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
-    <EmbeddedResource Include="Resources\LoopSmall%402x.png" />
     <EmbeddedResource Include="Resources\Music%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill.png" />
@@ -316,10 +387,6 @@
     <EmbeddedResource Include="Resources\Arpeggio%402x.png" />
     <EmbeddedResource Include="Resources\CollapsedSmall%402x.png" />
     <EmbeddedResource Include="Resources\DPCM%402x.png" />
-    <EmbeddedResource Include="Resources\Duty0%402x.png" />
-    <EmbeddedResource Include="Resources\Duty1%402x.png" />
-    <EmbeddedResource Include="Resources\Duty2%402x.png" />
-    <EmbeddedResource Include="Resources\Duty3%402x.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall%402x.png" />
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
     <EmbeddedResource Include="Resources\JumpSmall%402x.png" />
@@ -349,13 +416,6 @@
     <EmbeddedResource Include="Resources\Stop%402x.png" />
     <EmbeddedResource Include="Resources\Undo%402x.png" />
     <EmbeddedResource Include="Resources\Yes%402x.png" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand10_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand12_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand20_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand28_0.png" />
     <EmbeddedResource Include="Resources\VolumeSmall.png" />
     <EmbeddedResource Include="Resources\Export.png" />
     <EmbeddedResource Include="Resources\File.png" />
@@ -370,7 +430,6 @@
     <EmbeddedResource Include="Resources\LoopPattern.png" />
     <EmbeddedResource Include="Resources\LoopNone.png" />
     <EmbeddedResource Include="Resources\Pause.png" />
-    <EmbeddedResource Include="Resources\LoopSmall.png" />
     <EmbeddedResource Include="Resources\Add.png" />
     <EmbeddedResource Include="Resources\CollapsedSmall.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall.png" />

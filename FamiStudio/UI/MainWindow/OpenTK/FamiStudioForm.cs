@@ -137,16 +137,21 @@ namespace FamiStudio
 
         public void CaptureMouse(GLControl ctrl)
         {
-            captureControl = ctrl;
 #if FAMISTUDIO_MACOS
             captureButtons = MacUtils.GetMouseButtons();
 #else
             captureButtons = GetStateButtons(Mouse.GetState());
 #endif
+            if (captureButtons != System.Windows.Forms.MouseButtons.None)
+            {
+                captureControl = ctrl;
+                //Debug.WriteLine($"CAPTURE! captureControl = {captureControl} captureButtons = {captureButtons}");
+            }
         }
 
         public void ReleaseMouse()
         {
+            //Debug.WriteLine($"RELEASE! captureControl = {captureControl}");
             captureControl = null;
         }
 
@@ -374,7 +379,6 @@ namespace FamiStudio
         {
             //if (CheckFrozen(false)) return;
             base.OnMouseDown(e);
-            if (captureControl != null) return;
 
 #if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
@@ -386,7 +390,20 @@ namespace FamiStudio
             if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
                 return;
 
-            var ctrl = GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
+            int x;
+            int y;
+            GLControl ctrl = null;
+
+            if (captureControl != null)
+            {
+                ctrl = captureControl;
+                x = e.X - ctrl.Left;
+                y = e.Y - ctrl.Top;
+            }
+            else
+            {
+                ctrl = GetControlAtCoord(pt.X, pt.Y, out x, out y);
+            }
 
             deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseUp, ctrl, ToWinFormArgs(e, x, y)));
         }
@@ -421,6 +438,8 @@ namespace FamiStudio
         {
             if (k >= Key.A && k <= Key.Z)
                 return System.Windows.Forms.Keys.A + (k - Key.A);
+            else if (k >= Key.Number0 && k <= Key.Number9)
+                return System.Windows.Forms.Keys.D0 + (k - Key.Number0);
             else if (k == Key.ControlRight || k == Key.ControlLeft || k == Key.Command || k == Key.WinLeft)
                 return System.Windows.Forms.Keys.Control;
             else if (k == Key.AltRight || k == Key.AltLeft)
@@ -542,6 +561,8 @@ namespace FamiStudio
 
         protected void ProcessDeferredEvents()
         {
+            var hasMouseCaptureEvent = false;
+
             processingDeferredEvents = true;
 
             foreach (var evt in deferredEvents)
@@ -549,7 +570,9 @@ namespace FamiStudio
                 switch (evt.type)
                 {
                     case DeferredEventType.MouseMove:
-                        evt.ctrl?.MouseMove(evt.args as System.Windows.Forms.MouseEventArgs);
+                        if (captureControl == null)
+                            evt.ctrl?.MouseMove(evt.args as System.Windows.Forms.MouseEventArgs);
+                        hasMouseCaptureEvent = true;
                         break;
                     case DeferredEventType.MouseDown:
                         evt.ctrl?.MouseDown(evt.args as System.Windows.Forms.MouseEventArgs);
@@ -558,7 +581,9 @@ namespace FamiStudio
                         evt.ctrl?.MouseDoubleClick(evt.args as System.Windows.Forms.MouseEventArgs);
                         break;
                     case DeferredEventType.MouseUp:
-                        evt.ctrl?.MouseUp(evt.args as System.Windows.Forms.MouseEventArgs);
+                        if (captureControl == null)
+                            evt.ctrl?.MouseUp(evt.args as System.Windows.Forms.MouseEventArgs);
+                        hasMouseCaptureEvent = true;
                         break;
                     case DeferredEventType.MouseWheel:
                         evt.ctrl?.MouseWheel(evt.args as System.Windows.Forms.MouseEventArgs);
@@ -575,7 +600,7 @@ namespace FamiStudio
                 }
             }
 
-            if (captureControl != null)
+            if (captureControl != null && hasMouseCaptureEvent)
             {
 #if FAMISTUDIO_MACOS
                 var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
@@ -587,17 +612,16 @@ namespace FamiStudio
 #endif
                 var args = new System.Windows.Forms.MouseEventArgs(buttons, 0, pt.X - captureControl.Left, pt.Y - captureControl.Top, 0);
 
-                if (buttons != captureButtons)
+                //Debug.WriteLine($"MOVE! captureControl = {captureControl} buttons = {buttons} captureButtons = {captureButtons} pt = {pt}");
+
+                if (buttons != captureButtons || buttons == System.Windows.Forms.MouseButtons.None)
                 {
                     captureControl.MouseUp(args);
-
-                    // Failsafe.
-                    if (buttons == System.Windows.Forms.MouseButtons.None)
-                        captureControl = null;
+                    captureControl = null;
                 }
                 else
                 {
-                    captureControl.MouseMove(args);
+                    captureControl.MouseMove(args); 
                 }
             }
 

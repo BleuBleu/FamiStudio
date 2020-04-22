@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace FamiStudio
 {
-    public class InstrumentPlayer : PlayerBase
+    public class InstrumentPlayer : AudioPlayer
     {
         struct PlayerNote
         {
@@ -13,8 +13,8 @@ namespace FamiStudio
         };
 
         int expansionAudio = Project.ExpansionNone;
-        ChannelState[] channels;
-        int[] envelopeFrames = new int[Envelope.Max];
+        int numExpansionChannels = 0;
+        int[] envelopeFrames = new int[Envelope.Count];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
         bool IsRunning => playerThread != null;
 
@@ -56,10 +56,12 @@ namespace FamiStudio
             }
         }
         
-        public void Start(Project project)
+        public void Start(Project project, bool pal)
         {
             expansionAudio = project.ExpansionAudio;
-            channels = PlayerBase.CreateChannelStates(project, apuIndex);
+            numExpansionChannels = project.ExpansionNumChannels;
+            channelStates = CreateChannelStates(project, apuIndex, numExpansionChannels, pal);
+            palMode = pal;
 
             stopEvent.Reset();
             frameEvent.Set();
@@ -76,7 +78,7 @@ namespace FamiStudio
                 stopEvent.Set();
                 playerThread.Join();
                 playerThread = null;
-                channels = null;
+                channelStates = null;
             }
         }
 
@@ -93,8 +95,8 @@ namespace FamiStudio
             var activeChannel = -1;
             var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
 
-            NesApu.InitAndReset(apuIndex, SampleRate, expansionAudio, dmcCallback);
-            for (int i = 0; i < channels.Length; i++)
+            NesApu.InitAndReset(apuIndex, SampleRate, palMode, expansionAudio, numExpansionChannels, dmcCallback);
+            for (int i = 0; i < channelStates.Length; i++)
                 NesApu.EnableChannel(apuIndex, i, 0);
 
             while (true)
@@ -117,7 +119,7 @@ namespace FamiStudio
                     activeChannel = lastNote.channel;
                     if (activeChannel >= 0)
                     {
-                        channels[activeChannel].PlayNote(lastNote.note);
+                        channelStates[activeChannel].PlayNote(lastNote.note);
 
                         if (lastNote.note.IsRelease)
                         {
@@ -130,7 +132,7 @@ namespace FamiStudio
                         }
                     }
 
-                    for (int i = 0; i < channels.Length; i++)
+                    for (int i = 0; i < channelStates.Length; i++)
                         NesApu.EnableChannel(apuIndex, i, i == activeChannel ? 1 : 0);
                 }
 
@@ -145,21 +147,21 @@ namespace FamiStudio
 
                 if (activeChannel >= 0)
                 {
-                    channels[activeChannel].UpdateEnvelopes();
-                    channels[activeChannel].UpdateAPU();
+                    channelStates[activeChannel].UpdateEnvelopes();
+                    channelStates[activeChannel].UpdateAPU();
 
-                    for (int i = 0; i < Envelope.Max; i++)
-                        envelopeFrames[i] = channels[activeChannel].GetEnvelopeFrame(i);
+                    for (int i = 0; i < Envelope.Count; i++)
+                        envelopeFrames[i] = channelStates[activeChannel].GetEnvelopeFrame(i);
                 }
                 else
                 {
-                    for (int i = 0; i < Envelope.Max; i++)
+                    for (int i = 0; i < Envelope.Count; i++)
                         envelopeFrames[i] = 0;
-                    foreach (var channel in channels)
+                    foreach (var channel in channelStates)
                         channel.ClearNote();
                 }
 
-                EndFrameAndQueueSamples();
+                EndFrame();
             }
 
             audioStream.Stop();

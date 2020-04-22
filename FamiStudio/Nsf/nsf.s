@@ -1,8 +1,13 @@
-.ifdef FS
-.include "famitone2fs.s"
+.ifdef FAMISTUDIO
+.include "famistudio.s"
 .else
 .include "famitone2.s"
 .endif
+
+.segment "HEADER"
+
+; NSF header Placeholder so that the debug info addresses matches.
+HEADER : .res 128
 
 .segment "CODE_INIT"
 
@@ -14,6 +19,11 @@
 	;   - start addr in page starting at $9000 (2-byte)
 	;   - flags (3 low bits = num dpcm pages)
 	
+.if ::FT_PAL_SUPPORT && ::FT_NTSC_SUPPORT
+	mode = FT_TEMP_VAR1
+	stx FT_TEMP_VAR1
+.endif	
+
 	asl
 	asl
 	tax
@@ -64,7 +74,15 @@
 	ldy SONG_TABLE+2, x ; hi-byte
 	lda SONG_TABLE+1, x ; lo-byte
 	tax
+
+.if ::FT_PAL_SUPPORT && ::FT_NTSC_SUPPORT
+	lda mode
+	eor #1
+.elseif ::FT_PAL_SUPPORT
+	lda #0 ; PAL
+.else
 	lda #1 ; NTSC
+.endif
 	jsr FamiToneInit
 	
 	lda #0

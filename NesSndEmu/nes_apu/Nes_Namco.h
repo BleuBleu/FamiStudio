@@ -40,32 +40,44 @@ public:
 	void save_snapshot( namco_snapshot_t* out );
 	void load_snapshot( namco_snapshot_t const& );
 	
+	enum { shadow_internal_regs_count = 128 };
+	void start_seeking();
+	void stop_seeking(blip_time_t& clock);
+	void write_shadow_register(int addr, int data);
+
 private:
 	// noncopyable
 	Nes_Namco( const Nes_Namco& );
 	Nes_Namco& operator = ( const Nes_Namco& );
 	
+	enum { osc_update_time = 15 };
+
 	struct Namco_Osc {
 		long delay;
+		short sample;
 		Blip_Buffer* output;
-		short last_amp;
-		short wave_pos;
 	};
 	
 	Namco_Osc oscs [osc_count];
 	
 	cpu_time_t last_time;
 	int addr_reg;
+	int last_amp;
+	int active_osc;
+	long delay;
 	
 	enum { reg_count = 0x80 };
 	BOOST::uint8_t reg [reg_count];
-	Blip_Synth<blip_good_quality,15> synth;
-	
+	Blip_Synth<blip_good_quality,225> synth;
+	Blip_Buffer* buffer;
+
+	short shadow_internal_regs[shadow_internal_regs_count];
+
 	BOOST::uint8_t& access();
 	void run_until( cpu_time_t );
 };
 
-inline void Nes_Namco::volume( double v ) { synth.volume( 0.10 / osc_count * v ); }
+inline void Nes_Namco::volume( double v ) { synth.volume( 0.66 * v ); }
 
 inline void Nes_Namco::treble_eq( const blip_eq_t& eq ) { synth.treble_eq( eq ); }
 
@@ -76,12 +88,13 @@ inline int Nes_Namco::read_data() { return access(); }
 inline void Nes_Namco::osc_output( int i, Blip_Buffer* buf )
 {
 	assert( (unsigned) i < osc_count );
-	oscs [i].output = buf;
+	oscs [osc_count - i - 1].output = buf;
 }
 
 inline void Nes_Namco::write_data( cpu_time_t time, int data )
 {
-	run_until( time );
+	if (time > last_time)
+		run_until( time );
 	access() = data;
 }
 

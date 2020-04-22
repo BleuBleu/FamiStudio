@@ -44,9 +44,8 @@ void Nes_Vrc6::reset()
 
 void Nes_Vrc6::volume( double v )
 {
-	v *= 0.0967 * 2;
-	saw_synth.volume( v );
-	square_synth.volume( v * 0.5 );
+	saw_synth.volume( v * 0.222 );
+	square_synth.volume( v * 0.1127 );
 }
 
 void Nes_Vrc6::treble_eq( blip_eq_t const& eq )
@@ -242,3 +241,34 @@ void Nes_Vrc6::run_saw( cpu_time_t end_time )
 	osc.last_amp = last_amp;
 }
 
+void Nes_Vrc6::start_seeking()
+{
+	memset(shadow_regs, -1, sizeof(shadow_regs));
+}
+
+void Nes_Vrc6::stop_seeking(blip_time_t& clock)
+{
+	for (int i = 0; i < array_count(shadow_regs); i++)
+	{
+		if (shadow_regs[i] >= 0)
+		{
+			int osc_idx = i / osc_count;
+			int reg_idx = i % osc_count;
+
+			write_register(clock += 4, base_addr + addr_step * osc_idx + reg_idx, shadow_regs[i]);
+		}
+	}
+}
+
+void Nes_Vrc6::write_shadow_register(int addr, int data)
+{
+	for (int i = 0; i < osc_count; i++)
+	{
+		int osc_base_addr = base_addr + addr_step * i;
+		if (addr >= osc_base_addr && addr <= osc_base_addr + reg_count)
+		{
+			shadow_regs[i * reg_count + (addr - osc_base_addr)] = data;
+			return;
+		}
+	}
+}

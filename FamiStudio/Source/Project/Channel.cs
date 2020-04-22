@@ -17,6 +17,7 @@ namespace FamiStudio
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
+        public bool IsExpansionChannel => type >= ExpansionAudioStart;
 
         // Channel types.
         public const int Square1 = 0;
@@ -37,19 +38,19 @@ namespace FamiStudio
         public const int FdsWave = 14;
         public const int Mmc5Square1 = 15;
         public const int Mmc5Square2 = 16;
-        // public const int Mmc5Dpcm = 17; MATTT: Do we want to keep space for it?
-        public const int NamcoWave1 = 17;
-        public const int NamcoWave2 = 18;
-        public const int NamcoWave3 = 19;
-        public const int NamcoWave4 = 20;
-        public const int NamcoWave5 = 21;
-        public const int NamcoWave6 = 22;
-        public const int NamcoWave7 = 23;
-        public const int NamcoWave8 = 24;
-        public const int SunsoftSquare1 = 25;
-        public const int SunsoftSquare2 = 26;
-        public const int SunsoftSquare3 = 27;
-        public const int Count = 28;
+        public const int Mmc5Dpcm = 17;
+        public const int N163Wave1 = 18;
+        public const int N163Wave2 = 19;
+        public const int N163Wave3 = 20;
+        public const int N163Wave4 = 21;
+        public const int N163Wave5 = 22;
+        public const int N163Wave6 = 23;
+        public const int N163Wave7 = 24;
+        public const int N163Wave8 = 25;
+        public const int S5BSquare1 = 26;
+        public const int S5BSquare2 = 27;
+        public const int S5BSquare3 = 28;
+        public const int Count = 29;
 
         public static string[] ChannelNames =
         {
@@ -70,23 +71,56 @@ namespace FamiStudio
             "FDS", // FDS
             "Square 1", // MMC5
             "Square 2", // MMC5
-            "Wave 1", // Namco
-            "Wave 2", // Namco
-            "Wave 3", // Namco
-            "Wave 4", // Namco
-            "Wave 5", // Namco
-            "Wave 6", // Namco
-            "Wave 7", // Namco
-            "Wave 8", // Namco
-            "Square 1", // Sunsoft
-            "Square 2", // Sunsoft
-            "Square 3", // SunsoftS
+            "DPCM", // MMC5
+            "Wave 1", // N163
+            "Wave 2", // N163
+            "Wave 3", // N163
+            "Wave 4", // N163
+            "Wave 5", // N163
+            "Wave 6", // N163
+            "Wave 7", // N163
+            "Wave 8", // N163
+            "Square 1", // S5B
+            "Square 2", // S5B
+            "Square 3", // S5B
         };
 
-        public Channel()
+        public static string[] ChannelExportNames =
         {
-            // For serialization
-        }
+            "Square1",
+            "Square2",
+            "Triangle",
+            "Noise",
+            "DPCM",
+            "VRC6Square1", // VRC6
+            "VRC6Square2", // VRC6
+            "VRC6Saw", // VRC6
+            "VRC7FM1", // VRC7
+            "VRC7FM2", // VRC7
+            "VRC7FM3", // VRC7
+            "VRC7FM4", // VRC7
+            "VRC7FM5", // VRC7
+            "VRC7FM6", // VRC7
+            "FDS", // FDS
+            "MMC5Square1", // MMC5
+            "MMC5Square2", // MMC5
+            "MMC5DPCM", // MMC5
+            "N163Wave1", // N163
+            "N163Wave2", // N163
+            "N163Wave3", // N163
+            "N163Wave4", // N163
+            "N163Wave5", // N163
+            "N163Wave6", // N163
+            "N163Wave7", // N163
+            "N163Wave8", // N163
+            "S5BSquare1", // S5B
+            "S5BSquare2", // S5B
+            "S5BSquare3", // S5B
+        };
+
+        public bool IsFdsWaveChannel  => type == Channel.FdsWave;
+        public bool IsN163WaveChannel => type >= Channel.N163Wave1 && type <= Channel.N163Wave8;
+        public bool IsVrc7FmChannel   => type >= Channel.Vrc7Fm1 && type <= Channel.Vrc7Fm6;
 
         public Channel(Song song, int type, int songLength)
         {
@@ -118,7 +152,6 @@ namespace FamiStudio
             if (instrument.ExpansionType == Project.ExpansionVrc6 && type >= Vrc6Square1 && type <= Vrc6Saw)
                 return true;
 
-#if DEV
             if (instrument.ExpansionType == Project.ExpansionVrc7 && type >= Vrc7Fm1 && type <= Vrc7Fm6)
                 return true;
 
@@ -128,65 +161,104 @@ namespace FamiStudio
             if (type >= Mmc5Square1 && type <= Mmc5Square2)
                 return true;
 
-            if (instrument.ExpansionType == Project.ExpansionNamco && type >= NamcoWave1 && type <= NamcoWave8)
+            if (instrument.ExpansionType == Project.ExpansionN163 && type >= N163Wave1 && type <= N163Wave8)
                 return true;
 
-            // MATTT: Will we want special instrument for S5B? Gimmick doesnt use noise or envelopes I think.
-            if (instrument.ExpansionType == Project.ExpansionSunsoft && type >= SunsoftSquare1 && type <= SunsoftSquare3)
+            if (instrument.ExpansionType == Project.ExpansionS5B && type >= S5BSquare1 && type <= S5BSquare3)
                 return true;
-#endif
 
             return false;
         }
 
         public bool SupportsReleaseNotes => type != Dpcm;
         public bool SupportsSlideNotes => type != Noise && type != Dpcm;
-        public bool SupportsVibrato => type != Noise && type != Dpcm;
 
         public bool SupportsEffect(int effect)
         {
             switch (effect)
             {
-                case Note.EffectVolume:       return type != Dpcm;
-                case Note.EffectVibratoSpeed: return SupportsVibrato;
-                case Note.EffectVibratoDepth: return SupportsVibrato;
+                case Note.EffectVolume: return type != Dpcm;
+                case Note.EffectFinePitch: return type != Noise && type != Dpcm;
+                case Note.EffectVibratoSpeed: return type != Noise && type != Dpcm;
+                case Note.EffectVibratoDepth: return type != Noise && type != Dpcm;
+                case Note.EffectFdsModDepth: return type == FdsWave;
+                case Note.EffectFdsModSpeed: return type == FdsWave;
+                case Note.EffectSpeed: return song.UsesFamiTrackerTempo;
             }
 
             return true;
         }
 
-        public void Split(int factor)
+        public void DuplicateInstancesWithDifferentLengths()
         {
-            if ((song.PatternLength % factor) == 0)
+            var instanceLengthMap = new Dictionary<Pattern, int>();
+
+            for (int p = 0; p < song.Length; p++)
             {
-                // TODO: This might generate identical patterns, need to cleanup.
-                var splitPatterns = new Dictionary<Pattern, Pattern[]>();
-                var newPatterns = new List<Pattern>();
+                var pattern = patternInstances[p];
+                var patternLen = song.GetPatternLength(p);
 
-                foreach (var pattern in patterns)
+                if (pattern != null)
                 {
-                    var splits = pattern.Split(factor);
-                    splitPatterns[pattern] = splits;
-                    newPatterns.AddRange(splits);
-                }
-
-                var newSongLength = song.Length * factor;
-                var newPatternsInstances = new Pattern[Song.MaxLength];
-                
-                for (int i = 0; i < song.Length; i++)
-                {
-                    var oldPattern = patternInstances[i];
-                    if (oldPattern != null)
+                    if (instanceLengthMap.TryGetValue(pattern, out var prevLength))
                     {
-                        for (int j = 0; j < factor; j++)
+                        if (patternLen != prevLength)
                         {
-                            newPatternsInstances[i * factor + j] = splitPatterns[oldPattern][j];
+                            pattern = pattern.ShallowClone(); ;
+                            patternInstances[p] = pattern;
                         }
                     }
-                }
 
-                patternInstances = newPatternsInstances;
-                patterns = newPatterns;
+                    instanceLengthMap[pattern] = patternLen;
+                }
+            }
+        }
+
+        // Inputs are absolute note indices from beginning of song.
+        public void DeleteNotesBetween(int minFrame, int maxFrame, bool preserveFx = false)
+        {
+            var patternIdxMin = Song.FindPatternInstanceIndex(minFrame, out var patternNoteIdxMin);
+            var patternIdxMax = Song.FindPatternInstanceIndex(maxFrame, out var patternNoteIdxMax);
+
+            if (patternIdxMin == patternIdxMax)
+            {
+                if (patternIdxMin < song.Length)
+                {
+                    var pattern = patternInstances[patternIdxMin];
+                    if (pattern != null)
+                    {
+                        pattern.DeleteNotesBetween(patternNoteIdxMin, patternNoteIdxMax, preserveFx);
+                        pattern.ClearLastValidNoteCache();
+                    }
+                }
+            }
+            else
+            {
+                for (int p = patternIdxMin; p <= patternIdxMax && p < song.Length; p++)
+                {
+                    var pattern = patternInstances[p];
+
+                    if (pattern != null)
+                    {
+                        if (p == patternIdxMin)
+                        {
+                            pattern.DeleteNotesBetween(patternNoteIdxMin, Pattern.MaxLength, preserveFx);
+                        }
+                        else if (p == patternIdxMax)
+                        {
+                            pattern.DeleteNotesBetween(0, patternNoteIdxMax, preserveFx);
+                        }
+                        else
+                        {
+                            if (preserveFx)
+                                pattern.DeleteNotesBetween(0, Pattern.MaxLength, true);
+                            else
+                                pattern.Notes.Clear();
+                        }
+
+                        pattern.ClearLastValidNoteCache();
+                    }
+                }
             }
         }
 
@@ -215,7 +287,7 @@ namespace FamiStudio
             }
         }
 
-        public void RemoveEmptyPatterns()
+        public void DeleteEmptyPatterns()
         {
             for (int i = 0; i < patternInstances.Length; i++)
             {
@@ -225,7 +297,7 @@ namespace FamiStudio
                 }
             }
 
-            CleanupUnusedPatterns();
+            DeleteUnusedPatterns();
         }
 
         public bool RenamePattern(Pattern pattern, string name)
@@ -259,35 +331,7 @@ namespace FamiStudio
             }
         }
 
-        public bool GetMinMaxNote(out Note min, out Note max)
-        {
-            bool valid = false;
-
-            min = new Note(255);
-            max = new Note(0);
-
-            for (int i = 0; i < song.Length; i++)
-            {
-                var pattern = PatternInstances[i];
-                if (pattern != null)
-                {
-                    for (int j = 0; j < song.PatternLength; j++)
-                    {
-                        var n = pattern.Notes[j];
-                        if (n.IsValid && !n.IsStop)
-                        {
-                            if (n.Value < min.Value) min = n;
-                            if (n.Value > max.Value) max = n;
-                            valid = true;
-                        }
-                    }
-                }
-            }
-
-            return valid;
-        }
-
-        public void CleanupUnusedPatterns()
+        public void DeleteUnusedPatterns()
         {
             HashSet<Pattern> usedPatterns = new HashSet<Pattern>();
             for (int i = 0; i < song.Length; i++)
@@ -303,22 +347,29 @@ namespace FamiStudio
             patterns.AddRange(usedPatterns);
         }
 
-        public byte GetLastValidEffectValue(int startPatternIdx, int effect)
+        public void DeleteNotesPastMaxInstanceLength()
+        {
+            foreach (var pattern in patterns)
+                pattern.ClearNotesPastMaxInstanceLength();
+        }
+
+        public int GetLastValidEffectValue(int startPatternIdx, int effect)
         {
             for (int p = startPatternIdx; p >= 0; p--)
             {
                 var pattern = patternInstances[p];
                 if (pattern != null)
                 {
-                    if (pattern.HasLastEffectValue(effect))
-                        return pattern.GetLastEffectValue(effect);
+                    var lastPatternNoteIdx = song.GetPatternLength(p) - 1;
+                    if (pattern.HasLastEffectValueAt(lastPatternNoteIdx, effect))
+                        return pattern.GetLastEffectValueAt(lastPatternNoteIdx, effect);
                 }
             }
 
-            return (byte)Note.GetEffectDefaultValue(song, effect);
+            return Note.GetEffectDefaultValue(song, effect);
         }
 
-        public bool GetLastValidNote(ref int patternIdx, out int noteIdx, out bool released)
+        public bool GetLastValidNote(ref int patternIdx, ref Note lastValidNote, out int noteIdx, out bool released)
         {
             noteIdx = -1;
             released = false;
@@ -330,28 +381,70 @@ namespace FamiStudio
                 if (pattern != null)
                 {
                     var note = new Note(Note.NoteInvalid);
+                    var lastPatternNoteIdx = song.GetPatternLength(patternIdx) - 1;
 
-                    if (pattern.LastValidNoteTime >= 0)
+                    if (pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx) >= 0)
                     {
-                        note = pattern.LastValidNote;
-                        noteIdx = pattern.LastValidNoteTime;
-                        Debug.Assert(pattern.LastValidNote.IsValid);
+                        note    = pattern.GetLastValidNoteAt(lastPatternNoteIdx);
+                        noteIdx = pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx);
+                        Debug.Assert(note.IsValid);
                     }
 
-                    released = note.IsStop ? false : released || pattern.LastValidNoteReleased;
+                    released = note.IsStop ? false : released || pattern.GetLastValidNoteReleasedAt(lastPatternNoteIdx);
 
                     if (note.IsValid)
+                    {
+                        lastValidNote = note;
                         return true;
+                    }
                 }
             }
 
             return false;
         }
 
-        public bool ComputeSlideNoteParams(int patternIdx, int noteIdx, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
+        public static void GetShiftsForType(int type, int numN163Channels, out int pitchShift, out int slideShift)
         {
-            var note = patternInstances[patternIdx].Notes[noteIdx];
+            if (type >= Vrc7Fm1 && type <= Vrc7Fm6)
+            {
+                // VRC7 has large pitch values
+                slideShift = 3;
+                pitchShift = 3;
+            }
+            else if (type >= N163Wave1 && type <= N163Wave8)
+            {
+                // Every time we double the number of N163 channels, the pitch values double.
+                switch (numN163Channels)
+                {
+                    case 1:
+                        slideShift = 2;
+                        pitchShift = 2;
+                        break;
+                    case 2:
+                        slideShift = 3;
+                        pitchShift = 3;
+                        break;
+                    case 3:
+                    case 4:
+                        slideShift = 4;
+                        pitchShift = 4;
+                        break;
+                    default:
+                        slideShift = 5;
+                        pitchShift = 5;
+                        break;
+                }
+            }
+            else
+            {
+                // For most channels, we have 1 bit of fraction to better handle slopes.
+                slideShift = -1;
+                pitchShift =  0;
+            }
+        }
 
+        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, int famitrackerBaseTempo, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
+        {
             Debug.Assert(note.IsMusical);
 
             // Find the next note to calculate the slope.
@@ -365,13 +458,15 @@ namespace FamiStudio
             }
             else
             {
-                pitchDelta = (int)noteTable[note.Value] - (int)noteTable[note.SlideNoteTarget];
+                GetShiftsForType(type, song.Project.ExpansionNumChannels, out _, out var slideShift);
+
+                pitchDelta = noteTable[note.Value] - noteTable[note.SlideNoteTarget];
 
                 if (pitchDelta != 0)
                 {
-                    pitchDelta <<= 1; // We have 1 bit of fraction to better handle various slopes.
+                    pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
 
-                    var frameCount = noteDuration * song.Speed + 1;
+                    var frameCount = song.UsesFamiTrackerTempo ? Math.Floor(noteDuration * (famitrackerSpeed * famitrackerBaseTempo / (float)song.FamitrackerTempo) + 1) : noteDuration + 1;
                     var floatStep  = Math.Abs(pitchDelta) / (float)frameCount;
 
                     stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
@@ -383,29 +478,44 @@ namespace FamiStudio
             }
         }
 
+        public float ComputeRawSlideNoteParams(int noteValue, int slideTarget, int patternIdx, int noteIdx, int famitrackerSpeed, int famitrackerBaseTempo, ushort[] noteTable)
+        {
+            Debug.Assert(noteValue >= Note.MusicalNoteMin && noteValue <= Note.MusicalNoteMax);
+
+            // Find the next note to calculate the slope.
+            var noteDuration = FindNextNoteForSlide(patternIdx, noteIdx, 256); // 256 is kind of arbitrary. 
+            var pitchDelta = noteTable[noteValue] - noteTable[slideTarget];
+            var frameCount = song.UsesFamiTrackerTempo ? Math.Floor(noteDuration * (famitrackerSpeed * famitrackerBaseTempo / (float)song.FamitrackerTempo) + 1) : noteDuration + 1;
+
+            return (float)(pitchDelta / frameCount);
+        }
+
         public int FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes)
         {
             var noteCount = 0;
+            var patternLength = song.GetPatternLength(patternIdx);
+            var pattern = patternInstances[patternIdx];
 
-            for (int n = noteIdx + 1; n < song.PatternLength && noteCount < maxNotes; n++, noteCount++)
+            for (var it = pattern.GetNoteIterator(noteIdx + 1, patternLength); !it.Done && noteCount < maxNotes; it.Next(), noteCount++)
             {
-                var tmpNote = patternInstances[patternIdx].Notes[n];
-                if (tmpNote.IsMusical || tmpNote.IsStop)
-                    return (patternIdx * song.PatternLength + n) - (patternIdx * song.PatternLength + noteIdx);
+                var time = it.CurrentTime;
+                var note = it.CurrentNote;
+                if (note != null && (note.IsMusical || note.IsStop))
+                    return song.GetPatternStartNote(patternIdx, time) - song.GetPatternStartNote(patternIdx, noteIdx);
             }
 
             for (int p = patternIdx + 1; p < song.Length && noteCount < maxNotes; p++)
             {
-                var pattern = patternInstances[p];
+                pattern = patternInstances[p];
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
-                    return (p * song.PatternLength + pattern.FirstValidNoteTime) - (patternIdx * song.PatternLength + noteIdx);
+                    return song.GetPatternStartNote(p, pattern.FirstValidNoteTime) - song.GetPatternStartNote(patternIdx, noteIdx);
                 else
-                    noteCount += song.PatternLength;
+                    noteCount += song.GetPatternLength(p);
             }
 
             // This mean we hit the end of the song.
             if (noteCount < maxNotes)
-                return (song.Length * song.PatternLength) - (patternIdx * song.PatternLength + noteIdx);
+                return song.GetPatternStartNote(song.Length) - song.GetPatternStartNote(patternIdx, noteIdx);
 
             return maxNotes;
         }
@@ -418,14 +528,29 @@ namespace FamiStudio
             var pattern = patternInstances[p];
             if (pattern != null)
             {
-                while (n >= 0 && !pattern.Notes[n].IsValid) n--;
+                int  prevTime = -1;
+                Note prevNote = null;
 
-                if (n >= 0)
+                foreach (var kv in pattern.Notes)
                 {
-                    if (pattern.Notes[n].Value == noteValue)
+                    var time = kv.Key;
+                    if (time > noteIdx)
+                        break;
+
+                    var note = kv.Value;
+                    if (note.IsValid)
+                    {
+                        prevTime = time;
+                        prevNote = note;
+                    }
+                }
+
+                if (prevNote != null)
+                {
+                    if (prevNote.Value == noteValue)
                     {
                         patternIdx = p;
-                        noteIdx = n;
+                        noteIdx = prevTime;
                         return true;
                     }
                     else
@@ -439,20 +564,30 @@ namespace FamiStudio
             while (p >= 0)
             {
                 pattern = patternInstances[p];
-                if (pattern != null && pattern.LastValidNoteTime >= 0)
+                if (pattern != null)
                 {
-                    if (pattern.LastValidNote.IsValid && 
-                        pattern.LastValidNote.Value == noteValue)
+                    var lastPatternNoteIdx = song.GetPatternLength(p) - 1;
+                    n = pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx);
+                    if (n >= 0)
                     {
-                        n = pattern.LastValidNoteTime;
-                        patternIdx = p;
-                        noteIdx = n;
-                        return true;
+                        var lastNote = pattern.GetLastValidNoteAt(lastPatternNoteIdx);
+                        if (lastNote.IsValid)
+                        {
+                            if (lastNote.Value == noteValue)
+                            {
+                                noteIdx = n;
+                                patternIdx = p;
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        }
                     }
                 }
 
-                n = song.PatternLength - 1;
-                p--;
+                if (--p < 0) break;
             }
 
             return false;
@@ -462,12 +597,6 @@ namespace FamiStudio
         {
             for (int i = song.Length; i < patternInstances.Length; i++)
                 patternInstances[i] = null;
-        }
-
-        public void ClearNotesPastSongLength()
-        {
-            foreach (var pattern in patterns)
-                pattern.ClearNotesPastSongLength();
         }
 
         public static int ChannelTypeToIndex(int type)
@@ -482,10 +611,12 @@ namespace FamiStudio
                 return ExpansionAudioStart;
             if (type >= Mmc5Square1 && type <= Mmc5Square2)
                 return ExpansionAudioStart + type - Mmc5Square1;
-            if (type >= NamcoWave1 && type <= NamcoWave8)
-                return ExpansionAudioStart + type - NamcoWave1;
-            if (type >= SunsoftSquare1 && type <= SunsoftSquare3)
-                return ExpansionAudioStart + type - SunsoftSquare1;
+            if (type == Mmc5Dpcm)
+                return -1;
+            if (type >= N163Wave1 && type <= N163Wave8)
+                return ExpansionAudioStart + type - N163Wave1;
+            if (type >= S5BSquare1 && type <= S5BSquare3)
+                return ExpansionAudioStart + type - S5BSquare1;
             Debug.Assert(false);
             return -1;
         }
@@ -502,10 +633,45 @@ namespace FamiStudio
         }
 #endif
 
+        public void ClearPatternsLastValidNotesCache()
+        {
+            foreach (var pattern in patterns)
+                pattern.ClearLastValidNoteCache();
+        }
+        
+        public void MergeIdenticalPatterns()
+        {
+            var patternCrcMap = new Dictionary<uint, Pattern>();
+
+            for (int i = 0; i < patterns.Count; )
+            {
+                var pattern = patterns[i];
+                var crc = pattern.ComputeCRC();
+
+                if (patternCrcMap.TryGetValue(crc, out var matchingPattern))
+                {
+                    patterns.RemoveAt(i);
+
+                    for (int j = 0; j < song.Length; j++)
+                    {
+                        if (patternInstances[j] == pattern)
+                            patternInstances[j] = matchingPattern;
+                    }
+                }
+                else
+                {
+                    patternCrcMap[crc] = pattern;
+                    i++;
+                }
+            }
+
+            ClearPatternsLastValidNotesCache();
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (buffer.IsWriting)
-                CleanupUnusedPatterns();
+                DeleteUnusedPatterns();
 
             int patternCount = patterns.Count;
 

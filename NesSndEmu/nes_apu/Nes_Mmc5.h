@@ -16,6 +16,7 @@ public:
 	void volume(double);
 	void treble_eq(blip_eq_t const&);
 	void output(Blip_Buffer*);
+	void osc_output(int index, Blip_Buffer*);
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 
@@ -23,8 +24,9 @@ public:
 	enum { end_addr   = 0x5015 };
 
 	enum { shadow_regs_count = 8 };
-	static int addr_to_shadow_reg(int addr);
-	static int shadow_reg_to_addr(int idx);
+	void start_seeking();
+	void stop_seeking(blip_time_t& clock);
+	void write_shadow_register(int addr, int data);
 
 private:
 	// noncopyable
@@ -48,18 +50,10 @@ private:
 	int frame; // current frame (0-3)
 	int osc_enables;
 
+	short shadow_regs[shadow_regs_count];
+
 	void run_until(cpu_time_t);
 };
-
-inline int Nes_Mmc5::addr_to_shadow_reg(int addr)
-{
-	return addr >= start_addr && addr < start_addr + shadow_regs_count ? addr - start_addr : -1;
-}
-
-inline int Nes_Mmc5::shadow_reg_to_addr(int idx)
-{
-	return start_addr + idx;
-}
 
 #endif
 

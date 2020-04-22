@@ -435,7 +435,12 @@ namespace FamiStudio
         public static void SetNSWindowAlwayOnTop(IntPtr nsWin)
         {
             SendIntPtr(nsWin, selMakeKeyAndOrderFront, IntPtr.Zero);
-            SendIntPtr(nsWin, selSetLevel, 25);
+            SendIntPtr(nsWin, selSetLevel, 10);
+        }
+
+        public static void RemoveNSWindowAlwaysOnTop(IntPtr nsWin)
+        {
+            SendIntPtr(nsWin, selSetLevel, 0);
         }
 
         public static void SetNSWindowFocus(IntPtr nsWin)

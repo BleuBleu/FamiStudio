@@ -1,0 +1,16 @@
+site_name: FamiStudio Documentation
+nav:
+- Welcome: index.md   
+- User Guide:
+  - "Basics": basics.md
+  - "Editing Notes": pianoroll.md
+  - "Editing Patterns": sequencer.md
+  - "Editing Instruments": instruments.md
+  - "Editing Songs & Project": song.md
+  - "Importing & Exporting Your Songs": importexport.md
+  - "Using Expansion Audio": expansion.md
+  - "Cleaning-up your Project": cleanup.md
+  - "Configuring FamiStudio": config.md
+extra_css:
+    - css/extra.css    
+theme: slate

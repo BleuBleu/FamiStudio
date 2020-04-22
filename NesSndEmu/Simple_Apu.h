@@ -37,7 +37,7 @@ public:
 	void dmc_reader( int (*callback)( void* user_data, cpu_addr_t ), void* user_data = NULL );
 	
 	// Set output sample rate
-	blargg_err_t sample_rate( long rate );
+	blargg_err_t sample_rate( long rate, bool pal );
 	
 	// Write to register (0x4000-0x4017, except 0x4014 and 0x4016)
 	void write_register( cpu_addr_t, int data );
@@ -77,11 +77,8 @@ public:
 	bool is_seeking() const { return seeking; }
 
 private:
+	bool pal_mode;
 	bool seeking;
-	int  shadow_regs_apu[Nes_Apu::shadow_regs_count];
-	int  shadow_regs_vrc6[Nes_Vrc6::shadow_regs_count];
-	int  shadow_regs_fds[Nes_Fds::shadow_regs_count];
-	int  shadow_regs_mmc5[Nes_Mmc5::shadow_regs_count];
 	int  expansion;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;

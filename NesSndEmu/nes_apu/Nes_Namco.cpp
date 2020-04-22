@@ -30,6 +30,10 @@ Nes_Namco::~Nes_Namco()
 void Nes_Namco::reset()
 {
 	addr_reg = 0;
+	active_osc = osc_count - 1;
+	delay = 0;
+	last_amp = 0;
+	last_time = 0;
 	
 	int i;
 	for ( i = 0; i < reg_count; i++ )
@@ -39,13 +43,13 @@ void Nes_Namco::reset()
 	{
 		Namco_Osc& osc = oscs [i];
 		osc.delay = 0;
-		osc.last_amp = 0;
-		osc.wave_pos = 0;
+		osc.sample = 0;
 	}
 }
 
 void Nes_Namco::output( Blip_Buffer* buf )
 {
+	buffer = buf;
 	for ( int i = 0; i < osc_count; i++ )
 		osc_output( i, buf );
 }
@@ -58,24 +62,6 @@ BOOST::uint8_t& Nes_Namco::access()
 	return reg [addr];
 }
 
-/*
-void Nes_Namco::reflect_state( Tagged_Data& data )
-{
-	reflect_int16( data, 'ADDR', &addr_reg );
-	
-	static const char hex [17] = "0123456789ABCDEF";
-	int i;
-	for ( i = 0; i < reg_count; i++ )
-		reflect_int16( data, 'RG\0\0' + hex [i >> 4] * 0x100 + hex [i & 15], &reg [i] );
-	
-	for ( i = 0; i < osc_count; i++ )
-	{
-		reflect_int32( data, 'DLY0' + i, &oscs [i].delay );
-		reflect_int16( data, 'POS0' + i, &oscs [i].wave_pos );
-	}
-}
-*/
-
 void Nes_Namco::end_frame( cpu_time_t time )
 {
 	if ( time > last_time )
@@ -87,74 +73,96 @@ void Nes_Namco::end_frame( cpu_time_t time )
 
 #include BLARGG_ENABLE_OPTIMIZER
 
-void Nes_Namco::run_until( cpu_time_t nes_end_time )
+void Nes_Namco::run_until(cpu_time_t end_time)
 {
-	int active_oscs = ((reg [0x7f] >> 4) & 7) + 1;
-	for ( int i = osc_count - active_oscs; i < osc_count; i++ )
+	require(end_time >= last_time);
+
+	int active_oscs = ((reg[0x7f] >> 4) & 7) + 1;
+
+	cpu_time_t time = last_time + delay;
+
+	while (time < end_time)
 	{
-		Namco_Osc& osc = oscs [i];
-		Blip_Buffer* output = osc.output;
-		if ( !output )
-			continue;
-		
-		Blip_Buffer::resampled_time_t time =
-				output->resampled_time( last_time ) + osc.delay;
-		Blip_Buffer::resampled_time_t end_time = output->resampled_time( nes_end_time );
-		osc.delay = 0;
-		if ( time < end_time )
+		Namco_Osc& osc = oscs[active_osc];
+
+		BOOST::uint8_t* osc_reg = &reg[active_osc * 8 + 0x40];
+
+		long freq = ((osc_reg[4] & 3) << 16) | (osc_reg[2] << 8) | osc_reg[0];
+		int volume = osc_reg[7] & 15;
+		int wave_size = (8 - ((osc_reg[4] >> 2) & 7)) * 4;
+
+		// This is not very accurate. We always do the entire 15-cycle channel update.
+		// We should only update until end_time. This will fail to emulate mid-update
+		// register changes, but in practice should be OK.
+		if (osc.output && volume && freq && wave_size)
 		{
-			const BOOST::uint8_t* osc_reg = &reg [i * 8 + 0x40];
-			if ( !(osc_reg [4] & 0xe0) )
-				continue;
-			
-			int volume = osc_reg [7] & 15;
-			if ( !volume )
-				continue;
-			
-			long freq = (osc_reg [4] & 3) * 0x10000 + osc_reg [2] * 0x100L + osc_reg [0];
-			if ( !freq )
-				continue;
-			Blip_Buffer::resampled_time_t period =
-					output->resampled_duration( 983040 ) / freq * active_oscs;
-			
-			int wave_size = (8 - ((osc_reg [4] >> 2) & 7)) * 4;
-			if ( !wave_size )
-				continue;
-			
-			int last_amp = osc.last_amp;
-			int wave_pos = osc.wave_pos;
-			
-			do
-			{
-				// read wave sample
-				int addr = wave_pos + osc_reg [6];
-				int sample = reg [addr >> 1];
-				wave_pos++;
-				if ( addr & 1 )
-					sample >>= 4;
-				sample = (sample & 15) * volume;
-				
-				// output impulse if amplitude changed
-				int delta = sample - last_amp;
-				if ( delta )
-				{
-					last_amp = sample;
-					synth.offset_resampled( time, delta, output );
-				}
-				
-				// next sample
-				time += period;
-				if ( wave_pos >= wave_size )
-					wave_pos = 0;
-			}
-			while ( time < end_time );
-			
-			osc.wave_pos = wave_pos;
-			osc.last_amp = last_amp;
+			// read wave sample
+			long phase = (osc_reg[5] << 16) | (osc_reg[3] << 8) | osc_reg[1];
+			phase = (phase + freq) % (wave_size << 16);
+
+			int addr = ((phase >> 16) + osc_reg[6]) & 0xff;
+			int sample = reg[addr >> 1];
+
+			if (addr & 1)
+				sample >>= 4;
+
+			osc.sample = (sample & 15) * volume;
+
+			osc_reg[5] = (phase >> 16) & 0xff;
+			osc_reg[3] = (phase >>  8) & 0xff;
+			osc_reg[1] = (phase >>  0) & 0xff;
 		}
-		osc.delay = time - end_time;
+		else
+		{
+			osc.sample = 0;
+		}
+
+		float sum = 0.0f;
+		for (int i = osc_count - active_oscs; i < osc_count; i++)
+			sum += oscs[i].sample;
+		int sample = (int)(sum / min(6, max(1, active_oscs)) + 0.5f); 
+
+		// output impulse if amplitude changed
+		int delta = sample - last_amp;
+		if (delta)
+		{
+			last_amp = sample;
+			synth.offset(time, delta, buffer);
+		}
+
+		time += osc_update_time;
+
+		if (--active_osc < osc_count - active_oscs)
+			active_osc = osc_count - 1;
 	}
-	
-	last_time = nes_end_time;
+
+	delay = time - end_time;
+	last_time = time;
 }
+
+void Nes_Namco::start_seeking()
+{
+	memset(shadow_internal_regs, -1, sizeof(shadow_internal_regs));
+}
+
+void Nes_Namco::stop_seeking(blip_time_t& clock)
+{
+	for (int i = 0; i < array_count(shadow_internal_regs); i++)
+	{
+		if (shadow_internal_regs[i] >= 0)
+		{
+			write_register(clock += 4, addr_reg_addr, i);
+			write_register(clock += 4, data_reg_addr, shadow_internal_regs[i]);
+		}
+	}
+}
+
+void Nes_Namco::write_shadow_register(int addr, int data)
+{
+	if (addr >= addr_reg_addr && addr < (addr_reg_addr + reg_range))
+		addr_reg = data;
+	else if (addr >= data_reg_addr && addr < (data_reg_addr + reg_range))
+		shadow_internal_regs[addr_reg] = data;
+}
+
 

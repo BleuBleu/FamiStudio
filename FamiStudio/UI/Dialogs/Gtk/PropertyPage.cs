@@ -28,14 +28,17 @@ namespace FamiStudio
             public Widget control;
         };
 
-        System.Drawing.Color color;
-        Pixbuf colorBitmap;
-        List<Property> properties = new List<Property>();
+        private object userData;
+        private System.Drawing.Color color;
+        private Pixbuf colorBitmap;
+        private List<Property> properties = new List<Property>();
 
         public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
         public event PropertyChangedDelegate PropertyChanged;
         public delegate void PropertyWantsCloseDelegate(int idx);
         public event PropertyWantsCloseDelegate PropertyWantsClose;
+        public new object UserData { get => userData; set => userData = value; }
+        public int PropertyCount => properties.Count;
 
         public PropertyPage() : base(1, 1, false)
         {
@@ -90,12 +93,13 @@ namespace FamiStudio
             return colorBitmap;
         }
 
-        private Label CreateLabel(string str)
+        private Label CreateLabel(string str, string tooltip = null)
         {
             var label = new Label();
 
             label.Text = str;
             label.SetAlignment(0.0f, 0.5f);
+            label.TooltipText = tooltip;
 
             return label;
         }
@@ -122,11 +126,12 @@ namespace FamiStudio
             return textBox;
         }
 
-        private CheckButton CreateCheckBox(bool value, string text = "")
+        private CheckButton CreateCheckBox(bool value, string text = null, string tooltip = null)
         {
             var cb = new CheckButton();
             cb.Active = value;
             cb.Label = text;
+            cb.TooltipText = tooltip;
             cb.Toggled += Cb_Toggled;
 
             return cb;
@@ -200,11 +205,12 @@ namespace FamiStudio
             ChangeColor(o as ColorSelector, (int)e.X, (int)e.Y);
         }
 
-        private SpinButton CreateNumericUpDown(int value, int min, int max)
+        private SpinButton CreateNumericUpDown(int value, int min, int max, string tooltip = null)
         {
             var upDown = new SpinButton(min, max, 1);
 
             upDown.Value = value;
+            upDown.TooltipText = tooltip;
             upDown.ValueChanged += UpDown_ValueChanged1;
 
             return upDown;
@@ -221,7 +227,7 @@ namespace FamiStudio
             return new DomainSpinButton(values, value);
         }
 
-        private ComboBox CreateDropDownList(string[] values, string value)
+        private ComboBox CreateDropDownList(string[] values, string value, string tooltip = null)
         {
             var cb = ComboBox.NewText();
 
@@ -233,7 +239,17 @@ namespace FamiStudio
             }
 
             cb.Sensitive = values.Length > 0;
+            cb.TooltipText = tooltip;
+            cb.WidthRequest = 125;
+            cb.Changed += Cb_Changed;
+
             return cb;
+        }
+
+        private void Cb_Changed(object sender, EventArgs e)
+        {
+            int idx = GetPropertyIndex(sender as Widget);
+            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
         private CheckBoxList CreateCheckedListBox(string[] values, bool[] selected)
@@ -262,14 +278,25 @@ namespace FamiStudio
                 });
         }
 
-        public void AddBoolean(string label, bool value)
+        public void AddLabel(string label, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    label = CreateLabel(label),
-                    control = CreateCheckBox(value)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateLabel(value, tooltip)
+                });
+        }
+
+        public void AddBoolean(string label, bool value, string tooltip = null)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Boolean,
+                    label = CreateLabel(label, tooltip),
+                    control = CreateCheckBox(value, tooltip)
                 });
         }
 
@@ -293,15 +320,28 @@ namespace FamiStudio
                 });
         }
 
-        public void AddIntegerRange(string label, int value, int min, int max)
+        public void AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.IntegerRange,
-                    label = CreateLabel(label),
-                    control = CreateNumericUpDown(value, min, max)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateNumericUpDown(value, min, max, tooltip)
                 });
+        }
+
+        public void UpdateIntegerRange(int idx, int min, int max)
+        {
+            var spin = (properties[idx].control as SpinButton);
+            spin.SetRange(min, max);
+        }
+
+        public void UpdateIntegerRange(int idx, int value, int min, int max)
+        {
+            var spin = (properties[idx].control as SpinButton);
+            spin.SetRange(min, max);
+            spin.Value = value;
         }
 
         public void AddDomainRange(string label, int[] values, int value)
@@ -322,14 +362,14 @@ namespace FamiStudio
             spin.UpdateValues(values, value);
         }
 
-        public void AddStringList(string label, string[] values, string value)
+        public void AddStringList(string label, string[] values, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.StringList,
-                    label = CreateLabel(label),
-                    control = CreateDropDownList(values, value)
+                    label = CreateLabel(label, tooltip),
+                    control = CreateDropDownList(values, value, tooltip)
                 });
         }
 
@@ -347,6 +387,11 @@ namespace FamiStudio
         public void SetPropertyEnabled(int idx, bool enabled)
         {
             properties[idx].control.Sensitive = enabled;
+        }
+
+        public void SetLabelText(int idx, string text)
+        {
+            (properties[idx].control as Label).Text = text;
         }
 
         public object GetPropertyValue(int idx)

@@ -7,18 +7,24 @@ namespace FamiStudio
 {
     public class PropertyDialog : Window
     {
+        public delegate bool ValidateDelegate(PropertyPage props);
+        public event ValidateDelegate ValidateProperties;
+
+        private bool leftAlign = false;
+        private bool topAlign  = false;
+
         private PropertyPage propertyPage = new PropertyPage();
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false) : base(WindowType.Toplevel)
+        public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = width;
 
-            if (leftAlign)
-                pt.X -= width;
+            this.leftAlign = leftAlign;
+            this.topAlign  = topAlign;
 
             Move(pt.X, pt.Y);
         }
@@ -70,6 +76,31 @@ namespace FamiStudio
             SkipTaskbarHint = true;
         }
 
+        private bool RunValidation()
+        {
+            if (ValidateProperties == null)
+                return true;
+
+#if FAMISTUDIO_MACOS
+            MacUtils.RemoveNSWindowAlwaysOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
+#endif
+            // Validation might display messages boxes, need to work around z-ordering issues.
+            bool valid = ValidateProperties.Invoke(propertyPage);
+
+#if FAMISTUDIO_MACOS
+            // This fixes some super weird focus issues.
+            if (!valid)
+            {
+                Hide();
+                Show();
+            }
+
+            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
+#endif
+
+            return valid;
+        }
+
         private void ButtonNo_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
             result = System.Windows.Forms.DialogResult.Cancel;
@@ -77,19 +108,22 @@ namespace FamiStudio
 
         private void ButtonYes_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
-            result = System.Windows.Forms.DialogResult.OK;
+            if (RunValidation())
+                result = System.Windows.Forms.DialogResult.OK;
         }
 
         private void propertyPage_PropertyWantsClose(int idx)
         {
-            result = System.Windows.Forms.DialogResult.OK;
+            if (RunValidation())
+                result = System.Windows.Forms.DialogResult.OK;
         }
 
         protected override bool OnKeyPressEvent(Gdk.EventKey evnt)
         {
             if (evnt.Key == Gdk.Key.Return)
             {
-                result = System.Windows.Forms.DialogResult.OK;
+                if (RunValidation())
+                    result = System.Windows.Forms.DialogResult.OK;
             }
             else if (evnt.Key == Gdk.Key.Escape)
             {
@@ -102,6 +136,15 @@ namespace FamiStudio
         public System.Windows.Forms.DialogResult ShowDialog()
         {
             Show();
+
+            if (topAlign || leftAlign)
+            {
+                GetPosition(out var x, out var y);
+                if (leftAlign) x -= Allocation.Width;
+                if (topAlign)  y -= Allocation.Height;
+                Move(x, y);
+            }
+
 #if FAMISTUDIO_MACOS
             MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
 #endif

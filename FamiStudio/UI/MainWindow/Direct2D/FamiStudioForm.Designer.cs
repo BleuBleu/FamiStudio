@@ -103,6 +103,9 @@
             this.Name = "FamiStudioForm";
             this.Text = "FamiStudio";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.AllowDrop = true;
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.FamiStudioForm_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.FamiStudioForm_DragEnter);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyUp);
             this.tableLayout.ResumeLayout(false);
