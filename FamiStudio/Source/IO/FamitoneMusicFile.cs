@@ -122,7 +122,11 @@ namespace FamiStudio
                 else
                 {
                     lines.Add(line);
-                    lines.Add($"\t{db} 0, 0, 0, 0"); // MATTT
+
+                    if (machine == MachineType.NTSC)
+                        lines.Add($"\t{db} 0, 0, 0, 0");
+                    else
+                        lines.Add($"\t{db} {lo}(tempo_env{song.NoteLength}), {hi}(tempo_env{song.NoteLength}), 0, 0");
                 }
             }
 
@@ -454,6 +458,31 @@ namespace FamiStudio
             }
         }
 
+        private void OutputTempoEnvelopes()
+        {
+            if (project.UsesFamiStudioTempo && machine != MachineType.NTSC)
+            {
+                var uniqueNoteLengths = new HashSet<int>();
+
+                foreach (var song in project.Songs)
+                {
+                    uniqueNoteLengths.Add(song.NoteLength);
+
+                    for (int p = 0; p < song.Length; p++)
+                    {
+                        if (song.PatternHasCustomSettings(p))
+                            uniqueNoteLengths.Add(song.GetPatternNoteLength(p));
+                    }
+                }
+
+                foreach (var noteLength in uniqueNoteLengths)
+                {
+                    lines.Add($"{ll}tempo_env{noteLength}:");
+                    lines.Add($"\t{db} {String.Join(",", FamiStudioTempoUtils.GetPalSkipEnvelope(noteLength).Select(i => $"${i:x2}"))}");
+                }
+            }
+        }
+
         private void OutputSamples(string filename, string dmcFilename)
         {
             if (project.UsesSamples)
@@ -585,19 +614,21 @@ namespace FamiStudio
                         instrument = null;
                     }
 
-                    if (isSpeedChannel && project.UsesFamiStudioTempo)
+                    if (isSpeedChannel && project.UsesFamiStudioTempo && machine != MachineType.NTSC)
                     {
                         var noteLength = song.GetPatternNoteLength(p);
 
-                        if (noteLength    != previousNoteLength)
+                        if (noteLength != previousNoteLength || (p == song.LoopPoint && p != 0))
                         { 
                             if (!test)
                             {
-                                //lines.Add($"\t{db} $fb, ${noteLength:x2}, ${(skipFrames[0] < 0 ? 0xff : noteLength - skipFrames[0] - 1):x2}, ${(skipFrames[1] < 0 ? 0xff : noteLength - skipFrames[1] - 1):x2}"); // MATTT
+                                patternBuffer.Add($"$fb");
+                                patternBuffer.Add($"{lo}(tempo_env{noteLength})");
+                                patternBuffer.Add($"{hi}(tempo_env{noteLength})");
                                 previousNoteLength = noteLength;
                             }
 
-                            size += 4;
+                            size += 3;
                         }
                     }
 
@@ -990,6 +1021,7 @@ namespace FamiStudio
             CleanupEnvelopes();
             OutputHeader(separateSongs);
             OutputInstruments();
+            OutputTempoEnvelopes();
             OutputSamples(filename, dmcFilename);
 
             for (int i = 0; i < project.Songs.Count; i++)
