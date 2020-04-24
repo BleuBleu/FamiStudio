@@ -109,6 +109,7 @@
     <Compile Include="Source\Project\Envelope.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
+    <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="UI\Dialogs\Common\ConfigDialog.cs" />
     <Compile Include="UI\Dialogs\Common\NsfImportDialog.cs" />
     <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
