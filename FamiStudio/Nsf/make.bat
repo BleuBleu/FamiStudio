@@ -33,7 +33,7 @@ CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$
 
 :: FamiStudio engine (FamiStudio tempo)
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$980 {SONGDATASTART}=$8a00", "-D FAMISTUDIO -D FT_NTSC_SUPPORT=1 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_ntsc_tempo
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$980 {SONGDATASTART}=$8a00", "-D FAMISTUDIO -D FT_PAL_SUPPORT=1 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_pal_tempo
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$a80 {SONGDATASTART}=$8b00", "-D FAMISTUDIO -D FT_PAL_SUPPORT=1 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_pal_tempo
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$a80 {SONGDATASTART}=$8b00", "-D FAMISTUDIO -D FT_NTSC_SUPPORT=1 -D FT_PAL_SUPPORT=1 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_dual_tempo
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FAMISTUDIO -D FT_NTSC_SUPPORT=1 -D FT_VRC6 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_vrc6_ntsc_tempo
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FAMISTUDIO -D FT_NTSC_SUPPORT=1 -D FT_VRC7 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_vrc7_ntsc_tempo

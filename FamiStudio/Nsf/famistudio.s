@@ -174,10 +174,10 @@ FT_TEMPO_STEP_H:  .res 1
 FT_TEMPO_ACC_L:   .res 1
 FT_TEMPO_ACC_H:   .res 1
 .elseif FT_PAL_SUPPORT
-FT_TEMPO_SKIP_FRAME1:  .res 1
-FT_TEMPO_SKIP_FRAME2:  .res 1
-FT_TEMPO_NOTE_LENGTH:  .res 1
-FT_TEMPO_NOTE_COUNTER: .res 1
+FT_TEMPO_ENV_PTR_L:   .res 1
+FT_TEMPO_ENV_PTR_H:   .res 1
+FT_TEMPO_ENV_COUNTER: .res 1
+FT_TEMPO_ENV_IDX:     .res 1
 .endif
 FT_DPCM_LIST_L:   .res 1
 FT_DPCM_LIST_H:   .res 1
@@ -765,15 +765,18 @@ pal:
     sta FT_SONG_SPEED          ;apply default speed, this also enables music
 .elseif ::FT_PAL_SUPPORT
     lda (FT_TEMP_PTR1),y
-    sta FT_TEMPO_NOTE_COUNTER
-    sta FT_TEMPO_NOTE_LENGTH
+    sta FT_TEMPO_ENV_PTR_L
+    sta FT_TEMP_PTR2+0
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta FT_TEMPO_ENV_PTR_H
+    sta FT_TEMP_PTR2+1
+    ldy #0
+    sty FT_TEMPO_ENV_IDX
+    lda (FT_TEMP_PTR2),y
+    sta FT_TEMPO_ENV_COUNTER
+    lda #6
     sta FT_SONG_SPEED          ; simply so the song isnt considered paused.
-    iny
-    lda (FT_TEMP_PTR1),y
-    sta FT_TEMPO_SKIP_FRAME1
-    iny
-    lda (FT_TEMP_PTR1),y
-    sta FT_TEMPO_SKIP_FRAME2
 .else
     lda #6
     sta FT_SONG_SPEED
@@ -1896,21 +1899,31 @@ update_sound:
 .if ::FT_FAMISTUDIO_TEMPO && ::FT_PAL_SUPPORT
     lda FT_PAL_ADJUST ; On NTSC, just play 1 note per frame.
     bne check_done
-    dec FT_TEMPO_NOTE_COUNTER
-    bne check_frame1
-    lda FT_TEMPO_NOTE_LENGTH
-    sta FT_TEMPO_NOTE_COUNTER
 
-    ; We support notes up to 16 length, which mean we have up to 2 frames to skip.
-    check_frame1:
-        lda FT_TEMPO_NOTE_COUNTER
-        cmp FT_TEMPO_SKIP_FRAME1
-        bne check_frame2
+    dec FT_TEMPO_ENV_COUNTER
+    bne check_done
+
+    lda FT_TEMPO_ENV_PTR_L
+    sta FT_TEMP_PTR1+0
+    lda FT_TEMPO_ENV_PTR_H
+    sta FT_TEMP_PTR1+1
+
+    inc FT_TEMPO_ENV_IDX
+    ldy FT_TEMPO_ENV_IDX
+    lda (FT_TEMP_PTR1),y
+    bpl store_counter
+
+    tempo_envelope_end:
+        ldy #1
+        sty FT_TEMPO_ENV_IDX
+        lda (FT_TEMP_PTR1),y
+
+    store_counter:
+        sta FT_TEMPO_ENV_COUNTER
+
+        ; Skip this frame on PAL!
         jmp update
-    check_frame2:
-        cmp FT_TEMPO_SKIP_FRAME2
-        bne check_done
-        jmp update
+
     check_done:
 .endif
 
@@ -2662,17 +2675,18 @@ set_speed:
 .if ::FT_FAMISTUDIO_TEMPO 
     .if ::FT_PAL_SUPPORT
         lda (FT_TEMP_PTR1),y
-        sta FT_TEMPO_NOTE_COUNTER
-        sta FT_TEMPO_NOTE_LENGTH
+        sta FT_TEMPO_ENV_PTR_L
+        sta FT_TEMP_PTR2+0
         iny
         lda (FT_TEMP_PTR1),y
-        sta FT_TEMPO_SKIP_FRAME1
-        iny
-        lda (FT_TEMP_PTR1),y
-        sta FT_TEMPO_SKIP_FRAME2
+        sta FT_TEMPO_ENV_PTR_H
+        sta FT_TEMP_PTR2+1
         ldy #0
+        sty FT_TEMPO_ENV_IDX
+        lda (FT_TEMP_PTR2),y
+        sta FT_TEMPO_ENV_COUNTER
     .endif
-    add_16_8 FT_TEMP_PTR1, #3
+    add_16_8 FT_TEMP_PTR1, #2
 .else
     lda (FT_TEMP_PTR1),y
     sta FT_SONG_SPEED

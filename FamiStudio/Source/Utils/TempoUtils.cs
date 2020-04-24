@@ -11,6 +11,25 @@ namespace FamiStudio
         private const float FrameTimeMsPAL  = 1000.0f / FpsPAL;
         private const float FrameTimeMsNTSC = 1000.0f / FpsNTSC;
 
+        // Note Length  1 Error = 0.15 ms Must skip  1 frames over 6 Notes  0/0/0/0/0/1
+        // Note Length  2 Error = 0.15 ms Must skip  1 frames over 3 Notes  0/0/1
+        // Note Length  3 Error = 0.15 ms Must skip  1 frames over 2 Notes  0/1
+        // Note Length  4 Error = 0.30 ms Must skip  2 frames over 3 Notes  0/1/1
+        // Note Length  5 Error = 0.75 ms Must skip  5 frames over 6 Notes  0/1/1/1/1/1
+        // Note Length  6 Error = 0.15 ms Must skip  1 frames over 1 Notes  1
+        // Note Length  7 Error = 1.05 ms Must skip  7 frames over 6 Notes  1/1/1/1/1/2
+        // Note Length  8 Error = 0.60 ms Must skip  4 frames over 3 Notes  1/1/2
+        // Note Length  9 Error = 0.45 ms Must skip  3 frames over 2 Notes  1/2
+        // Note Length 10 Error = 0.75 ms Must skip  5 frames over 3 Notes  1/2/2
+        // Note Length 11 Error = 1.65 ms Must skip 11 frames over 6 Notes  1/2/2/2/2/2
+        // Note Length 12 Error = 0.30 ms Must skip  2 frames over 1 Notes  2
+        // Note Length 13 Error = 1.70 ms Must skip 11 frames over 5 Notes  2/2/2/2/3
+        // Note Length 14 Error = 1.05 ms Must skip  7 frames over 3 Notes  2/2/3
+        // Note Length 15 Error = 0.75 ms Must skip  5 frames over 2 Notes  2/3
+        // Note Length 16 Error = 1.20 ms Must skip  8 frames over 3 Notes  2/3/3
+        // Note Length 17 Error = 0.35 ms Must skip 20 frames over 7 Notes  2/3/3/3/3/3/3
+        // Note Length 18 Error = 0.45 ms Must skip  3 frames over 1 Notes  3
+
         // This table gives how a series of notes should perform PAL frame skips
         // in order to maintain pace with NTSC.
         //

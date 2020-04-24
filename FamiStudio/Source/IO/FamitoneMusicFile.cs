@@ -126,7 +126,7 @@ namespace FamiStudio
                     if (machine == MachineType.NTSC)
                         lines.Add($"\t{db} 0, 0, 0, 0");
                     else
-                        lines.Add($"\t{db} {lo}(tempo_env{song.NoteLength}), {hi}(tempo_env{song.NoteLength}), 0, 0");
+                        lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), 0, 0");
                 }
             }
 
@@ -623,8 +623,8 @@ namespace FamiStudio
                             if (!test)
                             {
                                 patternBuffer.Add($"$fb");
-                                patternBuffer.Add($"{lo}(tempo_env{noteLength})");
-                                patternBuffer.Add($"{hi}(tempo_env{noteLength})");
+                                patternBuffer.Add($"{lo}({ll}tempo_env{noteLength})");
+                                patternBuffer.Add($"{hi}({ll}tempo_env{noteLength})");
                                 previousNoteLength = noteLength;
                             }
 
@@ -1075,8 +1075,11 @@ namespace FamiStudio
                             // We only use those for vibrato right now.
                             bool lobyte = valStr.StartsWith("<(");
                             valStr = valStr.Substring(2, valStr.Length - 3);
-                            Debug.Assert(labels.ContainsKey(valStr));
-                            valNum = lobyte ? (labels[valStr] & 0xff) : (labels[valStr] >> 8) ;
+
+                            if (labels.ContainsKey(valStr))
+                                valNum = lobyte ? (labels[valStr] & 0xff) : (labels[valStr] >> 8);
+                            else if (lobyte)
+                                labelsToPatch.Add(new Tuple<string, int>(valStr, bytes.Count));
                         }
                         else if (labels.ContainsKey(valStr))
                         {
