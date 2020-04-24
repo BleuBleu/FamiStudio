@@ -8,6 +8,7 @@ namespace FamiStudio
     public class Song
     {
         public const int MaxLength = 256;
+        public const int MinNoteLength = 3;
         public const int MaxNoteLength = 18;
 
         public const int NativeTempoNTSC = 150;
@@ -546,7 +547,7 @@ namespace FamiStudio
         public void ResizeNotes(int newNoteLength, bool convert)
         {
             Debug.Assert(UsesFamiStudioTempo);
-            Debug.Assert(newNoteLength > 0 && newNoteLength <= MaxNoteLength);
+            Debug.Assert(newNoteLength >= MinNoteLength && newNoteLength <= MaxNoteLength);
 
             if (convert)
             {

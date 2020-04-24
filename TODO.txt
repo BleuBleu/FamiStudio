@@ -6,14 +6,8 @@
 	- There is a volume 15 somewhere.
 - Namco song 6, they with wave at pos 24. DO they sound right? Seems like the since is truncated.
 - Make sure all try/catch are enabled.
-
-
 - New tempo:
-	x Make it work with seek
-	x Add ASSERT
-	- Reset on loop point
 	- Export + NSF
-	- Resave files, remove old stuff an UI.
 	
  1 Error = 0.15 ms Must skip  1 frames over 6 Notes  0/0/0/0/0/1
  2 Error = 0.15 ms Must skip  1 frames over 3 Notes  0/0/1

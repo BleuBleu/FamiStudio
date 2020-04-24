@@ -11,7 +11,7 @@ namespace FamiStudio
         private const float FrameTimeMsPAL  = 1000.0f / FpsPAL;
         private const float FrameTimeMsNTSC = 1000.0f / FpsNTSC;
 
-        // This table gives how series of notes should perform PAL frame skips
+        // This table gives how a series of notes should perform PAL frame skips
         // in order to maintain pace with NTSC.
         //
         // For example, for a note that last 10 NTSC frame, the minimum PAL error

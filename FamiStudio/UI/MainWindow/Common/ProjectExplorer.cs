@@ -1187,7 +1187,7 @@ namespace FamiStudio
             }
             else
             {
-                dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, 1, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 3
+                dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, Song.MinNoteLength, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 3
                 dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 2, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 4
                 dlg.Properties.AddIntegerRange("Notes per Bar : ", song.BarLength / song.NoteLength, 2, 256, CommonTooltips.NotesPerBar); // 5
                 dlg.Properties.AddLabel("BPM :", song.BPM.ToString(), CommonTooltips.BPM); // 6
