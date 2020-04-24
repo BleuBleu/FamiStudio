@@ -107,7 +107,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    songStr += $" PatternLength=\"{song.PatternLength / song.NoteLength}\" BarLength=\"{song.BarLength / song.NoteLength}\" NoteLength=\"{song.NoteLength}\" PalSkipFrames=\"{String.Join(",", song.PalSkipFrames)}\"";
+                    songStr += $" PatternLength=\"{song.PatternLength / song.NoteLength}\" BarLength=\"{song.BarLength / song.NoteLength}\" NoteLength=\"{song.NoteLength}\"";
                 }
 
                 lines.Add(songStr);
@@ -126,9 +126,8 @@ namespace FamiStudio
                         {
                             var noteLength    = song.GetPatternNoteLength(i);
                             var barLength     = song.GetPatternBarLength(i);
-                            var palSkipFrames = song.GetPatternPalSkipFrames(i);
 
-                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength / noteLength}\" NoteLength=\"{noteLength}\" BarLength=\"{barLength / noteLength}\" PalSkipFrames=\"{String.Join(",", palSkipFrames)}\"");
+                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength / noteLength}\" NoteLength=\"{noteLength}\" BarLength=\"{barLength / noteLength}\"");
                         }
                     }
                 }
@@ -325,10 +324,6 @@ namespace FamiStudio
                                 song.ResizeNotes(noteLength, false);
                                 song.SetBarLength(int.Parse(parameters["BarLength"]) * noteLength);
                                 song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]) * noteLength);
-
-                                var skipFrames = parameters["PalSkipFrames"].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                                song.PalSkipFrames[0] = int.Parse(skipFrames[0]);
-                                song.PalSkipFrames[1] = int.Parse(skipFrames[1]);
                             }
                             break;
                         }
@@ -344,11 +339,7 @@ namespace FamiStudio
                                 var noteLength = int.Parse(parameters["NoteLength"]);
                                 var barLength = int.Parse(parameters["BarLength"]);
 
-                                var skipFramesStr = parameters["PalSkipFrames"].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                                var skipFrames = new int[2];
-                                skipFrames[0] = int.Parse(skipFramesStr[0]);
-                                skipFrames[1] = int.Parse(skipFramesStr[1]);
-                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, noteLength, barLength * noteLength, skipFrames);
+                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, noteLength, barLength * noteLength);
                             }
                             break;
                         }

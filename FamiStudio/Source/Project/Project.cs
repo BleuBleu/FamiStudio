@@ -478,9 +478,6 @@ namespace FamiStudio
                 foreach (var song in songs)
                 {
                     song.CreateChannels(true, Channel.ExpansionAudioStart + (!changed && expansion == ExpansionN163 ? oldNumChannels : 0));
-
-                    if (UsesFamiStudioTempo)
-                        Song.GetDefaultPalSkipFrames(song.NoteLength, song.PalSkipFrames);
                 }
 
                 if (changed)

@@ -4,9 +4,37 @@
 - Gimmick:
 	- Relook at all the channels, make sur no error
 	- There is a volume 15 somewhere.
-- CRASH: Rare crash in erika #3
+- Namco song 6, they with wave at pos 24. DO they sound right? Seems like the since is truncated.
 - Make sure all try/catch are enabled.
-- MAC: Recompile NesSndEmu.
+
+
+- New tempo:
+	x Make it work with seek
+	x Add ASSERT
+	- Reset on loop point
+	- Export + NSF
+	- Resave files, remove old stuff an UI.
+	
+ 1 Error = 0.15 ms Must skip  1 frames over 6 Notes  0/0/0/0/0/1
+ 2 Error = 0.15 ms Must skip  1 frames over 3 Notes  0/0/1
+ 3 Error = 0.15 ms Must skip  1 frames over 2 Notes  0/1
+ 4 Error = 0.30 ms Must skip  2 frames over 3 Notes  0/1/1
+ 5 Error = 0.75 ms Must skip  5 frames over 6 Notes  0/1/1/1/1/1
+ 6 Error = 0.15 ms Must skip  1 frames over 1 Notes  1
+ 
+ 7 Error = 1.05 ms Must skip  7 frames over 6 Notes  1/1/1/1/1/2
+ 8 Error = 0.60 ms Must skip  4 frames over 3 Notes  1/1/2
+ 9 Error = 0.45 ms Must skip  3 frames over 2 Notes  1/2
+10 Error = 0.75 ms Must skip  5 frames over 3 Notes  1/2/2
+11 Error = 1.65 ms Must skip 11 frames over 6 Notes  1/2/2/2/2/2
+12 Error = 0.30 ms Must skip  2 frames over 1 Notes  2
+
+13 Error = 1.70 ms Must skip 11 frames over 5 Notes  2/2/2/2/3
+14 Error = 1.05 ms Must skip  7 frames over 3 Notes  2/2/3
+15 Error = 0.75 ms Must skip  5 frames over 2 Notes  2/3
+16 Error = 1.20 ms Must skip  8 frames over 3 Notes  2/3/3
+17 Error = 0.35 ms Must skip 20 frames over 7 Notes  2/3/3/3/3/3/3
+18 Error = 0.45 ms Must skip  3 frames over 1 Notes  3
 
 TESTING:
 ========
@@ -18,21 +46,27 @@ Breaking changes
 
 2.0.0 Trailer
 =============
-- ROM export
-- All expansions
-- Fine pitch track
-- NSF import
-- Advance Tempo
-- PAL support
-- Custom pattern length/tempo + loop points
-- Duty cycle envelopes
-- Transform dialog
-- Binary FTM import
-- FamiStudio text import/export
-- Note dragging + audio preview
-- Quick channel switch (1,2,3,4,5) + (CTRL 1,2,3,4,5)
-- New documentation
-- New hands-on tutorial
+10 reasons to try FamiStudio 2.0!
+
+1) All expansions!
+2) More user friendly! Note dragging + audio preview + Quick channel switch (1,2,3,4,5) + (CTRL 1,2,3,4,5)
+3) NSF import!
+	- Show a bunch of songs.
+4) Binary FTM import!
+	- Show LoTR
+5) Duty cycle envelopes!
+	- 
+6) ROM export!
+	- Show everdrive footage.
+7) Advance Tempo & PAL support
+	- 
+8) Cleanup dialog
+9) FamiStudio text import/export
+10) Custom pattern length/tempo + loop points
+
+BONUS: New hands-on tutorials + documentation!
+
+- Fine pitch track. (No need to mention).
 
 Tutorial series
 ===============
@@ -48,6 +82,10 @@ x First song
 ===================
 - Add links to video tutorial when they are done.
 - Update sitemap.
+
+Tweet
+=====
+- Sound up! FamiStudio 2.0.0 is OUT! Massive release, please share! All audio expansions, NSF import, note dragging, binary FTM import, duty cycle envelopes, ROM export, PAL support and much more! #famitracker #famistudio #chiptune #nesdev #8bit #gamedev #vrc6 #vrc7 #mmc5 #n163 #fds
 
 Backlog:
 =========

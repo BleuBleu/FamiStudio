@@ -122,7 +122,7 @@ namespace FamiStudio
                 else
                 {
                     lines.Add(line);
-                    lines.Add($"\t{db} {song.NoteLength}, {(song.PalSkipFrames[0] < 0 ? 0xff : song.NoteLength - song.PalSkipFrames[0] - 1)}, {(song.PalSkipFrames[1] < 0 ? 0xff : song.NoteLength - song.PalSkipFrames[1] - 1)}, 0");
+                    lines.Add($"\t{db} 0, 0, 0, 0"); // MATTT
                 }
             }
 
@@ -561,7 +561,6 @@ namespace FamiStudio
                 var isSpeedChannel = c == speedChannel;
                 var instrument = (Instrument)null;
                 var previousNoteLength = song.NoteLength;
-                var previousSkipFrames = song.PalSkipFrames;
 
                 if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
@@ -589,17 +588,13 @@ namespace FamiStudio
                     if (isSpeedChannel && project.UsesFamiStudioTempo)
                     {
                         var noteLength = song.GetPatternNoteLength(p);
-                        var skipFrames = song.GetPatternPalSkipFrames(p);
 
-                        if (noteLength    != previousNoteLength    ||
-                            skipFrames[0] != previousSkipFrames[0] ||
-                            skipFrames[1] != previousSkipFrames[1])
+                        if (noteLength    != previousNoteLength)
                         { 
                             if (!test)
                             {
-                                lines.Add($"\t{db} $fb, ${noteLength:x2}, ${(skipFrames[0] < 0 ? 0xff : noteLength - skipFrames[0] - 1):x2}, ${(skipFrames[1] < 0 ? 0xff : noteLength - skipFrames[1] - 1):x2}");
+                                //lines.Add($"\t{db} $fb, ${noteLength:x2}, ${(skipFrames[0] < 0 ? 0xff : noteLength - skipFrames[0] - 1):x2}, ${(skipFrames[1] < 0 ? 0xff : noteLength - skipFrames[1] - 1):x2}"); // MATTT
                                 previousNoteLength = noteLength;
-                                previousSkipFrames = skipFrames;
                             }
 
                             size += 4;

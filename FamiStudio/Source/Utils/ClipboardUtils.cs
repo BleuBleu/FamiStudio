@@ -545,8 +545,6 @@ namespace FamiStudio
                     serializer.Serialize(ref customSettings[i].patternLength);
                     serializer.Serialize(ref customSettings[i].noteLength);
                     serializer.Serialize(ref customSettings[i].barLength);
-                    serializer.Serialize(ref customSettings[i].palSkipFrames[0]);
-                    serializer.Serialize(ref customSettings[i].palSkipFrames[1]);
                 }
             }
 
@@ -607,8 +605,6 @@ namespace FamiStudio
                     serializer.Serialize(ref customSettings[i].patternLength);
                     serializer.Serialize(ref customSettings[i].noteLength);
                     serializer.Serialize(ref customSettings[i].barLength);
-                    serializer.Serialize(ref customSettings[i].palSkipFrames[0]);
-                    serializer.Serialize(ref customSettings[i].palSkipFrames[1]);
                 }
             }
             else

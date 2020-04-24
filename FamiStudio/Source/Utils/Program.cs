@@ -37,6 +37,7 @@ namespace FamiStudio
             RenderTheme.Initialize();
             PlatformUtils.Initialize();
             ClipboardUtils.Initialize();
+            FamiStudioTempoUtils.Initialize();
             NesApu.InitializeNoteTables();
 
 #if FAMISTUDIO_WINDOWS
@@ -44,6 +45,7 @@ namespace FamiStudio
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 #endif
+
 
             var famiStudio = new FamiStudio(args.Length > 0 ? args[0] : null);
             famiStudio.Run();
