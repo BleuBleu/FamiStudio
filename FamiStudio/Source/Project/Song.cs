@@ -8,7 +8,7 @@ namespace FamiStudio
     public class Song
     {
         public const int MaxLength = 256;
-        public const int MinNoteLength = 3;
+        public const int MinNoteLength = 1;
         public const int MaxNoteLength = 18;
 
         public const int NativeTempoNTSC = 150;

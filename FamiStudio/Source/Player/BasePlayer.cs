@@ -96,7 +96,7 @@ namespace FamiStudio
 
 #if DEBUG
                     var noteLength = song.GetPatternNoteLength(playPattern);
-                    Debug.Assert((playNote % noteLength) != 0);
+                    Debug.Assert((playNote % noteLength) != 0 || noteLength == 1);
                     //Debug.WriteLine("*** SKIP!"); MATTT
 #endif
 
