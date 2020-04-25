@@ -20,40 +20,42 @@ The tempo mode will affect how the tempo of you songs is calculated, how much co
 
 In this mode, you always have control over every single frame (1/60th of a second of the song) and you always edit in NTSC. You will be able to choose a **Note Length** which has a fixed number a frame (1/60s). More frames means a slower tempo. 
 
+The biggest different with FamiTracker tempo is in the wait it handles PAL conversion. 
+
 For example, in the image below, we have a 7 NTSC frames (1/60th of a sec) per note. On PAL system, it takes only 6 frames (1/50th of a sec) to cover approximately the same amount of time. 
 
 ![](images/NtscPalFrames.png#center)
 
-Since our song is edited and stored as NTSC and we want to faitfully play it back on PAL systems, the solution is to run 2 NTSC frames, once every notes (twice if notes are >= 10 frames long). You can choose which of the frames will be skipped in the tempo settings. Note that the frame is not really skipped but merely run extremely fast. In the exemple below, on PAL systems, frame #2 is will almost impossible to hear since its sound will immediately be replaced by frame #3.
+Since our song is edited and stored as NTSC and we want to faitfully play it back on PAL systems, FamiStudio will sometimes run 2 NTSC frames in a single PAL frame so it can keep up with NTSC. 
 
 ![](images/PalSkipFrames.png#center)
 
-This will lead to a small error in playback speed on PAL system, but a very predictable behavior. 
+To make the PAL playback speed even more similar, the frame skips are ditributed over multiple notes, leading to a PAL playback speed error that is always less that 0.15%. 
 
-This table shows the relation between the number of NTSC frames, number of PAL frames and the tempo error generated.
+This table sumarizes the number of frames that will be skipped on PAL for different note length, as well as their exact positions inside the notes.
 
-Number of NTSC frames (1/60 sec) | Number of PAL frames (1/50 sec) | NTSC time (ms) | PAL time (ms) | Diff (ms) | Error (%) | BPM
---- | --- | --- | --- | --- | --- | ---
-1 | 1 | 16.64 | 20.00 | 3.357933 | -20.18% | 900.0 
-2 | 2 | 33.28 | 39.99 | 6.715866 | -20.18% | 450.0 
-3 | 3 | 49.92 | 59.99 | 10.0738 | -20.18% | 300.0 
-4 | 3 | 66.56 | 59.99 | -6.56547 | 10.94% | 225.0 
-5 | 4 | 83.20 | 79.99 | -3.20754 | 4.01% | 180.0 
-6 | 5 | 99.84 | 99.99 | 0.150398 | -0.15% | 150.0 
-7 | 6 | 116.47 | 119.98 | 3.508331 | -3.01% | 128.6 
-8 | 7 | 133.11 | 139.98 | 6.866264 | -5.16% | 112.5 
-9 | 8 | 149.75 | 159.98 | 10.2242 | -6.83% | 100.0 
-10 | 8 | 166.39 | 159.98 | -6.41507 | 4.01% | 90.0 
-11 | 9 | 183.03 | 179.97 | -3.05714 | 1.70% | 81.8 
-12 | 10 | 199.67 | 199.97 | 0.300796 | -0.15% | 75.0 
-13 | 11 | 216.31 | 219.97 | 3.658729 | -1.69% | 69.2 
-14 | 12 | 232.95 | 239.97 | 7.016662 | -3.01% | 64.3 
-15 | 13 | 249.59 | 259.96 | 10.37459 | -4.16% | 60.0 
-16 | 14 | 266.23 | 279.96 | 13.73253 | -5.16% | 56.3 
+Number of NTSC frames (1/60 sec) | Number of frames skipped by PAL | Position of skipped frames | BPM
+--- | --- | --- | ---
+1 | 1 frame every 6 notes | 0 | 900.0 
+2 | 1 frame every 3 notes | 1 | 450.0 
+3 | 1 frame every 2 notes | 1 | 300.0 
+4 | 2 frames every 3 notes | 2 | 225.0 
+5 | 5 frames every 6 note | 2 | 180.0 
+6 | 1 frames every 1 note | 2 | 150.0 
+7 | 7 frames every 6 note | 2, 4 | 128.6 
+8 | 4 frames every 3 note | 2, 5, | 112.5 
+9 | 3 frames every note | 2, 6 | 100.0 
+10 | 5 frames every 3 note | 2, 7 | 90.0 
+11 | 11 frames every 6 note | 2, 8 | 81.8 
+12 | 2 frames every 1 note | 3, 8 | 75.0 
+13 | 11 frames every 5 note | 2, 6, 10 | 69.2 
+14 | 7 frames every 3 note | 2, 6, 11 | 64.3 
+15 | 5 frames every 2 note  | 2, 7, 12 | 60.0 
+16 | 8 frames every 3 note | 3, 8, 12 | 56.3 
+17 | 20 frames every 7 note | 3, 8, 13 | 52.9
+18 | 3 frames every 1 note | 3, 8, 14 | 50.0
 
-Note that BPM values outside of the ones in this table can be created by putting multiples notes into a larger one. 
-
-For example, Gimmick! uses a 11 frames per note, but puts 2 notes inside it. One of 5 frames and one of 6 frames. This creates an approximate tempo of 163.6 BPM and the different note lengths is not audible.
+Note that you arent not limited to the BPM values suggested by the different note lengths. You can create in-between ones by putting multiples notes into a larger one. For example, Gimmick! uses a 11 frames per note, but puts 2 notes inside it. One of 5 frames and one of 6 frames. This creates an approximate tempo of 163.6 BPM and the different note lengths is not audible.
 
 ![](images/GimmickNote.png#center)
 
@@ -71,10 +73,7 @@ Delayed notes and delayed cuts are not supported and will likely never be as the
 
 Double-clicking on the a song will allow you to change its name, color and other attributes. Names must be unique.
 
-This dialog will look very different depending on:
-
-* The **Tempo Mode** of the current project.
-* If the project uses expansion audio or not. Expansion audio cannot run on PAL, so all PAL-related information will be hidden.
+This dialog will look very different depending on the **Tempo Mode** of the current project.
 
 FamiStudio Tempo | FamiTracker tempo
 --- | ---
@@ -94,6 +93,7 @@ Properties unique FamiTracker tempo mode:
 Properties unique FamiStudio tempo mode:
 
 * **Frames Per Notes**: How many frames (1/60th) in a typical notes. Values between 5 and 16 are recommended as they create the least error on PAL system.
-* **PAL Skip Frame 1**: Which frame will be skipped on PAL system. To keep up with NTSC, PAL will advance twice in one frame, once per note (twice in Frames Per Notes >= 10).
-* **PAL Skip Frame 2**: Second frame to skip on PAL system. Only applies when Frames Per Notes >= 10.
 
+These parameters will affect the look of the piano roll. 
+
+![](images/PianoRollFrames.png#center)

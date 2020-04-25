@@ -6,6 +6,19 @@ The Piano Roll is where you editing the actual notes of the song, the instrument
 
 You can also use it to preview instrument by clicking on the keyboard. The currently selected instrument (in the project explorer) will play on the currently selected channel (in the sequencer).
 
+## Subdivision
+
+Horizontal lines in the piano rolls are align with the notes of the piano. The vertical lines represents multiple levels of subdivisions:
+
+* Thick black lines seperate patterns (not shown in this image)
+* Thin black lines seperate bars (a bar is a simple group of notes, purely a visual aid)
+* Thin gray lines seperate notes
+* Thin dashes gray lines seperate individual NTSC frames, 1/60th of a sec. (FamiStudio tempo mode only)
+
+In FamiTracker tempo mode, you do not have access to the individual frames, so the dashes lines will not be visible.
+
+![](images/PianoRollFrames.png#center)
+
 ## Seeking
 
 Clicking in the timeline (header) of the piano roll will move the play position.

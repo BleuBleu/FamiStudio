@@ -105,8 +105,8 @@ Here is an example of a very short file:
 			Envelope Type="DutyCycle" Length="1" Values="2"
 		Instrument Name="Lead2"
 			Envelope Type="Volume" Length="12" Values="15,12,11,9,7,6,5,4,3,2,1,1"
-		Song Name="Tutorial Song" Length="5" LoopPoint="1" PatternLength="16" BarLength="4" NoteLength="7" PalSkipFrames="3,-1"
-			PatternCustomSettings Time="0" Length="10" NoteLength="7" BarLength="4" PalSkipFrames="3,-1"
+		Song Name="Tutorial Song" Length="5" LoopPoint="1" PatternLength="16" BarLength="4" NoteLength="7"
+			PatternCustomSettings Time="0" Length="10" NoteLength="7" BarLength="4"
 			Channel Type="Square1"
 				Pattern Name="Intro1"
 					Note Time="0" Value="G3" Instrument="Lead"
@@ -163,14 +163,12 @@ Song | Name | Yes | The name of the song.
 | PatternLength | Yes | The number of notes in a pattern.
 | BarLength | Yes | The number of notes in a bar.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
-| PalSkipFrames | Yes | (FamiStudio tempo only) The pal skip frames. 1 value if NoteLength < 10, 2 otherwise.
 | Tempo | Yes | (FamiTracker tempo only) The FamiTracker tempo.
 | Speed | Yes | (FamiTracker tempo only) The FamiTracker speed.
 PatternCustomSettings | Time | Yes | Index of the column of pattern that uses these custom settings.
 | Length | Yes | The custom length (in notes or frames) of the pattern.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
 | BarLength | Yes | (FamiStudio tempo only) The number of notes in a bar.
-| PalSkipFrames | Yes | (FamiStudio tempo only) The pal skip frames. 1 value if NoteLength < 10, 2 otherwise.
 Channel | Type | Yes | Square1, Square2, Triangle, Noise, DPCM, VRC6Square1, VRC6Square2, VRC6Saw, VRC7FM1, VRC7FM2, VRC7FM3, VRC7FM4, VRC7FM5, VRC7FM6, FDS, MMC5Square1, MMC5Square2, MMC5DPCM, N163Wave1, N163Wave2, N163Wave3, N163Wave4, N163Wave5, N163Wave6, N163Wave7, N163Wave8, S5BSquare1, S5BSquare2 or S5BSquare3 
 Pattern | Name | Yes | Name of the pattern.
 Note | Time | Yes | The frame (or note) number inside the pattern where this note is.

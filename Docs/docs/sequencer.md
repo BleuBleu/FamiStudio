@@ -70,11 +70,11 @@ Double clicking on the header of sequencer will allow you to set some customs se
 
 ![](images/CustomPatternSettings.png#center)
 
-This dialog will look quite different depending on the tempo mode you are using. To learn more about tempo modes, please check out the [Project properties section](song.md). PAL support is disabled when any kind of expansion audio is used.
+This dialog will look quite different depending on the tempo mode you are using. To learn more about tempo modes, please check out the [Project properties section](song.md). 
 
-FamiStudio Tempo<br/>(with PAL support) | FamiStudio Tempo<br/>(No PAL support) | FamiTracker tempo
---- | ---  | ---
-![](images/CustomPatternSettingsWithPAL.png#center) | ![](images/CustomPatternSettingsNoPAL.png#center) | ![](images/CustomPatternSettingsFamiTracker.png#center) 
+FamiStudio Tempo | FamiTracker tempo
+---  | ---
+![](images/CustomPatternSettingsNoPAL.png#center) | ![](images/CustomPatternSettingsFamiTracker.png#center) 
 
 Enabling **Custom Pattern** will allow you to change the values. Once a pattern has any kind of custom setting, it will no longer take its values from the Song's properties and will be display with a **asterisk (*)** next to its index in the Sequencer.
 

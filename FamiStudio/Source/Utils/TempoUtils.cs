@@ -192,7 +192,7 @@ namespace FamiStudio
                 numNotes[n - 1] = bestNumNotes;
                 frameCounts[n - 1] = bestFrameCount;
 
-                Debug.WriteLine($"Note Length {n} Error = {minOverallError:0.##} ms Must skip {n * bestNumNotes - bestFrameCount} frames over {bestNumNotes} Notes");
+                Debug.WriteLine($"Note Length {n} Error = {minOverallError:0.00} ms ({minOverallError * 100.0f / (float)(n * bestNumNotes * FrameTimeMsNTSC):0.00} %) Must skip {n * bestNumNotes - bestFrameCount} frames over {bestNumNotes} Notes");
             }
         }
 #endif
