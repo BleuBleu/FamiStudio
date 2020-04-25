@@ -195,7 +195,7 @@ namespace FamiStudio
                 Debug.WriteLine($"Note Length {n} Error = {minOverallError:0.##} ms Must skip {n * bestNumNotes - bestFrameCount} frames over {bestNumNotes} Notes");
             }
         }
-    }
 #endif
+    }
 }
 

@@ -56,7 +56,7 @@ namespace FamiStudio
 
         public unsafe bool Save(Project originalProject, FamitoneMusicFile.FamiToneKernel kernel, string filename, int[] songIds, string name, string author, string copyright, MachineType mode)
         {
-            //try
+            try
             {
                 if (songIds.Length == 0)
                     return false;
@@ -216,10 +216,10 @@ namespace FamiStudio
 
                 File.WriteAllBytes(filename, nsfBytes.ToArray());
             }
-            //catch
-            //{
-            //    return false;
-            //}
+            catch
+            {
+                return false;
+            }
 
             return true;
         }

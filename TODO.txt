@@ -1,12 +1,6 @@
 2.0.0
 =====
 
-- Gimmick:
-	- Relook at all the channels, make sur no error
-	- There is a volume 15 somewhere.
-- Namco song 6, they with wave at pos 24. DO they sound right? Seems like the since is truncated.
-- Make sure all try/catch are enabled.
-
 TESTING:
 ========
 - Test installer on Japanese machine.

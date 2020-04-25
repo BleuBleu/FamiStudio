@@ -58,7 +58,6 @@ namespace FamiStudio
 
         // These are for FamiStudio tempo mode
         private int noteLength = 10;
-        private int[] palSkipFrames = new int[2];
 
         public int Id => id;
         public Project Project => project;
