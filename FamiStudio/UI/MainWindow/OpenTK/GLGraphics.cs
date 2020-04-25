@@ -532,7 +532,6 @@ namespace FamiStudio
             {
                 if (smooth)
                     GL.Enable(EnableCap.PolygonSmooth);
-                GL.Enable(EnableCap.PolygonSmooth);
                 GL.Color4(brush.Color0);
                 GL.Begin(BeginMode.TriangleFan);
                 foreach (var pt in geo.Points)

@@ -27,16 +27,18 @@ typedef unsigned int   UINT;
 typedef const char*    LPCSTR;
 typedef long long      INT64;
 
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#define max(a, b) ((a) > (b) ? (a) : (b))
-#define ZeroMemory(p, s) memset(p, 0, s)
-
 #ifdef _MSC_VER
 #define FORCEINLINE __forceinline
 #define FASTCALL __fastcall
+#define CDECL __cdecl
 #else
 #define FORCEINLINE inline
 #define FASTCALL
+#ifdef LINUX
+	#define CDECL
+#else
+	#define CDECL __cdecl
+#endif
 #endif
 
 union TWIN
@@ -150,6 +152,10 @@ struct NSF_ADVANCEDOPTIONS
 
 #include <math.h>
 
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define ZeroMemory(p, s) memset(p, 0, s)
+
 #include "Wave_Square.h"
 #include "Wave_TND.h"
 
@@ -164,7 +170,7 @@ class CNSFFile;
 
 typedef BYTE (FASTCALL CNSFCore::*ReadProc)(WORD);
 typedef void (FASTCALL CNSFCore::*WriteProc)(WORD,BYTE);
-typedef void (__cdecl *ApuRegWriteCallback)(WORD addr, BYTE data);
+typedef void (CDECL *ApuRegWriteCallback)(WORD addr, BYTE data);
 
 class CNSFCore
 {
