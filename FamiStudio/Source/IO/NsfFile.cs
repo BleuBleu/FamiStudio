@@ -692,7 +692,11 @@ namespace FamiStudio
 
                         if (hasOctave)
                         {
-                            Debug.Assert(note <= 12);
+                            while (note > 12)
+                            {
+                                note -= 12;
+                                octave++;
+                            }
                             note += octave * 12;
                             period *= (1 << octave);
                             finePitch = period - noteTable[note];

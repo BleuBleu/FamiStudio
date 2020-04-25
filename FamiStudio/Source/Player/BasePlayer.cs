@@ -134,14 +134,17 @@ namespace FamiStudio
 
         private void ResetFamiStudioTempo(bool force)
         {
-            var newNoteLength = song.GetPatternNoteLength(playPattern);
-            var newPalSkipEnvelope = FamiStudioTempoUtils.GetPalSkipEnvelope(newNoteLength);
-
-            if (newPalSkipEnvelope != palSkipEnvelope || force)
+            if (!famitrackerTempo)
             {
-                palSkipEnvelope        = newPalSkipEnvelope;
-                palSkipEnvelopeCounter = palSkipEnvelope[0];
-                palSkipEnvelopeIndex   = 0;
+                var newNoteLength = song.GetPatternNoteLength(playPattern);
+                var newPalSkipEnvelope = FamiStudioTempoUtils.GetPalSkipEnvelope(newNoteLength);
+
+                if (newPalSkipEnvelope != palSkipEnvelope || force)
+                {
+                    palSkipEnvelope = newPalSkipEnvelope;
+                    palSkipEnvelopeCounter = palSkipEnvelope[0];
+                    palSkipEnvelopeIndex = 0;
+                }
             }
         }
 
