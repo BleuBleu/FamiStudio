@@ -149,7 +149,6 @@ namespace FamiStudio
                 {
                     if (note.IsStop)
                     {
-                        lastValidData.released = false;
                         lastValidData.time = -1;
                     }
                     if (note.IsValid)

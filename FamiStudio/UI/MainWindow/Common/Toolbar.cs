@@ -192,6 +192,8 @@ namespace FamiStudio
             for (char i = '0'; i <= '9'; i++)
                 specialCharacters[i.ToString()] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
 
+            specialCharacters["~"] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
+
             foreach (var specialChar in specialCharacters.Values)
             {
                 if (specialChar.Bmp != null)

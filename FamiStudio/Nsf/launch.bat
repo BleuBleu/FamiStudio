@@ -2,8 +2,8 @@
 
 @..\..\..\NES\tools\bin\msxsl.exe %USERPROFILE%\Documents\Mesen\Debugger\nsf.Workspace.xml ..\..\..\NES\tools\bin\cleandebug.xml -o %USERPROFILE%\Documents\Mesen\Debugger\nsf.Workspace.xml
 
-PatchNsf pal.nsf nsf_famistudio_pal_tempo.bin nsf.nsf
-copy /y nsf_famistudio_pal_tempo.dbg nsf.dbg
+PatchNsf release.nsf nsf_famistudio_ntsc_tempo.bin nsf.nsf
+copy /y nsf_famistudio_ntsc_tempo.dbg nsf.dbg
 
 @findstr /V "zeropage.*type=equ @LOCAL-MACRO_SYMBOL" nsf.dbg > nsf.dbg.new
 @del nsf.dbg

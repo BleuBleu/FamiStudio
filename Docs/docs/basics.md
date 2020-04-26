@@ -109,8 +109,8 @@ Here is a list of useful keyboard shortcuts:
 * **Ctrl+Space**: Plays from beginning of current pattern and switch to pattern loop mode.
 * **Shift+Space**: Plays from current position and reverts back to song loop mode and 
 * **Home**: Seeks back to beginning of the song.
-* **Esc**: Stops any stop, clears the selection.
 * **Ctrl+Home**: Seeks to beginning of the current pattern.
+* **Esc**: Stops any stop, clears the selection.
 * **Ctrl+Z**: Undo
 * **Ctrl+Y**: Redo
 * **Ctrl+N**: New project
@@ -132,3 +132,4 @@ Some keyboard shortcuts specific to the piano roll:
 * **Shift+Click**: Adds a release note.
 * **S+Click** (and drag): Creates or edit a slide note.
 * **A+Click**: Toggles the attack of a note.
+* **~ (Tilde)**: Expand/collapse the effect panel.

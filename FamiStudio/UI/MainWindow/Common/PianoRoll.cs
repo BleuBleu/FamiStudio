@@ -1377,7 +1377,8 @@ namespace FamiStudio
                                             g.PopTransform();
                                         }
 
-                                        released = n1.IsRelease;
+                                        if (n1.IsRelease)
+                                            released = true;
 
                                         if (n1.IsStop)
                                         {
@@ -2066,6 +2067,10 @@ namespace FamiStudio
                 ClearSelection();
                 ConditionalInvalidate();
             }
+            else if (e.KeyCode == Keys.Oem3)
+            {
+                ToggleEffectPannel();
+            }
             else if (showSelection && IsSelectionValid())
             {
                 bool ctrl  = ModifierKeys.HasFlag(Keys.Control);
@@ -2136,6 +2141,15 @@ namespace FamiStudio
         private void ShowInstrumentError()
         {
             App.DisplayWarning("Selected instrument is incompatible with channel!");
+        }
+
+        private void ToggleEffectPannel()
+        {
+            Debug.Assert(editMode == EditionMode.Channel);
+            showEffectsPanel = !showEffectsPanel;
+            UpdateRenderCoords();
+            ClampScroll();
+            ConditionalInvalidate();
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -2217,10 +2231,7 @@ namespace FamiStudio
             }
             else if (editMode == EditionMode.Channel && IsMouseInTopLeftCorner(e))
             {
-                showEffectsPanel = !showEffectsPanel;
-                UpdateRenderCoords();
-                ClampScroll();
-                ConditionalInvalidate();
+                ToggleEffectPannel();
                 return;
             }
             else if (editMode == EditionMode.Channel && GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
@@ -2650,7 +2661,7 @@ namespace FamiStudio
             }
             else if (IsMouseInTopLeftCorner(e))
             {
-                tooltip = "{MouseLeft} Show/hide effect panel";
+                tooltip = "{MouseLeft} Show/hide effect panel {~}";
             }
             else if (IsMouseInEffectList(e))
             {

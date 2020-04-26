@@ -2639,6 +2639,8 @@ regular_note:
 sec_and_done:
     lda no_attack_flag
     bne no_attack
+    lda FT_CHN_NOTE,x          ; dont trigger attack on stop notes.
+    beq no_attack
 .if .defined(::FT_VRC7)
     cpx #5
     bcs vrc7_channel

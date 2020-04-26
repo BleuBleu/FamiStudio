@@ -1,6 +1,10 @@
 2.0.0
 =====
 
+- NSF: Retest everthing.
+- NSF: Port new tempo mode to FamiStudioFS once tested on all NSF.
+- Release an unsupported Linux version?
+
 TESTING:
 ========
 - Test installer on Japanese machine.
@@ -8,39 +12,75 @@ TESTING:
 Breaking changes
 ================
 - VRC6 saw duty (mention in FamiTracker compatibility section)
+- Notes without attach will remain without attack even after a stop note.
 
 2.0.0 Trailer
 =============
-10 reasons to try FamiStudio 2.0!
-
-1) All expansions!
-2) More user friendly! Note dragging + audio preview + Quick channel switch (1,2,3,4,5) + (CTRL 1,2,3,4,5)
-3) NSF import!
-	- Show a bunch of songs.
-4) Binary FTM import!
-	- Show LoTR
-5) Duty cycle envelopes!
-	- 
-6) ROM export!
-	- Show everdrive footage.
-7) Advance Tempo & PAL support
-	- 
-8) Cleanup dialog
-9) FamiStudio text import/export
-10) Custom pattern length/tempo + loop points
-
-BONUS: New hands-on tutorials + documentation!
+00:00 - 00:12 <Gimmick!>
+	- [DOF + 3D playback]
+	- FamiStudio 2.0!
+	- Massive release, too many new features to list.
+	- Here are the top #10 reasons to give it a try!
+	- [Fade to white]
+00:12 - 00:30 <Gimmick!>
+	- All expansions: VRC6, VRC7, MMC5, FDS, S5B, N163.
+	- [Show the list of expansions]
+	- [Show edition of FDS waveworm (presets).
+	- [Show playing with VRC7 instruments]
+	- Tune parameters in real time (show VRC7, N163, FDS)
+00:30 - 00:50 <still play Gimmick! during file open, cross fade as song start>
+	- NSF import! Listen and reverse engineer your favorite songs!
+	- Will work with all supported expansions.
+	- [Show footage of MM3 open -> Get Your new powers ready]
+00:50 - 01:00: <MM3>
+	- More user friendly! 
+	- Note dragging + audio preview 
+	- [Footage of note dragging, like that GIF]
+	- [Footage ot channel switch]
+	- Quick channel switch (1,2,3,4,5) + (CTRL 1,2,3,4,5)
+01:00 - 01:15: <Frodo>
+	- Binary FamiTracker FTM support! 
+	- [Show Frodo]
+	- Only supported features, see documentation for a complete list.
+01:25 - 01:40: <Frodo keeps playing>
+	- ROM export!
+	- Listen to your song on actual hardware! 
+	- Uses Mapper 31. *Expansion audio not supported.
+	- [Show SD card + everdrive footage]
+01:15 - 01:25 <Cross fade to real version of Bloody Tears>
+	- Duty cycle envelopes!
+01:40 - 01:50 <TutorialSong>
+	- New hands-on tutorials + documentation! (Need tutorial first here??? Place holder)
+	- Learn how to create your first song from scratch.
+01:50 - 02:00 <New Shatterhand song here>
+	- [Show NTSC/PAL icon & project settings]
+	- New "FamiStudio" Tempo mode & PAL support
+	- Will be the default, "FamiTracker" mode still supported.
+	- Give full control over every frame + perfect PAL tempo matching.
+	- Custom FamiTone2 version that supports it also provided.
+	- Please see documentation for detail.
+02:00 - 02:10 <Lagrage point vrc7>
+	- Cleanup dialog
+	- Delete/merge unused/indentical patterns and instruments.
+02:10 - 02:20 <Namco II>
+	- FamiStudio text import/export
+	- Better interopability with other tools/softwares.
+02:20 - 02:30 <Kid icarus>
+	- Custom pattern length/tempo + loop points
+	- Create special shorter/longer patterns.
 
 - Fine pitch track. (No need to mention).
 
 Tutorial series
 ===============
-x First song
+- First song (REDO)
 	- Insert of dashed line
 	- Duty cycle
 	- ROM export.
-- Import/export
-- Advanced tempo management & PAL
+- NSF import
+- FamiTracker import
+- Export to each format
+- Advanced instrument editing.
 - Expansion audio
 
 2.0.0 Documentation
@@ -63,3 +103,6 @@ Backlog:
 - P2: Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
 - P2: Instrument folders
 - P2: Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).
+- P2: Mac: Paste special: Text is super dark
+- P2: Mac: Clicking on FS without the window doesn't give it focus...?
+

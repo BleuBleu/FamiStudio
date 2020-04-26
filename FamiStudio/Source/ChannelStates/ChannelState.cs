@@ -93,6 +93,7 @@ namespace FamiStudio
                     if (!newNote.HasFinePitch   && note.HasFinePitch)   { newNote.FinePitch   = note.FinePitch;   }
                     if (!newNote.HasFdsModDepth && note.HasFdsModDepth) { newNote.FdsModDepth = note.FdsModDepth; }
                     if (!newNote.HasFdsModSpeed && note.HasFdsModSpeed) { newNote.FdsModSpeed = note.FdsModSpeed; }
+                    if (newNote.Instrument == null && note.Instrument != null) { newNote.Instrument = note.Instrument; }
 
                     PlayNote(newNote);
                 }
@@ -102,6 +103,7 @@ namespace FamiStudio
                     if (newNote.HasFinePitch)   { note.FinePitch   = newNote.FinePitch;   }
                     if (newNote.HasFdsModDepth) { note.FdsModDepth = newNote.FdsModDepth; }
                     if (newNote.HasFdsModSpeed) { note.FdsModSpeed = newNote.FdsModSpeed; }
+                    if (newNote.Instrument != null) { note.Instrument = newNote.Instrument; }
                 }
             }
         }
@@ -136,7 +138,7 @@ namespace FamiStudio
 
                 note = newNote;
 
-                if (instrumentChanged || note.HasAttack)
+                if (instrumentChanged || note.HasAttack && !note.IsStop)
                 {
                     for (int j = 0; j < Envelope.Count; j++)
                     {

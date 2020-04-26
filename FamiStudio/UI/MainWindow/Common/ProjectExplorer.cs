@@ -183,7 +183,7 @@ namespace FamiStudio
             {
                 switch (type)
                 {
-                    case ButtonType.ProjectSettings: return $"{project.Name} ({project.Author})";
+                    case ButtonType.ProjectSettings: return string.IsNullOrEmpty(project.Author) ? $"{project.Name}": $"{project.Name} ({project.Author})";
                     case ButtonType.SongHeader: return "Songs";
                     case ButtonType.Song: return song.Name;
                     case ButtonType.InstrumentHeader: return "Instruments";
