@@ -421,7 +421,7 @@ namespace FamiStudio
 
             if (buffer.Version < 5)
             {
-                // At version 5 (FamiStudio 1.5.0), we moved to a sparse data structure for notes.
+                // At version 5 (FamiStudio 2.0.0), we moved to a sparse data structure for notes.
                 for (int i = 0; i < 256; i++)
                 {
                     var note = new Note();

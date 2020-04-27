@@ -768,7 +768,7 @@ namespace FamiStudio
             buffer.Serialize(ref famitrackerSpeed);
             buffer.Serialize(ref color);
 
-            // At version 5 (FamiStudio 1.5.0), we replaced the jump/skips effects by loop points and custom pattern length and we added a new tempo mode.
+            // At version 5 (FamiStudio 2.0.0), we replaced the jump/skips effects by loop points and custom pattern length and we added a new tempo mode.
             if (buffer.Version >= 5)
             {
                 buffer.Serialize(ref loopPoint);

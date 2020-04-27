@@ -11,7 +11,7 @@ namespace FamiStudio
         // Version 2 = FamiStudio 1.1.0 (Project properties)
         // Version 3 = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
         // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
-        // Version 5 = FamiStudio 1.5.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
+        // Version 5 = FamiStudio 2.0.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
         public static int Version = 5;
         public static int MaxSampleSize = 0x4000;
 
@@ -861,7 +861,7 @@ namespace FamiStudio
                 buffer.Serialize(ref expansionAudio);
             }
 
-            // At version 5 (FamiStudio 1.5.0) we added support for Namco 163 and advanced tempo mode.
+            // At version 5 (FamiStudio 2.0.0) we added support for Namco 163 and advanced tempo mode.
             if (buffer.Version >= 5)
             {
                 buffer.Serialize(ref expansionNumChannels);

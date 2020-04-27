@@ -208,7 +208,7 @@ namespace FamiStudio
             buffer.Serialize(ref name);
             buffer.Serialize(ref color);
 
-            // At version 5 (FamiStudio 1.5.0) we added duty cycle envelopes.
+            // At version 5 (FamiStudio 2.0.0) we added duty cycle envelopes.
             var dutyCycle = 0;
             if (buffer.Version < 5)
                 buffer.Serialize(ref dutyCycle);
@@ -218,7 +218,7 @@ namespace FamiStudio
             {
                 buffer.Serialize(ref expansion);
 
-                // At version 5 (FamiStudio 1.5.0) we added duty cycle envelopes.
+                // At version 5 (FamiStudio 2.0.0) we added duty cycle envelopes.
                 if (buffer.Version >= 5)
                 {
                     switch (expansion)

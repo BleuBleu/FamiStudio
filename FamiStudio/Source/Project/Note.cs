@@ -54,7 +54,7 @@ namespace FamiStudio
         private byte   FxFdsModDepth;
         private ushort FxFdsModSpeed;
 
-        // As of version 5 (FamiStudio 1.5.0), these are deprecated and are only kepth around
+        // As of version 5 (FamiStudio 2.0.0), these are deprecated and are only kepth around
         // for migration.
         public byte FxJump = 0xff;
         public byte FxSkip = 0xff;
@@ -291,17 +291,17 @@ namespace FamiStudio
         public bool IsEmpty => Value == Note.NoteInvalid && Flags == 0 && Slide == 0 && EffectMask == 0;
         public bool HasJumpOrSkip => FxJump != 0xff || FxSkip != 0xff;
 
-        // Serialization for notes before version 5 (before FamiStudio 1.5.0)
+        // Serialization for notes before version 5 (before FamiStudio 2.0.0)
         public void SerializeStatePreVer5(ProjectBuffer buffer)
         {
             buffer.Serialize(ref Value);
             
-            // At version 5 (FamiStudio 1.5.0) we refactored the note effects.
+            // At version 5 (FamiStudio 2.0.0) we refactored the note effects.
             const int SpeedInvalid   = 0xff;
             const int VolumeInvalid  = 0xff;
             const int VibratoInvalid = 0xf0;
 
-            // At version 5 (FamiStudio 1.5.0), we changed the numerical value of the release note.
+            // At version 5 (FamiStudio 2.0.0), we changed the numerical value of the release note.
             if (Value == 0xf7)
                 Value = Note.NoteRelease;
 
