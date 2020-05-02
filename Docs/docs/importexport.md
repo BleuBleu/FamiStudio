@@ -49,6 +49,8 @@ There are some limitations:
 
 * Slide notes of VRC7 will definately not export perfectly due to the different way in which both applications handle VRC7 pitches.
 
+* VRC6 saw channel is not incluenced by duty cycle in FamiStudio. FamiStudio always allow the full volume range for the saw. Import/export process does not try account for this. This might lead to volume inconsistencies between FamiTracker and FamiStudio where the volume needs to be doubled or halved to sound correct.
+
 * Vibrato effect might sound slightly different once exported to FamiTracker. The speed values in FamiStudio are slightly different than FamiTracker. Here is a table relating the speeds in FamiStudio and FamiTracker (this is applied automatically when importing/exporting):
 
 FamiTracker speed | FamiTracker period | FamiStudio speed | FamiStudio period

@@ -20,7 +20,7 @@ New features:
 
 Breaking/behavior changes:
 
-* VRC6 saw is no longer affected by duty. The 0 to 15 volume rage will map to the entire 0 to 31 possible range. Songs using VRC6 created prior to 2.0.0 will have to cut the volume in half to sound the same (either using volume track or instrument envelope).
+* VRC6 saw is no longer affected by duty. The 0 to 15 volume range will map to the entire 0 to 31 possible range. Songs using VRC6 created prior to 2.0.0 will have to cut the volume in half to sound the same (either using volume track or instrument envelope).
 * Notes without attack will remain without attack until a new note with attack is reached (even after a stop note).
 
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
