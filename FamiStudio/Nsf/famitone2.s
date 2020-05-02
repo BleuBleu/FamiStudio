@@ -1,14 +1,4 @@
 ;FamiTone2 v1.12
-FT_TEMP_SIZE_DEF = 3
-FT_BASE_SIZE_DEF = 140
-
-.segment "ZEROPAGE"
-FT_TEMP:		.res FT_TEMP_SIZE_DEF
-
-.segment "RAM"
-FT_BASE_ADR:	.res FT_BASE_SIZE_DEF
-
-.segment "CODE"
 
 ;settings, uncomment or put them into your main program; the latter makes possible updates easier
 
@@ -34,6 +24,21 @@ FT_THREAD	= 1			;undefine if you are calling sound effects from the same thread 
 ;internal defines
 FT_PITCH_FIX    = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
 
+.if FT_FAMISTUDIO_TEMPO
+FT_TEMP_SIZE_DEF = 4
+.else
+FT_TEMP_SIZE_DEF = 3
+.endif
+
+FT_BASE_SIZE_DEF = 140
+
+.segment "ZEROPAGE"
+FT_TEMP:		.res FT_TEMP_SIZE_DEF
+
+.segment "RAM"
+FT_BASE_ADR:	.res FT_BASE_SIZE_DEF
+
+.segment "CODE"
 
 ;zero page variables
 
@@ -41,7 +46,14 @@ FT_TEMP_PTR			= FT_TEMP		;word
 FT_TEMP_PTR_L		= FT_TEMP_PTR+0
 FT_TEMP_PTR_H		= FT_TEMP_PTR+1
 FT_TEMP_VAR1		= FT_TEMP+2
+.if FT_FAMISTUDIO_TEMPO
+FT_TEMP_PTR2			= FT_TEMP+2		;word
+FT_TEMP_PTR2_L		= FT_TEMP_PTR2+0
+FT_TEMP_PTR2_H		= FT_TEMP_PTR2+1
+FT_TEMP_SIZE        = 4
+.else
 FT_TEMP_SIZE        = 3
+.endif
 
 ;envelope structure offsets, 5 bytes per envelope, grouped by variable type
 
@@ -133,10 +145,10 @@ FT_TEMPO_STEP_H	= FT_VARS+6
 FT_TEMPO_ACC_L	= FT_VARS+7
 FT_TEMPO_ACC_H	= FT_VARS+8
 .elseif(FT_PAL_SUPPORT)
-FT_TEMPO_SKIP_FRAME1	= FT_VARS+5
-FT_TEMPO_SKIP_FRAME2	= FT_VARS+6
-FT_TEMPO_NOTE_LENGTH	= FT_VARS+7
-FT_TEMPO_NOTE_COUNTER	= FT_VARS+8
+FT_TEMPO_ENV_PTR_L	= FT_VARS+5
+FT_TEMPO_ENV_PTR_H	= FT_VARS+6
+FT_TEMPO_ENV_COUNTER	= FT_VARS+7
+FT_TEMPO_ENV_IDX	= FT_VARS+8
 .endif
 FT_SONG_SPEED	= FT_CH5_INSTRUMENT
 FT_PULSE1_PREV	= FT_CH3_DUTY
@@ -411,15 +423,18 @@ FamiToneMusicPlay:
 	sta FT_SONG_SPEED		;apply default speed, this also enables music
 .elseif(FT_PAL_SUPPORT)
     lda (FT_TEMP_PTR),y
-    sta FT_TEMPO_NOTE_COUNTER
-    sta FT_TEMPO_NOTE_LENGTH
+    sta FT_TEMPO_ENV_PTR_L
+    sta FT_TEMP_PTR2_L
+    iny
+    lda (FT_TEMP_PTR),y
+    sta FT_TEMPO_ENV_PTR_H
+    sta FT_TEMP_PTR2_H
+    ldy #0
+    sty FT_TEMPO_ENV_IDX
+    lda (FT_TEMP_PTR2),y
+    sta FT_TEMPO_ENV_COUNTER
+    lda #6
     sta FT_SONG_SPEED          ; simply so the song isnt considered paused.
-    iny
-    lda (FT_TEMP_PTR),y
-    sta FT_TEMPO_SKIP_FRAME1
-    iny
-    lda (FT_TEMP_PTR),y
-    sta FT_TEMPO_SKIP_FRAME2
 .else
     lda #6
     sta FT_SONG_SPEED
@@ -723,21 +738,31 @@ FamiToneUpdate:
 .if(FT_FAMISTUDIO_TEMPO && FT_PAL_SUPPORT)
 	lda FT_PAL_ADJUST ; On NTSC, just play 1 note per frame.
 	bne @check_done
-	dec FT_TEMPO_NOTE_COUNTER
-	bne @check_frame1
-	lda FT_TEMPO_NOTE_LENGTH
-	sta FT_TEMPO_NOTE_COUNTER
 
-	; We support notes up to 16 length, which mean we have up to 2 frames to skip.
-	@check_frame1:
-		lda FT_TEMPO_NOTE_COUNTER
-		cmp FT_TEMPO_SKIP_FRAME1
-		bne @check_frame2
+	dec FT_TEMPO_ENV_COUNTER
+	bne @check_done
+
+	lda FT_TEMPO_ENV_PTR_L
+	sta FT_TEMP_PTR+0
+	lda FT_TEMPO_ENV_PTR_H
+	sta FT_TEMP_PTR+1
+
+	inc FT_TEMPO_ENV_IDX
+	ldy FT_TEMPO_ENV_IDX
+	lda (FT_TEMP_PTR),y
+	bpl @store_counter
+
+	@tempo_envelope_end:
+		ldy #1
+		sty FT_TEMPO_ENV_IDX
+		lda (FT_TEMP_PTR),y
+
+	@store_counter:
+		sta FT_TEMPO_ENV_COUNTER
+
+		; Skip this frame on PAL!
 		jmp @update
-	@check_frame2:
-		cmp FT_TEMPO_SKIP_FRAME2
-		bne @check_done
-		jmp @update
+
 	@check_done:
 .endif
 
@@ -942,19 +967,20 @@ _FT2ChannelUpdate:
 @set_speed:
 .if(FT_FAMISTUDIO_TEMPO)
 	.if(FT_PAL_SUPPORT)
-		lda (FT_TEMP_PTR),y
-		sta FT_TEMPO_NOTE_COUNTER
-		sta FT_TEMPO_NOTE_LENGTH
-		iny
-		lda (FT_TEMP_PTR),y
-		sta FT_TEMPO_SKIP_FRAME1
-		iny
-		lda (FT_TEMP_PTR),y
-		sta FT_TEMPO_SKIP_FRAME2
-		ldy #0
+	        lda (FT_TEMP_PTR),y
+	        sta FT_TEMPO_ENV_PTR_L
+	        sta FT_TEMP_PTR2_L
+	        iny
+	        lda (FT_TEMP_PTR),y
+	        sta FT_TEMPO_ENV_PTR_H
+	        sta FT_TEMP_PTR2_H
+	        ldy #0
+	        sty FT_TEMPO_ENV_IDX
+	        lda (FT_TEMP_PTR2),y
+	        sta FT_TEMPO_ENV_COUNTER
 	.endif
 	clc
-	lda #3
+	lda #2
 	adc <FT_TEMP_PTR_L
 	sta <FT_TEMP_PTR_L
 	bcc @read_byte
