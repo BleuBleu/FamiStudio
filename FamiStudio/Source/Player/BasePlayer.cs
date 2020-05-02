@@ -97,7 +97,7 @@ namespace FamiStudio
 #if DEBUG
                     var noteLength = song.GetPatternNoteLength(playPattern);
                     Debug.Assert((playNote % noteLength) != 0 || noteLength == 1);
-                    //Debug.WriteLine("*** SKIP!"); MATTT
+                    //Debug.WriteLine("*** SKIP!"); 
 #endif
 
                     return palMode;
@@ -185,7 +185,7 @@ namespace FamiStudio
                     if (!AdvanceSong(song.Length, LoopMode.None))
                         return false;
 
-                    //Debug.WriteLine($"Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!"); MATTT
+                    //Debug.WriteLine($"Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!"); 
 
                     UpdateFrameSkip();
                 }
@@ -218,7 +218,7 @@ namespace FamiStudio
                     playPosition = song.GetPatternStartNote(playPattern) + playNote;
                 }
 
-                // Debug.WriteLine($"Running Frame {playPosition}!"); MATTT
+                // Debug.WriteLine($"Running Frame {playPosition}!"); 
 
                 // Update envelopes + APU registers.
                 foreach (var channel in channelStates)

@@ -1,21 +1,43 @@
 2.0.0
 =====
-- Release an unsupported Linux version?
+
+(mention in FamiTracker compatibility section)
+Move change log to documentation.
+
+RELEASE
+=======
+- Package build Win + MacOS
+- Make YouTube videos public (add links from other tutorials)
+- Publish in GitHub
+- Upload new documentation
+x Update website
+	x 4K screenshot
+- Itch.io
+	x Update banner
+- NESDEV forums
+- Tweet
 
 TESTING:
 ========
-- Test installer on Japanese machine.
+
+New features & changes:
+======================
+- More audio expansions: FDS, MMC5, VRC7, Namco 163 & Sunsoft S5B. 
+- Real-time expansion instrument parameters edition
+- NSF import
+- Note drag & drop with audio preview
+- FamiTracker FTM import
+- ROM export
+- Fine pitch effect track
+- New tempo mode
+- PAL support
+- FamiStudio text import/export
+- Custom pattern settings and loop point
 
 Breaking changes
 ================
 - VRC6 saw duty (mention in FamiTracker compatibility section)
-- Notes without attach will remain without attack even after a stop note.
-
-2.0.0 Trailer
-=============
-x Explain what famistudio is.
-- Replace documentation footage.
-- 
+- Notes without attack will remain without attack even after a stop note.
 
 Tutorial series
 ===============
@@ -38,11 +60,6 @@ Tutorial series
 	- Export samples
 - FamiTracker import/export
 
-2.0.0 Documentation
-===================
-- Add links to video tutorial when they are done.
-- Update sitemap.
-
 Tweet
 =====
 - Sound up! FamiStudio 2.0.0 is OUT! Massive release, please share! All audio expansions, NSF import, note dragging, binary FTM import, duty cycle envelopes, ROM export, PAL support and much more! 
@@ -62,4 +79,5 @@ Backlog:
 - P2: Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).
 - P2: Mac: Paste special: Text is super dark
 - P2: Mac: Clicking on FS without the window doesn't give it focus...?
+- P2: Installer on Japanese machine?
 
