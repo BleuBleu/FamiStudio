@@ -152,7 +152,7 @@ Instrument | Name | Yes | Name of the instrument.
 | N163WaveSize | | (N163 instrument only) 4, 8, 16 or 32.
 | N163WavePos | | (N163 instrument only) 0 to 124.
 | Vrc7Patch | | (VRC7 instrument only) 0 to 15.
-| Vrc7Reg{1 to 8}) | | (VRC7 instrument only, if Vrc7Patch is 0) Values of the 8 custom patch registers.
+| Vrc7Reg{1 to 8} | | (VRC7 instrument only, if Vrc7Patch is 0) Values of the 8 custom patch registers.
 Envelope | Type | Yes | Volume, Arpeggio, Pitch, DutyCycle, FDSWave, FDSMod or N163Wave.
 | Length | | Length of the envelope, 0 to 255.
 | Loop | | The loop point of the envelope.
@@ -196,6 +196,10 @@ Exporting to FamiTone2 works in the same way as the command line tools provided 
 When exporting file in seperate files, you can specific a name format template for each song. The {project} and {song} macros are available.
 
 When exporting as a single file (non-seperate), you will be prompt to name the output assembly file. If any of the exported songs uses DPCM samples, a .dmc file of the same name will also be outputted.
+
+If you are using the FamiStudio tempo mode and wish to have correct PAL playback in you homebrew game, please check out this custom version of FamiTone2 (named FamiTone2FS) that supports it:
+
+[https://github.com/BleuBleu/FamiTone2FS](https://github.com/BleuBleu/FamiTone2FS)
 
 # Importing Songs
 
@@ -241,7 +245,7 @@ NSF file are essentially programs designed to run on actual hardware. They will 
 
 That being said, NSF can still be extremely useful to reverse engineer how songs were made. In fact, this is how most of the Demo Songs that come with FamiStudio were made. 
 
-In the example below, we can imagine that the notes on the right were all using the same instrument with decreasing volume. The notes of the left were clearly using a vibrato effect or a pitch envelope. 
+In the example below, we can imagine that the notes on the right were all using the same instrument with a decreasing volume envelope. The notes of the left were clearly using a vibrato effect or a pitch envelope. 
 
 ![](images/NsfMess.png#center)
 

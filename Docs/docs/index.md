@@ -7,7 +7,7 @@ Welcome to the FamiStudio documentation. Please use the __User Guide__ menu abov
 The quickest way of getting started with FamiStudio is simply to follow this tutorial video step by step. It will walk you through the creation a simple song, from beginning to end.
 
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
-	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/pI4FGLzUYPw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/-5GovfMwF90" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 # Installation
