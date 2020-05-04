@@ -2,6 +2,12 @@
 
 Version history / release notes for each release.
 
+## Version 2.0.1
+
+New features:
+
+* Hotfix for 150% scaling crash.
+
 ## Version 2.0.0
 
 New features:
