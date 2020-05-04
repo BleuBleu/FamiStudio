@@ -1,20 +1,8 @@
-2.0.0
-=====
-
-RELEASE
-=======
-x Package build Win + MacOS
-- Make YouTube videos public (add links from other tutorials)
-/ Publish in GitHub
-- Upload new documentation
-x Update website
-	x 4K screenshot
-- Itch.io
-	x Update banner
-	- Post new binaries
-	- Add dev log
-- NESDEV forums
-- Tweet
+Issues
+======
+- MacOS scrolling issue?
+- Mexican crash.
+- 
 
 Tutorial series
 ===============
@@ -33,15 +21,16 @@ Tutorial series
 		- Replace instruments
 		- Import FamiTracker
 - Expansion audio
+	- FDS mod effect track
+	- 
 - NSF import
 	- Export samples
 - FamiTracker import/export
 
-Tweet
-=====
-- Sound up! FamiStudio 2.0.0 is OUT! Massive release, please share! All audio expansions, NSF import, note dragging, binary FTM import, duty cycle envelopes, ROM export, PAL support and much more! 
-
-#famitracker #famistudio #chiptune #nesdev #8bit #gamedev #vrc6 #vrc7 #mmc5 #n163 #fds
+Tweet ideas
+===========
+- Tweet the linux screenshots, find a dev who wants to help.
+- Tips of the week or something, animated GIFs.
 
 Backlog:
 =========

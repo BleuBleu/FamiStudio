@@ -363,8 +363,8 @@ namespace FamiStudio
             // Pre-resize all images so we dont have to deal with scaling later.
             if (needsScaling)
             {
-                var newWidth  = (int)(bmp.Width  * (Direct2DTheme.MainWindowScaling / 2.0f));
-                var newHeight = (int)(bmp.Height * (Direct2DTheme.MainWindowScaling / 2.0f));
+                var newWidth  = Math.Max(1, (int)(bmp.Width  * (Direct2DTheme.MainWindowScaling / 2.0f)));
+                var newHeight = Math.Max(1, (int)(bmp.Height * (Direct2DTheme.MainWindowScaling / 2.0f)));
 
                 bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
             }
