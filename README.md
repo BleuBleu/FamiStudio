@@ -28,6 +28,7 @@ You can find me:
 - On the [NESDEV Forums](https://forums.nesdev.com/) as BleuBleu 
 - On Twitter [@NesBleuBleu](http://www.twitter.com/nesbleubleu)
 - On [YouTube](https://www.youtube.com/channel/UC-dGLo2XZqXNA_aOYjaucgA?view_as=subscriber)
+- On [Itch.io](https://bleubleu.itch.io/famistudio)
 
 ## Acknowledgments
 - [Shiru](https://shiru.untergrund.net/code.shtml) for the FamiTone2 library and the demo songs that are included (_After the Rain_ and _Danger Streets_)
