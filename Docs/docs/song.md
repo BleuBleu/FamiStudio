@@ -12,15 +12,15 @@ The project properties is also where you select your [Expansion Audio](expansion
 
 Please visit the [Expansion Audio](expansion.md) section for more detail about each expansion.
 
-The tempo mode will affect how the tempo of you songs is calculated, how much control you have over the notes of your song and how your song plays on PAL systems. Note that changing the tempo mode when you have songs created is possible, but not recommended, the conversion is quite crude at the moment.
-
 ## Tempo Modes
+
+The tempo mode will affect how the tempo of you songs is calculated, how much control you have over the notes of your song and how your song plays on PAL systems. Note that changing the tempo mode when you have songs created is possible, but not recommended, the conversion is quite crude at the moment.
 
 ### FamiStudio tempo mode (default) 
 
 In this mode, you always have control over every single frame (1/60th of a second of the song) and you always edit in NTSC. You will be able to choose a **Note Length** which has a fixed number a frame (1/60s). More frames means a slower tempo. 
 
-The biggest different with FamiTracker tempo is in the wait it handles PAL conversion. 
+The biggest different with FamiTracker tempo is in the way it handles PAL conversion. 
 
 For example, in the image below, we have a 7 NTSC frames (1/60th of a sec) per note. On PAL system, it takes only 6 frames (1/50th of a sec) to cover approximately the same amount of time. 
 
@@ -43,7 +43,7 @@ Number of NTSC frames (1/60 sec) | Number of frames skipped by PAL | Position of
 5 | 5 frames every 6 note | 2 | 180.0 
 6 | 1 frames every 1 note | 2 | 150.0 
 7 | 7 frames every 6 note | 2, 4 | 128.6 
-8 | 4 frames every 3 note | 2, 5, | 112.5 
+8 | 4 frames every 3 note | 2, 5 | 112.5 
 9 | 3 frames every note | 2, 6 | 100.0 
 10 | 5 frames every 3 note | 2, 7 | 90.0 
 11 | 11 frames every 6 note | 2, 8 | 81.8 
@@ -59,7 +59,11 @@ Note that you arent not limited to the BPM values suggested by the different not
 
 ![](images/GimmickNote.png#center)
 
-The FamiTracker documentation has a [handy chart](http://famitracker.com/wiki/index.php?title=Common_tempo_values) for these. Note that you are limited to 16 frames per note a the moment.
+The FamiTracker documentation has a [handy chart](http://famitracker.com/wiki/index.php?title=Common_tempo_values) for these. Note that you are limited to 18 frames per note a the moment.
+
+If you are using the FamiStudio tempo mode and wish to have correct PAL playback in you homebrew game, please check out this custom version of FamiTone2 (named FamiTone2FS) that supports it:
+
+[https://github.com/BleuBleu/FamiTone2FS](https://github.com/BleuBleu/FamiTone2FS)
 
 ### FamiTracker tempo mode
 
