@@ -223,9 +223,13 @@ Note that only a small subset of features is supported. Only the following effec
 
 Besides effects, there are also other limitations:
 
+* When the limit of 16KB is reached, all subsequent DPCM samples will stop loading.
 * Namco 163 instrument can only have a single waveform. Any other waveform than zero will be ignored.
 * Namco 163 instrument only support wave size 4, 8, 16 and 32 and wave positions that are multiples of these sizes. Other values might lead to undefined behaviors.
 * VRC7 1xx/2xx/3xx/Qxx/Rxx effects will likely not sound like FamiTracker and will need manual corrections.
+* Instruments using both pitch and arpeggio envlopes at the same time will not sound the same as in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker re-triggers the pitch envelope at each arpeggio notes (probably the more sensible way), while FamiStudio simply runs both at the same time.
+* VRC6 saw channel is not incluenced by duty cycle in FamiStudio. FamiStudio always allow the full volume range for the saw. Import/export process does not try account for this. This might lead to volume inconsistencies between FamiTracker and FamiStudio where the volume needs to be doubled or halved to sound correct.
+* Vibrato effect might sound a bit different, please see table above for exact mappings.
 
 When importing from FamiTracker, all possible slide effects (1xx, 2xx, 3xx, Qxx and Rxx) will be converted to slide notes. Sometimes attack will be disabled as well to mimic the same behavior. This in an inherently imperfect process since they approaches are so different. For this reason, importing/exporting slide notes with FamiTracker should be considered a **lossy** process.
 
