@@ -1023,7 +1023,7 @@ namespace FamiStudio
                         ClearSelection();
                     }
                 }
-                else if (captureOperation == CaptureOperation.DragSelection)
+                else if (captureOperation == CaptureOperation.DragSelection && IsSelectionValid()) // No clue how we end up here with invalid selection.
                 {
                     var copy = ModifierKeys.HasFlag(Keys.Control);
                     var noteIdx = (int)((e.X - trackNameSizeX + scrollX) / noteSizeX);

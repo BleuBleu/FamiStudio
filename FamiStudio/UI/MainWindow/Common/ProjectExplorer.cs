@@ -1366,7 +1366,7 @@ namespace FamiStudio
                 {
                     EditInstrumentProperties(pt, button.instrument);
                 }
-#if FAMISTUDIO_MACOS
+#if !FAMISTUDIO_WINDOWS
                 else
                 {
                     // When pressing multiple times on mac, it creates click -> dbl click -> click -> dbl click sequences which

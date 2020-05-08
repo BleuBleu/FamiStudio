@@ -10,6 +10,7 @@ namespace FamiStudio
         public delegate bool ValidateDelegate(PropertyPage props);
         public event ValidateDelegate ValidateProperties;
 
+        private System.Drawing.Point initialLocation;
         private bool leftAlign = false;
         private bool topAlign  = false;
 
@@ -22,6 +23,7 @@ namespace FamiStudio
         {
             Init();
             WidthRequest = width;
+            initialLocation = pt;
 
             this.leftAlign = leftAlign;
             this.topAlign  = topAlign;
@@ -133,16 +135,27 @@ namespace FamiStudio
             return base.OnKeyPressEvent(evnt);
         }
 
-        public System.Windows.Forms.DialogResult ShowDialog()
+        public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent = null)
         {
             Show();
 
+#if FAMISTUDIO_LINUX
+            if (parent != null)
+            {
+                // Experiments.
+                var display = LinuxUtils.GetWindowDisplay(parent.WindowInfo);
+                var parentXId = parent.WindowInfo.Handle;
+                var dialogXId = new IntPtr(LinuxUtils.gdk_x11_drawable_get_xid(GdkWindow.Handle));
+                LinuxUtils.XReparentWindow(display, dialogXId, parentXId, 10, 10);
+            }
+#endif
+
             if (topAlign || leftAlign)
             {
-                GetPosition(out var x, out var y);
-                if (leftAlign) x -= Allocation.Width;
-                if (topAlign)  y -= Allocation.Height;
-                Move(x, y);
+                var pt = initialLocation;
+                if (leftAlign) pt.X -= Allocation.Width;
+                if (topAlign)  pt.Y -= Allocation.Height;
+                Move(pt.X, pt.Y);
             }
 
 #if FAMISTUDIO_MACOS

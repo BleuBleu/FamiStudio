@@ -1,12 +1,15 @@
 2.1.0
 =====
-- P0: Copy paste of text values in envelopes.
-- P1: Linux support.
-- P1: Command line processing
-- P2: Try to use clipboard on Mac
+- Copy paste of text values in envelopes.
+- Linux support.
+	- Need cursors when dragging.
+	- Need to figure out the whole z-order thing.
+- Command line processing
+- Try to use clipboard on Mac
 - One more sound engine?
 - Trackpad controls
-- Audio output switch.
+- Test the dialog left/right align on Mac.
+/ Audio output switch (to test on win7, mac still todo)
 x Device lost handling.
 
 Issues
