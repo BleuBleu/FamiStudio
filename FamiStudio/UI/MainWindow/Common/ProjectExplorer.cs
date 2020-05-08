@@ -447,6 +447,28 @@ namespace FamiStudio
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
         }
 
+        protected override void OnRenderTerminated()
+        {
+            theme.Terminate();
+
+            for (int i = 0; i < Project.ExpansionCount; i++)
+                Utils.DisposeAndNullify(ref bmpInstrument[i]);
+            for (int i = 0; i < Envelope.Count; i++)
+                Utils.DisposeAndNullify(ref bmpEnvelopes[i]);
+
+            Utils.DisposeAndNullify(ref bmpExpand);
+            Utils.DisposeAndNullify(ref bmpExpanded);
+            Utils.DisposeAndNullify(ref bmpCheckBoxYes);
+            Utils.DisposeAndNullify(ref bmpCheckBoxNo);
+            Utils.DisposeAndNullify(ref bmpButtonLeft);
+            Utils.DisposeAndNullify(ref bmpButtonRight);
+            Utils.DisposeAndNullify(ref bmpSong);
+            Utils.DisposeAndNullify(ref bmpAdd);
+            Utils.DisposeAndNullify(ref bmpDPCM);
+            Utils.DisposeAndNullify(ref bmpLoadInstrument);
+            Utils.DisposeAndNullify(ref sliderFillBrush);
+        }
+
         public void ConditionalInvalidate()
         {
             Invalidate();

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -38,7 +39,21 @@ namespace FamiStudio
             }
         }
 
+        private void TerminateRenderGraphics()
+        {
+            if (!DesignMode)
+            {
+                OnRenderTerminated();
+                d2dGraphics.Dispose();
+                d2dGraphics = null;
+            }
+        }
+
         protected virtual void OnRenderInitialized(Direct2DGraphics g)
+        {
+        }
+
+        protected virtual void OnRenderTerminated()
         {
         }
 
@@ -71,7 +86,23 @@ namespace FamiStudio
             {
                 d2dGraphics.BeginDraw();
                 OnRender(d2dGraphics);
-                d2dGraphics.EndDraw();
+
+                try
+                {
+                    d2dGraphics.EndDraw();
+                }
+                catch (SharpDX.SharpDXException ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    Debug.WriteLine(ex.StackTrace);
+
+                    if (ex.HResult == -2003238900) // D2DERR_RECREATE_TARGET
+                    {
+                        TerminateRenderGraphics();
+                        InitRenderGraphics();
+                        Invalidate();
+                    }
+                }
             }
         }
 

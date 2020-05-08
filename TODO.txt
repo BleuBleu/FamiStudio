@@ -5,9 +5,9 @@
 - P1: Command line processing
 - P2: Try to use clipboard on Mac
 - One more sound engine?
-- Device lost handling.
 - Trackpad controls
-- 
+- Audio output switch.
+x Device lost handling.
 
 Issues
 ======

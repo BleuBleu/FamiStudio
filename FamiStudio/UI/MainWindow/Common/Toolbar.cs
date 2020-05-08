@@ -202,6 +202,28 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnRenderTerminated()
+        {
+            theme.Terminate();
+
+            Utils.DisposeAndNullify(ref toolbarBrush);
+            Utils.DisposeAndNullify(ref warningBrush);
+            Utils.DisposeAndNullify(ref bmpLoopNone);
+            Utils.DisposeAndNullify(ref bmpLoopSong);
+            Utils.DisposeAndNullify(ref bmpLoopPattern);
+            Utils.DisposeAndNullify(ref bmpPlay);
+            Utils.DisposeAndNullify(ref bmpPause);
+            Utils.DisposeAndNullify(ref bmpNtsc);
+            Utils.DisposeAndNullify(ref bmpPal);
+
+            foreach (var b in buttons)
+                Utils.DisposeAndNullify(ref b.Bmp);
+            foreach (var c in specialCharacters.Values)
+                Utils.DisposeAndNullify(ref c.Bmp);
+
+            specialCharacters.Clear();
+        }
+
         public string ToolTip
         {
             get { return tooltip; }

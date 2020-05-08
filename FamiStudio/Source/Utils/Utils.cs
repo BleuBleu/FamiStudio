@@ -101,6 +101,15 @@ namespace FamiStudio
             return factors.ToArray();
         }
 
+        public static void DisposeAndNullify<T>(ref T obj) where T : IDisposable
+        {
+            if (obj != null)
+            {
+                obj.Dispose();
+                obj = default(T);
+            }
+        }
+
         public static int[] GetFactors(int n)
         {
             return GetFactors(n, n);
