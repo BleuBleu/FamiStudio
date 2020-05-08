@@ -16,6 +16,15 @@ Depending on how you download FamiStudio, you might get scary warnings the first
 
 ## Windows
 
+On Windows, if you get an error trying to start the application, but sure to install these 2 requirements:
+
+* You will need the [Visual Studio 2015 runtime](https://www.microsoft.com/en-us/download/confirmation.aspx?id=8109) (x86 version)
+* You also may need (especially on Windows 7) to install this rather old and cluncky [DirectX package](https://www.microsoft.com/en-us/download/confirmation.aspx?id=8109)
+
+	1. It is going to ask you to extra the files to somewhere, extract to a temporary folder
+	2. Run DXSETUP.exe inside that temporary folder to really install.
+	3. Delete the temp folder afterwards to cleanup.
+
 On Windows, SmartScreen might say "Windows protected your PC".
 
 ![](images/SmartScreen1.png#center)
@@ -26,7 +35,9 @@ To bypass the warning, simply click "More Info" and then "Run Anyway".
 
 ## MacOS
 
-On MacOS, GateKeeper is a bit more agressive. At first it will look like you simply cannot run it and it will give you the option to throw FamiStudio in the recycling bin.
+On MacOS, you will need to install [Mono](https://www.mono-project.com/download/stable/#download-mac).
+
+GateKeeper can be quite agressive when first running the application. At first it will look like you simply cannot run it and it will give you the option to throw FamiStudio in the recycling bin.
 
 ![](images/GateKeeper1.png#center)
 
