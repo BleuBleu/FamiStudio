@@ -100,7 +100,7 @@ namespace FamiStudio
         }
     }
 
-    public class GLConvexPath
+    public class GLConvexPath : IDisposable
     {
         public Point[] Points { get; private set; }
 
@@ -108,9 +108,13 @@ namespace FamiStudio
         {
             Points = points;
         }
+
+        public void Dispose()
+        {
+        }
     }
 
-    public class GLBrush
+    public class GLBrush : IDisposable
     {
         public float GradientSizeX = 0.0f;
         public float GradientSizeY = 0.0f;
@@ -143,6 +147,10 @@ namespace FamiStudio
 
         public bool IsGradient => GradientSizeX > 0 || GradientSizeY > 0;
         public bool IsBitmap => Bitmap != null;
+
+        public void Dispose()
+        {
+        }
     }
 
     public class GLBitmap : IDisposable

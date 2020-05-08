@@ -18,6 +18,7 @@ namespace FamiStudio
 
         protected GLControl() { cursorInfo = new CursorInfo(this); }
         protected virtual void OnRenderInitialized(GLGraphics g) { }
+        protected virtual void OnRenderTerminated() { }
         protected virtual void OnRender(GLGraphics g) { }
         protected virtual void OnMouseDown(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnMouseUp(System.Windows.Forms.MouseEventArgs e) { }
