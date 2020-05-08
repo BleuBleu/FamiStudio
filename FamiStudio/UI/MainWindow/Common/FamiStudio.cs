@@ -26,6 +26,8 @@ namespace FamiStudio
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
         private bool palMode = false;
+        private bool audioDeviceChanged = false;
+        private MultiMediaNotificationListener mmNoticiations;
 
         private bool newReleaseAvailable = false;
         private string newReleaseString = null;
@@ -72,6 +74,7 @@ namespace FamiStudio
             ProjectExplorer.ProjectModified += ProjectExplorer_ProjectModified;
 
             InitializeMidi();
+            InitializeMultiMediaNotifications();
 
             if (!string.IsNullOrEmpty(filename))
             {
@@ -148,6 +151,26 @@ namespace FamiStudio
         public void Run()
         {
             mainForm.Run();
+        }
+
+        public void InitializeMultiMediaNotifications()
+        {
+#if FAMISTUDIO_WINDOWS
+            // Windows 7 falls back to XAudio 2.7 which does not have 
+            // a virtual audio end point, which mean we need to detect 
+            // device changes a lot more manually.
+            if (Environment.OSVersion.Version.Major == 6 &&
+                Environment.OSVersion.Version.Minor <= 1)
+            {
+                mmNoticiations = new MultiMediaNotificationListener();
+                mmNoticiations.DefaultDeviceChanged += MmNoticiations_DefaultDeviceChanged;
+            }
+#endif
+        }
+
+        private void MmNoticiations_DefaultDeviceChanged()
+        {
+            audioDeviceChanged = true;
         }
 
         public void InitializeMidi()
@@ -531,15 +554,15 @@ namespace FamiStudio
             instrumentPlayer.StopAllNotes();
         }
 
-        public void StopEverything()
+        public void StopEverything(bool stopNotes = true)
         {
             Stop();
-            StopInstrumentPlayer();
+            StopInstrumentPlayer(stopNotes);
         }
 
-        public void StopInstrumentPlayer()
+        public void StopInstrumentPlayer(bool stopNotes = true)
         {
-            instrumentPlayer.Stop();
+            instrumentPlayer.Stop(stopNotes);
         }
 
         public void StartInstrumentPlayer()
@@ -760,8 +783,26 @@ namespace FamiStudio
                 ProjectExplorer.Invalidate();
         }
 
+        private void RecreateAudioPlayers()
+        {
+            StopEverything(false);
+
+            songPlayer.Shutdown();
+            songPlayer = new SongPlayer();
+            instrumentPlayer.Shutdown();
+            instrumentPlayer = new InstrumentPlayer();
+
+            StartInstrumentPlayer();
+        }
+
         public void Tick()
         {
+            if (audioDeviceChanged)
+            {
+                RecreateAudioPlayers();
+                audioDeviceChanged = false;
+            }
+
             ToolBar.Tick();
             PianoRoll.Tick();
             Sequencer.Tick();

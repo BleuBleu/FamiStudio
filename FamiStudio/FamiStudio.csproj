@@ -95,6 +95,7 @@
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
+    <Compile Include="Source\Player\MultiMediaNotifications.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Utils\MIDI.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
