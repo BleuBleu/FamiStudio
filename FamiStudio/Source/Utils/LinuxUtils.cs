@@ -9,6 +9,15 @@ namespace FamiStudio
         [DllImport("libgdk-x11-2.0.so.0")]
         internal static extern uint gdk_x11_drawable_get_xid(IntPtr handle);
 
+        [DllImport("libgdk-x11-2.0.so.0")]
+        internal static extern IntPtr gdk_x11_drawable_get_xdisplay(IntPtr handle);
+
+        [DllImport("libX11")]
+        public static extern void XLockDisplay(IntPtr display);
+
+        [DllImport("libX11")]
+        public static extern void XUnlockDisplay(IntPtr display);
+
         [DllImport("libX11", EntryPoint = "XReparentWindow")]
         public extern static int XReparentWindow(IntPtr display, IntPtr window, IntPtr parent, int x, int y);
 
