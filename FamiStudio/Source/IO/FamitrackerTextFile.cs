@@ -369,7 +369,7 @@ namespace FamiStudio
                 {
                     var param = SplitStringKeepQuotes(line.Substring(5));
 
-                    song = project.CreateSong(param[3]);
+                    song = CreateUniquelyNamedSong(param[3]);
                     song.SetLength(0);
                     song.SetDefaultPatternLength(int.Parse(param[0]));
                     song.FamitrackerSpeed = int.Parse(param[1]);

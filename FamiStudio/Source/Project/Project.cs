@@ -179,6 +179,11 @@ namespace FamiStudio
             return samples.Find(s => s.Name == name) == null;
         }
 
+        public bool IsSongNameUnique(string name)
+        {
+            return songs.Find(s => s.Name == name) == null;
+        }
+
         public DPCMSample CreateDPCMSample(string name, byte[] data)
         {
             var sampleSize = GetTotalSampleSize();

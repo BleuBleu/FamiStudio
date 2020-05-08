@@ -176,6 +176,17 @@ namespace FamiStudio
             return project.CreateDPCMSample(name, data);
         }
 
+        protected Song CreateUniquelyNamedSong(string baseName)
+        {
+            string name = baseName;
+            var j = 2;
+
+            while (!project.IsSongNameUnique(name))
+                name = baseName + "-" + j++;
+
+            return project.CreateSong(name);
+        }
+
         protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, Dictionary<Pattern, byte> patternLengths)
         {
             Note note = null;
