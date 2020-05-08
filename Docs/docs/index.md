@@ -18,7 +18,7 @@ Depending on how you download FamiStudio, you might get scary warnings the first
 
 On Windows, if you get an error trying to start the application, but sure to install these 2 requirements:
 
-* You will need the [Visual Studio 2015 runtime](https://www.microsoft.com/en-us/download/confirmation.aspx?id=8109) (x86 version)
+* You will need the [Visual Studio 2015 runtime](https://www.microsoft.com/en-pk/download/details.aspx?id=48145) (x86 version)
 * You also may need (especially on Windows 7) to install this rather old and cluncky [DirectX package](https://www.microsoft.com/en-us/download/confirmation.aspx?id=8109)
 
 	1. It is going to ask you to extra the files to somewhere, extract to a temporary folder
