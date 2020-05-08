@@ -1169,6 +1169,7 @@ namespace FamiStudio
 
                 if (e.KeyCode == Keys.Delete && IsSelectionValid())
                 {
+                    CancelDragSelection();
                     DeleteSelection();
                 }
             }

@@ -5,7 +5,7 @@ namespace FamiStudio
     public static class CommonTooltips
     {
         // Custom pattern.
-#if FAMISTUDIO_MACOS
+#if !FAMISTUDIO_WINDOWS
         public readonly static string CustomPattern = null;
 #else
         public readonly static string CustomPattern = "Enable to use different length or tempo parameter for this pattern.";
