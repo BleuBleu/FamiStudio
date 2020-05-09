@@ -144,8 +144,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.63431968"
-     inkscape:cx="742.53793"
-     inkscape:cy="-425.41973"
+     inkscape:cx="398.16243"
+     inkscape:cy="-122.11538"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -470,20 +470,20 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="41.689827"
-       y="166.35281"
+       x="50.240654"
+       y="166.56137"
        id="text5037-35"
        inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames6.png"
        inkscape:export-xdpi="71.892395"
        inkscape:export-ydpi="71.892395"><tspan
          sodipodi:role="line"
          id="tspan5035-1"
-         x="41.689827"
-         y="166.35281"
+         x="50.240654"
+         y="166.56137"
          style="font-size:5.29166651px;stroke-width:0.26458332">6 PAL Frames</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 110,150.17502 c 0,6.17648 -35.556098,0.64327 -47.500001,6.17648 C 60.577561,157.2421 60,160.0574 60,160.0574 c 0,0 -0.577561,-2.8153 -2.500002,-3.7059 C 45.556097,150.81829 10,156.3515 10,150.17502"
+       d="m 129.57097,150.17502 c 0,6.17648 -42.502909,0.64327 -56.780365,6.17648 -2.298037,0.8906 -2.98844,3.7059 -2.98844,3.7059 0,0 -0.690402,-2.8153 -2.988442,-3.7059 -14.277454,-5.53321 -56.780362,0 -56.780362,-6.17648"
        id="path5018-2-9"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cacac"
@@ -937,7 +937,7 @@
     <rect
        style="fill:#c6cdda;fill-opacity:1;stroke:#000000;stroke-width:0.49999997;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect6521-0"
-       width="185.686"
+       width="190.27425"
        height="85.000008"
        x="5"
        y="267"
@@ -2770,7 +2770,7 @@
        height="65"
        x="5"
        y="362"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <path
@@ -2778,7 +2778,7 @@
        d="M 10,422.00001 V 387"
        id="path4898-3-3"
        inkscape:connector-curvature="0"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2788,7 +2788,7 @@
        height="8"
        x="10"
        y="397"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2798,7 +2798,7 @@
        height="8"
        x="26.639999"
        y="397"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2808,7 +2808,7 @@
        height="8"
        x="43.279991"
        y="397"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2818,7 +2818,7 @@
        height="8"
        x="59.919998"
        y="397"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2828,7 +2828,7 @@
        height="8"
        x="76.559998"
        y="397"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2838,7 +2838,7 @@
        height="8"
        x="93.199997"
        y="397"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2848,7 +2848,7 @@
        height="8"
        x="10"
        y="405"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2858,7 +2858,7 @@
        height="8"
        x="30"
        y="405"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2868,7 +2868,7 @@
        height="8"
        x="50"
        y="405"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2878,7 +2878,7 @@
        height="8"
        x="70"
        y="405"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <rect
@@ -2888,7 +2888,7 @@
        height="8"
        x="90.000008"
        y="405"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <path
@@ -2897,7 +2897,7 @@
        id="path4900-9-8"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <text
@@ -2906,7 +2906,7 @@
        x="16.560417"
        y="402.93011"
        id="text4904-5-05"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -2920,7 +2920,7 @@
        x="33.241753"
        y="402.96371"
        id="text4904-3-2-5"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -2934,7 +2934,7 @@
        x="49.901131"
        y="402.92368"
        id="text4904-3-0-8-1"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -2948,7 +2948,7 @@
        x="66.586349"
        y="402.92368"
        id="text4904-3-0-4-74-26"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -2962,7 +2962,7 @@
        x="83.143669"
        y="402.88364"
        id="text4904-3-0-4-1-1-25"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -2976,7 +2976,7 @@
        x="99.804329"
        y="402.9198"
        id="text4904-3-0-4-1-4-7-64"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -2990,7 +2990,7 @@
        id="path5018-2-2-0"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cacac"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <text
@@ -2999,7 +2999,7 @@
        x="28.470818"
        y="371.83661"
        id="text5037-5-0"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3013,7 +3013,7 @@
        x="18.315353"
        y="410.92236"
        id="text4904-31-2-2"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3027,7 +3027,7 @@
        x="38.240417"
        y="410.93011"
        id="text4904-3-5-4-8"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3041,7 +3041,7 @@
        x="55.420181"
        y="410.92368"
        id="text4904-3-0-9-2-6"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3055,7 +3055,7 @@
        x="78.346359"
        y="410.92368"
        id="text4904-3-0-4-7-7-11"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3069,7 +3069,7 @@
        x="98.346352"
        y="410.92368"
        id="text4904-3-0-4-1-0-0-8"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3083,7 +3083,7 @@
        x="58.886497"
        y="420.29913"
        id="text6088-5"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3098,7 +3098,7 @@
        height="8"
        x="109.84"
        y="397"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <text
@@ -3107,7 +3107,7 @@
        x="116.44433"
        y="402.9198"
        id="text4904-3-0-4-1-4-7-64-6"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3122,7 +3122,7 @@
        height="8"
        x="126.48"
        y="397"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <text
@@ -3131,7 +3131,7 @@
        x="133.08432"
        y="402.9198"
        id="text4904-3-0-4-1-4-7-64-6-7"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3146,7 +3146,7 @@
        height="8"
        x="109.84"
        y="405"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <text
@@ -3155,7 +3155,7 @@
        x="118.18634"
        y="410.92368"
        id="text4904-3-0-4-1-0-0-8-6"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3170,7 +3170,7 @@
        height="8"
        x="129.84"
        y="405"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
     <text
@@ -3179,7 +3179,7 @@
        x="138.18634"
        y="410.92368"
        id="text4904-3-0-4-1-0-0-8-6-8"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3193,7 +3193,7 @@
        x="147.52705"
        y="386.54337"
        id="text5037-3-2-1-2"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242"><tspan
          sodipodi:role="line"
@@ -3207,7 +3207,7 @@
        id="path5251-6-7"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc"
-       inkscape:export-filename="C:\Users\bleub\Desktop\NtscPalFrames8.png"
+       inkscape:export-filename="C:\Users\bleub\Desktop\PalSkipFrames8.png"
        inkscape:export-xdpi="72.128242"
        inkscape:export-ydpi="72.128242" />
   </g>
