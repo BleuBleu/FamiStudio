@@ -234,28 +234,12 @@ namespace FamiStudio
 
         public Point PointToClient(GLControl ctrl, Point p)
         {
-            foreach (var c in controls)
-            {
-                if (c == ctrl)
-                {
-                    return base.PointToClient(new Point(p.X - ctrl.Left, p.Y - ctrl.Top));
-                }
-            }
-
-            return Point.Empty;
+            return base.PointToClient(new Point(p.X - ctrl.Left, p.Y - ctrl.Top));
         }
 
         public Point PointToScreen(GLControl ctrl, Point p)
         {
-            foreach (var c in controls)
-            {
-                if (c == ctrl)
-                {
-                    return base.PointToScreen(new Point(ctrl.Left + p.X, ctrl.Top  + p.Y));
-                }
-            }
-
-            return Point.Empty;
+            return base.PointToScreen(new Point(ctrl.Left + p.X, ctrl.Top  + p.Y));
         }
 
         protected GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)

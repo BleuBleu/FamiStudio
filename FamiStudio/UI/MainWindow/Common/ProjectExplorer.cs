@@ -785,6 +785,8 @@ namespace FamiStudio
         {
             base.OnMouseUp(e);
 
+            Capture = false;
+
             if (captureOperation == CaptureOperation.DragInstrument)
             {
                 if (ClientRectangle.Contains(e.X, e.Y))
@@ -834,7 +836,6 @@ namespace FamiStudio
             draggedInstrument = null;
             sliderDragButton = null;
             captureOperation = CaptureOperation.None;
-            Capture = false;
         }
 
         private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op)
@@ -1366,7 +1367,7 @@ namespace FamiStudio
                 {
                     EditInstrumentProperties(pt, button.instrument);
                 }
-#if !FAMISTUDIO_WINDOWS
+#if FAMISTUDIO_MACOS
                 else
                 {
                     // When pressing multiple times on mac, it creates click -> dbl click -> click -> dbl click sequences which

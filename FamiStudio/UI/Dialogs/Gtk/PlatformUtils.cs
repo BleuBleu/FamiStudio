@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using Gtk;
+using OpenTK;
 
 namespace FamiStudio
 {
@@ -64,9 +65,15 @@ namespace FamiStudio
                 }
             }
 
-#if FAMISTUDIO_MACOS
-            InitializeGtk();
+#if FAMISTUDIO_LINUX
+            Toolkit.Init(new ToolkitOptions
+            {
+                Backend = PlatformBackend.PreferX11,
+                EnableHighResolution = false
+            });
 #endif
+
+            InitializeGtk();
         }
 
         public static void InitializeGtk()
@@ -125,6 +132,7 @@ namespace FamiStudio
             filechooser.KeepAbove = true;
             filechooser.Modal = true;
             filechooser.SkipTaskbarHint = true;
+            filechooser.TransientFor = FamiStudioForm.Instance;
 
             filechooser.Filter = new FileFilter();
             foreach (var ext in extensionList)
@@ -134,9 +142,7 @@ namespace FamiStudio
             if (filechooser.Run() == (int)ResponseType.Accept)
                 filename = filechooser.Filename;
 
-            ProcessPendingEvents();
             filechooser.Destroy();
-            ProcessPendingEvents();
 
             return filename;
 #endif
@@ -158,6 +164,7 @@ namespace FamiStudio
             filechooser.KeepAbove = true;
             filechooser.Modal = true;
             filechooser.SkipTaskbarHint = true;
+            filechooser.TransientFor = FamiStudioForm.Instance;
 
             filechooser.Filter = new FileFilter();
             foreach (var ext in extensionList)
@@ -167,9 +174,7 @@ namespace FamiStudio
             if (filechooser.Run() == (int)ResponseType.Accept)
                 filename = filechooser.Filename;
 
-            ProcessPendingEvents();
             filechooser.Destroy();
-            ProcessPendingEvents();
 
             return filename;
 #endif
@@ -196,12 +201,11 @@ namespace FamiStudio
             md.SkipTaskbarHint = true;
             md.TypeHint = Gdk.WindowTypeHint.Dialog;
             md.Title = title;
+            md.TransientFor = FamiStudioForm.Instance;
 
             int ret = md.Run();
 
-            ProcessPendingEvents();
             md.Destroy();
-            ProcessPendingEvents();
 
             if (buttons == MessageBoxButtons.YesNo)
                 return ret == -8 ? DialogResult.Yes : ret == -9 ? DialogResult.No : DialogResult.Cancel;

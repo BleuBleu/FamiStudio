@@ -76,6 +76,9 @@ namespace FamiStudio
             KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
+#if FAMISTUDIO_LINUX
+            TransientFor = FamiStudioForm.Instance;
+#endif
         }
 
         private bool RunValidation()
@@ -138,17 +141,6 @@ namespace FamiStudio
         public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent = null)
         {
             Show();
-
-#if FAMISTUDIO_LINUX
-            if (parent != null)
-            {
-                // Experiments.
-                var display = LinuxUtils.GetWindowDisplay(parent.WindowInfo);
-                var parentXId = parent.WindowInfo.Handle;
-                var dialogXId = new IntPtr(LinuxUtils.gdk_x11_drawable_get_xid(GdkWindow.Handle));
-                LinuxUtils.XReparentWindow(display, dialogXId, parentXId, 10, 10);
-            }
-#endif
 
             if (topAlign || leftAlign)
             {
