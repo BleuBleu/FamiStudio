@@ -43,6 +43,7 @@ namespace FamiStudio
             this.famistudio = famistudio;
             this.Name = "FamiStudioForm";
             FamiStudioForm.instance = this;
+            Icon = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.FamiStudio_64.png");
 
             controls = new FamiStudioControls(this);
 

@@ -251,6 +251,10 @@
     <Compile Include="UI\MainWindow\OpenTK\GLWidget.cs" />
     <Compile Include="UI\Dialogs\Gtk\OpenTkUtils.cs" />
     <Compile Include="UI\Dialogs\Gtk\GtkUtils.cs" />
+    <None Include="Resources\FamiStudio_128.png" />
+    <EmbeddedResource Include="Resources\FamiStudio_16.png" />
+    <EmbeddedResource Include="Resources\FamiStudio_32.png" />
+    <EmbeddedResource Include="Resources\FamiStudio_64.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
