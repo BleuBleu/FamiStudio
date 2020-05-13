@@ -92,12 +92,12 @@ namespace FamiStudio
 
         protected override bool OnExposeEvent(Gdk.EventExpose ev)
         {
+            int width = Allocation.Width;
+            int height = Allocation.Height;
+
 #if FAMISTUDIO_MACOS
             var bgColor = Style.Backgrounds[(int)State];
             var fgColor = Style.Foregrounds[(int)State];
-
-            int width  = Allocation.Width;
-            int height = Allocation.Height;
 
             int imgWidth  = (int)(pixbuf.Width  / GLTheme.DialogScaling);
             int imgHeight = (int)(pixbuf.Height / GLTheme.DialogScaling);
@@ -131,9 +131,6 @@ namespace FamiStudio
 #else
             using (Gdk.GC gc = new Gdk.GC((Drawable)base.GdkWindow))
             {
-                int width  = Allocation.Width;
-                int height = Allocation.Height;
-
                 int x = layoutNormal == null ? (width - pixbuf.Width) / 2 : 5;
                 int y = (height - pixbuf.Height) / 2;
                 int yp = State == Gtk.StateType.Active ? 1 : 0;

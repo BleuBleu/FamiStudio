@@ -56,8 +56,7 @@ namespace FamiStudio
                         }
                         catch
                         {
-                            //try { FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); } catch { }
-                            FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); // MATTT
+                            try { FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); } catch { }
                         }
 #endif
                     }

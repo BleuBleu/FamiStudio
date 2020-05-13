@@ -782,8 +782,6 @@ namespace FamiStudio
         {
             base.OnMouseUp(e);
 
-            Capture = false;
-
             if (captureOperation == CaptureOperation.DragInstrument)
             {
                 if (ClientRectangle.Contains(e.X, e.Y))
@@ -833,6 +831,7 @@ namespace FamiStudio
             draggedInstrument = null;
             sliderDragButton = null;
             captureOperation = CaptureOperation.None;
+            Capture = false;
         }
 
         private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op)

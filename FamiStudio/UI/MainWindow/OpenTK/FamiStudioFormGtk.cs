@@ -29,6 +29,10 @@ namespace FamiStudio
         bool glInit = false;
         GLWidget glWidget;
 
+        private int  doubleClickTime = 250;
+        private uint lastMouseButton = 999;
+        private uint lastClickTime = 0;
+        private Point lastClickPos = Point.Empty;
         private Point lastMousePos = Point.Empty;
         private GLControl captureControl = null;
         private System.Windows.Forms.MouseButtons captureButton   = System.Windows.Forms.MouseButtons.None;
@@ -62,6 +66,8 @@ namespace FamiStudio
             glWidget.MotionNotifyEvent  += GlWidget_MotionNotifyEvent;
             glWidget.Resized            += GlWidget_Resized;
 
+            doubleClickTime = Gtk.Settings.GetForScreen(Gdk.Screen.Default).DoubleClickTime;
+
             Add(glWidget);
         }
 
@@ -89,13 +95,34 @@ namespace FamiStudio
                 if (captureControl != null)
                     return;
 
-                var e = GtkUtils.ToWinFormArgs(args.Event, x, y);
-                lastButtonPress = e.Button;
-                ctrl.MouseDown(e);
-            }
-            else if (args.Event.Type == Gdk.EventType.TwoButtonPress)
-            {
-                ctrl.MouseDoubleClick(GtkUtils.ToWinFormArgs(args.Event, x, y));
+                // GTK's double click is super weird, need to emulate the behavior
+                // of Windows here. Basically it will report events in this manner:
+                //  t=1 CLICK
+                //  t=2 RELEASE
+                //  t=3 CLICK <=== Extra Click/Release we dont get on windows.
+                //  t=4 RELEASE
+                //  t=4 DBL CLICK
+                if (args.Event.Button == lastMouseButton &&
+                    (args.Event.Time - lastClickTime) < doubleClickTime &&
+                    Math.Abs(lastClickPos.X - args.Event.X) < 4 &&
+                    Math.Abs(lastClickPos.Y - args.Event.Y) < 4)
+                {
+                    lastMouseButton = 999;
+                    lastClickTime   = 0;
+                    lastClickPos    = Point.Empty;
+
+                    ctrl.MouseDoubleClick(GtkUtils.ToWinFormArgs(args.Event, x, y));
+                }
+                else
+                {
+                    lastMouseButton = args.Event.Button;
+                    lastClickTime   = args.Event.Time;
+                    lastClickPos    = new Point((int)args.Event.X, (int)args.Event.Y);
+
+                    var e = GtkUtils.ToWinFormArgs(args.Event, x, y);
+                    lastButtonPress = e.Button;
+                    ctrl.MouseDown(e);
+                }
             }
         }
 
@@ -120,11 +147,11 @@ namespace FamiStudio
             lastMousePos.Y = (int)args.Event.Y;
 
             var e = GtkUtils.ToWinFormArgs(args.Event, x, y);
-            if (ctrl != null)
-                ctrl.MouseUp(e);
-
             if (e.Button == captureButton)
                 ReleaseMouse();
+
+            if (ctrl != null)
+                ctrl.MouseUp(e);
         }
 
         void GlWidget_ScrollEvent(object o, ScrollEventArgs args)
@@ -135,7 +162,7 @@ namespace FamiStudio
 
         void GlWidget_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
         {
-            Debug.WriteLine($"MOVE! {args.Event.X} {args.Event.Y}");
+            //Debug.WriteLine($"MOVE! {args.Event.X} {args.Event.Y}");
 
             int x;
             int y;
@@ -183,7 +210,7 @@ namespace FamiStudio
 
         public void RefreshSequencerLayout()
         { 
-            controls.Resize(glWidget.Allocation.Width, glWidget.Allocation.Width);
+            controls.Resize(glWidget.Allocation.Width, glWidget.Allocation.Height);
             controls.Invalidate();
         }
 
@@ -240,25 +267,14 @@ namespace FamiStudio
 
         protected bool OnIdleProcessMain()
         {
-            if (!glInit)
-                return false;
-
+            famistudio.Tick();
             RenderFrame();
             return true;
         }
 
         protected void RenderFrame()
         {
-            if (!glInit)
-                return;
-
-            // Tick here so that we also tick on move and resize.
-            famistudio.Tick(); // MATTT: In event loop?
-
-            int width  = glWidget.Allocation.Width;
-            int height = glWidget.Allocation.Height;
-
-            if (controls.Redraw(width, height))
+            if (glInit && controls.Redraw(glWidget.Allocation.Width, glWidget.Allocation.Height))
             {
                 GraphicsContext.CurrentContext.SwapBuffers();
             }
@@ -268,6 +284,8 @@ namespace FamiStudio
         {
             if (lastButtonPress != System.Windows.Forms.MouseButtons.None)
             {
+                Debug.Assert(captureControl == null);
+
                 captureButton  = lastButtonPress;
                 captureControl = ctrl;
                 Gdk.Pointer.Grab(glWidget.GdkWindow, true, Gdk.EventMask.PointerMotionMask | Gdk.EventMask.ButtonReleaseMask, null, null, 0);
@@ -322,15 +340,20 @@ namespace FamiStudio
             }
         }
 
+        protected override bool OnDeleteEvent(Gdk.Event evnt)
+        {
+            if (!famistudio.TryClosing())
+                return false;
+
+            Application.Quit();
+
+            return base.OnDeleteEvent(evnt);
+        }
+
         public void Run()
         {
             Show();
-
-            while (true)
-            {
-                Application.RunIteration();
-                //RenderFrame();
-            }
+            Application.Run();
         }
     }
 }

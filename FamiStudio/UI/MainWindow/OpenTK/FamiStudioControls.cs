@@ -90,7 +90,7 @@ namespace FamiStudio
 
             if (anyNeedsRedraw)
             {
-                Debug.WriteLine("REDRAW!");
+                //Debug.WriteLine("REDRAW!");
 
 #if FAMISTUDIO_LINUX
                 GL.Viewport(0, 0, width, height);
