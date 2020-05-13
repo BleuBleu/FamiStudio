@@ -1,4 +1,4 @@
-﻿using Gtk;
+using Gtk;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;

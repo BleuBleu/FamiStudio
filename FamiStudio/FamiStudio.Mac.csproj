@@ -134,7 +134,7 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="UI\Dialogs\Common\ExportDialog.cs" />
     <Compile Include="UI\MainWindow\Common\FamiStudio.cs" />
-    <Compile Include="UI\MainWindow\OpenTK\FamiStudioForm.cs" />
+    <Compile Include="UI\MainWindow\OpenTK\FamiStudioFormOpenTk.cs" />
     <Compile Include="UI\MainWindow\Common\ProjectExplorer.cs" />
     <Compile Include="UI\MainWindow\Common\PianoRoll.cs" />
     <Compile Include="Source\Utils\Program.cs" />
@@ -239,6 +239,9 @@
     <EmbeddedResource Include="Resources\QuickSand56_0.png" />
     <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
+    <Compile Include="UI\MainWindow\OpenTK\FamiStudioControls.cs" />
+    <Compile Include="UI\Dialogs\Gtk\GtkUtils.cs" />
+    <Compile Include="UI\Dialogs\Gtk\OpenTkUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

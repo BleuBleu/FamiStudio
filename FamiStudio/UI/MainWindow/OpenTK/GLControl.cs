@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 #if FAMISTUDIO_LINUX
 using CursorType = Gdk.Cursor;
 #else
-using CursorType = IntPtr;
+using CursorType = System.IntPtr;
 #endif
 
 namespace FamiStudio
