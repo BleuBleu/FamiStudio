@@ -249,6 +249,8 @@
     <Compile Include="UI\MainWindow\OpenTK\FamiStudioFormGtk.cs" />
     <Compile Include="UI\MainWindow\OpenTK\FamiStudioControls.cs" />
     <Compile Include="UI\MainWindow\OpenTK\GLWidget.cs" />
+    <Compile Include="UI\Dialogs\Gtk\OpenTkUtils.cs" />
+    <Compile Include="UI\Dialogs\Gtk\GtkUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

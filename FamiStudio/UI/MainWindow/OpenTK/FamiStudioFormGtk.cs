@@ -2,6 +2,7 @@
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Input;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -28,6 +29,7 @@ namespace FamiStudio
         bool glInit = false;
         GLWidget glWidget;
 
+        private Point lastMousePos = Point.Empty;
         private GLControl captureControl = null;
         private System.Windows.Forms.MouseButtons captureButton   = System.Windows.Forms.MouseButtons.None;
         private System.Windows.Forms.MouseButtons lastButtonPress = System.Windows.Forms.MouseButtons.None;
@@ -54,12 +56,11 @@ namespace FamiStudio
                 Gdk.EventMask.PointerMotionHintMask;
             glWidget.Show();
 
-            //glWidget.ConfigureEvent     += GlWidget_ConfigureEvent;
             glWidget.ButtonPressEvent   += GlWidget_ButtonPressEvent;
             glWidget.ButtonReleaseEvent += GlWidget_ButtonReleaseEvent;
             glWidget.ScrollEvent        += GlWidget_ScrollEvent;
             glWidget.MotionNotifyEvent  += GlWidget_MotionNotifyEvent;
-            glWidget.Resized += GlWidget_Resized;
+            glWidget.Resized            += GlWidget_Resized;
 
             Add(glWidget);
         }
@@ -71,34 +72,6 @@ namespace FamiStudio
             RenderFrame();
         }
 
-        protected System.Windows.Forms.MouseEventArgs ToWinFormArgs(Gdk.EventButton e, int x, int y)
-        {
-            System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;
-
-            if (e.Button == 1)
-                buttons = System.Windows.Forms.MouseButtons.Left;
-            else if (e.Button == 2)
-                buttons = System.Windows.Forms.MouseButtons.Middle;
-            else if (e.Button == 3)
-                buttons = System.Windows.Forms.MouseButtons.Right;
-
-            return new System.Windows.Forms.MouseEventArgs(buttons, 1, x, y, 0);
-        }
-
-        protected System.Windows.Forms.MouseEventArgs ToWinFormArgs(Gdk.EventMotion e, int x, int y)
-        {
-            System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;
-
-            if ((e.State & Gdk.ModifierType.Button1Mask) != 0)
-                buttons |= System.Windows.Forms.MouseButtons.Left;
-            else if ((e.State & Gdk.ModifierType.Button2Mask) != 0)
-                buttons |= System.Windows.Forms.MouseButtons.Middle;
-            else if ((e.State & Gdk.ModifierType.Button3Mask) != 0)
-                buttons |= System.Windows.Forms.MouseButtons.Right;
-
-            return new System.Windows.Forms.MouseEventArgs(buttons, 1, x, y, 0);
-        }
-
         protected System.Windows.Forms.MouseEventArgs ToWinFormArgs(Gdk.EventScroll e, int x, int y)
         {
             return new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, e.Direction == Gdk.ScrollDirection.Up ? 120 : -120);
@@ -108,18 +81,21 @@ namespace FamiStudio
         {
             var ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out int x, out int y);
 
+            lastMousePos.X = (int)args.Event.X;
+            lastMousePos.Y = (int)args.Event.Y;
+
             if (args.Event.Type == Gdk.EventType.ButtonPress)
             {
                 if (captureControl != null)
                     return;
 
-                var e = ToWinFormArgs(args.Event, x, y);
+                var e = GtkUtils.ToWinFormArgs(args.Event, x, y);
                 lastButtonPress = e.Button;
                 ctrl.MouseDown(e);
             }
             else if (args.Event.Type == Gdk.EventType.TwoButtonPress)
             {
-                ctrl.MouseDoubleClick(ToWinFormArgs(args.Event, x, y));
+                ctrl.MouseDoubleClick(GtkUtils.ToWinFormArgs(args.Event, x, y));
             }
         }
 
@@ -140,7 +116,10 @@ namespace FamiStudio
                 ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out x, out y);
             }
 
-            var e = ToWinFormArgs(args.Event, x, y);
+            lastMousePos.X = (int)args.Event.X;
+            lastMousePos.Y = (int)args.Event.Y;
+
+            var e = GtkUtils.ToWinFormArgs(args.Event, x, y);
             if (ctrl != null)
                 ctrl.MouseUp(e);
 
@@ -173,8 +152,33 @@ namespace FamiStudio
                 ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out x, out y);
             }
 
+            lastMousePos.X = (int)args.Event.X;
+            lastMousePos.Y = (int)args.Event.Y;
+
             if (ctrl != null)
-                ctrl.MouseMove(ToWinFormArgs(args.Event, x, y));
+            {
+                ctrl.MouseMove(GtkUtils.ToWinFormArgs(args.Event, x, y));
+                RefreshCursor(ctrl);
+            }
+        }
+
+        protected override bool OnKeyPressEvent(Gdk.EventKey evnt)
+        {
+            var args = new System.Windows.Forms.KeyEventArgs(GtkUtils.ToWinFormKey(evnt.Key) | GtkUtils.ToWinFormKey(evnt.State));
+            famistudio.KeyDown(args);
+            foreach (var ctrl in controls.Controls)
+                ctrl.KeyDown(args);
+
+            return base.OnKeyPressEvent(evnt);
+        }
+
+        protected override bool OnKeyReleaseEvent(Gdk.EventKey evnt)
+        {
+            var args = new System.Windows.Forms.KeyEventArgs(GtkUtils.ToWinFormKey(evnt.Key) | GtkUtils.ToWinFormKey(evnt.State)); 
+            foreach (var ctrl in controls.Controls)
+                ctrl.KeyUp(args);
+
+            return base.OnKeyReleaseEvent(evnt);
         }
 
         public void RefreshSequencerLayout()
@@ -186,6 +190,18 @@ namespace FamiStudio
         public void Invalidate()
         {
             controls.Invalidate();
+        }
+
+        public Point PointToClient(Point p)
+        {
+            glWidget.GdkWindow.GetOrigin(out var ox, out var oy);
+            return new Point(p.X - ox, p.Y - oy);
+        }
+
+        public Point PointToScreen(Point p)
+        {
+            glWidget.GdkWindow.GetOrigin(out var ox, out var oy);
+            return new Point(ox + p.X, oy + p.Y);
         }
 
         public Point PointToClient(GLControl ctrl, Point p)
@@ -226,11 +242,9 @@ namespace FamiStudio
         {
             if (!glInit)
                 return false;
-            else
-            {
-                RenderFrame();
-                return true;
-            }
+
+            RenderFrame();
+            return true;
         }
 
         protected void RenderFrame()
@@ -271,21 +285,32 @@ namespace FamiStudio
 
         public Point GetCursorPosition()
         {
-            return Point.Empty;
+            var mouseState = Mouse.GetCursorState();
+            return new Point(mouseState.X, mouseState.Y);
         }
 
         public void RefreshCursor()
         {
+            RefreshCursor(controls.GetControlAtCoord(lastMousePos.X, lastMousePos.Y, out _, out _));
+        }
+
+        private void RefreshCursor(GLControl ctrl)
+        {
+            if (captureControl != null && captureControl != ctrl)
+                return;
+
+            if (ctrl != null)
+                glWidget.GdkWindow.Cursor = ctrl.Cursor.Current;
         }
 
         public System.Windows.Forms.Keys GetModifierKeys()
         {
-            return System.Windows.Forms.Keys.None;
+            return OpenTkUtils.GetModifierKeys();
         }
 
         public static bool IsKeyDown(System.Windows.Forms.Keys k)
         {
-            return false;
+            return Keyboard.GetState().IsKeyDown(OpenTkUtils.FromWinFormKey(k));
         }
 
         public Rectangle Bounds
@@ -297,7 +322,7 @@ namespace FamiStudio
             }
         }
 
-    public void Run()
+        public void Run()
         {
             Show();
 

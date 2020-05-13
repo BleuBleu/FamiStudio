@@ -4,6 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FAMISTUDIO_LINUX
+using CursorType = Gdk.Cursor;
+#else
+using CursorType = IntPtr;
+#endif
+
 namespace FamiStudio
 {
     public class GLControl
@@ -71,12 +77,12 @@ namespace FamiStudio
 
     public class CursorInfo
     {
-        private IntPtr cursor = Cursors.Default;
+        private CursorType cursor = Cursors.Default;
         private GLControl parentControl;
 
         public CursorInfo(GLControl ctrl) { parentControl = ctrl; }
         public System.Drawing.Point Position => parentControl.ParentForm.GetCursorPosition();
-        public IntPtr Current
+        public CursorType Current
         {
             get { return cursor; }
             set { cursor = value; parentControl.ParentForm.RefreshCursor(); }

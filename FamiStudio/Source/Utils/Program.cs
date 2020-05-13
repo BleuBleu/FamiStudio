@@ -33,9 +33,9 @@ namespace FamiStudio
 #endif
 
             Settings.Load();
-            Cursors.Initialize();
             RenderTheme.Initialize();
             PlatformUtils.Initialize();
+            Cursors.Initialize();
             ClipboardUtils.Initialize();
             FamiStudioTempoUtils.Initialize();
             NesApu.InitializeNoteTables();

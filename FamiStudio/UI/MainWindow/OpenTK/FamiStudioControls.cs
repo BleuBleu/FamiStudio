@@ -7,14 +7,12 @@ namespace FamiStudio
     public class FamiStudioControls
     {
         const int ControlToolbar = 0;
-        const int ControlSequener = 1;
+        const int ControlSequencer = 1;
         const int ControlPianoRoll = 2;
         const int ControlProjectExplorer = 3;
 
         private GLGraphics gfx = new GLGraphics();
         private GLControl[] controls = new GLControl[4];
-        private GLControl captureControl;
-        private System.Windows.Forms.MouseButtons captureButtons;
 
         private Toolbar toolbar;
         private Sequencer sequencer;
@@ -35,7 +33,7 @@ namespace FamiStudio
             projectExplorer = new ProjectExplorer();
 
             controls[ControlToolbar] = toolbar;
-            controls[ControlSequener] = sequencer;
+            controls[ControlSequencer] = sequencer;
             controls[ControlPianoRoll] = pianoRoll;
             controls[ControlProjectExplorer] = projectExplorer;
 
