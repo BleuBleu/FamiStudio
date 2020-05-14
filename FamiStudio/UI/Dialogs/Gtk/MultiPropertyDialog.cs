@@ -77,8 +77,12 @@ namespace FamiStudio
             KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
-
+#if FAMISTUDIO_LINUX
+            TransientFor = FamiStudioForm.Instance;
+            SetPosition(WindowPosition.CenterOnParent);
+#else
             Move(x, y);
+#endif
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
