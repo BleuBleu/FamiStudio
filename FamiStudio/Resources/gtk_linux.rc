@@ -48,6 +48,11 @@ style "dialog"
     bg[PRELIGHT] = "#2A3033" # DarkGreyFillColor2
 }
 
+style "buttonlabel"
+{
+    fg[NORMAL] = "#000000"
+}
+
 style "flatbutton"
 {
     fg[NORMAL]   = "#C6CDDA" # LightGreyFillColor2
@@ -66,6 +71,7 @@ style "all"
 
 widget_class "*" style "all"
 widget_class "*GtkLabel*" style "label"
+widget_class "*Button*Label*" style "buttonlabel"
 widget_class "*Entry*" style "entry"
 widget_class "*ComboBox*" style "combo"
 widget_class "*GtkCheckButton*Label*" style "check_label"
@@ -74,3 +80,4 @@ widget_class "*FlatButton*" style "flatbutton"
 widget_class "*Dialog" style "dialog"
 widget "*CheckBoxList*" style "check_list"
 widget "FamiStudioForm" style "dialog"
+
