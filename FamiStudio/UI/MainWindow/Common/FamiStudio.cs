@@ -446,6 +446,8 @@ namespace FamiStudio
                                 var name = (string)asset["name"];
 #if FAMISTUDIO_WINDOWS
                                 if (name != null && name.ToLower().Contains("win"))
+#elif FAMISTUDIO_LINUX
+                                if (name != null && name.ToLower().Contains("linux"))
 #else
                                 if (name != null && name.ToLower().Contains("macos"))
 #endif
@@ -463,6 +465,21 @@ namespace FamiStudio
             }
         }
 
+        private void OpenUrl(string url)
+        {
+            try
+            {
+#if FAMISTUDIO_LINUX
+                Process.Start("xdg-open", url);
+#elif FAMISTUDIO_MACOS
+                Process.Start("open", url);
+#else
+                Process.Start(url);
+#endif
+            }
+            catch { }
+        }
+
         private void CheckNewReleaseDone()
         {
             if (newReleaseAvailable)
@@ -471,7 +488,7 @@ namespace FamiStudio
 
                 if (PlatformUtils.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    Process.Start("http://www.famistudio.org");
+                    OpenUrl("http://www.famistudio.org");
                 }
             }
         }
@@ -491,7 +508,7 @@ namespace FamiStudio
 
         public void ShowHelp()
         {
-            Process.Start("http://www.famistudio.org/doc/index.html");
+            OpenUrl("http://www.famistudio.org/doc/index.html");
         }
 
         private void UpdateTitle()
