@@ -4,12 +4,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-#if FAMISTUDIO_WINDOWS
-using AudioStream = FamiStudio.XAudio2Stream;
-#else
-using AudioStream = FamiStudio.PortAudioStream;
-#endif
-
 namespace FamiStudio
 {
     public enum LoopMode
@@ -28,7 +22,11 @@ namespace FamiStudio
         // NSTC: 734 = ceil(SampleRate / FrameRate) = ceil(44100 / 60.0988).
         // PAL:  882 = ceil(SampleRate / FrameRate) = ceil(44100 / 50.0070).
         protected const int BufferSize = 882 * sizeof(short);
+#if FAMISTUDIO_LINUX
+        protected const int NumAudioBuffers = 4; // ALSA seems to like to have one extra buffer.
+#else
         protected const int NumAudioBuffers = 3;
+#endif
 
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;

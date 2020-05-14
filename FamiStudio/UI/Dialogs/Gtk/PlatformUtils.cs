@@ -25,6 +25,7 @@ namespace FamiStudio
             // When debugging or when in a app package, our paths are a bit different.
             string[] pathsToSearch =
             {
+                "./Resources/",
                 "../../Resources/",
                 "../Resources/Fonts/",
                 "."

@@ -255,19 +255,27 @@
     <EmbeddedResource Include="Resources\FamiStudio_16.png" />
     <EmbeddedResource Include="Resources\FamiStudio_32.png" />
     <EmbeddedResource Include="Resources\FamiStudio_64.png" />
+    <Compile Include="Source\Player\OpenALStream.cs" />
+    <Content Include="libopenal32.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Quicksand-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Quicksand-Bold.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Quicksand-Regular.ttf" />
     <EmbeddedResource Include="Resources\DPCM.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Noise.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
     <EmbeddedResource Include="Resources\Square.png" />
   </ItemGroup>
   <ItemGroup>
