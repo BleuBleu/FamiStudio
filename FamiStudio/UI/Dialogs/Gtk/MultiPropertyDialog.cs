@@ -181,8 +181,6 @@ namespace FamiStudio
             Hide();
 #if FAMISTUDIO_MACOS
             MacUtils.RestoreMainNSWindowFocus();
-#else
-            PlatformUtils.ProcessPendingEvents();
 #endif
 
             return result;
