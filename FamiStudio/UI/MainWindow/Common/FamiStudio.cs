@@ -520,7 +520,13 @@ namespace FamiStudio
 
             var version = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
 
-            mainForm.Text = $"FamiStudio {version} - {projectFile}";
+            string title = $"FamiStudio {version} - {projectFile}";
+
+#if TRUE
+            title += " DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
+#endif
+
+            mainForm.Text = title;
         }
 
         public void PlayInstrumentNote(int n)
