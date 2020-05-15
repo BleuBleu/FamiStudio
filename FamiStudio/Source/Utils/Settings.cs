@@ -68,6 +68,8 @@ namespace FamiStudio
         {
 #if FAMISTUDIO_WINDOWS
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
+#elif FAMISTUDIO_LINUX
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
 #else
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
 #endif
