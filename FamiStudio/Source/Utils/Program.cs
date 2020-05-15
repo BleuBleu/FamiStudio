@@ -51,6 +51,11 @@ namespace FamiStudio
             famiStudio.Run();
 
             Settings.Save();
+
+#if FAMISTUDIO_LINUX
+            // We sometimes gets stuck here on Linux, lets abort.
+            Environment.Exit(0);
+#endif
         }
     }
 }
