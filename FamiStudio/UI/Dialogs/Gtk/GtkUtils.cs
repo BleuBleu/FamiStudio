@@ -84,15 +84,5 @@ namespace FamiStudio
 
             return mod;
         }
-
-        public static Gdk.Key FromWinFormKey(System.Windows.Forms.Keys k)
-        {
-            //if (k >= System.Windows.Forms.Keys.A && k <= System.Windows.Forms.Keys.Z)
-            //    return Key.A + (k - System.Windows.Forms.Keys.A);
-
-            //Debug.Assert(false);
-
-            return Gdk.Key.VoidSymbol;
-        }
     }
 }
