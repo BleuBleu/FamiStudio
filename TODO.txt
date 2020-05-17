@@ -1,5 +1,6 @@
 2.1.0
 =====
+- Integrate piano roll key highlight.
 - Copy paste of text values in envelopes.
 - Command line processing
 - Try to use clipboard on Mac
@@ -26,7 +27,20 @@ Linux notes
 ===========
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe
 - GTK# : sudo apt-get install gtk-sharp2 
-	- THIS MIGHT BE ENOUGH : sudo apt-get install libgtk2.0-cil
+	- This seem to be enough (sudo apt-get install libgtk2.0-cil)
+- How to recompile with old linux:
+	- Ubuntu 16.04.6
+	- Install cmake-gui
+	- OpenAL Soft
+		- Install ALSA libs (libasound2-dev)
+		- Download openal-soft code
+		- Run cmake-gui in /build folder.
+		- Configure
+		- Choose static C + C++ libs
+		- Choose Release (no debug info)
+		- Generate.
+		- make!
+	- NesSndEmu + NotSoFatso, run script.
 
 Backlog:
 =========
