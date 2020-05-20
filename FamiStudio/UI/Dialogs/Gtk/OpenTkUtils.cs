@@ -75,8 +75,10 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.Delete;
             else if (k == Key.Escape)
                 return System.Windows.Forms.Keys.Escape;
+            else if (k == Key.Tilde)
+                return System.Windows.Forms.Keys.Oem3;
 
-            Debug.WriteLine($"Unknown key pressed {k}");
+            Trace.WriteLine($"Unknown key pressed {k}");
 
             return System.Windows.Forms.Keys.None;
         }

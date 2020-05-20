@@ -68,7 +68,7 @@ namespace FamiStudio
             else if (k == Gdk.Key.quoteleft)
                 return System.Windows.Forms.Keys.Oem3;
 
-            Debug.WriteLine($"Unknown key pressed {k}");
+            Trace.WriteLine($"Unknown key pressed {k}");
 
             return System.Windows.Forms.Keys.None;
         }
