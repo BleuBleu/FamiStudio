@@ -56,7 +56,6 @@ namespace FamiStudio
 
         public string Text { get => Title; set => Title = value; }
 
-#if FAMISTUDIO_MACOS
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         private delegate bool WindowShouldZoomToFrameDelegate(IntPtr self, IntPtr cmd, IntPtr nsWindow, RectangleF toFrame);
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
@@ -74,7 +73,6 @@ namespace FamiStudio
         {
             MacUtils.SetWindowCursor(WindowInfo.Handle, sender, cursor);
         }
-#endif
 
         public FamiStudioForm(FamiStudio famistudio)
             : base(1280, 720, new GraphicsMode(new ColorFormat(8, 8, 8, 0), 0, 0), "FamiStudio")
@@ -84,12 +82,6 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
-#if FAMISTUDIO_LINUX
-            // Doesnt work!
-            //this.Icon = new Icon("/home/ubuntu/FamiStudio.ico", 32, 32);
-#endif
-
-#if FAMISTUDIO_MACOS
             MacUtils.Initialize(WindowInfo.Handle);
 
             // There are some severe maximize bugs in OpenTK. Simply disable the maximize and bypass all the frame zooming thing.
@@ -107,7 +99,6 @@ namespace FamiStudio
                 MacUtils.SelRegisterName("resetCursorRects"),
                 Marshal.GetFunctionPointerForDelegate(ResetCursorRectsHandler),
                 "v@:");
-#endif
 
             controls.Resize(Width, Height);
             controls.InitializeGL(this);
@@ -117,11 +108,7 @@ namespace FamiStudio
 
         public void CaptureMouse(GLControl ctrl)
         {
-#if FAMISTUDIO_MACOS
             captureButtons = MacUtils.GetMouseButtons();
-#else
-            captureButtons = GetStateButtons(Mouse.GetState());
-#endif
             if (captureButtons != System.Windows.Forms.MouseButtons.None)
             {
                 captureControl = ctrl;
@@ -137,29 +124,17 @@ namespace FamiStudio
 
         public System.Drawing.Point GetCursorPosition()
         {
-#if FAMISTUDIO_MACOS
             return PointToScreen(MacUtils.GetWindowMousePosition(WindowInfo.Handle));
-#else
-            var mouseState = Mouse.GetCursorState();
-            return new Point(mouseState.X, mouseState.Y);
-#endif
         }
 
         public void RefreshCursor()
         {
-#if FAMISTUDIO_MACOS
             var client = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
-#else
-            var mouseState = Mouse.GetCursorState();
-            var client = PointToClient(new Point(mouseState.X, mouseState.Y));
-#endif
             var ctrl = controls.GetControlAtCoord(client.X, client.Y, out _, out _);
 
             RefreshCursor(ctrl);
 
-#if FAMISTUDIO_MACOS
             MacUtils.InvalidateCursor(WindowInfo.Handle);
-#endif
         }
 
         public void RefreshCursor(GLControl ctrl)
@@ -170,9 +145,7 @@ namespace FamiStudio
             if (ctrl != null)
                 cursor = ctrl.Cursor.Current;
 
-#if FAMISTUDIO_MACOS
             MacUtils.InvalidateCursor(WindowInfo.Handle);
-#endif
         }
 
         protected override void OnMove(EventArgs e)
@@ -222,12 +195,8 @@ namespace FamiStudio
             base.OnMouseDown(e);
             if (captureControl != null) return;
 
-#if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
             var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
-#else
-            var pt = new Point(e.X, e.Y);
-#endif
 
             if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
                 return;
@@ -262,12 +231,8 @@ namespace FamiStudio
             //if (CheckFrozen(false)) return;
             base.OnMouseDown(e);
 
-#if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
             var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
-#else
-            var pt = new Point(e.X, e.Y);
-#endif
 
             if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
                 return;
@@ -295,12 +260,8 @@ namespace FamiStudio
             //if (CheckFrozen(false)) return;
             base.OnMouseWheel(e);
 
-#if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
             var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
-#else
-            var pt = new Point(e.X, e.Y);
-#endif
 
             // We get notified for clicks in the title back and stuff.
             if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
@@ -408,14 +369,8 @@ namespace FamiStudio
 
             if (captureControl != null && hasMouseCaptureEvent)
             {
-#if FAMISTUDIO_MACOS
                 var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
                 var buttons = MacUtils.GetMouseButtons();
-#else
-                var mouseState = Mouse.GetState();
-                var buttons = GetStateButtons(mouseState);
-                var pt = PointToClient(new Point(mouseState.X, mouseState.Y));
-#endif
                 var args = new System.Windows.Forms.MouseEventArgs(buttons, 0, pt.X - captureControl.Left, pt.Y - captureControl.Top, 0);
 
                 //Debug.WriteLine($"MOVE! captureControl = {captureControl} buttons = {buttons} captureButtons = {captureButtons} pt = {pt}");
@@ -472,10 +427,6 @@ namespace FamiStudio
         {
             Visible = true; 
             OnResize(EventArgs.Empty);
-
-#if FAMISTUDIO_LINUX
-            PlatformUtils.InitializeGtk();
-#endif
 
             while (true)
             {
