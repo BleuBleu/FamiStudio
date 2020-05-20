@@ -13,6 +13,8 @@ namespace FamiStudio
         private System.Drawing.Point initialLocation;
         private bool leftAlign = false;
         private bool topAlign  = false;
+        private FlatButton buttonYes;
+        private FlatButton buttonNo;
 
         private PropertyPage propertyPage = new PropertyPage();
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
@@ -43,8 +45,9 @@ namespace FamiStudio
             var hbox = new HBox(false, 0);
 
             var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
-            var buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
-            var buttonNo = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
+
+            buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
+            buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
 
             buttonYes.Show();
             buttonYes.ButtonPressEvent += ButtonYes_ButtonPressEvent;
@@ -113,6 +116,7 @@ namespace FamiStudio
 
         private void ButtonYes_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
+            propertyPage.NotifyClosing();
             if (RunValidation())
                 result = System.Windows.Forms.DialogResult.OK;
         }
@@ -127,6 +131,7 @@ namespace FamiStudio
         {
             if (evnt.Key == Gdk.Key.Return)
             {
+                propertyPage.NotifyClosing();
                 if (RunValidation())
                     result = System.Windows.Forms.DialogResult.OK;
             }

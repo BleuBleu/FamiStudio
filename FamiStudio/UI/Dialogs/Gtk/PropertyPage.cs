@@ -394,6 +394,17 @@ namespace FamiStudio
             (properties[idx].control as Label).Text = text;
         }
 
+        public void NotifyClosing()
+        {
+#if !FAMISTUDIO_WINDOWS
+            foreach (var prop in properties)
+            { 
+                if (prop.control is SpinButton)
+                    (prop.control as SpinButton).Update();
+            }
+#endif
+        }
+
         public object GetPropertyValue(int idx)
         {
             var prop = properties[idx];

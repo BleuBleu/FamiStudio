@@ -151,6 +151,7 @@ namespace FamiStudio
 
         private void ButtonYes_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
+            tabs[selectedIndex].properties.NotifyClosing();
             result = System.Windows.Forms.DialogResult.OK;
         }
 
@@ -158,6 +159,7 @@ namespace FamiStudio
         {
             if (evnt.Key == Gdk.Key.Return)
             {
+                tabs[selectedIndex].properties.NotifyClosing();
                 result = System.Windows.Forms.DialogResult.OK;
             }
             else if (evnt.Key == Gdk.Key.Escape)
