@@ -516,7 +516,7 @@ namespace FamiStudio
             string projectFile = "New Project";
 
             if (!string.IsNullOrEmpty(project.Filename))
-                projectFile = project.Filename;
+                projectFile = System.IO.Path.GetFileName(project.Filename);
 
             var version = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
 
@@ -630,6 +630,8 @@ namespace FamiStudio
                 {
                     if (ctrl)
                         Seek(song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _)));
+                    else if (shift)
+                        Seek(0);
 
                     Play();
                 }

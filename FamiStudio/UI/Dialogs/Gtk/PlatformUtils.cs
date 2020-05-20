@@ -155,11 +155,11 @@ namespace FamiStudio
             return MacUtils.ShowSaveDialog(title, extensionList);
 #else
             Gtk.FileChooserDialog filechooser =
-                new Gtk.FileChooserDialog("Choose the file to open",
+                new Gtk.FileChooserDialog("Choose the file to save",
                     null,
                     FileChooserAction.Save,
                     "Cancel", ResponseType.Cancel,
-                    "Open", ResponseType.Accept);
+                    "Save", ResponseType.Accept);
 
             filechooser.KeepAbove = true;
             filechooser.Modal = true;

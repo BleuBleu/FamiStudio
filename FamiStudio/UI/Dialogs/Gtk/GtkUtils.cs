@@ -65,6 +65,8 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.Delete;
             else if (k == Gdk.Key.Escape)
                 return System.Windows.Forms.Keys.Escape;
+            else if (k == Gdk.Key.quoteleft)
+                return System.Windows.Forms.Keys.Oem3;
 
             Debug.WriteLine($"Unknown key pressed {k}");
 

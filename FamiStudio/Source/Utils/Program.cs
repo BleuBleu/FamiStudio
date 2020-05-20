@@ -45,6 +45,9 @@ namespace FamiStudio
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 #endif
+#if FAMISTUDIO_LINUX
+            LinuxUtils.SetProcessName("FamiStudio");
+#endif
 
             var famiStudio = new FamiStudio(args.Length > 0 ? args[0] : null);
             famiStudio.Run();
