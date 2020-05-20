@@ -913,7 +913,7 @@ namespace FamiStudio
 
             var songSize = OutputSong(bestSplitSong, songIdx, bestChannel, bestFactor, false);
 
-            project.DeleteSong(song);
+            project.DeleteSong(bestSplitSong);
 
             return songSize;
         }
