@@ -1,7 +1,7 @@
 2.1.0
 =====
 - Copy paste of text values in envelopes.
-- Try to use clipboard on Mac
+- Try to use clipboard on Mac/Linux.
 - One more sound engine? Plenty?
 - Trackpad controls
 - Note snapping.
