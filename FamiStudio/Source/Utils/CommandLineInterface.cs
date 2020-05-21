@@ -186,6 +186,8 @@ namespace FamiStudio
                 return false;
             }
 
+            FamiStudio.StaticProject = project;
+
             return true;
         }
 

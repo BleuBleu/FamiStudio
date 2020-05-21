@@ -14,7 +14,7 @@ namespace FamiStudio
     public class FamiStudio
     {
         // TODO: Get rid of this!
-        public static Project StaticProject { get; private set; }
+        public static Project StaticProject { get; set; }
 
         private FamiStudioForm mainForm;
         private Project project;
