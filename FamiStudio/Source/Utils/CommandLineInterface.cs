@@ -108,7 +108,7 @@ namespace FamiStudio
             Console.WriteLine($"  FamiStudio <input> <command> <output> [-options]");
             Console.WriteLine($"");
             Console.WriteLine($"Examples:");
-            Console.WriteLine($"  FamiStudio music.fms wav-export gamusicme.wave -export-songs:2 -wav-export-rate:48000");
+            Console.WriteLine($"  FamiStudio music.fms wav-export music.wave -export-songs:2 -wav-export-rate:48000");
             Console.WriteLine($"  FamiStudio music.fms famitracker-txt-export music.txt -export-songs:0,1,2");
             Console.WriteLine($"  FamiStudio music.fms famitone2-export music.s -famitone2-format:ca65");
             Console.WriteLine($"");
