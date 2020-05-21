@@ -133,8 +133,8 @@ namespace FamiStudio
             Console.WriteLine($"NSF import specific options");
             Console.WriteLine($"  -nsf-import-song:<song> : Zero-based index of the song to import (default:0).");
             Console.WriteLine($"  -nsf-import-duration:<duration> : Duration, in sec, to record from the NSF (default:120).");
-            Console.WriteLine($"  -nsf-pattern-length:<length> : Pattern length to split the NSF into (default:256).");
-            Console.WriteLine($"  -nsf-start-frame:<frame> : Frame to skips before starting the NSF capture (default:0).");
+            Console.WriteLine($"  -nsf-import-pattern-length:<length> : Pattern length to split the NSF into (default:256).");
+            Console.WriteLine($"  -nsf-import-start-frame:<frame> : Frame to skips before starting the NSF capture (default:0).");
             Console.WriteLine($"");
             Console.WriteLine($"WAV export specific options");
             Console.WriteLine($"  -wav-export-rate:<rate> : Sample rate of the exported wave : 11025, 22050, 44100 or 48000 (default:44100).");
@@ -174,8 +174,8 @@ namespace FamiStudio
             {
                 var songIndex  = ParseOption("nsf-import-song", 0);
                 var duration   = ParseOption("nsf-import-duration", 120);
-                var patternLen = ParseOption("nsf-pattern-length", 256);
-                var startFrame = ParseOption("nsf-start-frame", 0);
+                var patternLen = ParseOption("nsf-import-pattern-length", 256);
+                var startFrame = ParseOption("nsf-import-start-frame", 0);
 
                 project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, true);
             }
