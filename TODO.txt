@@ -1,7 +1,6 @@
 2.1.0
 =====
 - Copy paste of text values in envelopes.
-- Command line processing
 - Try to use clipboard on Mac
 - One more sound engine? Plenty?
 - Trackpad controls
@@ -12,6 +11,7 @@
 / Linux: Grey window when dialog is open. CNR on Gnome + KDE.
 / Linux: Alsa/mixer name. Dont think i can change this.
 
+x Command line processing
 x CA65 export bug.
 x MAC: Test ShowHelp + Test Tilde + Home key + NotifyClosing.
 x Linux: song dialog, values dont change if you press OK (vr band wagon). Need to focus out.

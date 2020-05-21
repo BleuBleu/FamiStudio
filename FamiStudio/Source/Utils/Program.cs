@@ -49,8 +49,13 @@ namespace FamiStudio
             LinuxUtils.SetProcessName("FamiStudio");
 #endif
 
-            var famiStudio = new FamiStudio(args.Length > 0 ? args[0] : null);
-            famiStudio.Run();
+            var cli = new CommandLineInterface(args);
+
+            if (!cli.Run())
+            {
+                var famiStudio = new FamiStudio(args.Length > 0 ? args[0] : null);
+                famiStudio.Run();
+            }
 
             Settings.Save();
 
