@@ -92,7 +92,7 @@ namespace FamiStudio
             {
                 int len = Array.IndexOf<byte>(bytes, 0, idx) - idx + 1;
                 var songName = Encoding.ASCII.GetString(bytes, idx, len).TrimEnd('\0'); idx += len;
-                var song = project.CreateSong(songName);
+                var song = CreateUniquelyNamedSong(songName);
                 songEffectColumnCount[song] = new byte[chanCount];
             }
 
