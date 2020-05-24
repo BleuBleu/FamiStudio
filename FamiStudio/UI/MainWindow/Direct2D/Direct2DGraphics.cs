@@ -46,7 +46,7 @@ namespace FamiStudio
             renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
             renderTarget.AntialiasMode = AntialiasMode.Aliased;
 
-            strokeStyleMiter  = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
+            strokeStyleMiter = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
         }
 
         public void Dispose()
@@ -58,6 +58,8 @@ namespace FamiStudio
             foreach (var grad in solidGradientCache.Values)
                 grad.Dispose();
             solidGradientCache.Clear();
+
+            strokeStyleMiter.Dispose();
 
             if (renderTarget != null)
             {

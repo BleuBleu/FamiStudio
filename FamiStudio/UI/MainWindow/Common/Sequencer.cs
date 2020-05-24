@@ -296,6 +296,26 @@ namespace FamiStudio
             });
         }
 
+        protected override void OnRenderTerminated()
+        {
+            theme.Terminate();
+
+            for (int i = 0; i < Channel.Count; i++)
+                Utils.DisposeAndNullify(ref bmpTracks[i]);
+
+            Utils.DisposeAndNullify(ref bmpGhostNote);
+            Utils.DisposeAndNullify(ref bmpLoopPoint);
+            Utils.DisposeAndNullify(ref bmpCustomLength);
+            Utils.DisposeAndNullify(ref seekBarBrush);
+            Utils.DisposeAndNullify(ref whiteKeyBrush);
+            Utils.DisposeAndNullify(ref patternHeaderBrush);
+            Utils.DisposeAndNullify(ref selectedPatternVisibleBrush);
+            Utils.DisposeAndNullify(ref selectedPatternInvisibleBrush);
+            Utils.DisposeAndNullify(ref seekGeometry);
+
+            InvalidatePatternCache();
+        }
+
         protected override void OnResize(EventArgs e)
         {
             UpdateRenderCoords();
@@ -1534,6 +1554,15 @@ namespace FamiStudio
 
         public void InvalidatePatternCache()
         {
+            foreach (var list in patternBitmapCache)
+            {
+                foreach (var bmp in list.Value)
+                {
+                    if (bmp != null)
+                        bmp.Dispose();
+                }
+            }
+
             patternBitmapCache.Clear();
             ConditionalInvalidate();
         }

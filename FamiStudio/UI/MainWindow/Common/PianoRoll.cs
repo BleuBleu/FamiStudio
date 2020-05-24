@@ -538,6 +538,48 @@ namespace FamiStudio
             });
         }
         
+        protected override void OnRenderTerminated()
+        {
+            theme.Terminate();
+
+            Utils.DisposeAndNullify(ref whiteKeyBrush);
+            Utils.DisposeAndNullify(ref blackKeyBrush);
+            Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
+            Utils.DisposeAndNullify(ref blackKeyPressedBrush);
+            Utils.DisposeAndNullify(ref frameLineBrush);
+            Utils.DisposeAndNullify(ref debugBrush);
+            Utils.DisposeAndNullify(ref seekBarBrush);
+            Utils.DisposeAndNullify(ref selectionBgVisibleBrush);
+            Utils.DisposeAndNullify(ref selectionBgInvisibleBrush);
+            Utils.DisposeAndNullify(ref selectionNoteBrush);
+            Utils.DisposeAndNullify(ref attackBrush);
+            Utils.DisposeAndNullify(ref iconTransparentBrush);
+            Utils.DisposeAndNullify(ref dashedLineBrush);
+            Utils.DisposeAndNullify(ref bmpLoop);
+            Utils.DisposeAndNullify(ref bmpRelease);
+            Utils.DisposeAndNullify(ref bmpEffectExpanded);
+            Utils.DisposeAndNullify(ref bmpEffectCollapsed);
+            Utils.DisposeAndNullify(ref bmpSlide);
+            Utils.DisposeAndNullify(ref bmpSlideSmall);
+
+            for (int i = 0; i < Note.EffectCount; i++)
+            {
+                Utils.DisposeAndNullify(ref bmpEffects[i]);
+            }
+
+            for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
+            {
+                int idx = z - MinZoomLevel;
+
+                Utils.DisposeAndNullify(ref stopNoteGeometry[idx]);
+                Utils.DisposeAndNullify(ref releaseNoteGeometry[idx]);
+                Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[idx]);
+                Utils.DisposeAndNullify(ref slideNoteGeometry[idx]);
+            }
+
+            Utils.DisposeAndNullify(ref seekGeometry);
+        }
+
         private bool IsBlackKey(int key)
         {
             return key == 1 || key == 3 || key == 6 || key == 8 || key == 10;
