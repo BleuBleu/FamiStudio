@@ -27,6 +27,8 @@ namespace FamiStudio
         public XAudio2Stream(int rate, int channels, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             xaudio2 = new XAudio2();
+            //xaudio2 = new XAudio2(XAudio2Version.Version27); // To simulate Windows 7 behavior.
+            //xaudio2.CriticalError += Xaudio2_CriticalError;
             masteringVoice = new MasteringVoice(xaudio2);
             waveFormat = new WaveFormat(rate, 16, channels);
             audioBuffersRing = new AudioBuffer[numBuffers];
@@ -42,6 +44,11 @@ namespace FamiStudio
             bufferFill = bufferFillCallback;
             bufferSemaphore = new Semaphore(numBuffers, numBuffers);
             quitEvent = new ManualResetEvent(false);
+        }
+
+        private void Xaudio2_CriticalError(object sender, ErrorEventArgs e)
+        {
+            Debug.WriteLine("CRITICAL ERROR!");
         }
 
         private void SourceVoice_BufferEnd(IntPtr obj)

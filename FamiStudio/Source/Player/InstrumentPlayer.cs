@@ -69,11 +69,12 @@ namespace FamiStudio
             playerThread.Start();
         }
 
-        public void Stop()
+        public void Stop(bool stopNotes = true)
         {
             if (IsRunning)
             {
-                StopAllNotesAndWait();
+                if (stopNotes)
+                    StopAllNotesAndWait();
 
                 stopEvent.Set();
                 playerThread.Join();
