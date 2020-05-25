@@ -6,8 +6,11 @@ Version history / release notes for each release.
 
 New features:
 
-* Fix seek bar position in sequencer on Hi-DPI (Retina on MacOS or scaling > 100% on Windows).
-* Fix crash when importing FTM with multiple songs with the same name.
+* Fixing seek bar position in sequencer on Hi-DPI (Retina on MacOS or scaling > 100% on Windows).
+* Fixing crash when importing FTM containing multiple songs with the same name.
+* Fixing missing or out-of-order songs when exporting to FamiTone2.
+* Interpreting zero-velocity MINI note on events as note off as per specification.
+* Highlighting notes being dragged on the piano roll.
 * Detection of audio device changes on Windows 7.
 * Handling of D3D device lost to improve stability on Windows 7.
 
