@@ -833,6 +833,9 @@ namespace FamiStudio
 
             int playOctave = -1;
             int playNote = -1;
+            var draggingNote = captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragNewNote;
+            var dragOctave = (dragLastNoteValue - 1) / 12;
+            var dragNote   = (dragLastNoteValue - 1) % 12;
 
             if (playingNote > 0)
             {
@@ -841,6 +844,11 @@ namespace FamiStudio
 
                 if (!IsBlackKey(playNote))
                     g.FillRectangle(GetKeyRectangle(playOctave, playNote), whiteKeyPressedBrush);
+            }
+
+            if (draggingNote && !IsBlackKey(dragNote))
+            {
+                g.FillRectangle(GetKeyRectangle(dragOctave, dragNote), whiteKeyPressedBrush);
             }
 
             // Draw the piano
@@ -857,8 +865,8 @@ namespace FamiStudio
                     {
                         g.FillRectangle(GetKeyRectangle(i, j), blackKeyBrush);
 
-                        if (i == playOctave && j == playNote)
-                            g.FillRectangle(GetKeyRectangle(playOctave, playNote), blackKeyPressedBrush);
+                        if ((i == playOctave && j == playNote) || (draggingNote && (i == dragOctave && j == dragNote)))
+                            g.FillRectangle(GetKeyRectangle(i, j), blackKeyPressedBrush);
                     }
 
                     int y = octaveBaseY - j * noteSizeY;
