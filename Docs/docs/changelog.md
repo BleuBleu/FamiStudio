@@ -2,6 +2,15 @@
 
 Version history / release notes for each release.
 
+## Version 2.0.2
+
+New features:
+
+* Fix seek bar position in sequencer on Hi-DPI (Retina on MacOS or scaling > 100% on Windows).
+* Fix crash when importing FTM with multiple songs with the same name.
+* Detection of audio device changes on Windows 7.
+* Handling of D3D device lost to improve stability on Windows 7.
+
 ## Version 2.0.1
 
 New features:
