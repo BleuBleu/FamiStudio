@@ -99,16 +99,17 @@ namespace FamiStudio
         {
             if (wMsg == MM_MIM_DATA)
             {
+                int velocity = (dwParam1 >> 16) & 0xff;
                 int note = (dwParam1 >> 8) & 0xff;
                 int status = dwParam1 & 0xf0;
 
-                if (status == STATUS_NOTE_ON)
-                {
-                    NotePlayed?.Invoke(note, true);
-                }
-                else if (status == STATUS_NOTE_OFF)
+                if (status == STATUS_NOTE_OFF || (status == STATUS_NOTE_ON && velocity == 0))
                 {
                     NotePlayed?.Invoke(note, false);
+                }
+                else if (status == STATUS_NOTE_ON)
+                {
+                    NotePlayed?.Invoke(note, true);
                 }
             }
         }
