@@ -27,7 +27,9 @@ namespace FamiStudio
         private int lastMidiNote = -1;
         private bool palMode = false;
         private bool audioDeviceChanged = false;
+#if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
+#endif
 
         private bool newReleaseAvailable = false;
         private string newReleaseString = null;
