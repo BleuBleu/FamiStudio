@@ -43,15 +43,23 @@ namespace FamiStudio
         internal static extern int midiInGetDevCaps(uint uDeviceID, IntPtr pmic, uint cbmic);
 
         public delegate void MidiNoteDelegate(int note, bool on);
-        public event MidiNoteDelegate NotePlayed;
+        public static event MidiNoteDelegate NotePlayed;
 
-        private MidiInProc midiInProc;
-        private IntPtr handle;
+        private static MidiInProc midiInProc;
+        private static IntPtr handle;
 
-        public Midi()
+        public static void Initialize()
         {
-            midiInProc = new MidiInProc(MidiProc);
-            handle = IntPtr.Zero;
+            if (midiInProc == null)
+            {
+                midiInProc = new MidiInProc(MidiProc);
+                handle = IntPtr.Zero;
+            }
+        }
+
+        public static void Shutdown()
+        {
+
         }
 
         public static int InputCount
@@ -69,14 +77,7 @@ namespace FamiStudio
             return new string(caps.szPname);
         }
 
-        public void Close()
-        {
-            midiInStop(handle);
-            midiInClose(handle);
-            handle = IntPtr.Zero;
-        }
-
-        public bool Open(int id)
+        public static bool Open(int id)
         {
             if (midiInOpen(out handle, id, midiInProc, IntPtr.Zero, CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
                 return false;
@@ -84,7 +85,17 @@ namespace FamiStudio
             return midiInStart(handle) == MMSYSERR_NOERROR;
         }
 
-        private void MidiProc(IntPtr hMidiIn, int wMsg, IntPtr dwInstance, int dwParam1, int dwParam2)
+        public static void Close()
+        {
+            if (handle != IntPtr.Zero)
+            {
+                midiInStop(handle);
+                midiInClose(handle);
+                handle = IntPtr.Zero;
+            }
+        }
+
+        private static void MidiProc(IntPtr hMidiIn, int wMsg, IntPtr dwInstance, int dwParam1, int dwParam2)
         {
             if (wMsg == MM_MIM_DATA)
             {

@@ -98,7 +98,7 @@
     <Compile Include="Source\Player\MultiMediaNotifications.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
-    <Compile Include="Source\Utils\MIDI.cs" />
+    <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
