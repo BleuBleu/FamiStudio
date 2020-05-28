@@ -9,7 +9,11 @@ namespace FamiStudio
 {
     public static class Midi
     {
+#if FAMISTUDIO_MACOS
+        const string RtMidiLibName = "librtmidi.dylib";
+#else
         const string RtMidiLibName = "librtmidi.so";
+#endif
 
         internal const int STATUS_NOTE_ON  = 0x90;
         internal const int STATUS_NOTE_OFF = 0x80;
@@ -83,10 +87,10 @@ namespace FamiStudio
             rtmidi_in_set_callback(midiIn, callback, IntPtr.Zero);
             rtmidi_open_port(midiIn, idx, "FamiStudioMidiIn");
 
-            return false;
+            return true;
         }
 
-        public static bool Close()
+        public static void Close()
         {
             if (callback != null)
             {
@@ -94,8 +98,6 @@ namespace FamiStudio
                 rtmidi_close_port(midiIn);
                 callback = null;
             }
-
-            return false;
         }
 
         private static unsafe void MidiCallback(double timeStamp, IntPtr message, ulong messageSize, IntPtr userData)
