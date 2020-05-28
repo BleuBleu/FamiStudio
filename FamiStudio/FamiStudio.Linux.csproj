@@ -100,7 +100,6 @@
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
-    <Compile Include="Source\Utils\MIDI.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
@@ -263,6 +262,7 @@
     <Content Include="Resources\Quicksand-Bold.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Source\Utils\MIDILinux.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -201,7 +201,7 @@ namespace FamiStudio
                     }
                 }
 
-                if (midi.Open(midiDeviceIndex) && midi.Start())
+                if (midi.Open(midiDeviceIndex))
                     midi.NotePlayed += Midi_NotePlayed;
                 else
                     midi = null;
@@ -397,12 +397,14 @@ namespace FamiStudio
                 return false;
             }
 
+#if !FAMISTUDIO_LINUX
+            // Dont bother exiting cleanly on Linux.
             if (midi != null)
             {
-                midi.Stop();
                 midi.Close();
                 midi = null;
             }
+#endif
 
             StopEverything();
             songPlayer.Shutdown();
