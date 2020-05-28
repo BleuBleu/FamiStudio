@@ -92,7 +92,6 @@
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
-    <Compile Include="Source\Utils\MIDI.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
@@ -243,6 +242,10 @@
     <Compile Include="UI\MainWindow\OpenTK\FamiStudioControls.cs" />
     <Compile Include="UI\Dialogs\Gtk\GtkUtils.cs" />
     <Compile Include="UI\Dialogs\Gtk\OpenTkUtils.cs" />
+    <Compile Include="Source\Utils\RtMidi.cs" />
+    <Content Include="librtmidi.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -21,7 +21,6 @@ namespace FamiStudio
         private Song song;
         private SongPlayer songPlayer = new SongPlayer();
         private InstrumentPlayer instrumentPlayer = new InstrumentPlayer();
-        private Midi midi;
         private UndoRedoManager undoRedoManager;
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
@@ -177,16 +176,13 @@ namespace FamiStudio
 
         public void InitializeMidi()
         {
-            if (midi != null)
-            {
-                midi.Close();
-                midi = null;
-            }
+            Midi.Initialize();
+
+            Midi.Close();
+            Midi.NotePlayed -= Midi_NotePlayed;
 
             if (Midi.InputCount > 0)
             {
-                midi = new Midi();
-
                 int midiDeviceIndex = 0;
                 if (Settings.MidiDevice.Length > 0)
                 {
@@ -201,10 +197,8 @@ namespace FamiStudio
                     }
                 }
 
-                if (midi.Open(midiDeviceIndex) && midi.Start())
-                    midi.NotePlayed += Midi_NotePlayed;
-                else
-                    midi = null;
+                if (Midi.Open(midiDeviceIndex))
+                    Midi.NotePlayed += Midi_NotePlayed;
             }
         }
 
@@ -397,12 +391,9 @@ namespace FamiStudio
                 return false;
             }
 
-            if (midi != null)
-            {
-                midi.Stop();
-                midi.Close();
-                midi = null;
-            }
+            // Dont bother exiting cleanly on Linux.
+            Midi.NotePlayed -= Midi_NotePlayed;
+            Midi.Shutdown();
 
             StopEverything();
             songPlayer.Shutdown();

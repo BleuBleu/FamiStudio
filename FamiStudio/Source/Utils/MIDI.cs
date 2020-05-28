@@ -58,11 +58,7 @@ namespace FamiStudio
         {
             get
             {
-#if FAMISTUDIO_WINDOWS
                 return midiInGetNumDevs();
-#else
-                return 0;
-#endif
             }
         }
 
@@ -73,42 +69,36 @@ namespace FamiStudio
             return new string(caps.szPname);
         }
 
-        public bool Close()
+        public void Close()
         {
-            bool result = midiInClose(handle) == MMSYSERR_NOERROR;
+            midiInStop(handle);
+            midiInClose(handle);
             handle = IntPtr.Zero;
-            return result;
         }
 
         public bool Open(int id)
         {
-            return midiInOpen(out handle, id, midiInProc, IntPtr.Zero, CALLBACK_FUNCTION) == MMSYSERR_NOERROR;
-        }
+            if (midiInOpen(out handle, id, midiInProc, IntPtr.Zero, CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
+                return false;
 
-        public bool Start()
-        {
             return midiInStart(handle) == MMSYSERR_NOERROR;
-        }
-
-        public bool Stop()
-        {
-            return midiInStop(handle) == MMSYSERR_NOERROR;
         }
 
         private void MidiProc(IntPtr hMidiIn, int wMsg, IntPtr dwInstance, int dwParam1, int dwParam2)
         {
             if (wMsg == MM_MIM_DATA)
             {
+                int velocity = (dwParam1 >> 16) & 0xff;
                 int note = (dwParam1 >> 8) & 0xff;
                 int status = dwParam1 & 0xf0;
 
-                if (status == STATUS_NOTE_ON)
-                {
-                    NotePlayed?.Invoke(note, true);
-                }
-                else if (status == STATUS_NOTE_OFF)
+                if (status == STATUS_NOTE_OFF || (status == STATUS_NOTE_ON && velocity == 0))
                 {
                     NotePlayed?.Invoke(note, false);
+                }
+                else if (status == STATUS_NOTE_ON)
+                {
+                    NotePlayed?.Invoke(note, true);
                 }
             }
         }

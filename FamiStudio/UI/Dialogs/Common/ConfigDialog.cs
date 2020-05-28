@@ -64,6 +64,11 @@ namespace FamiStudio
 
                     page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[idx]); // 0
                     page.AddBoolean("Check for updates:", true); // 1
+
+#if FAMISTUDIO_LINUX
+                    page.SetPropertyEnabled(0, false);
+#endif
+
                     break;
                 }
                 case ConfigSection.Sound:
@@ -78,7 +83,9 @@ namespace FamiStudio
                     var midiDevices = new List<string>();
                     for (int i = 0; i < midiDeviceCount; i++)
                     {
-                        midiDevices.Add(Midi.GetDeviceName(i));
+                        var name = Midi.GetDeviceName(i);
+                        if (!string.IsNullOrEmpty(name))
+                            midiDevices.Add(name);
                     }
 
                     var midiDevice = "";
@@ -95,10 +102,6 @@ namespace FamiStudio
 
             page.Build();
             pages[(int)section] = page;
-
-#if FAMISTUDIO_LINUX
-            page.SetPropertyEnabled(0, false);
-#endif
 
             return page;
         }
