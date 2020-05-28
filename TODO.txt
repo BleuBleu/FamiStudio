@@ -1,19 +1,17 @@
 2.1.0
 =====
 - Copy paste of text values in envelopes.
-- Try to use clipboard on Mac.
-- Linux/Mac MIDI input.
+	=> Try to use real clipboard on Mac.
 - One more sound engine? Plenty?
 - Trackpad controls
 - Note snapping.
 - Mention copy paste projects in doc.
 - Fix POP in Gimmick.
-- Slides in NSF dont take pal into account? (subtract the pitch of both notes. TODO: PAL.)
+- Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 - VRC7 high pitch sound?
 
-/ Linux: Grey window when dialog is open. CNR on Gnome + KDE.
-/ Linux: Alsa/mixer name. Dont think i can change this.
-
+/ Linux: Black text on dark BG, can I do anything?
+x Linux/Mac MIDI input.
 x Command line processing
 x CA65 export bug.
 x MAC: Test ShowHelp + Test Tilde + Home key + NotifyClosing.
@@ -22,10 +20,6 @@ x Linux: bad title when saving/opening .
 x Keyboard shortcut to play from beginning (shift + space?)
 x Dont show full path of song in titlebar.
 x Linux: Tilda + Home dont work. (cant repro home key...)
-
-Issues
-======
-- MacOS scrolling issue? Try with 200%.
 
 Tweet ideas
 ===========
@@ -50,6 +44,7 @@ Linux notes
 		- Generate.
 		- make!
 	- NesSndEmu + NotSoFatso, run script.
+	- RtMidi, need to add static C/C++ libs to cmake file.
 
 Backlog:
 =========
