@@ -1,11 +1,14 @@
 2.1.0
 =====
 - Copy paste of text values in envelopes.
-- Try to use clipboard on Mac/Linux.
+- Try to use clipboard on Mac.
+- Linux/Mac MIDI input.
 - One more sound engine? Plenty?
 - Trackpad controls
 - Note snapping.
+- Mention copy paste projects in doc.
 - Fix POP in Gimmick.
+- Slides in NSF dont take pal into account? (subtract the pitch of both notes. TODO: PAL.)
 - VRC7 high pitch sound?
 
 / Linux: Grey window when dialog is open. CNR on Gnome + KDE.
