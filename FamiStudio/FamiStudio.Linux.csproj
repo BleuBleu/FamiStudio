@@ -262,7 +262,10 @@
     <Content Include="Resources\Quicksand-Bold.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Compile Include="Source\Utils\MIDILinux.cs" />
+    <Content Include="librtmidi.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Source\Utils\RtMidi.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
