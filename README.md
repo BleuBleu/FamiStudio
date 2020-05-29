@@ -14,13 +14,12 @@ The tools needed to compile are:
 - Visual Studio 2019 for Mac, on MacOS
 - MonoDevelop on Linux, I use 7.8.4 (build 2) (the Linux version is not usable, but it should compile, launch and play a song)
 
-There are 3 main projects:
-- The main FamiStudio application is written in C#.
-- Nes_Snd_Emu, NotSoFatso (and their DLL wrappers) are in C++. On Windows you will need to install C++ support installed if you plan to re-compile it. On MacOS and Linux, there is a small build shell script included.
+FamiStudio is composed of a few projects:
+- The main FamiStudio application is written in C#. 
+- NesSndEmu & NotSoFatso are C++ DLLs and are provided as binaries since they rarely change. In you plan to recompile them, you will need to install C++ support in Visual Studio. On MacOS and Linux, there is a small build shell script included.
 - The Setup project (Windows-only) is built using the "Microsoft Visual Studio Installer Projects" extension which can be installed from Visual Studio in the "Extensions and Updates" menu.
 
-The C# application is built on top of SharpDX 4.2.0 on Windows and OpenTK on Mac/Linux. Visual Studio will install the required packages automatically when building the project.
-To manually fetch the packages, run `msbuild /t:Restore` on the project from the Visual Studio Developer Command Prompt.
+The C# application is built on top of SharpDX 4.2.0 on Windows and OpenTK on Mac/Linux. Visual Studio will install the required packages automatically when building the project. To manually fetch the packages, run `msbuild /t:Restore` on the project from the Visual Studio Developer Command Prompt.
 
 ## Issues and Contributing
 Please open issues contact me if you find bugs or have feature suggestion ideas. 
