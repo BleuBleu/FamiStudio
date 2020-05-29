@@ -16,7 +16,7 @@ The tools needed to compile are:
 
 There are 3 main projects:
 - The main FamiStudio application is written in C#.
-- Nes_Snd_Emu (and its DLL wrapper) is in C++. On Windows you will need to install C++ support installed if you plan to re-compile it. On MacOS and Linux, there is a small build shell script included.
+- Nes_Snd_Emu, NotSoFatso (and their DLL wrappers) are in C++. On Windows you will need to install C++ support installed if you plan to re-compile it. On MacOS and Linux, there is a small build shell script included.
 - The Setup project (Windows-only) is built using the "Microsoft Visual Studio Installer Projects" extension which can be installed from Visual Studio in the "Extensions and Updates" menu.
 
 The C# application is built on top of SharpDX 4.2.0 on Windows and OpenTK on Mac/Linux. Visual Studio will install the required packages automatically when building the project.
