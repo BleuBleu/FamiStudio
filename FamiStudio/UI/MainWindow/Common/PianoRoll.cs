@@ -2956,7 +2956,11 @@ namespace FamiStudio
         {
             base.OnMouseWheel(e);
 
-            if (editMode != EditionMode.DPCM)
+            if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
+            {
+                scrollY -= e.Delta;
+            }
+            else if (editMode != EditionMode.DPCM)
             {
                 int pixelX = e.X - whiteKeySizeX;
                 int absoluteX = pixelX + scrollX;
@@ -2965,10 +2969,29 @@ namespace FamiStudio
                 scrollX = absoluteX - pixelX;
 
                 UpdateRenderCoords();
-                ClampScroll();
-                ConditionalInvalidate();
             }
+
+            ClampScroll();
+            ConditionalInvalidate();
         }
+
+        protected void OnMouseHorizontalWheel(MouseEventArgs e)
+        {
+            scrollX += e.Delta;
+            ClampScroll();
+            ConditionalInvalidate();
+
+            Debug.WriteLine($"{e.Delta} ({e.X}, {e.Y})");
+        }
+
+#if FAMISTUDIO_WINDOWS
+        protected override void WndProc(ref System.Windows.Forms.Message m)
+        {
+            base.WndProc(ref m);
+            if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
+                OnMouseHorizontalWheel(PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m));
+        }
+#endif
 
         public void Tick()
         {

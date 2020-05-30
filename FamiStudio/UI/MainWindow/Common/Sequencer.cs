@@ -1521,16 +1521,43 @@ namespace FamiStudio
         {
             base.OnMouseWheel(e);
 
-            int pixelX = e.X - trackNameSizeX;
-            int absoluteX = pixelX + scrollX;
-            if (e.Delta < 0 && zoomLevel > MinZoomLevel) { zoomLevel--; absoluteX /= 2; }
-            if (e.Delta > 0 && zoomLevel < MaxZoomLevel) { zoomLevel++; absoluteX *= 2; }
-            scrollX = absoluteX - pixelX;
+            if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
+            {
+                // What should we do here?
+                //scrollX -= e.Delta;
+            }
+            else
+            {
+                int pixelX = e.X - trackNameSizeX;
+                int absoluteX = pixelX + scrollX;
+                if (e.Delta < 0 && zoomLevel > MinZoomLevel) { zoomLevel--; absoluteX /= 2; }
+                if (e.Delta > 0 && zoomLevel < MaxZoomLevel) { zoomLevel++; absoluteX *= 2; }
+                scrollX = absoluteX - pixelX;
 
-            UpdateRenderCoords();
+                UpdateRenderCoords();
+            }
+
             ClampScroll();
             ConditionalInvalidate();
         }
+
+        protected void OnMouseHorizontalWheel(MouseEventArgs e)
+        {
+            scrollX += e.Delta;
+            ClampScroll();
+            ConditionalInvalidate();
+
+            Debug.WriteLine($"{e.Delta} ({e.X}, {e.Y})");
+        }
+
+#if FAMISTUDIO_WINDOWS
+        protected override void WndProc(ref System.Windows.Forms.Message m)
+        {
+            base.WndProc(ref m);
+            if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
+                OnMouseHorizontalWheel(PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m));
+        }
+#endif
 
         public void Tick()
         {

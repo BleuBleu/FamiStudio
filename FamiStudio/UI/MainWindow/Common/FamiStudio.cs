@@ -86,10 +86,12 @@ namespace FamiStudio
                 NewProject();
             }
 
+#if !DEBUG
             if (Settings.CheckUpdates)
             {
                 Task.Factory.StartNew(CheckForNewRelease);
             }
+#endif
         }
         
         private void ProjectExplorer_ProjectModified()

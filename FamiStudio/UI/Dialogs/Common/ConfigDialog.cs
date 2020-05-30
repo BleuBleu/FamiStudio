@@ -63,7 +63,8 @@ namespace FamiStudio
                     var idx = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
 
                     page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[idx]); // 0
-                    page.AddBoolean("Check for updates:", true); // 1
+                    page.AddBoolean("Check for updates:", Settings.CheckUpdates); // 1
+                    page.AddBoolean("TrackPad controls:", Settings.TrackPadControls); // 2
 
 #if FAMISTUDIO_LINUX
                     page.SetPropertyEnabled(0, false);
@@ -119,6 +120,7 @@ namespace FamiStudio
 
                 Settings.DpiScaling = scalingString == "System" ? 0 : int.Parse(scalingString.Substring(0, 3));
                 Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(1);
+                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(2);
 
                 // Sound
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(0);

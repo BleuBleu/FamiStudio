@@ -4,11 +4,16 @@
 	=> Try to use real clipboard on Mac.
 - One more sound engine? Plenty?
 - Trackpad controls
+	- Will be an option, will make zoom CTRL+wheel, and wheel will scroll up/down.
+	- Windows: WM_MOUSEHSCROLL + alternate move when wheel scrolls in Y
+	- Linux: It just works, scroll has direction (not in VM, but on bare metal yes).
+	- Mac: In theory should work, I have delta Y, but need to test.
 - Note snapping.
-- Mention copy paste projects in doc.
 - Fix POP in Gimmick.
-- Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
-- VRC7 high pitch sound?
+
+- Small: Mention copy paste projects in doc.
+- Small: Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
+- Small: VRC7 high pitch sound?
 
 / Linux: Black text on dark BG, can I do anything?
 x Linux/Mac MIDI input.

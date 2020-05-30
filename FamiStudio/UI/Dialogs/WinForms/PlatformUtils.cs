@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Drawing;
 
 namespace FamiStudio
 {
@@ -71,6 +72,17 @@ namespace FamiStudio
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icons = MessageBoxIcon.None)
         {
             return System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
+        }
+
+        public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)
+        {
+            // MATTT: Test hi-dpi and things like this.
+            short x = (short)((m.LParam.ToInt32() >> 0) & 0xffff);
+            short y = (short)((m.LParam.ToInt32() >> 16) & 0xffff);
+            short delta = (short)((m.WParam.ToInt32() >> 16) & 0xffff);
+            var clientPos = ctrl.PointToClient(new Point(x, y));
+
+            return new MouseEventArgs(MouseButtons.None, 1, clientPos.X, clientPos.Y, delta);
         }
     }
 }
