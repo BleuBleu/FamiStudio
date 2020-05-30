@@ -157,8 +157,12 @@ namespace FamiStudio
 
         void GlWidget_ScrollEvent(object o, ScrollEventArgs args)
         {
-            var ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out int x, out int y);
-            ctrl.MouseWheel(ToWinFormArgs(args.Event, x, y));
+            if (args.Event.Direction == Gdk.ScrollDirection.Up ||
+                args.Event.Direction == Gdk.ScrollDirection.Down)
+            {
+                var ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out int x, out int y);
+                ctrl.MouseWheel(ToWinFormArgs(args.Event, x, y));
+            }
         }
 
         void GlWidget_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
