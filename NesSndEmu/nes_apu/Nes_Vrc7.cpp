@@ -91,7 +91,7 @@ void Nes_Vrc7::mix_samples(blip_sample_t* sample_buffer, long sample_cnt)
 	{
 		int sample = OPLL_calc(opll);
 		sample = clamp(sample, -3200, 3600);
-		sample_buffer[i] = clamp((int16_t)(sample_buffer[i] + (int)(sample * vol)), -32768, 32767);
+		sample_buffer[i] = (int16_t)clamp(sample_buffer[i] + (int)(sample * vol), -32768, 32767);
 	}
 }
 
