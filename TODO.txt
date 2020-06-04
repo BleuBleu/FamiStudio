@@ -1,8 +1,6 @@
 2.1.0
 =====
 - Friday:
-	- DOC: Mention copy paste projects in doc.
-	- DOC: Troubleshooting section
 	- Copy paste of text values in envelopes.
 		=> Try to use real clipboard on Mac.
 	- Trackpad controls
@@ -15,12 +13,12 @@
 - Paste-mix (NyxTheShield).
 / FamiTone2 SFX support.
 	- PAL support
-	- Test!
 - One more sound engine? Plenty?
-
-- Small: Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
+- Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 
 / Linux: Black text on dark BG, can I do anything?
+x DOC: Mention copy paste projects in doc.
+x DOC: Troubleshooting section
 x VRC7 high pitch sound? (CANT REPRO)
 x Fix POP in Gimmick. 
 x Linux/Mac MIDI input.
