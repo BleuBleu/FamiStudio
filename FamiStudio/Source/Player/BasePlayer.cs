@@ -146,7 +146,7 @@ namespace FamiStudio
             }
         }
 
-        public bool BeginPlaySong(Song s, bool pal, int startNote)
+        public bool BeginPlaySong(Song s, bool pal, int startNote, IRegisterListener listener = null)
         {
             song = s;
             famitrackerTempo = song.UsesFamiTrackerTempo;
@@ -159,7 +159,7 @@ namespace FamiStudio
             tempoCounter = 0;
             firstFrame = true;
             ResetFamiStudioTempo(true);
-            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palMode);
+            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palMode, listener);
 
             NesApu.InitAndReset(apuIndex, SampleRate, palMode, GetNesApuExpansionAudio(song.Project), song.Project.ExpansionNumChannels, dmcCallback);
 
@@ -336,7 +336,7 @@ namespace FamiStudio
             return null;
         }
 
-        public ChannelState[] CreateChannelStates(Project project, int apuIdx, int expNumChannels, bool pal)
+        public ChannelState[] CreateChannelStates(Project project, int apuIdx, int expNumChannels, bool pal, IRegisterListener listener)
         {
             var channelCount = project.GetActiveChannelCount();
             var states = new ChannelState[channelCount];
@@ -345,7 +345,14 @@ namespace FamiStudio
             for (int i = 0; i < Channel.Count; i++)
             {
                 if (project.IsChannelActive(i))
-                    states[idx++] = CreateChannelState(apuIdx, i, expNumChannels, pal);
+                {
+                    var state = CreateChannelState(apuIdx, i, expNumChannels, pal);
+
+                    if (listener != null)
+                        state.SetRegisterListener(listener);
+
+                    states[idx++] = state;
+                }
             }
 
             return states;

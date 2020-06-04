@@ -336,14 +336,14 @@ namespace FamiStudio
         {
             var formatString = ParseOption("famitone2-format", "nesasm");
 
-            var format = FamitoneMusicFile.OutputFormat.NESASM;
+            var format = AssemblyFormat.NESASM;
             switch (formatString)
             {
-                case "ca65": format = FamitoneMusicFile.OutputFormat.CA65; break;
-                case "asm6": format = FamitoneMusicFile.OutputFormat.ASM6; break;
+                case "ca65": format = AssemblyFormat.CA65; break;
+                case "asm6": format = AssemblyFormat.ASM6; break;
             }
 
-            var extension = format == FamitoneMusicFile.OutputFormat.CA65 ? ".s" : ".asm";
+            var extension = format == AssemblyFormat.CA65 ? ".s" : ".asm";
             var seperate = HasOption("famitone2-seperate-files");
 
             if (!seperate && !ValidateExtension(filename, extension))

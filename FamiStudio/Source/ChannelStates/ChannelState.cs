@@ -21,6 +21,7 @@ namespace FamiStudio
         private   int slidePitch = 0;
         private   int slideShift = 0;
         private   int pitchShift = 0;
+        private   IRegisterListener registerListener;
 
         public ChannelState(int apu, int type, bool pal, int numN163Channels = 1)
         {
@@ -221,9 +222,17 @@ namespace FamiStudio
             }
         }
 
+        public void SetRegisterListener(IRegisterListener listener)
+        {
+            registerListener = listener;
+        }
+
         protected void WriteRegister(int reg, int data)
         {
             NesApu.WriteRegister(apuIdx, reg, data);
+
+            if (registerListener != null)
+                registerListener.WriteRegister(apuIdx, reg, data);
         }
 
         protected bool IsSeeking
@@ -277,4 +286,9 @@ namespace FamiStudio
             noteTriggered = false;
         }
     };
+
+    public interface IRegisterListener
+    {
+        void WriteRegister(int apuIndex, int reg, int data);
+    }
 }

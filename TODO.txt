@@ -1,24 +1,28 @@
 2.1.0
 =====
-- Copy paste of text values in envelopes.
-	=> Try to use real clipboard on Mac.
-- One more sound engine? Plenty?
-- Trackpad controls
-	- Will be an option, will make zoom CTRL+wheel, and wheel will scroll up/down.
-	- Windows: WM_MOUSEHSCROLL + alternate move when wheel scrolls in Y
-	- Linux: It just works, scroll has direction (not in VM, but on bare metal yes).
-	- Mac: In theory should work, I have delta Y, but need to test.
+- Friday:
+	- DOC: Mention copy paste projects in doc.
+	- DOC: Troubleshooting section
+	- Copy paste of text values in envelopes.
+		=> Try to use real clipboard on Mac.
+	- Trackpad controls
+		- Will be an option, will make zoom CTRL+wheel, and wheel will scroll up/down.
+		- Windows: WM_MOUSEHSCROLL + alternate move when wheel scrolls in Y
+		- Linux: It just works, scroll has direction (not in VM, but on bare metal yes).
+		- Mac: In theory should work, I have delta Y, but need to test.
+
 - Note snapping.
 - Paste-mix (NyxTheShield).
-- FamiTone2 SFX support.
+/ FamiTone2 SFX support.
+	- PAL support
+	- Test!
+- One more sound engine? Plenty?
 
-- Small: DOC: Mention copy paste projects in doc.
-- Small: DOC: Troubleshooting section
 - Small: Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
-- Small: VRC7 high pitch sound?
-- Small: Fix POP in Gimmick. (can i just reduce the global volume?)
 
 / Linux: Black text on dark BG, can I do anything?
+x VRC7 high pitch sound? (CANT REPRO)
+x Fix POP in Gimmick. 
 x Linux/Mac MIDI input.
 x Command line processing
 x CA65 export bug.
