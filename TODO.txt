@@ -9,11 +9,14 @@
 	- Linux: It just works, scroll has direction (not in VM, but on bare metal yes).
 	- Mac: In theory should work, I have delta Y, but need to test.
 - Note snapping.
-- Fix POP in Gimmick.
+- Paste-mix (NyxTheShield).
+- FamiTone2 SFX support.
 
-- Small: Mention copy paste projects in doc.
+- Small: DOC: Mention copy paste projects in doc.
+- Small: DOC: Troubleshooting section
 - Small: Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 - Small: VRC7 high pitch sound?
+- Small: Fix POP in Gimmick. (can i just reduce the global volume?)
 
 / Linux: Black text on dark BG, can I do anything?
 x Linux/Mac MIDI input.
