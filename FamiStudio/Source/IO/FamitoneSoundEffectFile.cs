@@ -96,15 +96,15 @@ namespace FamiStudio
                     {
                         if (regs[reg.Register - 0x4000] != reg.Value)
                         {
-                            if (reg.FrameNumber > lastChangeFrame)
+                            if (reg.FrameNumber != lastChangeFrame)
                             {
                                 // MATTT: This this!
                                 int numEmptyFrames = reg.FrameNumber - lastChangeFrame;
 
-                                while (numEmptyFrames > 0)
+                                while (numEmptyFrames >= 0)
                                 {
-                                    effect.Add((byte)(Math.Min(numEmptyFrames, 126) + 1));
-                                    numEmptyFrames -= 126;
+                                    effect.Add((byte)(Math.Min(numEmptyFrames, 127)));
+                                    numEmptyFrames -= 127;
                                 }
                             }
 
@@ -149,8 +149,8 @@ namespace FamiStudio
 
                     while (numEmptyFrames > 0)
                     {
-                        effect.Add((byte)(Math.Min(numEmptyFrames, 126) + 1));
-                        numEmptyFrames -= 126;
+                        effect.Add((byte)(Math.Min(numEmptyFrames, 127)));
+                        numEmptyFrames -= 127;
                     }
                 }
                 else
