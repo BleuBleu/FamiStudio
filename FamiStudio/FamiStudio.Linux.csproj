@@ -79,6 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
+    <Compile Include="Source\IO\FamitoneSoundEffectFile.cs" />
     <Compile Include="Source\IO\FamitrackerBaseFile.cs" />
     <Compile Include="Source\IO\FamitrackerBinaryFile.cs" />
     <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
@@ -98,6 +99,7 @@
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
+    <Compile Include="Source\Player\RegisterPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
