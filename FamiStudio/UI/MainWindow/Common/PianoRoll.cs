@@ -2879,7 +2879,7 @@ namespace FamiStudio
                 (captureOperation == CaptureOperation.DragNote ||
                  captureOperation == CaptureOperation.DragNewNote))
             {
-                App.PlayInstrumentNote(noteValue);
+                App.PlayInstrumentNote(noteValue, false);
                 dragLastNoteValue = noteValue;
             }
 
@@ -2892,7 +2892,8 @@ namespace FamiStudio
                 {
                     var note = pattern.GetOrCreateNoteAt(noteIdx);
                     note.Value = noteValue;
-                    note.Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
+                    if (channel.SupportsInstrument(currentInstrument))
+                        note.Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
                 }
             }
 

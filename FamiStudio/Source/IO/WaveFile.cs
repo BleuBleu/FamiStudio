@@ -33,7 +33,7 @@ namespace FamiStudio
 
         public unsafe static void Save(Song song, string filename, int sampleRate)
         {
-            var player = new WavPlayer();
+            var player = new WavPlayer(sampleRate);
             player.Loop = LoopMode.None;
             var samples = player.GetSongSamples(song, false);
 
