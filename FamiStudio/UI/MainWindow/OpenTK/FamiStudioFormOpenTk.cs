@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics;
@@ -21,7 +22,8 @@ namespace FamiStudio
             MouseUp,
             MouseWheel,
 			MouseWheelHorizontal,
-			MouseEnter,
+            PinchZoom,
+            MouseEnter,
             MouseLeave,
             KeyDown,
             KeyUp
@@ -40,8 +42,15 @@ namespace FamiStudio
             public EventArgs args;
         };
 
+        private IntPtr nsLoopMode = IntPtr.Zero;
+        private IntPtr nsApplication = IntPtr.Zero;
         private IntPtr cursor = Cursors.Default;
+        private IntPtr selType = IntPtr.Zero;
+        private IntPtr selNextEventMatchingMask = IntPtr.Zero;
+        private IntPtr selMagnification = IntPtr.Zero;
         private FamiStudio famistudio;
+        private float magnificationAccum = 0;
+        private bool forceCtrlDown = false;
         private bool[] keys = new bool[256];
         private bool processingDeferredEvents = false;
         private List<DeferredEvent> deferredEvents = new List<DeferredEvent>();
@@ -105,6 +114,18 @@ namespace FamiStudio
             controls.InitializeGL(this);
 
             GL.Disable(EnableCap.DepthTest);
+
+            var nsAplicationType = typeof(OpenTK.NativeWindow).Assembly.GetType("OpenTK.Platform.MacOS.NSApplication");
+            var handleField = nsAplicationType.GetField("Handle", BindingFlags.NonPublic | BindingFlags.Static);
+            nsApplication = (IntPtr)handleField.GetValue(null);
+
+            var cocoaNativeWindowType = typeof(OpenTK.NativeWindow).Assembly.GetType("OpenTK.Platform.MacOS.CocoaNativeWindow");
+            var loopModeFile = cocoaNativeWindowType.GetField("NSDefaultRunLoopMode", BindingFlags.NonPublic | BindingFlags.Static);
+            nsLoopMode = (IntPtr)loopModeFile.GetValue(null);
+
+            selType = MacUtils.SelRegisterName("type");
+            selMagnification = MacUtils.SelRegisterName("magnification");
+            selNextEventMatchingMask = MacUtils.SelRegisterName("nextEventMatchingMask:untilDate:inMode:dequeue:");
         }
 
         public void CaptureMouse(GLControl ctrl)
@@ -256,9 +277,11 @@ namespace FamiStudio
             deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseUp, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y)));
         }
 
+        float lastScrollX = float.NaN;
+        float lastScrollY = float.NaN;
+
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            //if (CheckFrozen(false)) return;
             base.OnMouseWheel(e);
             
             // Position is not reliable here. Super buggy.
@@ -267,13 +290,33 @@ namespace FamiStudio
             // We get notified for clicks in the title back and stuff.
             if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
                 return;
+            
+            if (float.IsNaN(lastScrollX))
+            {
+                lastScrollX = e.Mouse.Scroll.X;
+                lastScrollY = e.Mouse.Scroll.Y;
+            }
 
             var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
 
-            if (e.Delta != 0)
-                deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheel, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y, false)));
-            //if (e.Value != 0)
-            //	deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheelHorizontal, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y, true)));
+            if (Settings.TrackPadControls)
+            {
+                var dx = (int)Math.Round((e.Mouse.Scroll.X - lastScrollX) * 3.0f);
+                var dy = (int)Math.Round((e.Mouse.Scroll.Y - lastScrollY) * 3.0f);
+
+                if (dy != 0)
+                    deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheel, ctrl, new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, dy)));
+                if (dx != 0)
+                    deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheelHorizontal, ctrl, new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, dx)));
+            }
+            else
+            {
+                if (e.Delta != 0)
+                    deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheel, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y)));
+            }
+
+            lastScrollX = e.Mouse.Scroll.X;
+            lastScrollY = e.Mouse.Scroll.Y;
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -316,20 +359,6 @@ namespace FamiStudio
                 SwapBuffers();
         }
 
-        protected System.Windows.Forms.MouseButtons GetStateButtons(MouseState state)
-        {
-            System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;
-
-            if (state.IsButtonDown(MouseButton.Left))
-                buttons |= System.Windows.Forms.MouseButtons.Left;
-            if (state.IsButtonDown(MouseButton.Right))
-                buttons |= System.Windows.Forms.MouseButtons.Right;
-            if (state.IsButtonDown(MouseButton.Middle))
-                buttons |= System.Windows.Forms.MouseButtons.Middle;
-
-            return buttons;
-        }
-
         protected void ProcessDeferredEvents()
         {
             var hasMouseCaptureEvent = false;
@@ -362,7 +391,12 @@ namespace FamiStudio
 					case DeferredEventType.MouseWheelHorizontal:
 						evt.ctrl?.MouseHorizontalWheel(evt.args as System.Windows.Forms.MouseEventArgs);
 						break;
-					case DeferredEventType.MouseLeave:
+                    case DeferredEventType.PinchZoom:
+                        forceCtrlDown = true;
+                        evt.ctrl?.MouseWheel(evt.args as System.Windows.Forms.MouseEventArgs);
+                        forceCtrlDown = false;
+                        break;
+                    case DeferredEventType.MouseLeave:
                         evt.ctrl?.MouseLeave(evt.args as System.Windows.Forms.MouseEventArgs);
                         break;
                     case DeferredEventType.KeyDown:
@@ -414,6 +448,47 @@ namespace FamiStudio
             base.OnClosing(e);
         }
 
+        private void ProcessSpecialEvents()
+        {
+            if (!Settings.TrackPadControls)
+                return;
+
+            while (true)
+            {
+                const int NSEventTypeMagnify = 30;
+
+                var e = MacUtils.SendIntPtr(nsApplication, selNextEventMatchingMask, 1 << NSEventTypeMagnify, IntPtr.Zero, nsLoopMode, true);
+
+                if (e == IntPtr.Zero)
+                    return;
+
+                var type = MacUtils.SendInt(e, selType);
+
+                if (type == NSEventTypeMagnify)
+                {
+                    var magnification = (float)MacUtils.SendFloat(e, selMagnification);
+
+                    if (Math.Sign(magnification) != Math.Sign(magnificationAccum))
+                        magnificationAccum = 0;
+
+                    magnificationAccum += magnification;
+
+                    if (Math.Abs(magnificationAccum) > 0.25f)
+                    {
+                        var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
+
+                        // We get notified for clicks in the title back and stuff.
+                        if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
+                            continue;
+
+                        var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
+                        deferredEvents.Add(new DeferredEvent(DeferredEventType.PinchZoom, ctrl, new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, Math.Sign(magnificationAccum) * 120)));
+                        magnificationAccum = 0;
+                    }
+                }
+            }
+        }
+
         public void Invalidate()
         {
             controls.Invalidate();
@@ -427,7 +502,7 @@ namespace FamiStudio
 
         public System.Windows.Forms.Keys GetModifierKeys()
         {
-            return OpenTkUtils.GetModifierKeys();
+            return OpenTkUtils.GetModifierKeys() | (forceCtrlDown ? System.Windows.Forms.Keys.Control : System.Windows.Forms.Keys.None);
         }
 
         public new void Run() 
@@ -446,6 +521,7 @@ namespace FamiStudio
                 // them a bit and execute the handlers from outside of the event
                 // loop (basically outside of ProcessEvent).
 
+                ProcessSpecialEvents();
                 ProcessEvents();
                 ProcessDeferredEvents();
 

@@ -42,6 +42,9 @@ namespace FamiStudio
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, int int1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, uint uint1, IntPtr intPtr1, IntPtr intPtr2, bool bool1);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public static extern NSPointF SendPointF(IntPtr receiver, IntPtr selector);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]

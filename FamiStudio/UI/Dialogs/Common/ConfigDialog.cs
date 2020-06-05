@@ -91,7 +91,7 @@ namespace FamiStudio
 
                     var midiDevice = "";
 
-                    if (Settings.MidiDevice.Length > 0 && midiDevices.Contains(Settings.MidiDevice))
+                    if (!string.IsNullOrEmpty(Settings.MidiDevice) && midiDevices.Contains(Settings.MidiDevice))
                         midiDevice = Settings.MidiDevice;
                     else if (midiDevices.Count > 0)
                         midiDevice = midiDevices[0];

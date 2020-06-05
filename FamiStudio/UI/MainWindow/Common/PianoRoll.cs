@@ -2994,10 +2994,7 @@ namespace FamiStudio
             scrollX += e.Delta;
             ClampScroll();
             ConditionalInvalidate();
-
-            Debug.WriteLine($"{e.Delta} ({e.X}, {e.Y})");
         }
-
 
         public void Tick()
         {
