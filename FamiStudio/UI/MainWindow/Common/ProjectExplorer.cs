@@ -898,6 +898,94 @@ namespace FamiStudio
                     buttonY < (sliderPosY + sliderSizeY));
         }
 
+        private void ImportInstruments()
+        {
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm)|*.fti;*.fms;*.txt;*.ftm|FamiTracker Instrument File (*.fti)|*.fti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe");
+
+            if (filename != null)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                var success = false;
+
+                if (filename.ToLower().EndsWith("fti"))
+                {
+                    success = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
+                }
+                else
+                {
+                    Project instrumentProject = null;
+
+                    if (filename.ToLower().EndsWith("txt"))
+                    {
+                        instrumentProject = new FamistudioTextFile().Load(filename);
+
+                        if (instrumentProject == null)
+                            instrumentProject = new FamitrackerTextFile().Load(filename);
+                    }
+                    else if (filename.ToLower().EndsWith("ftm"))
+                    {
+                        instrumentProject = new FamitrackerBinaryFile().Load(filename);
+                    }
+                    else if (filename.ToLower().EndsWith("fms"))
+                    {
+                        instrumentProject = new ProjectFile().Load(filename);
+                    }
+
+                    if (instrumentProject != null)
+                    {
+                        var instruments = new List<Instrument>();
+                        var instrumentNames = new List<string>();
+
+                        foreach (var instrument in instrumentProject.Instruments)
+                        {
+                            if (instrument.ExpansionType == Project.ExpansionNone ||
+                                instrument.ExpansionType == App.Project.ExpansionAudio)
+                            {
+                                var instName = instrument.Name;
+
+                                if (instrument.ExpansionType != Project.ExpansionNone)
+                                    instName += $" ({Project.ExpansionShortNames[instrument.ExpansionType]})";
+
+                                instruments.Add(instrument);
+                                instrumentNames.Add(instName);
+                            }
+                        }
+
+                        var dlg = new PropertyDialog(300, ParentForm.Bounds);
+                        dlg.Properties.AddStringListMulti(null, instrumentNames.ToArray(), null);
+                        dlg.Properties.Build();
+
+                        if (dlg.ShowDialog() == DialogResult.OK)
+                        {
+                            var selected = dlg.Properties.GetPropertyValue<bool[]>(0);
+
+                            for (int i = 0; i < selected.Length; i++)
+                            {
+                                if (selected[i] && App.Project.GetInstrument(instruments[i].Name) == null)
+                                {
+                                    App.Project.Instruments.Add(instruments[i]);
+                                }
+                            }
+
+                            success = true;
+                        }
+                    }
+                }
+
+                App.Project.SortInstruments();
+
+                if (!success)
+                    App.UndoRedoManager.AbortTransaction();
+                else
+                    App.UndoRedoManager.EndTransaction();
+
+            }
+
+            RefreshButtons();
+            ConditionalInvalidate();
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -964,19 +1052,7 @@ namespace FamiStudio
                         }
                         if (subButtonType == SubButtonType.LoadInstrument)
                         {
-                            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "Fami Tracker Instrument (*.fti)|*.fti");
-                            if (filename != null)
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                                var instrument = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename);
-                                if (instrument == null)
-                                    App.UndoRedoManager.AbortTransaction();
-                                else
-                                    App.UndoRedoManager.EndTransaction();
-                            }
-
-                            RefreshButtons();
-                            ConditionalInvalidate();
+                            ImportInstruments();
                         }
                     }
                     else if (button.type == ButtonType.Instrument)

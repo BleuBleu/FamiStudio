@@ -13,6 +13,13 @@ namespace FamiStudio
         public PropertyPage Properties => propertyPage;
         private bool top = false;
 
+        public PropertyDialog(int width, Rectangle mainWinRect)
+        {
+            StartPosition = FormStartPosition.CenterParent;
+            Init();
+            Width = width;
+        }
+
         public PropertyDialog(Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
             top = topAlign;

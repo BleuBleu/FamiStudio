@@ -4,16 +4,15 @@
 	x 2.0.3 HOT FIX!
 	- Look at MaxWar wish list.
 		- Better folder handling
-		- Import FamiStudio isntruments
+		- Copy patterns instead of instancing? How.
+		x Import FamiStudio isntruments
 		- Std time
 		- MIDI?
 	- Copy paste of text values in envelopes.
 		=> Try to use real clipboard on Mac.
 	- Trackpad controls
-		x Will be an option, will make zoom CTRL+wheel, and wheel will scroll up/down.
-		x Windows: WM_MOUSEHSCROLL + alternate move when wheel scrolls in Y
-		x Linux: It just works, scroll has direction (not in VM, but on bare metal yes).
-		x Mac: In theory should work, I have delta Y, but need to test.
+		- Send test builds.
+		- Disable on Linux? Not good enough.
 		- Alt control for zooming.
 		- Review scrolling direction on all platforms.
 
