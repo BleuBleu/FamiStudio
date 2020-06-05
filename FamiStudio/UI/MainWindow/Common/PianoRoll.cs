@@ -2978,7 +2978,18 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+#if FAMISTUDIO_WINDOWS
+        protected override void WndProc(ref System.Windows.Forms.Message m)
+        {
+            base.WndProc(ref m);
+            if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
+                OnMouseHorizontalWheel(PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m));
+        }
+
         protected void OnMouseHorizontalWheel(MouseEventArgs e)
+#else
+        protected override void OnMouseHorizontalWheel(MouseEventArgs e)
+#endif
         {
             scrollX += e.Delta;
             ClampScroll();
@@ -2987,14 +2998,6 @@ namespace FamiStudio
             Debug.WriteLine($"{e.Delta} ({e.X}, {e.Y})");
         }
 
-#if FAMISTUDIO_WINDOWS
-        protected override void WndProc(ref System.Windows.Forms.Message m)
-        {
-            base.WndProc(ref m);
-            if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
-                OnMouseHorizontalWheel(PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m));
-        }
-#endif
 
         public void Tick()
         {

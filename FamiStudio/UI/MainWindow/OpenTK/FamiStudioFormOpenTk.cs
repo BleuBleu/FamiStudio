@@ -20,7 +20,8 @@ namespace FamiStudio
             MouseDoubleClick,
             MouseUp,
             MouseWheel,
-            MouseEnter,
+			MouseWheelHorizontal,
+			MouseEnter,
             MouseLeave,
             KeyDown,
             KeyUp
@@ -259,7 +260,7 @@ namespace FamiStudio
         {
             //if (CheckFrozen(false)) return;
             base.OnMouseWheel(e);
-
+            
             // Position is not reliable here. Super buggy.
             var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
 
@@ -269,7 +270,10 @@ namespace FamiStudio
 
             var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
 
-            deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheel, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y)));
+            if (e.Delta != 0)
+                deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheel, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y, false)));
+            //if (e.Value != 0)
+            //	deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheelHorizontal, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y, true)));
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -355,7 +359,10 @@ namespace FamiStudio
                     case DeferredEventType.MouseWheel:
                         evt.ctrl?.MouseWheel(evt.args as System.Windows.Forms.MouseEventArgs);
                         break;
-                    case DeferredEventType.MouseLeave:
+					case DeferredEventType.MouseWheelHorizontal:
+						evt.ctrl?.MouseHorizontalWheel(evt.args as System.Windows.Forms.MouseEventArgs);
+						break;
+					case DeferredEventType.MouseLeave:
                         evt.ctrl?.MouseLeave(evt.args as System.Windows.Forms.MouseEventArgs);
                         break;
                     case DeferredEventType.KeyDown:

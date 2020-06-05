@@ -33,6 +33,7 @@ namespace FamiStudio
         protected virtual void OnMouseMove(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnMouseLeave(EventArgs e) { }
         protected virtual void OnMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
+        protected virtual void OnMouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnKeyDown(System.Windows.Forms.KeyEventArgs e) { }
         protected virtual void OnKeyUp(System.Windows.Forms.KeyEventArgs e) { }
 
@@ -44,6 +45,7 @@ namespace FamiStudio
         public void MouseMove(System.Windows.Forms.MouseEventArgs e) { OnMouseMove(e); }
         public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
         public void MouseWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseWheel(e); }
+        public void MouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseHorizontalWheel(e); }
         public void KeyDown(System.Windows.Forms.KeyEventArgs e) { OnKeyDown(e); }
         public void KeyUp(System.Windows.Forms.KeyEventArgs e) { OnKeyUp(e); }
 

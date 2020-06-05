@@ -11,9 +11,11 @@ namespace FamiStudio
         bool bold;
         string buttonText;
         Pixbuf pixbuf;
+#if FAMISTUDIO_LINUX
         static Pango.Context context;
         Pango.Layout layoutNormal;
         Pango.Layout layoutBold;
+#endif
 
         public FlatButton(Pixbuf pb, string text = null)
         {
