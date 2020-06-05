@@ -2,6 +2,13 @@
 
 Version history / release notes for each release.
 
+## Version 2.0.3
+
+New features:
+
+* Fix crash when clicking on a note when a incompatible instrument is selected.
+* Fix WAV file export when using a sample rate different than 44100Hz.
+
 ## Version 2.0.2
 
 New features:
