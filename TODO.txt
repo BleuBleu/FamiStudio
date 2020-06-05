@@ -1,6 +1,13 @@
 2.1.0
 =====
 - Friday:
+	- 2.0.3 HOT FIX!
+	- Test wav export freq.
+	- Look at MaxWar wish list.
+		- Better folder handling
+		- Import FamiStudio isntruments
+		- Std time
+		- MIDI?
 	- Copy paste of text values in envelopes.
 		=> Try to use real clipboard on Mac.
 	- Trackpad controls
@@ -9,27 +16,16 @@
 		- Linux: It just works, scroll has direction (not in VM, but on bare metal yes).
 		- Mac: In theory should work, I have delta Y, but need to test.
 
-- Note snapping.
+- Note snapping. (or snap automatically when frames arent visible???)
+	x Icons
+	- Piano roll UI
+	- Snapping.
 - Paste-mix (NyxTheShield).
 / FamiTone2 SFX support.
 	- PAL support
 - One more sound engine? Plenty?
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
-
 / Linux: Black text on dark BG, can I do anything?
-x DOC: Mention copy paste projects in doc.
-x DOC: Troubleshooting section
-x VRC7 high pitch sound? (CANT REPRO)
-x Fix POP in Gimmick. 
-x Linux/Mac MIDI input.
-x Command line processing
-x CA65 export bug.
-x MAC: Test ShowHelp + Test Tilde + Home key + NotifyClosing.
-x Linux: song dialog, values dont change if you press OK (vr band wagon). Need to focus out.
-x Linux: bad title when saving/opening .
-x Keyboard shortcut to play from beginning (shift + space?)
-x Dont show full path of song in titlebar.
-x Linux: Tilda + Home dont work. (cant repro home key...)
 
 Tweet ideas
 ===========

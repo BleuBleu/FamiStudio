@@ -98,7 +98,6 @@ namespace FamiStudio
                         {
                             if (reg.FrameNumber != lastChangeFrame)
                             {
-                                // MATTT: This this!
                                 int numEmptyFrames = reg.FrameNumber - lastChangeFrame;
 
                                 while (numEmptyFrames >= 0)
@@ -144,7 +143,6 @@ namespace FamiStudio
 
                 if (!volumeAllZero)
                 {
-                    // MATTT: This this!
                     int numEmptyFrames = writes[writes.Length - 1].FrameNumber - lastChangeFrame;
 
                     while (numEmptyFrames > 0)
