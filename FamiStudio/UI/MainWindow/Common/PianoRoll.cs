@@ -2958,7 +2958,10 @@ namespace FamiStudio
 
             if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
             {
-                scrollY -= e.Delta;
+                if (ModifierKeys.HasFlag(Keys.Shift))
+                    scrollX -= e.Delta;
+                else
+                    scrollY -= e.Delta;
             }
             else if (editMode != EditionMode.DPCM)
             {

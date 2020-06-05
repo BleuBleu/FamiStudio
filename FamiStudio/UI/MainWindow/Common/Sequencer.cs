@@ -1523,8 +1523,8 @@ namespace FamiStudio
 
             if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
             {
-                // What should we do here?
-                //scrollX -= e.Delta;
+                if (ModifierKeys.HasFlag(Keys.Shift))
+                    scrollX -= e.Delta;
             }
             else
             {
