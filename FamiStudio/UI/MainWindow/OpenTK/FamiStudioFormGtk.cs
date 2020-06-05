@@ -79,9 +79,18 @@ namespace FamiStudio
             RenderFrame();
         }
 
-        protected System.Windows.Forms.MouseEventArgs ToWinFormArgs(Gdk.EventScroll e, int x, int y)
+        protected System.Windows.Forms.MouseEventArgs ToWinFormArgs(Gdk.EventScroll e, int x, int y, bool horizontal)
         {
-            return new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, e.Direction == Gdk.ScrollDirection.Up ? 120 : -120);
+            if (horizontal)
+            {
+                Debug.Assert(e.Direction == Gdk.ScrollDirection.Left || e.Direction == Gdk.ScrollDirection.Right);
+                return new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, e.Direction == Gdk.ScrollDirection.Right ? 120 : -120);
+            }
+            else
+            {
+                Debug.Assert(e.Direction == Gdk.ScrollDirection.Up || e.Direction == Gdk.ScrollDirection.Down);
+                return new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, e.Direction == Gdk.ScrollDirection.Up ? 120 : -120);
+            }
         }
 
         void GlWidget_ButtonPressEvent(object o, ButtonPressEventArgs args)
@@ -157,11 +166,17 @@ namespace FamiStudio
 
         void GlWidget_ScrollEvent(object o, ScrollEventArgs args)
         {
+            var ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out int x, out int y);
+
             if (args.Event.Direction == Gdk.ScrollDirection.Up ||
                 args.Event.Direction == Gdk.ScrollDirection.Down)
             {
-                var ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out int x, out int y);
-                ctrl.MouseWheel(ToWinFormArgs(args.Event, x, y));
+                ctrl.MouseWheel(ToWinFormArgs(args.Event, x, y, false));
+            }
+            else if (args.Event.Direction == Gdk.ScrollDirection.Left ||
+                     args.Event.Direction == Gdk.ScrollDirection.Right)
+            {
+                ctrl.MouseHorizontalWheel(ToWinFormArgs(args.Event, x, y, true));
             }
         }
 
