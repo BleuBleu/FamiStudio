@@ -12,16 +12,16 @@
 	- Trackpad controls
 		x Will be an option, will make zoom CTRL+wheel, and wheel will scroll up/down.
 		x Windows: WM_MOUSEHSCROLL + alternate move when wheel scrolls in Y
-		- Linux: It just works, scroll has direction (not in VM, but on bare metal yes).
-		- Mac: In theory should work, I have delta Y, but need to test.
+		x Linux: It just works, scroll has direction (not in VM, but on bare metal yes).
+		x Mac: In theory should work, I have delta Y, but need to test.
+		- Alt control for zooming.
+		- Review scrolling direction on all platforms.
 
 - Note snapping. (or snap automatically when frames arent visible???)
 	x Icons
 	- Piano roll UI
 	- Snapping.
 - Paste-mix (NyxTheShield).
-/ FamiTone2 SFX support.
-	- PAL support
 - One more sound engine? Plenty?
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 / Linux: Black text on dark BG, can I do anything?

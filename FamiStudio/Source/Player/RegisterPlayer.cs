@@ -20,11 +20,11 @@ namespace FamiStudio
             loopMode = LoopMode.None;
         }
 
-        public RegisterWrite[] GetRegisterValues(Song song)
+        public RegisterWrite[] GetRegisterValues(Song song, bool pal)
         {
             registerWrites = new List<RegisterWrite>();
 
-            if (BeginPlaySong(song, false, 0, this))
+            if (BeginPlaySong(song, pal, 0, this))
             {
                 while (PlaySongFrame())
                     frameIndex++;
