@@ -81,7 +81,8 @@ namespace FamiStudio
             None,
             Select,
             ClickPattern,
-            DragSelection
+            DragSelection,
+            AltZoom
         }
 
         bool showSelection = true;
@@ -856,6 +857,10 @@ namespace FamiStudio
                         ConditionalInvalidate();
                     }
                 }
+                else if (right && ModifierKeys.HasFlag(Keys.Alt))
+                {
+                    StartCaptureOperation(e, CaptureOperation.AltZoom);
+                }
                 else if (right && pattern != null)
                 {
                     var delete = ((e.Y - headerSizeY) / (float)trackSizeY < (Song.Channels.Length - 0.25f)) ||
@@ -1227,6 +1232,17 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private void UpdateAltZoom(MouseEventArgs e)
+        {
+            var deltaY = e.Y - captureStartY;
+
+            if (Math.Abs(deltaY) > 50)
+            {
+                ZoomAtLocation(e.X, Math.Sign(-deltaY));
+                captureStartY = e.Y;
+            }
+        }
+
         private bool IsMouseInPatternZone(MouseEventArgs e)
         {
             return e.Y > headerSizeY && e.X > trackNameSizeX;
@@ -1349,6 +1365,10 @@ namespace FamiStudio
             else if (captureOperation == CaptureOperation.DragSelection)
             {
                 ConditionalInvalidate();
+            }
+            else if (captureOperation == CaptureOperation.AltZoom)
+            {
+                UpdateAltZoom(e);
             }
 
             UpdateCursor();
@@ -1517,6 +1537,19 @@ namespace FamiStudio
             }
         }
 
+        private void ZoomAtLocation(int x, int delta)
+        {
+            int pixelX = x - trackNameSizeX;
+            int absoluteX = pixelX + scrollX;
+            if (delta < 0 && zoomLevel > MinZoomLevel) { zoomLevel--; absoluteX /= 2; }
+            if (delta > 0 && zoomLevel < MaxZoomLevel) { zoomLevel++; absoluteX *= 2; }
+            scrollX = absoluteX - pixelX;
+
+            UpdateRenderCoords();
+            ClampScroll();
+            ConditionalInvalidate();
+        }
+
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
@@ -1525,20 +1558,14 @@ namespace FamiStudio
             {
                 if (ModifierKeys.HasFlag(Keys.Shift))
                     scrollX -= e.Delta;
+
+                ClampScroll();
+                ConditionalInvalidate();
             }
             else
             {
-                int pixelX = e.X - trackNameSizeX;
-                int absoluteX = pixelX + scrollX;
-                if (e.Delta < 0 && zoomLevel > MinZoomLevel) { zoomLevel--; absoluteX /= 2; }
-                if (e.Delta > 0 && zoomLevel < MaxZoomLevel) { zoomLevel++; absoluteX *= 2; }
-                scrollX = absoluteX - pixelX;
-
-                UpdateRenderCoords();
+                ZoomAtLocation(e.X, e.Delta);
             }
-
-            ClampScroll();
-            ConditionalInvalidate();
         }
 
 #if FAMISTUDIO_WINDOWS

@@ -155,7 +155,8 @@ namespace FamiStudio
             DragSlideNoteTarget,
             DragNote,
             DragNewNote,
-            DragSelection
+            DragSelection,
+            AltZoom
         }
 
         static readonly bool[] captureNeedsThreshold = new[]
@@ -172,7 +173,8 @@ namespace FamiStudio
             true,  // DragSlideNoteTarget
             true,  // DragNote
             false, // DragNewNote
-            false  // DragSelection
+            false, // DragSelection
+            false, // AltZoom
         };
 
         int captureNoteIdx = 0;
@@ -1899,6 +1901,9 @@ namespace FamiStudio
                     case CaptureOperation.DragSelection:
                         UpdateNoteDrag(e, false);
                         break;
+                    case CaptureOperation.AltZoom:
+                        UpdateAltZoom(e);
+                        break;
                 }
             }
         }
@@ -2246,6 +2251,10 @@ namespace FamiStudio
             else if (middle && e.Y > headerSizeY && e.X > whiteKeySizeX)
             {
                 CaptureMouse(e);
+            }
+            else if (right && ModifierKeys.HasFlag(Keys.Alt))
+            {
+                StartCaptureOperation(e, CaptureOperation.AltZoom);
             }
             else if (left && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e) && EditEnvelope.CanResize)
             {
@@ -2914,6 +2923,17 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private void UpdateAltZoom(MouseEventArgs e)
+        {
+            var deltaY = e.Y - captureMouseY;
+
+            if (Math.Abs(deltaY) > 50)
+            {
+                ZoomAtLocation(e.X, Math.Sign(-deltaY));
+                captureMouseY = e.Y;
+            }
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -2952,6 +2972,19 @@ namespace FamiStudio
             }
         }
 
+        private void ZoomAtLocation(int x, int delta)
+        {
+            int pixelX = x - whiteKeySizeX;
+            int absoluteX = pixelX + scrollX;
+            if (delta < 0 && zoomLevel > MinZoomLevel) { zoomLevel--; absoluteX /= 2; }
+            if (delta > 0 && zoomLevel < MaxZoomLevel) { zoomLevel++; absoluteX *= 2; }
+            scrollX = absoluteX - pixelX;
+
+            UpdateRenderCoords();
+            ClampScroll();
+            ConditionalInvalidate();
+        }
+
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
@@ -2962,20 +2995,14 @@ namespace FamiStudio
                     scrollX -= e.Delta;
                 else
                     scrollY -= e.Delta;
+
+                ClampScroll();
+                ConditionalInvalidate();
             }
             else if (editMode != EditionMode.DPCM)
             {
-                int pixelX = e.X - whiteKeySizeX;
-                int absoluteX = pixelX + scrollX;
-                if (e.Delta < 0 && zoomLevel > MinZoomLevel) { zoomLevel--; absoluteX /= 2; }
-                if (e.Delta > 0 && zoomLevel < MaxZoomLevel) { zoomLevel++; absoluteX *= 2; }
-                scrollX = absoluteX - pixelX;
-
-                UpdateRenderCoords();
+                ZoomAtLocation(e.X, e.Delta);
             }
-
-            ClampScroll();
-            ConditionalInvalidate();
         }
 
 #if FAMISTUDIO_WINDOWS

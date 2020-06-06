@@ -997,6 +997,12 @@ namespace FamiStudio
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
             bool right  = e.Button.HasFlag(MouseButtons.Right);
 
+            if (middle)
+            {
+                mouseLastY = e.Y;
+                return;
+            }
+
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
             if (buttonIdx >= 0)
@@ -1184,11 +1190,6 @@ namespace FamiStudio
                         }
                     }
                 }
-            }
-
-            if (middle)
-            {
-                mouseLastY = e.Y;
             }
         }
 

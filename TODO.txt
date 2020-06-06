@@ -5,21 +5,18 @@
 	- Look at MaxWar wish list.
 		- Better folder handling
 		- Copy patterns instead of instancing? How.
-		x Import FamiStudio isntruments
+		x Import FamiStudio instruments
 		- Std time
 		- MIDI?
 	- Copy paste of text values in envelopes.
 		=> Try to use real clipboard on Mac.
 	- Trackpad controls
-		- Send test builds.
-		- Disable on Linux? Not good enough.
-		- Alt control for zooming.
+		- Send test builds (sunday).
+		- Disable on Linux? Not really good.
+		- Alt control for zooming. (alt + right click?)
 		- Review scrolling direction on all platforms.
+		- In project explorer -> Alt + left click to move will try to copy instrument. Fix.
 
-- Note snapping. (or snap automatically when frames arent visible???)
-	x Icons
-	- Piano roll UI
-	- Snapping.
 - Paste-mix (NyxTheShield).
 - One more sound engine? Plenty?
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
@@ -62,4 +59,6 @@ Backlog:
 - P2: Mac: Paste special: Text is super dark
 - P2: Mac: Clicking on FS without the window doesn't give it focus...?
 - P2: Installer on Japanese machine?
+- Note snapping. (or snap automatically when frames arent visible???)
+
 
