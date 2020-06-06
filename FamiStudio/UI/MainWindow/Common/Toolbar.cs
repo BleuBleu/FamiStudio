@@ -409,11 +409,10 @@ namespace FamiStudio
             App.ShowHelp();
         }
 
-        protected override void OnRender(RenderGraphics g)
+        private void RenderButtons(RenderGraphics g)
         {
             g.FillRectangle(0, 0, Width, Height, toolbarBrush);
 
-            var scaling = RenderTheme.MainWindowScaling;
             var pt = this.PointToClient(Cursor.Position);
 
             // Buttons
@@ -427,33 +426,66 @@ namespace FamiStudio
                 int x = btn.RightAligned ? Width - btn.X : btn.X;
                 g.DrawBitmap(bmp, x, btn.Y, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
             }
+        }
 
-            // Timecode
-            int frame = App.CurrentFrame;
-            int patternIdx = App.Song.FindPatternInstanceIndex(frame, out int noteIdx);
-
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
-
-            var numPatternDigits = Utils.NumDecimalDigits(App.Song.Length - 1);
-            var numNoteDigits    = Utils.NumDecimalDigits(App.Song.GetPatternLength(patternIdx) - 1);
+        private void RenderTimecode(RenderGraphics g)
+        {
+            var frame = App.CurrentFrame;
 
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            var patternString = patternIdx.ToString("D" + numPatternDigits);
-            var noteString    = noteIdx.ToString("D" + numNoteDigits);
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
 
-            var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
+            if (Settings.TimeFormat == 0)
+            {
+                int patternIdx = App.Song.FindPatternInstanceIndex(frame, out int noteIdx);
 
-            for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
-                g.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                var numPatternDigits = Utils.NumDecimalDigits(App.Song.Length - 1);
+                var numNoteDigits = Utils.NumDecimalDigits(App.Song.GetPatternLength(patternIdx) - 1);
 
-            g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
-            charPosX += colonSizeX;
+                var patternString = patternIdx.ToString("D" + numPatternDigits);
+                var noteString = noteIdx.ToString("D" + numNoteDigits);
 
-            for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
-                g.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
+                for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
+                    g.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+
+                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+                charPosX += colonSizeX;
+
+                for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
+                    g.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+            }
+            else
+            {
+                var fps = App.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC;
+                var totalMilliseconds = frame * 1000.0 / fps;
+                var time = TimeSpan.FromMilliseconds(totalMilliseconds);
+
+                var minutesString      = ((int)time.Minutes).ToString("D2");
+                var secondsString      = ((int)time.Seconds).ToString("D2");
+                var millisecondsString = ((int)time.Milliseconds).ToString("D3");
+
+                // 00:00:000
+                var charPosX = timecodePosX + timecodeSizeX / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
+
+                for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
+                    g.DrawText(minutesString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+                charPosX += colonSizeX;
+                for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
+                    g.DrawText(secondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+                charPosX += colonSizeX;
+                for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
+                    g.DrawText(millisecondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+            }
+        }
+
+        private void RenderWarningAndTooltip(RenderGraphics g)
+        {
             var message = tooltip;
             var messageBrush = theme.BlackBrush;
             var messageFont = ThemeBase.FontMedium;
@@ -529,6 +561,13 @@ namespace FamiStudio
                     posY += tooltipLineSizeY;
                 }
             }
+        }
+
+        protected override void OnRender(RenderGraphics g)
+        {
+            RenderButtons(g);
+            RenderTimecode(g);
+            RenderWarningAndTooltip(g);
         }
 
         protected override void OnMouseLeave(EventArgs e)

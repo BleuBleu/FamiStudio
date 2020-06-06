@@ -23,6 +23,19 @@ namespace FamiStudio
             ""
         };
 
+        public enum TimeFormat
+        {
+            PatternFrame,
+            MinuteSecondsMilliseconds,
+            Max
+        }
+
+        readonly string[] TimeFormatStrings =
+        {
+            "Pattern:Frame",
+            "MM:SS:mmm"
+        };
+
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
 
@@ -60,9 +73,11 @@ namespace FamiStudio
 #else
                     var scalingValues = new[] { "System" };
 #endif
-                    var idx = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
+                    var scalingIndex = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
+                    var timeFormatIndex = Settings.TimeFormat < (int)TimeFormat.Max ? Settings.TimeFormat : 0; 
 
-                    page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[idx]); // 0
+                    page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex]); // 0
+                    page.AddStringList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]);
                     page.AddBoolean("Check for updates:", Settings.CheckUpdates); // 1
                     page.AddBoolean("TrackPad controls:", Settings.TrackPadControls); // 2
 
@@ -117,10 +132,12 @@ namespace FamiStudio
                 var pageUI = pages[(int)ConfigSection.UserInterface];
                 var pageSound = pages[(int)ConfigSection.Sound];
                 var scalingString = pageUI.GetPropertyValue<string>(0);
+                var timeFormatString = pageUI.GetPropertyValue<string>(1);
 
                 Settings.DpiScaling = scalingString == "System" ? 0 : int.Parse(scalingString.Substring(0, 3));
-                Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(1);
-                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(2);
+                Settings.TimeFormat = Array.IndexOf(TimeFormatStrings, timeFormatString);
+                Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(2);
+                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(3);
 
                 // Sound
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(0);

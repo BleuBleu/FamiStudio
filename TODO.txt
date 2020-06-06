@@ -4,18 +4,14 @@
 	x 2.0.3 HOT FIX!
 	- Look at MaxWar wish list.
 		- Better folder handling
-		- Copy patterns instead of instancing? How.
-		x Import FamiStudio instruments
-		- Std time
+		- Copy patterns instead of instancing? How??
 		- MIDI?
 	- Copy paste of text values in envelopes.
 		=> Try to use real clipboard on Mac.
 	- Trackpad controls
 		- Send test builds (sunday).
 		- Disable on Linux? Not really good.
-		- Alt control for zooming. (alt + right click?)
 		- Review scrolling direction on all platforms.
-		- In project explorer -> Alt + left click to move will try to copy instrument. Fix.
 
 - Paste-mix (NyxTheShield).
 - One more sound engine? Plenty?

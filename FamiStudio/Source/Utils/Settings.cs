@@ -10,7 +10,8 @@ namespace FamiStudio
     static class Settings
     {
         // User Interface section
-        public static int DpiScaling { get; set; }
+        public static int DpiScaling { get; set; } = 0;
+        public static int TimeFormat { get; set; } = 0;
         public static bool CheckUpdates { get; set; } = true;
         public static bool TrackPadControls { get; set; } = false;
 
@@ -23,20 +24,16 @@ namespace FamiStudio
 
         public static void Load()
         {
-            try
-            {
-                var ini = IniFile.ParseINI(GetConfigFileName());
+            var ini = new IniFile();
+            ini.Load(GetConfigFileName());
 
-                DpiScaling = int.Parse(ini["UI"]["DpiScaling"]);
-                CheckUpdates = bool.Parse(ini["UI"]["CheckUpdates"]);
-                TrackPadControls = bool.Parse(ini["UI"]["TrackPadControls"]);
-                InstrumentStopTime = int.Parse(ini["Audio"]["InstrumentStopTime"]);
-                MidiDevice = ini["MIDI"]["Device"];
-                SquareSmoothVibrato = bool.Parse(ini["Audio"]["SquareSmoothVibrato"]);
-            }
-            catch
-            {
-            }
+            DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
+            TimeFormat = ini.GetInt("UI", "TimeFormat", 0);
+            CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
+            TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
+            InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
+            MidiDevice = ini.GetString("MIDI", "Device", "");
+            SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
 
             if (DpiScaling != 100 && DpiScaling != 150 && DpiScaling != 200)
                 DpiScaling = 0;
@@ -49,22 +46,19 @@ namespace FamiStudio
 
         public static void Save()
         {
-            var ini = new Dictionary<string, Dictionary<string, string>>();
+            var ini = new IniFile();
 
-            ini["UI"] = new Dictionary<string, string>();
-            ini["Audio"] = new Dictionary<string, string>();
-            ini["MIDI"] = new Dictionary<string, string>();
-
-            ini["UI"]["DpiScaling"]   = DpiScaling.ToString();
-            ini["UI"]["CheckUpdates"] = CheckUpdates.ToString();
-            ini["UI"]["TrackPadControls"] = TrackPadControls.ToString();
-            ini["Audio"]["InstrumentStopTime"] = InstrumentStopTime.ToString();
-            ini["Audio"]["SquareSmoothVibrato"] = SquareSmoothVibrato.ToString();
-            ini["MIDI"]["Device"]     = MidiDevice;
+            ini.SetInt("UI", "DpiScaling", DpiScaling);
+            ini.SetInt("UI", "TimeFormat", TimeFormat);
+            ini.SetBool("UI", "CheckUpdates", CheckUpdates);
+            ini.SetBool("UI", "TrackPadControls", TrackPadControls);
+            ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
+            ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
+            ini.SetString("MIDI", "Device", MidiDevice);
 
             Directory.CreateDirectory(GetConfigFilePath());
 
-            IniFile.WriteINI(GetConfigFileName(), ini);
+            ini.Save(GetConfigFileName());
         }
 
         private static string GetConfigFilePath()

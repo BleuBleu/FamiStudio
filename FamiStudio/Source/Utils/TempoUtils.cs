@@ -6,10 +6,8 @@ namespace FamiStudio
 {
     static class FamiStudioTempoUtils
     {
-        private const float FpsPAL  = 50.007f;
-        private const float FpsNTSC = 60.0988f;
-        private const float FrameTimeMsPAL  = 1000.0f / FpsPAL;
-        private const float FrameTimeMsNTSC = 1000.0f / FpsNTSC;
+        private const float FrameTimeMsPAL  = 1000.0f / NesApu.FpsPAL;
+        private const float FrameTimeMsNTSC = 1000.0f / NesApu.FpsNTSC;
 
         // Note Length  1 Error = 0.15 ms Must skip  1 frames over 6 Notes  0/0/0/0/0/1
         // Note Length  2 Error = 0.15 ms Must skip  1 frames over 3 Notes  0/0/1
