@@ -14,9 +14,9 @@ namespace FamiStudio
         const uint MagicNumberClipboardEnvelope = 0x21454346; // FCE!
         const uint MagicNumberClipboardPatterns = 0x21504346; // FCP!
 
-#if !FAMISTUDIO_WINDOWS
+#if FAMISTUDIO_LINUX
         static byte[] macClipboardData; // Cant copy between FamiStudio instance on MacOS.
-#else
+#elif FAMISTUDIO_WINDOWS
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int RegisterClipboardFormat(string format);
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -67,6 +67,8 @@ namespace FamiStudio
                 SetClipboardData(format, mem);
                 CloseClipboard();
             }
+#elif FAMISTUDIO_MACOS
+            MacUtils.SetPasteboardData(data);
 #else
             macClipboardData = data;
 #endif
@@ -92,6 +94,8 @@ namespace FamiStudio
                     CloseClipboard();
                 }
             }
+#elif FAMISTUDIO_MACOS
+            buffer = MacUtils.GetPasteboardData();
 #else
             buffer = macClipboardData;
 #endif
