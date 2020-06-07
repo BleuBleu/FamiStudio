@@ -486,6 +486,7 @@ namespace FamiStudio
 
         private void RenderWarningAndTooltip(RenderGraphics g)
         {
+            var scaling = RenderTheme.MainWindowScaling;
             var message = tooltip;
             var messageBrush = theme.BlackBrush;
             var messageFont = ThemeBase.FontMedium;
@@ -517,7 +518,7 @@ namespace FamiStudio
                 for (int j = 0; j < lines.Length; j++)
                 {
                     var splits = lines[j].Split(new char[] { '{', '}' }, StringSplitOptions.RemoveEmptyEntries);
-                    var posX = Width - 40 * RenderTheme.MainWindowScaling;
+                    var posX = Width - 40 * scaling;
 
                     for (int i = splits.Length - 1; i >= 0; i--)
                     {

@@ -1,5 +1,6 @@
 using Gtk;
 using System;
+using System.Drawing;
 using System.Reflection;
 using System.Resources;
 
@@ -20,6 +21,22 @@ namespace FamiStudio
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
         public  PropertyPage Properties => propertyPage;
+
+        public PropertyDialog(int width, Rectangle mainWinRect) : base(WindowType.Toplevel)
+        {
+            Init();
+            WidthRequest = width;
+
+#if FAMISTUDIO_LINUX
+            TransientFor = FamiStudioForm.Instance;
+            SetPosition(WindowPosition.CenterOnParent);
+#else
+            int x = mainWinRect.Left + (mainWinRect.Width  - width) / 2;
+            int y = mainWinRect.Top  + (mainWinRect.Height - width) / 2;
+
+            Move(x, y);
+#endif
+        }
 
         public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false) : base(WindowType.Toplevel)
         {

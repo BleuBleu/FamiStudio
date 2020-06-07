@@ -48,6 +48,7 @@ namespace FamiStudio
         public void MouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseHorizontalWheel(e); }
         public void KeyDown(System.Windows.Forms.KeyEventArgs e) { OnKeyDown(e); }
         public void KeyUp(System.Windows.Forms.KeyEventArgs e) { OnKeyUp(e); }
+        public void Focus() { }
 
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
