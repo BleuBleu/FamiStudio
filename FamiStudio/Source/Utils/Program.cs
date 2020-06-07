@@ -36,11 +36,11 @@ namespace FamiStudio
             RenderTheme.Initialize();
             PlatformUtils.Initialize();
             Cursors.Initialize();
-            ClipboardUtils.Initialize();
             FamiStudioTempoUtils.Initialize();
             NesApu.InitializeNoteTables();
 
 #if FAMISTUDIO_WINDOWS
+            WinUtils.Initialize();
             PerformanceCounter.Initialize();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

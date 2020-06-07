@@ -264,6 +264,7 @@ namespace FamiStudio
 
         private void OnNew()
         {
+            WinUtils.ClearClipboardString();
             App.NewProject();
         }
 
