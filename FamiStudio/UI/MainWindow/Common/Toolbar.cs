@@ -464,9 +464,9 @@ namespace FamiStudio
                 var totalMilliseconds = frame * 1000.0 / fps;
                 var time = TimeSpan.FromMilliseconds(totalMilliseconds);
 
-                var minutesString      = ((int)time.Minutes).ToString("D2");
-                var secondsString      = ((int)time.Seconds).ToString("D2");
-                var millisecondsString = ((int)time.Milliseconds).ToString("D3");
+                var minutesString      = time.Minutes.ToString("D2");
+                var secondsString      = time.Seconds.ToString("D2");
+                var millisecondsString = time.Milliseconds.ToString("D3");
 
                 // 00:00:000
                 var charPosX = timecodePosX + timecodeSizeX / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
@@ -598,15 +598,24 @@ namespace FamiStudio
 
             if (left || right)
             {
-                foreach (var btn in buttons)
+                if (e.X > timecodePosX && e.X < timecodePosX + timecodeSizeX &&
+                    e.Y > timecodePosY && e.Y < Height - timecodePosY)
                 {
-                    if (btn != null && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled()))
+                    Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
+                    ConditionalInvalidate();
+                }
+                else
+                {
+                    foreach (var btn in buttons)
                     {
-                        if (left)
-                            btn.Click?.Invoke();
-                        else
-                            btn.RightClick?.Invoke();
-                        break;
+                        if (btn != null && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled()))
+                        {
+                            if (left)
+                                btn.Click?.Invoke();
+                            else
+                                btn.RightClick?.Invoke();
+                            break;
+                        }
                     }
                 }
             }

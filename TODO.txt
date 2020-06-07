@@ -4,15 +4,20 @@
 	x 2.0.3 HOT FIX!
 	- Look at MaxWar wish list.
 		- Better folder handling
-		- Copy patterns instead of instancing? How??
+		- Copy patterns instead of instancing? How?
+		- Option for no-sound when no-pattern?
 		- MIDI?
+		x Time mode change on click.
+		- BUG: ALT + MOUSE WHEEL.
+		x BUG: Double right click, replace instrument, CTRL up/down.
 	- Copy paste of text values in envelopes.
 		=> Try to use real clipboard on Mac.
 	- Trackpad controls
 		- Send test builds (sunday).
 		- Disable on Linux? Not really good.
 		- Review scrolling direction on all platforms.
-
+- MAC: Can I remove hacks about mouse position?
+- Function to load a project (duplicated code)
 - Paste-mix (NyxTheShield).
 - One more sound engine? Plenty?
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)

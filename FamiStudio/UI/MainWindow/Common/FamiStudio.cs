@@ -123,6 +123,7 @@ namespace FamiStudio
             if (PianoRoll.ClientRectangle.Contains(pianoRollClientPos))
             {
                 PianoRoll.ReplaceSelectionInstrument(instrument);
+                PianoRoll.Focus();
             }
         }
 
