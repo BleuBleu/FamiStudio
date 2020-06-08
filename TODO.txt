@@ -8,13 +8,15 @@
 		- Option for no-sound when no-pattern?
 		- MIDI?
 		x Time mode change on click.
-		- BUG: ALT + MOUSE WHEEL. (*** VERY HARD TO REPRO.)
+		- BUG: Special paste VS. volume.
+		x BUG: ALT + MOUSE WHEEL. (*** VERY HARD TO REPRO.)
 		x BUG: Double right click, replace instrument, CTRL up/down.
 	- Copy paste of text values in envelopes.
 		x Try to use real clipboard on Mac.
-	- Trackpad controls
-		- Send test builds (sunday).
+	- Trackpad/pen controls
+		x Send test builds (sunday).
 		- Review scrolling direction on all platforms.
+		- Stepless zoom?
 - MAC: Can I remove hacks about mouse position?
 - Function to load a project (duplicated code)
 - Paste-mix (NyxTheShield).

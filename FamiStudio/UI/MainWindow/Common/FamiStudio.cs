@@ -609,6 +609,10 @@ namespace FamiStudio
             bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
             bool shift = e.Modifiers.HasFlag(Keys.Shift);
 
+            // Prevent loosing focus on Alt.
+            if (e.KeyCode == Keys.Menu)
+                e.Handled = true;
+
             if (e.KeyCode == Keys.Escape)
             {
                 StopIntrumentNote();
