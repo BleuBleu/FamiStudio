@@ -16,9 +16,7 @@
 	- Trackpad/pen controls
 		x Send test builds (sunday).
 		- Review scrolling direction on all platforms.
-- MAC: Can I remove hacks about mouse position?
-- Function to load a project (duplicated code)
-- Paste-mix (NyxTheShield).
+x Paste-mix (NyxTheShield).
 - Auto snap.
 - One more sound engine? Plenty?
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
