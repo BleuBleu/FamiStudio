@@ -113,11 +113,14 @@ namespace FamiStudio
             return extensions.Distinct().ToArray();
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
         {
             var extensionList = GetExtensionList(extensions);
 #if FAMISTUDIO_MACOS
-            return MacUtils.ShowOpenDialog(title, extensionList);
+            var filename = MacUtils.ShowOpenDialog(title, extensionList, defaultPath);
+            if (!string.IsNullOrEmpty(filename))
+                defaultPath = Path.GetDirectoryName(filename);
+            return filename;
 #else
             Gtk.Rc.ResetStyles(Gtk.Settings.GetForScreen(Gdk.Screen.Default));
             Gtk.Rc.ReparseAll();
@@ -148,11 +151,14 @@ namespace FamiStudio
 #endif
         }
 
-        public static string ShowSaveFileDialog(string title, string extensions)
+        public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             var extensionList = GetExtensionList(extensions);
 #if FAMISTUDIO_MACOS
-            return MacUtils.ShowSaveDialog(title, extensionList);
+            var filename = MacUtils.ShowSaveDialog(title, extensionList, defaultPath);
+            if (!string.IsNullOrEmpty(filename))
+                defaultPath = Path.GetDirectoryName(filename);
+            return filename;
 #else
             Gtk.FileChooserDialog filechooser =
                 new Gtk.FileChooserDialog("Choose the file to save",
@@ -178,6 +184,12 @@ namespace FamiStudio
 
             return filename;
 #endif
+        }
+
+        public static string ShowSaveFileDialog(string title, string extensions)
+        {
+            string dummy = "";
+            return ShowSaveFileDialog(title, extensions, ref dummy);
         }
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icon = MessageBoxIcon.None)
