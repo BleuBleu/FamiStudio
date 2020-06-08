@@ -290,6 +290,31 @@ namespace FamiStudio
                 return;
             }
 
+            project = OpenProjectFile(filename);
+
+            if (project != null)
+            {
+                InitProject();
+            }
+            else
+            {
+                NewProject();
+            }
+        }
+
+        public void OpenProject()
+        {
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe", ref Settings.LastFileFolder);
+            if (filename != null)
+            {
+                OpenProject(filename);
+            }
+        }
+
+        public Project OpenProjectFile(string filename, bool allowNsf = true)
+        {
+            Project project = null;
+
             if (filename.ToLower().EndsWith("fms"))
             {
                 project = new ProjectFile().Load(filename);
@@ -305,7 +330,7 @@ namespace FamiStudio
                 if (project == null)
                     project = new FamitrackerTextFile().Load(filename);
             }
-            else if (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe"))
+            else if (allowNsf && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
             {
                 NsfImportDialog dlg = new NsfImportDialog(filename, mainForm.Bounds);
 
@@ -315,25 +340,7 @@ namespace FamiStudio
                 }
             }
 
-            if (project != null)
-            {
-                InitProject();
-
-                //FamistudioTextFile.Save(project, "d:\\toto.txt");
-            }
-            else
-            {
-                NewProject();
-            }
-        }
-
-        public void OpenProject()
-        {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe");
-            if (filename != null)
-            {
-                OpenProject(filename);
-            }
+            return project;
         }
 
         public bool SaveProject(bool forceSaveAs = false)
@@ -342,7 +349,7 @@ namespace FamiStudio
 
             if (forceSaveAs || string.IsNullOrEmpty(project.Filename))
             {
-                string filename = PlatformUtils.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms");
+                string filename = PlatformUtils.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms", ref Settings.LastFileFolder);
                 if (filename != null)
                 {
                     success = new ProjectFile().Save(project, filename);

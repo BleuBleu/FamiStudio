@@ -900,7 +900,7 @@ namespace FamiStudio
 
         private void ImportInstruments()
         {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm)|*.fti;*.fms;*.txt;*.ftm|FamiTracker Instrument File (*.fti)|*.fti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe");
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm)|*.fti;*.fms;*.txt;*.ftm|FamiTracker Instrument File (*.fti)|*.fti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
 
             if (filename != null)
             {
@@ -914,23 +914,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    Project instrumentProject = null;
-
-                    if (filename.ToLower().EndsWith("txt"))
-                    {
-                        instrumentProject = new FamistudioTextFile().Load(filename);
-
-                        if (instrumentProject == null)
-                            instrumentProject = new FamitrackerTextFile().Load(filename);
-                    }
-                    else if (filename.ToLower().EndsWith("ftm"))
-                    {
-                        instrumentProject = new FamitrackerBinaryFile().Load(filename);
-                    }
-                    else if (filename.ToLower().EndsWith("fms"))
-                    {
-                        instrumentProject = new ProjectFile().Load(filename);
-                    }
+                    Project instrumentProject = App.OpenProjectFile(filename, false);
 
                     if (instrumentProject != null)
                     {
@@ -953,12 +937,13 @@ namespace FamiStudio
                         }
 
                         var dlg = new PropertyDialog(300, ParentForm.Bounds);
+                        dlg.Properties.AddLabel(null, "Select instruments to import:");
                         dlg.Properties.AddStringListMulti(null, instrumentNames.ToArray(), null);
                         dlg.Properties.Build();
 
                         if (dlg.ShowDialog() == DialogResult.OK)
                         {
-                            var selected = dlg.Properties.GetPropertyValue<bool[]>(0);
+                            var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
 
                             for (int i = 0; i < selected.Length; i++)
                             {

@@ -2491,7 +2491,7 @@ namespace FamiStudio
 
                     if (left && save && mapping != null && mapping.Sample != null)
                     {
-                        var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc");
+                        var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
                         if (filename != null)
                         {
                             File.WriteAllBytes(filename, mapping.Sample.Data);
@@ -2499,7 +2499,7 @@ namespace FamiStudio
                     }
                     else if (left && mapping == null)
                     {
-                        var filename = PlatformUtils.ShowOpenFileDialog("Open File", "DPCM Samples (*.dmc)|*.dmc");
+                        var filename = PlatformUtils.ShowOpenFileDialog("Open File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
                         if (filename != null)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);

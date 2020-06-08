@@ -37,17 +37,37 @@ namespace FamiStudio
             Marshal.FreeCoTaskMem(p);
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
         {
             var ofd = new OpenFileDialog()
             {
                 Filter = extensions,
-                Title = title
+                Title = title,
+                InitialDirectory = defaultPath
             };
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
+                defaultPath = System.IO.Path.GetDirectoryName(ofd.FileName);
                 return ofd.FileName;
+            }
+
+            return null;
+        }
+
+        public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = extensions,
+                Title = title,
+                InitialDirectory = defaultPath
+            };
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                defaultPath = System.IO.Path.GetDirectoryName(defaultPath);
+                return sfd.FileName;
             }
 
             return null;
@@ -55,18 +75,8 @@ namespace FamiStudio
 
         public static string ShowSaveFileDialog(string title, string extensions)
         {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = extensions,
-                Title = title
-            };
-
-            if (sfd.ShowDialog() == DialogResult.OK)
-            {
-                return sfd.FileName;
-            }
-
-            return null;
+            string dummy = "";
+            return ShowSaveFileDialog(title, extensions, ref dummy);
         }
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icons = MessageBoxIcon.None)
