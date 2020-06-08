@@ -301,8 +301,8 @@ namespace FamiStudio
 
             if (Settings.TrackPadControls)
             {
-                var dx = (int)Math.Round((e.Mouse.Scroll.X - lastScrollX) * 3.0f);
-                var dy = (int)Math.Round((e.Mouse.Scroll.Y - lastScrollY) * 3.0f);
+                var dx = (int)Math.Round((e.Mouse.Scroll.X - lastScrollX) * -3.0f);
+                var dy = (int)Math.Round((e.Mouse.Scroll.Y - lastScrollY) * -3.0f);
 
                 if (dy != 0)
                     deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheel, ctrl, new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, dy)));

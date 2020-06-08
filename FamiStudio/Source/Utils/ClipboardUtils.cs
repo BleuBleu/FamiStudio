@@ -51,7 +51,7 @@ namespace FamiStudio
 #if FAMISTUDIO_WINDOWS
             return WinUtils.GetClipboardString();
 #elif FAMISTUDIO_MACOS
-            return MacUtils.GetClipboardString();
+            return MacUtils.GetPasteboardString();
 #else
             return null;
 #endif
@@ -62,7 +62,7 @@ namespace FamiStudio
 #if FAMISTUDIO_WINDOWS
             WinUtils.ClearClipboardString();
 #elif FAMISTUDIO_MACOS
-            MacUtils.ClearClipboardString();
+            MacUtils.ClearPasteboardString();
 #endif
         }
 
