@@ -136,6 +136,7 @@ namespace FamiStudio
             filechooser.Modal = true;
             filechooser.SkipTaskbarHint = true;
             filechooser.TransientFor = FamiStudioForm.Instance;
+            filechooser.SetCurrentFolder(defaultPath);
 
             filechooser.Filter = new FileFilter();
             foreach (var ext in extensionList)
@@ -143,7 +144,10 @@ namespace FamiStudio
 
             string filename = null;
             if (filechooser.Run() == (int)ResponseType.Accept)
+            {
                 filename = filechooser.Filename;
+                defaultPath = Path.GetDirectoryName(filename);
+            }
 
             filechooser.Destroy();
 
@@ -171,6 +175,7 @@ namespace FamiStudio
             filechooser.Modal = true;
             filechooser.SkipTaskbarHint = true;
             filechooser.TransientFor = FamiStudioForm.Instance;
+            filechooser.SetCurrentFolder(defaultPath);
 
             filechooser.Filter = new FileFilter();
             foreach (var ext in extensionList)
@@ -178,7 +183,10 @@ namespace FamiStudio
 
             string filename = null;
             if (filechooser.Run() == (int)ResponseType.Accept)
+            {
                 filename = filechooser.Filename;
+                defaultPath = Path.GetDirectoryName(filename);
+            }
 
             filechooser.Destroy();
 
