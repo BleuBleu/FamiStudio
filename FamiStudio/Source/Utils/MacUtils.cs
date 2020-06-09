@@ -590,12 +590,22 @@ namespace FamiStudio
 
         public static unsafe void SetPasteboardData(byte[] data)
         {
-            fixed (byte* ptr = &data[0])
+            var pbTypes = ToNSArray(new[] { "FamiStudioData" });
+
+            if (data == null || data.Length == 0)
             {
-                var nsData = SendIntPtr(clsNSData, selDataWithBytesLength, new IntPtr(ptr), data.Length);
-                var pbTypes = ToNSArray(new[] { "FamiStudioData" });
+                var nsData = SendIntPtr(clsNSData, selDataWithBytesLength, IntPtr.Zero, 0);
                 SendIntPtr(famiStudioPasteboard, selDeclareTypesOwner, pbTypes, IntPtr.Zero);
                 SendVoid(famiStudioPasteboard, selSetDataForType, nsData, ToNSString("FamiStudioData"));
+            }
+            else
+            {
+                fixed (byte* ptr = &data[0])
+                {
+                    var nsData = SendIntPtr(clsNSData, selDataWithBytesLength, new IntPtr(ptr), data.Length);
+                    SendIntPtr(famiStudioPasteboard, selDeclareTypesOwner, pbTypes, IntPtr.Zero);
+                    SendVoid(famiStudioPasteboard, selSetDataForType, nsData, ToNSString("FamiStudioData"));
+                }
             }
         }
 
