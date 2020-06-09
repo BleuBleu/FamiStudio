@@ -1895,7 +1895,7 @@ namespace FamiStudio
             Capture = true;
         }
 
-        private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op, int noteIdx = -1, bool allowSnap = false)
+        private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op, bool allowSnap = false, int noteIdx = -1)
         {
             Debug.Assert(captureOperation == CaptureOperation.None);
             CaptureMouse(e);
@@ -2286,7 +2286,7 @@ namespace FamiStudio
             }
             else if (right && editMode == EditionMode.Channel && IsMouseInHeader(e))
             {
-                StartCaptureOperation(e, CaptureOperation.Select, -1, true);
+                StartCaptureOperation(e, CaptureOperation.Select, true);
                 UpdateSelection(e.X, true);
             }
             else if (right && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e))
@@ -2381,7 +2381,7 @@ namespace FamiStudio
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[patternIdx].Id);
                             var op = CaptureOperation.DragSlideNoteTarget;
-                            StartCaptureOperation(e, op, Song.GetPatternStartNote(patternIdx, noteIdx));
+                            StartCaptureOperation(e, op, false, Song.GetPatternStartNote(patternIdx, noteIdx));
                             changed = true;
                         }
                     }
@@ -2409,11 +2409,12 @@ namespace FamiStudio
                         if (supportsInstrument)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                            SnapPatternNote(patternIdx, ref noteIdx);
                             var note = pattern.GetOrCreateNoteAt(noteIdx);
                             note.Value = noteValue;
                             note.Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
                             pattern.ClearLastValidNoteCache();
-                            StartCaptureOperation(e, CaptureOperation.CreateDragSlideNoteTarget);
+                            StartCaptureOperation(e, CaptureOperation.CreateDragSlideNoteTarget, true);
                         }
                         else
                         {
@@ -2443,7 +2444,7 @@ namespace FamiStudio
                                 else
                                     App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
 
-                                StartCaptureOperation(e, CaptureOperation.DragSelection, -1, true);
+                                StartCaptureOperation(e, CaptureOperation.DragSelection, true);
 
                                 var absPrevNoteIdx = Song.GetPatternStartNote(prevPatternIdx, prevNoteIdx);
 
@@ -2458,7 +2459,7 @@ namespace FamiStudio
                                 var prevPattern = channel.PatternInstances[prevPatternIdx];
 
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, prevPattern.Id);
-                                StartCaptureOperation(e, CaptureOperation.DragNote, -1, true);
+                                StartCaptureOperation(e, CaptureOperation.DragNote, true);
 
                                 var absPrevNoteIdx = Song.GetPatternStartNote(prevPatternIdx, prevNoteIdx);
 
@@ -2475,7 +2476,7 @@ namespace FamiStudio
                             if (supportsInstrument)
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                                StartCaptureOperation(e, CaptureOperation.DragNewNote, -1, true);
+                                StartCaptureOperation(e, CaptureOperation.DragNewNote, true);
 
                                 var newNote = new Note(noteValue);
                                 newNote.Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
@@ -2878,6 +2879,15 @@ namespace FamiStudio
             else
             {
                 return noteIdx;
+            }
+        }
+
+        private void SnapPatternNote(int patternIdx, ref int noteIdx)
+        {
+            if (IsSnappingEnabled)
+            {
+                var noteLength = Song.GetPatternNoteLength(patternIdx);
+                noteIdx = (noteIdx / noteLength) * noteLength;
             }
         }
 
