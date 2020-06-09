@@ -15,23 +15,23 @@ namespace FamiStudio
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int IsClipboardFormatAvailable(int format);
         [DllImport("user32.dll")]
-        private static extern int OpenClipboard(int hwnd);
+        private static extern int OpenClipboard(IntPtr hwnd);
         [DllImport("user32.dll", EntryPoint = "GetClipboardData")]
-        private static extern int GetClipboardDataWin32(int wFormat);
+        private static extern IntPtr GetClipboardDataWin32(int wFormat);
         [DllImport("user32.dll", EntryPoint = "GetClipboardFormatNameA")]
         private static extern int GetClipboardFormatName(int wFormat, string lpString, int nMaxCount);
         [DllImport("kernel32.dll")]
-        private static extern int GlobalAlloc(int wFlags, int dwBytes);
+        private static extern IntPtr GlobalAlloc(int wFlags, int dwBytes);
         [DllImport("kernel32.dll")]
-        private static extern IntPtr GlobalLock(int hMem);
+        private static extern IntPtr GlobalLock(IntPtr hMem);
         [DllImport("kernel32.dll")]
-        private static extern int GlobalUnlock(int hMem);
+        private static extern int GlobalUnlock(IntPtr hMem);
         [DllImport("kernel32.dll")]
-        private static extern int GlobalSize(int mem);
+        private static extern int GlobalSize(IntPtr mem);
         [DllImport("user32.dll")]
         private static extern int CloseClipboard();
         [DllImport("user32.dll")]
-        private static extern int SetClipboardData(int wFormat, int hMem);
+        private static extern int SetClipboardData(int wFormat, IntPtr hMem);
         [DllImport("user32.dll")]
         private static extern int EmptyClipboard();
 
@@ -47,12 +47,21 @@ namespace FamiStudio
 
         public static void SetClipboardData(byte[] data)
         {
-            var mem = GlobalAlloc(GMEM_MOVEABLE, data.Length);
-            var ptr = GlobalLock(mem);
-            Marshal.Copy(data, 0, ptr, data.Length);
-            GlobalUnlock(mem);
+            IntPtr mem = IntPtr.Zero;
 
-            if (OpenClipboard(0) != 0)
+            if (data == null)
+            { 
+                mem = GlobalAlloc(GMEM_MOVEABLE, 0);
+            }
+            else
+            {
+                mem = GlobalAlloc(GMEM_MOVEABLE, data == null ? 0 : data.Length);
+                var ptr = GlobalLock(mem);
+                Marshal.Copy(data, 0, ptr, data.Length);
+                GlobalUnlock(mem);
+            }
+
+            if (OpenClipboard(IntPtr.Zero) != 0)
             {
                 SetClipboardData(clipboardFormat, mem);
                 CloseClipboard();
@@ -65,10 +74,10 @@ namespace FamiStudio
 
             if (IsClipboardFormatAvailable(clipboardFormat) != 0)
             {
-                if (OpenClipboard(0) != 0)
+                if (OpenClipboard(IntPtr.Zero) != 0)
                 {
                     var mem = GetClipboardDataWin32(clipboardFormat);
-                    if (mem != 0)
+                    if (mem != IntPtr.Zero)
                     {
                         var size = Math.Min(maxSize, GlobalSize(mem));
                         var ptr = GlobalLock(mem);
@@ -89,10 +98,10 @@ namespace FamiStudio
 
             if (IsClipboardFormatAvailable(CF_TEXT) != 0)
             {
-                if (OpenClipboard(0) != 0)
+                if (OpenClipboard(IntPtr.Zero) != 0)
                 {
                     var mem = GetClipboardDataWin32(CF_TEXT);
-                    if (mem != 0)
+                    if (mem != IntPtr.Zero)
                     {
                         var size = Math.Min(8192, GlobalSize(mem));
                         var ptr = GlobalLock(mem);
@@ -109,7 +118,7 @@ namespace FamiStudio
 
         public static void ClearClipboardString()
         {
-            if (OpenClipboard(0) != 0)
+            if (OpenClipboard(IntPtr.Zero) != 0)
             {
                 EmptyClipboard();
                 CloseClipboard();
