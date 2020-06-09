@@ -34,12 +34,12 @@ namespace FamiStudio
         const int DefaultNoteSizeY           = 4;
         const int DefaultScrollMargin        = 128;
         const int DefaultBarTextPosY         = 2;
-        const int DefaultTrackIconPosX       = 4;
+        const int DefaultTrackIconPosX       = 3;
         const int DefaultTrackIconPosY       = 4;
-        const int DefaultTrackNamePosX       = 24;
+        const int DefaultTrackNamePosX       = 23;
         const int DefaultTrackNamePosY       = 4;
         const int DefaultGhostNoteOffsetX    = 16;
-        const int DefaultGhostNoteOffsetY    = 16;
+        const int DefaultGhostNoteOffsetY    = 14;
         const int DefaultPatternNamePosX     = 2;
         const int DefaultPatternNamePosY     = 3;
         const int DefaultHeaderIconPosX      = 3;

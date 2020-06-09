@@ -7,6 +7,7 @@
 		- Option for no-sound when no-pattern?
 		- MIDI?
 		- BUG: Special paste VS. volume (WAIT GIF, DONT UNDERSTAND!).
+		x CRASH: Copy/paste empty patterns. => Mac Test!
 		x Better folder handling
 		x Time mode change on click.
 		x BUG: ALT + MOUSE WHEEL. (*** VERY HARD TO REPRO.)
@@ -18,6 +19,10 @@
 		- Review scrolling direction on all platforms.
 x Paste-mix (NyxTheShield).
 - Auto snap.
+	x Will need awareness of patterns for custom note sizes.
+	x Selection + drawing + dragging should be enough for good first pass.
+	- Max + Linux
+	- TEST A LOT (envelope, DPCM, etc)
 - One more sound engine? Plenty?
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 / Linux: Black text on dark BG, can I do anything?
