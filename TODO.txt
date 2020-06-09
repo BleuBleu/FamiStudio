@@ -21,6 +21,7 @@ x Paste-mix (NyxTheShield).
 - Auto snap.
 	x Will need awareness of patterns for custom note sizes.
 	x Selection + drawing + dragging should be enough for good first pass.
+	- Snap stop + release notes?
 	- Max + Linux
 	- TEST A LOT (envelope, DPCM, etc)
 - One more sound engine? Plenty?
