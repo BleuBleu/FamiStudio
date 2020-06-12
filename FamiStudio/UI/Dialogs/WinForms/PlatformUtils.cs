@@ -66,7 +66,7 @@ namespace FamiStudio
 
             if (sfd.ShowDialog() == DialogResult.OK)
             {
-                defaultPath = System.IO.Path.GetDirectoryName(defaultPath);
+                defaultPath = System.IO.Path.GetDirectoryName(sfd.FileName);
                 return sfd.FileName;
             }
 

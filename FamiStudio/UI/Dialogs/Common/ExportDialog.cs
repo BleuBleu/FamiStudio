@@ -77,6 +77,19 @@ namespace FamiStudio
             return names;
         }
 
+        private string[] GetChannelNames()
+        {
+            var channelTypes = project.GetActiveChannelList();
+            var channelNames = new string[channelTypes.Length];
+            for (int i = 0; i < channelTypes.Length; i++)
+            {
+                channelNames[i] = Channel.ChannelNames[channelTypes[i]];
+                if (i >= Channel.ExpansionAudioStart)
+                    channelNames[i] += $" ({project.ExpansionAudioShortName})";
+            }
+            return channelNames;
+        }
+
         private PropertyPage CreatePropertyPage(PropertyPage page, ExportFormat format)
         {
             var songNames = GetSongNames();
@@ -86,6 +99,10 @@ namespace FamiStudio
                 case ExportFormat.Wav:
                     page.AddStringList("Song :", songNames, songNames[0]); // 0
                     page.AddStringList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 1
+                    page.AddStringList("Mode :", new[] { "Play Once", "Duration" }, "Play Once"); // 2
+                    page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 3
+                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 4
+                    page.SetPropertyEnabled(3, false);
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
@@ -139,6 +156,10 @@ namespace FamiStudio
                 props.SetPropertyEnabled(3, (bool)value);
                 props.SetPropertyEnabled(4, (bool)value);
             }
+            else if (props == dialog.GetPropertyPage((int)ExportFormat.Wav) && idx == 2)
+            {
+                props.SetPropertyEnabled(3, (string)value == "Duration");
+            }
         }
 
         private int[] GetSongIds(bool[] selectedSongs)
@@ -162,8 +183,17 @@ namespace FamiStudio
                 var props = dialog.GetPropertyPage((int)ExportFormat.Wav);
                 var songName = props.GetPropertyValue<string>(0);
                 var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(1));
+                var duration = props.GetPropertyValue<string>(2) == "Duration" ? props.GetPropertyValue<int>(3) : -1;
+                var selectedChannels = props.GetPropertyValue<bool[]>(4);
 
-                WaveFile.Save(project.GetSong(songName), filename, sampleRate);
+                var channelMask = 0;
+                for (int i = 0; i < selectedChannels.Length; i++)
+                {
+                    if (selectedChannels[i])
+                        channelMask |= (1 << i);
+                }
+
+                WaveFile.Save(project.GetSong(songName), filename, sampleRate, duration, channelMask);
             }
         }
 

@@ -46,7 +46,7 @@ namespace FamiStudio
             return defaultValue;
         }
 
-        private int ParseOption(string name, int defaultValue)
+        private int ParseOption(string name, int defaultValue, bool hex = false)
         {
             foreach (var a in args)
             {
@@ -54,7 +54,12 @@ namespace FamiStudio
                 {
                     var colonIdx = a.LastIndexOf(':');
                     if (colonIdx >= 0)
-                        return Convert.ToInt32(a.Substring(colonIdx + 1));
+                    {
+                        if (hex)
+                            return Convert.ToInt32(a.Substring(colonIdx + 1), 16);
+                        else
+                            return Convert.ToInt32(a.Substring(colonIdx + 1));
+                    }
                     break;
                 }
             }
@@ -139,6 +144,8 @@ namespace FamiStudio
             Console.WriteLine($"");
             Console.WriteLine($"WAV export specific options");
             Console.WriteLine($"  -wav-export-rate:<rate> : Sample rate of the exported wave : 11025, 22050, 44100 or 48000 (default:44100).");
+            Console.WriteLine($"  -wav-export-duration:<duration> : Duration in second, 0 plays song once and stop (default:0).");
+            Console.WriteLine($"  -wav-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");
             Console.WriteLine($"");
             Console.WriteLine($"NSF export specific options");
             Console.WriteLine($"  -nsf-export-mode:<mode> : Target machine: ntsc, pal or dual (default:ntsc).");
@@ -252,10 +259,12 @@ namespace FamiStudio
 
             var songIndex  = ParseOption("export-song", 0);
             var sampleRate = ParseOption("wav-export-rate", 44100);
+            var duration   = ParseOption("wav-export-duration", 0);
+            var mask       = ParseOption("wav-export-channels", 0xff, true);
             var song       = GetProjectSong(songIndex);
 
             if (song != null)
-                WaveFile.Save(song, filename, sampleRate);
+                WaveFile.Save(song, filename, sampleRate, duration, mask);
         }
 
         private void NsfExport(string filename)

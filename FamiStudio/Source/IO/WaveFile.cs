@@ -31,11 +31,12 @@ namespace FamiStudio
             public int subChunk2Size;
         };
 
-        public unsafe static void Save(Song song, string filename, int sampleRate)
+        public unsafe static void Save(Song song, string filename, int sampleRate, int duration, int channelMask)
         {
             var player = new WavPlayer();
-            player.Loop = LoopMode.None;
-            var samples = player.GetSongSamples(song, false);
+            player.Loop = duration <= 0 ? LoopMode.None : LoopMode.Song;
+            player.ChannelMask = channelMask;
+            var samples = player.GetSongSamples(song, false, duration);
 
             using (var file = new FileStream(filename, FileMode.Create))
             {
