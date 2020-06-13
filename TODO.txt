@@ -17,7 +17,7 @@
 	- Copy paste of text values in envelopes.
 		x Try to use real clipboard on Mac.
 		x Do it!
-		- MacOS
+		x MacOS
 	- Trackpad/pen controls
 		x Send test builds (sunday).
 		x Review MacOs speed + real mouse wheel.
@@ -37,6 +37,7 @@ x Paste-mix (NyxTheShield).
 
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!
+- Retest snapping with various pattern sizes.
 
 Tweet ideas
 ===========
