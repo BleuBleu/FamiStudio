@@ -77,15 +77,19 @@ namespace FamiStudio
                     var timeFormatIndex = Settings.TimeFormat < (int)TimeFormat.Max ? Settings.TimeFormat : 0; 
 
                     page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex]); // 0
-                    page.AddStringList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]);
-                    page.AddBoolean("Check for updates:", Settings.CheckUpdates); // 1
-                    page.AddBoolean("TrackPad controls:", Settings.TrackPadControls); // 2
-
+                    page.AddStringList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]); // 1
+                    page.AddBoolean("Check for updates:", Settings.CheckUpdates); // 2
+                    page.AddBoolean("Trackpad controls:", Settings.TrackPadControls); // 3
+#if FAMISTUDIO_MACOS
+                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 4
+                    page.SetPropertyEnabled(4, Settings.TrackPadControls);
+                    page.PropertyChanged += Page_PropertyChanged;
+#endif
 #if FAMISTUDIO_LINUX
                     page.SetPropertyEnabled(0, false);
 #endif
 
-                    break;
+                        break;
                 }
                 case ConfigSection.Sound:
                 {
@@ -122,6 +126,16 @@ namespace FamiStudio
             return page;
         }
 
+#if FAMISTUDIO_MACOS
+        private void Page_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            if (props == pages[(int)ConfigSection.UserInterface] && idx == 3)
+            {
+                props.SetPropertyEnabled(4, (bool)value);
+            }
+        }
+#endif
+
         public DialogResult ShowDialog()
         {
             var dialogResult = dialog.ShowDialog();
@@ -138,6 +152,9 @@ namespace FamiStudio
                 Settings.TimeFormat = Array.IndexOf(TimeFormatStrings, timeFormatString);
                 Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(2);
                 Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(3);
+#if FAMISTUDIO_MACOS
+                Settings.ReverseTrackPad = pageUI.GetPropertyValue<bool>(4);
+#endif
 
                 // Sound
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(0);

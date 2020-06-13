@@ -42,13 +42,13 @@ namespace FamiStudio
 
         public static System.Windows.Forms.MouseEventArgs ToWinFormArgs(MouseWheelEventArgs e, int x, int y)
         {
-            return new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, e.Delta * 120);
+            return new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, (int)Math.Round(e.DeltaPrecise * 1200));
         }
 
         public static System.Windows.Forms.Keys ToWinFormKey(Key k)
         {
             if (k >= Key.A && k <= Key.Z)
-                return System.Windows.Forms.Keys.A + (k - Key.A);
+                return System.Windows.Forms.Keys.A + (k - Key.A);   
             else if (k >= Key.Number0 && k <= Key.Number9)
                 return System.Windows.Forms.Keys.D0 + (k - Key.Number0);
             else if (k == Key.ControlRight || k == Key.ControlLeft || k == Key.Command || k == Key.WinLeft)
