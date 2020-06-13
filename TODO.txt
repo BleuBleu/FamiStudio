@@ -7,6 +7,8 @@
 		- Option for no-sound when no-pattern?
 		- MIDI?
 		- BUG: Special paste VS. volume (WAIT GIF, DONT UNDERSTAND!).
+		- Cropped text special paste 150%.
+		- CRASH: envelope.
 		x CRASH: Copy/paste empty patterns. => Mac Test!
 		x Better folder handling
 		x Time mode change on click.
@@ -22,11 +24,17 @@ x Paste-mix (NyxTheShield).
 	x Will need awareness of patterns for custom note sizes.
 	x Selection + drawing + dragging should be enough for good first pass.
 	- Snap stop + release notes?
+	- Selection snap VS. Fraction.
+	- FamiTracker tempo mode for 1,2,3,4 mode.
 	- Max + Linux
 	- TEST A LOT (envelope, DPCM, etc)
-- One more sound engine? Plenty?
+- PAL mode editing.
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 / Linux: Black text on dark BG, can I do anything?
+
+Testing:
+- WAV export: MERGE+RETEST WITH SAMPLE RATE!
+
 
 Tweet ideas
 ===========

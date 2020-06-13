@@ -121,10 +121,27 @@ namespace FamiStudio
             DPCM
         };
 
-        enum SnapMode
+        enum SnapResolution
         {
-            Always,
-            Auto
+            OneQuarter,
+            OneThird,
+            OneHalf,
+            OneNote,
+            TwoNote,
+            ThreeNote,
+            FourNote,
+            Max
+        };
+
+        readonly double[] SnapResolutionFactors = new[]
+        {
+            1.0 / 4.0,
+            1.0 / 3.0,
+            1.0 / 2.0,
+            1.0,
+            2.0,
+            3.0,
+            4.0
         };
 
         RenderTheme theme;
@@ -148,7 +165,7 @@ namespace FamiStudio
         RenderBitmap bmpSlide;
         RenderBitmap bmpSlideSmall;
         RenderBitmap bmpSnap;
-        RenderBitmap bmpSnapAuto;
+        RenderBitmap[] bmpSnapResolution = new RenderBitmap[(int)SnapResolution.Max];
         RenderBitmap[] bmpEffects = new RenderBitmap[Note.EffectCount];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
@@ -216,7 +233,7 @@ namespace FamiStudio
         bool showSelection = false;
         bool showEffectsPanel = false;
         bool snap = false;
-        SnapMode snapMode = SnapMode.Always;
+        SnapResolution snapResolution = SnapResolution.OneNote;
         int scrollX = 0;
         int scrollY = 0;
         int zoomLevel = 0;
@@ -236,7 +253,7 @@ namespace FamiStudio
         int envelopeValueOffset = 0;
 
         private bool IsSnappingAllowed => App.Project.UsesFamiStudioTempo && editMode == EditionMode.Channel;
-        private bool IsSnappingEnabled => IsSnappingAllowed && snap && (snapMode == SnapMode.Always || zoomLevel < DrawFrameZoomLevel);
+        private bool IsSnappingEnabled => IsSnappingAllowed && snap;
 
         public delegate void ManyPatternChange();
         public event ManyPatternChange ManyPatternChanged;
@@ -519,7 +536,13 @@ namespace FamiStudio
             bmpSlide = g.CreateBitmapFromResource("Slide");
             bmpSlideSmall = g.CreateBitmapFromResource("SlideSmall");
             bmpSnap = g.CreateBitmapFromResource("Snap");
-            bmpSnapAuto = g.CreateBitmapFromResource("SnapAuto");
+            bmpSnapResolution[(int)SnapResolution.OneQuarter] = g.CreateBitmapFromResource("Snap1_4");
+            bmpSnapResolution[(int)SnapResolution.OneThird] = g.CreateBitmapFromResource("Snap1_3");
+            bmpSnapResolution[(int)SnapResolution.OneHalf] = g.CreateBitmapFromResource("Snap1_2");
+            bmpSnapResolution[(int)SnapResolution.OneNote] = g.CreateBitmapFromResource("Snap1");
+            bmpSnapResolution[(int)SnapResolution.TwoNote] = g.CreateBitmapFromResource("Snap2");
+            bmpSnapResolution[(int)SnapResolution.ThreeNote] = g.CreateBitmapFromResource("Snap3");
+            bmpSnapResolution[(int)SnapResolution.FourNote] = g.CreateBitmapFromResource("Snap4");
 
             for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
             {
@@ -588,7 +611,11 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpSlide);
             Utils.DisposeAndNullify(ref bmpSlideSmall);
             Utils.DisposeAndNullify(ref bmpSnap);
-            Utils.DisposeAndNullify(ref bmpSnapAuto);
+
+            for (int i = 0; i < (int)SnapResolution.Max; i++)
+            {
+                Utils.DisposeAndNullify(ref bmpSnapResolution[i]);
+            }
 
             for (int i = 0; i < Note.EffectCount; i++)
             {
@@ -826,7 +853,10 @@ namespace FamiStudio
                 g.DrawBitmap(showEffectsPanel ? bmpEffectExpanded : bmpEffectCollapsed, effectIconPosX, effectIconPosY);
 
                 if (IsSnappingAllowed)
-                    g.DrawBitmap(snapMode == SnapMode.Always ? bmpSnap : bmpSnapAuto, whiteKeySizeX - (int)bmpSnap.Size.Width - snapIconPosX - 1, snapIconPosY, snap ? 1.0f : 0.3f);
+                {
+                    g.DrawBitmap(bmpSnapResolution[(int)snapResolution], whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX * 2 - 1, snapIconPosY, snap ? 1.0f : 0.3f);
+                    g.DrawBitmap(bmpSnap, whiteKeySizeX - (int)bmpSnap.Size.Width * 1 - snapIconPosX * 1 - 1, snapIconPosY, snap ? 1.0f : 0.3f);
+                }
 
                 if (showEffectsPanel)
                 {
@@ -2286,7 +2316,7 @@ namespace FamiStudio
             }
             else if (right && editMode == EditionMode.Channel && IsMouseInHeader(e))
             {
-                StartCaptureOperation(e, CaptureOperation.Select, true);
+                StartCaptureOperation(e, CaptureOperation.Select, false);
                 UpdateSelection(e.X, true);
             }
             else if (right && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e))
@@ -2343,12 +2373,19 @@ namespace FamiStudio
                     }
                 }
             }
-            else if ((left || right) && editMode == EditionMode.Channel && IsMouseOnSnapButton(e))
+            else if ((left || right) && IsMouseOnSnapResolutionButton(e))
+            {
+                if (left)
+                    snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
+                else
+                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, 0);
+
+                ConditionalInvalidate();
+            }
+            else if (left && IsMouseOnSnapButton(e))
             {
                 if (left)
                     snap = !snap;
-                else
-                    snapMode = snapMode == SnapMode.Always ? SnapMode.Auto : SnapMode.Always;
 
                 ConditionalInvalidate();
             }
@@ -2537,13 +2574,16 @@ namespace FamiStudio
             else if (editMode == EditionMode.Channel && right && GetEffectNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx) && selectedEffectIdx >= 0)
             {
                 var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                if (pattern.Notes.TryGetValue(noteIdx, out var note))
-                    note.ClearEffectValue(selectedEffectIdx);
-                pattern.ClearLastValidNoteCache();
-                PatternChanged?.Invoke(pattern);
-                App.UndoRedoManager.EndTransaction();
-                ConditionalInvalidate();
+                if (pattern != null)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                    if (pattern.Notes.TryGetValue(noteIdx, out var note))
+                        note.ClearEffectValue(selectedEffectIdx);
+                    pattern.ClearLastValidNoteCache();
+                    PatternChanged?.Invoke(pattern);
+                    App.UndoRedoManager.EndTransaction();
+                    ConditionalInvalidate();
+                }
             }
             else if (editMode == EditionMode.DPCM && (left || right) && GetNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx, out noteValue))
             {
@@ -2663,22 +2703,13 @@ namespace FamiStudio
                 ClampScroll();
             }
 
-            int noteIdx = SnapNote((mouseX - whiteKeySizeX + scrollX) / noteSizeX);
+            int noteIdx = (mouseX - whiteKeySizeX + scrollX) / noteSizeX;
 
-            int snapPadCapture = IsSnappingEnabled ? PatternLengthForNoteIndex(captureNoteIdx) - 1 : 0;
-            int snapPadCurrent = IsSnappingEnabled ? PatternLengthForNoteIndex(noteIdx) - 1 : 0;
+            int minSelectionIdx = Math.Min(noteIdx, captureNoteIdx);
+            int maxSelectionIdx = Math.Max(noteIdx, captureNoteIdx);
+            int pad = IsSnappingEnabled ? -1 : 0;
 
-            if (first)
-            {
-                SetSelection(noteIdx, noteIdx + snapPadCurrent);
-            }
-            else
-            {
-                if (noteIdx < captureNoteIdx)
-                    SetSelection(noteIdx, captureNoteIdx + snapPadCapture);
-                else
-                    SetSelection(captureNoteIdx, noteIdx + snapPadCurrent);
-            }
+            SetSelection(SnapNote(minSelectionIdx), SnapNote(maxSelectionIdx, true) + pad);
 
             ConditionalInvalidate();
         }
@@ -2753,6 +2784,12 @@ namespace FamiStudio
             return showEffectsPanel && editMode == EditionMode.Channel && e.X > whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY;
         }
 
+        private bool IsMouseOnSnapResolutionButton(MouseEventArgs e)
+        {
+            return IsSnappingAllowed &&
+                e.X > whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX * 2 && e.X < whiteKeySizeX - (int)bmpSnap.Size.Width - snapIconPosX &&
+                e.Y > snapIconPosY && e.Y < snapIconPosY + (int)bmpSnap.Size.Height;
+        }
         private bool IsMouseOnSnapButton(MouseEventArgs e)
         {
             return IsSnappingAllowed &&
@@ -2791,9 +2828,13 @@ namespace FamiStudio
             {
                 tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan";
             }
+            else if (IsMouseOnSnapResolutionButton(e))
+            {
+                tooltip = "{MouseLeft} Next snap precision {MouseRight} Previous snap precision {MouseWheel} Change snap precision";
+            }
             else if (IsMouseOnSnapButton(e))
             {
-                tooltip = "{MouseLeft} Toggle snapping {Shift} {S} - {MouseRight} Change snap mode (always, auto)";
+                tooltip = "{MouseLeft} Toggle snapping {Shift} {S}";
             }
             else if (IsMouseInTopLeftCorner(e))
             {
@@ -2868,13 +2909,19 @@ namespace FamiStudio
             return Song.GetPatternNoteLength(patternIdx);
         }
 
-        private int SnapNote(int noteIdx)
+        private int SnapNote(int noteIdx, bool roundUp = false)
         {
             if (IsSnappingEnabled)
             {
                 var patternIdx = Song.FindPatternInstanceIndex(noteIdx, out noteIdx);
                 var noteLength = Song.GetPatternNoteLength(patternIdx);
-                return Song.GetPatternStartNote(patternIdx, (noteIdx / noteLength) * noteLength);
+                var snapFactor = SnapResolutionFactors[(int)snapResolution];
+                var snappedNoteIndex = (int)Math.Round(Math.Floor((noteIdx + 0.001) / (noteLength * snapFactor) + (roundUp ? 1 : 0)) * (noteLength * snapFactor));
+
+                if (!roundUp)
+                    snappedNoteIndex = Math.Min(Song.GetPatternLength(patternIdx) - 1, snappedNoteIndex);
+
+                return Song.GetPatternStartNote(patternIdx, snappedNoteIndex);
             }
             else
             {
@@ -3095,19 +3142,31 @@ namespace FamiStudio
         {
             base.OnMouseWheel(e);
 
-            if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
+            if (e.X > whiteKeySizeX)
             {
-                if (ModifierKeys.HasFlag(Keys.Shift))
-                    scrollX -= e.Delta;
-                else
-                    scrollY -= e.Delta;
+                if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
+                {
+                    if (ModifierKeys.HasFlag(Keys.Shift))
+                        scrollX -= e.Delta;
+                    else
+                        scrollY -= e.Delta;
 
-                ClampScroll();
-                ConditionalInvalidate();
+                    ClampScroll();
+                    ConditionalInvalidate();
+                }
+                else if (editMode != EditionMode.DPCM)
+                {
+                    ZoomAtLocation(e.X, e.Delta);
+                }
             }
-            else if (editMode != EditionMode.DPCM)
+            else if (IsMouseOnSnapResolutionButton(e))
             {
-                ZoomAtLocation(e.X, e.Delta);
+                if (e.Delta > 0)
+                    snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
+                else
+                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, 0);
+
+                ConditionalInvalidate();
             }
         }
 

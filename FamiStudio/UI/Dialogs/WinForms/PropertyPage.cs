@@ -484,9 +484,19 @@ namespace FamiStudio
         {
             SuspendLayout();
 
-            const int margin = 5;
-
+            int margin = (int)(5 * RenderTheme.DialogScaling);
             int maxLabelWidth = 0;
+            int defaultLabelHeight = 24;
+
+            // Workaround scaling issue with checkboxes. 
+            // Measure a label and well use this for checkbox.
+            if (RenderTheme.DialogScaling > 1.0f)
+            {
+                Label testLabel = CreateLabel("888");
+                Controls.Add(testLabel);
+                defaultLabelHeight = Math.Max(defaultLabelHeight, testLabel.Height);
+                Controls.Remove(testLabel);
+            }
 
             for (int i = 0; i < properties.Count; i++)
             {
@@ -508,6 +518,19 @@ namespace FamiStudio
             {
                 var prop = properties[i];
                 var height = 0;
+
+                // Hack for checkbox that dont scale with Hi-DPI. 
+                if (RenderTheme.DialogScaling > 1.0f && prop.control is CheckBox)
+                {
+                    prop.control.Height = defaultLabelHeight;
+                    prop.control.BackColor = Color.Green;
+
+                    if (prop.label != null)
+                    {
+                        prop.label.Height = defaultLabelHeight;
+                        prop.label.BackColor = Color.Red;
+                    }
+                }
 
                 if (prop.label != null)
                 {
