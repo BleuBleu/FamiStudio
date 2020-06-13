@@ -103,6 +103,7 @@ namespace FamiStudio
         static IntPtr selAlloc = SelRegisterName("alloc");
         static IntPtr selLength = SelRegisterName("length");
         static IntPtr selBytes = SelRegisterName("bytes");
+        static IntPtr selClearContents = SelRegisterName("clearContents");
         static IntPtr selStringForType = SelRegisterName("stringForType:");
         static IntPtr selSetStringForType = SelRegisterName("setString:forType:");
         static IntPtr selGeneralPasteboard = SelRegisterName("generalPasteboard");
@@ -645,7 +646,7 @@ namespace FamiStudio
 
         public static void ClearPasteboardString()
         {
-            SendVoid(generalPasteboard, selSetStringForType, ToNSString(""), ToNSString("NSStringPboardType"));
+            SendVoid(generalPasteboard, selClearContents);
         }
     };
 }
