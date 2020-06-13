@@ -2122,7 +2122,7 @@ namespace FamiStudio
             Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int minVal, out int maxVal);
 
             for (int i = startFrameIdx; i <= endFrameIdx; i++)
-                EditEnvelope.Values[i] = function(EditEnvelope.Values[i], i - startFrameIdx);
+                EditEnvelope.Values[i] = (sbyte)Utils.Clamp(function(EditEnvelope.Values[i], i - startFrameIdx), minVal, maxVal);
 
             UpdateWavePreset();
             EnvelopeChanged?.Invoke();
@@ -2153,11 +2153,9 @@ namespace FamiStudio
 
         private void IncrementEnvelopeValues(int amount)
         {
-            Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int minVal, out int maxVal);
-
             TransformEnvelopeValues(selectionFrameMin, selectionFrameMax, (val, idx) =>
             {
-                return (sbyte)Utils.Clamp(val + amount, minVal, maxVal);
+                return (sbyte)Utils.Clamp(val + amount, sbyte.MinValue, sbyte.MaxValue);
             });
         }
 

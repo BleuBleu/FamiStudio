@@ -103,7 +103,7 @@ namespace FamiStudio
                     var mem = GetClipboardDataWin32(CF_TEXT);
                     if (mem != IntPtr.Zero)
                     {
-                        var size = Math.Min(8192, GlobalSize(mem));
+                        var size = Math.Min(2048, GlobalSize(mem));
                         var ptr = GlobalLock(mem);
                         buffer = new byte[size];
                         Marshal.Copy(ptr, buffer, 0, size);

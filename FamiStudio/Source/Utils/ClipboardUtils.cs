@@ -14,6 +14,8 @@ namespace FamiStudio
         const uint MagicNumberClipboardEnvelope = 0x21454346; // FCE!
         const uint MagicNumberClipboardPatterns = 0x21504346; // FCP!
 
+        readonly static char[] Seperators = new[] { ' ', '\t', '\r', '\n', ',', ';', '\0' };
+
 #if FAMISTUDIO_LINUX
         static byte[] linuxClipboardData; // Cant copy between FamiStudio instance on Linux.
 #endif
@@ -67,20 +69,29 @@ namespace FamiStudio
         }
 
         public static bool ConstainsNotes    => GetClipboardDataInternal(MagicNumberClipboardNotes,    4) != null;
-        public static bool ConstainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null;
+        public static bool ConstainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null || GetStringEnvelopeData() != null;
         public static bool ConstainsPatterns => GetClipboardDataInternal(MagicNumberClipboardPatterns, 4) != null;
 
-        public static bool ContainsStringEnvelope()
+        public static sbyte[] GetStringEnvelopeData()
         {
-            // TODO: Read envelope values from string.
-            //var str = GetClipboardString();
+            var str = GetClipboardString();
 
-            //if (!string.IsNullOrEmpty(str))
-            //{
+            if (!string.IsNullOrEmpty(str))
+            {
+                var values = new List<sbyte>();
+                var splits = str.Split(Seperators, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var split in splits)
+                {
+                    if (int.TryParse(split, out var i))
+                        values.Add((sbyte)Utils.Clamp(i, sbyte.MinValue, sbyte.MaxValue));
+                    else
+                        return null;
+                }
 
-            //}
+                return values.Count > 0 ? values.ToArray() : null;
+            }
 
-            return false;
+            return null;
         }
 
         private static void SavePatternList(ProjectSaveBuffer serializer, ICollection<Pattern> patterns)
@@ -424,14 +435,18 @@ namespace FamiStudio
 
         public static sbyte[] LoadEnvelopeValues()
         {
+            var values = GetStringEnvelopeData();
+            if (values != null)
+                return values;
+
             var buffer = GetClipboardDataInternal(MagicNumberClipboardEnvelope);
 
             if (buffer == null)
                 return null;
 
             var numValues = BitConverter.ToInt32(buffer, 4);
-            var values = new sbyte[numValues];
 
+            values = new sbyte[numValues];
             for (int i = 0; i < numValues; i++)
                 values[i] = (sbyte)buffer[8 + i];
 
