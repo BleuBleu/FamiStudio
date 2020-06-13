@@ -494,7 +494,7 @@ namespace FamiStudio
             {
                 Label testLabel = CreateLabel("888");
                 Controls.Add(testLabel);
-                defaultLabelHeight = Math.Max(defaultLabelHeight, testLabel.Height);
+                defaultLabelHeight = Math.Max(defaultLabelHeight, testLabel.Height) + 2;
                 Controls.Remove(testLabel);
             }
 
@@ -523,13 +523,8 @@ namespace FamiStudio
                 if (RenderTheme.DialogScaling > 1.0f && prop.control is CheckBox)
                 {
                     prop.control.Height = defaultLabelHeight;
-                    prop.control.BackColor = Color.Green;
-
                     if (prop.label != null)
-                    {
                         prop.label.Height = defaultLabelHeight;
-                        prop.label.BackColor = Color.Red;
-                    }
                 }
 
                 if (prop.label != null)

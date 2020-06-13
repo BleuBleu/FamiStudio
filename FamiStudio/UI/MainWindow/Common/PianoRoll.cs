@@ -1138,12 +1138,7 @@ namespace FamiStudio
                 var newNote = notes[idx];
 
                 if (newNote == null)
-                {
-                    if (mix)
-                        newNote = Note.EmptyNote;
-                    else
-                        return null;
-                }
+                    newNote = Note.EmptyNote;
 
                 if (note == null)
                     note = new Note();
