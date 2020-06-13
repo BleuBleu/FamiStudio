@@ -252,7 +252,7 @@ namespace FamiStudio
         int envelopeValueZoom   = 1;
         int envelopeValueOffset = 0;
 
-        private bool IsSnappingAllowed => App.Project.UsesFamiStudioTempo && editMode == EditionMode.Channel;
+        private bool IsSnappingAllowed => editMode == EditionMode.Channel;
         private bool IsSnappingEnabled => IsSnappingAllowed && snap;
 
         public delegate void ManyPatternChange();
@@ -331,6 +331,7 @@ namespace FamiStudio
             UpdateRenderCoords();
             CenterScroll(patternIdx);
             ClampScroll();
+            ClampMinSnap();
             ConditionalInvalidate();
         }
 
@@ -443,6 +444,12 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private void ClampMinSnap()
+        {
+            if (App.Project.UsesFamiTrackerTempo)
+                snapResolution = (SnapResolution)Math.Max((int)snapResolution, (int)SnapResolution.OneNote);
+        }
+
         private Song Song
         {
             get { return App?.Song; }
@@ -482,6 +489,7 @@ namespace FamiStudio
             currentInstrument = null;
             editInstrument = null;
             noteTooltip = "";
+            ClampMinSnap();
             ClearSelection();
             UpdateRenderCoords();
         }
@@ -2378,7 +2386,7 @@ namespace FamiStudio
                 if (left)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
                 else
-                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, 0);
+                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
 
                 ConditionalInvalidate();
             }
@@ -2914,7 +2922,7 @@ namespace FamiStudio
             if (IsSnappingEnabled)
             {
                 var patternIdx = Song.FindPatternInstanceIndex(noteIdx, out noteIdx);
-                var noteLength = Song.GetPatternNoteLength(patternIdx);
+                var noteLength = Song.Project.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(patternIdx);
                 var snapFactor = SnapResolutionFactors[(int)snapResolution];
                 var snappedNoteIndex = (int)Math.Round(Math.Floor((noteIdx + 0.001) / (noteLength * snapFactor) + (roundUp ? 1 : 0)) * (noteLength * snapFactor));
 
@@ -3164,7 +3172,7 @@ namespace FamiStudio
                 if (e.Delta > 0)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
                 else
-                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, 0);
+                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
 
                 ConditionalInvalidate();
             }
@@ -3261,6 +3269,7 @@ namespace FamiStudio
                 BuildSupportEffectList();
                 UpdateRenderCoords();
                 ClampScroll();
+                ClampMinSnap();
                 ConditionalInvalidate();
 
                 captureOperation = CaptureOperation.None;
