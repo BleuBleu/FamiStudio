@@ -5,10 +5,10 @@
 	- Look at MaxWar wish list.
 		- Copy patterns instead of instancing? How?
 		- Option for no-sound when no-pattern?
-		- MIDI?
+		- MIDI import/export.
 		- BUG: Special paste VS. volume (WAIT GIF, DONT UNDERSTAND!).
 		- Cropped text special paste 150%.
-		- CRASH: envelope.
+		x CRASH: envelope.
 		x CRASH: Copy/paste empty patterns. => Mac Test!
 		x Better folder handling
 		x Time mode change on click.
@@ -19,13 +19,14 @@
 	- Trackpad/pen controls
 		x Send test builds (sunday).
 		- Review scrolling direction on all platforms.
+		- Review MacOs speed + real mouse wheel.
 x Paste-mix (NyxTheShield).
 - Auto snap.
 	x Will need awareness of patterns for custom note sizes.
 	x Selection + drawing + dragging should be enough for good first pass.
+	x Selection snap VS. Fraction.
+	x FamiTracker tempo mode for 1,2,3,4 mode.
 	- Snap stop + release notes?
-	- Selection snap VS. Fraction.
-	- FamiTracker tempo mode for 1,2,3,4 mode.
 	- Max + Linux
 	- TEST A LOT (envelope, DPCM, etc)
 - PAL mode editing.

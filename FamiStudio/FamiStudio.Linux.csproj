@@ -300,6 +300,22 @@
     <Content Include="NotSoFatso.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\Snap1%402x.png" />
+    <EmbeddedResource Include="Resources\Snap1.png" />
+    <EmbeddedResource Include="Resources\Snap1_2%402x.png" />
+    <EmbeddedResource Include="Resources\Snap1_2.png" />
+    <EmbeddedResource Include="Resources\Snap1_3%402x.png" />
+    <EmbeddedResource Include="Resources\Snap1_3.png" />
+    <EmbeddedResource Include="Resources\Snap1_4%402x.png" />
+    <EmbeddedResource Include="Resources\Snap1_4.png" />
+    <EmbeddedResource Include="Resources\Snap2%402x.png" />
+    <EmbeddedResource Include="Resources\Snap2.png" />
+    <EmbeddedResource Include="Resources\Snap3%402x.png" />
+    <EmbeddedResource Include="Resources\Snap3.png" />
+    <EmbeddedResource Include="Resources\Snap4%402x.png" />
+    <EmbeddedResource Include="Resources\Snap4.png" />
+    <EmbeddedResource Include="Resources\Snap%402x.png" />
+    <EmbeddedResource Include="Resources\Snap.png" />
     <EmbeddedResource Include="Resources\Clean%402x.png" />
     <EmbeddedResource Include="Resources\Clean.png" />
     <EmbeddedResource Include="Resources\Dash%402x.png" />
