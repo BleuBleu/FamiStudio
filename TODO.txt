@@ -1,27 +1,26 @@
 2.1.0
 =====
-- Friday:
-	x 2.0.3 HOT FIX!
-	- Look at MaxWar wish list.
-		- Copy patterns instead of instancing? How?
-		- Option for no-sound when no-pattern?
-		- MIDI import/export.
-		x BUG: Special paste VS. volume (WAIT GIF, DONT UNDERSTAND!).
-		x Cropped text special paste 150%.
-		x CRASH: envelope.
-		x CRASH: Copy/paste empty patterns. => Mac Test!
-		x Better folder handling
-		x Time mode change on click.
-		x BUG: ALT + MOUSE WHEEL. (*** VERY HARD TO REPRO.)
-		x BUG: Double right click, replace instrument, CTRL up/down.
-	- Copy paste of text values in envelopes.
-		x Try to use real clipboard on Mac.
-		x Do it!
-		x MacOS
-	- Trackpad/pen controls
-		x Send test builds (sunday).
-		x Review MacOs speed + real mouse wheel.
-		- Review scrolling direction on Linux.
+- MaxWar wish list.
+	x Copy patterns instead of instancing? How?
+	- Copy patterns to other channels.
+	- Option for no-sound when no-pattern?
+	- MIDI import/export.
+	x BUG: Special paste VS. volume (WAIT GIF, DONT UNDERSTAND!).
+	x Cropped text special paste 150%.
+	x CRASH: envelope.
+	x CRASH: Copy/paste empty patterns. => Mac Test!
+	x Better folder handling
+	x Time mode change on click.
+	x BUG: ALT + MOUSE WHEEL. (*** VERY HARD TO REPRO.)
+	x BUG: Double right click, replace instrument, CTRL up/down.
+- Copy paste of text values in envelopes.
+	x Try to use real clipboard on Mac.
+	x Do it!
+	x MacOS
+- Trackpad/pen controls
+	x Send test builds (sunday).
+	x Review MacOs speed + real mouse wheel.
+	- Review scrolling direction on Linux.
 x Paste-mix (NyxTheShield).
 - Auto snap.
 	x Will need awareness of patterns for custom note sizes.
@@ -38,6 +37,21 @@ x Paste-mix (NyxTheShield).
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!
 - Retest snapping with various pattern sizes.
+
+2.1.0 Trailer
+=============
+- Linux port
+- MacOS+Linux MIDI keyboard support
+- FamiTone2 SFX export
+- Improved WAV export
+- Note snapping
+- Trackpad controls
+- Pasting of text values in envelopes
+- Import of instruments from anything
+- New timecode mode
+- Mix paste
+- Duplicate patterns.
+- *** PAL space authoring.
 
 Tweet ideas
 ===========

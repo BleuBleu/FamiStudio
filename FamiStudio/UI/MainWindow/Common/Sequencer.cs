@@ -124,6 +124,8 @@ namespace FamiStudio
         RenderBitmap bmpGhostNote;
         RenderBitmap bmpLoopPoint;
         RenderBitmap bmpCustomLength;
+        RenderBitmap bmpInstanciate;
+        RenderBitmap bmpDuplicate;
 
         public delegate void TrackBarDelegate(int trackIdx, int barIdx);
         public delegate void ChannelDelegate(int channelIdx);
@@ -282,6 +284,8 @@ namespace FamiStudio
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
             bmpLoopPoint = g.CreateBitmapFromResource("LoopSmallFill");
             bmpCustomLength = g.CreateBitmapFromResource("CustomPattern");
+            bmpInstanciate = g.CreateBitmapFromResource("Instance");
+            bmpDuplicate = g.CreateBitmapFromResource("Duplicate");
 
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, trackNameSizeX, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
@@ -307,6 +311,8 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpGhostNote);
             Utils.DisposeAndNullify(ref bmpLoopPoint);
             Utils.DisposeAndNullify(ref bmpCustomLength);
+            Utils.DisposeAndNullify(ref bmpInstanciate);
+            Utils.DisposeAndNullify(ref bmpDuplicate);
             Utils.DisposeAndNullify(ref seekBarBrush);
             Utils.DisposeAndNullify(ref whiteKeyBrush);
             Utils.DisposeAndNullify(ref patternHeaderBrush);
@@ -509,6 +515,12 @@ namespace FamiStudio
                         var anchorOffsetRightX = patternSizeX * (1.0f - selectionDragAnchorPatternFraction);
 
                         g.FillAndDrawRectangle(pt.X - anchorOffsetLeftX, y, pt.X - anchorOffsetLeftX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
+
+                        if (ModifierKeys.HasFlag(Keys.Control))
+                        {
+                            var bmp = ModifierKeys.HasFlag(Keys.Shift) ? bmpDuplicate : bmpInstanciate;
+                            g.DrawBitmap(bmp, pt.X - anchorOffsetLeftX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, y + trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
+                        }
 
                         // Left side
                         for (int p = patternIdx - 1; p >= minSelectedPatternIdx + patternIdxDelta && p >= 0; p--)
@@ -1028,6 +1040,7 @@ namespace FamiStudio
                 else if (captureOperation == CaptureOperation.DragSelection && IsSelectionValid()) // No clue how we end up here with invalid selection.
                 {
                     var copy = ModifierKeys.HasFlag(Keys.Control);
+                    var duplicate = copy && ModifierKeys.HasFlag(Keys.Shift);
                     var noteIdx = (int)((e.X - trackNameSizeX + scrollX) / noteSizeX);
 
                     if (noteIdx >= 0 && noteIdx < Song.GetPatternStartNote(Song.Length))
@@ -1047,7 +1060,12 @@ namespace FamiStudio
                             {
                                 var nj = j + patternIdxDelta;
                                 if (nj >= 0 && nj < Song.Length)
-                                    Song.Channels[i].PatternInstances[nj] = tmpPatterns[j - minSelectedPatternIdx, i - minSelectedChannelIdx];
+                                {
+                                    if (duplicate)
+                                        Song.Channels[i].PatternInstances[nj] = tmpPatterns[j - minSelectedPatternIdx, i - minSelectedChannelIdx].ShallowClone();
+                                    else
+                                        Song.Channels[i].PatternInstances[nj] = tmpPatterns[j - minSelectedPatternIdx, i - minSelectedChannelIdx];
+                                }
                             }
                         }
 
@@ -1179,6 +1197,7 @@ namespace FamiStudio
             if (captureOperation == CaptureOperation.DragSelection)
             {
                 UpdateCursor();
+                ConditionalInvalidate();
             }
         }
 
@@ -1187,6 +1206,7 @@ namespace FamiStudio
             if (captureOperation == CaptureOperation.DragSelection)
             {
                 UpdateCursor();
+                ConditionalInvalidate();
             }
         }
 
