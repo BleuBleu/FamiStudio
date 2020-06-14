@@ -2192,6 +2192,8 @@ namespace FamiStudio
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
+            UpdateCursor();
+
             if (captureOperation != CaptureOperation.None)
                 return;
 
@@ -2277,6 +2279,11 @@ namespace FamiStudio
                     }
                 }
             }
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            UpdateCursor();
         }
 
         private void ShowInstrumentError()
@@ -3088,19 +3095,27 @@ namespace FamiStudio
             }
         }
 
+        private void UpdateCursor()
+        {
+            var pt = PointToClient(Cursor.Position);
+
+            if (editMode == EditionMode.Enveloppe && EditEnvelope.CanResize && (pt.X > whiteKeySizeX && pt.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
+                Cursor.Current = Cursors.SizeWE;
+            else if (captureOperation == CaptureOperation.ChangeEffectValue)
+                Cursor.Current = Cursors.SizeNS;
+            else if (ModifierKeys.HasFlag(Keys.Control) && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
+                Cursor.Current = Cursors.CopyCursor;
+            else
+                Cursor.Current = Cursors.Default;
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
             
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
-            if (editMode == EditionMode.Enveloppe && EditEnvelope.CanResize && (e.X > whiteKeySizeX && e.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
-                Cursor.Current = Cursors.SizeWE;
-            else if (captureOperation == CaptureOperation.ChangeEffectValue)
-                Cursor.Current = Cursors.SizeNS;
-            else
-                Cursor.Current = Cursors.Default;
-
+            UpdateCursor();
             UpdateCaptureOperation(e);
 
             if (middle)
