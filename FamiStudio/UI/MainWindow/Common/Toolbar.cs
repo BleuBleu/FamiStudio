@@ -105,6 +105,8 @@ namespace FamiStudio
         RenderBitmap bmpPause;
         RenderBitmap bmpNtsc;
         RenderBitmap bmpPal;
+        RenderBitmap bmpNtscToPal;
+        RenderBitmap bmpPalToNtsc;
         Button[] buttons = new Button[ButtonCount];
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
@@ -122,6 +124,8 @@ namespace FamiStudio
             bmpPause       = g.CreateBitmapFromResource("Pause");
             bmpNtsc        = g.CreateBitmapFromResource("NTSC");
             bmpPal         = g.CreateBitmapFromResource("PAL");
+            bmpNtscToPal   = g.CreateBitmapFromResource("NTSCToPAL");
+            bmpPalToNtsc   = g.CreateBitmapFromResource("PALToNTSC");
 
             buttons[ButtonNew]       = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { X = 40,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
@@ -215,6 +219,8 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpPause);
             Utils.DisposeAndNullify(ref bmpNtsc);
             Utils.DisposeAndNullify(ref bmpPal);
+            Utils.DisposeAndNullify(ref bmpNtscToPal);
+            Utils.DisposeAndNullify(ref bmpPalToNtsc);
 
             foreach (var b in buttons)
                 Utils.DisposeAndNullify(ref b.Bmp);
@@ -401,7 +407,10 @@ namespace FamiStudio
 
         private RenderBitmap OnMachineGetBitmap()
         {
-            return App.PalMode ? bmpPal : bmpNtsc;
+            if (App.Project.UsesFamiTrackerTempo)
+                return App.PalMode ? bmpPal : bmpNtsc;
+            else
+                return App.PalMode ? bmpNtscToPal : bmpNtsc; // MATTT
         }
 
         private void OnHelp()

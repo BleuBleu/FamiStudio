@@ -35,9 +35,9 @@ namespace FamiStudio
         protected int playNote = 0;
         protected int famitrackerSpeed = 6;
         protected int famitrackerNativeTempo = Song.NativeTempoNTSC;
-        protected byte[] palSkipEnvelope;
-        protected int palSkipEnvelopeIndex;
-        protected int palSkipEnvelopeCounter;
+        protected byte[] tempoEnvelope;
+        protected int tempoEnvelopeIndex;
+        protected int tempoEnvelopeCounter;
         protected bool famitrackerTempo = true;
         protected bool palMode = false;
         protected bool firstFrame = false;
@@ -83,14 +83,14 @@ namespace FamiStudio
             }
             else
             {
-                if (--palSkipEnvelopeCounter <= 0)
+                if (--tempoEnvelopeCounter <= 0)
                 {
-                    palSkipEnvelopeIndex++;
+                    tempoEnvelopeIndex++;
 
-                    if (palSkipEnvelope[palSkipEnvelopeIndex] == 0x80)
-                        palSkipEnvelopeIndex = 1;
+                    if (tempoEnvelope[tempoEnvelopeIndex] == 0x80)
+                        tempoEnvelopeIndex = 1;
 
-                    palSkipEnvelopeCounter = palSkipEnvelope[palSkipEnvelopeIndex];
+                    tempoEnvelopeCounter = tempoEnvelope[tempoEnvelopeIndex];
 
 #if DEBUG
                     var noteLength = song.GetPatternNoteLength(playPattern);
@@ -137,11 +137,11 @@ namespace FamiStudio
                 var newNoteLength = song.GetPatternNoteLength(playPattern);
                 var newPalSkipEnvelope = FamiStudioTempoUtils.GetPalSkipEnvelope(newNoteLength);
 
-                if (newPalSkipEnvelope != palSkipEnvelope || force)
+                if (newPalSkipEnvelope != tempoEnvelope || force)
                 {
-                    palSkipEnvelope = newPalSkipEnvelope;
-                    palSkipEnvelopeCounter = palSkipEnvelope[0];
-                    palSkipEnvelopeIndex = 0;
+                    tempoEnvelope = newPalSkipEnvelope;
+                    tempoEnvelopeCounter = tempoEnvelope[0];
+                    tempoEnvelopeIndex = 0;
                 }
             }
         }

@@ -6,7 +6,7 @@ namespace FamiStudio
 {
     static class FamiStudioTempoUtils
     {
-        private const float FrameTimeMsPAL  = 1000.0f / NesApu.FpsPAL;
+        private const float FrameTimeMsPAL = 1000.0f / NesApu.FpsPAL;
         private const float FrameTimeMsNTSC = 1000.0f / NesApu.FpsNTSC;
 
         // NTSC Note Length  1 Error = 0.15 ms Must run  1 double frames over 6 notes  0/0/0/0/0/1
@@ -28,7 +28,7 @@ namespace FamiStudio
         // NTSC Note Length 17 Error = 0.35 ms Must run 20 double frames over 7 notes  2/3/3/3/3/3/3
         // NTSC Note Length 18 Error = 0.45 ms Must run  3 double frames over 1 notes  3
 
-        // This table gives how a series of notes should perform PAL frame skips
+        // This table gives how a series of notes should run double-frames on PAL 
         // in order to maintain pace with NTSC.
         //
         // For example, for a note that last 10 NTSC frame, the minimum PAL error
@@ -42,7 +42,7 @@ namespace FamiStudio
         // 
         // Thus the entry in this table will be { 1, 2 }.
 
-        private static readonly int[,] PalNotesShortLongSkips =
+        private static readonly int[,] NtscSourcePalTargetLookup =
         {
             { 5, 1 }, // Note length 1
             { 2, 1 }, // Note length 2
@@ -66,6 +66,9 @@ namespace FamiStudio
             { 0, 1 }  // Note length 18
         };
 
+        // This table is the same idea as above, but describes how NTSC should
+        // idle on some frames in order to not go faster than PAL.
+
         // PAL Note Length  1 Error = 0.15 ms (0.15 %) Must skip  1 frames over 5 notes 0/0/0/0/1
         // PAL Note Length  2 Error = 0.30 ms (0.15 %) Must skip  2 frames over 5 notes 0/0/0/1/1
         // PAL Note Length  3 Error = 0.45 ms (0.15 %) Must skip  3 frames over 5 notes 0/0/1/1/1
@@ -85,11 +88,38 @@ namespace FamiStudio
         // PAL Note Length 17 Error = 2.31 ms (0.34 %) Must skip  7 frames over 2 notes 3/4
         // PAL Note Length 18 Error = 1.70 ms (0.16 %) Must skip 11 frames over 3 notes 3/4/4
 
-        private static byte[][] PalSkipEnvelopes = new byte[Song.MaxNoteLength][];
-
-        private static int[] GetDefaultPalSkipFrames(int noteLength)
+        private static readonly int[,] PalSourceNtscTargetLookup =
         {
-            int numSkipFrames = (int)Math.Ceiling(noteLength / 6.0f);
+            { 4, 1 }, // Note length 1
+            { 3, 2 }, // Note length 2
+            { 2, 3 }, // Note length 3
+            { 1, 4 }, // Note length 4
+            { 0, 1 }, // Note length 5
+
+            { 4, 1 }, // Note length 6
+            { 3, 2 }, // Note length 7
+            { 2, 3 }, // Note length 8
+            { 1, 5 }, // Note length 9
+            { 0, 1 }, // Note length 10
+
+            { 4, 1 }, // Note length 11
+            { 3, 2 }, // Note length 12
+            { 2, 3 }, // Note length 13
+            { 1, 4 }, // Note length 14
+            { 0, 1 }, // Note length 15
+
+            { 3, 1 }, // Note length 16
+            { 1, 1 }, // Note length 17
+            { 1, 2 }  // Note length 18
+        };
+
+        private static byte[][] NtscSourcePalTargetTempoEnvelopes = new byte[Song.MaxNoteLength][];
+        private static byte[][] PalSourceNtscTargetTempoEnvelopes = new byte[Song.MaxNoteLength][];
+
+        private static int[] GetDefaultNoteTempoEnvelope(int noteLength, bool pal)
+        {
+            var divider = pal ? 5.0 : 6.0f;
+            int numSkipFrames = (int)Math.Ceiling(noteLength / divider);
 
             var frames = new int[numSkipFrames];
 
@@ -112,15 +142,17 @@ namespace FamiStudio
             return frames;
         }
 
-        private static void BuildPalSkipEnvelopes()
+        private static void BuildTempoEnvelopes(bool pal)
         {
+            var lookup = pal ? PalSourceNtscTargetLookup : NtscSourcePalTargetLookup;
+
             for (var n = 1; n <= Song.MaxNoteLength; n++)
             {
-                var numShortSkips = PalNotesShortLongSkips[n - 1, 0];
-                var numLongSkips  = PalNotesShortLongSkips[n - 1, 1];
-                var numNotes      = numShortSkips + numLongSkips;
+                var numShortSkips = lookup[n - 1, 0];
+                var numLongSkips = lookup[n - 1, 1];
+                var numNotes = numShortSkips + numLongSkips;
 
-                var noteSkipsLong  = GetDefaultPalSkipFrames(n);
+                var noteSkipsLong = GetDefaultNoteTempoEnvelope(n, pal);
                 var noteSkipsShort = new int[noteSkipsLong.Length - 1];
                 Array.Copy(noteSkipsLong, noteSkipsShort, noteSkipsShort.Length);
 
@@ -133,7 +165,7 @@ namespace FamiStudio
 
                     for (int j = 0; j < noteSkips.Length; j++)
                     {
-                        var frameIndex = i* n + noteSkips[j];
+                        var frameIndex = i * n + noteSkips[j];
                         envelope.Add((byte)(frameIndex - lastFrameIndex));
                         lastFrameIndex = frameIndex;
                     }
@@ -148,95 +180,60 @@ namespace FamiStudio
                 envelope.Add((byte)(n - noteSkipsLong[noteSkipsLong.Length - 1] + envelope[0]));
                 envelope.Add(0x80);
 
-                Debug.Assert(envelope[0] >= 2);
+                // MATTT: Review when we have everything working. I think we will need to add + 1 to everything 
+                // once we decrement the counter at the beginning of the frame.
+                //Debug.Assert(envelope[0] >= 2); 
 
-                PalSkipEnvelopes[n - 1] = envelope.ToArray();
+                if (pal)
+                    PalSourceNtscTargetTempoEnvelopes[n - 1] = envelope.ToArray();
+                else
+                    NtscSourcePalTargetTempoEnvelopes[n - 1] = envelope.ToArray();
             }
         }
 
         public static byte[] GetPalSkipEnvelope(int noteLength)
         {
-            return PalSkipEnvelopes[noteLength - 1];
+            return NtscSourcePalTargetTempoEnvelopes[noteLength - 1];
         }
 
         public static void Initialize()
         {
 #if DEBUG
-            DumpNtscInfo();
-            DumpPalInfo();
+            DumpFrameSkipInfo(false);
+            DumpFrameSkipInfo(true);
 #endif
-            BuildPalSkipEnvelopes();
+            BuildTempoEnvelopes(false);
+            BuildTempoEnvelopes(true);
         }
 
 #if DEBUG
-        public static void DumpNtscInfo()
-        {
-            var numNotes    = new int[Song.MaxNoteLength];
-            var frameCounts = new int[Song.MaxNoteLength];
-
-            for (var n = 1; n <= Song.MaxNoteLength; n++)
-            {
-                var bestNumNotes = 0;
-                var bestFrameCount = 0;
-                var minOverallError = 999.9f;
-
-                for (int i = 1; i < 10; i++)
-                {
-                    var durationNTSC = n * i * FrameTimeMsNTSC;
-
-                    var minError = 9999.0f;
-                    var bestLength = 0;
-
-                    for (int j = n * i; j >= 1; j--)
-                    {
-                        var durationPAL = j * FrameTimeMsPAL;
-
-                        var error = Math.Abs(durationNTSC - durationPAL);
-                        if (error < minError)
-                        {
-                            minError = error;
-                            bestLength = j;
-                        }
-                    }
-
-                    if (minError < minOverallError)
-                    {
-                        minOverallError = minError;
-                        bestNumNotes = i;
-                        bestFrameCount = bestLength;
-                    }
-                }
-
-                numNotes[n - 1] = bestNumNotes;
-                frameCounts[n - 1] = bestFrameCount;
-
-                Debug.WriteLine($"NTSC Note Length {n} Error = {minOverallError:0.00} ms ({minOverallError * 100.0f / (float)(n * bestNumNotes * FrameTimeMsNTSC):0.00} %) Must run {n * bestNumNotes - bestFrameCount} double frames over {bestNumNotes} notes in PAL mode.");
-            }
-        }
-
-        public static void DumpPalInfo()
+        public static void DumpFrameSkipInfo(bool pal)
         {
             var numNotes = new int[Song.MaxNoteLength];
             var frameCounts = new int[Song.MaxNoteLength];
+            var frameTimeMsSource = pal ? FrameTimeMsPAL : FrameTimeMsNTSC;
+            var frameTimeMsTarget = !pal ? FrameTimeMsPAL : FrameTimeMsNTSC;
 
             for (var n = 1; n <= Song.MaxNoteLength; n++)
             {
                 var bestNumNotes = 0;
                 var bestFrameCount = 0;
                 var minOverallError = 999.9f;
+                var maxNumNotes = pal ? 6 : 10;
 
-                for (int i = 1; i < 6; i++)
+                for (int i = 1; i < maxNumNotes; i++)
                 {
-                    var durationPAL = n * i * FrameTimeMsPAL;
+                    var durationSource = n * i * frameTimeMsSource;
 
                     var minError = 9999.0f;
                     var bestLength = 0;
+                    var multipler = pal ? 2 : 1;
 
-                    for (int j = n * i * 2; j >= 1; j--)
+                    for (int j = n * i * multipler; j >= 1; j--)
                     {
-                        var durationNTSC = j * FrameTimeMsNTSC;
+                        var durationTarget = j * frameTimeMsTarget;
 
-                        var error = Math.Abs(durationNTSC - durationPAL);
+                        var error = Math.Abs(durationSource - durationTarget);
                         if (error < minError)
                         {
                             minError = error;
@@ -255,7 +252,10 @@ namespace FamiStudio
                 numNotes[n - 1] = bestNumNotes;
                 frameCounts[n - 1] = bestFrameCount;
 
-                Debug.WriteLine($"PAL Note Length {n} Error = {minOverallError:0.00} ms ({minOverallError * 100.0f / (float)(n * bestNumNotes * FrameTimeMsPAL):0.00} %) Must skip {bestFrameCount - n * bestNumNotes} frames over {bestNumNotes} notes in NTSC mode.");
+                if (pal)
+                    Debug.WriteLine($"PAL Note Length {n} Error = {minOverallError:0.00} ms ({minOverallError * 100.0f / (float)(n * bestNumNotes * FrameTimeMsPAL):0.00} %) Must skip {bestFrameCount - n * bestNumNotes} frames over {bestNumNotes} notes in NTSC mode.");
+                else
+                    Debug.WriteLine($"NTSC Note Length {n} Error = {minOverallError:0.00} ms ({minOverallError * 100.0f / (float)(n * bestNumNotes * FrameTimeMsNTSC):0.00} %) Must run {n * bestNumNotes - bestFrameCount} double frames over {bestNumNotes} notes in PAL mode.");
             }
         }
 #endif

@@ -31,8 +31,15 @@ x Paste-mix (NyxTheShield).
 	- Max + Linux
 	- TEST A LOT (envelope, DPCM, etc)
 - PAL mode editing.
+	- Add authoring space (add to FamiStudio text too)
+	- Add txt or icon to tell the space
+	- NSF import of PAL stuff.
+	- FamiStudio -> FamiTracker conversion? Simply set tempo to 125/150.
+	- FamiTracker -> FamiStudio tempo conversion? Derive from tempo, can only convert if 125/150.
+	- Add to NSF driver. (Create tests before, cant break anything).
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 / Linux: Black text on dark BG, can I do anything?
+- BUG: Timecode: Shouldnt change with PAL/NTSC!
 
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!
