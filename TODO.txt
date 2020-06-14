@@ -41,11 +41,12 @@ Testing:
 2.1.0 Trailer
 =============
 - Linux port
-- MacOS+Linux MIDI keyboard support
-- FamiTone2 SFX export
 - Improved WAV export
+- FamiTone2 SFX export
+- Command-line interface
 - Note snapping
 - Trackpad controls
+- MacOS+Linux MIDI keyboard support
 - Pasting of text values in envelopes
 - Import of instruments from anything
 - New timecode mode
