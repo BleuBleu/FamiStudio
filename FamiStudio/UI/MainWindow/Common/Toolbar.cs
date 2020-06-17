@@ -481,16 +481,9 @@ namespace FamiStudio
             }
             else
             {
-                TimeSpan time;
-
-                if (App.Project != null)
-                {
-                    time = TimeSpan.FromMilliseconds(frame * 1000.0 / (App.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
-                }
-                else
-                {
-                    time = TimeSpan.Zero;
-                }
+                TimeSpan time = App.Project != null ? 
+                    TimeSpan.FromMilliseconds(frame * 1000.0 / (App.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC)) :
+                    TimeSpan.Zero;
 
                 var minutesString      = time.Minutes.ToString("D2");
                 var secondsString      = time.Seconds.ToString("D2");

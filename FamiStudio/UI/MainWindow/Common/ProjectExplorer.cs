@@ -1000,7 +1000,7 @@ namespace FamiStudio
                     {
                         if (subButtonType == SubButtonType.Add)
                         {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
                             App.Project.CreateSong();
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
@@ -1134,7 +1134,7 @@ namespace FamiStudio
                         {
                             bool selectNewSong = song == selectedSong;
                             App.Stop();
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
                             App.Project.DeleteSong(song);
                             if (selectNewSong)
                                 selectedSong = App.Project.Songs[0];
@@ -1197,7 +1197,7 @@ namespace FamiStudio
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
 
                 project.Name = dlg.Properties.GetPropertyValue<string>(0);
                 project.Author = dlg.Properties.GetPropertyValue<string>(1);
@@ -1309,7 +1309,7 @@ namespace FamiStudio
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
 
                 App.Stop();
                 App.Seek(0);

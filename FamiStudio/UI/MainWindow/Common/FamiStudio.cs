@@ -207,6 +207,26 @@ namespace FamiStudio
             ToolBar.DisplayWarning(msg, beep);
         }
 
+        private void UndoRedoManager_PreUndoRedo(TransactionScope scope)
+        {
+            // Special category for stuff that is so important, we should stop the song.
+            if (scope == TransactionScope.ProjectProperties)
+            {
+                Stop();
+                StopInstrumentPlayer();
+                Seek(0);
+            }
+        }
+
+        private void UndoRedoManager_PostUndoRedo(TransactionScope scope)
+        {
+            if (scope == TransactionScope.ProjectProperties)
+            {
+                palPlayback = project.PalMode;
+                StartInstrumentPlayer();
+            }
+        }
+
         private void UndoRedoManager_Updated()
         {
             ToolBar.Invalidate();
@@ -233,6 +253,8 @@ namespace FamiStudio
                     }
                 }
 
+                undoRedoManager.PreUndoRedo  -= UndoRedoManager_PreUndoRedo;
+                undoRedoManager.PostUndoRedo -= UndoRedoManager_PostUndoRedo;
                 undoRedoManager.Updated -= UndoRedoManager_Updated;
                 undoRedoManager = null;
                 project = null;
@@ -263,6 +285,8 @@ namespace FamiStudio
 			palPlayback = project.PalMode;
 
             undoRedoManager = new UndoRedoManager(project, this);
+            undoRedoManager.PreUndoRedo  += UndoRedoManager_PreUndoRedo;
+            undoRedoManager.PostUndoRedo += UndoRedoManager_PostUndoRedo;
             undoRedoManager.Updated += UndoRedoManager_Updated;
 
             songPlayer.CurrentFrame = 0;
