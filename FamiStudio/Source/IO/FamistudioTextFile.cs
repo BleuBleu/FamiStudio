@@ -20,10 +20,11 @@ namespace FamiStudio
             var versionString = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
             var projectLine = $"Project Version=\"{versionString}\" TempoMode=\"{Project.TempoModeNames[project.TempoMode]}\"";
 
-            if (project.Name      != "")    projectLine += $" Name=\"{project.Name}\"";
-            if (project.Author    != "")    projectLine += $" Author=\"{project.Author}\"";
-            if (project.Copyright != "")    projectLine += $" Copyright=\"{project.Copyright}\"";
-            if (project.UsesExpansionAudio) projectLine += $" Expansion=\"{Project.ExpansionShortNames[project.ExpansionAudio]}\"";
+            if (project.Name      != "")     projectLine += $" Name=\"{project.Name}\"";
+            if (project.Author    != "")     projectLine += $" Author=\"{project.Author}\"";
+            if (project.Copyright != "")     projectLine += $" Copyright=\"{project.Copyright}\"";
+            if (project.UsesExpansionAudio)  projectLine += $" Expansion=\"{Project.ExpansionShortNames[project.ExpansionAudio]}\"";
+            if (project.PalMode)             projectLine += $" PAL=\"{true}\"";
 
             lines.Add(projectLine);
 
@@ -232,6 +233,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
                             if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudio(Array.IndexOf(Project.ExpansionShortNames, expansion));
                             if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = Array.IndexOf(Project.TempoModeNames, tempoMode);
+                            if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
                             break;
                         }
                         case "DPCMSample":

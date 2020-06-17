@@ -179,10 +179,6 @@ namespace FamiStudio
         public const float FpsPAL  = 50.0070f;
         public const float FpsNTSC = 60.0988f;
 
-#if DEBUG
-        public static bool seeking = false;
-#endif
-
         public static readonly ushort[]   NoteTableNTSC    = new ushort[97];
         public static readonly ushort[]   NoteTablePAL     = new ushort[97];
         public static readonly ushort[]   NoteTableVrc6Saw = new ushort[97];

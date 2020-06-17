@@ -1189,7 +1189,9 @@ namespace FamiStudio
             dlg.Properties.AddStringList("Expansion Audio :", Project.ExpansionNames, project.ExpansionAudioName, CommonTooltips.ExpansionAudio); // 3
             dlg.Properties.AddIntegerRange("Channels :", project.ExpansionNumChannels, 1, 8, CommonTooltips.ExpansionNumChannels); // 4 (Namco)
             dlg.Properties.AddStringList("Tempo Mode :", Project.TempoModeNames, Project.TempoModeNames[project.TempoMode], CommonTooltips.TempoMode); // 5
+            dlg.Properties.AddStringList("Authoring Machine :", Project.MachineNames, Project.MachineNames[project.PalMode ? 1 : 0], CommonTooltips.AuthoringMachine); // 6
             dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionN163);
+            dlg.Properties.SetPropertyEnabled(6, project.UsesFamiStudioTempo);
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             dlg.Properties.Build();
 
@@ -1201,13 +1203,15 @@ namespace FamiStudio
                 project.Author = dlg.Properties.GetPropertyValue<string>(1);
                 project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
 
-                var tempoMode = Array.IndexOf(Project.TempoModeNames, dlg.Properties.GetPropertyValue<string>(5));
-                var expansion = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
-                var numChannels = dlg.Properties.GetPropertyValue<int>(4);
+                var tempoMode    = Array.IndexOf(Project.TempoModeNames, dlg.Properties.GetPropertyValue<string>(5));
+                var expansion    = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
+                var palAuthoring = Array.IndexOf(Project.MachineNames,   dlg.Properties.GetPropertyValue<string>(6)) == 1;
+                var numChannels  = dlg.Properties.GetPropertyValue<int>(4);
 
-                var changedTempoMode   = tempoMode != project.TempoMode;
-                var changedExpansion   = expansion != project.ExpansionAudio;
-                var changedNumChannels = numChannels != project.ExpansionNumChannels;
+                var changedTempoMode        = tempoMode    != project.TempoMode;
+                var changedExpansion        = expansion    != project.ExpansionAudio;
+                var changedNumChannels      = numChannels  != project.ExpansionNumChannels;
+                var changedAuthoringMachine = palAuthoring != project.PalMode;
 
                 if (changedExpansion || changedNumChannels)
                 {
@@ -1244,8 +1248,34 @@ namespace FamiStudio
                     Reset();
                 }
 
+                if (changedAuthoringMachine && project.UsesFamiStudioTempo)
+                {
+                    project.PalMode = palAuthoring;
+                    App.PalPlayback = palAuthoring;
+                }
+
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();
+            }
+        }
+
+        private void ProjectProperties_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            var noExpansion = props.GetPropertyValue<string>(3) == Project.ExpansionNames[Project.ExpansionNone];
+
+            if (idx == 3) // Expansion
+            {
+                props.SetPropertyEnabled(4, (string)value == Project.ExpansionNames[Project.ExpansionN163]);
+                props.SetPropertyEnabled(6, props.GetPropertyValue<string>(5) == "FamiStudio" && noExpansion);
+
+                if (noExpansion)
+                    props.SetStringListIndex(6, App.Project.PalMode ? 1 : 0);
+                else
+                    props.SetStringListIndex(6, 0);
+            }
+            else if (idx == 5) // Tempo Mode
+            {
+                props.SetPropertyEnabled(6, (string)value == Project.TempoModeNames[Project.TempoFamiStudio]);
             }
         }
 
@@ -1433,14 +1463,6 @@ namespace FamiStudio
                     OnMouseDown(e);
                 }
 #endif
-            }
-        }
-
-        private void ProjectProperties_PropertyChanged(PropertyPage props, int idx, object value)
-        {
-            if (idx == 3)
-            {
-                props.SetPropertyEnabled(4, (string)value == Project.ExpansionNames[Project.ExpansionN163]);
             }
         }
 

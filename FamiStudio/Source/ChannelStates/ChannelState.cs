@@ -12,7 +12,6 @@ namespace FamiStudio
         protected Envelope[] envelopes = new Envelope[Envelope.Count];
         protected int[] envelopeIdx = new int[Envelope.Count];
         protected int[] envelopeValues = new int[Envelope.Count];
-        protected bool palMode;
         protected bool customRelease = false;
         protected bool noteTriggered = false;
         protected ushort[] noteTable = null;
@@ -27,7 +26,6 @@ namespace FamiStudio
         {
             apuIdx = apu;
             channelType = type;
-            palMode = pal;
             maximumPeriod = NesApu.GetPitchLimitForChannelType(channelType);
             noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
             note.Value = Note.NoteStop;

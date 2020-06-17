@@ -397,7 +397,7 @@ namespace FamiStudio
 
         private void OnMachine()
         {
-            App.PalMode = !App.PalMode;
+            App.PalPlayback = !App.PalPlayback;
         }
 
         private bool OnMachineEnabled()
@@ -407,10 +407,21 @@ namespace FamiStudio
 
         private RenderBitmap OnMachineGetBitmap()
         {
-            if (App.Project.UsesFamiTrackerTempo)
-                return App.PalMode ? bmpPal : bmpNtsc;
+            if (App.Project == null)
+            {
+                return bmpNtsc;
+            }
+            else if (App.Project.UsesFamiTrackerTempo)
+            {
+                return App.PalPlayback ? bmpPal : bmpNtsc;
+            }
             else
-                return App.PalMode ? bmpNtscToPal : bmpNtsc; // MATTT
+            {
+                if (App.Project.PalMode)
+                    return App.PalPlayback ? bmpPal : bmpPalToNtsc;
+                else
+                    return App.PalPlayback ? bmpNtscToPal : bmpNtsc;
+            }
         }
 
         private void OnHelp()
@@ -469,7 +480,7 @@ namespace FamiStudio
             }
             else
             {
-                var fps = App.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC;
+                var fps = App.PalPlayback ? NesApu.FpsPAL : NesApu.FpsNTSC;
                 var totalMilliseconds = frame * 1000.0 / fps;
                 var time = TimeSpan.FromMilliseconds(totalMilliseconds);
 

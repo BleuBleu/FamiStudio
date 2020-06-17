@@ -796,13 +796,15 @@ namespace FamiStudio
             if (nsf == null)
                 return null;
 
-            var numFrames = duration * (NsfIsPal(nsf) != 0 ? 50 : 60);
+            var palSource = (NsfIsPal(nsf) & 1) == 1;
+            var numFrames = duration * (palSource ? 50 : 60);
 
             project = new Project();
 
             project.Name      = Marshal.PtrToStringAnsi(NsfGetTitle(nsf));
             project.Author    = Marshal.PtrToStringAnsi(NsfGetArtist(nsf));
             project.Copyright = Marshal.PtrToStringAnsi(NsfGetCopyright(nsf));
+            project.PalMode   = palSource;
 
             switch (NsfGetExpansion(nsf))
             {

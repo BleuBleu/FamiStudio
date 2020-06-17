@@ -6,194 +6,166 @@ namespace FamiStudio
 {
     static class FamiStudioTempoUtils
     {
-        private const float FrameTimeMsPAL = 1000.0f / NesApu.FpsPAL;
-        private const float FrameTimeMsNTSC = 1000.0f / NesApu.FpsNTSC;
+        //NTSC Note Length  1 Error = 0.15 ms (0.15 %). Must run  1 double frames over 6 notes in PAL mode.
+        //NTSC Note Length  2 Error = 0.15 ms (0.15 %). Must run  1 double frames over 3 notes in PAL mode.
+        //NTSC Note Length  3 Error = 0.15 ms (0.15 %). Must run  1 double frames over 2 notes in PAL mode.
+        //NTSC Note Length  4 Error = 0.30 ms (0.15 %). Must run  2 double frames over 3 notes in PAL mode.
+        //NTSC Note Length  5 Error = 0.75 ms (0.15 %). Must run  5 double frames over 6 notes in PAL mode.
+        //NTSC Note Length  6 Error = 0.15 ms (0.15 %). Must run  1 double frames over 1 notes in PAL mode.
+        //NTSC Note Length  7 Error = 1.05 ms (0.15 %). Must run  7 double frames over 6 notes in PAL mode.
+        //NTSC Note Length  8 Error = 0.60 ms (0.15 %). Must run  4 double frames over 3 notes in PAL mode.
+        //NTSC Note Length  9 Error = 0.45 ms (0.15 %). Must run  3 double frames over 2 notes in PAL mode.
+        //NTSC Note Length 10 Error = 0.75 ms (0.15 %). Must run  5 double frames over 3 notes in PAL mode.
+        //NTSC Note Length 11 Error = 1.65 ms (0.15 %). Must run 11 double frames over 6 notes in PAL mode.
+        //NTSC Note Length 12 Error = 0.30 ms (0.15 %). Must run  2 double frames over 1 notes in PAL mode.
+        //NTSC Note Length 13 Error = 1.96 ms (0.15 %). Must run 13 double frames over 6 notes in PAL mode.
+        //NTSC Note Length 14 Error = 1.05 ms (0.15 %). Must run  7 double frames over 3 notes in PAL mode.
+        //NTSC Note Length 15 Error = 0.75 ms (0.15 %). Must run  5 double frames over 2 notes in PAL mode.
+        //NTSC Note Length 16 Error = 1.20 ms (0.15 %). Must run  8 double frames over 3 notes in PAL mode.
+        //NTSC Note Length 17 Error = 2.56 ms (0.15 %). Must run 17 double frames over 6 notes in PAL mode.
+        //NTSC Note Length 18 Error = 0.45 ms (0.15 %). Must run  3 double frames over 1 notes in PAL mode.
 
-        // NTSC Note Length  1 Error = 0.15 ms Must run  1 double frames over 6 notes  0/0/0/0/0/1
-        // NTSC Note Length  2 Error = 0.15 ms Must run  1 double frames over 3 notes  0/0/1
-        // NTSC Note Length  3 Error = 0.15 ms Must run  1 double frames over 2 notes  0/1
-        // NTSC Note Length  4 Error = 0.30 ms Must run  2 double frames over 3 notes  0/1/1
-        // NTSC Note Length  5 Error = 0.75 ms Must run  5 double frames over 6 notes  0/1/1/1/1/1
-        // NTSC Note Length  6 Error = 0.15 ms Must run  1 double frames over 1 notes  1
-        // NTSC Note Length  7 Error = 1.05 ms Must run  7 double frames over 6 notes  1/1/1/1/1/2
-        // NTSC Note Length  8 Error = 0.60 ms Must run  4 double frames over 3 notes  1/1/2
-        // NTSC Note Length  9 Error = 0.45 ms Must run  3 double frames over 2 notes  1/2
-        // NTSC Note Length 10 Error = 0.75 ms Must run  5 double frames over 3 notes  1/2/2
-        // NTSC Note Length 11 Error = 1.65 ms Must run 11 double frames over 6 notes  1/2/2/2/2/2
-        // NTSC Note Length 12 Error = 0.30 ms Must run  2 double frames over 1 notes  2
-        // NTSC Note Length 13 Error = 1.70 ms Must run 11 double frames over 5 notes  2/2/2/2/3
-        // NTSC Note Length 14 Error = 1.05 ms Must run  7 double frames over 3 notes  2/2/3
-        // NTSC Note Length 15 Error = 0.75 ms Must run  5 double frames over 2 notes  2/3
-        // NTSC Note Length 16 Error = 1.20 ms Must run  8 double frames over 3 notes  2/3/3
-        // NTSC Note Length 17 Error = 0.35 ms Must run 20 double frames over 7 notes  2/3/3/3/3/3/3
-        // NTSC Note Length 18 Error = 0.45 ms Must run  3 double frames over 1 notes  3
-
-        // This table gives how a series of notes should run double-frames on PAL 
-        // in order to maintain pace with NTSC.
-        //
-        // For example, for a note that last 10 NTSC frame, the minimum PAL error
-        // is when skipping 5 frames over 3 notes (30 NTSC frames):
-        //
-        //   30 * 16.64 ~ 25 * 20.0 (0.8ms error over 30 frames)
-        //
-        // To distribute these 5 frames over 3 notes:
-        //   - First note should skip 1 frame
-        //   - Second and & Thirds note should skip 2 frames.
-        // 
-        // Thus the entry in this table will be { 1, 2 }.
-
-        private static readonly int[,] NtscSourcePalTargetLookup =
+        // The note where the bit is set will be inaudible.
+        private static readonly int[][] NtscSourcePalTargetLookup = 
         {
-            { 5, 1 }, // Note length 1
-            { 2, 1 }, // Note length 2
-            { 1, 1 }, // Note length 3
-            { 1, 2 }, // Note length 4
-            { 1, 5 }, // Note length 5
-            { 0, 1 }, // Note length 6
-
-            { 5, 1 }, // Note length 7
-            { 2, 1 }, // Note length 8
-            { 1, 1 }, // Note length 9
-            { 1, 2 }, // Note length 10
-            { 1, 5 }, // Note length 11
-            { 0, 1 }, // Note length 12
-
-            { 4, 1 }, // Note length 13
-            { 2, 1 }, // Note length 14
-            { 1, 1 }, // Note length 15
-            { 1, 2 }, // Note length 16
-            { 1, 6 }, // Note length 17
-            { 0, 1 }  // Note length 18
+            /*  1 ( 1 over 6) */ new [] { 0b0,0b0,0b0,0b0,0b0,0b1 },
+            /*  2 ( 1 over 3) */ new [] { 0b00,0b00,0b01 },
+            /*  3 ( 1 over 2) */ new [] { 0b000,0b010 },
+            /*  4 ( 2 over 3) */ new [] { 0b0000,0b0100,0b0100 },
+            /*  5 ( 5 over 6) */ new [] { 0b00000,0b00100,0b00100,0b00100,0b00100,0b00100 },
+            /*  6 ( 1 over 1) */ new [] { 0b001000 },
+            /*  7 ( 7 over 6) */ new [] { 0b0010000,0b0010000,0b0010000,0b0010000,0b0010000,0b0010100 },
+            /*  8 ( 4 over 3) */ new [] { 0b00100000,0b00100000,0b00100100 },
+            /*  9 ( 3 over 2) */ new [] { 0b001000000,0b001000100 },
+            /* 10 ( 5 over 3) */ new [] { 0b0010000000,0b0010000100,0b0010000100 },
+            /* 11 (11 over 6) */ new [] { 0b00100000000,0b00100000100,0b00100000100,0b00100000100,0b00100000100,0b00100000100 },
+            /* 12 ( 2 over 1) */ new [] { 0b001000001000 },
+            /* 13 (13 over 6) */ new [] { 0b0010001000000,0b0010001000000,0b0010001000000,0b0010001000000,0b0010001000000,0b0010001000100 },
+            /* 14 ( 7 over 3) */ new [] { 0b00100010000000,0b00100010000000,0b00100010000100 },
+            /* 15 ( 5 over 2) */ new [] { 0b001000010000000,0b001000010000100 },
+            /* 16 ( 8 over 3) */ new [] { 0b0010000010000000,0b0001000010000100,0b0001000010000100 }, 
+            /* 17 (17 over 6) */ new [] { 0b00100000100000000,0b00100000100000100,0b00100000100000100,0b00100000100000100,0b00100000100000100,0b00100000100000100 }, 
+            /* 18 ( 3 over 1) */ new [] { 0b001000001000001000 },
         };
 
-        // This table is the same idea as above, but describes how NTSC should
-        // idle on some frames in order to not go faster than PAL.
+        // PAL Note Length  1 Error = 0.15 ms (0.15 %). Must skip  1 frames over 5 notes in NTSC mode.
+        // PAL Note Length  2 Error = 0.30 ms (0.15 %). Must skip  2 frames over 5 notes in NTSC mode.
+        // PAL Note Length  3 Error = 0.45 ms (0.15 %). Must skip  3 frames over 5 notes in NTSC mode.
+        // PAL Note Length  4 Error = 0.60 ms (0.15 %). Must skip  4 frames over 5 notes in NTSC mode.
+        // PAL Note Length  5 Error = 0.15 ms (0.15 %). Must skip  1 frames over 1 notes in NTSC mode.
+        // PAL Note Length  6 Error = 0.90 ms (0.15 %). Must skip  6 frames over 5 notes in NTSC mode.
+        // PAL Note Length  7 Error = 1.05 ms (0.15 %). Must skip  7 frames over 5 notes in NTSC mode.
+        // PAL Note Length  8 Error = 1.20 ms (0.15 %). Must skip  8 frames over 5 notes in NTSC mode.
+        // PAL Note Length  9 Error = 1.35 ms (0.15 %). Must skip  9 frames over 5 notes in NTSC mode.
+        // PAL Note Length 10 Error = 0.30 ms (0.15 %). Must skip  2 frames over 1 notes in NTSC mode.
+        // PAL Note Length 11 Error = 1.65 ms (0.15 %). Must skip 11 frames over 5 notes in NTSC mode.
+        // PAL Note Length 12 Error = 1.80 ms (0.15 %). Must skip 12 frames over 5 notes in NTSC mode.
+        // PAL Note Length 13 Error = 1.96 ms (0.15 %). Must skip 13 frames over 5 notes in NTSC mode.
+        // PAL Note Length 14 Error = 2.11 ms (0.15 %). Must skip 14 frames over 5 notes in NTSC mode.
+        // PAL Note Length 15 Error = 0.45 ms (0.15 %). Must skip  3 frames over 1 notes in NTSC mode.
+        // PAL Note Length 16 Error = 2.41 ms (0.15 %). Must skip 16 frames over 5 notes in NTSC mode.
+        // PAL Note Length 17 Error = 2.56 ms (0.15 %). Must skip 17 frames over 5 notes in NTSC mode.
+        // PAL Note Length 18 Error = 2.71 ms (0.15 %). Must skip 18 frames over 5 notes in NTSC mode.
 
-        // PAL Note Length  1 Error = 0.15 ms (0.15 %) Must skip  1 frames over 5 notes 0/0/0/0/1
-        // PAL Note Length  2 Error = 0.30 ms (0.15 %) Must skip  2 frames over 5 notes 0/0/0/1/1
-        // PAL Note Length  3 Error = 0.45 ms (0.15 %) Must skip  3 frames over 5 notes 0/0/1/1/1
-        // PAL Note Length  4 Error = 0.60 ms (0.15 %) Must skip  4 frames over 5 notes 0/1/1/1/1
-        // PAL Note Length  5 Error = 0.15 ms (0.15 %) Must skip  1 frames over 1 notes 1
-        // PAL Note Length  6 Error = 0.90 ms (0.15 %) Must skip  6 frames over 5 notes 1/1/1/1/2
-        // PAL Note Length  7 Error = 1.05 ms (0.15 %) Must skip  7 frames over 5 notes 1/1/1/2/2
-        // PAL Note Length  8 Error = 1.20 ms (0.15 %) Must skip  8 frames over 5 notes 1/1/2/2/2
-        // PAL Note Length  9 Error = 1.35 ms (0.15 %) Must skip  9 frames over 5 notes 1/2/2/2/2
-        // PAL Note Length 10 Error = 0.30 ms (0.15 %) Must skip  2 frames over 1 notes 2
-        // PAL Note Length 11 Error = 1.65 ms (0.15 %) Must skip 11 frames over 5 notes 2/2/2/2/3
-        // PAL Note Length 12 Error = 1.80 ms (0.15 %) Must skip 12 frames over 5 notes 2/2/2/3/3
-        // PAL Note Length 13 Error = 1.96 ms (0.15 %) Must skip 13 frames over 5 notes 2/2/3/3/3
-        // PAL Note Length 14 Error = 2.11 ms (0.15 %) Must skip 14 frames over 5 notes 2/3/3/3/3
-        // PAL Note Length 15 Error = 0.45 ms (0.15 %) Must skip  3 frames over 1 notes 3
-        // PAL Note Length 16 Error = 1.40 ms (0.11 %) Must skip 13 frames over 4 notes 3/3/3/4
-        // PAL Note Length 17 Error = 2.31 ms (0.34 %) Must skip  7 frames over 2 notes 3/4
-        // PAL Note Length 18 Error = 1.70 ms (0.16 %) Must skip 11 frames over 3 notes 3/4/4
-
-        private static readonly int[,] PalSourceNtscTargetLookup =
+        // The note where the bit is set, the engine will take a 1 frame pause.
+        private static readonly int[][] PalSourceNtscTargetLookup =
         {
-            { 4, 1 }, // Note length 1
-            { 3, 2 }, // Note length 2
-            { 2, 3 }, // Note length 3
-            { 1, 4 }, // Note length 4
-            { 0, 1 }, // Note length 5
-
-            { 4, 1 }, // Note length 6
-            { 3, 2 }, // Note length 7
-            { 2, 3 }, // Note length 8
-            { 1, 5 }, // Note length 9
-            { 0, 1 }, // Note length 10
-
-            { 4, 1 }, // Note length 11
-            { 3, 2 }, // Note length 12
-            { 2, 3 }, // Note length 13
-            { 1, 4 }, // Note length 14
-            { 0, 1 }, // Note length 15
-
-            { 3, 1 }, // Note length 16
-            { 1, 1 }, // Note length 17
-            { 1, 2 }  // Note length 18
+            /*  1 ( 1 over 5) */ new [] { 0b0,0b0,0b0,0b0,0b1 },
+            /*  2 ( 2 over 5) */ new [] { 0b00,0b00,0b00,0b00,0b01 },
+            /*  3 ( 3 over 5) */ new [] { 0b000,0b000,0b010,0b010,0b010 },
+            /*  4 ( 4 over 5) */ new [] { 0b0000,0b0100,0b0100,0b0100,0b0100 },
+            /*  5 ( 1 over 1) */ new [] { 0b00100 },
+            /*  6 ( 6 over 5) */ new [] { 0b010000,0b010000,0b010000,0b010000,0b010010 },
+            /*  7 ( 7 over 5) */ new [] { 0b0100000,0b0100000,0b0100000,0b0100010,0b0100010 },
+            /*  8 ( 8 over 5) */ new [] { 0b00100000,0b00100000,0b00100010,0b00100010,0b00100010 },
+            /*  9 ( 9 over 5) */ new [] { 0b010000000,0b010000100,0b010000100,0b010000100,0b010000100 },
+            /* 10 ( 2 over 1) */ new [] { 0b0010000100 },
+            /* 11 (11 over 5) */ new [] { 0b00100000100,0b00100000100,0b00100000100,0b00100000100,0b00100100100 },
+            /* 12 (12 over 5) */ new [] { 0b001000000100,0b001000000100,0b001000000100,0b001000100100,0b001000100100 },
+            /* 13 (13 over 5) */ new [] { 0b0010000000100,0b0010000000100,0b0010001000100,0b0010001000100,0b0010001000100 },
+            /* 14 (14 over 5) */ new [] { 0b00100000000100,0b00100010000100,0b00100010000100,0b00100010000100,0b00100010000100 },
+            /* 15 ( 3 over 1) */ new [] { 0b001000010000100 },
+            /* 16 (16 over 5) */ new [] { 0b0010000000100010,0b0010000000100010,0b0010000000100010,0b0010000000100010,0b0010001000100010 },
+            /* 17 (17 over 5) */ new [] { 0b00100000001000100,0b00100000001000100,0b00100000001000100,0b00100010001000100,0b00100010001000100 },
+            /* 18 (18 over 5) */ new [] { 0b001000000010000100,0b001000000010000100,0b001000100010000100,0b001000100010000100,0b001000100010000100 }
         };
 
-        private static byte[][] NtscSourcePalTargetTempoEnvelopes = new byte[Song.MaxNoteLength][];
-        private static byte[][] PalSourceNtscTargetTempoEnvelopes = new byte[Song.MaxNoteLength][];
-
-        private static int[] GetDefaultNoteTempoEnvelope(int noteLength, bool pal)
-        {
-            var divider = pal ? 5.0 : 6.0f;
-            int numSkipFrames = (int)Math.Ceiling(noteLength / divider);
-
-            var frames = new int[numSkipFrames];
-
-            if (noteLength == 2)
-            {
-                frames[0] = 1;
-            }
-            else
-            {
-                // By default, put the skip frames in the middle of the notes, this is
-                // where its least likely to have anything interesting (attacks tend
-                // to be at the beginning, stop notes at the end).
-                for (int i = 0; i < numSkipFrames; i++)
-                {
-                    float ratio = (i + 0.5f) / (numSkipFrames);
-                    frames[i] = (int)Math.Round(ratio * (noteLength - 1));
-                }
-            }
-
-            return frames;
-        }
+        private static byte[][] NtscToPalTempoEnvelopes = new byte[Song.MaxNoteLength][];
+        private static byte[][] PalToNtscTempoEnvelopes = new byte[Song.MaxNoteLength][];
 
         private static void BuildTempoEnvelopes(bool pal)
         {
             var lookup = pal ? PalSourceNtscTargetLookup : NtscSourcePalTargetLookup;
 
-            for (var n = 1; n <= Song.MaxNoteLength; n++)
+            for (int i = 0; i < lookup.Length; i++)
             {
-                var numShortSkips = lookup[n - 1, 0];
-                var numLongSkips = lookup[n - 1, 1];
-                var numNotes = numShortSkips + numLongSkips;
-
-                var noteSkipsLong = GetDefaultNoteTempoEnvelope(n, pal);
-                var noteSkipsShort = new int[noteSkipsLong.Length - 1];
-                Array.Copy(noteSkipsLong, noteSkipsShort, noteSkipsShort.Length);
-
+                var noteLength = i + 1;
+                var frames = lookup[i];
+                var totalFrames = noteLength * frames.Length;
+                var numBitSets = 0;
+                var lastFrameIndex = -1;
+                var firstFrameIndex = -1;
                 var envelope = new List<byte>();
+                var sum = 0;
 
-                var lastFrameIndex = 0;
-                for (int i = 0; i < numNotes; i++)
+                for (int n = 0; n < frames.Length; n++)
                 {
-                    var noteSkips = i >= numShortSkips ? noteSkipsLong : noteSkipsShort;
+                    var bitPattern = frames[n];
 
-                    for (int j = 0; j < noteSkips.Length; j++)
+                    for (int f = 0, b = 1 << i; f < noteLength; f++, b >>= 1)
                     {
-                        var frameIndex = i * n + noteSkips[j];
-                        envelope.Add((byte)(frameIndex - lastFrameIndex));
-                        lastFrameIndex = frameIndex;
+                        if ((bitPattern & b) != 0)
+                        {
+                            var frameIndex = n * noteLength + f;
+                            var frameDelta = frameIndex - lastFrameIndex;
+                            envelope.Add((byte)(frameDelta + (pal ? 1 : -1)));
+                            sum += frameDelta;
+                            lastFrameIndex = frameIndex;
+                            if (firstFrameIndex < 0) firstFrameIndex = frameIndex;
+                        }
                     }
+
+                    numBitSets += Utils.NumberOfSetBits(bitPattern);
                 }
 
-                int sum = 0;
-                for (int i = 0; i < envelope.Count; i++)
-                    sum += envelope[i];
+                envelope[0] = (byte)(envelope[0] + (pal ? -1 : 1));
 
-                Debug.Assert(sum + n - noteSkipsLong[noteSkipsLong.Length - 1] == n * numNotes);
+                var remainingFrames = totalFrames - sum;
 
-                envelope.Add((byte)(n - noteSkipsLong[noteSkipsLong.Length - 1] + envelope[0]));
+                if (remainingFrames != 0)
+                    envelope.Add((byte)(remainingFrames + firstFrameIndex + 1 + (pal ? 1 : -1)));
                 envelope.Add(0x80);
 
-                // MATTT: Review when we have everything working. I think we will need to add + 1 to everything 
-                // once we decrement the counter at the beginning of the frame.
-                //Debug.Assert(envelope[0] >= 2); 
+                Debug.Assert(envelope[0] > 1);
 
                 if (pal)
-                    PalSourceNtscTargetTempoEnvelopes[n - 1] = envelope.ToArray();
+                    PalToNtscTempoEnvelopes[i] = envelope.ToArray();
                 else
-                    NtscSourcePalTargetTempoEnvelopes[n - 1] = envelope.ToArray();
+                    NtscToPalTempoEnvelopes[i] = envelope.ToArray();
+
+                Debug.WriteLine($"{(pal ? "PAL" : "NTSC")} note length {noteLength} has {numBitSets} bit sets over {frames.Length} notes.");
+
+                //var histogram = new Dictionary<int, int>();
+                //for (int j = 1; j < envelope.Count - 1; j++)
+                //{
+                //    var frameCount = envelope[j];
+
+                //    if (!histogram.ContainsKey(frameCount))
+                //        histogram[frameCount] = 1;
+                //    else
+                //        histogram[frameCount]++;
+                //}
+
+                //foreach (var kv in histogram)
+                //    Debug.WriteLine($"    {kv.Key} = {kv.Value}");
             }
         }
 
-        public static byte[] GetPalSkipEnvelope(int noteLength)
+        public static byte[] GetTempoEnvelope(int noteLength, bool palSource)
         {
-            return NtscSourcePalTargetTempoEnvelopes[noteLength - 1];
+            return palSource ? 
+                PalToNtscTempoEnvelopes[noteLength - 1] :
+                NtscToPalTempoEnvelopes[noteLength - 1];
         }
 
         public static void Initialize()
@@ -209,53 +181,40 @@ namespace FamiStudio
 #if DEBUG
         public static void DumpFrameSkipInfo(bool pal)
         {
-            var numNotes = new int[Song.MaxNoteLength];
-            var frameCounts = new int[Song.MaxNoteLength];
-            var frameTimeMsSource = pal ? FrameTimeMsPAL : FrameTimeMsNTSC;
-            var frameTimeMsTarget = !pal ? FrameTimeMsPAL : FrameTimeMsNTSC;
+            const float frameTimeMsPAL  = 1000.0f / NesApu.FpsPAL;
+            const float frameTimeMsNTSC = 1000.0f / NesApu.FpsNTSC;
+
+
+            // 5/6th is pretty much the perfect ratio between PAL/NTSC. 
+            // Look for how many notes of one machine you need to run on the other
+            // until you find a number of frame that is divisible by 5 (pal) or 6 (ntsc).
+
+            var divider = pal ? 5 : 6;
+            var frameTimeSource = pal ? frameTimeMsPAL  : frameTimeMsNTSC;
+            var frameTimeTarget = pal ? frameTimeMsNTSC : frameTimeMsPAL;
 
             for (var n = 1; n <= Song.MaxNoteLength; n++)
             {
-                var bestNumNotes = 0;
-                var bestFrameCount = 0;
-                var minOverallError = 999.9f;
-                var maxNumNotes = pal ? 6 : 10;
-
-                for (int i = 1; i < maxNumNotes; i++)
+                for (int i = 1; i < 10; i++)
                 {
-                    var durationSource = n * i * frameTimeMsSource;
+                    int numFrames = n * i;
 
-                    var minError = 9999.0f;
-                    var bestLength = 0;
-                    var multipler = pal ? 2 : 1;
-
-                    for (int j = n * i * multipler; j >= 1; j--)
+                    if ((numFrames % divider) == 0)
                     {
-                        var durationTarget = j * frameTimeMsTarget;
+                        var numFrameSkipped = numFrames / divider;
+                        var durationSource  = numFrames * frameTimeSource;
+                        var durationTarget  = (numFrames + (pal ? numFrameSkipped : -numFrameSkipped)) * frameTimeTarget;
+                        var error = Math.Abs(durationTarget - durationSource);
 
-                        var error = Math.Abs(durationSource - durationTarget);
-                        if (error < minError)
-                        {
-                            minError = error;
-                            bestLength = j;
-                        }
-                    }
+                        if (pal)
+                            Debug.WriteLine($"PAL Note Length  {n} Error = {error:0.00} ms ({error * 100 / durationSource:0.00} %). Must skip {numFrameSkipped} frames over {i} notes in NTSC mode.");
+                        else
+                            Debug.WriteLine($"NTSC Note Length {n} Error = {error:0.00} ms ({error * 100 / durationSource:0.00} %). Must run {numFrameSkipped} double frames over {i} notes in PAL mode.");
 
-                    if (minError < minOverallError)
-                    {
-                        minOverallError = minError;
-                        bestNumNotes = i;
-                        bestFrameCount = bestLength;
+                        break;
                     }
                 }
 
-                numNotes[n - 1] = bestNumNotes;
-                frameCounts[n - 1] = bestFrameCount;
-
-                if (pal)
-                    Debug.WriteLine($"PAL Note Length {n} Error = {minOverallError:0.00} ms ({minOverallError * 100.0f / (float)(n * bestNumNotes * FrameTimeMsPAL):0.00} %) Must skip {bestFrameCount - n * bestNumNotes} frames over {bestNumNotes} notes in NTSC mode.");
-                else
-                    Debug.WriteLine($"NTSC Note Length {n} Error = {minOverallError:0.00} ms ({minOverallError * 100.0f / (float)(n * bestNumNotes * FrameTimeMsNTSC):0.00} %) Must run {n * bestNumNotes - bestFrameCount} double frames over {bestNumNotes} notes in PAL mode.");
             }
         }
 #endif

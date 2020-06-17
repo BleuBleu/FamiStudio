@@ -478,7 +478,7 @@ namespace FamiStudio
                 foreach (var noteLength in uniqueNoteLengths)
                 {
                     lines.Add($"{ll}tempo_env{noteLength}:");
-                    lines.Add($"\t{db} {String.Join(",", FamiStudioTempoUtils.GetPalSkipEnvelope(noteLength).Select(i => $"${i:x2}"))}");
+                    lines.Add($"\t{db} {String.Join(",", FamiStudioTempoUtils.GetTempoEnvelope(noteLength, project.PalMode).Select(i => $"${i:x2}"))}");
                 }
             }
         }

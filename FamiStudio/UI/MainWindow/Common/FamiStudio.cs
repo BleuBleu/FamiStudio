@@ -24,7 +24,7 @@ namespace FamiStudio
         private UndoRedoManager undoRedoManager;
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
-        private bool palMode = false;
+        private bool palPlayback = false;
         private bool audioDeviceChanged = false;
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
@@ -96,9 +96,6 @@ namespace FamiStudio
         
         private void ProjectExplorer_ProjectModified()
         {
-            if (Project.ExpansionAudio != Project.ExpansionNone)
-                palMode = false;
-
             RefreshSequencerLayout();
             Sequencer.Reset();
             PianoRoll.Reset();
@@ -263,7 +260,7 @@ namespace FamiStudio
 
             StaticProject = project;
             song = project.Songs[0];
-            palMode = false;
+			palPlayback = project.PalMode;
 
             undoRedoManager = new UndoRedoManager(project, this);
             undoRedoManager.Updated += UndoRedoManager_Updated;
@@ -278,7 +275,7 @@ namespace FamiStudio
             UpdateTitle();
             RefreshSequencerLayout();
 
-            instrumentPlayer.Start(project, palMode);
+            instrumentPlayer.Start(project, palPlayback);
         }
 
         public void OpenProject(string filename)
@@ -593,20 +590,22 @@ namespace FamiStudio
 
         public void StartInstrumentPlayer()
         {
-            instrumentPlayer.Start(project, palMode);
+            instrumentPlayer.Start(project, palPlayback);
         }
 
-        public bool PalMode
+        public bool PalPlayback
         {
             get
             {
-                return palMode;
+                return palPlayback;
             }
             set
             {
                 Stop();
                 StopInstrumentPlayer();
-                palMode = value;
+				palPlayback = value;
+				if (project.UsesFamiTrackerTempo)
+	                project.PalMode = value;
                 StartInstrumentPlayer();
             }
         }
@@ -756,7 +755,7 @@ namespace FamiStudio
         {
             if (!songPlayer.IsPlaying)
             {
-                songPlayer.Play(song, songPlayer.CurrentFrame, palMode);
+                songPlayer.Play(song, songPlayer.CurrentFrame, palPlayback);
             }
         }
 

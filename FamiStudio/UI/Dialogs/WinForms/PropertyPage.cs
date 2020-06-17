@@ -386,6 +386,11 @@ namespace FamiStudio
             (properties[idx].control as Label).Text = text;
         }
 
+        public void SetStringListIndex(int idx, int selIdx)
+        {
+            (properties[idx].control as ComboBox).SelectedIndex = selIdx;
+        }
+
         public void AddBoolean(string label, bool value, string tooltip = null)
         {
             properties.Add(

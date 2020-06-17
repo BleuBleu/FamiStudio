@@ -22,25 +22,33 @@
 	x Review MacOs speed + real mouse wheel.
 	- Review scrolling direction on Linux.
 x Paste-mix (NyxTheShield).
-- Auto snap.
+- Snap.
 	x Will need awareness of patterns for custom note sizes.
 	x Selection + drawing + dragging should be enough for good first pass.
 	x Selection snap VS. Fraction.
 	x FamiTracker tempo mode for 1,2,3,4 mode.
+	- SNAPPING 1/2 in 11 frames does 6-5-5-6, is that good or bad?
 	- Snap stop + release notes?
 	- Max + Linux
 	- TEST A LOT (envelope, DPCM, etc)
 - PAL mode editing.
-	- Add authoring space (add to FamiStudio text too)
-	- Add txt or icon to tell the space
-	- NSF import of PAL stuff.
-	- FamiStudio -> FamiTracker conversion? Simply set tempo to 125/150.
-	- FamiTracker -> FamiStudio tempo conversion? Derive from tempo, can only convert if 125/150.
+	- Cleanup tempo envelopes.
+		- Avoid skip at half note?
+		- Or regular distribution?
 	- Add to NSF driver. (Create tests before, cant break anything).
+	- ROM => Add to song table + dual more kernel.
+	- Testing
+		- Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
+		- Register player
+		- Wav export.
+	- Remove debug print in Player when done.
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
+- MATTT
 / Linux: Black text on dark BG, can I do anything?
-- BUG: Timecode: Shouldnt change with PAL/NTSC!
-
+- BUG: Change note size, say yes, play, then undo. Does not stop playing. Should really stop playing. We changed the note length!
+- BUG: Timecode: Shouldnt change with PAL/NTSC???
+	- Depend on authoring space i guess.
+	
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!
 - Retest snapping with various pattern sizes.
@@ -66,6 +74,13 @@ Tweet ideas
 - Tweet the linux screenshots, find a dev who wants to help.
 - Tips of the week or something, animated GIFs.
 
+MaxWar wish list.
+=================
+- Copy patterns to other channels.
+- Option for no-sound when no-pattern?
+- Loop end point
+- MIDI import/export.
+	
 Linux notes
 ===========
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe

@@ -12,7 +12,8 @@ namespace FamiStudio
         // Version 3 = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
         // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
         // Version 5 = FamiStudio 2.0.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
-        public static int Version = 5;
+        // Version 6 = FamiStudio 2.1.0 (PAL authoring machine)
+        public static int Version = 6;
         public static int MaxSampleSize = 0x4000;
 
         public const int ExpansionNone    = 0;
@@ -31,6 +32,12 @@ namespace FamiStudio
         {
             "FamiStudio",
             "FamiTracker"
+        };
+
+        public static string[] MachineNames =
+        {
+            "NTSC",
+            "PAL"
         };
 
         public static string[] ExpansionNames =
@@ -68,6 +75,11 @@ namespace FamiStudio
         private int expansionAudio = ExpansionNone;
         private int expansionNumChannels = 1;
 
+        // This flag has different meaning depending on the tempo mode:
+        //  - In FamiStudio  mode, it means the source data is authored on PAL
+        //  - In FamiTracker mode, it means the last playback mode was PAL
+        private bool pal = false; 
+
         public List<DPCMSample>    Samples        => samples;
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
         public List<Instrument>    Instruments    => instruments;
@@ -80,11 +92,11 @@ namespace FamiStudio
         public bool                UsesFamiStudioTempo  => tempoMode == TempoFamiStudio;
         public bool                UsesFamiTrackerTempo => tempoMode == TempoFamiTracker;
 
-        public string Filename   { get => filename; set => filename = value; }
-        public string Name       { get => name; set => name = value; }
-        public string Author     { get => author; set => author = value; }
-        public string Copyright  { get => copyright; set => copyright = value; }
-
+        public string Filename    { get => filename; set => filename = value; }
+        public string Name        { get => name; set => name = value; }
+        public string Author      { get => author; set => author = value; }
+        public string Copyright   { get => copyright; set => copyright = value; }
+        
         public Project(bool createSongAndInstrument = false)
         {
             if (createSongAndInstrument)
@@ -123,6 +135,19 @@ namespace FamiStudio
                 addr = (addr + s.Data.Length + 63) & 0xffc0;
             }
             return addr;
+        }
+
+        public bool PalMode
+        {
+            get
+            {
+                return pal;
+            }
+            set
+            {
+                Debug.Assert(value == false || !UsesExpansionAudio);
+                pal = value && !UsesExpansionAudio;
+            }
         }
 
         public Song GetSong(int id)
@@ -495,6 +520,9 @@ namespace FamiStudio
                     }
                 }
             }
+
+            if (expansion != ExpansionNone)
+                pal = false;
         }
 
         public int GetActiveChannelCount()
@@ -792,6 +820,7 @@ namespace FamiStudio
             foreach (var song in Songs)
                 song.Validate(this);
 
+            Debug.Assert(!UsesExpansionAudio || pal == false);
             Debug.Assert(Note.EmptyNote.IsEmpty);
 #endif
         }
@@ -875,6 +904,11 @@ namespace FamiStudio
             else
             {
                 tempoMode = TempoFamiTracker;
+            }
+
+            if (buffer.Version >= 6)
+            {
+                buffer.Serialize(ref pal);
             }
 
             // DPCM samples
