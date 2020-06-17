@@ -35,19 +35,17 @@ x Paste-mix (NyxTheShield).
 	- Cleanup tempo envelopes.
 		- Avoid skip at half note?
 		- Or regular distribution?
+	- Register player : PAL/NTSC, FamiTracker/FamiStudio.
 	- Add to NSF driver. (Create tests before, cant break anything).
 	- ROM => Add to song table + dual more kernel.
 	- Testing
 		- Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
-		- Register player
 		- Wav export.
 	- Remove debug print in Player when done.
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 - MATTT
 / Linux: Black text on dark BG, can I do anything?
 - BUG: Change note size, say yes, play, then undo. Does not stop playing. Should really stop playing. We changed the note length!
-- BUG: Timecode: Shouldnt change with PAL/NTSC???
-	- Depend on authoring space i guess.
 	
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!

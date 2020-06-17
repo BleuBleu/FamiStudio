@@ -451,13 +451,14 @@ namespace FamiStudio
         private void RenderTimecode(RenderGraphics g)
         {
             var frame = App.CurrentFrame;
+            var famitrackerTempo = App.Project != null && App.Project.UsesFamiTrackerTempo;
 
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
             g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
 
-            if (Settings.TimeFormat == 0)
+            if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
                 int patternIdx = App.Song.FindPatternInstanceIndex(frame, out int noteIdx);
 
@@ -480,9 +481,16 @@ namespace FamiStudio
             }
             else
             {
-                var fps = App.PalPlayback ? NesApu.FpsPAL : NesApu.FpsNTSC;
-                var totalMilliseconds = frame * 1000.0 / fps;
-                var time = TimeSpan.FromMilliseconds(totalMilliseconds);
+                TimeSpan time;
+
+                if (App.Project != null)
+                {
+                    time = TimeSpan.FromMilliseconds(frame * 1000.0 / (App.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
+                }
+                else
+                {
+                    time = TimeSpan.Zero;
+                }
 
                 var minutesString      = time.Minutes.ToString("D2");
                 var secondsString      = time.Seconds.ToString("D2");
