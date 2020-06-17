@@ -2,9 +2,6 @@
 =====
 - MaxWar wish list.
 	x Copy patterns instead of instancing? How?
-	- Copy patterns to other channels.
-	- Option for no-sound when no-pattern?
-	- MIDI import/export.
 	x BUG: Special paste VS. volume (WAIT GIF, DONT UNDERSTAND!).
 	x Cropped text special paste 150%.
 	x CRASH: envelope.
@@ -29,23 +26,22 @@ x Paste-mix (NyxTheShield).
 	x FamiTracker tempo mode for 1,2,3,4 mode.
 	- SNAPPING 1/2 in 11 frames does 6-5-5-6, is that good or bad?
 	- Snap stop + release notes?
-	- Max + Linux
+	- Mac/Linux
 	- TEST A LOT (envelope, DPCM, etc)
 - PAL mode editing.
 	- Cleanup tempo envelopes.
 		- Avoid skip at half note?
 		- Or regular distribution?
-	- Register player : PAL/NTSC, FamiTracker/FamiStudio.
 	- Add to NSF driver. (Create tests before, cant break anything).
 	- ROM => Add to song table + dual more kernel.
 	- Testing
 		- Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
+		- Register player : PAL/NTSC, FamiTracker/FamiStudio.
 		- Wav export.
 	- Remove debug print in Player when done.
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 - MATTT
 / Linux: Black text on dark BG, can I do anything?
-- BUG: Change note size, say yes, play, then undo. Does not stop playing. Should really stop playing. We changed the note length!
 	
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!
