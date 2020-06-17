@@ -24,7 +24,7 @@ x Paste-mix (NyxTheShield).
 	x Selection + drawing + dragging should be enough for good first pass.
 	x Selection snap VS. Fraction.
 	x FamiTracker tempo mode for 1,2,3,4 mode.
-	- SNAPPING 1/2 in 11 frames does 6-5-5-6, is that good or bad?
+	x SNAPPING 1/2 in 11 frames does 6-5-5-6, is that good or bad?
 	- Snap stop + release notes?
 	- Mac/Linux
 	- TEST A LOT (envelope, DPCM, etc)

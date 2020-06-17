@@ -2924,7 +2924,21 @@ namespace FamiStudio
                 var patternIdx = Song.FindPatternInstanceIndex(noteIdx, out noteIdx);
                 var noteLength = Song.Project.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(patternIdx);
                 var snapFactor = SnapResolutionFactors[(int)snapResolution];
-                var snappedNoteIndex = (int)Math.Round(Math.Floor((noteIdx + 0.001) / (noteLength * snapFactor) + (roundUp ? 1 : 0)) * (noteLength * snapFactor));
+                var snappedNoteIndex = noteIdx;
+
+                if (snapFactor >= 1.0)
+                {
+                    var numNotes = noteLength * (int)snapFactor;
+                    snappedNoteIndex = (noteIdx / numNotes + (roundUp ? 1 : 0)) * numNotes;
+                }
+                else
+                {
+                    // Subtract the base note so that snapping inside a note is always deterministic. 
+                    // Otherwise, rounding errors can create a different snapping pattern every note (6-5-5-6 like Gimmick).
+                    var baseNodeIdx  = noteIdx / noteLength * noteLength;
+                    var noteFrameIdx = noteIdx % noteLength;
+                    snappedNoteIndex = baseNodeIdx + (int)Math.Round(Math.Floor((noteFrameIdx + 0.001) / (noteLength * snapFactor) + (roundUp ? 1 : 0)) * (noteLength * snapFactor));
+                }
 
                 if (!roundUp)
                     snappedNoteIndex = Math.Min(Song.GetPatternLength(patternIdx) - 1, snappedNoteIndex);
