@@ -126,7 +126,7 @@ namespace FamiStudio
                     if (machine == MachineType.NTSC)
                         lines.Add($"\t{db} 0, 0, 0, 0");
                     else
-                        lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), 0, 0");
+                        lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), {(project.PalMode ? 2 : 0)}, 0");
                 }
             }
 

@@ -173,11 +173,13 @@ FT_TEMPO_STEP_L:  .res 1
 FT_TEMPO_STEP_H:  .res 1
 FT_TEMPO_ACC_L:   .res 1
 FT_TEMPO_ACC_H:   .res 1
-.elseif FT_PAL_SUPPORT
+.else
 FT_TEMPO_ENV_PTR_L:   .res 1
 FT_TEMPO_ENV_PTR_H:   .res 1
 FT_TEMPO_ENV_COUNTER: .res 1
 FT_TEMPO_ENV_IDX:     .res 1
+FT_TEMPO_FRAME_NUM:   .res 1
+FT_TEMPO_FRAME_CNT:   .res 1
 .endif
 FT_DPCM_LIST_L:   .res 1
 FT_DPCM_LIST_H:   .res 1
@@ -629,8 +631,10 @@ set_pitch_envelopes:
 
     ldy #0
     cmp (FT_TEMP_PTR1),y       ;check if there is such sub song
-    bcs skip
+    bcc valid_song
+    rts
 
+valid_song:
 .if ::FT_NUM_CHANNELS = 5
     asl
     sta tmp
@@ -763,7 +767,7 @@ pal:
     lda #6                     ;default speed
     sta FT_TEMPO_ACC_H
     sta FT_SONG_SPEED          ;apply default speed, this also enables music
-.elseif ::FT_PAL_SUPPORT
+.else
     lda (FT_TEMP_PTR1),y
     sta FT_TEMPO_ENV_PTR_L
     sta FT_TEMP_PTR2+0
@@ -771,15 +775,25 @@ pal:
     lda (FT_TEMP_PTR1),y
     sta FT_TEMPO_ENV_PTR_H
     sta FT_TEMP_PTR2+1
+    iny
+    lda (FT_TEMP_PTR1),y
+.if(::FT_PITCH_FIX) ; Dual mode
+    ldx FT_PAL_ADJUST
+    bne ntsc_target
+    ora #1
+    ntsc_target:
+.elseif(::FT_PAL_SUPPORT) ; PAL only
+    ora #1
+.endif
+    tax
+    lda _FT2FamiStudioTempoFrameLookup, x ; Lookup contains the number of frames to run (0,1,2) to maintain tempo
+    sta FT_TEMPO_FRAME_NUM
     ldy #0
     sty FT_TEMPO_ENV_IDX
     lda (FT_TEMP_PTR2),y
     sta FT_TEMPO_ENV_COUNTER
     lda #6
     sta FT_SONG_SPEED          ; simply so the song isnt considered paused.
-.else
-    lda #6
-    sta FT_SONG_SPEED
 .endif
 
 .ifdef ::FT_VRC7
@@ -1585,6 +1599,41 @@ update_row:
     sec
     sbc FT_SONG_SPEED
     sta FT_TEMPO_ACC_H
+
+.else ; ::FT_FAMISTUDIO_TEMPO here
+
+    dec FT_TEMPO_ENV_COUNTER
+    beq advance_tempo_envelope
+    lda #1
+    jmp store_frame_count
+
+advance_tempo_envelope:
+    lda FT_TEMPO_ENV_PTR_L
+    sta FT_TEMP_PTR1+0
+    lda FT_TEMPO_ENV_PTR_H
+    sta FT_TEMP_PTR1+1
+
+    inc FT_TEMPO_ENV_IDX
+    ldy FT_TEMPO_ENV_IDX
+    lda (FT_TEMP_PTR1),y
+    bpl store_counter
+
+tempo_envelope_end:
+    ldy #1
+    sty FT_TEMPO_ENV_IDX
+    lda (FT_TEMP_PTR1),y
+
+store_counter:
+    sta FT_TEMPO_ENV_COUNTER
+    lda FT_TEMPO_FRAME_NUM
+    bne store_frame_count
+    jmp skip_frame
+
+store_frame_count:
+    sta FT_TEMPO_FRAME_CNT
+
+update_row:
+
 .endif
 
     ; TODO: Turn most of these in loops, no reasons to be macros.
@@ -1895,37 +1944,14 @@ update_sound:
         bne s5b_channel_loop
 .endif
 
-; Run update twice sometimes so that PAL keeps up with NTSC
-.if ::FT_FAMISTUDIO_TEMPO && ::FT_PAL_SUPPORT
-    lda FT_PAL_ADJUST ; On NTSC, just play 1 note per frame.
-    bne check_done
-
-    dec FT_TEMPO_ENV_COUNTER
-    bne check_done
-
-    lda FT_TEMPO_ENV_PTR_L
-    sta FT_TEMP_PTR1+0
-    lda FT_TEMPO_ENV_PTR_H
-    sta FT_TEMP_PTR1+1
-
-    inc FT_TEMPO_ENV_IDX
-    ldy FT_TEMPO_ENV_IDX
-    lda (FT_TEMP_PTR1),y
-    bpl store_counter
-
-    tempo_envelope_end:
-        ldy #1
-        sty FT_TEMPO_ENV_IDX
-        lda (FT_TEMP_PTR1),y
-
-    store_counter:
-        sta FT_TEMPO_ENV_COUNTER
-
-        ; Skip this frame on PAL!
-        jmp update
-
-    check_done:
+.if ::FT_FAMISTUDIO_TEMPO 
+    ; See if we need to run a double frame (playing NTSC song on PAL)
+    dec FT_TEMPO_FRAME_CNT
+    beq skip_frame
+    jmp update_row
 .endif
+
+skip_frame:
 
 ;----------------------------------------------------------------------------------------------------------------------
 .if(::FT_SFX_ENABLE)
@@ -2675,19 +2701,17 @@ special_code:
 
 set_speed:
 .if ::FT_FAMISTUDIO_TEMPO 
-    .if ::FT_PAL_SUPPORT
-        lda (FT_TEMP_PTR1),y
-        sta FT_TEMPO_ENV_PTR_L
-        sta FT_TEMP_PTR2+0
-        iny
-        lda (FT_TEMP_PTR1),y
-        sta FT_TEMPO_ENV_PTR_H
-        sta FT_TEMP_PTR2+1
-        ldy #0
-        sty FT_TEMPO_ENV_IDX
-        lda (FT_TEMP_PTR2),y
-        sta FT_TEMPO_ENV_COUNTER
-    .endif
+    lda (FT_TEMP_PTR1),y
+    sta FT_TEMPO_ENV_PTR_L
+    sta FT_TEMP_PTR2+0
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta FT_TEMPO_ENV_PTR_H
+    sta FT_TEMP_PTR2+1
+    ldy #0
+    sty FT_TEMPO_ENV_IDX
+    lda (FT_TEMP_PTR2),y
+    sta FT_TEMPO_ENV_COUNTER
     add_16_8 FT_TEMP_PTR1, #2
 .else
     lda (FT_TEMP_PTR1),y
@@ -3479,6 +3503,12 @@ _FT2Vrc6DutyLookup:
     .byte $50
     .byte $60
     .byte $70
+.endif
+
+.if(FT_FAMISTUDIO_TEMPO)
+_FT2FamiStudioTempoFrameLookup:
+    .byte $01, $02 ; NTSC -> NTSC, NTSC -> PAL
+    .byte $00, $01 ; PAL  -> NTSC, PAL  -> PAL
 .endif
 
 .if(FT_SMOOTH_VIBRATO)

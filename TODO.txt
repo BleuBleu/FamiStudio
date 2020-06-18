@@ -32,9 +32,12 @@ x Paste-mix (NyxTheShield).
 	- Cleanup tempo envelopes.
 		- Avoid skip at half note?
 		- Or regular distribution?
-	- Add to NSF driver. (Create tests before, cant break anything).
+	x Add to NSF driver. (Create tests before, cant break anything).
 	- ROM => Add to song table + dual more kernel.
+	- Export make PAL/NTSC default where it makes sense (ROM, NSF, etc).
+	- FamiTone2FS
 	- Testing
+		- NSF A LOT! Export NSF and reimport to make sure skips/double frames are good.
 		- Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
 		- Register player : PAL/NTSC, FamiTracker/FamiStudio.
 		- Wav export.
@@ -42,7 +45,8 @@ x Paste-mix (NyxTheShield).
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 - MATTT
 / Linux: Black text on dark BG, can I do anything?
-	
+- NSF import: frames per notes is always wrong, smaller number should be note size.
+
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!
 - Retest snapping with various pattern sizes.
