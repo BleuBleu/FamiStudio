@@ -1419,7 +1419,7 @@ namespace FamiStudio
                 dlg.Properties.AddIntegerRange("Frames Per Notes:", noteLength, Song.MinNoteLength, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 1
                 dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx) / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 2
                 dlg.Properties.AddIntegerRange("Notes Per Bar :", song.GetPatternBarLength(patternIdx) / noteLength, 1, Pattern.MaxLength, CommonTooltips.NotesPerBar); // 3
-                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiStudioBPM(noteLength).ToString(), CommonTooltips.BPM); // 4
+                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiStudioBPM(song.Project.PalMode, noteLength).ToString(), CommonTooltips.BPM); // 4
             }
 
             for (var i = 1; i < dlg.Properties.PropertyCount && i < 6; i++)
@@ -1489,7 +1489,7 @@ namespace FamiStudio
                 var noteLength = (int)value;
 
                 props.UpdateIntegerRange(2, 1, Pattern.MaxLength / noteLength);
-                props.SetLabelText(4, Song.ComputeFamiStudioBPM(noteLength).ToString());
+                props.SetLabelText(4, Song.ComputeFamiStudioBPM(song.Project.PalMode, noteLength).ToString());
             }
         }
 

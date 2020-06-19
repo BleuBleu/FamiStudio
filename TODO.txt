@@ -36,12 +36,15 @@ x Paste-mix (NyxTheShield).
 	- ROM => Add to song table + dual more kernel.
 	- Export make PAL/NTSC default where it makes sense (ROM, NSF, etc).
 	- FamiTone2FS
+	- NSF IMPORT! WRONG NOTE TABLE!
 	- Testing
 		- NSF A LOT! Export NSF and reimport to make sure skips/double frames are good.
+			- ntsc nsf stalls?
 		- Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
 		- Register player : PAL/NTSC, FamiTracker/FamiStudio.
 		- Wav export.
 	- Remove debug print in Player when done.
+- Show envelope values.
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
 - MATTT
 / Linux: Black text on dark BG, can I do anything?

@@ -1365,14 +1365,14 @@ namespace FamiStudio
                 var tempo = props.GetPropertyValue<int>(3);
                 var speed = props.GetPropertyValue<int>(4);
 
-                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(speed, tempo).ToString());
+                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(selectedSong.Project.PalMode, speed, tempo).ToString());
             }
             else if (idx == 3) // 3 = Note length
             {
                 int noteLength = (int)value;
 
                 props.UpdateIntegerRange(4, 1, Pattern.MaxLength / noteLength);
-                props.SetLabelText(6, Song.ComputeFamiStudioBPM(noteLength).ToString());
+                props.SetLabelText(6, Song.ComputeFamiStudioBPM(selectedSong.Project.PalMode, noteLength).ToString());
             }
         }
 

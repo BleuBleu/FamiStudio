@@ -564,14 +564,14 @@ namespace FamiStudio
             noteLength = newNoteLength;
         }
 
-        public static int ComputeFamiTrackerBPM(int speed, int tempo)
+        public static int ComputeFamiTrackerBPM(bool palPlayback, int speed, int tempo)
         {
-            return tempo * 6 / speed;
+            return tempo * (palPlayback ? 5 : 6) / speed;
         }
 
-        public static int ComputeFamiStudioBPM(int noteLength)
+        public static int ComputeFamiStudioBPM(bool palSource, int noteLength)
         {
-            return 900 / noteLength;
+            return (palSource? 750 : 900) / noteLength;
         }
 
         public int BPM
@@ -579,9 +579,9 @@ namespace FamiStudio
             get
             {
                 if (UsesFamiStudioTempo)
-                    return ComputeFamiStudioBPM(noteLength);
+                    return ComputeFamiStudioBPM(project.PalMode, noteLength);
                 else
-                    return ComputeFamiTrackerBPM(famitrackerSpeed, famitrackerTempo);
+                    return ComputeFamiTrackerBPM(project.PalMode, famitrackerSpeed, famitrackerTempo);
             }
         }
 
