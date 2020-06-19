@@ -463,7 +463,11 @@ samples_none:
 	ldy song_addr_start+1, x ; hi-byte
 	lda song_addr_start+0, x ; lo-byte
 	tax
+.if(::FT_PAL_SUPPORT)
+	lda #0
+.else
 	lda #1 ; NTSC
+.endif	
 	jsr FamiToneInit
 	
 	lda #0

@@ -148,7 +148,10 @@ namespace FamiStudio
             Console.WriteLine($"  -wav-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");
             Console.WriteLine($"");
             Console.WriteLine($"NSF export specific options");
-            Console.WriteLine($"  -nsf-export-mode:<mode> : Target machine: ntsc, pal or dual (default:ntsc).");
+            Console.WriteLine($"  -nsf-export-mode:<mode> : Target machine: ntsc or pal (default:project mode).");
+            Console.WriteLine($"");
+            Console.WriteLine($"ROM export specific options");
+            Console.WriteLine($"  -rom-export-mode:<mode> : Target machine: ntsc, pal or dual (default:ntsc).");
             Console.WriteLine($"");
             Console.WriteLine($"FamiTone2 export specific options");
             Console.WriteLine($"  -famitone2-format:<format> : Assembly format to export to : nesasm, ca65 or asm6 (default:nesasm).");
@@ -310,12 +313,19 @@ namespace FamiStudio
                     return;
                 }
 
+                var machineString = ParseOption("rom-export-mode", project.PalMode ? "pal" : "ntsc");
+                var pal = false;
+
+                if (machineString.ToLower() == "pal")
+                    pal = true;
+
                 RomFile.Save(
                     project, 
                     filename,
                     exportSongIds,
                     project.Name,
-                    project.Author);
+                    project.Author,
+                    pal);
             }
         }
 

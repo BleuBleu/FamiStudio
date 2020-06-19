@@ -258,8 +258,10 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportWav.png" />
-    <EmbeddedResource Include="Rom\rom.nes" />
-    <EmbeddedResource Include="Rom\rom_tempo.nes" />
+    <EmbeddedResource Include="Rom\rom_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_ntsc_tempo.nes" />
+    <EmbeddedResource Include="Rom\rom_pal.nes" />
+    <EmbeddedResource Include="Rom\rom_pal_tempo.nes" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

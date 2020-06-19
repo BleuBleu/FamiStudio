@@ -100,9 +100,9 @@ namespace FamiStudio
             return encoded;
         }
 
-        public unsafe static bool Save(Project originalProject, string filename, int[] songIds, string name, string author)
+        public unsafe static bool Save(Project originalProject, string filename, int[] songIds, string name, string author, bool pal)
         {
-            try
+            //try
             {
                 if (songIds.Length == 0)
                     return false;
@@ -120,11 +120,13 @@ namespace FamiStudio
                 // Load ROM header (16 bytes) + code/tiles (12KB).
                 Stream romBinStream = null;
 
+                string romName = "FamiStudio.Rom.rom";
+                romName += pal ? "_pal" : "_ntsc";
                 if (project.UsesFamiStudioTempo)
-                    romBinStream = typeof(RomFile).Assembly.GetManifestResourceStream("FamiStudio.Rom.rom_tempo.nes");
-                else
-                    romBinStream = typeof(RomFile).Assembly.GetManifestResourceStream("FamiStudio.Rom.rom.nes");
+                    romName += "_tempo";
+                romName += ".nes";
 
+                romBinStream = typeof(RomFile).Assembly.GetManifestResourceStream(romName);
                 romBinStream.Read(headerBytes, 0, RomHeaderLength);
                 romBinStream.Seek(-RomCodeSize - RomTileSize, SeekOrigin.End);
                 romBinStream.Read(codeBytes, 0, RomCodeSize + RomTileSize);
@@ -218,10 +220,10 @@ namespace FamiStudio
 
                 File.WriteAllBytes(filename, romBytes.ToArray());
             }
-            catch
-            {
-                return false;
-            }
+            //catch
+            //{
+            //    return false;
+            //}
 
             return true;
         }

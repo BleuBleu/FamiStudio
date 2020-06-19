@@ -30,7 +30,6 @@ x Paste-mix (NyxTheShield).
 	- TEST A LOT (envelope, DPCM, etc)
 - PAL mode editing.
 	x Add to NSF driver. (Create tests before, cant break anything).
-	- ROM => Add to song table + dual more kernel.
 	- Export make PAL/NTSC default where it makes sense (ROM, NSF, etc).
 	- FamiTone2FS
 	- Testing
@@ -39,6 +38,7 @@ x Paste-mix (NyxTheShield).
 		- Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
 		- Register player : PAL/NTSC, FamiTracker/FamiStudio.
 		- Wav export.
+		- Retest FamiTracker exports (ROM, NSF, etc).
 	- Remove debug print in Player when done.
 - Show envelope values.
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes, take max???. TODO: PAL.)

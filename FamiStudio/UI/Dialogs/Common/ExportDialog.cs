@@ -118,6 +118,7 @@ namespace FamiStudio
                 case ExportFormat.Rom:
                     page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 0
                     page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 1
+                    page.AddStringList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 2
                     page.AddStringListMulti(null, songNames, null); // 2
                     break;
                 case ExportFormat.Text:
@@ -222,7 +223,7 @@ namespace FamiStudio
         private void ExportRom()
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(2));
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(3));
 
             if (songIds.Length > RomFile.MaxSongs)
             {
@@ -236,7 +237,8 @@ namespace FamiStudio
                 RomFile.Save(project, filename,
                     songIds,
                     props.GetPropertyValue<string>(0),
-                    props.GetPropertyValue<string>(1));
+                    props.GetPropertyValue<string>(1),
+                    props.GetPropertyValue<string>(2) == "PAL");
             }
         }
 
