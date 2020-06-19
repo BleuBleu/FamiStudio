@@ -130,7 +130,8 @@ namespace FamiStudio
                     numBitSets += Utils.NumberOfSetBits(bitPattern);
                 }
 
-                envelope[0] = (byte)(envelope[0] + (pal ? -1 : 1));
+                if (pal)
+                    envelope[0]--;
 
                 var remainingFrames = totalFrames - sum;
 
@@ -138,28 +139,12 @@ namespace FamiStudio
                     envelope.Add((byte)(remainingFrames + firstFrameIndex + 1 + (pal ? 1 : -1)));
                 envelope.Add(0x80);
 
-                Debug.Assert(envelope[0] > 1);
-
                 if (pal)
                     PalToNtscTempoEnvelopes[i] = envelope.ToArray();
                 else
                     NtscToPalTempoEnvelopes[i] = envelope.ToArray();
 
                 Debug.WriteLine($"{(pal ? "PAL" : "NTSC")} note length {noteLength} has {numBitSets} bit sets over {frames.Length} notes.");
-
-                //var histogram = new Dictionary<int, int>();
-                //for (int j = 1; j < envelope.Count - 1; j++)
-                //{
-                //    var frameCount = envelope[j];
-
-                //    if (!histogram.ContainsKey(frameCount))
-                //        histogram[frameCount] = 1;
-                //    else
-                //        histogram[frameCount]++;
-                //}
-
-                //foreach (var kv in histogram)
-                //    Debug.WriteLine($"    {kv.Key} = {kv.Value}");
             }
         }
 

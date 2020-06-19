@@ -29,14 +29,10 @@ x Paste-mix (NyxTheShield).
 	- Mac/Linux
 	- TEST A LOT (envelope, DPCM, etc)
 - PAL mode editing.
-	- Cleanup tempo envelopes.
-		- Avoid skip at half note?
-		- Or regular distribution?
 	x Add to NSF driver. (Create tests before, cant break anything).
 	- ROM => Add to song table + dual more kernel.
 	- Export make PAL/NTSC default where it makes sense (ROM, NSF, etc).
 	- FamiTone2FS
-	- NSF IMPORT! WRONG NOTE TABLE!
 	- Testing
 		- NSF A LOT! Export NSF and reimport to make sure skips/double frames are good.
 			- ntsc nsf stalls?
@@ -45,10 +41,9 @@ x Paste-mix (NyxTheShield).
 		- Wav export.
 	- Remove debug print in Player when done.
 - Show envelope values.
-- Slides in NSF dont take PAL into account? (subtract the pitch of both notes. TODO: PAL.)
+- Slides in NSF dont take PAL into account? (subtract the pitch of both notes, take max???. TODO: PAL.)
 - MATTT
 / Linux: Black text on dark BG, can I do anything?
-- NSF import: frames per notes is always wrong, smaller number should be note size.
 
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!

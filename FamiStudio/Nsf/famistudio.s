@@ -791,6 +791,8 @@ pal:
     ldy #0
     sty FT_TEMPO_ENV_IDX
     lda (FT_TEMP_PTR2),y
+    clc 
+    adc #1
     sta FT_TEMPO_ENV_COUNTER
     lda #6
     sta FT_SONG_SPEED          ; simply so the song isnt considered paused.

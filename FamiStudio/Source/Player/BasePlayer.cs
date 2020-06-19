@@ -40,7 +40,6 @@ namespace FamiStudio
         protected int tempoEnvelopeCounter;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
-        protected bool firstFrame = false;
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
@@ -94,12 +93,6 @@ namespace FamiStudio
                     tempoEnvelopeCounter = tempoEnvelope[tempoEnvelopeIndex];
 
 #if DEBUG
-                    var noteLength = song.GetPatternNoteLength(playPattern);
-                    if ((playNote % noteLength) == 0 && noteLength != 1)
-                    {
-                        Debug.WriteLine("*********** INVALID SKIPPED NOTE!");
-                    }
-                    
                     if (song.Project.PalMode)
                         Debug.WriteLine("*** Will do nothing for 1 frame!");
                     else
@@ -167,7 +160,6 @@ namespace FamiStudio
             playPattern = 0;
             playNote = 0;
             tempoCounter = 0;
-            firstFrame = true;
             ResetFamiStudioTempo(true);
             channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback, listener);
 
@@ -205,6 +197,21 @@ namespace FamiStudio
                 NesApu.StopSeeking(apuIndex);
             }
 
+            // Update envelopes + APU registers.
+            foreach (var channel in channelStates)
+            {
+                channel.Advance(song, playPattern, playNote, famitrackerSpeed, famitrackerNativeTempo);
+                channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
+            }
+
+            foreach (var channel in channelStates)
+            {
+                channel.UpdateEnvelopes();
+                channel.UpdateAPU();
+            }
+
+            playPosition = song.GetPatternStartNote(playPattern) + playNote;
+
             return true;
         }
 
@@ -212,16 +219,16 @@ namespace FamiStudio
         {
             Debug.WriteLine($"PlaySongFrame {playPosition}!");
 
-            int numFramesToRun = firstFrame ? 1 : UpdateTempoEnvelope();
+            int numFramesToRun = UpdateTempoEnvelope();
 
             for (int i = 0; i < numFramesToRun; i++)
             {
-                Debug.WriteLine($"  Running Frame {playPosition}!");
+                //Debug.WriteLine($"  Running Frame {playPosition}!");
 
-                if (firstFrame || UpdateTempo(famitrackerSpeed, song.FamitrackerTempo))
+                if (UpdateTempo(famitrackerSpeed, song.FamitrackerTempo))
                 {
                     // Advance to next note.
-                    if (!firstFrame && !AdvanceSong(song.Length, loopMode))
+                    if (!AdvanceSong(song.Length, loopMode))
                         return false;
 
                     foreach (var channel in channelStates)
@@ -233,6 +240,15 @@ namespace FamiStudio
                     playPosition = song.GetPatternStartNote(playPattern) + playNote;
                 }
 
+#if DEBUG
+                if (i > 0)
+                {
+                    var noteLength = song.GetPatternNoteLength(playPattern);
+                    if ((playNote % noteLength) == 0 && noteLength != 1)
+                        Debug.WriteLine("*********** INVALID SKIPPED NOTE!");
+                }
+#endif
+
                 // Update envelopes + APU registers.
                 foreach (var channel in channelStates)
                 {
@@ -240,8 +256,6 @@ namespace FamiStudio
                     channel.UpdateAPU();
                 }
             }
-
-            firstFrame = false;
 
             // Mute.
             for (int i = 0; i < channelStates.Length; i++)

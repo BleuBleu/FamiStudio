@@ -122,11 +122,7 @@ namespace FamiStudio
                 else
                 {
                     lines.Add(line);
-
-                    if (machine == MachineType.NTSC)
-                        lines.Add($"\t{db} 0, 0, 0, 0");
-                    else
-                        lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), {(project.PalMode ? 2 : 0)}, 0");
+                    lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), {(project.PalMode ? 2 : 0)}, 0");
                 }
             }
 
@@ -460,7 +456,7 @@ namespace FamiStudio
 
         private void OutputTempoEnvelopes()
         {
-            if (project.UsesFamiStudioTempo && machine != MachineType.NTSC)
+            if (project.UsesFamiStudioTempo)
             {
                 var uniqueNoteLengths = new HashSet<int>();
 
@@ -614,7 +610,7 @@ namespace FamiStudio
                         instrument = null;
                     }
 
-                    if (isSpeedChannel && project.UsesFamiStudioTempo && machine != MachineType.NTSC)
+                    if (isSpeedChannel && project.UsesFamiStudioTempo)
                     {
                         var noteLength = song.GetPatternNoteLength(p);
 
@@ -739,6 +735,7 @@ namespace FamiStudio
                                 found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTableNtsc, out _, out int stepSizeNtsc, out _);
                                 found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTablePal,  out _, out int stepSizePal,  out _);
 
+                                // MATTT: Review this!
                                 if (song.Project.UsesExpansionAudio || machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)
