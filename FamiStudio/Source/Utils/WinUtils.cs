@@ -113,6 +113,9 @@ namespace FamiStudio
                 }
             }
 
+            if (buffer == null)
+                return null;
+
             return ASCIIEncoding.ASCII.GetString(buffer);
         }
 
