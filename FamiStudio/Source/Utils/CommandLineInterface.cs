@@ -151,7 +151,7 @@ namespace FamiStudio
             Console.WriteLine($"  -nsf-export-mode:<mode> : Target machine: ntsc or pal (default:project mode).");
             Console.WriteLine($"");
             Console.WriteLine($"ROM export specific options");
-            Console.WriteLine($"  -rom-export-mode:<mode> : Target machine: ntsc, pal or dual (default:ntsc).");
+            Console.WriteLine($"  -rom-export-mode:<mode> : Target machine: ntsc, pal or dual (default:project mode).");
             Console.WriteLine($"");
             Console.WriteLine($"FamiTone2 export specific options");
             Console.WriteLine($"  -famitone2-format:<format> : Assembly format to export to : nesasm, ca65 or asm6 (default:nesasm).");
@@ -159,7 +159,7 @@ namespace FamiStudio
             Console.WriteLine($"  -famitone2-seperate-files : Export songs to individual files, output filename is the output path (default:disabled).");
             Console.WriteLine($"  -famitone2-seperate-song-pattern:<pattern> : Name pattern to use when exporting songs to seperate files (default:{{project}}_{{song}}).");
             Console.WriteLine($"  -famitone2-seperate-dmc-pattern:<pattern> : DMC filename pattern to use when exporting songs to seperate files (default:{{project}}).");
-            Console.WriteLine($"  -famitone2-sfx-mode:<mode> : Target machine for SFX : ntsc, pal or dual (default:ntsc).");
+            Console.WriteLine($"  -famitone2-sfx-mode:<mode> : Target machine for SFX : ntsc, pal or dual (default:project mode).");
             Console.WriteLine($"");
         }
 
@@ -275,13 +275,14 @@ namespace FamiStudio
             if (!ValidateExtension(filename, ".nsf"))
                 return;
 
-            var machineString = ParseOption("nsf-export-mode", "ntsc");
-            var machine = MachineType.NTSC;
+            var machineString = ParseOption("nsf-export-mode", project.PalMode ? "pal" : "ntsc");
+            var machine = project.PalMode ? MachineType.PAL : MachineType.NTSC;
 
             switch (machineString.ToLower())
             {
                 case "pal"  : machine = MachineType.PAL;  break;
                 case "dual" : machine = MachineType.Dual; break;
+                case "ntsc" : machine = MachineType.NTSC; break;
             }
 
             var exportSongIds = GetExportSongIds();
@@ -313,11 +314,14 @@ namespace FamiStudio
                     return;
                 }
 
-                var machineString = ParseOption("rom-export-mode", project.PalMode ? "pal" : "ntsc");
-                var pal = false;
+                var machineString = ParseOption("nsf-export-mode", project.PalMode ? "pal" : "ntsc");
+                var pal = project.PalMode;
 
-                if (machineString.ToLower() == "pal")
-                    pal = true;
+                switch (machineString.ToLower())
+                {
+                    case "pal"  : pal = true;  break;
+                    case "ntsc" : pal = false; break;
+                }
 
                 RomFile.Save(
                     project, 
@@ -416,12 +420,13 @@ namespace FamiStudio
                 case "asm6": format = AssemblyFormat.ASM6; break;
             }
 
-            var machineString = ParseOption("famitone2-sfx-machine", "ntsc");
-            var machine = MachineType.NTSC;
+            var machineString = ParseOption("nsf-export-mode", project.PalMode ? "pal" : "ntsc");
+            var machine = project.PalMode ? MachineType.PAL : MachineType.NTSC;
             switch (machineString.ToLower())
             {
-                case "pal":  machine = MachineType.PAL;  break;
-                case "dual": machine = MachineType.Dual; break;
+                case "pal"  : machine = MachineType.PAL;  break;
+                case "dual" : machine = MachineType.Dual; break;
+                case "ntsc" : machine = MachineType.NTSC; break;
             }
 
             var extension = format == AssemblyFormat.CA65 ? ".s" : ".asm";

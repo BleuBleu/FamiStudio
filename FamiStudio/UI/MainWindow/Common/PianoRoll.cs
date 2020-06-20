@@ -297,21 +297,21 @@ namespace FamiStudio
             effectIconSizeX           = (int)(DefaultEffectIconSizeX * scaling);
             effectValuePosTextOffsetY = (int)(DefaultEffectValuePosTextOffsetY * scaling);
             effectValueNegTextOffsetY = (int)(DefaultEffectValueNegTextOffsetY * scaling);
-            bigTextPosX              = (int)(DefaultBigTextPosX * scaling);
-            bigTextPosY              = (int)(DefaultBigTextPosY * scaling);
-            tooltipTextPosX          = (int)(DefaultTooltipTextPosX * scaling);
-            tooltipTextPosY          = (int)(DefaultTooltipTextPosY * scaling);
-            dpcmTextPosX             = (int)(DefaultDPCMTextPosX * scaling);
-            dpcmTextPosY             = (int)(DefaultDPCMTextPosY * scaling);
-            octaveNameOffsetY        = (int)(DefaultOctaveNameOffsetY * scaling);
-            slideIconPosX            = (int)(DefaultSlideIconPosX * scaling);
-            slideIconPosY            = (int)(DefaultSlideIconPosY * scaling);
-            envelopeSizeY            = DefaultEnvelopeSizeY * envelopeValueZoom * scaling;    
-            octaveSizeY              = 12 * noteSizeY;
-            numNotes                 = numOctaves * 12;
-            virtualSizeY             = numNotes * noteSizeY;
-            barSizeX                 = noteSizeX * (Song == null ? 16  : Song.BarLength);
-            headerAndEffectSizeY     = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
+            bigTextPosX               = (int)(DefaultBigTextPosX * scaling);
+            bigTextPosY               = (int)(DefaultBigTextPosY * scaling);
+            tooltipTextPosX           = (int)(DefaultTooltipTextPosX * scaling);
+            tooltipTextPosY           = (int)(DefaultTooltipTextPosY * scaling);
+            dpcmTextPosX              = (int)(DefaultDPCMTextPosX * scaling);
+            dpcmTextPosY              = (int)(DefaultDPCMTextPosY * scaling);
+            octaveNameOffsetY         = (int)(DefaultOctaveNameOffsetY * scaling);
+            slideIconPosX             = (int)(DefaultSlideIconPosX * scaling);
+            slideIconPosY             = (int)(DefaultSlideIconPosY * scaling);
+            envelopeSizeY             = DefaultEnvelopeSizeY * envelopeValueZoom * scaling;    
+            octaveSizeY               = 12 * noteSizeY;
+            numNotes                  = numOctaves * 12;
+            virtualSizeY              = numNotes * noteSizeY;
+            barSizeX                  = noteSizeX * (Song == null ? 16  : Song.BarLength);
+            headerAndEffectSizeY      = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
         }
 
         public Instrument CurrentInstrument
@@ -1638,6 +1638,8 @@ namespace FamiStudio
                         var selected = IsEnvelopeValueSelected(i);
                         g.FillRectangle(x, y - envelopeSizeY, x + noteSizeX, y, g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, (int)envelopeSizeY, 0.8f));
                         g.DrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, theme.BlackBrush, selected ? 2 : 1);
+                        if (zoomLevel >= 1)
+                            g.DrawText(env.Values[i].ToString("+#;-#;0"), ThemeBase.FontSmallCenter, x, y - envelopeSizeY- effectValuePosTextOffsetY, theme.LightGreyFillBrush1, noteSizeX);
                     }
                 }
                 else
@@ -1647,16 +1649,18 @@ namespace FamiStudio
                         var center = editEnvelope == Envelope.FdsWaveform ? 32 : 0;
                         int val = env.Values[i];
 
-                        float y0, y1;
+                        float y0, y1, ty;
                         if (val >= center)
                         {
                             y0 = (virtualSizeY - envelopeSizeY * (val + midValue + 1)) - scrollY;
                             y1 = (virtualSizeY - envelopeSizeY * (midValue + center) - scrollY);
+                            ty = y0;
                         }
                         else
                         {
                             y1 = (virtualSizeY - envelopeSizeY * (val + midValue)) - scrollY;
                             y0 = (virtualSizeY - envelopeSizeY * (midValue + center + 1) - scrollY);
+                            ty = y1;
                         }
 
                         var x = i * noteSizeX - scrollX;
@@ -1664,6 +1668,15 @@ namespace FamiStudio
 
                         g.FillRectangle(x, y0, x + noteSizeX, y1, theme.LightGreyFillBrush1);
                         g.DrawRectangle(x, y0, x + noteSizeX, y1, theme.BlackBrush, selected ? 2 : 1);
+
+                        if (zoomLevel >= 1)
+                        {
+                            bool drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * RenderTheme.MainWindowScaling * 2);
+                            var brush  = drawOutside ? theme.LightGreyFillBrush1 : theme.BlackBrush;
+                            var offset = drawOutside != val < center ? -effectValuePosTextOffsetY : effectValueNegTextOffsetY;
+
+                            g.DrawText(val.ToString(), ThemeBase.FontSmallCenter, x, ty + offset, brush, noteSizeX);
+                        }
                     }
                 }
 

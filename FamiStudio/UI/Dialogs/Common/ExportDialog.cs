@@ -108,7 +108,7 @@ namespace FamiStudio
                     page.AddString("Name :", project.Name, 31); // 0
                     page.AddString("Artist :", project.Author, 31); // 1
                     page.AddString("Copyright :", project.Copyright, 31); // 2
-                    page.AddStringList("Mode :", Enum.GetNames(typeof(MachineType)), Enum.GetNames(typeof(MachineType))[0]); // 3
+                    page.AddStringList("Mode :", Enum.GetNames(typeof(MachineType)), Enum.GetNames(typeof(MachineType))[project.PalMode ? 1 : 0]); // 3
                     page.AddStringListMulti(null, songNames, null); // 4
 #if DEBUG
                     page.AddStringList("Engine :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 5
@@ -139,7 +139,7 @@ namespace FamiStudio
                     break;
                 case ExportFormat.FamiTone2Sfx:
                     page.AddStringList("Format :", Enum.GetNames(typeof(AssemblyFormat)), Enum.GetNames(typeof(AssemblyFormat))[0]); // 0
-                    page.AddStringList("Mode :", Enum.GetNames(typeof(MachineType)), Enum.GetNames(typeof(MachineType))[0]); // 1
+                    page.AddStringList("Mode :", Enum.GetNames(typeof(MachineType)), Enum.GetNames(typeof(MachineType))[project.PalMode ? 1 : 0]); // 1
                     page.AddStringListMulti(null, songNames, null); // 2
                     break;
             }

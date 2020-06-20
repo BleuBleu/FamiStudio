@@ -1,46 +1,12 @@
 2.1.0
 =====
-- MaxWar wish list.
-	x Copy patterns instead of instancing? How?
-	x BUG: Special paste VS. volume (WAIT GIF, DONT UNDERSTAND!).
-	x Cropped text special paste 150%.
-	x CRASH: envelope.
-	x CRASH: Copy/paste empty patterns. => Mac Test!
-	x Better folder handling
-	x Time mode change on click.
-	x BUG: ALT + MOUSE WHEEL. (*** VERY HARD TO REPRO.)
-	x BUG: Double right click, replace instrument, CTRL up/down.
-- Copy paste of text values in envelopes.
-	x Try to use real clipboard on Mac.
-	x Do it!
-	x MacOS
-- Trackpad/pen controls
-	x Send test builds (sunday).
-	x Review MacOs speed + real mouse wheel.
-	- Review scrolling direction on Linux.
-x Paste-mix (NyxTheShield).
+- Trackpad: Review scrolling direction on Linux.
 - Snap.
-	x Will need awareness of patterns for custom note sizes.
-	x Selection + drawing + dragging should be enough for good first pass.
-	x Selection snap VS. Fraction.
-	x FamiTracker tempo mode for 1,2,3,4 mode.
-	x SNAPPING 1/2 in 11 frames does 6-5-5-6, is that good or bad?
-	- Snap stop + release notes?
 	- Mac/Linux
 	- TEST A LOT (envelope, DPCM, etc)
 - PAL mode editing.
-	x Add to NSF driver. (Create tests before, cant break anything).
-	- Export make PAL/NTSC default where it makes sense (ROM, NSF, etc).
 	- FamiTone2FS
-	- Testing
-		- NSF A LOT! Export NSF and reimport to make sure skips/double frames are good.
-			- ntsc nsf stalls?
-		- Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
-		- Register player : PAL/NTSC, FamiTracker/FamiStudio.
-		- Wav export.
-		- Retest FamiTracker exports (ROM, NSF, etc).
 	- Remove debug print in Player when done.
-- Show envelope values.
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes, take max???. TODO: PAL.)
 - MATTT
 / Linux: Black text on dark BG, can I do anything?
@@ -48,6 +14,12 @@ x Paste-mix (NyxTheShield).
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!
 - Retest snapping with various pattern sizes.
+- NSF A LOT! Export NSF and reimport to make sure skips/double frames are good.
+- Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
+- Register player : PAL/NTSC, FamiTracker/FamiStudio.
+- Wav export.
+- Retest FamiTracker exports (ROM, NSF, etc).
+- Make sure play starts exactly at the node the seek bar is (DPCM test).
 
 2.1.0 Trailer
 =============
@@ -63,7 +35,7 @@ Testing:
 - New timecode mode
 - Mix paste
 - Duplicate patterns.
-- *** PAL space authoring.
+- PAL space authoring.
 
 Tweet ideas
 ===========
@@ -99,7 +71,6 @@ Linux notes
 
 Backlog:
 =========
-- P1: Feature request from GitHub: Snap to 1/2, 1/4, etc.
 - P1: Fix crash on startup when there are no audio device (also freeze when switching audio devices)
 - P1: Proper error messages when something fails (save, etc.)
 - P2: Raw FDS modulation table envelope.
@@ -109,6 +80,5 @@ Backlog:
 - P2: Mac: Paste special: Text is super dark
 - P2: Mac: Clicking on FS without the window doesn't give it focus...?
 - P2: Installer on Japanese machine?
-- Note snapping. (or snap automatically when frames arent visible???)
 
 
