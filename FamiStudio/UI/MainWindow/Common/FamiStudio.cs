@@ -551,7 +551,7 @@ namespace FamiStudio
             mainForm.Text = title;
         }
 
-        public void PlayInstrumentNote(int n)
+        public void PlayInstrumentNote(int n, bool showWarning = true)
         {
             Note note = new Note(n);
             note.Volume = Note.VolumeMax;
@@ -569,7 +569,8 @@ namespace FamiStudio
                 }
                 else
                 {
-                    DisplayWarning("Selected instrument is incompatible with channel!", false);
+                    if (showWarning)
+                        DisplayWarning("Selected instrument is incompatible with channel!", false);
                     return;
                 }
             }

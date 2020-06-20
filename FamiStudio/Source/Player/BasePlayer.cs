@@ -17,11 +17,6 @@ namespace FamiStudio
 
     public class BasePlayer
     {
-        protected const int SampleRate = 44100;
-
-        // NSTC: 734 = ceil(SampleRate / FrameRate) = ceil(44100 / 60.0988).
-        // PAL:  882 = ceil(SampleRate / FrameRate) = ceil(44100 / 50.0070).
-        protected const int BufferSize = 882 * sizeof(short);
 #if FAMISTUDIO_LINUX
         protected const int NumAudioBuffers = 4; // ALSA seems to like to have one extra buffer.
 #else
@@ -38,6 +33,7 @@ namespace FamiStudio
         protected byte[] tempoEnvelope;
         protected int tempoEnvelopeIndex;
         protected int tempoEnvelopeCounter;
+        protected int sampleRate;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
         protected Song song;
@@ -46,9 +42,10 @@ namespace FamiStudio
         protected int channelMask = 0xffff;
         protected int playPosition = 0;
 
-        protected BasePlayer(int apu)
+        protected BasePlayer(int apu, int rate = 44100)
         {
             apuIndex = apu;
+            sampleRate = rate;
             dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
         }
 
@@ -163,7 +160,7 @@ namespace FamiStudio
             ResetFamiStudioTempo(true);
             channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback, listener);
 
-            NesApu.InitAndReset(apuIndex, SampleRate, palPlayback, GetNesApuExpansionAudio(song.Project), song.Project.ExpansionNumChannels, dmcCallback);
+            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, GetNesApuExpansionAudio(song.Project), song.Project.ExpansionNumChannels, dmcCallback);
 
             Debug.WriteLine($"START SEEKING!!"); 
 

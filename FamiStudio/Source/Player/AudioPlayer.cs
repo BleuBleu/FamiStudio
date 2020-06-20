@@ -22,9 +22,11 @@ namespace FamiStudio
         protected ManualResetEvent stopEvent = new ManualResetEvent(false);
         protected ConcurrentQueue<short[]> sampleQueue = new ConcurrentQueue<short[]>();
 
-        protected AudioPlayer(int apuIndex) : base(apuIndex)
+        protected AudioPlayer(int apuIndex, int sampleRate = 44100) : base(apuIndex, sampleRate)
         {
-            audioStream = new AudioStream(SampleRate, 1, BufferSize, NumAudioBuffers, AudioBufferFillCallback);
+            // Assume we are in PAL mode since it will always have a larger buffer.
+            int bufferSize = (int)Math.Ceiling(sampleRate / 50.0070) * sizeof(short);
+            audioStream = new AudioStream(sampleRate, 1, bufferSize, NumAudioBuffers, AudioBufferFillCallback);
         }
 
         protected short[] AudioBufferFillCallback()

@@ -7,7 +7,7 @@ namespace FamiStudio
     {
         List<short> samples;
 
-        public WavPlayer() : base(NesApu.APU_WAV_EXPORT)
+        public WavPlayer(int sampleRate) : base(NesApu.APU_WAV_EXPORT, sampleRate)
         {
         }
 

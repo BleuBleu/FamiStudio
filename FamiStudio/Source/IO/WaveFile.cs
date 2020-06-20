@@ -34,7 +34,7 @@ namespace FamiStudio
         public unsafe static void Save(Song song, string filename, int sampleRate, int duration, int channelMask)
         {
             var project = song.Project;
-            var player = new WavPlayer();
+            var player = new WavPlayer(sampleRate);
             player.Loop = duration <= 0 ? LoopMode.None : LoopMode.Song;
             player.ChannelMask = channelMask;
 

@@ -2,6 +2,25 @@
 
 Version history / release notes for each release.
 
+## Version 2.0.3
+
+New features:
+
+* Fix crash when clicking on a note when a incompatible instrument is selected.
+* Fix WAV file export when using a sample rate different than 44100Hz.
+
+## Version 2.0.2
+
+New features:
+
+* Fixing seek bar position in sequencer on Hi-DPI (Retina on MacOS or scaling > 100% on Windows).
+* Fixing crash when importing FTM containing multiple songs with the same name.
+* Fixing missing or out-of-order songs when exporting to FamiTone2.
+* Interpreting zero-velocity MIDI note on events as note off as per specification.
+* Highlighting notes being dragged on the piano roll.
+* Detection of audio device changes on Windows 7.
+* Handling of D3D device lost to improve stability on Windows 7.
+
 ## Version 2.0.1
 
 New features:

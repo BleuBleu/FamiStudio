@@ -22,6 +22,14 @@ Left-clicking on the icon of a channel (Square, triangle, noise, DPCM) will togg
 
 Clicking the tiny square icon next to the channel name will force display it in the piano roll.  Alternatively, you can press the keyboard key **Ctrl + 1...5** (more if using expansion).
 
+![](images/ForceDisplayButton.png#center)
+
+Channels that are force displayed and are not the current channel will appear dimmed in the piano roll. This is useful when harmonizing between multiple channels, or editing drum patterns.
+
+![](images/ForceDisplayPianoRoll.png#center)
+
+This can also achieved with the keyboard by pressing Ctrl + 1...5 (the number of the channel).
+
 ## Adding/removing patterns
 
 You can add a new pattern by left-clicking on an empty space. Right-clicking deletes.
@@ -48,13 +56,13 @@ When one or multiple patterns are selected, dragging them will move them in the 
 
 When one or multiple patterns are selected, press CTRL+C (or CTRL+X for cut). Move the selection somewhere else and paste with CTRL+V.
 
-![](images/ForceDisplayButton.png#center)
+## Copy/pasting patterns between projects
 
-Channels that are force displayed and are not the current channel will appear dimmed in the piano roll. This is useful when harmonizing between multiple channels, or editing drum patterns.
+Copy and pasting patterns between projects is possible When doing so, FamiStudio will assume patterns having the same name are identical. If a pattern is not found, it will offer you to create it for you. 
 
-![](images/ForceDisplayPianoRoll.png#center)
+For example, if you copy a pattern named "Chorus1" from a project to another. If no such pattern is found, it will be copied. Otherwise, if an existing pattern named "Chorus1" is found in the second project, it will assume it is the same.
 
-This can also achieved with the keyboard by pressing Ctrl + 1...5 (the number of the channel).
+Inside patterns, for notes and instrument, the [same rule](pianoroll.md#copy-pasting-notes-between-projects) applies.
 
 ## Setting the loop point
 
