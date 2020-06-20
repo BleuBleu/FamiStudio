@@ -544,7 +544,7 @@ namespace FamiStudio
 
             string title = $"FamiStudio {version} - {projectFile}";
 
-#if TRUE
+#if FALSE
             title += " DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
 #endif
 
