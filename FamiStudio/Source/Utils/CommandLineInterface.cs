@@ -285,6 +285,9 @@ namespace FamiStudio
                 case "ntsc" : machine = MachineType.NTSC; break;
             }
 
+            if (project.UsesExpansionAudio)
+                machine = MachineType.NTSC;
+
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
@@ -322,6 +325,9 @@ namespace FamiStudio
                     case "pal"  : pal = true;  break;
                     case "ntsc" : pal = false; break;
                 }
+
+                if (project.UsesExpansionAudio)
+                    pal = false;
 
                 RomFile.Save(
                     project, 

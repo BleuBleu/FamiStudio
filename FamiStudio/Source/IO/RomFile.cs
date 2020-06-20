@@ -102,10 +102,12 @@ namespace FamiStudio
 
         public unsafe static bool Save(Project originalProject, string filename, int[] songIds, string name, string author, bool pal)
         {
-            //try
+            try
             {
                 if (songIds.Length == 0)
                     return false;
+
+                Debug.Assert(!originalProject.UsesExpansionAudio || !pal);
 
                 if (songIds.Length > MaxSongs)
                     Array.Resize(ref songIds, MaxSongs);
@@ -220,10 +222,10 @@ namespace FamiStudio
 
                 File.WriteAllBytes(filename, romBytes.ToArray());
             }
-            //catch
-            //{
-            //    return false;
-            //}
+            catch
+            {
+                return false;
+            }
 
             return true;
         }

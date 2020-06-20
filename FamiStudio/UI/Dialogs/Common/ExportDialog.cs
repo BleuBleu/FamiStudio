@@ -120,6 +120,7 @@ namespace FamiStudio
                     page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 1
                     page.AddStringList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 2
                     page.AddStringListMulti(null, songNames, null); // 2
+                    page.SetPropertyEnabled(2, !project.UsesExpansionAudio);
                     break;
                 case ExportFormat.Text:
                     page.AddStringListMulti(null, songNames, null); // 0

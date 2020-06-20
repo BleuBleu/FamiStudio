@@ -1,9 +1,6 @@
 2.1.0
 =====
 - Trackpad: Review scrolling direction on Linux.
-- Snap.
-	- Mac/Linux
-	- TEST A LOT (envelope, DPCM, etc)
 - PAL mode editing.
 	- FamiTone2FS
 	- Remove debug print in Player when done.
@@ -11,14 +8,16 @@
 - MATTT
 
 Testing:
-- WAV export: MERGE+RETEST WITH SAMPLE RATE!
+- Test snap a lot (DPCM, All tempo, custom pattern, etc).
+- WAV export: RETEST WITH SAMPLE RATE!
 - Retest snapping with various pattern sizes.
 - NSF A LOT! Export NSF and reimport to make sure skips/double frames are good.
 - Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
 - Register player : PAL/NTSC, FamiTracker/FamiStudio.
 - Wav export.
-- Retest FamiTracker exports (ROM, NSF, etc).
+- Retest FamiTracker tempo exports (ROM, NSF, etc).
 - Make sure play starts exactly at the node the seek bar is (DPCM test).
+- Command line on Linux/Mac.
 
 2.1.0 Trailer
 =============
