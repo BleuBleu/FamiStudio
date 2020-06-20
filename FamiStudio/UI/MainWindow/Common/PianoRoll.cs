@@ -862,7 +862,7 @@ namespace FamiStudio
 
                 if (IsSnappingAllowed)
                 {
-                    g.DrawBitmap(bmpSnapResolution[(int)snapResolution], whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX * 2 - 1, snapIconPosY, snap ? 1.0f : 0.3f);
+                    g.DrawBitmap(bmpSnapResolution[(int)snapResolution], whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX - 1, snapIconPosY, snap ? 1.0f : 0.3f);
                     g.DrawBitmap(bmpSnap, whiteKeySizeX - (int)bmpSnap.Size.Width * 1 - snapIconPosX * 1 - 1, snapIconPosY, snap ? 1.0f : 0.3f);
                 }
 
@@ -2855,7 +2855,7 @@ namespace FamiStudio
             }
             else if (IsMouseOnSnapButton(e))
             {
-                tooltip = "{MouseLeft} Toggle snapping {Shift} {S}";
+                tooltip = "{MouseLeft} Toggle snapping {Shift} {S} {MouseWheel} Change snap precision";
             }
             else if (IsMouseInTopLeftCorner(e))
             {
@@ -3209,7 +3209,7 @@ namespace FamiStudio
                     ZoomAtLocation(e.X, e.Delta);
                 }
             }
-            else if (IsMouseOnSnapResolutionButton(e))
+            else if (IsMouseOnSnapResolutionButton(e) || IsMouseOnSnapButton(e))
             {
                 if (e.Delta > 0)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
