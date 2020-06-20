@@ -373,6 +373,12 @@ namespace FamiStudio
                 });
         }
 
+        public void SetStringListIndex(int idx, int selectedIndex)
+        {
+            var combo = (properties[idx].control as ComboBox);
+            combo.Active = selectedIndex;
+        }
+
         public void AddStringListMulti(string label, string[] values, bool[] selected)
         {
             properties.Add(
