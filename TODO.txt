@@ -9,8 +9,6 @@
 	- Remove debug print in Player when done.
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes, take max???. TODO: PAL.)
 - MATTT
-- Main merge:
-	- Review all graphics resources OnRenderTerminated.
 
 Testing:
 - WAV export: MERGE+RETEST WITH SAMPLE RATE!

@@ -16,7 +16,7 @@ namespace FamiStudio
             int maxSample = int.MaxValue;
 
             if (duration > 0)
-                maxSample = duration * 44100; // MATTT: Make sure it works with the sample rate fix!
+                maxSample = duration * sampleRate;
 
             samples = new List<short>();
 
