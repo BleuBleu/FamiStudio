@@ -80,7 +80,8 @@ namespace FamiStudio
 
                 if (newNote.IsValid)
                 {
-                    slideStep = 0;
+                    if (!newNote.IsRelease)
+                        slideStep = 0;
 
                     if (newNote.IsSlideNote)
                     {
