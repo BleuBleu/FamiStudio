@@ -95,6 +95,10 @@ namespace FamiStudio
 #if FAMISTUDIO_LINUX
                 GL.Viewport(0, 0, width, height);
                 GL.Clear(ClearBufferMask.ColorBufferBit);
+
+                // Tentative fix for a bug when NSF dialog is open that I can no longer repro.
+                if (controls[0].App.Project == null)
+                    return true;
 #endif
 
                 foreach (var control in controls)
