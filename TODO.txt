@@ -6,34 +6,77 @@
 	- Remove debug print in Player when done.
 - Slides in NSF dont take PAL into account? (subtract the pitch of both notes, take max???. TODO: PAL.)
 - MATTT
+- CRASH: Linux open NSF twice
+- NSF export: Should I clamp the period? Why did I remove the clamps???
 
 Testing:
 - Test snap a lot (DPCM, All tempo, custom pattern, etc).
 - WAV export: RETEST WITH SAMPLE RATE!
 - Retest snapping with various pattern sizes.
 - NSF A LOT! Export NSF and reimport to make sure skips/double frames are good.
+	- Test the release fix I did for slides.
 - Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
 - Register player : PAL/NTSC, FamiTracker/FamiStudio.
 - Wav export.
 - Retest FamiTracker tempo exports (ROM, NSF, etc).
 - Make sure play starts exactly at the node the seek bar is (DPCM test).
 - Command line on Linux/Mac.
+- Retest FTI import.
 
 2.1.0 Trailer
 =============
-- Linux port
-- Improved WAV export
-- FamiTone2 SFX export
-- Command-line interface
-- Note snapping
-- Trackpad controls
+00:00 Piano roll Anim [Megami Tense II]
+00:10 Linux port
+	- GTK window, OpenGL rendering, ALSA audio with MIDI support.
+	- Please see the documentation for the installation procedure.
+00:20 Trackpad controls [Back to windows, Fadei to Mouryou Senki Madara] (suggestion from @sirocyl)
+	- Simply enable in the options.
+	- Slide to go up/down/left/right and pinch to zoom (*may not work on all Linux disto)!
+00:30 Note snapping
+	- Snap to 1, 2, 3, 4 notes, fractional snapping of 1/4, 1/3, 1/2 available too.
+	- Click on the magnet to toggle (or Shift-S)
+	- Click or mousewheel or the number to change the snap precision
+00:40 New time format (suggestion from Max Warren)
+	- Display real minutes, seconds and milliseconds in the toolbar 
+	- Enable in the options or simple click on the timer!
+00:50 Command-line interface
+	- Import from any supported import format to any supported export format right from the command line!
+	- "FamiStudio.exe -?" or check out the documentation for the full list of options
+01:00 Import of instruments from anything  (suggestion from Max Warren)
+	- Import instrument from another project (FTM, FMS, FTI, TXT)
+	- Click on the little folder and select the instruments to import.
+xx:xx Duplication patterns in the sequencer
+	- When dragging patterns in the sequencer, hold CTRL is used to create another instance of the sample pattern (regular behavior).
+	- Now holding CTRL + SHIFT will create a independent copy of the pattern.
+01:10 Mix paste (suggestion from @NyxTheShield)
+	- Paste notes in the piano roll while preserving existing notes
+01:20 Improved WAV export
+	- More options when exporting to WAV file
+	- Specify the export time and select the channels to include
+	- Could be used to create stereo mix offline or add effects in post.
+01:30 FamiTone2 SFX export
+	- Export sounds effecst to the FamiTone2 format.
+	- One song = one sound effect.
+01:50 Pasting of text values in envelopes (suggestion from YamatoRyou)
+	- Paste any text values in the envelope editor.
+	- Text can be coma, semi-color, space, tab, line seperated.
+01:40 PAL space authoring.
+	- FamiStudio tempo mode now support authoring directly in PAL mode while maintaining near-perfect NTSC playback.
+	- Could be used in europe-centric games, or simply to achieve unusual tempos.
+
+NOT PART OF THE TRAILER.
 - MacOS+Linux MIDI keyboard support
-- Pasting of text values in envelopes
-- Import of instruments from anything
-- New timecode mode
-- Mix paste
-- Duplicate patterns.
-- PAL space authoring.
+- Shift space = play begin
+- Alt right drag zoom
+- 
+
+SONG
+- Review noise volumes. Some were higher.
+- Rename patterns
+- 
+
+BREAKING CHANGES
+- Slides vs release notes.
 
 Tweet ideas
 ===========
