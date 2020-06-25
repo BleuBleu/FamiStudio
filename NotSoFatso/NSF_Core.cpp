@@ -2355,7 +2355,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			switch (state)
 			{
 				case STATE_PERIOD:    return mWave_TND.nTriFreqTimer.W;
-				case STATE_VOLUME:    return mWave_TND.nTriLengthCount && mWave_TND.bTriChannelEnabled ? mWave_TND.nTriLinearLoad : 0;
+				case STATE_VOLUME:    return mWave_TND.nTriLengthCount && mWave_TND.bTriChannelEnabled ? mWave_TND.nTriLinearCount : 0;
 			}
 			break;
 		}
