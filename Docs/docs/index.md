@@ -68,3 +68,20 @@ To bypass this warning, open the "Security and Privacy" settings and look for th
 Click "Open Anyway" and then you will have the option to launch it.
 
 ![](images/GateKeeper3.png#center)
+
+## Linux
+
+The Linux version should work on most x64 ditros. But given the very non-stardard nature of the OS, your mileage may vary.
+
+Please install the following dependencies before trying ot run the Linux version.
+
+1. Install [Mono](https://www.mono-project.com/download/stable/#download-lin)
+2. Install gtk-sharp2, this is usually by typing this, but this might vary depending on your distro :
+
+        sudo apt-get install gtk-sharp2
+
+Then to run provided amd64 (basically any x64 processor), simply run:
+
+    mono FamiStudio.exe
+
+If you run a very old version of Linux or if you are running an exotic architecture, you may have missing dependencies. If this is the case, you may have to compile some of the libraries. This is a rather manual process. Please follow the build steps on [GitHub](https://github.com/BleuBleu/FamiStudio). 

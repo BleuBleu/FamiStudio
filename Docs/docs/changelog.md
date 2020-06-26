@@ -2,6 +2,30 @@
 
 Version history / release notes for each release.
 
+## Version 2.1.0
+
+New features:
+
+* First Linux release
+* Trackpad controls
+* Note snapping in the piano roll
+* New time format (MM:SS:mmm)
+* Command-line interface
+* Import of instruments from any supported format
+* Duplication patterns in the sequencer
+* Mix paste 
+* Improved WAV export
+* FamiTone2 sound effect export support
+* Support for pasting text values in envelopes (comma, semicolor, space, tab or newline seperated)
+* PAL native authoring for FamiStudio tempp
+* MacOS+Linux MIDI keyboard support
+* Shift+Space plays the song from the beginning of the song
+* Alt+Right click up/down as an alternate zooming method
+
+Breaking/behavior changes:
+
+* There was a bug in 2.0.x where release notes would abrutly interrupt slide notes (the NSF was doing it correctly). This is no longer the case.
+
 ## Version 2.0.3
 
 New features:
