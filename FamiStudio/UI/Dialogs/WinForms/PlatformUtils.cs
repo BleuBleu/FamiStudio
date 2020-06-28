@@ -86,7 +86,7 @@ namespace FamiStudio
 
         public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)
         {
-            // MATTT: Test hi-dpi and things like this.
+            // TODO: Test hi-dpi and things like this.
             short x = (short)((m.LParam.ToInt32() >> 0) & 0xffff);
             short y = (short)((m.LParam.ToInt32() >> 16) & 0xffff);
             short delta = (short)((m.WParam.ToInt32() >> 16) & 0xffff);

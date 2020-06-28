@@ -93,6 +93,12 @@ namespace FamiStudio
         [DllImport("kernel32.dll")]
         static extern bool AttachConsole(int dwProcessId);
         private const int ATTACH_PARENT_PROCESS = -1;
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetConsoleWindow();
+        [DllImport("user32.dll")]
+        static extern int SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+        const uint WM_CHAR = 0x0102;
+        const int VK_ENTER = 0x0D;
 #endif
 
         private void InitializeConsole()
@@ -102,11 +108,19 @@ namespace FamiStudio
 #endif
         }
 
+        private void ShutdownConsole()
+        {
+#if FAMISTUDIO_WINDOWS
+            SendMessage(GetConsoleWindow(), WM_CHAR, (IntPtr)VK_ENTER, IntPtr.Zero);
+#endif
+        }
+
         private void DisplayHelp()
         {
             var version = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
 
             InitializeConsole();
+            Console.WriteLine($"");
             Console.WriteLine($"FamiStudio {version} Command-Line Usage");
             Console.WriteLine($"");
             Console.WriteLine($"Usage:");
@@ -161,6 +175,7 @@ namespace FamiStudio
             Console.WriteLine($"  -famitone2-seperate-dmc-pattern:<pattern> : DMC filename pattern to use when exporting songs to seperate files (default:{{project}}).");
             Console.WriteLine($"  -famitone2-sfx-mode:<mode> : Target machine for SFX : ntsc, pal or dual (default:project mode).");
             Console.WriteLine($"");
+            ShutdownConsole();
         }
 
         private bool OpenProject()
@@ -479,6 +494,7 @@ namespace FamiStudio
                     }
                 }
 
+                ShutdownConsole();
                 return true;
             }
 
