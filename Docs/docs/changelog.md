@@ -12,14 +12,14 @@ New features:
 * New time format (MM:SS:mmm)
 * Command-line interface
 * Import of instruments from any supported format
-* Duplication patterns in the sequencer
+* Duplication of patterns in the sequencer
 * Mix paste 
 * Improved WAV export
 * FamiTone2 sound effect export support
-* Support for pasting text values in envelopes (comma, semicolor, space, tab or newline seperated)
-* PAL native authoring for FamiStudio tempp
+* Support for pasting text values in envelopes (comma, semicolon, space, tab or newline seperated)
+* PAL native authoring for FamiStudio tempo
 * MacOS+Linux MIDI keyboard support
-* Shift+Space plays the song from the beginning of the song
+* Shift+Space plays from the beginning of the song
 * Alt+Right click up/down as an alternate zooming method
 
 Breaking/behavior changes:
