@@ -1,5 +1,6 @@
 using Gtk;
 using System;
+using System.Drawing;
 using System.Reflection;
 using System.Resources;
 
@@ -10,18 +11,38 @@ namespace FamiStudio
         public delegate bool ValidateDelegate(PropertyPage props);
         public event ValidateDelegate ValidateProperties;
 
+        private System.Drawing.Point initialLocation;
         private bool leftAlign = false;
         private bool topAlign  = false;
+        private FlatButton buttonYes;
+        private FlatButton buttonNo;
 
         private PropertyPage propertyPage = new PropertyPage();
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
         public  PropertyPage Properties => propertyPage;
 
+        public PropertyDialog(int width, Rectangle mainWinRect) : base(WindowType.Toplevel)
+        {
+            Init();
+            WidthRequest = width;
+
+#if FAMISTUDIO_LINUX
+            TransientFor = FamiStudioForm.Instance;
+            SetPosition(WindowPosition.CenterOnParent);
+#else
+            int x = mainWinRect.Left + (mainWinRect.Width  - width) / 2;
+            int y = mainWinRect.Top  + (mainWinRect.Height - width) / 2;
+
+            Move(x, y);
+#endif
+        }
+
         public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = width;
+            initialLocation = pt;
 
             this.leftAlign = leftAlign;
             this.topAlign  = topAlign;
@@ -41,8 +62,9 @@ namespace FamiStudio
             var hbox = new HBox(false, 0);
 
             var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
-            var buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
-            var buttonNo = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
+
+            buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
+            buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
 
             buttonYes.Show();
             buttonYes.ButtonPressEvent += ButtonYes_ButtonPressEvent;
@@ -74,6 +96,9 @@ namespace FamiStudio
             KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
+#if FAMISTUDIO_LINUX
+            TransientFor = FamiStudioForm.Instance;
+#endif
         }
 
         private bool RunValidation()
@@ -108,6 +133,7 @@ namespace FamiStudio
 
         private void ButtonYes_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
+            propertyPage.NotifyClosing();
             if (RunValidation())
                 result = System.Windows.Forms.DialogResult.OK;
         }
@@ -122,6 +148,7 @@ namespace FamiStudio
         {
             if (evnt.Key == Gdk.Key.Return)
             {
+                propertyPage.NotifyClosing();
                 if (RunValidation())
                     result = System.Windows.Forms.DialogResult.OK;
             }
@@ -133,16 +160,16 @@ namespace FamiStudio
             return base.OnKeyPressEvent(evnt);
         }
 
-        public System.Windows.Forms.DialogResult ShowDialog()
+        public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent = null)
         {
             Show();
 
             if (topAlign || leftAlign)
             {
-                GetPosition(out var x, out var y);
-                if (leftAlign) x -= Allocation.Width;
-                if (topAlign)  y -= Allocation.Height;
-                Move(x, y);
+                var pt = initialLocation;
+                if (leftAlign) pt.X -= Allocation.Width;
+                if (topAlign)  pt.Y -= Allocation.Height;
+                Move(pt.X, pt.Y);
             }
 
 #if FAMISTUDIO_MACOS
@@ -156,8 +183,6 @@ namespace FamiStudio
 
 #if FAMISTUDIO_MACOS
             MacUtils.RestoreMainNSWindowFocus();
-#else
-            PlatformUtils.ProcessPendingEvents();
 #endif
 
             return result;

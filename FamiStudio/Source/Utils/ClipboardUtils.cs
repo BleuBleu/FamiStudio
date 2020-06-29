@@ -14,61 +14,20 @@ namespace FamiStudio
         const uint MagicNumberClipboardEnvelope = 0x21454346; // FCE!
         const uint MagicNumberClipboardPatterns = 0x21504346; // FCP!
 
-#if !FAMISTUDIO_WINDOWS
-        static byte[] macClipboardData; // Cant copy between FamiStudio instance on MacOS.
-#else
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int RegisterClipboardFormat(string format);
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int IsClipboardFormatAvailable(int format);
-        [DllImport("user32.dll")]
-        private static extern int OpenClipboard(int hwnd);
-        [DllImport("user32.dll")]
-        private static extern int GetClipboardData(int wFormat);
-        [DllImport("user32.dll", EntryPoint = "GetClipboardFormatNameA")]
-        private static extern int GetClipboardFormatName(int wFormat, string lpString, int nMaxCount);
-        [DllImport("kernel32.dll")]
-        private static extern int GlobalAlloc(int wFlags, int dwBytes);
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr GlobalLock(int hMem);
-        [DllImport("kernel32.dll")]
-        private static extern int GlobalUnlock(int hMem);
-        [DllImport("kernel32.dll")]
-        private static extern int GlobalSize(int mem);
-        [DllImport("user32.dll")]
-        private static extern int CloseClipboard();
-        [DllImport("user32.dll")]
-        private static extern int SetClipboardData(int wFormat, int hMem);
-        [DllImport("user32.dll")]
-        private static extern int EmptyClipboard();
+        readonly static char[] Seperators = new[] { ' ', '\t', '\r', '\n', ',', ';', '\0' };
 
-        const int GMEM_MOVEABLE = 2;
-
-        private static int format = -1;
+#if FAMISTUDIO_LINUX
+        static byte[] linuxClipboardData; // Cant copy between FamiStudio instance on Linux.
 #endif
 
-        public static void Initialize()
+        private static void SetClipboardDataInternal(byte[] data)
         {
 #if FAMISTUDIO_WINDOWS
-            format = RegisterClipboardFormat("FamiStudio");
-#endif
-        }
-
-    private static void SetClipboardDataInternal(byte[] data)
-        {
-#if FAMISTUDIO_WINDOWS
-            var mem = GlobalAlloc(GMEM_MOVEABLE, data.Length);
-            var ptr = GlobalLock(mem);
-            Marshal.Copy(data, 0, ptr, data.Length);
-            GlobalUnlock(mem);
-
-            if (OpenClipboard(0) != 0)
-            {
-                SetClipboardData(format, mem);
-                CloseClipboard();
-            }
+            WinUtils.SetClipboardData(data);
+#elif FAMISTUDIO_MACOS
+            MacUtils.SetPasteboardData(data);
 #else
-            macClipboardData = data;
+            linuxClipboardData = data;
 #endif
         }
 
@@ -76,24 +35,11 @@ namespace FamiStudio
         {
             byte[] buffer = null;
 #if FAMISTUDIO_WINDOWS
-            if (IsClipboardFormatAvailable(format) != 0)
-            {
-                if (OpenClipboard(0) != 0)
-                {
-                    var mem = GetClipboardData(format);
-                    if (mem != 0)
-                    {
-                        var size = Math.Min(maxSize, GlobalSize(mem));
-                        var ptr = GlobalLock(mem);
-                        buffer = new byte[size];
-                        Marshal.Copy(ptr, buffer, 0, size);
-                        GlobalUnlock(mem);
-                    }
-                    CloseClipboard();
-                }
-            }
+            buffer = WinUtils.GetClipboardData(maxSize);
+#elif FAMISTUDIO_MACOS
+            buffer = MacUtils.GetPasteboardData();
 #else
-            buffer = macClipboardData;
+            buffer = linuxClipboardData;
 #endif
 
             if (buffer == null || BitConverter.ToUInt32(buffer, 0) != magic)
@@ -102,9 +48,51 @@ namespace FamiStudio
             return buffer;
         }
 
+        private static string GetClipboardString()
+        {
+#if FAMISTUDIO_WINDOWS
+            return WinUtils.GetClipboardString();
+#elif FAMISTUDIO_MACOS
+            return MacUtils.GetPasteboardString();
+#else
+            return null;
+#endif
+        }
+
+        private static void ClearClipboardString()
+        {
+#if FAMISTUDIO_WINDOWS
+            WinUtils.ClearClipboardString();
+#elif FAMISTUDIO_MACOS
+            MacUtils.ClearPasteboardString();
+#endif
+        }
+
         public static bool ConstainsNotes    => GetClipboardDataInternal(MagicNumberClipboardNotes,    4) != null;
-        public static bool ConstainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null;
+        public static bool ConstainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null || GetStringEnvelopeData() != null;
         public static bool ConstainsPatterns => GetClipboardDataInternal(MagicNumberClipboardPatterns, 4) != null;
+
+        public static sbyte[] GetStringEnvelopeData()
+        {
+            var str = GetClipboardString();
+
+            if (!string.IsNullOrEmpty(str))
+            {
+                var values = new List<sbyte>();
+                var splits = str.Split(Seperators, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var split in splits)
+                {
+                    if (int.TryParse(split, out var i))
+                        values.Add((sbyte)Utils.Clamp(i, sbyte.MinValue, sbyte.MaxValue));
+                    else
+                        return null;
+                }
+
+                return values.Count > 0 ? values.ToArray() : null;
+            }
+
+            return null;
+        }
 
         private static void SavePatternList(ProjectSaveBuffer serializer, ICollection<Pattern> patterns)
         {
@@ -441,19 +429,24 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 clipboardData.Add((byte)values[i]);
 
+            ClearClipboardString();
             SetClipboardDataInternal(clipboardData.ToArray());
         }
 
         public static sbyte[] LoadEnvelopeValues()
         {
+            var values = GetStringEnvelopeData();
+            if (values != null)
+                return values;
+
             var buffer = GetClipboardDataInternal(MagicNumberClipboardEnvelope);
 
             if (buffer == null)
                 return null;
 
             var numValues = BitConverter.ToInt32(buffer, 4);
-            var values = new sbyte[numValues];
 
+            values = new sbyte[numValues];
             for (int i = 0; i < numValues; i++)
                 values[i] = (sbyte)buffer[8 + i];
 

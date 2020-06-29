@@ -6,6 +6,8 @@ using System.Threading;
 
 #if FAMISTUDIO_WINDOWS
 using AudioStream = FamiStudio.XAudio2Stream;
+#elif FAMISTUDIO_LINUX
+using AudioStream = FamiStudio.OpenALStream;
 #else
 using AudioStream = FamiStudio.PortAudioStream;
 #endif

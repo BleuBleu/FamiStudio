@@ -105,6 +105,8 @@ namespace FamiStudio
         RenderBitmap bmpPause;
         RenderBitmap bmpNtsc;
         RenderBitmap bmpPal;
+        RenderBitmap bmpNtscToPal;
+        RenderBitmap bmpPalToNtsc;
         Button[] buttons = new Button[ButtonCount];
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
@@ -122,6 +124,8 @@ namespace FamiStudio
             bmpPause       = g.CreateBitmapFromResource("Pause");
             bmpNtsc        = g.CreateBitmapFromResource("NTSC");
             bmpPal         = g.CreateBitmapFromResource("PAL");
+            bmpNtscToPal   = g.CreateBitmapFromResource("NTSCToPAL");
+            bmpPalToNtsc   = g.CreateBitmapFromResource("PALToNTSC");
 
             buttons[ButtonNew]       = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { X = 40,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
@@ -151,7 +155,7 @@ namespace FamiStudio
             buttons[ButtonRedo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
             buttons[ButtonTransform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
             buttons[ButtonConfig].ToolTip    = "{MouseLeft} Edit Application Settings";
-            buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}";
+            buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space}";
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
@@ -215,6 +219,8 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpPause);
             Utils.DisposeAndNullify(ref bmpNtsc);
             Utils.DisposeAndNullify(ref bmpPal);
+            Utils.DisposeAndNullify(ref bmpNtscToPal);
+            Utils.DisposeAndNullify(ref bmpPalToNtsc);
 
             foreach (var b in buttons)
                 Utils.DisposeAndNullify(ref b.Bmp);
@@ -391,7 +397,7 @@ namespace FamiStudio
 
         private void OnMachine()
         {
-            App.PalMode = !App.PalMode;
+            App.PalPlayback = !App.PalPlayback;
         }
 
         private bool OnMachineEnabled()
@@ -401,7 +407,21 @@ namespace FamiStudio
 
         private RenderBitmap OnMachineGetBitmap()
         {
-            return App.PalMode ? bmpPal : bmpNtsc;
+            if (App.Project == null)
+            {
+                return bmpNtsc;
+            }
+            else if (App.Project.UsesFamiTrackerTempo)
+            {
+                return App.PalPlayback ? bmpPal : bmpNtsc;
+            }
+            else
+            {
+                if (App.Project.PalMode)
+                    return App.PalPlayback ? bmpPal : bmpPalToNtsc;
+                else
+                    return App.PalPlayback ? bmpNtscToPal : bmpNtsc;
+            }
         }
 
         private void OnHelp()
@@ -409,11 +429,10 @@ namespace FamiStudio
             App.ShowHelp();
         }
 
-        protected override void OnRender(RenderGraphics g)
+        private void RenderButtons(RenderGraphics g)
         {
             g.FillRectangle(0, 0, Width, Height, toolbarBrush);
 
-            var scaling = RenderTheme.MainWindowScaling;
             var pt = this.PointToClient(Cursor.Position);
 
             // Buttons
@@ -427,33 +446,68 @@ namespace FamiStudio
                 int x = btn.RightAligned ? Width - btn.X : btn.X;
                 g.DrawBitmap(bmp, x, btn.Y, enabled ? (hover ? 0.75f : 1.0f) : 0.25f);
             }
+        }
 
-            // Timecode
-            int frame = App.CurrentFrame;
-            int patternIdx = App.Song.FindPatternInstanceIndex(frame, out int noteIdx);
-
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
-
-            var numPatternDigits = Utils.NumDecimalDigits(App.Song.Length - 1);
-            var numNoteDigits    = Utils.NumDecimalDigits(App.Song.GetPatternLength(patternIdx) - 1);
+        private void RenderTimecode(RenderGraphics g)
+        {
+            var frame = App.CurrentFrame;
+            var famitrackerTempo = App.Project != null && App.Project.UsesFamiTrackerTempo;
 
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            var patternString = patternIdx.ToString("D" + numPatternDigits);
-            var noteString    = noteIdx.ToString("D" + numNoteDigits);
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
 
-            var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
+            if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
+            {
+                int patternIdx = App.Song.FindPatternInstanceIndex(frame, out int noteIdx);
 
-            for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
-                g.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                var numPatternDigits = Utils.NumDecimalDigits(App.Song.Length - 1);
+                var numNoteDigits = Utils.NumDecimalDigits(App.Song.GetPatternLength(patternIdx) - 1);
 
-            g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
-            charPosX += colonSizeX;
+                var patternString = patternIdx.ToString("D" + numPatternDigits);
+                var noteString = noteIdx.ToString("D" + numNoteDigits);
 
-            for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
-                g.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
+                for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
+                    g.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+
+                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+                charPosX += colonSizeX;
+
+                for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
+                    g.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+            }
+            else
+            {
+                TimeSpan time = App.Project != null ? 
+                    TimeSpan.FromMilliseconds(frame * 1000.0 / (App.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC)) :
+                    TimeSpan.Zero;
+
+                var minutesString      = time.Minutes.ToString("D2");
+                var secondsString      = time.Seconds.ToString("D2");
+                var millisecondsString = time.Milliseconds.ToString("D3");
+
+                // 00:00:000
+                var charPosX = timecodePosX + timecodeSizeX / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
+
+                for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
+                    g.DrawText(minutesString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+                charPosX += colonSizeX;
+                for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
+                    g.DrawText(secondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+                charPosX += colonSizeX;
+                for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
+                    g.DrawText(millisecondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+            }
+        }
+
+        private void RenderWarningAndTooltip(RenderGraphics g)
+        {
+            var scaling = RenderTheme.MainWindowScaling;
             var message = tooltip;
             var messageBrush = theme.BlackBrush;
             var messageFont = ThemeBase.FontMedium;
@@ -485,7 +539,7 @@ namespace FamiStudio
                 for (int j = 0; j < lines.Length; j++)
                 {
                     var splits = lines[j].Split(new char[] { '{', '}' }, StringSplitOptions.RemoveEmptyEntries);
-                    var posX = Width - 40 * RenderTheme.MainWindowScaling;
+                    var posX = Width - 40 * scaling;
 
                     for (int i = splits.Length - 1; i >= 0; i--)
                     {
@@ -531,6 +585,13 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnRender(RenderGraphics g)
+        {
+            RenderButtons(g);
+            RenderTimecode(g);
+            RenderWarningAndTooltip(g);
+        }
+
         protected override void OnMouseLeave(EventArgs e)
         {
             ConditionalInvalidate();
@@ -559,15 +620,24 @@ namespace FamiStudio
 
             if (left || right)
             {
-                foreach (var btn in buttons)
+                if (e.X > timecodePosX && e.X < timecodePosX + timecodeSizeX &&
+                    e.Y > timecodePosY && e.Y < Height - timecodePosY)
                 {
-                    if (btn != null && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled()))
+                    Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
+                    ConditionalInvalidate();
+                }
+                else
+                {
+                    foreach (var btn in buttons)
                     {
-                        if (left)
-                            btn.Click?.Invoke();
-                        else
-                            btn.RightClick?.Invoke();
-                        break;
+                        if (btn != null && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled()))
+                        {
+                            if (left)
+                                btn.Click?.Invoke();
+                            else
+                                btn.RightClick?.Invoke();
+                            break;
+                        }
                     }
                 }
             }

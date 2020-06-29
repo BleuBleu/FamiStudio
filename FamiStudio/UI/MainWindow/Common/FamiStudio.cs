@@ -14,18 +14,17 @@ namespace FamiStudio
     public class FamiStudio
     {
         // TODO: Get rid of this!
-        public static Project StaticProject { get; private set; }
+        public static Project StaticProject { get; set; }
 
         private FamiStudioForm mainForm;
         private Project project;
         private Song song;
         private SongPlayer songPlayer = new SongPlayer();
         private InstrumentPlayer instrumentPlayer = new InstrumentPlayer();
-        private Midi midi;
         private UndoRedoManager undoRedoManager;
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
-        private bool palMode = false;
+        private bool palPlayback = false;
         private bool audioDeviceChanged = false;
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
@@ -87,17 +86,16 @@ namespace FamiStudio
                 NewProject();
             }
 
+#if !DEBUG
             if (Settings.CheckUpdates)
             {
                 Task.Factory.StartNew(CheckForNewRelease);
             }
+#endif
         }
         
         private void ProjectExplorer_ProjectModified()
         {
-            if (Project.ExpansionAudio != Project.ExpansionNone)
-                palMode = false;
-
             RefreshSequencerLayout();
             Sequencer.Reset();
             PianoRoll.Reset();
@@ -122,6 +120,7 @@ namespace FamiStudio
             if (PianoRoll.ClientRectangle.Contains(pianoRollClientPos))
             {
                 PianoRoll.ReplaceSelectionInstrument(instrument);
+                PianoRoll.Focus();
             }
         }
 
@@ -177,16 +176,13 @@ namespace FamiStudio
 
         public void InitializeMidi()
         {
-            if (midi != null)
-            {
-                midi.Close();
-                midi = null;
-            }
+            Midi.Initialize();
+
+            Midi.Close();
+            Midi.NotePlayed -= Midi_NotePlayed;
 
             if (Midi.InputCount > 0)
             {
-                midi = new Midi();
-
                 int midiDeviceIndex = 0;
                 if (Settings.MidiDevice.Length > 0)
                 {
@@ -201,16 +197,34 @@ namespace FamiStudio
                     }
                 }
 
-                if (midi.Open(midiDeviceIndex) && midi.Start())
-                    midi.NotePlayed += Midi_NotePlayed;
-                else
-                    midi = null;
+                if (Midi.Open(midiDeviceIndex))
+                    Midi.NotePlayed += Midi_NotePlayed;
             }
         }
 
         public void DisplayWarning(string msg, bool beep = true)
         {
             ToolBar.DisplayWarning(msg, beep);
+        }
+
+        private void UndoRedoManager_PreUndoRedo(TransactionScope scope)
+        {
+            // Special category for stuff that is so important, we should stop the song.
+            if (scope == TransactionScope.ProjectProperties)
+            {
+                Stop();
+                StopInstrumentPlayer();
+                Seek(0);
+            }
+        }
+
+        private void UndoRedoManager_PostUndoRedo(TransactionScope scope)
+        {
+            if (scope == TransactionScope.ProjectProperties)
+            {
+                palPlayback = project.PalMode;
+                StartInstrumentPlayer();
+            }
         }
 
         private void UndoRedoManager_Updated()
@@ -239,6 +253,8 @@ namespace FamiStudio
                     }
                 }
 
+                undoRedoManager.PreUndoRedo  -= UndoRedoManager_PreUndoRedo;
+                undoRedoManager.PostUndoRedo -= UndoRedoManager_PostUndoRedo;
                 undoRedoManager.Updated -= UndoRedoManager_Updated;
                 undoRedoManager = null;
                 project = null;
@@ -266,9 +282,11 @@ namespace FamiStudio
 
             StaticProject = project;
             song = project.Songs[0];
-            palMode = false;
+			palPlayback = project.PalMode;
 
             undoRedoManager = new UndoRedoManager(project, this);
+            undoRedoManager.PreUndoRedo  += UndoRedoManager_PreUndoRedo;
+            undoRedoManager.PostUndoRedo += UndoRedoManager_PostUndoRedo;
             undoRedoManager.Updated += UndoRedoManager_Updated;
 
             songPlayer.CurrentFrame = 0;
@@ -281,7 +299,7 @@ namespace FamiStudio
             UpdateTitle();
             RefreshSequencerLayout();
 
-            instrumentPlayer.Start(project, palMode);
+            instrumentPlayer.Start(project, palPlayback);
         }
 
         public void OpenProject(string filename)
@@ -292,6 +310,31 @@ namespace FamiStudio
             {
                 return;
             }
+
+            project = OpenProjectFile(filename);
+
+            if (project != null)
+            {
+                InitProject();
+            }
+            else
+            {
+                NewProject();
+            }
+        }
+
+        public void OpenProject()
+        {
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe", ref Settings.LastFileFolder);
+            if (filename != null)
+            {
+                OpenProject(filename);
+            }
+        }
+
+        public Project OpenProjectFile(string filename, bool allowNsf = true)
+        {
+            Project project = null;
 
             if (filename.ToLower().EndsWith("fms"))
             {
@@ -308,7 +351,7 @@ namespace FamiStudio
                 if (project == null)
                     project = new FamitrackerTextFile().Load(filename);
             }
-            else if (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe"))
+            else if (allowNsf && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
             {
                 NsfImportDialog dlg = new NsfImportDialog(filename, mainForm.Bounds);
 
@@ -318,25 +361,7 @@ namespace FamiStudio
                 }
             }
 
-            if (project != null)
-            {
-                InitProject();
-
-                //FamistudioTextFile.Save(project, "d:\\toto.txt");
-            }
-            else
-            {
-                NewProject();
-            }
-        }
-
-        public void OpenProject()
-        {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe");
-            if (filename != null)
-            {
-                OpenProject(filename);
-            }
+            return project;
         }
 
         public bool SaveProject(bool forceSaveAs = false)
@@ -345,7 +370,7 @@ namespace FamiStudio
 
             if (forceSaveAs || string.IsNullOrEmpty(project.Filename))
             {
-                string filename = PlatformUtils.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms");
+                string filename = PlatformUtils.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms", ref Settings.LastFileFolder);
                 if (filename != null)
                 {
                     success = new ProjectFile().Save(project, filename);
@@ -397,12 +422,9 @@ namespace FamiStudio
                 return false;
             }
 
-            if (midi != null)
-            {
-                midi.Stop();
-                midi.Close();
-                midi = null;
-            }
+            // Dont bother exiting cleanly on Linux.
+            Midi.NotePlayed -= Midi_NotePlayed;
+            Midi.Shutdown();
 
             StopEverything();
             songPlayer.Shutdown();
@@ -446,6 +468,8 @@ namespace FamiStudio
                                 var name = (string)asset["name"];
 #if FAMISTUDIO_WINDOWS
                                 if (name != null && name.ToLower().Contains("win"))
+#elif FAMISTUDIO_LINUX
+                                if (name != null && name.ToLower().Contains("linux"))
 #else
                                 if (name != null && name.ToLower().Contains("macos"))
 #endif
@@ -463,6 +487,21 @@ namespace FamiStudio
             }
         }
 
+        private void OpenUrl(string url)
+        {
+            try
+            {
+#if FAMISTUDIO_LINUX
+                Process.Start("xdg-open", url);
+#elif FAMISTUDIO_MACOS
+                Process.Start("open", url);
+#else
+                Process.Start(url);
+#endif
+            }
+            catch { }
+        }
+
         private void CheckNewReleaseDone()
         {
             if (newReleaseAvailable)
@@ -471,7 +510,7 @@ namespace FamiStudio
 
                 if (PlatformUtils.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    Process.Start("http://www.famistudio.org");
+                    OpenUrl("http://www.famistudio.org");
                 }
             }
         }
@@ -491,7 +530,7 @@ namespace FamiStudio
 
         public void ShowHelp()
         {
-            Process.Start("http://www.famistudio.org/doc/index.html");
+            OpenUrl("http://www.famistudio.org/doc/index.html");
         }
 
         private void UpdateTitle()
@@ -499,11 +538,17 @@ namespace FamiStudio
             string projectFile = "New Project";
 
             if (!string.IsNullOrEmpty(project.Filename))
-                projectFile = project.Filename;
+                projectFile = System.IO.Path.GetFileName(project.Filename);
 
             var version = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
 
-            mainForm.Text = $"FamiStudio {version} - {projectFile}";
+            string title = $"FamiStudio {version} - {projectFile}";
+
+#if FALSE
+            title += " DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
+#endif
+
+            mainForm.Text = title;
         }
 
         public void PlayInstrumentNote(int n, bool showWarning = true)
@@ -570,20 +615,22 @@ namespace FamiStudio
 
         public void StartInstrumentPlayer()
         {
-            instrumentPlayer.Start(project, palMode);
+            instrumentPlayer.Start(project, palPlayback);
         }
 
-        public bool PalMode
+        public bool PalPlayback
         {
             get
             {
-                return palMode;
+                return palPlayback;
             }
             set
             {
                 Stop();
                 StopInstrumentPlayer();
-                palMode = value;
+				palPlayback = value;
+				if (project.UsesFamiTrackerTempo)
+	                project.PalMode = value;
                 StartInstrumentPlayer();
             }
         }
@@ -592,6 +639,10 @@ namespace FamiStudio
         {
             bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
             bool shift = e.Modifiers.HasFlag(Keys.Shift);
+
+            // Prevent loosing focus on Alt.
+            if (e.KeyCode == Keys.Menu)
+                e.Handled = true;
 
             if (e.KeyCode == Keys.Escape)
             {
@@ -608,6 +659,8 @@ namespace FamiStudio
                 {
                     if (ctrl)
                         Seek(song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _)));
+                    else if (shift)
+                        Seek(0);
 
                     Play();
                 }
@@ -727,7 +780,7 @@ namespace FamiStudio
         {
             if (!songPlayer.IsPlaying)
             {
-                songPlayer.Play(song, songPlayer.CurrentFrame, palMode);
+                songPlayer.Play(song, songPlayer.CurrentFrame, palPlayback);
             }
         }
 

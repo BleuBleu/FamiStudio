@@ -176,9 +176,8 @@ namespace FamiStudio
         public const int MaximumPeriod15Bit = 0x7fff;
         public const int MaximumPeriod16Bit = 0xffff;
 
-#if DEBUG
-        public static bool seeking = false;
-#endif
+        public const float FpsPAL  = 50.0070f;
+        public const float FpsNTSC = 60.0988f;
 
         public static readonly ushort[]   NoteTableNTSC    = new ushort[97];
         public static readonly ushort[]   NoteTablePAL     = new ushort[97];

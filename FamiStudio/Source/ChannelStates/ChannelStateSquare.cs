@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -22,6 +23,8 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
+                //Debug.WriteLine(note.FriendlyName);
+
                 var period = GetPeriod();
                 var volume = GetVolume();
 

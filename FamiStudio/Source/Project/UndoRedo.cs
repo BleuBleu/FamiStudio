@@ -8,6 +8,7 @@ namespace FamiStudio
     public enum TransactionScope
     {
         Project,
+        ProjectProperties,
         DCPMSamples,
         Song,
         Channel,
@@ -70,6 +71,7 @@ namespace FamiStudio
             switch (scope)
             {
                 case TransactionScope.Project:
+                case TransactionScope.ProjectProperties:
                     project.SerializeState(buffer);
                     break;
                 case TransactionScope.DCPMSamples:
@@ -109,8 +111,12 @@ namespace FamiStudio
 
     public class UndoRedoManager
     {
-        public delegate void UndoRedoDelegate();
-        public event UndoRedoDelegate Updated;
+        public delegate void UndoRedoDelegate(TransactionScope scope);
+        public delegate void UpdatedDelegate();
+
+        public event UndoRedoDelegate PreUndoRedo;
+        public event UndoRedoDelegate PostUndoRedo;
+        public event UpdatedDelegate  Updated;
 
         private FamiStudio app;
         private Project project;
@@ -190,8 +196,11 @@ namespace FamiStudio
         {
             if (index > 0)
             {
-                transactions[index - 1].Undo();
+                var trans = transactions[index - 1];
+                PreUndoRedo?.Invoke(trans.Scope);
+                trans.Undo();
                 index--;
+                PostUndoRedo?.Invoke(trans.Scope);
                 Updated?.Invoke();
             }
         }
@@ -201,7 +210,10 @@ namespace FamiStudio
             if (index < transactions.Count)
             {
                 index++;
-                transactions[index - 1].Redo();
+                var trans = transactions[index - 1];
+                PreUndoRedo?.Invoke(trans.Scope);
+                trans.Redo();
+                PostUndoRedo?.Invoke(trans.Scope);
                 Updated?.Invoke();
             }
         }

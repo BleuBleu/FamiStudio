@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
+    <Compile Include="Source\IO\FamitoneSoundEffectFile.cs" />
     <Compile Include="Source\IO\FamitrackerBaseFile.cs" />
     <Compile Include="Source\IO\FamitrackerBinaryFile.cs" />
     <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
@@ -90,8 +91,9 @@
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
+    <Compile Include="Source\Player\RegisterPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
-    <Compile Include="Source\Utils\MIDI.cs" />
+    <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
@@ -134,7 +136,7 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="UI\Dialogs\Common\ExportDialog.cs" />
     <Compile Include="UI\MainWindow\Common\FamiStudio.cs" />
-    <Compile Include="UI\MainWindow\OpenTK\FamiStudioForm.cs" />
+    <Compile Include="UI\MainWindow\OpenTK\FamiStudioFormOpenTk.cs" />
     <Compile Include="UI\MainWindow\Common\ProjectExplorer.cs" />
     <Compile Include="UI\MainWindow\Common\PianoRoll.cs" />
     <Compile Include="Source\Utils\Program.cs" />
@@ -207,8 +209,10 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportWav.png" />
-    <EmbeddedResource Include="Rom\rom.nes" />
-    <EmbeddedResource Include="Rom\rom_tempo.nes" />
+    <EmbeddedResource Include="Rom\rom_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_ntsc_tempo.nes" />
+    <EmbeddedResource Include="Rom\rom_pal.nes" />
+    <EmbeddedResource Include="Rom\rom_pal_tempo.nes" />
     <EmbeddedResource Include="Resources\QuickSand10.fnt" />
     <EmbeddedResource Include="Resources\QuickSand10_0.png" />
     <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
@@ -239,6 +243,13 @@
     <EmbeddedResource Include="Resources\QuickSand56_0.png" />
     <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
+    <Compile Include="UI\MainWindow\OpenTK\FamiStudioControls.cs" />
+    <Compile Include="UI\Dialogs\Gtk\GtkUtils.cs" />
+    <Compile Include="UI\Dialogs\Gtk\OpenTkUtils.cs" />
+    <Content Include="librtmidi.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Source\Utils\RtMidi.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -273,6 +284,30 @@
     <Content Include="NotSoFatso.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\NTSCToPAL%402x.png" />
+    <EmbeddedResource Include="Resources\NTSCToPAL.png" />
+    <EmbeddedResource Include="Resources\PALToNTSC%402x.png" />
+    <EmbeddedResource Include="Resources\PALToNTSC.png" />
+    <EmbeddedResource Include="Resources\Duplicate%402x.png" />
+    <EmbeddedResource Include="Resources\Duplicate.png" />
+    <EmbeddedResource Include="Resources\Instance%402x.png" />
+    <EmbeddedResource Include="Resources\Instance.png" />
+    <EmbeddedResource Include="Resources\Snap1%402x.png" />
+    <EmbeddedResource Include="Resources\Snap1.png" />
+    <EmbeddedResource Include="Resources\Snap1_2%402x.png" />
+    <EmbeddedResource Include="Resources\Snap1_2.png" />
+    <EmbeddedResource Include="Resources\Snap1_3%402x.png" />
+    <EmbeddedResource Include="Resources\Snap1_3.png" />
+    <EmbeddedResource Include="Resources\Snap1_4%402x.png" />
+    <EmbeddedResource Include="Resources\Snap1_4.png" />
+    <EmbeddedResource Include="Resources\Snap2%402x.png" />
+    <EmbeddedResource Include="Resources\Snap2.png" />
+    <EmbeddedResource Include="Resources\Snap3%402x.png" />
+    <EmbeddedResource Include="Resources\Snap3.png" />
+    <EmbeddedResource Include="Resources\Snap4%402x.png" />
+    <EmbeddedResource Include="Resources\Snap4.png" />
+    <EmbeddedResource Include="Resources\Snap%402x.png" />
+    <EmbeddedResource Include="Resources\Snap.png" />
     <EmbeddedResource Include="Resources\Clean%402x.png" />
     <EmbeddedResource Include="Resources\Clean.png" />
     <EmbeddedResource Include="Resources\Dash%402x.png" />

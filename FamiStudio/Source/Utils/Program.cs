@@ -33,24 +33,36 @@ namespace FamiStudio
 #endif
 
             Settings.Load();
-            Cursors.Initialize();
             RenderTheme.Initialize();
             PlatformUtils.Initialize();
-            ClipboardUtils.Initialize();
+            Cursors.Initialize();
             FamiStudioTempoUtils.Initialize();
             NesApu.InitializeNoteTables();
 
 #if FAMISTUDIO_WINDOWS
+            WinUtils.Initialize();
             PerformanceCounter.Initialize();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 #endif
+#if FAMISTUDIO_LINUX
+            LinuxUtils.SetProcessName("FamiStudio");
+#endif
 
+            var cli = new CommandLineInterface(args);
 
-            var famiStudio = new FamiStudio(args.Length > 0 ? args[0] : null);
-            famiStudio.Run();
+            if (!cli.Run())
+            {
+                var famiStudio = new FamiStudio(args.Length > 0 ? args[0] : null);
+                famiStudio.Run();
+            }
 
             Settings.Save();
+
+#if FAMISTUDIO_LINUX
+            // We sometimes gets stuck here on Linux, lets abort.
+            Environment.Exit(0);
+#endif
         }
     }
 }

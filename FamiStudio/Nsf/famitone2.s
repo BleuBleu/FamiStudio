@@ -30,7 +30,11 @@ FT_TEMP_SIZE_DEF = 4
 FT_TEMP_SIZE_DEF = 3
 .endif
 
+.if FT_FAMISTUDIO_TEMPO
+FT_BASE_SIZE_DEF = 142
+.else
 FT_BASE_SIZE_DEF = 140
+.endif
 
 .segment "ZEROPAGE"
 FT_TEMP:		.res FT_TEMP_SIZE_DEF
@@ -47,7 +51,7 @@ FT_TEMP_PTR_L		= FT_TEMP_PTR+0
 FT_TEMP_PTR_H		= FT_TEMP_PTR+1
 FT_TEMP_VAR1		= FT_TEMP+2
 .if FT_FAMISTUDIO_TEMPO
-FT_TEMP_PTR2			= FT_TEMP+2		;word
+FT_TEMP_PTR2		= FT_TEMP+2		;word
 FT_TEMP_PTR2_L		= FT_TEMP_PTR2+0
 FT_TEMP_PTR2_H		= FT_TEMP_PTR2+1
 FT_TEMP_SIZE        = 4
@@ -144,11 +148,13 @@ FT_TEMPO_STEP_L	= FT_VARS+5
 FT_TEMPO_STEP_H	= FT_VARS+6
 FT_TEMPO_ACC_L	= FT_VARS+7
 FT_TEMPO_ACC_H	= FT_VARS+8
-.elseif(FT_PAL_SUPPORT)
-FT_TEMPO_ENV_PTR_L	= FT_VARS+5
-FT_TEMPO_ENV_PTR_H	= FT_VARS+6
+.else
+FT_TEMPO_ENV_PTR_L		= FT_VARS+5
+FT_TEMPO_ENV_PTR_H		= FT_VARS+6
 FT_TEMPO_ENV_COUNTER	= FT_VARS+7
-FT_TEMPO_ENV_IDX	= FT_VARS+8
+FT_TEMPO_ENV_IDX		= FT_VARS+8
+FT_TEMPO_FRAME_NUM		= FT_BASE_ADR+FT_BASE_SIZE_DEF-2
+FT_TEMPO_FRAME_CNT		= FT_BASE_ADR+FT_BASE_SIZE_DEF-1
 .endif
 FT_SONG_SPEED	= FT_CH5_INSTRUMENT
 FT_PULSE1_PREV	= FT_CH3_DUTY
@@ -361,7 +367,7 @@ FamiToneMusicPlay:
 
 	ldy #0
 	cmp (FT_TEMP_PTR),y		;check if there is such sub song
-	bcs @skip
+	bcs skip
 
 	asl a					;multiply song number by 14
 	sta <FT_TEMP_PTR_L		;use pointer LSB as temp variable
@@ -421,26 +427,38 @@ FamiToneMusicPlay:
 	lda #6					;default speed
 	sta FT_TEMPO_ACC_H
 	sta FT_SONG_SPEED		;apply default speed, this also enables music
-.elseif(FT_PAL_SUPPORT)
-    lda (FT_TEMP_PTR),y
-    sta FT_TEMPO_ENV_PTR_L
-    sta FT_TEMP_PTR2_L
-    iny
-    lda (FT_TEMP_PTR),y
-    sta FT_TEMPO_ENV_PTR_H
-    sta FT_TEMP_PTR2_H
-    ldy #0
-    sty FT_TEMPO_ENV_IDX
-    lda (FT_TEMP_PTR2),y
-    sta FT_TEMPO_ENV_COUNTER
-    lda #6
-    sta FT_SONG_SPEED          ; simply so the song isnt considered paused.
 .else
-    lda #6
-    sta FT_SONG_SPEED
+	lda (FT_TEMP_PTR),y
+	sta FT_TEMPO_ENV_PTR_L
+	sta FT_TEMP_PTR2_L
+	iny
+	lda (FT_TEMP_PTR),y
+	sta FT_TEMPO_ENV_PTR_H
+	sta FT_TEMP_PTR2_H
+	iny
+	lda (FT_TEMP_PTR),y
+.if(FT_PITCH_FIX) ; Dual mode
+	ldx FT_PAL_ADJUST
+	bne ntsc_target
+	ora #1
+	ntsc_target:
+.elseif(FT_PAL_SUPPORT) ; PAL only
+	ora #1
+.endif
+	tax
+	lda _FT2FamiStudioTempoFrameLookup, x ; Lookup contains the number of frames to run (0,1,2) to maintain tempo
+	sta FT_TEMPO_FRAME_NUM
+	ldy #0
+	sty FT_TEMPO_ENV_IDX
+	lda (FT_TEMP_PTR2),y
+	clc 
+	adc #1
+	sta FT_TEMPO_ENV_COUNTER
+	lda #6
+	sta FT_SONG_SPEED          ; simply so the song isnt considered paused.
 .endif
 
-@skip:
+skip:
 	rts
 
 
@@ -514,6 +532,41 @@ FamiToneUpdate:
 	sec
 	sbc FT_SONG_SPEED
 	sta FT_TEMPO_ACC_H
+
+.else ; FT_FAMISTUDIO_TEMPO here
+
+	dec FT_TEMPO_ENV_COUNTER
+	beq @advance_tempo_envelope
+	lda #1
+	jmp @store_frame_count
+
+@advance_tempo_envelope:
+	lda FT_TEMPO_ENV_PTR_L
+	sta FT_TEMP_PTR_L
+	lda FT_TEMPO_ENV_PTR_H
+	sta FT_TEMP_PTR_H
+
+	inc FT_TEMPO_ENV_IDX
+	ldy FT_TEMPO_ENV_IDX
+	lda (FT_TEMP_PTR),y
+	bpl @store_counter
+
+@tempo_envelope_end:
+	ldy #1
+	sty FT_TEMPO_ENV_IDX
+	lda (FT_TEMP_PTR),y
+
+@store_counter:
+	sta FT_TEMPO_ENV_COUNTER
+	lda FT_TEMPO_FRAME_NUM
+	bne @store_frame_count
+	jmp @skip_frame
+
+@store_frame_count:
+	sta FT_TEMPO_FRAME_CNT
+
+@update_row:
+
 .endif
 
 	ldx #.lobyte(FT_CH1_VARS)	;process channel 1
@@ -734,37 +787,14 @@ FamiToneUpdate:
 	ora #$f0
 	sta FT_MR_NOISE_V
 
-; Run update twice sometimes so that PAL keeps up with NTSC
-.if(FT_FAMISTUDIO_TEMPO && FT_PAL_SUPPORT)
-	lda FT_PAL_ADJUST ; On NTSC, just play 1 note per frame.
-	bne @check_done
-
-	dec FT_TEMPO_ENV_COUNTER
-	bne @check_done
-
-	lda FT_TEMPO_ENV_PTR_L
-	sta FT_TEMP_PTR+0
-	lda FT_TEMPO_ENV_PTR_H
-	sta FT_TEMP_PTR+1
-
-	inc FT_TEMPO_ENV_IDX
-	ldy FT_TEMPO_ENV_IDX
-	lda (FT_TEMP_PTR),y
-	bpl @store_counter
-
-	@tempo_envelope_end:
-		ldy #1
-		sty FT_TEMPO_ENV_IDX
-		lda (FT_TEMP_PTR),y
-
-	@store_counter:
-		sta FT_TEMPO_ENV_COUNTER
-
-		; Skip this frame on PAL!
-		jmp @update
-
-	@check_done:
+.if(FT_FAMISTUDIO_TEMPO)
+	; See if we need to run a double frame (playing NTSC song on PAL)
+	dec FT_TEMPO_FRAME_CNT
+	beq @skip_frame
+	jmp @update_row
 .endif
+
+@skip_frame:
 
 	.if(FT_SFX_ENABLE)
 
@@ -966,19 +996,17 @@ _FT2ChannelUpdate:
 
 @set_speed:
 .if(FT_FAMISTUDIO_TEMPO)
-	.if(FT_PAL_SUPPORT)
-	        lda (FT_TEMP_PTR),y
-	        sta FT_TEMPO_ENV_PTR_L
-	        sta FT_TEMP_PTR2_L
-	        iny
-	        lda (FT_TEMP_PTR),y
-	        sta FT_TEMPO_ENV_PTR_H
-	        sta FT_TEMP_PTR2_H
-	        ldy #0
-	        sty FT_TEMPO_ENV_IDX
-	        lda (FT_TEMP_PTR2),y
-	        sta FT_TEMPO_ENV_COUNTER
-	.endif
+        lda (FT_TEMP_PTR),y
+        sta FT_TEMPO_ENV_PTR_L
+        sta FT_TEMP_PTR2_L
+        iny
+        lda (FT_TEMP_PTR),y
+        sta FT_TEMPO_ENV_PTR_H
+        sta FT_TEMP_PTR2_H
+        ldy #0
+        sty FT_TEMPO_ENV_IDX
+        lda (FT_TEMP_PTR2),y
+        sta FT_TEMPO_ENV_COUNTER
 	clc
 	lda #2
 	adc <FT_TEMP_PTR_L
@@ -1302,6 +1330,11 @@ _FT2SfxUpdate:
 
 	.endif
 
+.if(FT_FAMISTUDIO_TEMPO)
+_FT2FamiStudioTempoFrameLookup:
+	.byte $01, $02 ; NTSC -> NTSC, NTSC -> PAL
+	.byte $00, $01 ; PAL  -> NTSC, PAL  -> PAL
+.endif
 
 ;dummy envelope used to initialize all channels with silence
 

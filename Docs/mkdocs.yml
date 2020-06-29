@@ -11,6 +11,7 @@ nav:
   - "Using Expansion Audio": expansion.md
   - "Cleaning-up your Project": cleanup.md
   - "Configuring FamiStudio": config.md
+  - "Command-line Processing": cmdline.md
   - "Troubleshooting": troubleshooting.md
   - "Change Log": changelog.md
 extra_css:

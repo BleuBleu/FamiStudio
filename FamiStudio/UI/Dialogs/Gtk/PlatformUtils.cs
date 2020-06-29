@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using Gtk;
+using OpenTK;
 
 namespace FamiStudio
 {
@@ -24,6 +25,7 @@ namespace FamiStudio
             // When debugging or when in a app package, our paths are a bit different.
             string[] pathsToSearch =
             {
+                "./Resources/",
                 "../../Resources/",
                 "../Resources/Fonts/",
                 "."
@@ -55,8 +57,7 @@ namespace FamiStudio
                         }
                         catch
                         {
-                            //try { FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); } catch { }
-                            FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); // MATTT
+                            try { FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); } catch { }
                         }
 #endif
                     }
@@ -64,9 +65,15 @@ namespace FamiStudio
                 }
             }
 
-#if FAMISTUDIO_MACOS
-            InitializeGtk();
+#if FAMISTUDIO_LINUX
+            Toolkit.Init(new ToolkitOptions
+            {
+                Backend = PlatformBackend.PreferX11,
+                EnableHighResolution = false
+            });
 #endif
+
+            InitializeGtk();
         }
 
         public static void InitializeGtk()
@@ -106,11 +113,14 @@ namespace FamiStudio
             return extensions.Distinct().ToArray();
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
         {
             var extensionList = GetExtensionList(extensions);
 #if FAMISTUDIO_MACOS
-            return MacUtils.ShowOpenDialog(title, extensionList);
+            var filename = MacUtils.ShowOpenDialog(title, extensionList, defaultPath);
+            if (!string.IsNullOrEmpty(filename))
+                defaultPath = Path.GetDirectoryName(filename);
+            return filename;
 #else
             Gtk.Rc.ResetStyles(Gtk.Settings.GetForScreen(Gdk.Screen.Default));
             Gtk.Rc.ReparseAll();
@@ -125,6 +135,8 @@ namespace FamiStudio
             filechooser.KeepAbove = true;
             filechooser.Modal = true;
             filechooser.SkipTaskbarHint = true;
+            filechooser.TransientFor = FamiStudioForm.Instance;
+            filechooser.SetCurrentFolder(defaultPath);
 
             filechooser.Filter = new FileFilter();
             foreach (var ext in extensionList)
@@ -132,11 +144,51 @@ namespace FamiStudio
 
             string filename = null;
             if (filechooser.Run() == (int)ResponseType.Accept)
+            {
                 filename = filechooser.Filename;
+                defaultPath = Path.GetDirectoryName(filename);
+            }
 
-            ProcessPendingEvents();
             filechooser.Destroy();
-            ProcessPendingEvents();
+
+            return filename;
+#endif
+        }
+
+        public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
+        {
+            var extensionList = GetExtensionList(extensions);
+#if FAMISTUDIO_MACOS
+            var filename = MacUtils.ShowSaveDialog(title, extensionList, defaultPath);
+            if (!string.IsNullOrEmpty(filename))
+                defaultPath = Path.GetDirectoryName(filename);
+            return filename;
+#else
+            Gtk.FileChooserDialog filechooser =
+                new Gtk.FileChooserDialog("Choose the file to save",
+                    null,
+                    FileChooserAction.Save,
+                    "Cancel", ResponseType.Cancel,
+                    "Save", ResponseType.Accept);
+
+            filechooser.KeepAbove = true;
+            filechooser.Modal = true;
+            filechooser.SkipTaskbarHint = true;
+            filechooser.TransientFor = FamiStudioForm.Instance;
+            filechooser.SetCurrentFolder(defaultPath);
+
+            filechooser.Filter = new FileFilter();
+            foreach (var ext in extensionList)
+                filechooser.Filter.AddPattern($"*.{ext}");
+
+            string filename = null;
+            if (filechooser.Run() == (int)ResponseType.Accept)
+            {
+                filename = filechooser.Filename;
+                defaultPath = Path.GetDirectoryName(filename);
+            }
+
+            filechooser.Destroy();
 
             return filename;
 #endif
@@ -144,35 +196,8 @@ namespace FamiStudio
 
         public static string ShowSaveFileDialog(string title, string extensions)
         {
-            var extensionList = GetExtensionList(extensions);
-#if FAMISTUDIO_MACOS
-            return MacUtils.ShowSaveDialog(title, extensionList);
-#else
-            Gtk.FileChooserDialog filechooser =
-                new Gtk.FileChooserDialog("Choose the file to open",
-                    null,
-                    FileChooserAction.Save,
-                    "Cancel", ResponseType.Cancel,
-                    "Open", ResponseType.Accept);
-
-            filechooser.KeepAbove = true;
-            filechooser.Modal = true;
-            filechooser.SkipTaskbarHint = true;
-
-            filechooser.Filter = new FileFilter();
-            foreach (var ext in extensionList)
-                filechooser.Filter.AddPattern($"*.{ext}");
-
-            string filename = null;
-            if (filechooser.Run() == (int)ResponseType.Accept)
-                filename = filechooser.Filename;
-
-            ProcessPendingEvents();
-            filechooser.Destroy();
-            ProcessPendingEvents();
-
-            return filename;
-#endif
+            string dummy = "";
+            return ShowSaveFileDialog(title, extensions, ref dummy);
         }
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icon = MessageBoxIcon.None)
@@ -196,12 +221,11 @@ namespace FamiStudio
             md.SkipTaskbarHint = true;
             md.TypeHint = Gdk.WindowTypeHint.Dialog;
             md.Title = title;
+            md.TransientFor = FamiStudioForm.Instance;
 
             int ret = md.Run();
 
-            ProcessPendingEvents();
             md.Destroy();
-            ProcessPendingEvents();
 
             if (buttons == MessageBoxButtons.YesNo)
                 return ret == -8 ? DialogResult.Yes : ret == -9 ? DialogResult.No : DialogResult.Cancel;

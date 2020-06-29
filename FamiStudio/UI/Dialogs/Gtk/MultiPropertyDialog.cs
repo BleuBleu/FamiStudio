@@ -77,8 +77,12 @@ namespace FamiStudio
             KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
-
+#if FAMISTUDIO_LINUX
+            TransientFor = FamiStudioForm.Instance;
+            SetPosition(WindowPosition.CenterOnParent);
+#else
             Move(x, y);
+#endif
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
@@ -147,6 +151,7 @@ namespace FamiStudio
 
         private void ButtonYes_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
+            tabs[selectedIndex].properties.NotifyClosing();
             result = System.Windows.Forms.DialogResult.OK;
         }
 
@@ -154,6 +159,7 @@ namespace FamiStudio
         {
             if (evnt.Key == Gdk.Key.Return)
             {
+                tabs[selectedIndex].properties.NotifyClosing();
                 result = System.Windows.Forms.DialogResult.OK;
             }
             else if (evnt.Key == Gdk.Key.Escape)
@@ -177,8 +183,6 @@ namespace FamiStudio
             Hide();
 #if FAMISTUDIO_MACOS
             MacUtils.RestoreMainNSWindowFocus();
-#else
-            PlatformUtils.ProcessPendingEvents();
 #endif
 
             return result;

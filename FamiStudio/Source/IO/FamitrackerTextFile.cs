@@ -161,6 +161,11 @@ namespace FamiStudio
 
                     project.SetExpansionAudio(convertedExp);
                 }
+                else if (line.StartsWith("MACHINE"))
+                {
+                    var machine = int.Parse(line.Substring(8));
+                    project.PalMode = machine == 1;
+                }
                 else if (line.StartsWith("N163CHANNELS"))
                 {
                     var numExpChannels = int.Parse(line.Substring(12).Trim(' ', '"'));
@@ -673,7 +678,7 @@ namespace FamiStudio
             lines.Add("COMMENT         \"\"");
 
             lines.Add("# Global settings");
-            lines.Add("MACHINE         0");
+            lines.Add("MACHINE         " + (project.PalMode ? "1" : "0"));
             lines.Add("FRAMERATE       0");
             lines.Add("EXPANSION       " + (project.ExpansionAudio != Project.ExpansionNone ? (1 << (project.ExpansionAudio - 1)) : 0));
             lines.Add("VIBRATO         1");

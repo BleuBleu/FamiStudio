@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics;
@@ -20,6 +21,8 @@ namespace FamiStudio
             MouseDoubleClick,
             MouseUp,
             MouseWheel,
+			MouseWheelHorizontal,
+            PinchZoom,
             MouseEnter,
             MouseLeave,
             KeyDown,
@@ -39,35 +42,30 @@ namespace FamiStudio
             public EventArgs args;
         };
 
-        const int ControlToolbar = 0;
-        const int ControlSequener = 1;
-        const int ControlPianoRoll = 2;
-        const int ControlProjectExplorer = 3;
-
+        private IntPtr nsLoopMode = IntPtr.Zero;
+        private IntPtr nsApplication = IntPtr.Zero;
         private IntPtr cursor = Cursors.Default;
+        private IntPtr selType = IntPtr.Zero;
+        private IntPtr selNextEventMatchingMask = IntPtr.Zero;
+        private IntPtr selMagnification = IntPtr.Zero;
         private FamiStudio famistudio;
-        private GLGraphics gfx = new GLGraphics();
-        private GLControl[] controls = new GLControl[4];
+        private float magnificationAccum = 0;
+        private bool forceCtrlDown = false;
         private bool[] keys = new bool[256];
         private bool processingDeferredEvents = false;
         private List<DeferredEvent> deferredEvents = new List<DeferredEvent>();
         private GLControl captureControl;
         private System.Windows.Forms.MouseButtons captureButtons;
-
-        private Toolbar toolbar;
-        private Sequencer sequencer;
-        private PianoRoll pianoRoll;
-        private ProjectExplorer projectExplorer;
+        private FamiStudioControls controls;
 
         public FamiStudio FamiStudio => famistudio;
-        public Toolbar ToolBar => toolbar;
-        public Sequencer Sequencer => sequencer;
-        public PianoRoll PianoRoll => pianoRoll;
-        public ProjectExplorer ProjectExplorer => projectExplorer;
+        public Toolbar ToolBar => controls.ToolBar;
+        public Sequencer Sequencer => controls.Sequencer;
+        public PianoRoll PianoRoll => controls.PianoRoll;
+        public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
 
         public string Text { get => Title; set => Title = value; }
 
-#if FAMISTUDIO_MACOS
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         private delegate bool WindowShouldZoomToFrameDelegate(IntPtr self, IntPtr cmd, IntPtr nsWindow, RectangleF toFrame);
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
@@ -85,19 +83,15 @@ namespace FamiStudio
         {
             MacUtils.SetWindowCursor(WindowInfo.Handle, sender, cursor);
         }
-#endif
 
         public FamiStudioForm(FamiStudio famistudio)
             : base(1280, 720, new GraphicsMode(new ColorFormat(8, 8, 8, 0), 0, 0), "FamiStudio")
         {
             this.VSync = VSyncMode.On;
             this.famistudio = famistudio;
-#if FAMISTUDIO_LINUX
-            // Doesnt work!
-            //this.Icon = new Icon("/home/ubuntu/FamiStudio.ico", 32, 32);
-#endif
 
-#if FAMISTUDIO_MACOS
+            controls = new FamiStudioControls(this);
+
             MacUtils.Initialize(WindowInfo.Handle);
 
             // There are some severe maximize bugs in OpenTK. Simply disable the maximize and bypass all the frame zooming thing.
@@ -115,33 +109,28 @@ namespace FamiStudio
                 MacUtils.SelRegisterName("resetCursorRects"),
                 Marshal.GetFunctionPointerForDelegate(ResetCursorRectsHandler),
                 "v@:");
-#endif
-            toolbar = new Toolbar();
-            sequencer = new Sequencer();
-            pianoRoll = new PianoRoll();
-            projectExplorer = new ProjectExplorer();
 
-            controls[ControlToolbar] = toolbar;
-            controls[ControlSequener] = sequencer;
-            controls[ControlPianoRoll] = pianoRoll;
-            controls[ControlProjectExplorer] = projectExplorer;
-
-            foreach (var ctrl in controls)
-            {
-                ctrl.ParentForm = this;
-                ctrl.RenderInitialized(gfx);
-            }
+            controls.Resize(Width, Height);
+            controls.InitializeGL(this);
 
             GL.Disable(EnableCap.DepthTest);
+
+            var nsAplicationType = typeof(OpenTK.NativeWindow).Assembly.GetType("OpenTK.Platform.MacOS.NSApplication");
+            var handleField = nsAplicationType.GetField("Handle", BindingFlags.NonPublic | BindingFlags.Static);
+            nsApplication = (IntPtr)handleField.GetValue(null);
+
+            var cocoaNativeWindowType = typeof(OpenTK.NativeWindow).Assembly.GetType("OpenTK.Platform.MacOS.CocoaNativeWindow");
+            var loopModeFile = cocoaNativeWindowType.GetField("NSDefaultRunLoopMode", BindingFlags.NonPublic | BindingFlags.Static);
+            nsLoopMode = (IntPtr)loopModeFile.GetValue(null);
+
+            selType = MacUtils.SelRegisterName("type");
+            selMagnification = MacUtils.SelRegisterName("magnification");
+            selNextEventMatchingMask = MacUtils.SelRegisterName("nextEventMatchingMask:untilDate:inMode:dequeue:");
         }
 
         public void CaptureMouse(GLControl ctrl)
         {
-#if FAMISTUDIO_MACOS
             captureButtons = MacUtils.GetMouseButtons();
-#else
-            captureButtons = GetStateButtons(Mouse.GetState());
-#endif
             if (captureButtons != System.Windows.Forms.MouseButtons.None)
             {
                 captureControl = ctrl;
@@ -157,33 +146,17 @@ namespace FamiStudio
 
         public System.Drawing.Point GetCursorPosition()
         {
-#if FAMISTUDIO_MACOS
             return PointToScreen(MacUtils.GetWindowMousePosition(WindowInfo.Handle));
-#else
-            var mouseState = Mouse.GetCursorState();
-            return new Point(mouseState.X, mouseState.Y);
-#endif
         }
 
         public void RefreshCursor()
         {
-#if FAMISTUDIO_MACOS
             var client = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
-#else
-            var mouseState = Mouse.GetCursorState();
-            var client = PointToClient(new Point(mouseState.X, mouseState.Y));
-#endif
-            var ctrl = GetControlAtCoord(client.X, client.Y, out _, out _);
+            var ctrl = controls.GetControlAtCoord(client.X, client.Y, out _, out _);
 
-            if (captureControl != null && captureControl != ctrl)
-                return;
+            RefreshCursor(ctrl);
 
-            if (ctrl != null)
-                cursor = ctrl.Cursor.Current;
-
-#if FAMISTUDIO_MACOS
             MacUtils.InvalidateCursor(WindowInfo.Handle);
-#endif
         }
 
         public void RefreshCursor(GLControl ctrl)
@@ -194,9 +167,7 @@ namespace FamiStudio
             if (ctrl != null)
                 cursor = ctrl.Cursor.Current;
 
-#if FAMISTUDIO_MACOS
             MacUtils.InvalidateCursor(WindowInfo.Handle);
-#endif
         }
 
         protected override void OnMove(EventArgs e)
@@ -209,121 +180,27 @@ namespace FamiStudio
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            ResizeControls();
+            controls.Resize(Width, Height);
             Invalidate();
             OnRenderFrame(null);
         }
 
-        private void ResizeControls()
-        {
-            int toolBarHeight = (int)(40 * GLTheme.MainWindowScaling);
-            int projectExplorerWidth = (int)(280 * GLTheme.MainWindowScaling);
-            int sequencerHeight = (int)(sequencer.ComputeDesiredSizeY() * GLTheme.MainWindowScaling);
-
-            toolbar.Move(0, 0, Width, toolBarHeight);
-            projectExplorer.Move(Width - projectExplorerWidth, toolBarHeight, projectExplorerWidth, Height - toolBarHeight);
-            sequencer.Move(0, toolBarHeight, Width - projectExplorerWidth, sequencerHeight);
-            pianoRoll.Move(0, toolBarHeight + sequencerHeight, Width - projectExplorerWidth, Height - toolBarHeight - sequencerHeight);
-        }
-
-        public void RefreshSequencerLayout()
-        {
-            ResizeControls();
-            Invalidate();
-        }
-
         public Point PointToClient(GLControl ctrl, Point p)
         {
-            foreach (var c in controls)
-            {
-                if (c == ctrl)
-                {
-                    return base.PointToClient(new Point(p.X - ctrl.Left, p.Y - ctrl.Top));
-                }
-            }
-
-            return Point.Empty;
+            return base.PointToClient(new Point(p.X - ctrl.Left, p.Y - ctrl.Top));
         }
 
         public Point PointToScreen(GLControl ctrl, Point p)
         {
-            foreach (var c in controls)
-            {
-                if (c == ctrl)
-                {
-                    return base.PointToScreen(new Point(ctrl.Left + p.X, ctrl.Top  + p.Y));
-                }
-            }
-
-            return Point.Empty;
-        }
-
-        protected GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
-        {
-            foreach (var ctrl in controls)
-            {
-                ctrlX = formX - ctrl.Left;
-                ctrlY = formY - ctrl.Top;
-
-                if (ctrlX >= 0 &&
-                    ctrlY >= 0 &&
-                    ctrlX <  ctrl.Width &&
-                    ctrlY <  ctrl.Height)
-                {
-                    return ctrl;
-                }
-            }
-
-            ctrlX = 0;
-            ctrlY = 0;
-            return null;
-        }
-
-        protected System.Windows.Forms.MouseEventArgs ToWinFormArgs(MouseMoveEventArgs e, int x, int y)
-        {
-#if FAMISTUDIO_MACOS
-            // The OpenTK mouse state isnt reliable and often has buttons getting "stuck"
-            // especially after things like resizing the window. Bypass it.
-            var buttons = MacUtils.GetMouseButtons();
-#else
-            System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;
-
-            if (e.Mouse.LeftButton == ButtonState.Pressed)
-                buttons = System.Windows.Forms.MouseButtons.Left;
-            else if (e.Mouse.MiddleButton == ButtonState.Pressed)
-                buttons = System.Windows.Forms.MouseButtons.Middle;
-            else if (e.Mouse.RightButton == ButtonState.Pressed)
-                buttons = System.Windows.Forms.MouseButtons.Right;
-#endif
-
-            return new System.Windows.Forms.MouseEventArgs(buttons, 1, x, y, 0);
-        }
-
-        protected System.Windows.Forms.MouseEventArgs ToWinFormArgs(MouseButtonEventArgs e, int x, int y)
-        {
-            System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;
-
-            switch (e.Button)
-            {
-                case MouseButton.Left:   buttons = System.Windows.Forms.MouseButtons.Left;   break;
-                case MouseButton.Middle: buttons = System.Windows.Forms.MouseButtons.Middle; break;
-                case MouseButton.Right:  buttons = System.Windows.Forms.MouseButtons.Right;  break;
-            }
-
-            return new System.Windows.Forms.MouseEventArgs(buttons, 1, x, y, 0);
-        }
-
-        protected System.Windows.Forms.MouseEventArgs ToWinFormArgs(MouseWheelEventArgs e, int x, int y)
-        {
-            return new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, e.Delta * 120);
+            return base.PointToScreen(new Point(ctrl.Left + p.X, ctrl.Top  + p.Y));
         }
 
         protected override void OnMouseMove(MouseMoveEventArgs e)
         {
             base.OnMouseMove(e);
-            var ctrl = GetControlAtCoord(e.X, e.Y, out int x, out int y);
+            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
             RefreshCursor(ctrl);
-            deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseMove, ctrl, ToWinFormArgs(e, x, y)));
+            deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseMove, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y)));
         }
 
         protected override void OnFocusedChanged(EventArgs e)
@@ -340,17 +217,13 @@ namespace FamiStudio
             base.OnMouseDown(e);
             if (captureControl != null) return;
 
-#if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
             var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
-#else
-            var pt = new Point(e.X, e.Y);
-#endif
 
             if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
                 return;
 
-            var ctrl = GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
+            var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
             var time = DateTime.Now;
 
             // No double-click in OpenTK, need to detect ourselves...
@@ -363,7 +236,7 @@ namespace FamiStudio
                 lastClickTime = DateTime.MinValue;
                 lastClickPos = Point.Empty;
 
-                deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseDoubleClick, ctrl, ToWinFormArgs(e, x, y)));
+                deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseDoubleClick, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y)));
             }
             else
             {
@@ -371,7 +244,7 @@ namespace FamiStudio
                 lastClickTime = time;
                 lastClickPos = pt;
 
-                deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseDown, ctrl, ToWinFormArgs(e, x, y)));
+                deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseDown, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y)));
             }
         }
 
@@ -380,12 +253,8 @@ namespace FamiStudio
             //if (CheckFrozen(false)) return;
             base.OnMouseDown(e);
 
-#if FAMISTUDIO_MACOS
             // Position is not reliable here. Super buggy.
             var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
-#else
-            var pt = new Point(e.X, e.Y);
-#endif
 
             if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
                 return;
@@ -402,31 +271,52 @@ namespace FamiStudio
             }
             else
             {
-                ctrl = GetControlAtCoord(pt.X, pt.Y, out x, out y);
+                ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out x, out y);
             }
 
-            deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseUp, ctrl, ToWinFormArgs(e, x, y)));
+            deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseUp, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y)));
         }
+
+        float lastScrollX = float.NaN;
+        float lastScrollY = float.NaN;
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            //if (CheckFrozen(false)) return;
             base.OnMouseWheel(e);
-
-#if FAMISTUDIO_MACOS
+            
             // Position is not reliable here. Super buggy.
             var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
-#else
-            var pt = new Point(e.X, e.Y);
-#endif
 
             // We get notified for clicks in the title back and stuff.
             if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
                 return;
+            
+            if (float.IsNaN(lastScrollX))
+            {
+                lastScrollX = e.Mouse.Scroll.X;
+                lastScrollY = e.Mouse.Scroll.Y;
+            }
 
-            var ctrl = GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
+            var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
 
-            deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheel, ctrl, ToWinFormArgs(e, x, y)));
+            if (Settings.TrackPadControls)
+            {
+                var dx = (int)Math.Round((e.Mouse.Scroll.X - lastScrollX) * 10.0f * (Settings.ReverseTrackPad ? -1.0f : 1.0f));
+                var dy = (int)Math.Round((e.Mouse.Scroll.Y - lastScrollY) * 10.0f * (Settings.ReverseTrackPad ? -1.0f : 1.0f));
+
+                if (dy != 0)
+                    deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheel, ctrl, new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, dy)));
+                if (dx != 0)
+                    deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheelHorizontal, ctrl, new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, dx)));
+            }
+            else
+            {
+                if (Math.Abs(e.DeltaPrecise) > 0.001f)
+                    deferredEvents.Add(new DeferredEvent(DeferredEventType.MouseWheel, ctrl, OpenTkUtils.ToWinFormArgs(e, x, y)));
+            }
+
+            lastScrollX = e.Mouse.Scroll.X;
+            lastScrollY = e.Mouse.Scroll.Y;
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -434,64 +324,18 @@ namespace FamiStudio
             base.OnMouseLeave(e);
         }
 
-        protected static System.Windows.Forms.Keys ToWinFormKey(Key k)
-        {
-            if (k >= Key.A && k <= Key.Z)
-                return System.Windows.Forms.Keys.A + (k - Key.A);
-            else if (k >= Key.Number0 && k <= Key.Number9)
-                return System.Windows.Forms.Keys.D0 + (k - Key.Number0);
-            else if (k == Key.ControlRight || k == Key.ControlLeft || k == Key.Command || k == Key.WinLeft)
-                return System.Windows.Forms.Keys.Control;
-            else if (k == Key.AltRight || k == Key.AltLeft)
-                return System.Windows.Forms.Keys.Alt;
-            else if (k == Key.ShiftRight || k == Key.ShiftLeft)
-                return System.Windows.Forms.Keys.Shift;
-            else if (k == Key.Up)
-                return System.Windows.Forms.Keys.Up;
-            else if (k == Key.Down)
-                return System.Windows.Forms.Keys.Down;
-            else if (k == Key.Left)
-                return System.Windows.Forms.Keys.Left;
-            else if (k == Key.Right)
-                return System.Windows.Forms.Keys.Right;
-            else if (k == Key.Space)
-                return System.Windows.Forms.Keys.Space;
-            else if (k == Key.Enter)
-                return System.Windows.Forms.Keys.Enter;
-            else if (k == Key.Home)
-                return System.Windows.Forms.Keys.Home;
-            else if (k == Key.Delete)
-                return System.Windows.Forms.Keys.Delete;
-            else if (k == Key.Escape)
-                return System.Windows.Forms.Keys.Escape;
-
-            Debug.WriteLine($"Unknown key pressed {k}");
-
-            return System.Windows.Forms.Keys.None;
-        }
-
-        protected static Key FromWinFormKey(System.Windows.Forms.Keys k)
-        {
-            if (k >= System.Windows.Forms.Keys.A && k <= System.Windows.Forms.Keys.Z)
-                return Key.A + (k - System.Windows.Forms.Keys.A);
-
-            Debug.Assert(false);
-
-            return Key.Unknown;
-        }
-
         public static bool IsKeyDown(System.Windows.Forms.Keys k)
         {
-            return Keyboard.GetState().IsKeyDown(FromWinFormKey(k));
+            return Keyboard.GetState().IsKeyDown(OpenTkUtils.FromWinFormKey(k));
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
             base.OnKeyDown(e);
 
-            var args = new System.Windows.Forms.KeyEventArgs(ToWinFormKey(e.Key) | GetModifierKeys());
+            var args = new System.Windows.Forms.KeyEventArgs(OpenTkUtils.ToWinFormKey(e.Key) | OpenTkUtils.GetModifierKeys());
             famistudio.KeyDown(args);
-            foreach (var ctrl in controls)
+            foreach (var ctrl in controls.Controls)
                 deferredEvents.Add(new DeferredEvent(DeferredEventType.KeyDown, ctrl, args));
         }
 
@@ -499,23 +343,9 @@ namespace FamiStudio
         {
             base.OnKeyUp(e);
 
-            var args = new System.Windows.Forms.KeyEventArgs(ToWinFormKey(e.Key) | GetModifierKeys());
-            foreach (var ctrl in controls)
+            var args = new System.Windows.Forms.KeyEventArgs(OpenTkUtils.ToWinFormKey(e.Key) | OpenTkUtils.GetModifierKeys());
+            foreach (var ctrl in controls.Controls)
                 deferredEvents.Add(new DeferredEvent(DeferredEventType.KeyUp, ctrl, args));
-        }
-
-        public System.Windows.Forms.Keys GetModifierKeys()
-        {
-            System.Windows.Forms.Keys modifiers = System.Windows.Forms.Keys.None;
-
-            if (Keyboard.GetState().IsKeyDown(Key.ControlRight) || Keyboard.GetState().IsKeyDown(Key.ControlLeft) || Keyboard.GetState().IsKeyDown(Key.Command) || Keyboard.GetState().IsKeyDown(Key.WinLeft))
-                modifiers |= System.Windows.Forms.Keys.Control;
-            if (Keyboard.GetState().IsKeyDown(Key.ShiftRight) || Keyboard.GetState().IsKeyDown(Key.ShiftLeft))
-                modifiers |= System.Windows.Forms.Keys.Shift;
-            if (Keyboard.GetState().IsKeyDown(Key.AltRight) || Keyboard.GetState().IsKeyDown(Key.AltLeft))
-                modifiers |= System.Windows.Forms.Keys.Alt;
-
-            return modifiers;
         }
 
         protected override void OnRenderFrame(OpenTK.FrameEventArgs e)
@@ -525,38 +355,8 @@ namespace FamiStudio
             // Tick here so that we also tick on move and resize.
             famistudio.Tick();
 
-            bool anyNeedsRedraw = false;
-            foreach (var control in controls)
-            {
-                anyNeedsRedraw |= control.NeedsRedraw;
-            }
-
-            if (anyNeedsRedraw)
-            {
-                foreach (var control in controls)
-                {
-                    gfx.BeginDraw(control, Height);
-                    control.Render(gfx);
-                    control.Validate();
-                    gfx.EndDraw();
-                }
-
+            if (controls.Redraw(Width, Height))
                 SwapBuffers();
-            }
-        }
-
-        protected System.Windows.Forms.MouseButtons GetStateButtons(MouseState state)
-        {
-            System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;
-
-            if (state.IsButtonDown(MouseButton.Left))
-                buttons |= System.Windows.Forms.MouseButtons.Left;
-            if (state.IsButtonDown(MouseButton.Right))
-                buttons |= System.Windows.Forms.MouseButtons.Right;
-            if (state.IsButtonDown(MouseButton.Middle))
-                buttons |= System.Windows.Forms.MouseButtons.Middle;
-
-            return buttons;
         }
 
         protected void ProcessDeferredEvents()
@@ -588,6 +388,14 @@ namespace FamiStudio
                     case DeferredEventType.MouseWheel:
                         evt.ctrl?.MouseWheel(evt.args as System.Windows.Forms.MouseEventArgs);
                         break;
+					case DeferredEventType.MouseWheelHorizontal:
+						evt.ctrl?.MouseHorizontalWheel(evt.args as System.Windows.Forms.MouseEventArgs);
+						break;
+                    case DeferredEventType.PinchZoom:
+                        forceCtrlDown = true;
+                        evt.ctrl?.MouseWheel(evt.args as System.Windows.Forms.MouseEventArgs);
+                        forceCtrlDown = false;
+                        break;
                     case DeferredEventType.MouseLeave:
                         evt.ctrl?.MouseLeave(evt.args as System.Windows.Forms.MouseEventArgs);
                         break;
@@ -602,14 +410,8 @@ namespace FamiStudio
 
             if (captureControl != null && hasMouseCaptureEvent)
             {
-#if FAMISTUDIO_MACOS
                 var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
                 var buttons = MacUtils.GetMouseButtons();
-#else
-                var mouseState = Mouse.GetState();
-                var buttons = GetStateButtons(mouseState);
-                var pt = PointToClient(new Point(mouseState.X, mouseState.Y));
-#endif
                 var args = new System.Windows.Forms.MouseEventArgs(buttons, 0, pt.X - captureControl.Left, pt.Y - captureControl.Top, 0);
 
                 //Debug.WriteLine($"MOVE! captureControl = {captureControl} buttons = {buttons} captureButtons = {captureButtons} pt = {pt}");
@@ -646,20 +448,67 @@ namespace FamiStudio
             base.OnClosing(e);
         }
 
+        private void ProcessSpecialEvents()
+        {
+            if (!Settings.TrackPadControls)
+                return;
+
+            while (true)
+            {
+                const int NSEventTypeMagnify = 30;
+
+                var e = MacUtils.SendIntPtr(nsApplication, selNextEventMatchingMask, 1 << NSEventTypeMagnify, IntPtr.Zero, nsLoopMode, true);
+
+                if (e == IntPtr.Zero)
+                    return;
+
+                var type = MacUtils.SendInt(e, selType);
+
+                if (type == NSEventTypeMagnify)
+                {
+                    var magnification = (float)MacUtils.SendFloat(e, selMagnification);
+
+                    if (Math.Sign(magnification) != Math.Sign(magnificationAccum))
+                        magnificationAccum = 0;
+
+                    magnificationAccum += magnification;
+
+                    if (Math.Abs(magnificationAccum) > 0.25f)
+                    {
+                        var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
+
+                        // We get notified for clicks in the title back and stuff.
+                        if (pt.X < 0 || pt.Y < 0 || pt.X >= ClientSize.Width || pt.Y >= ClientSize.Height)
+                            continue;
+
+                        var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
+                        deferredEvents.Add(new DeferredEvent(DeferredEventType.PinchZoom, ctrl, new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, x, y, Math.Sign(magnificationAccum) * 120)));
+                        magnificationAccum = 0;
+                    }
+                }
+            }
+        }
+
         public void Invalidate()
         {
-            foreach (var ctrl in controls)
-                ctrl.Invalidate();
+            controls.Invalidate();
+        }
+        
+        public void RefreshSequencerLayout()    
+        {
+            controls.Resize(Width, Height);
+            controls.Invalidate();
+        }
+
+        public System.Windows.Forms.Keys GetModifierKeys()
+        {
+            return OpenTkUtils.GetModifierKeys() | (forceCtrlDown ? System.Windows.Forms.Keys.Control : System.Windows.Forms.Keys.None);
         }
 
         public new void Run() 
         {
             Visible = true; 
             OnResize(EventArgs.Empty);
-
-#if FAMISTUDIO_LINUX
-            PlatformUtils.InitializeGtk();
-#endif
 
             while (true)
             {
@@ -672,6 +521,7 @@ namespace FamiStudio
                 // them a bit and execute the handlers from outside of the event
                 // loop (basically outside of ProcessEvent).
 
+                ProcessSpecialEvents();
                 ProcessEvents();
                 ProcessDeferredEvents();
 

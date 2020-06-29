@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace FamiStudio
@@ -21,6 +22,9 @@ namespace FamiStudio
         public extern static void SendVoid(IntPtr receiver, IntPtr selector, IntPtr intPtr1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static void SendVoid(IntPtr receiver, IntPtr selector, IntPtr intPtr1, IntPtr intPtr2);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static void SendVoid(IntPtr receiver, IntPtr selector, NSRect rect1, IntPtr intPtr1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
@@ -39,7 +43,13 @@ namespace FamiStudio
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, IntPtr intPtr2);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, int int1);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, uint uint1, IntPtr intPtr1, IntPtr intPtr2, bool bool1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public static extern NSPointF SendPointF(IntPtr receiver, IntPtr selector);
@@ -87,8 +97,21 @@ namespace FamiStudio
         static IntPtr clsNSSavePanel;
         static IntPtr clsNSAlert;
         static IntPtr clsNSCursor;
+        static IntPtr clsNSPasteboard;
+        static IntPtr clsNSData;
 
         static IntPtr selAlloc = SelRegisterName("alloc");
+        static IntPtr selLength = SelRegisterName("length");
+        static IntPtr selBytes = SelRegisterName("bytes");
+        static IntPtr selClearContents = SelRegisterName("clearContents");
+        static IntPtr selStringForType = SelRegisterName("stringForType:");
+        static IntPtr selSetStringForType = SelRegisterName("setString:forType:");
+        static IntPtr selGeneralPasteboard = SelRegisterName("generalPasteboard");
+        static IntPtr selPasteboardWithName = SelRegisterName("pasteboardWithName:");
+        static IntPtr selDeclareTypesOwner = SelRegisterName("declareTypes:owner:");
+        static IntPtr selSetDataForType = SelRegisterName("setData:forType:");
+        static IntPtr selDataForType = SelRegisterName("dataForType:");
+        static IntPtr selDataWithBytesLength = SelRegisterName("dataWithBytes:length:");
         static IntPtr selInitWithCharactersLength = SelRegisterName("initWithCharacters:length:");
         static IntPtr selFileURLWithPath = SelRegisterName("fileURLWithPath:");
         static IntPtr selPath = SelRegisterName("path");
@@ -119,6 +142,9 @@ namespace FamiStudio
         static IntPtr selBounds = SelRegisterName("bounds");
         static IntPtr selAddCursorRectCursor = SelRegisterName("addCursorRect:cursor:");
 
+        static IntPtr generalPasteboard;
+        static IntPtr famiStudioPasteboard;
+
         static float mainWindowScaling = 1.0f;
         static float dialogScaling = 1.0f;
 
@@ -135,6 +161,8 @@ namespace FamiStudio
             clsNSSavePanel = ObjCGetClass("NSSavePanel");
             clsNSAlert = ObjCGetClass("NSAlert");
             clsNSCursor = ObjCGetClass("NSCursor");
+            clsNSPasteboard = ObjCGetClass("NSPasteboard");
+            clsNSData = ObjCGetClass("NSData");
 
             dialogScaling = (float)SendFloat(nsWin, selBackingScaleFactor);
 
@@ -142,6 +170,9 @@ namespace FamiStudio
                 mainWindowScaling = Settings.DpiScaling / 100.0f;
             else
                 mainWindowScaling = dialogScaling;
+
+            generalPasteboard = SendIntPtr(clsNSPasteboard, selGeneralPasteboard);
+            famiStudioPasteboard = SendIntPtr(clsNSPasteboard, selPasteboardWithName, ToNSString("FamiStudio"));
         }
 
         public static IntPtr ToNSString(string str)
@@ -158,6 +189,11 @@ namespace FamiStudio
                     return handle;
                 }
             }
+        }
+
+        public static string FromNSString(IntPtr handle)
+        {
+            return Marshal.PtrToStringAuto(SendIntPtr(handle, selUTF8String));
         }
 
         public static IntPtr ToNSURL(string filepath)
@@ -551,6 +587,66 @@ namespace FamiStudio
             {
                 return System.Windows.Forms.DialogResult.OK;
             }
+        }
+
+        public static unsafe void SetPasteboardData(byte[] data)
+        {
+            var pbTypes = ToNSArray(new[] { "FamiStudioData" });
+
+            if (data == null || data.Length == 0)
+            {
+                var nsData = SendIntPtr(clsNSData, selDataWithBytesLength, IntPtr.Zero, 0);
+                SendIntPtr(famiStudioPasteboard, selDeclareTypesOwner, pbTypes, IntPtr.Zero);
+                SendVoid(famiStudioPasteboard, selSetDataForType, nsData, ToNSString("FamiStudioData"));
+            }
+            else
+            {
+                fixed (byte* ptr = &data[0])
+                {
+                    var nsData = SendIntPtr(clsNSData, selDataWithBytesLength, new IntPtr(ptr), data.Length);
+                    SendIntPtr(famiStudioPasteboard, selDeclareTypesOwner, pbTypes, IntPtr.Zero);
+                    SendVoid(famiStudioPasteboard, selSetDataForType, nsData, ToNSString("FamiStudioData"));
+                }
+            }
+        }
+
+        public static unsafe byte[] GetPasteboardData()
+        {   
+            var nsData = SendIntPtr(famiStudioPasteboard, selDataForType, ToNSString("FamiStudioData"));
+
+            if (nsData == IntPtr.Zero)
+                return null;
+
+            var length = SendInt(nsData, selLength);
+            if (length == 0)
+                return null;
+
+            var bytesPtr = SendIntPtr(nsData, selBytes);
+            if (bytesPtr == IntPtr.Zero)
+                return null;
+
+            var bytes = new byte[length];
+            fixed (byte* ptrDest = &bytes[0])
+            {
+                Marshal.Copy(bytesPtr, bytes, 0, length);
+            }
+
+            return bytes;
+        }
+
+        public static string GetPasteboardString()
+        {
+            var nsString = SendIntPtr(generalPasteboard, selStringForType, ToNSString("NSStringPboardType"));
+
+            if (nsString == IntPtr.Zero)
+                return null;
+
+            return FromNSString(nsString);
+        }
+
+        public static void ClearPasteboardString()
+        {
+            SendVoid(generalPasteboard, selClearContents);
         }
     };
 }

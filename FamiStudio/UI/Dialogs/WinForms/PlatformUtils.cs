@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Drawing;
 
 namespace FamiStudio
 {
@@ -36,17 +37,37 @@ namespace FamiStudio
             Marshal.FreeCoTaskMem(p);
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
         {
             var ofd = new OpenFileDialog()
             {
                 Filter = extensions,
-                Title = title
+                Title = title,
+                InitialDirectory = defaultPath
             };
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
+                defaultPath = System.IO.Path.GetDirectoryName(ofd.FileName);
                 return ofd.FileName;
+            }
+
+            return null;
+        }
+
+        public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
+        {
+            var sfd = new SaveFileDialog()
+            {
+                Filter = extensions,
+                Title = title,
+                InitialDirectory = defaultPath
+            };
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                defaultPath = System.IO.Path.GetDirectoryName(sfd.FileName);
+                return sfd.FileName;
             }
 
             return null;
@@ -54,23 +75,24 @@ namespace FamiStudio
 
         public static string ShowSaveFileDialog(string title, string extensions)
         {
-            var sfd = new SaveFileDialog()
-            {
-                Filter = extensions,
-                Title = title
-            };
-
-            if (sfd.ShowDialog() == DialogResult.OK)
-            {
-                return sfd.FileName;
-            }
-
-            return null;
+            string dummy = "";
+            return ShowSaveFileDialog(title, extensions, ref dummy);
         }
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icons = MessageBoxIcon.None)
         {
             return System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
+        }
+
+        public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)
+        {
+            // TODO: Test hi-dpi and things like this.
+            short x = (short)((m.LParam.ToInt32() >> 0) & 0xffff);
+            short y = (short)((m.LParam.ToInt32() >> 16) & 0xffff);
+            short delta = (short)((m.WParam.ToInt32() >> 16) & 0xffff);
+            var clientPos = ctrl.PointToClient(new Point(x, y));
+
+            return new MouseEventArgs(MouseButtons.None, 1, clientPos.X, clientPos.Y, delta);
         }
     }
 }

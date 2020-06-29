@@ -9,17 +9,21 @@ For any questions, you can reach me at [famistudio@outlook.com](mailto:famistudi
 All releases are available in the [Releases](https://github.com/BleuBleu/FamiStudio/releases) section. If you are on Windows, simply download and run the .MSI installer and a shortcut to FamiStudio will be placed in your Start menu.
 
 ## Compiling
-The tools needed to compile are:
-- Visual Studio 2017 on Windows 
-- Visual Studio 2019 for Mac, on MacOS
-- MonoDevelop on Linux, I use 7.8.4 (build 2) (the Linux version is not usable, but it should compile, launch and play a song)
-
 FamiStudio is composed of a few projects:
 - The main FamiStudio application is written in C#. 
-- NesSndEmu & NotSoFatso are C++ DLLs and are provided as binaries since they rarely change. In you plan to recompile them, you will need to install C++ support in Visual Studio. On MacOS and Linux, there is a small build shell script included.
-- The Setup project (Windows-only) is built using the "Microsoft Visual Studio Installer Projects" extension which can be installed from Visual Studio in the "Extensions and Updates" menu.
+- NesSndEmu & NotSoFatso are C++ DLLs and are provided as binaries since they rarely change. 
+- The Setup project (Windows only)
+
+### Windows
+On Windows, Visual Studio 2017 is used for development. The project contains everything, including both DLLs and the Setup project. In you plan to recompile the C++ DLLs, you will need to install C++ support in Visual Studio. The Setup project is built using the "Microsoft Visual Studio Installer Projects" extension which can be installed from Visual Studio in the "Extensions and Updates" menu.
 
 The C# application is built on top of SharpDX 4.2.0 on Windows and OpenTK on Mac/Linux. Visual Studio will install the required packages automatically when building the project. To manually fetch the packages, run `msbuild /t:Restore` on the project from the Visual Studio Developer Command Prompt.
+
+### MacOS
+On MacOS, Visual Studio 2019 for Mac is used to compile the main application. The 2 C++ DLLs can be compiled using a little shell script "build_macos.sh" that is located in the each of the folders. No fancy makefile here. [PortAudio](http://www.portaudio.com/) and [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/), which are used for audio output and MIDI input respectively have been pre-compiled using Homebrew and are likely not going to change often. The Application bundle is updated manually at each release.
+
+### Linux.
+On Linux, MonoDevelop 7.8.4 (build 2) is used to compile the main application. Much like MacOS, a little shell script, "build_linux.sh" is provided to compile each of the 2 C++ DLLs. No makefile is provided at the moment. [OpenAL Soft](https://openal-soft.org/) is provided as a precompiled AMD64 binary with ALSA support, if you recompile your own you will need to replace libopenal32.so or use a [dllmap](https://www.mono-project.com/docs/advanced/pinvoke/dllmap/) to point FamiStudio to the correct library. Same for [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) which is provided as librtmidi.so.
 
 ## Issues and Contributing
 Please open issues contact me if you find bugs or have feature suggestion ideas. 

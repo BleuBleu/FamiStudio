@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -8,17 +9,24 @@ namespace FamiStudio
 
         public WavPlayer(int sampleRate) : base(NesApu.APU_WAV_EXPORT, sampleRate)
         {
-            loopMode = LoopMode.LoopPoint;
         }
 
-        public short[] GetSongSamples(Song song, bool pal)
+        public short[] GetSongSamples(Song song, bool pal, int duration)
         {
+            int maxSample = int.MaxValue;
+
+            if (duration > 0)
+                maxSample = duration * sampleRate;
+
             samples = new List<short>();
 
             if (BeginPlaySong(song, pal, 0))
             {
-                while (PlaySongFrame());
+                while (PlaySongFrame() && samples.Count < maxSample);
             }
+
+            if (samples.Count > maxSample)
+                samples.RemoveRange(maxSample, samples.Count - maxSample);
 
             return samples.ToArray();
         }

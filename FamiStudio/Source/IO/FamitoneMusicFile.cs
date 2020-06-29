@@ -13,6 +13,13 @@ namespace FamiStudio
         Dual
     };
 
+    public enum AssemblyFormat
+    {
+        NESASM,
+        CA65,
+        ASM6
+    };
+
     public class FamitoneMusicFile
     {
         private Project project;
@@ -46,13 +53,6 @@ namespace FamiStudio
             FamiTone2,   // Stock FamiTone2
             FamiTone2FS, // Stock FamiTone2 + FamiStudio tempo support.
             FamiStudio   // Heavily modified version that supports every FamiStudio feature.
-        };
-
-        public enum OutputFormat
-        {
-            NESASM,
-            CA65,
-            ASM6
         };
 
         public FamitoneMusicFile(FamiToneKernel kernel)
@@ -122,11 +122,7 @@ namespace FamiStudio
                 else
                 {
                     lines.Add(line);
-
-                    if (machine == MachineType.NTSC)
-                        lines.Add($"\t{db} 0, 0, 0, 0");
-                    else
-                        lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), 0, 0");
+                    lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), {(project.PalMode ? 2 : 0)}, 0");
                 }
             }
 
@@ -460,7 +456,7 @@ namespace FamiStudio
 
         private void OutputTempoEnvelopes()
         {
-            if (project.UsesFamiStudioTempo && machine != MachineType.NTSC)
+            if (project.UsesFamiStudioTempo)
             {
                 var uniqueNoteLengths = new HashSet<int>();
 
@@ -478,7 +474,7 @@ namespace FamiStudio
                 foreach (var noteLength in uniqueNoteLengths)
                 {
                     lines.Add($"{ll}tempo_env{noteLength}:");
-                    lines.Add($"\t{db} {String.Join(",", FamiStudioTempoUtils.GetPalSkipEnvelope(noteLength).Select(i => $"${i:x2}"))}");
+                    lines.Add($"\t{db} {String.Join(",", FamiStudioTempoUtils.GetTempoEnvelope(noteLength, project.PalMode).Select(i => $"${i:x2}"))}");
                 }
             }
         }
@@ -614,7 +610,7 @@ namespace FamiStudio
                         instrument = null;
                     }
 
-                    if (isSpeedChannel && project.UsesFamiStudioTempo && machine != MachineType.NTSC)
+                    if (isSpeedChannel && project.UsesFamiStudioTempo)
                     {
                         var noteLength = song.GetPatternNoteLength(p);
 
@@ -918,25 +914,25 @@ namespace FamiStudio
             return songSize;
         }
         
-        private void SetupFormat(OutputFormat format)
+        private void SetupFormat(AssemblyFormat format)
         {
             switch (format)
             {
-                case OutputFormat.NESASM:
+                case AssemblyFormat.NESASM:
                     db = ".db";
                     dw = ".dw";
                     ll = ".";
                     lo = "LOW";
                     hi = "HIGH";
                     break;
-                case OutputFormat.CA65:
+                case AssemblyFormat.CA65:
                     db = ".byte";
                     dw = ".word";
                     ll = "@";
                     lo =  ".lobyte";
                     hi =  ".hibyte";
                     break;
-                case OutputFormat.ASM6:
+                case AssemblyFormat.ASM6:
                     db = "db";
                     dw = "dw";
                     ll = "@";
@@ -1013,7 +1009,7 @@ namespace FamiStudio
             project.DeleteUnusedInstruments(); 
         }
 
-        public bool Save(Project originalProject, int[] songIds, OutputFormat format, bool separateSongs, string filename, string dmcFilename, MachineType machine)
+        public bool Save(Project originalProject, int[] songIds, AssemblyFormat format, bool separateSongs, string filename, string dmcFilename, MachineType machine)
         {
             this.machine = machine;
             SetupProject(originalProject, songIds);
@@ -1155,7 +1151,7 @@ namespace FamiStudio
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, OutputFormat.ASM6, false, tempAsmFilename, tempDmcFilename, machine);
+            Save(project, songIds, AssemblyFormat.ASM6, false, tempAsmFilename, tempDmcFilename, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }

@@ -1,44 +1,52 @@
-Issues
-======
-- MacOS scrolling issue?
-- Mexican crash.
+2.2.0
+=====
+- FDS export
+- FamiStudio sound engine
+	- Should I clamp the period? Why did I remove the clamps???
+- Show piano roll rect in sequencer
 - 
-
-Tutorial series
-===============
-- Advanced note/instrument editing.
-	- Piano roll:
-		- Explain subdivions, tempo mode
-		- Arpeggio
-		- Release envelopes
-		- Release notes
-		- No attack notes
-		- No attack + releases
-		- Slide notes
-		- Copy, paste, paste special
-	- Project explorer:	
-		- Delete, copy envelopes
-		- Replace instruments
-		- Import FamiTracker
-- Expansion audio
-	- FDS mod effect track
-	- 
-- NSF import
-	- Export samples
-- FamiTracker import/export
 
 Tweet ideas
 ===========
 - Tweet the linux screenshots, find a dev who wants to help.
 - Tips of the week or something, animated GIFs.
 
+MaxWar wish list.
+=================
+- Copy patterns to other channels.
+- Option for no-sound when no-pattern?
+- Loop end point
+- MIDI import/export.
+	
+Linux notes
+===========
+- When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe
+- GTK# : sudo apt-get install gtk-sharp2 
+	- This seem to be enough (sudo apt-get install libgtk2.0-cil)
+- How to recompile with old linux:
+	- Ubuntu 16.04.6
+	- Install cmake-gui
+	- OpenAL Soft
+		- Install ALSA libs (libasound2-dev)
+		- Download openal-soft code
+		- Run cmake-gui in /build folder.
+		- Configure
+		- Choose static C + C++ libs
+		- Choose Release (no debug info)
+		- Generate.
+		- make!
+	- NesSndEmu + NotSoFatso, run script.
+	- RtMidi, need to add static C/C++ libs to cmake file.
+
+Trailer/scroll
+==============
+- Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece.
+- 
+
 Backlog:
 =========
-- P1: Feature request from GitHub: Snap to 1/2, 1/4, etc.
 - P1: Fix crash on startup when there are no audio device (also freeze when switching audio devices)
 - P1: Proper error messages when something fails (save, etc.)
-- P1: Command line processing
-- P2: Add taskbar progress bar + color to show playback state
 - P2: Raw FDS modulation table envelope.
 - P2: Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
 - P2: Instrument folders
@@ -46,4 +54,4 @@ Backlog:
 - P2: Mac: Paste special: Text is super dark
 - P2: Mac: Clicking on FS without the window doesn't give it focus...?
 - P2: Installer on Japanese machine?
-
+- P2: FamiTracker tempo mode never plays the 1st frame in the NSF.

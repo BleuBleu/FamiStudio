@@ -4,6 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FAMISTUDIO_LINUX
+using CursorType = Gdk.Cursor;
+#else
+using CursorType = System.IntPtr;
+#endif
+
 namespace FamiStudio
 {
     public class GLControl
@@ -27,6 +33,7 @@ namespace FamiStudio
         protected virtual void OnMouseMove(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnMouseLeave(EventArgs e) { }
         protected virtual void OnMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
+        protected virtual void OnMouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnKeyDown(System.Windows.Forms.KeyEventArgs e) { }
         protected virtual void OnKeyUp(System.Windows.Forms.KeyEventArgs e) { }
 
@@ -38,8 +45,10 @@ namespace FamiStudio
         public void MouseMove(System.Windows.Forms.MouseEventArgs e) { OnMouseMove(e); }
         public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
         public void MouseWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseWheel(e); }
+        public void MouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseHorizontalWheel(e); }
         public void KeyDown(System.Windows.Forms.KeyEventArgs e) { OnKeyDown(e); }
         public void KeyUp(System.Windows.Forms.KeyEventArgs e) { OnKeyUp(e); }
+        public void Focus() { }
 
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
@@ -71,12 +80,12 @@ namespace FamiStudio
 
     public class CursorInfo
     {
-        private IntPtr cursor = Cursors.Default;
+        private CursorType cursor = Cursors.Default;
         private GLControl parentControl;
 
         public CursorInfo(GLControl ctrl) { parentControl = ctrl; }
         public System.Drawing.Point Position => parentControl.ParentForm.GetCursorPosition();
-        public IntPtr Current
+        public CursorType Current
         {
             get { return cursor; }
             set { cursor = value; parentControl.ParentForm.RefreshCursor(); }

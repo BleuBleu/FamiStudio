@@ -31,9 +31,15 @@ You can an instrument by pressing the "+" sign, and you can one by right-clickin
 
 Clicking on an instrument name and dragging it over another instrument will allow you to replace all notes of the first instrument by the second. This is useful prior to deleting an instrument.
 
-## Importing FamiTracker instruments
+## Importing instruments
 
-You can import FamiTracker instrument files (FTI files, official FamiTracker 0.4.6 only) by clicking the little folder icon. 
+You can import intruments in your project from any supported input format, as well as FamiTracker instrument files (FTI files, official FamiTracker 0.4.6 only) by clicking the little folder icon. 
+
+When importing instruments from another project or a FamiTracker file, you will be prompted with a list of instruments to import. Simply check the instrument to bring over.
+
+![](images/ImportInstruments.png#center)
+
+Note that instruments that are using incompatible expansion audio will not be able to be imported. Also, instruments with the same names are assumed to be the same. If you project already contains an instrument called "Piano" and you try to import another one called "Piano", nothing will happen. You are responsible to uniquely name your instruments if they are truly different.
 
 ## Editing instrument envelopes
 
@@ -44,6 +50,14 @@ Clicking on an envelope icon in the project explorer will open the envelope of t
 The loop point of an envelope can be set by right-clicking in the timeline. Volume tracks are also allowed to have release envelopes. Release envelopes are played when a release note is encountered and terminates the loop by jumping to the release point. This is useful for fading out notes smoothly. The release point is set by right-dragging from the rightmost side of the envelope.
 
 ![](images/EditEnvelopeRelease.png#center)
+
+## Copying envelope values
+
+Right-clicking on the numbers on the header of the envelope editor allows for range selection of envelope values. These can then be copy and pasted elsewhere.
+
+![](images/CopyEnvelopeValues.png#center)
+
+It is also possible to paste envelope values coming for raw text. Any series of number that is space, tab, comma, semicolon or newline separated can be pasted in the envelope editor. 
 
 ## Copying envelopes
 

@@ -50,7 +50,7 @@ namespace FamiStudio
                 return false;
 
             var numChannels = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
-            idx += sizeof(int); // m_iMachine;
+            var machine     = BitConverter.ToInt32(bytes, idx); idx += sizeof(int); 
             idx += sizeof(int); // m_iEngineSpeed;
             idx += sizeof(int); // m_iVibratoStyle;
             if (blockVersion >= 4)
@@ -66,7 +66,7 @@ namespace FamiStudio
                     numN163Channels = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             }
 
-            project.SetExpansionAudio(expansion, numN163Channels);
+            project.PalMode = machine == 1;
 
             if (numChannels != project.GetActiveChannelCount())
                 return false;

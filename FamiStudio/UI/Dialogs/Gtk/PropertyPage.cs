@@ -373,6 +373,12 @@ namespace FamiStudio
                 });
         }
 
+        public void SetStringListIndex(int idx, int selectedIndex)
+        {
+            var combo = (properties[idx].control as ComboBox);
+            combo.Active = selectedIndex;
+        }
+
         public void AddStringListMulti(string label, string[] values, bool[] selected)
         {
             properties.Add(
@@ -392,6 +398,17 @@ namespace FamiStudio
         public void SetLabelText(int idx, string text)
         {
             (properties[idx].control as Label).Text = text;
+        }
+
+        public void NotifyClosing()
+        {
+#if !FAMISTUDIO_WINDOWS
+            foreach (var prop in properties)
+            { 
+                if (prop.control is SpinButton)
+                    (prop.control as SpinButton).Update();
+            }
+#endif
         }
 
         public object GetPropertyValue(int idx)

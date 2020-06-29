@@ -29,6 +29,16 @@ Clicking a pattern in the sequencer will scroll the piano roll to its location. 
 
 Right-clicking deletes a note.
 
+## Snapping
+
+Snapping can be toggle by clicking the little magnet in the top-left corner of the piano roll. **SHIFT+S** can also be used to quickly toggle snapping on/off. The precision of the snapping can be changed by left/right clicking the number of using the mousewheel over the number or magnet icon. 
+
+![](images/Snap.png#center)
+
+Using FamiStudio tempo mode will allow you to use both fractional snapping (1/4, 1/3, 1/2) and integer snapping (1, 2, 3, 4). FamiTracker tempo mode is limited to integer snapping since it does not give you full control over the individual frames. Fractional snapping will perform rounding when the number of frames in a note isnt exactly divisible by the precision.
+
+Adding, selecting and dragging of notes are currently the only actions affected by snapping. More might be added in future based on user feedback.
+
 ## Stop & Release notes
 
 Using Ctrl+click will add a stop note. Stops notes are displayed as little triangles. Although they are displayed next to the note preceding them, they actually have no pitch or instrument, they simply stop the sound. Stop notes are important because on the NES, a note will play indefinitely unless you tell it to stop.
@@ -76,6 +86,8 @@ Much like the sequencer, selcted notes can be copy (or cut) by pressing CTRL+C (
 If you want to paste notes, without their associated effets or volume track (or vice-versa). You can use a "special paste" by pressing CTRL+SHIFT+V. This will open a popup dialog asking you to choose what you want to paste.
 
 ![](images/PasteSpecial.png#center)
+
+The default behavior of pasting is to completely replace everything by the content of the clipboard. Using the "Mix with existing notes" option will preserve any existing data (notes, volumes, effects) and only insert new data if there is nothing there already.
 
 ## Copy & pasting notes between projects 
 

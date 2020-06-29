@@ -626,10 +626,7 @@ namespace FamiStudio
         {
             if (captureOperation == CaptureOperation.DragInstrument && captureThresholdMet)
             {
-#if !FAMISTUDIO_LINUX
-                // TODO LINUX: Cursors
                 Cursor.Current = envelopeDragIdx == -1 ? Cursors.DragCursor : Cursors.CopyCursor;
-#endif
             }
             else
             {
@@ -901,6 +898,79 @@ namespace FamiStudio
                     buttonY < (sliderPosY + sliderSizeY));
         }
 
+        private void ImportInstruments()
+        {
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm)|*.fti;*.fms;*.txt;*.ftm|FamiTracker Instrument File (*.fti)|*.fti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+
+            if (filename != null)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                var success = false;
+
+                if (filename.ToLower().EndsWith("fti"))
+                {
+                    success = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
+                }
+                else
+                {
+                    Project instrumentProject = App.OpenProjectFile(filename, false);
+
+                    if (instrumentProject != null)
+                    {
+                        var instruments = new List<Instrument>();
+                        var instrumentNames = new List<string>();
+
+                        foreach (var instrument in instrumentProject.Instruments)
+                        {
+                            if (instrument.ExpansionType == Project.ExpansionNone ||
+                                instrument.ExpansionType == App.Project.ExpansionAudio)
+                            {
+                                var instName = instrument.Name;
+
+                                if (instrument.ExpansionType != Project.ExpansionNone)
+                                    instName += $" ({Project.ExpansionShortNames[instrument.ExpansionType]})";
+
+                                instruments.Add(instrument);
+                                instrumentNames.Add(instName);
+                            }
+                        }
+
+                        var dlg = new PropertyDialog(300, ParentForm.Bounds);
+                        dlg.Properties.AddLabel(null, "Select instruments to import:");
+                        dlg.Properties.AddStringListMulti(null, instrumentNames.ToArray(), null);
+                        dlg.Properties.Build();
+
+                        if (dlg.ShowDialog() == DialogResult.OK)
+                        {
+                            var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+
+                            for (int i = 0; i < selected.Length; i++)
+                            {
+                                if (selected[i] && App.Project.GetInstrument(instruments[i].Name) == null)
+                                {
+                                    App.Project.Instruments.Add(instruments[i]);
+                                }
+                            }
+
+                            success = true;
+                        }
+                    }
+                }
+
+                App.Project.SortInstruments();
+
+                if (!success)
+                    App.UndoRedoManager.AbortTransaction();
+                else
+                    App.UndoRedoManager.EndTransaction();
+
+            }
+
+            RefreshButtons();
+            ConditionalInvalidate();
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -911,6 +981,12 @@ namespace FamiStudio
             bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
             bool right  = e.Button.HasFlag(MouseButtons.Right);
+
+            if (middle)
+            {
+                mouseLastY = e.Y;
+                return;
+            }
 
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
@@ -924,7 +1000,7 @@ namespace FamiStudio
                     {
                         if (subButtonType == SubButtonType.Add)
                         {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
                             App.Project.CreateSong();
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
@@ -967,19 +1043,7 @@ namespace FamiStudio
                         }
                         if (subButtonType == SubButtonType.LoadInstrument)
                         {
-                            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "Fami Tracker Instrument (*.fti)|*.fti");
-                            if (filename != null)
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                                var instrument = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename);
-                                if (instrument == null)
-                                    App.UndoRedoManager.AbortTransaction();
-                                else
-                                    App.UndoRedoManager.EndTransaction();
-                            }
-
-                            RefreshButtons();
-                            ConditionalInvalidate();
+                            ImportInstruments();
                         }
                     }
                     else if (button.type == ButtonType.Instrument)
@@ -1070,7 +1134,7 @@ namespace FamiStudio
                         {
                             bool selectNewSong = song == selectedSong;
                             App.Stop();
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
                             App.Project.DeleteSong(song);
                             if (selectNewSong)
                                 selectedSong = App.Project.Songs[0];
@@ -1112,11 +1176,6 @@ namespace FamiStudio
                     }
                 }
             }
-
-            if (middle)
-            {
-                mouseLastY = e.Y;
-            }
         }
 
         private void EditProjectProperties(Point pt)
@@ -1130,25 +1189,29 @@ namespace FamiStudio
             dlg.Properties.AddStringList("Expansion Audio :", Project.ExpansionNames, project.ExpansionAudioName, CommonTooltips.ExpansionAudio); // 3
             dlg.Properties.AddIntegerRange("Channels :", project.ExpansionNumChannels, 1, 8, CommonTooltips.ExpansionNumChannels); // 4 (Namco)
             dlg.Properties.AddStringList("Tempo Mode :", Project.TempoModeNames, Project.TempoModeNames[project.TempoMode], CommonTooltips.TempoMode); // 5
+            dlg.Properties.AddStringList("Authoring Machine :", Project.MachineNames, Project.MachineNames[project.PalMode ? 1 : 0], CommonTooltips.AuthoringMachine); // 6
             dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionN163);
+            dlg.Properties.SetPropertyEnabled(6, project.UsesFamiStudioTempo);
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             dlg.Properties.Build();
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
 
                 project.Name = dlg.Properties.GetPropertyValue<string>(0);
                 project.Author = dlg.Properties.GetPropertyValue<string>(1);
                 project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
 
-                var tempoMode = Array.IndexOf(Project.TempoModeNames, dlg.Properties.GetPropertyValue<string>(5));
-                var expansion = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
-                var numChannels = dlg.Properties.GetPropertyValue<int>(4);
+                var tempoMode    = Array.IndexOf(Project.TempoModeNames, dlg.Properties.GetPropertyValue<string>(5));
+                var expansion    = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
+                var palAuthoring = Array.IndexOf(Project.MachineNames,   dlg.Properties.GetPropertyValue<string>(6)) == 1;
+                var numChannels  = dlg.Properties.GetPropertyValue<int>(4);
 
-                var changedTempoMode   = tempoMode != project.TempoMode;
-                var changedExpansion   = expansion != project.ExpansionAudio;
-                var changedNumChannels = numChannels != project.ExpansionNumChannels;
+                var changedTempoMode        = tempoMode    != project.TempoMode;
+                var changedExpansion        = expansion    != project.ExpansionAudio;
+                var changedNumChannels      = numChannels  != project.ExpansionNumChannels;
+                var changedAuthoringMachine = palAuthoring != project.PalMode;
 
                 if (changedExpansion || changedNumChannels)
                 {
@@ -1185,8 +1248,34 @@ namespace FamiStudio
                     Reset();
                 }
 
+                if (changedAuthoringMachine && project.UsesFamiStudioTempo)
+                {
+                    project.PalMode = palAuthoring;
+                    App.PalPlayback = palAuthoring;
+                }
+
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();
+            }
+        }
+
+        private void ProjectProperties_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            var noExpansion = props.GetPropertyValue<string>(3) == Project.ExpansionNames[Project.ExpansionNone];
+
+            if (idx == 3) // Expansion
+            {
+                props.SetPropertyEnabled(4, (string)value == Project.ExpansionNames[Project.ExpansionN163]);
+                props.SetPropertyEnabled(6, props.GetPropertyValue<string>(5) == "FamiStudio" && noExpansion);
+
+                if (noExpansion)
+                    props.SetStringListIndex(6, App.Project.PalMode ? 1 : 0);
+                else
+                    props.SetStringListIndex(6, 0);
+            }
+            else if (idx == 5) // Tempo Mode
+            {
+                props.SetPropertyEnabled(6, (string)value == Project.TempoModeNames[Project.TempoFamiStudio]);
             }
         }
 
@@ -1220,7 +1309,7 @@ namespace FamiStudio
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
 
                 App.Stop();
                 App.Seek(0);
@@ -1276,14 +1365,14 @@ namespace FamiStudio
                 var tempo = props.GetPropertyValue<int>(3);
                 var speed = props.GetPropertyValue<int>(4);
 
-                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(speed, tempo).ToString());
+                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(selectedSong.Project.PalMode, speed, tempo).ToString());
             }
             else if (idx == 3) // 3 = Note length
             {
                 int noteLength = (int)value;
 
                 props.UpdateIntegerRange(4, 1, Pattern.MaxLength / noteLength);
-                props.SetLabelText(6, Song.ComputeFamiStudioBPM(noteLength).ToString());
+                props.SetLabelText(6, Song.ComputeFamiStudioBPM(selectedSong.Project.PalMode, noteLength).ToString());
             }
         }
 
@@ -1366,7 +1455,7 @@ namespace FamiStudio
                 {
                     EditInstrumentProperties(pt, button.instrument);
                 }
-#if FAMISTUDIO_MACOS
+#if !FAMISTUDIO_WINDOWS
                 else
                 {
                     // When pressing multiple times on mac, it creates click -> dbl click -> click -> dbl click sequences which
@@ -1374,14 +1463,6 @@ namespace FamiStudio
                     OnMouseDown(e);
                 }
 #endif
-            }
-        }
-
-        private void ProjectProperties_PropertyChanged(PropertyPage props, int idx, object value)
-        {
-            if (idx == 3)
-            {
-                props.SetPropertyEnabled(4, (string)value == Project.ExpansionNames[Project.ExpansionN163]);
             }
         }
 
