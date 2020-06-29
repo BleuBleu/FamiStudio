@@ -735,7 +735,6 @@ namespace FamiStudio
                                 found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTableNtsc, out _, out int stepSizeNtsc, out _);
                                 found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTablePal,  out _, out int stepSizePal,  out _);
 
-                                // MATTT: Review this!
                                 if (song.Project.UsesExpansionAudio || machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)

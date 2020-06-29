@@ -1,25 +1,3 @@
-2.1.0
-=====
-- PAL mode editing.
-	- FamiTone2FS
-	- Remove debug print in Player when done.
-- Slides in NSF dont take PAL into account? (subtract the pitch of both notes, take max???. TODO: PAL.)
-- MATTT
-- Are trackpad controls changing the tooltips correctly?
-- Recompile ROM just to be sure.
-
-Testing
-=======
-- Test snap a lot (DPCM, All tempo, custom pattern, etc).
-- Retest snapping with various pattern sizes.
-- NSF A LOT! Export NSF and reimport to make sure skips/double frames are good.
-	- Test the release fix I did for slides.
-- Playback: FamiTracker, FamiStudio, all mix, compare with old version, etc.
-- Register player : PAL/NTSC, FamiTracker/FamiStudio.
-- Retest FamiTracker tempo exports (ROM, NSF, etc).
-- Make sure play starts exactly at the node the seek bar is (DPCM test).
-- Command line on Mac (Linux tested).
-
 2.2.0
 =====
 - FDS export
@@ -60,6 +38,11 @@ Linux notes
 	- NesSndEmu + NotSoFatso, run script.
 	- RtMidi, need to add static C/C++ libs to cmake file.
 
+Trailer/scroll
+==============
+- Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece.
+- 
+
 Backlog:
 =========
 - P1: Fix crash on startup when there are no audio device (also freeze when switching audio devices)
@@ -71,3 +54,4 @@ Backlog:
 - P2: Mac: Paste special: Text is super dark
 - P2: Mac: Clicking on FS without the window doesn't give it focus...?
 - P2: Installer on Japanese machine?
+- P2: FamiTracker tempo mode never plays the 1st frame in the NSF.

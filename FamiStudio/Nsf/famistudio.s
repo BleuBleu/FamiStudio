@@ -2572,10 +2572,17 @@ slide:
     iny
     sta FT_SLIDE_STEP,x
     lda (FT_TEMP_PTR1),y       ; read slide note from
+.if(::FT_PITCH_FIX)
+    clc
+    adc FT_PAL_ADJUST
+.endif
     sta FT_TEMP_VAR2
     iny
     lda (FT_TEMP_PTR1),y       ; read slide note to
     ldy FT_TEMP_VAR2           ; start note
+.if(::FT_PITCH_FIX)
+    adc FT_PAL_ADJUST
+.endif
     stx FT_TEMP_VAR2           ; store slide index.    
     tax
 .ifdef exp_note_start
@@ -2583,7 +2590,7 @@ slide:
     cmp #exp_note_start
     bcs note_table_expansion
 .endif
-    sec                        ; subtract the pitch of both notes. TODO: PAL.
+    sec                        ; subtract the pitch of both notes.
     lda _FT2NoteTableLSB,y
     sbc _FT2NoteTableLSB,x
     sta slide_delta_lo
