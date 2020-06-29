@@ -10,9 +10,19 @@ The configuration dialog dialog is accessed from the toolbar.
 
 ![](images/ConfigUI.png#center)
 
-* **Scaling**: By default, FamiStudio will use the scaling of your primary monitor on Windows (100%, 150% and 200% are support) and on macOS it will choose between 100% or 200% depending on if you have a retina display or not. This behavior can be overriden by a scaling of your choosing. This requires restarting the app.
+* **Scaling**: By default, FamiStudio will use the scaling of your primary monitor on Windows (100%, 150% and 200% are support) and on macOS it will choose between 100% or 200% depending on if you have a retina display or not. This behavior can be overriden by a scaling of your choosing. This requires restarting the app:
+
+* **Time Format**: Allow changing the format of the timer in the main toolbar of the application. 
 
 * **Check for updates**: At startup FamiStudio checks for new version online. This can be disabled.
+
+* **Trackpad controls**: Enabling trackpad controls will switch to a control scheme that is better suited for trackpad users:
+
+    * Vertical mouse wheel up/down will scroll up/down instead of zooming in/out. This is the equivalent of swiping your fingers up/down on the trackpad.
+    * Horizontal mouse wheel will scroll left/right. This is equivalent of swiping your fingers left/right on the trackpad.
+    * Pinch to zoom (or alternatively CTRL + MouseWheel) will zoom in/out. If pinch-to-zoom does not work on Windows, please check your trackpad drivers, this is not an issue with FamiStudio.
+
+    Note that these are poorly supported on Linux due to the fact that the app uses GTK 2 and gestures are generally poorly supported in Linux.
 
 ## Sound Configuration
 

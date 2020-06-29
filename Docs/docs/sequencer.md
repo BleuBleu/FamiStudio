@@ -50,11 +50,17 @@ You can select multiple patterns in a rectangular grid, first select a pattern a
 
 ## Moving/copying patterns
 
-When one or multiple patterns are selected, dragging them will move them in the timeline. While dragging, holding Ctrl will copy a of the pattern(s). Note that when copying a pattern, it creates an instance of the same pattern, so modifying one instance will modify all of them.
+When one or multiple patterns are selected, dragging them will move them in the timeline. While dragging, holding CTRL will create another instance of the pattern(s). An instance is a copy that is linked to the original pattern, it will have the same name and color. Modifying one instance will modify all of them. This will be shown by a "link" icon when dragging.
+
+![](images/InstancePattern.png#center)
+
+Holding CTRL+SHIFT while dragging will create a completely independant copy of the selected patterns. This will be showned by a "copy" icon when dragging. They will change name and possibly color as well. 
+
+![](images/CopyPattern.png#center)
 
 ## Cut/copy/pasting patterns
 
-When one or multiple patterns are selected, press CTRL+C (or CTRL+X for cut). Move the selection somewhere else and paste with CTRL+V.
+When one or multiple patterns are selected, press CTRL+C (or CTRL+X for cut). Move the selection somewhere else and paste with CTRL+V. Copy and pasting always create instances of patterns.
 
 ## Copy/pasting patterns between projects
 

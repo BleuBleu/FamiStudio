@@ -14,7 +14,12 @@ Most of the operations are performed with the mouse. In general:
 * The **right mouse button** removes stuff. Right clicking in the header of the Sequencer or Piano Roll selects.
 * The **middle mouse button** pans when you press it and zooms and you use the mouse wheel.
 
-If you are working on a trackpad, all actions requiring pressing the middle mouse buttons can be done with Alt+Left click. 
+Alternatively, if your mouse does not have a middle mouse button or mouse wheel:
+
+* All actions requiring pressing the middle mouse buttons can be done with Alt+Left click.
+* All actions requiring the mouse wheel can be performed with Alt+Right click, then dragging up/down.
+
+If you are working on a trackpad, please check out how to enable [Trackpad controls](config.md#user-interface-configuration) in the configuration dialog.
 
 # Main Window
 
@@ -106,8 +111,8 @@ Please check out the [Editing Notes](pianoroll.md) section for more details.
 Here is a list of useful keyboard shortcuts:
 
 * **Space**: Play/stop the stop
-* **Ctrl+Space**: Plays from beginning of current pattern and switch to pattern loop mode.
-* **Shift+Space**: Plays from current position and reverts back to song loop mode and 
+* **Ctrl+Space**: Plays from beginning of current pattern.
+* **Shift+Space**: Plays from beginning of the song.
 * **Home**: Seeks back to beginning of the song.
 * **Ctrl+Home**: Seeks to beginning of the current pattern.
 * **Esc**: Stops any stop, clears the selection.
@@ -133,3 +138,4 @@ Some keyboard shortcuts specific to the piano roll:
 * **S+Click** (and drag): Creates or edit a slide note.
 * **A+Click**: Toggles the attack of a note.
 * **~ (Tilde)**: Expand/collapse the effect panel.
+* **Shift+S**: Toggles snapping.
