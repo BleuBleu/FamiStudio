@@ -23,7 +23,7 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                Debug.WriteLine(note.FriendlyName);
+                //Debug.WriteLine(note.FriendlyName);
 
                 var period = GetPeriod();
                 var volume = GetVolume();
