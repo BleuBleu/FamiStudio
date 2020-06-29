@@ -9,7 +9,7 @@ CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$480 {SONGDATASTART}=$
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$580 {SONGDATASTART}=$8600", "-D FT_NTSC_SUPPORT=1 -D FT_PAL_SUPPORT=1", nsf_famitone2_dual
 
 :: Stock FamiTone2 (FamiStudio tempo mode)
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$480 {SONGDATASTART}=$8500", "-D FT_NTSC_SUPPORT=1 -D FT_FAMISTUDIO_TEMPO=1", nsf_famitone2_ntsc_tempo
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$580 {SONGDATASTART}=$8600", "-D FT_NTSC_SUPPORT=1 -D FT_FAMISTUDIO_TEMPO=1", nsf_famitone2_ntsc_tempo
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$580 {SONGDATASTART}=$8600", "-D FT_PAL_SUPPORT=1 -D FT_FAMISTUDIO_TEMPO=1", nsf_famitone2_pal_tempo
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$580 {SONGDATASTART}=$8600", "-D FT_NTSC_SUPPORT=1 -D FT_PAL_SUPPORT=1 -D FT_FAMISTUDIO_TEMPO=1", nsf_famitone2_dual_tempo
 
