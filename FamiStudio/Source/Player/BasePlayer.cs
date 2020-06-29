@@ -89,7 +89,7 @@ namespace FamiStudio
 
                     tempoEnvelopeCounter = tempoEnvelope[tempoEnvelopeIndex];
 
-#if DEBUG
+#if FALSE //DEBUG
                     if (song.Project.PalMode)
                         Debug.WriteLine("*** Will do nothing for 1 frame!");
                     else
@@ -135,11 +135,11 @@ namespace FamiStudio
             if (!famitrackerTempo)
             {
                 var newNoteLength = song.GetPatternNoteLength(playPattern);
-                var newPalSkipEnvelope = FamiStudioTempoUtils.GetTempoEnvelope(newNoteLength, song.Project.PalMode);
+                var newTempoEnvelope = FamiStudioTempoUtils.GetTempoEnvelope(newNoteLength, song.Project.PalMode);
 
-                if (newPalSkipEnvelope != tempoEnvelope || force)
+                if (newTempoEnvelope != tempoEnvelope || force)
                 {
-                    tempoEnvelope = newPalSkipEnvelope;
+                    tempoEnvelope = newTempoEnvelope;
                     tempoEnvelopeCounter = tempoEnvelope[0];
                     tempoEnvelopeIndex = 0;
                 }
@@ -162,7 +162,7 @@ namespace FamiStudio
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, GetNesApuExpansionAudio(song.Project), song.Project.ExpansionNumChannels, dmcCallback);
 
-            Debug.WriteLine($"START SEEKING!!"); 
+            //Debug.WriteLine($"START SEEKING!!"); 
 
             if (startNote != 0)
             {
@@ -170,13 +170,13 @@ namespace FamiStudio
 
                 while (song.GetPatternStartNote(playPattern) + playNote < startNote)
                 {
-                    Debug.WriteLine($"Seek Frame {song.GetPatternStartNote(playPattern) + playNote}!");
+                    //Debug.WriteLine($"Seek Frame {song.GetPatternStartNote(playPattern) + playNote}!");
 
                     int numFramesToRun = UpdateTempoEnvelope();
 
                     for (int i = 0; i < numFramesToRun; i++)
                     {
-                        Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
+                        //Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
 
                         foreach (var channel in channelStates)
                         {
@@ -214,7 +214,7 @@ namespace FamiStudio
 
         public bool PlaySongFrame()
         {
-            Debug.WriteLine($"PlaySongFrame {playPosition}!");
+            //Debug.WriteLine($"PlaySongFrame {playPosition}!");
 
             int numFramesToRun = UpdateTempoEnvelope();
 
@@ -267,7 +267,8 @@ namespace FamiStudio
 
         public bool AdvanceSong(int songLength, LoopMode loopMode)
         {
-            bool resetTempo = false;
+            bool advancedPattern = false;
+            bool forceResetTempo = false;
 
             if (++playNote >= song.GetPatternLength(playPattern))
             {
@@ -275,7 +276,8 @@ namespace FamiStudio
                 if (loopMode != LoopMode.Pattern)
                 {
                     playPattern++;
-                    resetTempo = playPattern == song.LoopPoint;
+                    advancedPattern = true;
+                    forceResetTempo = playPattern == song.LoopPoint;
                 }
             }
 
@@ -287,7 +289,8 @@ namespace FamiStudio
                     {
                         playPattern = song.LoopPoint;
                         playNote = 0;
-                        resetTempo = true;
+                        advancedPattern = true;
+                        forceResetTempo = true;
                     }
                     else 
                     {
@@ -298,7 +301,8 @@ namespace FamiStudio
                 {
                     playPattern = Math.Max(0, song.LoopPoint);
                     playNote = 0;
-                    resetTempo = true;
+                    advancedPattern = true;
+                    forceResetTempo = true;
                 }
                 else if (loopMode == LoopMode.None)
                 {
@@ -306,8 +310,8 @@ namespace FamiStudio
                 }
             }
 
-            if (resetTempo)
-                ResetFamiStudioTempo(resetTempo);
+            if (advancedPattern)
+                ResetFamiStudioTempo(forceResetTempo);
 
             return true;
         }
