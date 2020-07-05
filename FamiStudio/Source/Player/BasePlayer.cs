@@ -146,6 +146,32 @@ namespace FamiStudio
             }
         }
 
+        protected void AdvanceChannels()
+        {
+            foreach (var channel in channelStates)
+            {
+                channel.Advance(song, playPattern, playNote, famitrackerSpeed, famitrackerNativeTempo);
+                channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
+            }
+        }
+
+        protected void UpdateChannelsEnvelopesAndAPU()
+        {
+            foreach (var channel in channelStates)
+            {
+                channel.UpdateEnvelopes();
+                channel.UpdateAPU();
+            }
+        }
+
+        protected void UpdateChannelsMuting()
+        {
+            for (int i = 0; i < channelStates.Length; i++)
+            {
+                NesApu.EnableChannel(apuIndex, i, (channelMask & (1 << i)));
+            }
+        }
+
         public bool BeginPlaySong(Song s, bool pal, int startNote, IRegisterListener listener = null)
         {
             song = s;
@@ -161,6 +187,8 @@ namespace FamiStudio
             channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback, listener);
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, GetNesApuExpansionAudio(song.Project), song.Project.ExpansionNumChannels, dmcCallback);
+
+            UpdateChannelsMuting();
 
             //Debug.WriteLine($"START SEEKING!!"); 
 
@@ -178,13 +206,8 @@ namespace FamiStudio
                     {
                         //Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
 
-                        foreach (var channel in channelStates)
-                        {
-                            channel.Advance(song, playPattern, playNote, famitrackerSpeed, famitrackerNativeTempo);
-                            channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
-                            channel.UpdateEnvelopes();
-                            channel.UpdateAPU();
-                        }
+                        AdvanceChannels();
+                        UpdateChannelsEnvelopesAndAPU();
 
                         if (!AdvanceSong(song.Length, LoopMode.None))
                             return false;
@@ -194,18 +217,9 @@ namespace FamiStudio
                 NesApu.StopSeeking(apuIndex);
             }
 
-            // Update envelopes + APU registers.
-            foreach (var channel in channelStates)
-            {
-                channel.Advance(song, playPattern, playNote, famitrackerSpeed, famitrackerNativeTempo);
-                channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
-            }
-
-            foreach (var channel in channelStates)
-            {
-                channel.UpdateEnvelopes();
-                channel.UpdateAPU();
-            }
+            AdvanceChannels();
+            UpdateChannelsEnvelopesAndAPU();
+            EndFrame();
 
             playPosition = song.GetPatternStartNote(playPattern) + playNote;
 
@@ -228,11 +242,7 @@ namespace FamiStudio
                     if (!AdvanceSong(song.Length, loopMode))
                         return false;
 
-                    foreach (var channel in channelStates)
-                    {
-                        channel.Advance(song, playPattern, playNote, famitrackerSpeed, famitrackerNativeTempo);
-                        channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
-                    }
+                    AdvanceChannels();
 
                     playPosition = song.GetPatternStartNote(playPattern) + playNote;
                 }
@@ -254,12 +264,7 @@ namespace FamiStudio
                 }
             }
 
-            // Mute.
-            for (int i = 0; i < channelStates.Length; i++)
-            {
-                NesApu.EnableChannel(apuIndex, i, (channelMask & (1 << i)));
-            }
-
+            UpdateChannelsMuting();
             EndFrame();
 
             return true;
