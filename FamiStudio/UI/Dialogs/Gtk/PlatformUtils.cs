@@ -185,6 +185,14 @@ namespace FamiStudio
             if (filechooser.Run() == (int)ResponseType.Accept)
             {
                 filename = filechooser.Filename;
+
+                // GTK file chooser does not add the extension automatically.
+                var extension = Path.GetExtension(filename).ToLower();
+                var desiredExtension = $".{extensionList[0]}";
+
+                if (extension != desiredExtension)
+                    filename = Path.ChangeExtension(filename, desiredExtension);
+
                 defaultPath = Path.GetDirectoryName(filename);
             }
 
