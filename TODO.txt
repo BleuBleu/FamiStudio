@@ -1,10 +1,9 @@
-2.2.0
+2.1.1
 =====
-- FDS export
-- FamiStudio sound engine
-	- Should I clamp the period? Why did I remove the clamps???
-- Show piano roll rect in sequencer
-- 
+- Trackpad sensitivity settings
+- Fix Max issues (playback)
+	- Check envelopes too (app + NSF)
+- Add license to Linux ZIP
 
 Tweet ideas
 ===========
