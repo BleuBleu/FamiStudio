@@ -187,12 +187,34 @@ namespace FamiStudio
             return project.CreateSong(name);
         }
 
+        protected Arpeggio GetOrCreateArpeggio(int param)
+        {
+            var name = $"Arp {param:X2}";
+            var arp = project.GetArpeggio(name);
+
+            if (arp != null)
+                return arp;
+
+            arp = project.CreateArpeggio(name);
+            arp.Envelope.Length = 3;
+            arp.Envelope.Loop = 0;
+            arp.Envelope.Values[0] = 0;
+            arp.Envelope.Values[1] = (sbyte)((param & 0xf0) >> 4);
+            arp.Envelope.Values[2] = (sbyte)((param & 0x0f) >> 0);
+
+            return arp;
+        }
+
         protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, Dictionary<Pattern, byte> patternLengths)
         {
             Note note = null;
 
             switch (fx.fx)
             {
+                case Effect_Arpeggio:
+                    note = pattern.GetLastValidNoteAt(n); // MATTT: This is gonna be more complicated than this!!!
+                    note.Arpeggio = GetOrCreateArpeggio(fx.param);
+                    break;
                 case Effect_Jump:
                     pattern.Song.SetLoopPoint(fx.param);
                     break;
