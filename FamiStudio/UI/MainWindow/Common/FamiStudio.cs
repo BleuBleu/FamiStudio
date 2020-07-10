@@ -34,7 +34,7 @@ namespace FamiStudio
         private string newReleaseString = null;
         private string newReleaseUrl = null;
 
-        public bool RealTimeUpdate => songPlayer.IsPlaying || PianoRoll.IsEditingInstrument;
+        public bool RealTimeUpdate => songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio;
         public bool IsPlaying => songPlayer.IsPlaying;
         public int CurrentFrame => songPlayer.CurrentFrame;
         public int ChannelMask { get => songPlayer.ChannelMask; set => songPlayer.ChannelMask = value; }
@@ -578,6 +578,11 @@ namespace FamiStudio
                 }
             }
 
+            if (PianoRoll.IsEditingArpeggio && song.Channels[channel].SupportsArpeggios)
+            {
+                note.Arpeggio = PianoRoll.CurrentArpeggio;
+            }
+
             instrumentPlayer.PlayNote(channel, note);
         }
 
@@ -825,9 +830,9 @@ namespace FamiStudio
             }
         }
 
-        public int GetEnvelopeFrame(Instrument instrument, int envelopeIdx)
+        public int GetEnvelopeFrame(Instrument instrument, int envelopeIdx, bool force = false)
         {
-            if (ProjectExplorer.SelectedInstrument == instrument)
+            if (ProjectExplorer.SelectedInstrument == instrument || force)
                 return instrumentPlayer.GetEnvelopeFrame(envelopeIdx);
             else
                 return -1;

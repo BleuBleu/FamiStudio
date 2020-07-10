@@ -63,13 +63,6 @@ namespace FamiStudio
                         pitchEnvelopeOverride = false;
                     }
                 }
-
-                if (tmpNote.IsMusical && tmpNote.Arpeggio != null)
-                {
-                    envelopes[Envelope.Arpeggio] = tmpNote.Arpeggio.Envelope;
-                    envelopeIdx[Envelope.Arpeggio] = 0;
-                    envelopeValues[Envelope.Arpeggio] = 0;
-                }
             }
         }
 
@@ -156,6 +149,13 @@ namespace FamiStudio
 
                     envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
                     noteTriggered = true;
+
+                    if (note.IsMusical && note.Arpeggio != null)
+                    {
+                        envelopes[Envelope.Arpeggio] = note.Arpeggio.Envelope;
+                        envelopeIdx[Envelope.Arpeggio] = 0;
+                        envelopeValues[Envelope.Arpeggio] = 0;
+                    }
                 }
 
                 if (instrumentChanged)

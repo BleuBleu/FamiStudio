@@ -493,6 +493,11 @@ namespace FamiStudio
             get { return editMode == EditionMode.Enveloppe; }
         }
 
+        public bool IsEditingArpeggio
+        {
+            get { return editMode == EditionMode.Arpeggio; }
+        }
+
         public bool ShowSelection
         {
             get { return showSelection; }
@@ -864,9 +869,9 @@ namespace FamiStudio
 
             g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
 
-            if ((editMode == EditionMode.Enveloppe && editEnvelope < Envelope.RegularCount) || (editMode == EditionMode.Channel))
+            if (((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && editEnvelope < Envelope.RegularCount) || (editMode == EditionMode.Channel))
             {
-                var seekFrame = editMode == EditionMode.Enveloppe ? App.GetEnvelopeFrame(editInstrument, editEnvelope) : App.CurrentFrame;
+                var seekFrame = editMode == EditionMode.Enveloppe|| editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio) : App.CurrentFrame;
                 if (seekFrame >= 0)
                 {
                     g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
@@ -1681,9 +1686,9 @@ namespace FamiStudio
                 if (env.Length > 0)
                     g.DrawLine(env.Length * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
 
-                if (editMode == EditionMode.Enveloppe && editEnvelope < Envelope.RegularCount)
+                if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && editEnvelope < Envelope.RegularCount)
                 {
-                    var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope);
+                    var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio);
                     if (seekFrame >= 0)
                     {
                         var seekX = seekFrame * noteSizeX - scrollX;
