@@ -335,6 +335,7 @@ namespace FamiStudio
 
         public Song SelectedSong => selectedSong;
         public Instrument SelectedInstrument => selectedInstrument;
+        public Arpeggio SelectedArpeggio => selectedArpeggio;
 
         public delegate void EmptyDelegate();
         public delegate void InstrumentEnvelopeDelegate(Instrument instrument, int envelope);

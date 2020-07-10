@@ -569,6 +569,9 @@ namespace FamiStudio
                 if (song.Channels[channel].SupportsInstrument(ProjectExplorer.SelectedInstrument))
                 {
                     note.Instrument = ProjectExplorer.SelectedInstrument;
+
+                    if (song.Channels[channel].SupportsArpeggios && ProjectExplorer.SelectedArpeggio != null)
+                        note.Arpeggio = ProjectExplorer.SelectedArpeggio;
                 }
                 else
                 {
