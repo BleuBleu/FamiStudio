@@ -79,6 +79,8 @@ namespace FamiStudio
             Song,
             InstrumentHeader,
             Instrument,
+            ArpeggioHeader,
+            Arpeggio,
             ParamCheckbox,
             ParamSlider,
             ParamList,
@@ -123,6 +125,7 @@ namespace FamiStudio
             public int instrumentParam = -1;
             public Song song;
             public Instrument instrument;
+            public Arpeggio arpeggio;
             public ProjectExplorer projectExplorer;
 
             public Button(ProjectExplorer pe)
@@ -141,6 +144,9 @@ namespace FamiStudio
                         active = new[] { true ,true };
                         return new[] { SubButtonType.Add ,
                                        SubButtonType.LoadInstrument };
+                    case ButtonType.ArpeggioHeader:
+                        active = new[] { true };
+                        return new[] { SubButtonType.Add };
                     case ButtonType.Instrument:
                         if (instrument == null)
                         {
@@ -173,6 +179,14 @@ namespace FamiStudio
 
                             return buttons;
                         }
+                    case ButtonType.Arpeggio:
+                        if (arpeggio != null)
+                        {
+                            active = new[] { true };
+                            return new[] { SubButtonType.ArpeggioEnvelope };
+                        }
+                        break;
+
                 }
 
                 active = null;
@@ -188,6 +202,8 @@ namespace FamiStudio
                     case ButtonType.Song: return song.Name;
                     case ButtonType.InstrumentHeader: return "Instruments";
                     case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
+                    case ButtonType.ArpeggioHeader: return "Arpeggios";
+                    case ButtonType.Arpeggio: return arpeggio == null ? "None" : arpeggio.Name;
                     case ButtonType.ParamCheckbox:
                     case ButtonType.ParamSlider:
                     case ButtonType.ParamList: return Instrument.GetRealTimeParamName(instrumentParam);
@@ -203,6 +219,7 @@ namespace FamiStudio
                     case ButtonType.SongHeader:
                     case ButtonType.InstrumentHeader: return ThemeBase.LightGreyFillColor2;
                     case ButtonType.Song: return song.Color;
+                    case ButtonType.Arpeggio: return arpeggio == null ? ThemeBase.LightGreyFillColor1 : arpeggio.Color;
                     case ButtonType.ParamCheckbox:
                     case ButtonType.ParamSlider:
                     case ButtonType.ParamList:
@@ -212,18 +229,19 @@ namespace FamiStudio
                 return ThemeBase.LightGreyFillColor1;
             }
 
-            public RenderFont GetFont(Song selectedSong, Instrument selectedInstrument)
+            public RenderFont GetFont()
             {
                 if (type == ButtonType.ProjectSettings)
                 {
                     return ThemeBase.FontMediumBoldCenterEllipsis;
                 }
-                if (type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader)
+                if (type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.ArpeggioHeader)
                 {
                     return ThemeBase.FontMediumBoldCenter;
                 }
-                else if ((type == ButtonType.Song && song == selectedSong) ||
-                         (type == ButtonType.Instrument && instrument == selectedInstrument))
+                else if ((type == ButtonType.Song       && song       == projectExplorer.selectedSong)       ||
+                         (type == ButtonType.Instrument && instrument == projectExplorer.selectedInstrument) ||
+                         (type == ButtonType.Arpeggio   && arpeggio   == projectExplorer.selectedArpeggio))
                 {
                     return ThemeBase.FontMediumBold;
                 }
@@ -238,6 +256,10 @@ namespace FamiStudio
                 if (type == ButtonType.Song)
                 {
                     return projectExplorer.bmpSong;
+                }
+                else if (type == ButtonType.Arpeggio)
+                {
+                    return projectExplorer.bmpEnvelopes[Envelope.Arpeggio];
                 }
                 else if (type == ButtonType.Instrument)
                 {
@@ -292,6 +314,7 @@ namespace FamiStudio
         Instrument draggedInstrument = null;
         Instrument selectedInstrument = null; // null = DPCM
         Instrument expandedInstrument = null;
+        Arpeggio selectedArpeggio = null;
         List<Button> buttons = new List<Button>();
 
         RenderTheme theme;
@@ -318,6 +341,7 @@ namespace FamiStudio
         public delegate void InstrumentDelegate(Instrument instrument);
         public delegate void InstrumentPointDelegate(Instrument instrument, Point pos);
         public delegate void SongDelegate(Song song);
+        public delegate void ArpeggioDelegate(Arpeggio arpeggio);
 
         public event InstrumentEnvelopeDelegate InstrumentEdited;
         public event InstrumentDelegate InstrumentSelected;
@@ -327,6 +351,9 @@ namespace FamiStudio
         public event InstrumentPointDelegate InstrumentDraggedOutside;
         public event SongDelegate SongModified;
         public event SongDelegate SongSelected;
+        public event ArpeggioDelegate ArpeggioSelected;
+        public event ArpeggioDelegate ArpeggioEdited;
+        public event ArpeggioDelegate ArpeggioColorChanged;
         public event EmptyDelegate ProjectModified;
 
         public ProjectExplorer()
@@ -409,6 +436,14 @@ namespace FamiStudio
                         }
                     }
                 }
+            }
+
+            buttons.Add(new Button(this) { type = ButtonType.ArpeggioHeader });
+            buttons.Add(new Button(this) { type = ButtonType.Arpeggio }); // null arpeggio = none.
+
+            foreach (var arpeggio in App.Project.Arpeggios)
+            {
+                buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio });
             }
 
             UpdateRenderCoords();
@@ -535,7 +570,7 @@ namespace FamiStudio
                     leftPadding = expandButtonSizeX;
                 }
 
-                g.DrawText(button.GetText(App.Project), button.GetFont(selectedSong, selectedInstrument), icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, theme.BlackBrush, actualWidth - buttonTextNoIconPosX * 2);
+                g.DrawText(button.GetText(App.Project), button.GetFont(), icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, theme.BlackBrush, actualWidth - buttonTextNoIconPosX * 2);
 
                 if (icon != null)
                     g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY);
@@ -1124,6 +1159,29 @@ namespace FamiStudio
                             ConditionalInvalidate();
                         }
                     }
+                    if (button.type == ButtonType.ArpeggioHeader)
+                    {
+                        if (subButtonType == SubButtonType.Add)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.Project.CreateArpeggio();
+                            App.UndoRedoManager.EndTransaction();
+                            RefreshButtons();
+                            ConditionalInvalidate();
+                        }
+                    }
+                    else if (button.type == ButtonType.Arpeggio)
+                    {
+                        selectedArpeggio = button.arpeggio;
+
+                        if (subButtonType < SubButtonType.EnvelopeMax)
+                        {
+                            ArpeggioEdited?.Invoke(selectedArpeggio);
+                        }
+
+                        ArpeggioSelected?.Invoke(selectedArpeggio);
+                        ConditionalInvalidate();
+                    }
                 }
                 else if (right)
                 {
@@ -1429,6 +1487,34 @@ namespace FamiStudio
             }
         }
 
+        private void EditArpeggioProperties(Point pt, Arpeggio arpeggio)
+        {
+            var dlg = new PropertyDialog(PointToScreen(pt), 160, true, pt.Y > Height / 2);
+            dlg.Properties.AddColoredString(arpeggio.Name, arpeggio.Color); // 0
+            dlg.Properties.AddColor(arpeggio.Color); // 1
+            dlg.Properties.Build();
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                var newName = dlg.Properties.GetPropertyValue<string>(0);
+
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                if (App.Project.RenameArpeggio(arpeggio, newName))
+                {
+                    arpeggio.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                    ArpeggioColorChanged?.Invoke(arpeggio);
+                    RefreshButtons();
+                    ConditionalInvalidate();
+                    App.UndoRedoManager.EndTransaction();
+                }
+                else
+                {
+                    App.UndoRedoManager.AbortTransaction();
+                    SystemSounds.Beep.Play();
+                }
+            }
+        }
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             base.OnMouseDoubleClick(e);
@@ -1454,6 +1540,10 @@ namespace FamiStudio
                 else if (button.type == ButtonType.Instrument && button.instrument != null && subButtonType == SubButtonType.Max)
                 {
                     EditInstrumentProperties(pt, button.instrument);
+                }
+                else if (button.type == ButtonType.Arpeggio && button.arpeggio != null && subButtonType == SubButtonType.Max)
+                {
+                    EditArpeggioProperties(pt, button.arpeggio);
                 }
 #if !FAMISTUDIO_WINDOWS
                 else

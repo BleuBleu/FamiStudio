@@ -118,7 +118,8 @@ namespace FamiStudio
             None,
             Channel,
             Enveloppe,
-            DPCM
+            DPCM,
+            Arpeggio
         };
 
         enum SnapResolution
@@ -245,6 +246,7 @@ namespace FamiStudio
         // Pattern edit mode.
         int editChannel = -1;
         Instrument currentInstrument = null;
+        Arpeggio currentArpeggio = null;
 
         // Envelope edit mode.
         Instrument editInstrument = null;
@@ -252,8 +254,14 @@ namespace FamiStudio
         int envelopeValueZoom   = 1;
         int envelopeValueOffset = 0;
 
+        // Arpeggio edit mode
+        Arpeggio editArpeggio = null;
+
         private bool IsSnappingAllowed => editMode == EditionMode.Channel;
         private bool IsSnappingEnabled => IsSnappingAllowed && snap;
+        
+        public Instrument CurrentInstrument { get => currentInstrument; set => currentInstrument = value; }
+        public Arpeggio   CurrentArpeggio   { get => currentArpeggio;   set => currentArpeggio   = value; }
 
         public delegate void ManyPatternChange();
         public event ManyPatternChange ManyPatternChanged;
@@ -276,7 +284,7 @@ namespace FamiStudio
             var scaling = RenderTheme.MainWindowScaling;
 
             numOctaves                = DefaultNumOctaves;
-            headerSizeY               = (int)((editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe ? 2 : 1) * DefaultHeaderSizeY * scaling);
+            headerSizeY               = (int)((editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio ? 2 : 1) * DefaultHeaderSizeY * scaling);
             effectPanelSizeY          = (int)(DefaultEffectPanelSizeY * scaling);
             effectButtonSizeY         = (int)(DefaultEffectButtonSizeY * scaling);
             noteSizeX                 = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
@@ -312,12 +320,6 @@ namespace FamiStudio
             virtualSizeY              = numNotes * noteSizeY;
             barSizeX                  = noteSizeX * (Song == null ? 16  : Song.BarLength);
             headerAndEffectSizeY      = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
-        }
-
-        public Instrument CurrentInstrument
-        {
-            get { return currentInstrument; }
-            set { currentInstrument = value; }
         }
 
         public void StartEditPattern(int trackIdx, int patternIdx)
@@ -360,7 +362,25 @@ namespace FamiStudio
 
             ClearSelection();
             UpdateRenderCoords();
-            CenterEnvelopeScroll();
+            CenterEnvelopeScroll(editInstrument.Envelopes[editEnvelope], editEnvelope, editInstrument);
+            ClampScroll();
+            ConditionalInvalidate();
+        }
+
+        public void StartEditArpeggio(Arpeggio arpeggio)
+        {
+            editMode = EditionMode.Arpeggio;
+            editEnvelope = Envelope.Arpeggio;
+            editInstrument = null;
+            editArpeggio = arpeggio;
+            showEffectsPanel = false;
+            noteTooltip = "";
+            envelopeValueZoom = 1;
+            envelopeValueOffset = 0;
+
+            ClearSelection();
+            UpdateRenderCoords();
+            CenterEnvelopeScroll(arpeggio.Envelope, Envelope.Arpeggio);
             ClampScroll();
             ConditionalInvalidate();
         }
@@ -388,18 +408,18 @@ namespace FamiStudio
             }
         }
 
-        private void CenterEnvelopeScroll()
+        private void CenterEnvelopeScroll(Envelope envelope, int envelopeType, Instrument instrument = null)
         {
             var maxNumNotes = Width / DefaultNoteSizeX;
 
-            if (editInstrument.Envelopes[editEnvelope].Length == 0)
+            if (envelope.Length == 0)
                 zoomLevel = DefaultEnvelopeZoomLevel;
             else
-                zoomLevel = Utils.Clamp((int)Math.Floor(Math.Log(maxNumNotes / (float)editInstrument.Envelopes[editEnvelope].Length, 2.0)), MinZoomLevel, MaxZoomLevel);
+                zoomLevel = Utils.Clamp((int)Math.Floor(Math.Log(maxNumNotes / (float)envelope.Length, 2.0)), MinZoomLevel, MaxZoomLevel);
 
             UpdateRenderCoords();
 
-            Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int min, out int max);
+            Envelope.GetMinMaxValue(instrument, envelopeType, out int min, out int max);
 
             int midY = virtualSizeY - ((min + max) / 2 + 64 / envelopeValueZoom) * (virtualSizeY / (128 / envelopeValueZoom));
             
@@ -457,7 +477,15 @@ namespace FamiStudio
 
         private Envelope EditEnvelope
         {
-            get { return editInstrument?.Envelopes[(int)editEnvelope]; }
+            get
+            {
+                if (editMode == EditionMode.Enveloppe)
+                    return editInstrument?.Envelopes[(int)editEnvelope];
+                else if (editMode == EditionMode.Arpeggio)
+                    return editArpeggio.Envelope;
+                else
+                    return null;
+            }
         }
 
         public bool IsEditingInstrument
@@ -487,7 +515,9 @@ namespace FamiStudio
             editMode = EditionMode.None;
             editChannel = -1;
             currentInstrument = null;
+            currentArpeggio = null;
             editInstrument = null;
+            editArpeggio = null;
             noteTooltip = "";
             ClampMinSnap();
             ClearSelection();
@@ -508,6 +538,7 @@ namespace FamiStudio
                 editMode = EditionMode.None;
                 editChannel = -1;
                 editInstrument = null;
+                editArpeggio = null;
                 showEffectsPanel = false;
                 ClearSelection();
                 UpdateRenderCoords();
@@ -686,7 +717,7 @@ namespace FamiStudio
             g.PushClip(0, 0, Width, headerSizeY);
             g.Clear(ThemeBase.DarkGreyLineColor2);
 
-            if (editMode == EditionMode.Enveloppe && EditEnvelope != null)
+            if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && EditEnvelope != null)
             {
                 var env = EditEnvelope;
 
@@ -1280,7 +1311,7 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
                 CopyNotes();
-            else if (editMode == EditionMode.Enveloppe)
+            else if (editMode == EditionMode.Enveloppe) // MATTT: Arpeggion copy/paste
                 CopyEnvelopeValues();
         }
 
@@ -1288,7 +1319,7 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
                 CutNotes();
-            else if (editMode == EditionMode.Enveloppe)
+            else if (editMode == EditionMode.Enveloppe) // MATTT: Arpeggion copy/paste
                 CutEnvelopeValues();
         }
 
@@ -1298,7 +1329,7 @@ namespace FamiStudio
 
             if (editMode == EditionMode.Channel)
                 PasteNotes();
-            else if (editMode == EditionMode.Enveloppe)
+            else if (editMode == EditionMode.Enveloppe) // MATTT: Arpeggion copy/paste
                 PasteEnvelopeValues();
         }
 
@@ -1336,7 +1367,7 @@ namespace FamiStudio
             }
         }
 
-        private void RenderNote(RenderGraphics g, Channel channel, bool selected, Color color, int p0, int i0, Note n0, bool released, int p1, int i1)
+        private void RenderNote(RenderGraphics g, Channel channel, bool selected, Color color, Arpeggio arpeggio, int p0, int i0, Note n0, bool released, int p1, int i1)
         {
             int x = Song.GetPatternStartNote(p0, i0) * noteSizeX - scrollX;
             int y = virtualSizeY - n0.Value * noteSizeY - scrollY;
@@ -1373,7 +1404,43 @@ namespace FamiStudio
                 iconX += noteAttackSizeX + slideIconPosX;
             }
 
+            if (n0.Arpeggio != null)
+            {
+                var offsets = n0.Arpeggio.GetChordOffsets();
+                foreach (var offset in offsets)
+                {
+                    g.PushTranslation(0, offset * -noteSizeY);
+                    g.FillRectangle(0, 0, sx, sy, g.GetSolidBrush(n0.Arpeggio.Color, 1.0f, 0.2f));
+                    g.PopTransform();
+                }
+            }
+
             g.PopTransform();
+        }
+
+        private void RenderReleaseStopNote(RenderGraphics g, int value, bool selected, Color color, Arpeggio arpeggio, int p1, int i1, Note n1, bool released)
+        {
+            int x = Song.GetPatternStartNote(p1, i1) * noteSizeX - scrollX;
+            int y = virtualSizeY - value * noteSizeY - scrollY;
+
+            var paths = n1.IsStop ? (released ? stopReleaseNoteGeometry : stopNoteGeometry) : releaseNoteGeometry;
+
+            g.PushTranslation(x, y);
+            g.FillAndDrawConvexPath(paths[zoomLevel - MinZoomLevel], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f), selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
+
+            if (arpeggio != null)
+            {
+                var offsets = arpeggio.GetChordOffsets();
+                foreach (var offset in offsets)
+                {
+                    g.PushTranslation(0, offset * -noteSizeY);
+                    g.FillConvexPath(paths[zoomLevel - MinZoomLevel], g.GetSolidBrush(arpeggio.Color, 1.0f, 0.2f), true);
+                    g.PopTransform();
+                }
+            }
+
+            g.PopTransform();
+
         }
 
         private void RenderNotes(RenderGraphics g, RenderArea a)
@@ -1457,6 +1524,7 @@ namespace FamiStudio
                         {
                             var selected = false;
                             var color = ThemeBase.LightGreyFillColor1;
+                            var arpeggio = (Arpeggio)null;
 
                             var p0 = a.minVisiblePattern - 1;
                             var i0 = 0;
@@ -1467,6 +1535,7 @@ namespace FamiStudio
                                 n0 = n0.Clone();
                                 selected = IsNoteSelected(p0, i0) && isActiveChannel;
                                 color = n0.Instrument == null ? ThemeBase.LightGreyFillColor1 : n0.Instrument.Color;
+                                arpeggio = n0.Arpeggio;
                                 if (!isActiveChannel) color = Color.FromArgb((int)(color.A * 0.2f), color);
                             }
 
@@ -1488,7 +1557,7 @@ namespace FamiStudio
                                         break;
 
                                     if (n0.IsValid && n1.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote))
-                                        RenderNote(g, channel, selected, color, p0, i0, n0, released, p1, i1);
+                                        RenderNote(g, channel, selected, color, arpeggio, p0, i0, n0, released, p1, i1);
 
                                     if (n1.IsStop || n1.IsRelease)
                                     {
@@ -1496,16 +1565,7 @@ namespace FamiStudio
                                         int value = n0.Value >= Note.MusicalNoteMin && n0.Value <= Note.MusicalNoteMax ? n0.Value : 49; // C4 by default.
 
                                         if (value >= a.minVisibleNote && value <= a.maxVisibleNote)
-                                        {
-                                            int x = Song.GetPatternStartNote(p1, i1) * noteSizeX - scrollX;
-                                            int y = virtualSizeY - value * noteSizeY - scrollY;
-
-                                            var paths = n1.IsStop ? (released ? stopReleaseNoteGeometry :  stopNoteGeometry) : releaseNoteGeometry;
-
-                                            g.PushTranslation(x, y);
-                                            g.FillAndDrawConvexPath(paths[zoomLevel - MinZoomLevel], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f), selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
-                                            g.PopTransform();
-                                        }
+                                            RenderReleaseStopNote(g, value, selected, color, arpeggio, p1, i1, n1, released);
 
                                         if (n1.IsRelease)
                                             released = true;
@@ -1515,6 +1575,7 @@ namespace FamiStudio
                                             p0 = -1;
                                             n0.Value = Note.NoteInvalid;
                                             n0.Instrument = null;
+                                            arpeggio = null;
                                         }
                                         else
                                         {
@@ -1542,6 +1603,7 @@ namespace FamiStudio
                                         released &= !n1.HasAttack;
                                         selected = IsNoteSelected(p0, i0) && isActiveChannel;
                                         color = n0.Instrument == null ? ThemeBase.LightGreyFillColor1 : n0.Instrument.Color;
+                                        arpeggio = n0.Arpeggio;
                                         if (!isActiveChannel) color = Color.FromArgb((int)(color.A * 0.2f), color);
                                     }
                                 }
@@ -1549,7 +1611,7 @@ namespace FamiStudio
 
                             if (n0.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote))
                             {
-                                RenderNote(g, channel, selected, color, p0, i0, n0, released, Math.Min(Song.Length, a.maxVisiblePattern + 1), 0);
+                                RenderNote(g, channel, selected, color, arpeggio, p0, i0, n0, released, Math.Min(Song.Length, a.maxVisiblePattern + 1), 0);
                             }
                         }
                     }
@@ -1585,7 +1647,7 @@ namespace FamiStudio
                     g.DrawText($"Editing DPCM Samples ({App.Project.GetTotalSampleSize()} / {Project.MaxSampleSize} Bytes)", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
                 }
             }
-            else if (editMode == EditionMode.Enveloppe)
+            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
             {
                 // Draw the enveloppe value backgrounds
                 int maxValue = 128 / envelopeValueZoom;
@@ -1594,7 +1656,7 @@ namespace FamiStudio
                 int minVisibleValue = maxValue - Math.Max((int)Math.Ceiling((scrollY + Height) / envelopeSizeY), 0);
 
                 var env = EditEnvelope;
-                var spacing = editEnvelope == Envelope.DutyCycle ? 4 : (editEnvelope == Envelope.Arpeggio ? 12 : 16);
+                var spacing = editEnvelope == Envelope.DutyCycle ? 4 : (editEnvelope == Envelope.Arpeggio ? 12 : 16); // MATTT: editEnvelope shouldnt be accessed
 
                 for (int i = minVisibleValue; i <= maxVisibleValue; i++)
                 {
@@ -1619,7 +1681,7 @@ namespace FamiStudio
                 if (env.Length > 0)
                     g.DrawLine(env.Length * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
 
-                if (editEnvelope < Envelope.RegularCount)
+                if (editMode == EditionMode.Enveloppe && editEnvelope < Envelope.RegularCount)
                 {
                     var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope);
                     if (seekFrame >= 0)
@@ -1680,12 +1742,19 @@ namespace FamiStudio
                     }
                 }
 
-                var envelopeString = Envelope.EnvelopeNames[editEnvelope];
+                if (editMode == EditionMode.Enveloppe)
+                {
+                    var envelopeString = Envelope.EnvelopeNames[editEnvelope];
 
-                if (editEnvelope == Envelope.Pitch)
-                    envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? "Relative " : "Absolute ") + envelopeString;
+                    if (editEnvelope == Envelope.Pitch)
+                        envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? "Relative " : "Absolute ") + envelopeString;
 
-                g.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                    g.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                }
+                else
+                {
+                    g.DrawText($"Editing Arpeggio {editArpeggio.Name}", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                }
             }
 
             g.PopClip();
@@ -1796,8 +1865,10 @@ namespace FamiStudio
 
                 Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int min, out int max);
 
-                idx0 = Utils.Clamp(idx0, 0, editInstrument.Envelopes[editEnvelope].Length - 1);
-                idx1 = Utils.Clamp(idx1, 0, editInstrument.Envelopes[editEnvelope].Length - 1);
+                var env = EditEnvelope;
+
+                idx0 = Utils.Clamp(idx0, 0, env.Length - 1);
+                idx1 = Utils.Clamp(idx1, 0, env.Length - 1);
 
                 if (idx0 != idx1)
                 {
@@ -1810,12 +1881,12 @@ namespace FamiStudio
                     for (int i = idx0; i <= idx1; i++)
                     {
                         int val = (int)Math.Round(Utils.Lerp(val0, val1, (i - idx0) / (float)(idx1 - idx0)));
-                        editInstrument.Envelopes[editEnvelope].Values[i] = (sbyte)Utils.Clamp(val, min, max);
+                        env.Values[i] = (sbyte)Utils.Clamp(val, min, max);
                     }
                 }
                 else
                 {
-                    editInstrument.Envelopes[editEnvelope].Values[idx0] = (sbyte)Utils.Clamp(val0, min, max);
+                    env.Values[idx0] = (sbyte)Utils.Clamp(val0, min, max);
                 }
 
                 ConditionalInvalidate();
@@ -1824,17 +1895,20 @@ namespace FamiStudio
 
         private void UpdateWavePreset()
         {
-            if (editInstrument.ExpansionType == Project.ExpansionFds)
+            if (editMode == EditionMode.Enveloppe)
             {
-                if (editEnvelope == Envelope.FdsWaveform)
-                    editInstrument.FdsWavePreset = Envelope.WavePresetCustom;
-                if (editEnvelope == Envelope.FdsModulation)
-                    editInstrument.FdsModPreset  = Envelope.WavePresetCustom;
-            }
-            else if (editInstrument.ExpansionType == Project.ExpansionN163)
-            {
-                if (editEnvelope == Envelope.N163Waveform)
-                    editInstrument.N163WavePreset = Envelope.WavePresetCustom;
+                if (editInstrument.ExpansionType == Project.ExpansionFds)
+                {
+                    if (editEnvelope == Envelope.FdsWaveform)
+                        editInstrument.FdsWavePreset = Envelope.WavePresetCustom;
+                    if (editEnvelope == Envelope.FdsModulation)
+                        editInstrument.FdsModPreset = Envelope.WavePresetCustom;
+                }
+                else if (editInstrument.ExpansionType == Project.ExpansionN163)
+                {
+                    if (editEnvelope == Envelope.N163Waveform)
+                        editInstrument.N163WavePreset = Envelope.WavePresetCustom;
+                }
             }
         }
 
@@ -2251,7 +2325,7 @@ namespace FamiStudio
                 {
                     if (editMode == EditionMode.Channel)
                         DeleteSelectedNotes();
-                    else if (editMode == EditionMode.Enveloppe)
+                    else if (editMode == EditionMode.Enveloppe) // MATTT
                         DeleteSelectedEnvelopeValues();
                 }
 
@@ -2273,7 +2347,7 @@ namespace FamiStudio
                             break;
                     }
                 }
-                else if (editMode == EditionMode.Enveloppe)
+                else if (editMode == EditionMode.Enveloppe) // MATTT
                 {
                     switch (e.KeyCode)
                     {
@@ -2340,7 +2414,7 @@ namespace FamiStudio
                 StartCaptureOperation(e, CaptureOperation.Select, false);
                 UpdateSelection(e.X, true);
             }
-            else if (right && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e))
+            else if (right && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e)) // MATTT
             {
                 StartCaptureOperation(e, CaptureOperation.Select);
                 UpdateSelection(e.X, true);
@@ -2362,23 +2436,38 @@ namespace FamiStudio
             {
                 StartCaptureOperation(e, CaptureOperation.AltZoom);
             }
-            else if (left && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e) && EditEnvelope.CanResize)
+            else if (left && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && IsMouseInHeaderTopPart(e) && EditEnvelope.CanResize)
             {
                 StartCaptureOperation(e, CaptureOperation.ResizeEnvelope);
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+
+                if (editMode == EditionMode.Enveloppe)
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+                else
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
+
                 ResizeEnvelope(e);
             }
-            else if (editMode == EditionMode.Enveloppe && ((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e))
+            else if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e)) 
             {
                 CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e, op);
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+
+                if (editMode == EditionMode.Enveloppe)
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+                else
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
+
                 ResizeEnvelope(e);
             }
-            else if ((left || right) && editMode == EditionMode.Enveloppe && IsMouseInNoteArea(e) && editInstrument.Envelopes[editEnvelope].Length > 0)
+            else if ((left || right) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)  && IsMouseInNoteArea(e) && EditEnvelope.Length > 0) // MATTT
             {
                 StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+
+                if (editMode == EditionMode.Enveloppe)
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+                else
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
+
                 DrawEnvelope(e, true); 
             }
             else if (left && editMode == EditionMode.Channel && IsMouseInEffectPanel(e) && selectedEffectIdx >= 0)
@@ -2538,6 +2627,7 @@ namespace FamiStudio
 
                                 var newNote = new Note(noteValue);
                                 newNote.Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
+                                newNote.Arpeggio   = Song.Channels[editChannel].SupportsArpeggios ? currentArpeggio : null;
 
                                 dragFrameMin = captureNoteIdx;
                                 dragFrameMax = captureNoteIdx;
@@ -2668,7 +2758,7 @@ namespace FamiStudio
 
                 if (editMode == EditionMode.Channel)
                     maxScrollX = Math.Max(Song.GetPatternStartNote(Song.Length) * noteSizeX - ScrollMargin, 0);
-                else if (editMode == EditionMode.Enveloppe)
+                else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                     maxScrollX = Math.Max(EditEnvelope.Length * noteSizeX - ScrollMargin, 0);
 
                 if (scrollX < minScrollX) scrollX = minScrollX;
@@ -2689,7 +2779,9 @@ namespace FamiStudio
 
         private void SetSelection(int min, int max)
         {
-            if (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe)
+            if (editMode == EditionMode.Channel   || 
+                editMode == EditionMode.Enveloppe || 
+                editMode == EditionMode.Arpeggio)
             {
                 int rangeMax = editMode == EditionMode.Channel ? Song.GetPatternStartNote(Song.Length) - 1 : EditEnvelope.Length - 1;
 
@@ -2782,12 +2874,12 @@ namespace FamiStudio
 
         private bool IsMouseInHeaderTopPart(MouseEventArgs e)
         {
-            return editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y > 0 && e.Y < headerSizeY / 2;
+            return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && e.X > whiteKeySizeX && e.Y > 0 && e.Y < headerSizeY / 2;
         }
 
         private bool IsMouseInHeaderBottomPart(MouseEventArgs e)
         {
-            return editMode == EditionMode.Enveloppe && e.X > whiteKeySizeX && e.Y >= headerSizeY / 2 && e.Y < headerSizeY;
+            return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && e.X > whiteKeySizeX && e.Y >= headerSizeY / 2 && e.Y < headerSizeY;
         }
 
         private bool IsMouseInPiano(MouseEventArgs e)
@@ -2837,11 +2929,11 @@ namespace FamiStudio
             {
                 tooltip = "{MouseLeft} Seek - {MouseRight} Select - {MouseRight}{MouseRight} Select entire pattern";
             }
-            else if (IsMouseInHeaderTopPart(e) && editMode == EditionMode.Enveloppe)
+            else if (IsMouseInHeaderTopPart(e) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
                 tooltip = "{MouseRight} Select - {MouseLeft} Resize envelope";
             }
-            else if (IsMouseInHeaderBottomPart(e) && editMode == EditionMode.Enveloppe)
+            else if (IsMouseInHeaderBottomPart(e) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
                 tooltip = "{MouseLeft} Set loop point - {MouseRight} Set release point (volume only, must have loop point)";
             }
@@ -2890,7 +2982,7 @@ namespace FamiStudio
                         }
                     }
                 }
-                else if (editMode == EditionMode.Enveloppe)
+                else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                 {
                     tooltip = "{MouseLeft} Set envelope value - {MouseWheel} Pan";
 
@@ -3047,6 +3139,7 @@ namespace FamiStudio
                             {
                                 newNote.Value = (byte)Utils.Clamp(oldNote.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
                                 newNote.Instrument = oldNote.Instrument;
+                                newNote.Arpeggio = oldNote.Arpeggio;
                                 newNote.Slide = oldNote.Slide;
                                 newNote.Flags = oldNote.Flags;
                             }
@@ -3133,7 +3226,7 @@ namespace FamiStudio
         {
             var pt = PointToClient(Cursor.Position);
 
-            if (editMode == EditionMode.Enveloppe && EditEnvelope.CanResize && (pt.X > whiteKeySizeX && pt.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
+            if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && EditEnvelope.CanResize && (pt.X > whiteKeySizeX && pt.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
                 Cursor.Current = Cursors.SizeWE;
             else if (captureOperation == CaptureOperation.ChangeEffectValue)
                 Cursor.Current = Cursors.SizeNS;
@@ -3294,8 +3387,10 @@ namespace FamiStudio
 
             buffer.Serialize(ref editChannel);
             buffer.Serialize(ref currentInstrument);
+            buffer.Serialize(ref currentArpeggio);
             buffer.Serialize(ref editInstrument);
             buffer.Serialize(ref editEnvelope);
+            buffer.Serialize(ref editArpeggio);
             buffer.Serialize(ref envelopeValueZoom);
             buffer.Serialize(ref envelopeValueOffset);
             buffer.Serialize(ref scrollX);

@@ -1,9 +1,38 @@
-2.1.1
+2.2.0
 =====
-- Trackpad sensitivity settings
-- Fix Max issues (playback)
-	- Check envelopes too (app + NSF)
-- Add license to Linux ZIP
+- FDS export
+- FamiStudio sound engine
+	- Remove a bunch of macros, reduce code size
+	- Rename stuff
+	- Resurect VFX
+	- 3 assembly versions : will need a simple test ROM.
+	- Deprecate FamiTone2 FS.
+	- Should I clamp the period? Why did I remove the clamps???
+- Show piano roll rect in sequencer
+- Drag seek bar (github issue request!).
+- Arpeggio : GOAL, recreate song #4 from silver surfer. (3/4 notes, slow/fast, Micromachines & Jurassic park has 1 frame delay before starting the arp)
+	
+	- New Category below instrument "Arpeggios".
+	- Default "None"
+	- They are simply envlopes.
+	- See if they need to reset notes (attack) : Look at NSF + FamiTracker.
+		- Silver surfer, smurf, MC kids, asterix dont reset
+		- 
+	- See how FamiTrackers handles vs. instrument envlopes).
+	
+	-
+	- NSF
+	- Import export (FT, text format)
+	- Replace selection arp
+	
+	Note drawing:
+		- Arpeggio will break culling? Test how slide notes react...
+	
+	Minor:
+		- Should arpeggios even have colors in project explorer?
+		- Should I use a "..." icon for arps?
+- Instrument picker?
+- Discord server
 
 Tweet ideas
 ===========

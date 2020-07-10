@@ -40,11 +40,13 @@ namespace FamiStudio
 
         public readonly static Note EmptyNote = new Note();
 
+        // TODO: Create properties. This used to be a struct, its a proper class now...
         public byte       Value = NoteInvalid; // (0 = stop, 1 = C0 ... 96 = B7).
         public byte       Flags;
         public byte       Slide;
         public ushort     EffectMask;
         public Instrument Instrument;
+        public Arpeggio   Arpeggio;
 
         // Effects.
         private byte   FxVolume;
@@ -72,6 +74,7 @@ namespace FamiStudio
         {
             Value = NoteInvalid;
             Instrument = null;
+            Arpeggio = null;
             Slide = 0;
             Flags = 0;
 
@@ -359,6 +362,10 @@ namespace FamiStudio
             if ((EffectMask & EffectFinePitchMask)   != 0) buffer.Serialize(ref FxFinePitch);
             if ((EffectMask & EffectFdsModSpeedMask) != 0) buffer.Serialize(ref FxFdsModSpeed);
             if ((EffectMask & EffectFdsModDepthMask) != 0) buffer.Serialize(ref FxFdsModDepth);
+
+            // At version 7 (FamiStudio 2.2.0) we added support for arpeggios.
+            if (buffer.Version >= 7)
+                buffer.Serialize(ref Arpeggio);
         }
 
         //

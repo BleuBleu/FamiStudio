@@ -63,6 +63,13 @@ namespace FamiStudio
                         pitchEnvelopeOverride = false;
                     }
                 }
+
+                if (tmpNote.IsMusical && tmpNote.Arpeggio != null)
+                {
+                    envelopes[Envelope.Arpeggio] = tmpNote.Arpeggio.Envelope;
+                    envelopeIdx[Envelope.Arpeggio] = 0;
+                    envelopeValues[Envelope.Arpeggio] = 0;
+                }
             }
         }
 

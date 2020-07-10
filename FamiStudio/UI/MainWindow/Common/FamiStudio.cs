@@ -73,6 +73,9 @@ namespace FamiStudio
             ProjectExplorer.SongModified += projectExplorer_SongModified;
             ProjectExplorer.SongSelected += projectExplorer_SongSelected;
             ProjectExplorer.ProjectModified += ProjectExplorer_ProjectModified;
+            ProjectExplorer.ArpeggioSelected += ProjectExplorer_ArpeggioSelected;
+            ProjectExplorer.ArpeggioEdited += ProjectExplorer_ArpeggioEdited;
+            ProjectExplorer.ArpeggioColorChanged += ProjectExplorer_ArpeggioColorChanged;
 
             InitializeMidi();
             InitializeMultiMediaNotifications();
@@ -93,7 +96,7 @@ namespace FamiStudio
             }
 #endif
         }
-        
+
         private void ProjectExplorer_ProjectModified()
         {
             RefreshSequencerLayout();
@@ -898,6 +901,11 @@ namespace FamiStudio
             }
         }
 
+        private void ProjectExplorer_ArpeggioEdited(Arpeggio arpeggio)
+        {
+            PianoRoll.StartEditArpeggio(arpeggio);
+        }
+
         private void pianoRoll_EnvelopeChanged()
         {
             ProjectExplorer.Invalidate();
@@ -924,9 +932,19 @@ namespace FamiStudio
             PianoRoll.CurrentInstrument = instrument;
         }
 
+        private void ProjectExplorer_ArpeggioSelected(Arpeggio arpeggio)
+        {
+            PianoRoll.CurrentArpeggio = arpeggio;
+        }
+
         private void projectExplorer_InstrumentColorChanged(Instrument instrument)
         {
             Sequencer.InvalidatePatternCache();
+            PianoRoll.ConditionalInvalidate();
+        }
+
+        private void ProjectExplorer_ArpeggioColorChanged(Arpeggio arpeggio)
+        {
             PianoRoll.ConditionalInvalidate();
         }
 

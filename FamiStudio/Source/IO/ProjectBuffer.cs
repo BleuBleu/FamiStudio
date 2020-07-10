@@ -22,6 +22,7 @@ namespace FamiStudio
         void Serialize(ref short[] values);
         void Serialize(ref Song song);
         void Serialize(ref Instrument instrument);
+        void Serialize(ref Arpeggio arpeggio);
         void Serialize(ref Pattern pattern, Channel channel);
         void Serialize(ref DPCMSample pattern);
         bool IsReading { get; }
@@ -149,6 +150,12 @@ namespace FamiStudio
         {
             int instrumentId = instrument == null ? -1 : instrument.Id;
             Serialize(ref instrumentId);
+        }
+
+        public void Serialize(ref Arpeggio arpeggio)
+        {
+            int arpeggioId = arpeggio == null ? -1 : arpeggio.Id;
+            Serialize(ref arpeggioId);
         }
 
         public void Serialize(ref Pattern pattern, Channel channel)
@@ -318,6 +325,13 @@ namespace FamiStudio
             instrument = project.GetInstrument(instrumentId);
         }
 
+        public void Serialize(ref Arpeggio arpeggio)
+        {
+            int arpeggioId = -1;
+            Serialize(ref arpeggioId, true);
+            arpeggio = project.GetArpeggio(arpeggioId);
+        }
+
         public void Serialize(ref Pattern pattern, Channel channel)
         {
             int patternId = -1;
@@ -445,6 +459,12 @@ namespace FamiStudio
         {
             int instrumentId = instrument == null ? -1 : instrument.Id;
             Serialize(ref instrumentId);
+        }
+
+        public void Serialize(ref Arpeggio arpeggio)
+        {
+            int arpeggioId = arpeggio == null ? -1 : arpeggio.Id;
+            Serialize(ref arpeggioId);
         }
 
         public void Serialize(ref Pattern pattern, Channel channel)
