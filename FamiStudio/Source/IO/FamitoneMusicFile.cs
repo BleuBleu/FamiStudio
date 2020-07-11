@@ -704,6 +704,7 @@ namespace FamiStudio
                         else if (note.HasAttack && hasArpeggioActive)
                         {
                             patternBuffer.Add($"${0x66:x2}");
+                            hasArpeggioActive = false;
                         }
 
                         if (note.HasFdsModSpeed)

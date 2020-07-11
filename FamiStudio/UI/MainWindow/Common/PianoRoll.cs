@@ -1561,7 +1561,7 @@ namespace FamiStudio
                                     if (i1 >= patternLen)
                                         break;
 
-                                    if (n0.IsValid && n1.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote))
+                                    if (n0.IsValid && n1.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote || n0.IsArpeggio))
                                         RenderNote(g, channel, selected, color, arpeggio, p0, i0, n0, released, p1, i1);
 
                                     if (n1.IsStop || n1.IsRelease)
@@ -1614,7 +1614,7 @@ namespace FamiStudio
                                 }
                             }
 
-                            if (n0.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote))
+                            if (n0.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote || n0.IsArpeggio))
                             {
                                 RenderNote(g, channel, selected, color, arpeggio, p0, i0, n0, released, Math.Min(Song.Length, a.maxVisiblePattern + 1), 0);
                             }

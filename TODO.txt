@@ -1,6 +1,8 @@
 2.2.0
 =====
 - Play right now when dragging...
+- BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
+	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
 - FDS export
 - FamiStudio sound engine
 	- Remove a bunch of macros, reduce code size
@@ -14,12 +16,10 @@
 - Arpeggio : GOAL, recreate song #4 from silver surfer. (3/4 notes, slow/fast, Micromachines & Jurassic park has 1 frame delay before starting the arp)
 	- NSF
 		- Test expansions.
-		- 
 	- Import export (FT, text format)
 	- Replace selection arp
-	- Audio preview when editing arps.
-		=> Display seek bar.
-	
+	- Add/remove arps.
+	- Must delete + add note to set the art, weird?
 	Note drawing:
 		- Arpeggio will break culling? Test how slide notes react...
 	

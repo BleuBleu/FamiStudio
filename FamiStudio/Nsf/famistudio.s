@@ -1218,6 +1218,7 @@ nocut:
 
     ; Read note, apply arpeggio 
     clc
+    ldx _FT2Vrc7EnvelopeTable,y    
     adc FT_ENV_VALUE+FT_ENV_NOTE_OFF,x
     tax
 
@@ -1371,6 +1372,7 @@ nocut:
 
     ; Read note, apply arpeggio 
     clc
+    ldx _FT2N163EnvelopeTable,y
     adc FT_ENV_VALUE+FT_ENV_NOTE_OFF,x
     tax
 
@@ -2136,6 +2138,7 @@ init_envelopes:
 .macro _FT2SetExpInstrumentBase
 
     chan_idx = FT_TEMP_VAR2
+    tmp_x = FT_TEMP_VAR3
 
     sty chan_idx
     asl                        ;instrument number is pre multiplied by 4
@@ -2157,13 +2160,27 @@ init_envelopes:
     inx
 
     ; Arpeggio envelope
+    ; TODO: CLeanup this tmp_x mess, so ugly.
+    stx tmp_x
+    ldx chan_idx
+    lda FT_CHN_ENV_OVERRIDE,x ; instrument arpeggio is overriden by arpeggio, dont touch!
+    lsr
+    ldx tmp_x
+    bcs skip_arpeggio_ptr
+
+read_arpeggio_ptr:    
     lda (ptr),y
     sta FT_ENV_ADR_L,x
     iny
     lda (ptr),y
     sta FT_ENV_ADR_H,x
     iny
+    jmp init_envelopes
+skip_arpeggio_ptr:
+    iny
+    iny
 
+init_envelopes:
     ; Initialize volume + arpeggio envelopes.
     lda #1
     sta FT_ENV_PTR-1,x         ;reset env1 pointer (env1 is volume and volume can have releases)
@@ -2176,13 +2193,13 @@ init_envelopes:
     ldx chan_idx
     lda FT_CHN_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
     bpl pitch_env
-    dex
-    dex                        ; Noise + DPCM dont have pitch envelopes             
     iny
     iny
     bne pitch_overriden
 
     pitch_env:
+    dex
+    dex                        ; Noise + DPCM dont have pitch envelopes             
     lda #1
     sta FT_PITCH_ENV_PTR,x     ;reset env3 pointer (pitch envelope have relative/absolute flag in the first byte)
     lda #0
@@ -2589,11 +2606,7 @@ override_arpeggio_envelope:
     iny
     lda (FT_TEMP_PTR1),y
     sta FT_ENV_ADR_H,x
-    lda #0
-    tay
-    sta FT_ENV_REPEAT,x
-    sta FT_ENV_VALUE,x
-    sta FT_ENV_PTR,x
+    ldy #0
     ldx FT_TEMP_VAR1
     add_16_8 FT_TEMP_PTR1, #2
     jmp read_byte

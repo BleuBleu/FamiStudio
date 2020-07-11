@@ -47,7 +47,7 @@ CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FAMISTUDIO -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=5 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_n163_5ch_ntsc_tempo
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FAMISTUDIO -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=6 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_n163_6ch_ntsc_tempo
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FAMISTUDIO -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=7 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_n163_7ch_ntsc_tempo
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FAMISTUDIO -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=8 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_n163_8ch_ntsc_tempo
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$e80 {SONGDATASTART}=$8f00", "-D FAMISTUDIO -D FT_NTSC_SUPPORT=1 -D FT_N163 -D FT_N163_CHN_CNT=8 -D FT_FAMISTUDIO_TEMPO=1", nsf_famistudio_n163_8ch_ntsc_tempo
 
 EXIT /B %ERRORLEVEL%
 
