@@ -70,8 +70,7 @@ FT_PITCH_ENV_REPEAT   : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_ADR_L    : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_ADR_H    : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_PTR      : .res FT_NUM_PITCH_ENVELOPES
-FT_PITCH_ENV_OVERRIDE : .res FT_NUM_PITCH_ENVELOPES
-FT_FINE_PITCH         : .res FT_NUM_PITCH_ENVELOPES
+FT_PITCH_FINE_VALUE   : .res FT_NUM_PITCH_ENVELOPES
 
 ;slide structure offsets, 3 bytes per slide.
 FT_SLIDE_STEP    : .res FT_NUM_PITCH_ENVELOPES
@@ -88,6 +87,7 @@ FT_CHN_RETURN_L     : .res FT_NUM_CHANNELS
 FT_CHN_RETURN_H     : .res FT_NUM_CHANNELS
 FT_CHN_REF_LEN      : .res FT_NUM_CHANNELS
 FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS
+FT_CHN_ENV_OVERRIDE : .res FT_NUM_CHANNELS ; bit 7 = pitch, bit 0 = arpeggio.
 .if .defined(FT_N163) || .defined(FT_VRC7) || .defined(FT_FDS)
 FT_CHN_INST_CHANGED : .res FT_NUM_CHANNELS-5
 .endif
@@ -560,6 +560,7 @@ set_channels:
     sta FT_CHN_NOTE,x
     sta FT_CHN_REF_LEN,x
     sta FT_CHN_VOLUME_TRACK,x
+    sta FT_CHN_ENV_OVERRIDE,x
 
 nextchannel:
     inx                        ;next channel
@@ -603,8 +604,7 @@ set_pitch_envelopes:
     sta FT_PITCH_ENV_REPEAT,x
     sta FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_H,x
-    sta FT_PITCH_ENV_OVERRIDE,x
-    sta FT_FINE_PITCH,x
+    sta FT_PITCH_FINE_VALUE,x
     lda #1
     sta FT_PITCH_ENV_PTR,x
     inx
@@ -887,10 +887,10 @@ done:
  
     ; Pitch envelope + fine pitch (sign extended)
     clc
-    lda FT_FINE_PITCH+pitch_env_offset pitch_env_indexer
+    lda FT_PITCH_FINE_VALUE+pitch_env_offset pitch_env_indexer
     adc FT_PITCH_ENV_VALUE_L+pitch_env_offset pitch_env_indexer
     sta pitch+0
-    lda FT_FINE_PITCH+pitch_env_offset pitch_env_indexer
+    lda FT_PITCH_FINE_VALUE+pitch_env_offset pitch_env_indexer
     and #$80
     beq pos
     lda #$ff
@@ -2034,7 +2034,7 @@ no_pulse2_upd:
     ptr = FT_TEMP_PTR1
     wave_ptr = FT_TEMP_PTR2
     chan_idx = FT_TEMP_VAR2
-    exp_inst = FT_TEMP_VAR3
+    tmp_x = FT_TEMP_VAR3
 
     sty chan_idx
     asl                        ;instrument number is pre multiplied by 4
@@ -2055,12 +2055,25 @@ no_pulse2_upd:
     inx
 
     ; Arpeggio envelope
+    ; TODO: CLeanup this tmp_x mess, so ugly.
+    stx tmp_x
+    ldx chan_idx
+    lda FT_CHN_ENV_OVERRIDE,x ; instrument arpeggio is overriden by arpeggio, dont touch!
+    lsr
+    ldx tmp_x
+    bcs skip_arpeggio_ptr
+
+read_arpeggio_ptr:    
     lda (FT_TEMP_PTR1),y
     sta FT_ENV_ADR_L,x
     iny
     lda (FT_TEMP_PTR1),y
     sta FT_ENV_ADR_H,x
+    jmp init_envelopes
+skip_arpeggio_ptr:
+    iny
 
+init_envelopes:
     ; Initialize volume + arpeggio envelopes.
     lda #1
     sta FT_ENV_PTR-1,x         ;reset env1 pointer (env1 is volume and volume can have releases)
@@ -2097,18 +2110,17 @@ no_pulse2_upd:
     pitch_env:
     ; Pitch envelopes.
     ldx chan_idx
+    lda FT_CHN_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
+    bmi no_pitch    
     lda _FT2ChannelToPitch, x
     bmi no_pitch
     tax
-    lda FT_PITCH_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
-    bne no_pitch
     lda #1
     sta FT_PITCH_ENV_PTR,x     ;reset env3 pointer (pitch envelope have relative/absolute flag in the first byte)
     lda #0
     sta FT_PITCH_ENV_REPEAT,x  ;reset env3 repeat counter
     sta FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_H,x
-    sta FT_PITCH_ENV_OVERRIDE,x
     iny
     lda (FT_TEMP_PTR1),y       ;instrument pointer LSB
     sta FT_PITCH_ENV_ADR_L,x
@@ -2162,10 +2174,10 @@ no_pulse2_upd:
 
     ; Pitch envelopes.
     ldx chan_idx
+    lda FT_CHN_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
+    bpl pitch_env
     dex
     dex                        ; Noise + DPCM dont have pitch envelopes             
-    lda FT_PITCH_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
-    beq pitch_env
     iny
     iny
     bne pitch_overriden
@@ -2177,7 +2189,6 @@ no_pulse2_upd:
     sta FT_PITCH_ENV_REPEAT,x  ;reset env3 repeat counter
     sta FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_H,x
-    sta FT_PITCH_ENV_OVERRIDE,x
     lda (ptr),y       ;instrument pointer LSB
     sta FT_PITCH_ENV_ADR_L,x
     iny
@@ -2529,18 +2540,26 @@ fine_pitch:
     tax
     lda (FT_TEMP_PTR1),y
     inc_16 FT_TEMP_PTR1
-    sta FT_FINE_PITCH,x
+    sta FT_PITCH_FINE_VALUE,x
     ldx FT_TEMP_VAR1
     jmp read_byte 
 
 clear_pitch_override_flag:
-    ldy _FT2ChannelToPitch,x
-    lda #0
-    sta FT_PITCH_ENV_OVERRIDE,y
-    ldy #0
+    lda #$7f
+    and FT_CHN_ENV_OVERRIDE,x
+    sta FT_CHN_ENV_OVERRIDE,x
     jmp read_byte 
 
+clear_arpeggio_override_flag:
+    lda #$fe
+    and FT_CHN_ENV_OVERRIDE,x
+    sta FT_CHN_ENV_OVERRIDE,x
+    jmp read_byte
+
 override_pitch_envelope:
+    lda #$80
+    ora FT_CHN_ENV_OVERRIDE,x
+    sta FT_CHN_ENV_OVERRIDE,x
     stx FT_TEMP_VAR1
     lda _FT2ChannelToPitch,x
     tax
@@ -2554,10 +2573,30 @@ override_pitch_envelope:
     sta FT_PITCH_ENV_REPEAT,x
     lda #1
     sta FT_PITCH_ENV_PTR,x
-    sta FT_PITCH_ENV_OVERRIDE,x
     ldx FT_TEMP_VAR1
     add_16_8 FT_TEMP_PTR1, #2
     jmp read_byte 
+
+override_arpeggio_envelope:
+    lda #$01
+    ora FT_CHN_ENV_OVERRIDE,x
+    sta FT_CHN_ENV_OVERRIDE,x
+    stx FT_TEMP_VAR1    
+    lda _FT2ChannelToArpeggioEnvelope,x
+    tax    
+    lda (FT_TEMP_PTR1),y
+    sta FT_ENV_ADR_L,x
+    iny
+    lda (FT_TEMP_PTR1),y
+    sta FT_ENV_ADR_H,x
+    lda #0
+    tay
+    sta FT_ENV_REPEAT,x
+    sta FT_ENV_VALUE,x
+    sta FT_ENV_PTR,x
+    ldx FT_TEMP_VAR1
+    add_16_8 FT_TEMP_PTR1, #2
+    jmp read_byte
 
 disable_attack:
     lda #1
@@ -2827,24 +2866,28 @@ no_ref:
 .endproc
 
 special_code_jmp_lo:
-    .byte <_FT2ChannelUpdate::slide
-    .byte <_FT2ChannelUpdate::disable_attack
-    .byte <_FT2ChannelUpdate::override_pitch_envelope
-    .byte <_FT2ChannelUpdate::clear_pitch_override_flag
-    .byte <_FT2ChannelUpdate::fine_pitch
+    .byte <_FT2ChannelUpdate::slide                        ; $61
+    .byte <_FT2ChannelUpdate::disable_attack               ; $62
+    .byte <_FT2ChannelUpdate::override_pitch_envelope      ; $63
+    .byte <_FT2ChannelUpdate::override_arpeggio_envelope   ; $64
+    .byte <_FT2ChannelUpdate::clear_pitch_override_flag    ; $65
+    .byte <_FT2ChannelUpdate::clear_arpeggio_override_flag ; $66
+    .byte <_FT2ChannelUpdate::fine_pitch                   ; $67
 .ifdef ::FT_FDS        
-    .byte <_FT2ChannelUpdate::fds_mod_speed
-    .byte <_FT2ChannelUpdate::fds_mod_depth
+    .byte <_FT2ChannelUpdate::fds_mod_speed                ; $68
+    .byte <_FT2ChannelUpdate::fds_mod_depth                ; $69
 .endif        
 special_code_jmp_hi:
-    .byte >_FT2ChannelUpdate::slide
-    .byte >_FT2ChannelUpdate::disable_attack
-    .byte >_FT2ChannelUpdate::override_pitch_envelope
-    .byte >_FT2ChannelUpdate::clear_pitch_override_flag
-    .byte >_FT2ChannelUpdate::fine_pitch
+    .byte >_FT2ChannelUpdate::slide                        ; $61
+    .byte >_FT2ChannelUpdate::disable_attack               ; $62
+    .byte >_FT2ChannelUpdate::override_pitch_envelope      ; $63
+    .byte >_FT2ChannelUpdate::override_arpeggio_envelope   ; $64
+    .byte >_FT2ChannelUpdate::clear_pitch_override_flag    ; $65
+    .byte >_FT2ChannelUpdate::clear_arpeggio_override_flag ; $66
+    .byte >_FT2ChannelUpdate::fine_pitch                   ; $67
 .ifdef ::FT_FDS        
-    .byte >_FT2ChannelUpdate::fds_mod_speed
-    .byte >_FT2ChannelUpdate::fds_mod_depth
+    .byte >_FT2ChannelUpdate::fds_mod_speed                ; $68
+    .byte >_FT2ChannelUpdate::fds_mod_depth                ; $69
 .endif
 
 ;------------------------------------------------------------------------------
@@ -3462,6 +3505,37 @@ _FT2ChannelToVolumeEnvelope:
 .endif
 .if .defined(FT_CH12_ENVS)
     .byte FT_CH12_ENVS+FT_ENV_VOLUME_OFF
+.endif
+
+_FT2ChannelToArpeggioEnvelope:
+    .byte FT_CH0_ENVS+FT_ENV_NOTE_OFF
+    .byte FT_CH1_ENVS+FT_ENV_NOTE_OFF
+    .byte FT_CH2_ENVS+FT_ENV_NOTE_OFF
+    .byte FT_CH3_ENVS+FT_ENV_NOTE_OFF
+    .byte $ff
+.if .defined(FT_CH5_ENVS)
+    .byte FT_CH5_ENVS+FT_ENV_NOTE_OFF
+.endif
+.if .defined(FT_CH6_ENVS)
+    .byte FT_CH6_ENVS+FT_ENV_NOTE_OFF
+.endif
+.if .defined(FT_CH7_ENVS)
+    .byte FT_CH7_ENVS+FT_ENV_NOTE_OFF
+.endif
+.if .defined(FT_CH8_ENVS)
+    .byte FT_CH8_ENVS+FT_ENV_NOTE_OFF
+.endif
+.if .defined(FT_CH9_ENVS)
+    .byte FT_CH9_ENVS+FT_ENV_NOTE_OFF
+.endif
+.if .defined(FT_CH10_ENVS)
+    .byte FT_CH10_ENVS+FT_ENV_NOTE_OFF
+.endif
+.if .defined(FT_CH11_ENVS)
+    .byte FT_CH11_ENVS+FT_ENV_NOTE_OFF
+.endif
+.if .defined(FT_CH12_ENVS)
+    .byte FT_CH12_ENVS+FT_ENV_NOTE_OFF
 .endif
 
 _FT2ChannelToPitch:

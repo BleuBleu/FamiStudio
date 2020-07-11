@@ -1,5 +1,6 @@
 2.2.0
 =====
+- Play right now when dragging...
 - FDS export
 - FamiStudio sound engine
 	- Remove a bunch of macros, reduce code size
@@ -11,19 +12,13 @@
 - Show piano roll rect in sequencer
 - Drag seek bar (github issue request!).
 - Arpeggio : GOAL, recreate song #4 from silver surfer. (3/4 notes, slow/fast, Micromachines & Jurassic park has 1 frame delay before starting the arp)
-	
-	- New Category below instrument "Arpeggios".
-	- Default "None"
-	- They are simply envlopes.
-	- See if they need to reset notes (attack) : Look at NSF + FamiTracker.
-		- Silver surfer, smurf, MC kids, asterix dont reset
-		- 
-	- See how FamiTrackers handles vs. instrument envlopes).
-	
-	-
 	- NSF
+		- Test expansions.
+		- 
 	- Import export (FT, text format)
 	- Replace selection arp
+	- Audio preview when editing arps.
+		=> Display seek bar.
 	
 	Note drawing:
 		- Arpeggio will break culling? Test how slide notes react...

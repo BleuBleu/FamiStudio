@@ -150,7 +150,7 @@ namespace FamiStudio
                     envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
                     noteTriggered = true;
 
-                    if (note.IsMusical && note.Arpeggio != null)
+                    if (note.IsMusical && note.IsArpeggio)
                     {
                         envelopes[Envelope.Arpeggio] = note.Arpeggio.Envelope;
                         envelopeIdx[Envelope.Arpeggio] = 0;

@@ -63,7 +63,8 @@ namespace FamiStudio
                     page.AddBoolean("Merge identical instruments:", true); // 2
                     page.AddBoolean("Delete unused instruments:", true);   // 3
                     page.AddBoolean("Delete unused samples:", true);       // 4
-                    page.AddStringListMulti(null, GetSongNames(), null);   // 5
+                    page.AddBoolean("Delete unused arpeggios:", true);     // 5
+                    page.AddStringListMulti(null, GetSongNames(), null);   // 6
                     break;
             }
 
@@ -89,15 +90,16 @@ namespace FamiStudio
         private void Cleanup()
         {
             var props = dialog.GetPropertyPage((int)TransformOperation.Cleanup);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(6));
 
             var mergeIdenticalPatterns    = props.GetPropertyValue<bool>(0);
             var deleteEmptyPatterns       = props.GetPropertyValue<bool>(1);
             var mergeIdenticalInstruments = props.GetPropertyValue<bool>(2);
             var deleteUnusedInstruments   = props.GetPropertyValue<bool>(3);
             var deleteUnusedSamples       = props.GetPropertyValue<bool>(4);
+            var deleteUnusedArpeggios     = props.GetPropertyValue<bool>(5);
 
-            if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns || mergeIdenticalInstruments || deleteUnusedInstruments || deleteUnusedSamples))
+            if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns || mergeIdenticalInstruments || deleteUnusedInstruments || deleteUnusedSamples || deleteUnusedArpeggios))
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -137,6 +139,11 @@ namespace FamiStudio
                 if (deleteUnusedSamples)
                 {
                     app.Project.DeleteUnusedSamples();
+                }
+
+                if (deleteUnusedArpeggios)
+                {
+                    app.Project.DeleteUnusedArpeggios();
                 }
 
                 app.UndoRedoManager.EndTransaction();

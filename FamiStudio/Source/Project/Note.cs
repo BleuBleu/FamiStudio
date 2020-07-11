@@ -124,6 +124,12 @@ namespace FamiStudio
             set { Slide = value; }
         }
 
+        public bool IsArpeggio
+        {
+            get { return Arpeggio != null; }
+            set { if (!value) Arpeggio = null; }
+        }
+
         public byte Volume
         {
             get { Debug.Assert(HasVolume); return FxVolume; }

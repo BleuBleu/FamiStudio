@@ -164,7 +164,7 @@ namespace FamiStudio
                                     noteLine += $" Value=\"{note.FriendlyName}\"";
                                     if (note.Instrument != null)
                                         noteLine += $" Instrument=\"{note.Instrument.Name}\"";
-                                    if (note.Arpeggio != null)
+                                    if (note.IsArpeggio)
                                         noteLine += $" Arpeggio=\"{note.Arpeggio.Name}\"";
                                 }
 

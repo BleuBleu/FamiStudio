@@ -1409,7 +1409,7 @@ namespace FamiStudio
                 iconX += noteAttackSizeX + slideIconPosX;
             }
 
-            if (n0.Arpeggio != null)
+            if (n0.IsArpeggio)
             {
                 var offsets = n0.Arpeggio.GetChordOffsets();
                 foreach (var offset in offsets)
@@ -2733,7 +2733,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
                         App.Project.UnmapDPCMSample(noteValue);
-                        App.Project.CleanupUnusedSamples();
+                        App.Project.CleanupUnmappedSamples();
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                     }

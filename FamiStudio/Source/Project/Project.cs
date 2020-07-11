@@ -683,7 +683,7 @@ namespace FamiStudio
             }
         }
 
-        public void CleanupUnusedSamples()
+        public void CleanupUnmappedSamples()
         {
             var usedSamples = new HashSet<DPCMSample>();
             foreach (var mapping in samplesMapping)
@@ -733,6 +733,7 @@ namespace FamiStudio
 
             DeleteUnusedInstruments();
             DeleteUnusedSamples();
+            DeleteUnusedArpeggios();
         }
 
         public void MergeIdenticalInstruments()
@@ -855,6 +856,36 @@ namespace FamiStudio
                     samplesMapping[i] = null;
                 }
             }
+        }
+
+        public void DeleteUnusedArpeggios()
+        {
+            var usedArpeggios = new HashSet<Arpeggio>();
+
+            foreach (var song in songs)
+            {
+                for (int p = 0; p < song.Length; p++)
+                {
+                    foreach (var channel in song.Channels)
+                    {
+                        var pattern = channel.PatternInstances[p];
+                        if (pattern != null)
+                        {
+                            foreach (var note in pattern.Notes.Values)
+                            {
+                                if (note.IsArpeggio)
+                                {
+                                    //Debug.Assert(note.IsMusical);
+                                    usedArpeggios.Add(note.Arpeggio);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            arpeggios = new List<Arpeggio>(usedArpeggios);
+            SortArpeggios();
         }
 
 #if DEBUG

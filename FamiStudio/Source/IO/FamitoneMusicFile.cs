@@ -35,6 +35,7 @@ namespace FamiStudio
         private MachineType machine = MachineType.NTSC;
         private List<List<string>> globalPacketPatternBuffers = new List<List<string>>();
         private Dictionary<byte, string> vibratoEnvelopeNames = new Dictionary<byte, string>();
+        private Dictionary<Arpeggio, string> arpeggioEnvelopeNames = new Dictionary<Arpeggio, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
 
         private FamiToneKernel kernel = FamiToneKernel.FamiStudio;
@@ -265,7 +266,7 @@ namespace FamiStudio
                         default:
                             processed = ProcessEnvelope(env,
                                 i == Envelope.Volume && kernel == FamiToneKernel.FamiStudio,
-                                i == Envelope.Pitch  && kernel == FamiToneKernel.FamiStudio);
+                                i == Envelope.Pitch && kernel == FamiToneKernel.FamiStudio);
                             break;
                     }
 
@@ -285,6 +286,25 @@ namespace FamiStudio
                 }
             }
 
+            // Write the arpeggio envelopes.
+            if (kernel == FamiToneKernel.FamiStudio)
+            {
+                var arpeggioEnvelopes = new Dictionary<Arpeggio, uint>();
+
+                foreach (var arpeggio in project.Arpeggios)
+                {
+                    var processed = ProcessEnvelope(arpeggio.Envelope, false, false);
+                    uint crc = CRC32.Compute(processed);
+                    arpeggioEnvelopes[arpeggio] = crc;
+                    uniqueEnvelopes[crc] = processed;
+                }
+
+                foreach (var arpeggio in project.Arpeggios)
+                {
+                    arpeggioEnvelopeNames[arpeggio] = $"{ll}env{uniqueEnvelopes.IndexOfKey(arpeggioEnvelopes[arpeggio])}";
+                }
+            }
+
             // Write instruments
             lines.Add($"{ll}instruments:");
 
@@ -292,7 +312,7 @@ namespace FamiStudio
             {
                 var instrument = project.Instruments[i];
 
-                if (instrument.ExpansionType != Project.ExpansionFds  &&
+                if (instrument.ExpansionType != Project.ExpansionFds &&
                     instrument.ExpansionType != Project.ExpansionN163 &&
                     instrument.ExpansionType != Project.ExpansionVrc7)
                 {
@@ -308,9 +328,9 @@ namespace FamiStudio
                     }
                     else
                     {
-                        var duty      = instrument.IsEnvelopeActive(Envelope.DutyCycle) ? instrument.Envelopes[Envelope.DutyCycle].Values[0] : 0;
-                        var dutyShift = instrument.ExpansionType == Project.ExpansionNone ?    6 : 4;
-                        var dutyBits  = instrument.ExpansionType == Project.ExpansionNone ? 0x30 : 0;
+                        var duty = instrument.IsEnvelopeActive(Envelope.DutyCycle) ? instrument.Envelopes[Envelope.DutyCycle].Values[0] : 0;
+                        var dutyShift = instrument.ExpansionType == Project.ExpansionNone ? 6 : 4;
+                        var dutyBits = instrument.ExpansionType == Project.ExpansionNone ? 0x30 : 0;
 
                         lines.Add($"\t{db} ${(duty << dutyShift) | dutyBits:x2} ;instrument {i:x2} ({instrument.Name})");
                         lines.Add($"\t{dw} {ll}env{volumeEnvIdx}, {ll}env{arpeggioEnvIdx}, {ll}env{pitchEnvIdx}");
@@ -324,7 +344,7 @@ namespace FamiStudio
             lines.Add("");
 
             // FDS, N163 and VRC7 instruments are special.
-            if (project.ExpansionAudio == Project.ExpansionFds  ||
+            if (project.ExpansionAudio == Project.ExpansionFds ||
                 project.ExpansionAudio == Project.ExpansionN163 ||
                 project.ExpansionAudio == Project.ExpansionVrc7)
             {
@@ -586,6 +606,7 @@ namespace FamiStudio
                 var isSpeedChannel = c == speedChannel;
                 var instrument = (Instrument)null;
                 var previousNoteLength = song.NoteLength;
+                var hasArpeggioActive = false;
 
                 if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
@@ -659,7 +680,7 @@ namespace FamiStudio
 
                         if (note.HasFinePitch)
                         {
-                            patternBuffer.Add($"${0x65:x2}");
+                            patternBuffer.Add($"${0x67:x2}");
                             patternBuffer.Add($"${note.FinePitch:x2}");
                         }
 
@@ -670,19 +691,31 @@ namespace FamiStudio
                             patternBuffer.Add($"{hi}({vibratoEnvelopeNames[note.RawVibrato]})");
 
                             if (note.RawVibrato == 0)
-                                patternBuffer.Add($"${0x64:x2}");
+                                patternBuffer.Add($"${0x65:x2}");
+                        }
+
+                        if (note.IsArpeggio && note.HasAttack && note.IsMusical)
+                        {
+                            patternBuffer.Add($"${0x64:x2}");
+                            patternBuffer.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                            patternBuffer.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                            hasArpeggioActive = true;
+                        }
+                        else if (note.HasAttack && hasArpeggioActive)
+                        {
+                            patternBuffer.Add($"${0x66:x2}");
                         }
 
                         if (note.HasFdsModSpeed)
                         {
-                            patternBuffer.Add($"${0x66:x2}");
+                            patternBuffer.Add($"${0x68:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
                         }
 
                         if (note.HasFdsModDepth)
                         {
-                            patternBuffer.Add($"${0x67:x2}");
+                            patternBuffer.Add($"${0x69:x2}");
                             patternBuffer.Add($"${note.FdsModDepth:x2}");
                         }
 
@@ -962,6 +995,7 @@ namespace FamiStudio
                                 note.HasVolume    = false;
                                 note.IsSlideNote  = false;
                                 note.HasFinePitch = false;
+                                note.Arpeggio     = null;
                             }
                         }
                     }
