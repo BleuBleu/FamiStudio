@@ -3,15 +3,35 @@
 - Play right now when dragging...
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
-- FDS export (Not sure if doable...)
+- FDS export
+- Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
+- Why is volume visible on triangle channel?
 - FamiStudio sound engine
+	X Create unit tests.
+	- All .proc
 	- Remove a bunch of macros, reduce code size
+		- FamiToneComputeNoteFinalPitch
+	- Toggeable features (table with code size + RAM usage)
+		- Slides
+		- Volume track
+		- Fine pitch track
+		- Vibrato
+		- Arpeggio
+		- All expansions.
 	- Rename stuff
-	- Resurect VFX
-	- 3 assembly versions : will need a simple test ROM.
-	- Deprecate FamiTone2 FS.
+		- FT => FAMISTUDIO or FS ?
+		- _FT2? 
+		- Naming convension for public/private stuff
+	- Resurect SFX
+	- Global/Project config.
+	- 3 assembly versions 
+	- Test ROM.
+	- Documentation.
 	- Should I clamp the period? Why did I remove the clamps???
-- Show piano roll rect in sequencer
+	- Need to be a seperate project.
+	- What to do with FT_EQUALIZER?
+	- Deprecate FamiTone2 FS.
+/ Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.
 - Drag seek bar (github issue request!).
@@ -19,6 +39,7 @@
 	- NSF
 		- Test expansions.
 	- Import export (FT, text format)
+	- Copy paste doesnt work.
 	- Validation code.
 	- Paste special
 	x Replace selection arp
@@ -27,6 +48,8 @@
 	- Should I use a "..." icon for arps?
 - Instrument picker?
 - Discord server
+- Feature requests from email (record?)
+- First time control tutorial?
 
 Tweet ideas
 ===========

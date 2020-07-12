@@ -875,7 +875,7 @@ done:
 
 ; x = note index
 ; y = slide/pitch envelope index
-.macro FamiToneComputeNoteFinalPitch pitch_env_offset, pitch_env_indexer, note_table_lsb, note_table_msb
+.macro FamiToneComputeNoteFinalPitchMacro pitch_env_offset, pitch_env_indexer, note_table_lsb, note_table_msb
 
     .local pitch
     .local tmp_ror
@@ -964,6 +964,18 @@ no_slide:
 
 .endmacro
 
+.proc FamiToneComputeNoteFinalPitch
+    FamiToneComputeNoteFinalPitchMacro 0, {,y}, _FT2NoteTableLSB, _FT2NoteTableMSB
+    rts
+.endproc
+
+.ifdef ::FT_VRC6
+.proc FamiToneComputeNoteFinalPitchVrc6Saw
+    FamiToneComputeNoteFinalPitchMacro 0, {,y}, _FT2SawNoteTableLSB, _FT2SawNoteTableMSB
+    rts
+.endproc
+.endif
+
 .macro FamiToneUpdateChannelSound idx, env_offset, slide_offset, pulse_prev, vol_ora, hi_ora, reg_hi, reg_lo, reg_vol, reg_sweep
 
     .local note_table_lsb
@@ -977,14 +989,6 @@ no_slide:
 
     tmp   = FT_TEMP_VAR1
     pitch = FT_TEMP_PTR2
-
-.if .defined(::FT_VRC6) && idx = 7
-    note_table_lsb = _FT2SawNoteTableLSB
-    note_table_msb = _FT2SawNoteTableMSB
-.else
-    note_table_lsb = _FT2NoteTableLSB
-    note_table_msb = _FT2NoteTableMSB
-.endif
 
     lda FT_CHN_NOTE+idx
     bne nocut
@@ -1013,7 +1017,12 @@ nocut:
     .endif
     tax
 
-    FamiToneComputeNoteFinalPitch slide_offset, , note_table_lsb, note_table_msb
+    ldy #slide_offset
+    .if .defined(::FT_VRC6) && idx = 7
+        jsr FamiToneComputeNoteFinalPitchVrc6Saw
+    .else
+        jsr FamiToneComputeNoteFinalPitch
+    .endif
 
     lda pitch+0
     sta reg_lo
@@ -1112,7 +1121,7 @@ nocut:
     adc FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_NOTE_OFF
     tax
 
-    FamiToneComputeNoteFinalPitch 3, , _FT2FdsNoteTableLSB, _FT2FdsNoteTableMSB
+    FamiToneComputeNoteFinalPitchMacro 3, , _FT2FdsNoteTableLSB, _FT2FdsNoteTableMSB
 
     lda pitch+0
     sta FDS_FREQ_LO
@@ -1223,7 +1232,7 @@ nocut:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    FamiToneComputeNoteFinalPitch 3, {,y}, _FT2Vrc7NoteTableLSB, _FT2Vrc7NoteTableMSB
+    FamiToneComputeNoteFinalPitchMacro 3, {,y}, _FT2Vrc7NoteTableLSB, _FT2Vrc7NoteTableMSB
 
     ; Compute octave by dividing by 2 until we are <= 512 (0x100).
     ldx #0
@@ -1377,7 +1386,7 @@ nocut:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    FamiToneComputeNoteFinalPitch 3, {,y}, _FT2N163NoteTableLSB, _FT2N163NoteTableMSB
+    FamiToneComputeNoteFinalPitchMacro 3, {,y}, _FT2N163NoteTableLSB, _FT2N163NoteTableMSB
 
     ; Convert 16-bit -> 18-bit.
     asl pitch+0
@@ -1456,7 +1465,7 @@ nocut:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    FamiToneComputeNoteFinalPitch 3, {,y}, _FT2NoteTableLSB, _FT2NoteTableMSB
+    FamiToneComputeNoteFinalPitchMacro 3, {,y}, _FT2NoteTableLSB, _FT2NoteTableMSB
 
     ; Write pitch
     lda _FT2S5BRegLoTable,y
