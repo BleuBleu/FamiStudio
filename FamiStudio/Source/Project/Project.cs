@@ -423,6 +423,32 @@ namespace FamiStudio
             instruments.Clear();
         }
 
+        public void ReplaceArpeggio(Arpeggio arpeggioOld, Arpeggio arpeggioNew)
+        {
+            foreach (var song in songs)
+            {
+                foreach (var channel in song.Channels)
+                {
+                    foreach (var pattern in channel.Patterns)
+                    {
+                        foreach (var note in pattern.Notes.Values)
+                        {
+                            if (note.Arpeggio == arpeggioOld)
+                            {
+                                note.Arpeggio = arpeggioNew;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void DeleteArpeggio(Arpeggio arpeggio)
+        {
+            arpeggios.Remove(arpeggio);
+            ReplaceArpeggio(arpeggio, null);
+        }
+
         public void DeleteAllSamples()
         {
             for (int i = 0; i < samplesMapping.Length; i++)

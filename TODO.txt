@@ -3,7 +3,7 @@
 - Play right now when dragging...
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
-- FDS export
+- FDS export (Not sure if doable...)
 - FamiStudio sound engine
 	- Remove a bunch of macros, reduce code size
 	- Rename stuff
@@ -17,15 +17,12 @@
 	- NSF
 		- Test expansions.
 	- Import export (FT, text format)
-	- Replace selection arp
-	- Add/remove arps.
-	- Must delete + add note to set the art, weird?
-	Note drawing:
-		- Arpeggio will break culling? Test how slide notes react...
-	
-	Minor:
-		- Should arpeggios even have colors in project explorer?
-		- Should I use a "..." icon for arps?
+	- Validation code.
+	- Paste special
+	x Replace selection arp
+	x Add/remove arps.
+	- Must delete + add note to set the arp, weird?
+	- Should I use a "..." icon for arps?
 - Instrument picker?
 - Discord server
 

@@ -606,7 +606,7 @@ namespace FamiStudio
                 var isSpeedChannel = c == speedChannel;
                 var instrument = (Instrument)null;
                 var previousNoteLength = song.NoteLength;
-                var hasArpeggioActive = false;
+                var arpeggio = (Arpeggio)null;
 
                 if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
@@ -629,6 +629,7 @@ namespace FamiStudio
                         // Clear stored instrument to force a reset. We might be looping
                         // to a section where the instrument was set from a previous pattern.
                         instrument = null;
+                        arpeggio = null;
                     }
 
                     if (isSpeedChannel && project.UsesFamiStudioTempo)
@@ -680,7 +681,7 @@ namespace FamiStudio
 
                         if (note.HasFinePitch)
                         {
-                            patternBuffer.Add($"${0x67:x2}");
+                            patternBuffer.Add($"${0x68:x2}");
                             patternBuffer.Add($"${note.FinePitch:x2}");
                         }
 
@@ -694,29 +695,41 @@ namespace FamiStudio
                                 patternBuffer.Add($"${0x65:x2}");
                         }
 
-                        if (note.IsArpeggio && note.HasAttack && note.IsMusical)
+                        if (note.IsMusical)
                         {
-                            patternBuffer.Add($"${0x64:x2}");
-                            patternBuffer.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
-                            patternBuffer.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
-                            hasArpeggioActive = true;
-                        }
-                        else if (note.HasAttack && hasArpeggioActive)
-                        {
-                            patternBuffer.Add($"${0x66:x2}");
-                            hasArpeggioActive = false;
+                            // Set/clear override when changing arpeggio
+                            if (note.Arpeggio != arpeggio)
+                            {
+                                if (note.Arpeggio != null)
+                                {
+                                    patternBuffer.Add($"${0x64:x2}");
+                                    patternBuffer.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                                    patternBuffer.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                                }
+                                else
+                                {
+                                    patternBuffer.Add($"${0x66:x2}");
+                                }
+
+                                arpeggio = note.Arpeggio;
+                            }
+                            // If same arpeggio, but note has an attack, reset it.
+                            else if (note.HasAttack && arpeggio != null)
+                            {
+                                patternBuffer.Add($"${0x67:x2}");
+                            }
                         }
 
                         if (note.HasFdsModSpeed)
                         {
-                            patternBuffer.Add($"${0x68:x2}");
+                            patternBuffer.Add($"${0x69:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
                         }
 
                         if (note.HasFdsModDepth)
                         {
-                            patternBuffer.Add($"${0x69:x2}");
+                            patternBuffer.Add($"${0x6a:x2}");
                             patternBuffer.Add($"${note.FdsModDepth:x2}");
                         }
 

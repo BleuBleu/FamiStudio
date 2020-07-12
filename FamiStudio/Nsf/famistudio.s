@@ -2606,9 +2606,24 @@ override_arpeggio_envelope:
     iny
     lda (FT_TEMP_PTR1),y
     sta FT_ENV_ADR_H,x
-    ldy #0
+    lda #0
+    tay
+    sta FT_ENV_REPEAT,x ; Reset the envelope since this might be a no-attack note.
+    sta FT_ENV_VALUE,x
+    sta FT_ENV_PTR,x
     ldx FT_TEMP_VAR1
     add_16_8 FT_TEMP_PTR1, #2
+    jmp read_byte
+
+reset_arpeggio:
+    stx FT_TEMP_VAR1    
+    lda _FT2ChannelToArpeggioEnvelope,x
+    tax
+    lda #0
+    sta FT_ENV_REPEAT,x
+    sta FT_ENV_VALUE,x
+    sta FT_ENV_PTR,x
+    ldx FT_TEMP_VAR1
     jmp read_byte
 
 disable_attack:
@@ -2885,10 +2900,11 @@ special_code_jmp_lo:
     .byte <_FT2ChannelUpdate::override_arpeggio_envelope   ; $64
     .byte <_FT2ChannelUpdate::clear_pitch_override_flag    ; $65
     .byte <_FT2ChannelUpdate::clear_arpeggio_override_flag ; $66
-    .byte <_FT2ChannelUpdate::fine_pitch                   ; $67
+    .byte <_FT2ChannelUpdate::reset_arpeggio               ; $67
+    .byte <_FT2ChannelUpdate::fine_pitch                   ; $68
 .ifdef ::FT_FDS        
-    .byte <_FT2ChannelUpdate::fds_mod_speed                ; $68
-    .byte <_FT2ChannelUpdate::fds_mod_depth                ; $69
+    .byte <_FT2ChannelUpdate::fds_mod_speed                ; $69
+    .byte <_FT2ChannelUpdate::fds_mod_depth                ; $6a
 .endif        
 special_code_jmp_hi:
     .byte >_FT2ChannelUpdate::slide                        ; $61
@@ -2897,10 +2913,11 @@ special_code_jmp_hi:
     .byte >_FT2ChannelUpdate::override_arpeggio_envelope   ; $64
     .byte >_FT2ChannelUpdate::clear_pitch_override_flag    ; $65
     .byte >_FT2ChannelUpdate::clear_arpeggio_override_flag ; $66
-    .byte >_FT2ChannelUpdate::fine_pitch                   ; $67
+    .byte >_FT2ChannelUpdate::reset_arpeggio               ; $67
+    .byte >_FT2ChannelUpdate::fine_pitch                   ; $68
 .ifdef ::FT_FDS        
-    .byte >_FT2ChannelUpdate::fds_mod_speed                ; $68
-    .byte >_FT2ChannelUpdate::fds_mod_depth                ; $69
+    .byte >_FT2ChannelUpdate::fds_mod_speed                ; $69
+    .byte >_FT2ChannelUpdate::fds_mod_depth                ; $6a
 .endif
 
 ;------------------------------------------------------------------------------

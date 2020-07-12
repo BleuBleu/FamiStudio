@@ -291,6 +291,7 @@ namespace FamiStudio
         {
             None,
             DragInstrument,
+            DragArpeggio,
             MoveSlider
         };
 
@@ -314,6 +315,7 @@ namespace FamiStudio
         Instrument draggedInstrument = null;
         Instrument selectedInstrument = null; // null = DPCM
         Instrument expandedInstrument = null;
+        Arpeggio draggedArpeggio = null;
         Arpeggio selectedArpeggio = null;
         List<Button> buttons = new List<Button>();
 
@@ -343,6 +345,7 @@ namespace FamiStudio
         public delegate void InstrumentPointDelegate(Instrument instrument, Point pos);
         public delegate void SongDelegate(Song song);
         public delegate void ArpeggioDelegate(Arpeggio arpeggio);
+        public delegate void ArpeggioPointDelegate(Arpeggio arpeggio, Point pos);
 
         public event InstrumentEnvelopeDelegate InstrumentEdited;
         public event InstrumentDelegate InstrumentSelected;
@@ -355,6 +358,8 @@ namespace FamiStudio
         public event ArpeggioDelegate ArpeggioSelected;
         public event ArpeggioDelegate ArpeggioEdited;
         public event ArpeggioDelegate ArpeggioColorChanged;
+        public event ArpeggioDelegate ArpeggioDeleted;
+        public event ArpeggioPointDelegate ArpeggioDraggedOutside;
         public event EmptyDelegate ProjectModified;
 
         public ProjectExplorer()
@@ -664,6 +669,10 @@ namespace FamiStudio
             {
                 Cursor.Current = envelopeDragIdx == -1 ? Cursors.DragCursor : Cursors.CopyCursor;
             }
+            else if (captureOperation == CaptureOperation.DragArpeggio && captureThresholdMet)
+            {
+                Cursor.Current = Cursors.DragCursor;
+            }
             else
             {
                 Cursor.Current = Cursors.Default;
@@ -859,11 +868,19 @@ namespace FamiStudio
                     InstrumentDraggedOutside(draggedInstrument, PointToScreen(new Point(e.X, e.Y)));
                 }
             }
+            else if (captureOperation == CaptureOperation.DragArpeggio)
+            {
+                if (!ClientRectangle.Contains(e.X, e.Y))
+                {
+                    ArpeggioDraggedOutside(draggedArpeggio, PointToScreen(new Point(e.X, e.Y)));
+                }
+            }
             else if (captureOperation == CaptureOperation.MoveSlider)
             {
                 App.UndoRedoManager.EndTransaction();
             }
 
+            draggedArpeggio = null;
             draggedInstrument = null;
             sliderDragButton = null;
             captureOperation = CaptureOperation.None;
@@ -1175,6 +1192,12 @@ namespace FamiStudio
                     {
                         selectedArpeggio = button.arpeggio;
 
+                        if (selectedInstrument != null)
+                        {
+                            draggedArpeggio = selectedArpeggio;
+                            StartCaptureOperation(e, CaptureOperation.DragArpeggio);
+                        }
+
                         if (subButtonType < SubButtonType.EnvelopeMax)
                         {
                             ArpeggioEdited?.Invoke(selectedArpeggio);
@@ -1231,6 +1254,26 @@ namespace FamiStudio
                                 RefreshButtons();
                                 ConditionalInvalidate();
                             }
+                        }
+                    }
+                    else if (button.type == ButtonType.Arpeggio)
+                    {
+                        var arpeggio = button.arpeggio;
+
+                        if (PlatformUtils.MessageBox($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        {
+                            bool selectNewArpeggio = arpeggio == selectedArpeggio;
+                            App.StopEverything();
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                            App.Project.DeleteArpeggio(arpeggio);
+                            if (selectNewArpeggio)
+                                selectedArpeggio = App.Project.Arpeggios.Count > 0 ? App.Project.Arpeggios[0] : null;
+                            SongSelected?.Invoke(selectedSong);
+                            ArpeggioDeleted?.Invoke(arpeggio);
+                            App.UndoRedoManager.EndTransaction();
+                            App.StartInstrumentPlayer();
+                            RefreshButtons();
+                            ConditionalInvalidate();
                         }
                     }
                 }

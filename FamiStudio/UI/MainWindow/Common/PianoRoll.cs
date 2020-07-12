@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Media;
@@ -1409,13 +1409,13 @@ namespace FamiStudio
                 iconX += noteAttackSizeX + slideIconPosX;
             }
 
-            if (n0.IsArpeggio)
+            if (arpeggio != null)
             {
-                var offsets = n0.Arpeggio.GetChordOffsets();
+                var offsets = arpeggio.GetChordOffsets();
                 foreach (var offset in offsets)
                 {
                     g.PushTranslation(0, offset * -noteSizeY);
-                    g.FillRectangle(0, 0, sx, sy, g.GetSolidBrush(n0.Arpeggio.Color, 1.0f, 0.2f));
+                    g.FillRectangle(0, 0, sx, sy, g.GetSolidBrush(arpeggio.Color, 1.0f, 0.2f));
                     g.PopTransform();
                 }
             }
@@ -2872,6 +2872,19 @@ namespace FamiStudio
             }
         }
 
+        public void ReplaceSelectionArpeggio(Arpeggio arpeggio)
+        {
+            if (editMode == EditionMode.Channel && Song.Channels[editChannel].SupportsArpeggios && IsSelectionValid())
+            {
+                TransformNotes(selectionFrameMin, selectionFrameMax, true, (note, idx) =>
+                {
+                    if (note != null && note.IsMusical)
+                        note.Arpeggio = arpeggio;
+                    return note;
+                });
+            }
+        }
+
         private bool IsMouseInHeader(MouseEventArgs e)
         {
             return e.X > whiteKeySizeX && e.Y < headerSizeY;
@@ -2984,6 +2997,8 @@ namespace FamiStudio
                             var note = pat.Notes[noteIdx];
                             if (note.Instrument != null)
                                 newNoteTooltip += $" ({note.Instrument.Name})";
+                            if (note.IsArpeggio)
+                                newNoteTooltip += $" (Arpeggio: {note.Arpeggio.Name})";
                         }
                     }
                 }

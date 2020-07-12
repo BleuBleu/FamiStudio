@@ -76,6 +76,8 @@ namespace FamiStudio
             ProjectExplorer.ArpeggioSelected += ProjectExplorer_ArpeggioSelected;
             ProjectExplorer.ArpeggioEdited += ProjectExplorer_ArpeggioEdited;
             ProjectExplorer.ArpeggioColorChanged += ProjectExplorer_ArpeggioColorChanged;
+            ProjectExplorer.ArpeggioDeleted += ProjectExplorer_ArpeggioDeleted;
+            ProjectExplorer.ArpeggioDraggedOutside += ProjectExplorer_ArpeggioDraggedOutside;
 
             InitializeMidi();
             InitializeMultiMediaNotifications();
@@ -110,6 +112,11 @@ namespace FamiStudio
             PianoRoll.Reset();
         }
 
+        private void ProjectExplorer_ArpeggioDeleted(Arpeggio arpeggio)
+        {
+            PianoRoll.Reset();
+        }
+
         private void PianoRoll_NotesPasted()
         {
             ProjectExplorer.RefreshButtons();
@@ -123,6 +130,17 @@ namespace FamiStudio
             if (PianoRoll.ClientRectangle.Contains(pianoRollClientPos))
             {
                 PianoRoll.ReplaceSelectionInstrument(instrument);
+                PianoRoll.Focus();
+            }
+        }
+
+        private void ProjectExplorer_ArpeggioDraggedOutside(Arpeggio arpeggio, Point pos)
+        {
+            var pianoRollClientPos = PianoRoll.PointToClient(pos);
+
+            if (PianoRoll.ClientRectangle.Contains(pianoRollClientPos))
+            {
+                PianoRoll.ReplaceSelectionArpeggio(arpeggio);
                 PianoRoll.Focus();
             }
         }
