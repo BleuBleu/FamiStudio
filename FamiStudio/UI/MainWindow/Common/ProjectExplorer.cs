@@ -299,6 +299,7 @@ namespace FamiStudio
         {
             false,
             true,
+            true,
             false
         };
 
@@ -836,17 +837,20 @@ namespace FamiStudio
                     var instrumentSrc = draggedInstrument;
                     var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
 
-                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null && instrumentSrc.ExpansionType == instrumentDst.ExpansionType)
+                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null)
                     {
                         if (envelopeDragIdx == -1)
                         {
-                            if (PlatformUtils.MessageBox($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            if (instrumentSrc.ExpansionType == instrumentDst.ExpansionType)
                             {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                                App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
-                                App.UndoRedoManager.EndTransaction();
+                                if (PlatformUtils.MessageBox($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                                {
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                                    App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
+                                    App.UndoRedoManager.EndTransaction();
 
-                                InstrumentReplaced?.Invoke(instrumentDst);
+                                    InstrumentReplaced?.Invoke(instrumentDst);
+                                }
                             }
                         }
                         else
