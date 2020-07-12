@@ -12,6 +12,8 @@
 	- Deprecate FamiTone2 FS.
 	- Should I clamp the period? Why did I remove the clamps???
 - Show piano roll rect in sequencer
+	x Make it a setting
+	- Make it look better.
 - Drag seek bar (github issue request!).
 - Arpeggio : GOAL, recreate song #4 from silver surfer. (3/4 notes, slow/fast, Micromachines & Jurassic park has 1 frame delay before starting the arp)
 	- NSF

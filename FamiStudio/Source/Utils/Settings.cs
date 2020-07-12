@@ -13,6 +13,7 @@ namespace FamiStudio
         public static int DpiScaling = 0;
         public static int TimeFormat = 0;
         public static bool CheckUpdates = true;
+        public static bool ShowPianoRollViewRange = true;
         public static bool TrackPadControls = false;
         public static bool ReverseTrackPad = false;
 
@@ -36,6 +37,7 @@ namespace FamiStudio
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
             TimeFormat = ini.GetInt("UI", "TimeFormat", 0);
             CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
+            ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
@@ -67,6 +69,7 @@ namespace FamiStudio
             ini.SetInt("UI", "DpiScaling", DpiScaling);
             ini.SetInt("UI", "TimeFormat", TimeFormat);
             ini.SetBool("UI", "CheckUpdates", CheckUpdates);
+            ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetBool("UI", "TrackPadControls", TrackPadControls);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);

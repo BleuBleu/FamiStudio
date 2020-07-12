@@ -79,9 +79,10 @@ namespace FamiStudio
                     page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex]); // 0
                     page.AddStringList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]); // 1
                     page.AddBoolean("Check for updates:", Settings.CheckUpdates); // 2
-                    page.AddBoolean("Trackpad controls:", Settings.TrackPadControls); // 3
+                    page.AddBoolean("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 3
+                    page.AddBoolean("Trackpad controls:", Settings.TrackPadControls); // 4
 #if FAMISTUDIO_MACOS
-                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 4
+                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 5
                     page.SetPropertyEnabled(4, Settings.TrackPadControls);
                     page.PropertyChanged += Page_PropertyChanged;
 #endif
@@ -129,9 +130,9 @@ namespace FamiStudio
 #if FAMISTUDIO_MACOS
         private void Page_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            if (props == pages[(int)ConfigSection.UserInterface] && idx == 3)
+            if (props == pages[(int)ConfigSection.UserInterface] && idx == 4)
             {
-                props.SetPropertyEnabled(4, (bool)value);
+                props.SetPropertyEnabled(5, (bool)value);
             }
         }
 #endif
@@ -151,9 +152,10 @@ namespace FamiStudio
                 Settings.DpiScaling = scalingString == "System" ? 0 : int.Parse(scalingString.Substring(0, 3));
                 Settings.TimeFormat = Array.IndexOf(TimeFormatStrings, timeFormatString);
                 Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(2);
-                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(3);
+                Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(3);
+                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(4);
 #if FAMISTUDIO_MACOS
-                Settings.ReverseTrackPad = pageUI.GetPropertyValue<bool>(4);
+                Settings.ReverseTrackPad = pageUI.GetPropertyValue<bool>(5);
 #endif
 
                 // Sound

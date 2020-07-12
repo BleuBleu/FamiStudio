@@ -118,6 +118,7 @@ namespace FamiStudio
         RenderBrush patternHeaderBrush;
         RenderBrush selectedPatternVisibleBrush;
         RenderBrush selectedPatternInvisibleBrush;
+        RenderBrush dashedLineVerticalBrush;
         RenderPath seekGeometry;
 
         RenderBitmap[] bmpTracks = new RenderBitmap[Channel.Count];
@@ -292,6 +293,7 @@ namespace FamiStudio
             patternHeaderBrush = g.CreateVerticalGradientBrush(0, patternHeaderSizeY, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             selectedPatternVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
             selectedPatternInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(32, ThemeBase.LightGreyFillColor1));
+            dashedLineVerticalBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
 
             seekGeometry = g.CreateConvexPath(new[]
             {
@@ -318,6 +320,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref patternHeaderBrush);
             Utils.DisposeAndNullify(ref selectedPatternVisibleBrush);
             Utils.DisposeAndNullify(ref selectedPatternInvisibleBrush);
+            Utils.DisposeAndNullify(ref dashedLineVerticalBrush);
             Utils.DisposeAndNullify(ref seekGeometry);
 
             InvalidatePatternCache();
@@ -490,6 +493,16 @@ namespace FamiStudio
                         g.PopTransform();
                     }
                 }
+            }
+
+            // Piano roll view rect
+            if (Settings.ShowPianoRollViewRange)
+            {
+                App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex);
+
+                g.PushTranslation(pianoRollMinNoteIdx * noteSizeX - scrollX + trackNameSizeX, pianoRollChannelIndex * trackSizeY);
+                g.DrawRectangle(0, 0, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX, trackSizeY, seekBarBrush, 3);
+                g.PopTransform();
             }
 
             // Dragging selection

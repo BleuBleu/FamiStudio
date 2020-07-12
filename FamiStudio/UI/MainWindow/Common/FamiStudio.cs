@@ -26,6 +26,7 @@ namespace FamiStudio
         private int lastMidiNote = -1;
         private bool palPlayback = false;
         private bool audioDeviceChanged = false;
+        private bool pianoRollScrollChanged = false;
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
 #endif
@@ -34,7 +35,7 @@ namespace FamiStudio
         private string newReleaseString = null;
         private string newReleaseUrl = null;
 
-        public bool RealTimeUpdate => songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio;
+        public bool RealTimeUpdate => songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || pianoRollScrollChanged;
         public bool IsPlaying => songPlayer.IsPlaying;
         public int CurrentFrame => songPlayer.CurrentFrame;
         public int ChannelMask { get => songPlayer.ChannelMask; set => songPlayer.ChannelMask = value; }
@@ -64,6 +65,7 @@ namespace FamiStudio
             PianoRoll.EnvelopeChanged += pianoRoll_EnvelopeChanged;
             PianoRoll.ControlActivated += PianoRoll_ControlActivated;
             PianoRoll.NotesPasted += PianoRoll_NotesPasted;
+            PianoRoll.ScrollChanged += PianoRoll_ScrollChanged;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
             ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
@@ -97,6 +99,18 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        private void PianoRoll_ScrollChanged()
+        {
+            if (Settings.ShowPianoRollViewRange)
+            {
+#if FAMISTUDIO_WINDOWS
+                pianoRollScrollChanged = true;
+#else
+                Sequencer.ConditionalInvalidate();
+#endif
+            }
         }
 
         private void ProjectExplorer_ProjectModified()
@@ -433,6 +447,7 @@ namespace FamiStudio
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 InitializeMidi();
+                InvalidateEverything(true);
             }
         }
 
@@ -859,6 +874,15 @@ namespace FamiStudio
                 return -1;
         }
 
+        public bool GetPianoRollViewRange(out int minNoteIdx, out int maxNoteIdx, out int channelIndex)
+        {
+            minNoteIdx   = -1000000;
+            maxNoteIdx   = -1000000;
+            channelIndex = -1000000;
+
+            return PianoRoll.GetViewRange(ref minNoteIdx, ref maxNoteIdx, ref channelIndex);
+        }
+
         private void InvalidateEverything(bool projectExplorer = false)
         {
             ToolBar.Invalidate();
@@ -894,6 +918,8 @@ namespace FamiStudio
 
             if (RealTimeUpdate)
                 InvalidateEverything();
+
+            pianoRollScrollChanged = false;
 
             CheckNewReleaseDone();
         }

@@ -263,16 +263,15 @@ namespace FamiStudio
         public Instrument CurrentInstrument { get => currentInstrument; set => currentInstrument = value; }
         public Arpeggio   CurrentArpeggio   { get => currentArpeggio;   set => currentArpeggio   = value; }
 
-        public delegate void ManyPatternChange();
-        public event ManyPatternChange ManyPatternChanged;
-        public delegate void PatternChange(Pattern pattern);
-        public event PatternChange PatternChanged;
-        public delegate void EnvelopeResize();
-        public event EnvelopeResize EnvelopeChanged;
-        public delegate void ControlActivate();
-        public event ControlActivate ControlActivated;
-        public delegate void NotesPastedDelegate();
-        public event NotesPastedDelegate NotesPasted;
+        public delegate void EmptyDelegate();
+        public delegate void PatternDelegate(Pattern pattern);
+
+        public event PatternDelegate PatternChanged;
+        public event EmptyDelegate ManyPatternChanged;
+        public event EmptyDelegate EnvelopeChanged;
+        public event EmptyDelegate ControlActivated;
+        public event EmptyDelegate NotesPasted;
+        public event EmptyDelegate ScrollChanged;
 
         public PianoRoll()
         {
@@ -524,6 +523,7 @@ namespace FamiStudio
             editInstrument = null;
             editArpeggio = null;
             noteTooltip = "";
+            ClampScroll();
             ClampMinSnap();
             ClearSelection();
             UpdateRenderCoords();
@@ -703,6 +703,22 @@ namespace FamiStudio
                     virtualSizeY - octaveSizeY * octave - (key <= 4 ? ((key / 2 + 1) * whiteKeySizeY) : ((whiteKeySizeY * 3) + ((key - 4) / 2 + 1) * keySizeY)) - scrollY,
                     whiteKeySizeX,
                     keySizeY);
+            }
+        }
+
+        public bool GetViewRange(ref int minNoteIdx, ref int maxNoteIdx, ref int channelIndex)
+        {
+            if (editMode == EditionMode.Channel)
+            {
+                minNoteIdx = Math.Max((int)Math.Floor(scrollX / (float)noteSizeX), 0);
+                maxNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / (float)noteSizeX), Song.GetPatternStartNote(Song.Length));
+                channelIndex = editChannel;
+
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -2771,6 +2787,8 @@ namespace FamiStudio
                 if (scrollY < minScrollY) scrollY = minScrollY;
                 if (scrollY > maxScrollY) scrollY = maxScrollY;
             }
+
+            ScrollChanged?.Invoke();
         }
 
         private void DoScroll(int deltaX, int deltaY)
