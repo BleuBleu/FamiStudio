@@ -27,6 +27,7 @@ namespace FamiStudio
         private bool palPlayback = false;
         private bool audioDeviceChanged = false;
         private bool pianoRollScrollChanged = false;
+        private bool tutorialShown = false;
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
 #endif
@@ -904,6 +905,21 @@ namespace FamiStudio
             StartInstrumentPlayer();
         }
 
+        private void ConditionalShowTutorial()
+        {
+            if (!tutorialShown)
+            {
+                tutorialShown = true;
+
+                if (Settings.ShowTutorial)
+                {
+                    var dlg = new TutorialDialog();
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                        Settings.ShowTutorial = false;
+                }
+            }
+        }
+
         public void Tick()
         {
             if (audioDeviceChanged)
@@ -921,6 +937,7 @@ namespace FamiStudio
 
             pianoRollScrollChanged = false;
 
+            ConditionalShowTutorial();
             CheckNewReleaseDone();
         }
 

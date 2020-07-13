@@ -75,6 +75,11 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
     <Compile Include="Source\IO\FamitoneSoundEffectFile.cs" />
     <Compile Include="Source\IO\FamitrackerBaseFile.cs" />
@@ -117,6 +122,9 @@
     <Compile Include="UI\Dialogs\Common\NsfImportDialog.cs" />
     <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
     <Compile Include="UI\Dialogs\Common\TransformDialog.cs" />
+    <Compile Include="UI\Dialogs\WinForms\TutorialDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="UI\MainWindow\Common\CommonTooltips.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DGraphics.cs" />
     <Compile Include="UI\MainWindow\Direct2D\Direct2DFontLoader.cs" />
@@ -186,6 +194,10 @@
     <EmbeddedResource Include="Nsf\nsf_famitone2_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\Dialogs\WinForms\MultiPropertyDialog.resx">
       <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -197,6 +209,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyDialog.resx">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Dialogs\WinForms\TutorialDialog.resx">
+      <DependentUpon>TutorialDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_fds_ntsc.bin" />
@@ -228,6 +243,9 @@
     </Compile>
     <Compile Include="UI\Dialogs\WinForms\MultiPropertyDialog.Designer.cs">
       <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Dialogs\WinForms\TutorialDialog.Designer.cs">
+      <DependentUpon>TutorialDialog.cs</DependentUpon>
     </Compile>
     <EmbeddedResource Include="Resources\gtk_mac.rc" />
     <EmbeddedResource Include="Resources\gtk_linux.rc" />
@@ -294,6 +312,17 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\ArrowLeft%402x.png" />
+    <EmbeddedResource Include="Resources\ArrowLeft.png" />
+    <EmbeddedResource Include="Resources\ArrowRight%402x.png" />
+    <EmbeddedResource Include="Resources\ArrowRight.png" />
+    <EmbeddedResource Include="Resources\Tutorial0.jpg" />
+    <EmbeddedResource Include="Resources\Tutorial1.jpg" />
+    <EmbeddedResource Include="Resources\Tutorial2.jpg" />
+    <EmbeddedResource Include="Resources\Tutorial3.jpg" />
+    <EmbeddedResource Include="Resources\Tutorial4.jpg" />
+    <EmbeddedResource Include="Resources\Tutorial5.jpg" />
+    <EmbeddedResource Include="Resources\Tutorial6.jpg" />
     <EmbeddedResource Include="Resources\NTSCToPAL%402x.png" />
     <EmbeddedResource Include="Resources\NTSCToPAL.png" />
     <EmbeddedResource Include="Resources\PALToNTSC%402x.png" />

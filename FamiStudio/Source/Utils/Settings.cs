@@ -9,6 +9,12 @@ namespace FamiStudio
 {
     static class Settings
     {
+        // Version in case we need to do deprecation.
+        public const int SettingsVersion = 1;
+
+        // General section.
+        public static int Version = SettingsVersion;
+
         // User Interface section
         public static int DpiScaling = 0;
         public static int TimeFormat = 0;
@@ -16,6 +22,7 @@ namespace FamiStudio
         public static bool ShowPianoRollViewRange = true;
         public static bool TrackPadControls = false;
         public static bool ReverseTrackPad = false;
+        public static bool ShowTutorial = true;
 
         // Audio section
         public static int InstrumentStopTime = 2;
@@ -34,6 +41,8 @@ namespace FamiStudio
             var ini = new IniFile();
             ini.Load(GetConfigFileName());
 
+            Version = ini.GetInt("General", "Version", 0);
+            ShowTutorial = ini.GetBool("UI", "ShowTutorial", true);
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
             TimeFormat = ini.GetInt("UI", "TimeFormat", 0);
             CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
@@ -60,12 +69,17 @@ namespace FamiStudio
                 LastInstrumentFolder = "";
             if (!Directory.Exists(LastSampleFolder))
                 LastSampleFolder = "";
+
+            // No deprecation at the moment.
+            Version = SettingsVersion;
         }
 
         public static void Save()
         {
             var ini = new IniFile();
 
+            ini.SetInt("General", "Version", SettingsVersion);
+            ini.SetBool("UI", "ShowTutorial", ShowTutorial);
             ini.SetInt("UI", "DpiScaling", DpiScaling);
             ini.SetInt("UI", "TimeFormat", TimeFormat);
             ini.SetBool("UI", "CheckUpdates", CheckUpdates);

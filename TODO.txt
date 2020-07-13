@@ -52,7 +52,8 @@
 - Discord server
 - Feature requests from email (record?)
 - First time control tutorial?
-
+	- TEST WITH HIGH DPI!!!	
+	
 Tweet ideas
 ===========
 - Tweet the linux screenshots, find a dev who wants to help.
