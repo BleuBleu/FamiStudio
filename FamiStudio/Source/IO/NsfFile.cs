@@ -110,6 +110,11 @@ namespace FamiStudio
                 {
                     kernelBinary += "_famistudio";
 
+                    if (project.UsesFamiTrackerTempo)
+                    {
+                        kernelBinary += "_famitracker";
+                    }
+
                     if (project.UsesExpansionAudio)
                     {
                         kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
@@ -121,6 +126,9 @@ namespace FamiStudio
                 else
                 {
                     kernelBinary += "_famitone2";
+
+                    if (project.UsesFamiStudioTempo)
+                        project.ConvertToFamiTrackerTempo(false);
                 }
 
                 switch (mode)
@@ -128,11 +136,6 @@ namespace FamiStudio
                     case MachineType.NTSC: kernelBinary += "_ntsc"; break;
                     case MachineType.PAL:  kernelBinary += "_pal";  break;
                     case MachineType.Dual: kernelBinary += "_dual"; break;
-                }
-
-                if (project.UsesFamiStudioTempo)
-                {
-                    kernelBinary += "_tempo";
                 }
 
                 kernelBinary += ".bin";

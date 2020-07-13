@@ -20,9 +20,6 @@ FT_THREAD         = 0     ;undefine if you are calling sound effects from the sa
 .ifndef FT_NTSC_SUPPORT
     FT_NTSC_SUPPORT = 0
 .endif
-.ifndef FT_FAMISTUDIO_TEMPO
-    FT_FAMISTUDIO_TEMPO = 0
-.endif
 
 ;internal defines
 FT_PITCH_FIX      = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
@@ -206,7 +203,7 @@ FT_SONG_LIST_L:   .res 1
 FT_SONG_LIST_H:   .res 1
 FT_INSTRUMENT_L:  .res 1
 FT_INSTRUMENT_H:  .res 1
-.if !FT_FAMISTUDIO_TEMPO
+.ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
 FT_TEMPO_STEP_L:  .res 1
 FT_TEMPO_STEP_H:  .res 1
 FT_TEMPO_ACC_L:   .res 1
@@ -797,7 +794,7 @@ nextchannel:
     cpx #FT_NUM_CHANNELS
     bne set_channels
 
-.if !::FT_FAMISTUDIO_TEMPO
+.ifdef ::FAMISTUDIO_USE_FAMITRACKER_TEMPO
     lda FT_PAL_ADJUST          ;read tempo for PAL or NTSC
     beq pal
     iny
@@ -1677,7 +1674,7 @@ pause:
 ;----------------------------------------------------------------------------------------------------------------------
 update:
 
-.if !::FT_FAMISTUDIO_TEMPO 
+.ifdef ::FAMISTUDIO_USE_FAMITRACKER_TEMPO
     clc                        ;update frame counter that considers speed, tempo, and PAL/NTSC
     lda FT_TEMPO_ACC_L
     adc FT_TEMPO_STEP_L
@@ -1694,7 +1691,7 @@ update_row:
     sbc FT_SONG_SPEED
     sta FT_TEMPO_ACC_H
 
-.else ; ::FT_FAMISTUDIO_TEMPO here
+.else ; FamiStudio tempo
 
     dec FT_TEMPO_ENV_COUNTER
     beq advance_tempo_envelope
@@ -2040,7 +2037,7 @@ update_sound:
         bne s5b_channel_loop
 .endif
 
-.if ::FT_FAMISTUDIO_TEMPO 
+.ifndef ::FAMISTUDIO_USE_FAMITRACKER_TEMPO
     ; See if we need to run a double frame (playing NTSC song on PAL)
     dec FT_TEMPO_FRAME_CNT
     beq skip_frame
@@ -2886,7 +2883,7 @@ special_code:
     jmp read_byte 
 
 set_speed:
-.if ::FT_FAMISTUDIO_TEMPO 
+.ifndef ::FAMISTUDIO_USE_FAMITRACKER_TEMPO
     lda (FT_TEMP_PTR1),y
     sta FT_TEMPO_ENV_PTR_L
     sta FT_TEMP_PTR2+0
@@ -3752,7 +3749,7 @@ _FT2Vrc6DutyLookup:
     .byte $70
 .endif
 
-.if(FT_FAMISTUDIO_TEMPO)
+.ifndef FAMISTUDIO_USE_FAMITRACKER_TEMPO
 _FT2FamiStudioTempoFrameLookup:
     .byte $01, $02 ; NTSC -> NTSC, NTSC -> PAL
     .byte $00, $01 ; PAL  -> NTSC, PAL  -> PAL

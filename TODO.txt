@@ -26,9 +26,9 @@
 	- Resurect SFX
 	- Global/Project config?
 	- 3 assembly versions + 3 simple black screen test ROMs.
+		- How to handle segments.
 	- Nice test ROM (same as ROM, but with SFX player)
 	- Documentation.
-	- Should I clamp the period? Why did I remove the clamps again?
 	- Need to be a seperate project on GitHub?
 	- What to do with FT_EQUALIZER?
 	- Deprecate FamiTone2 FS.
