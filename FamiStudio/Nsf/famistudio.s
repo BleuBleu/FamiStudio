@@ -1,5 +1,7 @@
+;======================================================================================================================
 ; FamiStudio NSF driver, heavily customized version of FamiTone2. 
 ; Terrible code. Not for the faint of hearth.
+;======================================================================================================================
 
 ;settings, uncomment or put them into your main program; the latter makes possible updates easier
 
@@ -25,6 +27,35 @@ FT_THREAD         = 0     ;undefine if you are calling sound effects from the sa
 ;internal defines
 FT_PITCH_FIX      = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
 FT_SMOOTH_VIBRATO = 1    ; Blaarg's smooth vibrato technique
+
+;; Expansions.
+;FAMISTUDIO_EXP_VRC6
+;FAMISTUDIO_EXP_VRC7
+;FAMISTUDIO_EXP_MMC5
+;FAMISTUDIO_EXP_S5B
+;FAMISTUDIO_EXP_FDS
+;FAMISTUDIO_EXP_N163 (+ FAMISTUDIO_EXP_N163_CHN_CNT)
+
+;; Are those features?
+;FAMISTUDIO_CFG_PAL_SUPPORT
+;FAMISTUDIO_CFG_NTSC_SUPPORT
+;FAMISTUDIO_CFG_SFX_SUPPORT
+;FAMISTUDIO_CFG_SMOOTH_VIBRATO
+;FAMISTUDIO_CFG_XXX (thread, etc.)
+
+;; Toggeable features.
+;FAMISTUDIO_USE_FAMITRACKER_TEMPO
+;FAMISTUDIO_USE_SLIDE_NOTES
+;FAMISTUDIO_USE_VOLUME_TRACK
+;FAMISTUDIO_USE_PITCH_TRACK
+;FAMISTUDIO_USE_VIBRATO
+;FAMISTUDIO_USE_ARPEGGIO
+
+FAMISTUDIO_USE_VOLUME_TRACK = 1
+FAMISTUDIO_USE_PITCH_TRACK = 1
+FAMISTUDIO_USE_SLIDE_NOTES = 1
+FAMISTUDIO_USE_VIBRATO = 1
+FAMISTUDIO_USE_ARPEGGIO = 1
 
 .segment "RAM"
 
@@ -70,12 +101,16 @@ FT_PITCH_ENV_REPEAT   : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_ADR_L    : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_ADR_H    : .res FT_NUM_PITCH_ENVELOPES
 FT_PITCH_ENV_PTR      : .res FT_NUM_PITCH_ENVELOPES
+.if .defined(FAMISTUDIO_USE_PITCH_TRACK)
 FT_PITCH_FINE_VALUE   : .res FT_NUM_PITCH_ENVELOPES
+.endif
 
+.if .defined(FAMISTUDIO_USE_SLIDE_NOTES)
 ;slide structure offsets, 3 bytes per slide.
 FT_SLIDE_STEP    : .res FT_NUM_PITCH_ENVELOPES
 FT_SLIDE_PITCH_L : .res FT_NUM_PITCH_ENVELOPES
 FT_SLIDE_PITCH_H : .res FT_NUM_PITCH_ENVELOPES
+.endif
 
 ;channel structure offsets, 10 bytes per channel
 FT_CHN_PTR_L        : .res FT_NUM_CHANNELS
@@ -86,8 +121,12 @@ FT_CHN_REPEAT       : .res FT_NUM_CHANNELS
 FT_CHN_RETURN_L     : .res FT_NUM_CHANNELS
 FT_CHN_RETURN_H     : .res FT_NUM_CHANNELS
 FT_CHN_REF_LEN      : .res FT_NUM_CHANNELS
+.if .defined(FAMISTUDIO_USE_VOLUME_TRACK)
 FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS
+.endif
+.if .defined(FAMISTUDIO_USE_VIBRATO) || .defined(FAMISTUDIO_USE_ARPEGGIO)
 FT_CHN_ENV_OVERRIDE : .res FT_NUM_CHANNELS ; bit 7 = pitch, bit 0 = arpeggio.
+.endif
 .if .defined(FT_N163) || .defined(FT_VRC7) || .defined(FT_FDS)
 FT_CHN_INST_CHANGED : .res FT_NUM_CHANNELS-5
 .endif
@@ -559,14 +598,19 @@ set_channels:
     sta FT_CHN_INSTRUMENT,x
     sta FT_CHN_NOTE,x
     sta FT_CHN_REF_LEN,x
-    sta FT_CHN_VOLUME_TRACK,x
-    sta FT_CHN_ENV_OVERRIDE,x
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK    
+        sta FT_CHN_VOLUME_TRACK,x
+    .endif    
+    .if .defined(FAMISTUDIO_USE_VIBRATO) || .defined(FAMISTUDIO_USE_ARPEGGIO)
+        sta FT_CHN_ENV_OVERRIDE,x
+    .endif
 
 nextchannel:
     inx                        ;next channel
     cpx #FT_NUM_CHANNELS
     bne set_channels
 
+.ifdef ::FAMISTUDIO_USE_SLIDE_NOTES
     ldx #0    ;initialize all slides to zero
     lda #0
 set_slides:
@@ -575,6 +619,7 @@ set_slides:
     inx                        ;next channel
     cpx #FT_NUM_PITCH_ENVELOPES
     bne set_slides
+.endif
 
     ldx #0    ;initialize all envelopes to the dummy envelope
 
@@ -604,7 +649,9 @@ set_pitch_envelopes:
     sta FT_PITCH_ENV_REPEAT,x
     sta FT_PITCH_ENV_VALUE_L,x
     sta FT_PITCH_ENV_VALUE_H,x
-    sta FT_PITCH_FINE_VALUE,x
+    .ifdef ::FAMISTUDIO_USE_PITCH_TRACK
+        sta FT_PITCH_FINE_VALUE,x
+    .endif
     lda #1
     sta FT_PITCH_ENV_PTR,x
     inx
@@ -741,8 +788,10 @@ set_channels:
     sta FT_CHN_INSTRUMENT,x
     sta FT_CHN_NOTE,x
     sta FT_CHN_REF_LEN,x
-    lda #$f0
-    sta FT_CHN_VOLUME_TRACK,x
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
+        lda #$f0
+        sta FT_CHN_VOLUME_TRACK,x
+    .endif
 
 nextchannel:
     inx                        ;next channel
@@ -885,6 +934,8 @@ done:
     pitch   = FT_TEMP_PTR2
     tmp_ror = FT_TEMP_VAR1
  
+.ifdef ::FAMISTUDIO_USE_PITCH_TRACK
+
     ; Pitch envelope + fine pitch (sign extended)
     clc
     lda FT_PITCH_FINE_VALUE+pitch_env_offset pitch_env_indexer
@@ -898,6 +949,16 @@ pos:
     adc FT_PITCH_ENV_VALUE_H+pitch_env_offset pitch_env_indexer
     sta pitch+1
 
+.else
+
+    lda FT_PITCH_ENV_VALUE_L+pitch_env_offset pitch_env_indexer
+    sta pitch+0
+    lda FT_PITCH_ENV_VALUE_H+pitch_env_offset pitch_env_indexer
+    sta pitch+1
+
+.endif
+
+.ifdef ::FAMISTUDIO_USE_SLIDE_NOTES
     ; Check if there is an active slide.
     lda FT_SLIDE_STEP+pitch_env_offset pitch_env_indexer
     beq no_slide
@@ -926,6 +987,7 @@ pos:
     lda tmp_ror
     adc pitch+1 
     sta pitch+1 
+.endif
 .endif
 
 no_slide:    
@@ -1078,9 +1140,12 @@ nocut:
 
 compute_volume:
     lda FT_ENV_VALUE+env_offset+FT_ENV_VOLUME_OFF
-    ora FT_CHN_VOLUME_TRACK+idx ; TODO: Triangle channel doesnt really need a volume track. Make it optional.
-    tax
-    lda _FT2VolumeTable, x 
+
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK    
+        ora FT_CHN_VOLUME_TRACK+idx ; TODO: Triangle channel doesnt really need a volume track. Make it optional.
+        tax
+        lda _FT2VolumeTable, x 
+    .endif
 
 .if .defined(FT_VRC6) && idx = 7 
     ; VRC6 saw has 6-bits
@@ -1147,9 +1212,11 @@ zero_delay:
 
 compute_volume:
     lda FT_ENV_VALUE+FT_CH5_ENVS+FT_ENV_VOLUME_OFF
-    ora FT_CHN_VOLUME_TRACK+5 
-    tax
-    lda _FT2VolumeTable, x 
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
+        ora FT_CHN_VOLUME_TRACK+5 
+        tax
+        lda _FT2VolumeTable, x 
+    .endif
     asl ; FDS volume is 6-bits, but clamped to 32. Just double it.
 
 set_volume:
@@ -1291,7 +1358,9 @@ nocut:
     ; Read/multiply volume
     ldx _FT2Vrc7EnvelopeTable,y
     lda FT_ENV_VALUE+FT_ENV_VOLUME_OFF,x
-    ora FT_CHN_VOLUME_TRACK+5, y
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
+        ora FT_CHN_VOLUME_TRACK+5, y
+    .endif
     tax
 
     lda #0
@@ -1303,9 +1372,10 @@ update_volume:
     lda _FT2Vrc7VolTable,y
     sta VRC7_REG_SEL
     jsr _FT2Vrc7WaitRegSelect
-
-    lda _FT2VolumeTable,x
-    tax
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
+        lda _FT2VolumeTable,x
+        tax
+    .endif
     lda _FT2Vrc7InvertVolumeTable,x
     ora FT_CHN_VRC7_PATCH,y
     sta VRC7_REG_WRITE
@@ -1416,14 +1486,20 @@ nocut:
     ; Read/multiply volume
     ldx _FT2N163EnvelopeTable,y
     lda FT_ENV_VALUE+FT_ENV_VOLUME_OFF,x
-    ora FT_CHN_VOLUME_TRACK+5, y
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
+        ora FT_CHN_VOLUME_TRACK+5, y
+    .endif
     tax
 
 update_volume:
     ; Write volume
     lda _FT2N163VolTable,y
     sta N163_ADDR
-    lda _FT2VolumeTable,x 
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
+        lda _FT2VolumeTable,x 
+    .else
+        txa
+    .endif
     ora #FT_N163_CHN_MASK
     sta N163_DATA
     
@@ -1480,15 +1556,21 @@ nocut:
     ; Read/multiply volume
     ldx _FT2S5BEnvelopeTable,y
     lda FT_ENV_VALUE+FT_ENV_VOLUME_OFF,x
-    ora FT_CHN_VOLUME_TRACK+5, y
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
+        ora FT_CHN_VOLUME_TRACK+5, y
+    .endif
     tax
 
 update_volume:
     ; Write volume
     lda _FT2S5BVolTable,y
     sta S5B_ADDR
-    lda _FT2VolumeTable,x 
-    sta S5B_DATA
+    .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK    
+        lda _FT2VolumeTable,x 
+        sta S5B_DATA
+    .else
+        stx S5B_DATA
+    .endif
 
     rts
 .endproc
@@ -1871,6 +1953,7 @@ pitch_env_next:
     cpx #FT_NUM_PITCH_ENVELOPES
     bne pitch_env_process
 
+.ifdef ::FAMISTUDIO_USE_SLIDE_NOTES
 ;----------------------------------------------------------------------------------------------------------------------
 update_slides:
     ldx #0    ;process 3 slides
@@ -1906,6 +1989,7 @@ slide_next:
     inx                        ;next slide
     cpx #FT_NUM_PITCH_ENVELOPES
     bne slide_process
+.endif
 
 ;----------------------------------------------------------------------------------------------------------------------
 update_sound:
@@ -2066,13 +2150,16 @@ no_pulse2_upd:
     inx
 
     ; Arpeggio envelope
-    ; TODO: CLeanup this tmp_x mess, so ugly.
+.ifdef ::FAMISTUDIO_USE_ARPEGGIO
     stx tmp_x
     ldx chan_idx
-    lda FT_CHN_ENV_OVERRIDE,x ; instrument arpeggio is overriden by arpeggio, dont touch!
+    lda FT_CHN_ENV_OVERRIDE,x ; Check if its overriden by arpeggio.
     lsr
     ldx tmp_x
-    bcs skip_arpeggio_ptr
+    bcc read_arpeggio_ptr 
+    iny ; instrument arpeggio is overriden by arpeggio, dont touch!
+    jmp init_envelopes
+.endif
 
 read_arpeggio_ptr:    
     lda (FT_TEMP_PTR1),y
@@ -2080,9 +2167,6 @@ read_arpeggio_ptr:
     iny
     lda (FT_TEMP_PTR1),y
     sta FT_ENV_ADR_H,x
-    jmp init_envelopes
-skip_arpeggio_ptr:
-    iny
 
 init_envelopes:
     ; Initialize volume + arpeggio envelopes.
@@ -2121,8 +2205,10 @@ init_envelopes:
     pitch_env:
     ; Pitch envelopes.
     ldx chan_idx
+.ifdef ::FAMISTUDIO_USE_VIBRATO 
     lda FT_CHN_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
     bmi no_pitch    
+.endif    
     lda _FT2ChannelToPitch, x
     bmi no_pitch
     tax
@@ -2169,13 +2255,16 @@ init_envelopes:
     inx
 
     ; Arpeggio envelope
-    ; TODO: CLeanup this tmp_x mess, so ugly.
+.ifdef ::FAMISTUDIO_USE_ARPEGGIO
     stx tmp_x
     ldx chan_idx
-    lda FT_CHN_ENV_OVERRIDE,x ; instrument arpeggio is overriden by arpeggio, dont touch!
+    lda FT_CHN_ENV_OVERRIDE,x ; Check if its overriden by arpeggio.
     lsr
     ldx tmp_x
-    bcs skip_arpeggio_ptr
+    bcc read_arpeggio_ptr 
+    iny ; instrument arpeggio is overriden by arpeggio, dont touch!
+    jmp init_envelopes
+.endif
 
 read_arpeggio_ptr:    
     lda (ptr),y
@@ -2183,13 +2272,10 @@ read_arpeggio_ptr:
     iny
     lda (ptr),y
     sta FT_ENV_ADR_H,x
-    iny
     jmp init_envelopes
-skip_arpeggio_ptr:
-    iny
-    iny
 
 init_envelopes:
+    iny
     ; Initialize volume + arpeggio envelopes.
     lda #1
     sta FT_ENV_PTR-1,x         ;reset env1 pointer (env1 is volume and volume can have releases)
@@ -2200,11 +2286,13 @@ init_envelopes:
 
     ; Pitch envelopes.
     ldx chan_idx
+.ifdef ::FAMISTUDIO_USE_VIBRATO
     lda FT_CHN_ENV_OVERRIDE,x ; instrument pitch is overriden by vibrato, dont touch!
     bpl pitch_env
     iny
     iny
     bne pitch_overriden
+.endif
 
     pitch_env:
     dex
@@ -2514,6 +2602,7 @@ check_volume_track:
     cmp #$70
     bcc special_code_6x
 
+.ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
 volume_track:    
     and #$0f
     asl ; a LUT would be nice, but x/y are both in-use here.
@@ -2522,6 +2611,9 @@ volume_track:
     asl
     sta FT_CHN_VOLUME_TRACK,x
     jmp read_byte
+.else
+    brk ; If you hit this, this mean you use the volume track in your songs, but did not enable the "FAMISTUDIO_USE_VOLUME_TRACK" feature.
+.endif
 
 special_code_6x:
     stx FT_TEMP_VAR1
@@ -2560,6 +2652,7 @@ fds_mod_speed:
 
 .endif
 
+.ifdef ::FAMISTUDIO_USE_PITCH_TRACK
 fine_pitch:
     stx FT_TEMP_VAR1
     lda _FT2ChannelToPitch,x
@@ -2569,18 +2662,14 @@ fine_pitch:
     sta FT_PITCH_FINE_VALUE,x
     ldx FT_TEMP_VAR1
     jmp read_byte 
+.endif
 
+.ifdef ::FAMISTUDIO_USE_VIBRATO
 clear_pitch_override_flag:
     lda #$7f
     and FT_CHN_ENV_OVERRIDE,x
     sta FT_CHN_ENV_OVERRIDE,x
     jmp read_byte 
-
-clear_arpeggio_override_flag:
-    lda #$fe
-    and FT_CHN_ENV_OVERRIDE,x
-    sta FT_CHN_ENV_OVERRIDE,x
-    jmp read_byte
 
 override_pitch_envelope:
     lda #$80
@@ -2602,6 +2691,14 @@ override_pitch_envelope:
     ldx FT_TEMP_VAR1
     add_16_8 FT_TEMP_PTR1, #2
     jmp read_byte 
+.endif
+
+.ifdef ::FAMISTUDIO_USE_ARPEGGIO
+clear_arpeggio_override_flag:
+    lda #$fe
+    and FT_CHN_ENV_OVERRIDE,x
+    sta FT_CHN_ENV_OVERRIDE,x
+    jmp read_byte
 
 override_arpeggio_envelope:
     lda #$01
@@ -2634,12 +2731,14 @@ reset_arpeggio:
     sta FT_ENV_PTR,x
     ldx FT_TEMP_VAR1
     jmp read_byte
+.endif
 
 disable_attack:
     lda #1
     sta no_attack_flag    
     jmp read_byte 
 
+.ifdef ::FAMISTUDIO_USE_SLIDE_NOTES
 slide:
     stx FT_TEMP_VAR1
     lda _FT2ChannelToSlide,x
@@ -2740,13 +2839,16 @@ note_table_done:
 slide_done_pos:
     ldy #0
     jmp sec_and_done
+.endif
 
 regular_note:    
     sta FT_CHN_NOTE,x          ; store note code
+.ifdef ::FAMISTUDIO_USE_SLIDE_NOTES
     ldy _FT2ChannelToSlide,x   ; clear any previous slide on new node.
     bmi sec_and_done
     lda #0
     sta FT_SLIDE_STEP,y
+.endif
 sec_and_done:
     lda no_attack_flag
     bne no_attack
@@ -2899,6 +3001,28 @@ no_ref:
     lda FT_TEMP_PTR_H
     sta FT_CHN_PTR_H,x
     rts
+
+.ifndef ::FAMISTUDIO_USE_PITCH_TRACK
+fine_pitch:
+.endif
+.ifndef ::FAMISTUDIO_USE_VIBRATO
+override_pitch_envelope:
+clear_pitch_override_flag:
+.endif
+.ifndef ::FAMISTUDIO_USE_ARPEGGIO
+override_arpeggio_envelope:
+clear_arpeggio_override_flag:
+reset_arpeggio:
+.endif
+.ifndef ::FAMISTUDIO_USE_SLIDE_NOTES
+slide:
+.endif
+    ; If you hit this, this mean you either:
+    ; - have fine pitches in your songs, but didnt enable "FAMISTUDIO_USE_PITCH_TRACK"
+    ; - have vibrato effect in your songs, but didnt enable "FAMISTUDIO_USE_VIBRATO"
+    ; - have arpeggiated chords in your songs, but didnt enable "FAMISTUDIO_USE_ARPEGGIO"
+    ; - have slide notes in your songs, but didnt enable "FAMISTUDIO_USE_SLIDE_NOTES"
+    brk 
 
 .endproc
 
@@ -3546,6 +3670,7 @@ _FT2ChannelToVolumeEnvelope:
     .byte FT_CH12_ENVS+FT_ENV_VOLUME_OFF
 .endif
 
+.ifdef FAMISTUDIO_USE_ARPEGGIO
 _FT2ChannelToArpeggioEnvelope:
     .byte FT_CH0_ENVS+FT_ENV_NOTE_OFF
     .byte FT_CH1_ENVS+FT_ENV_NOTE_OFF
@@ -3575,6 +3700,7 @@ _FT2ChannelToArpeggioEnvelope:
 .endif
 .if .defined(FT_CH12_ENVS)
     .byte FT_CH12_ENVS+FT_ENV_NOTE_OFF
+.endif
 .endif
 
 _FT2ChannelToPitch:
@@ -3642,6 +3768,8 @@ _FT2SmoothVibratoSweepLookup:
 	.byte $8f, $00, $87
 .endif
 
+.ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
+
 ; Precomputed volume multiplication table (rounded but never to zero unless one of the value is zero).
 ; Load the 2 volumes in the lo/hi nibble and fetch.
 
@@ -3662,3 +3790,5 @@ _FT2VolumeTable:
     .byte $00, $01, $02, $03, $03, $04, $05, $06, $07, $08, $09, $0a, $0a, $0b, $0c, $0d
     .byte $00, $01, $02, $03, $04, $05, $06, $07, $07, $08, $09, $0a, $0b, $0c, $0d, $0e
     .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+
+.endif

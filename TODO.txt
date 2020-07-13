@@ -8,9 +8,7 @@
 - Why is volume visible on triangle channel?
 - FamiStudio sound engine
 	X Create unit tests.
-	- All .proc
-	- Remove a bunch of macros, reduce code size
-		- FamiToneComputeNoteFinalPitch
+	x All .proc
 	- Toggeable features (table with code size + RAM usage)
 		- Slides
 		- Volume track
@@ -18,19 +16,22 @@
 		- Vibrato
 		- Arpeggio
 		- All expansions.
+	- Document function inputs like in my game.
+	- Unify #ifdef VS 0/1
 	- Rename stuff
 		- FT => FAMISTUDIO or FS ?
 		- _FT2? 
 		- Naming convension for public/private stuff
 	- Resurect SFX
-	- Global/Project config.
-	- 3 assembly versions 
-	- Test ROM.
+	- Global/Project config?
+	- 3 assembly versions + 3 simple black screen test ROMs.
+	- Nice test ROM (same as ROM, but with SFX player)
 	- Documentation.
-	- Should I clamp the period? Why did I remove the clamps???
-	- Need to be a seperate project.
+	- Should I clamp the period? Why did I remove the clamps again?
+	- Need to be a seperate project on GitHub?
 	- What to do with FT_EQUALIZER?
 	- Deprecate FamiTone2 FS.
+	- FT thread thingy.
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.
