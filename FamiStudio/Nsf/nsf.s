@@ -1,7 +1,19 @@
 .ifdef FAMISTUDIO
-.include "famistudio.s"
+	.ifdef FAMISTUDIO_CFG_NTSC_SUPPORT
+		NSF_NTSC_SUPPORT=1
+	.endif
+	.ifdef FAMISTUDIO_CFG_PAL_SUPPORT
+		NSF_PAL_SUPPORT=1
+	.endif
+	.include "famistudio.s"
 .else
-.include "famitone2.s"
+	.ifdef FT_NTSC_SUPPORT
+		NSF_NTSC_SUPPORT=1
+	.endif
+	.ifdef FT_PAL_SUPPORT
+		NSF_PAL_SUPPORT=1
+	.endif
+	.include "famitone2.s"
 .endif
 
 .segment "HEADER"
@@ -19,7 +31,7 @@ HEADER : .res 128
 	;   - start addr in page starting at $9000 (2-byte)
 	;   - flags (3 low bits = num dpcm pages)
 	
-.if ::FT_PAL_SUPPORT && ::FT_NTSC_SUPPORT
+.if .defined(NSF_NTSC_SUPPORT) && .defined(NSF_PAL_SUPPORT)
 	mode = FT_TEMP_VAR1
 	stx FT_TEMP_VAR1
 .endif	
@@ -75,10 +87,10 @@ HEADER : .res 128
 	lda SONG_TABLE+1, x ; lo-byte
 	tax
 
-.if ::FT_PAL_SUPPORT && ::FT_NTSC_SUPPORT
+.if .defined(NSF_NTSC_SUPPORT) && .defined(NSF_PAL_SUPPORT)
 	lda mode
 	eor #1
-.elseif ::FT_PAL_SUPPORT
+.elseif .defined(NSF_PAL_SUPPORT)
 	lda #0 ; PAL
 .else
 	lda #1 ; NTSC

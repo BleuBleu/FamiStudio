@@ -14,16 +14,15 @@ FT_DPCM_ENABLE    = 1     ;undefine to exclude all DMC code
 FT_SFX_ENABLE     = 0     ;undefine to exclude all sound effects code
 FT_THREAD         = 0     ;undefine if you are calling sound effects from the same thread as the sound update call
 
-.ifndef FT_PAL_SUPPORT
-    FT_PAL_SUPPORT = 0
-.endif
-.ifndef FT_NTSC_SUPPORT
-    FT_NTSC_SUPPORT = 0
-.endif
+;.ifndef FT_PAL_SUPPORT
+;    FT_PAL_SUPPORT = 0
+;.endif
+;.ifndef FT_NTSC_SUPPORT
+;    FT_NTSC_SUPPORT = 0
+;.endif
 
 ;internal defines
-FT_PITCH_FIX      = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
-FT_SMOOTH_VIBRATO = 1    ; Blaarg's smooth vibrato technique
+;FT_PITCH_FIX      = FT_PAL_SUPPORT && FT_NTSC_SUPPORT ;add PAL/NTSC pitch correction code only when both modes are enabled
 
 ;; Expansions.
 ;FAMISTUDIO_EXP_VRC6
@@ -37,8 +36,12 @@ FT_SMOOTH_VIBRATO = 1    ; Blaarg's smooth vibrato technique
 ;FAMISTUDIO_CFG_PAL_SUPPORT
 ;FAMISTUDIO_CFG_NTSC_SUPPORT
 ;FAMISTUDIO_CFG_SFX_SUPPORT
-;FAMISTUDIO_CFG_SMOOTH_VIBRATO
+FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1    ; Blaarg's smooth vibrato technique
 ;FAMISTUDIO_CFG_XXX (thread, etc.)
+
+.if .defined(FAMISTUDIO_CFG_NTSC_SUPPORT) && .defined(FAMISTUDIO_CFG_PAL_SUPPORT)
+FAMISTUDIO_CFG_DUAL_SUPPORT = 1
+.endif
 
 ;; Toggeable features.
 ;FAMISTUDIO_USE_FAMITRACKER_TEMPO
@@ -103,13 +106,11 @@ FT_PITCH_FINE_VALUE   : .res FT_NUM_PITCH_ENVELOPES
 .endif
 
 .if .defined(FAMISTUDIO_USE_SLIDE_NOTES)
-;slide structure offsets, 3 bytes per slide.
 FT_SLIDE_STEP    : .res FT_NUM_PITCH_ENVELOPES
 FT_SLIDE_PITCH_L : .res FT_NUM_PITCH_ENVELOPES
 FT_SLIDE_PITCH_H : .res FT_NUM_PITCH_ENVELOPES
 .endif
 
-;channel structure offsets, 10 bytes per channel
 FT_CHN_PTR_L        : .res FT_NUM_CHANNELS
 FT_CHN_PTR_H        : .res FT_NUM_CHANNELS
 FT_CHN_NOTE         : .res FT_NUM_CHANNELS
@@ -141,7 +142,6 @@ FT_CHN_VRC7_TRIGGER : .res 6 ; bit 0 = new note triggered, bit 7 = note released
 FT_CHN_N163_WAVE_LEN: .res FAMISTUDIO_EXP_N163_CHN_CNT
 .endif
 
-;variables and aliases
 FT_CH0_ENVS = 0
 FT_CH1_ENVS = 3
 FT_CH2_ENVS = 6
@@ -492,19 +492,19 @@ FDS_ENV_SPEED  = $408A
     stx FT_TEMP_PTR_L
     sty FT_TEMP_PTR_H
 
-    .if(::FT_PITCH_FIX)
+.ifdef ::FAMISTUDIO_CFG_DUAL_SUPPORT
     tax                        ;set SZ flags for A
     beq pal
     lda #97
 pal:
-    .else
-    .if(::FT_PAL_SUPPORT)
-    lda #0
+.else
+    .ifdef ::FAMISTUDIO_CFG_PAL_SUPPORT
+        lda #0
     .endif
-    .if(::FT_NTSC_SUPPORT)
-    lda #97
+    .ifdef ::FAMISTUDIO_CFG_NTSC_SUPPORT
+        lda #97
     .endif
-    .endif
+.endif
     sta FT_PAL_ADJUST
 
     jsr FamiToneMusicStop      ;initialize channels and envelopes
@@ -822,12 +822,12 @@ pal:
     sta FT_TEMP_PTR2+1
     iny
     lda (FT_TEMP_PTR1),y
-.if(::FT_PITCH_FIX) ; Dual mode
+.if .defined(::FAMISTUDIO_CFG_DUAL_SUPPORT) ; Dual mode
     ldx FT_PAL_ADJUST
     bne ntsc_target
     ora #1
     ntsc_target:
-.elseif(::FT_PAL_SUPPORT) ; PAL only
+.elseif .defined(::FAMISTUDIO_CFG_PAL_SUPPORT) ; PAL only
     ora #1
 .endif
     tax
@@ -1069,7 +1069,7 @@ nocut:
 
 .else
 
-    .if(::FT_PITCH_FIX)
+    .ifdef ::FAMISTUDIO_CFG_DUAL_SUPPORT
         clc
         adc FT_PAL_ADJUST
     .endif
@@ -1089,7 +1089,7 @@ nocut:
     .ifnblank pulse_prev
 
         .if(!::FT_SFX_ENABLE)
-            .if (!.blank(reg_sweep)) && (::FT_SMOOTH_VIBRATO)
+            .if (!.blank(reg_sweep)) && .defined(::FAMISTUDIO_CFG_SMOOTH_VIBRATO)
                 ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
                 tax ; X = new hi-period
                 sec
@@ -1130,7 +1130,7 @@ nocut:
 
 .endif ; idx = 3
 
-.if .blank(pulse_prev) || .blank(reg_sweep) || (!::FT_SMOOTH_VIBRATO)
+.if .blank(pulse_prev) || .blank(reg_sweep) || (!.defined(::FAMISTUDIO_CFG_SMOOTH_VIBRATO))
     sta reg_hi
 .endif
 
@@ -2743,7 +2743,7 @@ slide:
     iny
     sta FT_SLIDE_STEP,x
     lda (FT_TEMP_PTR1),y       ; read slide note from
-.if(::FT_PITCH_FIX)
+.ifdef ::FAMISTUDIO_CFG_DUAL_SUPPORT
     clc
     adc FT_PAL_ADJUST
 .endif
@@ -2751,7 +2751,7 @@ slide:
     iny
     lda (FT_TEMP_PTR1),y       ; read slide note to
     ldy FT_TEMP_VAR2           ; start note
-.if(::FT_PITCH_FIX)
+.ifdef ::FAMISTUDIO_CFG_DUAL_SUPPORT
     adc FT_PAL_ADJUST
 .endif
     stx FT_TEMP_VAR2           ; store slide index.    
@@ -3148,15 +3148,13 @@ not_busy:
     
     ldy #0
     
-    .if(::FT_PITCH_FIX)
-
+.ifdef ::FAMISTUDIO_CFG_DUAL_SUPPORT
     lda FT_PAL_ADJUST          ;add 2 to the sound list pointer for PAL
     bne ntsc
     iny
     iny
 ntsc:
-
-    .endif
+.endif
     
     lda (FT_TEMP_PTR1),y       ;read and store pointer to the effects list
     sta FT_SFX_ADR_L
@@ -3347,7 +3345,7 @@ _FT2DummyPitchEnvelope:
 ;first 64 bytes are PAL, next 64 bytes are NTSC
 
 _FT2NoteTableLSB:
-    .if(FT_PAL_SUPPORT)
+    .ifdef FAMISTUDIO_CFG_PAL_SUPPORT
         .byte $00
         .byte $68, $b6, $0e, $6f, $d9, $4b, $c6, $48, $d1, $60, $f6, $92 ; Octave 0
         .byte $34, $db, $86, $37, $ec, $a5, $62, $23, $e8, $b0, $7b, $49 ; Octave 1
@@ -3358,7 +3356,7 @@ _FT2NoteTableLSB:
         .byte $31, $2e, $2b, $29, $26, $24, $22, $20, $1e, $1d, $1b, $19 ; Octave 6
         .byte $18, $16, $15, $14, $13, $12, $11, $10, $0f, $0e, $0d, $0c ; Octave 7
     .endif
-    .if(FT_NTSC_SUPPORT)
+    .ifdef FAMISTUDIO_CFG_NTSC_SUPPORT
         .byte $00
         .byte $5b, $9c, $e6, $3b, $9a, $01, $72, $ea, $6a, $f1, $7f, $13 ; Octave 0
         .byte $ad, $4d, $f3, $9d, $4c, $00, $b8, $74, $34, $f8, $bf, $89 ; Octave 1
@@ -3371,7 +3369,7 @@ _FT2NoteTableLSB:
     .endif
 
 _FT2NoteTableMSB:
-    .if(FT_PAL_SUPPORT)
+    .ifdef FAMISTUDIO_CFG_PAL_SUPPORT
         .byte $00
         .byte $0c, $0b, $0b, $0a, $09, $09, $08, $08, $07, $07, $06, $06 ; Octave 0
         .byte $06, $05, $05, $05, $04, $04, $04, $04, $03, $03, $03, $03 ; Octave 1
@@ -3382,7 +3380,7 @@ _FT2NoteTableMSB:
         .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
         .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
     .endif
-    .if(FT_NTSC_SUPPORT)
+    .ifdef FAMISTUDIO_CFG_NTSC_SUPPORT
         .byte $00
         .byte $0d, $0c, $0b, $0b, $0a, $0a, $09, $08, $08, $07, $07, $07 ; Octave 0
         .byte $06, $06, $05, $05, $05, $05, $04, $04, $04, $03, $03, $03 ; Octave 1
@@ -3755,7 +3753,7 @@ _FT2FamiStudioTempoFrameLookup:
     .byte $00, $01 ; PAL  -> NTSC, PAL  -> PAL
 .endif
 
-.if(FT_SMOOTH_VIBRATO)
+.ifdef FAMISTUDIO_CFG_SMOOTH_VIBRATO
 ; lookup table for the 2 registers we need to set for smooth vibrato.
 ; Index 0 decrement the hi-period, index 2 increments. Index 1 is unused. 
 _FT2SmoothVibratoLoPeriodLookup:
