@@ -16,9 +16,9 @@
 		x Vibrato
 		x Arpeggio
 		x All expansions
-	- Reverse "tempo" -> "famitracker".
+	x Reverse "tempo" -> "famitracker".
+	x Unify #ifdef VS 0/1
 	- Document function inputs like in my game.
-	- Unify #ifdef VS 0/1
 	- Rename stuff
 		- FT => FAMISTUDIO or FS ?
 		- _FT2? 

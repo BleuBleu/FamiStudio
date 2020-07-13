@@ -10,8 +10,8 @@
 FT_DPCM_OFF       = $c000
 FT_SFX_STREAMS    = 0     ;number of sound effects played at once, 1..4
   
-FT_DPCM_ENABLE    = 1     ;undefine to exclude all DMC code
-FT_SFX_ENABLE     = 0     ;undefine to exclude all sound effects code
+;FT_DPCM_ENABLE    = 1     ;undefine to exclude all DMC code
+;FT_SFX_ENABLE     = 0     ;undefine to exclude all sound effects code
 FT_THREAD         = 0     ;undefine if you are calling sound effects from the same thread as the sound update call
 
 ;.ifndef FT_PAL_SUPPORT
@@ -38,6 +38,7 @@ FT_THREAD         = 0     ;undefine if you are calling sound effects from the sa
 ;FAMISTUDIO_CFG_SFX_SUPPORT
 FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1    ; Blaarg's smooth vibrato technique
 ;FAMISTUDIO_CFG_XXX (thread, etc.)
+FAMISTUDIO_CFG_DPCM_SUPPORT = 1
 
 .if .defined(FAMISTUDIO_CFG_NTSC_SUPPORT) && .defined(FAMISTUDIO_CFG_PAL_SUPPORT)
 FAMISTUDIO_CFG_DUAL_SUPPORT = 1
@@ -247,7 +248,7 @@ FT_EXP_INSTRUMENT_H: .res 1
 .endif
 
 ; SFX Definately dont work right now.
-.if(FT_SFX_ENABLE)
+.ifdef FAMISTUDIO_CFG_SFX_SUPPORT
 
 FT_SFX_STRUCT_SIZE = 15
 
@@ -416,7 +417,7 @@ FDS_ENV_SPEED  = $408A
 
 ;aliases for the APU registers in the output buffer
 
-.if(!FT_SFX_ENABLE) ;if sound effects are disabled, write to the APU directly
+.ifndef FAMISTUDIO_CFG_SFX_SUPPORT
     FT_MR_PULSE1_V = APU_PL1_VOL
     FT_MR_PULSE1_L = APU_PL1_LO
     FT_MR_PULSE1_H = APU_PL1_HI
@@ -1088,7 +1089,7 @@ nocut:
 
     .ifnblank pulse_prev
 
-        .if(!::FT_SFX_ENABLE)
+        .ifndef ::FAMISTUDIO_CFG_SFX_SUPPORT
             .if (!.blank(reg_sweep)) && .defined(::FAMISTUDIO_CFG_SMOOTH_VIBRATO)
                 ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
                 tax ; X = new hi-period
@@ -1617,7 +1618,7 @@ update_volume:
 .endmacro
 
 .macro _FT2UpdateRowDpcm channel_idx
-.if(::FT_DPCM_ENABLE)
+.ifdef ::FAMISTUDIO_CFG_DPCM_SUPPORT
     .local @play_sample
     .local @no_new_note
     ldx #channel_idx    ;process channel 5
@@ -2047,7 +2048,7 @@ update_sound:
 skip_frame:
 
 ;----------------------------------------------------------------------------------------------------------------------
-.if(::FT_SFX_ENABLE)
+.ifdef ::FAMISTUDIO_CFG_SFX_SUPPORT
 
     ;process all sound effect streams
 
@@ -3063,7 +3064,7 @@ special_code_jmp_hi:
 .endproc
 
     
-.if(FT_DPCM_ENABLE)
+.ifdef ::FAMISTUDIO_CFG_DPCM_SUPPORT
 
 ;------------------------------------------------------------------------------
 ; play DPCM sample with higher priority, for sound effects
@@ -3134,7 +3135,7 @@ not_busy:
 
 .endif
 
-.if(FT_SFX_ENABLE)
+.ifdef ::FAMISTUDIO_CFG_SFX_SUPPORT
 
 ;------------------------------------------------------------------------------
 ; init sound effects player, set pointer to data
