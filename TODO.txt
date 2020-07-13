@@ -9,13 +9,14 @@
 - FamiStudio sound engine
 	X Create unit tests.
 	x All .proc
-	- Toggeable features (table with code size + RAM usage)
-		- Slides
-		- Volume track
-		- Fine pitch track
-		- Vibrato
-		- Arpeggio
-		- All expansions.
+	x Toggeable features (table with code size + RAM usage)
+		x Slides
+		x Volume track
+		x Fine pitch track
+		x Vibrato
+		x Arpeggio
+		x All expansions
+	- Reverse "tempo" -> "famitracker".
 	- Document function inputs like in my game.
 	- Unify #ifdef VS 0/1
 	- Rename stuff

@@ -59,27 +59,27 @@ FAMISTUDIO_USE_ARPEGGIO = 1
 
 .segment "RAM"
 
-.if .defined(FT_VRC7)
+.if .defined(FAMISTUDIO_EXP_VRC7)
     FT_NUM_ENVELOPES        = 3+3+2+3+2+2+2+2+2+2
     FT_NUM_PITCH_ENVELOPES  = 9
     FT_NUM_CHANNELS         = 11
-.elseif .defined(FT_VRC6)
+.elseif .defined(FAMISTUDIO_EXP_VRC6)
     FT_NUM_ENVELOPES        = 3+3+2+3+3+3+3
     FT_NUM_PITCH_ENVELOPES  = 6
     FT_NUM_CHANNELS         = 8
-.elseif .defined(FT_S5B)
+.elseif .defined(FAMISTUDIO_EXP_S5B)
     FT_NUM_ENVELOPES        = 3+3+2+3+2+2+2
     FT_NUM_PITCH_ENVELOPES  = 6
     FT_NUM_CHANNELS         = 8    
-.elseif .defined(FT_N163) 
-    FT_NUM_ENVELOPES        = 3+3+2+3+(FT_N163_CHN_CNT*2)
-    FT_NUM_PITCH_ENVELOPES  = 3+FT_N163_CHN_CNT
-    FT_NUM_CHANNELS         = 5+FT_N163_CHN_CNT
-.elseif .defined(FT_MMC5)
+.elseif .defined(FAMISTUDIO_EXP_N163) 
+    FT_NUM_ENVELOPES        = 3+3+2+3+(FAMISTUDIO_EXP_N163_CHN_CNT*2)
+    FT_NUM_PITCH_ENVELOPES  = 3+FAMISTUDIO_EXP_N163_CHN_CNT
+    FT_NUM_CHANNELS         = 5+FAMISTUDIO_EXP_N163_CHN_CNT
+.elseif .defined(FAMISTUDIO_EXP_MMC5)
     FT_NUM_ENVELOPES        = 3+3+2+3+3+3
     FT_NUM_PITCH_ENVELOPES  = 5
     FT_NUM_CHANNELS         = 7
-.elseif .defined(FT_FDS)
+.elseif .defined(FAMISTUDIO_EXP_FDS)
     FT_NUM_ENVELOPES        = 3+3+2+3+2
     FT_NUM_PITCH_ENVELOPES  = 4
     FT_NUM_CHANNELS         = 6
@@ -127,21 +127,21 @@ FT_CHN_VOLUME_TRACK : .res FT_NUM_CHANNELS
 .if .defined(FAMISTUDIO_USE_VIBRATO) || .defined(FAMISTUDIO_USE_ARPEGGIO)
 FT_CHN_ENV_OVERRIDE : .res FT_NUM_CHANNELS ; bit 7 = pitch, bit 0 = arpeggio.
 .endif
-.if .defined(FT_N163) || .defined(FT_VRC7) || .defined(FT_FDS)
+.if .defined(FAMISTUDIO_EXP_N163) || .defined(FAMISTUDIO_EXP_VRC7) || .defined(FAMISTUDIO_EXP_FDS)
 FT_CHN_INST_CHANGED : .res FT_NUM_CHANNELS-5
 .endif
 .ifdef FT_EQUALIZER
 FT_CHN_NOTE_COUNTER : .res FT_NUM_CHANNELS
 .endif
 
-.ifdef FT_VRC7
+.ifdef FAMISTUDIO_EXP_VRC7
 FT_CHN_PREV_HI      : .res 6
 FT_CHN_VRC7_PATCH   : .res 6
 FT_CHN_VRC7_TRIGGER : .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 .endif
 
-.ifdef FT_N163
-FT_CHN_N163_WAVE_LEN: .res FT_N163_CHN_CNT
+.ifdef FAMISTUDIO_EXP_N163
+FT_CHN_N163_WAVE_LEN: .res FAMISTUDIO_EXP_N163_CHN_CNT
 .endif
 
 ;variables and aliases
@@ -150,18 +150,18 @@ FT_CH1_ENVS = 3
 FT_CH2_ENVS = 6
 FT_CH3_ENVS = 8
 
-.if .defined(FT_VRC6) 
+.if .defined(FAMISTUDIO_EXP_VRC6) 
     FT_CH5_ENVS  = 11
     FT_CH6_ENVS  = 14
     FT_CH7_ENVS  = 17
-.elseif .defined(FT_VRC7) 
+.elseif .defined(FAMISTUDIO_EXP_VRC7) 
     FT_CH5_ENVS  = 11
     FT_CH6_ENVS  = 13
     FT_CH7_ENVS  = 15    
     FT_CH8_ENVS  = 17
     FT_CH9_ENVS  = 19
     FT_CH10_ENVS = 21    
-.elseif .defined(FT_N163)
+.elseif .defined(FAMISTUDIO_EXP_N163)
     FT_CH5_ENVS  = 11
     FT_CH6_ENVS  = 13
     FT_CH7_ENVS  = 15    
@@ -170,25 +170,25 @@ FT_CH3_ENVS = 8
     FT_CH10_ENVS = 21   
     FT_CH11_ENVS = 23   
     FT_CH12_ENVS = 25   
-.elseif .defined(FT_FDS)
+.elseif .defined(FAMISTUDIO_EXP_FDS)
     FT_CH5_ENVS  = 11
-.elseif .defined(FT_MMC5)
+.elseif .defined(FAMISTUDIO_EXP_MMC5)
     FT_CH5_ENVS  = 11
     FT_CH6_ENVS  = 14
-.elseif .defined(FT_S5B)    
+.elseif .defined(FAMISTUDIO_EXP_S5B)    
     FT_CH5_ENVS  = 11
     FT_CH6_ENVS  = 13
     FT_CH7_ENVS  = 15
 .endif
 
-.if .defined(FT_VRC7)
+.if .defined(FAMISTUDIO_EXP_VRC7)
     FT_PITCH_SHIFT = 3
-.elseif .defined(FT_N163)
-    .if FT_N163_CHN_CNT > 4
+.elseif .defined(FAMISTUDIO_EXP_N163)
+    .if FAMISTUDIO_EXP_N163_CHN_CNT > 4
         FT_PITCH_SHIFT = 5
-    .elseif FT_N163_CHN_CNT > 2
+    .elseif FAMISTUDIO_EXP_N163_CHN_CNT > 2
         FT_PITCH_SHIFT = 4
-    .elseif FT_N163_CHN_CNT > 1
+    .elseif FAMISTUDIO_EXP_N163_CHN_CNT > 1
         FT_PITCH_SHIFT = 3
     .else
         FT_PITCH_SHIFT = 2
@@ -196,7 +196,6 @@ FT_CH3_ENVS = 8
 .else
     FT_PITCH_SHIFT = 0
 .endif
-
 
 FT_ENV_VOLUME_OFF = 0
 FT_ENV_NOTE_OFF   = 1
@@ -228,16 +227,16 @@ FT_PULSE1_PREV:   .res 1
 FT_PULSE2_PREV:   .res 1
 FT_SONG_SPEED     = FT_CHN_INSTRUMENT+4
 
-.ifdef FT_N163
-FT_N163_CHN_MASK  = (FT_N163_CHN_CNT - 1) << 4
+.ifdef FAMISTUDIO_EXP_N163
+FT_N163_CHN_MASK  = (FAMISTUDIO_EXP_N163_CHN_CNT - 1) << 4
 .endif
 
-.ifdef FT_MMC5
+.ifdef FAMISTUDIO_EXP_MMC5
 FT_MMC5_PULSE1_PREV: .res 1
 FT_MMC5_PULSE2_PREV: .res 1
 .endif
 
-.ifdef FT_FDS
+.ifdef FAMISTUDIO_EXP_FDS
 FT_FDS_MOD_SPEED: .res 2
 FT_FDS_MOD_DEPTH: .res 1
 FT_FDS_MOD_DELAY: .res 1
@@ -245,7 +244,7 @@ FT_FDS_OVERRIDE_FLAGS: .res 1 ; Bit 7 = mod speed overriden, bit 6 mod depth ove
 .endif
 
 ; FDS, N163 and VRC7 have very different instrument layout and are 16-bytes, so we keep them seperate.
-.if .defined(FT_FDS) || .defined(FT_N163) || .defined(FT_VRC7) 
+.if .defined(FAMISTUDIO_EXP_FDS) || .defined(FAMISTUDIO_EXP_N163) || .defined(FAMISTUDIO_EXP_VRC7) 
 FT_EXP_INSTRUMENT_L: .res 1
 FT_EXP_INSTRUMENT_H: .res 1
 .endif
@@ -284,7 +283,7 @@ FT_TEMP:
 FT_TEMP_VAR1 : .res 1
 FT_TEMP_VAR2 : .res 1
 FT_TEMP_VAR3 : .res 1
-.ifdef FT_VRC7
+.ifdef FAMISTUDIO_EXP_VRC7
 FT_TEMP_VAR4 : .res 1
 .endif
 
@@ -320,7 +319,7 @@ APU_DMC_LEN    = $4013
 APU_SND_CHN    = $4015
 APU_FRAME_CNT  = $4017
 
-.ifdef FT_VRC6
+.ifdef FAMISTUDIO_EXP_VRC6
 VRC6_PL1_VOL   = $9000
 VRC6_PL1_LO    = $9001
 VRC6_PL1_HI    = $9002
@@ -332,7 +331,7 @@ VRC6_SAW_LO    = $b001
 VRC6_SAW_HI    = $b002
 .endif
 
-.ifdef FT_VRC7
+.ifdef FAMISTUDIO_EXP_VRC7
 VRC7_SILENCE   = $e000
 VRC7_REG_SEL   = $9010
 VRC7_REG_WRITE = $9030
@@ -356,7 +355,7 @@ VRC7_REG_VOL_5 = $34
 VRC7_REG_VOL_6 = $35 
 .endif
 
-.ifdef FT_MMC5
+.ifdef FAMISTUDIO_EXP_MMC5
 MMC5_PL1_VOL   = $5000
 MMC5_PL1_SWEEP = $5001
 MMC5_PL1_LO    = $5002
@@ -369,7 +368,7 @@ MMC5_PCM_MODE  = $5010
 MMC5_SND_CHN   = $5015
 .endif
 
-.ifdef FT_N163
+.ifdef FAMISTUDIO_EXP_N163
 N163_SILENCE       = $e000
 N163_ADDR          = $f800
 N163_DATA          = $4800 
@@ -383,7 +382,7 @@ N163_REG_WAVE      = $7e
 N163_REG_VOLUME    = $7f
 .endif
 
-.ifdef FT_S5B
+.ifdef FAMISTUDIO_EXP_S5B
 S5B_ADDR       = $c000
 S5B_DATA       = $e000
 S5B_REG_LO_A   = $00
@@ -404,7 +403,7 @@ S5B_REG_IO_A   = $0e
 S5B_REG_IO_B   = $0f
 .endif
 
-.ifdef FT_FDS
+.ifdef FAMISTUDIO_EXP_FDS
 FDS_WAV_START  = $4040
 FDS_VOL_ENV    = $4080
 FDS_FREQ_LO    = $4082
@@ -467,7 +466,7 @@ FDS_ENV_SPEED  = $408A
 @ok:
 .endmacro
 
-.ifdef FT_VRC7
+.ifdef FAMISTUDIO_EXP_VRC7
 .proc _FT2Vrc7WaitRegWrite
     stx FT_TEMP_VAR4
     ldx #$08
@@ -521,7 +520,7 @@ pal:
     sta FT_INSTRUMENT_H
     iny
 
-    .if .defined(::FT_FDS) || .defined(::FT_N163) || .defined(::FT_VRC7) 
+    .if .defined(::FAMISTUDIO_EXP_FDS) || .defined(::FAMISTUDIO_EXP_N163) || .defined(::FAMISTUDIO_EXP_VRC7) 
         lda (FT_TEMP_PTR1),y       ;get expansion instrument list address
         sta FT_EXP_INSTRUMENT_L
         iny
@@ -555,19 +554,19 @@ pal:
     sta APU_PL1_SWEEP
     sta APU_PL2_SWEEP
 
-.ifdef ::FT_VRC7
+.ifdef ::FAMISTUDIO_EXP_VRC7
     lda #0
     sta VRC7_SILENCE ; Enable VRC7 audio.
 .endif
 
-.ifdef ::FT_MMC5
+.ifdef ::FAMISTUDIO_EXP_MMC5
     lda #$00
     sta MMC5_PCM_MODE
     lda #$03
     sta MMC5_SND_CHN
 .endif
 
-.ifdef ::FT_S5B
+.ifdef ::FAMISTUDIO_EXP_S5B
     lda #S5B_REG_TONE
     sta S5B_ADDR
     lda #$38 ; No noise, just 3 tones for now.
@@ -760,7 +759,7 @@ valid_song:
     .assert 0, error, "Missing song multiplier."
 .endif
 
-.if .defined(::FT_FDS) || .defined(::FT_VRC7) || .defined(::FT_N163)
+.if .defined(::FAMISTUDIO_EXP_FDS) || .defined(::FAMISTUDIO_EXP_VRC7) || .defined(::FAMISTUDIO_EXP_N163)
     adc #7                     ;add offset
 .else
     adc #5                     ;add offset
@@ -847,7 +846,7 @@ pal:
     sta FT_SONG_SPEED          ; simply so the song isnt considered paused.
 .endif
 
-.ifdef ::FT_VRC7
+.ifdef ::FAMISTUDIO_EXP_VRC7
     lda #0
     ldx #5
     clear_vrc7_loop:
@@ -858,7 +857,7 @@ pal:
         bpl clear_vrc7_loop 
 .endif
 
-.ifdef FT_FDS
+.ifdef FAMISTUDIO_EXP_FDS
     lda #0
     sta FT_FDS_MOD_SPEED+0
     sta FT_FDS_MOD_SPEED+1
@@ -876,9 +875,9 @@ pal:
         bpl clear_inst_changed_loop 
 .endif
 
-.ifdef ::FT_N163
+.ifdef ::FAMISTUDIO_EXP_N163
     lda #0
-    ldx #FT_N163_CHN_CNT
+    ldx #FAMISTUDIO_EXP_N163_CHN_CNT
     clear_vrc7_loop:
         sta FT_CHN_N163_WAVE_LEN, x
         dex
@@ -964,7 +963,7 @@ pos:
     beq no_slide
 
     ; Add slide
-.if pitch_env_offset >= 3 && (.defined(::FT_VRC7) || .defined(::FT_N163))
+.if pitch_env_offset >= 3 && (.defined(::FAMISTUDIO_EXP_VRC7) || .defined(::FAMISTUDIO_EXP_N163))
     ; These channels dont have fractional part for slides and have the same shift for slides + pitch.
     clc
     lda FT_SLIDE_PITCH_L+pitch_env_offset pitch_env_indexer
@@ -992,7 +991,7 @@ pos:
 
 no_slide:    
 
-.if pitch_env_offset >= 3 && (.defined(::FT_VRC7) || .defined(::FT_N163))
+.if pitch_env_offset >= 3 && (.defined(::FAMISTUDIO_EXP_VRC7) || .defined(::FAMISTUDIO_EXP_N163))
     .if ::FT_PITCH_SHIFT >= 1
         asl pitch+0
         rol pitch+1
@@ -1031,7 +1030,7 @@ no_slide:
     rts
 .endproc
 
-.ifdef ::FT_VRC6
+.ifdef ::FAMISTUDIO_EXP_VRC6
 .proc FamiToneComputeNoteFinalPitchVrc6Saw
     FamiToneComputeNoteFinalPitchMacro 0, {,y}, _FT2SawNoteTableLSB, _FT2SawNoteTableMSB
     rts
@@ -1080,7 +1079,7 @@ nocut:
     tax
 
     ldy #slide_offset
-    .if .defined(::FT_VRC6) && idx = 7
+    .if .defined(::FAMISTUDIO_EXP_VRC6) && idx = 7
         jsr FamiToneComputeNoteFinalPitchVrc6Saw
     .else
         jsr FamiToneComputeNoteFinalPitch
@@ -1147,7 +1146,7 @@ compute_volume:
         lda _FT2VolumeTable, x 
     .endif
 
-.if .defined(FT_VRC6) && idx = 7 
+.if .defined(FAMISTUDIO_EXP_VRC6) && idx = 7 
     ; VRC6 saw has 6-bits
     asl
     asl
@@ -1155,10 +1154,10 @@ compute_volume:
 
 set_volume:
 
-.if idx = 0 || idx = 1 || idx = 3 || (idx >= 5 && .defined(::FT_MMC5))
+.if idx = 0 || idx = 1 || idx = 3 || (idx >= 5 && .defined(::FAMISTUDIO_EXP_MMC5))
     ldx FT_ENV_VALUE+env_offset+FT_ENV_DUTY_OFF
     ora _FT2DutyLookup, x
-.elseif (idx = 5 || idx = 6) && .defined(::FT_VRC6)
+.elseif (idx = 5 || idx = 6) && .defined(::FAMISTUDIO_EXP_VRC6)
     ldx FT_ENV_VALUE+env_offset+FT_ENV_DUTY_OFF
     ora _FT2Vrc6DutyLookup, x
 .endif
@@ -1171,7 +1170,7 @@ set_volume:
 
 .endmacro
 
-.ifdef FT_FDS
+.ifdef FAMISTUDIO_EXP_FDS
 
 .proc FamiToneUpdateFdsChannelSound
 
@@ -1231,7 +1230,7 @@ set_volume:
 
 .endif
 
-.ifdef FT_VRC7
+.ifdef FAMISTUDIO_EXP_VRC7
 
 _FT2Vrc7RegLoTable:
     .byte VRC7_REG_LO_1, VRC7_REG_LO_2, VRC7_REG_LO_3, VRC7_REG_LO_4, VRC7_REG_LO_5, VRC7_REG_LO_6
@@ -1387,7 +1386,7 @@ update_volume:
 
 .endif
 
-.ifdef FT_N163
+.ifdef FAMISTUDIO_EXP_N163
 
 _FT2N163RegLoTable:
     .byte N163_REG_FREQ_LO - $00
@@ -1511,7 +1510,7 @@ update_volume:
 .endproc
 .endif
 
-.ifdef FT_S5B
+.ifdef FAMISTUDIO_EXP_S5B
 
 _FT2S5BRegLoTable:
     .byte S5B_REG_LO_A, S5B_REG_LO_B, S5B_REG_LO_C
@@ -1591,11 +1590,11 @@ update_volume:
     ldy #channel_idx
     lda FT_CHN_INSTRUMENT+channel_idx
 
-.if .defined(::FT_FDS) && channel_idx >= 5
+.if .defined(::FAMISTUDIO_EXP_FDS) && channel_idx >= 5
     jsr _FT2SetFdsInstrument
-.elseif .defined(::FT_VRC7) && channel_idx >= 5
+.elseif .defined(::FAMISTUDIO_EXP_VRC7) && channel_idx >= 5
     jsr _FT2SetVrc7Instrument
-.elseif .defined(::FT_N163) && channel_idx >= 5
+.elseif .defined(::FAMISTUDIO_EXP_N163) && channel_idx >= 5
     jsr _FT2SetN163Instrument
 .else
     jsr _FT2SetInstrument
@@ -1738,13 +1737,13 @@ update_row:
     _FT2UpdateRow 3, FT_CH3_ENVS
     _FT2UpdateRowDpcm 4
 
-.ifdef ::FT_VRC6
+.ifdef ::FAMISTUDIO_EXP_VRC6
     _FT2UpdateRow 5, FT_CH5_ENVS
     _FT2UpdateRow 6, FT_CH6_ENVS
     _FT2UpdateRow 7, FT_CH7_ENVS
 .endif
 
-.ifdef ::FT_VRC7
+.ifdef ::FAMISTUDIO_EXP_VRC7
     _FT2UpdateRow  5, FT_CH5_ENVS
     _FT2UpdateRow  6, FT_CH6_ENVS
     _FT2UpdateRow  7, FT_CH7_ENVS
@@ -1753,44 +1752,44 @@ update_row:
     _FT2UpdateRow 10, FT_CH10_ENVS
 .endif
 
-.ifdef ::FT_FDS
+.ifdef ::FAMISTUDIO_EXP_FDS
     _FT2UpdateRow 5, FT_CH5_ENVS
 .endif
 
-.ifdef ::FT_MMC5
+.ifdef ::FAMISTUDIO_EXP_MMC5
     _FT2UpdateRow 5, FT_CH5_ENVS
     _FT2UpdateRow 6, FT_CH6_ENVS
 .endif
 
-.ifdef ::FT_S5B
+.ifdef ::FAMISTUDIO_EXP_S5B
     _FT2UpdateRow 5, FT_CH5_ENVS
     _FT2UpdateRow 6, FT_CH6_ENVS
     _FT2UpdateRow 7, FT_CH7_ENVS
 .endif
 
-.ifdef ::FT_N163
-    .if ::FT_N163_CHN_CNT >= 1
+.ifdef ::FAMISTUDIO_EXP_N163
+    .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 1
         _FT2UpdateRow  5, FT_CH5_ENVS
     .endif
-    .if ::FT_N163_CHN_CNT >= 2
+    .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 2
         _FT2UpdateRow  6, FT_CH6_ENVS
     .endif
-    .if ::FT_N163_CHN_CNT >= 3
+    .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 3
         _FT2UpdateRow  7, FT_CH7_ENVS
     .endif
-    .if ::FT_N163_CHN_CNT >= 4
+    .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 4
         _FT2UpdateRow  8, FT_CH8_ENVS
     .endif
-    .if ::FT_N163_CHN_CNT >= 5
+    .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 5
         _FT2UpdateRow  9, FT_CH9_ENVS
     .endif
-    .if ::FT_N163_CHN_CNT >= 6
+    .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 6
         _FT2UpdateRow 10, FT_CH10_ENVS
     .endif
-    .if ::FT_N163_CHN_CNT >= 7
+    .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 7
         _FT2UpdateRow 11, FT_CH11_ENVS
     .endif
-    .if ::FT_N163_CHN_CNT >= 8
+    .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 8
         _FT2UpdateRow 12, FT_CH12_ENVS
     .endif
 .endif
@@ -1999,22 +1998,22 @@ update_sound:
     FamiToneUpdateChannelSound 2, FT_CH2_ENVS, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
     FamiToneUpdateChannelSound 3, FT_CH3_ENVS,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
 
-.ifdef ::FT_VRC6
+.ifdef ::FAMISTUDIO_EXP_VRC6
     FamiToneUpdateChannelSound 5, FT_CH5_ENVS, 3, , , #$80, VRC6_PL1_HI, VRC6_PL1_LO, VRC6_PL1_VOL
     FamiToneUpdateChannelSound 6, FT_CH6_ENVS, 4, , , #$80, VRC6_PL2_HI, VRC6_PL2_LO, VRC6_PL2_VOL
     FamiToneUpdateChannelSound 7, FT_CH7_ENVS, 5, , , #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
 .endif
 
-.ifdef ::FT_MMC5
+.ifdef ::FAMISTUDIO_EXP_MMC5
     FamiToneUpdateChannelSound 5, FT_CH5_ENVS, 3, FT_MMC5_PULSE1_PREV, , , MMC5_PL1_HI, MMC5_PL1_LO, MMC5_PL1_VOL
     FamiToneUpdateChannelSound 6, FT_CH6_ENVS, 4, FT_MMC5_PULSE2_PREV, , , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
 .endif
 
-.ifdef ::FT_FDS
+.ifdef ::FAMISTUDIO_EXP_FDS
     jsr FamiToneUpdateFdsChannelSound
 .endif
 
-.ifdef ::FT_VRC7
+.ifdef ::FAMISTUDIO_EXP_VRC7
     ldy #0
     vrc7_channel_loop:
         jsr _FT2UpdateVrc7ChannelSound
@@ -2023,16 +2022,16 @@ update_sound:
         bne vrc7_channel_loop
 .endif
 
-.ifdef ::FT_N163
+.ifdef ::FAMISTUDIO_EXP_N163
     ldy #0
     n163_channel_loop:
         jsr _FT2UpdateN163ChannelSound
         iny
-        cpy #FT_N163_CHN_CNT
+        cpy #FAMISTUDIO_EXP_N163_CHN_CNT
         bne n163_channel_loop
 .endif
 
-.ifdef ::FT_S5B
+.ifdef ::FAMISTUDIO_EXP_S5B
     ldy #0
     s5b_channel_loop:
         jsr _FT2UpdateS5BChannelSound
@@ -2180,7 +2179,7 @@ init_envelopes:
     ; Duty cycle envelope
     lda chan_idx
     cmp #2                     ;triangle has no duty.
-.if !.defined(::FT_S5B)
+.if !.defined(::FAMISTUDIO_EXP_S5B)
     bne duty
 .else
     beq no_duty
@@ -2229,7 +2228,7 @@ init_envelopes:
 
 .endproc
 
-.if .defined(FT_FDS) || .defined(FT_N163) || .defined(FT_VRC7) 
+.if .defined(FAMISTUDIO_EXP_FDS) || .defined(FAMISTUDIO_EXP_N163) || .defined(FAMISTUDIO_EXP_VRC7) 
 .macro _FT2SetExpInstrumentBase
 
     chan_idx = FT_TEMP_VAR2
@@ -2315,7 +2314,7 @@ init_envelopes:
 .endmacro
 .endif
 
-.ifdef FT_VRC7
+.ifdef FAMISTUDIO_EXP_VRC7
 .proc _FT2SetVrc7Instrument
 
     ptr = FT_TEMP_PTR1
@@ -2354,7 +2353,7 @@ init_envelopes:
 .endproc
 .endif
 
-.ifdef FT_FDS
+.ifdef FAMISTUDIO_EXP_FDS
 .proc _FT2SetFdsInstrument
 
     ptr        = FT_TEMP_PTR1
@@ -2470,7 +2469,7 @@ init_envelopes:
 .endproc
 .endif
 
-.ifdef FT_N163
+.ifdef FAMISTUDIO_EXP_N163
 
 _FT2N163WaveTable:
     .byte N163_REG_WAVE - $00
@@ -2551,19 +2550,19 @@ _FT2N163WaveTable:
     no_attack_flag = FT_TEMP_VAR3
     slide_delta_lo = FT_TEMP_PTR2_H
 
-.if .defined(::FT_VRC6)
+.if .defined(::FAMISTUDIO_EXP_VRC6)
     exp_note_start = 7
     exp_note_table_lsb = _FT2SawNoteTableLSB
     exp_note_table_msb = _FT2SawNoteTableMSB
-.elseif .defined(::FT_VRC7)
+.elseif .defined(::FAMISTUDIO_EXP_VRC7)
     exp_note_start = 5
     exp_note_table_lsb = _FT2Vrc7NoteTableLSB
     exp_note_table_msb = _FT2Vrc7NoteTableMSB
-.elseif .defined(::FT_N163)
+.elseif .defined(::FAMISTUDIO_EXP_N163)
     exp_note_start = 5
     exp_note_table_lsb = _FT2N163NoteTableLSB
     exp_note_table_msb = _FT2N163NoteTableMSB
-.elseif .defined(::FT_FDS)
+.elseif .defined(::FAMISTUDIO_EXP_FDS)
     exp_note_start = 5
     exp_note_table_lsb = _FT2FdsNoteTableLSB
     exp_note_table_msb = _FT2FdsNoteTableMSB
@@ -2626,7 +2625,7 @@ special_code_6x:
     ldx FT_TEMP_VAR1
     jmp (FT_TEMP_PTR2)
 
-.ifdef ::FT_FDS
+.ifdef ::FAMISTUDIO_EXP_FDS
 
 fds_mod_depth:    
     lda (FT_TEMP_PTR1),y
@@ -2784,7 +2783,7 @@ note_table_done:
 .endif
     ldx FT_TEMP_VAR2           ; slide index.
     sta FT_SLIDE_PITCH_H,x
-    .if .defined(::FT_N163) || .defined(::FT_VRC7)
+    .if .defined(::FAMISTUDIO_EXP_N163) || .defined(::FAMISTUDIO_EXP_VRC7)
         cpx #3 ; slide #3 is the first of expansion slides.
         bcs positive_shift
     .endif
@@ -2793,7 +2792,7 @@ note_table_done:
         asl                        ; shift-left, we have 1 bit of fractional slide.
         sta FT_SLIDE_PITCH_L,x
         rol FT_SLIDE_PITCH_H,x     ; shift-left, we have 1 bit of fractional slide.
-    .if .defined(::FT_N163) || .defined(::FT_VRC7)
+    .if .defined(::FAMISTUDIO_EXP_N163) || .defined(::FAMISTUDIO_EXP_VRC7)
         jmp shift_done
     positive_shift:
         lda slide_delta_lo
@@ -2854,7 +2853,7 @@ sec_and_done:
     bne no_attack
     lda FT_CHN_NOTE,x          ; dont trigger attack on stop notes.
     beq no_attack
-.if .defined(::FT_VRC7)
+.if .defined(::FAMISTUDIO_EXP_VRC7)
     cpx #5
     bcs vrc7_channel
     sec                        ;new note flag is set
@@ -2877,7 +2876,7 @@ special_code:
     asl a
     sta FT_CHN_INSTRUMENT,x    ;store instrument number*4
 
-.if .defined(::FT_N163) || .defined(::FT_VRC7) || .defined(::FT_FDS)
+.if .defined(::FAMISTUDIO_EXP_N163) || .defined(::FAMISTUDIO_EXP_VRC7) || .defined(::FAMISTUDIO_EXP_FDS)
     cpx #5
     bcc regular_channel
         lda #1
@@ -2950,7 +2949,7 @@ set_reference:
 
 release_note:
 
-.ifdef ::FT_VRC7
+.ifdef ::FAMISTUDIO_EXP_VRC7
     cpx #5
     bcc apu_channel
     lda #$80
@@ -3035,7 +3034,7 @@ special_code_jmp_lo:
     .byte <_FT2ChannelUpdate::clear_arpeggio_override_flag ; $66
     .byte <_FT2ChannelUpdate::reset_arpeggio               ; $67
     .byte <_FT2ChannelUpdate::fine_pitch                   ; $68
-.ifdef ::FT_FDS        
+.ifdef ::FAMISTUDIO_EXP_FDS        
     .byte <_FT2ChannelUpdate::fds_mod_speed                ; $69
     .byte <_FT2ChannelUpdate::fds_mod_depth                ; $6a
 .endif        
@@ -3048,7 +3047,7 @@ special_code_jmp_hi:
     .byte >_FT2ChannelUpdate::clear_arpeggio_override_flag ; $66
     .byte >_FT2ChannelUpdate::reset_arpeggio               ; $67
     .byte >_FT2ChannelUpdate::fine_pitch                   ; $68
-.ifdef ::FT_FDS        
+.ifdef ::FAMISTUDIO_EXP_FDS        
     .byte >_FT2ChannelUpdate::fds_mod_speed                ; $69
     .byte >_FT2ChannelUpdate::fds_mod_depth                ; $6a
 .endif
@@ -3398,7 +3397,7 @@ _FT2NoteTableMSB:
         .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
     .endif
 
-.ifdef FT_VRC6
+.ifdef FAMISTUDIO_EXP_VRC6
 _FT2SawNoteTableLSB:
     .byte $00
     .byte $44, $69, $9a, $d6, $1e, $70, $cb, $30, $9e, $13, $91, $16 ; Octave 0
@@ -3421,7 +3420,7 @@ _FT2SawNoteTableMSB:
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
 .endif
 
-.ifdef FT_VRC7
+.ifdef FAMISTUDIO_EXP_VRC7
 _FT2Vrc7NoteTableLSB:
     .byte $00
     .byte $ac, $b7, $c2, $cd, $d9, $e6, $f4, $02, $12, $22, $33, $46 ; Octave 0
@@ -3444,7 +3443,7 @@ _FT2Vrc7NoteTableMSB:
     .byte $56, $5b, $61, $66, $6c, $73, $7a, $81, $89, $91, $99, $a3 ; Octave 7    
 .endif
 
-.ifdef FT_FDS
+.ifdef FAMISTUDIO_EXP_FDS
 _FT2FdsNoteTableLSB:
     .byte $00
     .byte $13, $14, $16, $17, $18, $1a, $1b, $1d, $1e, $20, $22, $24 ; Octave 0
@@ -3467,8 +3466,8 @@ _FT2FdsNoteTableMSB:
     .byte $09, $0a, $0a, $0b, $0c, $0c, $0d, $0e, $0f, $10, $11, $12 ; Octave 7
 .endif
 
-.ifdef FT_N163
-.if FT_N163_CHN_CNT = 1
+.ifdef FAMISTUDIO_EXP_N163
+.if FAMISTUDIO_EXP_N163_CHN_CNT = 1
     _FT2N163NoteTableLSB:
         .byte $00
         .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 0
@@ -3489,7 +3488,7 @@ _FT2FdsNoteTableMSB:
         .byte $08,$09,$0a,$0a,$0b,$0b,$0c,$0d,$0e,$0f,$10,$10 ; Octave 5
         .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 6
         .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 7
-.elseif FT_N163_CHN_CNT = 2
+.elseif FAMISTUDIO_EXP_N163_CHN_CNT = 2
     _FT2N163NoteTableLSB:
         .byte $00
         .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$00,$0f ; Octave 0
@@ -3510,7 +3509,7 @@ _FT2FdsNoteTableMSB:
         .byte $11,$13,$14,$15,$16,$17,$19,$1a,$1c,$1e,$20,$21 ; Octave 5
         .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 6
         .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 7
-.elseif FT_N163_CHN_CNT = 3
+.elseif FAMISTUDIO_EXP_N163_CHN_CNT = 3
     _FT2N163NoteTableLSB:
         .byte $00
         .byte $d7,$e4,$f1,$00,$0f,$1f,$30,$42,$56,$6a,$80,$96 ; Octave 0
@@ -3531,7 +3530,7 @@ _FT2FdsNoteTableMSB:
         .byte $1a,$1c,$1e,$20,$21,$23,$26,$28,$2a,$2d,$30,$32 ; Octave 5
         .byte $35,$39,$3c,$40,$43,$47,$4c,$50,$55,$5a,$60,$65 ; Octave 6
         .byte $6b,$72,$78,$80,$87,$8f,$98,$a1,$ab,$b5,$c0,$cb ; Octave 7
-.elseif FT_N163_CHN_CNT = 4
+.elseif FAMISTUDIO_EXP_N163_CHN_CNT = 4
 _FT2N163NoteTableLSB:
         .byte $00
         .byte $1f,$30,$42,$55,$6a,$7f,$96,$ae,$c8,$e3,$00,$1e ; Octave 0
@@ -3552,7 +3551,7 @@ _FT2N163NoteTableLSB:
         .byte $23,$26,$28,$2a,$2d,$2f,$32,$35,$39,$3c,$40,$43 ; Octave 5
         .byte $47,$4c,$50,$55,$5a,$5f,$65,$6b,$72,$78,$80,$87 ; Octave 6
         .byte $8f,$98,$a1,$aa,$b5,$bf,$cb,$d7,$e4,$f1,$ff,$ff ; Octave 7
-.elseif FT_N163_CHN_CNT = 5
+.elseif FAMISTUDIO_EXP_N163_CHN_CNT = 5
     _FT2N163NoteTableLSB:
         .byte $00
         .byte $67,$7c,$93,$ab,$c4,$df,$fc,$1a,$3a,$5c,$80,$a6 ; Octave 0
@@ -3573,7 +3572,7 @@ _FT2N163NoteTableLSB:
         .byte $2c,$2f,$32,$35,$38,$3b,$3f,$43,$47,$4b,$50,$54 ; Octave 5
         .byte $59,$5f,$64,$6a,$71,$77,$7f,$86,$8e,$97,$a0,$a9 ; Octave 6
         .byte $b3,$be,$c9,$d5,$e2,$ef,$fe,$ff,$ff,$ff,$ff,$ff ; Octave 7
-.elseif FT_N163_CHN_CNT = 6
+.elseif FAMISTUDIO_EXP_N163_CHN_CNT = 6
     _FT2N163NoteTableLSB:
         .byte $00
         .byte $af,$c8,$e3,$00,$1f,$3f,$61,$85,$ac,$d5,$00,$2d ; Octave 0
@@ -3594,7 +3593,7 @@ _FT2N163NoteTableLSB:
         .byte $35,$39,$3c,$40,$43,$47,$4c,$50,$55,$5a,$60,$65 ; Octave 5
         .byte $6b,$72,$78,$80,$87,$8f,$98,$a1,$ab,$b5,$c0,$cb ; Octave 6
         .byte $d7,$e4,$f1,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
-.elseif FT_N163_CHN_CNT = 7
+.elseif FAMISTUDIO_EXP_N163_CHN_CNT = 7
     _FT2N163NoteTableLSB:
         .byte $00
         .byte $f6,$14,$34,$56,$79,$9f,$c7,$f1,$1e,$4d,$80,$b5 ; Octave 0
@@ -3615,7 +3614,7 @@ _FT2N163NoteTableLSB:
         .byte $3e,$42,$46,$4a,$4f,$53,$58,$5e,$63,$69,$70,$76 ; Octave 5
         .byte $7d,$85,$8d,$95,$9e,$a7,$b1,$bc,$c7,$d3,$e0,$ed ; Octave 6
         .byte $fb,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff ; Octave 7
-.elseif FT_N163_CHN_CNT = 8
+.elseif FAMISTUDIO_EXP_N163_CHN_CNT = 8
     _FT2N163NoteTableLSB:
         .byte $00
         .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 0
@@ -3741,7 +3740,7 @@ _FT2DutyLookup:
     .byte $b0
     .byte $f0
 
-.ifdef FT_VRC6
+.ifdef FAMISTUDIO_EXP_VRC6
 _FT2Vrc6DutyLookup:
     .byte $00
     .byte $10
