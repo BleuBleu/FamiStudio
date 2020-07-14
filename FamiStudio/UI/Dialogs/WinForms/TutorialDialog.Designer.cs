@@ -28,43 +28,17 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.buttonLeft = new NoFocusButton();
-            this.buttonRight = new NoFocusButton();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.label1 = new System.Windows.Forms.Label();
             this.checkBoxDontShow = new System.Windows.Forms.CheckBox();
+            this.buttonLeft = new NoFocusButton();
+            this.buttonRight = new NoFocusButton();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
-            // buttomLeft
-            // 
-            this.buttonLeft.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonLeft.FlatAppearance.BorderSize = 0;
-            this.buttonLeft.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonLeft.Location = new System.Drawing.Point(682, 520);
-            this.buttonLeft.Name = "buttomLeft";
-            this.buttonLeft.Size = new System.Drawing.Size(32, 32);
-            this.buttonLeft.TabIndex = 15;
-            this.buttonLeft.UseVisualStyleBackColor = true;
-            this.buttonLeft.Click += new System.EventHandler(this.buttonLeft_Click);
-            // 
-            // buttonRight
-            // 
-            this.buttonRight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonRight.FlatAppearance.BorderSize = 0;
-            this.buttonRight.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonRight.Location = new System.Drawing.Point(720, 520);
-            this.buttonRight.Name = "buttonRight";
-            this.buttonRight.Size = new System.Drawing.Size(32, 32);
-            this.buttonRight.TabIndex = 16;
-            this.buttonRight.UseVisualStyleBackColor = true;
-            this.buttonRight.Click += new System.EventHandler(this.buttonRight_Click);
-            // 
             // pictureBox1
             // 
-            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBox1.Location = new System.Drawing.Point(16, 88);
+            this.pictureBox1.Location = new System.Drawing.Point(10, 88);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(736, 414);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -75,7 +49,7 @@
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.Location = new System.Drawing.Point(16, 13);
+            this.label1.Location = new System.Drawing.Point(10, 10);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(736, 64);
             this.label1.TabIndex = 18;
@@ -85,18 +59,42 @@
             // 
             this.checkBoxDontShow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkBoxDontShow.AutoSize = true;
-            this.checkBoxDontShow.Location = new System.Drawing.Point(16, 512);
+            this.checkBoxDontShow.Location = new System.Drawing.Point(10, 513);
             this.checkBoxDontShow.Name = "checkBoxDontShow";
-            this.checkBoxDontShow.Size = new System.Drawing.Size(167, 24);
+            this.checkBoxDontShow.Size = new System.Drawing.Size(115, 17);
             this.checkBoxDontShow.TabIndex = 19;
             this.checkBoxDontShow.Text = "Do not show again";
             this.checkBoxDontShow.UseVisualStyleBackColor = true;
+            // 
+            // buttonLeft
+            // 
+            this.buttonLeft.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonLeft.FlatAppearance.BorderSize = 0;
+            this.buttonLeft.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonLeft.Location = new System.Drawing.Point(676, 504);
+            this.buttonLeft.Name = "buttonLeft";
+            this.buttonLeft.Size = new System.Drawing.Size(32, 32);
+            this.buttonLeft.TabIndex = 15;
+            this.buttonLeft.UseVisualStyleBackColor = true;
+            this.buttonLeft.Click += new System.EventHandler(this.buttonLeft_Click);
+            // 
+            // buttonRight
+            // 
+            this.buttonRight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRight.FlatAppearance.BorderSize = 0;
+            this.buttonRight.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonRight.Location = new System.Drawing.Point(714, 504);
+            this.buttonRight.Name = "buttonRight";
+            this.buttonRight.Size = new System.Drawing.Size(32, 32);
+            this.buttonRight.TabIndex = 16;
+            this.buttonRight.UseVisualStyleBackColor = true;
+            this.buttonRight.Click += new System.EventHandler(this.buttonRight_Click);
             // 
             // TutorialDialog
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
-            this.ClientSize = new System.Drawing.Size(766, 568);
+            this.ClientSize = new System.Drawing.Size(754, 548);
             this.ControlBox = false;
             this.Controls.Add(this.checkBoxDontShow);
             this.Controls.Add(this.label1);

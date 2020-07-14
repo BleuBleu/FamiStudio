@@ -9,7 +9,7 @@ namespace FamiStudio
     {
         int pageIndex = 0;
 
-        public TutorialDialog()
+        public TutorialDialog(System.Drawing.Rectangle rect)
         {
             Init();
         }
@@ -35,9 +35,9 @@ namespace FamiStudio
             buttonRight.Width  = (int)(buttonRight.Width  * Direct2DTheme.DialogScaling);
             buttonRight.Height = (int)(buttonRight.Height * Direct2DTheme.DialogScaling);
 
-            buttonRight.Left  = Width  - buttonRight.Width  - 16;
-            buttonRight.Top   = Height - buttonRight.Height - 16;
-            buttonLeft.Left   = buttonRight.Left - buttonLeft.Width - 16;
+            buttonRight.Left  = Width  - buttonRight.Width  - 10;
+            buttonRight.Top   = Height - buttonRight.Height - 10;
+            buttonLeft.Left   = buttonRight.Left - buttonLeft.Width - 10;
             buttonLeft.Top    = buttonRight.Top;
 
             try
