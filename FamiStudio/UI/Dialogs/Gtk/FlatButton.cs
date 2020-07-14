@@ -56,6 +56,12 @@ namespace FamiStudio
             set { bold = value; QueueDraw(); }
         }
 
+        public Pixbuf Pixbuf
+        {
+            get { return pixbuf; }
+            set { pixbuf = value; QueueDraw(); }
+        }
+
         protected override bool OnButtonPressEvent(Gdk.EventButton evnt)
         {
             if (evnt.Button == 1)

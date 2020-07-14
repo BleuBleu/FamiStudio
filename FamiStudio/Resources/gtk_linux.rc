@@ -41,13 +41,15 @@ style "buttonlabel"
 
 style "flatbutton"
 {
-    fg[NORMAL]   = "#C6CDDA" # LightGreyFillColor2
-    fg[PRELIGHT] = "#C6CDDA" # LightGreyFillColor2
-    fg[ACTIVE]   = "#C6CDDA" # LightGreyFillColor2
+    fg[NORMAL]      = "#C6CDDA" # LightGreyFillColor2
+    fg[PRELIGHT]    = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE]      = "#C6CDDA" # LightGreyFillColor2
+    fg[INSENSITIVE] = "#C6CDDA" # LightGreyFillColor2
 
-    bg[NORMAL]   = "#2A3033" # DarkGreyFillColor2
-    bg[PRELIGHT] = "#3A4043" # DarkGreyFillColor2 + 0x10
-    bg[ACTIVE]   = "#4A5053" # DarkGreyFillColor2 + 0x20
+    bg[NORMAL]      = "#2A3033" # DarkGreyFillColor2
+    bg[PRELIGHT]    = "#3A4043" # DarkGreyFillColor2 + 0x10
+    bg[ACTIVE]      = "#4A5053" # DarkGreyFillColor2 + 0x20
+    bg[INSENSITIVE] = "#2A3033" # LightGreyFillColor2
 }
 
 style "all"

@@ -287,8 +287,8 @@ namespace FamiStudio
 
         protected bool OnIdleProcessMain()
         {
-            famistudio.Tick();
             RenderFrame();
+            famistudio.Tick();
             return true;
         }
 

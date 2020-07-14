@@ -913,7 +913,7 @@ namespace FamiStudio
 
                 if (Settings.ShowTutorial)
                 {
-                    var dlg = new TutorialDialog();
+                    var dlg = new TutorialDialog(mainForm.Bounds);
                     if (dlg.ShowDialog() == DialogResult.OK)
                         Settings.ShowTutorial = false;
                 }
