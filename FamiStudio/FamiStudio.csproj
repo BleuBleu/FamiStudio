@@ -175,6 +175,25 @@
     <Compile Include="UI\MainWindow\Common\Toolbar.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Dialogs\WinForms\MultiPropertyDialog.resx">
+      <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\MainWindow\Direct2D\FamiStudioForm.resx">
+      <DependentUpon>FamiStudioForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyPage.resx">
+      <DependentUpon>PropertyPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyDialog.resx">
+      <DependentUpon>PropertyDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Dialogs\WinForms\TutorialDialog.resx">
+      <DependentUpon>TutorialDialog.cs</DependentUpon>
+    </EmbeddedResource>    
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_fds_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_mmc5_ntsc.bin" />
@@ -194,25 +213,7 @@
     <EmbeddedResource Include="Nsf\nsf_famitone2_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Dialogs\WinForms\MultiPropertyDialog.resx">
-      <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\MainWindow\Direct2D\FamiStudioForm.resx">
-      <DependentUpon>FamiStudioForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyPage.resx">
-      <DependentUpon>PropertyPage.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Dialogs\WinForms\PropertyDialog.resx">
-      <DependentUpon>PropertyDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Dialogs\WinForms\TutorialDialog.resx">
-      <DependentUpon>TutorialDialog.cs</DependentUpon>
-    </EmbeddedResource>
+
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_fds_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_mmc5_ntsc.bin" />

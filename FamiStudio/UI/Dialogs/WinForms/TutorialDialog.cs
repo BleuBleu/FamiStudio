@@ -5,7 +5,6 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-    // MATTT: Test this with Hi-DPI!!!
     public partial class TutorialDialog : Form
     {
         readonly string[] messages = new[]
@@ -42,10 +41,26 @@ namespace FamiStudio
             InitializeComponent();
 
             string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
-            buttomLeft.Image   = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowLeft{suffix}.png"));
+            buttonLeft.Image   = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowLeft{suffix}.png"));
+
+            Width  = (int)(Direct2DTheme.DialogScaling * Width);
+            Height = (int)(Direct2DTheme.DialogScaling * Height);
+            label1.Height = (int)(Direct2DTheme.DialogScaling * label1.Height);
+            pictureBox1.Top = (label1.Top + label1.Height) + 8;
+            pictureBox1.Height = (int)(pictureBox1.Width / 1.7777777f); // 16:9
 
             label1.ForeColor = ThemeBase.LightGreyFillColor2;
             checkBoxDontShow.ForeColor = ThemeBase.LightGreyFillColor2;
+
+            buttonLeft.Width   = (int)(buttonLeft.Width   * Direct2DTheme.DialogScaling);
+            buttonLeft.Height  = (int)(buttonLeft.Height  * Direct2DTheme.DialogScaling);
+            buttonRight.Width  = (int)(buttonRight.Width  * Direct2DTheme.DialogScaling);
+            buttonRight.Height = (int)(buttonRight.Height * Direct2DTheme.DialogScaling);
+
+            buttonRight.Left  = Width  - buttonRight.Width  - 16;
+            buttonRight.Top   = Height - buttonRight.Height - 16;
+            buttonLeft.Left   = buttonRight.Left - buttonLeft.Width - 16;
+            buttonLeft.Top    = buttonRight.Top;
 
             try
             {
@@ -62,7 +77,7 @@ namespace FamiStudio
             pageIndex = Utils.Clamp(idx, 0, messages.Length - 1);
             pictureBox1.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{images[pageIndex]}"));
             label1.Text = messages[pageIndex];
-            buttomLeft.Visible = pageIndex != 0;
+            buttonLeft.Visible = pageIndex != 0;
 
             string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
             buttonRight.Image = pageIndex == messages.Length - 1 ?

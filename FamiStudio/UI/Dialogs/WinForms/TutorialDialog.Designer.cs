@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.buttomLeft = new NoFocusButton();
+            this.buttonLeft = new NoFocusButton();
             this.buttonRight = new NoFocusButton();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -38,17 +38,19 @@
             // 
             // buttomLeft
             // 
-            this.buttomLeft.FlatAppearance.BorderSize = 0;
-            this.buttomLeft.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttomLeft.Location = new System.Drawing.Point(682, 520);
-            this.buttomLeft.Name = "buttomLeft";
-            this.buttomLeft.Size = new System.Drawing.Size(32, 32);
-            this.buttomLeft.TabIndex = 15;
-            this.buttomLeft.UseVisualStyleBackColor = true;
-            this.buttomLeft.Click += new System.EventHandler(this.buttonLeft_Click);
+            this.buttonLeft.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonLeft.FlatAppearance.BorderSize = 0;
+            this.buttonLeft.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonLeft.Location = new System.Drawing.Point(682, 520);
+            this.buttonLeft.Name = "buttomLeft";
+            this.buttonLeft.Size = new System.Drawing.Size(32, 32);
+            this.buttonLeft.TabIndex = 15;
+            this.buttonLeft.UseVisualStyleBackColor = true;
+            this.buttonLeft.Click += new System.EventHandler(this.buttonLeft_Click);
             // 
             // buttonRight
             // 
+            this.buttonRight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonRight.FlatAppearance.BorderSize = 0;
             this.buttonRight.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonRight.Location = new System.Drawing.Point(720, 520);
@@ -60,6 +62,8 @@
             // 
             // pictureBox1
             // 
+            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBox1.Location = new System.Drawing.Point(16, 88);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(736, 414);
@@ -69,6 +73,8 @@
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.Location = new System.Drawing.Point(16, 13);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(736, 64);
@@ -77,10 +83,11 @@
             // 
             // checkBoxDontShow
             // 
+            this.checkBoxDontShow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkBoxDontShow.AutoSize = true;
             this.checkBoxDontShow.Location = new System.Drawing.Point(16, 512);
             this.checkBoxDontShow.Name = "checkBoxDontShow";
-            this.checkBoxDontShow.Size = new System.Drawing.Size(115, 17);
+            this.checkBoxDontShow.Size = new System.Drawing.Size(167, 24);
             this.checkBoxDontShow.TabIndex = 19;
             this.checkBoxDontShow.Text = "Do not show again";
             this.checkBoxDontShow.UseVisualStyleBackColor = true;
@@ -94,7 +101,7 @@
             this.Controls.Add(this.checkBoxDontShow);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.pictureBox1);
-            this.Controls.Add(this.buttomLeft);
+            this.Controls.Add(this.buttonLeft);
             this.Controls.Add(this.buttonRight);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.KeyPreview = true;
@@ -113,7 +120,7 @@
         #endregion
 
         private NoFocusButton buttonRight;
-        private NoFocusButton buttomLeft;
+        private NoFocusButton buttonLeft;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox checkBoxDontShow;
