@@ -248,6 +248,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="Source\Utils\RtMidi.cs" />
+    <Compile Include="UI\Dialogs\Gtk\TutorialDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

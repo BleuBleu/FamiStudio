@@ -16,7 +16,7 @@ namespace FamiStudio
 
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
-        public TutorialDialog(System.Drawing.Rectangle mainWinRect) : base(WindowType.Toplevel)
+        public TutorialDialog() : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = 756;
@@ -24,11 +24,6 @@ namespace FamiStudio
 #if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
             SetPosition(WindowPosition.CenterOnParent);
-#else
-            int x = mainWinRect.Left + (mainWinRect.Width  - width) / 2;
-            int y = mainWinRect.Top  + (mainWinRect.Height - width) / 2;
-
-            Move(x, y);
 #endif
         }
 
@@ -39,8 +34,11 @@ namespace FamiStudio
             buttonRight = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.ArrowRight{suffix}.png"));
 
             checkBoxDontShow = new CheckButton();
-            checkBoxDontShow.Label = "Do not show again";
             checkBoxDontShow.Show();
+
+            var checkLabel = new Label();
+            checkLabel.Text = "Do not show again";
+            checkLabel.Show();
 
             buttonLeft.Show();
             buttonLeft.ButtonPressEvent  += ButtonLeft_ButtonPressEvent;
@@ -57,10 +55,15 @@ namespace FamiStudio
             buttonsAlign.Show();
             buttonsAlign.Add(buttonsHbox);
 
+            var checkBoxHBox = new HBox(false, 0);
+            checkBoxHBox.PackStart(checkBoxDontShow, false, false, 0);
+            checkBoxHBox.PackStart(checkLabel, false, false, 0);
+            checkBoxHBox.Show();
+
             var checkBoxAlign = new Alignment(0.0f, 0.5f, 0.0f, 0.0f);
             checkBoxAlign.TopPadding = 5;
             checkBoxAlign.Show();
-            checkBoxAlign.Add(checkBoxDontShow);
+            checkBoxAlign.Add(checkBoxHBox);
 
             var hbox = new HBox(true, 0);
             hbox.PackStart(checkBoxAlign);
@@ -134,6 +137,9 @@ namespace FamiStudio
             Show();
 
 #if FAMISTUDIO_MACOS
+            int x = parent.Bounds.Left + (parent.Bounds.Width  - Allocation.Width)  / 2;
+            int y = parent.Bounds.Top  + (parent.Bounds.Height - Allocation.Height) / 2;
+            Move(x, y);
             MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
 #endif
 
