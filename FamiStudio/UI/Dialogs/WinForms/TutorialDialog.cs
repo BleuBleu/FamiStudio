@@ -9,7 +9,7 @@ namespace FamiStudio
     {
         int pageIndex = 0;
 
-        public TutorialDialog(System.Drawing.Rectangle rect)
+        public TutorialDialog()
         {
             Init();
         }

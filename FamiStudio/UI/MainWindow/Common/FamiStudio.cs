@@ -907,6 +907,11 @@ namespace FamiStudio
 
         private void ConditionalShowTutorial()
         {
+#if FAMISTUDIO_WINDOWS
+            // Edge case where we open a NSF from the command line and the open dialog is active.
+            if (!mainForm.CanFocus)
+                return;
+#endif
             if (tutorialCounter > 0)
             {
                 if (--tutorialCounter == 0)
