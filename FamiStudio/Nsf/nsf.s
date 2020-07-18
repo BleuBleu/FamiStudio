@@ -19,7 +19,13 @@
 .segment "HEADER"
 
 ; NSF header Placeholder so that the debug info addresses matches.
-HEADER : .res 128
+header:   .res 128
+
+.segment "RAM"
+
+.if .defined(NSF_NTSC_SUPPORT) && .defined(NSF_PAL_SUPPORT)
+nsf_mode: .res 1
+.endif
 
 .segment "CODE_INIT"
 
@@ -32,15 +38,14 @@ HEADER : .res 128
 	;   - flags (3 low bits = num dpcm pages)
 	
 .if .defined(NSF_NTSC_SUPPORT) && .defined(NSF_PAL_SUPPORT)
-	mode = FT_TEMP_VAR1
-	stx FT_TEMP_VAR1
+	stx nsf_mode
 .endif	
 
 	asl
 	asl
 	tax
 	
-	ldy SONG_TABLE+0, x
+	ldy nsf_song_table+0, x
 
 	; First map the full 0x9000 - 0xf000 to song data.
 	sty $5FF9
@@ -58,8 +63,8 @@ HEADER : .res 128
 	sty $5FFf
 	
 	; Then map the samples at the very end (if 1 page => start at 0xf000, if 2 pages => start at 0xe000, etc.)
-	ldy DPCM_PAGE_START
-	lda DPCM_PAGE_CNT
+	ldy nsf_dpcm_page_start
+	lda nsf_dpcm_page_cnt
 	beq samples_none
 	
 	cmp #1
@@ -83,22 +88,28 @@ HEADER : .res 128
 	samples_none:
 
 	; Load song data and play
-	ldy SONG_TABLE+2, x ; hi-byte
-	lda SONG_TABLE+1, x ; lo-byte
+	ldy nsf_song_table+2, x ; hi-byte
+	lda nsf_song_table+1, x ; lo-byte
 	tax
 
 .if .defined(NSF_NTSC_SUPPORT) && .defined(NSF_PAL_SUPPORT)
-	lda mode
+	lda nsf_mode
 	eor #1
 .elseif .defined(NSF_PAL_SUPPORT)
 	lda #0 ; PAL
 .else
 	lda #1 ; NTSC
 .endif
+
+.ifdef FAMISTUDIO
+	jsr famistudio_init
+	lda #0
+	jsr famistudio_music_play
+.else
 	jsr FamiToneInit
-	
 	lda #0
 	jsr FamiToneMusicPlay
+.endif
 
 	rts
 
@@ -107,18 +118,22 @@ HEADER : .res 128
 .segment "CODE_PLAY"
 
 .proc nsf_play
+.ifdef FAMISTUDIO
+	jsr famistudio_update
+.else
 	jsr FamiToneUpdate
+.endif
 	rts
 .endproc
 
 .segment "SONG_DATA"
 
-DPCM_PAGE_START: .res 1
-DPCM_PAGE_CNT:   .res 1
+nsf_dpcm_page_start: .res 1
+nsf_dpcm_page_cnt:   .res 1
 
 ; each entry in the song table is 4 bytes
 ;  - first page of the song (1 byte)
 ;  - address of the start of the song in page starting at 0x9000 (2 byte)
 ;  - unused (1-byte)
 
-SONG_TABLE:      .res 4
+nsf_song_table:      .res 4

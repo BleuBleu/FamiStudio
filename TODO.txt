@@ -22,8 +22,12 @@
 	- Rename stuff
 		- FT => FAMISTUDIO or FS ?
 		- _FT2? 
-		- Naming convension for public/private stuff
+	- Declare all temp variable at top of procs.
+	- famistudio_output_buf
+	- Cleanup comments.
+	- FT_DPCM_PTR/FT_DPCM_OFF -> Why am I missing this line???
 	- Resurect SFX
+	- ROM: Fix (and generalize to a demo?)
 	- Global/Project config?
 	- 3 assembly versions + 3 simple black screen test ROMs.
 		- How to handle segments.
