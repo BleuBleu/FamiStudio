@@ -109,7 +109,9 @@ namespace FamiStudio
 
                 for (int chn = 0; chn < song.Channels.Length; ++chn)
                 {
-                    line += $"{ll}song{i}ch{chn},";
+                    if (chn > 0)
+                        line += ",";
+                    line += $"{ll}song{i}ch{chn}";
                 }
 
                 if (song.UsesFamiTrackerTempo)
@@ -413,7 +415,9 @@ namespace FamiStudio
                         samplePitchAndLoop = mapping.Pitch | ((mapping.Loop ? 1 : 0) << 6);
                     }
 
-                    lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FT_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2}\t;{i} {sampleName}");
+                    var constName = kernel == FamiToneKernel.FamiStudio ? "FAMISTUDIO_DPCM_PTR" : "FT_DPCM_PTR";
+
+                    lines.Add($"\t{db} ${sampleOffset:x2}+{lo}({constName}),${sampleSize:x2},${samplePitchAndLoop:x2}\t;{i} {sampleName}");
                 }
 
                 lines.Add("");
@@ -1135,7 +1139,7 @@ namespace FamiStudio
                             {
                                 labelsToPatch.Add(new Tuple<string, int>(valStr, bytes.Count));
                             }
-                            else if (valStr.Contains("FT_DPCM_PTR"))
+                            else if (valStr.Contains("FT_DPCM_PTR") || valStr.Contains("FAMISTUDIO_DPCM_PTR"))
                             {
                                 valNum = Convert.ToInt32(valStr.Split('+')[0], 16) + ((dpcmOffset & 0x3fff) >> 6);
                             }
