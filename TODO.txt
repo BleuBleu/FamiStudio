@@ -3,40 +3,34 @@
 - Play right now when dragging...
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
+- BUG: One bad pixel in ROM?
 - FDS export
 - Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
 - Why is volume visible on triangle channel?
 - FamiStudio sound engine
-	X Create unit tests.
-	x All .proc
-	x Toggeable features (table with code size + RAM usage)
-		x Slides
-		x Volume track
-		x Fine pitch track
-		x Vibrato
-		x Arpeggio
-		x All expansions
-	x Reverse "tempo" -> "famitracker".
-	x Unify #ifdef VS 0/1
+	- 3 assembly versions + 3 simple black screen test ROMs.
+		- Remove all proc
+		- Remove all ::
+		- All local symols @.
+		- How to handle segments.
+
+
 	- Document function inputs like in my game.
 	- Rename stuff
 		- FT => FAMISTUDIO or FS ?
 		- _FT2? 
 	- Declare all temp variable at top of procs.
-	- famistudio_output_buf
 	- Cleanup comments.
 	- FT_DPCM_PTR/FT_DPCM_OFF -> Why am I missing this line???
 	- Resurect SFX
 	- ROM: Fix (and generalize to a demo?)
 	- Global/Project config?
-	- 3 assembly versions + 3 simple black screen test ROMs.
-		- How to handle segments.
 	- Nice test ROM (same as ROM, but with SFX player)
 	- Documentation.
 	- Need to be a seperate project on GitHub?
 	- What to do with FT_EQUALIZER?
 	- Deprecate FamiTone2 FS.
-	x FT thread thingy.
+	- TAB/SPACE
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.
