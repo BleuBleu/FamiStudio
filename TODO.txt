@@ -36,7 +36,7 @@
 	- Need to be a seperate project on GitHub?
 	- What to do with FT_EQUALIZER?
 	- Deprecate FamiTone2 FS.
-	- FT thread thingy.
+	x FT thread thingy.
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.

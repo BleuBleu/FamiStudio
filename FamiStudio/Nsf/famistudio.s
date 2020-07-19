@@ -66,40 +66,40 @@ FAMISTUDIO_DUAL_SUPPORT = 1
     FAMISTUDIO_NUM_CHANNELS         = 5
 .endif
 
-FAMISTUDIO_CH0_ENVs = 0
-FAMISTUDIO_CH1_ENVs = 3
-FAMISTUDIO_CH2_ENVs = 6
-FAMISTUDIO_CH3_ENVs = 8
+FAMISTUDIO_CH0_ENVS = 0
+FAMISTUDIO_CH1_ENVS = 3
+FAMISTUDIO_CH2_ENVS = 6
+FAMISTUDIO_CH3_ENVS = 8
 
 .if .defined(FAMISTUDIO_EXP_VRC6) 
-    FAMISTUDIO_CH5_ENVs  = 11
-    FAMISTUDIO_CH6_ENVs  = 14
-    FAMISTUDIO_CH7_ENVs  = 17
+    FAMISTUDIO_CH5_ENVS  = 11
+    FAMISTUDIO_CH6_ENVS  = 14
+    FAMISTUDIO_CH7_ENVS  = 17
 .elseif .defined(FAMISTUDIO_EXP_VRC7) 
-    FAMISTUDIO_CH5_ENVs  = 11
-    FAMISTUDIO_CH6_ENVs  = 13
-    FAMISTUDIO_CH7_ENVs  = 15    
-    FAMISTUDIO_CH8_ENVs  = 17
-    FAMISTUDIO_CH9_ENVs  = 19
-    FAMISTUDIO_CH10_ENVs = 21    
+    FAMISTUDIO_CH5_ENVS  = 11
+    FAMISTUDIO_CH6_ENVS  = 13
+    FAMISTUDIO_CH7_ENVS  = 15    
+    FAMISTUDIO_CH8_ENVS  = 17
+    FAMISTUDIO_CH9_ENVS  = 19
+    FAMISTUDIO_CH10_ENVS = 21    
 .elseif .defined(FAMISTUDIO_EXP_N163)
-    FAMISTUDIO_CH5_ENVs  = 11
-    FAMISTUDIO_CH6_ENVs  = 13
-    FAMISTUDIO_CH7_ENVs  = 15    
-    FAMISTUDIO_CH8_ENVs  = 17
-    FAMISTUDIO_CH9_ENVs  = 19
-    FAMISTUDIO_CH10_ENVs = 21   
-    FAMISTUDIO_CH11_ENVs = 23   
-    FAMISTUDIO_CH12_ENVs = 25   
+    FAMISTUDIO_CH5_ENVS  = 11
+    FAMISTUDIO_CH6_ENVS  = 13
+    FAMISTUDIO_CH7_ENVS  = 15    
+    FAMISTUDIO_CH8_ENVS  = 17
+    FAMISTUDIO_CH9_ENVS  = 19
+    FAMISTUDIO_CH10_ENVS = 21   
+    FAMISTUDIO_CH11_ENVS = 23   
+    FAMISTUDIO_CH12_ENVS = 25   
 .elseif .defined(FAMISTUDIO_EXP_FDS)
-    FAMISTUDIO_CH5_ENVs  = 11
+    FAMISTUDIO_CH5_ENVS  = 11
 .elseif .defined(FAMISTUDIO_EXP_MMC5)
-    FAMISTUDIO_CH5_ENVs  = 11
-    FAMISTUDIO_CH6_ENVs  = 14
+    FAMISTUDIO_CH5_ENVS  = 11
+    FAMISTUDIO_CH6_ENVS  = 14
 .elseif .defined(FAMISTUDIO_EXP_S5B)    
-    FAMISTUDIO_CH5_ENVs  = 11
-    FAMISTUDIO_CH6_ENVs  = 13
-    FAMISTUDIO_CH7_ENVs  = 15
+    FAMISTUDIO_CH5_ENVS  = 11
+    FAMISTUDIO_CH6_ENVS  = 13
+    FAMISTUDIO_CH7_ENVS  = 15
 .endif
 
 FAMISTUDIO_ENV_VOLUME_OFF = 0
@@ -124,6 +124,15 @@ FAMISTUDIO_ENV_DUTY_OFF   = 2
 
 .if .defined(FAMISTUDIO_EXP_N163)
 FAMISTUDIO_N163_CHN_MASK  = (FAMISTUDIO_EXP_N163_CHN_CNT - 1) << 4
+.endif
+
+.if .defined(FAMISTUDIO_CFG_SFX_SUPPORT)
+FAMISTUDIO_SFX_STRUCT_SIZE = 15
+
+FAMISTUDIO_SFX_CH0 = FAMISTUDIO_SFX_STRUCT_SIZE * 0
+FAMISTUDIO_SFX_CH1 = FAMISTUDIO_SFX_STRUCT_SIZE * 1
+FAMISTUDIO_SFX_CH2 = FAMISTUDIO_SFX_STRUCT_SIZE * 2
+FAMISTUDIO_SFX_CH3 = FAMISTUDIO_SFX_STRUCT_SIZE * 3
 .endif
 
 .segment "RAM"
@@ -201,7 +210,6 @@ famistudio_instrument_hi:         .res 1
 famistudio_dpcm_list_lo:          .res 1 ; TODO: Not needed if DPCM support is disabled.
 famistudio_dpcm_list_hi:          .res 1 ; TODO: Not needed if DPCM support is disabled.
 famistudio_dpcm_effect:           .res 1 ; TODO: Not needed if DPCM support is disabled.
-famistudio_output_buf:            .res 1
 famistudio_pulse1_prev:           .res 1
 famistudio_pulse2_prev:           .res 1
 famistudio_song_speed             = famistudio_chn_instrument+4
@@ -228,30 +236,18 @@ famistudio_exp_instrument_lo:     .res 1
 famistudio_exp_instrument_hi:     .res 1
 .endif
 
-; SFX Definately dont work right now.
-.ifdef FAMISTUDIO_CFG_SFX_SUPPORT
+.if .defined(FAMISTUDIO_CFG_SFX_SUPPORT)
 
-FT_SFX_STRUCT_SIZE = 15
+famistudio_sfx_addr_lo:    .res 1
+famistudio_sfx_addr_hi:    .res 1
+famistudio_sfx_base_addr:  .res (FAMISTUDIO_CFG_SFX_STREAMS * FAMISTUDIO_SFX_STRUCT_SIZE)
 
-;sound effect stream variables, 2 bytes and 15 bytes per stream
-;when sound effects are disabled, this memory is not used
-
-FT_SFX_ADR_L    = .res 1
-FT_SFX_ADR_H    = .res 1
-FT_SFX_BASE_ADR = .res 1
-
-FT_SFX_REPEAT   = FT_SFX_BASE_ADR+0
-FT_SFX_PTR_L    = FT_SFX_BASE_ADR+1
-FT_SFX_PTR_H    = FT_SFX_BASE_ADR+2
-FT_SFX_OFF      = FT_SFX_BASE_ADR+3
-FT_SFX_BUF      = FT_SFX_BASE_ADR+4    ;11 bytes
-
-;aliases for sound effect channels to use in user calls
-
-FT_SFX_CH0      = FT_SFX_STRUCT_SIZE*0
-FT_SFX_CH1      = FT_SFX_STRUCT_SIZE*1
-FT_SFX_CH2      = FT_SFX_STRUCT_SIZE*2
-FT_SFX_CH3      = FT_SFX_STRUCT_SIZE*3
+; TODO: Refactor SFX memory layout. These uses a AoS approach, not fan. 
+famistudio_sfx_repeat: famistudio_sfx_base_addr + 0
+famistudio_sfx_ptr_lo: famistudio_sfx_base_addr + 1
+famistudio_sfx_ptr_hi: famistudio_sfx_base_addr + 2
+famistudio_sfx_offset: famistudio_sfx_base_addr + 3
+famistudio_sfx_buffer: famistudio_sfx_base_addr + 4
 
 .endif 
 
@@ -271,151 +267,151 @@ famistudio_ptr2_hi = famistudio_ptr1+1
 
 .segment "CODE"
 
-APU_PL1_VOL    = $4000
-APU_PL1_SWEEP  = $4001
-APU_PL1_LO     = $4002
-APU_PL1_HI     = $4003
-APU_PL2_VOL    = $4004
-APU_PL2_SWEEP  = $4005
-APU_PL2_LO     = $4006
-APU_PL2_HI     = $4007
-APU_TRI_LINEAR = $4008
-APU_TRI_LO     = $400a
-APU_TRI_HI     = $400b
-APU_NOISE_VOL  = $400c
-APU_NOISE_LO   = $400e
-APU_NOISE_HI   = $400f
-APU_DMC_FREQ   = $4010
-APU_DMC_RAW    = $4011
-APU_DMC_START  = $4012
-APU_DMC_LEN    = $4013
-APU_SND_CHN    = $4015
-APU_FRAME_CNT  = $4017
+FAMISTUDIO_APU_PL1_VOL    = $4000
+FAMISTUDIO_APU_PL1_SWEEP  = $4001
+FAMISTUDIO_APU_PL1_LO     = $4002
+FAMISTUDIO_APU_PL1_HI     = $4003
+FAMISTUDIO_APU_PL2_VOL    = $4004
+FAMISTUDIO_APU_PL2_SWEEP  = $4005
+FAMISTUDIO_APU_PL2_LO     = $4006
+FAMISTUDIO_APU_PL2_HI     = $4007
+FAMISTUDIO_APU_TRI_LINEAR = $4008
+FAMISTUDIO_APU_TRI_LO     = $400a
+FAMISTUDIO_APU_TRI_HI     = $400b
+FAMISTUDIO_APU_NOISE_VOL  = $400c
+FAMISTUDIO_APU_NOISE_LO   = $400e
+FAMISTUDIO_APU_NOISE_HI   = $400f
+FAMISTUDIO_APU_DMC_FREQ   = $4010
+FAMISTUDIO_APU_DMC_RAW    = $4011
+FAMISTUDIO_APU_DMC_START  = $4012
+FAMISTUDIO_APU_DMC_LEN    = $4013
+FAMISTUDIO_APU_SND_CHN    = $4015
+FAMISTUDIO_APU_FRAME_CNT  = $4017
 
 .ifdef FAMISTUDIO_EXP_VRC6
-VRC6_PL1_VOL   = $9000
-VRC6_PL1_LO    = $9001
-VRC6_PL1_HI    = $9002
-VRC6_PL2_VOL   = $a000
-VRC6_PL2_LO    = $a001
-VRC6_PL2_HI    = $a002
-VRC6_SAW_VOL   = $b000
-VRC6_SAW_LO    = $b001
-VRC6_SAW_HI    = $b002
+FAMISTUDIO_VRC6_PL1_VOL   = $9000
+FAMISTUDIO_VRC6_PL1_LO    = $9001
+FAMISTUDIO_VRC6_PL1_HI    = $9002
+FAMISTUDIO_VRC6_PL2_VOL   = $a000
+FAMISTUDIO_VRC6_PL2_LO    = $a001
+FAMISTUDIO_VRC6_PL2_HI    = $a002
+FAMISTUDIO_VRC6_SAW_VOL   = $b000
+FAMISTUDIO_VRC6_SAW_LO    = $b001
+FAMISTUDIO_VRC6_SAW_HI    = $b002
 .endif
 
 .ifdef FAMISTUDIO_EXP_VRC7
-VRC7_SILENCE   = $e000
-VRC7_REG_SEL   = $9010
-VRC7_REG_WRITE = $9030
-VRC7_REG_LO_1  = $10
-VRC7_REG_LO_2  = $11
-VRC7_REG_LO_3  = $12
-VRC7_REG_LO_4  = $13
-VRC7_REG_LO_5  = $14
-VRC7_REG_LO_6  = $15
-VRC7_REG_HI_1  = $20
-VRC7_REG_HI_2  = $21
-VRC7_REG_HI_3  = $22
-VRC7_REG_HI_4  = $23
-VRC7_REG_HI_5  = $24
-VRC7_REG_HI_6  = $25
-VRC7_REG_VOL_1 = $30
-VRC7_REG_VOL_2 = $31
-VRC7_REG_VOL_3 = $32
-VRC7_REG_VOL_4 = $33
-VRC7_REG_VOL_5 = $34
-VRC7_REG_VOL_6 = $35 
+FAMISTUDIO_VRC7_SILENCE   = $e000
+FAMISTUDIO_VRC7_REG_SEL   = $9010
+FAMISTUDIO_VRC7_REG_WRITE = $9030
+FAMISTUDIO_VRC7_REG_LO_1  = $10
+FAMISTUDIO_VRC7_REG_LO_2  = $11
+FAMISTUDIO_VRC7_REG_LO_3  = $12
+FAMISTUDIO_VRC7_REG_LO_4  = $13
+FAMISTUDIO_VRC7_REG_LO_5  = $14
+FAMISTUDIO_VRC7_REG_LO_6  = $15
+FAMISTUDIO_VRC7_REG_HI_1  = $20
+FAMISTUDIO_VRC7_REG_HI_2  = $21
+FAMISTUDIO_VRC7_REG_HI_3  = $22
+FAMISTUDIO_VRC7_REG_HI_4  = $23
+FAMISTUDIO_VRC7_REG_HI_5  = $24
+FAMISTUDIO_VRC7_REG_HI_6  = $25
+FAMISTUDIO_VRC7_REG_VOL_1 = $30
+FAMISTUDIO_VRC7_REG_VOL_2 = $31
+FAMISTUDIO_VRC7_REG_VOL_3 = $32
+FAMISTUDIO_VRC7_REG_VOL_4 = $33
+FAMISTUDIO_VRC7_REG_VOL_5 = $34
+FAMISTUDIO_VRC7_REG_VOL_6 = $35 
 .endif
 
 .ifdef FAMISTUDIO_EXP_MMC5
-MMC5_PL1_VOL   = $5000
-MMC5_PL1_SWEEP = $5001
-MMC5_PL1_LO    = $5002
-MMC5_PL1_HI    = $5003
-MMC5_PL2_VOL   = $5004
-MMC5_PL2_SWEEP = $5005
-MMC5_PL2_LO    = $5006
-MMC5_PL2_HI    = $5007
-MMC5_PCM_MODE  = $5010
-MMC5_SND_CHN   = $5015
+FAMISTUDIO_MMC5_PL1_VOL   = $5000
+FAMISTUDIO_MMC5_PL1_SWEEP = $5001
+FAMISTUDIO_MMC5_PL1_LO    = $5002
+FAMISTUDIO_MMC5_PL1_HI    = $5003
+FAMISTUDIO_MMC5_PL2_VOL   = $5004
+FAMISTUDIO_MMC5_PL2_SWEEP = $5005
+FAMISTUDIO_MMC5_PL2_LO    = $5006
+FAMISTUDIO_MMC5_PL2_HI    = $5007
+FAMISTUDIO_MMC5_PCM_MODE  = $5010
+FAMISTUDIO_MMC5_SND_CHN   = $5015
 .endif
 
 .ifdef FAMISTUDIO_EXP_N163
-N163_SILENCE       = $e000
-N163_ADDR          = $f800
-N163_DATA          = $4800 
-N163_REG_FREQ_LO   = $78
-N163_REG_PHASE_LO  = $79
-N163_REG_FREQ_MID  = $7a
-N163_REG_PHASE_MID = $7b
-N163_REG_FREQ_HI   = $7c
-N163_REG_PHASE_HI  = $7d
-N163_REG_WAVE      = $7e
-N163_REG_VOLUME    = $7f
+FAMISTUDIO_N163_SILENCE       = $e000
+FAMISTUDIO_N163_ADDR          = $f800
+FAMISTUDIO_N163_DATA          = $4800 
+FAMISTUDIO_N163_REG_FREQ_LO   = $78
+FAMISTUDIO_N163_REG_PHASE_LO  = $79
+FAMISTUDIO_N163_REG_FREQ_MID  = $7a
+FAMISTUDIO_N163_REG_PHASE_MID = $7b
+FAMISTUDIO_N163_REG_FREQ_HI   = $7c
+FAMISTUDIO_N163_REG_PHASE_HI  = $7d
+FAMISTUDIO_N163_REG_WAVE      = $7e
+FAMISTUDIO_N163_REG_VOLUME    = $7f
 .endif
 
 .ifdef FAMISTUDIO_EXP_S5B
-S5B_ADDR       = $c000
-S5B_DATA       = $e000
-S5B_REG_LO_A   = $00
-S5B_REG_HI_A   = $01
-S5B_REG_LO_B   = $02
-S5B_REG_HI_B   = $03
-S5B_REG_LO_C   = $04
-S5B_REG_HI_C   = $05
-S5B_REG_NOISE  = $06
-S5B_REG_TONE   = $07
-S5B_REG_VOL_A  = $08
-S5B_REG_VOL_B  = $09
-S5B_REG_VOL_C  = $0a
-S5B_REG_ENV_LO = $0b
-S5B_REG_ENV_HI = $0c
-S5B_REG_SHAPE  = $0d
-S5B_REG_IO_A   = $0e
-S5B_REG_IO_B   = $0f
+FAMISTUDIO_S5B_ADDR       = $c000
+FAMISTUDIO_S5B_DATA       = $e000
+FAMISTUDIO_S5B_REG_LO_A   = $00
+FAMISTUDIO_S5B_REG_HI_A   = $01
+FAMISTUDIO_S5B_REG_LO_B   = $02
+FAMISTUDIO_S5B_REG_HI_B   = $03
+FAMISTUDIO_S5B_REG_LO_C   = $04
+FAMISTUDIO_S5B_REG_HI_C   = $05
+FAMISTUDIO_S5B_REG_NOISE  = $06
+FAMISTUDIO_S5B_REG_TONE   = $07
+FAMISTUDIO_S5B_REG_VOL_A  = $08
+FAMISTUDIO_S5B_REG_VOL_B  = $09
+FAMISTUDIO_S5B_REG_VOL_C  = $0a
+FAMISTUDIO_S5B_REG_ENV_LO = $0b
+FAMISTUDIO_S5B_REG_ENV_HI = $0c
+FAMISTUDIO_S5B_REG_SHAPE  = $0d
+FAMISTUDIO_S5B_REG_IO_A   = $0e
+FAMISTUDIO_S5B_REG_IO_B   = $0f
 .endif
 
 .ifdef FAMISTUDIO_EXP_FDS
-FDS_WAV_START  = $4040
-FDS_VOL_ENV    = $4080
-FDS_FREQ_LO    = $4082
-FDS_FREQ_HI    = $4083
-FDS_SWEEP_ENV  = $4084
-FDS_SWEEP_BIAS = $4085
-FDS_MOD_LO     = $4086
-FDS_MOD_HI     = $4087
-FDS_MOD_TABLE  = $4088
-FDS_VOL        = $4089
-FDS_ENV_SPEED  = $408A
+FAMISTUDIO_FDS_WAV_START  = $4040
+FAMISTUDIO_FDS_VOL_ENV    = $4080
+FAMISTUDIO_FDS_FREQ_LO    = $4082
+FAMISTUDIO_FDS_FREQ_HI    = $4083
+FAMISTUDIO_FDS_SWEEP_ENV  = $4084
+FAMISTUDIO_FDS_SWEEP_BIAS = $4085
+FAMISTUDIO_FDS_MOD_LO     = $4086
+FAMISTUDIO_FDS_MOD_HI     = $4087
+FAMISTUDIO_FDS_MOD_TABLE  = $4088
+FAMISTUDIO_FDS_VOL        = $4089
+FAMISTUDIO_FDS_ENV_SPEED  = $408A
 .endif
 
 ;aliases for the APU registers in the output buffer
 
 .ifndef FAMISTUDIO_CFG_SFX_SUPPORT
-FT_MR_PULSE1_V = APU_PL1_VOL
-FT_MR_PULSE1_L = APU_PL1_LO
-FT_MR_PULSE1_H = APU_PL1_HI
-FT_MR_PULSE2_V = APU_PL2_VOL
-FT_MR_PULSE2_L = APU_PL2_LO
-FT_MR_PULSE2_H = APU_PL2_HI
-FT_MR_TRI_V    = APU_TRI_LINEAR
-FT_MR_TRI_L    = APU_TRI_LO
-FT_MR_TRI_H    = APU_TRI_HI
-FT_MR_NOISE_V  = APU_NOISE_VOL
-FT_MR_NOISE_F  = APU_NOISE_LO
+FT_MR_PULSE1_V = FAMISTUDIO_APU_PL1_VOL
+FT_MR_PULSE1_L = FAMISTUDIO_APU_PL1_LO
+FT_MR_PULSE1_H = FAMISTUDIO_APU_PL1_HI
+FT_MR_PULSE2_V = FAMISTUDIO_APU_PL2_VOL
+FT_MR_PULSE2_L = FAMISTUDIO_APU_PL2_LO
+FT_MR_PULSE2_H = FAMISTUDIO_APU_PL2_HI
+FT_MR_TRI_V    = FAMISTUDIO_APU_TRI_LINEAR
+FT_MR_TRI_L    = FAMISTUDIO_APU_TRI_LO
+FT_MR_TRI_H    = FAMISTUDIO_APU_TRI_HI
+FT_MR_NOISE_V  = FAMISTUDIO_APU_NOISE_VOL
+FT_MR_NOISE_F  = FAMISTUDIO_APU_NOISE_LO
 .else ;otherwise write to the output buffer
-FT_MR_PULSE1_V = famistudio_output_buf
-FT_MR_PULSE1_L = famistudio_output_buf+1
-FT_MR_PULSE1_H = famistudio_output_buf+2
-FT_MR_PULSE2_V = famistudio_output_buf+3
-FT_MR_PULSE2_L = famistudio_output_buf+4
-FT_MR_PULSE2_H = famistudio_output_buf+5
-FT_MR_TRI_V    = famistudio_output_buf+6
-FT_MR_TRI_L    = famistudio_output_buf+7
-FT_MR_TRI_H    = famistudio_output_buf+8
-FT_MR_NOISE_V  = famistudio_output_buf+9
-FT_MR_NOISE_F  = famistudio_output_buf+10
+FT_MR_PULSE1_V = famistudio_output_buf + 0
+FT_MR_PULSE1_L = famistudio_output_buf + 1
+FT_MR_PULSE1_H = famistudio_output_buf + 2
+FT_MR_PULSE2_V = famistudio_output_buf + 3
+FT_MR_PULSE2_L = famistudio_output_buf + 4
+FT_MR_PULSE2_H = famistudio_output_buf + 5
+FT_MR_TRI_V    = famistudio_output_buf + 6
+FT_MR_TRI_L    = famistudio_output_buf + 7
+FT_MR_TRI_H    = famistudio_output_buf + 8
+FT_MR_NOISE_V  = famistudio_output_buf + 9
+FT_MR_NOISE_F  = famistudio_output_buf + 10
 .endif
 
 ;------------------------------------------------------------------------------
@@ -476,37 +472,37 @@ pal:
     sta famistudio_pulse2_prev
 
     lda #$0f                   ;enable channels, stop DMC
-    sta APU_SND_CHN
+    sta FAMISTUDIO_APU_SND_CHN
     lda #$80                   ;disable triangle length counter
-    sta APU_TRI_LINEAR
+    sta FAMISTUDIO_APU_TRI_LINEAR
     lda #$00                   ;load noise length
-    sta APU_NOISE_HI
+    sta FAMISTUDIO_APU_NOISE_HI
 
     lda #$30                   ;volumes to 0
-    sta APU_PL1_VOL
-    sta APU_PL2_VOL
-    sta APU_NOISE_VOL
+    sta FAMISTUDIO_APU_PL1_VOL
+    sta FAMISTUDIO_APU_PL2_VOL
+    sta FAMISTUDIO_APU_NOISE_VOL
     lda #$08                   ;no sweep
-    sta APU_PL1_SWEEP
-    sta APU_PL2_SWEEP
+    sta FAMISTUDIO_APU_PL1_SWEEP
+    sta FAMISTUDIO_APU_PL2_SWEEP
 
 .ifdef ::FAMISTUDIO_EXP_VRC7
     lda #0
-    sta VRC7_SILENCE ; Enable VRC7 audio.
+    sta FAMISTUDIO_VRC7_SILENCE ; Enable VRC7 audio.
 .endif
 
 .ifdef ::FAMISTUDIO_EXP_MMC5
     lda #$00
-    sta MMC5_PCM_MODE
+    sta FAMISTUDIO_MMC5_PCM_MODE
     lda #$03
-    sta MMC5_SND_CHN
+    sta FAMISTUDIO_MMC5_SND_CHN
 .endif
 
 .ifdef ::FAMISTUDIO_EXP_S5B
-    lda #S5B_REG_TONE
-    sta S5B_ADDR
+    lda #FAMISTUDIO_S5B_REG_TONE
+    sta FAMISTUDIO_S5B_ADDR
     lda #$38 ; No noise, just 3 tones for now.
-    sta S5B_DATA
+    sta FAMISTUDIO_S5B_DATA
 .endif
 
     jmp famistudio_music_stop
@@ -840,10 +836,10 @@ pause:
     jsr famistudio_sample_stop
     
     lda #0                     ;mute sound
-    sta famistudio_env_value+FAMISTUDIO_CH0_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_CH1_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_CH2_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_CH3_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+    sta famistudio_env_value+FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    sta famistudio_env_value+FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    sta famistudio_env_value+FAMISTUDIO_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    sta famistudio_env_value+FAMISTUDIO_CH3_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     lda famistudio_song_speed          ;set pause flag
     ora #$80
     bne done
@@ -1040,13 +1036,13 @@ nocut:
                 cpy #$03
                 bcs hi_delta_too_big
                 ldx #$40
-                stx APU_FRAME_CNT ; reset frame counter in case it was about to clock
+                stx FAMISTUDIO_APU_FRAME_CNT ; reset frame counter in case it was about to clock
                 lda famistudio_smooth_vibrato_period_lo_lookup, y ; be sure low 8 bits of timer period are $ff (for positive delta), or $00 (for negative delta)
                 sta reg_lo
                 lda famistudio_smooth_vibrato_sweep_lookup, y ; sweep enabled, shift = 7, set negative flag or delta is negative..
                 sta reg_sweep
                 lda #$c0
-                sta APU_FRAME_CNT ; clock sweep immediately
+                sta FAMISTUDIO_APU_FRAME_CNT ; clock sweep immediately
                 lda #$08
                 sta reg_sweep ; disable sweep
                 lda pitch+0
@@ -1118,35 +1114,35 @@ set_volume:
 
 nocut:
     clc
-    adc famistudio_env_value+FAMISTUDIO_CH5_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+    adc famistudio_env_value+FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     tax
 
     famistudio_get_note_pitch_macro 3, , famistudio_fds_note_table_lsb, famistudio_fds_note_table_msb
 
     lda pitch+0
-    sta FDS_FREQ_LO
+    sta FAMISTUDIO_FDS_FREQ_LO
     lda pitch+1
-    sta FDS_FREQ_HI
+    sta FAMISTUDIO_FDS_FREQ_HI
 
 check_mod_delay:
     lda famistudio_fds_mod_delay
     beq zero_delay
     dec famistudio_fds_mod_delay
     lda #$80
-    sta FDS_MOD_HI
+    sta FAMISTUDIO_FDS_MOD_HI
     bne compute_volume
 
 zero_delay:
     lda famistudio_fds_mod_speed+1
-    sta FDS_MOD_HI
+    sta FAMISTUDIO_FDS_MOD_HI
     lda famistudio_fds_mod_speed+0
-    sta FDS_MOD_LO
+    sta FAMISTUDIO_FDS_MOD_LO
     lda famistudio_fds_mod_depth
     ora #$80
-    sta FDS_SWEEP_ENV
+    sta FAMISTUDIO_FDS_SWEEP_ENV
 
 compute_volume:
-    lda famistudio_env_value+FAMISTUDIO_CH5_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+    lda famistudio_env_value+FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
         ora famistudio_chn_volume_track+5 
         tax
@@ -1156,7 +1152,7 @@ compute_volume:
 
 set_volume:
     ora #$80
-    sta FDS_VOL_ENV
+    sta FAMISTUDIO_FDS_VOL_ENV
     lda #0
     sta famistudio_fds_override_flags
 
@@ -1169,13 +1165,13 @@ set_volume:
 .ifdef FAMISTUDIO_EXP_VRC7
 
 famistudio_vrc7_reg_table_lo:
-    .byte VRC7_REG_LO_1, VRC7_REG_LO_2, VRC7_REG_LO_3, VRC7_REG_LO_4, VRC7_REG_LO_5, VRC7_REG_LO_6
+    .byte FAMISTUDIO_VRC7_REG_LO_1, FAMISTUDIO_VRC7_REG_LO_2, FAMISTUDIO_VRC7_REG_LO_3, FAMISTUDIO_VRC7_REG_LO_4, FAMISTUDIO_VRC7_REG_LO_5, FAMISTUDIO_VRC7_REG_LO_6
 famistudio_vrc7_reg_table_hi:
-    .byte VRC7_REG_HI_1, VRC7_REG_HI_2, VRC7_REG_HI_3, VRC7_REG_HI_4, VRC7_REG_HI_5, VRC7_REG_HI_6
+    .byte FAMISTUDIO_VRC7_REG_HI_1, FAMISTUDIO_VRC7_REG_HI_2, FAMISTUDIO_VRC7_REG_HI_3, FAMISTUDIO_VRC7_REG_HI_4, FAMISTUDIO_VRC7_REG_HI_5, FAMISTUDIO_VRC7_REG_HI_6
 famistudio_vrc7_vol_table:
-    .byte VRC7_REG_VOL_1, VRC7_REG_VOL_2, VRC7_REG_VOL_3, VRC7_REG_VOL_4, VRC7_REG_VOL_5, VRC7_REG_VOL_6
+    .byte FAMISTUDIO_VRC7_REG_VOL_1, FAMISTUDIO_VRC7_REG_VOL_2, FAMISTUDIO_VRC7_REG_VOL_3, FAMISTUDIO_VRC7_REG_VOL_4, FAMISTUDIO_VRC7_REG_VOL_5, FAMISTUDIO_VRC7_REG_VOL_6
 famistudio_vrc7_env_table:
-    .byte FAMISTUDIO_CH5_ENVs, FAMISTUDIO_CH6_ENVs, FAMISTUDIO_CH7_ENVs, FAMISTUDIO_CH8_ENVs, FAMISTUDIO_CH9_ENVs, FAMISTUDIO_CH10_ENVs 
+    .byte FAMISTUDIO_CH5_ENVS, FAMISTUDIO_CH6_ENVS, FAMISTUDIO_CH7_ENVS, FAMISTUDIO_CH8_ENVS, FAMISTUDIO_CH9_ENVS, FAMISTUDIO_CH10_ENVS 
 famistudio_vrc7_invert_vol_table:
     .byte $0f, $0e, $0d, $0c, $0b, $0a, $09, $08, $07, $06, $05, $04, $03, $02, $01, $00
 
@@ -1210,13 +1206,13 @@ release:
    
     ; Untrigger note.  
     lda famistudio_vrc7_reg_table_hi,y
-    sta VRC7_REG_SEL
+    sta FAMISTUDIO_VRC7_REG_SEL
     jsr famistudio_vrc7_wait_reg_select
 
     lda famistudio_chn_vrc7_prev_hi, y
     and #$ef ; remove trigger
     sta famistudio_chn_vrc7_prev_hi, y
-    sta VRC7_REG_WRITE
+    sta FAMISTUDIO_VRC7_REG_WRITE
     jsr famistudio_vrc7_wait_reg_write   
 
     rts
@@ -1229,13 +1225,13 @@ check_cut:
 cut:  
     ; Untrigger note.  
     lda famistudio_vrc7_reg_table_hi,y
-    sta VRC7_REG_SEL
+    sta FAMISTUDIO_VRC7_REG_SEL
     jsr famistudio_vrc7_wait_reg_select
 
     lda famistudio_chn_vrc7_prev_hi, y
     and #$cf ; remove trigger + sustain
     sta famistudio_chn_vrc7_prev_hi, y
-    sta VRC7_REG_WRITE
+    sta FAMISTUDIO_VRC7_REG_WRITE
     jsr famistudio_vrc7_wait_reg_write
 
     rts
@@ -1267,11 +1263,11 @@ nocut:
 
     ; Write pitch (lo)
     lda famistudio_vrc7_reg_table_lo,y
-    sta VRC7_REG_SEL
+    sta FAMISTUDIO_VRC7_REG_SEL
     jsr famistudio_vrc7_wait_reg_select
 
     lda pitch+0
-    sta VRC7_REG_WRITE
+    sta FAMISTUDIO_VRC7_REG_WRITE
     jsr famistudio_vrc7_wait_reg_write
 
     ; Un-trigger previous note if needed.
@@ -1282,19 +1278,19 @@ nocut:
     beq write_hi_period
     untrigger_prev_note:
         lda famistudio_vrc7_reg_table_hi,y
-        sta VRC7_REG_SEL
+        sta FAMISTUDIO_VRC7_REG_SEL
         jsr famistudio_vrc7_wait_reg_select
 
         lda famistudio_chn_vrc7_prev_hi,y
         and #$ef ; remove trigger
-        sta VRC7_REG_WRITE
+        sta FAMISTUDIO_VRC7_REG_WRITE
         jsr famistudio_vrc7_wait_reg_write
 
     write_hi_period:
 
     ; Write pitch (hi)
     lda famistudio_vrc7_reg_table_hi,y
-    sta VRC7_REG_SEL
+    sta FAMISTUDIO_VRC7_REG_SEL
     jsr famistudio_vrc7_wait_reg_select
 
     txa
@@ -1302,7 +1298,7 @@ nocut:
     ora #$30
     ora pitch+1
     sta famistudio_chn_vrc7_prev_hi, y
-    sta VRC7_REG_WRITE
+    sta FAMISTUDIO_VRC7_REG_WRITE
     jsr famistudio_vrc7_wait_reg_write
 
     ; Read/multiply volume
@@ -1320,7 +1316,7 @@ update_volume:
 
     ; Write volume
     lda famistudio_vrc7_vol_table,y
-    sta VRC7_REG_SEL
+    sta FAMISTUDIO_VRC7_REG_SEL
     jsr famistudio_vrc7_wait_reg_select
     .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
         lda famistudio_volume_table,x
@@ -1328,7 +1324,7 @@ update_volume:
     .endif
     lda famistudio_vrc7_invert_vol_table,x
     ora famistudio_chn_vrc7_patch,y
-    sta VRC7_REG_WRITE
+    sta FAMISTUDIO_VRC7_REG_WRITE
     jsr famistudio_vrc7_wait_reg_write
 
     rts
@@ -1340,50 +1336,50 @@ update_volume:
 .ifdef FAMISTUDIO_EXP_N163
 
 _FT2N163RegLoTable:
-    .byte N163_REG_FREQ_LO - $00
-    .byte N163_REG_FREQ_LO - $08
-    .byte N163_REG_FREQ_LO - $10
-    .byte N163_REG_FREQ_LO - $18
-    .byte N163_REG_FREQ_LO - $20
-    .byte N163_REG_FREQ_LO - $28
-    .byte N163_REG_FREQ_LO - $30
-    .byte N163_REG_FREQ_LO - $38
+    .byte FAMISTUDIO_N163_REG_FREQ_LO - $00
+    .byte FAMISTUDIO_N163_REG_FREQ_LO - $08
+    .byte FAMISTUDIO_N163_REG_FREQ_LO - $10
+    .byte FAMISTUDIO_N163_REG_FREQ_LO - $18
+    .byte FAMISTUDIO_N163_REG_FREQ_LO - $20
+    .byte FAMISTUDIO_N163_REG_FREQ_LO - $28
+    .byte FAMISTUDIO_N163_REG_FREQ_LO - $30
+    .byte FAMISTUDIO_N163_REG_FREQ_LO - $38
 _FT2N163RegMidTable:
-    .byte N163_REG_FREQ_MID - $00
-    .byte N163_REG_FREQ_MID - $08
-    .byte N163_REG_FREQ_MID - $10
-    .byte N163_REG_FREQ_MID - $18
-    .byte N163_REG_FREQ_MID - $20
-    .byte N163_REG_FREQ_MID - $28
-    .byte N163_REG_FREQ_MID - $30
-    .byte N163_REG_FREQ_MID - $38
+    .byte FAMISTUDIO_N163_REG_FREQ_MID - $00
+    .byte FAMISTUDIO_N163_REG_FREQ_MID - $08
+    .byte FAMISTUDIO_N163_REG_FREQ_MID - $10
+    .byte FAMISTUDIO_N163_REG_FREQ_MID - $18
+    .byte FAMISTUDIO_N163_REG_FREQ_MID - $20
+    .byte FAMISTUDIO_N163_REG_FREQ_MID - $28
+    .byte FAMISTUDIO_N163_REG_FREQ_MID - $30
+    .byte FAMISTUDIO_N163_REG_FREQ_MID - $38
 _FT2N163RegHiTable:
-    .byte N163_REG_FREQ_HI - $00
-    .byte N163_REG_FREQ_HI - $08
-    .byte N163_REG_FREQ_HI - $10
-    .byte N163_REG_FREQ_HI - $18
-    .byte N163_REG_FREQ_HI - $20
-    .byte N163_REG_FREQ_HI - $28
-    .byte N163_REG_FREQ_HI - $30
-    .byte N163_REG_FREQ_HI - $38
+    .byte FAMISTUDIO_N163_REG_FREQ_HI - $00
+    .byte FAMISTUDIO_N163_REG_FREQ_HI - $08
+    .byte FAMISTUDIO_N163_REG_FREQ_HI - $10
+    .byte FAMISTUDIO_N163_REG_FREQ_HI - $18
+    .byte FAMISTUDIO_N163_REG_FREQ_HI - $20
+    .byte FAMISTUDIO_N163_REG_FREQ_HI - $28
+    .byte FAMISTUDIO_N163_REG_FREQ_HI - $30
+    .byte FAMISTUDIO_N163_REG_FREQ_HI - $38
 _FT2N163VolTable:
-    .byte N163_REG_VOLUME - $00
-    .byte N163_REG_VOLUME - $08
-    .byte N163_REG_VOLUME - $10
-    .byte N163_REG_VOLUME - $18
-    .byte N163_REG_VOLUME - $20
-    .byte N163_REG_VOLUME - $28
-    .byte N163_REG_VOLUME - $30
-    .byte N163_REG_VOLUME - $38    
+    .byte FAMISTUDIO_N163_REG_VOLUME - $00
+    .byte FAMISTUDIO_N163_REG_VOLUME - $08
+    .byte FAMISTUDIO_N163_REG_VOLUME - $10
+    .byte FAMISTUDIO_N163_REG_VOLUME - $18
+    .byte FAMISTUDIO_N163_REG_VOLUME - $20
+    .byte FAMISTUDIO_N163_REG_VOLUME - $28
+    .byte FAMISTUDIO_N163_REG_VOLUME - $30
+    .byte FAMISTUDIO_N163_REG_VOLUME - $38    
 _FT2N163EnvelopeTable:
-    .byte FAMISTUDIO_CH5_ENVs
-    .byte FAMISTUDIO_CH6_ENVs
-    .byte FAMISTUDIO_CH7_ENVs
-    .byte FAMISTUDIO_CH8_ENVs
-    .byte FAMISTUDIO_CH9_ENVs
-    .byte FAMISTUDIO_CH10_ENVs
-    .byte FAMISTUDIO_CH11_ENVs
-    .byte FAMISTUDIO_CH12_ENVs
+    .byte FAMISTUDIO_CH5_ENVS
+    .byte FAMISTUDIO_CH6_ENVS
+    .byte FAMISTUDIO_CH7_ENVS
+    .byte FAMISTUDIO_CH8_ENVS
+    .byte FAMISTUDIO_CH9_ENVS
+    .byte FAMISTUDIO_CH10_ENVS
+    .byte FAMISTUDIO_CH11_ENVS
+    .byte FAMISTUDIO_CH12_ENVS
 
 ; y = N163 channel idx (0,1,2,3,4,5,6,7)
 .proc famistudio_update_n163_channel_sound
@@ -1420,18 +1416,18 @@ nocut:
 
     ; Write pitch
     lda _FT2N163RegLoTable,y
-    sta N163_ADDR
+    sta FAMISTUDIO_N163_ADDR
     lda pitch+0
-    sta N163_DATA
+    sta FAMISTUDIO_N163_DATA
     lda _FT2N163RegMidTable,y
-    sta N163_ADDR
+    sta FAMISTUDIO_N163_ADDR
     lda pitch+1
-    sta N163_DATA
+    sta FAMISTUDIO_N163_DATA
     lda _FT2N163RegHiTable,y
-    sta N163_ADDR
+    sta FAMISTUDIO_N163_ADDR
     lda famistudio_chn_n163_wave_len,y
     ora pitch_hi
-    sta N163_DATA
+    sta FAMISTUDIO_N163_DATA
 
     ; Read/multiply volume
     ldx _FT2N163EnvelopeTable,y
@@ -1444,14 +1440,14 @@ nocut:
 update_volume:
     ; Write volume
     lda _FT2N163VolTable,y
-    sta N163_ADDR
+    sta FAMISTUDIO_N163_ADDR
     .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK
         lda famistudio_volume_table,x 
     .else
         txa
     .endif
     ora #FAMISTUDIO_N163_CHN_MASK
-    sta N163_DATA
+    sta FAMISTUDIO_N163_DATA
     
     lda #0
     sta famistudio_chn_inst_changed,y
@@ -1464,13 +1460,13 @@ update_volume:
 .ifdef FAMISTUDIO_EXP_S5B
 
 _FT2S5BRegLoTable:
-    .byte S5B_REG_LO_A, S5B_REG_LO_B, S5B_REG_LO_C
+    .byte FAMISTUDIO_S5B_REG_LO_A, FAMISTUDIO_S5B_REG_LO_B, FAMISTUDIO_S5B_REG_LO_C
 _FT2S5BRegHiTable:
-    .byte S5B_REG_HI_A, S5B_REG_HI_B, S5B_REG_HI_C
+    .byte FAMISTUDIO_S5B_REG_HI_A, FAMISTUDIO_S5B_REG_HI_B, FAMISTUDIO_S5B_REG_HI_C
 _FT2S5BVolTable:
-    .byte S5B_REG_VOL_A, S5B_REG_VOL_B, S5B_REG_VOL_C
+    .byte FAMISTUDIO_S5B_REG_VOL_A, FAMISTUDIO_S5B_REG_VOL_B, FAMISTUDIO_S5B_REG_VOL_C
 _FT2S5BEnvelopeTable:
-    .byte FAMISTUDIO_CH5_ENVs, FAMISTUDIO_CH6_ENVs, FAMISTUDIO_CH7_ENVs
+    .byte FAMISTUDIO_CH5_ENVS, FAMISTUDIO_CH6_ENVS, FAMISTUDIO_CH7_ENVS
 
 ; y = S5B channel idx (0,1,2)
 .proc famistudio_update_s5b_channel_sound
@@ -1495,13 +1491,13 @@ nocut:
 
     ; Write pitch
     lda _FT2S5BRegLoTable,y
-    sta S5B_ADDR
+    sta FAMISTUDIO_S5B_ADDR
     lda pitch+0
-    sta S5B_DATA
+    sta FAMISTUDIO_S5B_DATA
     lda _FT2S5BRegHiTable,y
-    sta S5B_ADDR
+    sta FAMISTUDIO_S5B_ADDR
     lda pitch+1
-    sta S5B_DATA
+    sta FAMISTUDIO_S5B_DATA
 
     ; Read/multiply volume
     ldx _FT2S5BEnvelopeTable,y
@@ -1514,12 +1510,12 @@ nocut:
 update_volume:
     ; Write volume
     lda _FT2S5BVolTable,y
-    sta S5B_ADDR
+    sta FAMISTUDIO_S5B_ADDR
     .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK    
         lda famistudio_volume_table,x 
-        sta S5B_DATA
+        sta FAMISTUDIO_S5B_DATA
     .else
-        stx S5B_DATA
+        stx FAMISTUDIO_S5B_DATA
     .endif
 
     rts
@@ -1682,66 +1678,66 @@ update_row:
 .endif
 
     ; TODO: Turn most of these in loops, no reasons to be macros.
-    famistudio_update_row 0, FAMISTUDIO_CH0_ENVs
-    famistudio_update_row 1, FAMISTUDIO_CH1_ENVs
-    famistudio_update_row 2, FAMISTUDIO_CH2_ENVs
-    famistudio_update_row 3, FAMISTUDIO_CH3_ENVs
+    famistudio_update_row 0, FAMISTUDIO_CH0_ENVS
+    famistudio_update_row 1, FAMISTUDIO_CH1_ENVS
+    famistudio_update_row 2, FAMISTUDIO_CH2_ENVS
+    famistudio_update_row 3, FAMISTUDIO_CH3_ENVS
     famistudio_update_row_dpcm 4
 
 .ifdef ::FAMISTUDIO_EXP_VRC6
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVs
-    famistudio_update_row 6, FAMISTUDIO_CH6_ENVs
-    famistudio_update_row 7, FAMISTUDIO_CH7_ENVs
+    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
+    famistudio_update_row 6, FAMISTUDIO_CH6_ENVS
+    famistudio_update_row 7, FAMISTUDIO_CH7_ENVS
 .endif
 
 .ifdef ::FAMISTUDIO_EXP_VRC7
-    famistudio_update_row  5, FAMISTUDIO_CH5_ENVs
-    famistudio_update_row  6, FAMISTUDIO_CH6_ENVs
-    famistudio_update_row  7, FAMISTUDIO_CH7_ENVs
-    famistudio_update_row  8, FAMISTUDIO_CH8_ENVs
-    famistudio_update_row  9, FAMISTUDIO_CH9_ENVs
-    famistudio_update_row 10, FAMISTUDIO_CH10_ENVs
+    famistudio_update_row  5, FAMISTUDIO_CH5_ENVS
+    famistudio_update_row  6, FAMISTUDIO_CH6_ENVS
+    famistudio_update_row  7, FAMISTUDIO_CH7_ENVS
+    famistudio_update_row  8, FAMISTUDIO_CH8_ENVS
+    famistudio_update_row  9, FAMISTUDIO_CH9_ENVS
+    famistudio_update_row 10, FAMISTUDIO_CH10_ENVS
 .endif
 
 .ifdef ::FAMISTUDIO_EXP_FDS
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVs
+    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
 .endif
 
 .ifdef ::FAMISTUDIO_EXP_MMC5
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVs
-    famistudio_update_row 6, FAMISTUDIO_CH6_ENVs
+    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
+    famistudio_update_row 6, FAMISTUDIO_CH6_ENVS
 .endif
 
 .ifdef ::FAMISTUDIO_EXP_S5B
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVs
-    famistudio_update_row 6, FAMISTUDIO_CH6_ENVs
-    famistudio_update_row 7, FAMISTUDIO_CH7_ENVs
+    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
+    famistudio_update_row 6, FAMISTUDIO_CH6_ENVS
+    famistudio_update_row 7, FAMISTUDIO_CH7_ENVS
 .endif
 
 .ifdef ::FAMISTUDIO_EXP_N163
     .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 1
-        famistudio_update_row  5, FAMISTUDIO_CH5_ENVs
+        famistudio_update_row  5, FAMISTUDIO_CH5_ENVS
     .endif
     .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 2
-        famistudio_update_row  6, FAMISTUDIO_CH6_ENVs
+        famistudio_update_row  6, FAMISTUDIO_CH6_ENVS
     .endif
     .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 3
-        famistudio_update_row  7, FAMISTUDIO_CH7_ENVs
+        famistudio_update_row  7, FAMISTUDIO_CH7_ENVS
     .endif
     .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 4
-        famistudio_update_row  8, FAMISTUDIO_CH8_ENVs
+        famistudio_update_row  8, FAMISTUDIO_CH8_ENVS
     .endif
     .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 5
-        famistudio_update_row  9, FAMISTUDIO_CH9_ENVs
+        famistudio_update_row  9, FAMISTUDIO_CH9_ENVS
     .endif
     .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 6
-        famistudio_update_row 10, FAMISTUDIO_CH10_ENVs
+        famistudio_update_row 10, FAMISTUDIO_CH10_ENVS
     .endif
     .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 7
-        famistudio_update_row 11, FAMISTUDIO_CH11_ENVs
+        famistudio_update_row 11, FAMISTUDIO_CH11_ENVS
     .endif
     .if ::FAMISTUDIO_EXP_N163_CHN_CNT >= 8
-        famistudio_update_row 12, FAMISTUDIO_CH12_ENVs
+        famistudio_update_row 12, FAMISTUDIO_CH12_ENVS
     .endif
 .endif
 
@@ -1944,20 +1940,20 @@ slide_next:
 ;----------------------------------------------------------------------------------------------------------------------
 update_sound:
 
-    famistudio_update_channel_sound 0, FAMISTUDIO_CH0_ENVs, 0, famistudio_pulse1_prev, , , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V, APU_PL1_SWEEP
-    famistudio_update_channel_sound 1, FAMISTUDIO_CH1_ENVs, 1, famistudio_pulse2_prev, , , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V, APU_PL2_SWEEP
-    famistudio_update_channel_sound 2, FAMISTUDIO_CH2_ENVs, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
-    famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVs,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
+    famistudio_update_channel_sound 0, FAMISTUDIO_CH0_ENVS, 0, famistudio_pulse1_prev, , , FT_MR_PULSE1_H, FT_MR_PULSE1_L, FT_MR_PULSE1_V, FAMISTUDIO_APU_PL1_SWEEP
+    famistudio_update_channel_sound 1, FAMISTUDIO_CH1_ENVS, 1, famistudio_pulse2_prev, , , FT_MR_PULSE2_H, FT_MR_PULSE2_L, FT_MR_PULSE2_V, FAMISTUDIO_APU_PL2_SWEEP
+    famistudio_update_channel_sound 2, FAMISTUDIO_CH2_ENVS, 2, , #$80, , FT_MR_TRI_H, FT_MR_TRI_L, FT_MR_TRI_V
+    famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVS,  , , #$f0, , FT_MR_NOISE_F, , FT_MR_NOISE_V
 
 .ifdef ::FAMISTUDIO_EXP_VRC6
-    famistudio_update_channel_sound 5, FAMISTUDIO_CH5_ENVs, 3, , , #$80, VRC6_PL1_HI, VRC6_PL1_LO, VRC6_PL1_VOL
-    famistudio_update_channel_sound 6, FAMISTUDIO_CH6_ENVs, 4, , , #$80, VRC6_PL2_HI, VRC6_PL2_LO, VRC6_PL2_VOL
-    famistudio_update_channel_sound 7, FAMISTUDIO_CH7_ENVs, 5, , , #$80, VRC6_SAW_HI, VRC6_SAW_LO, VRC6_SAW_VOL
+    famistudio_update_channel_sound 5, FAMISTUDIO_CH5_ENVS, 3, , , #$80, FAMISTUDIO_VRC6_PL1_HI, FAMISTUDIO_VRC6_PL1_LO, FAMISTUDIO_VRC6_PL1_VOL
+    famistudio_update_channel_sound 6, FAMISTUDIO_CH6_ENVS, 4, , , #$80, FAMISTUDIO_VRC6_PL2_HI, FAMISTUDIO_VRC6_PL2_LO, FAMISTUDIO_VRC6_PL2_VOL
+    famistudio_update_channel_sound 7, FAMISTUDIO_CH7_ENVS, 5, , , #$80, FAMISTUDIO_VRC6_SAW_HI, FAMISTUDIO_VRC6_SAW_LO, FAMISTUDIO_VRC6_SAW_VOL
 .endif
 
 .ifdef ::FAMISTUDIO_EXP_MMC5
-    famistudio_update_channel_sound 5, FAMISTUDIO_CH5_ENVs, 3, famistudio_mmc5_pulse1_prev, , , MMC5_PL1_HI, MMC5_PL1_LO, MMC5_PL1_VOL
-    famistudio_update_channel_sound 6, FAMISTUDIO_CH6_ENVs, 4, famistudio_mmc5_pulse2_prev, , , MMC5_PL2_HI, MMC5_PL2_LO, MMC5_PL2_VOL
+    famistudio_update_channel_sound 5, FAMISTUDIO_CH5_ENVS, 3, famistudio_mmc5_pulse1_prev, , , FAMISTUDIO_MMC5_PL1_HI, FAMISTUDIO_MMC5_PL1_LO, FAMISTUDIO_MMC5_PL1_VOL
+    famistudio_update_channel_sound 6, FAMISTUDIO_CH6_ENVS, 4, famistudio_mmc5_pulse2_prev, , , FAMISTUDIO_MMC5_PL2_HI, FAMISTUDIO_MMC5_PL2_LO, FAMISTUDIO_MMC5_PL2_VOL
 .endif
 
 .ifdef ::FAMISTUDIO_EXP_FDS
@@ -2006,57 +2002,57 @@ skip_frame:
     ;process all sound effect streams
 
     .if FAMISTUDIO_CFG_SFX_STREAMS>0
-    ldx #FT_SFX_CH0
+    ldx #FAMISTUDIO_SFX_CH0
     jsr famistudio_sfx_update
     .endif
     .if FAMISTUDIO_CFG_SFX_STREAMS>1
-    ldx #FT_SFX_CH1
+    ldx #FAMISTUDIO_SFX_CH1
     jsr _FT2SfxUpdat
     .endif
     .if FAMISTUDIO_CFG_SFX_STREAMS>2
-    ldx #FT_SFX_CH2
+    ldx #FAMISTUDIO_SFX_CH2
     jsr famistudio_sfx_update
     .endif
     .if FAMISTUDIO_CFG_SFX_STREAMS>3
-    ldx #FT_SFX_CH3
+    ldx #FAMISTUDIO_SFX_CH3
     jsr famistudio_sfx_update
     .endif
 
     ;send data from the output buffer to the APU
 
     lda famistudio_output_buf      ;pulse 1 volume
-    sta APU_PL1_VOL
+    sta FAMISTUDIO_APU_PL1_VOL
     lda famistudio_output_buf+1    ;pulse 1 period LSB
-    sta APU_PL1_LO
+    sta FAMISTUDIO_APU_PL1_LO
     lda famistudio_output_buf+2    ;pulse 1 period MSB, only applied when changed
     cmp famistudio_pulse1_prev
     beq no_pulse1_upd
     sta famistudio_pulse1_prev
-    sta APU_PL1_HI
+    sta FAMISTUDIO_APU_PL1_HI
 no_pulse1_upd:
 
     lda famistudio_output_buf+3    ;pulse 2 volume
-    sta APU_PL2_VOL
+    sta FAMISTUDIO_APU_PL2_VOL
     lda famistudio_output_buf+4    ;pulse 2 period LSB
-    sta APU_PL2_LO
+    sta FAMISTUDIO_APU_PL2_LO
     lda famistudio_output_buf+5    ;pulse 2 period MSB, only applied when changed
     cmp famistudio_pulse2_prev
     beq no_pulse2_upd
     sta famistudio_pulse2_prev
-    sta APU_PL2_HI
+    sta FAMISTUDIO_APU_PL2_HI
 no_pulse2_upd:
 
     lda famistudio_output_buf+6    ;triangle volume (plays or not)
-    sta APU_TRI_LINEAR
+    sta FAMISTUDIO_APU_TRI_LINEAR
     lda famistudio_output_buf+7    ;triangle period LSB
-    sta APU_TRI_LO
+    sta FAMISTUDIO_APU_TRI_LO
     lda famistudio_output_buf+8    ;triangle period MSB
-    sta APU_TRI_HI
+    sta FAMISTUDIO_APU_TRI_HI
 
     lda famistudio_output_buf+9    ;noise volume
-    sta APU_NOISE_VOL
+    sta FAMISTUDIO_APU_NOISE_VOL
     lda famistudio_output_buf+10   ;noise period
-    sta APU_NOISE_LO
+    sta FAMISTUDIO_APU_NOISE_LO
 
 .endif
 
@@ -2288,11 +2284,11 @@ init_envelopes:
     ldx #0
     iny
     read_patch_loop:
-        stx VRC7_REG_SEL
+        stx FAMISTUDIO_VRC7_REG_SEL
         jsr famistudio_vrc7_wait_reg_select
         lda (ptr),y
         iny
-        sta VRC7_REG_WRITE
+        sta FAMISTUDIO_VRC7_REG_WRITE
         jsr famistudio_vrc7_wait_reg_write
         inx
         cpx #8
@@ -2315,7 +2311,7 @@ init_envelopes:
     famistudio_set_exp_instrument_base
 
     lda #0
-    sta FDS_SWEEP_BIAS
+    sta FAMISTUDIO_FDS_SWEEP_BIAS
 
     lda famistudio_chn_inst_changed
     bne write_fds_wave
@@ -2335,7 +2331,7 @@ init_envelopes:
         iny
 
         ora #$80
-        sta FDS_VOL ; Enable wave RAM write
+        sta FAMISTUDIO_FDS_VOL ; Enable wave RAM write
 
         ; FDS Waveform
         lda (ptr),y
@@ -2349,17 +2345,17 @@ init_envelopes:
         ldy #0
         wave_loop:
             lda (wave_ptr),y
-            sta FDS_WAV_START,y
+            sta FAMISTUDIO_FDS_WAV_START,y
             iny
             cpy #64
             bne wave_loop
 
         lda #$80
-        sta FDS_MOD_HI ; Need to disable modulation before writing.
+        sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
         lda master_vol
-        sta FDS_VOL ; Disable RAM write.
+        sta FAMISTUDIO_FDS_VOL ; Disable RAM write.
         lda #0
-        sta FDS_SWEEP_BIAS
+        sta FAMISTUDIO_FDS_SWEEP_BIAS
 
         ; FDS Modulation
         ldy tmp_y
@@ -2374,7 +2370,7 @@ init_envelopes:
         ldy #0
         mod_loop:
             lda (wave_ptr),y
-            sta FDS_MOD_TABLE
+            sta FAMISTUDIO_FDS_MOD_TABLE
             iny
             cpy #32
             bne mod_loop
@@ -2423,14 +2419,14 @@ init_envelopes:
 .ifdef FAMISTUDIO_EXP_N163
 
 _FT2N163WaveTable:
-    .byte N163_REG_WAVE - $00
-    .byte N163_REG_WAVE - $08
-    .byte N163_REG_WAVE - $10
-    .byte N163_REG_WAVE - $18
-    .byte N163_REG_WAVE - $20
-    .byte N163_REG_WAVE - $28
-    .byte N163_REG_WAVE - $30
-    .byte N163_REG_WAVE - $38
+    .byte FAMISTUDIO_N163_REG_WAVE - $00
+    .byte FAMISTUDIO_N163_REG_WAVE - $08
+    .byte FAMISTUDIO_N163_REG_WAVE - $10
+    .byte FAMISTUDIO_N163_REG_WAVE - $18
+    .byte FAMISTUDIO_N163_REG_WAVE - $20
+    .byte FAMISTUDIO_N163_REG_WAVE - $28
+    .byte FAMISTUDIO_N163_REG_WAVE - $30
+    .byte FAMISTUDIO_N163_REG_WAVE - $38
 
 .proc famistudio_set_n163_instrument
 
@@ -2452,10 +2448,10 @@ _FT2N163WaveTable:
     beq done
 
     lda _FT2N163WaveTable, x
-    sta N163_ADDR
+    sta FAMISTUDIO_N163_ADDR
     lda (ptr),y
     sta wave_pos
-    sta N163_DATA
+    sta FAMISTUDIO_N163_DATA
     iny
 
     ; Wave length
@@ -2479,11 +2475,11 @@ _FT2N163WaveTable:
     ; N163 wave
     lda wave_pos
     ora #$80
-    sta N163_ADDR
+    sta FAMISTUDIO_N163_ADDR
     ldy #0
     wave_loop:
         lda (wave_ptr),y
-        sta N163_DATA
+        sta FAMISTUDIO_N163_DATA
         iny
         cpy wave_len
         bne wave_loop
@@ -3030,7 +3026,7 @@ famistudio_special_code_jmp_hi:
 .proc famistudio_sample_stop
 
     lda #%00001111
-    sta APU_SND_CHN
+    sta FAMISTUDIO_APU_SND_CHN
 
     rts
 
@@ -3063,22 +3059,22 @@ sample_play:
     sta famistudio_ptr0_hi
 
     lda #%00001111             ;stop DPCM
-    sta APU_SND_CHN
+    sta FAMISTUDIO_APU_SND_CHN
 
     ldy #0
     lda (famistudio_ptr0),y       ;sample offset
-    sta APU_DMC_START
+    sta FAMISTUDIO_APU_DMC_START
     iny
     lda (famistudio_ptr0),y       ;sample length
-    sta APU_DMC_LEN
+    sta FAMISTUDIO_APU_DMC_LEN
     iny
     lda (famistudio_ptr0),y       ;pitch and loop
-    sta APU_DMC_FREQ
+    sta FAMISTUDIO_APU_DMC_FREQ
 
     lda #32                    ;reset DAC counter
-    sta APU_DMC_RAW
+    sta FAMISTUDIO_APU_DMC_RAW
     lda #%00011111             ;start DMC
-    sta APU_SND_CHN
+    sta FAMISTUDIO_APU_SND_CHN
 
     rts
 
@@ -3094,7 +3090,7 @@ sample_play:
     ldx famistudio_dpcm_effect
     beq famistudio_sample_play_sfx::sample_play
     tax
-    lda APU_SND_CHN
+    lda FAMISTUDIO_APU_SND_CHN
     and #16
     beq not_busy
     rts
@@ -3131,12 +3127,12 @@ ntsc:
 .endif
     
     lda (famistudio_ptr0),y       ;read and store pointer to the effects list
-    sta FT_SFX_ADR_L
+    sta famistudio_sfx_addr_lo
     iny
     lda (famistudio_ptr0),y
-    sta FT_SFX_ADR_H
+    sta famistudio_sfx_addr_hi
 
-    ldx #FT_SFX_CH0            ;init all the streams
+    ldx #FAMISTUDIO_SFX_CH0            ;init all the streams
 
 set_channels:
     jsr famistudio_sfx_clear_channel
@@ -3158,14 +3154,14 @@ set_channels:
 .proc famistudio_sfx_clear_channel
 
     lda #0
-    sta FT_SFX_PTR_H,x         ;this stops the effect
-    sta FT_SFX_REPEAT,x
-    sta FT_SFX_OFF,x
-    sta FT_SFX_BUF+6,x         ;mute triangle
+    sta famistudio_sfx_ptr_hi,x         ;this stops the effect
+    sta famistudio_sfx_repeat,x
+    sta famistudio_sfx_offset,x
+    sta famistudio_sfx_buffer+6,x         ;mute triangle
     lda #$30
-    sta FT_SFX_BUF+0,x         ;mute pulse1
-    sta FT_SFX_BUF+3,x         ;mute pulse2
-    sta FT_SFX_BUF+9,x         ;mute noise
+    sta famistudio_sfx_buffer+0,x         ;mute pulse1
+    sta famistudio_sfx_buffer+3,x         ;mute pulse2
+    sta famistudio_sfx_buffer+9,x         ;mute noise
 
     rts
 
@@ -3174,7 +3170,7 @@ set_channels:
 ;------------------------------------------------------------------------------
 ; play sound effect
 ; in: A is a number of the sound effect 0..127
-;     X is offset of sound effect channel, should be FT_SFX_CH0..FT_SFX_CH3
+;     X is offset of sound effect channel, should be FAMISTUDIO_SFX_CH0..FAMISTUDIO_SFX_CH3
 ;------------------------------------------------------------------------------
 
 .proc famistudio_sfx_play
@@ -3184,16 +3180,16 @@ set_channels:
 
     jsr famistudio_sfx_clear_channel    ;stops the effect if it plays
 
-    lda FT_SFX_ADR_L
+    lda famistudio_sfx_addr_lo
     sta famistudio_ptr0_lo
-    lda FT_SFX_ADR_H
+    lda famistudio_sfx_addr_hi
     sta famistudio_ptr0_hi
 
     lda (famistudio_ptr0),y       ;read effect pointer from the table
-    sta FT_SFX_PTR_L,x         ;store it
+    sta famistudio_sfx_ptr_lo,x         ;store it
     iny
     lda (famistudio_ptr0),y
-    sta FT_SFX_PTR_H,x         ;this write enables the effect
+    sta famistudio_sfx_ptr_hi,x         ;this write enables the effect
 
     rts
 
@@ -3204,21 +3200,21 @@ set_channels:
 
 .proc famistudio_sfx_update
 
-    lda FT_SFX_REPEAT,x        ;check if repeat counter is not zero
+    lda famistudio_sfx_repeat,x        ;check if repeat counter is not zero
     beq no_repeat
-    dec FT_SFX_REPEAT,x        ;decrement and return
+    dec famistudio_sfx_repeat,x        ;decrement and return
     bne update_buf            ;just mix with output buffer
 
 no_repeat:
-    lda FT_SFX_PTR_H,x         ;check if MSB of the pointer is not zero
+    lda famistudio_sfx_ptr_hi,x         ;check if MSB of the pointer is not zero
     bne sfx_active
     rts                        ;return otherwise, no active effect
 
 sfx_active:
     sta famistudio_ptr0_hi         ;load effect pointer into temp
-    lda FT_SFX_PTR_L,x
+    lda famistudio_sfx_ptr_lo,x
     sta famistudio_ptr0_lo
-    ldy FT_SFX_OFF,x
+    ldy famistudio_sfx_offset,x
     clc
 
 read_byte:
@@ -3226,9 +3222,9 @@ read_byte:
     bmi get_data              ;if bit 7 is set, it is a register write
     beq eof
     iny
-    sta FT_SFX_REPEAT,x        ;if bit 7 is reset, it is number of repeats
+    sta famistudio_sfx_repeat,x        ;if bit 7 is reset, it is number of repeats
     tya
-    sta FT_SFX_OFF,x
+    sta famistudio_sfx_offset,x
     jmp update_buf
 
 get_data:
@@ -3238,64 +3234,64 @@ get_data:
     tax
     lda (famistudio_ptr0),y       ;read value
     iny
-    sta FT_SFX_BUF-128,x       ;store into output buffer
+    sta famistudio_sfx_buffer-128,x       ;store into output buffer
     ldx famistudio_r0
     jmp read_byte             ;and read next byte
 
 eof:
-    sta FT_SFX_PTR_H,x         ;mark channel as inactive
+    sta famistudio_sfx_ptr_hi,x         ;mark channel as inactive
 
 update_buf:
 
     lda famistudio_output_buf             ;compare effect output buffer with main output buffer
     and #$0f                   ;if volume of pulse 1 of effect is higher than that of the
     sta famistudio_r0          ;main buffer, overwrite the main buffer value with the new one
-    lda FT_SFX_BUF+0,x
+    lda famistudio_sfx_buffer+0,x
     and #$0f
     cmp famistudio_r0
     bcc no_pulse1
-    lda FT_SFX_BUF+0,x
+    lda famistudio_sfx_buffer+0,x
     sta famistudio_output_buf+0
-    lda FT_SFX_BUF+1,x
+    lda famistudio_sfx_buffer+1,x
     sta famistudio_output_buf+1
-    lda FT_SFX_BUF+2,x
+    lda famistudio_sfx_buffer+2,x
     sta famistudio_output_buf+2
 no_pulse1:
 
     lda famistudio_output_buf+3           ;same for pulse 2
     and #$0f
     sta famistudio_r0
-    lda FT_SFX_BUF+3,x
+    lda famistudio_sfx_buffer+3,x
     and #$0f
     cmp famistudio_r0
     bcc no_pulse2
-    lda FT_SFX_BUF+3,x
+    lda famistudio_sfx_buffer+3,x
     sta famistudio_output_buf+3
-    lda FT_SFX_BUF+4,x
+    lda famistudio_sfx_buffer+4,x
     sta famistudio_output_buf+4
-    lda FT_SFX_BUF+5,x
+    lda famistudio_sfx_buffer+5,x
     sta famistudio_output_buf+5
 no_pulse2:
 
-    lda FT_SFX_BUF+6,x           ;overwrite triangle of main output buffer if it is active
+    lda famistudio_sfx_buffer+6,x           ;overwrite triangle of main output buffer if it is active
     beq no_triangle
     sta famistudio_output_buf+6
-    lda FT_SFX_BUF+7,x
+    lda famistudio_sfx_buffer+7,x
     sta famistudio_output_buf+7
-    lda FT_SFX_BUF+8,x
+    lda famistudio_sfx_buffer+8,x
     sta famistudio_output_buf+8
 no_triangle:
 
     lda famistudio_output_buf+9           ;same as for pulse 1 and 2, but for noise
     and #$0f
     sta famistudio_r0
-    lda FT_SFX_BUF+9,x
+    lda famistudio_sfx_buffer+9,x
     and #$0f
     cmp famistudio_r0
     bcc no_noise
-    lda FT_SFX_BUF+9,x
+    lda famistudio_sfx_buffer+9,x
     sta famistudio_output_buf+9
-    lda FT_SFX_BUF+10,x
+    lda famistudio_sfx_buffer+10,x
     sta famistudio_output_buf+10
 no_noise:
 
@@ -3607,66 +3603,66 @@ famistudio_n163_note_table_lsb:
 .endif
 
 famistudio_channel_to_volume_env:
-    .byte FAMISTUDIO_CH0_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_CH1_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_CH2_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_CH3_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+    .byte FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .byte FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .byte FAMISTUDIO_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .byte FAMISTUDIO_CH3_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .byte $ff
-.if .defined(FAMISTUDIO_CH5_ENVs)
-    .byte FAMISTUDIO_CH5_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+.if .defined(FAMISTUDIO_CH5_ENVS)
+    .byte FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
-.if .defined(FAMISTUDIO_CH6_ENVs)
-    .byte FAMISTUDIO_CH6_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+.if .defined(FAMISTUDIO_CH6_ENVS)
+    .byte FAMISTUDIO_CH6_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
-.if .defined(FAMISTUDIO_CH7_ENVs)
-    .byte FAMISTUDIO_CH7_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+.if .defined(FAMISTUDIO_CH7_ENVS)
+    .byte FAMISTUDIO_CH7_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
-.if .defined(FAMISTUDIO_CH8_ENVs)
-    .byte FAMISTUDIO_CH8_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+.if .defined(FAMISTUDIO_CH8_ENVS)
+    .byte FAMISTUDIO_CH8_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
-.if .defined(FAMISTUDIO_CH9_ENVs)
-    .byte FAMISTUDIO_CH9_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+.if .defined(FAMISTUDIO_CH9_ENVS)
+    .byte FAMISTUDIO_CH9_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
-.if .defined(FAMISTUDIO_CH10_ENVs)
-    .byte FAMISTUDIO_CH10_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+.if .defined(FAMISTUDIO_CH10_ENVS)
+    .byte FAMISTUDIO_CH10_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
-.if .defined(FAMISTUDIO_CH11_ENVs)
-    .byte FAMISTUDIO_CH11_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+.if .defined(FAMISTUDIO_CH11_ENVS)
+    .byte FAMISTUDIO_CH11_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
-.if .defined(FAMISTUDIO_CH12_ENVs)
-    .byte FAMISTUDIO_CH12_ENVs+FAMISTUDIO_ENV_VOLUME_OFF
+.if .defined(FAMISTUDIO_CH12_ENVS)
+    .byte FAMISTUDIO_CH12_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
 
 .ifdef FAMISTUDIO_USE_ARPEGGIO
 famistudio_channel_to_arpeggio_env:
-    .byte FAMISTUDIO_CH0_ENVs+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_CH1_ENVs+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_CH2_ENVs+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_CH3_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+    .byte FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .byte FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .byte FAMISTUDIO_CH2_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .byte FAMISTUDIO_CH3_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     .byte $ff
-.if .defined(FAMISTUDIO_CH5_ENVs)
-    .byte FAMISTUDIO_CH5_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+.if .defined(FAMISTUDIO_CH5_ENVS)
+    .byte FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
-.if .defined(FAMISTUDIO_CH6_ENVs)
-    .byte FAMISTUDIO_CH6_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+.if .defined(FAMISTUDIO_CH6_ENVS)
+    .byte FAMISTUDIO_CH6_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
-.if .defined(FAMISTUDIO_CH7_ENVs)
-    .byte FAMISTUDIO_CH7_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+.if .defined(FAMISTUDIO_CH7_ENVS)
+    .byte FAMISTUDIO_CH7_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
-.if .defined(FAMISTUDIO_CH8_ENVs)
-    .byte FAMISTUDIO_CH8_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+.if .defined(FAMISTUDIO_CH8_ENVS)
+    .byte FAMISTUDIO_CH8_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
-.if .defined(FAMISTUDIO_CH9_ENVs)
-    .byte FAMISTUDIO_CH9_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+.if .defined(FAMISTUDIO_CH9_ENVS)
+    .byte FAMISTUDIO_CH9_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
-.if .defined(FAMISTUDIO_CH10_ENVs)
-    .byte FAMISTUDIO_CH10_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+.if .defined(FAMISTUDIO_CH10_ENVS)
+    .byte FAMISTUDIO_CH10_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
-.if .defined(FAMISTUDIO_CH11_ENVs)
-    .byte FAMISTUDIO_CH11_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+.if .defined(FAMISTUDIO_CH11_ENVS)
+    .byte FAMISTUDIO_CH11_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
-.if .defined(FAMISTUDIO_CH12_ENVs)
-    .byte FAMISTUDIO_CH12_ENVs+FAMISTUDIO_ENV_NOTE_OFF
+.if .defined(FAMISTUDIO_CH12_ENVS)
+    .byte FAMISTUDIO_CH12_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
 .endif
 
