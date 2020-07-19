@@ -22,3 +22,5 @@ site/
 *.pdb
 *.exp
 *.suo
+*.fns
+SoundEngine/demo_src/*.nes
