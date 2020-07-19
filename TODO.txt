@@ -8,29 +8,19 @@
 - Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
 - Why is volume visible on triangle channel?
 - FamiStudio sound engine
-	- 3 assembly versions + 3 simple black screen test ROMs.
-		- Remove all proc
-		- Remove all ::
-		- All local symols @.
-		- How to handle segments.
-
-
+	- All local symols @. ==> famistudio_r1 not done.
 	- Document function inputs like in my game.
-	- Rename stuff
-		- FT => FAMISTUDIO or FS ?
-		- _FT2? 
-	- Declare all temp variable at top of procs.
-	- Cleanup comments.
-	- FT_DPCM_PTR/FT_DPCM_OFF -> Why am I missing this line???
-	- Resurect SFX
-	- ROM: Fix (and generalize to a demo?)
-	- Global/Project config?
+	- FT_MT_XXX
+	- Cleanup comments + align.
+	===> THEN PORT to ASM6 + NESASM.
 	- Nice test ROM (same as ROM, but with SFX player)
-	- Documentation.
-	- Need to be a seperate project on GitHub?
-	- What to do with FT_EQUALIZER?
+	- Config:
+		- ca65 segments
+		- zp on other assemblers, etc.
+	- Resurect SFX
+	- Documentation + config comments?
 	- Deprecate FamiTone2 FS.
-	- TAB/SPACE
+	- Double check TAB/SPACE
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.
