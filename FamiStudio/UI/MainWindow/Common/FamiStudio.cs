@@ -393,7 +393,7 @@ namespace FamiStudio
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence);
+                    project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits);
                 }
             }
 

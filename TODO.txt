@@ -7,6 +7,7 @@
 - FDS export
 - Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
 - Why is volume visible on triangle channel?
+- Loop count on wav.
 - FamiStudio sound engine
 	- All local symols @. ==> famistudio_r1 not done.
 	- Document function inputs like in my game.

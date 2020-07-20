@@ -28,6 +28,7 @@ namespace FamiStudio
                 dialog.Properties.AddIntegerRange("Pattern Length:", 256, 4, 256); // 2
                 dialog.Properties.AddIntegerRange("Start frame:", 0, 0, 256);      // 3
                 dialog.Properties.AddBoolean("Remove intro silence:", true);       // 4
+                dialog.Properties.AddBoolean("Reverse DPCM bits:", false);         // 5
                 dialog.Properties.Build();
             }
         }
@@ -49,5 +50,6 @@ namespace FamiStudio
         public int PatternLength => dialog.Properties.GetPropertyValue<int>(2);
         public int StartFrame => dialog.Properties.GetPropertyValue<int>(3);
         public bool RemoveIntroSilence => dialog.Properties.GetPropertyValue<bool>(4);
+        public bool ReverseDpcmBits => dialog.Properties.GetPropertyValue<bool>(5);
     }
 }
