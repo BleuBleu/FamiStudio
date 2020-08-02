@@ -1,8 +1,8 @@
 ;======================================================================================================================
 ; FAMISTUDIO SOUND ENGINE (2.2.0)
 ;
-; This is the FamiStudio sound engine. It is used by the NSF export, the ROM export and can be used to make games. It
-; supports every feature from FamiStudio, some of them are Toggeable to save CPU/memory.
+; This is the FamiStudio sound engine. It is used by the NSF and ROM exporter of FamiStudio and can be used to make 
+; games. It supports every feature from FamiStudio, some of them are toggeable to save CPU/memory.
 ;
 ; This is essentially a heavily modified version of FamiTone2 by Shiru. A lot of his code and comments are still
 ; present here, so massive thanks to him!! I am not trying to steal his work or anything, i renamed a lot of functions
@@ -40,7 +40,7 @@
 ;
 ;   2) The second way is "externally", using definitions coming from elsewhere in your app or the command line. If you
 ;      wish do so, simply define FAMISTUDIO_CFG_EXTERNAL and this whole section will be ignored. You are then 
-;      responsible for providing all configuration. 
+;      responsible for providing all configuration. This is how the provided demos and FamiStudio uses it.
 ;
 ; Note that the engine uses "ifdef" and not "if" for all boolean values. So defining a value to ZERO will still 
 ; evaluate to true.
@@ -49,8 +49,8 @@
 ;
 ;   1) Audio expansion
 ;   2) Global engine parameters
-;   3) Features
-;   4) Segments
+;   3) Supported features
+;   4) Segments (TODO)
 ;======================================================================================================================
 
 ; Define this to configure the sound engine from outside (in your app, or from the command line)
@@ -94,18 +94,15 @@
 
 ; One of these MUST be defined (PAL or NTSC playback).
 ; FAMISTUDIO_CFG_PAL_SUPPORT   = 1
-; FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
+FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 
 ; Support for sound effects playback + number of SFX that can play at once.
 ; FAMISTUDIO_CFG_SFX_SUPPORT   = 1 
 ; FAMISTUDIO_CFG_SFX_STREAMS   = 2
 
-; Do not used, simply used by the ROM exported & demos.
-; FAMISTUDIO_CFG_EQUALIZER     = 1 
-
 ; Blaarg's smooth vibrato technique. Eliminates phase resets ("pops") on square channels will be ignored if SFX are
 ; enabled since they are currently incompatible with each other. This might change in the future.
-FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1 
+; FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1 
 
 ; Enables DPCM playback support.
 FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
@@ -114,11 +111,11 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; FAMISTUDIO_CFG_THREAD         = 1     
 
 ;======================================================================================================================
-; 3) FEATURES CONFIGURATION
+; 3) SUPPORTED FEATURES CONFIGURATION
 ;
 ; Every feature supported in FamiStudio is supported by this sound engine. If you know for sure that you are not using
 ; specific features in your music, you can disable them to save memory/processing time. Using a feature in your song
-; and failing to enable it will likely lead to crashes (BRK), or undefined behavior. They all have theform
+; and failing to enable it will likely lead to crashes (BRK), or undefined behavior. They all have the form
 ; FAMISTUDIO_USE_XXX.
 ;======================================================================================================================
 
@@ -272,7 +269,7 @@ FAMISTUDIO_ENV_DUTY_OFF   = 2
 .endif
 
 ;======================================================================================================================
-; RAM VARAIBLES (You should not have to play with these)
+; RAM VARIABLES (You should not have to play with these)
 ;======================================================================================================================
 
 .segment "RAM"
@@ -666,7 +663,6 @@ famistudio_init:
 .endif
 
     jmp famistudio_music_stop
-
 
 ;======================================================================================================================
 ; FAMISTUDIO_MUSIC_STOP (public)

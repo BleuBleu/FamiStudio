@@ -1,6 +1,16 @@
 ; Simple FamiStudio ROM to play music on actual hardware.
 ; Based off Brad's (rainwarrior.ca) CA65 template, both the regular and FDS version.
 
+; Enable all features.
+FAMISTUDIO_CFG_EXTERNAL       = 1
+FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
+FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
+FAMISTUDIO_USE_VOLUME_TRACK   = 1
+FAMISTUDIO_USE_PITCH_TRACK    = 1
+FAMISTUDIO_USE_SLIDE_NOTES    = 1
+FAMISTUDIO_USE_VIBRATO        = 1
+FAMISTUDIO_USE_ARPEGGIO       = 1
+
 .include "../Nsf/famistudio.s"
 
 .segment "ZEROPAGE"
