@@ -6,25 +6,19 @@
 - BUG: One bad pixel in ROM?
 - Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
 - Loop count on wav.
-- FDS export
-	- Command line.
-	- Remove all anonymous blocks.
-	- Retest ROM export.
 - FamiStudio sound engine
-	- All local symols @. ==> famistudio_r1 not done.
-	- Document function inputs like in my game.
-	- FT_MT_XXX
-	- Cleanup comments + align.
+	- FT_MR_XXX
+	- Migrate everything (NSF, ROM) to FAMISTUDIO_CFG_EXTERNAL.
 	===> THEN PORT to ASM6 + NESASM.
+	- Segment???
 	- Nice test ROM (same as ROM, but with SFX player)
 	- Config:
-		- ca65 segments
 		- zp on other assemblers, etc.
-		- How to override from outside? 
 	- Resurect SFX
-	- Documentation + config comments?
+	- Documentation.
 	- Deprecate FamiTone2 FS.
 	- Double check TAB/SPACE
+	- Music pause doesnt do all channels.
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.
@@ -43,9 +37,12 @@
 - Instrument picker?
 - Discord server
 - Feature requests from email (record?)
-- First time control tutorial?
-	- TEST WITH HIGH DPI!!!	
 - Linux, rename .so -> lib***.so
+
+Testing:
+========
+- Retest ROM export.
+- Test tutorial dialog with high DPI : mac + windows
 
 Tweet ideas
 ===========

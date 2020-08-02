@@ -426,26 +426,26 @@ default_palette:
     pha
     ; prevent NMI re-entry
     lda nmi_lock
-    beq :+
+    beq lock_nmi
         jmp nmi_end
-    :
+lock_nmi:
     lda #1
     sta nmi_lock
     ; increment frame counter
     inc nmi_count
     ;
     lda nmi_ready
-    bne :+ ; nmi_ready == 0 not ready to update PPU
+    bne check_rendering_off ; nmi_ready == 0 not ready to update PPU
         jmp ppu_update_end
-    :
+check_rendering_off:
     cmp #2 ; nmi_ready == 2 turns rendering off
-    bne :+
+    bne oam_dma
         lda #%00000000
         sta $2001
         ldx #0
         stx nmi_ready
         jmp ppu_update_end
-    :
+oam_dma:
     ; sprite OAM DMA
     ldx #0
     stx $2003
@@ -632,18 +632,18 @@ nmi_end:
 .proc ppu_update
     lda #1
     sta nmi_ready
-    :
+    wait:
         lda nmi_ready
-        bne :-
+        bne wait
     rts
 .endproc
 
 ; ppu_skip: waits until next NMI, does not update PPU
 .proc ppu_skip
     lda nmi_count
-    :
+    wait:
         cmp nmi_count
-        beq :-
+        beq wait
     rts
 .endproc 
 
@@ -651,9 +651,9 @@ nmi_end:
 .proc ppu_off
     lda #2
     sta nmi_ready
-    :
+    wait:
         lda nmi_ready
-        bne :-
+        bne wait
     rts
 .endproc 
 
@@ -704,7 +704,7 @@ PAD_R      = $80
     sta $4016
     ; read 8 bytes from the interface at $4016
     ldx #8
-    :
+    gamepad_loop:
         pha
         lda $4016
         ; combine low two bits and store in carry bit
@@ -714,7 +714,7 @@ PAD_R      = $80
         ; rotate carry into gamepad variable
         ror
         dex
-        bne :-
+        bne gamepad_loop
     sta gamepad
     rts
 .endproc 

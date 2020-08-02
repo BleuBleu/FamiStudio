@@ -1,40 +1,175 @@
 ;======================================================================================================================
-; FamiStudio NSF driver, heavily customized version of FamiTone2. 
-; Terrible code. Not for the faint of hearth.
+; FAMISTUDIO SOUND ENGINE (2.2.0)
+;
+; This is the FamiStudio sound engine. It is used by the NSF export, the ROM export and can be used to make games. It
+; supports every feature from FamiStudio, some of them are Toggeable to save CPU/memory.
+;
+; This is essentially a heavily modified version of FamiTone2 by Shiru. A lot of his code and comments are still
+; present here, so massive thanks to him!! I am not trying to steal his work or anything, i renamed a lot of functions
+; and variables because at some point it was becoming a mess of coding standards and getting hard to maintain.
+;
+; Moderately advanced users can probably figure out how to use the sound engine simply by reading these comments.
+; For more in-depth documentation, please go to:
+;
+;    https://famistudio.org/doc/soundengine/
 ;======================================================================================================================
 
-FAMISTUDIO_DPCM_OFF = $c000
-FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
+;======================================================================================================================
+; INTERFACE
+;
+; The interface is pretty much the same as FamiTone2, with a slightly different naming convention. The main functions
+; you should be interested in are:
+;
+;   - famistudio_init
+;   - famistudio_music_play
+;   - famistudio_music_pause
+;   - famistudio_music_stop
+;   - famistudio_sfx_init
+;   - famistudio_sfx_play
+;   - famistudio_sfx_sample_play
+;   - famistudio_update
+;======================================================================================================================
 
-; Expansions.
-;FAMISTUDIO_EXP_VRC6
-;FAMISTUDIO_EXP_VRC7
-;FAMISTUDIO_EXP_MMC5
-;FAMISTUDIO_EXP_S5B
-;FAMISTUDIO_EXP_FDS
-;FAMISTUDIO_EXP_N163 (+ FAMISTUDIO_EXP_N163_CHN_CNT)
+;======================================================================================================================
+; CONFIGURATION
+;
+; There are 2 main ways of configuring the engine. 
+;
+;   1) The simplest way is right here, in the section below. Simply comment/uncomment these defines, and move on 
+;      with your life.
+;
+;   2) The second way is "externally", using definitions coming from elsewhere in your app or the command line. If you
+;      wish do so, simply define FAMISTUDIO_CFG_EXTERNAL and this whole section will be ignored. You are then 
+;      responsible for providing all configuration. 
+;
+; Note that the engine uses "ifdef" and not "if" for all boolean values. So defining a value to ZERO will still 
+; evaluate to true.
+;
+; There are 4 main things to configure, each of them will be detailed below.
+;
+;   1) Audio expansion
+;   2) Global engine parameters
+;   3) Features
+;   4) Segments
+;======================================================================================================================
 
-; Global configuration.
-;FAMISTUDIO_CFG_PAL_SUPPORT
-;FAMISTUDIO_CFG_NTSC_SUPPORT
-;FAMISTUDIO_CFG_SFX_SUPPORT
-;FAMISTUDIO_CFG_EQUALIZER
-FAMISTUDIO_CFG_SFX_STREAMS    = 0     ;number of sound effects played at once, 1..4
-FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1    ; Blaarg's smooth vibrato technique
+; Define this to configure the sound engine from outside (in your app, or from the command line)
+.ifndef FAMISTUDIO_CFG_EXTERNAL 
+
+;======================================================================================================================
+; 1) AUDIO EXPANSION CONFIGURATION
+;
+; You can enable up to one audio expansion (FAMISTUDIO_EXP_XXX). Enabling more than one expansion will lead to
+; undefined behavior. Memory usage goes up as more complex expansions are used. The audio expansion you choose
+; **MUST MATCH** with the data you will load in the engine. Loading a FDS song while enabling VRC6 will lead to
+; undefined behavior.
+;======================================================================================================================
+
+; Konami VRC6 (2 extra square + saw)
+; FAMISTUDIO_EXP_VRC6          = 1 
+
+; Konami VRC7 (6 FM channels)
+; FAMISTUDIO_EXP_VRC7          = 1 
+
+; Nintendo MMC5 (2 extra squares, extra DPCM not supported)
+; FAMISTUDIO_EXP_MMC5          = 1 
+
+; Sunsoft S5B (2 extra squares, advanced features not supported.)
+; FAMISTUDIO_EXP_S5B           = 1 
+
+; Famicom Disk System (extra wavetable channel)
+; FAMISTUDIO_EXP_FDS           = 1 
+
+; Namco 163 (between 1 and 8 extra wavetable channels) + number of channels.
+; FAMISTUDIO_EXP_N163          = 1 
+; FAMISTUDIO_EXP_N163_CHN_CNT  = 4
+
+;======================================================================================================================
+; 2) GLOBAL ENGINE CONFIGURATION
+;
+; These are parameters that configures the engine, but are independent of the data you will be importing, such as
+; which platform (PAL/NTSC) you want to support playback for, whether SFX are enabled or not, etc. They all have the
+; form FAMISTUDIO_CFG_XXX.
+;======================================================================================================================
+
+; One of these MUST be defined (PAL or NTSC playback).
+; FAMISTUDIO_CFG_PAL_SUPPORT   = 1
+; FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
+
+; Support for sound effects playback + number of SFX that can play at once.
+; FAMISTUDIO_CFG_SFX_SUPPORT   = 1 
+; FAMISTUDIO_CFG_SFX_STREAMS   = 2
+
+; Do not used, simply used by the ROM exported & demos.
+; FAMISTUDIO_CFG_EQUALIZER     = 1 
+
+; Blaarg's smooth vibrato technique. Eliminates phase resets ("pops") on square channels will be ignored if SFX are
+; enabled since they are currently incompatible with each other. This might change in the future.
+FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1 
+
+; Enables DPCM playback support.
 FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
-;FAMISTUDIO_CFG_THREAD         = 1     ;undefine if you are calling sound effects from the same thread as the sound update call
 
-; Toggeable features.
-;FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
+; Must be enabled if you are calling sound effects from a different thread than the sound engine update.
+; FAMISTUDIO_CFG_THREAD         = 1     
+
+;======================================================================================================================
+; 3) FEATURES CONFIGURATION
+;
+; Every feature supported in FamiStudio is supported by this sound engine. If you know for sure that you are not using
+; specific features in your music, you can disable them to save memory/processing time. Using a feature in your song
+; and failing to enable it will likely lead to crashes (BRK), or undefined behavior. They all have theform
+; FAMISTUDIO_USE_XXX.
+;======================================================================================================================
+
+; Must be enabled if the songs you will be importing have been created using FamiTracker tempo mode. If you are using
+; FamiStudio tempo mode, this must be undefined. You cannot mix and match tempo modes, the engine can only run in one
+; mode or the other. 
+; More information at: https://famistudio.org/doc/song/#tempo-modes
+; FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
+
+; Must be enabled if any song use the volume track. The volume track allows manipulating the volume at the track level
+; independently from instruments.
+; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
 FAMISTUDIO_USE_VOLUME_TRACK   = 1
+
+; Must be enabled if any song use the pitch track. The pitch track allows manipulating the pitch at the track level
+; independently from instruments.
+; More information at: https://famistudio.org/doc/pianoroll/#pitch
 FAMISTUDIO_USE_PITCH_TRACK    = 1
+
+; Must be enabled if any song use slide notes. Slide notes allows portamento and slide effects.
+; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
 FAMISTUDIO_USE_SLIDE_NOTES    = 1
+
+; Must be enabled if any song use the vibrato speed/depth effect track. 
+; More information at: https://famistudio.org/doc/pianoroll/#vibrato-depth-speed
 FAMISTUDIO_USE_VIBRATO        = 1
+
+; Must be enabled if any song use arpeggios (not to be confused with instrument arpeggio envelopes, those are always
+; supported).
+; More information at: (TODO)
 FAMISTUDIO_USE_ARPEGGIO       = 1
 
-; Internal defines, do not change.
+.endif
+
+; Memory location of the DPCM samples. Must be between $c000 and $ffc0, and a multiple of 64.
+.ifndef FAMISTUDIO_DPCM_OFF
+    FAMISTUDIO_DPCM_OFF = $c000
+.endif
+
+;======================================================================================================================
+; INTERNAL DEFINES (Do not touch)
+;======================================================================================================================
+
+FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
+
+.if (!.defined(FAMISTUDIO_CFG_NTSC_SUPPORT)) && (!.defined(FAMISTUDIO_CFG_PAL_SUPPORT))
+    FAMISTUDIO_CFG_NTSC_SUPPORT = 1
+.endif
+
 .if .defined(FAMISTUDIO_CFG_NTSC_SUPPORT) && .defined(FAMISTUDIO_CFG_PAL_SUPPORT)
-FAMISTUDIO_DUAL_SUPPORT = 1
+    FAMISTUDIO_DUAL_SUPPORT = 1
 .endif
 
 .if .defined(FAMISTUDIO_EXP_VRC7)
@@ -124,17 +259,21 @@ FAMISTUDIO_ENV_DUTY_OFF   = 2
 .endif
 
 .if .defined(FAMISTUDIO_EXP_N163)
-FAMISTUDIO_N163_CHN_MASK  = (FAMISTUDIO_EXP_N163_CHN_CNT - 1) << 4
+    FAMISTUDIO_N163_CHN_MASK = (FAMISTUDIO_EXP_N163_CHN_CNT - 1) << 4
 .endif
 
 .if .defined(FAMISTUDIO_CFG_SFX_SUPPORT)
-FAMISTUDIO_SFX_STRUCT_SIZE = 15
+    FAMISTUDIO_SFX_STRUCT_SIZE = 15
 
-FAMISTUDIO_SFX_CH0 = FAMISTUDIO_SFX_STRUCT_SIZE * 0
-FAMISTUDIO_SFX_CH1 = FAMISTUDIO_SFX_STRUCT_SIZE * 1
-FAMISTUDIO_SFX_CH2 = FAMISTUDIO_SFX_STRUCT_SIZE * 2
-FAMISTUDIO_SFX_CH3 = FAMISTUDIO_SFX_STRUCT_SIZE * 3
+    FAMISTUDIO_SFX_CH0 = FAMISTUDIO_SFX_STRUCT_SIZE * 0
+    FAMISTUDIO_SFX_CH1 = FAMISTUDIO_SFX_STRUCT_SIZE * 1
+    FAMISTUDIO_SFX_CH2 = FAMISTUDIO_SFX_STRUCT_SIZE * 2
+    FAMISTUDIO_SFX_CH3 = FAMISTUDIO_SFX_STRUCT_SIZE * 3
 .endif
+
+;======================================================================================================================
+; RAM VARAIBLES (You should not have to play with these)
+;======================================================================================================================
 
 .segment "RAM"
 
@@ -252,6 +391,13 @@ famistudio_sfx_buffer: famistudio_sfx_base_addr + 4
 
 .endif 
 
+;======================================================================================================================
+; ZEROPAGE VARIABLES
+;
+; These are only used as temporary variable during the famistudio_xxx calls.
+; Feel free to alias those with other ZP values in your programs to save a few bytes.
+;======================================================================================================================
+
 .segment "ZEROPAGE"
 
 famistudio_r0:   .res 1
@@ -265,6 +411,10 @@ famistudio_ptr0_lo = famistudio_ptr0+0
 famistudio_ptr0_hi = famistudio_ptr0+1
 famistudio_ptr1_lo = famistudio_ptr1+0
 famistudio_ptr1_hi = famistudio_ptr1+1
+
+;======================================================================================================================
+; CODE
+;======================================================================================================================
 
 .segment "CODE"
 
@@ -387,51 +537,55 @@ FAMISTUDIO_FDS_VOL        = $4089
 FAMISTUDIO_FDS_ENV_SPEED  = $408A
 .endif
 
-;aliases for the APU registers in the output buffer
-
 .ifndef FAMISTUDIO_CFG_SFX_SUPPORT
-FT_MR_PULSE1_V = FAMISTUDIO_APU_PL1_VOL
-FT_MR_PULSE1_L = FAMISTUDIO_APU_PL1_LO
-FT_MR_PULSE1_H = FAMISTUDIO_APU_PL1_HI
-FT_MR_PULSE2_V = FAMISTUDIO_APU_PL2_VOL
-FT_MR_PULSE2_L = FAMISTUDIO_APU_PL2_LO
-FT_MR_PULSE2_H = FAMISTUDIO_APU_PL2_HI
-FT_MR_TRI_V    = FAMISTUDIO_APU_TRI_LINEAR
-FT_MR_TRI_L    = FAMISTUDIO_APU_TRI_LO
-FT_MR_TRI_H    = FAMISTUDIO_APU_TRI_HI
-FT_MR_NOISE_V  = FAMISTUDIO_APU_NOISE_VOL
-FT_MR_NOISE_F  = FAMISTUDIO_APU_NOISE_LO
-.else ;otherwise write to the output buffer
-FT_MR_PULSE1_V = famistudio_output_buf + 0
-FT_MR_PULSE1_L = famistudio_output_buf + 1
-FT_MR_PULSE1_H = famistudio_output_buf + 2
-FT_MR_PULSE2_V = famistudio_output_buf + 3
-FT_MR_PULSE2_L = famistudio_output_buf + 4
-FT_MR_PULSE2_H = famistudio_output_buf + 5
-FT_MR_TRI_V    = famistudio_output_buf + 6
-FT_MR_TRI_L    = famistudio_output_buf + 7
-FT_MR_TRI_H    = famistudio_output_buf + 8
-FT_MR_NOISE_V  = famistudio_output_buf + 9
-FT_MR_NOISE_F  = famistudio_output_buf + 10
+    ; Output directly to APU
+    FT_MR_PULSE1_V = FAMISTUDIO_APU_PL1_VOL
+    FT_MR_PULSE1_L = FAMISTUDIO_APU_PL1_LO
+    FT_MR_PULSE1_H = FAMISTUDIO_APU_PL1_HI
+    FT_MR_PULSE2_V = FAMISTUDIO_APU_PL2_VOL
+    FT_MR_PULSE2_L = FAMISTUDIO_APU_PL2_LO
+    FT_MR_PULSE2_H = FAMISTUDIO_APU_PL2_HI
+    FT_MR_TRI_V    = FAMISTUDIO_APU_TRI_LINEAR
+    FT_MR_TRI_L    = FAMISTUDIO_APU_TRI_LO
+    FT_MR_TRI_H    = FAMISTUDIO_APU_TRI_HI
+    FT_MR_NOISE_V  = FAMISTUDIO_APU_NOISE_VOL
+    FT_MR_NOISE_F  = FAMISTUDIO_APU_NOISE_LO
+.else 
+    ; Otherwise write to the output buffer
+    FT_MR_PULSE1_V = famistudio_output_buf + 0
+    FT_MR_PULSE1_L = famistudio_output_buf + 1
+    FT_MR_PULSE1_H = famistudio_output_buf + 2
+    FT_MR_PULSE2_V = famistudio_output_buf + 3
+    FT_MR_PULSE2_L = famistudio_output_buf + 4
+    FT_MR_PULSE2_H = famistudio_output_buf + 5
+    FT_MR_TRI_V    = famistudio_output_buf + 6
+    FT_MR_TRI_L    = famistudio_output_buf + 7
+    FT_MR_TRI_H    = famistudio_output_buf + 8
+    FT_MR_NOISE_V  = famistudio_output_buf + 9
+    FT_MR_NOISE_F  = famistudio_output_buf + 10
 .endif
 
-;------------------------------------------------------------------------------
-; reset APU, initialize FamiTone
-; in: A   0 for PAL, not 0 for NTSC
-;     X,Y pointer to music data
-;------------------------------------------------------------------------------
+;======================================================================================================================
+; FAMISTUDIO_INIT (public)
+;
+; Reset APU, initialize the sound engine with some music data.
+; 
+; [in] a : Playback platform, zero for PAL, non-zero for NTSC.
+; [in] x : Pointer to music data (lo)
+; [in] y : Pointer to music data (hi)
+;======================================================================================================================
 
 famistudio_init:
     
     @music_data_ptr = famistudio_ptr0
 
-    stx famistudio_song_list_lo         ;store music data pointer for further use
+    stx famistudio_song_list_lo
     sty famistudio_song_list_hi
     stx @music_data_ptr+0
     sty @music_data_ptr+1
 
 .ifdef FAMISTUDIO_DUAL_SUPPORT
-    tax                        ;set SZ flags for A
+    tax
     beq @pal
     lda #97
 @pal:
@@ -445,18 +599,20 @@ famistudio_init:
 .endif
     sta famistudio_pal_adjust
 
-    jsr famistudio_music_stop      ;initialize channels and envelopes
+    jsr famistudio_music_stop
 
+    ; Instrument address
     ldy #1
-    lda (@music_data_ptr),y       ;get instrument list address
+    lda (@music_data_ptr),y
     sta famistudio_instrument_lo
     iny
     lda (@music_data_ptr),y
     sta famistudio_instrument_hi
     iny
 
+    ; Expansions instrument address
     .if .defined(FAMISTUDIO_EXP_FDS) || .defined(FAMISTUDIO_EXP_N163) || .defined(FAMISTUDIO_EXP_VRC7) 
-        lda (@music_data_ptr),y       ;get expansion instrument list address
+        lda (@music_data_ptr),y
         sta famistudio_exp_instrument_lo
         iny
         lda (@music_data_ptr),y
@@ -464,28 +620,29 @@ famistudio_init:
         iny
     .endif
 
-    lda (@music_data_ptr),y       ;get sample list address
+    ; Sample list address
+    lda (@music_data_ptr),y
     sta famistudio_dpcm_list_lo
     iny
     lda (@music_data_ptr),y
     sta famistudio_dpcm_list_hi
 
-    lda #$80                   ;previous pulse period MSB, to not write it when not changed
+    lda #$80 ; Previous pulse period MSB, to not write it when not changed
     sta famistudio_pulse1_prev
     sta famistudio_pulse2_prev
 
-    lda #$0f                   ;enable channels, stop DMC
+    lda #$0f ; Enable channels, stop DMC
     sta FAMISTUDIO_APU_SND_CHN
-    lda #$80                   ;disable triangle length counter
+    lda #$80 ; Disable triangle length counter
     sta FAMISTUDIO_APU_TRI_LINEAR
-    lda #$00                   ;load noise length
+    lda #$00 ; Load noise length
     sta FAMISTUDIO_APU_NOISE_HI
 
-    lda #$30                   ;volumes to 0
+    lda #$30 ; Volumes to 0
     sta FAMISTUDIO_APU_PL1_VOL
     sta FAMISTUDIO_APU_PL2_VOL
     sta FAMISTUDIO_APU_NOISE_VOL
-    lda #$08                   ;no sweep
+    lda #$08 ; No sweep
     sta FAMISTUDIO_APU_PL1_SWEEP
     sta FAMISTUDIO_APU_PL2_SWEEP
 
@@ -510,18 +667,23 @@ famistudio_init:
 
     jmp famistudio_music_stop
 
-;------------------------------------------------------------------------------
-; stop music that is currently playing, if any
-; in: none
-;------------------------------------------------------------------------------
+
+;======================================================================================================================
+; FAMISTUDIO_MUSIC_STOP (public)
+;
+; Stops any music currently playing, if any. Note that this will not update the APU, so sound might linger. Calling
+; famistudio_update after this will update the APU.
+; 
+; [in] no input params.
+;======================================================================================================================
 
 famistudio_music_stop:
 
     lda #0
-    sta famistudio_song_speed          ;stop music, reset pause flag
-    sta famistudio_dpcm_effect         ;no DPCM effect playing
+    sta famistudio_song_speed
+    sta famistudio_dpcm_effect
 
-    ldx #0    ;initialize channel structures
+    ldx #0
 
 @set_channels:
 
@@ -541,22 +703,22 @@ famistudio_music_stop:
     .endif    
 
 @nextchannel:
-    inx                        ;next channel
+    inx
     cpx #FAMISTUDIO_NUM_CHANNELS
     bne @set_channels
 
 .if .defined(FAMISTUDIO_USE_SLIDE_NOTES)
-    ldx #0    ;initialize all slides to zero
+    ldx #0
     lda #0
 @set_slides:
 
     sta famistudio_slide_step, x
-    inx                        ;next channel
+    inx
     cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
     bne @set_slides
 .endif
 
-    ldx #0    ;initialize all envelopes to the dummy envelope
+    ldx #0
 
 @set_envelopes:
 
@@ -572,7 +734,7 @@ famistudio_music_stop:
     cpx #FAMISTUDIO_NUM_ENVELOPES
     bne @set_envelopes
 
-    ldx #0    ;initialize all envelopes to the dummy envelope
+    ldx #0
 
 @set_pitch_envelopes:
 
@@ -595,15 +757,19 @@ famistudio_music_stop:
 
     jmp famistudio_sample_stop
 
-;------------------------------------------------------------------------------
-; play music
-; in: A number of subsong
-;------------------------------------------------------------------------------
+;======================================================================================================================
+; FAMISTUDIO_MUSIC_PLAY (public)
+;
+; Plays a song from the loaded music data (from a previous call to famistudio_init).
+; 
+; [in] a : Song index.
+;======================================================================================================================
 
 famistudio_music_play:
 
     @tmp = famistudio_ptr0_lo
     @song_list_ptr = famistudio_ptr0
+    @temp_env_ptr  = famistudio_ptr1
 
     ldx famistudio_song_list_lo
     stx @song_list_ptr+0
@@ -611,9 +777,9 @@ famistudio_music_play:
     stx @song_list_ptr+1
 
     ldy #0
-    cmp (@song_list_ptr),y       ;check if there is such sub song
+    cmp (@song_list_ptr),y
     bcc @valid_song
-    rts
+    rts ; Invalid song index.
 
 @valid_song:
 .if FAMISTUDIO_NUM_CHANNELS = 5
@@ -695,22 +861,23 @@ famistudio_music_play:
 .endif
 
 .if .defined(FAMISTUDIO_EXP_FDS) || .defined(FAMISTUDIO_EXP_VRC7) || .defined(FAMISTUDIO_EXP_N163)
-    adc #7                     ;add offset
+    adc #7 ; We have an extra expansion instrument pointer for these.
 .else
-    adc #5                     ;add offset
+    adc #5 
 .endif
     tay
 
-    lda famistudio_song_list_lo         ;restore pointer LSB
+    lda famistudio_song_list_lo
     sta @song_list_ptr+0
 
-    jsr famistudio_music_stop      ;stop music, initialize channels and envelopes
+    jsr famistudio_music_stop
 
-    ldx #0    ;initialize channel structures
+    ldx #0
 
 @set_channels:
 
-    lda (@song_list_ptr),y       ;read channel pointers
+    ; Channel data address
+    lda (@song_list_ptr),y
     sta famistudio_chn_ptr_lo,x
     iny
     lda (@song_list_ptr),y
@@ -728,36 +895,37 @@ famistudio_music_play:
     .endif
 
 @nextchannel:
-    inx                        ;next channel
+    inx
     cpx #FAMISTUDIO_NUM_CHANNELS
     bne @set_channels
 
 .ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    lda famistudio_pal_adjust          ;read tempo for PAL or NTSC
+    lda famistudio_pal_adjust
     beq @pal
     iny
     iny
 @pal:
 
-    lda (@song_list_ptr),y       ;read the tempo step
+    ; Tempo increment.
+    lda (@song_list_ptr),y
     sta famistudio_tempo_step_lo
     iny
     lda (@song_list_ptr),y
     sta famistudio_tempo_step_hi
 
-    lda #0                     ;reset tempo accumulator
+    lda #0 ; Reset tempo accumulator
     sta famistudio_tempo_acc_lo
-    lda #6                     ;default speed
+    lda #6 ; Default speed
     sta famistudio_tempo_acc_hi
-    sta famistudio_song_speed          ;apply default speed, this also enables music
+    sta famistudio_song_speed ; Apply default speed, this also enables music
 .else
     lda (@song_list_ptr),y
     sta famistudio_tempo_env_ptr_lo
-    sta famistudio_ptr1+0
+    sta @temp_env_ptr+0
     iny
     lda (@song_list_ptr),y
     sta famistudio_tempo_env_ptr_hi
-    sta famistudio_ptr1+1
+    sta @temp_env_ptr+1
     iny
     lda (@song_list_ptr),y
 .if .defined(FAMISTUDIO_DUAL_SUPPORT) ; Dual mode
@@ -773,12 +941,12 @@ famistudio_music_play:
     sta famistudio_tempo_frame_num
     ldy #0
     sty famistudio_tempo_env_idx
-    lda (famistudio_ptr1),y
+    lda (@temp_env_ptr),y
     clc 
     adc #1
     sta famistudio_tempo_env_counter
     lda #6
-    sta famistudio_song_speed          ; simply so the song isnt considered paused.
+    sta famistudio_song_speed ; Non-zero simply so the song isnt considered paused.
 .endif
 
 .ifdef FAMISTUDIO_EXP_VRC7
@@ -822,38 +990,51 @@ famistudio_music_play:
 @skip:
     rts
 
-;------------------------------------------------------------------------------
-; pause and unpause current music
-; in: A 0 or not 0 to play or pause
-;------------------------------------------------------------------------------
+;======================================================================================================================
+; FAMISTUDIO_MUSIC_PAUSE (public)
+;
+; Pause/unpause the currently playing song. Note that this will not update the APU, so sound might linger. Calling
+; famistudio_update after this will update the APU.
+; 
+; [in] a : zero to play, non-zero to pause.
+;======================================================================================================================
 
 famistudio_music_pause:
 
-    tax                        ;set SZ flags for A
+    tax
     beq @unpause
     
 @pause:
 
     jsr famistudio_sample_stop
     
-    lda #0                     ;mute sound
+    lda #0
     sta famistudio_env_value+FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_CH3_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    lda famistudio_song_speed          ;set pause flag
+    lda famistudio_song_speed ; <= 0 pauses the music
     ora #$80
     bne @done
 @unpause:
-    lda famistudio_song_speed          ;reset pause flag
+    lda famistudio_song_speed ; > 0 unpause music
     and #$7f
 @done:
     sta famistudio_song_speed
 
     rts
 
-; x = note index
-; y = slide/pitch envelope index
+;======================================================================================================================
+; FAMISTUDIO_GET_NOTE_PITCH_MACRO (internal)
+;
+; Uber-macro used to compute the final pitch of a note, taking into account the current note, arpeggios, instrument
+; pitch envelopes, slide notes and fine pitch tracks.
+; 
+; [in] x : note index.
+; [in] y : slide/pitch envelope index.
+; [out] famistudio_ptr1 : Final note pitch.
+;======================================================================================================================
+
 .macro famistudio_get_note_pitch_macro pitch_env_offset, pitch_env_indexer, note_table_lsb, note_table_msb
 
     .local @pitch
@@ -881,6 +1062,7 @@ famistudio_music_pause:
 
 .else
 
+    ; Pitch envelope only
     lda famistudio_pitch_env_value_lo+pitch_env_offset pitch_env_indexer
     sta @pitch+0
     lda famistudio_pitch_env_value_hi+pitch_env_offset pitch_env_indexer
@@ -906,11 +1088,11 @@ famistudio_music_pause:
  .else
     ; Most channels have 1 bit of fraction for slides.
     lda famistudio_slide_pitch_hi+pitch_env_offset pitch_env_indexer
-    cmp #$80 ; sign extend upcoming right shift.
-    ror ; we have 1 bit of fraction for slides, shift right hi byte.
+    cmp #$80 ; Sign extend upcoming right shift.
+    ror ; We have 1 bit of fraction for slides, shift right hi byte.
     sta @tmp_ror
     lda famistudio_slide_pitch_lo+pitch_env_offset pitch_env_indexer
-    ror ; shift right low byte.
+    ror ; Shift right low byte.
     clc
     adc @pitch+0
     sta @pitch+0
@@ -966,6 +1148,15 @@ famistudio_get_note_pitch_vrc6_saw:
     rts
 .endif
 
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_CHANNEL_SOUND (internal)
+;
+; Uber-macro used to update the APU registers for a given 2A03/VRC6/MMC5 channel. This macro is an absolute mess, but
+; it is still more maintainable than having many different functions.
+;
+; [in] no input params.
+;======================================================================================================================
+
 .macro famistudio_update_channel_sound idx, env_offset, slide_offset, pulse_prev, vol_ora, hi_ora, reg_hi, reg_lo, reg_vol, reg_sweep
 
     .local @pitch
@@ -986,7 +1177,7 @@ famistudio_get_note_pitch_vrc6_saw:
     clc
     adc famistudio_env_value+env_offset+FAMISTUDIO_ENV_NOTE_OFF
 
-.ifblank slide_offset ;  noise channel is a bit special    
+.ifblank slide_offset ; Noise channel is a bit special    
 
     and #$0f
     eor #$0f
@@ -1027,21 +1218,21 @@ famistudio_get_note_pitch_vrc6_saw:
                 beq @compute_volume
                 stx pulse_prev
                 tay 
-                iny ; we only care about -1 ($ff) and 1. Adding one means we only check of 0 or 2, we already checked for zero (so < 3).
+                iny ; We only care about -1 ($ff) and 1. Adding one means we only check of 0 or 2, we already checked for zero (so < 3).
                 cpy #$03
                 bcs @hi_delta_too_big
                 ldx #$40
-                stx FAMISTUDIO_APU_FRAME_CNT ; reset frame counter in case it was about to clock
-                lda famistudio_smooth_vibrato_period_lo_lookup, y ; be sure low 8 bits of timer period are $ff (for positive delta), or $00 (for negative delta)
+                stx FAMISTUDIO_APU_FRAME_CNT ; Reset frame counter in case it was about to clock
+                lda famistudio_smooth_vibrato_period_lo_lookup, y ; Be sure low 8 bits of timer period are $ff (for positive delta), or $00 (for negative delta)
                 sta reg_lo
-                lda famistudio_smooth_vibrato_sweep_lookup, y ; sweep enabled, shift = 7, set negative flag or delta is negative..
+                lda famistudio_smooth_vibrato_sweep_lookup, y ; Sweep enabled, shift = 7, set negative flag or delta is negative..
                 sta reg_sweep
                 lda #$c0
-                sta FAMISTUDIO_APU_FRAME_CNT ; clock sweep immediately
+                sta FAMISTUDIO_APU_FRAME_CNT ; Clock sweep immediately
                 lda #$08
-                sta reg_sweep ; disable sweep
+                sta reg_sweep ; Disable sweep
                 lda @pitch+0
-                sta reg_lo ; restore lo-period.
+                sta reg_lo ; Restore lo-period.
                 jmp @compute_volume
             @hi_delta_too_big:
                 stx reg_hi
@@ -1068,7 +1259,7 @@ famistudio_get_note_pitch_vrc6_saw:
     lda famistudio_env_value+env_offset+FAMISTUDIO_ENV_VOLUME_OFF
 
     .ifdef ::FAMISTUDIO_USE_VOLUME_TRACK    
-        ora famistudio_chn_volume_track+idx ; TODO: Triangle channel doesnt really need a volume track. Make it optional.
+        ora famistudio_chn_volume_track+idx
         tax
         lda famistudio_volume_table, x 
     .endif
@@ -1098,6 +1289,14 @@ famistudio_get_note_pitch_vrc6_saw:
 .endmacro
 
 .ifdef FAMISTUDIO_EXP_FDS
+
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_FDS_CHANNEL_SOUND (internal)
+;
+; Updates the FDS audio registers.
+;
+; [in] no input params.
+;======================================================================================================================
 
 famistudio_update_fds_channel_sound:
 
@@ -1178,10 +1377,18 @@ famistudio_vrc7_wait_reg_write:
         ldx famistudio_vrc7_dummy
     rts
 
+; From nesdev wiki.
 famistudio_vrc7_wait_reg_select:
     rts
 
-; y = VRC7 channel idx (0,1,2,3,4,5)
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_VRC7_CHANNEL_SOUND (internal)
+;
+; Updates the VRC7 audio registers for a given channel.
+;
+; [in] y: VRC7 channel idx (0,1,2,3,4,5)
+;======================================================================================================================
+
 famistudio_update_vrc7_channel_sound:
 
     @pitch = famistudio_ptr1
@@ -1219,7 +1426,7 @@ famistudio_update_vrc7_channel_sound:
     jsr famistudio_vrc7_wait_reg_select
 
     lda famistudio_chn_vrc7_prev_hi, y
-    and #$cf ; remove trigger + sustain
+    and #$cf ; Remove trigger + sustain
     sta famistudio_chn_vrc7_prev_hi, y
     sta FAMISTUDIO_VRC7_REG_WRITE
     jsr famistudio_vrc7_wait_reg_write
@@ -1369,7 +1576,14 @@ famistudio_n163_env_table:
     .byte FAMISTUDIO_CH11_ENVS
     .byte FAMISTUDIO_CH12_ENVS
 
-; y = N163 channel idx (0,1,2,3,4,5,6,7)
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_N163_CHANNEL_SOUND (internal)
+;
+; Updates the N163 audio registers for a given channel.
+;
+; [in] y: N163 channel idx (0,1,2,3,4,5,6,7)
+;======================================================================================================================
+
 famistudio_update_n163_channel_sound:
     
     pitch    = famistudio_ptr1
@@ -1377,7 +1591,7 @@ famistudio_update_n163_channel_sound:
 
     lda famistudio_chn_note+5,y
     bne @nocut
-    ldx #0 ; this will fetch volume 0.
+    ldx #0 ; This will fetch volume 0.
     bne @nocut
     jmp @update_volume
 
@@ -1455,14 +1669,21 @@ famistudio_s5b_vol_table:
 famistudio_s5b_env_table:
     .byte FAMISTUDIO_CH5_ENVS, FAMISTUDIO_CH6_ENVS, FAMISTUDIO_CH7_ENVS
 
-; y = S5B channel idx (0,1,2)
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_S5B_CHANNEL_SOUND (internal)
+;
+; Updates the S5B audio registers for a given channel.
+;
+; [in] y: S5B channel idx (0,1,2)
+;======================================================================================================================
+
 famistudio_update_s5b_channel_sound:
     
     pitch = famistudio_ptr1
 
     lda famistudio_chn_note+5,y
     bne @nocut
-    ldx #0 ; this will fetch volume 0.
+    ldx #0 ; This will fetch volume 0.
     beq @update_volume
 
 @nocut:
@@ -1508,6 +1729,13 @@ famistudio_update_s5b_channel_sound:
 
 .endif
 
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_ROW (internal)
+;
+; Macro to advance the song for a given channel. Will read any new note or effect (if any) and load any new 
+; instrument (if any).
+;======================================================================================================================
+
 .macro famistudio_update_row channel_idx, env_idx
 
     .local @no_new_note
@@ -1546,25 +1774,31 @@ famistudio_update_s5b_channel_sound:
         dec famistudio_chn_note_counter, x
     @done:    
 .else
-    .local @no_new_note ; why do i need this?
+    .local @no_new_note ; Why do i need this?
     @no_new_note:
 .endif
 
 .endmacro
 
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_ROW_DPCM (internal)
+;
+; Special version for DPCM.
+;======================================================================================================================
+
 .macro famistudio_update_row_dpcm channel_idx
 .ifdef ::FAMISTUDIO_CFG_DPCM_SUPPORT
     .local @play_sample
     .local @no_new_note
-    ldx #channel_idx    ;process channel 5
+    ldx #channel_idx
     jsr famistudio_channel_update
     bcc @no_new_note
     lda famistudio_chn_note+channel_idx
     bne @play_sample
     jsr famistudio_sample_stop
-    bne @no_new_note    ;A is non-zero after famistudio_sample_stop
+    bne @no_new_note
 @play_sample:
-    jsr famistudio_sample_play_music
+    jsr famistudio_music_sample_play
 
 .ifdef ::FAMISTUDIO_CFG_EQUALIZER
     .local @done
@@ -1587,14 +1821,19 @@ famistudio_update_s5b_channel_sound:
 .endif
 .endmacro
 
-;------------------------------------------------------------------------------
-; update FamiTone state, should be called every NMI
-; in: none
-;------------------------------------------------------------------------------
+;======================================================================================================================
+; FAMISTUDIO_UPDATE (public)
+;
+; Main update function, should be called once per frame, ideally at the end of NMI. Will update the tempo, advance
+; the song if needed, update instrument and apply any change to the APU registers.
+;
+; [in] no input params.
+;======================================================================================================================
 
 famistudio_update:
 
     @pitch_env_type = famistudio_r0
+    @temp_pitch     = famistudio_r1
     @tempo_env_ptr  = famistudio_ptr0
     @env_ptr        = famistudio_ptr0
     @pitch_env_ptr  = famistudio_ptr0
@@ -1606,8 +1845,8 @@ famistudio_update:
     pha
 .endif
 
-    lda famistudio_song_speed          ;speed 0 means that no music is playing currently
-    bmi @pause                 ;bit 7 set is the pause flag
+    lda famistudio_song_speed ; Speed 0 means that no music is playing currently
+    bmi @pause ; Bit 7 set is the pause flag
     bne @update
 @pause:
 .ifndef FAMISTUDIO_USE_FAMITRACKER_TEMPO
@@ -1620,15 +1859,15 @@ famistudio_update:
 @update:
 
 .ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    clc                        ;update frame counter that considers speed, tempo, and PAL/NTSC
+    clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
     lda famistudio_tempo_acc_lo
     adc famistudio_tempo_step_lo
     sta famistudio_tempo_acc_lo
     lda famistudio_tempo_acc_hi
     adc famistudio_tempo_step_hi
     cmp famistudio_song_speed
-    bcs @update_row            ;overflow, row update is needed
-    sta famistudio_tempo_acc_hi         ;no row update, skip to the envelopes update
+    bcs @update_row ; Overflow, row update is needed
+    sta famistudio_tempo_acc_hi ; No row update, skip to the envelopes update
     jmp @update_envelopes
 
 @update_row:
@@ -1638,12 +1877,14 @@ famistudio_update:
 
 .else ; FamiStudio tempo
 
+    ; Decrement envelope counter, see if we need to advance.
     dec famistudio_tempo_env_counter
     beq @advance_tempo_envelope
     lda #1
     jmp @store_frame_count
 
 @advance_tempo_envelope:
+    ; Advance the envelope by one step.
     lda famistudio_tempo_env_ptr_lo
     sta @tempo_env_ptr+0
     lda famistudio_tempo_env_ptr_hi
@@ -1652,7 +1893,7 @@ famistudio_update:
     inc famistudio_tempo_env_idx
     ldy famistudio_tempo_env_idx
     lda (@tempo_env_ptr),y
-    bpl @store_counter
+    bpl @store_counter ; Negative value means we loop back to to index 1.
 
 @tempo_envelope_end:
     ldy #1
@@ -1660,6 +1901,7 @@ famistudio_update:
     lda (@tempo_env_ptr),y
 
 @store_counter:
+    ; Reset the counter
     sta famistudio_tempo_env_counter
     lda famistudio_tempo_frame_num
     bne @store_frame_count
@@ -1738,7 +1980,7 @@ famistudio_update:
 
 ;----------------------------------------------------------------------------------------------------------------------
 @update_envelopes:
-    ldx #0    ;process 11 envelopes
+    ldx #0
 
 @env_process:
     lda famistudio_env_repeat,x
@@ -1747,38 +1989,38 @@ famistudio_update:
     bne @env_next
 
 @env_read:
-    lda famistudio_env_addr_lo,x         ;load envelope data address into temp
+    lda famistudio_env_addr_lo,x
     sta @env_ptr+0
     lda famistudio_env_addr_hi,x
     sta @env_ptr+1
-    ldy famistudio_env_ptr,x           ;load envelope pointer
+    ldy famistudio_env_ptr,x
 
 @env_read_value:
-    lda (@env_ptr),y       ;read a byte of the envelope data
-    bpl @env_special           ;values below 128 used as a special code, loop or repeat
-    clc                        ;values above 128 are output value+192 (output values are signed -63..64)
+    lda (@env_ptr),y
+    bpl @env_special ; Values below 128 used as a special code, loop or repeat
+    clc              ; Values above 128 are output value+192 (output values are signed -63..64)
     adc #256-192
-    sta famistudio_env_value,x         ;store the output value
-    iny                        ;advance the pointer
-    bne @env_next_store_ptr    ;bra
+    sta famistudio_env_value,x
+    iny
+    bne @env_next_store_ptr
 
 @env_special:
-    bne @env_set_repeat        ;zero is the loop point, non-zero values used for the repeat counter
-    iny                        ;advance the pointer
-    lda (@env_ptr),y       ;read loop position
-    tay                        ;use loop position
-    jmp @env_read_value        ;read next byte of the envelope
+    bne @env_set_repeat  ; Zero is the loop point, non-zero values used for the repeat counter
+    iny
+    lda (@env_ptr),y     ; Read loop position
+    tay
+    jmp @env_read_value
 
 @env_set_repeat:
     iny
-    sta famistudio_env_repeat,x        ;store the repeat counter value
+    sta famistudio_env_repeat,x ; Store the repeat counter value
 
 @env_next_store_ptr:
-    tya                        ;store the envelope pointer
+    tya
     sta famistudio_env_ptr,x
 
 @env_next:
-    inx                        ;next envelope
+    inx
 
     cpx #FAMISTUDIO_NUM_ENVELOPES
     bne @env_process
@@ -1805,11 +2047,11 @@ famistudio_update:
     lda (@pitch_env_ptr),y
     clc  
     adc #256-192
-    sta famistudio_r1
+    sta @temp_pitch
     clc
     adc famistudio_pitch_env_value_lo,x
     sta famistudio_pitch_env_value_lo,x
-    lda famistudio_r1
+    lda @temp_pitch
     bpl @pitch_relative_last_pos  
     lda #$ff
 @pitch_relative_last_pos:
@@ -1833,7 +2075,7 @@ famistudio_update:
     sta @pitch_env_ptr+1
     ldy #0
     lda (@pitch_env_ptr),y
-    sta @pitch_env_type ; going to be 0 for absolute envelope, 0x80 for relative.
+    sta @pitch_env_type ; First value is 0 for absolute envelope, 0x80 for relative.
     ldy famistudio_pitch_env_ptr,x
 
 @pitch_env_read_value:
@@ -1858,11 +2100,11 @@ famistudio_update:
     jmp @pitch_env_next_store_ptr
 
 @pitch_relative:
-    sta famistudio_r1
+    sta @temp_pitch
     clc
     adc famistudio_pitch_env_value_lo,x
     sta famistudio_pitch_env_value_lo,x
-    lda famistudio_r1
+    lda @temp_pitch
     and #$80
     bpl @pitch_relative_pos  
     lda #$ff
@@ -1881,7 +2123,7 @@ famistudio_update:
 
 @pitch_env_set_repeat:
     iny
-    ora @pitch_env_type ; this is going to set the relative flag in the hi-bit.
+    ora @pitch_env_type ; This is going to set the relative flag in the hi-bit.
     sta famistudio_pitch_env_repeat,x
 
 @pitch_env_next_store_ptr:
@@ -1897,12 +2139,12 @@ famistudio_update:
 .ifdef FAMISTUDIO_USE_SLIDE_NOTES
 ;----------------------------------------------------------------------------------------------------------------------
 @update_slides:
-    ldx #0    ;process 3 slides
+    ldx #0
 
 @slide_process:
-    lda famistudio_slide_step,x        ; zero repeat means no active slide.
+    lda famistudio_slide_step,x ; Zero repeat means no active slide.
     beq @slide_next
-    clc                        ; add step to slide pitch (16bit + 8bit signed).
+    clc ; Add step to slide pitch (16bit + 8bit signed).
     lda famistudio_slide_step,x
     adc famistudio_slide_pitch_lo,x
     sta famistudio_slide_pitch_lo,x
@@ -1927,7 +2169,7 @@ famistudio_update:
     sta famistudio_slide_step,x
 
 @slide_next:
-    inx                        ;next slide
+    inx 
     cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
     bne @slide_process
 .endif
@@ -1994,8 +2236,7 @@ famistudio_update:
 ;----------------------------------------------------------------------------------------------------------------------
 .ifdef FAMISTUDIO_CFG_SFX_SUPPORT
 
-    ;process all sound effect streams
-
+    ; Process all sound effect streams
     .if FAMISTUDIO_CFG_SFX_STREAMS > 0
     ldx #FAMISTUDIO_SFX_CH0
     jsr famistudio_sfx_update
@@ -2013,40 +2254,40 @@ famistudio_update:
     jsr famistudio_sfx_update
     .endif
 
-    ;send data from the output buffer to the APU
+    ; Send data from the output buffer to the APU
 
-    lda famistudio_output_buf      ;pulse 1 volume
+    lda famistudio_output_buf      ; Pulse 1 volume
     sta FAMISTUDIO_APU_PL1_VOL
-    lda famistudio_output_buf+1    ;pulse 1 period LSB
+    lda famistudio_output_buf+1    ; Pulse 1 period LSB
     sta FAMISTUDIO_APU_PL1_LO
-    lda famistudio_output_buf+2    ;pulse 1 period MSB, only applied when changed
+    lda famistudio_output_buf+2    ; Pulse 1 period MSB, only applied when changed
     cmp famistudio_pulse1_prev
     beq @no_pulse1_upd
     sta famistudio_pulse1_prev
     sta FAMISTUDIO_APU_PL1_HI
 
 @no_pulse1_upd:
-    lda famistudio_output_buf+3    ;pulse 2 volume
+    lda famistudio_output_buf+3    ; Pulse 2 volume
     sta FAMISTUDIO_APU_PL2_VOL
-    lda famistudio_output_buf+4    ;pulse 2 period LSB
+    lda famistudio_output_buf+4    ; Pulse 2 period LSB
     sta FAMISTUDIO_APU_PL2_LO
-    lda famistudio_output_buf+5    ;pulse 2 period MSB, only applied when changed
+    lda famistudio_output_buf+5    ; Pulse 2 period MSB, only applied when changed
     cmp famistudio_pulse2_prev
     beq @no_pulse2_upd
     sta famistudio_pulse2_prev
     sta FAMISTUDIO_APU_PL2_HI
 
 @no_pulse2_upd:
-    lda famistudio_output_buf+6    ;triangle volume (plays or not)
+    lda famistudio_output_buf+6    ; Triangle volume (plays or not)
     sta FAMISTUDIO_APU_TRI_LINEAR
-    lda famistudio_output_buf+7    ;triangle period LSB
+    lda famistudio_output_buf+7    ; Triangle period LSB
     sta FAMISTUDIO_APU_TRI_LO
-    lda famistudio_output_buf+8    ;triangle period MSB
+    lda famistudio_output_buf+8    ; Triangle period MSB
     sta FAMISTUDIO_APU_TRI_HI
 
-    lda famistudio_output_buf+9    ;noise volume
+    lda famistudio_output_buf+9    ; Noise volume
     sta FAMISTUDIO_APU_NOISE_VOL
-    lda famistudio_output_buf+10   ;noise period
+    lda famistudio_output_buf+10   ; Noise period
     sta FAMISTUDIO_APU_NOISE_LO
 
 .endif
@@ -2060,8 +2301,15 @@ famistudio_update:
 
     rts
 
-;internal routine, sets up envelopes of a channel according to current instrument
-;in X envelope group offset, y = channel idx, A instrument number
+;======================================================================================================================
+; FAMISTUDIO_SET_INSTRUMENT (internal)
+;
+; Internal function to set an instrument for a given channel. Will initialize all instrument envelopes.
+;
+; [in] x: first envelope index for this channel.
+; [in] y: channel index
+; [in] a: instrument index.
+;======================================================================================================================
 
 famistudio_set_instrument:
 
@@ -2071,10 +2319,10 @@ famistudio_set_instrument:
     @tmp_x         = famistudio_r2
 
     sty @chan_idx
-    asl                        ;instrument number is pre multiplied by 4
+    asl ; Instrument number is pre multiplied by 4
     tay
     lda famistudio_instrument_hi
-    adc #0                     ;use carry to extend range for 64 instruments
+    adc #0 ; Use carry to extend range for 64 instruments
     sta @intrument_ptr+1
     lda famistudio_instrument_lo
     sta @intrument_ptr+0
@@ -2096,7 +2344,7 @@ famistudio_set_instrument:
     lsr
     ldx @tmp_x
     bcc @read_arpeggio_ptr 
-    iny ; instrument arpeggio is overriden by arpeggio, dont touch!
+    iny ; Instrument arpeggio is overriden by arpeggio, dont touch!
     jmp @init_envelopes
 .endif
 
@@ -2110,20 +2358,20 @@ famistudio_set_instrument:
 @init_envelopes:
     ; Initialize volume + arpeggio envelopes.
     lda #1
-    sta famistudio_env_ptr-1,x         ;reset env1 pointer (env1 is volume and volume can have releases)
+    sta famistudio_env_ptr-1,x ; Reset volume envelope pointer to 1 (volume have releases point in index 0)
     lda #0
-    sta famistudio_env_repeat-1,x      ;reset env1 repeat counter
-    sta famistudio_env_repeat,x        ;reset env2 repeat counter
-    sta famistudio_env_ptr,x           ;reset env2 pointer
+    sta famistudio_env_repeat-1,x
+    sta famistudio_env_repeat,x
+    sta famistudio_env_ptr,x
 
     ; Duty cycle envelope
     lda @chan_idx
-    cmp #2                     ;triangle has no duty.
+    cmp #2 ; Triangle has no duty.
 .if !.defined(FAMISTUDIO_EXP_S5B)
     bne @duty
 .else
     beq @no_duty
-    cmp #5                     ;S5B has no duty.
+    cmp #5 ; S5B has no duty.
     bcc @duty
 .endif
     @no_duty:
@@ -2139,34 +2387,45 @@ famistudio_set_instrument:
         lda (@intrument_ptr),y
         sta famistudio_env_addr_hi,x
         lda #0
-        sta famistudio_env_repeat,x        ;reset env3 repeat counter
-        sta famistudio_env_ptr,x           ;reset env3 pointer
+        sta famistudio_env_repeat,x
+        sta famistudio_env_ptr,x
     @pitch_env:
     ; Pitch envelopes.
     ldx @chan_idx
 .ifdef FAMISTUDIO_USE_VIBRATO 
-    lda famistudio_chn_env_override,x ; instrument pitch is overriden by vibrato, dont touch!
+    lda famistudio_chn_env_override,x ; Instrument pitch is overriden by vibrato, dont touch!
     bmi @no_pitch    
 .endif    
     lda famistudio_channel_to_pitch_env, x
     bmi @no_pitch
     tax
     lda #1
-    sta famistudio_pitch_env_ptr,x     ;reset env3 pointer (pitch envelope have relative/absolute flag in the first byte)
+    sta famistudio_pitch_env_ptr,x     ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
     lda #0
-    sta famistudio_pitch_env_repeat,x  ;reset env3 repeat counter
+    sta famistudio_pitch_env_repeat,x
     sta famistudio_pitch_env_value_lo,x
     sta famistudio_pitch_env_value_hi,x
     iny
-    lda (@intrument_ptr),y       ;instrument pointer LSB
+    lda (@intrument_ptr),y
     sta famistudio_pitch_env_addr_lo,x
     iny
-    lda (@intrument_ptr),y       ;instrument pointer MSB
+    lda (@intrument_ptr),y
     sta famistudio_pitch_env_addr_hi,x
     @no_pitch:
     rts
 
 .if .defined(FAMISTUDIO_EXP_FDS) || .defined(FAMISTUDIO_EXP_N163) || .defined(FAMISTUDIO_EXP_VRC7) 
+
+;======================================================================================================================
+; FAMISTUDIO_SET_EXP_INSTRUMENT_BASE (internal)
+;
+; Internal macro to set an expansion instrument for a given channel. Will initialize all instrument envelopes.
+;
+; [in] x: first envelope index for this channel.
+; [in] y: channel index
+; [in] a: instrument index.
+;======================================================================================================================
+
 .macro famistudio_set_exp_instrument_base
 
     .local @chan_idx
@@ -2182,11 +2441,11 @@ famistudio_set_instrument:
     @ptr      = famistudio_ptr0
 
     sty @chan_idx
-    asl                        ;instrument number is pre multiplied by 4
+    asl ; Instrument number is pre multiplied by 4
     asl
     tay
     lda famistudio_exp_instrument_hi
-    adc #0                     ;use carry to extend range for 64 instruments
+    adc #0  ; Use carry to extend range for 64 instruments
     sta @ptr+1
     lda famistudio_exp_instrument_lo
     sta @ptr+0
@@ -2208,7 +2467,7 @@ famistudio_set_instrument:
     lsr
     ldx @tmp_x
     bcc @read_arpeggio_ptr 
-    iny ; instrument arpeggio is overriden by arpeggio, dont touch!
+    iny ; Instrument arpeggio is overriden by arpeggio, dont touch!
     jmp @init_envelopes
 .endif
 
@@ -2224,16 +2483,16 @@ famistudio_set_instrument:
     iny
     ; Initialize volume + arpeggio envelopes.
     lda #1
-    sta famistudio_env_ptr-1,x         ;reset env1 pointer (env1 is volume and volume can have releases)
+    sta famistudio_env_ptr-1,x ; Reset volume envelope pointer to 1 (volume have releases point in index 0)
     lda #0
-    sta famistudio_env_repeat-1,x      ;reset env1 repeat counter
-    sta famistudio_env_repeat,x        ;reset env2 repeat counter
-    sta famistudio_env_ptr,x           ;reset env2 pointer
+    sta famistudio_env_repeat-1,x
+    sta famistudio_env_repeat,x
+    sta famistudio_env_ptr,x
 
     ; Pitch envelopes.
     ldx @chan_idx
 .ifdef ::FAMISTUDIO_USE_VIBRATO
-    lda famistudio_chn_env_override,x ; instrument pitch is overriden by vibrato, dont touch!
+    lda famistudio_chn_env_override,x ; Instrument pitch is overriden by vibrato, dont touch!
     bpl @pitch_env
     iny
     iny
@@ -2242,17 +2501,17 @@ famistudio_set_instrument:
 
 @pitch_env:
     dex
-    dex                        ; Noise + DPCM dont have pitch envelopes             
+    dex ; Noise + DPCM dont have pitch envelopes             
     lda #1
-    sta famistudio_pitch_env_ptr,x     ;reset env3 pointer (pitch envelope have relative/absolute flag in the first byte)
+    sta famistudio_pitch_env_ptr,x ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
     lda #0
-    sta famistudio_pitch_env_repeat,x  ;reset env3 repeat counter
+    sta famistudio_pitch_env_repeat,x
     sta famistudio_pitch_env_value_lo,x
     sta famistudio_pitch_env_value_hi,x
-    lda (@ptr),y       ;instrument pointer LSB
+    lda (@ptr),y
     sta famistudio_pitch_env_addr_lo,x
     iny
-    lda (@ptr),y       ;instrument pointer MSB
+    lda (@ptr),y
     sta famistudio_pitch_env_addr_hi,x
     iny
 
@@ -2261,6 +2520,17 @@ famistudio_set_instrument:
 .endif
 
 .ifdef FAMISTUDIO_EXP_VRC7
+
+;======================================================================================================================
+; FAMISTUDIO_SET_VRC7_INSTRUMENT (internal)
+;
+; Internal function to set a VRC7 instrument for a given channel. Will load custom patch if needed.
+;
+; [in] x: first envelope index for this channel.
+; [in] y: channel index
+; [in] a: instrument index.
+;======================================================================================================================
+
 famistudio_set_vrc7_instrument:
 
     @ptr      = famistudio_ptr0
@@ -2299,6 +2569,17 @@ famistudio_set_vrc7_instrument:
 .endif
 
 .ifdef FAMISTUDIO_EXP_FDS
+
+;======================================================================================================================
+; FAMISTUDIO_SET_FDS_INSTRUMENT (internal)
+;
+; Internal function to set a FDS instrument. Will upload the wave and modulation envelope if needed.
+;
+; [in] x: first envelope index for this channel.
+; [in] y: channel index
+; [in] a: instrument index.
+;======================================================================================================================
+
 famistudio_set_fds_instrument:
 
     @ptr        = famistudio_ptr0
@@ -2424,6 +2705,16 @@ famistudio_n163_wave_table:
     .byte FAMISTUDIO_N163_REG_WAVE - $30
     .byte FAMISTUDIO_N163_REG_WAVE - $38
 
+;======================================================================================================================
+; FAMISTUDIO_SET_FDS_INSTRUMENT (internal)
+;
+; Internal function to set a N163 instrument. Will upload the waveform if needed.
+;
+; [in] x: first envelope index for this channel.
+; [in] y: channel index
+; [in] a: instrument index.
+;======================================================================================================================
+
 famistudio_set_n163_instrument:
 
     @ptr      = famistudio_ptr0
@@ -2486,7 +2777,7 @@ famistudio_set_n163_instrument:
 
 .endif
 
-; increments 16-bit.
+; Increments 16-bit. (internal)
 .macro famistudio_inc_16 addr
     .local @ok
     inc addr+0
@@ -2495,7 +2786,7 @@ famistudio_set_n163_instrument:
 @ok:
 .endmacro
 
-; add 8-bit to a 16-bit (unsigned).
+; Add 8-bit to a 16-bit (unsigned). (internal)
 .macro famistudio_add_16_8 addr, val
     .local @ok
     clc
@@ -2507,11 +2798,20 @@ famistudio_set_n163_instrument:
 @ok:
 .endmacro
 
-;internal routine, parses channel note data
+;======================================================================================================================
+; FAMISTUDIO_CHANNEL_UPDATE (internal)
+;
+; Advances the song by one frame for a given channel. If a new note or effect(s) are found, they will be processed.
+;
+; [in] x: channel index
+;======================================================================================================================
+
 famistudio_channel_update:
 
     @tmp_ptr_lo           = famistudio_r0
     @tmp_chan_idx         = famistudio_r0
+    @tmp_slide_from       = famistudio_r1
+    @tmp_slide_idx        = famistudio_r1
     @no_attack_flag       = famistudio_r2
     @slide_delta_lo       = famistudio_ptr1_hi
     @channel_data_ptr     = famistudio_ptr0
@@ -2537,34 +2837,34 @@ famistudio_channel_update:
     @exp_note_table_msb = famistudio_fds_note_table_msb
 .endif
 
-    lda famistudio_chn_repeat,x        ;check repeat counter
+    lda famistudio_chn_repeat,x
     beq @no_repeat
-    dec famistudio_chn_repeat,x        ;decrease repeat counter
-    clc                        ;no new note
+    dec famistudio_chn_repeat,x
+    clc
     rts
 
 @no_repeat:
     lda #0
     sta @no_attack_flag
-    lda famistudio_chn_ptr_lo,x         ;load channel pointer into temp
+    lda famistudio_chn_ptr_lo,x
     sta @channel_data_ptr+0
     lda famistudio_chn_ptr_hi,x
     sta @channel_data_ptr+1
     ldy #0
 
 @read_byte:
-    lda (@channel_data_ptr),y       ;read byte of the channel
+    lda (@channel_data_ptr),y
     famistudio_inc_16 @channel_data_ptr
 
 @check_regular_note:
     cmp #$61
-    bcs @check_special_code    ; $00 to $60 are regular notes, most common case.
+    bcs @check_special_code ; $00 to $60 are regular notes, most common case.
     jmp @regular_note
 
 @check_special_code:
     ora #0
     bpl @check_volume_track
-    jmp @special_code           ;bit 7 0=note 1=special code
+    jmp @special_code ; Bit 7: 0=note 1=special code
 
 @check_volume_track:
     cmp #$70
@@ -2573,7 +2873,7 @@ famistudio_channel_update:
 .ifdef FAMISTUDIO_USE_VOLUME_TRACK
 @volume_track:    
     and #$0f
-    asl ; a LUT would be nice, but x/y are both in-use here.
+    asl
     asl
     asl
     asl
@@ -2711,29 +3011,29 @@ famistudio_channel_update:
     stx @tmp_chan_idx
     lda famistudio_channel_to_slide,x
     tax
-    lda (@channel_data_ptr),y       ; read slide step size
+    lda (@channel_data_ptr),y ; Read slide step size
     iny
     sta famistudio_slide_step,x
-    lda (@channel_data_ptr),y       ; read slide note from
+    lda (@channel_data_ptr),y ; Read slide note from
 .ifdef FAMISTUDIO_DUAL_SUPPORT
     clc
     adc famistudio_pal_adjust
 .endif
-    sta famistudio_r1
+    sta @tmp_slide_from
     iny
-    lda (@channel_data_ptr),y       ; read slide note to
-    ldy famistudio_r1           ; start note
+    lda (@channel_data_ptr),y ; Read slide note to
+    ldy @tmp_slide_from       ; reload note from
 .ifdef FAMISTUDIO_DUAL_SUPPORT
     adc famistudio_pal_adjust
 .endif
-    stx famistudio_r1           ; store slide index.    
+    stx @tmp_slide_idx ; X contained the slide index.    
     tax
 .ifdef @exp_note_start
     lda @tmp_chan_idx
     cmp #@exp_note_start
     bcs @note_table_expansion
 .endif
-    sec                        ; subtract the pitch of both notes.
+    sec ; Subtract the pitch of both notes.
     lda famistudio_note_table_lsb,y
     sbc famistudio_note_table_lsb,x
     sta @slide_delta_lo
@@ -2750,17 +3050,17 @@ famistudio_channel_update:
     sbc @exp_note_table_msb,x
 @note_table_done:
 .endif
-    ldx famistudio_r1           ; slide index.
+    ldx @tmp_slide_idx ; slide index.
     sta famistudio_slide_pitch_hi,x
     .if .defined(FAMISTUDIO_EXP_N163) || .defined(FAMISTUDIO_EXP_VRC7)
-        cpx #3 ; slide #3 is the first of expansion slides.
+        cpx #3 ; Slide #3 is the first of expansion slides.
         bcs @positive_shift
     .endif
     @negative_shift:
         lda @slide_delta_lo
-        asl                        ; shift-left, we have 1 bit of fractional slide.
+        asl ; Shift-left, we have 1 bit of fractional slide.
         sta famistudio_slide_pitch_lo,x
-        rol famistudio_slide_pitch_hi,x     ; shift-left, we have 1 bit of fractional slide.
+        rol famistudio_slide_pitch_hi,x ; Shift-left, we have 1 bit of fractional slide.
     .if .defined(FAMISTUDIO_EXP_N163) || .defined(FAMISTUDIO_EXP_VRC7)
         jmp @shift_done
     @positive_shift:
@@ -2800,8 +3100,8 @@ famistudio_channel_update:
     .endif
     ldx @tmp_chan_idx
     ldy #2
-    lda (@channel_data_ptr),y       ; re-read the target note (ugly...)
-    sta famistudio_chn_note,x          ; store note code
+    lda (@channel_data_ptr),y ; Re-read the target note (ugly...)
+    sta famistudio_chn_note,x ; Store note code
     famistudio_add_16_8 @channel_data_ptr, #3
 
 @slide_done_pos:
@@ -2810,9 +3110,9 @@ famistudio_channel_update:
 .endif
 
 @regular_note:    
-    sta famistudio_chn_note,x          ; store note code
+    sta famistudio_chn_note,x ; Store note code
 .ifdef FAMISTUDIO_USE_SLIDE_NOTES
-    ldy famistudio_channel_to_slide,x   ; clear any previous slide on new node.
+    ldy famistudio_channel_to_slide,x ; Clear any previous slide on new node.
     bmi @sec_and_done
     lda #0
     sta famistudio_slide_step,y
@@ -2820,21 +3120,21 @@ famistudio_channel_update:
 @sec_and_done:
     lda @no_attack_flag
     bne @no_attack
-    lda famistudio_chn_note,x          ; dont trigger attack on stop notes.
+    lda famistudio_chn_note,x ; Dont trigger attack on stop notes.
     beq @no_attack
 .if .defined(FAMISTUDIO_EXP_VRC7)
     cpx #5
     bcs @vrc7_channel
-    sec                        ;new note flag is set
+    sec ; New note flag is set
     jmp @done
     @vrc7_channel:
         lda #1
-        sta famistudio_chn_vrc7_trigger-5,x ; set trigger flag for VRC7
+        sta famistudio_chn_vrc7_trigger-5,x ; Set trigger flag for VRC7
 .endif    
-    sec                        ;new note flag is set
+    sec ; New note flag is set
     jmp @done
 @no_attack:
-    clc                        ;pretend there is no new note.
+    clc ; Pretend there is no new note.
     jmp @done
 
 @special_code:
@@ -2843,7 +3143,7 @@ famistudio_channel_update:
     bcs @set_empty_rows
     asl a
     asl a
-    sta famistudio_chn_instrument,x    ;store instrument number*4
+    sta famistudio_chn_instrument,x ; Store instrument number*4
 
 .if .defined(FAMISTUDIO_EXP_N163) || .defined(FAMISTUDIO_EXP_VRC7) || .defined(FAMISTUDIO_EXP_FDS)
     cpx #5
@@ -2856,6 +3156,7 @@ famistudio_channel_update:
 
 @set_speed:
 .ifndef FAMISTUDIO_USE_FAMITRACKER_TEMPO
+    ; Load and reset the new tempo envelope.
     lda (@channel_data_ptr),y
     sta famistudio_tempo_env_ptr_lo
     sta @tempo_env_ptr+0
@@ -2896,18 +3197,18 @@ famistudio_channel_update:
     beq @set_loop
 
 @set_reference:
-    clc                        ;remember return address+3
+    clc ; Remember return address+3
     lda @channel_data_ptr+0
     adc #3
     sta famistudio_chn_return_lo,x
     lda @channel_data_ptr+1
     adc #0
     sta famistudio_chn_return_hi,x
-    lda (@channel_data_ptr),y       ;read length of the reference (how many rows)
+    lda (@channel_data_ptr),y ; Read length of the reference (how many rows)
     sta famistudio_chn_ref_len,x
     iny
-    lda (@channel_data_ptr),y       ;read 16-bit absolute address of the reference
-    sta @tmp_ptr_lo          ;remember in temp
+    lda (@channel_data_ptr),y ; Read 16-bit absolute address of the reference
+    sta @tmp_ptr_lo
     iny
     lda (@channel_data_ptr),y
     sta @channel_data_ptr+1
@@ -2922,7 +3223,7 @@ famistudio_channel_update:
     cpx #5
     bcc @apu_channel
     lda #$80
-    sta famistudio_chn_vrc7_trigger-5,x ; set release flag for VRC7
+    sta famistudio_chn_vrc7_trigger-5,x ; Set release flag for VRC7
     @apu_channel:
 .endif    
 
@@ -2930,18 +3231,18 @@ famistudio_channel_update:
     lda famistudio_channel_to_volume_env,x ; DPCM(5) will never have releases.
     tax
 
-    lda famistudio_env_addr_lo,x         ;load envelope data address into temp
+    lda famistudio_env_addr_lo,x ; Load envelope data address into temp
     sta @volume_env_ptr+0
     lda famistudio_env_addr_hi,x
     sta @volume_env_ptr+1
     
     ldy #0
-    lda (@volume_env_ptr),y       ;read first byte of the envelope data, this contains the release index.
+    lda (@volume_env_ptr),y ; Read first byte of the envelope data, this contains the release index.
     beq @env_has_no_release
 
     sta famistudio_env_ptr,x
     lda #0
-    sta famistudio_env_repeat,x        ;need to reset envelope repeat to force update.
+    sta famistudio_env_repeat,x ; Need to reset envelope repeat to force update.
     
 @env_has_no_release:
     ldx @tmp_chan_idx
@@ -2949,15 +3250,15 @@ famistudio_channel_update:
     jmp @done
 
 @set_repeat:
-    sta famistudio_chn_repeat,x        ;set up repeat counter, carry is clear, no new note
+    sta famistudio_chn_repeat,x ; Set up repeat counter, carry is clear, no new note
 
 @done:
-    lda famistudio_chn_ref_len,x       ;check reference row counter
-    beq @no_ref                ;if it is zero, there is no reference
-    dec famistudio_chn_ref_len,x       ;decrease row counter
+    lda famistudio_chn_ref_len,x ; Check reference row counter
+    beq @no_ref                  ; If it is zero, there is no reference
+    dec famistudio_chn_ref_len,x ; Decrease row counter
     bne @no_ref
 
-    lda famistudio_chn_return_lo,x      ;end of a reference, return to previous pointer
+    lda famistudio_chn_return_lo,x ; End of a reference, return to previous pointer
     sta famistudio_chn_ptr_lo,x
     lda famistudio_chn_return_hi,x
     sta famistudio_chn_ptr_hi,x
@@ -3019,9 +3320,13 @@ famistudio_channel_update:
     .byte >@special_code_fds_mod_depth                ; $6a
 .endif
 
-;------------------------------------------------------------------------------
-; stop DPCM sample if it plays
-;------------------------------------------------------------------------------
+;======================================================================================================================
+; FAMISTUDIO_SAMPLE_STOP (internal)
+;
+; Stop DPCM sample if it plays
+;
+; [in] no input params.
+;======================================================================================================================
 
 famistudio_sample_stop:
 
@@ -3032,12 +3337,15 @@ famistudio_sample_stop:
     
 .ifdef FAMISTUDIO_CFG_DPCM_SUPPORT
 
-;------------------------------------------------------------------------------
-; play DPCM sample with higher priority, for sound effects
-; in: A is number of a sample, 1..63
-;------------------------------------------------------------------------------
+;======================================================================================================================
+; FAMISTUDIO_SAMPLE_PLAY_SFX (public)
+;
+; Play DPCM sample with higher priority, for sound effects
+;
+; [in] a: Sample index, 1...63.
+;======================================================================================================================
 
-famistudio_sample_play_sfx:
+famistudio_sfx_sample_play:
 
     ldx #1
     stx famistudio_dpcm_effect
@@ -3047,7 +3355,7 @@ sample_play:
     @tmp = famistudio_r0
     @sample_data_ptr = famistudio_ptr0
 
-    sta @tmp               ;sample number*3, offset in the sample table
+    sta @tmp ; Sample number*3, offset in the sample table
     asl a
     clc
     adc @tmp
@@ -3058,32 +3366,36 @@ sample_play:
     adc famistudio_dpcm_list_hi
     sta @sample_data_ptr+1
 
-    lda #%00001111             ;stop DPCM
+    lda #%00001111 ; Stop DPCM
     sta FAMISTUDIO_APU_SND_CHN
 
     ldy #0
-    lda (@sample_data_ptr),y       ;sample offset
+    lda (@sample_data_ptr),y ; Sample offset
     sta FAMISTUDIO_APU_DMC_START
     iny
-    lda (@sample_data_ptr),y       ;sample length
+    lda (@sample_data_ptr),y ; Sample length
     sta FAMISTUDIO_APU_DMC_LEN
     iny
-    lda (@sample_data_ptr),y       ;pitch and loop
+    lda (@sample_data_ptr),y ; Pitch and loop
     sta FAMISTUDIO_APU_DMC_FREQ
 
-    lda #32                    ;reset DAC counter
+    lda #32 ; Reset DAC counter
     sta FAMISTUDIO_APU_DMC_RAW
-    lda #%00011111             ;start DMC
+    lda #%00011111 ; Start DMC
     sta FAMISTUDIO_APU_SND_CHN
 
     rts
 
-;------------------------------------------------------------------------------
-; play DPCM sample, used by music player, could be used externally
-; in: A is number of a sample, 1..63
-;------------------------------------------------------------------------------
+;======================================================================================================================
+; FAMISTUDIO_SAMPLE_PLAY_MUSIC (internal)
+;
+; Play DPCM sample, used by music player, could be used externally. Samples played for music have lower priority than
+; samples played by SFX.
+;
+; [in] a: Sample index, 1...63.
+;======================================================================================================================
 
-famistudio_sample_play_music:           ;for music (low priority)
+famistudio_music_sample_play:
 
     ldx famistudio_dpcm_effect
     beq sample_play
@@ -3102,10 +3414,14 @@ famistudio_sample_play_music:           ;for music (low priority)
 
 .ifdef FAMISTUDIO_CFG_SFX_SUPPORT
 
-;------------------------------------------------------------------------------
-; init sound effects player, set pointer to data
-; in: X,Y is address of sound effects data
-;------------------------------------------------------------------------------
+;======================================================================================================================
+; FAMISTUDIO_SFX_INIT (public)
+;
+; Initialize the sound effect player.
+;
+; [in] x: Sound effect data pointer (lo)
+; [in] y: Sound effect data pointer (hi)
+;======================================================================================================================
 
 famistudio_sfx_init:
 
@@ -3117,20 +3433,20 @@ famistudio_sfx_init:
     ldy #0
     
 .ifdef FAMISTUDIO_DUAL_SUPPORT
-    lda famistudio_pal_adjust          ;add 2 to the sound list pointer for PAL
+    lda famistudio_pal_adjust ; Add 2 to the sound list pointer for PAL
     bne @ntsc
     iny
     iny
 @ntsc:
 .endif
     
-    lda (@effect_list_ptr),y       ;read and store pointer to the effects list
+    lda (@effect_list_ptr),y 
     sta famistudio_sfx_addr_lo
     iny
     lda (@effect_list_ptr),y
     sta famistudio_sfx_addr_hi
 
-    ldx #FAMISTUDIO_SFX_CH0            ;init all the streams
+    ldx #FAMISTUDIO_SFX_CH0 
 
 @set_channels:
     jsr famistudio_sfx_clear_channel
@@ -3143,67 +3459,79 @@ famistudio_sfx_init:
 
     rts
 
-;internal routine, clears output buffer of a sound effect
-;in: A is 0
-;    X is offset of sound effect stream
+;======================================================================================================================
+; FAMISTUDIO_SFX_CLEAR_CHANNEL (internal)
+;
+; Clears output buffer of a sound effect.
+;
+; [in] x: Offset of the sound effect stream.
+;======================================================================================================================
 
 famistudio_sfx_clear_channel:
 
     lda #0
-    sta famistudio_sfx_ptr_hi,x         ;this stops the effect
+    sta famistudio_sfx_ptr_hi,x   ; This stops the effect
     sta famistudio_sfx_repeat,x
     sta famistudio_sfx_offset,x
-    sta famistudio_sfx_buffer+6,x         ;mute triangle
+    sta famistudio_sfx_buffer+6,x ; Mute triangle
     lda #$30
-    sta famistudio_sfx_buffer+0,x         ;mute pulse1
-    sta famistudio_sfx_buffer+3,x         ;mute pulse2
-    sta famistudio_sfx_buffer+9,x         ;mute noise
+    sta famistudio_sfx_buffer+0,x ; Mute pulse1
+    sta famistudio_sfx_buffer+3,x ; Mute pulse2
+    sta famistudio_sfx_buffer+9,x ; Mute noise
     rts
 
-;------------------------------------------------------------------------------
-; play sound effect
-; in: A is a number of the sound effect 0..127
-;     X is offset of sound effect channel, should be FAMISTUDIO_SFX_CH0..FAMISTUDIO_SFX_CH3
-;------------------------------------------------------------------------------
+;======================================================================================================================
+; FAMISTUDIO_SFX_PLAY (public)
+;
+; Plays a sound effect.
+;
+; [in] a: Sound effect index (0...127)
+; [in] x: Offset of sound effect channel, should be FAMISTUDIO_SFX_CH0..FAMISTUDIO_SFX_CH3
+;======================================================================================================================
 
 famistudio_sfx_play:
 
     @effect_data_ptr = famistudio_ptr0
 
-    asl a                      ;get offset in the effects list
+    asl a
     tay
 
-    jsr famistudio_sfx_clear_channel    ;stops the effect if it plays
+    jsr famistudio_sfx_clear_channel ; Stops the effect if it plays
 
     lda famistudio_sfx_addr_lo
     sta @effect_data_ptr+0
     lda famistudio_sfx_addr_hi
     sta @effect_data_ptr+1
 
-    lda (@effect_data_ptr),y       ;read effect pointer from the table
-    sta famistudio_sfx_ptr_lo,x         ;store it
+    lda (@effect_data_ptr),y
+    sta famistudio_sfx_ptr_lo,x
     iny
     lda (@effect_data_ptr),y
-    sta famistudio_sfx_ptr_hi,x         ;this write enables the effect
+    sta famistudio_sfx_ptr_hi,x ; This write enables the effect
 
     rts
 
-;internal routine, update one sound effect stream
-;in: X is offset of sound effect stream
+;======================================================================================================================
+; FAMISTUDIO_SFX_UPDATE (internal)
+;
+; Updates a single sound effect stream.
+;
+; [in] x: Offset of sound effect channel, should be FAMISTUDIO_SFX_CH0..FAMISTUDIO_SFX_CH3
+;======================================================================================================================
 
 famistudio_sfx_update:
 
     @tmp = famistudio_r0
 
-    lda famistudio_sfx_repeat,x        ;check if repeat counter is not zero
+    lda famistudio_sfx_repeat,x ; Check if repeat counter is not zero
     beq @no_repeat
-    dec famistudio_sfx_repeat,x        ;decrement and return
-    bne @update_buf            ;just mix with output buffer
+    dec famistudio_sfx_repeat,x ; Decrement and return
+    bne @update_buf ; Just mix with output buffer
 
 @no_repeat:
-    lda famistudio_sfx_ptr_hi,x         ;check if MSB of the pointer is not zero
+    lda famistudio_sfx_ptr_hi,x ; Check if MSB of the pointer is not zero
     bne @sfx_active
-    rts                        ;return otherwise, no active effect
+    rts ; Return otherwise, no active effect
 
 @sfx_active:
     sta @effect_data_ptr+1         ;load effect pointer into temp
@@ -3213,33 +3541,33 @@ famistudio_sfx_update:
     clc
 
 @read_byte:
-    lda (@effect_data_ptr),y       ;read byte of effect
-    bmi @get_data              ;if bit 7 is set, it is a register write
+    lda (@effect_data_ptr),y ; Read byte of effect
+    bmi @get_data ; If bit 7 is set, it is a register write
     beq @eof
     iny
-    sta famistudio_sfx_repeat,x        ;if bit 7 is reset, it is number of repeats
+    sta famistudio_sfx_repeat,x ; If bit 7 is reset, it is number of repeats
     tya
     sta famistudio_sfx_offset,x
     jmp @update_buf
 
 @get_data:
     iny
-    stx @tmp          ;it is a register write
-    adc @tmp          ;get offset in the effect output buffer
+    stx @tmp ; It is a register write
+    adc @tmp ; Get offset in the effect output buffer
     tax
-    lda (@effect_data_ptr),y       ;read value
+    lda (@effect_data_ptr),y
     iny
-    sta famistudio_sfx_buffer-128,x       ;store into output buffer
+    sta famistudio_sfx_buffer-128,x
     ldx @tmp
-    jmp @read_byte             ;and read next byte
+    jmp @read_byte 
 
 @eof:
-    sta famistudio_sfx_ptr_hi,x         ;mark channel as inactive
+    sta famistudio_sfx_ptr_hi,x ; Mark channel as inactive
 
 @update_buf:
-    lda famistudio_output_buf             ;compare effect output buffer with main output buffer
-    and #$0f                   ;if volume of pulse 1 of effect is higher than that of the
-    sta @tmp          ;main buffer, overwrite the main buffer value with the new one
+    lda famistudio_output_buf ; Compare effect output buffer with main output buffer
+    and #$0f ; If volume of pulse 1 of effect is higher than that of the main buffer, overwrite the main buffer value with the new one
+    sta @tmp 
     lda famistudio_sfx_buffer+0,x
     and #$0f
     cmp @tmp
@@ -3252,7 +3580,7 @@ famistudio_sfx_update:
     sta famistudio_output_buf+2
 
 @no_pulse1:
-    lda famistudio_output_buf+3           ;same for pulse 2
+    lda famistudio_output_buf+3
     and #$0f
     sta @tmp
     lda famistudio_sfx_buffer+3,x
@@ -3267,7 +3595,7 @@ famistudio_sfx_update:
     sta famistudio_output_buf+5
 
 @no_pulse2:
-    lda famistudio_sfx_buffer+6,x           ;overwrite triangle of main output buffer if it is active
+    lda famistudio_sfx_buffer+6,x ; Overwrite triangle of main output buffer if it is active
     beq @no_triangle
     sta famistudio_output_buf+6
     lda famistudio_sfx_buffer+7,x
@@ -3276,7 +3604,7 @@ famistudio_sfx_update:
     sta famistudio_output_buf+8
 
 @no_triangle:
-    lda famistudio_output_buf+9           ;same as for pulse 1 and 2, but for noise
+    lda famistudio_output_buf+9
     and #$0f
     sta @tmp
     lda famistudio_sfx_buffer+9,x
@@ -3293,18 +3621,14 @@ famistudio_sfx_update:
 
 .endif
 
-;dummy envelope used to initialize all channels with silence
-
+; Dummy envelope used to initialize all channels with silence
 famistudio_dummy_envelope:
     .byte $c0,$7f,$00,$00
 
 famistudio_dummy_pitch_envelope:
     .byte $00,$c0,$7f,$00,$01
 
-;PAL and NTSC, 11-bit dividers
-;rest note, then octaves 1-5, then three zeroes
-;first 64 bytes are PAL, next 64 bytes are NTSC
-
+; Note tables
 famistudio_note_table_lsb:
     .ifdef FAMISTUDIO_CFG_PAL_SUPPORT
         .byte $00
@@ -3594,6 +3918,7 @@ famistudio_n163_note_table_lsb:
 .endif
 .endif
 
+; For a given channel, returns the index of the volume envelope.
 famistudio_channel_to_volume_env:
     .byte FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .byte FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
@@ -3626,6 +3951,7 @@ famistudio_channel_to_volume_env:
 .endif
 
 .ifdef FAMISTUDIO_USE_ARPEGGIO
+; For a given channel, returns the index of the arpeggio envelope.
 famistudio_channel_to_arpeggio_env:
     .byte FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     .byte FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_NOTE_OFF
@@ -3658,6 +3984,7 @@ famistudio_channel_to_arpeggio_env:
 .endif
 .endif
 
+; For a given channel, returns the index of the slide/pitch envelope.
 famistudio_channel_to_pitch_env:
 famistudio_channel_to_slide:
     .byte $00
@@ -3690,6 +4017,7 @@ famistudio_channel_to_slide:
     .byte $0a
 .endif
 
+; Duty lookup table.
 famistudio_duty_lookup:
     .byte $30
     .byte $70
@@ -3697,6 +4025,7 @@ famistudio_duty_lookup:
     .byte $f0
 
 .ifdef FAMISTUDIO_EXP_VRC6
+; Duty lookup table for VRC6.
 famistudio_vrc6_duty_lookup:
     .byte $00
     .byte $10
