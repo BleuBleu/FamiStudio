@@ -23,6 +23,7 @@ r1: .res 1
 r2: .res 1
 r3: .res 1
 r4: .res 1
+r5: .res 1
 
 ; General purpose pointers.
 p0: .res 2
@@ -755,8 +756,8 @@ loading_text: ; Loading....
 .proc play_song
 
     text_ptr = p0
-    song_idx_mul_32 = r0
-    temp_x = r1
+    song_idx_mul_32 = r4
+    temp_x = r5
 
     ; each song table entry is 32-bytes.
     asl
@@ -770,6 +771,10 @@ loading_text: ; Loading....
 .ifdef ::FAMISTUDIO_EXP_FDS
     
     stx temp_x
+    jsr famistudio_music_stop
+    jsr famistudio_update
+    jsr update_all_equalizers
+    jsr ppu_update
 
     ; Write "Loading..." text.
     lda #<loading_text
@@ -878,7 +883,7 @@ samples_none:
     ldy #11
     jsr draw_text
     jsr ppu_update
-    
+
 done:
     rts
 
@@ -963,6 +968,27 @@ equalizer_color_lookup:
 
 .endproc
 
+.proc update_all_equalizers
+
+    lda #0
+    jsr update_equalizer
+    lda #1
+    jsr update_equalizer
+    lda #2
+    jsr update_equalizer
+    lda #3
+    jsr update_equalizer
+    lda #4
+    jsr update_equalizer
+.ifdef ::FAMISTUDIO_EXP_FDS
+    lda #5
+    jsr update_equalizer
+.endif
+
+    rts
+
+.endproc
+
 .proc main
 
     jsr ppu_off
@@ -1021,21 +1047,7 @@ loop:
 draw:
 
     jsr famistudio_update
-
-    lda #0
-    jsr update_equalizer
-    lda #1
-    jsr update_equalizer
-    lda #2
-    jsr update_equalizer
-    lda #3
-    jsr update_equalizer
-    lda #4
-    jsr update_equalizer
-.ifdef ::FAMISTUDIO_EXP_FDS
-    lda #5
-    jsr update_equalizer
-.endif
+    jsr update_all_equalizers
 
 draw_done:
 

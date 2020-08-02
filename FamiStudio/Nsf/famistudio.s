@@ -536,6 +536,9 @@ famistudio_music_stop:
     .if .defined(FAMISTUDIO_USE_VIBRATO) || .defined(FAMISTUDIO_USE_ARPEGGIO)
         sta famistudio_chn_env_override,x
     .endif
+    .if .defined(FAMISTUDIO_CFG_EQUALIZER)
+        sta famistudio_chn_note_counter,x
+    .endif    
 
 @nextchannel:
     inx                        ;next channel
@@ -1607,6 +1610,10 @@ famistudio_update:
     bmi @pause                 ;bit 7 set is the pause flag
     bne @update
 @pause:
+.ifndef FAMISTUDIO_USE_FAMITRACKER_TEMPO
+    lda #1
+    sta famistudio_tempo_frame_cnt
+.endif
     jmp @update_sound
 
 ;----------------------------------------------------------------------------------------------------------------------
