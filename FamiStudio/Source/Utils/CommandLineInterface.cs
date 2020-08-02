@@ -142,6 +142,7 @@ namespace FamiStudio
             Console.WriteLine($"  wav-export : Export to a WAV file (*.wav).");
             Console.WriteLine($"  nsf-export : Export to a NSF file (*.nsf).");
             Console.WriteLine($"  rom-export : Export to a NES ROM file (.nes).");
+            Console.WriteLine($"  fds-export : Export to a FDS disk file (.fds).");
             Console.WriteLine($"  famitracker-txt-export : Export to a FamiTracker text file (*.txt).");
             Console.WriteLine($"  famistudio-txt-export : Export to a FamiStudio text file (*.txt).");
             Console.WriteLine($"  famitone2-export : Export to FamiTone2 assembly file(s) (*.s, *.asm).");
@@ -328,7 +329,7 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                if (exportSongIds.Length > RomFile.MaxSongs)
+                if (exportSongIds.Length > RomFileBase.MaxSongs)
                 {
                     Console.WriteLine("There is currently a hard limit of 8 songs for NES ROM export.");
                     return;
@@ -354,6 +355,30 @@ namespace FamiStudio
                     project.Name,
                     project.Author,
                     pal);
+            }
+        }
+
+        private void FdsExport(string filename)
+        {
+            if (!ValidateExtension(filename, ".fds"))
+                return;
+
+            var exportSongIds = GetExportSongIds();
+            if (exportSongIds != null)
+            {
+                if (exportSongIds.Length > RomFileBase.MaxSongs)
+                {
+                    Console.WriteLine("There is currently a hard limit of 8 songs for FDS disk export.");
+                    return;
+                }
+
+                var fds = new FdsFile();
+                fds.Save(
+                    project,
+                    filename,
+                    exportSongIds,
+                    project.Name,
+                    project.Author);
             }
         }
 
@@ -487,6 +512,7 @@ namespace FamiStudio
                         case "wav-export": WavExport(outputFilename); break;
                         case "nsf-export": NsfExport(outputFilename); break;
                         case "rom-export": RomExport(outputFilename); break;
+                        case "fds-export": FdsExport(outputFilename); break;
                         case "famitracker-txt-export": FamiTrackerTextExport(outputFilename); break;
                         case "famistudio-txt-export":  FamiStudioTextExport(outputFilename);  break;
                         case "famitone2-export": FamiTone2MusicExport(outputFilename); break;
