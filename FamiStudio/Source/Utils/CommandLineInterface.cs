@@ -346,7 +346,8 @@ namespace FamiStudio
                 if (project.UsesExpansionAudio)
                     pal = false;
 
-                RomFile.Save(
+                var rom = new RomFile();
+                rom.Save(
                     project, 
                     filename,
                     exportSongIds,

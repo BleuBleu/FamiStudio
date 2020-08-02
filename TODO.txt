@@ -4,10 +4,12 @@
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
 - BUG: One bad pixel in ROM?
-- FDS export
 - Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
-- Why is volume visible on triangle channel?
 - Loop count on wav.
+- FDS export
+	- Command line.
+	- Remove all anonymous blocks.
+	- Retest ROM export.
 - FamiStudio sound engine
 	- All local symols @. ==> famistudio_r1 not done.
 	- Document function inputs like in my game.
@@ -18,6 +20,7 @@
 	- Config:
 		- ca65 segments
 		- zp on other assemblers, etc.
+		- How to override from outside? 
 	- Resurect SFX
 	- Documentation + config comments?
 	- Deprecate FamiTone2 FS.
@@ -42,7 +45,8 @@
 - Feature requests from email (record?)
 - First time control tutorial?
 	- TEST WITH HIGH DPI!!!	
-	
+- Linux, rename .so -> lib***.so
+
 Tweet ideas
 ===========
 - Tweet the linux screenshots, find a dev who wants to help.

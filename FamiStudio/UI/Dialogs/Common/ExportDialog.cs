@@ -25,7 +25,7 @@ namespace FamiStudio
         {
             "Wave",
             "NSF",
-            "ROM",
+            "ROM / FDS",
             "FamiStudio Text",
             "FamiTracker Text",
             "FamiTone2 Music",
@@ -116,11 +116,13 @@ namespace FamiStudio
                     page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
                     break;
                 case ExportFormat.Rom:
-                    page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 0
-                    page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 1
-                    page.AddStringList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 2
+                    page.AddStringList("Type :", new[] { "NES ROM", "FDS Disk" }, project.ExpansionAudio == Project.ExpansionFds ? "FDS Disk" : "NES ROM"); // 0
+                    page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
+                    page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
+                    page.AddStringList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
                     page.AddStringListMulti(null, songNames, null); // 2
-                    page.SetPropertyEnabled(2, !project.UsesExpansionAudio);
+                    page.SetPropertyEnabled(0,  project.ExpansionAudio == Project.ExpansionFds);
+                    page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
                     break;
                 case ExportFormat.Text:
                     page.AddStringListMulti(null, songNames, null); // 0
@@ -224,22 +226,38 @@ namespace FamiStudio
         private void ExportRom()
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(3));
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(4));
 
-            if (songIds.Length > RomFile.MaxSongs)
+            if (songIds.Length > RomFileBase.MaxSongs)
             {
-                PlatformUtils.MessageBox("Please select 8 songs or less.", "ROM Export", MessageBoxButtons.OK);
+                PlatformUtils.MessageBox($"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons.OK);
                 return;
             }
 
-            var filename = PlatformUtils.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes");
-            if (filename != null)
+            if (props.GetPropertyValue<string>(0) == "NES ROM")
             {
-                RomFile.Save(project, filename,
-                    songIds,
-                    props.GetPropertyValue<string>(0),
-                    props.GetPropertyValue<string>(1),
-                    props.GetPropertyValue<string>(2) == "PAL");
+                var filename = PlatformUtils.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes");
+                if (filename != null)
+                {
+                    var rom = new RomFile();
+                    rom.Save(
+                        project, filename, songIds,
+                        props.GetPropertyValue<string>(1),
+                        props.GetPropertyValue<string>(2),
+                        props.GetPropertyValue<string>(3) == "PAL");
+                }
+            }
+            else
+            {
+                var filename = PlatformUtils.ShowSaveFileDialog("Export Famicom Disk", "FDS Disk (*.fds)|*.fds");
+                if (filename != null)
+                {
+                    var fds = new FdsFile();
+                    fds.Save(
+                        project, filename, songIds,
+                        props.GetPropertyValue<string>(1),
+                        props.GetPropertyValue<string>(2));
+                }
             }
         }
 
