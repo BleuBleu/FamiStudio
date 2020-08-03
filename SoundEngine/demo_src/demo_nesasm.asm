@@ -71,7 +71,7 @@ reset:
     lda #0
     ldx #0
     .clear_ram_loop:
-        sta $0000, X
+        sta <$0000, X
         sta $0100, X
         sta $0200, X
         sta $0300, X
@@ -109,14 +109,14 @@ nmi:
     tya
     pha
     ; prevent NMI re-entry
-    lda nmi_lock
+    lda <nmi_lock
     beq .lock_nmi
     jmp .nmi_end
 .lock_nmi:
     lda #1
-    sta nmi_lock
-    inc nmi_count
-    lda nmi_ready
+    sta <nmi_lock
+    inc <nmi_count
+    lda <nmi_ready
     bne .check_rendering_off ; nmi_ready == 0 not ready to update PPU
     jmp .ppu_update_end
 .check_rendering_off:
@@ -125,7 +125,7 @@ nmi:
         lda #%00000000
         sta $2001
         ldx #0
-        stx nmi_ready
+        stx <nmi_ready
         jmp .ppu_update_end
 .oam_dma:
     ; sprite OAM DMA
@@ -137,12 +137,12 @@ nmi:
     ; nametable update (column)
     .col_update:
         ldx #0
-        cpx nmt_col_update_len
+        cpx <nmt_col_update_len
         beq .palettes
         lda #%10001100
         sta $2000 ; set vertical nametable increment
         ldx #0
-        cpx nmt_col_update_len
+        cpx <nmt_col_update_len
         bcs .palettes
         .nmt_col_update_loop:
             lda nmt_col_update, x
@@ -159,10 +159,10 @@ nmi:
                 sta $2007
                 dey
                 bne .col_loop
-            cpx nmt_col_update_len
+            cpx <nmt_col_update_len
             bcc .nmt_col_update_loop
         lda #0
-        sta nmt_col_update_len
+        sta <nmt_col_update_len
 
     ; palettes
     .palettes:
@@ -181,25 +181,25 @@ nmi:
             bne .pal_loop
 
 .scroll:
-    lda scroll_nmt
+    lda <scroll_nmt
     and #%00000011 ; keep only lowest 2 bits to prevent error
     ora #%10001000
     sta $2000
-    lda scroll_x
+    lda <scroll_x
     sta $2005
-    lda scroll_y
+    lda <scroll_y
     sta $2005
     ; enable rendering
     lda #%00011110
     sta $2001
     ; flag PPU update complete
     ldx #0
-    stx nmi_ready
+    stx <nmi_ready
 .ppu_update_end:
     ; if this engine had music/sound, this would be a good place to play it
     ; unlock re-entry flag
     lda #0
-    sta nmi_lock
+    sta <nmi_lock
 .nmi_end:
     ; restore registers and return
     pla
@@ -215,26 +215,26 @@ irq:
 ; ppu_update: waits until next NMI, turns rendering on (if not already), uploads OAM, palette, and nametable update to PPU
 ppu_update:
     lda #1
-    sta nmi_ready
+    sta <nmi_ready
     .wait:
-        lda nmi_ready
+        lda <nmi_ready
         bne .wait
     rts
 
 ; ppu_skip: waits until next NMI, does not update PPU
 ppu_skip:
-    lda nmi_count
+    lda <nmi_count
     .wait:
-        cmp nmi_count
+        cmp <nmi_count
         beq .wait
     rts
 
 ; ppu_off: waits until next NMI, turns rendering off (now safe to write PPU directly via $2007)
 ppu_off:
     lda #2
-    sta nmi_ready
+    sta <nmi_ready
     .wait:
-        lda nmi_ready
+        lda <nmi_ready
         bne .wait
     rts
 
@@ -266,25 +266,25 @@ gamepad_poll:
         ror a
         dex
         bne .gamepad_loop
-    sta gamepad
+    sta <gamepad
     rts
 
 gamepad_poll_dpcm_safe:
-    lda gamepad
-    sta gamepad_previous
+    lda <gamepad
+    sta <gamepad_previous
     jsr gamepad_poll
     .reread:
-        lda gamepad
+        lda <gamepad
         pha
         jsr gamepad_poll
         pla
-        cmp gamepad
+        cmp <gamepad
         bne .reread
 
     .toggle:
-    eor gamepad_previous
-    and gamepad
-    sta gamepad_pressed
+    eor <gamepad_previous
+    and <gamepad
+    sta <gamepad_pressed
 
     rts
 
@@ -292,14 +292,14 @@ play_song:
 
 ;    ldx #.lobyte(castlevania_2_music_data)
 ;    ldy #.hibyte(castlevania_2_music_data)
-;.ifdef ::FAMISTUDIO_CFG_PAL_SUPPORT
-;    lda #0
-;.else
-;    lda #1 ; NTSC
-;.endif  
+    .ifdef FAMISTUDIO_CFG_PAL_SUPPORT
+    lda #0
+    .else
+    lda #1 ; NTSC
+    .endif  
 ;    jsr famistudio_init
     
-;    lda #0
+    lda #0
 ;    jsr famistudio_music_play
 
     rts
@@ -320,60 +320,60 @@ equalizer_color_lookup:
 ; a = channel to update
 update_equalizer:
     
-;.pos_x = r0
-;.color_offset = r1
+.pos_x = r0
+.color_offset = r1
 
-;    tay
-;    lda equalizer_color_lookup, y
-;    sta .color_offset
-;    tya
+    tay
+    lda equalizer_color_lookup, y
+    sta <.color_offset
+    tya
 
-;    ; compute x position.
-;    asl a
-;    asl a
-;    sta .pos_x
+    ; compute x position.
+    asl a
+    asl a
+    sta <.pos_x
 
-;    ; compute lookup index.
-;    lda famistudio_chn_note_counter, y
-;    asl a
-;    asl a
-;    tay
+    ; compute lookup index.
+    ;lda famistudio_chn_note_counter, y
+    asl a
+    asl a
+    tay
 
-;    ; compute 2 addresses
-;    ldx nmt_col_update_len
-;    lda #$22
-;    sta nmt_col_update,x
-;    sta nmt_col_update+7,x
-;    lda #$47
-;    clc
-;    adc pos_x
-;    sta nmt_col_update+1,x
-;    adc #1
-;    sta nmt_col_update+8,x
-;    lda #4
-;    sta nmt_col_update+2,x
-;    sta nmt_col_update+9,x
+    ; compute 2 addresses
+    ldx <nmt_col_update_len
+    lda #$22
+    sta nmt_col_update,x
+    sta nmt_col_update+7,x
+    lda #$47
+    clc
+    adc <.pos_x
+    sta nmt_col_update+1,x
+    adc #1
+    sta nmt_col_update+8,x
+    lda #4
+    sta nmt_col_update+2,x
+    sta nmt_col_update+9,x
 
-;    lda equalizer_lookup, y
-;    adc color_offset
-;    sta nmt_col_update+3,x
-;    sta nmt_col_update+10,x
-;    lda equalizer_lookup+1, y
-;    adc color_offset
-;    sta nmt_col_update+4,x
-;    sta nmt_col_update+11,x
-;    lda equalizer_lookup+2, y
-;    adc color_offset
-;    sta nmt_col_update+5,x
-;    sta nmt_col_update+12,x
-;    lda equalizer_lookup+3, y
-;    adc color_offset
-;    sta nmt_col_update+6,x
-;    sta nmt_col_update+13,x
+    lda equalizer_lookup, y
+    adc <.color_offset
+    sta nmt_col_update+3,x
+    sta nmt_col_update+10,x
+    lda equalizer_lookup+1, y
+    adc <.color_offset
+    sta nmt_col_update+4,x
+    sta nmt_col_update+11,x
+    lda equalizer_lookup+2, y
+    adc <.color_offset
+    sta nmt_col_update+5,x
+    sta nmt_col_update+12,x
+    lda equalizer_lookup+3, y
+    adc <.color_offset
+    sta nmt_col_update+6,x
+    sta nmt_col_update+13,x
     
-;    lda #14
-;    adc nmt_col_update_len
-;    sta nmt_col_update_len 
+    lda #14
+    adc <nmt_col_update_len
+    sta <nmt_col_update_len 
 
     rts
 
@@ -390,7 +390,7 @@ main:
     jsr setup_background
 
     lda #0 ; song zero.
-    sta song_index
+    sta <song_index
     jsr play_song
 
     jsr ppu_update
@@ -405,16 +405,16 @@ main:
     ;   beq check_left
 
     ;   ; dont go beyond last song.
-    ;   lda song_index
+    ;   lda <song_index
     ;   cmp max_song
-    ;   beq draw
+    ;   beq .draw
 
     ;   ; next song.
     ;   clc
     ;   adc #1
-    ;   sta song_index
+    ;   sta <song_index
     ;   jsr play_song
-    ;   jmp draw_done ; Intentionally skipping equalizer update to keep NMI update small.
+    ;   jmp .draw_done ; Intentionally skipping equalizer update to keep NMI update small.
 
     ;check_left:
     ;   lda gamepad_pressed
@@ -422,14 +422,14 @@ main:
     ;   beq draw
 
     ;   ; dont go below zero
-    ;   lda song_index
-    ;   beq draw
+    ;   lda <song_index
+    ;   beq .draw
 
     ;   sec
     ;   sbc #1
-    ;   sta song_index
+    ;   sta <song_index
     ;   jsr play_song
-    ;   jmp draw_done ; Intentionally skipping equalizer update to keep NMI update small.
+    ;   jmp .draw_done ; Intentionally skipping equalizer update to keep NMI update small.
 
 .draw:
 
@@ -468,7 +468,7 @@ rle_decompress:
     sta <.rle_tag
 .loop:
     jsr rle_read_byte
-    cmp .rle_tag
+    cmp <.rle_tag
     beq .is_rle
     sta $2007
     sta <.rle_byte

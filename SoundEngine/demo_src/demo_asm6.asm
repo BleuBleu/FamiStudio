@@ -49,6 +49,18 @@
     ; CODE
     .base $8000
 
+FAMISTUDIO_CFG_EXTERNAL     = 1
+FAMISTUDIO_CFG_DPCM_SUPPORT = 1
+FAMISTUDIO_CFG_SFX_SUPPORT  = 1 
+FAMISTUDIO_CFG_SFX_STREAMS  = 2
+FAMISTUDIO_USE_VOLUME_TRACK = 1
+FAMISTUDIO_USE_PITCH_TRACK  = 1
+FAMISTUDIO_USE_SLIDE_NOTES  = 1
+FAMISTUDIO_USE_VIBRATO      = 1
+FAMISTUDIO_USE_ARPEGGIO     = 1
+
+    ;.include "..\famistudio_asm6.asm"
+
 ; Our single screen.
 screen_data_rle:
     .incbin "demo.rle"
@@ -300,14 +312,14 @@ play_song:
 
 ;    ldx #.lobyte(castlevania_2_music_data)
 ;    ldy #.hibyte(castlevania_2_music_data)
-;.ifdef ::FAMISTUDIO_CFG_PAL_SUPPORT
-;    lda #0
-;.else
-;    lda #1 ; NTSC
-;.endif  
+    .ifdef FAMISTUDIO_CFG_PAL_SUPPORT
+    lda #0
+    .else
+    lda #1 ; NTSC
+    .endif  
 ;    jsr famistudio_init
     
-;    lda #0
+    lda #0
 ;    jsr famistudio_music_play
 
     rts
@@ -328,60 +340,60 @@ equalizer_color_lookup:
 ; a = channel to update
 update_equalizer:
     
-;.pos_x = r0
-;.color_offset = r1
+@pos_x = r0
+@color_offset = r1
 
-;    tay
-;    lda equalizer_color_lookup, y
-;    sta .color_offset
-;    tya
+    tay
+    lda equalizer_color_lookup, y
+    sta @color_offset
+    tya
 
-;    ; compute x position.
-;    asl a
-;    asl a
-;    sta .pos_x
+    ; compute x position.
+    asl a
+    asl a
+    sta @pos_x
 
-;    ; compute lookup index.
-;    lda famistudio_chn_note_counter, y
-;    asl a
-;    asl a
-;    tay
+    ; compute lookup index.
+    ;lda famistudio_chn_note_counter, y
+    asl a
+    asl a
+    tay
 
-;    ; compute 2 addresses
-;    ldx nmt_col_update_len
-;    lda #$22
-;    sta nmt_col_update,x
-;    sta nmt_col_update+7,x
-;    lda #$47
-;    clc
-;    adc pos_x
-;    sta nmt_col_update+1,x
-;    adc #1
-;    sta nmt_col_update+8,x
-;    lda #4
-;    sta nmt_col_update+2,x
-;    sta nmt_col_update+9,x
+    ; compute 2 addresses
+    ldx nmt_col_update_len
+    lda #$22
+    sta nmt_col_update,x
+    sta nmt_col_update+7,x
+    lda #$47
+    clc
+    adc @pos_x
+    sta nmt_col_update+1,x
+    adc #1
+    sta nmt_col_update+8,x
+    lda #4
+    sta nmt_col_update+2,x
+    sta nmt_col_update+9,x
 
-;    lda equalizer_lookup, y
-;    adc color_offset
-;    sta nmt_col_update+3,x
-;    sta nmt_col_update+10,x
-;    lda equalizer_lookup+1, y
-;    adc color_offset
-;    sta nmt_col_update+4,x
-;    sta nmt_col_update+11,x
-;    lda equalizer_lookup+2, y
-;    adc color_offset
-;    sta nmt_col_update+5,x
-;    sta nmt_col_update+12,x
-;    lda equalizer_lookup+3, y
-;    adc color_offset
-;    sta nmt_col_update+6,x
-;    sta nmt_col_update+13,x
+    lda equalizer_lookup, y
+    adc @color_offset
+    sta nmt_col_update+3,x
+    sta nmt_col_update+10,x
+    lda equalizer_lookup+1, y
+    adc @color_offset
+    sta nmt_col_update+4,x
+    sta nmt_col_update+11,x
+    lda equalizer_lookup+2, y
+    adc @color_offset
+    sta nmt_col_update+5,x
+    sta nmt_col_update+12,x
+    lda equalizer_lookup+3, y
+    adc @color_offset
+    sta nmt_col_update+6,x
+    sta nmt_col_update+13,x
     
-;    lda #14
-;    adc nmt_col_update_len
-;    sta nmt_col_update_len 
+    lda #14
+    adc nmt_col_update_len
+    sta nmt_col_update_len 
 
     rts
 

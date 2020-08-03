@@ -17,7 +17,9 @@
 		NSF_PAL_SUPPORT=1
 	.endif
 	.include "../../SoundEngine/famistudio_ca65.s"
+
 .else
+
 	.ifdef FT_NTSC_SUPPORT
 		NSF_NTSC_SUPPORT=1
 	.endif
@@ -25,6 +27,7 @@
 		NSF_PAL_SUPPORT=1
 	.endif
 	.include "famitone2.s"
+	
 .endif
 
 .segment "HEADER"

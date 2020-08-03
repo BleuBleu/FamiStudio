@@ -376,16 +376,17 @@ famistudio_exp_instrument_hi:     .res 1
 
 .if .defined(FAMISTUDIO_CFG_SFX_SUPPORT)
 
+famistudio_output_buf:     .res 11
 famistudio_sfx_addr_lo:    .res 1
 famistudio_sfx_addr_hi:    .res 1
 famistudio_sfx_base_addr:  .res (FAMISTUDIO_CFG_SFX_STREAMS * FAMISTUDIO_SFX_STRUCT_SIZE)
 
 ; TODO: Refactor SFX memory layout. These uses a AoS approach, not fan. 
-famistudio_sfx_repeat: famistudio_sfx_base_addr + 0
-famistudio_sfx_ptr_lo: famistudio_sfx_base_addr + 1
-famistudio_sfx_ptr_hi: famistudio_sfx_base_addr + 2
-famistudio_sfx_offset: famistudio_sfx_base_addr + 3
-famistudio_sfx_buffer: famistudio_sfx_base_addr + 4
+famistudio_sfx_repeat = famistudio_sfx_base_addr + 0
+famistudio_sfx_ptr_lo = famistudio_sfx_base_addr + 1
+famistudio_sfx_ptr_hi = famistudio_sfx_base_addr + 2
+famistudio_sfx_offset = famistudio_sfx_base_addr + 3
+famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 
 .endif 
 
@@ -2240,7 +2241,7 @@ famistudio_update:
     .endif
     .if FAMISTUDIO_CFG_SFX_STREAMS > 1
     ldx #FAMISTUDIO_SFX_CH1
-    jsr _FT2SfxUpdat
+    jsr famistudio_sfx_update
     .endif
     .if FAMISTUDIO_CFG_SFX_STREAMS > 2
     ldx #FAMISTUDIO_SFX_CH2
@@ -3449,9 +3450,9 @@ famistudio_sfx_init:
     jsr famistudio_sfx_clear_channel
     txa
     clc
-    adc #FT_SFX_STRUCT_SIZE
+    adc #FAMISTUDIO_SFX_STRUCT_SIZE
     tax
-    cpx #FT_SFX_STRUCT_SIZE*FAMISTUDIO_CFG_SFX_STREAMS
+    cpx #FAMISTUDIO_SFX_STRUCT_SIZE*FAMISTUDIO_CFG_SFX_STREAMS
     bne @set_channels
 
     rts
@@ -3519,6 +3520,7 @@ famistudio_sfx_play:
 famistudio_sfx_update:
 
     @tmp = famistudio_r0
+    @effect_data_ptr = famistudio_ptr0
 
     lda famistudio_sfx_repeat,x ; Check if repeat counter is not zero
     beq @no_repeat

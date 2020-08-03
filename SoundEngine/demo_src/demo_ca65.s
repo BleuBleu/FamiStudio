@@ -42,10 +42,17 @@ oam: .res 256        ; sprite OAM data to be uploaded by DMA
 
 .segment "CODE"
 
-; MATTT
-FAMISTUDIO_CFG_EQUALIZER = 1
+FAMISTUDIO_CFG_EXTERNAL     = 1
+FAMISTUDIO_CFG_DPCM_SUPPORT = 1
+FAMISTUDIO_CFG_SFX_SUPPORT  = 1 
+FAMISTUDIO_CFG_SFX_STREAMS  = 2
+FAMISTUDIO_USE_VOLUME_TRACK = 1
+FAMISTUDIO_USE_PITCH_TRACK  = 1
+FAMISTUDIO_USE_SLIDE_NOTES  = 1
+FAMISTUDIO_USE_VIBRATO      = 1
+FAMISTUDIO_USE_ARPEGGIO     = 1
 
-.include "..\famistudio_ca65.s"
+;.include "..\famistudio_ca65.s"
 
 ; Our single screen.
 screen_data_rle:
@@ -55,7 +62,7 @@ default_palette:
 .incbin "demo.pal"
 .incbin "demo.pal"
 
-.proc reset
+reset:
 
     sei       ; mask interrupts
     lda #0
@@ -70,13 +77,13 @@ default_palette:
     txs       ; initialize stack
     ; wait for first vblank
     bit $2002
-    wait_vblank_loop:
+    @wait_vblank_loop:
         bit $2002
-        bpl wait_vblank_loop
+        bpl @wait_vblank_loop
     ; clear all RAM to 0
     lda #0
     ldx #0
-    clear_ram_loop:
+    @clear_ram_loop:
         sta $0000, X
         sta $0100, X
         sta $0200, X
@@ -86,30 +93,28 @@ default_palette:
         sta $0600, X
         sta $0700, X
         inx
-        bne clear_ram_loop
+        bne @clear_ram_loop
     ; place all sprites offscreen at Y=255
     lda #255
     ldx #0
-    clear_oam_loop:
+    @clear_oam_loop:
         sta oam, X
         inx
         inx
         inx
         inx
-        bne clear_oam_loop
+        bne @clear_oam_loop
     ; wait for second vblank
-    wait_vblank_loop2:
+    @wait_vblank_loop2:
         bit $2002
-        bpl wait_vblank_loop2
+        bpl @wait_vblank_loop2
     ; NES is initialized, ready to begin!
     ; enable the NMI for graphical updates, and jump to our main program
     lda #%10001000
     sta $2000
     jmp main
 
-.endproc
-
-.proc nmi
+nmi:
     ; save registers
     pha
     txa
@@ -118,24 +123,24 @@ default_palette:
     pha
     ; prevent NMI re-entry
     lda nmi_lock
-    beq lock_nmi
-    jmp nmi_end
-lock_nmi:
+    beq @lock_nmi
+    jmp @nmi_end
+@lock_nmi:
     lda #1
     sta nmi_lock
     inc nmi_count
     lda nmi_ready
-    bne check_rendering_off ; nmi_ready == 0 not ready to update PPU
-    jmp ppu_update_end
-check_rendering_off:
+    bne @check_rendering_off ; nmi_ready == 0 not ready to update PPU
+    jmp @ppu_update_end
+@check_rendering_off:
     cmp #2 ; nmi_ready == 2 turns rendering off
-    bne oam_dma
+    bne @oam_dma
         lda #%00000000
         sta $2001
         ldx #0
         stx nmi_ready
-        jmp ppu_update_end
-oam_dma:
+        jmp @ppu_update_end
+@oam_dma:
     ; sprite OAM DMA
     ldx #0
     stx $2003
@@ -143,16 +148,16 @@ oam_dma:
     sta $4014
 
     ; nametable update (column)
-    col_update:
+    @col_update:
         ldx #0
         cpx nmt_col_update_len
-        beq palettes
+        beq @palettes
         lda #%10001100
         sta $2000 ; set vertical nametable increment
         ldx #0
         cpx nmt_col_update_len
-        bcs palettes
-        nmt_col_update_loop:
+        bcs @palettes
+        @nmt_col_update_loop:
             lda nmt_col_update, x
             inx
             sta $2006
@@ -161,34 +166,34 @@ oam_dma:
             sta $2006
             ldy nmt_col_update, x
             inx
-            col_loop:
+            @col_loop:
                 lda nmt_col_update, x
                 inx
                 sta $2007
                 dey
-                bne col_loop
+                bne @col_loop
             cpx nmt_col_update_len
-            bcc nmt_col_update_loop
+            bcc @nmt_col_update_loop
         lda #0
         sta nmt_col_update_len
 
     ; palettes
-    palettes:
+    @palettes:
         lda #%10001000
         sta $2000 ; set horizontal nametable increment  
         lda $2002
         lda #$3F
         sta $2006
         ldx #0
-        stx $2006 ; set PPU address to $3F00
-        pal_loop:
+        stx $2006 ; set 0PPU address to $3F00
+        @pal_loop:
             lda palette, X
             sta $2007
             inx
             cpx #32
-            bne pal_loop
+            bne @pal_loop
 
-scroll:
+@scroll:
     lda scroll_nmt
     and #%00000011 ; keep only lowest 2 bits to prevent error
     ora #%10001000
@@ -203,12 +208,12 @@ scroll:
     ; flag PPU update complete
     ldx #0
     stx nmi_ready
-ppu_update_end:
+@ppu_update_end:
     ; if this engine had music/sound, this would be a good place to play it
     ; unlock re-entry flag
     lda #0
     sta nmi_lock
-nmi_end:
+@nmi_end:
     ; restore registers and return
     pla
     tay
@@ -217,40 +222,34 @@ nmi_end:
     pla
     rti
 
-.endproc 
-
-.proc irq
+irq:
     rti
-.endproc 
 
 ; ppu_update: waits until next NMI, turns rendering on (if not already), uploads OAM, palette, and nametable update to PPU
-.proc ppu_update
+ppu_update:
     lda #1
     sta nmi_ready
-    wait:
+    @wait:
         lda nmi_ready
-        bne wait
+        bne @wait
     rts
-.endproc
 
 ; ppu_skip: waits until next NMI, does not update PPU
-.proc ppu_skip
+ppu_skip:
     lda nmi_count
-    wait:
+    @wait:
         cmp nmi_count
-        beq wait
+        beq @wait
     rts
-.endproc 
 
 ; ppu_off: waits until next NMI, turns rendering off (now safe to write PPU directly via $2007)
-.proc ppu_off
+ppu_off:
     lda #2
     sta nmi_ready
-    wait:
+    @wait:
         lda nmi_ready
-        bne wait
+        bne @wait
     rts
-.endproc 
 
 PAD_A      = $01
 PAD_B      = $02
@@ -261,7 +260,7 @@ PAD_D      = $20
 PAD_L      = $40
 PAD_R      = $80
 
-.proc gamepad_poll
+gamepad_poll:
     ; strobe the gamepad to latch current button state
     lda #1
     sta $4016
@@ -269,7 +268,7 @@ PAD_R      = $80
     sta $4016
     ; read 8 bytes from the interface at $4016
     ldx #8
-    gamepad_loop:
+    @gamepad_loop:
         pha
         lda $4016
         ; combine low two bits and store in carry bit
@@ -279,25 +278,24 @@ PAD_R      = $80
         ; rotate carry into gamepad variable
         ror a
         dex
-        bne gamepad_loop
+        bne @gamepad_loop
     sta gamepad
     rts
-.endproc 
 
 .proc gamepad_poll_dpcm_safe
     
     lda gamepad
     sta gamepad_previous
     jsr gamepad_poll
-    reread:
+    @reread:
         lda gamepad
         pha
         jsr gamepad_poll
         pla
         cmp gamepad
-        bne reread
+        bne @reread
 
-    toggle:
+    @toggle:
     eor gamepad_previous
     and gamepad
     sta gamepad_pressed
@@ -306,23 +304,21 @@ PAD_R      = $80
 
 .endproc
 
-.proc play_song
+play_song:
 
-    ldx #.lobyte(castlevania_2_music_data)
-    ldy #.hibyte(castlevania_2_music_data)
-.ifdef ::FAMISTUDIO_CFG_PAL_SUPPORT
+    ;ldx #.lobyte(castlevania_2_music_data)
+    ;ldy #.hibyte(castlevania_2_music_data)
+.ifdef FAMISTUDIO_CFG_PAL_SUPPORT
     lda #0
 .else
     lda #1 ; NTSC
 .endif  
-    jsr famistudio_init
+    ;jsr famistudio_init
     
     lda #0
-    jsr famistudio_music_play
+    ;jsr famistudio_music_play
 
     rts
-
-.endproc 
 
 equalizer_lookup:
     .byte $f0, $f0, $f0, $f0 ; 0
@@ -338,7 +334,7 @@ equalizer_color_lookup:
     .byte $01, $02, $00, $02, $02
 
 ; a = channel to update
-.proc update_equalizer
+update_equalizer:
     
     pos_x = r0
     color_offset = r1
@@ -354,7 +350,7 @@ equalizer_color_lookup:
     sta pos_x
 
     ; compute lookup index.
-    lda famistudio_chn_note_counter, y
+    ;lda famistudio_chn_note_counter, y
     asl a
     asl a
     tay
@@ -397,17 +393,15 @@ equalizer_color_lookup:
 
     rts
 
-.endproc
-
-.proc main
+main:
 
     ldx #0
-    palette_loop:
+    @palette_loop:
         lda default_palette, X
         sta palette, X
         inx
         cpx #32
-        bcc palette_loop
+        bcc @palette_loop
     
     jsr setup_background
 
@@ -417,7 +411,7 @@ equalizer_color_lookup:
 
     jsr ppu_update
 
-loop:
+@loop:
 
     jsr gamepad_poll_dpcm_safe
     
@@ -453,9 +447,9 @@ loop:
     ;   jsr play_song
     ;   jmp draw_done ; Intentionally skipping equalizer update to keep NMI update small.
 
-draw:
+@draw:
 
-    jsr famistudio_update ; MATTT: Call in NMI.
+    ;jsr famistudio_update ; MATTT: Call in NMI.
     
     lda #0
     jsr update_equalizer
@@ -468,66 +462,60 @@ draw:
     lda #4
     jsr update_equalizer
 
-draw_done:
+@draw_done:
 
     jsr ppu_update
-    jmp loop
-
-.endproc 
+    jmp @loop
 
 ; Shiru's code.
 ; x = lo byte of RLE data addr
 ; y = hi byte of RLE data addr
-.proc rle_decompress
+rle_decompress:
 
-    rle_lo   = r0
-    rle_high = r1
-    rle_tag  = r2
-    rle_byte = r3
+    @rle_lo   = r0
+    @rle_high = r1
+    @rle_tag  = r2
+    @rle_byte = r3
 
-    stx rle_lo
-    sty rle_high
+    stx @rle_lo
+    sty @rle_high
     ldy #0
     jsr rle_read_byte
-    sta rle_tag
-loop:
+    sta @rle_tag
+@loop:
     jsr rle_read_byte
-    cmp rle_tag
-    beq is_rle
+    cmp @rle_tag
+    beq @is_rle
     sta $2007
-    sta rle_byte
-    bne loop
-is_rle:
+    sta @rle_byte
+    bne @loop
+@is_rle:
     jsr rle_read_byte
     cmp #0
-    beq done
+    beq @done
     tax
-    lda rle_byte
-rle_loop:
+    lda @rle_byte
+@rle_loop:
     sta $2007
     dex
-    bne rle_loop
-    beq loop
-done: ;.4
+    bne @rle_loop
+    beq @loop
+@done: ;.4
     rts
 
-.endproc
+rle_read_byte:
 
-.proc rle_read_byte
+    @rle_lo   = r0
+    @rle_high = r1
 
-    rle_lo   = r0
-    rle_high = r1
-
-    lda (rle_lo),y
-    inc rle_lo
-    bne done
-    inc rle_high
-done:
+    lda (@rle_lo),y
+    inc @rle_lo
+    bne @done
+    inc @rle_high
+@done:
     rts
 
-.endproc
-
-.proc setup_background
+setup_background:
 
     ; first nametable, start by clearing to empty
     lda $2002 ; reset latch
@@ -571,12 +559,10 @@ done:
 
     rts
 
-.endproc
+;.include "bloodytears.s"
 
-.include "bloodytears.s"
-
-.segment "DPCM"
-.incbin "bloodytears.dmc"
+;.segment "DPCM"
+;.incbin "bloodytears.dmc"
 
 .segment "VECTORS"
 .word nmi
