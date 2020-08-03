@@ -11,7 +11,7 @@ FAMISTUDIO_USE_SLIDE_NOTES    = 1
 FAMISTUDIO_USE_VIBRATO        = 1
 FAMISTUDIO_USE_ARPEGGIO       = 1
 
-.include "../Nsf/famistudio.s"
+.include "../../SoundEngine/famistudio_ca65.s"
 
 .segment "ZEROPAGE"
 nmi_lock:           .res 1 ; prevents NMI re-entry

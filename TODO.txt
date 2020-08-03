@@ -7,18 +7,15 @@
 - Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
 - Loop count on wav.
 - FamiStudio sound engine
-	- FT_MR_XXX
-	- Migrate everything (NSF, ROM) to FAMISTUDIO_CFG_EXTERNAL.
 	===> THEN PORT to ASM6 + NESASM.
-	- Segment???
+	- Segment / zp on other assemblers, etc.
 	- Nice test ROM (same as ROM, but with SFX player)
-	- Config:
-		- zp on other assemblers, etc.
 	- Resurect SFX
 	- Documentation.
 	- Deprecate FamiTone2 FS.
-	- Double check TAB/SPACE
 	- Music pause doesnt do all channels.
+	- Export dialog + command line.
+	- Double check TAB/SPACE at the end.
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.

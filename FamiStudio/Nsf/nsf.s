@@ -16,7 +16,7 @@
 	.ifdef FAMISTUDIO_CFG_PAL_SUPPORT
 		NSF_PAL_SUPPORT=1
 	.endif
-	.include "famistudio.s"
+	.include "../../SoundEngine/famistudio_ca65.s"
 .else
 	.ifdef FT_NTSC_SUPPORT
 		NSF_NTSC_SUPPORT=1
