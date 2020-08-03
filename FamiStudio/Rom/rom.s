@@ -5,6 +5,7 @@
 FAMISTUDIO_CFG_EXTERNAL       = 1
 FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
+FAMISTUDIO_CFG_EQUALIZER      = 1
 FAMISTUDIO_USE_VOLUME_TRACK   = 1
 FAMISTUDIO_USE_PITCH_TRACK    = 1
 FAMISTUDIO_USE_SLIDE_NOTES    = 1
@@ -53,7 +54,7 @@ INES_MAPPER = 31 ; 31 = NSF-like mapper.
 INES_MIRROR = 1  ; 0 = horizontal mirroring, 1 = vertical mirroring
 INES_SRAM   = 0  ; 1 = battery backed SRAM at $6000-7FFF
 
-.ifdef FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_FDS
     .byte 'F','D','S',$1a
     .byte 1 ; side count
 .else
@@ -65,7 +66,7 @@ INES_SRAM   = 0  ; 1 = battery backed SRAM at $6000-7FFF
     .byte $0, $0, $0, $0, $0, $0, $0, $0 ; padding
 .endif
 
-.ifdef FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_FDS
 
 ; FDS File headers
 FILE_COUNT = 6 + 1
@@ -208,7 +209,7 @@ FILE_COUNT = 6 + 1
 .endif
 
 .segment "SONG"
-.ifndef FAMISTUDIO_EXP_FDS
+.if !FAMISTUDIO_EXP_FDS
 .incbin "song.bin" ; Test song, Bloody Tears.
 .endif
 
@@ -217,7 +218,7 @@ FILE_COUNT = 6 + 1
 ; Will be overwritten by FamiStudio.
 ; General info about the project (author, etc.), 64-bytes.
 max_song:        .byte $00
-.ifdef FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_FDS
 fds_unused:      .byte $00
 fds_file_count:  .byte $06 ; Number of actual file on the disk.
 .else
@@ -238,7 +239,7 @@ MAX_SONGS = 8
 ;  - 1 byte: song flags (uses DPCM or not)
 ;  - 28 bytes: song name.
 song_table:
-.ifdef FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_FDS
 song_fds_file:   .byte $00
 .else
 song_page_start: .byte $00
@@ -259,7 +260,7 @@ song_name:       .res  28
 .segment "VECTORS"
 vectors:
 .word nmi
-.ifdef FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_FDS
     .word nmi
     .word nmi ;bypass
 .endif
@@ -268,7 +269,7 @@ vectors:
 
 .segment "CODE"
 
-.ifdef FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_FDS
 ; FDS BIOS functions
 fds_bios_load_files     = $e1f8
 fds_bios_set_file_count = $e305
@@ -277,7 +278,7 @@ fds_bios_set_file_count = $e305
 ; Our single screen.
 screen_data_rle:
 
-.ifdef FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_FDS
 .incbin "fds.rle"
 .else
 .incbin "rom.rle"
@@ -287,7 +288,7 @@ default_palette:
 .incbin "rom.pal"
 .incbin "rom.pal"
 
-;.ifdef FAMISTUDIO_EXP_FDS
+;.if FAMISTUDIO_EXP_FDS
 
 ;; this routine is entered by interrupting the last boot file load
 ;; by forcing an NMI not expected by the BIOS, allowing the license
@@ -318,7 +319,7 @@ default_palette:
 
 .proc reset
 
-    .ifdef ::FAMISTUDIO_EXP_FDS
+    .if ::FAMISTUDIO_EXP_FDS
         ; set FDS to use vertical mirroring
         lda $fa
         and #%11110111
@@ -346,7 +347,7 @@ default_palette:
     ldx #0
     clear_ram_loop:
         ; FDS uses some of that memory, will be cleared in the loop below.
-        .ifndef ::FAMISTUDIO_EXP_FDS
+        .if !::FAMISTUDIO_EXP_FDS
             sta $0000, x
             sta $0100, x
         .endif
@@ -358,7 +359,7 @@ default_palette:
         sta $0700, x
         inx
         bne clear_ram_loop
-    .ifdef ::FAMISTUDIO_EXP_FDS
+    .if ::FAMISTUDIO_EXP_FDS
         ldx #0
         clear_zp_loop:
             sta $00, x
@@ -380,7 +381,7 @@ default_palette:
         bne clear_oam_loop
 
     ; wipe unused portion of FDS RAM (between SONG and VECTORS)
-    .ifdef ::FAMISTUDIO_EXP_FDS
+    .if ::FAMISTUDIO_EXP_FDS
         .import __SONG_RUN__
         WIPE_ADDR = __SONG_RUN__
         WIPE_SIZE = __VECTORS_RUN__ - __SONG_RUN__
@@ -409,7 +410,7 @@ default_palette:
     .endif
 
     ; Set correct file count.
-    .ifdef ::FAMISTUDIO_EXP_FDS
+    .if ::FAMISTUDIO_EXP_FDS
         lda fds_file_count
         jsr fds_bios_set_file_count
         .word disk_id
@@ -527,7 +528,7 @@ palettes:
     ldx #0
     stx $2006 ; set PPU address to $3F00
 
-.ifdef ::FAMISTUDIO_EXP_FDS        
+.if ::FAMISTUDIO_EXP_FDS        
 
     ; Need to squeeze a few more cycles of the NMI when in FDS mode.
     lda palette+0
@@ -751,7 +752,7 @@ PAD_R      = $80
 
 .endproc
 
-.ifdef ::FAMISTUDIO_EXP_FDS
+.if ::FAMISTUDIO_EXP_FDS
 
 disk_id:
     .byte $ff, $ff, $ff, $ff, $ff, $ff, $00, $00, $00, $00
@@ -778,7 +779,7 @@ loading_text: ; Loading....
     sta song_idx_mul_32
     tax
 
-.ifdef ::FAMISTUDIO_EXP_FDS
+.if ::FAMISTUDIO_EXP_FDS
     
     stx temp_x
     jsr famistudio_music_stop
@@ -870,7 +871,7 @@ samples_none:
 
 .endif
 
-.ifdef ::FAMISTUDIO_CFG_PAL_SUPPORT
+.if ::FAMISTUDIO_CFG_PAL_SUPPORT
     lda #0
 .else
     lda #1 ; NTSC
@@ -939,7 +940,7 @@ equalizer_color_lookup:
     lda #$22
     sta nmt_col_update,x
     sta nmt_col_update+7,x
-.ifdef ::FAMISTUDIO_EXP_FDS    
+.if ::FAMISTUDIO_EXP_FDS    
     lda #$45
 .else
     lda #$47
@@ -990,7 +991,7 @@ equalizer_color_lookup:
     jsr update_equalizer
     lda #4
     jsr update_equalizer
-.ifdef ::FAMISTUDIO_EXP_FDS
+.if ::FAMISTUDIO_EXP_FDS
     lda #5
     jsr update_equalizer
 .endif

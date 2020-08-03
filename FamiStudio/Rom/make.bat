@@ -1,12 +1,12 @@
 @echo [Compiling]
 @echo off
 @del *.o
-..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_famitracker_ntsc.o -D FAMISTUDIO_CFG_EQUALIZER -D FAMISTUDIO_CFG_NTSC_SUPPORT -D FAMISTUDIO_USE_FAMITRACKER_TEMPO
-..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_famitracker_pal.o -D FAMISTUDIO_CFG_EQUALIZER -D FAMISTUDIO_CFG_PAL_SUPPORT -D FAMISTUDIO_USE_FAMITRACKER_TEMPO
-..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_ntsc.o -D FAMISTUDIO_CFG_EQUALIZER -D FAMISTUDIO_CFG_NTSC_SUPPORT
-..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_pal.o -D FAMISTUDIO_CFG_EQUALIZER -D FAMISTUDIO_CFG_PAL_SUPPORT
-..\..\..\NES\tools\bin\ca65 rom.s -g -o fds_famitracker.o -D FAMISTUDIO_CFG_EQUALIZER -D FAMISTUDIO_CFG_NTSC_SUPPORT -D FAMISTUDIO_USE_FAMITRACKER_TEMPO -D FAMISTUDIO_EXP_FDS
-..\..\..\NES\tools\bin\ca65 rom.s -g -o fds.o -D FAMISTUDIO_CFG_EQUALIZER -D FAMISTUDIO_CFG_NTSC_SUPPORT -D FAMISTUDIO_EXP_FDS
+..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_famitracker_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1
+..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_famitracker_pal.o -D FAMISTUDIO_CFG_PAL_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1
+..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1
+..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_pal.o -D FAMISTUDIO_CFG_PAL_SUPPORT=1
+..\..\..\NES\tools\bin\ca65 rom.s -g -o fds_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_FDS=1
+..\..\..\NES\tools\bin\ca65 rom.s -g -o fds.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_FDS=1
 @del *.nes
 @del *.fds
 @echo [Linking]
