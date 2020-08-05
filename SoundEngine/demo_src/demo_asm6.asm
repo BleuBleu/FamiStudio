@@ -9,6 +9,7 @@
     .db INES_MIRROR | (INES_SRAM << 1) | ((INES_MAPPER & $f) << 4)
     .db (INES_MAPPER & %11110000)
     .db $0, $0, $0, $0, $0, $0, $0, $0 ; padding
+    .fillvalue $ff
 
     ; ZEROPAGE
     .enum $0000
@@ -50,6 +51,7 @@
     .base $8000
 
 FAMISTUDIO_CFG_EXTERNAL     = 1
+FAMISTUDIO_EXP_VRC7         = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT = 1
 FAMISTUDIO_CFG_SFX_SUPPORT  = 1 
 FAMISTUDIO_CFG_SFX_STREAMS  = 2
@@ -59,7 +61,7 @@ FAMISTUDIO_USE_SLIDE_NOTES  = 1
 FAMISTUDIO_USE_VIBRATO      = 1
 FAMISTUDIO_USE_ARPEGGIO     = 1
 
-    ;.include "..\famistudio_asm6.asm"
+    .include "..\famistudio_asm6.asm"
 
 ; Our single screen.
 screen_data_rle:
@@ -312,7 +314,7 @@ play_song:
 
 ;    ldx #.lobyte(castlevania_2_music_data)
 ;    ldy #.hibyte(castlevania_2_music_data)
-    .ifdef FAMISTUDIO_CFG_PAL_SUPPORT
+    .if FAMISTUDIO_CFG_PAL_SUPPORT
     lda #0
     .else
     lda #1 ; NTSC

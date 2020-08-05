@@ -62,19 +62,19 @@ nsf_mode: .res 1
 	ldy nsf_song_table+0, x
 
 	; First map the full 0x9000 - 0xf000 to song data.
-	sty $5FF9
+	sty $5ff9
 	iny
-	sty $5FFa
+	sty $5ffa
 	iny
-	sty $5FFb
+	sty $5ffb
 	iny
-	sty $5FFc
+	sty $5ffc
 	iny
-	sty $5FFd
+	sty $5ffd
 	iny
-	sty $5FFe
+	sty $5ffe
 	iny
-	sty $5FFf
+	sty $5fff
 	
 	; Then map the samples at the very end (if 1 page => start at 0xf000, if 2 pages => start at 0xe000, etc.)
 	ldy nsf_dpcm_page_start
@@ -89,16 +89,16 @@ nsf_mode: .res 1
 	beq samples_3_pages
 
 	samples_4_pages:
-		sty $5FFc
+		sty $5ffc
 		iny
 	samples_3_pages:
-		sty $5FFd
+		sty $5ffd
 		iny
 	samples_2_pages:
-		sty $5FFe
+		sty $5ffe
 		iny
 	samples_1_pages:
-		sty $5FFf
+		sty $5fff
 	samples_none:
 
 	; Load song data and play

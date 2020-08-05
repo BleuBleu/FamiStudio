@@ -43,6 +43,7 @@ oam: .res 256        ; sprite OAM data to be uploaded by DMA
 .segment "CODE"
 
 FAMISTUDIO_CFG_EXTERNAL     = 1
+FAMISTUDIO_EXP_VRC7         = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT = 1
 FAMISTUDIO_CFG_SFX_SUPPORT  = 1 
 FAMISTUDIO_CFG_SFX_STREAMS  = 2
@@ -52,7 +53,7 @@ FAMISTUDIO_USE_SLIDE_NOTES  = 1
 FAMISTUDIO_USE_VIBRATO      = 1
 FAMISTUDIO_USE_ARPEGGIO     = 1
 
-;.include "..\famistudio_ca65.s"
+.include "..\famistudio_ca65.s"
 
 ; Our single screen.
 screen_data_rle:
@@ -282,7 +283,7 @@ gamepad_poll:
     sta gamepad
     rts
 
-.proc gamepad_poll_dpcm_safe
+gamepad_poll_dpcm_safe:
     
     lda gamepad
     sta gamepad_previous
@@ -302,13 +303,11 @@ gamepad_poll:
 
     rts
 
-.endproc
-
 play_song:
 
     ;ldx #.lobyte(castlevania_2_music_data)
     ;ldy #.hibyte(castlevania_2_music_data)
-.ifdef FAMISTUDIO_CFG_PAL_SUPPORT
+.if FAMISTUDIO_CFG_PAL_SUPPORT
     lda #0
 .else
     lda #1 ; NTSC
