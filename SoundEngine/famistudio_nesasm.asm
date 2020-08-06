@@ -58,7 +58,7 @@
 ;======================================================================================================================
 
     .ifndef FAMISTUDIO_CFG_EXTERNAL 
-    FAMISTUDIO_CFG_EXTERNAL = 0
+FAMISTUDIO_CFG_EXTERNAL = 0
     .endif
 
 ; Set this to configure the sound engine from outside (in your app, or from the command line)
@@ -218,6 +218,10 @@ FAMISTUDIO_CFG_SFX_SUPPORT = 0
 FAMISTUDIO_CFG_SFX_STREAMS = 0
     .endif
 
+    .ifndef FAMISTUDIO_CFG_SFX_STREAMS
+FAMISTUDIO_CFG_SFX_STREAMS = 1
+    .endif
+
     .ifndef FAMISTUDIO_CFG_SMOOTH_VIBRATO
 FAMISTUDIO_CFG_SMOOTH_VIBRATO = 0
     .endif
@@ -370,7 +374,7 @@ FAMISTUDIO_ENV_DUTY_OFF   = 2
 FAMISTUDIO_PITCH_SHIFT = 3
     .else
         .if FAMISTUDIO_EXP_N163
-            .if (AMISTUDIO_EXP_N163_CHN_CNT > 4)
+            .if (FAMISTUDIO_EXP_N163_CHN_CNT > 4)
 FAMISTUDIO_PITCH_SHIFT = 5
             .endif
             .if (FAMISTUDIO_EXP_N163_CHN_CNT > 2) & (FAMISTUDIO_EXP_N163_CHN_CNT <= 4)
@@ -664,7 +668,7 @@ FAMISTUDIO_FDS_MOD_LO     = $4086
 FAMISTUDIO_FDS_MOD_HI     = $4087
 FAMISTUDIO_FDS_MOD_TABLE  = $4088
 FAMISTUDIO_FDS_VOL        = $4089
-    FAMISTUDIO_FDS_ENV_SPEED  = $408A
+FAMISTUDIO_FDS_ENV_SPEED  = $408A
     .endif
 
     .if !FAMISTUDIO_CFG_SFX_SUPPORT
@@ -1484,7 +1488,7 @@ famistudio_update_fds_channel_sound:
         tax
         lda famistudio_volume_table, x 
     .endif
-    asl ; FDS volume is 6-bits, but clamped to 32. Just double it.
+    asl a ; FDS volume is 6-bits, but clamped to 32. Just double it.
 
 .set_volume:
     ora #$80

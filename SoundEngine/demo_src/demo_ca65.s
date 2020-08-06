@@ -43,7 +43,6 @@ oam: .res 256        ; sprite OAM data to be uploaded by DMA
 .segment "CODE"
 
 FAMISTUDIO_CFG_EXTERNAL     = 1
-FAMISTUDIO_EXP_VRC7         = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT = 1
 FAMISTUDIO_CFG_SFX_SUPPORT  = 1 
 FAMISTUDIO_CFG_SFX_STREAMS  = 2

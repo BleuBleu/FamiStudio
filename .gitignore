@@ -24,4 +24,6 @@ site/
 *.suo
 *.fns
 SoundEngine/demo_src/*.nes
+SoundEngine/unit_tests/*.nes
+SoundEngine/unit_tests/*.inc
 *.lst
