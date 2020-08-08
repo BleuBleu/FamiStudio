@@ -9,10 +9,12 @@
 - Loop count on wav.
 - FamiStudio sound engine
 	- Nice test ROM (same as ROM, but with SFX player)
+		- Update in NMI?
+		- Song1: Shatterhand
+		+ Song2: Silver surfer once done.
+		- Use punch out! SFX. 71 + something else.
 	- Resurect SFX
 	- Documentation.
-	- Deprecate FamiTone2 FS.
-	- Music pause doesnt do all channels.
 	- Export dialog + command line.
 	- Double check TAB/SPACE at the end.
 / Show piano roll rect in sequencer
@@ -39,6 +41,7 @@ Testing:
 ========
 - Retest ROM export.
 - Test tutorial dialog with high DPI : mac + windows
+- Deprecate FamiTone2 FS.
 
 Tweet ideas
 ===========

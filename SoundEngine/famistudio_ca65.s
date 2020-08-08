@@ -1171,6 +1171,30 @@ famistudio_music_pause:
     sta famistudio_env_value+FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_CH3_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.ifdef FAMISTUDIO_CH5_ENVS
+    sta famistudio_env_value+FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
+.ifdef FAMISTUDIO_CH6_ENVS
+    sta famistudio_env_value+FAMISTUDIO_CH6_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
+.ifdef FAMISTUDIO_CH7_ENVS
+    sta famistudio_env_value+FAMISTUDIO_CH7_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
+.ifdef FAMISTUDIO_CH8_ENVS
+    sta famistudio_env_value+FAMISTUDIO_CH8_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
+.ifdef FAMISTUDIO_CH9_ENVS
+    sta famistudio_env_value+FAMISTUDIO_CH9_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
+.ifdef FAMISTUDIO_CH10_ENVS
+    sta famistudio_env_value+FAMISTUDIO_CH10_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
+.ifdef FAMISTUDIO_CH11_ENVS
+    sta famistudio_env_value+FAMISTUDIO_CH11_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
+.ifdef FAMISTUDIO_CH12_ENVS
+    sta famistudio_env_value+FAMISTUDIO_CH12_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif    
     lda famistudio_song_speed ; <= 0 pauses the music
     ora #$80
     bne @done

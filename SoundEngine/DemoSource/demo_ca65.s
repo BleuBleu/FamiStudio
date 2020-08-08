@@ -22,6 +22,7 @@ gamepad:            .res 1
 gamepad_previous:   .res 1
 gamepad_pressed:    .res 1
 song_index:         .res 1
+pause_flag:         .res 1
 
 ; General purpose temporary vars.
 r0: .res 1
@@ -47,6 +48,7 @@ FAMISTUDIO_CFG_EXTERNAL     = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT = 1
 FAMISTUDIO_CFG_SFX_SUPPORT  = 1 
 FAMISTUDIO_CFG_SFX_STREAMS  = 2
+FAMISTUDIO_CFG_EQUALIZER    = 1
 FAMISTUDIO_USE_VOLUME_TRACK = 1
 FAMISTUDIO_USE_PITCH_TRACK  = 1
 FAMISTUDIO_USE_SLIDE_NOTES  = 1
@@ -67,6 +69,8 @@ screen_data_rle:
 default_palette:
 .incbin "demo.pal"
 .incbin "demo.pal"
+
+NUM_SONGS = 2
 
 reset:
 
@@ -310,17 +314,28 @@ gamepad_poll_dpcm_safe:
 
 play_song:
 
-    ;ldx #.lobyte(castlevania_2_music_data)
-    ;ldy #.hibyte(castlevania_2_music_data)
-.if FAMISTUDIO_CFG_PAL_SUPPORT
-    lda #0
-.else
-    lda #1 ; NTSC
-.endif  
-    ;jsr famistudio_init
+    lda song_index
+    bne @song2
+
+    ; Here since both of our songs came from different FamiStudio projects, 
+    ; they are actually 2 different song data, with a single song in each.
+    ; For a real game, if would be preferable to export all songs together
+    ; so that instruments shared across multiple songs are only exported once.
+    @song1:
+        ldx #.lobyte(castlevania_2_music_data)
+        ldy #.hibyte(castlevania_2_music_data)
+        jmp @play_song
+
+    @song2:
+        ldx #.lobyte(castlevania_2_music_data)
+        ldy #.hibyte(castlevania_2_music_data)
+        jmp @play_song
     
+    @play_song:
+    lda #1 ; NTSC
+    jsr famistudio_init
     lda #0
-    ;jsr famistudio_music_play
+    jsr famistudio_music_play
 
     rts
 
@@ -354,7 +369,7 @@ update_equalizer:
     sta pos_x
 
     ; compute lookup index.
-    ;lda famistudio_chn_note_counter, y
+    lda famistudio_chn_note_counter, y
     asl a
     asl a
     tay
@@ -419,41 +434,68 @@ main:
 
     jsr gamepad_poll_dpcm_safe
     
-    ;check_right:
-    ;   lda gamepad_pressed
-    ;   and #PAD_R
-    ;   beq check_left
+    @check_right:
+        lda gamepad_pressed
+        and #PAD_R
+        beq @check_left
 
-    ;   ; dont go beyond last song.
-    ;   lda song_index
-    ;   cmp max_song
-    ;   beq draw
+        ; next song.
+        lda song_index
+        clc
+        adc #1
+        and #1
+        sta song_index
+        jsr play_song
+        jmp @draw_done ; Intentionally skipping equalizer update to keep NMI update small.
 
-    ;   ; next song.
-    ;   clc
-    ;   adc #1
-    ;   sta song_index
-    ;   jsr play_song
-    ;   jmp draw_done ; Intentionally skipping equalizer update to keep NMI update small.
+    @check_left:
+        lda gamepad_pressed
+        and #PAD_L
+        beq @check_start
 
-    ;check_left:
-    ;   lda gamepad_pressed
-    ;   and #PAD_L
-    ;   beq draw
+        lda song_index
+        sec
+        sbc #1
+        and #1
+        sta song_index
+        jsr play_song
+        jmp @draw_done ; Intentionally skipping equalizer update to keep NMI update small.
 
-    ;   ; dont go below zero
-    ;   lda song_index
-    ;   beq draw
+    @check_start:
+        lda gamepad_pressed
+        and #PAD_START
+        beq @check_a
 
-    ;   sec
-    ;   sbc #1
-    ;   sta song_index
-    ;   jsr play_song
-    ;   jmp draw_done ; Intentionally skipping equalizer update to keep NMI update small.
+        lda #1
+        eor pause_flag
+        sta pause_flag
+
+        jsr famistudio_music_pause
+        jmp @check_a
+
+    @check_a:
+        lda gamepad_pressed
+        and #PAD_B
+        beq @check_b
+
+        lda #0
+        ldx #FAMISTUDIO_SFX_CH0
+        jsr famistudio_sfx_play
+        beq @draw
+
+    @check_b:
+        lda gamepad_pressed
+        and #PAD_B
+        beq @draw
+
+        lda #1
+        ldx #FAMISTUDIO_SFX_CH1
+        jsr famistudio_sfx_play
+        beq @draw
 
 @draw:
 
-    ;jsr famistudio_update ; MATTT: Call in NMI.
+    jsr famistudio_update ; TODO: Call in NMI.
     
     lda #0
     jsr update_equalizer
@@ -563,10 +605,11 @@ setup_background:
 
     rts
 
-;.include "bloodytears.s"
+.segment "SONG"
+.include "bloodytears.s"
 
-;.segment "DPCM"
-;.incbin "bloodytears.dmc"
+.segment "DPCM"
+.incbin "bloodytears.dmc"
 
 .segment "VECTORS"
 .word nmi
