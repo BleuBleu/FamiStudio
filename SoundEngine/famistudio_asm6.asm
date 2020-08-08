@@ -433,7 +433,7 @@ FAMISTUDIO_ENV_DUTY_OFF   = 2
 ; RAM VARIABLES (You should not have to play with these)
 ;======================================================================================================================
 
-.enum FAMISTUDIO_ASM6_RAM_ENUM
+.enum FAMISTUDIO_ASM6_BSS_ENUM
 
 famistudio_env_value:             .dsb FAMISTUDIO_NUM_ENVELOPES
 famistudio_env_repeat:            .dsb FAMISTUDIO_NUM_ENVELOPES
@@ -559,7 +559,7 @@ famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 ; Feel free to alias those with other ZP values in your programs to save a few bytes.
 ;======================================================================================================================
 
-.enum FAMISTUDIO_ASM6_P_ENUM
+.enum FAMISTUDIO_ASM6_ZP_ENUM
 
 famistudio_r0:   .dsb 1
 famistudio_r1:   .dsb 1
@@ -579,7 +579,7 @@ famistudio_ptr1_hi = famistudio_ptr1+1
 ; CODE
 ;======================================================================================================================
 
-.base FAMISTUDIO_ASM6_CODE_ORG
+.base FAMISTUDIO_ASM6_CODE_BASE
 
 FAMISTUDIO_APU_PL1_VOL    = $4000
 FAMISTUDIO_APU_PL1_SWEEP  = $4001

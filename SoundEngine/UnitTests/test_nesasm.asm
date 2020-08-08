@@ -8,7 +8,12 @@
     .bank 0
     .org $8000 
 
-FAMISTUDIO_CFG_EXTERNAL = 1
+FAMISTUDIO_CFG_EXTERNAL      = 1
+FAMISTUDIO_NESASM_ZP_RSSET   = $0000
+FAMISTUDIO_NESASM_BSS_RSSET  = $0300
+FAMISTUDIO_NESASM_CODE_BANK  = 0
+FAMISTUDIO_NESASM_CODE_ORG   = $8000
+
     .include "test_defs.inc"
     .include "..\famistudio_nesasm.asm"
     .bank 4

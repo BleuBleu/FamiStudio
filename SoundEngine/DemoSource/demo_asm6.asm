@@ -50,6 +50,7 @@
     ; CODE
     .base $8000
 
+; FamiStudio config.
 FAMISTUDIO_CFG_EXTERNAL     = 1
 FAMISTUDIO_CFG_DPCM_SUPPORT = 1
 FAMISTUDIO_CFG_SFX_SUPPORT  = 1 
@@ -59,6 +60,11 @@ FAMISTUDIO_USE_PITCH_TRACK  = 1
 FAMISTUDIO_USE_SLIDE_NOTES  = 1
 FAMISTUDIO_USE_VIBRATO      = 1
 FAMISTUDIO_USE_ARPEGGIO     = 1
+
+; ASM6-specific config.
+FAMISTUDIO_ASM6_ZP_ENUM   = $0012
+FAMISTUDIO_ASM6_BSS_ENUM  = $03a0
+FAMISTUDIO_ASM6_CODE_BASE = $8000
 
     .include "..\famistudio_asm6.asm"
 
@@ -565,7 +571,7 @@ setup_background:
     rts
 
     ; VECTORS
-    .org $fffA
+    .org $fffa
     .dw nmi
     .dw reset
     .dw irq

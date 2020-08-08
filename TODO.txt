@@ -1,14 +1,13 @@
 2.2.0
 =====
 - Play right now when dragging...
+- BUG: NSF export with NULL instrument (from github, mario song).
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
 - BUG: One bad pixel in ROM?
 - Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
 - Loop count on wav.
 - FamiStudio sound engine
-	===> THEN PORT to ASM6 + NESASM.
-	- Segment / zp on other assemblers, etc.
 	- Nice test ROM (same as ROM, but with SFX player)
 	- Resurect SFX
 	- Documentation.

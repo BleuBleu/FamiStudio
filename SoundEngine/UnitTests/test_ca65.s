@@ -10,15 +10,12 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 .byte (INES_MAPPER & %11110000)
 .byte $0, $0, $0, $0, $0, $0, $0, $0 ; padding
 
-.segment "ZEROPAGE"
-dummy_zp: .res 18 ; MATTT
-
-.segment "RAM"
-dummy_ram: .res 160 ; MATTT
-
 .segment "CODE"
 
 FAMISTUDIO_CFG_EXTERNAL = 1
+.define FAMISTUDIO_CA65_ZP_SEGMENT   ZEROPAGE
+.define FAMISTUDIO_CA65_RAM_SEGMENT  RAM
+.define FAMISTUDIO_CA65_CODE_SEGMENT CODE
 .include "test_defs.inc"
 .include "..\famistudio_ca65.s"
 

@@ -75,15 +75,26 @@ FAMISTUDIO_CFG_EXTERNAL = 0
 ; as .ifdef. 
 ;======================================================================================================================
 
-FAMISTUDIO_NESASM_ZP_SECTION   = 1
-; FAMISTUDIO_NESASM_ZP_RSSET     = $0010
+; Define this to emit the ".zp" directive before the zeropage variables.
+; FAMISTUDIO_NESASM_ZP_SECTION   = 1
 
-FAMISTUDIO_NESASM_BSS_SECTION  = 1
-; FAMISTUDIO_NESASM_BSS_RSSET    = $0010
+; Address where to allocate the zeropage variables that the engine use. 
+FAMISTUDIO_NESASM_ZP_RSSET     = $00a0
 
-FAMISTUDIO_NESASM_CODE_SECTION = 1
+; Define this to emit the ".bss" directive before the RAM/BSS variables.
+; FAMISTUDIO_NESASM_BSS_SECTION  = 1
+
+; Address where to allocate the RAN/BSS variables that the engine use. 
+ FAMISTUDIO_NESASM_BSS_RSSET    = $0400
+
+; Define this to emit the ".code" directive before the code section.
+; FAMISTUDIO_NESASM_CODE_SECTION = 1
+
+; Define this to emit the ".bank" directive before the code section.
 ; FAMISTUDIO_NESASM_CODE_BANK    = 0
-; FAMISTUDIO_NESASM_CODE_ORG     = $8000
+
+; Address where to place the engine code.
+FAMISTUDIO_NESASM_CODE_ORG     = $8000
 
 ;======================================================================================================================
 ; 2) AUDIO EXPANSION CONFIGURATION
