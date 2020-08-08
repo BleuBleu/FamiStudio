@@ -61,37 +61,6 @@ default_palette:
     .incbin "demo.pal"
     .incbin "demo.pal"
 
-;test_macro .macro 
-;;    .local @ok
-;    inc \1+0
-;;    bne @ok
-;;    inc addr+1
-;;@ok:
-;    .endm
-
-;proc1:
-
-;.test = r0
-;    test_macro .test
-
-;proc2:
-
-;.test = r1
-;    test_macro .test
-
-;test_macro .macro 
-;;    .local @ok
-;    lda \1+0 \2
-;    adc \3 \4
-;;    bne @ok
-;;    inc addr+1
-;;@ok:
-;    .endm
-
-;proc1:
-
-;    test_macro r0,,y, a, b
-
 reset:
 
     sei       ; mask interrupts

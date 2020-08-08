@@ -46,15 +46,15 @@
 ;      different configurations, while pointing to the same code file. This is how the provided demos and FamiStudio
 ;      uses it.
 ;
-; Note that the engine uses "if" and not "ifdef" for all boolean values so you need to define these to non-zero 
-; values. Undefined values will be assumed to be zero.
+; Note that unless specified, the engine uses "if" and not "ifdef" for all boolean values so you need to define these
+; to non-zero values. Undefined values will be assumed to be zero.
 ;
 ; There are 4 main things to configure, each of them will be detailed below.
 ;
-;   1) Audio expansion
-;   2) Global engine parameters
-;   3) Supported features
-;   4) Segments (TODO)
+;   1) Segments (ZP/RAM/PRG)
+;   2) Audio expansion
+;   3) Global engine parameters
+;   4) Supported features
 ;======================================================================================================================
 
     .ifndef FAMISTUDIO_CFG_EXTERNAL 
@@ -65,7 +65,28 @@ FAMISTUDIO_CFG_EXTERNAL = 0
     .if !FAMISTUDIO_CFG_EXTERNAL
 
 ;======================================================================================================================
-; 1) AUDIO EXPANSION CONFIGURATION
+; 1) SEGMENT CONFIGURATION
+;
+; You need to tell where you want to allocate the zeropage, RAM and code. This section will be slightly different for
+; each assembler.
+;
+; For NESASM, you can specify the .rsset location for zeroage and RAM/BSS as well as the .bank/.org for the engine 
+; code. The .zp/.bss/.code section directives can also be emitted.  ALl these values are optional and will be tested
+; as .ifdef. 
+;======================================================================================================================
+
+FAMISTUDIO_NESASM_ZP_SECTION   = 1
+; FAMISTUDIO_NESASM_ZP_RSSET     = $0010
+
+FAMISTUDIO_NESASM_BSS_SECTION  = 1
+; FAMISTUDIO_NESASM_BSS_RSSET    = $0010
+
+FAMISTUDIO_NESASM_CODE_SECTION = 1
+; FAMISTUDIO_NESASM_CODE_BANK    = 0
+; FAMISTUDIO_NESASM_CODE_ORG     = $8000
+
+;======================================================================================================================
+; 2) AUDIO EXPANSION CONFIGURATION
 ;
 ; You can enable up to one audio expansion (FAMISTUDIO_EXP_XXX). Enabling more than one expansion will lead to
 ; undefined behavior. Memory usage goes up as more complex expansions are used. The audio expansion you choose
@@ -93,7 +114,7 @@ FAMISTUDIO_CFG_EXTERNAL = 0
 ; FAMISTUDIO_EXP_N163_CHN_CNT  = 4
 
 ;======================================================================================================================
-; 2) GLOBAL ENGINE CONFIGURATION
+; 3) GLOBAL ENGINE CONFIGURATION
 ;
 ; These are parameters that configures the engine, but are independent of the data you will be importing, such as
 ; which platform (PAL/NTSC) you want to support playback for, whether SFX are enabled or not, etc. They all have the
@@ -119,7 +140,7 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; FAMISTUDIO_CFG_THREAD         = 1     
 
 ;======================================================================================================================
-; 3) SUPPORTED FEATURES CONFIGURATION
+; 4) SUPPORTED FEATURES CONFIGURATION
 ;
 ; Every feature supported in FamiStudio is supported by this sound engine. If you know for sure that you are not using
 ; specific features in your music, you can disable them to save memory/processing time. Using a feature in your song
@@ -408,7 +429,12 @@ FAMISTUDIO_SFX_CH3 = FAMISTUDIO_SFX_STRUCT_SIZE * 3
 ; RAM VARIABLES (You should not have to play with these)
 ;======================================================================================================================
 
-    .rsset $03a0 ; MATTT
+    .ifdef FAMISTUDIO_NESASM_BSS_SECTION
+    .bss
+    .endif
+    .ifdef FAMISTUDIO_NESASM_BSS_RSSET
+    .rsset FAMISTUDIO_NESASM_BSS_RSSET 
+    .endif
 
 famistudio_env_value:             .rs FAMISTUDIO_NUM_ENVELOPES
 famistudio_env_repeat:            .rs FAMISTUDIO_NUM_ENVELOPES
@@ -532,7 +558,12 @@ famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 ; Feel free to alias those with other ZP values in your programs to save a few bytes.
 ;======================================================================================================================
 
-    .rsset $0012 ; MATTT
+    .ifdef FAMISTUDIO_NESASM_ZP_SECTION
+    .zp
+    .endif
+    .ifdef FAMISTUDIO_NESASM_ZP_RSSET
+    .rsset FAMISTUDIO_NESASM_ZP_RSSET 
+    .endif
 
 famistudio_r0:   .rs 1
 famistudio_r1:   .rs 1
@@ -550,7 +581,15 @@ famistudio_ptr1_hi = famistudio_ptr1+1
 ; CODE
 ;======================================================================================================================
 
-    .org $8000 ; MATTT
+    .ifdef FAMISTUDIO_NESASM_CODE_SECTION
+    .code
+    .endif
+    .ifdef FAMISTUDIO_NESASM_CODE_BANK
+    .bank FAMISTUDIO_NESASM_CODE_BANK 
+    .endif
+    .ifdef FAMISTUDIO_NESASM_CODE_ORG
+    .org FAMISTUDIO_NESASM_CODE_ORG 
+    .endif
 
 FAMISTUDIO_APU_PL1_VOL    = $4000
 FAMISTUDIO_APU_PL1_SWEEP  = $4001

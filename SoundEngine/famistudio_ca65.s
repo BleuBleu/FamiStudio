@@ -46,15 +46,15 @@
 ;      different configurations, while pointing to the same code file. This is how the provided demos and FamiStudio
 ;      uses it.
 ;
-; Note that the engine uses "if" and not "ifdef" for all boolean values so you need to define these to non-zero 
-; values. Undefined values will be assumed to be zero.
+; Note that unless specified, the engine uses "if" and not "ifdef" for all boolean values so you need to define these
+; to non-zero values. Undefined values will be assumed to be zero.
 ;
 ; There are 4 main things to configure, each of them will be detailed below.
 ;
-;   1) Audio expansion
-;   2) Global engine parameters
-;   3) Supported features
-;   4) Segments (TODO)
+;   1) Segments (ZP/RAM/PRG)
+;   2) Audio expansion
+;   3) Global engine parameters
+;   4) Supported features
 ;======================================================================================================================
 
 .ifndef FAMISTUDIO_CFG_EXTERNAL 
@@ -65,7 +65,21 @@
 .if !FAMISTUDIO_CFG_EXTERNAL
 
 ;======================================================================================================================
-; 1) AUDIO EXPANSION CONFIGURATION
+; 1) SEGMENT CONFIGURATION
+;
+; You need to tell where you want to allocate the zeropage, RAM and code. This section will be slightly different for
+; each assembler.
+;
+; For CA65, you need to specify the name of your ZEROPAGE, RAM/BSS and CODE/PRG segments as c-style macros (.define)
+; like the example below.
+;======================================================================================================================
+
+.define FAMISTUDIO_CA65_ZP_SEGMENT   ZP
+.define FAMISTUDIO_CA65_RAM_SEGMENT  RAM
+.define FAMISTUDIO_CA65_CODE_SEGMENT PRG
+
+;======================================================================================================================
+; 2) AUDIO EXPANSION CONFIGURATION
 ;
 ; You can enable up to one audio expansion (FAMISTUDIO_EXP_XXX). Enabling more than one expansion will lead to
 ; undefined behavior. Memory usage goes up as more complex expansions are used. The audio expansion you choose
@@ -93,7 +107,7 @@
 ; FAMISTUDIO_EXP_N163_CHN_CNT  = 4
 
 ;======================================================================================================================
-; 2) GLOBAL ENGINE CONFIGURATION
+; 3) GLOBAL ENGINE CONFIGURATION
 ;
 ; These are parameters that configures the engine, but are independent of the data you will be importing, such as
 ; which platform (PAL/NTSC) you want to support playback for, whether SFX are enabled or not, etc. They all have the
@@ -119,7 +133,7 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; FAMISTUDIO_CFG_THREAD         = 1     
 
 ;======================================================================================================================
-; 3) SUPPORTED FEATURES CONFIGURATION
+; 4) SUPPORTED FEATURES CONFIGURATION
 ;
 ; Every feature supported in FamiStudio is supported by this sound engine. If you know for sure that you are not using
 ; specific features in your music, you can disable them to save memory/processing time. Using a feature in your song
@@ -287,6 +301,19 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
     .error "N163 only supports between 1 and 8 channels."
 .endif
 
+; THis is the best way i found to test if a C-style macro is defined or not... 
+.if .xmatch(.string(FAMISTUDIO_CA65_ZP_SEGMENT), "FAMISTUDIO_CA65_ZP_SEGMENT")
+    .error "You must .define FAMISTUDIO_CA65_ZP_SEGMENT with the name of your zeropage segment."
+.endif
+
+.if .xmatch(.string(FAMISTUDIO_CA65_RAM_SEGMENT), "FAMISTUDIO_CA65_RAM_SEGMENT")
+    .error "You must .define FAMISTUDIO_CA65_RAM_SEGMENT with the name of your RAM/BSS segment."
+.endif
+
+.if .xmatch(.string(FAMISTUDIO_CA65_CODE_SEGMENT), "FAMISTUDIO_CA65_CODE_SEGMENT")
+    .error "You must .define FAMISTUDIO_CA65_CODE_SEGMENT with the name of your CODE/PRG segment."
+.endif
+
 FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
 
 .if FAMISTUDIO_EXP_VRC7
@@ -408,7 +435,7 @@ FAMISTUDIO_ENV_DUTY_OFF   = 2
 ; RAM VARIABLES (You should not have to play with these)
 ;======================================================================================================================
 
-.segment "RAM"
+.segment .string(FAMISTUDIO_CA65_RAM_SEGMENT)
 
 famistudio_env_value:             .res FAMISTUDIO_NUM_ENVELOPES
 famistudio_env_repeat:            .res FAMISTUDIO_NUM_ENVELOPES
@@ -532,7 +559,7 @@ famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 ; Feel free to alias those with other ZP values in your programs to save a few bytes.
 ;======================================================================================================================
 
-.segment "ZEROPAGE"
+.segment .string(FAMISTUDIO_CA65_ZP_SEGMENT)
 
 famistudio_r0:   .res 1
 famistudio_r1:   .res 1
@@ -550,7 +577,7 @@ famistudio_ptr1_hi = famistudio_ptr1+1
 ; CODE
 ;======================================================================================================================
 
-.segment "CODE"
+.segment .string(FAMISTUDIO_CA65_CODE_SEGMENT)
 
 FAMISTUDIO_APU_PL1_VOL    = $4000
 FAMISTUDIO_APU_PL1_SWEEP  = $4001

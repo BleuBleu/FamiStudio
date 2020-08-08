@@ -46,15 +46,15 @@
 ;      different configurations, while pointing to the same code file. This is how the provided demos and FamiStudio
 ;      uses it.
 ;
-; Note that the engine uses "if" and not "ifdef" for all boolean values so you need to define these to non-zero 
-; values. Undefined values will be assumed to be zero.
+; Note that unless specified, the engine uses "if" and not "ifdef" for all boolean values so you need to define these
+; to non-zero values. Undefined values will be assumed to be zero.
 ;
 ; There are 4 main things to configure, each of them will be detailed below.
 ;
-;   1) Audio expansion
-;   2) Global engine parameters
-;   3) Supported features
-;   4) Segments (TODO)
+;   1) Segments (ZP/RAM/PRG)
+;   2) Audio expansion
+;   3) Global engine parameters
+;   4) Supported features
 ;======================================================================================================================
 
 .ifndef FAMISTUDIO_CFG_EXTERNAL 
@@ -65,7 +65,20 @@
 .if !FAMISTUDIO_CFG_EXTERNAL
 
 ;======================================================================================================================
-; 1) AUDIO EXPANSION CONFIGURATION
+; 1) SEGMENT CONFIGURATION
+;
+; You need to tell where you want to allocate the zeropage, RAM and code. This section will be slightly different for
+; each assembler.
+;
+; For ASM6, you need to specify the .enum location for zeroage and RAM/BSS as well as the .org for the engine code.
+;======================================================================================================================
+
+FAMISTUDIO_ASM6_ZP_ENUM   = $0000
+FAMISTUDIO_ASM6_BSS_ENUM  = $0200
+FAMISTUDIO_ASM6_CODE_BASE = $8000
+
+;======================================================================================================================
+; 2) AUDIO EXPANSION CONFIGURATION
 ;
 ; You can enable up to one audio expansion (FAMISTUDIO_EXP_XXX). Enabling more than one expansion will lead to
 ; undefined behavior. Memory usage goes up as more complex expansions are used. The audio expansion you choose
@@ -93,7 +106,7 @@
 ; FAMISTUDIO_EXP_N163_CHN_CNT  = 4
 
 ;======================================================================================================================
-; 2) GLOBAL ENGINE CONFIGURATION
+; 3) GLOBAL ENGINE CONFIGURATION
 ;
 ; These are parameters that configures the engine, but are independent of the data you will be importing, such as
 ; which platform (PAL/NTSC) you want to support playback for, whether SFX are enabled or not, etc. They all have the
@@ -119,7 +132,7 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; FAMISTUDIO_CFG_THREAD         = 1     
 
 ;======================================================================================================================
-; 3) SUPPORTED FEATURES CONFIGURATION
+; 4) SUPPORTED FEATURES CONFIGURATION
 ;
 ; Every feature supported in FamiStudio is supported by this sound engine. If you know for sure that you are not using
 ; specific features in your music, you can disable them to save memory/processing time. Using a feature in your song
@@ -287,6 +300,18 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
     .error "N163 only supports between 1 and 8 channels."
 .endif
 
+.ifndef FAMISTUDIO_ASM6_ZP_ENUM
+    .error "You need to set FAMISTUDIO_ASM6_ZP_ENUM to the location of the zeropage variables."
+.endif
+
+.ifndef FAMISTUDIO_ASM6_BSS_ENUM
+    .error "You need to set FAMISTUDIO_ASM6_BSS_ENUM to the location of the RAM/BSS variables."
+.endif
+
+.ifndef FAMISTUDIO_ASM6_CODE_BASE
+    .error "You need to set FAMISTUDIO_ASM6_CODE_BASE to the location of the engine code."
+.endif
+
 FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
 
 .if FAMISTUDIO_EXP_VRC7
@@ -408,7 +433,7 @@ FAMISTUDIO_ENV_DUTY_OFF   = 2
 ; RAM VARIABLES (You should not have to play with these)
 ;======================================================================================================================
 
-.enum $03a0 ; MATTT
+.enum FAMISTUDIO_ASM6_RAM_ENUM
 
 famistudio_env_value:             .dsb FAMISTUDIO_NUM_ENVELOPES
 famistudio_env_repeat:            .dsb FAMISTUDIO_NUM_ENVELOPES
@@ -525,7 +550,7 @@ famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 
 .endif 
 
-.ende ; MATTT
+.ende
 
 ;======================================================================================================================
 ; ZEROPAGE VARIABLES
@@ -534,7 +559,7 @@ famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 ; Feel free to alias those with other ZP values in your programs to save a few bytes.
 ;======================================================================================================================
 
-.enum $0012 ; MATTT
+.enum FAMISTUDIO_ASM6_P_ENUM
 
 famistudio_r0:   .dsb 1
 famistudio_r1:   .dsb 1
@@ -554,7 +579,7 @@ famistudio_ptr1_hi = famistudio_ptr1+1
 ; CODE
 ;======================================================================================================================
 
-.base $8000 ; MATTT
+.base FAMISTUDIO_ASM6_CODE_ORG
 
 FAMISTUDIO_APU_PL1_VOL    = $4000
 FAMISTUDIO_APU_PL1_SWEEP  = $4001
