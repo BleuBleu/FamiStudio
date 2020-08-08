@@ -1,10 +1,11 @@
 2.2.0
 =====
 - Play right now when dragging...
+- BUG: Select notes with arpeggion, do CTRL+LEFT/RIGHT to move them. Arpeggion is gone.
+- BUG: Copy paste doesnt copy arpeggio.
 - BUG: NSF export with NULL instrument (from github, mario song).
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
-- BUG: One bad pixel in ROM?
 - Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
 - Loop count on wav.
 - FamiStudio sound engine
@@ -13,7 +14,7 @@
 		- Song1: Shatterhand
 		+ Song2: Silver surfer once done.
 		- Use punch out! SFX. 71 + something else.
-	- Resurect SFX
+	- Re-test SFX
 	- Documentation.
 	- Export dialog + command line.
 	- Double check TAB/SPACE at the end.
@@ -42,6 +43,7 @@ Testing:
 - Retest ROM export.
 - Test tutorial dialog with high DPI : mac + windows
 - Deprecate FamiTone2 FS.
+- One bad pixel in ROM, make sure its gone.
 
 Tweet ideas
 ===========
