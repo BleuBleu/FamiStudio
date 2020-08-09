@@ -3,8 +3,6 @@
 - Play right note when dragging.
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
-- Loop count on wav.
-	- Command line too.
 - FamiStudio sound engine
 	- Nice test ROM (same as ROM, but with SFX player)
 		- Update in NMI?

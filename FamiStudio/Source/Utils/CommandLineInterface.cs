@@ -287,6 +287,8 @@ namespace FamiStudio
 
             if (duration > 0)
                 loopCount = -1;
+            else
+                loopCount = Math.Max(1, loopCount);
 
             if (song != null)
                 WaveFile.Save(song, filename, sampleRate, loopCount, duration, mask);
