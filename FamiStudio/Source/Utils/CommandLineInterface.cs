@@ -280,12 +280,16 @@ namespace FamiStudio
 
             var songIndex  = ParseOption("export-song", 0);
             var sampleRate = ParseOption("wav-export-rate", 44100);
+            var loopCount  = ParseOption("wav-export-loop", 1);
             var duration   = ParseOption("wav-export-duration", 0);
             var mask       = ParseOption("wav-export-channels", 0xff, true);
             var song       = GetProjectSong(songIndex);
 
+            if (duration > 0)
+                loopCount = -1;
+
             if (song != null)
-                WaveFile.Save(song, filename, sampleRate, duration, mask);
+                WaveFile.Save(song, filename, sampleRate, loopCount, duration, mask);
         }
 
         private void NsfExport(string filename)

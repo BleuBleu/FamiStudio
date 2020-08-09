@@ -99,10 +99,11 @@ namespace FamiStudio
                 case ExportFormat.Wav:
                     page.AddStringList("Song :", songNames, songNames[0]); // 0
                     page.AddStringList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 1
-                    page.AddStringList("Mode :", new[] { "Play Once", "Duration" }, "Play Once"); // 2
-                    page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 3
-                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 4
-                    page.SetPropertyEnabled(3, false);
+                    page.AddStringList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 2
+                    page.AddIntegerRange("Loop count:", 1, 1, 10); // 3
+                    page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 4
+                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 5
+                    page.SetPropertyEnabled(4, false);
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
@@ -162,7 +163,8 @@ namespace FamiStudio
             }
             else if (props == dialog.GetPropertyPage((int)ExportFormat.Wav) && idx == 2)
             {
-                props.SetPropertyEnabled(3, (string)value == "Duration");
+                props.SetPropertyEnabled(3, (string)value != "Duration");
+                props.SetPropertyEnabled(4, (string)value == "Duration");
             }
         }
 
@@ -187,8 +189,9 @@ namespace FamiStudio
                 var props = dialog.GetPropertyPage((int)ExportFormat.Wav);
                 var songName = props.GetPropertyValue<string>(0);
                 var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(1));
-                var duration = props.GetPropertyValue<string>(2) == "Duration" ? props.GetPropertyValue<int>(3) : -1;
-                var selectedChannels = props.GetPropertyValue<bool[]>(4);
+                var loopCount = props.GetPropertyValue<string>(2) != "Duration" ? props.GetPropertyValue<int>(3) : -1;
+                var duration  = props.GetPropertyValue<string>(2) == "Duration" ? props.GetPropertyValue<int>(4) : -1;
+                var selectedChannels = props.GetPropertyValue<bool[]>(5);
 
                 var channelMask = 0;
                 for (int i = 0; i < selectedChannels.Length; i++)
@@ -197,7 +200,7 @@ namespace FamiStudio
                         channelMask |= (1 << i);
                 }
 
-                WaveFile.Save(project.GetSong(songName), filename, sampleRate, duration, channelMask);
+                WaveFile.Save(project.GetSong(songName), filename, sampleRate, loopCount, duration, channelMask);
             }
         }
 
