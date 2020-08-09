@@ -8,6 +8,8 @@
 		- Update in NMI?
 		- Song1: JTS
 			- Change samples to match notes.
+			- Rename patterns.
+			- Rename instruments
 		- Song2: Shatterhand
 		- Song3: Silver surfer once done.
 		- SFX: Megaman + Mario?
