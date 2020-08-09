@@ -849,6 +849,7 @@ namespace FamiStudio
                     var prevNoteValue = Note.NoteInvalid;
                     var prevInstrument = (Instrument)null;
                     var prevSlideEffect = Effect_None;
+                    var prevArpeggio = (Arpeggio)null;
                     
                     for (int p = 0; p < song.Length; p++)
                     {
@@ -1006,6 +1007,25 @@ namespace FamiStudio
                                 effectString += $" P{(byte)(-note.FinePitch + 0x80):X2}";
                             if (note.HasFdsModDepth)
                                 effectString += $" H{note.FdsModDepth:X2}";
+
+                            if (note.IsMusical && note.Arpeggio != prevArpeggio)
+                            {
+                                var arpeggioString = " 0";
+
+                                if (note.Arpeggio != null)
+                                {
+                                    arpeggioString += note.Arpeggio.Envelope.Length >= 2 ? $"{Utils.Clamp(note.Arpeggio.Envelope.Values[1], 0, 15):X1}" : "0";
+                                    arpeggioString += note.Arpeggio.Envelope.Length >= 3 ? $"{Utils.Clamp(note.Arpeggio.Envelope.Values[2], 0, 15):X1}" : "0";
+                                }
+                                else
+                                {
+                                    arpeggioString += "00";
+                                }
+
+                                effectString += arpeggioString;
+                                prevArpeggio  = note.Arpeggio;
+                            }
+
                             if (note.HasFdsModSpeed)
                             {
                                 effectString += $" I{(note.FdsModSpeed >> 8) & 0xff:X2}";
