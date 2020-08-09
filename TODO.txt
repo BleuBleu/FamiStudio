@@ -6,7 +6,8 @@
 - FamiStudio sound engine
 	- Nice test ROM (same as ROM, but with SFX player)
 		- Update in NMI?
-		- Song1: Bloody tears (redo with duty cycle, etc.)
+		- Song1: JTS
+			- Change samples to match notes.
 		- Song2: Shatterhand
 		- Song3: Silver surfer once done.
 		- SFX: Megaman + Mario?
@@ -38,7 +39,7 @@ Testing:
 - Test tutorial dialog with high DPI : mac + windows
 - Deprecate FamiTone2 FS.
 - One bad pixel in ROM, make sure its gone.
-- Bad sequencer texture filtering : Re-test AMD, Re-test Mac + Linux.
+- Bad sequencer texture filtering : Re-test Mac + Linux.
 
 Tweet ideas
 ===========
