@@ -15,11 +15,7 @@
 	- Documentation.
 	- Export dialog + command line.
 	- Double check TAB/SPACE at the end.
-- Arpeggio : GOAL, recreate song #4 from silver surfer. (3/4 notes, slow/fast, Micromachines & Jurassic park has 1 frame delay before starting the arp)
-	- NSF
-		- Test expansions.
-	- Import export (FT, text format)
-	- Copy paste doesnt work.
+- Arpeggio : 
 	- Validation code.
 	- Paste special
 	x Replace selection arp
