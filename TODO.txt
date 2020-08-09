@@ -1,9 +1,8 @@
 2.2.0
 =====
 - Play right now when dragging...
-- BUG: Select notes with arpeggion, do CTRL+LEFT/RIGHT to move them. Arpeggion is gone.
+- BUG: Select notes with arpeggio, do CTRL+LEFT/RIGHT to move them. Arpeggion is gone.
 - BUG: Copy paste doesnt copy arpeggio.
-- BUG: NSF export with NULL instrument (from github, mario song).
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
 - Piano roll left auto scroll when drag is annoying. Make it only when going over the piano.
@@ -14,14 +13,11 @@
 		- Song1: Shatterhand
 		+ Song2: Silver surfer once done.
 		- Use punch out! SFX. 71 + something else.
+		- Select plays a DPCM (just a test)
 	- Re-test SFX
 	- Documentation.
 	- Export dialog + command line.
 	- Double check TAB/SPACE at the end.
-/ Show piano roll rect in sequencer
-	x Make it a setting
-	- Make it look better.
-- Drag seek bar (github issue request!).
 - Arpeggio : GOAL, recreate song #4 from silver surfer. (3/4 notes, slow/fast, Micromachines & Jurassic park has 1 frame delay before starting the arp)
 	- NSF
 		- Test expansions.
@@ -33,6 +29,10 @@
 	x Add/remove arps.
 	- Must delete + add note to set the arp, weird?
 	- Should I use a "..." icon for arps?
+/ Show piano roll rect in sequencer
+	x Make it a setting
+	- Make it look better.
+- Drag seek bar (github issue request!).
 - Instrument picker?
 - Discord server
 - Feature requests from email (record?)
