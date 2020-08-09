@@ -42,6 +42,7 @@ Testing:
 - Test tutorial dialog with high DPI : mac + windows
 - Deprecate FamiTone2 FS.
 - One bad pixel in ROM, make sure its gone.
+- Bad sequencer texture filtering : Re-test AMD, Re-test Mac + Linux.
 
 Tweet ideas
 ===========

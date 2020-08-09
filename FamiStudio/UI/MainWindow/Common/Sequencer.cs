@@ -487,7 +487,7 @@ namespace FamiStudio
                         g.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY - 1, 0.9f));
                         g.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, theme.DarkGreyLineBrush1);
                         g.PushClip(0, 0, sx, trackSizeY);
-                        g.DrawBitmap(bmp, 1.5f, 1.5f + patternHeaderSizeY, sx - 1, bmp.Size.Height, 1.0f);
+                        g.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, bmp.Size.Height, 1.0f);
                         g.DrawText(pattern.Name, ThemeBase.FontSmall, patternNamePosX, patternNamePosY, theme.BlackBrush);
                         g.PopClip();
                         g.PopTransform();
