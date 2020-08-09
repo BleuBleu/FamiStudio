@@ -1201,8 +1201,9 @@ namespace FamiStudio
                     {
                         note.Value = newNote.Value;
                         note.Instrument = editChannel == Channel.Dpcm || !Song.Channels[editChannel].SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
-                        note.Slide = newNote.Slide;
-                        note.Flags = newNote.Flags;
+                        note.Slide    = newNote.Slide;
+                        note.Flags    = newNote.Flags;
+                        note.Arpeggio = newNote.Arpeggio;
                     }
                 }
                 if (pasteVolume)
@@ -2568,6 +2569,7 @@ namespace FamiStudio
                         note.Value = (byte)(ctrl ? Note.NoteStop : Note.NoteRelease);
                         note.Instrument = null;
                         note.Slide = 0;
+                        note.Arpeggio = null;
                         pattern.ClearLastValidNoteCache();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
@@ -2828,7 +2830,7 @@ namespace FamiStudio
 
         private void UpdateSelection(int mouseX, bool first = false)
         {
-            if ((mouseX - whiteKeySizeX) < 100)
+            if ((mouseX - whiteKeySizeX) < 0)
             {
                 scrollX -= 32;
                 ClampScroll();
@@ -3223,6 +3225,7 @@ namespace FamiStudio
                         var note = pattern.GetOrCreateNoteAt(noteIdx);
                         note.Value = noteValue;
                         note.Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
+                        note.Arpeggio = channel.SupportsArpeggios ? currentArpeggio  : null;
                     }
                     else
                     {
