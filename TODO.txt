@@ -6,10 +6,11 @@
 - FamiStudio sound engine
 	- Nice test ROM (same as ROM, but with SFX player)
 		- Update in NMI?
-		- Song1: Shatterhand
-		+ Song2: Silver surfer once done.
-		- Use punch out! SFX. 71 + something else.
-		- Select plays a DPCM (just a test)
+		- Song1: Bloody tears (redo with duty cycle, etc.)
+		- Song2: Shatterhand
+		- Song3: Silver surfer once done.
+		- SFX: Megaman + Mario?
+		- Select plays a DPCM (only in bloody tears). Undocumented.
 	- Re-test SFX
 	- Documentation.
 	- Export dialog + command line.
