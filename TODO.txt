@@ -9,7 +9,7 @@
 		- Song1: JTS
 			- Change samples to match notes.
 		- Song2: Shatterhand
-		- Song3: Silver surfer once done.
+		- Song3: Silver surfer track 6. SICK!
 		- SFX: Megaman + Mario?
 		- Select plays a DPCM (only in bloody tears). Undocumented.
 	- Re-test SFX
@@ -19,10 +19,13 @@
 - Arpeggio : 
 	- Validation code.
 	- Paste special
+	- Make rendering nicer +(1,1) pixel
 	x Replace selection arp
 	x Add/remove arps.
 	- Must delete + add note to set the arp, weird?
 	- Should I use a "..." icon for arps?
+	- Drag to copy arpeggio in project explorer.
+	- Cant select values in piano roll when editing arpeggios???
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.
