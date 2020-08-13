@@ -44,8 +44,8 @@ namespace PrintCodeSize
                     FileName = exe,
                     Arguments = args,
                     UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
+                    //RedirectStandardOutput = true,
+                    //CreateNoWindow = true
                 }
             };
 
@@ -60,28 +60,28 @@ namespace PrintCodeSize
             var expansionDefines = new string[14][]
             {
                 new string [] { },
-                new [] { "FAMISTUDIO_EXP_VRC6" },
-                new [] { "FAMISTUDIO_EXP_VRC7" },
-                new [] { "FAMISTUDIO_EXP_MMC5" },
-                new [] { "FAMISTUDIO_EXP_S5B"  },
-                new [] { "FAMISTUDIO_EXP_FDS"  },
-                new [] { "FAMISTUDIO_EXP_N163", "FAMISTUDIO_EXP_N163_CHN_CNT=1" },
-                new [] { "FAMISTUDIO_EXP_N163", "FAMISTUDIO_EXP_N163_CHN_CNT=2" },
-                new [] { "FAMISTUDIO_EXP_N163", "FAMISTUDIO_EXP_N163_CHN_CNT=3" },
-                new [] { "FAMISTUDIO_EXP_N163", "FAMISTUDIO_EXP_N163_CHN_CNT=4" },
-                new [] { "FAMISTUDIO_EXP_N163", "FAMISTUDIO_EXP_N163_CHN_CNT=5" },
-                new [] { "FAMISTUDIO_EXP_N163", "FAMISTUDIO_EXP_N163_CHN_CNT=6" },
-                new [] { "FAMISTUDIO_EXP_N163", "FAMISTUDIO_EXP_N163_CHN_CNT=7" },
-                new [] { "FAMISTUDIO_EXP_N163", "FAMISTUDIO_EXP_N163_CHN_CNT=8" }
+                new [] { "FAMISTUDIO_EXP_MMC5=1" },
+                new [] { "FAMISTUDIO_EXP_S5B=1"  },
+                new [] { "FAMISTUDIO_EXP_VRC6=1" },
+                new [] { "FAMISTUDIO_EXP_VRC7=1" },
+                new [] { "FAMISTUDIO_EXP_FDS=1"  },
+                new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=1" },
+                new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=2" },
+                new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=3" },
+                new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=4" },
+                new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=5" },
+                new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=6" },
+                new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=7" },
+                new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=8" }
             };
 
             var expansionDesc = new[]
             {
                 "2A03",
-                "VRC6",
-                "VRC7",
                 "MMC5",
                 "S5B",
+                "VRC6",
+                "VRC7",
                 "FDS",
                 "N163 (1 channels)",
                 "N163 (2 channels)",
@@ -96,12 +96,12 @@ namespace PrintCodeSize
             var featureDefines = new[]
             {
                 "",
-                //"FAMISTUDIO_USE_FAMITRACKER_TEMPO",
-                "FAMISTUDIO_USE_SLIDE_NOTES",
-                "FAMISTUDIO_USE_VOLUME_TRACK",
-                "FAMISTUDIO_USE_PITCH_TRACK",
-                "FAMISTUDIO_USE_VIBRATO",
-                "FAMISTUDIO_USE_ARPEGGIO"
+                //"FAMISTUDIO_USE_FAMITRACKER_TEMPO=1",
+                "FAMISTUDIO_USE_SLIDE_NOTES=1",
+                "FAMISTUDIO_USE_VOLUME_TRACK=1",
+                "FAMISTUDIO_USE_PITCH_TRACK=1",
+                "FAMISTUDIO_USE_VIBRATO=1",
+                "FAMISTUDIO_USE_ARPEGGIO=1"
             };
 
             var featureDesc = new[]
@@ -123,8 +123,8 @@ namespace PrintCodeSize
 
             for (int i = 0; i < expansionDefines.GetLength(0); i++)
             {
-                var ca65Args = @"famistudio.s -g -o tmp.o -D FT_NTSC_SUPPORT=1 ";
-                var ld65Args = @"-C FeatureMatrix.cfg -o tmp.bin tmp.o --mapfile tmp.map";
+                var ca65Args = @"feature_matrix.s -g -o tmp.o -D FAMISTUDIO_CFG_EXTERNAL=1 -D FT_NTSC_SUPPORT=1 ";
+                var ld65Args = @"-C feature_matrix.cfg -o tmp.bin tmp.o --mapfile tmp.map";
 
                 foreach (var def in expansionDefines[i])
                     ca65Args += $" -D {def}";
@@ -143,18 +143,16 @@ namespace PrintCodeSize
                     ramMatrix[i, j] = ramSize;
                     zpMatrix[i, j] = zpSize;
 
-                    Console.WriteLine($"CODE = {codeSize}, RAM = {ramSize}, ZP = {zpSize}");
+                    Console.WriteLine($"CODE = {codeSize}, RAM = {ramSize}, ZEROPAGE = {zpSize}");
                 }
             }
 
             var lines = new List<string>();
-            var header = "<html><body><table><th>";
-
+            lines.Add("<html><body>");
+            lines.Add("<h1>CODE</h1>");
+            var header = "<table><th>";
             for (int j = 0; j < featureDesc.Length; j++)
-            {
                 header += $"<td>{featureDesc[j]}</td>";
-            }
-
             header += "</th>";
             lines.Add(header);
 
@@ -163,7 +161,25 @@ namespace PrintCodeSize
                 var row = $"<tr><td>{expansionDesc[i]}</td>";
 
                 for (int j = 0; j < codeMatrix.GetLength(1); j++)
-                    row += $"<td>CODE: {codeMatrix[i, j]}<br>RAM: {ramMatrix[i, j]}<br>ZEROPAGE: {zpMatrix[i, j]}</td>";
+                    row += $"<td>{codeMatrix[i, j]}</td>";
+
+                row += "</tr>";
+                lines.Add(row);
+            }
+            
+            lines.Add("</table><h1>RAM</h1><table>");
+            header = "<table><th>";
+            for (int j = 0; j < featureDesc.Length; j++)
+                header += $"<td>{featureDesc[j]}</td>";
+            header += "</th>";
+            lines.Add(header);
+
+            for (int i = 0; i < codeMatrix.GetLength(0); i++)
+            {
+                var row = $"<tr><td>{expansionDesc[i]}</td>";
+
+                for (int j = 0; j < codeMatrix.GetLength(1); j++)
+                    row += $"<td>{ramMatrix[i, j]}</td>";
 
                 row += "</tr>";
                 lines.Add(row);

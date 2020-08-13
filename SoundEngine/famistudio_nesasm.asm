@@ -4275,9 +4275,9 @@ famistudio_tempo_frame_lookup:
 ; lookup table for the 2 registers we need to set for smooth vibrato.
 ; Index 0 decrement the hi-period, index 2 increments. Index 1 is unused. 
 famistudio_smooth_vibrato_period_lo_lookup:
-	.byte $00, $00, $ff
+    .byte $00, $00, $ff
 famistudio_smooth_vibrato_sweep_lookup:
-	.byte $8f, $00, $87
+    .byte $8f, $00, $87
     .endif
 
     .if FAMISTUDIO_USE_VOLUME_TRACK

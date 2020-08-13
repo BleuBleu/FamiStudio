@@ -282,7 +282,7 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
 .endif
 
 .if (FAMISTUDIO_EXP_VRC6 + FAMISTUDIO_EXP_VRC7 + FAMISTUDIO_EXP_MMC5 + FAMISTUDIO_EXP_S5B + FAMISTUDIO_EXP_FDS + FAMISTUDIO_EXP_N163) = 0
-	FAMISTUDIO_EXP_NONE = 1
+    FAMISTUDIO_EXP_NONE = 1
 .else
     FAMISTUDIO_EXP_NONE = 0
 .endif
@@ -291,7 +291,7 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
     FAMISTUDIO_EXP_NOTE_START = 5
 .endif
 .if FAMISTUDIO_EXP_VRC6
-	FAMISTUDIO_EXP_NOTE_START = 7
+    FAMISTUDIO_EXP_NOTE_START = 7
 .endif
 
 .if FAMISTUDIO_CFG_SFX_SUPPORT && FAMISTUDIO_CFG_SMOOTH_VIBRATO
@@ -4237,9 +4237,9 @@ famistudio_tempo_frame_lookup:
 ; lookup table for the 2 registers we need to set for smooth vibrato.
 ; Index 0 decrement the hi-period, index 2 increments. Index 1 is unused. 
 famistudio_smooth_vibrato_period_lo_lookup:
-	.byte $00, $00, $ff
+    .byte $00, $00, $ff
 famistudio_smooth_vibrato_sweep_lookup:
-	.byte $8f, $00, $87
+    .byte $8f, $00, $87
 .endif
 
 .if FAMISTUDIO_USE_VOLUME_TRACK
