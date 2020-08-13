@@ -14,6 +14,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 nmi_lock:           .res 1 ; prevents NMI re-entry
 nmi_count:          .res 1 ; is incremented every NMI
 nmi_ready:          .res 1 ; set to 1 to push a PPU frame update, 2 to turn rendering off next NMI
+nmt_row_update_len: .res 1 ; number of bytes in nmt_row_update buffer
 nmt_col_update_len: .res 1 ; number of bytes in nmt_col_update buffer
 scroll_x:           .res 1 ; x scroll position
 scroll_y:           .res 1 ; y scroll position
@@ -35,7 +36,9 @@ r4: .res 1
 p0: .res 2
 
 .segment "RAM"
+; TODO: These 2 arent actually used at the same time... unify.
 nmt_col_update: .res 128 ; nametable update entry buffer for PPU update (column mode)
+nmt_row_update: .res 128 ; nametable update entry buffer for PPU update (column mode)
 palette:        .res 32  ; palette buffer for PPU update
 
 .segment "OAM"
@@ -54,6 +57,7 @@ FAMISTUDIO_USE_PITCH_TRACK  = 1
 FAMISTUDIO_USE_SLIDE_NOTES  = 1
 FAMISTUDIO_USE_VIBRATO      = 1
 FAMISTUDIO_USE_ARPEGGIO     = 1
+FAMISTUDIO_DPCM_OFF         = $e000
 
 ; CA65-specifc config.
 .define FAMISTUDIO_CA65_ZP_SEGMENT   ZEROPAGE
@@ -70,7 +74,19 @@ default_palette:
 .incbin "demo.pal"
 .incbin "demo.pal"
 
-NUM_SONGS = 2
+; Silver Surfer - BGM 2
+song_title_silver_surfer:
+    .byte $ff, $ff, $ff, $12, $22, $25, $2f, $1e, $2b, $ff, $12, $2e, $2b, $1f, $1e, $2b, $ff, $4c, $ff, $01, $06, $0c, $ff, $36, $ff, $ff, $ff, $ff
+
+; Journey To Silius - Menu
+song_title_jts:
+    .byte $ff, $ff, $09, $28, $2e, $2b, $27, $1e, $32, $ff, $13, $28, $ff, $12, $22, $25, $22, $2e, $2c, $ff, $4c, $ff, $0c, $1e, $27, $2e, $ff, $ff
+
+; Shatterhand - Final Area
+song_title_shatterhand:
+    .byte $ff, $ff, $12, $21, $1a, $2d, $2d, $1e, $2b, $21, $1a, $27, $1d, $ff, $4c, $ff, $05, $22, $27, $1a, $25, $ff, $00, $2b, $1e, $1a, $ff, $ff
+
+NUM_SONGS = 3
 
 reset:
 
@@ -161,12 +177,9 @@ nmi:
     @col_update:
         ldx #0
         cpx nmt_col_update_len
-        beq @palettes
+        beq @row_update
         lda #%10001100
         sta $2000 ; set vertical nametable increment
-        ldx #0
-        cpx nmt_col_update_len
-        bcs @palettes
         @nmt_col_update_loop:
             lda nmt_col_update, x
             inx
@@ -186,6 +199,33 @@ nmi:
             bcc @nmt_col_update_loop
         lda #0
         sta nmt_col_update_len
+
+    ; nametable update (row)
+    @row_update:
+        lda #%10001000
+        sta $2000 ; set horizontal nametable increment
+        ldx #0
+        cpx nmt_row_update_len
+        bcs @palettes
+        @nmt_row_update_loop:
+            lda nmt_row_update, x
+            inx
+            sta $2006
+            lda nmt_row_update, x
+            inx
+            sta $2006
+            ldy nmt_row_update, x
+            inx
+            @row_loop:
+                lda nmt_row_update, x
+                inx
+                sta $2007
+                dey
+                bne @row_loop
+            cpx nmt_row_update_len
+            bcc @nmt_row_update_loop
+        lda #0
+        sta nmt_row_update_len
 
     ; palettes
     @palettes:
@@ -314,21 +354,43 @@ gamepad_poll_dpcm_safe:
 
 play_song:
 
+    @text_ptr = p0
+
     lda song_index
-    bne @song2
+    cmp #1
+    beq @journey_to_silius
+    cmp #2
+    beq @shatterhand
 
     ; Here since both of our songs came from different FamiStudio projects, 
-    ; they are actually 2 different song data, with a single song in each.
+    ; they are actually 3 different song data, with a single song in each.
     ; For a real game, if would be preferable to export all songs together
     ; so that instruments shared across multiple songs are only exported once.
-    @song1:
-        ldx #.lobyte(castlevania_2_music_data)
-        ldy #.hibyte(castlevania_2_music_data)
+    @silver_surfer:
+        lda #<song_title_silver_surfer
+        sta @text_ptr+0
+        lda #>song_title_silver_surfer
+        sta @text_ptr+1
+        ldx #.lobyte(silver_surfer_c_stephen_ruddy_music_data)
+        ldy #.hibyte(silver_surfer_c_stephen_ruddy_music_data)
         jmp @play_song
 
-    @song2:
-        ldx #.lobyte(castlevania_2_music_data)
-        ldy #.hibyte(castlevania_2_music_data)
+    @journey_to_silius:
+        lda #<song_title_jts
+        sta @text_ptr+0
+        lda #>song_title_jts
+        sta @text_ptr+1
+        ldx #.lobyte(journey_to_silius_music_data)
+        ldy #.hibyte(journey_to_silius_music_data)
+        jmp @play_song
+
+    @shatterhand:
+        lda #<song_title_shatterhand
+        sta @text_ptr+0
+        lda #>song_title_shatterhand
+        sta @text_ptr+1
+        ldx #.lobyte(shatterhand_music_data)
+        ldy #.hibyte(shatterhand_music_data)
         jmp @play_song
     
     @play_song:
@@ -336,6 +398,12 @@ play_song:
     jsr famistudio_init
     lda #0
     jsr famistudio_music_play
+
+    ;update title.
+    ldx #2
+    ldy #15
+    jsr draw_text
+    jsr ppu_update
 
     rts
 
@@ -350,23 +418,23 @@ equalizer_lookup:
     .byte $b8, $c8, $c8, $c8 ; 7
     .byte $c8, $c8, $c8, $c8 ; 8
 equalizer_color_lookup:
-    .byte $01, $02, $00, $02, $02
+    .byte $01, $02, $00, $02, $01
 
 ; a = channel to update
 update_equalizer:
     
-    pos_x = r0
-    color_offset = r1
+    @pos_x = r0
+    @color_offset = r1
 
     tay
     lda equalizer_color_lookup, y
-    sta color_offset
+    sta @color_offset
     tya
 
     ; compute x position.
     asl a
     asl a
-    sta pos_x
+    sta @pos_x
 
     ; compute lookup index.
     lda famistudio_chn_note_counter, y
@@ -381,7 +449,7 @@ update_equalizer:
     sta nmt_col_update+7,x
     lda #$47
     clc
-    adc pos_x
+    adc @pos_x
     sta nmt_col_update+1,x
     adc #1
     sta nmt_col_update+8,x
@@ -390,19 +458,19 @@ update_equalizer:
     sta nmt_col_update+9,x
 
     lda equalizer_lookup, y
-    adc color_offset
+    adc @color_offset
     sta nmt_col_update+3,x
     sta nmt_col_update+10,x
     lda equalizer_lookup+1, y
-    adc color_offset
+    adc @color_offset
     sta nmt_col_update+4,x
     sta nmt_col_update+11,x
     lda equalizer_lookup+2, y
-    adc color_offset
+    adc @color_offset
     sta nmt_col_update+5,x
     sta nmt_col_update+12,x
     lda equalizer_lookup+3, y
-    adc color_offset
+    adc @color_offset
     sta nmt_col_update+6,x
     sta nmt_col_update+13,x
     
@@ -439,27 +507,32 @@ main:
         and #PAD_R
         beq @check_left
 
-        ; next song.
+        ; dont go beyond last song.
         lda song_index
+        cmp #(NUM_SONGS - 1)
+        beq @draw
+
+        ; next song.
         clc
         adc #1
-        and #1
         sta song_index
         jsr play_song
-        jmp @draw_done ; Intentionally skipping equalizer update to keep NMI update small.
+        jmp @draw_done 
 
     @check_left:
         lda gamepad_pressed
         and #PAD_L
         beq @check_start
 
+        ; dont go below zero
         lda song_index
+        beq @draw
+
         sec
         sbc #1
-        and #1
         sta song_index
         jsr play_song
-        jmp @draw_done ; Intentionally skipping equalizer update to keep NMI update small.
+        jmp @draw_done 
 
     @check_start:
         lda gamepad_pressed
@@ -561,6 +634,51 @@ rle_read_byte:
 @done:
     rts
 
+; Draws text with rendering on.
+; x/y = tile position
+; p0  = pointer to text data.
+draw_text:
+
+    @temp_x   = r2
+    @temp     = r3
+    @text_ptr = p0
+    
+    stx @temp_x
+    ldx nmt_row_update_len
+    tya
+    lsr
+    lsr
+    lsr
+    ora #$20 ; high bits of Y + $20
+    sta nmt_row_update,x
+    inx
+    tya
+    asl
+    asl
+    asl
+    asl
+    asl
+    sta @temp
+    lda @temp_x
+    ora @temp
+    sta nmt_row_update,x
+    inx
+    lda #28 ; all our strings have 28 characters.
+    sta nmt_row_update,x
+    inx
+
+    ldy #0
+    @text_loop:
+        lda (@text_ptr),y
+        sta nmt_row_update,x
+        inx
+        iny
+        cpy #28
+        bne @text_loop
+
+    stx nmt_row_update_len
+    rts
+
 setup_background:
 
     ; first nametable, start by clearing to empty
@@ -605,11 +723,20 @@ setup_background:
 
     rts
 
-.segment "SONG"
-.include "bloodytears.s"
+.segment "SONG1"
+song_silver_surfer:
+.include "song_silver_surfer_ca65.s"
+
+.segment "SONG2"
+song_journey_to_silius:
+.include "song_journey_to_silius_ca65.s"
+
+.segment "SONG3"
+song_shatterhand:
+.include "song_shatterhand_ca65.s"
 
 .segment "DPCM"
-.incbin "bloodytears.dmc"
+.incbin "song_journey_to_silius.dmc"
 
 .segment "VECTORS"
 .word nmi
