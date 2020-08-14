@@ -86,7 +86,7 @@ namespace FamiStudio
 
                     regs[0x00] = 0x30;
                     regs[0x04] = 0x30;
-                    regs[0x08] = 0x00;
+                    regs[0x08] = 0x80;
                     regs[0x0c] = 0x30;
 
                     foreach (var reg in writes)
