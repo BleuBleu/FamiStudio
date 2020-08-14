@@ -498,6 +498,11 @@ main:
 
     jsr ppu_update
 
+    ; Load SFX
+    ldx #<sounds
+    ldy #>sounds
+    jsr famistudio_sfx_init
+
 @loop:
 
     jsr gamepad_poll_dpcm_safe
@@ -548,7 +553,7 @@ main:
 
     @check_a:
         lda gamepad_pressed
-        and #PAD_B
+        and #PAD_A
         beq @check_b
 
         lda #0
@@ -726,6 +731,9 @@ setup_background:
 .segment "SONG1"
 song_silver_surfer:
 .include "song_silver_surfer_ca65.s"
+
+sfx_data:
+.include "sfx_ca65.s"
 
 .segment "SONG2"
 song_journey_to_silius:

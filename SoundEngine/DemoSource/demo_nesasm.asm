@@ -494,6 +494,11 @@ main:
 
     jsr ppu_update
 
+    ; Load SFX
+    ldx #LOW(sounds)
+    ldy #HIGH(sounds)
+    jsr famistudio_sfx_init
+
 .loop:
 
     jsr gamepad_poll_dpcm_safe
@@ -544,7 +549,7 @@ main:
 
     .check_a:
         lda <gamepad_pressed
-        and #PAD_B
+        and #PAD_A
         beq .check_b
 
         lda #0
@@ -724,6 +729,8 @@ setup_background:
     .org $a000
 song_silver_surfer:
     .include "song_silver_surfer_nesasm.asm"
+sfx_data:
+    .include "sfx_nesasm.asm"
     .bank 2
     .org $c000
 song_journey_to_silius:

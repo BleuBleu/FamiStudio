@@ -505,6 +505,11 @@ main:
 
     jsr ppu_update
 
+    ; Load SFX
+    ldx #<sounds
+    ldy #>sounds
+    jsr famistudio_sfx_init
+
 @loop:
 
     jsr gamepad_poll_dpcm_safe
@@ -555,7 +560,7 @@ main:
 
     @check_a:
         lda gamepad_pressed
-        and #PAD_B
+        and #PAD_A
         beq @check_b
 
         lda #0
@@ -734,6 +739,8 @@ setup_background:
     .org $a000
 song_silver_surfer:
     .include "song_silver_surfer_asm6.asm"
+sfx_data:
+    .include "sfx_ca65.s"
     .org $c000
 song_journey_to_silius:
     .include "song_journey_to_silius_asm6.asm"
@@ -741,7 +748,7 @@ song_journey_to_silius:
 song_shatterhand:
     .include "song_shatterhand_asm6.asm"
 
-    ;; DPCM
+    ; DPCM
     .org $e000
     .incbin "song_journey_to_silius.dmc"
 
