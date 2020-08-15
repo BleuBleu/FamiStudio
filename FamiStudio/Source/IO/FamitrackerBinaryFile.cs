@@ -41,6 +41,11 @@ namespace FamiStudio
         private Instrument[] instruments = new Instrument[MaxInstruments];
         private DPCMSample[] samples = new DPCMSample[MaxSamples];
 
+        public FamitrackerBinaryFile(ILogInterface log)
+        {
+            this.log = log;
+        }
+
         private bool ReadParams(int idx)
         {
             Debug.Assert(blockVersion >= 4);
@@ -69,7 +74,10 @@ namespace FamiStudio
             project.PalMode = machine == 1;
 
             if (numChannels != project.GetActiveChannelCount())
+            {
+                log?.Log("Error, unexpected audio channel count.");
                 return false;
+            }
 
             return true;
         }
@@ -103,7 +111,10 @@ namespace FamiStudio
                 var chanType = bytes[idx++];
 
                 if (ChanIdLookup[chanType] != channelList[i])
+                {
+                    log?.Log("Error, channel type mismatch.");
                     return false;
+                }
 
                 for (int j = 0; j < numSongs; j++)
                     songEffectColumnCount[project.Songs[j]][i] = bytes[idx++];
@@ -279,7 +290,10 @@ namespace FamiStudio
                 var instrument = project.CreateInstrument(type, $"___TEMP_INSTRUMENT_NAME___{index}");
 
                 if (instrument == null)
+                {
+                    log?.Log($"Error, failed to create instrument {index}.");
                     return false;
+                }
 
                 switch (type)
                 {
@@ -566,11 +580,17 @@ namespace FamiStudio
 
             var id = Encoding.ASCII.GetString(bytes, idx, FileHeaderId.Length); idx += FileHeaderId.Length;
             if (id != FileHeaderId)
+            {
+                log?.Log("Error, invalid FTM file ID.");
                 return null;
+            }
 
             var version = BitConverter.ToUInt32(bytes, idx); idx += sizeof(uint);
             if (version < MinVersion || version > MaxVersion)
+            {
+                log?.Log("Error, unsupported file version. Only FTM version 0.4.4 to 0.4.6 are supported.");
                 return null;
+            }
 
             var blockToc = new Dictionary<string, BlockInfo>();
 

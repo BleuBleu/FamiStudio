@@ -114,6 +114,11 @@ namespace FamiStudio
             "B-"
         };
 
+        public FamitrackerTextFile(ILogInterface log)
+        {
+            this.log = log;
+        }
+
         public Project Load(string filename)
         {
             var envelopes   = new Dictionary<int, Envelope>[Project.ExpansionCount, Envelope.Count];

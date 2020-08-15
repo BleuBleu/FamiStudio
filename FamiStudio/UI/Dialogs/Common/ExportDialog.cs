@@ -50,10 +50,11 @@ namespace FamiStudio
             "ExportFamiTone2"
         };
 
+        ILogInterface log;
         Project project;
         MultiPropertyDialog dialog;
 
-        public unsafe ExportDialog(Rectangle mainWinRect, Project project)
+        public unsafe ExportDialog(Rectangle mainWinRect, Project project, ILogInterface log)
         {
             int width  = 550;
             int height = 450;
@@ -66,7 +67,8 @@ namespace FamiStudio
 
             this.dialog = new MultiPropertyDialog(x, y, width, height, 200);
             this.project = project;
-      
+            this.log = log;
+
             for (int i = 0; i < (int)ExportFormat.Max; i++)
             {
                 var format = (ExportFormat)i;
@@ -224,7 +226,7 @@ namespace FamiStudio
                 var kernel = FamitoneMusicFile.FamiToneKernel.FamiStudio;
 #endif
 
-                new NsfFile().Save(project, kernel, filename,
+                new NsfFile(log).Save(project, kernel, filename,
                     GetSongIds(props.GetPropertyValue<bool[]>(4)),
                     props.GetPropertyValue<string>(0),
                     props.GetPropertyValue<string>(1),
@@ -287,7 +289,7 @@ namespace FamiStudio
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
-                new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
+                new FamitrackerTextFile(log).Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
             }
         }
 

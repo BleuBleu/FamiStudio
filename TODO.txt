@@ -22,6 +22,7 @@
 	- Should I use a "..." icon for arps?
 	- Drag to copy arpeggio in project explorer.
 	- Cant select values in piano roll when editing arpeggios???
+	- Documentation.
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.

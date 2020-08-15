@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-    class CommandLineInterface
+    class CommandLineInterface : ILogInterface
     {
         private string[] args;
         private Project project;
@@ -198,14 +198,14 @@ namespace FamiStudio
             }
             else if (filename.ToLower().EndsWith("ftm"))
             {
-                project = new FamitrackerBinaryFile().Load(filename);
+                project = new FamitrackerBinaryFile(this).Load(filename);
             }
             else if (filename.ToLower().EndsWith("txt"))
             {
                 project = new FamistudioTextFile().Load(filename);
 
                 if (project == null)
-                    project = new FamitrackerTextFile().Load(filename);
+                    project = new FamitrackerTextFile(this).Load(filename);
             }
             else if (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe"))
             {
@@ -215,7 +215,7 @@ namespace FamiStudio
                 var startFrame  = ParseOption("nsf-import-start-frame", 0);
                 var reverseDpcm = HasOption("nsf-import-reverse-dpcm");
 
-                project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, true, reverseDpcm);
+                project = new NsfFile(this).Load(filename, songIndex, duration, patternLen, startFrame, true, reverseDpcm);
             }
 
             if (project == null)
@@ -323,7 +323,7 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                new NsfFile().Save(
+                new NsfFile(this).Save(
                     project,
                     FamitoneMusicFile.FamiToneKernel.FamiStudio,
                     filename,
@@ -404,7 +404,7 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                new FamitrackerTextFile().Save(project, filename, exportSongIds);
+                new FamitrackerTextFile(this).Save(project, filename, exportSongIds);
             }
         }
 
@@ -539,6 +539,11 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        public void Log(string msg)
+        {
+            Console.WriteLine("    " + msg);
         }
     }
 }

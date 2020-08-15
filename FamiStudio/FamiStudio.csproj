@@ -108,6 +108,7 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
+    <Compile Include="Source\Utils\LogInterface.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
@@ -124,6 +125,15 @@
     <Compile Include="UI\Dialogs\Common\NsfImportDialog.cs" />
     <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
     <Compile Include="UI\Dialogs\Common\TransformDialog.cs" />
+    <Compile Include="UI\Dialogs\WinForms\AutoScrollTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Dialogs\WinForms\LogDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Dialogs\WinForms\LogDialog.designer.cs">
+      <DependentUpon>LogDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\Dialogs\WinForms\TutorialDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -180,6 +190,9 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Dialogs\WinForms\LogDialog.resx">
+      <DependentUpon>LogDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Dialogs\WinForms\MultiPropertyDialog.resx">
       <DependentUpon>MultiPropertyDialog.cs</DependentUpon>

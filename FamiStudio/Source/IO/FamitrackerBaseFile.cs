@@ -122,6 +122,7 @@ namespace FamiStudio
             public byte param;
         }
 
+        protected ILogInterface log;
         protected Project project;
         protected Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
         protected Dictionary<Pattern, byte> patternLengths = new Dictionary<Pattern, byte>();
@@ -140,6 +141,7 @@ namespace FamiStudio
                 case SndChip_S5B  : return Project.ExpansionS5B;
             }
 
+            log?.Log("Error, unsupported audio expansion.");
             return -1; // We dont support exotic combinations.
         }
 

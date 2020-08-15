@@ -368,9 +368,10 @@ namespace FamiStudio
             }
         }
 
-        public Project OpenProjectFile(string filename, bool allowNsf = true)
+        public Project OpenProjectFile(string filename, bool allowNsf = true, bool quiet = false)
         {
-            Project project = null;
+            var log = new LogDialog();
+            var project = (Project)null;
 
             if (filename.ToLower().EndsWith("fms"))
             {
@@ -378,14 +379,14 @@ namespace FamiStudio
             }
             else if (filename.ToLower().EndsWith("ftm"))
             {
-                project = new FamitrackerBinaryFile().Load(filename);
+                project = new FamitrackerBinaryFile(log).Load(filename);
             }
             else if (filename.ToLower().EndsWith("txt"))
             {
                 project = new FamistudioTextFile().Load(filename);
 
                 if (project == null)
-                    project = new FamitrackerTextFile().Load(filename);
+                    project = new FamitrackerTextFile(log).Load(filename);
             }
             else if (allowNsf && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
             {
@@ -393,8 +394,13 @@ namespace FamiStudio
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits);
+                    project = new NsfFile(log).Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits);
                 }
+            }
+
+            if (!quiet && !log.LogEmpty)
+            {
+                log.ShowDialog();
             }
 
             return project;
@@ -437,8 +443,13 @@ namespace FamiStudio
 
         public void Export()
         {
-            var dlg = new ExportDialog(mainForm.Bounds, project);
+            var log = new LogDialog();
+            var dlg = new ExportDialog(mainForm.Bounds, project, log);
+
             dlg.ShowDialog();
+
+            if (!log.LogEmpty)
+                log.ShowDialog();
         }
 
         public void OpenConfigDialog()
