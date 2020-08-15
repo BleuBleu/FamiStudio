@@ -28,8 +28,8 @@ namespace FamiStudio
             "ROM / FDS",
             "FamiStudio Text",
             "FamiTracker Text",
-            "FamiTone2 Music",
-            "FamiTone2 SFX",
+            "FamiStudio Music ASM",
+            "FamiStudio SFX ASM",
             ""
         };
 
@@ -49,7 +49,7 @@ namespace FamiStudio
 
         public unsafe ExportDialog(Rectangle mainWinRect, Project project)
         {
-            int width  = 500;
+            int width  = 550;
             int height = 450;
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
             int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
@@ -58,7 +58,7 @@ namespace FamiStudio
             height += 30;
 #endif
 
-            this.dialog = new MultiPropertyDialog(x, y, width, height);
+            this.dialog = new MultiPropertyDialog(x, y, width, height, 200);
             this.project = project;
       
             for (int i = 0; i < (int)ExportFormat.Max; i++)

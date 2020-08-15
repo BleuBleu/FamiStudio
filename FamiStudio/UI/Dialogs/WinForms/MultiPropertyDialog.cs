@@ -22,15 +22,9 @@ namespace FamiStudio
         Font font;
         Font fontBold;
 
-        public MultiPropertyDialog(int x, int y, int width, int height)
+        public MultiPropertyDialog(int x, int y, int width, int height, int tabsWidth = 150)
         {
             InitializeComponent();
-
-            int oldTabWidth = panelTabs.Width;
-
-            panelTabs.Width  = (int)(panelTabs.Width  * Direct2DTheme.DialogScaling);
-            panelProps.Width = panelProps.Width - (panelTabs.Width - oldTabWidth);
-            panelProps.Left  = panelTabs.Left + panelTabs.Width;
 
             string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
             this.buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
@@ -38,6 +32,8 @@ namespace FamiStudio
             this.Width    = (int)(width  * Direct2DTheme.DialogScaling);
             this.font     = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             this.fontBold = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
+
+            tableLayout.ColumnStyles[0].Width = tabsWidth * Direct2DTheme.DialogScaling;
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
@@ -78,8 +74,7 @@ namespace FamiStudio
                 tabs[i].properties.Visible = i == selectedIndex;
             }
 
-            panelTabs.Height  = maxHeight;
-            panelProps.Height = maxHeight;
+            tableLayout.Height = maxHeight;
 
             buttonYes.Width  = (int)(buttonYes.Width  * Direct2DTheme.DialogScaling);
             buttonYes.Height = (int)(buttonYes.Height * Direct2DTheme.DialogScaling);

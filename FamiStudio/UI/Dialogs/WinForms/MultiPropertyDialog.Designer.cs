@@ -28,29 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.panelProps = new System.Windows.Forms.Panel();
-            this.panelTabs = new System.Windows.Forms.Panel();
             this.buttonYes = new NoFocusButton();
             this.buttonNo = new NoFocusButton();
+            this.tableLayout = new System.Windows.Forms.TableLayoutPanel();
+            this.panelProps = new System.Windows.Forms.Panel();
+            this.panelTabs = new System.Windows.Forms.Panel();
+            this.tableLayout.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // panelProps
-            // 
-            this.panelProps.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelProps.Location = new System.Drawing.Point(165, 5);
-            this.panelProps.Margin = new System.Windows.Forms.Padding(0);
-            this.panelProps.Name = "panelProps";
-            this.panelProps.Size = new System.Drawing.Size(278, 326);
-            this.panelProps.TabIndex = 20;
-            // 
-            // panelTabs
-            // 
-            this.panelTabs.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
-            this.panelTabs.Location = new System.Drawing.Point(5, 5);
-            this.panelTabs.Name = "panelTabs";
-            this.panelTabs.Size = new System.Drawing.Size(160, 326);
-            this.panelTabs.TabIndex = 21;
             // 
             // buttonYes
             // 
@@ -76,14 +60,49 @@
             this.buttonNo.UseVisualStyleBackColor = true;
             this.buttonNo.Click += new System.EventHandler(this.buttonNo_Click);
             // 
+            // tableLayout
+            // 
+            this.tableLayout.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayout.ColumnCount = 2;
+            this.tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 150F));
+            this.tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayout.Controls.Add(this.panelProps, 1, 0);
+            this.tableLayout.Controls.Add(this.panelTabs, 0, 0);
+            this.tableLayout.Location = new System.Drawing.Point(5, 5);
+            this.tableLayout.Margin = new System.Windows.Forms.Padding(0);
+            this.tableLayout.Name = "tableLayout";
+            this.tableLayout.RowCount = 1;
+            this.tableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayout.Size = new System.Drawing.Size(438, 327);
+            this.tableLayout.TabIndex = 22;
+            // 
+            // panelProps
+            // 
+            this.panelProps.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelProps.Location = new System.Drawing.Point(150, 0);
+            this.panelProps.Margin = new System.Windows.Forms.Padding(0);
+            this.panelProps.Name = "panelProps";
+            this.panelProps.Size = new System.Drawing.Size(307, 327);
+            this.panelProps.TabIndex = 20;
+            // 
+            // panelTabs
+            // 
+            this.panelTabs.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
+            this.panelTabs.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelTabs.Location = new System.Drawing.Point(0, 0);
+            this.panelTabs.Margin = new System.Windows.Forms.Padding(0);
+            this.panelTabs.Name = "panelTabs";
+            this.panelTabs.Size = new System.Drawing.Size(150, 327);
+            this.panelTabs.TabIndex = 21;
+            // 
             // MultiPropertyDialog
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
             this.ClientSize = new System.Drawing.Size(448, 373);
             this.ControlBox = false;
-            this.Controls.Add(this.panelTabs);
-            this.Controls.Add(this.panelProps);
+            this.Controls.Add(this.tableLayout);
             this.Controls.Add(this.buttonYes);
             this.Controls.Add(this.buttonNo);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
@@ -95,6 +114,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MultiPropertyDialog_KeyDown);
+            this.tableLayout.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -102,6 +122,7 @@
         #endregion
         private NoFocusButton buttonYes;
         private NoFocusButton buttonNo;
+        private System.Windows.Forms.TableLayoutPanel tableLayout;
         private System.Windows.Forms.Panel panelProps;
         private System.Windows.Forms.Panel panelTabs;
     }
