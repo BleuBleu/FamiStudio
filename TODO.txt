@@ -15,7 +15,7 @@
 		- Pause/Unpause
 		- Select plays a DPCM (only in bloody tears). Undocumented.
 	- Documentation.
-	- Export dialog + command line.
+	x Export dialog + command line.
 		- Multi property tab width on Linux/Mac
 	- Double check TAB/SPACE at the end.
 - Arpeggio : 

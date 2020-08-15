@@ -123,7 +123,7 @@ namespace PrintCodeSize
 
             for (int i = 0; i < expansionDefines.GetLength(0); i++)
             {
-                var ca65Args = @"feature_matrix.s -g -o tmp.o -D FAMISTUDIO_CFG_EXTERNAL=1 -D FT_NTSC_SUPPORT=1 ";
+                var ca65Args = @"feature_matrix.s -g -o tmp.o -D FAMISTUDIO_CFG_EXTERNAL=1 -D FT_NTSC_SUPPORT=1 -D FAMISTUDIO_CFG_DPCM_SUPPORT=1 ";
                 var ld65Args = @"-C feature_matrix.cfg -o tmp.bin tmp.o --mapfile tmp.map";
 
                 foreach (var def in expansionDefines[i])

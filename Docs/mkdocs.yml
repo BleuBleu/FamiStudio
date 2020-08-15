@@ -12,6 +12,7 @@ nav:
   - "Cleaning-up your Project": cleanup.md
   - "Configuring FamiStudio": config.md
   - "Command-line Processing": cmdline.md
+  - "NES Sound Engine": soundengine.md
   - "Troubleshooting": troubleshooting.md
   - "Change Log": changelog.md
 extra_css:

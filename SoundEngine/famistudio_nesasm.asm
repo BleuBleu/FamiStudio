@@ -132,7 +132,7 @@ FAMISTUDIO_NESASM_CODE_ORG     = $8000
 ; form FAMISTUDIO_CFG_XXX.
 ;======================================================================================================================
 
-; One of these MUST be defined (PAL or NTSC playback).
+; One of these MUST be defined (PAL or NTSC playback). Note that only NTSC support is supported when using any of the audio expansions.
 ; FAMISTUDIO_CFG_PAL_SUPPORT   = 1
 FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 
