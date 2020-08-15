@@ -455,13 +455,17 @@ namespace FamiStudio
                         var songFilename = Path.Combine(filename, Utils.MakeNiceAsmName(formattedSongName) + extension);
                         var dpcmFilename = Path.Combine(filename, Utils.MakeNiceAsmName(formattedDpcmName) + ".dmc");
 
-                        FamitoneMusicFile f = new FamitoneMusicFile(kernel);
+                        Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
+
+                        FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
                         f.Save(project, new int[] { songId }, format, true, songFilename, dpcmFilename, MachineType.Dual);
                     }
                 }
                 else
                 {
-                    FamitoneMusicFile f = new FamitoneMusicFile(kernel);
+                    Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
+
+                    FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
                     f.Save(project, exportSongIds, format, false, filename, Path.ChangeExtension(filename, ".dmc"), MachineType.Dual);
                 }
             }
@@ -544,7 +548,7 @@ namespace FamiStudio
             return false;
         }
 
-        public void Log(string msg)
+        public void LogMessage(string msg)
         {
             Console.WriteLine("    " + msg);
         }

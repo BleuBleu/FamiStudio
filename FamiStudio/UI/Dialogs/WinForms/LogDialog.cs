@@ -22,7 +22,7 @@ namespace FamiStudio
             Width  = (int)(Direct2DTheme.DialogScaling * Width);
             Height = (int)(Direct2DTheme.DialogScaling * Height);
 
-            textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 8.0f, FontStyle.Regular);
+            textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
 
             buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
             buttonYes.Width  = (int)(buttonYes.Width * Direct2DTheme.DialogScaling);
@@ -72,7 +72,7 @@ namespace FamiStudio
             base.OnShown(e);
         }
 
-        public void Log(string msg)
+        public void LogMessage(string msg)
         {
             messages.Add(msg);   
         }

@@ -148,10 +148,14 @@ namespace FamiStudio
 
                 nsfBytes.AddRange(nsfBinBuffer);
 
+                Log.LogMessage(LogSeverity.Info, $"Sound engine code size: {nsfBinBuffer.Length} bytes.");
+
                 var songTableIdx  = nsfBytes.Count;
                 var songTableSize = NsfGlobalVarsSize + project.Songs.Count * NsfSongTableEntrySize;
 
                 nsfBytes.AddRange(new byte[songTableSize]);
+
+                Log.LogMessage(LogSeverity.Info, $"Song table size: {songTableSize} bytes.");
 
                 var songDataIdx  = nsfBytes.Count;
                 var dpcmBaseAddr = NsfDpcmOffset;
@@ -162,7 +166,8 @@ namespace FamiStudio
                     var totalSampleSize = project.GetTotalSampleSize();
 
                     // Samples need to be 64-bytes aligned.
-                    nsfBytes.AddRange(new byte[64 - (nsfBytes.Count & 0x3f)]);
+                    var initPaddingSize = 64 - (nsfBytes.Count & 0x3f);
+                    nsfBytes.AddRange(new byte[initPaddingSize]);
 
                     // We start putting the samples right after the code, so the first page is not a
                     // full one. If we have near 16KB of samples, we might go over the 4 page limit.
@@ -188,6 +193,9 @@ namespace FamiStudio
 
                     nsfBytes[songTableIdx + 0] = (byte)dpcmPageStart; // DPCM_PAGE_START
                     nsfBytes[songTableIdx + 1] = (byte)dpcmPageCount; // DPCM_PAGE_CNT
+
+                    Log.LogMessage(LogSeverity.Info, $"DPCM samples size: {totalSampleSize} bytes.");
+                    Log.LogMessage(LogSeverity.Info, $"DPCM padding size: {initPaddingSize + dpcmPadding} bytes.");
                 }
 
                 // Export each song individually, build TOC at the same time.
@@ -197,7 +205,7 @@ namespace FamiStudio
                     var firstPage = nsfBytes.Count < NsfPageSize;
                     int page = nsfBytes.Count / NsfPageSize + (firstPage ? 1 : 0);
                     int addr = NsfMemoryStart + (firstPage ? 0 : NsfPageSize ) + (nsfBytes.Count & (NsfPageSize - 1));
-                    var songBytes = new FamitoneMusicFile(kernel).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, mode);
+                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, mode);
 
                     // If we introduced padding for the samples, we can try to squeeze a song in there.
                     if (songBytes.Length < dpcmPadding)
@@ -211,11 +219,15 @@ namespace FamiStudio
                     nsfBytes[idx + 2] = (byte)((addr >> 8) & 0xff);
                     nsfBytes[idx + 3] = (byte)0;
 
+                    Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
+
                     nsfBytes.AddRange(songBytes);
                 }
 
                 // Finally insert the header, not very efficient, but easy.
                 nsfBytes.InsertRange(0, headerBytes);
+
+                Log.LogMessage(LogSeverity.Info, $"NSF export successful, final file size {nsfBytes.Count} bytes.");
 
                 File.WriteAllBytes(filename, nsfBytes.ToArray());
             }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace FamiStudio
 
     public interface ILogOutput
     {
-        void Log(string msg);
+        void LogMessage(string msg);
         LogSeverity MinSeverity { get; }
     }
 
@@ -47,7 +48,8 @@ namespace FamiStudio
         {
             if (LogOutput != null && (int)severity >= (int)LogOutput.MinSeverity)
             {
-                LogOutput.Log(SeverityStrings[(int)severity] + msg);
+                LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
+                Debug.WriteLine(SeverityStrings[(int)severity] + msg);
             }
         }
     };

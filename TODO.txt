@@ -5,6 +5,9 @@
 - LICENSE
 - First note, etc.
 - Fix FTM import.
+- Tempo FamiTracker header ,t1,t2.
+- Sample packing.
+
 2.2.0
 =====
 - Play right note when dragging.
@@ -30,6 +33,7 @@
 	- Make it look better.
 - Export log.
 	- Write file sizes, etc. Especially for NSF, ROM, FT2, FamiStudio.
+- Save export folder...
 - Option to not play notes when dragging.
 - Drag seek bar (github issue request!).
 - Instrument picker?
