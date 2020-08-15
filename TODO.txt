@@ -12,6 +12,7 @@
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
 - FamiStudio sound engine
 	- Multi property tab width on Linux/Mac
+	- Make sure that single value envelopes (looping or not) are optimized.
 - Arpeggio : 
 	- Validation code.
 	- Paste special
@@ -78,7 +79,12 @@ Linux notes
 Trailer/scroll
 ==============
 - Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece.
-- 
+
+MkDocs
+======
+- Install Python
+- pip install mkdocs
+- pip install mkdocs-bootswatch
 
 Backlog:
 =========
