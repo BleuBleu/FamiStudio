@@ -52,6 +52,72 @@ namespace FamiStudio
         protected const byte Effect_SunsoftEnvType = 32;
         protected const byte Effect_Count = 33;
 
+        static protected readonly Dictionary<char, byte> TextToEffectLookup = new Dictionary<char, byte>
+        {
+            { '0', Effect_Arpeggio     },
+            { '1', Effect_PortaUp      },
+            { '2', Effect_PortaDown    },
+            { '3', Effect_Portamento   },
+            { '4', Effect_Vibrato      },
+            { '7', Effect_Tremolo      },
+            { 'A', Effect_VolumeSlide  },
+            { 'B', Effect_Jump         },
+            { 'C', Effect_Halt         },
+            { 'D', Effect_Skip         },
+            { 'E', Effect_Volume       },
+            { 'F', Effect_Speed        },
+            { 'G', Effect_Delay        },
+            { 'H', Effect_Sweepup      },
+            { 'I', Effect_Sweepdown    },
+            { 'P', Effect_Pitch        },
+            { 'Q', Effect_SlideUp      },
+            { 'R', Effect_SlideDown    },
+            { 'S', Effect_NoteCut      },
+            { 'V', Effect_DutyCycle    },
+            { 'W', Effect_DpcmPitch    },
+            { 'X', Effect_Retrigger    },
+            { 'Y', Effect_SampleOffset },
+            { 'Z', Effect_Dac          },
+        };
+
+        static protected readonly Dictionary<char, int> FdsTextToEffectLookup = new Dictionary<char, int>
+        {
+            { 'H', Effect_FdsModDepth   },
+            { 'I', Effect_FdsModSpeedHi },
+            { 'J', Effect_FdsModSpeedLo },
+        };
+
+        static protected readonly Dictionary<byte, char> EffectToTextLookup = new Dictionary<byte, char>
+        {
+            { Effect_Arpeggio      , '0' },
+            { Effect_PortaUp       , '1' },
+            { Effect_PortaDown     , '2' },
+            { Effect_Portamento    , '3' },
+            { Effect_Vibrato       , '4' },
+            { Effect_Tremolo       , '7' },
+            { Effect_VolumeSlide   , 'A' },
+            { Effect_Jump          , 'B' },
+            { Effect_Halt          , 'C' },
+            { Effect_Skip          , 'D' },
+            { Effect_Volume        , 'E' },
+            { Effect_Speed         , 'F' },
+            { Effect_Delay         , 'G' },
+            { Effect_Sweepup       , 'H' },
+            { Effect_Sweepdown     , 'I' },
+            { Effect_Pitch         , 'P' },
+            { Effect_SlideUp       , 'Q' },
+            { Effect_SlideDown     , 'R' },
+            { Effect_NoteCut       , 'S' },
+            { Effect_DutyCycle     , 'V' },
+            { Effect_DpcmPitch     , 'W' },
+            { Effect_Retrigger     , 'X' },
+            { Effect_SampleOffset  , 'Y' },
+            { Effect_Dac           , 'Z' },
+            { Effect_FdsModDepth   , 'H' },
+            { Effect_FdsModSpeedHi , 'I' },
+            { Effect_FdsModSpeedLo , 'J' },
+        };
+
         protected static readonly int[] ChanIdLookup = new[]
         {
             Channel.Square1,        // CHANID_SQUARE1
@@ -122,7 +188,6 @@ namespace FamiStudio
             public byte param;
         }
 
-        protected ILogInterface log;
         protected Project project;
         protected Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
         protected Dictionary<Pattern, byte> patternLengths = new Dictionary<Pattern, byte>();
@@ -141,7 +206,7 @@ namespace FamiStudio
                 case SndChip_S5B  : return Project.ExpansionS5B;
             }
 
-            log?.Log("Error, unsupported audio expansion.");
+            Log.LogMessage(LogSeverity.Error, "Unsupported audio expansion.");
             return -1; // We dont support exotic combinations.
         }
 
@@ -213,23 +278,27 @@ namespace FamiStudio
 
             switch (fx.fx)
             {
+                case Effect_None:
+                    return;
                 case Effect_Arpeggio:
                     note = pattern.GetLastValidNoteAt(n); // MATTT: This is gonna be more complicated than this!!!
                     note.Arpeggio = GetOrCreateArpeggio(fx.param);
-                    break;
+                    return;
                 case Effect_Jump:
                     pattern.Song.SetLoopPoint(fx.param);
-                    break;
+                    return;
                 case Effect_Skip:
                     patternLengths[pattern] = (byte)(n + 1);
-                    break;
+                    return;
                 case Effect_Speed:
                     if (fx.param <= 0x1f) // We only support speed change for now.
                         pattern.GetOrCreateNoteAt(n).Speed = Math.Max((byte)1, (byte)fx.param);
-                    break;
+                    else
+                        Log.LogMessage(LogSeverity.Warning, $"Only speed changes are supported, not tempo. Will be ignored. {GetPatternString(pattern, n)}");
+                    return;
                 case Effect_Pitch:
                     pattern.GetOrCreateNoteAt(n).FinePitch = (sbyte)(0x80 - fx.param);
-                    break;
+                    return;
                 case Effect_Vibrato:
                     note = pattern.GetOrCreateNoteAt(n);
                     note.VibratoDepth = (byte)(fx.param & 0x0f);
@@ -240,25 +309,42 @@ namespace FamiStudio
                     {
                         note.RawVibrato = 0;
                     }
-                    break;
+                    return;
                 case Effect_FdsModSpeedHi:
                     // TODO: If both hi/lo effects arent in a pair, this is likely not going to work.
                     note = pattern.GetOrCreateNoteAt(n);
                     if (!note.HasFdsModSpeed) note.FdsModSpeed = 0;
                     note.FdsModSpeed = (ushort)(((note.FdsModSpeed) & 0x00ff) | (fx.param << 8));
-                    break;
+                    return;
                 case Effect_FdsModSpeedLo:
                     // TODO: If both hi/lo effects arent in a pair, this is likely not going to work.
                     note = pattern.GetOrCreateNoteAt(n);
                     if (!note.HasFdsModSpeed) note.FdsModSpeed = 0;
                     note.FdsModSpeed = (ushort)(((note.FdsModSpeed) & 0xff00) | (fx.param << 0));
-                    break;
+                    return;
                 case Effect_FdsModDepth:
                     pattern.GetOrCreateNoteAt(n).FdsModDepth = fx.param;
-                    break;
+                    return;
+                case Effect_PortaUp:
+                case Effect_PortaDown:
+                case Effect_Portamento:
+                case Effect_SlideUp:
+                case Effect_SlideDown:
+                    // These will be applied later.
+                    return;
             }
+
+            if (EffectToTextLookup.ContainsKey(fx.fx))
+                Log.LogMessage(LogSeverity.Warning, $"Effect '{EffectToTextLookup[fx.fx]}' is not supported and will be ignored. {GetPatternString(pattern, n)}");
+            else
+                Log.LogMessage(LogSeverity.Warning, $"Unknown effect code ({fx.fx}) and will be ignored. {GetPatternString(pattern, n)}");
         }
-        
+
+        private string GetPatternString(Pattern pattern, int n)
+        {
+            return $"(Channel={Channel.ChannelNames[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n})";
+        }
+
         private int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
             var pattern = channel.PatternInstances[patternIdx];

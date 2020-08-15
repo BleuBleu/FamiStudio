@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-    class CommandLineInterface : ILogInterface
+    class CommandLineInterface : ILogOutput
     {
         private string[] args;
         private Project project;
@@ -127,7 +127,7 @@ namespace FamiStudio
             Console.WriteLine($"  FamiStudio <input> <command> <output> [-options]");
             Console.WriteLine($"");
             Console.WriteLine($"Examples:");
-            Console.WriteLine($"  FamiStudio music.fms wav-export music.wave -export-songs:2 -wav-export-rate:48000");
+            Console.WriteLine($"  FamiStudio music.fms wav-export music.wav -export-songs:2 -wav-export-rate:48000");
             Console.WriteLine($"  FamiStudio music.fms famitracker-txt-export music.txt -export-songs:0,1,2");
             Console.WriteLine($"  FamiStudio music.fms famitone2-asm-export music.s -famitone2-format:ca65");
             Console.WriteLine($"");
@@ -198,14 +198,14 @@ namespace FamiStudio
             }
             else if (filename.ToLower().EndsWith("ftm"))
             {
-                project = new FamitrackerBinaryFile(this).Load(filename);
+                project = new FamitrackerBinaryFile().Load(filename);
             }
             else if (filename.ToLower().EndsWith("txt"))
             {
-                project = new FamistudioTextFile().Load(filename);
-
-                if (project == null)
-                    project = new FamitrackerTextFile(this).Load(filename);
+                if (FamistudioTextFile.LooksLikeFamiStudioText(filename))
+                    project = new FamistudioTextFile().Load(filename);
+                else
+                    project = new FamitrackerTextFile().Load(filename);
             }
             else if (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe"))
             {
@@ -215,7 +215,7 @@ namespace FamiStudio
                 var startFrame  = ParseOption("nsf-import-start-frame", 0);
                 var reverseDpcm = HasOption("nsf-import-reverse-dpcm");
 
-                project = new NsfFile(this).Load(filename, songIndex, duration, patternLen, startFrame, true, reverseDpcm);
+                project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, true, reverseDpcm);
             }
 
             if (project == null)
@@ -323,7 +323,7 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                new NsfFile(this).Save(
+                new NsfFile().Save(
                     project,
                     FamitoneMusicFile.FamiToneKernel.FamiStudio,
                     filename,
@@ -404,7 +404,7 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                new FamitrackerTextFile(this).Save(project, filename, exportSongIds);
+                new FamitrackerTextFile().Save(project, filename, exportSongIds);
             }
         }
 
@@ -512,25 +512,28 @@ namespace FamiStudio
             {
                 InitializeConsole();
 
-                if (OpenProject())
+                using (var scopedLog = new ScopedLogOutput(this))
                 {
-                    var outputFilename = args[2];
-
-                    switch (args[1].ToLower().Trim())
+                    if (OpenProject())
                     {
-                        case "wav-export": WavExport(outputFilename); break;
-                        case "nsf-export": NsfExport(outputFilename); break;
-                        case "rom-export": RomExport(outputFilename); break;
-                        case "fds-export": FdsExport(outputFilename); break;
-                        case "famitracker-txt-export": FamiTrackerTextExport(outputFilename); break;
-                        case "famistudio-txt-export":  FamiStudioTextExport(outputFilename);  break;
-                        case "famitone2-asm-export": FamiTone2MusicExport(outputFilename, false); break;
-                        case "famitone2-asm-sfx-export": FamiTone2SfxExport(outputFilename, false); break;
-                        case "famistudio-asm-export": FamiTone2MusicExport(outputFilename, true); break;
-                        case "famistudio-asm-sfx-export": FamiTone2SfxExport(outputFilename, true); break;
-                        default:
-                            Console.WriteLine($"Unknown command {args[1]}. Use -help or -? for help.");
-                            break;
+                        var outputFilename = args[2];
+
+                        switch (args[1].ToLower().Trim())
+                        {
+                            case "wav-export": WavExport(outputFilename); break;
+                            case "nsf-export": NsfExport(outputFilename); break;
+                            case "rom-export": RomExport(outputFilename); break;
+                            case "fds-export": FdsExport(outputFilename); break;
+                            case "famitracker-txt-export": FamiTrackerTextExport(outputFilename); break;
+                            case "famistudio-txt-export": FamiStudioTextExport(outputFilename); break;
+                            case "famitone2-asm-export": FamiTone2MusicExport(outputFilename, false); break;
+                            case "famitone2-asm-sfx-export": FamiTone2SfxExport(outputFilename, false); break;
+                            case "famistudio-asm-export": FamiTone2MusicExport(outputFilename, true); break;
+                            case "famistudio-asm-sfx-export": FamiTone2SfxExport(outputFilename, true); break;
+                            default:
+                                Console.WriteLine($"Unknown command {args[1]}. Use -help or -? for help.");
+                                break;
+                        }
                     }
                 }
 
@@ -545,5 +548,7 @@ namespace FamiStudio
         {
             Console.WriteLine("    " + msg);
         }
+
+        public LogSeverity MinSeverity => LogSeverity.Info;
     }
 }

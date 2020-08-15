@@ -139,11 +139,17 @@ namespace FamiStudio
 
                     // TODO: Error message instead.
                     if (songBytes.Length > FdsMaxSongSize)
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Song '{song.Name}' is too large ({songBytes.Length} bytes, maximum is {FdsMaxSongSize}). File will be corrupted.");
                         Array.Resize(ref songBytes, FdsMaxSongSize);
+                    }
 
                     // TODO: Error message instead.
                     if (fdsFileBytes.Count + FdsBlockHeaderSize + songBytes.Length > FdsMaxFileSize)
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Reached maximum file size ({FdsMaxFileSize}). Songs will be missing.");
                         break;
+                    }
 
                     AddFile(fdsFileBytes, fileIndex, FdsSongDataAddr, $"SONG{i}...", songBytes);
 
@@ -178,8 +184,11 @@ namespace FamiStudio
                 // Build final ROM and save.
                 File.WriteAllBytes(filename, byteArray);
             }
-            catch
+            catch (Exception e)
             {
+                Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
+                Log.LogMessage(LogSeverity.Error, e.Message);
+                Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return false;
             }
 

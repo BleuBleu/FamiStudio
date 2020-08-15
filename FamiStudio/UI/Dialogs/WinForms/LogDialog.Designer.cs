@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.buttonYes = new NoFocusButton();
-            this.textBox = new AutoScrollTextBox();
+            this.textBox = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // buttonYes
@@ -58,6 +58,7 @@
             this.textBox.ReadOnly = true;
             this.textBox.Size = new System.Drawing.Size(788, 351);
             this.textBox.TabIndex = 19;
+            this.textBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             // 
             // LogDialog
             // 
@@ -83,6 +84,6 @@
 
         #endregion
         private NoFocusButton buttonYes;
-        private AutoScrollTextBox textBox;
+        private System.Windows.Forms.TextBox textBox;
     }
 }

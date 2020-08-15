@@ -108,7 +108,7 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
-    <Compile Include="Source\Utils\LogInterface.cs" />
+    <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />

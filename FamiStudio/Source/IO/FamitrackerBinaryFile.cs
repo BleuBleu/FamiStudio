@@ -41,11 +41,6 @@ namespace FamiStudio
         private Instrument[] instruments = new Instrument[MaxInstruments];
         private DPCMSample[] samples = new DPCMSample[MaxSamples];
 
-        public FamitrackerBinaryFile(ILogInterface log)
-        {
-            this.log = log;
-        }
-
         private bool ReadParams(int idx)
         {
             Debug.Assert(blockVersion >= 4);
@@ -71,11 +66,12 @@ namespace FamiStudio
                     numN163Channels = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             }
 
+            project.SetExpansionAudio(expansion, numN163Channels);
             project.PalMode = machine == 1;
 
             if (numChannels != project.GetActiveChannelCount())
             {
-                log?.Log("Error, unexpected audio channel count.");
+                Log.LogMessage(LogSeverity.Error, "Unexpected audio channel count.");
                 return false;
             }
 
@@ -112,7 +108,7 @@ namespace FamiStudio
 
                 if (ChanIdLookup[chanType] != channelList[i])
                 {
-                    log?.Log("Error, channel type mismatch.");
+                    Log.LogMessage(LogSeverity.Error, "Channel type mismatch.");
                     return false;
                 }
 
@@ -291,7 +287,7 @@ namespace FamiStudio
 
                 if (instrument == null)
                 {
-                    log?.Log($"Error, failed to create instrument {index}.");
+                    Log.LogMessage(LogSeverity.Error, $"Failed to create instrument {index}.");
                     return false;
                 }
 
@@ -581,14 +577,14 @@ namespace FamiStudio
             var id = Encoding.ASCII.GetString(bytes, idx, FileHeaderId.Length); idx += FileHeaderId.Length;
             if (id != FileHeaderId)
             {
-                log?.Log("Error, invalid FTM file ID.");
+                Log.LogMessage(LogSeverity.Error, "Invalid FTM file ID.");
                 return null;
             }
 
             var version = BitConverter.ToUInt32(bytes, idx); idx += sizeof(uint);
             if (version < MinVersion || version > MaxVersion)
             {
-                log?.Log("Error, unsupported file version. Only FTM version 0.4.4 to 0.4.6 are supported.");
+                Log.LogMessage(LogSeverity.Error, "Unsupported file version. Only FTM version 0.4.4 to 0.4.6 are supported.");
                 return null;
             }
 

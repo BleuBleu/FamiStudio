@@ -8,11 +8,12 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-    public partial class LogDialog : Form, ILogInterface
+    public partial class LogDialog : Form, ILogOutput
     {
-        List<string> messages = new List<string>();
+        private LogSeverity minSeverity = LogSeverity.Warning;
+        private List<string> messages = new List<string>();
 
-        public LogDialog()
+        public LogDialog(LogSeverity minSeverity)
         {
             InitializeComponent();
 
@@ -28,6 +29,8 @@ namespace FamiStudio
             buttonYes.Height = (int)(buttonYes.Height * Direct2DTheme.DialogScaling);
             buttonYes.Left = Width - buttonYes.Width - 10;
             buttonYes.Top = Height - buttonYes.Height - 10;
+
+            this.minSeverity = minSeverity;
         }
 
         protected override CreateParams CreateParams
@@ -73,5 +76,7 @@ namespace FamiStudio
         {
             messages.Add(msg);   
         }
+
+        public LogSeverity MinSeverity => minSeverity;
     }
 }

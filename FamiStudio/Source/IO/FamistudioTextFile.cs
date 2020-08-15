@@ -197,7 +197,7 @@ namespace FamiStudio
             return true;
         }
 
-        private string[] SplitStringKeepQuotes(string str)
+        private static string[] SplitStringKeepQuotes(string str)
         {
             return str.Split('"').Select((element, index) => index % 2 == 0
                                                         ? element.Split(new[] { ' ', '=' }, StringSplitOptions.RemoveEmptyEntries)
@@ -205,7 +205,7 @@ namespace FamiStudio
                                   .SelectMany(element => element).ToArray();
         }
 
-        private string SplitLine(string line, ref Dictionary<string, string> parameters)
+        private static string SplitLine(string line, ref Dictionary<string, string> parameters)
         {
             var splits = SplitStringKeepQuotes(line);
 
@@ -218,6 +218,22 @@ namespace FamiStudio
             }
 
             return null;
+        }
+
+        public static bool LooksLikeFamiStudioText(string filename)
+        {
+            try
+            {
+                var lines = File.ReadAllLines(filename);
+                var parameters = new Dictionary<string, string>();
+
+                // TODO: Ignore empty lines. Whitespace shouldnt matter.
+                return SplitLine(lines[0].Trim(), ref parameters) == "Project";
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public Project Load(string filename)
@@ -414,8 +430,11 @@ namespace FamiStudio
 
                 return project;
             }
-            catch
+            catch (Exception e)
             {
+                Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
+                Log.LogMessage(LogSeverity.Error, e.Message);
+                Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return null;
             }
         }

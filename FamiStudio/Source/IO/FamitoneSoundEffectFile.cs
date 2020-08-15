@@ -179,9 +179,11 @@ namespace FamiStudio
                         effect.RemoveRange(lastZeroVolumeIdx, effect.Count - lastZeroVolumeIdx);
                     }
 
-                    // TODO: Error management!
                     if (effect.Count > 255)
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Effect was longer than 256 bytes ({effect.Count}) and was truncated.");
                         effect.RemoveRange(lastZeroVolumeIdx, effect.Count - 255);
+                    }
 
                     effect.Add(0);
 

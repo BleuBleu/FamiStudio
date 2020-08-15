@@ -27,7 +27,7 @@ namespace FamiStudio
 
                     if (loadVersion > Project.Version)
                     {
-                        // TODO: Error message.
+                        Log.LogMessage(LogSeverity.Error, $"File version ({loadVersion}) is more recent than this version of FamiStudio ({Project.Version}).");
                         return null;
                     }
 

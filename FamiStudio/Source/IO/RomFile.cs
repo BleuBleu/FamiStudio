@@ -132,8 +132,11 @@ namespace FamiStudio
 
                 File.WriteAllBytes(filename, romBytes.ToArray());
             }
-            catch
+            catch (Exception e)
             {
+                Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
+                Log.LogMessage(LogSeverity.Error, e.Message);
+                Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return false;
             }
 

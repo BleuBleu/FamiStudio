@@ -370,37 +370,40 @@ namespace FamiStudio
 
         public Project OpenProjectFile(string filename, bool allowNsf = true, bool quiet = false)
         {
-            var log = new LogDialog();
+            var logDlg = new LogDialog(LogSeverity.Warning);
             var project = (Project)null;
 
-            if (filename.ToLower().EndsWith("fms"))
+            using (var scopedLog = new ScopedLogOutput(logDlg))
             {
-                project = new ProjectFile().Load(filename);
-            }
-            else if (filename.ToLower().EndsWith("ftm"))
-            {
-                project = new FamitrackerBinaryFile(log).Load(filename);
-            }
-            else if (filename.ToLower().EndsWith("txt"))
-            {
-                project = new FamistudioTextFile().Load(filename);
-
-                if (project == null)
-                    project = new FamitrackerTextFile(log).Load(filename);
-            }
-            else if (allowNsf && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
-            {
-                NsfImportDialog dlg = new NsfImportDialog(filename, mainForm.Bounds);
-
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (filename.ToLower().EndsWith("fms"))
                 {
-                    project = new NsfFile(log).Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits);
+                    project = new ProjectFile().Load(filename);
                 }
-            }
+                else if (filename.ToLower().EndsWith("ftm"))
+                {
+                    project = new FamitrackerBinaryFile().Load(filename);
+                }
+                else if (filename.ToLower().EndsWith("txt"))
+                {
+                    if (FamistudioTextFile.LooksLikeFamiStudioText(filename))
+                        project = new FamistudioTextFile().Load(filename);
+                    else
+                        project = new FamitrackerTextFile().Load(filename);
+                }
+                else if (allowNsf && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
+                {
+                    NsfImportDialog dlg = new NsfImportDialog(filename, mainForm.Bounds);
 
-            if (!quiet && !log.LogEmpty)
-            {
-                log.ShowDialog();
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+                        project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits);
+                    }
+                }
+
+                if (!quiet && !logDlg.LogEmpty)
+                {
+                    logDlg.ShowDialog();
+                }
             }
 
             return project;
@@ -443,13 +446,17 @@ namespace FamiStudio
 
         public void Export()
         {
-            var log = new LogDialog();
-            var dlg = new ExportDialog(mainForm.Bounds, project, log);
+            var logDlg = new LogDialog(LogSeverity.Info);
 
-            dlg.ShowDialog();
+            using (var scopedLog = new ScopedLogOutput(logDlg))
+            {
+                var dlg = new ExportDialog(mainForm.Bounds, project);
 
-            if (!log.LogEmpty)
-                log.ShowDialog();
+                dlg.ShowDialog();
+
+                if (!logDlg.LogEmpty)
+                    logDlg.ShowDialog();
+            }
         }
 
         public void OpenConfigDialog()

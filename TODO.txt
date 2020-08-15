@@ -4,7 +4,7 @@
 - DLL rename (Linux, rename .so -> lib***.so)
 - LICENSE
 - First note, etc.
-
+- Fix FTM import.
 2.2.0
 =====
 - Play right note when dragging.
@@ -17,6 +17,7 @@
 	- Validation code.
 	- Paste special
 	- Make rendering nicer +(1,1) pixel
+	- FamiTracker: There is a MATTT thing that crashes when loading FDS_rushjet1_-_fdx.ftm.
 	x Replace selection arp
 	x Add/remove arps.
 	- Must delete + add note to set the arp, weird?
@@ -28,6 +29,7 @@
 	x Make it a setting
 	- Make it look better.
 - Export log.
+	- Write file sizes, etc. Especially for NSF, ROM, FT2, FamiStudio.
 - Option to not play notes when dragging.
 - Drag seek bar (github issue request!).
 - Instrument picker?

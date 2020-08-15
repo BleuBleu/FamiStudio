@@ -54,13 +54,6 @@ namespace FamiStudio
             public fixed byte programSize[3];
         };
 
-        ILogInterface log;
-
-        public NsfFile(ILogInterface log)
-        {
-            this.log = log;
-        }
-
         public unsafe bool Save(Project originalProject, FamitoneMusicFile.FamiToneKernel kernel, string filename, int[] songIds, string name, string author, string copyright, MachineType mode)
         {
             try
@@ -228,9 +221,9 @@ namespace FamiStudio
             }
             catch (Exception e)
             {
-                log?.Log("NSF Export: Internal error! Please contact the developer on GitHub!");
-                log?.Log(e.Message);
-                log?.Log(e.StackTrace);
+                Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
+                Log.LogMessage(LogSeverity.Error, e.Message);
+                Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return false;
             }
 

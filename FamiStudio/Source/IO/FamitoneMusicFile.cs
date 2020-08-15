@@ -857,7 +857,10 @@ namespace FamiStudio
                         if (matchingPatternIdx < 0)
                         {
                             if (packedPatternBuffers.Count > MaxPackedPatterns)
-                                return -1; // TODO: Error.
+                            {
+                                Log.LogMessage(LogSeverity.Error, $"Too many patterns ({packedPatternBuffers.Count}).");
+                                return -1; 
+                            }
 
                             packedPatternBuffers.Add(patternBuffer);
 
@@ -943,7 +946,7 @@ namespace FamiStudio
                     {
                         int size = OutputSong(splitSong, songIdx, speedChannel, factor, true);
 
-                        if (size < minSize)
+                        if (size >= 0 && size < minSize)
                         {
                             minSize = size;
                             bestChannel = speedChannel;
