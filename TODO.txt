@@ -14,10 +14,9 @@
 	- Nice test ROM (same as ROM, but with SFX player)
 		- Pause/Unpause
 		- Select plays a DPCM (only in bloody tears). Undocumented.
-	- Documentation.
+	x Documentation.
 	x Export dialog + command line.
 		- Multi property tab width on Linux/Mac
-	- Double check TAB/SPACE at the end.
 - Arpeggio : 
 	- Validation code.
 	- Paste special
@@ -46,6 +45,7 @@ Testing:
 - One bad pixel in ROM, make sure its gone.
 - Bad sequencer texture filtering : Re-test Mac + Linux.
 - Retest export dialog in HiDPI.
+- Retest Famitone2/FamiStudio engine/SFX export.
 
 Tweet ideas
 ===========

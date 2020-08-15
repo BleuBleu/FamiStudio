@@ -66,6 +66,12 @@ A small demo is included with the engine sound code. The demo is available for a
 
 ![](images/SoundEngineDemo.png#center)
 
+The source code for the demo is located in the \DemoSource subfolder.
+
+* CA65: DemoSource\demo_ca65.s
+* NESASM: DemoSource\demo_nesasm.asm
+* ASM6: DemoSource\demo_asm6.asm
+
 The songs used in the demo are available in the demo songs that are included with FamiStudio:
 
 * Silver Surfer.fms
@@ -74,15 +80,19 @@ The songs used in the demo are available in the demo songs that are included wit
 
 The sound effects used in the demo are available in SFX.fms, which is in the \DemoAssets folder that comes with the sound engine.
 
-## Integrating it with your game
+## Integrating in your game
 
-The sound engine is contained in a single file which can be simply included in one of your assembly file, like it is done in the demo. Another approach would be to compile the engine as a seperate obj file and link it. This might require you to import the famistudio_xxx calls in other parts of your project.
+The sound engine is contained in a single file which can be simply included in one of your assembly file, like it is done in the demo. 
 
 * CA65: famistudio_ca65.s
 * NESASM: famistudio_nesasm.asm
 * ASM6: famistudio_asm6.asm
 
+Another approach would be to compile the engine as a seperate obj file and link it. This might require you to import the famistudio_xxx calls in other parts of your project.
+
 All the instructions to use it in your project are included as comments at the top of these files.
+
+## Interface 
 
 The interface is pretty much the same as FamiTone2, with a slightly different naming convention. The subroutines you can call from your game are: 
 
