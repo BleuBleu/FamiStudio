@@ -16,6 +16,8 @@ namespace FamiStudio
             Rom,
             Text,
             FamiTracker,
+            FamiStudioMusic,
+            FamiStudioSfx,
             FamiTone2Music,
             FamiTone2Sfx,
             Max
@@ -28,8 +30,10 @@ namespace FamiStudio
             "ROM / FDS",
             "FamiStudio Text",
             "FamiTracker Text",
-            "FamiStudio Music ASM",
-            "FamiStudio SFX ASM",
+            "FamiStudio Music Asm",
+            "FamiStudio SFX Asm",
+            "FamiTone2 Music Asm",
+            "FamiTone2 SFX Asm",
             ""
         };
 
@@ -40,6 +44,8 @@ namespace FamiStudio
             "ExportRom",
             "ExportText",
             "ExportFamiTracker",
+            "ExportFamiStudioEngine",
+            "ExportFamiStudioEngine",
             "ExportFamiTone2",
             "ExportFamiTone2"
         };
@@ -132,16 +138,17 @@ namespace FamiStudio
                     page.AddStringListMulti(null, songNames, null); // 0
                     break;
                 case ExportFormat.FamiTone2Music:
-                    page.AddStringList("Variant :", Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel)), Enum.GetNames(typeof(FamitoneMusicFile.FamiToneKernel))[0]); // 0
-                    page.AddStringList("Format :", Enum.GetNames(typeof(AssemblyFormat)), Enum.GetNames(typeof(AssemblyFormat))[0]); // 1
-                    page.AddBoolean("Separate Files :", false); // 2
-                    page.AddString("Song Name Pattern :", "{project}_{song}"); // 3
-                    page.AddString("DMC Name Pattern :", "{project}"); // 4
-                    page.AddStringListMulti(null, songNames, null); // 5
+                case ExportFormat.FamiStudioMusic:
+                    page.AddStringList("Format :", Enum.GetNames(typeof(AssemblyFormat)), Enum.GetNames(typeof(AssemblyFormat))[0]); // 0
+                    page.AddBoolean("Separate Files :", false); // 1
+                    page.AddString("Song Name Pattern :", "{project}_{song}"); // 2
+                    page.AddString("DMC Name Pattern :", "{project}"); // 3
+                    page.AddStringListMulti(null, songNames, null); // 4
+                    page.SetPropertyEnabled(2, false);
                     page.SetPropertyEnabled(3, false);
-                    page.SetPropertyEnabled(4, false);
                     break;
                 case ExportFormat.FamiTone2Sfx:
+                case ExportFormat.FamiStudioSfx:
                     page.AddStringList("Format :", Enum.GetNames(typeof(AssemblyFormat)), Enum.GetNames(typeof(AssemblyFormat))[0]); // 0
                     page.AddStringList("Mode :", Enum.GetNames(typeof(MachineType)), Enum.GetNames(typeof(MachineType))[project.PalMode ? 1 : 0]); // 1
                     page.AddStringListMulti(null, songNames, null); // 2
@@ -156,10 +163,10 @@ namespace FamiStudio
 
         private void Page_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            if (props == dialog.GetPropertyPage((int)ExportFormat.FamiTone2Music) && idx == 2)
+            if (props == dialog.GetPropertyPage((int)ExportFormat.FamiTone2Music) && idx == 1)
             {
+                props.SetPropertyEnabled(2, (bool)value);
                 props.SetPropertyEnabled(3, (bool)value);
-                props.SetPropertyEnabled(4, (bool)value);
             }
             else if (props == dialog.GetPropertyPage((int)ExportFormat.Wav) && idx == 2)
             {
@@ -284,17 +291,16 @@ namespace FamiStudio
             }
         }
 
-        private void ExportFamiTone2Music()
+        private void ExportFamiTone2Music(bool famiStudio)
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.FamiTone2Music);
-            var kernelString = props.GetPropertyValue<string>(0);
-            var separate = props.GetPropertyValue<bool>(2);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
-            var kernel = (FamitoneMusicFile.FamiToneKernel)Enum.Parse(typeof(FamitoneMusicFile.FamiToneKernel), kernelString);
-            var exportFormat = (AssemblyFormat)Enum.Parse(typeof(AssemblyFormat), props.GetPropertyValue<string>(1));
+            var separate = props.GetPropertyValue<bool>(1);
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(4));
+            var kernel = famiStudio ? FamitoneMusicFile.FamiToneKernel.FamiStudio : FamitoneMusicFile.FamiToneKernel.FamiTone2;
+            var exportFormat = (AssemblyFormat)Enum.Parse(typeof(AssemblyFormat), props.GetPropertyValue<string>(0));
             var ext = exportFormat == AssemblyFormat.CA65 ? "s" : "asm";
-            var songNamePattern = props.GetPropertyValue<string>(3);
-            var dpcmNamePattern = props.GetPropertyValue<string>(4);
+            var songNamePattern = props.GetPropertyValue<string>(2);
+            var dpcmNamePattern = props.GetPropertyValue<string>(3);
 
             if (separate)
             {
@@ -318,7 +324,8 @@ namespace FamiStudio
             }
             else
             {
-                var filename = PlatformUtils.ShowSaveFileDialog("Export FamiTone2 Code", $"FamiTone2 Assembly File (*.{ext})|*.{ext}");
+                var engineName = famiStudio ? "FamiStudio" : "FamiTone2";
+                var filename = PlatformUtils.ShowSaveFileDialog($"Export {engineName} Assembly Code", $"{engineName} Assembly File (*.{ext})|*.{ext}");
                 if (filename != null)
                 {
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel);
@@ -356,8 +363,10 @@ namespace FamiStudio
                     case ExportFormat.Rom: ExportRom(); break;
                     case ExportFormat.Text: ExportText(); break;
                     case ExportFormat.FamiTracker: ExportFamiTracker(); break;
-                    case ExportFormat.FamiTone2Music: ExportFamiTone2Music(); break;
+                    case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
+                    case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
                     case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(); break;
+                    case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(); break;
                 }
             }
         }

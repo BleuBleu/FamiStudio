@@ -51,9 +51,8 @@ namespace FamiStudio
 
         public enum FamiToneKernel
         {
-            FamiTone2,   // Stock FamiTone2
-            FamiTone2FS, // Stock FamiTone2 + FamiStudio tempo support.
-            FamiStudio   // Heavily modified version that supports every FamiStudio feature.
+            FamiTone2, // Stock FamiTone2
+            FamiStudio // Heavily modified version that supports every FamiStudio feature.
         };
 
         public FamitoneMusicFile(FamiToneKernel kernel)

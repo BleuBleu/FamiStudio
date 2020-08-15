@@ -129,7 +129,7 @@ namespace FamiStudio
             Console.WriteLine($"Examples:");
             Console.WriteLine($"  FamiStudio music.fms wav-export music.wave -export-songs:2 -wav-export-rate:48000");
             Console.WriteLine($"  FamiStudio music.fms famitracker-txt-export music.txt -export-songs:0,1,2");
-            Console.WriteLine($"  FamiStudio music.fms famitone2-export music.s -famitone2-format:ca65");
+            Console.WriteLine($"  FamiStudio music.fms famitone2-asm-export music.s -famitone2-format:ca65");
             Console.WriteLine($"");
             Console.WriteLine($"Supported input formats:");
             Console.WriteLine($"  FamiStudio project (*.fms)");
@@ -145,8 +145,10 @@ namespace FamiStudio
             Console.WriteLine($"  fds-export : Export to a FDS disk file (.fds).");
             Console.WriteLine($"  famitracker-txt-export : Export to a FamiTracker text file (*.txt).");
             Console.WriteLine($"  famistudio-txt-export : Export to a FamiStudio text file (*.txt).");
-            Console.WriteLine($"  famitone2-export : Export to FamiTone2 assembly file(s) (*.s, *.asm).");
-            Console.WriteLine($"  famitone2-sfx-export : Export to FamiTone2 sound effect assembly file(s) (*.s, *.asm).");
+            Console.WriteLine($"  famistudio-asm-export : Export to FamiStudio sound engine music assembly file(s) (*.s, *.asm).");
+            Console.WriteLine($"  famistudio-asm-sfx-export : Export to FamiStudio sound engine sound effect assembly file(s) (*.s, *.asm).");
+            Console.WriteLine($"  famitone2-asm-export : Export to FamiTone2 music assembly file(s) (*.s, *.asm).");
+            Console.WriteLine($"  famitone2-asm-sfx-export : Export to FamiTone2 sound effect assembly file(s) (*.s, *.asm).");
             Console.WriteLine($"");
             Console.WriteLine($"General options:");
             Console.WriteLine($"  -export-songs:<songs> : Comma-seperated zero-based indices of the songs to export (default:all).");
@@ -169,13 +171,19 @@ namespace FamiStudio
             Console.WriteLine($"ROM export specific options");
             Console.WriteLine($"  -rom-export-mode:<mode> : Target machine: ntsc, pal or dual (default:project mode).");
             Console.WriteLine($"");
+            Console.WriteLine($"FamiStudio sound engine export specific options");
+            Console.WriteLine($"  -famistudio-asm-format:<format> : Assembly format to export to : nesasm, ca65 or asm6 (default:nesasm).");
+            Console.WriteLine($"  -famistudio-asm-seperate-files : Export songs to individual files, output filename is the output path (default:disabled).");
+            Console.WriteLine($"  -famistudio-asm-seperate-song-pattern:<pattern> : Name pattern to use when exporting songs to seperate files (default:{{project}}_{{song}}).");
+            Console.WriteLine($"  -famistudio-asm-seperate-dmc-pattern:<pattern> : DMC filename pattern to use when exporting songs to seperate files (default:{{project}}).");
+            Console.WriteLine($"  -famistudio-asm-sfx-mode:<mode> : Target machine for SFX : ntsc, pal or dual (default:project mode).");
+            Console.WriteLine($"");
             Console.WriteLine($"FamiTone2 export specific options");
-            Console.WriteLine($"  -famitone2-format:<format> : Assembly format to export to : nesasm, ca65 or asm6 (default:nesasm).");
-            Console.WriteLine($"  -famitone2-variant:<variant> : The variant of FamiTone2 to use : famitone2, famitone2fs or famistudio (default:famitone2).");
-            Console.WriteLine($"  -famitone2-seperate-files : Export songs to individual files, output filename is the output path (default:disabled).");
-            Console.WriteLine($"  -famitone2-seperate-song-pattern:<pattern> : Name pattern to use when exporting songs to seperate files (default:{{project}}_{{song}}).");
-            Console.WriteLine($"  -famitone2-seperate-dmc-pattern:<pattern> : DMC filename pattern to use when exporting songs to seperate files (default:{{project}}).");
-            Console.WriteLine($"  -famitone2-sfx-mode:<mode> : Target machine for SFX : ntsc, pal or dual (default:project mode).");
+            Console.WriteLine($"  -famitone2-asm-format:<format> : Assembly format to export to : nesasm, ca65 or asm6 (default:nesasm).");
+            Console.WriteLine($"  -famitone2-asm-seperate-files : Export songs to individual files, output filename is the output path (default:disabled).");
+            Console.WriteLine($"  -famitone2-asm-seperate-song-pattern:<pattern> : Name pattern to use when exporting songs to seperate files (default:{{project}}_{{song}}).");
+            Console.WriteLine($"  -famitone2-asm-seperate-dmc-pattern:<pattern> : DMC filename pattern to use when exporting songs to seperate files (default:{{project}}).");
+            Console.WriteLine($"  -famitone2-asm-sfx-mode:<mode> : Target machine for SFX : ntsc, pal or dual (default:project mode).");
             Console.WriteLine($"");
             ShutdownConsole();
         }
@@ -412,9 +420,11 @@ namespace FamiStudio
             }
         }
 
-        private void FamiTone2MusicExport(string filename)
+        private void FamiTone2MusicExport(string filename, bool famiStudio)
         {
-            var formatString = ParseOption("famitone2-format", "nesasm");
+            var kernel = famiStudio ? FamitoneMusicFile.FamiToneKernel.FamiStudio : FamitoneMusicFile.FamiToneKernel.FamiTone2;
+            var engineName = famiStudio ? "famistudio" : "famitone2";
+            var formatString = ParseOption($"{engineName}-asm-format", "nesasm");
 
             var format = AssemblyFormat.NESASM;
             switch (formatString)
@@ -424,26 +434,18 @@ namespace FamiStudio
             }
 
             var extension = format == AssemblyFormat.CA65 ? ".s" : ".asm";
-            var seperate = HasOption("famitone2-seperate-files");
+            var seperate = HasOption($"{engineName}-asm-seperate-files");
 
             if (!seperate && !ValidateExtension(filename, extension))
                 return;
-
-            var kernelString = ParseOption("famitone2-variant", "famitone2");
-            var kernel = FamitoneMusicFile.FamiToneKernel.FamiTone2;
-            switch (formatString)
-            {
-                case "famitone2fs": kernel = FamitoneMusicFile.FamiToneKernel.FamiTone2FS; break;
-                case "famistudio":  kernel = FamitoneMusicFile.FamiToneKernel.FamiStudio;  break;
-            }
 
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
                 if (seperate)
                 {
-                    var songNamePattern = ParseOption("famitone2-seperate-song-pattern", "{project}_{song}");
-                    var dpcmNamePattern = ParseOption("famitone2-seperate-dmc-pattern", "{project}");
+                    var songNamePattern = ParseOption($"{engineName}-asm-seperate-song-pattern", "{project}_{song}");
+                    var dpcmNamePattern = ParseOption($"{engineName}-asm-seperate-dmc-pattern", "{project}");
 
                     foreach (var songId in exportSongIds)
                     {
@@ -465,9 +467,10 @@ namespace FamiStudio
             }
         }
 
-        private void FamiTone2SfxExport(string filename)
+        private void FamiTone2SfxExport(string filename, bool famiStudio)
         {
-            var formatString = ParseOption("famitone2-format", "nesasm");
+            var engineName = famiStudio ? "famistudio" : "famitone2";
+            var formatString = ParseOption($"{engineName}-asm-format", "nesasm");
             var format = AssemblyFormat.NESASM;
             switch (formatString)
             {
@@ -475,7 +478,7 @@ namespace FamiStudio
                 case "asm6": format = AssemblyFormat.ASM6; break;
             }
 
-            var machineString = ParseOption("nsf-export-mode", project.PalMode ? "pal" : "ntsc");
+            var machineString = ParseOption($"{engineName}-asm-sfx-mode", project.PalMode ? "pal" : "ntsc");
             var machine = project.PalMode ? MachineType.PAL : MachineType.NTSC;
             switch (machineString.ToLower())
             {
@@ -521,8 +524,10 @@ namespace FamiStudio
                         case "fds-export": FdsExport(outputFilename); break;
                         case "famitracker-txt-export": FamiTrackerTextExport(outputFilename); break;
                         case "famistudio-txt-export":  FamiStudioTextExport(outputFilename);  break;
-                        case "famitone2-export": FamiTone2MusicExport(outputFilename); break;
-                        case "famitone2-sfx-export": FamiTone2SfxExport(outputFilename); break;
+                        case "famitone2-asm-export": FamiTone2MusicExport(outputFilename, false); break;
+                        case "famitone2-asm-sfx-export": FamiTone2SfxExport(outputFilename, false); break;
+                        case "famistudio-asm-export": FamiTone2MusicExport(outputFilename, true); break;
+                        case "famistudio-asm-sfx-export": FamiTone2SfxExport(outputFilename, true); break;
                         default:
                             Console.WriteLine($"Unknown command {args[1]}. Use -help or -? for help.");
                             break;
