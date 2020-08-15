@@ -534,7 +534,7 @@ main:
     @check_left:
         lda gamepad_pressed
         and #PAD_L
-        beq @check_start
+        beq @check_select
 
         ; dont go below zero
         lda song_index
@@ -546,6 +546,20 @@ main:
         jsr play_song
         jmp @draw_done 
 
+    @check_select:
+        lda gamepad_pressed
+        and #PAD_SELECT
+        beq @check_start
+
+        ; Undocumented: selects plays a SFX sample when journey to silius is loaded.
+        lda song_index
+        cmp #1
+        bne @draw
+
+        lda #11
+        jsr famistudio_sfx_sample_play
+        jmp @draw
+
     @check_start:
         lda gamepad_pressed
         and #PAD_START
@@ -556,7 +570,7 @@ main:
         sta pause_flag
 
         jsr famistudio_music_pause
-        jmp @check_a
+        jmp @draw
 
     @check_a:
         lda gamepad_pressed
