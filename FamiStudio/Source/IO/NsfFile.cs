@@ -580,7 +580,7 @@ namespace FamiStudio
                 {
                     if (hasTrigger)
                     {
-                        var trigger = volume != 0 && period != 0 ? ChannelState.Triggered : ChannelState.Stopped;
+                        var trigger = volume != 0 && (channel.Type == Channel.Noise || period != 0) ? ChannelState.Triggered : ChannelState.Stopped;
 
                         if (trigger != state.trigger)
                         {
