@@ -66,6 +66,7 @@ namespace FamiStudio
                     numN163Channels = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             }
 
+            project.SetExpansionAudio(expansion, numN163Channels);
             project.PalMode = machine == 1;
 
             if (numChannels != project.GetActiveChannelCount())
