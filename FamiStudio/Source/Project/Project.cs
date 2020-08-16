@@ -652,7 +652,12 @@ namespace FamiStudio
             var sampleData = new List<byte>();
 
             foreach (var sample in samples)
+            {
                 sampleData.AddRange(sample.Data);
+                var paddedSize = ((sampleData.Count + 63) & 0xffc0) - sampleData.Count;
+                for (int i = 0; i < paddedSize; i++)
+                    sampleData.Add(0x55);
+            }
 
             if (sampleData.Count > MaxSampleSize)
                 sampleData.RemoveRange(MaxSampleSize, sampleData.Count - MaxSampleSize);
