@@ -801,15 +801,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
-        "ProductCode" = "8:{195BBBDA-4AC7-4E8C-8994-A6320954128F}"
-        "PackageCode" = "8:{085F9D39-BBF3-430E-9682-ADA4C800344A}"
+        "ProductCode" = "8:{2ECB6900-FC37-427D-A400-BF1501797E36}"
+        "PackageCode" = "8:{31C8D92F-E72B-4AA1-A14A-F10A10E1655A}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.1.0"
+        "ProductVersion" = "8:2.1.1"
         "Manufacturer" = "8:BleuBleu"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1351,7 +1351,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_02EAA2AD59C5483CB557FE728242DD43"
             {
-            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\FamiStudio.exe"
+            "SourcePath" = "8:..\\FamiStudio\\obj\\Debug\\FamiStudio.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
