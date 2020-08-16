@@ -155,8 +155,30 @@ namespace FamiStudio
 
             var numNotes = patternLength / (UsesFamiStudioTempo ? noteLength : 1);
 
-            if ((numNotes % factor) == 0 && (songLength * factor) < MaxLength)
+            if ((numNotes % factor) == 0)
             {
+                var newSongLength = 0;
+                var newLoopPoint = 0;
+                var newPatternCustomSettings = new List<PatternCustomSetting>();
+                var newPatternMap = new Dictionary<Pattern, Pattern[]>();
+                var newNumNotes = numNotes / factor;
+                
+                // First check if we wont end up with more than 256 patterns.
+                for (int p = 0; p < songLength; p++)
+                {
+                    var patternLen = GetPatternLength(p);
+                    var patternNoteLength = UsesFamiStudioTempo ? GetPatternNoteLength(p) : 1;
+                    var patternNewLen = newNumNotes * patternNoteLength;
+                    var chunkCount = (int)Math.Ceiling(patternLen / (float)patternNewLen);
+
+                    newSongLength += chunkCount;
+                }
+
+                if (newSongLength > MaxLength)
+                    return false;
+
+                newSongLength = 0;
+
                 var oldChannelPatterns  = new Pattern[channels.Length][];
                 var oldChannelInstances = new Pattern[channels.Length][];
 
@@ -171,12 +193,6 @@ namespace FamiStudio
 
                     channel.Patterns.Clear();
                 }
-
-                var newSongLength = 0;
-                var newLoopPoint = 0;
-                var newPatternCustomSettings = new List<PatternCustomSetting>();
-                var newPatternMap = new Dictionary<Pattern, Pattern[]>();
-                var newNumNotes = numNotes / factor;
 
                 for (int p = 0; p < songLength; p++)
                 {
