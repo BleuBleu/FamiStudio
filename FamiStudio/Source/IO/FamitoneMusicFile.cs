@@ -689,7 +689,7 @@ namespace FamiStudio
                         if (note.IsValid)
                         {
                             // Instrument change.
-                            if (note.IsMusical)
+                            if (note.IsMusical && note.Instrument != null)
                             {
                                 if (note.Instrument != instrument)
                                 {
