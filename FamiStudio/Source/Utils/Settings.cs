@@ -35,6 +35,7 @@ namespace FamiStudio
         public static string LastFileFolder = "";
         public static string LastInstrumentFolder  = "";
         public static string LastSampleFolder = "";
+        public static string LastExportFolder = "";
 
         public static void Load()
         {
@@ -55,6 +56,7 @@ namespace FamiStudio
             LastFileFolder = ini.GetString("Folders", "LastFileFolder", "");
             LastInstrumentFolder = ini.GetString("Folders", "LastInstrumentFolder", "");
             LastSampleFolder = ini.GetString("Folders", "LastSampleFolder", "");
+            LastExportFolder = ini.GetString("Folders", "LastExportFolder", "");
 
             if (DpiScaling != 100 && DpiScaling != 150 && DpiScaling != 200)
                 DpiScaling = 0;
@@ -69,6 +71,8 @@ namespace FamiStudio
                 LastInstrumentFolder = "";
             if (!Directory.Exists(LastSampleFolder))
                 LastSampleFolder = "";
+            if (!Directory.Exists(LastExportFolder))
+                LastExportFolder = "";
 
             // No deprecation at the moment.
             Version = SettingsVersion;
@@ -92,6 +96,7 @@ namespace FamiStudio
             ini.SetString("Folders", "LastFileFolder", LastFileFolder);
             ini.SetString("Folders", "LastInstrumentFolder", LastInstrumentFolder);
             ini.SetString("Folders", "LastSampleFolder", LastSampleFolder);
+            ini.SetString("Folders", "LastExportFolder", LastExportFolder);
 
             Directory.CreateDirectory(GetConfigFilePath());
 

@@ -21,6 +21,7 @@
 	x Make it a setting
 	- Make it look better.
 - Save export folder.
+- Log window on Linux.
 - Option to not play notes when dragging.
 - Drag seek bar (github issue request!).
 - Instrument picker?
@@ -36,6 +37,7 @@ Testing:
 - Bad sequencer texture filtering : Re-test Mac + Linux.
 - Retest export dialog in HiDPI.
 - Retest Famitone2/FamiStudio engine/SFX export.
+- Linux/MacOS: Test browse for folder dialog???
 
 Tweet ideas
 ===========
