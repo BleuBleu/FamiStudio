@@ -219,17 +219,17 @@ namespace FamiStudio
                     nsfBytes[idx + 2] = (byte)((addr >> 8) & 0xff);
                     nsfBytes[idx + 3] = (byte)0;
 
-                    Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
-
                     nsfBytes.AddRange(songBytes);
+
+                    Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
                 }
 
                 // Finally insert the header, not very efficient, but easy.
                 nsfBytes.InsertRange(0, headerBytes);
 
-                Log.LogMessage(LogSeverity.Info, $"NSF export successful, final file size {nsfBytes.Count} bytes.");
-
                 File.WriteAllBytes(filename, nsfBytes.ToArray());
+
+                Log.LogMessage(LogSeverity.Info, $"NSF export successful, final file size {nsfBytes.Count} bytes.");
             }
             catch (Exception e)
             {

@@ -107,6 +107,8 @@ namespace FamiStudio
                 var fdsFileBytes = new List<byte>();
                 fdsFileBytes.AddRange(fdsDiskInitBytes);
 
+                Log.LogMessage(LogSeverity.Info, $"FDS code and graphics files: {fdsDiskInitBytes.Length} bytes.");
+
                 var fileIndex     = FdsFirstFileIndex;
                 var dpcmFileIndex = 0;
 
@@ -123,6 +125,8 @@ namespace FamiStudio
 
                     dpcmFileIndex = fileIndex;
                     fileIndex++;
+
+                    Log.LogMessage(LogSeverity.Info, $"DPCM file size: {dpcmBytes.Length} bytes.");
                 }
 
                 var projectInfo = BuildProjectInfo(songIds, name, author);
@@ -154,6 +158,8 @@ namespace FamiStudio
                     AddFile(fdsFileBytes, fileIndex, FdsSongDataAddr, $"SONG{i}...", songBytes);
 
                     fileIndex++;
+
+                    Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' file size: {songBytes.Length} bytes.");
                 }
 
                 //File.WriteAllBytes("D:\\dump\\fdsdata.bin", fdsFileBytes.ToArray());
@@ -183,6 +189,8 @@ namespace FamiStudio
 
                 // Build final ROM and save.
                 File.WriteAllBytes(filename, byteArray);
+
+                Log.LogMessage(LogSeverity.Info, $"FDS export successful, final file size {byteArray.Length} bytes.");
             }
             catch (Exception e)
             {

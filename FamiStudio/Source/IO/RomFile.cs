@@ -56,6 +56,8 @@ namespace FamiStudio
                 romBinStream.Seek(-RomCodeSize - RomTileSize, SeekOrigin.End);
                 romBinStream.Read(codeBytes, 0, RomCodeSize + RomTileSize);
 
+                Log.LogMessage(LogSeverity.Info, $"ROM code and graphics size: {codeBytes.Length} bytes.");
+
                 // Build project info + song table of content.
                 var projectInfo = BuildProjectInfo(songIds, name, author);
                 var songTable   = BuildSongTableOfContent(project);
@@ -79,12 +81,17 @@ namespace FamiStudio
 
                     var dpcmBytes = project.GetPackedSampleData();
                     if (dpcmBytes.Length > (MaxDpcmPages * RomPageSize))
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"DPCM samples size ({dpcmBytes.Length}) is larger than the maximum allowed for ROM export ({MaxDpcmPages * RomPageSize}). Truncating.");
                         Array.Resize(ref dpcmBytes, MaxDpcmPages * RomPageSize);
+                    }
 
                     songDataBytes.AddRange(dpcmBytes);
 
                     projectInfo.dpcmPageCount = (byte)dpcmPageCount;
                     projectInfo.dpcmPageStart = (byte)0;
+
+                    Log.LogMessage(LogSeverity.Info, $"DPCM allocated size: {dpcmPageCount * RomPageSize} bytes.");
                 }
 
                 // Export each song individually, build TOC at the same time.
@@ -100,6 +107,8 @@ namespace FamiStudio
                     songTable[i].flags = (byte)(song.UsesDpcm ? 1 : 0);
 
                     songDataBytes.AddRange(songBytes);
+
+                    Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
                 }
 
                 //File.WriteAllBytes("D:\\debug.bin", songDataBytes.ToArray());
@@ -131,6 +140,8 @@ namespace FamiStudio
                 romBytes.AddRange(codeBytes);
 
                 File.WriteAllBytes(filename, romBytes.ToArray());
+
+                Log.LogMessage(LogSeverity.Info, $"ROM export successful, final file size {romBytes.Count} bytes.");
             }
             catch (Exception e)
             {

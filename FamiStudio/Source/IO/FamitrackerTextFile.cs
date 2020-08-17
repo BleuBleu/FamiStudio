@@ -524,14 +524,21 @@ namespace FamiStudio
         private void TruncateLongPatterns(Song song)
         {
             if (song.PatternLength > 256)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Number of rows per pattern ({song.PatternLength}) in song properties is more than 256. FamiTracker does not support this and will be truncated to 256.");
                 song.SetDefaultPatternLength(256);
+            }
 
             // FamiTracker can only shorten patterns using skips.
             // We allow patterns to be longer than the default, so we will truncate those.
             for (int i = 0; i < song.Length; i++)
             {
-                if (song.GetPatternLength(i) > song.PatternLength)
+                var patternLen = song.GetPatternLength(i);
+                if (patternLen > song.PatternLength)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Custom number of rows per pattern ({patternLen}) is longer than the song default ({song.PatternLength}). FamiTracker does not support this and will be truncated.");
                     song.ClearPatternCustomSettings(i);
+                }
             }
 
             song.DeleteNotesPastMaxInstanceLength();
@@ -603,7 +610,10 @@ namespace FamiStudio
             project.RemoveAllSongsBut(songIds);
 
             if (project.UsesFamiStudioTempo)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Song uses FamiStudio tempo. Will be exported with speed of 1, tempo 150.");
                 project.ConvertToFamiTrackerTempo(false);
+            }
 
             ConvertPitchEnvelopes(project);
             var envelopes = MergeIdenticalEnvelopes(project);

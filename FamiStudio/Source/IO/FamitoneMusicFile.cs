@@ -1132,7 +1132,9 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Total dmc file size: {dmcSize} bytes.");
             }
 
+#if DEBUG
             Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + tempoSize + songsSize);
+#endif
 
             return true;
         }
