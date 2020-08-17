@@ -117,7 +117,7 @@
     <Compile Include="UI\Dialogs\Common\PasteSpecialDialog.cs" />
     <Compile Include="UI\Dialogs\Common\TransformDialog.cs" />
     <Compile Include="UI\MainWindow\Common\CommonTooltips.cs" />
-    <Content Include="NesSndEmu.so">
+    <Content Include="libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="Source\Project\DPCMSample.cs" />
@@ -270,6 +270,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="Source\Utils\RtMidi.cs" />
+    <Content Include="..\LICENSE">
+      <Link>LICENSE</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -299,7 +303,7 @@
     <EmbeddedResource Include="Resources\Loop.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NotSoFatso.so">
+    <Content Include="libNotSoFatso.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="Resources\NTSCToPAL%402x.png" />
