@@ -244,6 +244,36 @@ namespace FamiStudio
                 values[j] = (sbyte)(values[j] - values[j - 1]);
         }
 
+        public void Truncate()
+        {
+            if (relative || !canResize || length == 0 || release >= 0)
+                return;
+
+            if (loop > 0)
+            {
+                // Looping envelope can be optimized if they all have the same value.
+                for (int i = 1; i < length; i++)
+                {
+                    if (values[i] != values[0])
+                        return;
+                }
+
+                length = 1;
+            }
+            else
+            {
+                // Non looping envelope can be optimized by removing all the trailing values that have the same value.
+                int i = length - 2;
+                for (; i >= 0 && i > release; i--)
+                {
+                    if (values[i] != values[i + 1])
+                        break;
+                }
+
+                length = i + 2;
+            }
+        }
+
         public Envelope ShallowClone()
         {
             var env = new Envelope();

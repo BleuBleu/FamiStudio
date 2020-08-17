@@ -5,7 +5,6 @@
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
 - FamiStudio sound engine
 	- Multi property tab width on Linux/Mac
-	- Make sure that single value envelopes (looping or not) are optimized.
 - Arpeggio : 
 	- Validation code.
 	- Paste special
@@ -21,8 +20,6 @@
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.
-- Export log.
-	- Write file sizes, etc. Especially for NSF, ROM, FT2, FamiStudio.
 - Save export folder.
 - Option to not play notes when dragging.
 - Drag seek bar (github issue request!).

@@ -76,10 +76,9 @@ namespace FamiStudio
                 }
                 if (env.Length == 0)
                 {
-                    env.Length = 127;
-                    env.Loop = -1;
-                    for (int i = 0; i < env.Length; i++)
-                        env.Values[i] = 15;
+                    env.Length = 1;
+                    env.Loop   = -1;
+                    env.Values[0] = 15;
                 }
             }
         }
@@ -143,6 +142,20 @@ namespace FamiStudio
         {
             if (env.IsEmpty)
                 return null;
+
+            env.Truncate();
+
+            // Special case for envelopes with a single value (like duty often are).
+            // Make them 127 in length so that they update less often.
+            if (env.Length == 1 && !env.Relative && env.Release < 0)
+            {
+                if (newPitchEnvelope)
+                    return new byte[] { 0x00, (byte)(192 + env.Values[0]), 0x7f, 0x00, 0x01 };
+                else if (allowReleases)
+                    return new byte[] { 0x04, (byte)(192 + env.Values[0]), 0x7f, 0x00, 0x01 };
+                else
+                    return new byte[] { (byte)(192 + env.Values[0]), 0x7f, 0x00, 0x00 } ;
+            }
 
             var data = new byte[256];
 
@@ -275,7 +288,7 @@ namespace FamiStudio
                         default:
                             processed = ProcessEnvelope(env,
                                 i == Envelope.Volume && kernel == FamiToneKernel.FamiStudio,
-                                i == Envelope.Pitch && kernel == FamiToneKernel.FamiStudio);
+                                i == Envelope.Pitch  && kernel == FamiToneKernel.FamiStudio);
                             break;
                     }
 
