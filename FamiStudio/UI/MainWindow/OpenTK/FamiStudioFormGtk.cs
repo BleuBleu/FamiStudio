@@ -292,6 +292,11 @@ namespace FamiStudio
             return true;
         }
 
+        public void Refresh()
+        {
+            RenderFrame();
+        }
+
         protected void RenderFrame()
         {
             if (glInit && controls.Redraw(glWidget.Allocation.Width, glWidget.Allocation.Height))

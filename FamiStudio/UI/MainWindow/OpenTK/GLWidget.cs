@@ -67,7 +67,7 @@ namespace Gtk
             set;
         }
 
-        GraphicsContextFlags graphicsContextFlags;
+        GraphicsContextFlags graphicsContextFlags = GraphicsContextFlags.Default;
 
         /// <summary>Constructs a new GLWidget.</summary>
         public GLWidget()

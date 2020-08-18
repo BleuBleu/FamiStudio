@@ -19,7 +19,7 @@ namespace FamiStudio
         private HBox mainHbox;
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
-        public MultiPropertyDialog(int x, int y, int width, int height) : base(WindowType.Toplevel)
+        public MultiPropertyDialog(int x, int y, int width, int height, int tabWidth = 160) : base(WindowType.Toplevel)
         {
             var buttonsHBox = new HBox(false, 0);
 
@@ -46,7 +46,7 @@ namespace FamiStudio
 
             buttonsVBox = new VBox();
             buttonsVBox.Show();
-            buttonsVBox.WidthRequest = 160;
+            buttonsVBox.WidthRequest = tabWidth;
 
             var buttonsVBoxPadding = new Alignment(0.0f, 0.0f, 0.0f, 0.0f);
             buttonsVBoxPadding.RightPadding = 5;

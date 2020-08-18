@@ -274,6 +274,7 @@
     </Content>
     <Compile Include="Source\Utils\RtMidi.cs" />
     <Compile Include="UI\Dialogs\Gtk\TutorialDialog.cs" />
+    <Compile Include="UI\Dialogs\Gtk\LogDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

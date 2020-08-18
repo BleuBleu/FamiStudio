@@ -33,6 +33,10 @@ namespace FamiStudio
             int x = mainWinRect.Left + (mainWinRect.Width - width) / 2;
             int y = mainWinRect.Top + (mainWinRect.Height - height) / 2;
 
+#if FAMISTUDIO_LINUX
+            height += 30;
+#endif
+
             app = famistudio;
             dialog = new MultiPropertyDialog(x, y, width, height);
 
