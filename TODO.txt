@@ -20,13 +20,13 @@
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.
-- Save export folder.
 - Log window on Linux.
 - Option to not play notes when dragging.
 - Drag seek bar (github issue request!).
 - Instrument picker?
 - Discord server
 - Feature requests from email (record?)
+- Move MacUtils to UI folder (where GtkUtils is)
 
 Testing:
 ========

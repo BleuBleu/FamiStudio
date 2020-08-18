@@ -148,6 +148,9 @@ namespace FamiStudio
                         currentDpcm = CreateUniquelyNamedSample(param[2], new byte[int.Parse(param[1])]);
                         dpcms[int.Parse(param[0])] = currentDpcm;
                         dpcmWriteIdx = 0;
+
+                        if (currentDpcm == null)
+                            Log.LogMessage(LogSeverity.Warning, $"Cannot allocate DPCM sample '{param[2]}'. Maximum total size allowed is 16KB.");
                     }
                     else if (line.StartsWith("DPCM"))
                     {
@@ -199,6 +202,10 @@ namespace FamiStudio
                             instrument.N163WavePreset = Envelope.WavePresetCustom;
                             instrument.N163WaveSize   = byte.Parse(param[6]);
                             instrument.N163WavePos    = byte.Parse(param[7]);
+
+                            var wavCount = byte.Parse(param[8]);
+                            if (wavCount > 1)
+                                Log.LogMessage(LogSeverity.Warning, $"N163 instrument '{instrument.Name}' has more than 1 waveform ({wavCount}). All others will be ignored.");
                         }
 
                         if (vol >= 0 && instrument.IsEnvelopeActive(Envelope.Volume))    instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, Envelope.Volume][vol].ShallowClone();
