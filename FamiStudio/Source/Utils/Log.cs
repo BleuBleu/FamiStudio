@@ -17,14 +17,14 @@ namespace FamiStudio
     public interface ILogOutput
     {
         void LogMessage(string msg);
-        LogSeverity MinSeverity { get; }
     }
 
     public class ScopedLogOutput : IDisposable
     {
-        public ScopedLogOutput(ILogOutput log)
+        public ScopedLogOutput(ILogOutput log, LogSeverity minSeverity = LogSeverity.Info)
         {
             Log.LogOutput = log;
+            Log.MinSeverity = minSeverity;
         }
 
         public void Dispose()
@@ -43,10 +43,11 @@ namespace FamiStudio
         };
 
         public static ILogOutput LogOutput { get; set; }
+        public static LogSeverity MinSeverity = LogSeverity.Info;
 
         public static void LogMessage(LogSeverity severity, string msg)
         {
-            if (LogOutput != null && (int)severity >= (int)LogOutput.MinSeverity)
+            if (LogOutput != null && (int)severity >= (int)MinSeverity)
             {
                 LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
                 Debug.WriteLine(SeverityStrings[(int)severity] + msg);

@@ -552,7 +552,5 @@ namespace FamiStudio
         {
             Console.WriteLine("    " + msg);
         }
-
-        public LogSeverity MinSeverity => LogSeverity.Info;
     }
 }

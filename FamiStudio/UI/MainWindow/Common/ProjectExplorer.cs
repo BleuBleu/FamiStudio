@@ -971,7 +971,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    Project instrumentProject = App.OpenProjectFile(filename, false, true);
+                    Project instrumentProject = App.OpenProjectFile(filename, false);
 
                     if (instrumentProject != null)
                     {
