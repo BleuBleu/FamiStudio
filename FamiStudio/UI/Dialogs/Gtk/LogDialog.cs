@@ -1,13 +1,14 @@
 using Gtk;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Resources;
 
 namespace FamiStudio
 {
-    public class LogDialog : Window, ILogOutput
+    public class LogDialog : Window
     {
-        public LogDialog() : base(WindowType.Toplevel)
+        public LogDialog(List<string> messages) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = 756;
@@ -55,12 +56,5 @@ namespace FamiStudio
 
             return System.Windows.Forms.DialogResult.OK;
         }
-
-        public void LogMessage(string msg)
-        {
-
-        }
-
-        public bool LogEmpty => true;
-    }
+}
 }

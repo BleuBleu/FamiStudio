@@ -19,12 +19,22 @@ namespace FamiStudio
         void LogMessage(string msg);
     }
 
+    public class ListLogOutput : ILogOutput
+    {
+        private List<string> messages = new List<string>();
+
+        public void LogMessage(string msg)
+        {
+            messages.Add(msg);
+        }
+
+        public bool IsEmpty => messages.Count != 0;
+        public List<string> Messages => messages;
+    }
+
     public class ScopedLogOutput : IDisposable
     {
-        // HACK: Working around a super strange mono compiling bug where I cant pass 
-        // the interface. It wants me to add a reference to ATK sharp. Somewhat similar 
-        // to this unsolved bug: https://xamarin.github.io/bugzilla-archives/30/30631/bug.html
-        public ScopedLogOutput(/*ILogOutput*/ object log, LogSeverity minSeverity = LogSeverity.Info)
+        public ScopedLogOutput(ILogOutput log, LogSeverity minSeverity = LogSeverity.Info)
         {
             Log.LogOutput = log;
             Log.MinSeverity = minSeverity;
@@ -46,14 +56,14 @@ namespace FamiStudio
         };
 
         // HACK: See comment above. Mono compiler bug.
-        public static /*ILogOutput*/ object LogOutput;
+        public static ILogOutput LogOutput;
         public static LogSeverity MinSeverity = LogSeverity.Info;
 
         public static void LogMessage(LogSeverity severity, string msg)
         {
-            if ((int)severity >= (int)MinSeverity && (LogOutput as ILogOutput) != null)
+            if ((int)severity >= (int)MinSeverity && LogOutput != null)
             {
-                (LogOutput as ILogOutput).LogMessage(SeverityStrings[(int)severity] + msg);
+                LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
                 Debug.WriteLine(SeverityStrings[(int)severity] + msg);
             }
         }
