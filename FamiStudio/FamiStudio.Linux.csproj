@@ -84,11 +84,13 @@
     <Compile Include="Source\IO\FamitrackerBinaryFile.cs" />
     <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
+    <Compile Include="Source\IO\FdsFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\RomFile.cs" />
+    <Compile Include="Source\IO\RomFileBase.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
@@ -103,6 +105,7 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
+    <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
@@ -210,10 +213,12 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportWav.png" />
+    <EmbeddedResource Include="Rom\rom_famitracker_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_famitracker_pal.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />
-    <EmbeddedResource Include="Rom\rom_ntsc_tempo.nes" />
     <EmbeddedResource Include="Rom\rom_pal.nes" />
-    <EmbeddedResource Include="Rom\rom_pal_tempo.nes" />
+    <EmbeddedResource Include="Rom\fds.fds" />
+    <EmbeddedResource Include="Rom\fds_famitracker.fds" />
     <EmbeddedResource Include="Resources\QuickSand10.fnt" />
     <EmbeddedResource Include="Resources\QuickSand10_0.png" />
     <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
@@ -301,6 +306,8 @@
     <Content Include="NotSoFatso.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\ExportFamiStudioEngine%402x.png" />
+    <EmbeddedResource Include="Resources\ExportFamiStudioEngine.png" />
     <EmbeddedResource Include="Resources\ArrowLeft%402x.png" />
     <EmbeddedResource Include="Resources\ArrowLeft.png" />
     <EmbeddedResource Include="Resources\ArrowRight%402x.png" />
