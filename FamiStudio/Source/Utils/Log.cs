@@ -28,7 +28,7 @@ namespace FamiStudio
             messages.Add(msg);
         }
 
-        public bool IsEmpty => messages.Count != 0;
+        public bool IsEmpty => messages.Count == 0;
         public List<string> Messages => messages;
     }
 

@@ -8,11 +8,9 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-    public partial class LogDialog : Form, ILogOutput
+    public partial class LogDialog : Form
     {
-        private List<string> messages = new List<string>();
-
-        public LogDialog()
+        public LogDialog(List<string> messages)
         {
             InitializeComponent();
 
@@ -22,6 +20,7 @@ namespace FamiStudio
             Height = (int)(Direct2DTheme.DialogScaling * Height);
 
             textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
+            textBox.Text = string.Join("\r\n", messages);
 
             buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
             buttonYes.Width  = (int)(buttonYes.Width * Direct2DTheme.DialogScaling);
@@ -58,20 +57,6 @@ namespace FamiStudio
         {
             DialogResult = DialogResult.OK;
             Close();
-        }
-
-        public bool LogEmpty => messages.Count == 0;
-
-        protected override void OnShown(EventArgs e)
-        {
-            textBox.Text = string.Join("\r\n", messages);
-
-            base.OnShown(e);
-        }
-
-        public void LogMessage(string msg)
-        {
-            messages.Add(msg);   
         }
     }
 }
