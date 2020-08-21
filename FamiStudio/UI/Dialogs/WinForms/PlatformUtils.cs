@@ -4,6 +4,7 @@ using System.Drawing.Text;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Drawing;
+using System.IO;
 
 namespace FamiStudio
 {
@@ -77,6 +78,23 @@ namespace FamiStudio
         {
             string dummy = "";
             return ShowSaveFileDialog(title, extensions, ref dummy);
+        }
+
+        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
+        {
+            var folderBrowserDialog = new FolderBrowserDialog();
+            folderBrowserDialog.Description = title;
+
+            if (!string.IsNullOrEmpty(defaultPath) && Directory.Exists(defaultPath))
+                folderBrowserDialog.SelectedPath = Settings.LastExportFolder;
+
+            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            {
+                defaultPath = folderBrowserDialog.SelectedPath;
+                return folderBrowserDialog.SelectedPath;
+            }
+
+            return null;
         }
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icons = MessageBoxIcon.None)

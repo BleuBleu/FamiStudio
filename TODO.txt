@@ -20,7 +20,6 @@
 / Show piano roll rect in sequencer
 	x Make it a setting
 	- Make it look better.
-- Log window on Linux.
 - Option to not play notes when dragging.
 - Drag seek bar (github issue request!).
 - Instrument picker?
@@ -38,6 +37,7 @@ Testing:
 - Retest export dialog in HiDPI.
 - Retest Famitone2/FamiStudio engine/SFX export.
 - Linux/MacOS: Test browse for folder dialog???
+- Test LogDialog
 
 Tweet ideas
 ===========
