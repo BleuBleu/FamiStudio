@@ -83,6 +83,7 @@ namespace FamiStudio
         int envelopeMax;
         int whiteKeySizeY;
         int whiteKeySizeX;
+        int recordKeyPosX;
         int blackKeySizeY;
         int blackKeySizeX;
         int effectIconPosX;
@@ -153,6 +154,7 @@ namespace FamiStudio
         RenderBrush frameLineBrush;
         RenderBrush debugBrush;
         RenderBrush seekBarBrush;
+        RenderBrush seekBarRecBrush;
         RenderBrush selectionBgVisibleBrush;
         RenderBrush selectionBgInvisibleBrush;
         RenderBrush selectionNoteBrush;
@@ -292,7 +294,8 @@ namespace FamiStudio
             releaseNoteSizeY          = (int)(DefaultReleaseNoteSizeY * scaling);
             envelopeMax               = (int)(DefaultEnvelopeMax * scaling);      
             whiteKeySizeY             = (int)(DefaultWhiteKeySizeY * scaling);    
-            whiteKeySizeX             = (int)(DefaultWhiteKeySizeX * scaling);    
+            whiteKeySizeX             = (int)(DefaultWhiteKeySizeX * scaling);
+            recordKeyPosX             = (int)((DefaultWhiteKeySizeX - 10) * scaling);
             blackKeySizeY             = (int)(DefaultBlackKeySizeY * scaling);    
             blackKeySizeX             = (int)(DefaultBlackKeySizeX * scaling);
             effectIconPosX            = (int)(DefaultEffectIconPosX * scaling);
@@ -560,6 +563,7 @@ namespace FamiStudio
             frameLineBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.DarkGreyLineColor2));
             debugBrush = g.CreateSolidBrush(ThemeBase.GreenColor);
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
+            seekBarRecBrush = g.CreateSolidBrush(ThemeBase.DarkRedFillColor2);
             selectionBgVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
             selectionBgInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, ThemeBase.LightGreyFillColor1));
             selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
@@ -642,6 +646,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref frameLineBrush);
             Utils.DisposeAndNullify(ref debugBrush);
             Utils.DisposeAndNullify(ref seekBarBrush);
+            Utils.DisposeAndNullify(ref seekBarRecBrush);
             Utils.DisposeAndNullify(ref selectionBgVisibleBrush);
             Utils.DisposeAndNullify(ref selectionBgInvisibleBrush);
             Utils.DisposeAndNullify(ref selectionNoteBrush);
@@ -720,6 +725,11 @@ namespace FamiStudio
             {
                 return false;
             }
+        }
+
+        private RenderBrush GetSeekBarBrush()
+        {
+            return (App.IsRecording && editMode == EditionMode.Channel) ? seekBarRecBrush : seekBarBrush;
         }
 
         class RenderArea
@@ -891,8 +901,8 @@ namespace FamiStudio
                 if (seekFrame >= 0)
                 {
                     g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
-                    g.FillAndDrawConvexPath(seekGeometry, seekBarBrush, theme.BlackBrush);
-                    g.DrawLine(0, headerSizeY / 2, 0, headerSizeY, seekBarBrush, 3);
+                    g.FillAndDrawConvexPath(seekGeometry, GetSeekBarBrush(), theme.BlackBrush);
+                    g.DrawLine(0, headerSizeY / 2, 0, headerSizeY, GetSeekBarBrush(), 3);
                     g.PopTransform();
                 }
             }
@@ -946,6 +956,12 @@ namespace FamiStudio
             g.PopClip();
         }
 
+        private readonly char[] OctaveKeys = new char[]
+        {
+            'Z', 'S', 'X', 'D', 'C', 'V', 'G', 'B', 'H', 'N', 'J', 'M',
+            'Q', '2', 'W', '3', 'E', 'R', '5', 'T', '6', 'Y', '7', 'U'
+        };
+
         private void RenderPiano(RenderGraphics g, RenderArea a)
         {
             g.PushTranslation(0, headerAndEffectSizeY);
@@ -998,6 +1014,22 @@ namespace FamiStudio
                 }
 
                 g.DrawText("C" + i, ThemeBase.FontSmall, 1, octaveBaseY - octaveNameOffsetY, theme.BlackBrush);
+            }
+
+            if (App.IsRecording)
+            {
+                const int BaseRecOctave = 3;
+
+                for (int i = 0; i < 2; i++)
+                {
+                    int octaveBaseY = (virtualSizeY - octaveSizeY * (i + BaseRecOctave)) - scrollY;
+
+                    for (int j = 0; j < 12; j++)
+                    {
+                        int y = octaveBaseY - j * noteSizeY;
+                        g.DrawText(OctaveKeys[i * 12 + j].ToString(), ThemeBase.FontSmallCenter, blackKeySizeX, y - octaveNameOffsetY, theme.DarkRedFillBrush2, whiteKeySizeX - blackKeySizeX);
+                    }
+                }
             }
 
             g.DrawLine(whiteKeySizeX - 1, 0, whiteKeySizeX - 1, Height, theme.DarkGreyLineBrush1);
@@ -1126,7 +1158,7 @@ namespace FamiStudio
                 g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
 
                 int seekX = App.CurrentFrame * noteSizeX - scrollX;
-                g.DrawLine(seekX, 0, seekX, effectPanelSizeY, seekBarBrush, 3);
+                g.DrawLine(seekX, 0, seekX, effectPanelSizeY, GetSeekBarBrush(), 3);
 
                 g.DrawLine(0, effectPanelSizeY - 1, Width, effectPanelSizeY - 1, theme.BlackBrush);
                 g.PopClip();
@@ -1534,7 +1566,7 @@ namespace FamiStudio
                     g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
 
                     int seekX = App.CurrentFrame * noteSizeX - scrollX;
-                    g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
+                    g.DrawLine(seekX, 0, seekX, Height, GetSeekBarBrush(), 3);
 
                     // Pattern drawing.
                     for (int c = 0; c < Song.Channels.Length; c++)
@@ -1709,7 +1741,7 @@ namespace FamiStudio
                     if (seekFrame >= 0)
                     {
                         var seekX = seekFrame * noteSizeX - scrollX;
-                        g.DrawLine(seekX, 0, seekX, Height, seekBarBrush, 3);
+                        g.DrawLine(seekX, 0, seekX, Height, GetSeekBarBrush(), 3);
                     }
                 }
 

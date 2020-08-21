@@ -329,6 +329,10 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\RecRed%402x.png" />
+    <EmbeddedResource Include="Resources\RecRed.png" />
+    <EmbeddedResource Include="Resources\Rec%402x.png" />
+    <EmbeddedResource Include="Resources\Rec.png" />
     <EmbeddedResource Include="Resources\ExportFamiStudioEngine%402x.png" />
     <EmbeddedResource Include="Resources\ExportFamiStudioEngine.png" />
     <EmbeddedResource Include="Resources\ArrowLeft%402x.png" />

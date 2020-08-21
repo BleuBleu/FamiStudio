@@ -35,11 +35,12 @@ namespace FamiStudio
         const int ButtonTransform = 9;
         const int ButtonConfig    = 10;
         const int ButtonPlay      = 11;
-        const int ButtonRewind    = 12;
-        const int ButtonLoop      = 13;
-        const int ButtonMachine   = 14;
-        const int ButtonHelp      = 15;
-        const int ButtonCount     = 16;
+        const int ButtonRec       = 12;
+        const int ButtonRewind    = 13;
+        const int ButtonLoop      = 14;
+        const int ButtonMachine   = 15;
+        const int ButtonHelp      = 16;
+        const int ButtonCount     = 17;
 
         const int DefaultTimecodePosX            = 404;
         const int DefaultTimecodePosY            = 4;
@@ -107,6 +108,8 @@ namespace FamiStudio
         RenderBitmap bmpPal;
         RenderBitmap bmpNtscToPal;
         RenderBitmap bmpPalToNtsc;
+        RenderBitmap bmpRec;
+        RenderBitmap bmpRecRed;
         Button[] buttons = new Button[ButtonCount];
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
@@ -126,6 +129,8 @@ namespace FamiStudio
             bmpPal         = g.CreateBitmapFromResource("PAL");
             bmpNtscToPal   = g.CreateBitmapFromResource("NTSCToPAL");
             bmpPalToNtsc   = g.CreateBitmapFromResource("PALToNTSC");
+            bmpRec         = g.CreateBitmapFromResource("Rec");
+            bmpRecRed      = g.CreateBitmapFromResource("RecRed");
 
             buttons[ButtonNew]       = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { X = 40,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
@@ -139,9 +144,10 @@ namespace FamiStudio
             buttons[ButtonTransform] = new Button { X = 328, Y = 4, Bmp = g.CreateBitmapFromResource("Transform"), Click = OnTransform };
             buttons[ButtonConfig]    = new Button { X = 364, Y = 4, Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
             buttons[ButtonPlay]      = new Button { X = 572, Y = 4, Click = OnPlay, GetBitmap = OnPlayGetBitmap };
-            buttons[ButtonRewind]    = new Button { X = 608, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
-            buttons[ButtonLoop]      = new Button { X = 644, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
-            buttons[ButtonMachine]   = new Button { X = 680, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
+            buttons[ButtonRec]       = new Button { X = 608, Y = 4, GetBitmap = OnRecordGetBitmap, Click = OnRecord };
+            buttons[ButtonRewind]    = new Button { X = 644, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
+            buttons[ButtonLoop]      = new Button { X = 680, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[ButtonMachine]   = new Button { X = 716, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
             buttons[ButtonHelp]      = new Button { X = 36,  Y = 4, Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
 
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
@@ -157,6 +163,7 @@ namespace FamiStudio
             buttons[ButtonConfig].ToolTip    = "{MouseLeft} Edit Application Settings";
             buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space}";
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
+            buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
@@ -221,6 +228,8 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpPal);
             Utils.DisposeAndNullify(ref bmpNtscToPal);
             Utils.DisposeAndNullify(ref bmpPalToNtsc);
+            Utils.DisposeAndNullify(ref bmpRec);
+            Utils.DisposeAndNullify(ref bmpRecRed);
 
             foreach (var b in buttons)
                 Utils.DisposeAndNullify(ref b.Bmp);
@@ -377,6 +386,16 @@ namespace FamiStudio
             App.Seek(0);
         }
 
+        private RenderBitmap OnRecordGetBitmap()
+        {
+            return App.IsRecording ? bmpRecRed : bmpRec; 
+        }
+
+        private void OnRecord()
+        {
+            App.ToggleRecording();
+        }
+
         private void OnLoop()
         {
             App.LoopMode = (LoopMode)(((int)App.LoopMode + 1) % 3);
@@ -456,7 +475,10 @@ namespace FamiStudio
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.DarkGreyFillBrush1, theme.BlackBrush);
+            var timeCodeColor = App.IsRecording ? theme.DarkRedFillBrush2 : theme.DarkGreyFillBrush1;
+            var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush1;
+
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.BlackBrush);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -471,13 +493,13 @@ namespace FamiStudio
                 var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
                 for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
-                    g.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                    g.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
 
-                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
                 charPosX += colonSizeX;
 
                 for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
-                    g.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                    g.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
             }
             else
             {
@@ -493,15 +515,15 @@ namespace FamiStudio
                 var charPosX = timecodePosX + timecodeSizeX / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
 
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    g.DrawText(minutesString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
-                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+                    g.DrawText(minutesString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    g.DrawText(secondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
-                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, colonSizeX);
+                    g.DrawText(secondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
-                    g.DrawText(millisecondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, theme.LightGreyFillBrush1, zeroSizeX);
+                    g.DrawText(millisecondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
             }
         }
 

@@ -114,6 +114,7 @@ namespace FamiStudio
 
         RenderTheme theme;
         RenderBrush seekBarBrush;
+        RenderBrush seekBarRecBrush;
         RenderBrush whiteKeyBrush;
         RenderBrush patternHeaderBrush;
         RenderBrush selectedPatternVisibleBrush;
@@ -289,6 +290,7 @@ namespace FamiStudio
             bmpDuplicate = g.CreateBitmapFromResource("Duplicate");
 
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
+            seekBarRecBrush = g.CreateSolidBrush(ThemeBase.DarkRedFillColor2);
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, trackNameSizeX, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             patternHeaderBrush = g.CreateVerticalGradientBrush(0, patternHeaderSizeY, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             selectedPatternVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
@@ -316,6 +318,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpInstanciate);
             Utils.DisposeAndNullify(ref bmpDuplicate);
             Utils.DisposeAndNullify(ref seekBarBrush);
+            Utils.DisposeAndNullify(ref seekBarRecBrush);
             Utils.DisposeAndNullify(ref whiteKeyBrush);
             Utils.DisposeAndNullify(ref patternHeaderBrush);
             Utils.DisposeAndNullify(ref selectedPatternVisibleBrush);
@@ -338,6 +341,11 @@ namespace FamiStudio
                    maxSelectedPatternIdx >= 0 &&
                    minSelectedChannelIdx >= 0 &&
                    maxSelectedChannelIdx >= 0;
+        }
+
+        private RenderBrush GetSeekBarBrush()
+        {
+            return App.IsRecording ? seekBarRecBrush : seekBarBrush;
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -405,7 +413,7 @@ namespace FamiStudio
             }
 
             g.PushTranslation(seekX, 0);
-            g.FillAndDrawConvexPath(seekGeometry, seekBarBrush, theme.BlackBrush);
+            g.FillAndDrawConvexPath(seekGeometry, GetSeekBarBrush(), theme.BlackBrush);
             g.PopTransform();
 
             g.PopClip();
@@ -467,7 +475,7 @@ namespace FamiStudio
             g.PushClip(trackNameSizeX, 0, Width, Height);
 
             // Seek
-            g.DrawLine(seekX + trackNameSizeX, 1, seekX + trackNameSizeX, Height, seekBarBrush, 3);
+            g.DrawLine(seekX + trackNameSizeX, 1, seekX + trackNameSizeX, Height, GetSeekBarBrush(), 3);
 
             // Patterns
             for (int t = 0, py = 0; t < Song.Channels.Length; t++, py += trackSizeY)
@@ -501,7 +509,7 @@ namespace FamiStudio
                 App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex);
 
                 g.PushTranslation(pianoRollMinNoteIdx * noteSizeX - scrollX + trackNameSizeX, pianoRollChannelIndex * trackSizeY);
-                g.DrawRectangle(0, 0, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX, trackSizeY, seekBarBrush, 3);
+                g.DrawRectangle(0, 0, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX, trackSizeY, GetSeekBarBrush(), 3);
                 g.PopTransform();
             }
 

@@ -92,6 +92,8 @@ namespace FamiStudio
         public static Color LightGreyFillColor1   = Color.FromArgb(178, 185, 198);
         public static Color LightGreyFillColor2   = Color.FromArgb(198, 205, 218);
         public static Color SeekBarColor          = Color.FromArgb(225, 170,   0);
+        public static Color DarkRedFillColor1     = Color.FromArgb( 92,   0,  16);
+        public static Color DarkRedFillColor2     = Color.FromArgb(210,  16,  48);
 
         public static Color BlackColor = Color.FromArgb(0, 0,   0);
         public static Color GreenColor = Color.FromArgb(0, 0, 255);
@@ -105,6 +107,8 @@ namespace FamiStudio
         private RenderBrush darkGreyLineBrush3;
         private RenderBrush darkGreyFillBrush1;
         private RenderBrush darkGreyFillBrush2;
+        private RenderBrush darkRedFillBrush1;
+        private RenderBrush darkRedFillBrush2;
 
         public RenderBrush BlackBrush           { get => blackBrush;           protected set => blackBrush           = value; }
         public RenderBrush LightGreyFillBrush1  { get => lightGreyFillBrush1;  protected set => lightGreyFillBrush1  = value; }
@@ -115,6 +119,8 @@ namespace FamiStudio
         public RenderBrush DarkGreyLineBrush3   { get => darkGreyLineBrush3;   protected set => darkGreyLineBrush3   = value; }
         public RenderBrush DarkGreyFillBrush1   { get => darkGreyFillBrush1;   protected set => darkGreyFillBrush1   = value; }
         public RenderBrush DarkGreyFillBrush2   { get => darkGreyFillBrush2;   protected set => darkGreyFillBrush2   = value; }
+        public RenderBrush DarkRedFillBrush1    { get => darkRedFillBrush1;    protected set => darkRedFillBrush1    = value; }
+        public RenderBrush DarkRedFillBrush2    { get => darkRedFillBrush2;    protected set => darkRedFillBrush2    = value; }
 
         private static int nextColorIdx = 0;
         public static Color[,] CustomColors = new Color[5, 4]
@@ -186,6 +192,8 @@ namespace FamiStudio
             darkGreyLineBrush3 = g.CreateSolidBrush(DarkGreyLineColor3);
             darkGreyFillBrush1 = g.CreateSolidBrush(DarkGreyFillColor1);
             darkGreyFillBrush2 = g.CreateSolidBrush(DarkGreyFillColor2);
+            darkRedFillBrush1 = g.CreateSolidBrush(DarkRedFillColor1);
+            darkRedFillBrush2 = g.CreateSolidBrush(DarkRedFillColor2);
 
             for (int j = 0; j < CustomColors.GetLength(1); j++)
             {
@@ -207,6 +215,8 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref darkGreyLineBrush3);
             Utils.DisposeAndNullify(ref darkGreyFillBrush1);
             Utils.DisposeAndNullify(ref darkGreyFillBrush2);
+            Utils.DisposeAndNullify(ref darkRedFillBrush1);
+            Utils.DisposeAndNullify(ref darkRedFillBrush2);
 
             for (int j = 0; j < CustomColors.GetLength(1); j++)
             {

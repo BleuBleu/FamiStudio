@@ -27,6 +27,7 @@ namespace FamiStudio
         private bool palPlayback = false;
         private bool audioDeviceChanged = false;
         private bool pianoRollScrollChanged = false;
+        private bool recordingMode = false;
         private int tutorialCounter = 3;
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
@@ -38,6 +39,7 @@ namespace FamiStudio
 
         public bool RealTimeUpdate => songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || pianoRollScrollChanged;
         public bool IsPlaying => songPlayer.IsPlaying;
+        public bool IsRecording => recordingMode;
         public int CurrentFrame => songPlayer.CurrentFrame;
         public int ChannelMask { get => songPlayer.ChannelMask; set => songPlayer.ChannelMask = value; }
         public string ToolTip { get => ToolBar.ToolTip; set => ToolBar.ToolTip = value; }
@@ -847,6 +849,8 @@ namespace FamiStudio
 
         public void Play()
         {
+            // MATTT: Stop recording here?
+
             if (!songPlayer.IsPlaying)
             {
                 songPlayer.Play(song, songPlayer.CurrentFrame, palPlayback);
@@ -860,6 +864,29 @@ namespace FamiStudio
                 songPlayer.Stop();
                 InvalidateEverything();
             }
+        }
+
+        public void StartRecording()
+        {
+            Debug.Assert(!recordingMode);
+            Stop();
+            recordingMode = true;
+            InvalidateEverything();
+        }
+
+        public void StopRecording()
+        {
+            Debug.Assert(recordingMode);
+            recordingMode = false;
+            InvalidateEverything();
+        }
+
+        public void ToggleRecording()
+        {
+            if (IsRecording)
+                StopRecording();
+            else
+                StartRecording();
         }
 
         public void Seek(int frame)
