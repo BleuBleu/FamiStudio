@@ -304,29 +304,23 @@ namespace FamiStudio
 
             if (separate)
             {
-                var folderBrowserDialog = new FolderBrowserDialog();
-                folderBrowserDialog.Description = "Select the export folder";
+                var folder = PlatformUtils.ShowBrowseFolderDialog("Select the export folder", ref Settings.LastExportFolder);
 
-                if (!string.IsNullOrEmpty(Settings.LastExportFolder) && Directory.Exists(Settings.LastExportFolder))
-                    folderBrowserDialog.SelectedPath = Settings.LastExportFolder;
-
-                if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                if (folder != null)
                 {
                     foreach (var songId in songIds)
                     {
                         var song = project.GetSong(songId);
                         var formattedSongName = songNamePattern.Replace("{project}", project.Name).Replace("{song}", song.Name);
                         var formattedDpcmName = dpcmNamePattern.Replace("{project}", project.Name).Replace("{song}", song.Name);
-                        var songFilename = Path.Combine(folderBrowserDialog.SelectedPath, Utils.MakeNiceAsmName(formattedSongName) + "." + ext);
-                        var dpcmFilename = Path.Combine(folderBrowserDialog.SelectedPath, Utils.MakeNiceAsmName(formattedDpcmName) + ".dmc");
+                        var songFilename = Path.Combine(folder, Utils.MakeNiceAsmName(formattedSongName) + "." + ext);
+                        var dpcmFilename = Path.Combine(folder, Utils.MakeNiceAsmName(formattedDpcmName) + ".dmc");
 
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
                         f.Save(project, new int[] { songId }, exportFormat, true, songFilename, dpcmFilename, MachineType.Dual);
                     }
-
-                    Settings.LastExportFolder = folderBrowserDialog.SelectedPath;
                 }
             }
             else

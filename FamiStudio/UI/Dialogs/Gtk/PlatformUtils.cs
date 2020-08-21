@@ -202,6 +202,37 @@ namespace FamiStudio
 #endif
         }
 
+        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
+        {
+#if FAMISTUDIO_MACOS
+#else
+            Gtk.FileChooserDialog filechooser =
+                new Gtk.FileChooserDialog("Choose the file to save",
+                    null,
+                    FileChooserAction.Save,
+                    "Cancel", ResponseType.Cancel,
+                    "Save", ResponseType.Accept);
+
+            filechooser.KeepAbove = true;
+            filechooser.Modal = true;
+            filechooser.Action = FileChooserAction.SelectFolder;
+            filechooser.SkipTaskbarHint = true;
+            filechooser.TransientFor = FamiStudioForm.Instance;
+            filechooser.SetCurrentFolder(defaultPath);
+
+            string filename = null;
+            if (filechooser.Run() == (int)ResponseType.Accept)
+            {
+                filename = filechooser.Filename;
+                defaultPath = Path.GetDirectoryName(filename);
+            }
+
+            filechooser.Destroy();
+
+            return filename;
+#endif
+        }
+
         public static string ShowSaveFileDialog(string title, string extensions)
         {
             string dummy = "";
