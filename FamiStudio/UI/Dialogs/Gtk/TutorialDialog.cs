@@ -132,6 +132,17 @@ namespace FamiStudio
             SetPage(pageIndex - 1);
         }
 
+        protected override bool OnKeyPressEvent(Gdk.EventKey evnt)
+        {
+            if (evnt.Key == Gdk.Key.Return ||
+                evnt.Key == Gdk.Key.Escape)
+            {
+                result = System.Windows.Forms.DialogResult.OK;
+            }
+
+            return base.OnKeyPressEvent(evnt);
+        }
+
         public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent = null)
         {
             Show();
