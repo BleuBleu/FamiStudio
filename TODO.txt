@@ -4,11 +4,14 @@ TODAY:
 - Recording mode
 	- TAB + BACKSPACE
 	- Stop note??
+	- Snap
+	- Base octave page up/down.
+	- Follow.
 - Move MacUtils to UI folder (where GtkUtils is) + browse for folder
 - Make piano roll rect look better.
-- Pass all unfocused keys to piano roll?
 - Test IsKeyDown() on Linux + Mac. Linux seems to try to use OpenTK???
 
+=============
 - Play right note when dragging.
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
@@ -31,14 +34,6 @@ TODAY:
 - Feature requests from email (record?)
 - MATTT
 
-            else 
-            {
-                var arrowKey = ((e.KeyData & Keys.Up) == Keys.Up) || ((e.KeyData & Keys.Down) == Keys.Down) || ((e.KeyData & Keys.Left) == Keys.Left) || ((e.KeyData & Keys.Right) == Keys.Right);
-
-                if (!PianoRoll.Focused || arrowKey) PianoRoll.UnfocusedKeyDown(e);
-                if (!Sequencer.Focused || arrowKey) Sequencer.UnfocusedKeyDown(e);
-            }
-            
 Testing:
 ========
 - Retest ROM export.

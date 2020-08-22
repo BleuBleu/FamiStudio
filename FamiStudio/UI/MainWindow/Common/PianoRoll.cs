@@ -2448,6 +2448,9 @@ namespace FamiStudio
 
                 pattern.Notes[noteIdx] = note.Clone();
 
+                pattern.ClearLastValidNoteCache();
+                PatternChanged?.Invoke(pattern);
+
                 // MATTT
                 App.Seek(App.CurrentFrame + Song.NoteLength);
                 App.UndoRedoManager.EndTransaction();
