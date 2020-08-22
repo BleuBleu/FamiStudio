@@ -6,12 +6,16 @@
 - Documentation : 
 	- Arpeggio.
 	- Recording mode.
+	- FDS export
+	- Error log
+	- Wave loop
+	- Recording mode.
 - Option to not play notes when dragging.
 - Drag seek bar (github issue request!).
 - Instrument picker?
 - MATTT
 
-2.0.0 Release
+2.2.0 Release
 =============
 - Features
 	- Arpeggios
