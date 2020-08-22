@@ -205,6 +205,16 @@ namespace FamiStudio
         public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
 #if FAMISTUDIO_MACOS
+            var filename = MacUtils.ShowBrowseFolderDialog(title, defaultPath);
+            if (!string.IsNullOrEmpty(filename))
+            {
+                if (Directory.Exists(filename))
+                    defaultPath = filename;
+                else
+                    defaultPath = Path.GetDirectoryName(filename);
+                return defaultPath;
+            }
+            return null;
 #else
             Gtk.FileChooserDialog filechooser =
                 new Gtk.FileChooserDialog("Choose the file to save",

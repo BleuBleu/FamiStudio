@@ -359,6 +359,12 @@ namespace FamiStudio
                 SwapBuffers();
         }
 
+        public void Refresh()
+        {
+            Invalidate();
+            OnRenderFrame(null);
+        }
+
         protected void ProcessDeferredEvents()
         {
             var hasMouseCaptureEvent = false;

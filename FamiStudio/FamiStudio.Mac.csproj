@@ -254,6 +254,7 @@
     </Content>
     <Compile Include="Source\Utils\RtMidi.cs" />
     <Compile Include="Source\UI\MacLinux\TutorialDialog.cs" />
+    <Compile Include="Source\UI\MacLinux\LogDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

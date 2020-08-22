@@ -131,6 +131,8 @@ namespace FamiStudio
         static IntPtr selSetTitle = SelRegisterName("setTitle:");
         static IntPtr selSetDirectoryURL = SelRegisterName("setDirectoryURL:");
         static IntPtr selSetAllowedFileTypes = SelRegisterName("setAllowedFileTypes:");
+        static IntPtr selSetCanChooseDirectories = SelRegisterName("setCanChooseDirectories:");
+        static IntPtr selSetCanCreateirectories = SelRegisterName("setCanCreateDirectories:");
         static IntPtr selRunModal = SelRegisterName("runModal");
         static IntPtr selURL = SelRegisterName("URL");
         static IntPtr selInit = SelRegisterName("init");
@@ -543,6 +545,35 @@ namespace FamiStudio
             if (status == NSOKButton)
             {
                 var url = SendIntPtr(savePanel, selURL);
+                return FromNSURL(url);
+            }
+
+            return null;
+        }
+
+        public static string ShowBrowseFolderDialog(string title, string path = null)
+        {
+            var openPanel = SendIntPtr(clsNSOpenPanel, selOpenPanel);
+            SendIntPtr(openPanel, selSetTitle, ToNSString(title));
+
+            if (path != null)
+            {
+                var url = ToNSURL(path);
+                SendIntPtr(openPanel, selSetDirectoryURL, url);
+            }
+
+            //var fileTypesArray = ToNSArray(extensions);
+            //SendIntPtr(openPanel, selSetAllowedFileTypes, fileTypesArray);
+            SendIntPtr(openPanel, selSetCanChooseDirectories, 1);
+            SendIntPtr(openPanel, selSetCanCreateirectories, 1);
+
+            var status = SendInt(openPanel, selRunModal);
+
+            SetNSWindowFocus(mainNsWindow);
+
+            if (status == NSOKButton)
+            {
+                var url = SendIntPtr(openPanel, selURL);
                 return FromNSURL(url);
             }
 
