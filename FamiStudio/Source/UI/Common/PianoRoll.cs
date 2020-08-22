@@ -179,9 +179,9 @@ namespace FamiStudio
         RenderBitmap bmpSnapRed;
         RenderBitmap[] bmpSnapResolution = new RenderBitmap[(int)SnapResolution.Max];
         RenderBitmap[] bmpEffects = new RenderBitmap[Note.EffectCount];
-        RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
-        RenderPath[] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
-        RenderPath[] releaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
+        RenderPath[,] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1, 2];
+        RenderPath[,] stopReleaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1, 2];
+        RenderPath[,] releaseNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1, 2];
         RenderPath[] slideNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
         RenderPath seekGeometry;
 
@@ -608,14 +608,14 @@ namespace FamiStudio
                 int idx = z - MinZoomLevel;
                 int x = (int)(noteSizeX * (float)Math.Pow(2.0, z) - 1);
 
-                stopNoteGeometry[idx] = g.CreateConvexPath(new[]
+                stopNoteGeometry[idx, 0] = g.CreateConvexPath(new[]
                 {
                     new Point(0, 0),
                     new Point(0, noteSizeY),
                     new Point(x, noteSizeY / 2)
                 });
 
-                releaseNoteGeometry[idx] = g.CreateConvexPath(new[]
+                releaseNoteGeometry[idx, 0] = g.CreateConvexPath(new[]
                 {
                     new Point(0, 0),
                     new Point(0, noteSizeY),
@@ -623,9 +623,31 @@ namespace FamiStudio
                     new Point(x + 1, noteSizeY / 2 - releaseNoteSizeY / 2)
                 });
 
-                stopReleaseNoteGeometry[idx] = g.CreateConvexPath(new[]
+                stopReleaseNoteGeometry[idx, 0] = g.CreateConvexPath(new[]
                 {
                     new Point(0, noteSizeY / 2 - releaseNoteSizeY / 2),
+                    new Point(0, noteSizeY / 2 + releaseNoteSizeY / 2),
+                    new Point(x, noteSizeY / 2)
+                });
+
+                stopNoteGeometry[idx, 1] = g.CreateConvexPath(new[]
+                {
+                    new Point(0, 1),
+                    new Point(0, noteSizeY),
+                    new Point(x, noteSizeY / 2)
+                });
+
+                releaseNoteGeometry[idx, 1] = g.CreateConvexPath(new[]
+                {
+                    new Point(0, 1),
+                    new Point(0, noteSizeY),
+                    new Point(x + 1, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2),
+                    new Point(x + 1, noteSizeY / 2 - releaseNoteSizeY / 2 + 1)
+                });
+
+                stopReleaseNoteGeometry[idx, 1] = g.CreateConvexPath(new[]
+                {
+                    new Point(0, noteSizeY / 2 - releaseNoteSizeY / 2 + 1),
                     new Point(0, noteSizeY / 2 + releaseNoteSizeY / 2),
                     new Point(x, noteSizeY / 2)
                 });
@@ -687,9 +709,12 @@ namespace FamiStudio
             {
                 int idx = z - MinZoomLevel;
 
-                Utils.DisposeAndNullify(ref stopNoteGeometry[idx]);
-                Utils.DisposeAndNullify(ref releaseNoteGeometry[idx]);
-                Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[idx]);
+                Utils.DisposeAndNullify(ref stopNoteGeometry[idx, 0]);
+                Utils.DisposeAndNullify(ref releaseNoteGeometry[idx, 0]);
+                Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[idx, 0]);
+                Utils.DisposeAndNullify(ref stopNoteGeometry[idx, 1]);
+                Utils.DisposeAndNullify(ref releaseNoteGeometry[idx, 1]);
+                Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[idx, 1]);
                 Utils.DisposeAndNullify(ref slideNoteGeometry[idx]);
             }
 
@@ -1464,7 +1489,7 @@ namespace FamiStudio
                 foreach (var offset in offsets)
                 {
                     g.PushTranslation(0, offset * -noteSizeY);
-                    g.FillRectangle(0, 0, sx, sy, g.GetSolidBrush(arpeggio.Color, 1.0f, 0.2f));
+                    g.FillRectangle(0, 1, sx, sy, g.GetSolidBrush(arpeggio.Color, 1.0f, 0.2f));
                     g.PopTransform();
                 }
             }
@@ -1480,7 +1505,7 @@ namespace FamiStudio
             var paths = n1.IsStop ? (released ? stopReleaseNoteGeometry : stopNoteGeometry) : releaseNoteGeometry;
 
             g.PushTranslation(x, y);
-            g.FillAndDrawConvexPath(paths[zoomLevel - MinZoomLevel], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f), selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
+            g.FillAndDrawConvexPath(paths[zoomLevel - MinZoomLevel, 0], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f), selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
 
             if (arpeggio != null)
             {
@@ -1488,7 +1513,7 @@ namespace FamiStudio
                 foreach (var offset in offsets)
                 {
                     g.PushTranslation(0, offset * -noteSizeY);
-                    g.FillConvexPath(paths[zoomLevel - MinZoomLevel], g.GetSolidBrush(arpeggio.Color, 1.0f, 0.2f), true);
+                    g.FillConvexPath(paths[zoomLevel - MinZoomLevel, 1], g.GetSolidBrush(arpeggio.Color, 1.0f, 0.2f), true);
                     g.PopTransform();
                 }
             }
