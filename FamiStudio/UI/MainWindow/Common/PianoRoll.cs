@@ -2434,6 +2434,8 @@ namespace FamiStudio
                 var channel = Song.Channels[editChannel];
                 var pattern = channel.PatternInstances[patternIdx];
 
+                //SnapNote();
+
                 // Create a pattern if needed.
                 if (pattern == null)
                 {
@@ -2455,6 +2457,17 @@ namespace FamiStudio
                 App.Seek(App.CurrentFrame + Song.NoteLength);
                 App.UndoRedoManager.EndTransaction();
 
+                var seekX = App.CurrentFrame * noteSizeX - scrollX;
+                var minX = 128;
+                var maxX = Width - whiteKeySizeX - 128;
+
+                // Keep everything visible 
+                if (seekX < minX)
+                    scrollX -= (minX - seekX);
+                else if (seekX > maxX)
+                    scrollX += (seekX - maxX);
+
+                ClampScroll();
                 ConditionalInvalidate();
             }
         }

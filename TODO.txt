@@ -3,10 +3,8 @@
 TODAY:
 - Recording mode
 	- TAB + BACKSPACE
-	- Stop note??
 	- Snap
 	- Base octave page up/down.
-	- Follow.
 - Move MacUtils to UI folder (where GtkUtils is) + browse for folder
 - Make piano roll rect look better.
 - Test IsKeyDown() on Linux + Mac. Linux seems to try to use OpenTK???

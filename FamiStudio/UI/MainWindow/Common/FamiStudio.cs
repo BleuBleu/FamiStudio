@@ -1157,12 +1157,19 @@ namespace FamiStudio
             buffer.Serialize(ref ghostChannelMask);
             buffer.Serialize(ref song);
 
+            var currentFrame = CurrentFrame;
+            buffer.Serialize(ref currentFrame);
+
             ProjectExplorer.SerializeState(buffer);
             Sequencer.SerializeState(buffer);
             PianoRoll.SerializeState(buffer);
 
             if (buffer.IsReading)
             {
+                // Move seek bar on undo/redo when recording.
+                if (IsRecording)
+                    Seek(currentFrame);
+
                 RefreshSequencerLayout();
                 mainForm.Invalidate();
             }
