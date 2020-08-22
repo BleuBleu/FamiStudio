@@ -464,6 +464,8 @@ namespace FamiStudio
                 size += kv.Value.Length;
             }
 
+            arpeggioEnvelopeNames[null] = defaultEnvName;
+
             // Write the unique vibrato envelopes.
             if (kernel == FamiToneKernel.FamiStudio)
             {
@@ -733,6 +735,7 @@ namespace FamiStudio
 
                         if (note.HasVibrato)
                         {
+                            // MATTT: If note has attack, no point in setting the default vibrato envelope, instrument will do it anyway.
                             patternBuffer.Add($"${0x63:x2}");
                             patternBuffer.Add($"{lo}({vibratoEnvelopeNames[note.RawVibrato]})");
                             patternBuffer.Add($"{hi}({vibratoEnvelopeNames[note.RawVibrato]})");
@@ -746,16 +749,15 @@ namespace FamiStudio
                             // Set/clear override when changing arpeggio
                             if (note.Arpeggio != arpeggio)
                             {
-                                if (note.Arpeggio != null)
+                                if (note != null || !note.HasAttack)
                                 {
                                     patternBuffer.Add($"${0x64:x2}");
                                     patternBuffer.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
                                     patternBuffer.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
                                 }
-                                else
-                                {
+
+                                if (note.Arpeggio == null)
                                     patternBuffer.Add($"${0x66:x2}");
-                                }
 
                                 arpeggio = note.Arpeggio;
                             }

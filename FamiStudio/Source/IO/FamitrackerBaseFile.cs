@@ -256,6 +256,9 @@ namespace FamiStudio
 
         protected Arpeggio GetOrCreateArpeggio(int param)
         {
+            if (param == 0)
+                return null;
+
             var name = $"Arp {param:X2}";
             var arp = project.GetArpeggio(name);
 
@@ -279,10 +282,6 @@ namespace FamiStudio
             switch (fx.fx)
             {
                 case Effect_None:
-                    return;
-                case Effect_Arpeggio:
-                    note = pattern.GetLastValidNoteAt(n); // MATTT: This is gonna be more complicated than this!!!
-                    note.Arpeggio = GetOrCreateArpeggio(fx.param);
                     return;
                 case Effect_Jump:
                     pattern.Song.SetLoopPoint(fx.param);
@@ -330,6 +329,7 @@ namespace FamiStudio
                 case Effect_Portamento:
                 case Effect_SlideUp:
                 case Effect_SlideDown:
+                case Effect_Arpeggio:
                     // These will be applied later.
                     return;
             }
@@ -476,6 +476,66 @@ namespace FamiStudio
             return bestIdx;
         }
 
+        private void CreateArpeggios(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        {
+            var processedPatterns = new HashSet<Pattern>();
+
+            foreach (var c in s.Channels)
+            {
+                if (!c.SupportsArpeggios)
+                    continue;
+
+                var lastNoteInstrument = (Instrument)null;
+                var lastNoteArpeggio = (Arpeggio)null;
+                var lastNoteValue = (byte)Note.NoteInvalid;
+
+                for (int p = 0; p < s.Length; p++)
+                {
+                    var pattern = c.PatternInstances[p];
+
+                    if (pattern == null || !patternFxData.ContainsKey(pattern) || processedPatterns.Contains(pattern))
+                        continue;
+
+                    processedPatterns.Add(pattern);
+
+                    var fxData = patternFxData[pattern];
+                    var patternLen = s.GetPatternLength(p);
+
+                    for (var it = pattern.GetNoteIterator(0, patternLen); !it.Done; it.Next())
+                    {
+                        var n    = it.CurrentTime;
+                        var note = it.CurrentNote;
+
+                        for (int i = 0; i < fxData.GetLength(1); i++)
+                        {
+                            var fx = fxData[n, i];
+
+                            if (fx.fx == Effect_Arpeggio)
+                            {
+                                if (note == null)
+                                {
+                                    note = pattern.GetOrCreateNoteAt(n);
+                                    note.Value = lastNoteValue;
+                                    note.Instrument = lastNoteInstrument;
+                                    note.HasAttack = false;
+                                    it.Resync();
+                                }
+
+                                note.Arpeggio = GetOrCreateArpeggio(fx.param);
+                            }
+                        }
+
+                        if (note != null && note.IsValid)
+                        {
+                            lastNoteValue      = note.Value;
+                            lastNoteInstrument = note.Instrument;
+                            lastNoteArpeggio   = note.Arpeggio;
+                        }
+                    }
+                }
+            }
+        }
+
         private void CreateSlideNotes(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
             var processedPatterns = new HashSet<Pattern>();
@@ -488,6 +548,7 @@ namespace FamiStudio
 
                 var songSpeed = s.FamitrackerSpeed;
                 var lastNoteInstrument = (Instrument)null;
+                var lastNoteArpeggio = (Arpeggio)null;
                 var lastNoteValue = (byte)Note.NoteInvalid;
                 var portamentoSpeed = 0;
                 var slideSpeed = 0;
@@ -544,6 +605,7 @@ namespace FamiStudio
 
                                     note.Value      = lastNoteValue;
                                     note.Instrument = lastNoteInstrument;
+                                    note.Arpeggio   = lastNoteArpeggio;
                                     note.HasAttack  = false;
                                 }
                             }
@@ -688,6 +750,7 @@ namespace FamiStudio
                         {
                             lastNoteValue      = note.IsSlideNote ? note.SlideNoteTarget : note.Value;
                             lastNoteInstrument = note.Instrument;
+                            lastNoteArpeggio   = note.Arpeggio;
                         }
                     }
                 }
@@ -721,6 +784,7 @@ namespace FamiStudio
                 else
                     s.SetBarLength(barLength);
 
+                CreateArpeggios(s, patternFxData);
                 CreateSlideNotes(s, patternFxData);
 
                 s.DeleteEmptyPatterns();

@@ -4,9 +4,6 @@
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
 - Arpeggio : 
-	- FamiTracker: There is a MATTT thing that crashes when loading FDS_rushjet1_-_fdx.ftm.
-	x Replace selection arp
-	x Add/remove arps.
 	- Documentation.
 - Option to not play notes when dragging.
 - Drag seek bar (github issue request!).

@@ -149,14 +149,16 @@ namespace FamiStudio
                         if (note.Arpeggio != null)
                         {
                             envelopes[Envelope.Arpeggio] = note.Arpeggio.Envelope;
-                            envelopeIdx[Envelope.Arpeggio] = 0;
-                            envelopeValues[Envelope.Arpeggio] = 0;
                             arpeggioEnvelopeOverride = true;
                         }
                         else
                         {
+                            envelopes[Envelope.Arpeggio] = null;
                             arpeggioEnvelopeOverride = false;
                         }
+
+                        envelopeIdx[Envelope.Arpeggio] = 0;
+                        envelopeValues[Envelope.Arpeggio] = 0;
                     }
                     // If same arpeggio, but note has an attack, reset it.
                     else if (note.HasAttack && arpeggioEnvelopeOverride)

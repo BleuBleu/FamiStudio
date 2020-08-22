@@ -516,21 +516,22 @@ namespace FamiStudio
                         if (blockVersion < 5 && project.ExpansionAudio == Project.ExpansionFds && channel.Type == Channel.FdsWave && octave < 6 && octave != 0)
                             octave += 2;
 
-                        if (note != 0 && octave != 0)
+                        if (note == 13)
                         {
-                            switch (note)
-                            {
-                                case 13: pattern.GetOrCreateNoteAt(n).Value = Note.NoteRelease; break;
-                                case 14: pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop; break;
-                                default:
-                                    if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
-                                        pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];
-                                    if (channel.Type == Channel.Noise)
-                                        pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note + 15);
-                                    else
-                                        pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note);
-                                    break;
-                            }
+                            pattern.GetOrCreateNoteAt(n).Value = Note.NoteRelease;
+                        }
+                        else if (note == 14)
+                        {
+                            pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop;
+                        }
+                        else if (note != 0 && octave != 0)
+                        {
+                            if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
+                                pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];
+                            if (channel.Type == Channel.Noise)
+                                pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note + 15);
+                            else
+                                pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note);
                         }
                     }
 
