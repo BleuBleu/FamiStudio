@@ -21,6 +21,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_0D7EA7143526434498438F17CF54A486"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
         "OwnerKey" = "8:_F8442B1E6721F9F7CA7633937BAFE4FF"
         "MsmSig" = "8:_UNDEFINED"
@@ -28,13 +34,7 @@
         "Entry"
         {
         "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
-        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
-        "OwnerKey" = "8:_6C89BD387812ECC8F813AD5435321A15"
+        "OwnerKey" = "8:_5907743FD4B7075E982831F3D61936A1"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -46,36 +46,48 @@
         "Entry"
         {
         "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
-        "OwnerKey" = "8:_5907743FD4B7075E982831F3D61936A1"
+        "OwnerKey" = "8:_6C89BD387812ECC8F813AD5435321A15"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_0E8D5BE6867142BA88C824E848A44DF4"
+        "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
+        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_320572F80CAE40A2884B87BC673FD59C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_2170D06C2813442491EACBF5C1BB3201"
+        "MsmKey" = "8:_36E757E722E54219BB76A5B30B183A8C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_29A022B6EE314228BD07A95FFF02AAC0"
+        "MsmKey" = "8:_4542EA29EA6B4D7DA38044FAC2DC34DD"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_2D4512664B0F4FF282814DBC11C62C98"
+        "MsmKey" = "8:_481EFC1CD6F747029EF0944827D9CC6E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_2E5B65CAFABA45988F3602EB9F3CCBE6"
+        "MsmKey" = "8:_58349617D8AB4541A4AAB91729D29D46"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_583B4F1EA412476690F4AB9C35083986"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -83,12 +95,6 @@
         {
         "MsmKey" = "8:_5907743FD4B7075E982831F3D61936A1"
         "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_6802629516074A218C72D553A3E74FED"
-        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -105,13 +111,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_72FF03F461144A8B83AFAE60351D1EF6"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_9C4D03EBEC03429C8A67253FDE5C3A3F"
+        "MsmKey" = "8:_749FC7DFE4044C56A1F585A2D63D73AA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -123,19 +123,31 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_E07FC0F5669E4384B4794C20D5432F56"
+        "MsmKey" = "8:_CF5ACC43DDB94796823CCA9B59379B7A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_F4401CBAFD4146F1817135F87E753FAC"
+        "MsmKey" = "8:_D46C752804214E659796C9BD5F9684C3"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_F5856227EA094ABDB33A33C4B8060B3C"
+        "MsmKey" = "8:_DB567E6D21E44480980DDE5F76003C9E"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_DCD33E104C0C44BFBA4886685C9001FB"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E0BE0B2620A346A99004035186DC2454"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -148,13 +160,13 @@
         "Entry"
         {
         "MsmKey" = "8:_F8442B1E6721F9F7CA7633937BAFE4FF"
-        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_F8442B1E6721F9F7CA7633937BAFE4FF"
-        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
+        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -166,25 +178,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_6C89BD387812ECC8F813AD5435321A15"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_5907743FD4B7075E982831F3D61936A1"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_F8442B1E6721F9F7CA7633937BAFE4FF"
+        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -196,7 +190,25 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
+        "OwnerKey" = "8:_F8442B1E6721F9F7CA7633937BAFE4FF"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_5907743FD4B7075E982831F3D61936A1"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_6C89BD387812ECC8F813AD5435321A15"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -294,6 +306,26 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0D7EA7143526434498438F17CF54A486"
+            {
+            "SourcePath" = "8:Demo Songs\\Journey To Silius (FT2 Friendly).fms"
+            "TargetName" = "8:Journey To Silius (FT2 Friendly).fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0E1830606F567E40430D3A93BEF40D33"
             {
             "AssemblyRegister" = "3:1"
@@ -301,11 +333,6 @@
             "AssemblyAsmDisplayName" = "8:SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_0E1830606F567E40430D3A93BEF40D33"
-                    {
-                    "Name" = "8:SharpDX.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:SharpDX.dll"
             "TargetName" = "8:"
@@ -325,7 +352,87 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0E8D5BE6867142BA88C824E848A44DF4"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_320572F80CAE40A2884B87BC673FD59C"
+            {
+            "SourcePath" = "8:Demo Songs\\Silver Surfer.fms"
+            "TargetName" = "8:Silver Surfer.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_36E757E722E54219BB76A5B30B183A8C"
+            {
+            "SourcePath" = "8:Demo Songs\\Gimmick.fms"
+            "TargetName" = "8:Gimmick.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4542EA29EA6B4D7DA38044FAC2DC34DD"
+            {
+            "SourcePath" = "8:Demo Songs\\DuckTales (FT2 Friendly).fms"
+            "TargetName" = "8:DuckTales (FT2 Friendly).fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_481EFC1CD6F747029EF0944827D9CC6E"
+            {
+            "SourcePath" = "8:Demo Songs\\Layla The Iris Missions.fms"
+            "TargetName" = "8:Layla The Iris Missions.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_58349617D8AB4541A4AAB91729D29D46"
             {
             "SourcePath" = "8:Demo Songs\\Mega Man 2.fms"
             "TargetName" = "8:Mega Man 2.fms"
@@ -345,70 +452,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2170D06C2813442491EACBF5C1BB3201"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_583B4F1EA412476690F4AB9C35083986"
             {
-            "SourcePath" = "8:Demo Songs\\Journey To Silius.fms"
-            "TargetName" = "8:Journey To Silius.fms"
-            "Tag" = "8:"
-            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_29A022B6EE314228BD07A95FFF02AAC0"
-            {
-            "SourcePath" = "8:Demo Songs\\Danger Streets.fms"
-            "TargetName" = "8:Danger Streets.fms"
-            "Tag" = "8:"
-            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2D4512664B0F4FF282814DBC11C62C98"
-            {
-            "SourcePath" = "8:Demo Songs\\Castlevania 2.fms"
-            "TargetName" = "8:Castlevania 2.fms"
-            "Tag" = "8:"
-            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2E5B65CAFABA45988F3602EB9F3CCBE6"
-            {
-            "SourcePath" = "8:Demo Songs\\Gimmick.fms"
-            "TargetName" = "8:Gimmick.fms"
+            "SourcePath" = "8:Demo Songs\\TutorialSong.fms"
+            "TargetName" = "8:TutorialSong.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -432,11 +479,6 @@
             "AssemblyAsmDisplayName" = "8:SharpDX.Direct2D1, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_5907743FD4B7075E982831F3D61936A1"
-                    {
-                    "Name" = "8:SharpDX.Direct2D1.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:SharpDX.Direct2D1.dll"
             "TargetName" = "8:"
@@ -456,26 +498,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6802629516074A218C72D553A3E74FED"
-            {
-            "SourcePath" = "8:Demo Songs\\After The Rain.fms"
-            "TargetName" = "8:After The Rain.fms"
-            "Tag" = "8:"
-            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_68F38BC81F0EC8ABA97B80F723386F61"
             {
             "AssemblyRegister" = "3:1"
@@ -483,11 +505,6 @@
             "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
                 "ScatterAssemblies"
                 {
-                    "_68F38BC81F0EC8ABA97B80F723386F61"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:System.Net.Http.dll"
             "TargetName" = "8:"
@@ -514,11 +531,6 @@
             "AssemblyAsmDisplayName" = "8:SharpDX.XAudio2, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_6C89BD387812ECC8F813AD5435321A15"
-                    {
-                    "Name" = "8:SharpDX.XAudio2.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:SharpDX.XAudio2.dll"
             "TargetName" = "8:"
@@ -538,30 +550,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_72FF03F461144A8B83AFAE60351D1EF6"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_749FC7DFE4044C56A1F585A2D63D73AA"
             {
-            "SourcePath" = "8:Demo Songs\\Shovel Knight.fms"
-            "TargetName" = "8:Shovel Knight.fms"
-            "Tag" = "8:"
-            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_9C4D03EBEC03429C8A67253FDE5C3A3F"
-            {
-            "SourcePath" = "8:Demo Songs\\Layla The Iris Missions.fms"
-            "TargetName" = "8:Layla The Iris Missions.fms"
+            "SourcePath" = "8:Demo Songs\\Shatterhand.fms"
+            "TargetName" = "8:Shatterhand.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -585,11 +577,6 @@
             "AssemblyAsmDisplayName" = "8:SharpDX.Direct3D11, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_B2961EA04D6C3B0F391D53E11E6CC725"
-                    {
-                    "Name" = "8:SharpDX.Direct3D11.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:SharpDX.Direct3D11.dll"
             "TargetName" = "8:"
@@ -609,10 +596,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E07FC0F5669E4384B4794C20D5432F56"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CF5ACC43DDB94796823CCA9B59379B7A"
             {
-            "SourcePath" = "8:Demo Songs\\Shatterhand.fms"
-            "TargetName" = "8:Shatterhand.fms"
+            "SourcePath" = "8:Demo Songs\\Castlevania 2 (FT2 Friendly).fms"
+            "TargetName" = "8:Castlevania 2 (FT2 Friendly).fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -629,10 +616,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F4401CBAFD4146F1817135F87E753FAC"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D46C752804214E659796C9BD5F9684C3"
             {
-            "SourcePath" = "8:Demo Songs\\TutorialSong.fms"
-            "TargetName" = "8:TutorialSong.fms"
+            "SourcePath" = "8:Demo Songs\\After The Rain (FT2 Friendly).fms"
+            "TargetName" = "8:After The Rain (FT2 Friendly).fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -649,10 +636,50 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F5856227EA094ABDB33A33C4B8060B3C"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DB567E6D21E44480980DDE5F76003C9E"
             {
-            "SourcePath" = "8:Demo Songs\\DuckTales.fms"
-            "TargetName" = "8:DuckTales.fms"
+            "SourcePath" = "8:Demo Songs\\Danger Streets (FT2 Friendly).fms"
+            "TargetName" = "8:Danger Streets (FT2 Friendly).fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DCD33E104C0C44BFBA4886685C9001FB"
+            {
+            "SourcePath" = "8:Demo Songs\\Shovel Knight.fms"
+            "TargetName" = "8:Shovel Knight.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E0BE0B2620A346A99004035186DC2454"
+            {
+            "SourcePath" = "8:Demo Songs\\Journey To Silius.fms"
+            "TargetName" = "8:Journey To Silius.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -676,11 +703,6 @@
             "AssemblyAsmDisplayName" = "8:SharpDX.DXGI, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_F8442B1E6721F9F7CA7633937BAFE4FF"
-                    {
-                    "Name" = "8:SharpDX.DXGI.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:SharpDX.DXGI.dll"
             "TargetName" = "8:"
@@ -801,15 +823,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
-        "ProductCode" = "8:{2ECB6900-FC37-427D-A400-BF1501797E36}"
-        "PackageCode" = "8:{31C8D92F-E72B-4AA1-A14A-F10A10E1655A}"
+        "ProductCode" = "8:{DAB77214-E0AD-461C-96A4-FE2053C3AFD6}"
+        "PackageCode" = "8:{80A57123-D904-40AD-9A99-C26C5B9105CD}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.1.1"
+        "ProductVersion" = "8:2.2.0"
         "Manufacturer" = "8:BleuBleu"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1351,7 +1373,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_02EAA2AD59C5483CB557FE728242DD43"
             {
-            "SourcePath" = "8:..\\FamiStudio\\obj\\Debug\\FamiStudio.exe"
+            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\FamiStudio.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
