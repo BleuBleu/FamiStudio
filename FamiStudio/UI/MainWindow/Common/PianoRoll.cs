@@ -176,6 +176,7 @@ namespace FamiStudio
         RenderBitmap bmpSlide;
         RenderBitmap bmpSlideSmall;
         RenderBitmap bmpSnap;
+        RenderBitmap bmpSnapRed;
         RenderBitmap[] bmpSnapResolution = new RenderBitmap[(int)SnapResolution.Max];
         RenderBitmap[] bmpEffects = new RenderBitmap[Note.EffectCount];
         RenderPath[] stopNoteGeometry = new RenderPath[MaxZoomLevel - MinZoomLevel + 1];
@@ -593,6 +594,7 @@ namespace FamiStudio
             bmpSlide = g.CreateBitmapFromResource("Slide");
             bmpSlideSmall = g.CreateBitmapFromResource("SlideSmall");
             bmpSnap = g.CreateBitmapFromResource("Snap");
+            bmpSnapRed = g.CreateBitmapFromResource("SnapRed");
             bmpSnapResolution[(int)SnapResolution.OneQuarter] = g.CreateBitmapFromResource("Snap1_4");
             bmpSnapResolution[(int)SnapResolution.OneThird] = g.CreateBitmapFromResource("Snap1_3");
             bmpSnapResolution[(int)SnapResolution.OneHalf] = g.CreateBitmapFromResource("Snap1_2");
@@ -669,6 +671,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpSlide);
             Utils.DisposeAndNullify(ref bmpSlideSmall);
             Utils.DisposeAndNullify(ref bmpSnap);
+            Utils.DisposeAndNullify(ref bmpSnapRed);
 
             for (int i = 0; i < (int)SnapResolution.Max; i++)
             {
@@ -933,8 +936,8 @@ namespace FamiStudio
 
                 if (IsSnappingAllowed)
                 {
-                    g.DrawBitmap(bmpSnapResolution[(int)snapResolution], whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX - 1, snapIconPosY, snap ? 1.0f : 0.3f);
-                    g.DrawBitmap(bmpSnap, whiteKeySizeX - (int)bmpSnap.Size.Width * 1 - snapIconPosX * 1 - 1, snapIconPosY, snap ? 1.0f : 0.3f);
+                    g.DrawBitmap(bmpSnapResolution[(int)snapResolution], whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX - 1, snapIconPosY, IsSnappingEnabled ? 1.0f : 0.3f);
+                    g.DrawBitmap(App.IsRecording ? bmpSnapRed : bmpSnap, whiteKeySizeX - (int)bmpSnap.Size.Width * 1 - snapIconPosX * 1 - 1, snapIconPosY, IsSnappingEnabled || App.IsRecording ? 1.0f : 0.3f);
                 }
 
                 if (showEffectsPanel)
@@ -1021,11 +1024,9 @@ namespace FamiStudio
 
             if (App.IsRecording)
             {
-                const int BaseRecOctave = 3;
-
                 for (int i = 0; i < RecordingNoteToKeyMap.Count; i++)
                 { 
-                    int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + BaseRecOctave)) - scrollY;
+                    int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + App.BaseRecordingOctave)) - scrollY;
                     int y = octaveBaseY - (i % 12) * noteSizeY;
                     g.DrawText(RecordingNoteToKeyMap[i].ToString(), ThemeBase.FontSmallCenter, blackKeySizeX, y - recordingKeyOffsetY, theme.DarkRedFillBrush2, whiteKeySizeX - blackKeySizeX);
                 }
@@ -2423,18 +2424,91 @@ namespace FamiStudio
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            UpdateCursor();
+            UpdateCursor(); 
+        }
+
+        protected void EnsureSeekBarVisible()
+        {
+            var seekX = App.CurrentFrame * noteSizeX - scrollX;
+            var minX = 128;
+            var maxX = Width - whiteKeySizeX - 128;
+
+            // Keep everything visible 
+            if (seekX < minX)
+                scrollX -= (minX - seekX);
+            else if (seekX > maxX)
+                scrollX += (seekX - maxX);
+
+            ClampScroll();
+        }
+
+        public void DeleteRecording(int frame)
+        {
+            if (App.IsRecording && editMode == EditionMode.Channel)
+            {
+                var endFrame = frame;
+                var startFrame = SnapNote(frame, false, true);
+
+                if (startFrame == 0)
+                    return;
+
+                if (startFrame == endFrame)
+                    startFrame = SnapNote(startFrame - 1, false, true);
+
+                var startPatternIdx = Song.FindPatternInstanceIndex(startFrame, out _);
+                var endPatternIdx   = Song.FindPatternInstanceIndex(endFrame, out _);
+
+                var channel = Song.Channels[editChannel];
+
+                if (startPatternIdx == endPatternIdx)
+                {
+                    if (channel.PatternInstances[startPatternIdx] != null)
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[startPatternIdx].Id);
+                    else
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
+                }
+                else
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+
+                channel.DeleteNotesBetween(startFrame, endFrame);
+                App.Seek(startFrame);
+                EnsureSeekBarVisible();
+                App.UndoRedoManager.EndTransaction();
+
+                for (int i = startPatternIdx; i <= endPatternIdx; i++)
+                    PatternChanged?.Invoke(channel.PatternInstances[startPatternIdx]);
+
+                ConditionalInvalidate();
+            }
+        }
+
+        public void AdvanceRecording(int frame, bool doTransaction = false)
+        {
+            if (App.IsRecording && editMode == EditionMode.Channel)
+            {
+                var snappedFrame = SnapNote(frame, true, true);
+
+                if (doTransaction)
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
+
+                App.Seek(snappedFrame);
+                EnsureSeekBarVisible();
+
+                if (doTransaction)
+                    App.UndoRedoManager.EndTransaction();
+
+                ConditionalInvalidate();
+            }
         }
 
         public void RecordNote(Note note)
         {
             if (App.IsRecording && editMode == EditionMode.Channel && (note.IsMusical || note.IsStop))
             {
-                var patternIdx = Song.FindPatternInstanceIndex(App.CurrentFrame, out var noteIdx);
+                var currentFrame = SnapNote(App.CurrentFrame, false, true);
+                var patternIdx = Song.FindPatternInstanceIndex(currentFrame, out var noteIdx);
                 var channel = Song.Channels[editChannel];
                 var pattern = channel.PatternInstances[patternIdx];
-
-                //SnapNote();
 
                 // Create a pattern if needed.
                 if (pattern == null)
@@ -2448,26 +2522,16 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                 }
 
-                pattern.Notes[noteIdx] = note.Clone();
-
+                var newNote = note.Clone();
+                newNote.HasVolume = false;
+                pattern.Notes[noteIdx] = newNote;
                 pattern.ClearLastValidNoteCache();
                 PatternChanged?.Invoke(pattern);
 
-                // MATTT
-                App.Seek(App.CurrentFrame + Song.NoteLength);
+                AdvanceRecording(currentFrame);
+
                 App.UndoRedoManager.EndTransaction();
 
-                var seekX = App.CurrentFrame * noteSizeX - scrollX;
-                var minX = 128;
-                var maxX = Width - whiteKeySizeX - 128;
-
-                // Keep everything visible 
-                if (seekX < minX)
-                    scrollX -= (minX - seekX);
-                else if (seekX > maxX)
-                    scrollX += (seekX - maxX);
-
-                ClampScroll();
                 ConditionalInvalidate();
             }
         }
@@ -3139,9 +3203,9 @@ namespace FamiStudio
             return Song.GetPatternNoteLength(patternIdx);
         }
 
-        private int SnapNote(int noteIdx, bool roundUp = false)
+        private int SnapNote(int noteIdx, bool roundUp = false, bool forceSnap = false)
         {
-            if (IsSnappingEnabled)
+            if (IsSnappingEnabled || forceSnap)
             {
                 var patternIdx = Song.FindPatternInstanceIndex(noteIdx, out noteIdx);
                 var noteLength = Song.Project.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(patternIdx);
@@ -3159,7 +3223,33 @@ namespace FamiStudio
                     // Otherwise, rounding errors can create a different snapping pattern every note (6-5-5-6 like Gimmick).
                     var baseNodeIdx  = noteIdx / noteLength * noteLength;
                     var noteFrameIdx = noteIdx % noteLength;
-                    snappedNoteIndex = baseNodeIdx + (int)Math.Round(Math.Floor((noteFrameIdx + 0.001) / (noteLength * snapFactor) + (roundUp ? 1 : 0)) * (noteLength * snapFactor));
+                    var numSnapPoints = (int)Math.Round(1.0 / snapFactor);
+
+                    // This is terrible...
+                    if (roundUp)
+                    {
+                        for (int i = 0; i <= numSnapPoints; i++)
+                        {
+                            var snapPoint = (int)Math.Round(i / (double)numSnapPoints * noteLength);
+                            if (noteFrameIdx < snapPoint)
+                            {
+                                snappedNoteIndex = baseNodeIdx + snapPoint;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int i = numSnapPoints - 1; i >= 0; i--)
+                        {
+                            var snapPoint = (int)Math.Round(i / (double)numSnapPoints * noteLength);
+                            if (noteFrameIdx >= snapPoint)
+                            {
+                                snappedNoteIndex = baseNodeIdx + snapPoint;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 if (!roundUp)

@@ -1,10 +1,6 @@
 2.2.0
 =====
 TODAY:
-- Recording mode
-	- TAB + BACKSPACE
-	- Snap
-	- Base octave page up/down.
 - Move MacUtils to UI folder (where GtkUtils is) + browse for folder
 - Make piano roll rect look better.
 - Test IsKeyDown() on Linux + Mac. Linux seems to try to use OpenTK???
@@ -43,6 +39,7 @@ Testing:
 - Retest Famitone2/FamiStudio engine/SFX export.
 - Linux/MacOS: Test browse for folder dialog???
 - Test LogDialog
+- Test all keys for piano on Linux/Mac.
 
 Tweet ideas
 ===========

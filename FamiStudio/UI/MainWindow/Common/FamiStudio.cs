@@ -29,6 +29,7 @@ namespace FamiStudio
         private bool pianoRollScrollChanged = false;
         private bool recordingMode = false;
         private int tutorialCounter = 3;
+        private int baseRecordingOctave = 3;
         private Keys lastRecordingKeyDown = Keys.None; 
         private bool[] keyStates = new bool[256];
 #if FAMISTUDIO_WINDOWS
@@ -42,6 +43,7 @@ namespace FamiStudio
         public bool RealTimeUpdate => songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || pianoRollScrollChanged;
         public bool IsPlaying => songPlayer.IsPlaying;
         public bool IsRecording => recordingMode;
+        public int BaseRecordingOctave => baseRecordingOctave;
         public int CurrentFrame => songPlayer.CurrentFrame;
         public int ChannelMask { get => songPlayer.ChannelMask; set => songPlayer.ChannelMask = value; }
         public string ToolTip { get => ToolBar.ToolTip; set => ToolBar.ToolTip = value; }
@@ -364,6 +366,7 @@ namespace FamiStudio
 
         private void InitProject()
         {
+            StopRecording();
             instrumentPlayer.Stop();
 
             StaticProject = project;
@@ -784,8 +787,9 @@ namespace FamiStudio
                     }
                     else
                     {
-                        var baseOctave = 3;
-                        noteValue += Note.FromFriendlyName("C0") + (baseOctave * 12);
+                        noteValue += Note.FromFriendlyName("C0") + (baseRecordingOctave * 12);
+                        noteValue = Utils.Clamp(noteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
+
                         lastRecordingKeyDown = e.KeyCode;
 
                         PlayInstrumentNote(noteValue, true, true);
@@ -819,14 +823,32 @@ namespace FamiStudio
             }
 
             if (IsRecording && !ctrl && !shift && HandleRecordingKey(e, true))
+            {
                 return;
-
-            if (e.KeyCode == Keys.Enter)
+            }
+            else if (IsRecording && e.KeyCode == Keys.Tab)
+            {
+                PianoRoll.AdvanceRecording(CurrentFrame, true);
+            }
+            else if (IsRecording && e.KeyCode == Keys.Back)
+            {
+                PianoRoll.DeleteRecording(CurrentFrame);
+            }
+            if (e.KeyCode == Keys.PageUp)
+            {
+                baseRecordingOctave = Math.Min(7, baseRecordingOctave + 1);
+                PianoRoll.ConditionalInvalidate();
+            }
+            else if (e.KeyCode == Keys.PageDown)
+            {
+                baseRecordingOctave = Math.Max(0, baseRecordingOctave - 1);
+                PianoRoll.ConditionalInvalidate();
+            }
+            else if (e.KeyCode == Keys.Enter)
             {
                 ToggleRecording();
             }
-
-            if (e.KeyCode == Keys.Space)
+            else if (e.KeyCode == Keys.Space)
             {
                 if (IsPlaying)
                 {

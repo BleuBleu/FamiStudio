@@ -15,6 +15,7 @@ namespace FamiStudio
         Pattern,
         Instrument,
         Arpeggio,
+        Application,
         Max
     };
 
@@ -92,6 +93,8 @@ namespace FamiStudio
                     break;
                 case TransactionScope.Arpeggio:
                     project.GetArpeggio(objectId).SerializeState(buffer);
+                    break;
+                case TransactionScope.Application:
                     break;
             }
 
