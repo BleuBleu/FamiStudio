@@ -37,6 +37,7 @@ namespace FamiStudio
         private Dictionary<byte, string> vibratoEnvelopeNames = new Dictionary<byte, string>();
         private Dictionary<Arpeggio, string> arpeggioEnvelopeNames = new Dictionary<Arpeggio, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
+        private string noArpeggioEnvelopeName;
 
         private FamiToneKernel kernel = FamiToneKernel.FamiStudio;
 
@@ -464,7 +465,7 @@ namespace FamiStudio
                 size += kv.Value.Length;
             }
 
-            arpeggioEnvelopeNames[null] = defaultEnvName;
+            noArpeggioEnvelopeName = defaultEnvName;
 
             // Write the unique vibrato envelopes.
             if (kernel == FamiToneKernel.FamiStudio)
@@ -735,7 +736,7 @@ namespace FamiStudio
 
                         if (note.HasVibrato)
                         {
-                            // MATTT: If note has attack, no point in setting the default vibrato envelope, instrument will do it anyway.
+                            // TODO: If note has attack, no point in setting the default vibrato envelope, instrument will do it anyway.
                             patternBuffer.Add($"${0x63:x2}");
                             patternBuffer.Add($"{lo}({vibratoEnvelopeNames[note.RawVibrato]})");
                             patternBuffer.Add($"{hi}({vibratoEnvelopeNames[note.RawVibrato]})");
@@ -752,8 +753,17 @@ namespace FamiStudio
                                 if (note != null || !note.HasAttack)
                                 {
                                     patternBuffer.Add($"${0x64:x2}");
-                                    patternBuffer.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
-                                    patternBuffer.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
+
+                                    if (note.Arpeggio == null)
+                                    {
+                                        patternBuffer.Add($"{lo}({noArpeggioEnvelopeName})");
+                                        patternBuffer.Add($"{hi}({noArpeggioEnvelopeName})");
+                                    }
+                                    else
+                                    {
+                                        patternBuffer.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                                        patternBuffer.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                                    }
                                 }
 
                                 if (note.Arpeggio == null)
