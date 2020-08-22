@@ -794,7 +794,7 @@ namespace FamiStudio
                 else if (e.KeyCode == lastRecordingKeyDown)
                 {
                     lastRecordingKeyDown = Keys.None;
-                    PlayInstrumentNote(Note.NoteRelease, true, false);
+                    StopOrReleaseIntrumentNote(false);
                 }
 
                 return true;
@@ -934,6 +934,12 @@ namespace FamiStudio
 
         public void KeyUp(KeyEventArgs e)
         {
+            bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
+            bool shift = e.Modifiers.HasFlag(Keys.Shift);
+
+            if (IsRecording && !ctrl && !shift && HandleRecordingKey(e, false))
+                return;
+
 #if FAMISTUDIO_WINDOWS
             if (!Sequencer.Focused) Sequencer.UnfocusedKeyUp(e);
 #endif
