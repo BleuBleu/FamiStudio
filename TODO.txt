@@ -1,8 +1,6 @@
 2.2.0
 =====
 - Play right note when dragging.
-- BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
-	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
 - Documentation : 
 	- Arpeggio.
 	- Recording mode.
@@ -11,9 +9,11 @@
 	- Wave loop
 	- Recording mode.
 - Option to not play notes when dragging.
-- Drag seek bar (github issue request!).
 - Instrument picker?
 - MATTT
+
+Cut:
+- Drag seek bar.
 
 2.2.0 Release
 =============
@@ -27,6 +27,8 @@
 	- WAV export loop count
 	- Recording mode
 - Discord server
+- Trailer
+- Tutorial : Wrap up from 2.0.0 to 2.2.0.
 
 Testing:
 ========

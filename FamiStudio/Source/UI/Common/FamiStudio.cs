@@ -172,16 +172,19 @@ namespace FamiStudio
             Sequencer.Reset();
             PianoRoll.Reset();
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
+            PianoRoll.CurrentArpeggio   = ProjectExplorer.SelectedArpeggio;
         }
 
         private void ProjectExplorer_InstrumentDeleted(Instrument instrument)
         {
             PianoRoll.Reset();
+            PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
         }
 
         private void ProjectExplorer_ArpeggioDeleted(Arpeggio arpeggio)
         {
             PianoRoll.Reset();
+            PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
         }
 
         private void PianoRoll_NotesPasted()
@@ -384,6 +387,7 @@ namespace FamiStudio
             PianoRoll.Reset();
             Sequencer.Reset();
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
+            PianoRoll.CurrentArpeggio   = ProjectExplorer.SelectedArpeggio;
             InvalidateEverything();
             UpdateTitle();
             RefreshSequencerLayout();

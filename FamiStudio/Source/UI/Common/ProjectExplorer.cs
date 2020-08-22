@@ -1361,6 +1361,7 @@ namespace FamiStudio
                         (!changedExpansion && changedNumChannels) ||
                         PlatformUtils.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
+                        selectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
                         App.StopEverything();
                         project.SetExpansionAudio(expansion, numChannels);
                         ProjectModified?.Invoke();
