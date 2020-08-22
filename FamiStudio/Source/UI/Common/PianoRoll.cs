@@ -1390,7 +1390,7 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
                 CopyNotes();
-            else if (editMode == EditionMode.Enveloppe) // MATTT: Arpeggion copy/paste
+            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                 CopyEnvelopeValues();
         }
 
@@ -1398,7 +1398,7 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
                 CutNotes();
-            else if (editMode == EditionMode.Enveloppe) // MATTT: Arpeggion copy/paste
+            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                 CutEnvelopeValues();
         }
 
@@ -1408,7 +1408,7 @@ namespace FamiStudio
 
             if (editMode == EditionMode.Channel)
                 PasteNotes();
-            else if (editMode == EditionMode.Enveloppe) // MATTT: Arpeggion copy/paste
+            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                 PasteEnvelopeValues();
         }
 
@@ -2283,7 +2283,10 @@ namespace FamiStudio
 
         private void TransformEnvelopeValues(int startFrameIdx, int endFrameIdx, Func<sbyte, int, sbyte> function)
         {
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+            if (editMode == EditionMode.Arpeggio)
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
+            else
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
 
             Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int minVal, out int maxVal);
 
@@ -2404,7 +2407,7 @@ namespace FamiStudio
                 {
                     if (editMode == EditionMode.Channel)
                         DeleteSelectedNotes();
-                    else if (editMode == EditionMode.Enveloppe) // MATTT
+                    else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                         DeleteSelectedEnvelopeValues();
                 }
 
@@ -2426,7 +2429,7 @@ namespace FamiStudio
                             break;
                     }
                 }
-                else if (editMode == EditionMode.Enveloppe) // MATTT
+                else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                 {
                     switch (e.KeyCode)
                     {
@@ -2602,7 +2605,7 @@ namespace FamiStudio
                 StartCaptureOperation(e, CaptureOperation.Select, false);
                 UpdateSelection(e.X, true);
             }
-            else if (right && editMode == EditionMode.Enveloppe && IsMouseInHeaderTopPart(e)) // MATTT
+            else if (right && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && IsMouseInHeaderTopPart(e)) 
             {
                 StartCaptureOperation(e, CaptureOperation.Select);
                 UpdateSelection(e.X, true);
@@ -2647,7 +2650,7 @@ namespace FamiStudio
 
                 ResizeEnvelope(e);
             }
-            else if ((left || right) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)  && IsMouseInNoteArea(e) && EditEnvelope.Length > 0) // MATTT
+            else if ((left || right) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)  && IsMouseInNoteArea(e) && EditEnvelope.Length > 0) 
             {
                 StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
 

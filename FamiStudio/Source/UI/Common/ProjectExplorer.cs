@@ -874,7 +874,41 @@ namespace FamiStudio
             }
             else if (captureOperation == CaptureOperation.DragArpeggio)
             {
-                if (!ClientRectangle.Contains(e.X, e.Y))
+                if (ClientRectangle.Contains(e.X, e.Y))
+                {
+                    var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
+
+                    var arpeggioSrc = draggedArpeggio;
+                    var arpeggioDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Arpeggio ? buttons[buttonIdx].arpeggio : null;
+
+                    if (arpeggioSrc != arpeggioDst && arpeggioSrc != null && arpeggioDst != null)
+                    {
+                        if (envelopeDragIdx == -1)
+                        {
+                            if (PlatformUtils.MessageBox($"Are you sure you want to replace all notes using arpeggio '{arpeggioDst.Name}' with '{arpeggioSrc.Name}'?", "Replace arpeggio?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                                App.Project.ReplaceArpeggio(arpeggioDst, arpeggioSrc);
+                                App.UndoRedoManager.EndTransaction();
+                            }
+                        }
+                        else
+                        {
+                            if (PlatformUtils.MessageBox($"Are you sure you want to copy the arpeggio values from '{arpeggioSrc.Name}' to '{arpeggioDst.Name}'?", "Copy Arpeggio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, arpeggioDst.Id);
+                                arpeggioDst.Envelope.Length = arpeggioSrc.Envelope.Length;
+                                arpeggioDst.Envelope.Loop = arpeggioSrc.Envelope.Loop;
+                                Array.Copy(arpeggioSrc.Envelope.Values, arpeggioDst.Envelope.Values, arpeggioDst.Envelope.Values.Length);
+                                App.UndoRedoManager.EndTransaction();
+
+                                ArpeggioEdited?.Invoke(arpeggioDst);
+                                Invalidate();
+                            }
+                        }
+                    }
+                }
+                else
                 {
                     ArpeggioDraggedOutside(draggedArpeggio, PointToScreen(new Point(e.X, e.Y)));
                 }
@@ -1196,14 +1230,16 @@ namespace FamiStudio
                     {
                         selectedArpeggio = button.arpeggio;
 
-                        if (selectedInstrument != null)
+                        if (selectedArpeggio != null)
                         {
+                            envelopeDragIdx = -1;
                             draggedArpeggio = selectedArpeggio;
                             StartCaptureOperation(e, CaptureOperation.DragArpeggio);
                         }
 
                         if (subButtonType < SubButtonType.EnvelopeMax)
                         {
+                            envelopeDragIdx = (int)subButtonType;
                             ArpeggioEdited?.Invoke(selectedArpeggio);
                         }
 

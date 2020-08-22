@@ -983,7 +983,7 @@ namespace FamiStudio
 
         public void Play()
         {
-            // MATTT: Stop recording here?
+            StopRecording();
 
             if (!songPlayer.IsPlaying)
             {

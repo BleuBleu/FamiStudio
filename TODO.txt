@@ -7,8 +7,6 @@
 	- FamiTracker: There is a MATTT thing that crashes when loading FDS_rushjet1_-_fdx.ftm.
 	x Replace selection arp
 	x Add/remove arps.
-	- Drag to copy arpeggio in project explorer.
-	- Cant select values in piano roll when editing arpeggios???
 	- Documentation.
 - Option to not play notes when dragging.
 - Drag seek bar (github issue request!).
