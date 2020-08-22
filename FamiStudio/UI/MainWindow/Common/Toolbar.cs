@@ -163,7 +163,7 @@ namespace FamiStudio
             buttons[ButtonConfig].ToolTip    = "{MouseLeft} Edit Application Settings";
             buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space}";
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
-            buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode";
+            buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
@@ -192,6 +192,8 @@ namespace FamiStudio
             specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
             specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = (int)(28 * scaling) };
             specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
+            specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
+            specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
             specialCharacters["Drag"]       = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("Drag"),       OffsetY = 2 * scaling };
             specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseLeft"),  OffsetY = 2 * scaling };
             specialCharacters["MouseRight"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseRight"), OffsetY = 2 * scaling };

@@ -67,6 +67,7 @@ namespace FamiStudio
         const int DefaultDPCMTextPosX = 2;
         const int DefaultDPCMTextPosY = 0;
         const int DefaultOctaveNameOffsetY = 11;
+        const int DefaultRecordingKeyOffsetY = 12;
         const int DefaultSlideIconPosX = 2;
         const int DefaultSlideIconPosY = 2;
 
@@ -102,6 +103,7 @@ namespace FamiStudio
         int dpcmTextPosX;
         int dpcmTextPosY;
         int octaveNameOffsetY;
+        int recordingKeyOffsetY;
         int octaveSizeY;
         int virtualSizeY;
         int barSizeX;
@@ -144,6 +146,12 @@ namespace FamiStudio
             2.0,
             3.0,
             4.0
+        };
+
+        static readonly List<char> RecordingNoteToKeyMap = new List<char>
+        {
+            'Z', 'S', 'X', 'D', 'C', 'V', 'G', 'B', 'H', 'N', 'J', 'M',
+            'Q', '2', 'W', '3', 'E', 'R', '5', 'T', '6', 'Y', '7', 'U', 'I', '9', 'O', '0', 'P', '[', '=', ']'
         };
 
         RenderTheme theme;
@@ -314,6 +322,7 @@ namespace FamiStudio
             dpcmTextPosX              = (int)(DefaultDPCMTextPosX * scaling);
             dpcmTextPosY              = (int)(DefaultDPCMTextPosY * scaling);
             octaveNameOffsetY         = (int)(DefaultOctaveNameOffsetY * scaling);
+            recordingKeyOffsetY       = (int)(DefaultRecordingKeyOffsetY * scaling);
             slideIconPosX             = (int)(DefaultSlideIconPosX * scaling);
             slideIconPosY             = (int)(DefaultSlideIconPosY * scaling);
             envelopeSizeY             = DefaultEnvelopeSizeY * envelopeValueZoom * scaling;    
@@ -956,12 +965,6 @@ namespace FamiStudio
             g.PopClip();
         }
 
-        private readonly char[] OctaveKeys = new char[]
-        {
-            'Z', 'S', 'X', 'D', 'C', 'V', 'G', 'B', 'H', 'N', 'J', 'M',
-            'Q', '2', 'W', '3', 'E', 'R', '5', 'T', '6', 'Y', '7', 'U'
-        };
-
         private void RenderPiano(RenderGraphics g, RenderArea a)
         {
             g.PushTranslation(0, headerAndEffectSizeY);
@@ -1020,15 +1023,11 @@ namespace FamiStudio
             {
                 const int BaseRecOctave = 3;
 
-                for (int i = 0; i < 2; i++)
-                {
-                    int octaveBaseY = (virtualSizeY - octaveSizeY * (i + BaseRecOctave)) - scrollY;
-
-                    for (int j = 0; j < 12; j++)
-                    {
-                        int y = octaveBaseY - j * noteSizeY;
-                        g.DrawText(OctaveKeys[i * 12 + j].ToString(), ThemeBase.FontSmallCenter, blackKeySizeX, y - octaveNameOffsetY, theme.DarkRedFillBrush2, whiteKeySizeX - blackKeySizeX);
-                    }
+                for (int i = 0; i < RecordingNoteToKeyMap.Count; i++)
+                { 
+                    int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + BaseRecOctave)) - scrollY;
+                    int y = octaveBaseY - (i % 12) * noteSizeY;
+                    g.DrawText(RecordingNoteToKeyMap[i].ToString(), ThemeBase.FontSmallCenter, blackKeySizeX, y - recordingKeyOffsetY, theme.DarkRedFillBrush2, whiteKeySizeX - blackKeySizeX);
                 }
             }
 
@@ -1986,7 +1985,7 @@ namespace FamiStudio
                         if (note != playingNote)
                         {
                             playingNote = note;
-                            App.PlayInstrumentNote(playingNote);
+                            App.PlayInstrumentNote(playingNote, true, true);
                             ConditionalInvalidate();
                         }
                         return;
@@ -2000,7 +1999,7 @@ namespace FamiStudio
                         if (note != playingNote)
                         {
                             playingNote = note;
-                            App.PlayInstrumentNote(playingNote);
+                            App.PlayInstrumentNote(playingNote, true, true);
                             ConditionalInvalidate();
                         }
                         return;
@@ -2144,7 +2143,7 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
                         break;
                     case CaptureOperation.PlayPiano:
-                        App.StopOrReleaseIntrumentNote();
+                        App.StopOrReleaseIntrumentNote(false);
                         playingNote = -1;
                         ConditionalInvalidate();
                         break;
@@ -2425,6 +2424,36 @@ namespace FamiStudio
         protected override void OnKeyUp(KeyEventArgs e)
         {
             UpdateCursor();
+        }
+
+        public void RecordNote(Note note)
+        {
+            if (App.IsRecording && editMode == EditionMode.Channel && (note.IsMusical || note.IsStop))
+            {
+                var patternIdx = Song.FindPatternInstanceIndex(App.CurrentFrame, out var noteIdx);
+                var channel = Song.Channels[editChannel];
+                var pattern = channel.PatternInstances[patternIdx];
+
+                // Create a pattern if needed.
+                if (pattern == null)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                    pattern = channel.CreatePattern();
+                    channel.PatternInstances[patternIdx] = pattern;
+                }
+                else
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                }
+
+                pattern.Notes[noteIdx] = note.Clone();
+
+                // MATTT
+                App.Seek(App.CurrentFrame + Song.NoteLength);
+                App.UndoRedoManager.EndTransaction();
+
+                ConditionalInvalidate();
+            }
         }
 
         private void ShowInstrumentError()
@@ -3241,7 +3270,7 @@ namespace FamiStudio
                 (captureOperation == CaptureOperation.DragNote ||
                  captureOperation == CaptureOperation.DragNewNote))
             {
-                App.PlayInstrumentNote(noteValue, false);
+                App.PlayInstrumentNote(noteValue, false, false);
                 dragLastNoteValue = noteValue;
             }
 

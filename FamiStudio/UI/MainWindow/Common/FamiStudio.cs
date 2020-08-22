@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -29,6 +29,8 @@ namespace FamiStudio
         private bool pianoRollScrollChanged = false;
         private bool recordingMode = false;
         private int tutorialCounter = 3;
+        private Keys lastRecordingKeyDown = Keys.None; 
+        private bool[] keyStates = new bool[256];
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
 #endif
@@ -53,6 +55,52 @@ namespace FamiStudio
         public PianoRoll PianoRoll => mainForm.PianoRoll;
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
         public Rectangle MainWindowBounds => mainForm.Bounds;
+
+        static readonly Dictionary<Keys, int> RecordingKeyToNoteMap = new Dictionary<Keys, int>
+        {
+            { Keys.D1,        -1 }, // Special: Stop note.
+
+            { Keys.Z,          0 },
+            { Keys.S,          1 },
+            { Keys.X,          2 },
+            { Keys.D,          3 },
+            { Keys.C,          4 },
+            { Keys.V,          5 },
+            { Keys.G,          6 },
+            { Keys.B,          7 },
+            { Keys.H,          8 },
+            { Keys.N,          9 },
+            { Keys.J,         10 },
+            { Keys.M,         11 },
+
+            { Keys.Oemcomma,  12 },
+            { Keys.L,         13 },
+            { Keys.OemPeriod, 14 },
+            { Keys.Oem1,      15 }, // ;
+            { Keys.Oem2,      16 }, // /
+
+            { Keys.Q,         12 },
+            { Keys.D2,        13 },
+            { Keys.W,         14 },
+            { Keys.D3,        15 },
+            { Keys.E,         16 },
+            { Keys.R,         17 },
+            { Keys.D5,        18 },
+            { Keys.T,         19 },
+            { Keys.D6,        20 },
+            { Keys.Y,         21 },
+            { Keys.D7,        22 },
+            { Keys.U,         23 },
+
+            { Keys.I,         24 },
+            { Keys.D9,        25 },
+            { Keys.O,         26 },
+            { Keys.D0,        27 },
+            { Keys.P,         28 },
+            { Keys.Oem4,      29 }, // [
+            { Keys.Oemplus,   30 }, // +/=
+            { Keys.Oem6,      31 }, // ]
+        };
 
         public FamiStudio(string filename)
         {
@@ -614,7 +662,7 @@ namespace FamiStudio
             mainForm.Text = title;
         }
 
-        public void PlayInstrumentNote(int n, bool showWarning = true)
+        public void PlayInstrumentNote(int n, bool showWarning = true, bool allowRecording = false)
         {
             Note note = new Note(n);
             note.Volume = Note.VolumeMax;
@@ -647,9 +695,12 @@ namespace FamiStudio
             }
 
             instrumentPlayer.PlayNote(channel, note);
+
+            if (allowRecording && IsRecording)
+                PianoRoll.RecordNote(note);
         }
 
-        public void StopOrReleaseIntrumentNote()
+        public void StopOrReleaseIntrumentNote(bool allowRecording = false)
         {
             if (ProjectExplorer.SelectedInstrument != null && 
                 (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || ProjectExplorer.SelectedInstrument.ExpansionType == Project.ExpansionVrc7) &&
@@ -661,11 +712,9 @@ namespace FamiStudio
             {
                 instrumentPlayer.StopAllNotes();
             }
-        }
 
-        public void ReleaseInstrumentNote()
-        {
-            instrumentPlayer.ReleaseNote(Sequencer.SelectedChannel);
+            if (allowRecording && IsRecording)
+                PianoRoll.RecordNote(new Note(Note.NoteStop));
         }
 
         public void StopIntrumentNote()
@@ -705,6 +754,54 @@ namespace FamiStudio
                 StartInstrumentPlayer();
             }
         }
+        
+        private bool PreventKeyRepeat(KeyEventArgs e, bool keyDown)
+        {
+            var keyCode = (int)e.KeyCode;
+
+            if (keyCode < keyStates.Length && keyDown != keyStates[keyCode])
+            {
+                keyStates[keyCode] = keyDown;
+                return true;
+            }
+
+            return false;
+        }
+
+        protected bool HandleRecordingKey(KeyEventArgs e, bool keyDown)
+        {
+            if (RecordingKeyToNoteMap.TryGetValue(e.KeyCode, out var noteValue))
+            {
+                if (!PreventKeyRepeat(e, keyDown))
+                    return true;
+
+                if (keyDown)
+                {
+                    if (noteValue < 0)
+                    {
+                        lastRecordingKeyDown = Keys.None;
+                        StopOrReleaseIntrumentNote(true);
+                    }
+                    else
+                    {
+                        var baseOctave = 3;
+                        noteValue += Note.FromFriendlyName("C0") + (baseOctave * 12);
+                        lastRecordingKeyDown = e.KeyCode;
+
+                        PlayInstrumentNote(noteValue, true, true);
+                    }
+                }
+                else if (e.KeyCode == lastRecordingKeyDown)
+                {
+                    lastRecordingKeyDown = Keys.None;
+                    PlayInstrumentNote(Note.NoteRelease, true, false);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
 
         public void KeyDown(KeyEventArgs e)
         {
@@ -718,6 +815,15 @@ namespace FamiStudio
             if (e.KeyCode == Keys.Escape)
             {
                 StopIntrumentNote();
+                StopRecording();
+            }
+
+            if (IsRecording && !ctrl && !shift && HandleRecordingKey(e, true))
+                return;
+
+            if (e.KeyCode == Keys.Enter)
+            {
+                ToggleRecording();
             }
 
             if (e.KeyCode == Keys.Space)
@@ -747,7 +853,7 @@ namespace FamiStudio
                     Seek(0);
                 }
             }
-            if (e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D9)
+            if (!IsRecording && e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D9)
             {
                 if (ctrl)
                     GhostChannelMask ^= (1 << (int)(e.KeyCode - Keys.D1));
@@ -837,12 +943,12 @@ namespace FamiStudio
         {
             if (on)
             {
-                PlayInstrumentNote(Utils.Clamp(n - 11, Note.MusicalNoteMin, Note.MusicalNoteMax));
+                PlayInstrumentNote(Utils.Clamp(n - 11, Note.MusicalNoteMin, Note.MusicalNoteMax), true, true);
                 lastMidiNote = n;
             }
             else if (n == lastMidiNote)
             {
-                StopOrReleaseIntrumentNote();
+                StopOrReleaseIntrumentNote(false);
                 lastMidiNote = -1;
             }
         }
@@ -876,9 +982,12 @@ namespace FamiStudio
 
         public void StopRecording()
         {
-            Debug.Assert(recordingMode);
-            recordingMode = false;
-            InvalidateEverything();
+            if (recordingMode)
+            {
+                recordingMode = false;
+                lastRecordingKeyDown = Keys.None;
+                InvalidateEverything();
+            }
         }
 
         public void ToggleRecording()
