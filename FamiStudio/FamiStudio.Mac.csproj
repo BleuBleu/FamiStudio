@@ -192,7 +192,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Source\Utils\MacUtils.cs" />
+    <Compile Include="Source\UI\MacLinux\MacUtils.cs" />
     <EmbeddedResource Include="Resources\gtk_mac.rc" />
     <EmbeddedResource Include="Resources\gtk_linux.rc" />
     <Compile Include="Source\UI\MacLinux\CheckBoxList.cs" />

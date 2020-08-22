@@ -1,9 +1,5 @@
 2.2.0
 =====
-TODAY:
-- Move MacUtils to UI folder (where GtkUtils is) + browse for folder
-
-=============
 - Play right note when dragging.
 - BUG: Select expansions instrument, change expansions, will delete the exp instruments, old instrument still referenced and can draw in track.
 	- Also, if an arpeggio was selected, gets confused. Audio still plays arpeggio, but does not add to piano roll.
