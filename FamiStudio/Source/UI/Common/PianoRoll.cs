@@ -3404,7 +3404,22 @@ namespace FamiStudio
                 (captureOperation == CaptureOperation.DragNote ||
                  captureOperation == CaptureOperation.DragNewNote))
             {
-                App.PlayInstrumentNote(noteValue, false, false);
+                // If we are adding a new note or if the threshold has not been met, we need
+                // to play the selected note from the project explorer, otherwise we need to 
+                // play the instrument from the selected note.
+                if (captureOperation == CaptureOperation.DragNewNote || !captureThresholdMet)
+                {
+                    App.PlayInstrumentNote(noteValue, false, false);
+                }
+                else
+                {
+                    foreach (var n in dragNotes)
+                    {
+                        App.PlayInstrumentNote(noteValue, false, false, true, n.Value.Instrument, n.Value.Arpeggio);
+                        break;
+                    }
+                }
+
                 dragLastNoteValue = noteValue;
             }
 

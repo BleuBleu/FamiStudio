@@ -1,6 +1,5 @@
 2.2.0
 =====
-- Play right note when dragging.
 - Documentation : 
 	- Arpeggio.
 	- Recording mode.
@@ -10,7 +9,6 @@
 	- Recording mode.
 - Option to not play notes when dragging.
 - Instrument picker?
-- MATTT
 
 Cut:
 - Drag seek bar.

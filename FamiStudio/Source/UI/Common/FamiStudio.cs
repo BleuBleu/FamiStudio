@@ -669,24 +669,28 @@ namespace FamiStudio
             mainForm.Text = title;
         }
 
-        public void PlayInstrumentNote(int n, bool showWarning = true, bool allowRecording = false)
+        public void PlayInstrumentNote(int n, bool showWarning, bool allowRecording, bool custom = false, Instrument customInstrument = null, Arpeggio customArpeggio = null)
         {
             Note note = new Note(n);
             note.Volume = Note.VolumeMax;
 
+            var instrument = custom ? customInstrument : ProjectExplorer.SelectedInstrument;
+            var arpeggio   = custom ? customArpeggio   : ProjectExplorer.SelectedArpeggio;
+
             int channel = Sequencer.SelectedChannel;
-            if (ProjectExplorer.SelectedInstrument == null)
+
+            if (instrument == null)
             {
                 channel = Channel.Dpcm;
             }
             else
             {
-                if (song.Channels[channel].SupportsInstrument(ProjectExplorer.SelectedInstrument))
+                if (song.Channels[channel].SupportsInstrument(instrument))
                 {
-                    note.Instrument = ProjectExplorer.SelectedInstrument;
+                    note.Instrument = instrument;
 
-                    if (song.Channels[channel].SupportsArpeggios && ProjectExplorer.SelectedArpeggio != null)
-                        note.Arpeggio = ProjectExplorer.SelectedArpeggio;
+                    if (song.Channels[channel].SupportsArpeggios && arpeggio != null)
+                        note.Arpeggio = arpeggio;
                 }
                 else
                 {
