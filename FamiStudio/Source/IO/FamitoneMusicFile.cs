@@ -932,6 +932,13 @@ namespace FamiStudio
 
                 if (!test)
                 {
+                    if (song.LoopPoint < 0)
+                    {
+                        lines.Add($"{ll}song{songIdx}ch{c}loop:");
+                        lines.Add($"\t{db} ${EncodeNoteValue(c, Note.NoteStop):x2}");
+                        size++;
+                    }
+
                     lines.Add($"\t{db} $fd");
                     lines.Add($"\t{dw} {ll}song{songIdx}ch{c}loop");
                 }
@@ -981,7 +988,7 @@ namespace FamiStudio
                 }
             }
 
-            for (int factor = 1; factor <= song.PatternLength; factor++)
+            for (int factor = 1; factor <= Math.Min(16, song.PatternLength); factor++)
             {
                 if ((song.PatternLength % factor) == 0 &&
                     (song.PatternLength / factor) >= MinPatternLength)

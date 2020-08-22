@@ -2,6 +2,19 @@
 
 Version history / release notes for each release.
 
+## Version 2.1.1
+
+Changes:
+
+* Fixed first frame not being audible when pressing play
+* Fixed multiple crashes & issues when exporting to NSF
+* Fixed missing notes on noise channel when importing NSFs
+* Fixed import of FamiTracker FTM files that uses expansion audio
+* Fixed incorrect DPCM samples alignment when exporting NSF, ROM & FamiTone2.
+* Renaming .so files on Linux to support older version of Mono
+* Setting correct file extension when saving on Linux
+* FamiTone2 sound effect export fixes
+
 ## Version 2.1.0
 
 New features:
@@ -25,6 +38,11 @@ New features:
 Breaking/behavior changes:
 
 * There was a bug in 2.0.x where release notes would abrutly interrupt slide notes (the NSF was doing it correctly). This is no longer the case.
+
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/r3oHXZ3MhyA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
 
 ## Version 2.0.3
 
@@ -75,6 +93,7 @@ Breaking/behavior changes:
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
 	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/QRn_ymIdUp8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+<br/>
 
 ## Version 1.4.0
 
@@ -95,6 +114,7 @@ Breaking/behavior changes:
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
 	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/Ox_D0Z_H2NY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+<br/>
 
 ## Version 1.3.0
 
@@ -108,6 +128,7 @@ New features:
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
 	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/7rYloart1wI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+<br/>
 
 ## Version 1.2.1
 
@@ -132,6 +153,7 @@ New features:
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
 	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/o8VI4vKZtXY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+<br/>
 
 ## Version 1.1.0
 
@@ -146,6 +168,7 @@ New features:
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
 	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/kpQmQ-PRlaY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+<br/>
 
 ## Version 1.0.0
 
