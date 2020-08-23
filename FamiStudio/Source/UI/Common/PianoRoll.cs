@@ -753,7 +753,7 @@ namespace FamiStudio
             if (editMode == EditionMode.Channel)
             {
                 minNoteIdx = Math.Max((int)Math.Floor(scrollX / (float)noteSizeX), 0);
-                maxNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / (float)noteSizeX), Song.GetPatternStartNote(Song.Length));
+                maxNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width - whiteKeySizeX) / (float)noteSizeX), Song.GetPatternStartNote(Song.Length));
                 channelIndex = editChannel;
 
                 return true;
@@ -1257,10 +1257,10 @@ namespace FamiStudio
                     if (!mix || !note.IsValid && newNote.IsValid)
                     {
                         note.Value = newNote.Value;
-                        note.Instrument = editChannel == Channel.Dpcm || !Song.Channels[editChannel].SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
-                        note.Slide    = newNote.Slide;
+                        note.Instrument = editChannel == Channel.Dpcm || !channel.SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
+                        note.Slide    = channel.SupportsSlideNotes ? newNote.Slide : (byte)0;
                         note.Flags    = newNote.Flags;
-                        note.Arpeggio = newNote.Arpeggio;
+                        note.Arpeggio = channel.SupportsArpeggios  ? newNote.Arpeggio : null;
                     }
                 }
                 if (pasteVolume)

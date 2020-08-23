@@ -30,10 +30,10 @@ namespace FamiStudio
             "ROM / FDS",
             "FamiStudio Text",
             "FamiTracker Text",
-            "FamiStudio Music Asm",
-            "FamiStudio SFX Asm",
-            "FamiTone2 Music Asm",
-            "FamiTone2 SFX Asm",
+            "FamiStudio Music Code",
+            "FamiStudio SFX Code",
+            "FamiTone2 Music Code",
+            "FamiTone2 SFX Code",
             ""
         };
 
