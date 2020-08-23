@@ -22,7 +22,7 @@ The engine has a basic set of features, as well as a few extra toggeable feature
 
 The basic feature set that is always available in engine is:
 
-* Support for the first four 2A03 channels (2 squares, triangle and noise channel), DPCM channel is a toggeable feature.
+* Support for the first four 2A03 channels (2 squares, triangle and noise channel).
 * Support for the full 96 notes (C0 to B7).
 * Instruments with duty cycle, volume, pitch and arpeggio envelopes.
 	* Absolute and relative pitch envelopes.

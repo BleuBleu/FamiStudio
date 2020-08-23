@@ -144,6 +144,6 @@ Some keyboard shortcuts specific to the piano roll:
 * **~ (Tilde)**: Expand/collapse the effect panel.
 * **Shift+S**: Toggles snapping.
 
-When recording mode is active, some of the keys will be remapped in the shaped of a piano so you can input notes.
+When recording mode is active, some of the keys will be overriden to support piano input.
 
 ![](images/QWERTY.png#center)

@@ -18,5 +18,8 @@ Here are the operations that can be performed:
 
 * **Delete unused samples** : Samples without a single note played will be deleted.
 
+* **Delete unused arpeggios** : Arpeggios that are not used by a single note will be deleted.
+
+
 
 

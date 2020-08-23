@@ -7,7 +7,8 @@ The export dialog is access through the main toolbar.
 Only a single song can be exported at a time. You can choose the sample rate, it is recommended to stick to 44.1KHz if you want the sound to be exactly as you hear it in FamiStudio. Lower sample rate might lack high frequencies.
 
 The song can be exported in one of two modes:
-* Play Once : Will play the song until the end, ignoring the loop point.
+
+* Play N Times: Will play the song a specified number of times.
 * Duration : Will loop though the song for the specified number of seconds.
 
 ![](images/ExportWav.png#center)
@@ -24,15 +25,19 @@ Song that do not use any audio expansion can export as PAL and Dual mode, where 
 
 The maximum song size is approximately 28KB minus the size of the DPCM samples used. Note that this size are not printed anywhere and are not related to the size of the *.fms file. Best to simply try and see if it works.
 
-## ROM
+## ROM / FDS Disk
 
-Song(s) can be exported to a NES ROM file to play if back on an emulator or on actual hardware. The current iteration uses [Mapper 31](https://wiki.nesdev.com/w/index.php/INES_Mapper_031) which is supported by most emulators and the [Everdrive N8](https://krikzz.com/store/home/31-everdrive-n8-nes.html). You can then copy the ROM to an SD card and listen to it on actual hardware. Note that expansion audio is not supported with this mapper.
+Song(s) can be exported to a NES ROM file or a Famicom Disk System disk to play if back on an emulator or on actual hardware. 
+
+For ROM export, the current iteration uses [Mapper 31](https://wiki.nesdev.com/w/index.php/INES_Mapper_031) which is supported by most emulators and the [Everdrive N8](https://krikzz.com/store/home/31-everdrive-n8-nes.html). You can then copy the ROM to an SD card and listen to it on actual hardware. Note that expansion audio is not supported with this mapper.
 
 ![](images/Rom.png#center)
 
-The user interface is very simple, pressing left/right on the D-PAD will change the current track. Track/song names will be truncated to 28 characters.
+The user interface is very simple, pressing left/right on the D-PAD will change the current track. Track/song names will be truncated to 28 characters. For something a lot more customizable, check out [EZNSF](https://github.com/bbbradsmith/eznsf) by Brad Smith.
 
-For something a lot more customizable, check out [EZNSF](https://github.com/bbbradsmith/eznsf) by Brad Smith.
+For FDS export, the process is very similar and will output a FDS disk image instead of a ROM. It has been tested on actual hardware using the [FDSStick](https://3dscapture.com/fdsstick/). Songs are loaded on demand from the disk, so switching tracks will be a bit slower on FDS than on a ROM. 
+
+![](images/FdsExport.png#center)
 
 ## FamiTracker Text
 
@@ -144,6 +149,10 @@ DPCMMapping | Note | Yes | Piano note to map the sample to (Between C1 and D6).
 | Sample | Yes | Name of the DPCMSample to map.
 | Pitch | | Pitch of the sample.
 | Loop | | True or False.
+Arpeggio | Name | Yes | Name of the arpeggio.
+| Length | Yes | Length of the arpeggio note sequence, 0 to 255.
+| Loop | Yes | The loop point of the envelope.
+| Values | Yes | Coma separated values of the arpeggio -64 to 63 range.
 Instrument | Name | Yes | Name of the instrument.
 | Expansion | | Expansion audio of the instrument: VRC6, VRC7, FDS, MMC5, N163, S5B
 | FdsWavePreset | | (FDS instrument only) Sine, Triangle, Sawtooth, Square 50%, Square 25%, Flat or Custom.
@@ -158,7 +167,7 @@ Instrument | Name | Yes | Name of the instrument.
 | Vrc7Patch | | (VRC7 instrument only) 0 to 15.
 | Vrc7Reg{1 to 8} | | (VRC7 instrument only, if Vrc7Patch is 0) Values of the 8 custom patch registers.
 Envelope | Type | Yes | Volume, Arpeggio, Pitch, DutyCycle, FDSWave, FDSMod or N163Wave.
-| Length | | Length of the envelope, 0 to 255.
+| Length | Yes | Length of the envelope, 0 to 255.
 | Loop | | The loop point of the envelope.
 | Release | | (Volume envelope only) The release point of the envelope.
 | Relative | | (Pitch envelope only) True or False.
@@ -180,6 +189,7 @@ Pattern | Name | Yes | Name of the pattern.
 Note | Time | Yes | The frame (or note) number inside the pattern where this note is.
 | Value | | Note from C0 to B7, Stop or Release.
 | Instrument | | (Only if note has a musical value, from C0 to B7) Name of the instrument to use.
+| Arpeggio | | Optional, name of the arpeggio to use.
 | Attack | | If the note has an attack, True of False.
 | Volume | | The volume of the note, 0 to 15.
 | VibratoSpeed | | The Vibrato speed, 0 to 12.
@@ -191,9 +201,9 @@ Note | Time | Yes | The frame (or note) number inside the pattern where this not
 PatternInstance | Time | Yes | Index of the column of patterns where to place this instance.
 | Pattern | Yes | Name of the pattern to instantiate.
 
-## FamiTone2 Music
+## FamiStudio / FamiTone2 Music Code
 
-Exporting to FamiTone2 works in the same way as the command line tools provided by Shiru. It will generate assembly code that can be included in your homebrew project and played using the FamiTone2 sound engine. 
+Exporting music to the [FamiStudio Sound Engine](soundengine.md) or [FamiTone2](https://shiru.untergrund.net/code.shtml) work very similarely. It will generate assembly code that can be included in your homebrew project and played using the FamiTone2 sound engine. 
 
 ![](images/ExportFamiTone2.png#center)
 
@@ -201,13 +211,9 @@ When exporting file in separate files, you can specific a name format template f
 
 When exporting as a single file (non-separate), you will be prompt to name the output assembly file. If any of the exported songs uses DPCM samples, a .dmc file of the same name will also be outputted.
 
-If you are using the FamiStudio tempo mode and wish to have correct PAL playback in you homebrew game, please check out this custom version of FamiTone2 (named FamiTone2FS) that supports it:
+## FamiStudio / FamiTone2 Sound Effect Code
 
-[https://github.com/BleuBleu/FamiTone2FS](https://github.com/BleuBleu/FamiTone2FS)
-
-## FamiTone2 Sound Effect
-
-The same goes for sound effect export. It should work very similarly as original FamiTone 2 tools provided by Shiru. In this mode, one song is one sound effect, so songs should be very short. Unlike the FamiTone2 music format which only support a subset of all the FamiTracker/FamiStudio features, here any feature (except DPCM samples) can be used and the sound effect should export correctly.
+The same goes for sound effect export. In this mode, one song is one sound effect, so songs should be very short. Unlike the FamiStudio/FamiTone2 music format which only support a subset of all the FamiTracker/FamiStudio features, here any feature (except DPCM samples) can be used and the sound effect should export correctly.
 
 ![](images/ExportFamiTone2SFX.png#center)
 
@@ -265,4 +271,8 @@ In the example below, we can imagine that the notes on the right were all using 
 
 Only features that are supported by FamiStudio will be imported. Things like hardware sweeps & advanced DPCM manipulations will all be ignored.
 
+# Error Log
 
+When importing/exporting from/to specific format, an error log may appear providing a list of warnings/errors that occured during the process. Please pay attention to these as they may explain why your song sound differently than intended.
+
+![](images/ErrorLog.png#center)

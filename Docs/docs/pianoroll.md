@@ -29,6 +29,25 @@ Clicking a pattern in the sequencer will scroll the piano roll to its location. 
 
 Right-clicking deletes a note.
 
+## Recoding mode
+
+Recording mode is another way to input notes and is enabled by pressing the record button on the toolbar. Recording mode allows inputting notes using a MIDI controller or using a piano-type layout on the QWERTY keyboard. This layout is very similar to what FamiTracker uses. Note that this is not a "real-time" recording mode, simply a note-by-note input mode.
+
+![](images/QWERTY.png#center)
+
+The QWERTY keyboard input will give you a range of approximately 2.5 octaves. By default, this will go from C3 to C5 but it can be moved up/down by pressing **Page Up** and **Page Down**. Which keyboard key maps to which piano key will be displayed in the piano roll. 
+
+![](images/RecordingPiano.png#center)
+
+When recording mode is active, the seek bar will turn red. Each note you input will be snapped to the current snap precision (see next section for info about snapping) and the seek bar will advance to the next snapping position. 
+
+There are a few other special keys that are enabled when recording mode is activated:
+
+* **Backspace**: moves back by 1 note (or snapping interval), erasing any note inside the interval. 
+* **Tab**: Advances by 1 note (or snapping interval), not recording anything.
+* **1**: Inserts a stop note and advances.
+* **Page Up/Down**: Moves the octave range that can be inputted using the QWERTY keyboard up/down.
+
 ## Snapping
 
 Snapping can be toggle by clicking the little magnet in the top-left corner of the piano roll. **SHIFT+S** can also be used to quickly toggle snapping on/off. The precision of the snapping can be changed by left/right clicking the number of using the mousewheel over the number or magnet icon. 
@@ -70,6 +89,16 @@ Slide notes are notes that start at a given pitch (the pitch of the note) and sl
 ![](images/SlideNote.png#center)
 
 Slide notes garantees that the target pitch will be reached by the end of the note (end of the triangle) but this might happen a bit earlier than the visual repesentation suggests. Especially in the higher pitches. This is due to the fact that the pitch calculations are all integer-based (with 1-bit of fraction) and it is often impossible to get the exact required slope to reach the pitch at the exact time. 
+
+## Arpeggios
+
+Arpeggios (not to be confused with arpeggio instrument envelopes) are typically used to simulate chords by playing changing notes very rapidly. A note can optionally have an arpeggio associated to it, just like it has an instrument associated to it. When an arpeggio is used, the notes used by this arpeggio will be displayed in a semi-transparent way and the extra notes will take the color of the associated arpeggio. Note that in order to keep things simple, the individual sequence of notes inside the arpeggio will not be displayed.
+
+![](images/Arpeggio.png#center)
+
+You can change which arpeggio is associated with a note the same way to can replace an instrument. You can select a new arpeggio and click on an existing note. Or you can select a few notes and drag and drop an arpeggio from the Project Explorer on to the selection.
+
+If an instrument uses an arpeggio envelope and also uses an arpeggio chord, the chord will take over and completely override the arpeggio envelope of the instrument. 
 
 ## Selecting and editing notes
 
