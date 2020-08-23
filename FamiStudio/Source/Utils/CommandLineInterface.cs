@@ -163,6 +163,7 @@ namespace FamiStudio
             Console.WriteLine($"WAV export specific options");
             Console.WriteLine($"  -wav-export-rate:<rate> : Sample rate of the exported wave : 11025, 22050, 44100 or 48000 (default:44100).");
             Console.WriteLine($"  -wav-export-duration:<duration> : Duration in second, 0 plays song once and stop (default:0).");
+            Console.WriteLine($"  -wav-export-loop:<count> : Number of times to play the song (default:1).");
             Console.WriteLine($"  -wav-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");
             Console.WriteLine($"");
             Console.WriteLine($"NSF export specific options");

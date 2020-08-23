@@ -2,7 +2,6 @@
 =====
 - Doc: 
 	- Settings dialog update when final.
-- Wav loop count cmd line.
 - Small email requests (check!):
 	- Option to not play notes when dragging.
 
