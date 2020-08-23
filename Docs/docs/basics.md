@@ -5,8 +5,9 @@ A FamiStudio project contains:
 * A list of Songs
 * A list of Instruments
 * A list of DPCM samples
+* A list of Arpeggios
 
-Songs are made of Patterns, which are on one of the five Channels supported by the NES. Patterns contain Notes which are played by an Instrument (DPCM samples do not require an instrument). Instruments may have some of their attributes (pitch, volume, arpeggio) modulated by Envelopes.
+Songs are made of Patterns, which are on one of the five Channels supported by the NES. Patterns contain Notes which are played by an Instrument (DPCM samples do not require an instrument) and may refer to an arpeggio. Instruments may have some of their attributes (pitch, volume, arpeggio) modulated by Envelopes.
 
 Most of the operations are performed with the mouse. In general:
 
@@ -39,6 +40,7 @@ At any given moment there is always:
 * A selected channel, in bold in the sequencer
 * A selected song, in bold in the project explorer song list
 * A selected instrument, in bold in the project explorer instrument list.
+* A selected arpeggio, in bold in the project explorer arpeggio list.
 
 The sequencer and piano roll will display the information for the currently selected song. When pressing the keys on the piano roll, it will play notes for the currently selected instrument, and output it on the currently selected channel. The same applies if you have a MIDI keyboard connected.
 
@@ -89,8 +91,9 @@ The project explorer displays the list of songs and instruments in the current p
 ![](images/ProjectExplorer.png#center)
 
 For more details on what you can do with the Project Explorer, please check out these sections:
+
 * [Editing Songs & Project](song.md)
-* [Editing Instruments](instruments.md)
+* [Editing Instruments & Arpeggios](instruments.md)
 
 # Sequencer
 
@@ -111,11 +114,12 @@ Please check out the [Editing Notes](pianoroll.md) section for more details.
 Here is a list of useful keyboard shortcuts:
 
 * **Space**: Play/stop the stop
+* **Enter**: Toggles recording mode.
 * **Ctrl+Space**: Plays from beginning of current pattern.
 * **Shift+Space**: Plays from beginning of the song.
 * **Home**: Seeks back to beginning of the song.
 * **Ctrl+Home**: Seeks to beginning of the current pattern.
-* **Esc**: Stops any stop, clears the selection.
+* **Esc**: Stops any lindering sound, stops recording mode, clears the selection.
 * **Ctrl+Z**: Undo
 * **Ctrl+Y**: Redo
 * **Ctrl+N**: New project
@@ -139,3 +143,7 @@ Some keyboard shortcuts specific to the piano roll:
 * **A+Click**: Toggles the attack of a note.
 * **~ (Tilde)**: Expand/collapse the effect panel.
 * **Shift+S**: Toggles snapping.
+
+When recording mode is active, some of the keys will be remapped in the shaped of a piano so you can input notes.
+
+![](images/QWERTY.png#center)

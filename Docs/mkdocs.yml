@@ -5,7 +5,7 @@ nav:
   - "Basics": basics.md
   - "Editing Notes": pianoroll.md
   - "Editing Patterns": sequencer.md
-  - "Editing Instruments": instruments.md
+  - "Editing Instruments & Arpeggios": instruments.md
   - "Editing Songs & Project": song.md
   - "Importing & Exporting Your Songs": importexport.md
   - "Using Expansion Audio": expansion.md
