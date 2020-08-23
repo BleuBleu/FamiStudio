@@ -337,9 +337,9 @@ namespace FamiStudio
             }
         }
 
-        private void ExportFamiTone2Sfx()
+        private void ExportFamiTone2Sfx(bool famiStudio)
         {
-            var props = dialog.GetPropertyPage((int)ExportFormat.FamiTone2Sfx);
+            var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioSfx : (int)ExportFormat.FamiTone2Sfx);
             var exportFormat = (AssemblyFormat)Enum.Parse(typeof(AssemblyFormat), props.GetPropertyValue<string>(0));
             var ext = exportFormat == AssemblyFormat.CA65 ? "s" : "asm";
             var mode = (MachineType)Enum.Parse(typeof(MachineType), props.GetPropertyValue<string>(1));
@@ -368,8 +368,8 @@ namespace FamiStudio
                     case ExportFormat.FamiTracker: ExportFamiTracker(); break;
                     case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
                     case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
-                    case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(); break;
-                    case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(); break;
+                    case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
+                    case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
                 }
             }
         }
