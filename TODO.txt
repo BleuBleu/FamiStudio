@@ -2,20 +2,32 @@
 =====
 - Doc: 
 	- Settings dialog update when final.
+	- Where to download sound engine?
+
+2.2.0 Trailer
+=============
+1) Recording mode
+	- Tired of clicking with the mouse? Input notes using a MIDI controller or a QWERTY keyboard. 
+	- The snapping precision is used to control the length of each recorded notes.
+	- QWERTY keys are displayed on the piano, Page Up/Page Down to move the octave up/down.
+	- Press Backspace to go back, Tab to skip ahead and 1 to insert a stop note. [Show QWERTY layout]
+2) Arpeggios
+	- Define your own arpeggios of arbitrary length and complexity.
+	- Unlike instrument arpeggio envelopes, these arpeggios are not bound to any specific instrument.
+	- Will appear as semi-transparent chords in the piano roll.
+3) Sound Engine
+	- First official release of the FamiStudio Sound Engine for NES developers.
+	- Supports every feature supported by FamiStudio, available for all 3 major assemblers : CA65, NESASM and ASM6.
+	- Some features are toggeable to save CPU/RAM, please check out the documentation on famistudio.org for more details. [Show tables]
+4) FDS export
+
+5) Piano Rect
+	- The visible range of the piano roll is not displayed in the sequencer.
+	- This is useful sometimes to know exactly which are of the song you are looking at.
 
 2.2.0 Release
 =============
 - Discord server
-- Trailer
-	- Arpeggios
-	- Sound Engine
-	- Piano Rect
-	- FDS export
-	- Tutorials
-	- Error log
-	- WAV export loop count
-	- Recording mode
-- Where to download sound engine (update doc).
 
 Testing:
 ========
