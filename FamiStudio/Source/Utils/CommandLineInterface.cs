@@ -106,6 +106,7 @@ namespace FamiStudio
 #if FAMISTUDIO_WINDOWS
             AttachConsole(ATTACH_PARENT_PROCESS);
 #endif
+            Console.WriteLine($"");
         }
 
         private void ShutdownConsole()
@@ -120,7 +121,6 @@ namespace FamiStudio
             var version = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
 
             InitializeConsole();
-            Console.WriteLine($"");
             Console.WriteLine($"FamiStudio {version} Command-Line Usage");
             Console.WriteLine($"");
             Console.WriteLine($"Usage:");
