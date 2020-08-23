@@ -508,7 +508,7 @@ namespace FamiStudio
         {
             var log = new ListLogOutput();
 
-            using (var scopedLog = new ScopedLogOutput(log, LogSeverity.Warning))
+            using (var scopedLog = new ScopedLogOutput(log, LogSeverity.Info))
             {
                 var dlg = new ExportDialog(mainForm.Bounds, project);
 

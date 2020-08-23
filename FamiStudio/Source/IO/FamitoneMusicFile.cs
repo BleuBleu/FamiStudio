@@ -51,6 +51,13 @@ namespace FamiStudio
         private const int MaxPatterns = 128 * MaxSongs;
         private const int MaxPackedPatterns = (5 * MaxPatterns * MaxSongs);
 
+        private bool usesFamiTrackerTempo = false;
+        private bool usesVolumeTrack = false;
+        private bool usesPitchTrack = false;
+        private bool usesSlideNotes = false;
+        private bool usesVibrato = false;
+        private bool usesArpeggio = false;
+
         public enum FamiToneKernel
         {
             FamiTone2, // Stock FamiTone2
@@ -124,6 +131,8 @@ namespace FamiStudio
 
                     line += $",{tempoPal},{tempoNtsc}";
                     lines.Add(line);
+
+                    usesFamiTrackerTempo = true;
                 }
                 else
                 {
@@ -726,12 +735,14 @@ namespace FamiStudio
                         if (note.HasVolume)
                         {
                             patternBuffer.Add($"${(byte)(0x70 | note.Volume):x2}");
+                            usesVolumeTrack = true;
                         }
 
                         if (note.HasFinePitch)
                         {
                             patternBuffer.Add($"${0x68:x2}");
                             patternBuffer.Add($"${note.FinePitch:x2}");
+                            usesPitchTrack = true;
                         }
 
                         if (note.HasVibrato)
@@ -743,6 +754,8 @@ namespace FamiStudio
 
                             if (note.RawVibrato == 0)
                                 patternBuffer.Add($"${0x65:x2}");
+
+                            usesVibrato = true;
                         }
 
                         if (note.IsMusical)
@@ -770,6 +783,7 @@ namespace FamiStudio
                                     patternBuffer.Add($"${0x66:x2}");
 
                                 arpeggio = note.Arpeggio;
+                                usesArpeggio = true;
                             }
                             // If same arpeggio, but note has an attack, reset it.
                             else if (note.HasAttack && arpeggio != null)
@@ -853,6 +867,7 @@ namespace FamiStudio
                                     patternBuffer.Add($"${(byte)stepSize:x2}");
                                     patternBuffer.Add($"${EncodeNoteValue(c, note.Value):x2}");
                                     patternBuffer.Add($"${EncodeNoteValue(c, note.SlideNoteTarget):x2}");
+                                    usesSlideNotes = true;
                                     continue;
                                 }
                             }
@@ -1162,7 +1177,25 @@ namespace FamiStudio
 
                 if (project.UsesSamples)
                     Log.LogMessage(LogSeverity.Info, $"Total dmc file size: {dmcSize} bytes.");
+
+                if (kernel == FamiToneKernel.FamiStudio)
+                {
+                    if (usesFamiTrackerTempo)
+                        Log.LogMessage(LogSeverity.Info, "Project uses FamiTracker tempo, you must set FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1.");
+                    if (usesVolumeTrack)
+                        Log.LogMessage(LogSeverity.Info, "Volume track is used, you must set FAMISTUDIO_USE_VOLUME_TRACK = 1.");
+                    if (usesPitchTrack)
+                        Log.LogMessage(LogSeverity.Info, "Fine pitch track is used, you must set FAMISTUDIO_USE_PITCH_TRACK = 1.");
+                    if (usesSlideNotes)
+                        Log.LogMessage(LogSeverity.Info, "Slide notes are used, you must set FAMISTUDIO_USE_SLIDE_NOTES = 1.");
+                    if (usesVibrato)
+                        Log.LogMessage(LogSeverity.Info, "Vibrato effect is used, you must set FAMISTUDIO_USE_VIBRATO = 1.");
+                    if (usesArpeggio)
+                        Log.LogMessage(LogSeverity.Info, "Arpeggios are used, you must set FAMISTUDIO_USE_ARPEGGIO = 1.");
+                }
             }
+
+
 
 #if DEBUG
             Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + tempoSize + songsSize);
