@@ -1230,12 +1230,9 @@ namespace FamiStudio
                     {
                         selectedArpeggio = button.arpeggio;
 
-                        if (selectedArpeggio != null)
-                        {
-                            envelopeDragIdx = -1;
-                            draggedArpeggio = selectedArpeggio;
-                            StartCaptureOperation(e, CaptureOperation.DragArpeggio);
-                        }
+                        envelopeDragIdx = -1;
+                        draggedArpeggio = selectedArpeggio;
+                        StartCaptureOperation(e, CaptureOperation.DragArpeggio);
 
                         if (subButtonType < SubButtonType.EnvelopeMax)
                         {
