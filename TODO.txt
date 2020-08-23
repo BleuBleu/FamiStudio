@@ -2,8 +2,8 @@
 =====
 - Doc: 
 	- Settings dialog update when final.
+- BUG: Cant drag & assign "None" arpeggio.
 - Wav loop count cmd line.
-- Paste of arpeggios between projects.
 - Small email requests (check!):
 	- Option to not play notes when dragging.
 

@@ -1311,19 +1311,23 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, true, out var missingSamples);
+            var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, true, out var missingArpeggios, out var missingSamples);
 
             bool createMissingInstrument = false;
             if (missingInstruments)
                 createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
+            bool createMissingArpeggios = false;
+            if (missingArpeggios)
+                createMissingArpeggios = PlatformUtils.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+
             bool createMissingSamples = false;
             if (missingSamples && editChannel == Channel.Dpcm)
                 createMissingSamples = PlatformUtils.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
-            App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
+            App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios  || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
 
-            var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument, createMissingSamples);
+            var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument, createMissingArpeggios, createMissingSamples);
 
             if (notes == null)
             {
