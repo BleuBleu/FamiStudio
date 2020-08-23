@@ -120,12 +120,6 @@ Note that you arent not limited to the BPM values suggested by the different not
 
 The FamiTracker documentation has a [handy chart](http://famitracker.com/wiki/index.php?title=Common_tempo_values) for these. Note that you are limited to 18 frames per note a the moment.
 
-### FamiTone2 support of FamiStudio tempo mode
-
-If you are using the FamiStudio tempo mode and wish to have correct PAL playback in you homebrew game, please check out this custom version of FamiTone2 (named FamiTone2FS) that supports it:
-
-[https://github.com/BleuBleu/FamiTone2FS](https://github.com/BleuBleu/FamiTone2FS)
-
 ### FamiTracker tempo mode
 
 This mode is mostly for compatibility with FamiTracker. It uses the speed/tempo paradigm. Please check out the [FamiTracker documentation](http://famitracker.com/wiki/index.php?title=Fxx) for a detailed explanation on how the playback speed is affected. If you import a FamiTracker Text or FTM file, it will be in this tempo mode. 

@@ -3,13 +3,10 @@
 - Doc: 
 	- Settings dialog update when final.
 
-Cut:
-- Drag seek bar.
-- Instrument picker?
-
 2.2.0 Release
 =============
-- Features
+- Discord server
+- Trailer
 	- Arpeggios
 	- Sound Engine
 	- Piano Rect
@@ -18,9 +15,6 @@ Cut:
 	- Error log
 	- WAV export loop count
 	- Recording mode
-- Discord server
-- Trailer
-- Tutorial : Wrap up from 2.0.0 to 2.2.0.
 - Where to download sound engine (update doc).
 
 Testing:
@@ -34,6 +28,7 @@ Testing:
 - Retest Famitone2/FamiStudio engine/SFX export.
 - Test LogDialog on Mac (rc theme not done)
 - Test all keys for piano on Linux/Mac. (+is key down open TK).
+- Recording mode on Linux + Mac.
 
 MaxWar wish list.
 =================
@@ -74,6 +69,8 @@ MkDocs
 
 Backlog:
 =========
+- Drag seek bar
+- Instrument picker
 - Raw FDS modulation table envelope.
 - Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
 - Instrument folders
