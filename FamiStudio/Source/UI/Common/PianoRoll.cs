@@ -3408,19 +3408,33 @@ namespace FamiStudio
                 (captureOperation == CaptureOperation.DragNote ||
                  captureOperation == CaptureOperation.DragNewNote))
             {
-                // If we are adding a new note or if the threshold has not been met, we need
-                // to play the selected note from the project explorer, otherwise we need to 
-                // play the instrument from the selected note.
-                if (captureOperation == CaptureOperation.DragNewNote || !captureThresholdMet)
+                var dragNote = (Note)null;
+                foreach (var n in dragNotes)
                 {
-                    App.PlayInstrumentNote(noteValue, false, false);
+                    dragNote = n.Value;
+                    break;
                 }
-                else
+
+                // Itch.io request.
+                bool disableDragSound = Settings.NoDragSoungWhenPlaying && App.IsPlaying;
+
+                // No sound feedback on stop/release notes.
+                if (dragNote != null && dragNote.IsMusical && !disableDragSound)
                 {
-                    foreach (var n in dragNotes)
+                    // If we are adding a new note or if the threshold has not been met, we need
+                    // to play the selected note from the project explorer, otherwise we need to 
+                    // play the instrument from the selected note.
+                    if (captureOperation == CaptureOperation.DragNewNote || !captureThresholdMet)
                     {
-                        App.PlayInstrumentNote(noteValue, false, false, true, n.Value.Instrument, n.Value.Arpeggio);
-                        break;
+                        App.PlayInstrumentNote(noteValue, false, false);
+                    }
+                    else
+                    {
+                        foreach (var n in dragNotes)
+                        {
+                            App.PlayInstrumentNote(noteValue, false, false, true, n.Value.Instrument, n.Value.Arpeggio);
+                            break;
+                        }
                     }
                 }
 

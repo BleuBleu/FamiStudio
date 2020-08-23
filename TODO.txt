@@ -2,8 +2,6 @@
 =====
 - Doc: 
 	- Settings dialog update when final.
-- Small email requests (check!):
-	- Option to not play notes when dragging.
 
 Cut:
 - Drag seek bar.

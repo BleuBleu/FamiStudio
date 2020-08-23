@@ -42,11 +42,11 @@ namespace FamiStudio
         public unsafe ConfigDialog(Rectangle mainWinRect)
         {
 #if FAMISTUDIO_LINUX
-            int width  = 500;
+            int width  = 550;
 #else
-            int width  = 480;
+            int width  = 530;
 #endif
-            int height = 300;
+            int height = 350;
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
             int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
 
@@ -96,6 +96,8 @@ namespace FamiStudio
                 {
                     page.AddIntegerRange("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 0
                     page.AddBoolean("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 1
+                    page.AddBoolean("Disable dragging sound while song is playing:", Settings.NoDragSoungWhenPlaying); // 2
+                        
                     break;
                 }
                 case ConfigSection.MIDI:
@@ -161,6 +163,7 @@ namespace FamiStudio
                 // Sound
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(0);
                 Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(1);
+                Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(2);
 
                 // MIDI
                 var pageMIDI = pages[(int)ConfigSection.MIDI];

@@ -27,6 +27,7 @@ namespace FamiStudio
         // Audio section
         public static int InstrumentStopTime = 2;
         public static bool SquareSmoothVibrato = true;
+        public static bool NoDragSoungWhenPlaying = false;
 
         // MIDI section
         public static string MidiDevice = "";
@@ -53,6 +54,7 @@ namespace FamiStudio
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
             MidiDevice = ini.GetString("MIDI", "Device", "");
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
+            NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
             LastFileFolder = ini.GetString("Folders", "LastFileFolder", "");
             LastInstrumentFolder = ini.GetString("Folders", "LastInstrumentFolder", "");
             LastSampleFolder = ini.GetString("Folders", "LastSampleFolder", "");
@@ -92,6 +94,7 @@ namespace FamiStudio
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
+            ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
             ini.SetString("MIDI", "Device", MidiDevice);
             ini.SetString("Folders", "LastFileFolder", LastFileFolder);
             ini.SetString("Folders", "LastInstrumentFolder", LastInstrumentFolder);
