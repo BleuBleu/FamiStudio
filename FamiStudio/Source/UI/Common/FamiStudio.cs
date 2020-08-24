@@ -179,11 +179,13 @@ namespace FamiStudio
         {
             PianoRoll.Reset();
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
+            PianoRoll.CurrentArpeggio   = ProjectExplorer.SelectedArpeggio;
         }
 
         private void ProjectExplorer_ArpeggioDeleted(Arpeggio arpeggio)
         {
             PianoRoll.Reset();
+            PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
             PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
         }
 
