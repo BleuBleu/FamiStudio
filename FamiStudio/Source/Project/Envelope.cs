@@ -50,7 +50,7 @@ namespace FamiStudio
         {
             if (type == FdsWaveform)
                 maxLength = 64;
-            else if (type == FdsModulation || type == N163Waveform)
+            else if (type == FdsModulation)
                 maxLength = 32;
             else 
                 maxLength = 256;

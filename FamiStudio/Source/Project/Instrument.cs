@@ -139,8 +139,9 @@ namespace FamiStudio
             get { return n163WaveSize; }
             set
             {
-                n163WaveSize = (byte)Utils.NextPowerOfTwo(value);
-                n163WavePos  = (byte)(n163WavePos & ~(n163WaveSize - 1));
+                Debug.Assert((value & 0x03) == 0);
+                n163WaveSize = (byte)Utils.Clamp(value       & 0xfc, 4, 248);
+                n163WavePos  = (byte)Utils.Clamp(n163WavePos & 0xfc, 0, 248 - n163WaveSize);
                 UpdateN163WaveEnvelope();
             }
         }
@@ -148,21 +149,14 @@ namespace FamiStudio
         public byte N163WavePos
         {
             get { return n163WavePos; }
-            set { n163WavePos = (byte)value; }
-        }
-        
-        public int N163OctaveShift
-        {
-            get
+            set
             {
-                if (n163WaveSize >= 32) return 3;
-                if (n163WaveSize >= 16) return 2;
-                if (n163WaveSize >=  8) return 1;
-
-                return 0;
+                Debug.Assert((value & 0x03) == 0);
+                n163WavePos  = (byte)Utils.Clamp(value        & 0xfc, 0, 248);
+                n163WaveSize = (byte)Utils.Clamp(n163WaveSize & 0xfc, 4, 248 - n163WavePos);
             }
         }
-
+        
         public byte Vrc7Patch
         {
             get { return vrc7Patch; }
@@ -297,6 +291,7 @@ namespace FamiStudio
             public string name;
             public int min;
             public int max;
+            public int snap;
             public bool list;
         };
 
@@ -354,8 +349,8 @@ namespace FamiStudio
 
             // N163
             new RealTimeParamInfo() { name = "Wave Preset",                max = Envelope.WavePresetMax - 1, list = true },
-            new RealTimeParamInfo() { name = "Wave Size",                  min = 4, max = 32, list = true },
-            new RealTimeParamInfo() { name = "Wave Position",              max = 124, list = true },
+            new RealTimeParamInfo() { name = "Wave Size",                  min = 4, max = 248, snap = 4 },
+            new RealTimeParamInfo() { name = "Wave Position",              max = 244, snap = 4 },
 
             // VRC7
             new RealTimeParamInfo() { name = "Patch",                      max = 15, list = true },
@@ -490,6 +485,11 @@ namespace FamiStudio
             return RealTimeParamsInfo[param].max;
         }
 
+        public static int GetRealTimeParamSnapValue(int param)
+        {
+            return Math.Max(1, RealTimeParamsInfo[param].snap);
+        }
+
         public int GetRealTimeParamValue(int param)
         {
             switch (param)
@@ -567,7 +567,7 @@ namespace FamiStudio
 
                 // N163
                 case ParamN163WavePreset: N163WavePreset = (byte)val; break;
-                case ParamN163WavePos:    N163WavePos    = (byte)(val & ~(n163WaveSize - 1)); break;
+                case ParamN163WavePos:    N163WavePos    = (byte)val; break;
                 case ParamN163WaveSize:   N163WaveSize   = (byte)val; break;
 
                 // VRC7
@@ -627,10 +627,6 @@ namespace FamiStudio
         {
             switch (param)
             {
-                case ParamN163WaveSize:
-                    return val <= 4 ? 4 : val /= 2;
-                case ParamN163WavePos:
-                    return val == 0 ? 0 : val - n163WaveSize;
                 default:
                     return Utils.Clamp(val - 1, GetRealTimeParamMinValue(param), GetRealTimeParamMaxValue(param));
             }
@@ -640,10 +636,6 @@ namespace FamiStudio
         {
             switch (param)
             {
-                case ParamN163WaveSize:
-                    return val >= 32 ? 32 : val *= 2;
-                case ParamN163WavePos:
-                    return val >= 128 - n163WaveSize ? 128 - n163WaveSize : val + n163WaveSize;
                 default:
                     return Utils.Clamp(val + 1, GetRealTimeParamMinValue(param), GetRealTimeParamMaxValue(param));
             }

@@ -663,8 +663,8 @@ void FASTCALL CNSFCore::WriteMemory_N106(WORD a,BYTE v)
 	case r2:	if(mWave_N106.nFreqReg[ch].B.w != (v & 3)){		\
 					mWave_N106.nFreqReg[ch].B.w = v & 0x03;		\
 					mWave_N106.fFreqTimer[ch] = -1.0f;}			\
-				mWave_N106.nWaveSize[ch] = 0x20 - (v & 0x1C);	\
-				mWave_N106.nWaveSizeWritten[ch] = (v >> 2) & 7;	\
+				mWave_N106.nWaveSize[ch] = 256 - (v & 0xFC);	\
+				mWave_N106.nWaveSizeWritten[ch] = (v >> 2) & 0x3F;	\
 				break;											\
 	case r3:	mWave_N106.nWavePosStart[ch] = v;				\
 				break;											\

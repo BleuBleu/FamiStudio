@@ -398,6 +398,7 @@ namespace FamiStudio
 
         public void Reset()
         {
+            scrollY = 0;
             selectedSong = App.Project.Songs[0];
             selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
             expandedInstrument = null;
@@ -966,20 +967,23 @@ namespace FamiStudio
 
             var actualWidth = Width - scrollBarSizeX;
             var buttonX = e.X;
-            var buttonY = e.Y - buttonIdx * buttonSizeY;
+            var buttonY = e.Y + scrollY - buttonIdx * buttonSizeY;
 
             var paramVal = button.instrument.GetRealTimeParamValue(button.instrumentParam);
             var paramMin = Instrument.GetRealTimeParamMinValue(button.instrumentParam);
             var paramMax = Instrument.GetRealTimeParamMaxValue(button.instrumentParam);
+            var paramSnap = Instrument.GetRealTimeParamSnapValue(button.instrumentParam);
 
             if (shift)
             {
-                paramVal = Utils.Clamp(paramVal + (e.X - mouseLastX), paramMin, paramMax);
+                paramVal = Utils.Clamp(paramVal + (e.X - mouseLastX) * paramSnap, paramMin, paramMax);
             }
             else
             {
                 paramVal = (int)Math.Round(Utils.Lerp(paramMin, paramMax, Utils.Clamp((buttonX - (actualWidth - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
             }
+
+            paramVal = (paramVal / paramSnap) * paramSnap;
 
             button.instrument.SetRealTimeParamValue(button.instrumentParam, paramVal);
 

@@ -8,7 +8,6 @@ namespace FamiStudio
         int regOffset;
         int waveLength;
         int channelMask;
-        int octaveShift;
 
         public ChannelStateN163(int apuIdx, int channelType, int numChannels, bool pal) : base(apuIdx, channelType, pal, numChannels)
         {
@@ -30,7 +29,8 @@ namespace FamiStudio
 
                 if (instrument.ExpansionType == Project.ExpansionN163)
                 {
-                    Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
+                    // This can actually trigger if you tweak an instrument while playing a song.
+                    //Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
 
                     var pos = instrument.N163WavePos / 2;
                     var wave = instrument.Envelopes[Envelope.N163Waveform].BuildN163Waveform();
@@ -40,7 +40,6 @@ namespace FamiStudio
 
                     WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
                     waveLength = 256 - instrument.N163WaveSize;
-                    octaveShift = instrument.N163OctaveShift;
                 }
             }
         }

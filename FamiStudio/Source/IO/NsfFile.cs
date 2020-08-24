@@ -798,8 +798,9 @@ namespace FamiStudio
             int numNamcoChannels = 1;
             for (int i = 0; i < numFrames; i++)
             {
-                NsfRunFrame(tmpNsf);
-                numNamcoChannels = Math.Max(numNamcoChannels, NsfGetState(tmpNsf, Channel.N163Wave1, STATE_N163NUMCHANNELS, 0));
+                var playCalled = NsfRunFrame(tmpNsf);
+                if (playCalled != 0)
+                    numNamcoChannels = Math.Max(numNamcoChannels, NsfGetState(tmpNsf, Channel.N163Wave1, STATE_N163NUMCHANNELS, 0));
             }
 
             NsfClose(tmpNsf);
