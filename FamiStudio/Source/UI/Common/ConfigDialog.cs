@@ -96,7 +96,7 @@ namespace FamiStudio
                 {
                     page.AddIntegerRange("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 0
                     page.AddBoolean("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 1
-                    page.AddBoolean("Disable dragging sound while song is playing:", Settings.NoDragSoungWhenPlaying); // 2
+                    page.AddBoolean("Mute piano roll interactions during playback:", Settings.NoDragSoungWhenPlaying); // 2
                         
                     break;
                 }
