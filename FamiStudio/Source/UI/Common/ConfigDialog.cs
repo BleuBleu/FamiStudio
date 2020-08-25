@@ -36,6 +36,13 @@ namespace FamiStudio
             "MM:SS:mmm"
         };
 
+        public string[] FollowSequencerStrings =
+        {
+            "None",
+            "Jump",
+            "Continuous"
+        };
+
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
 
@@ -74,7 +81,8 @@ namespace FamiStudio
                     var scalingValues = new[] { "System" };
 #endif
                     var scalingIndex = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
-                    var timeFormatIndex = Settings.TimeFormat < (int)TimeFormat.Max ? Settings.TimeFormat : 0; 
+                    var timeFormatIndex = Settings.TimeFormat < (int)TimeFormat.Max ? Settings.TimeFormat : 0;
+                    var followSequencerIndex = Settings.FollowSequencer <= 0 ? 0 : Settings.FollowSequencer % FollowSequencerStrings.Length;
 
                     page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex]); // 0
                     page.AddStringList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]); // 1
@@ -85,12 +93,15 @@ namespace FamiStudio
                     page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 5
                     page.SetPropertyEnabled(4, Settings.TrackPadControls);
                     page.PropertyChanged += Page_PropertyChanged;
+                    page.AddStringList("Follow Sequencer:", FollowSequencerStrings, FollowSequencerStrings[followSequencerIndex]); // 6
+#else
+                    page.AddStringList("Follow Sequencer:", FollowSequencerStrings, FollowSequencerStrings[followSequencerIndex]); // 5
 #endif
 #if FAMISTUDIO_LINUX
                     page.SetPropertyEnabled(0, false);
 #endif
 
-                        break;
+                    break;
                 }
                 case ConfigSection.Sound:
                 {
@@ -158,7 +169,11 @@ namespace FamiStudio
                 Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(4);
 #if FAMISTUDIO_MACOS
                 Settings.ReverseTrackPad = pageUI.GetPropertyValue<bool>(5);
+                var followSequencerString = pageUI.GetPropertyValue<string>(6);
+#else
+                var followSequencerString = pageUI.GetPropertyValue<string>(5);
 #endif
+                Settings.FollowSequencer = Array.IndexOf(FollowSequencerStrings, followSequencerString);
 
                 // Sound
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(0);

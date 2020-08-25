@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
@@ -356,6 +356,36 @@ namespace FamiStudio
             g.Clear(ThemeBase.DarkGreyFillColor1);
 
             var seekX = ScaleForZoom(App.CurrentFrame) * RenderTheme.MainWindowScaling - scrollX;
+
+            if (App.IsPlaying)
+            {
+                if (Settings.FollowSequencer == 1)
+                {
+                    bool followed = false;
+                    if (seekX < 0)
+                    {
+                        scrollX = (int)seekX + trackNameSizeX;
+                        followed = true;
+                    }
+                    else if (seekX > Width - trackNameSizeX)
+                    {
+                        scrollX += Width - trackNameSizeX;
+                        followed = true;
+                    }
+                    ClampScroll();
+                    if (followed)
+                    {
+                        seekX = ScaleForZoom(App.CurrentFrame) * RenderTheme.MainWindowScaling - scrollX;
+                    }
+                }
+                else if (Settings.FollowSequencer == 2)
+                {
+                    scrollX = (int)seekX + scrollX - Width / 2;
+                    ClampScroll();
+                    seekX = ScaleForZoom(App.CurrentFrame) * RenderTheme.MainWindowScaling - scrollX;
+                }
+            }
+
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
             var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / noteSizeX), Song.GetPatternStartNote(Song.Length));
             var minVisiblePattern = Utils.Clamp(Song.FindPatternInstanceIndex(minVisibleNoteIdx, out _) + 0, 0, Song.Length);

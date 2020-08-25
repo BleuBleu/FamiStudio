@@ -22,6 +22,7 @@ namespace FamiStudio
         public static bool ShowPianoRollViewRange = true;
         public static bool TrackPadControls = false;
         public static bool ReverseTrackPad = false;
+        public static int FollowSequencer = 0;
         public static bool ShowTutorial = true;
 
         // Audio section
@@ -51,6 +52,7 @@ namespace FamiStudio
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
+            FollowSequencer = ini.GetInt("UI", "FollowSequencer", 0);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
             MidiDevice = ini.GetString("MIDI", "Device", "");
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
@@ -92,6 +94,7 @@ namespace FamiStudio
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetBool("UI", "TrackPadControls", TrackPadControls);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
+            ini.SetInt("UI", "FollowSequencer", FollowSequencer);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
