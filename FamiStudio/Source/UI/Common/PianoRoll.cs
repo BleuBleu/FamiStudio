@@ -3607,6 +3607,38 @@ namespace FamiStudio
                 var pt = this.PointToClient(Cursor.Position);
                 UpdateSelection(pt.X, false);
             }
+
+            if (App.IsPlaying && (Settings.FollowSync == 1 || Settings.FollowSync == 2))
+            {
+                var seekX = App.CurrentFrame * noteSizeX - scrollX;
+                var minX = 128;
+                var maxX = Width - whiteKeySizeX;
+                bool followed = false;
+                if (Settings.FollowMode == 1)
+                {
+                    if (seekX < 0)
+                    {
+                        scrollX = (int)seekX + minX;
+                        followed = true;
+                    }
+                    else if (seekX > maxX)
+                    {
+                        scrollX += maxX;
+                        followed = true;
+                    }
+                }
+                else if (Settings.FollowMode == 2)
+                {
+                    followed = true;
+                    scrollX = (int)seekX + scrollX - Width / 2;
+                }
+
+                if (followed)
+                {
+                    ClampScroll();
+                    ConditionalInvalidate();
+                }
+            }
         }
 
         private bool GetEffectNoteForCoord(int x, int y, out int patternIdx, out int noteIdx)

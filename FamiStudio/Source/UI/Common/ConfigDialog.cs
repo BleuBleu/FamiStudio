@@ -36,11 +36,18 @@ namespace FamiStudio
             "MM:SS:mmm"
         };
 
-        public string[] FollowSequencerStrings =
+        public string[] FollowModeStrings =
         {
             "None",
             "Jump",
             "Continuous"
+        };
+
+        public string[] FollowSyncStrings =
+        {
+            "Sequencer",
+            "Piano Roll",
+            "Both"
         };
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
@@ -82,20 +89,20 @@ namespace FamiStudio
 #endif
                     var scalingIndex = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
                     var timeFormatIndex = Settings.TimeFormat < (int)TimeFormat.Max ? Settings.TimeFormat : 0;
-                    var followSequencerIndex = Settings.FollowSequencer <= 0 ? 0 : Settings.FollowSequencer % FollowSequencerStrings.Length;
+                    var followModeIndex = Settings.FollowMode <= 0 ? 0 : Settings.FollowMode % FollowModeStrings.Length;
+                    var followSyncIndex = Settings.FollowSync <= 0 ? 0 : Settings.FollowSync % FollowSyncStrings.Length;
 
                     page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex]); // 0
                     page.AddStringList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]); // 1
-                    page.AddBoolean("Check for updates:", Settings.CheckUpdates); // 2
-                    page.AddBoolean("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 3
-                    page.AddBoolean("Trackpad controls:", Settings.TrackPadControls); // 4
+                    page.AddStringList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex]);  // 2
+                    page.AddStringList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex]); // 3
+                    page.AddBoolean("Check for updates:", Settings.CheckUpdates); // 4
+                    page.AddBoolean("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
+                    page.AddBoolean("Trackpad controls:", Settings.TrackPadControls); // 6
 #if FAMISTUDIO_MACOS
-                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 5
+                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 7
                     page.SetPropertyEnabled(4, Settings.TrackPadControls);
                     page.PropertyChanged += Page_PropertyChanged;
-                    page.AddStringList("Follow Sequencer:", FollowSequencerStrings, FollowSequencerStrings[followSequencerIndex]); // 6
-#else
-                    page.AddStringList("Follow Sequencer:", FollowSequencerStrings, FollowSequencerStrings[followSequencerIndex]); // 5
 #endif
 #if FAMISTUDIO_LINUX
                     page.SetPropertyEnabled(0, false);
@@ -161,19 +168,19 @@ namespace FamiStudio
                 var pageSound = pages[(int)ConfigSection.Sound];
                 var scalingString = pageUI.GetPropertyValue<string>(0);
                 var timeFormatString = pageUI.GetPropertyValue<string>(1);
+                var followModeString = pageUI.GetPropertyValue<string>(2);
+                var followSyncString = pageUI.GetPropertyValue<string>(3);
 
                 Settings.DpiScaling = scalingString == "System" ? 0 : int.Parse(scalingString.Substring(0, 3));
                 Settings.TimeFormat = Array.IndexOf(TimeFormatStrings, timeFormatString);
-                Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(2);
-                Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(3);
-                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(4);
+                Settings.FollowMode = Array.IndexOf(FollowModeStrings, followModeString);
+                Settings.FollowSync = Array.IndexOf(FollowSyncStrings, followSyncString);
+                Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(4);
+                Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(5);
+                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(6);
 #if FAMISTUDIO_MACOS
-                Settings.ReverseTrackPad = pageUI.GetPropertyValue<bool>(5);
-                var followSequencerString = pageUI.GetPropertyValue<string>(6);
-#else
-                var followSequencerString = pageUI.GetPropertyValue<string>(5);
+                Settings.ReverseTrackPad = pageUI.GetPropertyValue<bool>(7);
 #endif
-                Settings.FollowSequencer = Array.IndexOf(FollowSequencerStrings, followSequencerString);
 
                 // Sound
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(0);

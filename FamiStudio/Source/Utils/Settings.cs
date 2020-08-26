@@ -22,7 +22,8 @@ namespace FamiStudio
         public static bool ShowPianoRollViewRange = true;
         public static bool TrackPadControls = false;
         public static bool ReverseTrackPad = false;
-        public static int FollowSequencer = 0;
+        public static int FollowMode = 0;
+        public static int FollowSync = 0;
         public static bool ShowTutorial = true;
 
         // Audio section
@@ -48,11 +49,12 @@ namespace FamiStudio
             ShowTutorial = ini.GetBool("UI", "ShowTutorial", true);
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
             TimeFormat = ini.GetInt("UI", "TimeFormat", 0);
+            FollowMode = ini.GetInt("UI", "FollowMode", 0);
+            FollowSync = ini.GetInt("UI", "FollowSync", 0);
             CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
-            FollowSequencer = ini.GetInt("UI", "FollowSequencer", 0);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
             MidiDevice = ini.GetString("MIDI", "Device", "");
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
@@ -90,11 +92,12 @@ namespace FamiStudio
             ini.SetBool("UI", "ShowTutorial", ShowTutorial);
             ini.SetInt("UI", "DpiScaling", DpiScaling);
             ini.SetInt("UI", "TimeFormat", TimeFormat);
+            ini.SetInt("UI", "FollowMode", FollowMode);
+            ini.SetInt("UI", "FollowSync", FollowSync);
             ini.SetBool("UI", "CheckUpdates", CheckUpdates);
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetBool("UI", "TrackPadControls", TrackPadControls);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
-            ini.SetInt("UI", "FollowSequencer", FollowSequencer);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
