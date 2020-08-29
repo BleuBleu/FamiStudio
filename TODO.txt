@@ -1,33 +1,43 @@
 2.2.0
 =====
+- POLISH: Snap VS. Single click on a note.
+- Recompile NesSndEmu + NotSoFatso on Linux/Mac.
 - Doc: 
 	- Settings dialog update when final.
 	- Where to download sound engine?
 
 2.2.0 Trailer
 =============
-1) Recording mode
+1) Recording mode 
+	- TODO: Insert of MIDI keyboard
+	
 	- Tired of clicking with the mouse? Input notes using a MIDI controller or a QWERTY keyboard. 
+	- Patterns are automatically created as needed.
 	- The snapping precision is used to control the length of each recorded notes.
-	- QWERTY keys are displayed on the piano, Page Up/Page Down to move the octave up/down.
-	- Press Backspace to go back, Tab to skip ahead and 1 to insert a stop note. [Show QWERTY layout]
-2) Arpeggios
+	- Press Backspace to go back, Tab to skip ahead and 1 to insert a stop note. 
+	- QWERTY keys are displayed on the piano, Page Up/Page Down to move the octave up/down. [Show QWERTY layout]
+2) Arpeggios:
 	- Define your own arpeggios of arbitrary length and complexity.
 	- Unlike instrument arpeggio envelopes, these arpeggios are not bound to any specific instrument.
-	- Will appear as semi-transparent chords in the piano roll.
+	- They will appear as semi-transparent chords in the piano roll.
 3) Sound Engine
+	- [Go back to Silver Surfer playing]
+	- [Open MESEN to show demo, timed with the song playing]
+	- [Open Export dialog, go to FamiStudio export section]
+	
 	- First official release of the FamiStudio Sound Engine for NES developers.
 	- Supports every feature supported by FamiStudio, available for all 3 major assemblers : CA65, NESASM and ASM6.
-	- Some features are toggeable to save CPU/RAM, please check out the documentation on famistudio.org for more details. [Show tables]
-4) FDS export
-
-5) Piano Rect
-	- The visible range of the piano roll is not displayed in the sequencer.
-	- This is useful sometimes to know exactly which are of the song you are looking at.
+	- Export to it through the Export dialog or the command line.
+4) Discord server!
+	- Come discuss with other FamiStudio users. Link available on www.famistudio.org. 
+5) FDS Disk Export
+	- You can now export your Famicom Disk System song to FDS files to play them on actual hardware.
+	- Here it is using a FDSStick to avoid having to deal with physical disks, but the actual FDS sound hardware is being used.
 
 2.2.0 Release
 =============
 - Discord server
+- Update NESDEV wiki.
 
 Testing:
 ========
@@ -78,6 +88,10 @@ MkDocs
 - Install Python
 - pip install mkdocs
 - pip install mkdocs-bootswatch
+
+Discord
+=======
+- Invite link: https://discord.gg/88UPmxh
 
 Backlog:
 =========
