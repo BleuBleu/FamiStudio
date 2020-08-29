@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
@@ -1647,36 +1647,6 @@ namespace FamiStudio
             {
                 var pt = PointToClient(Cursor.Position);
                 UpdateSelection(pt.X, false);
-            }
-
-            if (App.IsPlaying && (Settings.FollowSync == 0 || Settings.FollowSync == 2))
-            {
-                var seekX = ScaleForZoom(App.CurrentFrame) * RenderTheme.MainWindowScaling - scrollX;
-                bool followed = false;
-                if (Settings.FollowMode == 1)
-                {
-                    if (seekX < 0)
-                    {
-                        scrollX = (int)seekX + trackNameSizeX;
-                        followed = true;
-                    }
-                    else if (seekX > Width - trackNameSizeX)
-                    {
-                        scrollX += Width - trackNameSizeX;
-                        followed = true;
-                    }
-                }
-                else if (Settings.FollowMode == 2)
-                {
-                    followed = true;
-                    scrollX = (int)seekX + scrollX - Width / 2;
-                }
-
-                if (followed)
-                {
-                    ClampScroll();
-                    ConditionalInvalidate();
-                }
             }
         }
 

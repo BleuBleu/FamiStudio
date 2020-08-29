@@ -483,24 +483,6 @@
     <EmbeddedResource Include="Resources\SpeedSmall.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />
-    <EmbeddedResource Include="Resources\FollowContinuousBoth.png" />
-    <EmbeddedResource Include="Resources\FollowContinuousPiano.png" />
-    <EmbeddedResource Include="Resources\FollowContinuousSeq.png" />
-    <EmbeddedResource Include="Resources\FollowJumpPiano.png" />
-    <EmbeddedResource Include="Resources\FollowJumpSeq.png" />
-    <EmbeddedResource Include="Resources\FollowNoneBoth.png" />
-    <EmbeddedResource Include="Resources\FollowNonePiano.png" />
-    <EmbeddedResource Include="Resources\FollowNoneSeq.png" />
-    <EmbeddedResource Include="Resources\FollowJumpBoth.png" />
-    <EmbeddedResource Include="Resources\FollowContinuousBoth%402x.png" />
-    <EmbeddedResource Include="Resources\FollowContinuousPiano%402x.png" />
-    <EmbeddedResource Include="Resources\FollowContinuousSeq%402x.png" />
-    <EmbeddedResource Include="Resources\FollowJumpBoth%402x.png" />
-    <EmbeddedResource Include="Resources\FollowJumpPiano%402x.png" />
-    <EmbeddedResource Include="Resources\FollowJumpSeq%402x.png" />
-    <EmbeddedResource Include="Resources\FollowNoneBoth%402x.png" />
-    <EmbeddedResource Include="Resources\FollowNonePiano%402x.png" />
-    <EmbeddedResource Include="Resources\FollowNoneSeq%402x.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">

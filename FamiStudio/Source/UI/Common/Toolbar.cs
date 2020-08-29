@@ -38,10 +38,9 @@ namespace FamiStudio
         const int ButtonRec       = 12;
         const int ButtonRewind    = 13;
         const int ButtonLoop      = 14;
-        const int ButtonFollow    = 15;
-        const int ButtonMachine   = 16;
-        const int ButtonHelp      = 17;
-        const int ButtonCount     = 18; //should always be last
+        const int ButtonMachine   = 15;
+        const int ButtonHelp      = 16;
+        const int ButtonCount     = 17;
 
         const int DefaultTimecodePosX            = 404;
         const int DefaultTimecodePosY            = 4;
@@ -111,9 +110,6 @@ namespace FamiStudio
         RenderBitmap bmpPalToNtsc;
         RenderBitmap bmpRec;
         RenderBitmap bmpRecRed;
-        RenderBitmap[] bmpFollowNone;
-        RenderBitmap[] bmpFollowJump;
-        RenderBitmap[] bmpFollowContinuous;
         Button[] buttons = new Button[ButtonCount];
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
@@ -136,17 +132,6 @@ namespace FamiStudio
             bmpRec         = g.CreateBitmapFromResource("Rec");
             bmpRecRed      = g.CreateBitmapFromResource("RecRed");
 
-            string[] followModes = { "Seq", "Piano", "Both" };
-            bmpFollowNone = new RenderBitmap[followModes.Length];
-            bmpFollowJump = new RenderBitmap[followModes.Length];
-            bmpFollowContinuous = new RenderBitmap[followModes.Length];
-            for (int i = 0; i < followModes.Length; i++)
-            {
-                bmpFollowNone[i] = g.CreateBitmapFromResource("FollowNone" + followModes[i]);
-                bmpFollowJump[i] = g.CreateBitmapFromResource("FollowJump" + followModes[i]);
-                bmpFollowContinuous[i] = g.CreateBitmapFromResource("FollowContinuous" + followModes[i]);
-            }
-
             buttons[ButtonNew]       = new Button { X = 4,   Y = 4, Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { X = 40,  Y = 4, Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
             buttons[ButtonSave]      = new Button { X = 76,  Y = 4, Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
@@ -162,8 +147,7 @@ namespace FamiStudio
             buttons[ButtonRec]       = new Button { X = 608, Y = 4, GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[ButtonRewind]    = new Button { X = 644, Y = 4, Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]      = new Button { X = 680, Y = 4, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
-            buttons[ButtonFollow]    = new Button { X = 716, Y = 4, Click = OnFollowMode, RightClick = OnFollowSync, GetBitmap = OnFollowGetBitmap };
-            buttons[ButtonMachine]   = new Button { X = 752, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
+            buttons[ButtonMachine]   = new Button { X = 716, Y = 4, Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
             buttons[ButtonHelp]      = new Button { X = 36,  Y = 4, Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
 
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
@@ -181,7 +165,6 @@ namespace FamiStudio
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
-            buttons[ButtonFollow].ToolTip    = "{MouseLeft} Toggle Follow Mode - {MouseRight} Toggle Window Following";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
 
@@ -431,29 +414,6 @@ namespace FamiStudio
             }
 
             return null;
-        }
-
-        private void OnFollowMode()
-        {
-            Settings.FollowMode = (Settings.FollowMode + 1) % 3;
-        }
-
-        private void OnFollowSync()
-        {
-            Settings.FollowSync = (Settings.FollowSync + 1) % 3;
-        }
-
-        private RenderBitmap OnFollowGetBitmap()
-        {
-            RenderBitmap[] arr;
-            switch (Settings.FollowMode)
-            {
-                case 0: arr = bmpFollowNone; break;
-                case 1: arr = bmpFollowJump; break;
-                case 2: arr = bmpFollowContinuous; break;
-                default: return null;
-            }
-            return arr[Settings.FollowSync % arr.Length];
         }
 
         private void OnMachine()
