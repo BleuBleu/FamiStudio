@@ -70,7 +70,10 @@ namespace FamiStudio
             project.PalMode = machine == 1;
 
             if (numChannels != project.GetActiveChannelCount())
+            {
+                Log.LogMessage(LogSeverity.Error, "Unexpected audio channel count.");
                 return false;
+            }
 
             return true;
         }
@@ -104,7 +107,10 @@ namespace FamiStudio
                 var chanType = bytes[idx++];
 
                 if (ChanIdLookup[chanType] != channelList[i])
+                {
+                    Log.LogMessage(LogSeverity.Error, "Channel type mismatch.");
                     return false;
+                }
 
                 for (int j = 0; j < numSongs; j++)
                     songEffectColumnCount[project.Songs[j]][i] = bytes[idx++];
@@ -164,7 +170,7 @@ namespace FamiStudio
                 env.Values[i] = (sbyte)bytes[idx++];
         }
 
-        private void ReadInstrument2A03(Instrument instrument, ref int idx)
+        private void ReadInstrument2A03(Instrument instrument, int instIdx, ref int idx)
         {
             ReadCommonEnvelopes(instrument, ref idx, envelopes);
 
@@ -200,12 +206,12 @@ namespace FamiStudio
             }
         }
 
-        private void ReadInstrumentVRC6(Instrument instrument, ref int idx)
+        private void ReadInstrumentVRC6(Instrument instrument, int instIdx, ref int idx)
         {
             ReadCommonEnvelopes(instrument, ref idx, envelopesExp);
         }
 
-        private void ReadInstrumentVRC7(Instrument instrument, ref int idx)
+        private void ReadInstrumentVRC7(Instrument instrument, int instIdx, ref int idx)
         {
             instrument.Vrc7Patch = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
@@ -220,7 +226,7 @@ namespace FamiStudio
             }
         }
 
-        private void ReadInstrumentFds(Instrument instrument, ref int idx)
+        private void ReadInstrumentFds(Instrument instrument, int instIdx, ref int idx)
         {
             var wavEnv = instrument.Envelopes[Envelope.FdsWaveform];
             var modEnv = instrument.Envelopes[Envelope.FdsModulation];
@@ -245,7 +251,7 @@ namespace FamiStudio
             ReadSingleEnvelope(Envelope.Pitch,    instrument.Envelopes[Envelope.Pitch],    ref idx);
         }
 
-        private void ReadInstrumentN163(Instrument instrument, ref int idx)
+        private void ReadInstrumentN163(Instrument instrument, int instIdx, ref int idx)
         {
             ReadCommonEnvelopes(instrument, ref idx, envelopesExp);
 
@@ -255,16 +261,19 @@ namespace FamiStudio
             instrument.N163WaveSize   = (byte)fileWaveSize;
             instrument.N163WavePos    = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
-            var waveCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int); 
+            var wavCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int); 
 
             for (int j = 0; j < fileWaveSize; j++)
                 instrument.Envelopes[Envelope.N163Waveform].Values[j] = (sbyte)bytes[idx++];
 
+            if (wavCount > 1)
+                Log.LogMessage(LogSeverity.Warning, $"N163 instrument index {instIdx} has more than 1 waveform ({wavCount}). All others will be ignored.");
+
             // Skip any extra waves.
-            idx += (waveCount - 1) * fileWaveSize;
+            idx += (wavCount - 1) * fileWaveSize;
         }
 
-        private void ReadInstrumentS5B(Instrument instrument, ref int idx)
+        private void ReadInstrumentS5B(Instrument instrument, int instIdx, ref int idx)
         {
             ReadCommonEnvelopes(instrument, ref idx, envelopesExp);
         }
@@ -280,16 +289,19 @@ namespace FamiStudio
                 var instrument = project.CreateInstrument(type, $"___TEMP_INSTRUMENT_NAME___{index}");
 
                 if (instrument == null)
+                {
+                    Log.LogMessage(LogSeverity.Error, $"Failed to create instrument {index}.");
                     return false;
+                }
 
                 switch (type)
                 {
-                    case Project.ExpansionNone: ReadInstrument2A03(instrument,  ref idx); break;
-                    case Project.ExpansionVrc6: ReadInstrumentVRC6(instrument,  ref idx); break;
-                    case Project.ExpansionVrc7: ReadInstrumentVRC7(instrument,  ref idx); break;
-                    case Project.ExpansionFds:  ReadInstrumentFds(instrument,   ref idx); break;
-                    case Project.ExpansionN163: ReadInstrumentN163(instrument,  ref idx); break;
-                    case Project.ExpansionS5B:  ReadInstrumentS5B(instrument,   ref idx); break;
+                    case Project.ExpansionNone: ReadInstrument2A03(instrument,  index, ref idx); break;
+                    case Project.ExpansionVrc6: ReadInstrumentVRC6(instrument,  index, ref idx); break;
+                    case Project.ExpansionVrc7: ReadInstrumentVRC7(instrument,  index, ref idx); break;
+                    case Project.ExpansionFds:  ReadInstrumentFds(instrument,   index, ref idx); break;
+                    case Project.ExpansionN163: ReadInstrumentN163(instrument,  index, ref idx); break;
+                    case Project.ExpansionS5B:  ReadInstrumentS5B(instrument,   index, ref idx); break;
                     default:
                         return false;
                 }
@@ -504,21 +516,22 @@ namespace FamiStudio
                         if (blockVersion < 5 && project.ExpansionAudio == Project.ExpansionFds && channel.Type == Channel.FdsWave && octave < 6 && octave != 0)
                             octave += 2;
 
-                        if (note != 0 && octave != 0)
+                        if (note == 13)
                         {
-                            switch (note)
-                            {
-                                case 13: pattern.GetOrCreateNoteAt(n).Value = Note.NoteRelease; break;
-                                case 14: pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop; break;
-                                default:
-                                    if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
-                                        pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];
-                                    if (channel.Type == Channel.Noise)
-                                        pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note + 15);
-                                    else
-                                        pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note);
-                                    break;
-                            }
+                            pattern.GetOrCreateNoteAt(n).Value = Note.NoteRelease;
+                        }
+                        else if (note == 14)
+                        {
+                            pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop;
+                        }
+                        else if (note != 0 && octave != 0)
+                        {
+                            if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
+                                pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];
+                            if (channel.Type == Channel.Noise)
+                                pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note + 15);
+                            else
+                                pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note);
                         }
                     }
 
@@ -555,6 +568,9 @@ namespace FamiStudio
                 Array.Copy(bytes, idx, data, 0, size); idx += size;
 
                 samples[i] = CreateUniquelyNamedSample(name, data);
+
+                if (samples[i] == null)
+                    Log.LogMessage(LogSeverity.Warning, $"Cannot allocate DPCM sample '{name}'. Maximum total size allowed is 16KB.");
             }
 
             return true;
@@ -567,11 +583,17 @@ namespace FamiStudio
 
             var id = Encoding.ASCII.GetString(bytes, idx, FileHeaderId.Length); idx += FileHeaderId.Length;
             if (id != FileHeaderId)
+            {
+                Log.LogMessage(LogSeverity.Error, "Invalid FTM file ID.");
                 return null;
+            }
 
             var version = BitConverter.ToUInt32(bytes, idx); idx += sizeof(uint);
             if (version < MinVersion || version > MaxVersion)
+            {
+                Log.LogMessage(LogSeverity.Error, "Unsupported file version. Only FTM version 0.4.4 to 0.4.6 are supported.");
                 return null;
+            }
 
             var blockToc = new Dictionary<string, BlockInfo>();
 

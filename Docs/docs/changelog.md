@@ -2,7 +2,21 @@
 
 Version history / release notes for each release.
 
-## Version 2.1.1
+## Version 2.2.0
+
+Changes:
+
+* Recording mode to record note-by-note using MIDI controller or QWERTY keyboard
+* Arpeggio support
+* Official FamiStudio Sound Engine release
+* Displaying the piano roll view range in the sequencer
+* FDS disk export
+* Basic tutorials for first time users
+* Error logging when importing/exporting files
+* Wav export loop count
+* Option to disable dragging sounds when a song is playing
+
+## Version 2.1.1 (Hotfix)
 
 Changes:
 
@@ -10,7 +24,7 @@ Changes:
 * Fixed multiple crashes & issues when exporting to NSF
 * Fixed missing notes on noise channel when importing NSFs
 * Fixed import of FamiTracker FTM files that uses expansion audio
-* Fixed incorrect DPCM samples alignment when exporting NSF, ROM & FamiTone2.
+* Fixed incorrect DPCM samples alignment when exporting NSF, ROM & FamiTone2
 * Renaming .so files on Linux to support older version of Mono
 * Setting correct file extension when saving on Linux
 * FamiTone2 sound effect export fixes
@@ -44,14 +58,14 @@ Breaking/behavior changes:
 </div>
 <br/>
 
-## Version 2.0.3
+## Version 2.0.3 (Hotfix)
 
 New features:
 
 * Fix crash when clicking on a note when a incompatible instrument is selected.
 * Fix WAV file export when using a sample rate different than 44100Hz.
 
-## Version 2.0.2
+## Version 2.0.2 (Hotfix)
 
 New features:
 
@@ -63,7 +77,7 @@ New features:
 * Detection of audio device changes on Windows 7.
 * Handling of D3D device lost to improve stability on Windows 7.
 
-## Version 2.0.1
+## Version 2.0.1 (Hotfix)
 
 New features:
 
@@ -130,7 +144,7 @@ New features:
 </div>
 <br/>
 
-## Version 1.2.1
+## Version 1.2.1 (Hotfix)
 
 New features:
 

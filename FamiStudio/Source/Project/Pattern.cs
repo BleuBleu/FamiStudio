@@ -138,7 +138,7 @@ namespace FamiStudio
                 var i    = kv.Key;
                 var note = kv.Value;
 
-                if (i >= endTime)
+                if (i > endTime)
                     break;
 
                 if (note.IsRelease)
@@ -407,6 +407,9 @@ namespace FamiStudio
                 Debug.Assert(inst == null || song.Project.InstrumentExists(inst));
                 Debug.Assert(inst == null || song.Project.GetInstrument(inst.Id) == inst);
                 Debug.Assert(inst == null || channel.SupportsInstrument(inst));
+
+                var arp = note.Arpeggio;
+                Debug.Assert(arp == null || song.Project.GetArpeggio(arp.Id) == arp);
             }
         }
 #endif

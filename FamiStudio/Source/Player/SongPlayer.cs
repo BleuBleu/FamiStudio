@@ -59,10 +59,22 @@ namespace FamiStudio
 
                 while (true)
                 {
-                    int idx = WaitHandle.WaitAny(waitEvents);
+                    var idx = WaitHandle.WaitAny(waitEvents);
 
-                    if (idx == 0 || !PlaySongFrame())
+                    if (idx == 0)
                         break;
+
+                    var reachedEnd = !PlaySongFrame();
+
+                    // When we reach the end of the song, we will wait for the stream to finished 
+                    // consuming the queued samples. This happens when songs don't have loop points,
+                    // (like SFX) and avoids cutting the last couple frames of audio.
+                    if (reachedEnd)
+                    {
+                        while (sampleQueue.Count != 0)
+                            Thread.Sleep(1);
+                        break;
+                    }
                 }
             }
 

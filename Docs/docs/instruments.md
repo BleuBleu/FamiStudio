@@ -1,6 +1,6 @@
 # Editing Instruments
 
-The project explorer displays the list of songs and instruments in the current project. This section is only going to cover editing of instruments. Please refer to the [Editing Songs & Project](song.md) section to learn how to edit project and song properties.
+The project explorer displays the list of songs and instruments in the current project. This section is only going to cover editing of instruments and arpeggios. Please refer to the [Editing Songs & Project](song.md) section to learn how to edit project and song properties.
 
 ![](images/ProjectExplorer.png#center)
 
@@ -67,10 +67,30 @@ Clicking on an envelope button and dragging it on another instrument will copy t
 
 Right-clicking on the icon of an envelope deletes it.
 
-## Editing DPCM samples
+# Editing DPCM samples
 
 Clicking on the little icon next to the DPCM samples in the project explorer will open the piano roll in DPCM edition mode.
 
 ![](images/EditDPCM.png#center)
 
 Clicking anywhere on a note that does not have a DPCM sample associated will prompt you to open a .DMC file. No DMC edition tool is provided, you can use [FamiTracker](http://famitracker.com/), [RJDMC](http://forums.famitracker.com/viewtopic.php?t=95) or any other tool. DPCM samples are assumed to have unique names and 2 samples with the same name will be assume to be the same. Double-clicking on an existing sample edits its pitch and toggle loop. Note that only notes between C1 and D6 are allowed to have DPCM samples.
+
+# Editing Arpeggios
+
+Arpeggios (not to be confused with arpeggio instrument envelopes) are typically used to simulate chords by playing changing notes very rapidly. They work in the exact same way as arpeggio instrument envelopes, but they are not bound to any specific instrument. For example, if you define a "Major chord" arpeggio that repeats a sequence 0-4-7 of notes, you can then re-use this arpeggio on any instrument later on. Saving you the trouble or either inputting many tiny notes, or creating many instruments for each chord.
+
+Arpeggios are handled in a very similar way to instrument. You can add a new arpeggio by click on the **+** button of the **Arpeggios** section. To edit the sequence of note you can then click of the little note icon on the right side of the arpeggio button. 
+
+![](images/EditArpeggio.png#center)
+
+You can also assign a name and a color to each arpeggio by double-clicking on an arpeggio. This color will be displayed in the piano roll when the arpeggio is used.
+
+![](images/EditArpeggioProperties.png#center)
+
+## Replacing arpeggios by another
+
+Much like instrument, you can replace every usage of an arpeggio by another by simply dragging an arpeggio on to another. FamiStudio will prompt you to confirm the replacement.
+
+## Copying arpeggios
+
+You can also copy the sequence of note from one arpeggio to another by dragging the little note icon (the one on the right side) on to another arpeggio. 

@@ -9,6 +9,7 @@ namespace FamiStudio
         protected int channelType;
         protected Note note = new Note(Note.NoteInvalid);
         protected bool pitchEnvelopeOverride = false;
+        protected bool arpeggioEnvelopeOverride = false;
         protected Envelope[] envelopes = new Envelope[Envelope.Count];
         protected int[] envelopeIdx = new int[Envelope.Count];
         protected int[] envelopeValues = new int[Envelope.Count];
@@ -94,6 +95,7 @@ namespace FamiStudio
                     if (!newNote.HasFdsModDepth && note.HasFdsModDepth) { newNote.FdsModDepth = note.FdsModDepth; }
                     if (!newNote.HasFdsModSpeed && note.HasFdsModSpeed) { newNote.FdsModSpeed = note.FdsModSpeed; }
                     if (newNote.Instrument == null && note.Instrument != null) { newNote.Instrument = note.Instrument; }
+                    if (newNote.Arpeggio   == null && note.Arpeggio   != null && newNote.IsValid && !newNote.IsMusical) { newNote.Arpeggio   = note.Arpeggio;   }
 
                     PlayNote(newNote);
                 }
@@ -108,7 +110,7 @@ namespace FamiStudio
             }
         }
 
-        public void PlayNote(Note newNote, bool forceInstrumentChange = false)
+        public void PlayNote(Note newNote)
         {
             if (!newNote.HasFinePitch)
                  newNote.FinePitch = 0;
@@ -134,16 +136,47 @@ namespace FamiStudio
             }
             else
             {
-                bool instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentChange;
+                bool instrumentChanged = note.Instrument != newNote.Instrument;
+                bool arpeggioChanged   = note.Arpeggio   != newNote.Arpeggio;
 
                 note = newNote;
+
+                if (note.IsMusical)
+                {
+                    // Set/clear override when changing arpeggio
+                    if (arpeggioChanged)
+                    {
+                        if (note.Arpeggio != null)
+                        {
+                            envelopes[Envelope.Arpeggio] = note.Arpeggio.Envelope;
+                            arpeggioEnvelopeOverride = true;
+                        }
+                        else
+                        {
+                            envelopes[Envelope.Arpeggio] = null;
+                            arpeggioEnvelopeOverride = false;
+                        }
+
+                        envelopeIdx[Envelope.Arpeggio] = 0;
+                        envelopeValues[Envelope.Arpeggio] = 0;
+                    }
+                    // If same arpeggio, but note has an attack, reset it.
+                    else if (note.HasAttack && arpeggioEnvelopeOverride)
+                    {
+                        envelopeIdx[Envelope.Arpeggio] = 0;
+                        envelopeValues[Envelope.Arpeggio] = 0;
+                    }
+                }
 
                 if (instrumentChanged || note.HasAttack && !note.IsStop)
                 {
                     for (int j = 0; j < Envelope.Count; j++)
                     {
-                        if (j != Envelope.Pitch || !pitchEnvelopeOverride)
+                        if ((j != Envelope.Pitch    || !pitchEnvelopeOverride) &&
+                            (j != Envelope.Arpeggio || !arpeggioEnvelopeOverride))
+                        {
                             envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
+                        }
                         envelopeIdx[j] = 0;
                     }
 
@@ -246,6 +279,8 @@ namespace FamiStudio
 
         public void ClearNote()
         {
+            arpeggioEnvelopeOverride = false;
+            note.Arpeggio = null;
             note.Instrument = null;
             for (int i = 0; i < Envelope.Count; i++)
                 envelopes[i] = null;

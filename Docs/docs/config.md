@@ -14,7 +14,20 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Time Format**: Allow changing the format of the timer in the main toolbar of the application. 
 
+* **Follow Mode**: Select which type of follow mode to use:
+
+    * **Jump**: Once the play position reaches the right edge of the screen, advances by a full screen.
+    * **Continuous**: Once the play position is at least 75% of the way to the right, starts scrolling smoothly.<br><br>
+
+* **Follow Views**: Select which type of follow mode to use:
+
+    * **Sequencer**: Only enables follow mode in the sequencer.
+    * **Piano Roll**: Only enables follow mode in the piano roll.
+    * **Both**: Enables follow mode on both controls.<br><br>
+
 * **Check for updates**: At startup FamiStudio checks for new version online. This can be disabled.
+
+* **Show Piano Roll View Range**: Displays a yellow rectangle in the sequencer representing the view range of the piano roll.
 
 * **Trackpad controls**: Enabling trackpad controls will switch to a control scheme that is better suited for trackpad users:
 

@@ -97,6 +97,16 @@ namespace FamiStudio
                 }
             }
 
+            // Arpeggios
+            foreach (var arpeggio in project.Arpeggios)
+            {
+                var env = arpeggio.Envelope;
+                var arpeggioLine = $"\tArpeggio Name=\"{arpeggio.Name}\" Length=\"{env.Length}\"";
+                if (env.Loop >= 0) arpeggioLine += $" Loop=\"{env.Loop}\"";
+                arpeggioLine += $" Values=\"{String.Join(",", env.Values.Take(env.Length))}\"";
+                lines.Add(arpeggioLine);
+            }
+
             // Songs
             foreach (var song in project.Songs)
             {
@@ -154,7 +164,10 @@ namespace FamiStudio
                                     noteLine += $" Value=\"{note.FriendlyName}\"";
                                     if (note.Instrument != null)
                                         noteLine += $" Instrument=\"{note.Instrument.Name}\"";
+                                    if (note.IsArpeggio)
+                                        noteLine += $" Arpeggio=\"{note.Arpeggio.Name}\"";
                                 }
+
                                 if (!note.HasAttack)     noteLine += $" Attack=\"{false.ToString()}\"";
                                 if (note.HasVolume)      noteLine += $" Volume=\"{note.Volume}\"";
                                 if (note.HasVibrato)     noteLine += $" VibratoSpeed=\"{note.VibratoSpeed}\" VibratoDepth=\"{note.VibratoDepth}\"";
@@ -184,7 +197,7 @@ namespace FamiStudio
             return true;
         }
 
-        private string[] SplitStringKeepQuotes(string str)
+        private static string[] SplitStringKeepQuotes(string str)
         {
             return str.Split('"').Select((element, index) => index % 2 == 0
                                                         ? element.Split(new[] { ' ', '=' }, StringSplitOptions.RemoveEmptyEntries)
@@ -192,7 +205,7 @@ namespace FamiStudio
                                   .SelectMany(element => element).ToArray();
         }
 
-        private string SplitLine(string line, ref Dictionary<string, string> parameters)
+        private static string SplitLine(string line, ref Dictionary<string, string> parameters)
         {
             var splits = SplitStringKeepQuotes(line);
 
@@ -207,6 +220,22 @@ namespace FamiStudio
             return null;
         }
 
+        public static bool LooksLikeFamiStudioText(string filename)
+        {
+            try
+            {
+                var lines = File.ReadAllLines(filename);
+                var parameters = new Dictionary<string, string>();
+
+                // TODO: Ignore empty lines. Whitespace shouldnt matter.
+                return SplitLine(lines[0].Trim(), ref parameters) == "Project";
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public Project Load(string filename)
         {
             try
@@ -215,6 +244,7 @@ namespace FamiStudio
                 var parameters = new Dictionary<string, string>();
                 var project = (Project)null;
                 var instrument = (Instrument)null;
+                var arpeggio = (Arpeggio)null;
                 var song = (Song)null;
                 var channel = (Channel)null;
                 var pattern = (Pattern)null;
@@ -286,6 +316,20 @@ namespace FamiStudio
                                     }
                                 }
                             }
+
+                            break;
+                        }
+                        case "Arpeggio":
+                        {
+                            arpeggio = project.CreateArpeggio(parameters["Name"]);
+                            arpeggio.Envelope.Length = int.Parse(parameters["Length"]);
+                            
+                            if (parameters.TryGetValue("Loop", out var loopStr))
+                                arpeggio.Envelope.Loop = int.Parse(loopStr);
+
+                            var values = parameters["Values"].Split(',');
+                            for (int j = 0; j < values.Length; j++)
+                                arpeggio.Envelope.Values[j] = sbyte.Parse(values[j]);
 
                             break;
                         }
@@ -363,6 +407,7 @@ namespace FamiStudio
 
                             if (parameters.TryGetValue("Value",        out var valueStr))     note.Value           = (byte)Note.FromFriendlyName(valueStr);
                             if (parameters.TryGetValue("Instrument",   out var instStr))      note.Instrument      = project.GetInstrument(instStr);
+                            if (parameters.TryGetValue("Arpeggio",     out var arpStr))       note.Arpeggio        = project.GetArpeggio(arpStr);
                             if (parameters.TryGetValue("Attack",       out var attackStr))    note.HasAttack       = bool.Parse(attackStr);
                             if (parameters.TryGetValue("Volume",       out var volumeStr))    note.Volume          = byte.Parse(volumeStr);
                             if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr))  note.VibratoSpeed    = byte.Parse(vibSpeedStr);
@@ -385,8 +430,11 @@ namespace FamiStudio
 
                 return project;
             }
-            catch
+            catch (Exception e)
             {
+                Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
+                Log.LogMessage(LogSeverity.Error, e.Message);
+                Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return null;
             }
         }

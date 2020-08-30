@@ -13,7 +13,8 @@ namespace FamiStudio
         // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
         // Version 5 = FamiStudio 2.0.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
         // Version 6 = FamiStudio 2.1.0 (PAL authoring machine)
-        public static int Version = 6;
+        // Version 7 = FamiStudio 2.2.0 (Arpeggios)
+        public static int Version = 7;
         public static int MaxSampleSize = 0x4000;
 
         public const int ExpansionNone    = 0;
@@ -65,6 +66,7 @@ namespace FamiStudio
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
         private List<DPCMSample> samples = new List<DPCMSample>();
         private List<Instrument> instruments = new List<Instrument>();
+        private List<Arpeggio> arpeggios = new List<Arpeggio>();
         private List<Song> songs = new List<Song>();
         private int nextUniqueId = 100;
         private string filename = "";
@@ -84,6 +86,7 @@ namespace FamiStudio
         public DPCMSampleMapping[] SamplesMapping => samplesMapping;
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
+        public List<Arpeggio>      Arpeggios      => arpeggios;
         public int                 ExpansionAudio => expansionAudio;
         public int                 ExpansionNumChannels => expansionNumChannels;
         public string              ExpansionAudioName => ExpansionNames[expansionAudio];
@@ -168,6 +171,16 @@ namespace FamiStudio
         public Instrument GetInstrument(string name)
         {
             return instruments.Find(i => i.Name == name);
+        }
+
+        public Arpeggio GetArpeggio(int id)
+        {
+            return arpeggios.Find(a => a.Id == id);
+        }
+
+        public Arpeggio GetArpeggio(string name)
+        {
+            return arpeggios.Find(a => a.Name == name);
         }
 
         public bool InstrumentExists(Instrument inst)
@@ -345,6 +358,19 @@ namespace FamiStudio
             return instrument;
         }
 
+        public Arpeggio CreateArpeggio(string name = null)
+        {
+            if (name == null)
+                name = GenerateUniqueArpeggioName();
+            else if (arpeggios.Find(arp => arp.Name == name) != null)
+                return null;
+
+            var arpeggio = new Arpeggio(GenerateUniqueId(), name);
+            arpeggios.Add(arpeggio);
+            SortArpeggios();
+            return arpeggio;
+        }
+
         public void UpdateAllLastValidNotesAndVolume()
         {
             foreach (var song in songs)
@@ -397,6 +423,32 @@ namespace FamiStudio
             instruments.Clear();
         }
 
+        public void ReplaceArpeggio(Arpeggio arpeggioOld, Arpeggio arpeggioNew)
+        {
+            foreach (var song in songs)
+            {
+                foreach (var channel in song.Channels)
+                {
+                    foreach (var pattern in channel.Patterns)
+                    {
+                        foreach (var note in pattern.Notes.Values)
+                        {
+                            if (note.Arpeggio == arpeggioOld)
+                            {
+                                note.Arpeggio = arpeggioNew;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void DeleteArpeggio(Arpeggio arpeggio)
+        {
+            arpeggios.Remove(arpeggio);
+            ReplaceArpeggio(arpeggio, null);
+        }
+
         public void DeleteAllSamples()
         {
             for (int i = 0; i < samplesMapping.Length; i++)
@@ -420,6 +472,16 @@ namespace FamiStudio
             {
                 var name = "Instrument " + i;
                 if (instruments.Find(inst => inst.Name == name) == null)
+                    return name;
+            }
+        }
+
+        public string GenerateUniqueArpeggioName()
+        {
+            for (int i = 1; ; i++)
+            {
+                var name = "Arpeggio " + i;
+                if (arpeggios.Find(arp => arp.Name == name) == null)
                     return name;
             }
         }
@@ -449,6 +511,29 @@ namespace FamiStudio
                     return expComp;
                 else
                     return i1.Name.CompareTo(i2.Name);
+            });
+        }
+
+        public bool RenameArpeggio(Arpeggio arpeggio, string name)
+        {
+            if (arpeggio.Name == name)
+                return true;
+
+            if (arpeggios.Find(arp => arp.Name == name) == null)
+            {
+                arpeggio.Name = name;
+                SortArpeggios();
+                return true;
+            }
+
+            return false;
+        }
+
+        public void SortArpeggios()
+        {
+            arpeggios.Sort((a1, a2) =>
+            {
+                    return a1.Name.CompareTo(a2.Name);
             });
         }
 
@@ -624,7 +709,7 @@ namespace FamiStudio
             }
         }
 
-        public void CleanupUnusedSamples()
+        public void CleanupUnmappedSamples()
         {
             var usedSamples = new HashSet<DPCMSample>();
             foreach (var mapping in samplesMapping)
@@ -679,6 +764,7 @@ namespace FamiStudio
 
             DeleteUnusedInstruments();
             DeleteUnusedSamples();
+            DeleteUnusedArpeggios();
         }
 
         public void MergeIdenticalInstruments()
@@ -803,6 +889,36 @@ namespace FamiStudio
             }
         }
 
+        public void DeleteUnusedArpeggios()
+        {
+            var usedArpeggios = new HashSet<Arpeggio>();
+
+            foreach (var song in songs)
+            {
+                for (int p = 0; p < song.Length; p++)
+                {
+                    foreach (var channel in song.Channels)
+                    {
+                        var pattern = channel.PatternInstances[p];
+                        if (pattern != null)
+                        {
+                            foreach (var note in pattern.Notes.Values)
+                            {
+                                if (note.IsArpeggio)
+                                {
+                                    //Debug.Assert(note.IsMusical);
+                                    usedArpeggios.Add(note.Arpeggio);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            arpeggios = new List<Arpeggio>(usedArpeggios);
+            SortArpeggios();
+        }
+
 #if DEBUG
         private void ValidateDPCMSamples()
         {
@@ -873,6 +989,15 @@ namespace FamiStudio
                 instrument.SerializeState(buffer);
         }
 
+        public void SerializeArpeggioState(ProjectBuffer buffer)
+        {
+            int arpeggioCount = arpeggios.Count;
+            buffer.Serialize(ref arpeggioCount);
+            buffer.InitializeList(ref arpeggios, arpeggioCount);
+            foreach (var arp in arpeggios)
+                arp.SerializeState(buffer);
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             if (!buffer.IsForUndoRedo)
@@ -921,6 +1046,13 @@ namespace FamiStudio
 
             // Instruments
             SerializeInstrumentState(buffer);
+
+            // At version 7 (FamiStudio 2.2.0) we added support for arpeggios.
+            if (buffer.Version >= 7)
+            {
+                // Arpeggios
+                SerializeArpeggioState(buffer);
+            }
 
             // Songs
             int songCount = songs.Count;

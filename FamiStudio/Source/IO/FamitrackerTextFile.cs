@@ -16,72 +16,6 @@ namespace FamiStudio
                                   .SelectMany(element => element).ToArray();
         }
 
-        static readonly Dictionary<char, byte> TextToEffectLookup = new Dictionary<char, byte>
-        {
-            { '0', Effect_Arpeggio     },
-            { '1', Effect_PortaUp      },
-            { '2', Effect_PortaDown    },
-            { '3', Effect_Portamento   },
-            { '4', Effect_Vibrato      },
-            { '7', Effect_Tremolo      },
-            { 'A', Effect_VolumeSlide  },
-            { 'B', Effect_Jump         },
-            { 'C', Effect_Halt         },
-            { 'D', Effect_Skip         },
-            { 'E', Effect_Volume       },
-            { 'F', Effect_Speed        },
-            { 'G', Effect_Delay        },
-            { 'H', Effect_Sweepup      },
-            { 'I', Effect_Sweepdown    },
-            { 'P', Effect_Pitch        },
-            { 'Q', Effect_SlideUp      },
-            { 'R', Effect_SlideDown    },
-            { 'S', Effect_NoteCut      },
-            { 'V', Effect_DutyCycle    },
-            { 'W', Effect_DpcmPitch    },
-            { 'X', Effect_Retrigger    },
-            { 'Y', Effect_SampleOffset },
-            { 'Z', Effect_Dac          },
-        };
-
-        static readonly Dictionary<char, int> FdsTextToEffectLookup = new Dictionary<char, int>
-        {
-            { 'H', Effect_FdsModDepth   },
-            { 'I', Effect_FdsModSpeedHi },
-            { 'J', Effect_FdsModSpeedLo },
-        };
-
-        static readonly Dictionary<byte, char> EffectToTextLookup = new Dictionary<byte, char>
-        {
-            { Effect_Arpeggio      , '0' },
-            { Effect_PortaUp       , '1' },
-            { Effect_PortaDown     , '2' },
-            { Effect_Portamento    , '3' },
-            { Effect_Vibrato       , '4' },
-            { Effect_Tremolo       , '7' },
-            { Effect_VolumeSlide   , 'A' },
-            { Effect_Jump          , 'B' },
-            { Effect_Halt          , 'C' },
-            { Effect_Skip          , 'D' },
-            { Effect_Volume        , 'E' },
-            { Effect_Speed         , 'F' },
-            { Effect_Delay         , 'G' },
-            { Effect_Sweepup       , 'H' },
-            { Effect_Sweepdown     , 'I' },
-            { Effect_Pitch         , 'P' },
-            { Effect_SlideUp       , 'Q' },
-            { Effect_SlideDown     , 'R' },
-            { Effect_NoteCut       , 'S' },
-            { Effect_DutyCycle     , 'V' },
-            { Effect_DpcmPitch     , 'W' },
-            { Effect_Retrigger     , 'X' },
-            { Effect_SampleOffset  , 'Y' },
-            { Effect_Dac           , 'Z' },
-            { Effect_FdsModDepth   , 'H' },
-            { Effect_FdsModSpeedHi , 'I' },
-            { Effect_FdsModSpeedLo , 'J' },
-        };
-
         static readonly Dictionary<string, int> TextToNoteLookup = new Dictionary<string, int>
         {
             { "A-",   9 },
@@ -139,57 +73,203 @@ namespace FamiStudio
             {
                 var line = lines[i].Trim();
 
-                if (line.StartsWith("TITLE"))
-                {
-                    project.Name = line.Substring(5).Trim(' ', '"');
-                }
-                else if (line.StartsWith("AUTHOR"))
-                {
-                    project.Author = line.Substring(6).Trim(' ', '"');
-                }
-                else if (line.StartsWith("COPYRIGHT"))
-                {
-                    project.Copyright = line.Substring(9).Trim(' ', '"');
-                }
-                else if (line.StartsWith("EXPANSION"))
-                {
-                    var exp = int.Parse(line.Substring(9));
-                    var convertedExp = ConvertExpansionAudio(exp);
-
-                    if (convertedExp < 0)
-                        return null;
-
-                    project.SetExpansionAudio(convertedExp);
-                }
-                else if (line.StartsWith("MACHINE"))
-                {
-                    var machine = int.Parse(line.Substring(8));
-                    project.PalMode = machine == 1;
-                }
-                else if (line.StartsWith("N163CHANNELS"))
-                {
-                    var numExpChannels = int.Parse(line.Substring(12).Trim(' ', '"'));
-                    project.SetExpansionAudio(Project.ExpansionN163, numExpChannels);
-                }
-                else if (line.StartsWith("MACRO"))
-                {
-                    var expansion = line.StartsWith("MACROVRC6") ? Project.ExpansionVrc6  :
-                                    line.StartsWith("MACRON163") ? Project.ExpansionN163 : Project.ExpansionNone;
-
-                    var halves = line.Substring(line.IndexOf(' ')).Split(':');
-                    var param = halves[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    var curve = halves[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    var type = int.Parse(param[0]);
-                    var idx  = int.Parse(param[1]);
-                    var loop = int.Parse(param[2]);
-                    var rel  = int.Parse(param[3]);
-
-                    var famistudioType = EnvelopeTypeLookup[type];
-
-                    if (famistudioType < Envelope.Count)
+                try
+                { 
+                    if (line.StartsWith("TITLE"))
                     {
-                        var env = new Envelope(famistudioType);
+                        project.Name = line.Substring(5).Trim(' ', '"');
+                    }
+                    else if (line.StartsWith("AUTHOR"))
+                    {
+                        project.Author = line.Substring(6).Trim(' ', '"');
+                    }
+                    else if (line.StartsWith("COPYRIGHT"))
+                    {
+                        project.Copyright = line.Substring(9).Trim(' ', '"');
+                    }
+                    else if (line.StartsWith("EXPANSION"))
+                    {
+                        var exp = int.Parse(line.Substring(9));
+                        var convertedExp = ConvertExpansionAudio(exp);
+
+                        if (convertedExp < 0)
+                            return null;
+
+                        project.SetExpansionAudio(convertedExp);
+                    }
+                    else if (line.StartsWith("MACHINE"))
+                    {
+                        var machine = int.Parse(line.Substring(8));
+                        project.PalMode = machine == 1;
+                    }
+                    else if (line.StartsWith("N163CHANNELS"))
+                    {
+                        var numExpChannels = int.Parse(line.Substring(12).Trim(' ', '"'));
+                        project.SetExpansionAudio(Project.ExpansionN163, numExpChannels);
+                    }
+                    else if (line.StartsWith("MACRO"))
+                    {
+                        var expansion = line.StartsWith("MACROVRC6") ? Project.ExpansionVrc6  :
+                                        line.StartsWith("MACRON163") ? Project.ExpansionN163 : Project.ExpansionNone;
+
+                        var halves = line.Substring(line.IndexOf(' ')).Split(':');
+                        var param = halves[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        var curve = halves[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        var type = int.Parse(param[0]);
+                        var idx  = int.Parse(param[1]);
+                        var loop = int.Parse(param[2]);
+                        var rel  = int.Parse(param[3]);
+
+                        var famistudioType = EnvelopeTypeLookup[type];
+
+                        if (famistudioType < Envelope.Count)
+                        {
+                            var env = new Envelope(famistudioType);
+                            env.Length = curve.Length;
+
+                            // FamiTracker allows envelope with release with no loop. We dont allow that.
+                            if (env.CanRelease && loop == -1 && rel != -1)
+                                loop = rel;
+
+                            env.Loop = loop;
+                            env.Release = env.CanRelease && rel != -1 ? rel + 1 : -1;
+                            env.Relative = famistudioType == Envelope.Pitch;
+
+                            for (int j = 0; j < curve.Length; j++)
+                                env.Values[j] = sbyte.Parse(curve[j]);
+
+                            envelopes[expansion, famistudioType][idx] = env;
+                        }
+                    }
+                    else if (line.StartsWith("DPCMDEF"))
+                    {
+                        var param = SplitStringKeepQuotes(line.Substring(7));
+                        currentDpcm = CreateUniquelyNamedSample(param[2], new byte[int.Parse(param[1])]);
+                        dpcms[int.Parse(param[0])] = currentDpcm;
+                        dpcmWriteIdx = 0;
+
+                        if (currentDpcm == null)
+                            Log.LogMessage(LogSeverity.Warning, $"Cannot allocate DPCM sample '{param[2]}'. Maximum total size allowed is 16KB.");
+                    }
+                    else if (line.StartsWith("DPCM"))
+                    {
+                        if (currentDpcm != null) // Can happen if more than 16KB of samples
+                        {
+                            var param = line.Substring(6).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            foreach (var s in param)
+                            {
+                                currentDpcm.Data[dpcmWriteIdx++] = Convert.ToByte(s, 16);
+                            }
+                        }
+                    }
+                    else if (line.StartsWith("KEYDPCM"))
+                    {
+                        var param = line.Substring(7).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (param[0] == "0")
+                        {
+                            int octave   = int.Parse(param[1]);
+                            int semitone = int.Parse(param[2]);
+                            int note = octave * 12 + semitone + 1;
+
+                            if (project.NoteSupportsDPCM(note))
+                            {
+                                int dpcm  = int.Parse(param[3]);
+                                int pitch = int.Parse(param[4]);
+                                int loop  = int.Parse(param[5]);
+
+                                project.MapDPCMSample(note, dpcms[dpcm], pitch, loop != 0);
+                            }
+                        }
+                    }
+                    else if (line.StartsWith("INST2A03") || line.StartsWith("INSTVRC6") || line.StartsWith("INSTN163"))
+                    {
+                        var expansion = line.StartsWith("INSTVRC6") ? Project.ExpansionVrc6  : 
+                                        line.StartsWith("INSTN163") ? Project.ExpansionN163 : Project.ExpansionNone;
+
+                        var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
+
+                        int idx = int.Parse(param[0]);
+                        int vol = int.Parse(param[1]);
+                        int arp = int.Parse(param[2]);
+                        int pit = int.Parse(param[3]);
+                        int dut = int.Parse(param[5]);
+
+                        var instrument = CreateUniquelyNamedInstrument(expansion, param[param.Length - 1]);
+
+                        if (expansion == Project.ExpansionN163)
+                        {
+                            instrument.N163WavePreset = Envelope.WavePresetCustom;
+                            instrument.N163WaveSize   = byte.Parse(param[6]);
+                            instrument.N163WavePos    = byte.Parse(param[7]);
+
+                            var wavCount = byte.Parse(param[8]);
+                            if (wavCount > 1)
+                                Log.LogMessage(LogSeverity.Warning, $"N163 instrument '{instrument.Name}' has more than 1 waveform ({wavCount}). All others will be ignored.");
+                        }
+
+                        if (vol >= 0 && instrument.IsEnvelopeActive(Envelope.Volume))    instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, Envelope.Volume][vol].ShallowClone();
+                        if (arp >= 0 && instrument.IsEnvelopeActive(Envelope.Arpeggio))  instrument.Envelopes[Envelope.Arpeggio]  = envelopes[expansion, Envelope.Arpeggio][arp].ShallowClone();
+                        if (pit >= 0 && instrument.IsEnvelopeActive(Envelope.Pitch))     instrument.Envelopes[Envelope.Pitch]     = envelopes[expansion, Envelope.Pitch][pit].ShallowClone();
+                        if (dut >= 0 && instrument.IsEnvelopeActive(Envelope.DutyCycle)) instrument.Envelopes[Envelope.DutyCycle] = envelopes[expansion, Envelope.DutyCycle][dut].ShallowClone();
+
+                        instruments[idx] = instrument;
+                    }
+                    else if (line.StartsWith("INSTVRC7"))
+                    {
+                        var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
+
+                        int idx = int.Parse(param[0]);
+                        var instrument = CreateUniquelyNamedInstrument(Project.ExpansionVrc7, param[param.Length - 1]);
+
+                        instrument.Vrc7Patch = byte.Parse(param[1]);
+                        if (instrument.Vrc7Patch == 0)
+                        {
+                            for (int j = 0; j < 8; j++)
+                                instrument.Vrc7PatchRegs[j] = Convert.ToByte(param[2 + j], 16);
+                        }
+
+                        instruments[idx] = instrument;
+                    }
+                    else if (line.StartsWith("INSTFDS"))
+                    {
+                        var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
+
+                        int idx       = int.Parse(param[0]);
+                        int modEnable = int.Parse(param[1]);
+                        int modSpeed  = int.Parse(param[2]);
+                        int modDepth  = int.Parse(param[3]);
+                        int modDelay  = int.Parse(param[4]);
+
+                        if (modEnable == 0)
+                        {
+                            modSpeed = 0;
+                            modDepth = 0;
+                            modDelay = 0;
+                        }
+
+                        instruments[idx] = CreateUniquelyNamedInstrument(Project.ExpansionFds, param[5]);
+                        instruments[idx].FdsModSpeed   = (ushort)modSpeed;
+                        instruments[idx].FdsModDepth   = (byte)modDepth;
+                        instruments[idx].FdsModDelay   = (byte)modDelay;
+                        instruments[idx].FdsWavePreset = Envelope.WavePresetCustom;
+                        instruments[idx].FdsModPreset  = Envelope.WavePresetCustom;
+                    }
+                    else if (line.StartsWith("FDSMACRO"))
+                    {
+                        var halves = line.Substring(line.IndexOf(' ')).Split(':');
+                        var param = halves[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        var curve = halves[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        var inst = int.Parse(param[0]);
+                        var type = int.Parse(param[1]);
+                        var loop = int.Parse(param[2]);
+                        var rel  = int.Parse(param[3]);
+
+                        var famistudioType = EnvelopeTypeLookup[type];
+
+                        var env = instruments[inst].Envelopes[famistudioType];
+
                         env.Length = curve.Length;
 
                         // FamiTracker allows envelope with release with no loop. We dont allow that.
@@ -202,294 +282,166 @@ namespace FamiStudio
 
                         for (int j = 0; j < curve.Length; j++)
                             env.Values[j] = sbyte.Parse(curve[j]);
-
-                        envelopes[expansion, famistudioType][idx] = env;
                     }
-                }
-                else if (line.StartsWith("DPCMDEF"))
-                {
-                    var param = SplitStringKeepQuotes(line.Substring(7));
-                    currentDpcm = CreateUniquelyNamedSample(param[2], new byte[int.Parse(param[1])]);
-                    dpcms[int.Parse(param[0])] = currentDpcm;
-                    dpcmWriteIdx = 0;
-                }
-                else if (line.StartsWith("DPCM"))
-                {
-                    if (currentDpcm != null) // Can happen if more than 16KB of samples
+                    else if (line.StartsWith("FDSMOD") || line.StartsWith("FDSWAVE"))
                     {
-                        var param = line.Substring(6).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        foreach (var s in param)
+                        var mod = line.StartsWith("FDSMOD");
+                        var halves = line.Substring(line.IndexOf(' ')).Split(':');
+                        var param = halves[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        var curve = halves[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        var inst = int.Parse(param[0]);
+                        var env = instruments[inst].Envelopes[mod ? Envelope.FdsModulation : Envelope.FdsWaveform];
+                        for (int j = 0; j < curve.Length; j++)
+                            env.Values[j] = sbyte.Parse(curve[j]);
+                        if (mod)
+                            env.ConvertFdsModulationToAbsolute();
+                    }
+                    else if (line.StartsWith("N163WAVE"))
+                    {
+                        var param = line.Substring(8).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        var instIdx = int.Parse(param[0]);
+                        var waveIdx = int.Parse(param[1]);
+
+                        // TODO: We could create different instruments for each wave.
+                        if (waveIdx == 0)
                         {
-                            currentDpcm.Data[dpcmWriteIdx++] = Convert.ToByte(s, 16);
+                            var env = instruments[instIdx].Envelopes[Envelope.N163Waveform];
+
+                            for (int j = 3; j < param.Length; j++)
+                                env.Values[j - 3] = sbyte.Parse(param[j]);
                         }
                     }
-                }
-                else if (line.StartsWith("KEYDPCM"))
-                {
-                    var param = line.Substring(7).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (param[0] == "0")
+                    else if (line.StartsWith("TRACK"))
                     {
-                        int octave   = int.Parse(param[1]);
-                        int semitone = int.Parse(param[2]);
-                        int note = octave * 12 + semitone + 1;
+                        var param = SplitStringKeepQuotes(line.Substring(5));
 
-                        if (project.NoteSupportsDPCM(note))
+                        song = CreateUniquelyNamedSong(param[3]);
+                        song.SetLength(0);
+                        song.SetDefaultPatternLength(int.Parse(param[0]));
+                        song.FamitrackerSpeed = int.Parse(param[1]);
+                        song.FamitrackerTempo = int.Parse(param[2]);
+                        columns = new int[song.Channels.Length];
+                    }
+                    else if (line.StartsWith("COLUMNS"))
+                    {
+                        var param = line.Substring(7).Split(new[] { ' ', ':' }, StringSplitOptions.RemoveEmptyEntries);
+                        for (int j = 0; j < song.Channels.Length; j++)
+                            columns[j] = int.Parse(param[j]);
+                    }
+                    else if (line.StartsWith("ORDER"))
+                    {
+                        var orderIdx = Convert.ToInt32(line.Substring(6, 2), 16);
+                        var values = line.Substring(5).Split(':')[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        var order = new int[song.Channels.Length];
+                        for (int j = 0; j < song.Channels.Length; j++)
                         {
-                            int dpcm  = int.Parse(param[3]);
-                            int pitch = int.Parse(param[4]);
-                            int loop  = int.Parse(param[5]);
+                            int patternIdx = Convert.ToInt32(values[j], 16);
+                            var name = values[j];
+                            var pattern = song.Channels[j].GetPattern(name);
 
-                            project.MapDPCMSample(note, dpcms[dpcm], pitch, loop != 0);
-                        }
-                    }
-                }
-                else if (line.StartsWith("INST2A03") || line.StartsWith("INSTVRC6") || line.StartsWith("INSTN163"))
-                {
-                    var expansion = line.StartsWith("INSTVRC6") ? Project.ExpansionVrc6  : 
-                                    line.StartsWith("INSTN163") ? Project.ExpansionN163 : Project.ExpansionNone;
+                            if (pattern == null)
+                                pattern = song.Channels[j].CreatePattern(name);
 
-                    var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
-
-                    int idx = int.Parse(param[0]);
-                    int vol = int.Parse(param[1]);
-                    int arp = int.Parse(param[2]);
-                    int pit = int.Parse(param[3]);
-                    int dut = int.Parse(param[5]);
-
-                    var instrument = CreateUniquelyNamedInstrument(expansion, param[param.Length - 1]);
-
-                    if (expansion == Project.ExpansionN163)
-                    {
-                        instrument.N163WavePreset = Envelope.WavePresetCustom;
-                        instrument.N163WaveSize   = byte.Parse(param[6]);
-                        instrument.N163WavePos    = byte.Parse(param[7]);
-                    }
-
-                    if (vol >= 0 && instrument.IsEnvelopeActive(Envelope.Volume))    instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, Envelope.Volume][vol].ShallowClone();
-                    if (arp >= 0 && instrument.IsEnvelopeActive(Envelope.Arpeggio))  instrument.Envelopes[Envelope.Arpeggio]  = envelopes[expansion, Envelope.Arpeggio][arp].ShallowClone();
-                    if (pit >= 0 && instrument.IsEnvelopeActive(Envelope.Pitch))     instrument.Envelopes[Envelope.Pitch]     = envelopes[expansion, Envelope.Pitch][pit].ShallowClone();
-                    if (dut >= 0 && instrument.IsEnvelopeActive(Envelope.DutyCycle)) instrument.Envelopes[Envelope.DutyCycle] = envelopes[expansion, Envelope.DutyCycle][dut].ShallowClone();
-
-                    instruments[idx] = instrument;
-                }
-                else if (line.StartsWith("INSTVRC7"))
-                {
-                    var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
-
-                    int idx = int.Parse(param[0]);
-                    var instrument = CreateUniquelyNamedInstrument(Project.ExpansionVrc7, param[param.Length - 1]);
-
-                    instrument.Vrc7Patch = byte.Parse(param[1]);
-                    if (instrument.Vrc7Patch == 0)
-                    {
-                        for (int j = 0; j < 8; j++)
-                            instrument.Vrc7PatchRegs[j] = Convert.ToByte(param[2 + j], 16);
-                    }
-
-                    instruments[idx] = instrument;
-                }
-                else if (line.StartsWith("INSTFDS"))
-                {
-                    var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
-
-                    int idx       = int.Parse(param[0]);
-                    int modEnable = int.Parse(param[1]);
-                    int modSpeed  = int.Parse(param[2]);
-                    int modDepth  = int.Parse(param[3]);
-                    int modDelay  = int.Parse(param[4]);
-
-                    if (modEnable == 0)
-                    {
-                        modSpeed = 0;
-                        modDepth = 0;
-                        modDelay = 0;
-                    }
-
-                    instruments[idx] = CreateUniquelyNamedInstrument(Project.ExpansionFds, param[5]);
-                    instruments[idx].FdsModSpeed   = (ushort)modSpeed;
-                    instruments[idx].FdsModDepth   = (byte)modDepth;
-                    instruments[idx].FdsModDelay   = (byte)modDelay;
-                    instruments[idx].FdsWavePreset = Envelope.WavePresetCustom;
-                    instruments[idx].FdsModPreset  = Envelope.WavePresetCustom;
-                }
-                else if (line.StartsWith("FDSMACRO"))
-                {
-                    var halves = line.Substring(line.IndexOf(' ')).Split(':');
-                    var param = halves[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    var curve = halves[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    var inst = int.Parse(param[0]);
-                    var type = int.Parse(param[1]);
-                    var loop = int.Parse(param[2]);
-                    var rel  = int.Parse(param[3]);
-
-                    var famistudioType = EnvelopeTypeLookup[type];
-
-                    var env = instruments[inst].Envelopes[famistudioType];
-
-                    env.Length = curve.Length;
-
-                    // FamiTracker allows envelope with release with no loop. We dont allow that.
-                    if (env.CanRelease && loop == -1 && rel != -1)
-                        loop = rel;
-
-                    env.Loop = loop;
-                    env.Release = env.CanRelease && rel != -1 ? rel + 1 : -1;
-                    env.Relative = famistudioType == Envelope.Pitch;
-
-                    for (int j = 0; j < curve.Length; j++)
-                        env.Values[j] = sbyte.Parse(curve[j]);
-                }
-                else if (line.StartsWith("FDSMOD") || line.StartsWith("FDSWAVE"))
-                {
-                    var mod = line.StartsWith("FDSMOD");
-                    var halves = line.Substring(line.IndexOf(' ')).Split(':');
-                    var param = halves[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    var curve = halves[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    var inst = int.Parse(param[0]);
-                    var env = instruments[inst].Envelopes[mod ? Envelope.FdsModulation : Envelope.FdsWaveform];
-                    for (int j = 0; j < curve.Length; j++)
-                        env.Values[j] = sbyte.Parse(curve[j]);
-                    if (mod)
-                        env.ConvertFdsModulationToAbsolute();
-                }
-                else if (line.StartsWith("N163WAVE"))
-                {
-                    var param = line.Substring(8).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    var instIdx = int.Parse(param[0]);
-                    var waveIdx = int.Parse(param[1]);
-
-                    // TODO: We could create different instruments for each wave.
-                    if (waveIdx == 0)
-                    {
-                        var env = instruments[instIdx].Envelopes[Envelope.N163Waveform];
-
-                        for (int j = 3; j < param.Length; j++)
-                            env.Values[j - 3] = sbyte.Parse(param[j]);
-                    }
-                }
-                else if (line.StartsWith("TRACK"))
-                {
-                    var param = SplitStringKeepQuotes(line.Substring(5));
-
-                    song = CreateUniquelyNamedSong(param[3]);
-                    song.SetLength(0);
-                    song.SetDefaultPatternLength(int.Parse(param[0]));
-                    song.FamitrackerSpeed = int.Parse(param[1]);
-                    song.FamitrackerTempo = int.Parse(param[2]);
-                    columns = new int[song.Channels.Length];
-                }
-                else if (line.StartsWith("COLUMNS"))
-                {
-                    var param = line.Substring(7).Split(new[] { ' ', ':' }, StringSplitOptions.RemoveEmptyEntries);
-                    for (int j = 0; j < song.Channels.Length; j++)
-                        columns[j] = int.Parse(param[j]);
-                }
-                else if (line.StartsWith("ORDER"))
-                {
-                    var orderIdx = Convert.ToInt32(line.Substring(6, 2), 16);
-                    var values = line.Substring(5).Split(':')[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    var order = new int[song.Channels.Length];
-                    for (int j = 0; j < song.Channels.Length; j++)
-                    {
-                        int patternIdx = Convert.ToInt32(values[j], 16);
-                        var name = values[j];
-                        var pattern = song.Channels[j].GetPattern(name);
-
-                        if (pattern == null)
-                            pattern = song.Channels[j].CreatePattern(name);
-
-                        song.Channels[j].PatternInstances[orderIdx] = pattern;
-                    }
-
-                    song.SetLength(song.Length + 1);
-                }
-                else if (line.StartsWith("PATTERN"))
-                {
-                    patternName = line.Substring(8);
-                }
-                else if (line.StartsWith("ROW"))
-                {
-                    var channels = line.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
-                    var n = Convert.ToInt32(channels[0].Substring(4, 2), 16);
-
-                    for (int j = 1; j <= song.Channels.Length; j++)
-                    {
-                        var noteData = channels[j].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        var pattern = song.Channels[j - 1].GetPattern(patternName);
-
-                        if (pattern == null)
-                            continue;
-
-                        //var fxData = new RowFxData[song.PatternLength];
-                        if (!patternFxData.ContainsKey(pattern))
-                            patternFxData[pattern] = new RowFxData[song.PatternLength, 4];
-
-                        // Note
-                        if (noteData[0] == "---")
-                        {
-                            pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop;
-                        }
-                        else if (noteData[0] == "===")
-                        {
-                            pattern.GetOrCreateNoteAt(n).Value = Note.NoteRelease;
-                        }
-                        else if (noteData[0] != "...")
-                        {
-                            int famitoneNote;
-
-                            if (j == 4)
-                            { 
-                                famitoneNote = (Convert.ToInt32(noteData[0].Substring(0, 1), 16) + 31) + 1;
-                            }
-                            else
-                            {
-                                int semitone = TextToNoteLookup[noteData[0].Substring(0, 2)];
-                                int octave = noteData[0][2] - '0';
-                                famitoneNote = octave * 12 + semitone + 1;
-                            }
-
-                            if (famitoneNote >= Note.MusicalNoteMin && famitoneNote <= Note.MusicalNoteMax)
-                            {
-                                var note = pattern.GetOrCreateNoteAt(n);
-                                note.Value = (byte)famitoneNote;
-                                note.Instrument = j == 5 ? null : instruments[Convert.ToInt32(noteData[1], 16)];
-                            }
-                            else
-                            {
-                                // Note outside of range.
-                            }
+                            song.Channels[j].PatternInstances[orderIdx] = pattern;
                         }
 
-                        // Volume
-                        if (noteData[2] != ".")
-                        {
-                            pattern.GetOrCreateNoteAt(n).Volume = Convert.ToByte(noteData[2], 16);
-                        }
+                        song.SetLength(song.Length + 1);
+                    }
+                    else if (line.StartsWith("PATTERN"))
+                    {
+                        patternName = line.Substring(8);
+                    }
+                    else if (line.StartsWith("ROW"))
+                    {
+                        var channels = line.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                        var n = Convert.ToInt32(channels[0].Substring(4, 2), 16);
 
-                        // Read FX.
-                        for (int k = 0; k < columns[j - 1]; k++)
+                        for (int j = 1; j <= song.Channels.Length; j++)
                         {
-                            var fxStr = noteData[3 + k];
+                            var noteData = channels[j].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            var pattern = song.Channels[j - 1].GetPattern(patternName);
 
-                            if (fxStr == "...")
+                            if (pattern == null)
                                 continue;
 
-                            var fx = new RowFxData();
+                            //var fxData = new RowFxData[song.PatternLength];
+                            if (!patternFxData.ContainsKey(pattern))
+                                patternFxData[pattern] = new RowFxData[song.PatternLength, 4];
 
-                            if (project.ExpansionAudio == Project.ExpansionFds && FdsTextToEffectLookup.TryGetValue(fxStr[0], out var fdsFx))
-                                fx.fx = (byte)fdsFx;
-                            else
-                                fx.fx = TextToEffectLookup[fxStr[0]];
+                            // Note
+                            if (noteData[0] == "---")
+                            {
+                                pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop;
+                            }
+                            else if (noteData[0] == "===")
+                            {
+                                pattern.GetOrCreateNoteAt(n).Value = Note.NoteRelease;
+                            }
+                            else if (noteData[0] != "...")
+                            {
+                                int famitoneNote;
 
-                            fx.param = Convert.ToByte(fxStr.Substring(1), 16);
-                            patternFxData[pattern][n, k] = fx;
+                                if (j == 4)
+                                { 
+                                    famitoneNote = (Convert.ToInt32(noteData[0].Substring(0, 1), 16) + 31) + 1;
+                                }
+                                else
+                                {
+                                    int semitone = TextToNoteLookup[noteData[0].Substring(0, 2)];
+                                    int octave = noteData[0][2] - '0';
+                                    famitoneNote = octave * 12 + semitone + 1;
+                                }
 
-                            ApplySimpleEffects(fx, pattern, n, patternLengths);
+                                if (famitoneNote >= Note.MusicalNoteMin && famitoneNote <= Note.MusicalNoteMax)
+                                {
+                                    var note = pattern.GetOrCreateNoteAt(n);
+                                    note.Value = (byte)famitoneNote;
+                                    note.Instrument = j == 5 ? null : instruments[Convert.ToInt32(noteData[1], 16)];
+                                }
+                                else
+                                {
+                                    // Note outside of range.
+                                }
+                            }
+
+                            // Volume
+                            if (noteData[2] != ".")
+                            {
+                                pattern.GetOrCreateNoteAt(n).Volume = Convert.ToByte(noteData[2], 16);
+                            }
+
+                            // Read FX.
+                            for (int k = 0; k < columns[j - 1]; k++)
+                            {
+                                var fxStr = noteData[3 + k];
+
+                                if (fxStr == "...")
+                                    continue;
+
+                                var fx = new RowFxData();
+
+                                if (project.ExpansionAudio == Project.ExpansionFds && FdsTextToEffectLookup.TryGetValue(fxStr[0], out var fdsFx))
+                                    fx.fx = (byte)fdsFx;
+                                else
+                                    fx.fx = TextToEffectLookup[fxStr[0]];
+
+                                fx.param = Convert.ToByte(fxStr.Substring(1), 16);
+                                patternFxData[pattern][n, k] = fx;
+
+                                ApplySimpleEffects(fx, pattern, n, patternLengths);
+                            }
                         }
                     }
+                }
+                catch (Exception e)
+                {
+                    Log.LogMessage(LogSeverity.Error, $"Line {i} could not be parsed correctly.");
+                    Log.LogMessage(LogSeverity.Error, e.Message);
+                    Log.LogMessage(LogSeverity.Error, e.StackTrace);
+
+                    return null;
                 }
             }
 
@@ -579,14 +531,21 @@ namespace FamiStudio
         private void TruncateLongPatterns(Song song)
         {
             if (song.PatternLength > 256)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Number of rows per pattern ({song.PatternLength}) in song properties is more than 256. FamiTracker does not support this and will be truncated to 256.");
                 song.SetDefaultPatternLength(256);
+            }
 
             // FamiTracker can only shorten patterns using skips.
             // We allow patterns to be longer than the default, so we will truncate those.
             for (int i = 0; i < song.Length; i++)
             {
-                if (song.GetPatternLength(i) > song.PatternLength)
+                var patternLen = song.GetPatternLength(i);
+                if (patternLen > song.PatternLength)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Custom number of rows per pattern ({patternLen}) is longer than the song default ({song.PatternLength}). FamiTracker does not support this and will be truncated.");
                     song.ClearPatternCustomSettings(i);
+                }
             }
 
             song.DeleteNotesPastMaxInstanceLength();
@@ -658,7 +617,10 @@ namespace FamiStudio
             project.RemoveAllSongsBut(songIds);
 
             if (project.UsesFamiStudioTempo)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Song uses FamiStudio tempo. Will be exported with speed of 1, tempo 150.");
                 project.ConvertToFamiTrackerTempo(false);
+            }
 
             ConvertPitchEnvelopes(project);
             var envelopes = MergeIdenticalEnvelopes(project);
@@ -849,6 +811,7 @@ namespace FamiStudio
                     var prevNoteValue = Note.NoteInvalid;
                     var prevInstrument = (Instrument)null;
                     var prevSlideEffect = Effect_None;
+                    var prevArpeggio = (Arpeggio)null;
                     
                     for (int p = 0; p < song.Length; p++)
                     {
@@ -1006,6 +969,25 @@ namespace FamiStudio
                                 effectString += $" P{(byte)(-note.FinePitch + 0x80):X2}";
                             if (note.HasFdsModDepth)
                                 effectString += $" H{note.FdsModDepth:X2}";
+
+                            if (note.IsMusical && note.Arpeggio != prevArpeggio)
+                            {
+                                var arpeggioString = " 0";
+
+                                if (note.Arpeggio != null)
+                                {
+                                    arpeggioString += note.Arpeggio.Envelope.Length >= 2 ? $"{Utils.Clamp(note.Arpeggio.Envelope.Values[1], 0, 15):X1}" : "0";
+                                    arpeggioString += note.Arpeggio.Envelope.Length >= 3 ? $"{Utils.Clamp(note.Arpeggio.Envelope.Values[2], 0, 15):X1}" : "0";
+                                }
+                                else
+                                {
+                                    arpeggioString += "00";
+                                }
+
+                                effectString += arpeggioString;
+                                prevArpeggio  = note.Arpeggio;
+                            }
+
                             if (note.HasFdsModSpeed)
                             {
                                 effectString += $" I{(note.FdsModSpeed >> 8) & 0xff:X2}";

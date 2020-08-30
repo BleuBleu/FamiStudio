@@ -85,14 +85,20 @@ namespace FamiStudio
 
             // Needs to match the current expansion audio. Our enum happens to match (-1) for now.
             if (instType != Project.ExpansionNone && instType != project.ExpansionAudio)
+            {
+                Log.LogMessage(LogSeverity.Error, "Incompatible audio expansion.");
                 return null;
+            }
 
             var offset = 7;
             var nameLen = BitConverter.ToInt32(bytes, offset); offset += 4;
             var name = Encoding.ASCII.GetString(bytes, offset, nameLen); offset += nameLen;
 
             if (project.GetInstrument(name) != null)
+            {
+                Log.LogMessage(LogSeverity.Error, $"An instrument named '{name}' already exists.");
                 return null;
+            }
 
             var instrument = project.CreateInstrument(instType, name);
 
@@ -121,8 +127,13 @@ namespace FamiStudio
             else if (instType == Project.ExpansionNone ||
                      instType == Project.ExpansionN163)
             {
-                if (bytes[offset++] != SEQ_COUNT)
+                var seqCount = bytes[offset++];
+
+                if (seqCount != SEQ_COUNT)
+                {
+                    Log.LogMessage(LogSeverity.Error, $"Unexpected number of envelopes ({seqCount}).");
                     return null;
+                }
 
                 // Envelopes
                 for (int i = 0; i < SEQ_COUNT; i++)

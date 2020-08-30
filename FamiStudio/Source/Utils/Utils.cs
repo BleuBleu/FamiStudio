@@ -73,6 +73,17 @@ namespace FamiStudio
             return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
         }
 
+        static readonly byte[] BitLookups = new byte[]
+        {
+            0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
+            0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf
+        };
+
+        public static byte ReverseBits(byte b)
+        {
+            return (byte)((BitLookups[b & 0xf] << 4) | BitLookups[b >> 4]);
+        }
+
         public static string MakeNiceAsmName(string name)
         {
             string niceName = "";

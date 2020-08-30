@@ -7,8 +7,9 @@ namespace FamiStudio
     {
         List<short> samples;
 
-        public WavPlayer(int sampleRate) : base(NesApu.APU_WAV_EXPORT, sampleRate)
+        public WavPlayer(int sampleRate, int maxLoop) : base(NesApu.APU_WAV_EXPORT, sampleRate)
         {
+            maxLoopCount = maxLoop;
         }
 
         public short[] GetSongSamples(Song song, bool pal, int duration)

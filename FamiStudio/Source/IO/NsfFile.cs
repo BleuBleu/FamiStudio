@@ -110,6 +110,11 @@ namespace FamiStudio
                 {
                     kernelBinary += "_famistudio";
 
+                    if (project.UsesFamiTrackerTempo)
+                    {
+                        kernelBinary += "_famitracker";
+                    }
+
                     if (project.UsesExpansionAudio)
                     {
                         kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
@@ -121,6 +126,9 @@ namespace FamiStudio
                 else
                 {
                     kernelBinary += "_famitone2";
+
+                    if (project.UsesFamiStudioTempo)
+                        project.ConvertToFamiTrackerTempo(false);
                 }
 
                 switch (mode)
@@ -128,11 +136,6 @@ namespace FamiStudio
                     case MachineType.NTSC: kernelBinary += "_ntsc"; break;
                     case MachineType.PAL:  kernelBinary += "_pal";  break;
                     case MachineType.Dual: kernelBinary += "_dual"; break;
-                }
-
-                if (project.UsesFamiStudioTempo)
-                {
-                    kernelBinary += "_tempo";
                 }
 
                 kernelBinary += ".bin";
@@ -145,10 +148,14 @@ namespace FamiStudio
 
                 nsfBytes.AddRange(nsfBinBuffer);
 
+                Log.LogMessage(LogSeverity.Info, $"Sound engine code size: {nsfBinBuffer.Length} bytes.");
+
                 var songTableIdx  = nsfBytes.Count;
                 var songTableSize = NsfGlobalVarsSize + project.Songs.Count * NsfSongTableEntrySize;
 
                 nsfBytes.AddRange(new byte[songTableSize]);
+
+                Log.LogMessage(LogSeverity.Info, $"Song table size: {songTableSize} bytes.");
 
                 var songDataIdx  = nsfBytes.Count;
                 var dpcmBaseAddr = NsfDpcmOffset;
@@ -159,7 +166,8 @@ namespace FamiStudio
                     var totalSampleSize = project.GetTotalSampleSize();
 
                     // Samples need to be 64-bytes aligned.
-                    nsfBytes.AddRange(new byte[64 - (nsfBytes.Count & 0x3f)]);
+                    var initPaddingSize = 64 - (nsfBytes.Count & 0x3f);
+                    nsfBytes.AddRange(new byte[initPaddingSize]);
 
                     // We start putting the samples right after the code, so the first page is not a
                     // full one. If we have near 16KB of samples, we might go over the 4 page limit.
@@ -185,6 +193,9 @@ namespace FamiStudio
 
                     nsfBytes[songTableIdx + 0] = (byte)dpcmPageStart; // DPCM_PAGE_START
                     nsfBytes[songTableIdx + 1] = (byte)dpcmPageCount; // DPCM_PAGE_CNT
+
+                    Log.LogMessage(LogSeverity.Info, $"DPCM samples size: {totalSampleSize} bytes.");
+                    Log.LogMessage(LogSeverity.Info, $"DPCM padding size: {initPaddingSize + dpcmPadding} bytes.");
                 }
 
                 // Export each song individually, build TOC at the same time.
@@ -194,7 +205,7 @@ namespace FamiStudio
                     var firstPage = nsfBytes.Count < NsfPageSize;
                     int page = nsfBytes.Count / NsfPageSize + (firstPage ? 1 : 0);
                     int addr = NsfMemoryStart + (firstPage ? 0 : NsfPageSize ) + (nsfBytes.Count & (NsfPageSize - 1));
-                    var songBytes = new FamitoneMusicFile(kernel).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, mode);
+                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, mode);
 
                     // If we introduced padding for the samples, we can try to squeeze a song in there.
                     if (songBytes.Length < dpcmPadding)
@@ -209,15 +220,22 @@ namespace FamiStudio
                     nsfBytes[idx + 3] = (byte)0;
 
                     nsfBytes.AddRange(songBytes);
+
+                    Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
                 }
 
                 // Finally insert the header, not very efficient, but easy.
                 nsfBytes.InsertRange(0, headerBytes);
 
                 File.WriteAllBytes(filename, nsfBytes.ToArray());
+
+                Log.LogMessage(LogSeverity.Info, $"NSF export successful, final file size {nsfBytes.Count} bytes.");
             }
-            catch
+            catch (Exception e)
             {
+                Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
+                Log.LogMessage(LogSeverity.Error, e.Message);
+                Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return false;
             }
 
@@ -780,8 +798,9 @@ namespace FamiStudio
             int numNamcoChannels = 1;
             for (int i = 0; i < numFrames; i++)
             {
-                NsfRunFrame(tmpNsf);
-                numNamcoChannels = Math.Max(numNamcoChannels, NsfGetState(tmpNsf, Channel.N163Wave1, STATE_N163NUMCHANNELS, 0));
+                var playCalled = NsfRunFrame(tmpNsf);
+                if (playCalled != 0)
+                    numNamcoChannels = Math.Max(numNamcoChannels, NsfGetState(tmpNsf, Channel.N163Wave1, STATE_N163NUMCHANNELS, 0));
             }
 
             NsfClose(tmpNsf);
@@ -789,7 +808,7 @@ namespace FamiStudio
             return numNamcoChannels;
         }
 
-        public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence)
+        public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence, bool reverseDpcm)
         {
             nsf = NsfOpen(filename);
 
@@ -886,6 +905,15 @@ namespace FamiStudio
             song.UpdatePatternStartNotes();
             project.DeleteUnusedInstruments();
             project.UpdateAllLastValidNotesAndVolume();
+
+            if (reverseDpcm)
+            {
+                foreach (var sample in project.Samples)
+                {
+                    for (int i = 0; i < sample.Data.Length; i++)
+                        sample.Data[i] = Utils.ReverseBits(sample.Data[i]);
+                }
+            }
 
             return project;
         }

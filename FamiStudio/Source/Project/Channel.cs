@@ -172,6 +172,7 @@ namespace FamiStudio
 
         public bool SupportsReleaseNotes => type != Dpcm;
         public bool SupportsSlideNotes => type != Noise && type != Dpcm;
+        public bool SupportsArpeggios => type != Dpcm;
 
         public bool SupportsEffect(int effect)
         {

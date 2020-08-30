@@ -34,6 +34,8 @@ namespace FamiStudio
         protected int tempoEnvelopeIndex;
         protected int tempoEnvelopeCounter;
         protected int sampleRate;
+        protected int loopCount = 0;
+        protected int maxLoopCount = -1;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
         protected Song song;
@@ -288,7 +290,14 @@ namespace FamiStudio
 
             if (playPattern >= songLength)
             {
-                if (loopMode == LoopMode.LoopPoint)
+                loopCount++;
+
+                if (maxLoopCount > 0 && loopCount >= maxLoopCount)
+                {
+                    return false;
+                }
+
+                if (loopMode == LoopMode.LoopPoint) // This loop mode is actually unused.
                 {
                     if (song.LoopPoint >= 0)
                     {
@@ -296,6 +305,7 @@ namespace FamiStudio
                         playNote = 0;
                         advancedPattern = true;
                         forceResetTempo = true;
+                        loopCount++;
                     }
                     else 
                     {

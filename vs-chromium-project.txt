@@ -1,0 +1,6 @@
+[SearchableFiles.include]
+*.cs
+*.cpp
+*.h
+
+[SearchableFiles.ignore]
