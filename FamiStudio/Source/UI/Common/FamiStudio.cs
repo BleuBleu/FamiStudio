@@ -28,8 +28,10 @@ namespace FamiStudio
         private bool audioDeviceChanged = false;
         private bool pianoRollScrollChanged = false;
         private bool recordingMode = false;
+        private bool followMode = false;
         private int tutorialCounter = 3;
         private int baseRecordingOctave = 3;
+        private int lastTickCurrentFrame = -1;
         private Keys lastRecordingKeyDown = Keys.None; 
         private bool[] keyStates = new bool[256];
 #if FAMISTUDIO_WINDOWS
@@ -40,11 +42,12 @@ namespace FamiStudio
         private string newReleaseString = null;
         private string newReleaseUrl = null;
 
-        public bool RealTimeUpdate => songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || pianoRollScrollChanged;
-        public bool IsPlaying => songPlayer.IsPlaying;
+        public bool RealTimeUpdate => songPlayer != null && songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || pianoRollScrollChanged;
+        public bool IsPlaying => songPlayer != null && songPlayer.IsPlaying;
         public bool IsRecording => recordingMode;
+        public bool FollowModeEnabled { get => followMode && Settings.FollowMode != Settings.FollowModeNone; set => followMode = value; }
         public int BaseRecordingOctave => baseRecordingOctave;
-        public int CurrentFrame => songPlayer.CurrentFrame;
+        public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : songPlayer.CurrentFrame;
         public int ChannelMask { get => songPlayer.ChannelMask; set => songPlayer.ChannelMask = value; }
         public string ToolTip { get => ToolBar.ToolTip; set => ToolBar.ToolTip = value; }
         public Project Project => project;
@@ -61,7 +64,6 @@ namespace FamiStudio
         static readonly Dictionary<Keys, int> RecordingKeyToNoteMap = new Dictionary<Keys, int>
         {
             { Keys.D1,        -1 }, // Special: Stop note.
-
             { Keys.Z,          0 },
             { Keys.S,          1 },
             { Keys.X,          2 },
@@ -844,7 +846,7 @@ namespace FamiStudio
             {
                 PianoRoll.DeleteRecording(CurrentFrame);
             }
-            if (e.KeyCode == Keys.PageUp)
+            else if (e.KeyCode == Keys.PageUp)
             {
                 baseRecordingOctave = Math.Min(7, baseRecordingOctave + 1);
                 PianoRoll.ConditionalInvalidate();
@@ -857,6 +859,11 @@ namespace FamiStudio
             else if (e.KeyCode == Keys.Enter)
             {
                 ToggleRecording();
+            }
+            else if (shift && e.KeyCode == Keys.F)
+            {
+                followMode = !followMode;
+                ToolBar.Invalidate();
             }
             else if (e.KeyCode == Keys.Space)
             {
@@ -1006,6 +1013,14 @@ namespace FamiStudio
             if (songPlayer.IsPlaying)
             {
                 songPlayer.Stop();
+
+                // HACK: Update continuous follow mode onle last time so it catches up to the 
+                // real final player position.
+                lastTickCurrentFrame = songPlayer.CurrentFrame;
+                Sequencer.UpdateFollowMode(true);
+                PianoRoll.UpdateFollowMode(true);
+                lastTickCurrentFrame = -1;
+
                 InvalidateEverything();
             }
         }
@@ -1126,6 +1141,9 @@ namespace FamiStudio
 
         public void Tick()
         {
+            if (IsPlaying)
+                lastTickCurrentFrame = songPlayer.CurrentFrame;
+
             if (audioDeviceChanged)
             {
                 RecreateAudioPlayers();

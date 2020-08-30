@@ -33,6 +33,7 @@ namespace FamiStudio
         const int DefaultEnvelopeZoomLevel = 2;
         const int ScrollMargin = 128;
         const int DrawFrameZoomLevel = -1;
+        const float ContinuousFollowPercent = 0.75f;
 
         const int DefaultNumOctaves = 8;
         const int DefaultHeaderSizeY = 17;
@@ -234,6 +235,8 @@ namespace FamiStudio
         int selectionFrameMax = -1;
         int[] supportedEffects;
         bool captureThresholdMet = false;
+        bool panning = false; // TODO: Make this a capture operation.
+        bool continuouslyFollowing = false;
         CaptureOperation captureOperation = CaptureOperation.None;
 
         // Note dragging support.
@@ -2201,6 +2204,7 @@ namespace FamiStudio
 
                 captureOperation = CaptureOperation.None;
                 Capture = false;
+                panning = false;
             }
         }
 
@@ -2216,6 +2220,7 @@ namespace FamiStudio
 
                 captureOperation = CaptureOperation.None;
                 Capture = false;
+                panning = false;
 
                 ManyPatternChanged?.Invoke();
             }
@@ -2459,11 +2464,11 @@ namespace FamiStudio
             UpdateCursor(); 
         }
 
-        protected void EnsureSeekBarVisible()
+        protected bool EnsureSeekBarVisible(float percent = ContinuousFollowPercent)
         {
             var seekX = App.CurrentFrame * noteSizeX - scrollX;
-            var minX = 128;
-            var maxX = Width - whiteKeySizeX - 128;
+            var minX = 0;
+            var maxX = (int)((Width * percent) - whiteKeySizeX);
 
             // Keep everything visible 
             if (seekX < minX)
@@ -2472,6 +2477,9 @@ namespace FamiStudio
                 scrollX += (seekX - maxX);
 
             ClampScroll();
+
+            seekX = App.CurrentFrame * noteSizeX - scrollX;
+            return seekX == maxX;
         }
 
         public void DeleteRecording(int frame)
@@ -2625,6 +2633,7 @@ namespace FamiStudio
             }
             else if (middle && e.Y > headerSizeY && e.X > whiteKeySizeX)
             {
+                panning = true;
                 CaptureMouse(e);
             }
             else if (right && ModifierKeys.HasFlag(Keys.Alt))
@@ -3531,14 +3540,18 @@ namespace FamiStudio
 
             bool middle = e.Button.HasFlag(MouseButtons.Middle);
 
-            if (!middle)
-            {
+            if (middle)
+                panning = false;
+            else
                 EndCaptureOperation(e);
-            }
         }
 
         private void ZoomAtLocation(int x, int delta)
         {
+            // When continuously following, zoom at the seek bar location.
+            if (continuouslyFollowing)
+                x = (int)(Width * ContinuousFollowPercent);
+
             int pixelX = x - whiteKeySizeX;
             int absoluteX = pixelX + scrollX;
             if (delta < 0 && zoomLevel > MinZoomLevel) { zoomLevel--; absoluteX /= 2; }
@@ -3600,13 +3613,42 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        public void UpdateFollowMode(bool force = false)
+        {
+            continuouslyFollowing = false;
+
+            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncSequencer && !panning)
+            {
+                var frame = App.CurrentFrame;
+                var seekX = frame * noteSizeX - scrollX;
+
+                if (Settings.FollowMode == Settings.FollowModeJump)
+                {
+                    var maxX = Width - whiteKeySizeX;
+                    if (seekX < 0 || seekX > maxX)
+                        scrollX = frame * noteSizeX;
+                }
+                else
+                {
+                    continuouslyFollowing = EnsureSeekBarVisible();
+                }
+
+                ClampScroll();
+            }
+        }
+
         public void Tick()
         {
+            if (App == null)
+                return;
+
             if (captureOperation == CaptureOperation.Select)
             {
                 var pt = this.PointToClient(Cursor.Position);
                 UpdateSelection(pt.X, false);
             }
+
+            UpdateFollowMode();
         }
 
         private bool GetEffectNoteForCoord(int x, int y, out int patternIdx, out int noteIdx)
@@ -3680,6 +3722,7 @@ namespace FamiStudio
 
                 captureOperation = CaptureOperation.None;
                 Capture = false;
+                panning = false;
             }
         }
     }

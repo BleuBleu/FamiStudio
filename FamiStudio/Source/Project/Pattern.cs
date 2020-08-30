@@ -138,7 +138,7 @@ namespace FamiStudio
                 var i    = kv.Key;
                 var note = kv.Value;
 
-                if (i >= endTime)
+                if (i > endTime)
                     break;
 
                 if (note.IsRelease)

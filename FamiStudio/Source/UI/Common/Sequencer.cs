@@ -45,6 +45,7 @@ namespace FamiStudio
         const int DefaultHeaderIconPosX      = 3;
         const int DefaultHeaderIconPosY      = 3;
         const int DefaultHeaderIconSizeX     = 12;
+        const float ContinuousFollowPercent = 0.75f;
 
         const int MinZoomLevel = -2;
         const int MaxZoomLevel =  4;
@@ -97,7 +98,9 @@ namespace FamiStudio
         int   selectionDragAnchorPatternIdx = -1;
         float selectionDragAnchorPatternFraction = -1.0f;
         CaptureOperation captureOperation = CaptureOperation.None;
-        
+        bool panning = false; // TODO: Make this a capture operation.
+        bool continuouslyFollowing = false;
+
         int ScaleForZoom(int value)
         {
             var actualZoom = zoomLevel + zoomBias;
@@ -355,7 +358,7 @@ namespace FamiStudio
         {
             g.Clear(ThemeBase.DarkGreyFillColor1);
 
-            var seekX = ScaleForZoom(App.CurrentFrame) * RenderTheme.MainWindowScaling - scrollX;
+            var seekX = noteSizeX * App.CurrentFrame - scrollX;
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
             var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / noteSizeX), Song.GetPatternStartNote(Song.Length));
             var minVisiblePattern = Utils.Clamp(Song.FindPatternInstanceIndex(minVisibleNoteIdx, out _) + 0, 0, Song.Length);
@@ -746,6 +749,7 @@ namespace FamiStudio
                 mouseLastX = e.X;
                 mouseLastY = e.Y;
                 Capture = true;
+                panning = true;
                 return;
             }
 
@@ -1051,6 +1055,11 @@ namespace FamiStudio
         {
             base.OnMouseUp(e);
 
+            bool middle = e.Button.HasFlag(MouseButtons.Middle);
+
+            if (middle)
+                panning = false;
+
             if (captureOperation != CaptureOperation.None)
             {
                 if (captureOperation == CaptureOperation.ClickPattern)
@@ -1138,6 +1147,7 @@ namespace FamiStudio
                 }
 
                 Capture = false;
+                panning = false;
                 captureOperation = CaptureOperation.None;
             }
 
@@ -1592,6 +1602,10 @@ namespace FamiStudio
 
         private void ZoomAtLocation(int x, int delta)
         {
+            // When continuously following, zoom at the seek bar location.
+            if (continuouslyFollowing)
+                x = (int)(Width * ContinuousFollowPercent);
+
             int pixelX = x - trackNameSizeX;
             int absoluteX = pixelX + scrollX;
             if (delta < 0 && zoomLevel > MinZoomLevel) { zoomLevel--; absoluteX /= 2; }
@@ -1641,13 +1655,60 @@ namespace FamiStudio
             Debug.WriteLine($"{e.Delta} ({e.X}, {e.Y})");
         }
 
+        protected bool EnsureSeekBarVisible(float percent = ContinuousFollowPercent)
+        {
+            var seekX = (int)Math.Round(noteSizeX * App.CurrentFrame - scrollX);
+            var minX = 0;
+            var maxX = (int)((Width * percent) - trackNameSizeX);
+
+            // Keep everything visible 
+            if (seekX < minX)
+                scrollX -= (minX - seekX);
+            else if (seekX > maxX)
+                scrollX += (seekX - maxX);
+
+            ClampScroll();
+
+            seekX = (int)Math.Round(noteSizeX * App.CurrentFrame - scrollX);
+            return seekX == maxX;
+        }
+
+        public void UpdateFollowMode(bool force = false)
+        {
+            continuouslyFollowing = false;
+
+            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncPianoRoll && !panning)
+            {
+                var frame = App.CurrentFrame;
+                var seekX = (int)Math.Round(noteSizeX * App.CurrentFrame - scrollX);
+
+                if (Settings.FollowMode == Settings.FollowModeJump)
+                {
+                    var maxX = Width - trackNameSizeX;
+                    if (seekX < 0 || seekX > maxX)
+                        scrollX = (int)Math.Round(frame * noteSizeX);
+                }
+                else
+                {
+                    continuouslyFollowing = EnsureSeekBarVisible();
+                }
+
+                ClampScroll();
+            }
+        }
+
         public void Tick()
         {
+            if (App == null)
+                return;
+
             if (captureOperation == CaptureOperation.Select)
             {
                 var pt = PointToClient(Cursor.Position);
                 UpdateSelection(pt.X, false);
             }
+
+            UpdateFollowMode();
         }
 
         public void SongModified()
