@@ -77,6 +77,24 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.Escape;
             else if (k == Key.Tilde)
                 return System.Windows.Forms.Keys.Oem3;
+            else if (k == Key.Tab)
+                return System.Windows.Forms.Keys.Tab;
+            else if (k == Key.Plus)
+                return System.Windows.Forms.Keys.Oemplus;
+            else if (k == Key.BracketLeft)
+                return System.Windows.Forms.Keys.Oem4;
+            else if (k == Key.RBracket)
+                return System.Windows.Forms.Keys.Oem6;
+            else if (k == Key.Comma)
+                return System.Windows.Forms.Keys.Oemcomma;
+            else if (k == Key.Period)
+                return System.Windows.Forms.Keys.OemPeriod;
+            else if (k == Key.Semicolon)
+                return System.Windows.Forms.Keys.Oem1;
+            else if (k == Key.Slash)
+                return System.Windows.Forms.Keys.Oem2;
+            else if (k == Key.BackSpace)
+                return System.Windows.Forms.Keys.Back;
 
             Trace.WriteLine($"Unknown key pressed {k}");
 

@@ -343,6 +343,7 @@ namespace FamiStudio
             base.OnKeyUp(e);
 
             var args = new System.Windows.Forms.KeyEventArgs(OpenTkUtils.ToWinFormKey(e.Key) | OpenTkUtils.GetModifierKeys());
+            famistudio.KeyUp(args);
             foreach (var ctrl in controls.Controls)
                 deferredEvents.Add(new DeferredEvent(DeferredEventType.KeyUp, ctrl, args));
         }
