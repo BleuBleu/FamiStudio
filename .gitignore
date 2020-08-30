@@ -27,3 +27,4 @@ SoundEngine/DemoSource/*.nes
 SoundEngine/UnitTests/*.nes
 SoundEngine/UnitTests/*.inc
 *.lst
+FamiStudio/FamiStudio.args.json
