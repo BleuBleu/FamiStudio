@@ -250,8 +250,7 @@ namespace FamiStudio
 
         protected override void OnMouseUp(MouseButtonEventArgs e)
         {
-            //if (CheckFrozen(false)) return;
-            base.OnMouseDown(e);
+            base.OnMouseUp(e);
 
             // Position is not reliable here. Super buggy.
             var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
@@ -418,17 +417,18 @@ namespace FamiStudio
             {
                 var pt = MacUtils.GetWindowMousePosition(WindowInfo.Handle);
                 var buttons = MacUtils.GetMouseButtons();
-                var args = new System.Windows.Forms.MouseEventArgs(buttons, 0, pt.X - captureControl.Left, pt.Y - captureControl.Top, 0);
 
                 //Debug.WriteLine($"MOVE! captureControl = {captureControl} buttons = {buttons} captureButtons = {captureButtons} pt = {pt}");
 
                 if (buttons != captureButtons || buttons == System.Windows.Forms.MouseButtons.None)
                 {
+                    var args = new System.Windows.Forms.MouseEventArgs(captureButtons, 0, pt.X - captureControl.Left, pt.Y - captureControl.Top, 0);
                     captureControl.MouseUp(args);
                     captureControl = null;
                 }
                 else
                 {
+                    var args = new System.Windows.Forms.MouseEventArgs(buttons, 0, pt.X - captureControl.Left, pt.Y - captureControl.Top, 0);
                     captureControl.MouseMove(args); 
                 }
             }
