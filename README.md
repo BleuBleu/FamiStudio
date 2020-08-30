@@ -33,7 +33,7 @@ Assuming we agree on a feature to be developed, I expect:
 - All features needs to be implemented and tested on all 3 platforms (Windows, MacOS and Linux). 
 - Testing must include Hi-DPI scaling on Windows (150% and 200%) as well as Retina display on MacOS as these have been know to break often.
 - Any feature that impacts the music needs to be integrated to all import/export format (FamiTracker, NSF, FTI, etc.)
-- Any new feature needs to be added to the NSF driver needs to be toggeable if it has a cost (RAM or CPU cycles) and new permutations generated.
+- Any new feature needs to be added to the NSF driver needs to be toggeable if it has a cost (RAM or CPU cycles).
 
 ## Contact
 Please open issues contact me if you find bugs or have feature suggestion ideas. 
