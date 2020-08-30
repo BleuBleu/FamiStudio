@@ -92,5 +92,10 @@ namespace FamiStudio
                 SetPage(pageIndex + 1);
             }
         }
+
+        private void TutorialDialog_KeyDown(object sender, KeyEventArgs e)
+        {
+            buttonRight_Click(null, EventArgs.Empty);
+        }
     }
 }
