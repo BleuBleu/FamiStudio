@@ -21,6 +21,7 @@ namespace FamiStudio
 
             textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             textBox.Text = string.Join("\r\n", messages);
+            textBox.Select(0, 0);
 
             buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
             buttonYes.Width  = (int)(buttonYes.Width * Direct2DTheme.DialogScaling);
