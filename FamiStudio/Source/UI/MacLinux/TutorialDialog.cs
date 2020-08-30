@@ -137,7 +137,7 @@ namespace FamiStudio
             if (evnt.Key == Gdk.Key.Return ||
                 evnt.Key == Gdk.Key.Escape)
             {
-                result = System.Windows.Forms.DialogResult.OK;
+                ButtonRight_ButtonPressEvent(null, null);
             }
 
             return base.OnKeyPressEvent(evnt);
