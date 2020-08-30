@@ -26,6 +26,8 @@ namespace FamiStudio
             label1.Height = (int)(Direct2DTheme.DialogScaling * label1.Height);
             pictureBox1.Top = (label1.Top + label1.Height) + 8;
             pictureBox1.Height = (int)(pictureBox1.Width / 1.7777777f); // 16:9
+            pictureBox1.Width = (int)(Direct2DTheme.DialogScaling * pictureBox1.Width);
+            pictureBox1.Height = (int)(Direct2DTheme.DialogScaling * pictureBox1.Height);
 
             label1.ForeColor = ThemeBase.LightGreyFillColor2;
             checkBoxDontShow.ForeColor = ThemeBase.LightGreyFillColor2;

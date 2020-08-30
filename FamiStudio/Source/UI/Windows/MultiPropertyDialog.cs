@@ -64,7 +64,7 @@ namespace FamiStudio
 
         protected override void OnShown(EventArgs e)
         {
-            int maxHeight = Width / 2;
+            int maxHeight = Math.Max((int)(32 * Direct2DTheme.DialogScaling * tabs.Count), Width / 2);
 
             // Property pages need to be visible when doing the layout otherwise
             // they have the wrong size.
