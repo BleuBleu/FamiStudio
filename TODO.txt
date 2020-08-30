@@ -1,7 +1,6 @@
 2.2.0
 =====
 - POLISH: Snap VS. Single click on a note.
-- Recompile NesSndEmu + NotSoFatso on Linux/Mac.
 - Doc: 
 	- Settings dialog update when final.
 	- Where to download sound engine?
