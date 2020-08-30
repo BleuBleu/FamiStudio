@@ -22,6 +22,19 @@ style "dialog"
     bg[NORMAL] = "#2A3033" # DarkGreyFillColor2
 }
 
+style "text_view"
+{
+    text[NORMAL]      = "#C6CDDA" # LightGreyFillColor2
+    text[PRELIGHT]    = "#C6CDDA" # LightGreyFillColor2
+    text[ACTIVE]      = "#C6CDDA" # LightGreyFillColor2
+    text[INSENSITIVE] = "#C6CDDA" # LightGreyFillColor2
+
+    base[NORMAL]   = "#2A3033" # DarkGreyFillColor2
+    base[ACTIVE]   = "#2A3033" # DarkGreyFillColor2
+    base[PRELIGHT] = "#2A3033" # DarkGreyFillColor2
+    base[INSENSITIVE] = "#2A3033" # LightGreyFillColor2    
+}
+
 style "flatbutton"
 {
     fg[NORMAL]      = "#C6CDDA" # LightGreyFillColor2
@@ -44,5 +57,6 @@ widget_class "*" style "all"
 widget_class "*GtkLabel*" style "label"
 widget_class "*GtkCheckButton*Label*" style "check"
 widget_class "*Spin*" style "spin"
+widget_class "*GtkTextView*" style "text_view"
 widget_class "*FlatButton*" style "flatbutton"
 widget_class "*Dialog" style "dialog"
