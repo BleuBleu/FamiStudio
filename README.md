@@ -25,13 +25,24 @@ On MacOS, Visual Studio 2019 for Mac is used to compile the main application. Th
 ### Linux.
 On Linux, MonoDevelop 7.8.4 (build 2) is used to compile the main application. Much like MacOS, a little shell script, "build_linux.sh" is provided to compile each of the 2 C++ DLLs. No makefile is provided at the moment. [OpenAL Soft](https://openal-soft.org/) is provided as a precompiled AMD64 binary with ALSA support, if you recompile your own you will need to replace libopenal32.so or use a [dllmap](https://www.mono-project.com/docs/advanced/pinvoke/dllmap/) to point FamiStudio to the correct library. Same for [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) which is provided as librtmidi.so.
 
-## Issues and Contributing
+## Contributing
+I'm hesitant to take unsolicited pull requests. If you want to contribute a feature, please get in touch with me first so we can come up with a plan. This will avoid wasting both your time and mine.
+
+## Platforms, Feature Parity & Testing
+Assuming we agree on a feature to be developed, I expect:
+- All features needs to be implemented and tested on all 3 platforms (Windows, MacOS and Linux). 
+- Testing must include Hi-DPI scaling on Windows (150% and 200%) as well as Retina display on MacOS as these have been know to break often.
+- Any feature that impacts the music needs to be integrated to all import/export format (FamiTracker, NSF, FTI, etc.)
+- Any new feature needs to be added to the NSF driver needs to be toggeable if it has a cost (RAM or CPU cycles) and new permutations generated.
+
+## Contact
 Please open issues contact me if you find bugs or have feature suggestion ideas. 
 You can find me:
 - On the [NESDEV Forums](https://forums.nesdev.com/) as BleuBleu 
 - On Twitter [@NesBleuBleu](http://www.twitter.com/nesbleubleu)
 - On [YouTube](https://www.youtube.com/channel/UC-dGLo2XZqXNA_aOYjaucgA?view_as=subscriber)
 - On [Itch.io](https://bleubleu.itch.io/famistudio)
+- On the [FamiStudio Discord](https://discord.gg/88UPmxh)
 
 ## Acknowledgments
 - [Shiru](https://shiru.untergrund.net/code.shtml) for the FamiTone2 library and the demo songs that are included (_After the Rain_ and _Danger Streets_)
