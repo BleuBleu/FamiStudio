@@ -1039,6 +1039,7 @@ namespace FamiStudio
             {
                 recordingMode = false;
                 lastRecordingKeyDown = Keys.None;
+                StopIntrumentNote();
                 InvalidateEverything();
             }
         }

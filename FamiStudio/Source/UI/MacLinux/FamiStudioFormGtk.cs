@@ -221,7 +221,8 @@ namespace FamiStudio
 
         protected override bool OnKeyReleaseEvent(Gdk.EventKey evnt)
         {
-            var args = new System.Windows.Forms.KeyEventArgs(GtkUtils.ToWinFormKey(evnt.Key) | GtkUtils.ToWinFormKey(evnt.State)); 
+            var args = new System.Windows.Forms.KeyEventArgs(GtkUtils.ToWinFormKey(evnt.Key) | GtkUtils.ToWinFormKey(evnt.State));
+            famistudio.KeyUp(args);
             foreach (var ctrl in controls.Controls)
                 ctrl.KeyUp(args);
 
