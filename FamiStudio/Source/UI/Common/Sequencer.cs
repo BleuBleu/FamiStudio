@@ -1677,7 +1677,7 @@ namespace FamiStudio
         {
             continuouslyFollowing = false;
 
-            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncPianoRoll && !panning)
+            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncPianoRoll && !panning && captureOperation == CaptureOperation.None)
             {
                 var frame = App.CurrentFrame;
                 var seekX = (int)Math.Round(noteSizeX * App.CurrentFrame - scrollX);
