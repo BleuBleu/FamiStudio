@@ -38,7 +38,6 @@ namespace FamiStudio
 
         public string[] FollowModeStrings =
         {
-            "None",
             "Jump",
             "Continuous"
         };

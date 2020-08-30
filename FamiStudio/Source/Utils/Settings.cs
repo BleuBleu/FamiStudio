@@ -13,9 +13,8 @@ namespace FamiStudio
         public const int SettingsVersion = 1;
 
         // Constants for follow.
-        public const int FollowModeNone       = 0;
-        public const int FollowModeJump       = 1;
-        public const int FollowModeContinuous = 2;
+        public const int FollowModeJump       = 0;
+        public const int FollowModeContinuous = 1;
 
         public const int FollowSyncSequencer = 0;
         public const int FollowSyncPianoRoll = 1;

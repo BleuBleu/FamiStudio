@@ -476,10 +476,7 @@ namespace FamiStudio
 
         private ButtonStatus OnFollowEnabled()
         {
-            if (Settings.FollowMode == Settings.FollowModeNone)
-                return ButtonStatus.Disabled;
-            else
-                return App.FollowModeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
+            return App.FollowModeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
         private ButtonStatus OnMachineEnabled()
