@@ -3454,6 +3454,10 @@ namespace FamiStudio
             {
                 Debug.Assert(dragFrameMin == dragFrameMax);
 
+                // If there is a not between the snapped position and where we clicked, use that one.
+                if (dragFrameMin > Song.GetPatternStartNote(patternIdx, noteIdx))
+                    patternIdx = Song.FindPatternInstanceIndex(dragFrameMin, out noteIdx);
+
                 var pattern = channel.PatternInstances[patternIdx];
                 if (pattern != null)
                 {
