@@ -117,9 +117,11 @@ namespace FamiStudio
                 {
                     var dpcmBytes = project.GetPackedSampleData();
 
-                    // TODO: Error message instead.
                     if (dpcmBytes.Length > FdsMaxDpcmSize)
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"DPCM samples size ({dpcmBytes.Length}) is larger than the maximum allowed for FDS export ({FdsMaxDpcmSize}). Truncating.");
                         Array.Resize(ref dpcmBytes, FdsMaxDpcmSize);
+                    }
 
                     AddFile(fdsFileBytes, fileIndex, FdsDpcmStart, "DPCM....", dpcmBytes);
 
@@ -141,14 +143,12 @@ namespace FamiStudio
                     songTable[i].page  = (byte)fileIndex;
                     songTable[i].flags = (byte)(song.UsesDpcm ? dpcmFileIndex : 0);
 
-                    // TODO: Error message instead.
                     if (songBytes.Length > FdsMaxSongSize)
                     {
                         Log.LogMessage(LogSeverity.Warning, $"Song '{song.Name}' is too large ({songBytes.Length} bytes, maximum is {FdsMaxSongSize}). File will be corrupted.");
                         Array.Resize(ref songBytes, FdsMaxSongSize);
                     }
 
-                    // TODO: Error message instead.
                     if (fdsFileBytes.Count + FdsBlockHeaderSize + songBytes.Length > FdsMaxFileSize)
                     {
                         Log.LogMessage(LogSeverity.Warning, $"Reached maximum file size ({FdsMaxFileSize}). Songs will be missing.");
