@@ -9,6 +9,7 @@ Changes:
 * Recording mode to record note-by-note using MIDI controller or QWERTY keyboard
 * Arpeggio support
 * Official FamiStudio Sound Engine release
+* Follow mode
 * Displaying the piano roll view range in the sequencer
 * FDS disk export
 * Basic tutorials for first time users
