@@ -1,4 +1,5 @@
 FAMISTUDIO SOUND ENGINE
+=======================
 
 This is the FamiStudio sound engine. It is used by the NSF and ROM exporter of FamiStudio and can be used to make 
 games. It supports every feature from FamiStudio, some of them are toggeable to save CPU/memory.
@@ -13,12 +14,18 @@ that are in the code files.
 For more in-depth documentation, please visit:
 https://famistudio.org/doc/soundengine/
 
+CODE
+====
+
 The sound engine is contained in a single file which can be simply included in one of your assembly file, like it 
 is done in the demo. 
 
 * CA65:   famistudio_ca65.s
 * NESASM: famistudio_nesasm.asm
 * ASM6:   famistudio_asm6.asm
+
+DEMO
+====
 
 A small demo is included with the engine sound code. The demo is available for all 3 major assemblers and they will 
 all generate binary identical ROMs.
@@ -31,3 +38,11 @@ The source code for the demo is located in the \DemoSource subfolder.
 
 To build the demo, run the appropriate batch file build_demo_xxx.bat, but make sure to make it point to the 
 executable of the assembler. 
+
+EXPORTING MUSIC/SFX DATA
+========================
+
+You can export music or sound effect data to the engine by using either the FamiStudio export dialog
+or from the command line.
+
+

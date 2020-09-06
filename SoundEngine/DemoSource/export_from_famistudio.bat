@@ -10,4 +10,6 @@
 "%ProgramFiles(x86)%\FamiStudio\FamiStudio.exe" "%ProgramFiles(x86)%\FamiStudio\Demo Songs\Shatterhand.fms" famistudio-asm-export %~dp0song_shatterhand_asm6.asm -famistudio-asm-format:asm6
 "%ProgramFiles(x86)%\FamiStudio\FamiStudio.exe" "%ProgramFiles(x86)%\FamiStudio\Demo Songs\Shatterhand.fms" famistudio-asm-export %~dp0song_shatterhand_ca65.s -famistudio-asm-format:ca65
 
-
+"%ProgramFiles(x86)%\FamiStudio\FamiStudio.exe" "%ProgramFiles(x86)%\FamiStudio\Demo Songs\SFX.fms" famistudio-asm-sfx-export %~dp0sfx_nesasm.asm -famistudio-asm-format:nesasm
+"%ProgramFiles(x86)%\FamiStudio\FamiStudio.exe" "%ProgramFiles(x86)%\FamiStudio\Demo Songs\SFX.fms" famistudio-asm-sfx-export %~dp0sfx_asm6.asm -famistudio-asm-format:asm6
+"%ProgramFiles(x86)%\FamiStudio\FamiStudio.exe" "%ProgramFiles(x86)%\FamiStudio\Demo Songs\SFX.fms" famistudio-asm-sfx-export %~dp0sfx_ca65.s -famistudio-asm-format:ca65

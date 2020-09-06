@@ -248,3 +248,10 @@ Every feature supported in FamiStudio is supported by this sound engine. If you 
     ; with instrument arpeggio envelopes, those are always supported).
     ; More information at: (TODO)
     FAMISTUDIO_USE_ARPEGGIO       = 1
+    
+## Exporting Music/SFX to the engine
+
+You can export music or sound effect data to the engine by using either the [Export Dialog](importexport.md) or from the [command line](cmdline.md).
+
+
+
