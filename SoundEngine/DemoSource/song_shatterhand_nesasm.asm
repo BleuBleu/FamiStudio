@@ -8,14 +8,14 @@ shatterhand_music_data:
 	.db LOW(.tempo_env9), HIGH(.tempo_env9), 0, 0
 
 .instruments:
-	.dw .env3,.env0,.env0,.env9
-	.dw .env7,.env1,.env0,.env9
-	.dw .env11,.env10,.env0,.env9
-	.dw .env13,.env8,.env0,.env9
-	.dw .env2,.env0,.env0,.env6
-	.dw .env2,.env0,.env5,.env6
-	.dw .env2,.env0,.env4,.env6
-	.dw .env12,.env10,.env0,.env9
+	.dw .env3,.env0,.env0,.env7
+	.dw .env5,.env1,.env0,.env7
+	.dw .env9,.env8,.env0,.env7
+	.dw .env13,.env6,.env0,.env7
+	.dw .env2,.env0,.env0,.env4
+	.dw .env2,.env0,.env11,.env4
+	.dw .env2,.env0,.env10,.env4
+	.dw .env12,.env8,.env0,.env7
 
 .samples:
 .env0:
@@ -25,23 +25,23 @@ shatterhand_music_data:
 .env2:
 	.db $06,$c8,$c9,$c5,$00,$03,$c4,$c4,$c2,$00,$08
 .env3:
-	.db $00,$cf,$7d,$cf,$00,$03
+	.db $04,$cf,$7f,$00,$01
 .env4:
-	.db $c2,$00,$00
-.env5:
-	.db $c1,$00,$00
-.env6:
 	.db $00,$c0,$08,$c0,$04,$bd,$03,$bd,$00,$03
-.env7:
+.env5:
 	.db $00,$cf,$ca,$c3,$c2,$c0,$00,$05
-.env8:
+.env6:
 	.db $c0,$c2,$c5,$00,$02
-.env9:
+.env7:
 	.db $00,$c0,$7f,$00,$01
-.env10:
+.env8:
 	.db $c0,$c1,$c2,$00,$02
-.env11:
+.env9:
 	.db $00,$cb,$ca,$09,$c9,$00,$04
+.env10:
+	.db $c2,$7f,$00,$00
+.env11:
+	.db $c1,$7f,$00,$00
 .env12:
 	.db $00,$ca,$c6,$c3,$c0,$00,$04
 .env13:

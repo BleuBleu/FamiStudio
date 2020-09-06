@@ -758,7 +758,7 @@ song_shatterhand:
 .include "song_shatterhand_ca65.s"
 
 .segment "DPCM"
-.incbin "song_journey_to_silius.dmc"
+.incbin "song_journey_to_silius_ca65.dmc"
 
 .segment "VECTORS"
 .word nmi

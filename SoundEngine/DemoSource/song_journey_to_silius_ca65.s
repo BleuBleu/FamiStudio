@@ -8,19 +8,19 @@ journey_to_silius_music_data:
 	.byte .lobyte(@tempo_env5), .hibyte(@tempo_env5), 0, 0
 
 @instruments:
-	.word @env1,@env0,@env0,@env4
+	.word @env2,@env0,@env0,@env4
 	.word @env3,@env0,@env0,@env4
-	.word @env11,@env0,@env0,@env9
-	.word @env14,@env0,@env0,@env9
-	.word @env3,@env0,@env6,@env4
-	.word @env15,@env0,@env6,@env9
-	.word @env7,@env0,@env5,@env4
-	.word @env14,@env0,@env5,@env9
-	.word @env8,@env12,@env0,@env9
-	.word @env16,@env13,@env0,@env9
-	.word @env8,@env13,@env0,@env9
-	.word @env2,@env10,@env0,@env9
-	.word @env2,@env0,@env0,@env9
+	.word @env11,@env0,@env0,@env8
+	.word @env16,@env0,@env0,@env8
+	.word @env3,@env0,@env12,@env4
+	.word @env7,@env0,@env12,@env8
+	.word @env5,@env0,@env9,@env4
+	.word @env16,@env0,@env9,@env8
+	.word @env6,@env13,@env0,@env8
+	.word @env15,@env14,@env0,@env8
+	.word @env6,@env14,@env0,@env8
+	.word @env1,@env10,@env0,@env8
+	.word @env1,@env0,@env0,@env8
 
 @samples:
 	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0c	;1 (Sample 1)
@@ -90,37 +90,37 @@ journey_to_silius_music_data:
 @env0:
 	.byte $c0,$7f,$00,$00
 @env1:
-	.byte $08,$ce,$cb,$ca,$c9,$c9,$00,$05,$c1,$c5,$c4,$c3,$c2,$c1,$00,$0d
+	.byte $04,$cf,$7f,$00,$01
 @env2:
-	.byte $00,$cf,$7d,$cf,$00,$03
+	.byte $08,$ce,$cb,$ca,$c9,$c9,$00,$05,$c1,$c5,$c4,$c3,$c2,$c1,$00,$0d
 @env3:
 	.byte $0f,$c4,$c6,$c9,$c8,$0e,$c7,$0e,$c6,$0e,$c5,$0e,$c4,$00,$0c,$c1,$c5,$c4,$c3,$c2,$c1,$00,$14
 @env4:
 	.byte $00,$c0,$07,$c1,$c3,$c6,$c3,$c1,$bf,$bd,$ba,$bd,$bf,$00,$03
 @env5:
-	.byte $c2,$00,$00
-@env6:
-	.byte $c1,$00,$00
-@env7:
 	.byte $0e,$c5,$c6,$c6,$ca,$cb,$cc,$cb,$ca,$c9,$c8,$c7,$00,$0b,$c1,$c5,$c4,$c3,$c2,$c1,$00,$13
-@env8:
+@env6:
 	.byte $00,$cc,$cc,$c9,$c5,$c2,$c0,$00,$06
-@env9:
+@env7:
+	.byte $04,$c3,$7f,$00,$01
+@env8:
 	.byte $00,$c0,$7f,$00,$01
+@env9:
+	.byte $c2,$7f,$00,$00
 @env10:
 	.byte $c0,$bf,$be,$bd,$bc,$bb,$ba,$b9,$b8,$b7,$00,$09
 @env11:
 	.byte $00,$c5,$c9,$c9,$c8,$00,$04
 @env12:
-	.byte $c0,$c3,$00,$01
+	.byte $c1,$7f,$00,$00
 @env13:
-	.byte $c0,$c6,$00,$01
+	.byte $c0,$c3,$00,$01
 @env14:
-	.byte $00,$c4,$00,$01
+	.byte $c0,$c6,$00,$01
 @env15:
-	.byte $00,$c3,$00,$01
-@env16:
 	.byte $00,$cd,$ce,$cc,$c8,$c9,$c7,$c6,$c4,$c3,$c1,$c0,$00,$0b
+@env16:
+	.byte $04,$c4,$7f,$00,$01
 @env17:
 	.byte $00,$c0,$be,$bc,$bc,$bd,$bf,$c1,$c3,$c4,$c4,$c2,$00,$01
 @tempo_env5:
@@ -368,7 +368,7 @@ journey_to_silius_music_data:
 @ref83:
 	.byte $3d,$cd,$63,.lobyte(@env17),.hibyte(@env17),$cf
 @ref84:
-	.byte $cd,$63,.lobyte(@env9),.hibyte(@env9),$65,$81,$62,$61,$06,$3d,$30,$cd
+	.byte $cd,$63,.lobyte(@env8),.hibyte(@env8),$65,$81,$62,$61,$06,$3d,$30,$cd
 	.byte $fd
 	.word @song0ch1loop
 

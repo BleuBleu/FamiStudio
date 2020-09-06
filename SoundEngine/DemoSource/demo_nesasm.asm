@@ -756,7 +756,7 @@ song_shatterhand:
     ; DPCM
     .bank 3
     .org $e000
-    .incbin "song_journey_to_silius.dmc"
+    .incbin "song_journey_to_silius_nesasm.dmc"
 
     ; VECTORS
     .org $fffa

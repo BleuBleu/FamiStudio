@@ -754,7 +754,7 @@ setup_background:
 song_silver_surfer:
     .include "song_silver_surfer_asm6.asm"
 sfx_data:
-    .include "sfx_ca65.s"
+    .include "sfx_asm6.asm"
     .org $c000
 song_journey_to_silius:
     .include "song_journey_to_silius_asm6.asm"
@@ -764,7 +764,7 @@ song_shatterhand:
 
     ; DPCM
     .org $e000
-    .incbin "song_journey_to_silius.dmc"
+    .incbin "song_journey_to_silius_asm6.dmc"
 
     ; VECTORS
     .org $fffa
