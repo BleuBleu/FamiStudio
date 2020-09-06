@@ -14,8 +14,6 @@ The engine, as well as a demo project, is available for all 3 major assemblers:
 * NESASM
 * ASM6
 
-** Where to download? **
-
 ## Features
 
 The engine has a basic set of features, as well as a few extra toggeable features that you may wish to disable to same CPU/RAM. If you disable a feature, you need to make sure that you definetaly are not using it in any of your songs. Using a feature in a song without enabling it in the song engine may lead to crashes (BRK) or undefined behaviors.
