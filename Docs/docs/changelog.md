@@ -17,6 +17,11 @@ Changes:
 * Wav export loop count
 * Option to disable dragging sounds when a song is playing
 
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/X1zPjnM1wb0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
+
 ## Version 2.1.1 (Hotfix)
 
 Changes:
