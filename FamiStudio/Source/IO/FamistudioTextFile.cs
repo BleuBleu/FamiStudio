@@ -10,10 +10,10 @@ namespace FamiStudio
 {
     public class FamistudioTextFile
     {
-        public bool Save(Project originalProject, string filename, int[] songIds)
+        public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData)
         {
             var project = originalProject.DeepClone();
-            project.RemoveAllSongsBut(songIds);
+            project.RemoveAllSongsBut(songIds, deleteUnusedData);
 
             var lines = new List<string>();
 
@@ -413,7 +413,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr))  note.VibratoSpeed    = byte.Parse(vibSpeedStr);
                             if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr))  note.VibratoDepth    = byte.Parse(vibDepthStr);
                             if (parameters.TryGetValue("FinePitch",    out var finePitchStr)) note.FinePitch       = sbyte.Parse(finePitchStr);
-                            if (parameters.TryGetValue("SlideTarget",  out var slideStr))     note.SlideNoteTarget = (byte)Note.FromFriendlyName(valueStr);
+                            if (parameters.TryGetValue("SlideTarget",  out var slideStr))     note.SlideNoteTarget = (byte)Note.FromFriendlyName(slideStr);
                             if (parameters.TryGetValue("FdsModSpeed",  out var modSpeedStr))  note.FdsModSpeed     = ushort.Parse(modSpeedStr);
                             if (parameters.TryGetValue("FdsModDepth",  out var modDepthStr))  note.FdsModDepth     = byte.Parse(modDepthStr);
 

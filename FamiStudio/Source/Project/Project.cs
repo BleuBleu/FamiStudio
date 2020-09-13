@@ -750,7 +750,7 @@ namespace FamiStudio
             return sampleData.ToArray();
         }
 
-        public void RemoveAllSongsBut(int[] songIds)
+        public void RemoveAllSongsBut(int[] songIds, bool deleteUnusedData = true)
         {
             for (int i = songs.Count - 1; i >= 0; i--)
             {
@@ -762,9 +762,12 @@ namespace FamiStudio
                 }
             }
 
-            DeleteUnusedInstruments();
-            DeleteUnusedSamples();
-            DeleteUnusedArpeggios();
+            if (deleteUnusedData)
+            {
+                DeleteUnusedInstruments();
+                DeleteUnusedSamples();
+                DeleteUnusedArpeggios();
+            }
         }
 
         public void MergeIdenticalInstruments()

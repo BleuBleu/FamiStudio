@@ -133,6 +133,7 @@ namespace FamiStudio
                     break;
                 case ExportFormat.Text:
                     page.AddStringListMulti(null, songNames, null); // 0
+                    page.AddBoolean("Delete unused data", false); // 1
                     break;
                 case ExportFormat.FamiTracker:
                     page.AddStringListMulti(null, songNames, null); // 0
@@ -277,7 +278,8 @@ namespace FamiStudio
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.Text);
-                new FamistudioTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
+                var deleteUnusedData = props.GetPropertyValue<bool>(1);
+                new FamistudioTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)), deleteUnusedData);
             }
         }
 

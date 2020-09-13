@@ -417,7 +417,7 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                new FamistudioTextFile().Save(project, filename, exportSongIds);
+                new FamistudioTextFile().Save(project, filename, exportSongIds, false);
             }
         }
 
