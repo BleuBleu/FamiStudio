@@ -133,7 +133,7 @@ namespace FamiStudio
                     break;
                 case ExportFormat.Text:
                     page.AddStringListMulti(null, songNames, null); // 0
-                    page.AddBoolean("Delete unused data", false); // 1
+                    page.AddBoolean("Delete unused data :", false); // 1
                     break;
                 case ExportFormat.FamiTracker:
                     page.AddStringListMulti(null, songNames, null); // 0
