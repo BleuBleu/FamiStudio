@@ -1,8 +1,13 @@
+Post 2.2.0
+==========
+- Dont change scroll in pianoroll/sequencer when undoing + playing + follow to avoid jumps
+x Fix FamiStudio text format + DONT delete unused stuff.
+- Labels on notes in piano roll.
+- Warning when +16KB on samples on FTM.
+
 2.2.0 Release
 =============
-- Discord server
 - Update NESDEV wiki.
-- Deprecate FamiTone2 FS.
 
 MaxWar wish list.
 =================
