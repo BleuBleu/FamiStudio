@@ -10,6 +10,7 @@ Changes:
 * Added option to not trim unused data when exporting to FamiStudio Text format.
 * Fixed crash when exporting to some formats on MacOS
 * Fixed crash when exporting FamiStudio/FamiTone2 SFX longer than 256 bytes.
+* Fixed glibc dependency issue on Linux that go introduced in 2.2.0.
 
 ## Version 2.2.0
 
