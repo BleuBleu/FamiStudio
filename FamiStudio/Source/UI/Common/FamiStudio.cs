@@ -521,7 +521,7 @@ namespace FamiStudio
                 if (!log.IsEmpty)
                 {
                     var logDlg = new LogDialog(log.Messages);
-                    logDlg.ShowDialog();
+                    logDlg.ShowDialog(mainForm);
                 }
             }
         }
