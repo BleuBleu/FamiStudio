@@ -2,6 +2,15 @@
 
 Version history / release notes for each release.
 
+## Version 2.2.1 (Hotfix)
+
+Changes:
+
+* Fixed import of slide notes from FamiStudio Text format.
+* Added option to not trim unused data when exporting to FamiStudio Text format.
+* Fixed crash when exporting to some formats on MacOS
+* Fixed crash when exporting FamiStudio/FamiTone2 SFX longer than 256 bytes.
+
 ## Version 2.2.0
 
 Changes:
