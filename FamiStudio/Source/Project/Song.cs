@@ -630,17 +630,22 @@ namespace FamiStudio
         }
 
 #if DEBUG
-        public void Validate(Project project)
+        public void Validate(Project project, Dictionary<int, object> idMap)
         {
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
+
+            if (idMap.TryGetValue(id, out var foundObj))
+                Debug.Assert(foundObj == this);
+            else
+                idMap.Add(id, this);
 
             var uniqueNotes = new HashSet<Note>();
             var uniquePatterns = new HashSet<Pattern>();
 
             foreach (var channel in channels)
             {
-                channel.Validate(this);
+                channel.Validate(this, idMap);
 
                 // This is extremely heavy handed, but it is important. 
                 // Notes used to be struct and they got changed to classes later on.
@@ -768,6 +773,11 @@ namespace FamiStudio
 
             UpdatePatternStartNotes();
             DeleteNotesPastMaxInstanceLength();
+        }
+
+        public void ChangeId(int newId)
+        {
+            id = newId;
         }
 
         public void SerializeState(ProjectBuffer buffer)

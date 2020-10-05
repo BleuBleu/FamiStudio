@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -37,12 +38,29 @@ namespace FamiStudio
             this.envelope.Loop = 0;
         }
 
+        public void Validate(Project project, Dictionary<int, object> idMap)
+        {
+#if DEBUG
+            if (idMap.TryGetValue(id, out var foundObj))
+                Debug.Assert(foundObj == this);
+            else
+                idMap.Add(id, this);
+
+            Debug.Assert(project.GetArpeggio(id) == this);
+#endif
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
             buffer.Serialize(ref color);
             envelope.SerializeState(buffer);
+        }
+
+        public void ChangeId(int newId)
+        {
+            id = newId;
         }
 
         public int[] GetChordOffsets()

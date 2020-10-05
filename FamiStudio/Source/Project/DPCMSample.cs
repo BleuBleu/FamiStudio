@@ -1,4 +1,7 @@
-﻿namespace FamiStudio
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+
+namespace FamiStudio
 {
     public class DPCMSample
     {
@@ -20,6 +23,23 @@
             this.id = id;
             this.name = name;
             this.data = data;
+        }
+
+        public void ChangeId(int newId)
+        {
+            id = newId;
+        }
+
+        public void Validate(Project project, Dictionary<int, object> idMap)
+        {
+#if DEBUG
+            if (idMap.TryGetValue(id, out var foundObj))
+                Debug.Assert(foundObj == this);
+            else
+                idMap.Add(id, this);
+
+            Debug.Assert(project.GetSample(id) == this);
+#endif
         }
 
         public void SerializeState(ProjectBuffer buffer)

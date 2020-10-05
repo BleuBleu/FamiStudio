@@ -1,9 +1,46 @@
-Post 2.2.0
-==========
+Tips & Tricks
+=============
+x #00 - Basic controls & onboarding (pan, zoom, trackpad, tooltips, piano roll view rect, demo songs)
+x #01 - Sequencer basics (pattern add, delete, edit, instance & copy).
+x #02 - Piano roll basics (add note, delete note, snapping, dragging, select, transpose with KB).
+x #03 - Channels in piano roll (force display, muting & soloing, etc.)
+#04 - Volume envelopes & release notes
+#05 - Toggling note attacks (combination with release)
+#06 - Slide notes (combination with release notes)
+#07 - Pitch envelopes (absolute & relative, paste text values)
+#08 - Effect panel (speed, FDS mod, etc.)
+#09 - Quickly copy notes
+#10 - Copy & paste (special paste, mix paste, drag & copy, between projects, etc.)
+#11 - Custom pattern settings & loop points.
+#12 - Recording with Keyboard or MIDI controller (page up/down, keys, etc.)
+#13 - Importing instruments
+#14 - Importing from FamiTracker
+#15 - Importing NSFs (bit reverse, etc.)
+#16 - FamiStudio vs. FamiTracker tempo (PAL, etc.)
+#17 - DPCM samples (import, save, etc)
+#18 - Replacing an instrument by another (copy envelopes, etc.)
+#19 - Arpeggios (replacing, etc.)
+#20 - Exporting to FamiTracker
+#21 - Exporting to a NSF / ROM / FDS Disk
+#22 - FDS audio (waveform, modulation, etc.)
+#23 - VRC7 audio (release envelope)
+#24 - N163 audio (wavetable, number of channels => quality, etc.)
+#25 - Command line processing 
+
+2.3.0
+=====
+- Enhanced FamiTracker compatibility.
+	- Delayed notes
+	- Delayed cuts
+	- Vxx
+	- Tempo changes.
+- Song merge (+ fix instrument import... very bad). 
+	=> Add unique ID validation.
 - Dont change scroll in pianoroll/sequencer when undoing + playing + follow to avoid jumps
-x Fix FamiStudio text format + DONT delete unused stuff.
 - Labels on notes in piano roll.
 - Warning when +16KB on samples on FTM.
+- Copy patterns to other channels.
+- Save as MP3
 
 2.2.0 Release
 =============
@@ -11,7 +48,6 @@ x Fix FamiStudio text format + DONT delete unused stuff.
 
 MaxWar wish list.
 =================
-- Copy patterns to other channels.
 - Option for no-sound when no-pattern?
 - Loop end point
 - MIDI import/export.

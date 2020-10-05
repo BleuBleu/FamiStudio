@@ -623,14 +623,14 @@ namespace FamiStudio
         }
 
 #if DEBUG
-        public void Validate(Song song)
+        public void Validate(Song song, Dictionary<int, object> idMap)
         {
             Debug.Assert(this == song.GetChannelByType(type));
             Debug.Assert(this.song == song);
             foreach (var inst in patternInstances)
                 Debug.Assert(inst == null || patterns.Contains(inst));
             foreach (var pat in patterns)
-                pat.Validate(this);
+                pat.Validate(this, idMap);
         }
 #endif
 

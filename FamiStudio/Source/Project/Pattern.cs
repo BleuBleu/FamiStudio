@@ -389,9 +389,14 @@ namespace FamiStudio
         }
 
 #if DEBUG
-        public void Validate(Channel channel)
+        public void Validate(Channel channel, Dictionary<int, object> idMap)
         {
             Debug.Assert(this.song == channel.Song);
+
+            if (idMap.TryGetValue(id, out var foundObj))
+                Debug.Assert(foundObj == this);
+            else
+                idMap.Add(id, this);
 
             foreach (var kv in notes)
             {
@@ -413,6 +418,11 @@ namespace FamiStudio
             }
         }
 #endif
+
+        public void ChangeId(int newId)
+        {
+            id = newId;
+        }
 
         public unsafe void SerializeState(ProjectBuffer buffer)
         {

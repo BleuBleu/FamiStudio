@@ -770,6 +770,47 @@ namespace FamiStudio
             }
         }
 
+        public void Merge(Project other)
+        {
+            Debug.Assert(other.ExpansionAudio == ExpansionNone || other.ExpansionAudio == ExpansionAudio);
+            Debug.Assert(other.TempoMode == TempoMode);
+
+            // Change all the IDs in the source project.
+            List<int> allOtherIds = new List<int>();
+            foreach (var inst in other.Instruments)
+                inst.ChangeId(GenerateUniqueId());
+            foreach (var arp in other.Arpeggios)
+                arp.ChangeId(GenerateUniqueId());
+            foreach (var sample in other.Samples)
+                sample.ChangeId(GenerateUniqueId());
+            foreach (var song in other.Songs)
+            {
+                song.ChangeId(GenerateUniqueId());
+                foreach (var channels in song.Channels)
+                {
+                    foreach (var pattern in channels.Patterns)
+                        pattern.ChangeId(GenerateUniqueId());
+                }
+            }
+
+            // MATTT: Check sample name uniqueness and merge DPCM mapping too.
+            // MATTT: Check instrument/arpeggios names and make unique.
+
+            // Add everything.
+            foreach (var inst in other.Instruments)
+                instruments.Add(inst);
+            foreach (var arp in other.Arpeggios)
+                arpeggios.Add(arp);
+            foreach (var sample in other.Samples) 
+                samples.Add(sample);
+            foreach (var song in other.Songs)
+                songs.Add(song);
+
+            SortInstruments();
+            SortArpeggios();
+            Validate();
+        }
+
         public void MergeIdenticalInstruments()
         {
             var instrumentCrcMap = new Dictionary<uint, Instrument>();
@@ -923,8 +964,13 @@ namespace FamiStudio
         }
 
 #if DEBUG
-        private void ValidateDPCMSamples()
+        private void ValidateDPCMSamples(Dictionary<int, object> idMap)
         {
+            foreach (var sample in samples)
+            {
+                sample.Validate(this, idMap);
+            }
+
             foreach (var mapping in samplesMapping)
             {
                 if (mapping != null && mapping.Sample != null)
@@ -934,15 +980,35 @@ namespace FamiStudio
                 }
             }
         }
+
+        private void ValidateInstruments(Dictionary<int, object> idMap)
+        {
+            foreach (var inst in instruments)
+            {
+                inst.Validate(this, idMap);
+            }
+        }
+
+        private void ValidateArpeggios(Dictionary<int, object> idMap)
+        {
+            foreach (var arp in arpeggios)
+            {
+                arp.Validate(this, idMap);
+            }
+        }
 #endif
 
         public void Validate()
         {
 #if DEBUG
-            ValidateDPCMSamples();
+            var idMap = new Dictionary<int, object>(); ;
+
+            ValidateDPCMSamples(idMap);
+            ValidateInstruments(idMap);
+            ValidateArpeggios(idMap);
 
             foreach (var song in Songs)
-                song.Validate(this);
+                song.Validate(this, idMap);
 
             Debug.Assert(!UsesExpansionAudio || pal == false);
             Debug.Assert(Note.EmptyNote.IsEmpty);

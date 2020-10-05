@@ -103,6 +103,7 @@ namespace FamiStudio
             Add,
             DPCM,
             LoadInstrument,
+            LoadSong,
             ExpandInstrument,
             Max
         }
@@ -138,11 +139,12 @@ namespace FamiStudio
                 switch (type)
                 {
                     case ButtonType.SongHeader:
-                        active = new[] { true };
-                        return new[] { SubButtonType.Add };
+                        active = new[] { true, true };
+                        return new[] { SubButtonType.Add,
+                                       SubButtonType.LoadSong };
                     case ButtonType.InstrumentHeader:
                         active = new[] { true ,true };
-                        return new[] { SubButtonType.Add ,
+                        return new[] { SubButtonType.Add,
                                        SubButtonType.LoadInstrument };
                     case ButtonType.ArpeggioHeader:
                         active = new[] { true };
@@ -277,6 +279,7 @@ namespace FamiStudio
                         return projectExplorer.bmpAdd;
                     case SubButtonType.DPCM:
                         return projectExplorer.bmpDPCM;
+                    case SubButtonType.LoadSong:
                     case SubButtonType.LoadInstrument:
                         return projectExplorer.bmpLoadInstrument;
                     case SubButtonType.ExpandInstrument:
@@ -993,6 +996,78 @@ namespace FamiStudio
                     buttonY < (sliderPosY + sliderSizeY));
         }
 
+        private void ImportSong()
+        {
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Song Files (*.fms;*.txt;*.ftm)|*.fms;*.txt;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+
+            if (filename != null)
+            {
+                Project otherProject = App.OpenProjectFile(filename, false);
+
+                if (otherProject == null)
+                {
+                    return;
+                }
+
+                if (otherProject.ExpansionAudio != Project.ExpansionNone &&
+                    otherProject.ExpansionAudio != App.Project.ExpansionAudio)
+                {
+                    PlatformUtils.MessageBox($"Cannot import from a project that uses a different audio expansion.", "Import Song", MessageBoxButtons.OK);
+                    return;
+                }
+
+                if (otherProject.TempoMode != App.Project.TempoMode)
+                {
+                    PlatformUtils.MessageBox($"Cannot import from a project that uses a different tempo mode.", "Import Song", MessageBoxButtons.OK);
+                    return;
+                }
+
+                var songs = new List<Song>();
+                var songNames = new List<string>();
+
+                foreach (var song in otherProject.Songs)
+                {
+                    // Cant have duplicated song names.
+                    if (App.Project.GetSong(song.Name) != null)
+                        continue;
+
+                    songs.Add(song);
+                    songNames.Add(song.Name);
+                }
+
+                var dlg = new PropertyDialog(300, ParentForm.Bounds);
+                dlg.Properties.AddLabel(null, "Select songs to import:");
+                dlg.Properties.AddStringListMulti(null, songNames.ToArray(), null);
+                dlg.Properties.Build();
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                    var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                    var songIds = new List<int>();
+
+                    for (int i = 0; i < selected.Length; i++)
+                    {
+                        if (selected[i])
+                            songIds.Add(songs[i].Id);
+                    }
+
+                    if (songIds.Count > 0)
+                    {
+                        otherProject.RemoveAllSongsBut(songIds.ToArray());
+                        App.Project.Merge(otherProject);
+                    }
+
+                    App.Project.SortInstruments();
+                    App.UndoRedoManager.EndTransaction();
+                }
+            }
+
+            RefreshButtons();
+            ConditionalInvalidate();
+        }
+
         private void ImportInstruments()
         {
             var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm)|*.fti;*.fms;*.txt;*.ftm|FamiTracker Instrument File (*.fti)|*.fti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
@@ -1044,7 +1119,7 @@ namespace FamiStudio
                             {
                                 if (selected[i] && App.Project.GetInstrument(instruments[i].Name) == null)
                                 {
-                                    App.Project.Instruments.Add(instruments[i]);
+                                    App.Project.Instruments.Add(instruments[i]); // MATTT: This is SUPER WRONG.
                                 }
                             }
 
@@ -1100,6 +1175,10 @@ namespace FamiStudio
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
                             ConditionalInvalidate();
+                        }
+                        else if (subButtonType == SubButtonType.LoadSong)
+                        {
+                            ImportSong();
                         }
                     }
                     else if (button.type == ButtonType.Song)
