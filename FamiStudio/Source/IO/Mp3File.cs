@@ -1,0 +1,59 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace FamiStudio
+{
+    class Mp3File
+    {
+#if FAMISTUDIO_WINDOWS
+        private const string ShineMp3Dll = "ShineMp3.dll";
+#elif FAMISTUDIO_MACOS
+        private const string ShineMp3Dll = "ShineMp3.dylib";
+#else
+        private const string ShineMp3Dll = "ShineMp3.so";
+#endif
+
+        [DllImport(ShineMp3Dll, CallingConvention = CallingConvention.StdCall, EntryPoint = "ShineMp3Encode")]
+        extern static int ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples, IntPtr wavData, int mp3_bitrate, int mp3_data_size, IntPtr mp3_data);
+
+        public unsafe static bool Save(Song song, string filename, int sampleRate, int bitRate, int loopCount, int duration, int channelMask)
+        {
+            if (sampleRate < 44100)
+            {
+                sampleRate = 44100;
+                Log.LogMessage(LogSeverity.Warning, $"Sample rate of {sampleRate}Hz is too low for MP3. Forcing 44100Hz.");
+            }
+
+            var project = song.Project;
+            var player = new WavPlayer(sampleRate, loopCount);
+
+            player.Loop = LoopMode.Song;
+            player.ChannelMask = channelMask;
+
+            var wavData = player.GetSongSamples(song, project.PalMode, duration);
+            var mp3Data = new byte[wavData.Length * sizeof(short) * 4];
+            var mp3Size = 0;
+
+            fixed (short* wavPtr = &wavData[0])
+            {
+                fixed (byte* mp3Ptr = &mp3Data[0])
+                {
+                    mp3Size = ShineMp3Encode(sampleRate, 1, wavData.Length, new IntPtr(wavPtr), bitRate, mp3Data.Length, new IntPtr(mp3Ptr));
+                }
+            }
+
+            if (mp3Size <= 0)
+                return false;
+
+            Array.Resize(ref mp3Data, mp3Size);
+            File.WriteAllBytes(filename, mp3Data);
+
+            return true;
+        }
+    }
+}

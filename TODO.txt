@@ -34,13 +34,15 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	- Delayed cuts
 	- Vxx
 	- Tempo changes.
-- Song merge (+ fix instrument import... very bad). 
-	=> Add unique ID validation.
+/ Song merge (+ fix instrument import... very bad). 
+	x Add unique ID validation.
 - Dont change scroll in pianoroll/sequencer when undoing + playing + follow to avoid jumps
 - Labels on notes in piano roll.
 - Warning when +16KB on samples on FTM.
 - Copy patterns to other channels.
-- Save as MP3
+x Save as MP3
+	- Port to other platforms.
+	- Command line.
 
 2.2.0 Release
 =============

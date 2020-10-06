@@ -11,7 +11,7 @@ namespace FamiStudio
     {
         enum ExportFormat
         {
-            Wav,
+            WavMp3,
             Nsf,
             Rom,
             Text,
@@ -25,7 +25,7 @@ namespace FamiStudio
 
         string[] ExportFormatNames =
         {
-            "Wave",
+            "WAV / MP3",
             "NSF",
             "ROM / FDS",
             "FamiStudio Text",
@@ -102,14 +102,16 @@ namespace FamiStudio
 
             switch (format)
             {
-                case ExportFormat.Wav:
+                case ExportFormat.WavMp3:
                     page.AddStringList("Song :", songNames, songNames[0]); // 0
-                    page.AddStringList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 1
-                    page.AddStringList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 2
-                    page.AddIntegerRange("Loop count:", 1, 1, 10); // 3
-                    page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 4
-                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 5
-                    page.SetPropertyEnabled(4, false);
+                    page.AddStringList("Format :", new[] { "WAV", "MP3" }, "WAV"); // 1
+                    page.AddStringList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
+                    page.AddStringList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
+                    page.AddStringList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
+                    page.AddIntegerRange("Loop count:", 1, 1, 10); // 5
+                    page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
+                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 7
+                    page.SetPropertyEnabled(6, false);
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
@@ -169,10 +171,17 @@ namespace FamiStudio
                 props.SetPropertyEnabled(2, (bool)value);
                 props.SetPropertyEnabled(3, (bool)value);
             }
-            else if (props == dialog.GetPropertyPage((int)ExportFormat.Wav) && idx == 2)
+            else if (props == dialog.GetPropertyPage((int)ExportFormat.WavMp3))
             {
-                props.SetPropertyEnabled(3, (string)value != "Duration");
-                props.SetPropertyEnabled(4, (string)value == "Duration");
+                if (idx == 1)
+                {
+                    props.SetPropertyEnabled(3, (string)value == "MP3");
+                }
+                else if (idx == 4)
+                {
+                    props.SetPropertyEnabled(5, (string)value != "Duration");
+                    props.SetPropertyEnabled(6, (string)value == "Duration");
+                }
             }
         }
 
@@ -189,17 +198,25 @@ namespace FamiStudio
             return songIds.ToArray();
         }
 
-        private void ExportWav()
+        private void ExportWavMp3()
         {
-            var filename = PlatformUtils.ShowSaveFileDialog("Export Wave File", "Wave Audio File (*.wav)|*.wav", ref Settings.LastExportFolder);
+            var props = dialog.GetPropertyPage((int)ExportFormat.WavMp3);
+            var format = props.GetPropertyValue<string>(1);
+
+            var filename = "";
+            if (format == "MP3")
+                filename = PlatformUtils.ShowSaveFileDialog("Export MP3 File", "MP3 Audio File (*.mp3)|*.mp3", ref Settings.LastExportFolder);
+            else
+                filename = PlatformUtils.ShowSaveFileDialog("Export Wave File", "Wave Audio File (*.wav)|*.wav", ref Settings.LastExportFolder);
+
             if (filename != null)
             {
-                var props = dialog.GetPropertyPage((int)ExportFormat.Wav);
                 var songName = props.GetPropertyValue<string>(0);
-                var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(1));
-                var loopCount = props.GetPropertyValue<string>(2) != "Duration" ? props.GetPropertyValue<int>(3) : -1;
-                var duration  = props.GetPropertyValue<string>(2) == "Duration" ? props.GetPropertyValue<int>(4) : -1;
-                var selectedChannels = props.GetPropertyValue<bool[]>(5);
+                var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2));
+                var bitRate = Convert.ToInt32(props.GetPropertyValue<string>(3));
+                var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
+                var duration  = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
+                var selectedChannels = props.GetPropertyValue<bool[]>(7);
 
                 var channelMask = 0;
                 for (int i = 0; i < selectedChannels.Length; i++)
@@ -208,7 +225,10 @@ namespace FamiStudio
                         channelMask |= (1 << i);
                 }
 
-                WaveFile.Save(project.GetSong(songName), filename, sampleRate, loopCount, duration, channelMask);
+                if (format == "MP3")
+                    Mp3File.Save(project.GetSong(songName), filename, sampleRate, bitRate, loopCount, duration, channelMask);
+                else
+                    WaveFile.Save(project.GetSong(songName), filename, sampleRate, loopCount, duration, channelMask);
             }
         }
 
@@ -363,7 +383,7 @@ namespace FamiStudio
 
                 switch (selectedFormat)
                 {
-                    case ExportFormat.Wav: ExportWav(); break;
+                    case ExportFormat.WavMp3: ExportWavMp3(); break;
                     case ExportFormat.Nsf: ExportNsf(); break;
                     case ExportFormat.Rom: ExportRom(); break;
                     case ExportFormat.Text: ExportText(); break;

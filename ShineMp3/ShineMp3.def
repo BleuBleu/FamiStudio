@@ -1,0 +1,3 @@
+LIBRARY   SHINEMP3
+EXPORTS
+	ShineMp3Encode   @1
