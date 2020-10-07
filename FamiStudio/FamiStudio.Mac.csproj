@@ -256,6 +256,9 @@
     <Compile Include="Source\Utils\RtMidi.cs" />
     <Compile Include="Source\UI\MacLinux\TutorialDialog.cs" />
     <Compile Include="Source\UI\MacLinux\LogDialog.cs" />
+    <Content Include="ShineMp3.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
