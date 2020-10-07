@@ -14,7 +14,7 @@ int __stdcall ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples
 		return -1;
 
 	shine_config_t config;
-	config.wave.channels   = wav_channels;
+	config.wave.channels   = (channels)wav_channels;
 	config.wave.samplerate = wav_rate;
 	config.mpeg.emph = NONE;
 	config.mpeg.copyright = 0;
