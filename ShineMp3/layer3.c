@@ -87,7 +87,7 @@ shine_global_config *shine_initialise(shine_config_t *pub_config)
   if (shine_check_config(pub_config->wave.samplerate, pub_config->mpeg.bitr) < 0)
     return NULL;
 
-  config = calloc(1,sizeof(shine_global_config));
+  config = (shine_global_config*)calloc(1,sizeof(shine_global_config));
   if (config == NULL)
     return config;
 
