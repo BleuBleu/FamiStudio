@@ -111,6 +111,7 @@ namespace FamiStudio
                     page.AddIntegerRange("Loop count:", 1, 1, 10); // 5
                     page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
                     page.AddStringListMulti("Channels :", GetChannelNames(), null); // 7
+                    page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
                     break;
                 case ExportFormat.Nsf:
