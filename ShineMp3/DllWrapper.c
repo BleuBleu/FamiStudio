@@ -8,7 +8,7 @@
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b)) 
 
-int __stdcall ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples, short* wavData, int mp3_bitrate, int mp3_data_size, unsigned char* mp3_data)
+extern "C" int __stdcall ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples, short* wavData, int mp3_bitrate, int mp3_data_size, unsigned char* mp3_data)
 {
 	if (shine_check_config(wav_rate, mp3_bitrate) < 0)
 		return -1;
