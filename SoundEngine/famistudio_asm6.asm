@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (2.2.0)
+; FAMISTUDIO SOUND ENGINE (2.3.0)
 ;
 ; This is the FamiStudio sound engine. It is used by the NSF and ROM exporter of FamiStudio and can be used to make 
 ; games. It supports every feature from FamiStudio, some of them are toggeable to save CPU/memory.
@@ -1908,89 +1908,84 @@ famistudio_update_s5b_channel_sound:
 
 .endif
 
+
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_ROW (internal)
 ;
-; Macro to advance the song for a given channel. Will read any new note or effect (if any) and load any new 
-; instrument (if any).
-;======================================================================================================================
-
-.macro famistudio_update_row channel_idx, env_idx
-
-    ldx #channel_idx
-    jsr famistudio_channel_update
-    bcc no_new_note
-    ldx #env_idx
-    ldy #channel_idx
-    lda famistudio_chn_instrument+channel_idx
-
-.if FAMISTUDIO_EXP_FDS && channel_idx >= 5
-    jsr famistudio_set_fds_instrument
-.endif
-.if FAMISTUDIO_EXP_VRC7 && channel_idx >= 5
-    jsr famistudio_set_vrc7_instrument
-.endif
-.if FAMISTUDIO_EXP_N163 && channel_idx >= 5
-    jsr famistudio_set_n163_instrument
-.endif
-.if ((!FAMISTUDIO_EXP_FDS) && (!FAMISTUDIO_EXP_VRC7) && (!FAMISTUDIO_EXP_N163)) || (channel_idx < 5)
-    jsr famistudio_set_instrument
-.endif
-
-.if FAMISTUDIO_CFG_EQUALIZER
-    new_note:
-        ldx #channel_idx
-        lda #8
-        sta famistudio_chn_note_counter, x
-        jmp done
-    no_new_note:
-        ldx #channel_idx
-        lda famistudio_chn_note_counter, x
-        beq done
-        dec famistudio_chn_note_counter, x
-    done:    
-.else
-    no_new_note:
-.endif
-
-.endm
-
-;======================================================================================================================
-; FAMISTUDIO_UPDATE_ROW_DPCM (internal)
+; Advance the song for a given channel. Will read any new note or effect (if any) and load any new 
 ;
-; Special version for DPCM.
+; [in] x: channel index (also true when leaving the function)
 ;======================================================================================================================
 
-.macro famistudio_update_row_dpcm channel_idx
-.if FAMISTUDIO_CFG_DPCM_SUPPORT
-    ldx #channel_idx
-    jsr famistudio_channel_update
-    bcc no_new_note
-    lda famistudio_chn_note+channel_idx
-    bne play_sample
-    jsr famistudio_sample_stop
-    bne no_new_note
-play_sample:
-    jsr famistudio_music_sample_play
+famistudio_update_row:
 
-.if FAMISTUDIO_CFG_EQUALIZER
-    new_note:
-        ldx #channel_idx
+.if !FAMISTUDIO_CFG_DPCM_SUPPORT
+    cpx #4
+    beq @no_new_note
+.endif
+
+    jsr famistudio_channel_update
+    bcc @no_new_note
+
+    txa
+    tay
+    ldx famistudio_channel_env,y
+    lda famistudio_chn_instrument,y
+
+    ; TODO: If samples are disabled, there is no point in doing this test most of the time.
+    cpy #4
+.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_S5B
+    bne @base_instrument
+.else
+    bcc @base_instrument
+.endif
+.if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163
+    beq @dpcm
+    .if FAMISTUDIO_EXP_FDS
+        jsr famistudio_set_fds_instrument
+        jmp @new_note
+    .endif
+    .if FAMISTUDIO_EXP_VRC7
+        jsr famistudio_set_vrc7_instrument
+        jmp @new_note
+    .endif
+    .if FAMISTUDIO_EXP_N163
+        jsr famistudio_set_n163_instrument
+        jmp @new_note
+    .endif
+.endif
+
+    @dpcm:
+.if FAMISTUDIO_CFG_DPCM_SUPPORT    
+        lda famistudio_chn_note+4
+        bne @play_sample
+        jsr famistudio_sample_stop
+        bne @no_new_note
+        @play_sample:
+            jsr famistudio_music_sample_play
+            ldx #4
+            jmp @new_note
+.endif
+
+    @base_instrument:
+        jsr famistudio_set_instrument
+
+.if FAMISTUDIO_CFG_EQUALIZER 
+    @new_note:
         lda #8
         sta famistudio_chn_note_counter, x
-        jmp done
-    no_new_note:
-        ldx #channel_idx
+        jmp @done
+    @no_new_note:
         lda famistudio_chn_note_counter, x
-        beq done
+        beq @done
         dec famistudio_chn_note_counter, x
-    done:    
+    @done:    
 .else
-    no_new_note:
+    @new_note:
+    @no_new_note:
 .endif
 
-.endif
-.endm
+    rts
 
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE (public)
@@ -2085,69 +2080,12 @@ famistudio_update:
 
 .endif
 
-    ; TODO: Turn most of these in loops, no reasons to be macros.
-    famistudio_update_row 0, FAMISTUDIO_CH0_ENVS
-    famistudio_update_row 1, FAMISTUDIO_CH1_ENVS
-    famistudio_update_row 2, FAMISTUDIO_CH2_ENVS
-    famistudio_update_row 3, FAMISTUDIO_CH3_ENVS
-    famistudio_update_row_dpcm 4
-
-.if FAMISTUDIO_EXP_VRC6
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
-    famistudio_update_row 6, FAMISTUDIO_CH6_ENVS
-    famistudio_update_row 7, FAMISTUDIO_CH7_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_VRC7
-    famistudio_update_row  5, FAMISTUDIO_CH5_ENVS
-    famistudio_update_row  6, FAMISTUDIO_CH6_ENVS
-    famistudio_update_row  7, FAMISTUDIO_CH7_ENVS
-    famistudio_update_row  8, FAMISTUDIO_CH8_ENVS
-    famistudio_update_row  9, FAMISTUDIO_CH9_ENVS
-    famistudio_update_row 10, FAMISTUDIO_CH10_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_FDS
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_MMC5
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
-    famistudio_update_row 6, FAMISTUDIO_CH6_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_S5B
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
-    famistudio_update_row 6, FAMISTUDIO_CH6_ENVS
-    famistudio_update_row 7, FAMISTUDIO_CH7_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_N163
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 1
-        famistudio_update_row  5, FAMISTUDIO_CH5_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 2
-        famistudio_update_row  6, FAMISTUDIO_CH6_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 3
-        famistudio_update_row  7, FAMISTUDIO_CH7_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 4
-        famistudio_update_row  8, FAMISTUDIO_CH8_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 5
-        famistudio_update_row  9, FAMISTUDIO_CH9_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 6
-        famistudio_update_row 10, FAMISTUDIO_CH10_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 7
-        famistudio_update_row 11, FAMISTUDIO_CH11_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 8
-        famistudio_update_row 12, FAMISTUDIO_CH12_ENVS
-    .endif
-.endif
+    ldx #0
+    @channel_loop:
+        jsr famistudio_update_row
+        inx
+        cpx #FAMISTUDIO_NUM_CHANNELS
+        bne @channel_loop
 
 ;----------------------------------------------------------------------------------------------------------------------
 @update_envelopes:
@@ -2582,6 +2520,7 @@ famistudio_set_instrument:
     lda (intrument_ptr),y
     sta famistudio_pitch_env_addr_hi,x
     @no_pitch:
+    ldx chan_idx
     rts
 
 .if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7
@@ -2678,6 +2617,7 @@ famistudio_set_instrument:
     iny
 
 @pitch_overriden:
+    ldx chan_idx
 .endm
 
 .endif
@@ -2728,6 +2668,7 @@ famistudio_set_vrc7_instrument:
         bne @read_patch_loop
 
     @done:
+    ldx chan_idx
     rts
 .endif
 
@@ -2853,6 +2794,7 @@ famistudio_set_fds_instrument:
                 lda (ptr),y
                 sta famistudio_fds_mod_delay
 
+    ldx #5
     rts
 .endif
 
@@ -2883,8 +2825,8 @@ famistudio_set_n163_instrument:
     ptr      = famistudio_ptr0
     wave_ptr = famistudio_ptr1
     wave_len = famistudio_r0
-    wave_pos = famistudio_r1
     chan_idx = famistudio_r1
+    wave_pos = famistudio_r2
 
     famistudio_set_exp_instrument
 
@@ -2935,6 +2877,7 @@ famistudio_set_n163_instrument:
         bne @wave_loop
 
     @done:
+    ldx chan_idx
     rts
 
 .endif
@@ -4109,6 +4052,7 @@ famistudio_n163_note_table_lsb:
 .endif
 
 ; For a given channel, returns the index of the volume envelope.
+famistudio_channel_env:
 famistudio_channel_to_volume_env:
     .byte FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .byte FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
