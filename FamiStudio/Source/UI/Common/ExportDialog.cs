@@ -56,7 +56,7 @@ namespace FamiStudio
         public unsafe ExportDialog(Rectangle mainWinRect, Project project)
         {
             int width  = 550;
-            int height = 450;
+            int height = 520;
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
             int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
 
