@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -79,14 +80,20 @@ namespace FamiStudio
 
             if (MidiDevice == null)
                 MidiDevice = "";
-            if (!Directory.Exists(LastFileFolder))
-                LastFileFolder = "";
             if (!Directory.Exists(LastInstrumentFolder))
                 LastInstrumentFolder = "";
             if (!Directory.Exists(LastSampleFolder))
                 LastSampleFolder = "";
             if (!Directory.Exists(LastExportFolder))
                 LastExportFolder = "";
+
+            // Try to point to the demo songs initially.
+            if (!Directory.Exists(LastFileFolder) || string.IsNullOrEmpty(LastFileFolder))
+            {
+                var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var demoSongsPath = Path.Combine(appPath, "Demo Songs");
+                LastFileFolder = Directory.Exists(demoSongsPath) ? demoSongsPath : "";
+            }
 
             // No deprecation at the moment.
             Version = SettingsVersion;
