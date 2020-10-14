@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace FamiStudio
@@ -124,6 +125,14 @@ namespace FamiStudio
         public static int[] GetFactors(int n)
         {
             return GetFactors(n, n);
+        }
+
+        public static string AddFileSuffix(string filename, string suffix)
+        {
+            var extension = Path.GetExtension(filename);
+            var filenameNoExtension = filename.Substring(0, filename.Length - extension.Length);
+
+            return filenameNoExtension + suffix + extension;
         }
     }
 }

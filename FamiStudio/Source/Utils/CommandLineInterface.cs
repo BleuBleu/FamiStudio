@@ -140,6 +140,7 @@ namespace FamiStudio
             Console.WriteLine($"");
             Console.WriteLine($"Supported commands and corresponding output format(s):");
             Console.WriteLine($"  wav-export : Export to a WAV file (*.wav).");
+            Console.WriteLine($"  mp3-export : Export to a WAV file (*.mp3).");
             Console.WriteLine($"  nsf-export : Export to a NSF file (*.nsf).");
             Console.WriteLine($"  rom-export : Export to a NES ROM file (.nes).");
             Console.WriteLine($"  fds-export : Export to a FDS disk file (.fds).");
@@ -165,6 +166,15 @@ namespace FamiStudio
             Console.WriteLine($"  -wav-export-duration:<duration> : Duration in second, 0 plays song once and stop (default:0).");
             Console.WriteLine($"  -wav-export-loop:<count> : Number of times to play the song (default:1).");
             Console.WriteLine($"  -wav-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");
+            Console.WriteLine($"  -wav-export-separate-channels : Export each channels to separate file (default:off).");
+            Console.WriteLine($"");
+            Console.WriteLine($"WAV export specific options");
+            Console.WriteLine($"  -mp3-export-rate:<rate> : Sample rate of the exported mp3 : 44100 or 48000 (default:44100).");
+            Console.WriteLine($"  -mp3-export-bitrate:<rate> : Bitrate of the exported mp3 : 96, 112, 128, 160, 192, 224, 256 or 320 (default:192).");
+            Console.WriteLine($"  -mp3-export-duration:<duration> : Duration in second, 0 plays song once and stop (default:0).");
+            Console.WriteLine($"  -mp3-export-loop:<count> : Number of times to play the song (default:1).");
+            Console.WriteLine($"  -mp3-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");
+            Console.WriteLine($"  -mp3-export-separate-channels : Export each channels to separate file (default:off).");
             Console.WriteLine($"");
             Console.WriteLine($"NSF export specific options");
             Console.WriteLine($"  -nsf-export-mode:<mode> : Target machine: ntsc or pal (default:project mode).");
@@ -282,16 +292,20 @@ namespace FamiStudio
             return songIds;
         }
 
-        private void WavExport(string filename)
+        private void WavMp3Export(string filename, bool mp3)
         {
-            if (!ValidateExtension(filename, ".wav"))
+            var extension = mp3 ? "mp3" : "wav";
+
+            if (!ValidateExtension(filename, "." + extension))
                 return;
 
             var songIndex  = ParseOption("export-song", 0);
-            var sampleRate = ParseOption("wav-export-rate", 44100);
-            var loopCount  = ParseOption("wav-export-loop", 1);
-            var duration   = ParseOption("wav-export-duration", 0);
-            var mask       = ParseOption("wav-export-channels", 0xff, true);
+            var sampleRate = ParseOption($"{extension}-export-rate", 44100);
+            var loopCount  = ParseOption($"{extension}-export-loop", 1);
+            var duration   = ParseOption($"{extension}-export-duration", 0);
+            var mask       = ParseOption($"{extension}-export-channels", 0xff, true);
+            var separate   = HasOption($"{extension}-export-separate-channels");
+            var bitrate    = ParseOption($"{extension}-export-bitrate", 192);
             var song       = GetProjectSong(songIndex);
 
             if (duration > 0)
@@ -300,7 +314,30 @@ namespace FamiStudio
                 loopCount = Math.Max(1, loopCount);
 
             if (song != null)
-                WaveFile.Save(song, filename, sampleRate, loopCount, duration, mask);
+            {
+                if (separate)
+                {
+                    for (int i = 0; i < song.Channels.Length; i++)
+                    {
+                        if ((mask & (1 << i)) != 0)
+                        {
+                            var channelFilename = Utils.AddFileSuffix(filename, "_" + song.Channels[i].ExportName);
+
+                            if (mp3)
+                                Mp3File.Save(song, channelFilename, sampleRate, bitrate, loopCount, duration, 1 << i);
+                            else
+                                WaveFile.Save(song, channelFilename, sampleRate, loopCount, duration, 1 << i);
+                        }
+                    }
+                }
+                else
+                {
+                    if (mp3)
+                        Mp3File.Save(song, filename, sampleRate, bitrate, loopCount, duration, mask);
+                    else
+                        WaveFile.Save(song, filename, sampleRate, loopCount, duration, mask);
+                }
+            }
         }
 
         private void NsfExport(string filename)
@@ -525,7 +562,8 @@ namespace FamiStudio
 
                         switch (args[1].ToLower().Trim())
                         {
-                            case "wav-export": WavExport(outputFilename); break;
+                            case "wav-export": WavMp3Export(outputFilename, false); break;
+                            case "mp3-export": WavMp3Export(outputFilename, true); break;
                             case "nsf-export": NsfExport(outputFilename); break;
                             case "rom-export": RomExport(outputFilename); break;
                             case "fds-export": FdsExport(outputFilename); break;

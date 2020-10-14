@@ -55,8 +55,8 @@ namespace FamiStudio
 
         public unsafe ExportDialog(Rectangle mainWinRect, Project project)
         {
-            int width  = 550;
-            int height = 520;
+            int width  = 600;
+            int height = 550;
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
             int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
 
@@ -110,7 +110,8 @@ namespace FamiStudio
                     page.AddStringList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
                     page.AddIntegerRange("Loop count:", 1, 1, 10); // 5
                     page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
-                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 7
+                    page.AddBoolean("Separate channel files", false); // 7
+                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 8
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
                     break;
@@ -217,19 +218,39 @@ namespace FamiStudio
                 var bitRate = Convert.ToInt32(props.GetPropertyValue<string>(3));
                 var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
                 var duration  = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
-                var selectedChannels = props.GetPropertyValue<bool[]>(7);
+                var separateFiles = props.GetPropertyValue<bool>(7);
+                var selectedChannels = props.GetPropertyValue<bool[]>(8);
+                var song = project.GetSong(songName);
 
-                var channelMask = 0;
-                for (int i = 0; i < selectedChannels.Length; i++)
+                if (separateFiles)
                 {
-                    if (selectedChannels[i])
-                        channelMask |= (1 << i);
-                }
+                    for (int i = 0; i < selectedChannels.Length; i++)
+                    {
+                        if (selectedChannels[i])
+                        {
+                            var channelFilename = Utils.AddFileSuffix(filename, "_" + song.Channels[i].ExportName);
 
-                if (format == "MP3")
-                    Mp3File.Save(project.GetSong(songName), filename, sampleRate, bitRate, loopCount, duration, channelMask);
+                            if (format == "MP3")
+                                Mp3File.Save(song, channelFilename, sampleRate, bitRate, loopCount, duration, 1 << i);
+                            else
+                                WaveFile.Save(song, channelFilename, sampleRate, loopCount, duration, 1 << i);
+                        }
+                    }
+                }
                 else
-                    WaveFile.Save(project.GetSong(songName), filename, sampleRate, loopCount, duration, channelMask);
+                {
+                    var channelMask = 0;
+                    for (int i = 0; i < selectedChannels.Length; i++)
+                    {
+                        if (selectedChannels[i])
+                            channelMask |= (1 << i);
+                    }
+
+                    if (format == "MP3")
+                        Mp3File.Save(song, filename, sampleRate, bitRate, loopCount, duration, channelMask);
+                    else
+                        WaveFile.Save(song, filename, sampleRate, loopCount, duration, channelMask);
+                }
             }
         }
 
