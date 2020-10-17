@@ -14,7 +14,8 @@ namespace FamiStudio
         // Version 5 = FamiStudio 2.0.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
         // Version 6 = FamiStudio 2.1.0 (PAL authoring machine)
         // Version 7 = FamiStudio 2.2.0 (Arpeggios)
-        public static int Version = 7;
+        // Version 8 = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
+        public static int Version = 8;
         public static int MaxSampleSize = 0x4000;
 
         public const int ExpansionNone    = 0;
