@@ -30,19 +30,58 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 2.3.0
 =====
 - Enhanced FamiTracker compatibility.
-	- Delayed notes
-	- Delayed cuts
-	- Vxx
+	- Delayed notes.
+	- Delayed cuts.
+	- Vxx.
 	- Tempo changes.
-/ Song merge (+ fix instrument import... very bad). 
+	- Groove calculator.
+	- Fix 1 frame missing in NSF
+	- Fix computation of slide notes in FamiTracker tempo mode.
+/ Song merge 
 	x Add unique ID validation.
+	x fix instrument import... very bad.
+	- Add logging so that people understand name conflicts, DPCM conflicts, etc.
 - Dont change scroll in pianoroll/sequencer when undoing + playing + follow to avoid jumps
+- Configure QWERTY keys for piano input.
 - Labels on notes in piano roll.
-- Warning when +16KB on samples on FTM.
+- Paste special : choose effects to paste.
 - Copy patterns to other channels.
-x Save as MP3
-	- Port to other platforms.
-	- Command line.
+- When we change tempo mode, need to delete speed + temp + delay + cut effects.
+x BUG: Missing notes in anime.ftm.
+- BUG: Validation errors in duplicate song.
+- Add message about VRC6 Saw volume.
+
+TESTING:
+- mp3/wav command line export.
+
+Delay notes
+===========
+- If there are both a delay + delayed cut, the note delay takes precedence, and the delayed cut starts counting from when the delayed note kicks it.
+	C-4
+	D-4 G08 S04
+- Every time we advance to the next note
+	- If there was a note delayed, it is played immediated if there arent any new note. If there is a new note the delayed note is played, then the new one. Making the delayed note inaudible (but it is applied).
+	- If there was a queued cut, it is aborted.
+- Delayed cuts can go for very long.
+	advance = update tempo
+	for each channel
+		if (advance || (has delayed note && delay == 0))
+			if (has delayed note)
+				advance row
+			advance row
+		
+x) Change NSF to loop over channels, no more macro shit. 
+2) In FamiTracker mode, advance check will need to be inside the loop.
+3) Convert to other assemblers.
+
+Vxx
+===
+- Overrides duty only if instrument has no duty cycle envelopes.
+- No effect at all if current instrument has an envelope.
+- When setting a new instrument, dont set duty cycle if is default and previous instrument had override duty.
+
+
+- *** RESIZE ALL NSF BINARIES, THEY GOT SMALLER!
 
 2.2.0 Release
 =============

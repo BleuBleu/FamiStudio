@@ -148,8 +148,7 @@ namespace FamiStudio
 
                 if (activeChannel >= 0)
                 {
-                    channelStates[activeChannel].UpdateEnvelopes();
-                    channelStates[activeChannel].UpdateAPU();
+                    channelStates[activeChannel].Update();
 
                     for (int i = 0; i < Envelope.Count; i++)
                         envelopeFrames[i] = channelStates[activeChannel].GetEnvelopeFrame(i);

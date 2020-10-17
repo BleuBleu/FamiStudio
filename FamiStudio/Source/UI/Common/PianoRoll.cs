@@ -592,6 +592,9 @@ namespace FamiStudio
             bmpEffects[Note.EffectSpeed] = g.CreateBitmapFromResource("SpeedSmall");
             bmpEffects[Note.EffectFdsModDepth] = g.CreateBitmapFromResource("ModSmall");
             bmpEffects[Note.EffectFdsModSpeed] = g.CreateBitmapFromResource("ModSmall");
+            bmpEffects[Note.EffectDutyCycle] = g.CreateBitmapFromResource("DutyCycleSmall");
+            bmpEffects[Note.EffectNoteDelay] = g.CreateBitmapFromResource("NoteDelaySmall");
+            bmpEffects[Note.EffectCutDelay] = g.CreateBitmapFromResource("CutDelaySmall");
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
             bmpSlide = g.CreateBitmapFromResource("Slide");

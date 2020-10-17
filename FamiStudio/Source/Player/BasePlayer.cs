@@ -152,17 +152,15 @@ namespace FamiStudio
         {
             foreach (var channel in channelStates)
             {
-                channel.Advance(song, playPattern, playNote, famitrackerSpeed, famitrackerNativeTempo);
-                channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
+                channel.Advance(song, playPattern, playNote, ref famitrackerSpeed, famitrackerNativeTempo);
             }
         }
 
-        protected void UpdateChannelsEnvelopesAndAPU()
+        protected void UpdateChannels()
         {
             foreach (var channel in channelStates)
             {
-                channel.UpdateEnvelopes();
-                channel.UpdateAPU();
+                channel.Update();
             }
         }
 
@@ -209,7 +207,7 @@ namespace FamiStudio
                         //Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
 
                         AdvanceChannels();
-                        UpdateChannelsEnvelopesAndAPU();
+                        UpdateChannels();
 
                         if (!AdvanceSong(song.Length, LoopMode.None))
                             return false;
@@ -220,7 +218,7 @@ namespace FamiStudio
             }
 
             AdvanceChannels();
-            UpdateChannelsEnvelopesAndAPU();
+            UpdateChannels();
             EndFrame();
 
             playPosition = song.GetPatternStartNote(playPattern) + playNote;
@@ -261,8 +259,7 @@ namespace FamiStudio
                 // Update envelopes + APU registers.
                 foreach (var channel in channelStates)
                 {
-                    channel.UpdateEnvelopes();
-                    channel.UpdateAPU();
+                    channel.Update();
                 }
             }
 

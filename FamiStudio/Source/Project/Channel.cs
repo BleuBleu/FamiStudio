@@ -14,6 +14,7 @@ namespace FamiStudio
 
         public int Type => type;
         public string Name => ChannelNames[(int)type];
+        public string ExportName => ChannelExportNames[(int)type];
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
@@ -185,6 +186,9 @@ namespace FamiStudio
                 case Note.EffectFdsModDepth: return type == FdsWave;
                 case Note.EffectFdsModSpeed: return type == FdsWave;
                 case Note.EffectSpeed: return song.UsesFamiTrackerTempo;
+                case Note.EffectDutyCycle: return type == Square1 || type == Square2 || type == Vrc6Square1 || type == Vrc6Square2 || type == Noise;
+                case Note.EffectNoteDelay: return song.UsesFamiTrackerTempo;
+                case Note.EffectCutDelay: return song.UsesFamiTrackerTempo;
             }
 
             return true;

@@ -324,6 +324,9 @@ namespace FamiStudio
                 case Effect_FdsModDepth:
                     pattern.GetOrCreateNoteAt(n).FdsModDepth = fx.param;
                     return;
+                case Effect_DutyCycle:
+                    pattern.GetOrCreateNoteAt(n).DutyCycle = fx.param;
+                    return;
                 case Effect_PortaUp:
                 case Effect_PortaDown:
                 case Effect_Portamento:

@@ -55,6 +55,9 @@ namespace FamiStudio
         private sbyte  FxFinePitch;
         private byte   FxFdsModDepth;
         private ushort FxFdsModSpeed;
+        private byte   FxDutyCycle;
+        private byte   FxNoteDelay;
+        private byte   FxCutDelay;
 
         // As of version 5 (FamiStudio 2.0.0), these are deprecated and are only kepth around
         // for migration.
@@ -87,6 +90,9 @@ namespace FamiStudio
                 FxFinePitch = 0;
                 FxFdsModDepth = 0;
                 FxFdsModSpeed = 0;
+                FxDutyCycle = 0;
+                FxNoteDelay = 0;
+                FxCutDelay = 0;
             }
         }
 
@@ -200,6 +206,24 @@ namespace FamiStudio
             set { Debug.Assert(value >= 0 && value <= 4096); FxFdsModSpeed = value; HasFdsModSpeed = true; }
         }
 
+        public byte DutyCycle
+        {
+            get { Debug.Assert(HasDutyCycle); return FxDutyCycle; }
+            set { Debug.Assert(value >= 0 && value <= 7); FxDutyCycle = value; HasDutyCycle = true; }
+        }
+
+        public byte NoteDelay
+        {
+            get { Debug.Assert(HasNoteDelay); return FxNoteDelay; }
+            set { Debug.Assert(value >= 0 && value <= 31); FxNoteDelay = value; HasNoteDelay = true; }
+        }
+
+        public byte CutDelay
+        {
+            get { Debug.Assert(HasCutDelay); return FxCutDelay; }
+            set { Debug.Assert(value >= 0 && value <= 31); FxCutDelay = value; HasCutDelay = true; }
+        }
+
         public bool HasVolume
         {
             get { return (EffectMask & EffectVolumeMask) != 0; }
@@ -234,6 +258,24 @@ namespace FamiStudio
         {
             get { return (EffectMask & EffectFdsModSpeedMask) != 0; }
             set { if (value) EffectMask |= EffectFdsModSpeedMask; else EffectMask = (ushort)(EffectMask & ~EffectFdsModSpeedMask); }
+        }
+
+        public bool HasDutyCycle
+        {
+            get { return (EffectMask & EffectDutyCycleMask) != 0; }
+            set { if (value) EffectMask |= EffectDutyCycleMask; else EffectMask = (ushort)(EffectMask & ~EffectDutyCycleMask); }
+        }
+
+        public bool HasNoteDelay
+        {
+            get { return (EffectMask & EffectNoteDelayMask) != 0; }
+            set { if (value) EffectMask |= EffectNoteDelayMask; else EffectMask = (ushort)(EffectMask & ~EffectNoteDelayMask); }
+        }
+
+        public bool HasCutDelay
+        {
+            get { return (EffectMask & EffectCutDelayMask) != 0; }
+            set { if (value) EffectMask |= EffectCutDelayMask; else EffectMask = (ushort)(EffectMask & ~EffectCutDelayMask); }
         }
 
         public bool HasAttack
@@ -368,6 +410,9 @@ namespace FamiStudio
             if ((EffectMask & EffectFinePitchMask)   != 0) buffer.Serialize(ref FxFinePitch);
             if ((EffectMask & EffectFdsModSpeedMask) != 0) buffer.Serialize(ref FxFdsModSpeed);
             if ((EffectMask & EffectFdsModDepthMask) != 0) buffer.Serialize(ref FxFdsModDepth);
+            if (buffer.Version >= 8 && (EffectMask & EffectDutyCycleMask) != 0) buffer.Serialize(ref FxDutyCycle);
+            if (buffer.Version >= 8 && (EffectMask & EffectNoteDelayMask) != 0) buffer.Serialize(ref FxNoteDelay);
+            if (buffer.Version >= 8 && (EffectMask & EffectCutDelayMask)  != 0) buffer.Serialize(ref FxCutDelay);
 
             // At version 7 (FamiStudio 2.2.0) we added support for arpeggios.
             if (buffer.Version >= 7)
@@ -386,17 +431,23 @@ namespace FamiStudio
             "Pitch",
             "Speed",
             "FDS Depth",
-            "FDS Speed"
+            "FDS Speed",
+            "Duty Cycle",
+            "Note Delay",
+            "Cut Delay"
         };
 
-        public const int EffectVolume       = 0;
-        public const int EffectVibratoSpeed = 1; // 4Xy
-        public const int EffectVibratoDepth = 2; // 4xY
-        public const int EffectFinePitch    = 3; // Pxx
-        public const int EffectSpeed        = 4; // Fxx
-        public const int EffectFdsModDepth  = 5; // Gxx
-        public const int EffectFdsModSpeed  = 6; // Ixx/Jxx
-        public const int EffectCount        = 7;
+        public const int EffectVolume       =  0;
+        public const int EffectVibratoSpeed =  1; // 4Xy
+        public const int EffectVibratoDepth =  2; // 4xY
+        public const int EffectFinePitch    =  3; // Pxx
+        public const int EffectSpeed        =  4; // Fxx
+        public const int EffectFdsModDepth  =  5; // Gxx
+        public const int EffectFdsModSpeed  =  6; // Ixx/Jxx
+        public const int EffectDutyCycle    =  7; // Vxx
+        public const int EffectNoteDelay    =  8; // Gxx
+        public const int EffectCutDelay     =  9; // Sxx
+        public const int EffectCount        = 10;
 
         public const int EffectVolumeMask       = (1 << EffectVolume);
         public const int EffectVibratoMask      = (1 << EffectVibratoSpeed) | (1 << EffectVibratoDepth);
@@ -404,6 +455,9 @@ namespace FamiStudio
         public const int EffectSpeedMask        = (1 << EffectSpeed);
         public const int EffectFdsModDepthMask  = (1 << EffectFdsModDepth);
         public const int EffectFdsModSpeedMask  = (1 << EffectFdsModSpeed);
+        public const int EffectDutyCycleMask    = (1 << EffectDutyCycle);
+        public const int EffectNoteDelayMask    = (1 << EffectNoteDelay);
+        public const int EffectCutDelayMask     = (1 << EffectCutDelay);
 
         public bool HasValidEffectValue(int fx)
         {
@@ -416,6 +470,9 @@ namespace FamiStudio
                 case EffectSpeed        : return HasSpeed;
                 case EffectFdsModDepth  : return HasFdsModDepth;
                 case EffectFdsModSpeed  : return HasFdsModSpeed;
+                case EffectDutyCycle    : return HasDutyCycle;
+                case EffectNoteDelay    : return HasNoteDelay;
+                case EffectCutDelay     : return HasCutDelay;
             }
 
             return false;
@@ -432,6 +489,9 @@ namespace FamiStudio
                 case EffectSpeed        : return Speed;
                 case EffectFdsModDepth  : return FdsModDepth;
                 case EffectFdsModSpeed  : return FdsModSpeed;
+                case EffectDutyCycle    : return DutyCycle;
+                case EffectNoteDelay    : return NoteDelay;
+                case EffectCutDelay     : return CutDelay;
             }
 
             return 0;
@@ -448,6 +508,9 @@ namespace FamiStudio
                 case EffectSpeed        : Speed        =   (byte)val; break;
                 case EffectFdsModDepth  : FdsModDepth  =   (byte)val; break;
                 case EffectFdsModSpeed  : FdsModSpeed  = (ushort)val; break;
+                case EffectDutyCycle    : DutyCycle    =   (byte)val; break;
+                case EffectNoteDelay    : NoteDelay    =   (byte)val; break;
+                case EffectCutDelay     : CutDelay     =   (byte)val; break;
             }
         }
         
@@ -462,6 +525,9 @@ namespace FamiStudio
                 case EffectSpeed        : HasSpeed       = false; break;
                 case EffectFdsModDepth  : HasFdsModDepth = false; break;
                 case EffectFdsModSpeed  : HasFdsModSpeed = false; break;
+                case EffectDutyCycle    : HasDutyCycle   = false; break;
+                case EffectNoteDelay    : HasNoteDelay   = false; break;
+                case EffectCutDelay     : HasCutDelay    = false; break;
             }
         }
 
@@ -491,6 +557,9 @@ namespace FamiStudio
                 case EffectSpeed        : return 31;
                 case EffectFdsModDepth  : return 63;
                 case EffectFdsModSpeed  : return 4095;
+                case EffectDutyCycle    : return song.Project.ExpansionAudio == Project.ExpansionVrc6 ? 7 : 3;
+                case EffectNoteDelay    : return 31;
+                case EffectCutDelay     : return 31;
             }
 
             return 0;

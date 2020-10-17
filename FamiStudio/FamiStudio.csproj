@@ -337,6 +337,8 @@
     <EmbeddedResource Include="Resources\CutDelaySmall.png" />
     <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />
     <EmbeddedResource Include="Resources\NoteDelaySmall.png" />
+    <EmbeddedResource Include="Resources\DutyCycleSmall%402x.png" />
+    <EmbeddedResource Include="Resources\DutyCycleSmall.png" />
     <EmbeddedResource Include="Resources\Follow%402x.png" />
     <EmbeddedResource Include="Resources\Follow.png" />
     <EmbeddedResource Include="Resources\YellowChecker.png" />
