@@ -1074,67 +1074,87 @@ namespace FamiStudio
 
             if (filename != null)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                var success = false;
-
-                if (filename.ToLower().EndsWith("fti"))
+                var log = new ListLogOutput();
+                using (var scopedLog = new ScopedLogOutput(log, LogSeverity.Warning))
                 {
-                    success = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
-                }
-                else
-                {
-                    Project instrumentProject = App.OpenProjectFile(filename, false);
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
-                    if (instrumentProject != null)
+                    var success = false;
+
+                    if (filename.ToLower().EndsWith("fti"))
                     {
-                        var instruments = new List<Instrument>();
-                        var instrumentNames = new List<string>();
+                        success = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
+                    }
+                    else
+                    {
+                        Project instrumentProject = App.OpenProjectFile(filename, false);
 
-                        foreach (var instrument in instrumentProject.Instruments)
+                        if (instrumentProject != null)
                         {
-                            if (instrument.ExpansionType == Project.ExpansionNone ||
-                                instrument.ExpansionType == App.Project.ExpansionAudio)
+                            var instruments = new List<Instrument>();
+                            var instrumentNames = new List<string>();
+
+                            foreach (var instrument in instrumentProject.Instruments)
                             {
-                                var instName = instrument.Name;
-
-                                if (instrument.ExpansionType != Project.ExpansionNone)
-                                    instName += $" ({Project.ExpansionShortNames[instrument.ExpansionType]})";
-
-                                instruments.Add(instrument);
-                                instrumentNames.Add(instName);
-                            }
-                        }
-
-                        var dlg = new PropertyDialog(300, ParentForm.Bounds);
-                        dlg.Properties.AddLabel(null, "Select instruments to import:");
-                        dlg.Properties.AddStringListMulti(null, instrumentNames.ToArray(), null);
-                        dlg.Properties.Build();
-
-                        if (dlg.ShowDialog() == DialogResult.OK)
-                        {
-                            var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-
-                            for (int i = 0; i < selected.Length; i++)
-                            {
-                                if (selected[i] && App.Project.GetInstrument(instruments[i].Name) == null)
+                                // MATTT : Message here.
+                                if (instrument.ExpansionType == Project.ExpansionNone ||
+                                    instrument.ExpansionType == App.Project.ExpansionAudio)
                                 {
-                                    App.Project.Instruments.Add(instruments[i]); // MATTT: This is SUPER WRONG.
+                                    var instName = instrument.Name;
+
+                                    if (instrument.ExpansionType != Project.ExpansionNone)
+                                        instName += $" ({Project.ExpansionShortNames[instrument.ExpansionType]})";
+
+                                    instruments.Add(instrument);
+                                    instrumentNames.Add(instName);
                                 }
                             }
 
-                            success = true;
+                            var dlg = new PropertyDialog(300, ParentForm.Bounds);
+                            dlg.Properties.AddLabel(null, "Select instruments to import:");
+                            dlg.Properties.AddStringListMulti(null, instrumentNames.ToArray(), null);
+                            dlg.Properties.Build();
+
+                            if (dlg.ShowDialog() == DialogResult.OK)
+                            {
+                                var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+
+                                for (int i = 0; i < selected.Length; i++)
+                                {
+                                    var inst = instruments[i];
+
+                                    if (selected[i])
+                                    {
+                                        if (App.Project.GetInstrument(inst.Name) == null)
+                                        {
+                                            // Change instrument id since it may overlap with an ID used in this project.
+                                            inst.ChangeId(App.Project.GenerateUniqueId());
+                                            App.Project.Instruments.Add(inst);
+                                        }
+                                        else
+                                        {
+                                            // MATTT : Message here.
+                                        }
+                                    }
+                                }
+
+                                success = true;
+                            }
                         }
                     }
+
+                    App.Project.SortInstruments();
+
+                    if (!success)
+                        App.UndoRedoManager.AbortTransaction();
+                    else
+                        App.UndoRedoManager.EndTransaction();
+
+                    if (!log.IsEmpty)
+                    {
+                        new LogDialog(log.Messages).ShowDialog(ParentForm);
+                    }
                 }
-
-                App.Project.SortInstruments();
-
-                if (!success)
-                    App.UndoRedoManager.AbortTransaction();
-                else
-                    App.UndoRedoManager.EndTransaction();
-
             }
 
             RefreshButtons();
