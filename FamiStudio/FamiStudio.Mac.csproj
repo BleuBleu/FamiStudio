@@ -293,6 +293,10 @@
     <Content Include="NotSoFatso.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\CutDelaySmall%402x.png" />
+    <EmbeddedResource Include="Resources\CutDelaySmall.png" />
+    <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />
+    <EmbeddedResource Include="Resources\NoteDelaySmall.png" />
     <EmbeddedResource Include="Resources\Follow%402x.png" />
     <EmbeddedResource Include="Resources\Follow.png" />
     <EmbeddedResource Include="Resources\YellowChecker.png" />
