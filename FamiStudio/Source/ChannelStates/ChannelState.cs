@@ -104,7 +104,6 @@ namespace FamiStudio
                 {
                     dutyEnvelope.Values[0] = (sbyte)newNote.DutyCycle;
                     envelopeIdx[Envelope.DutyCycle] = 0;
-                    dutyCycleEnvelopeOverride = true;
                 }
             }
         }
@@ -174,9 +173,8 @@ namespace FamiStudio
 
                     for (int j = 0; j < Envelope.Count; j++)
                     {
-                        if ((j != Envelope.Pitch     || !pitchEnvelopeOverride)    &&
-                            (j != Envelope.Arpeggio  || !arpeggioEnvelopeOverride) &&
-                            (j != Envelope.DutyCycle || !dutyCycleEnvelopeOverride))
+                        if ((j != Envelope.Pitch     || !pitchEnvelopeOverride) &&
+                            (j != Envelope.Arpeggio  || !arpeggioEnvelopeOverride))
                         {
                             if (j == Envelope.DutyCycle && dutyCycleEnvelopeOverride)
                                 envelopes[j] = dutyEnvelope;
