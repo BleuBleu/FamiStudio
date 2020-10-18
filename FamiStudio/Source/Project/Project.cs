@@ -330,7 +330,15 @@ namespace FamiStudio
             song.SerializeState(saveSerializer);
             var newSong = CreateSong();
             var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
+
+            // Remap the ID of the song + all patterns.
             loadSerializer.RemapId(song.Id, newSong.Id);
+            foreach (var channels in song.Channels)
+            {
+                foreach (var pattern in channels.Patterns)
+                    loadSerializer.RemapId(pattern.Id, GenerateUniqueId());
+            }
+
             newSong.SerializeState(loadSerializer);
 #if DEBUG
             Validate();

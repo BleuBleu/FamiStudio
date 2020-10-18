@@ -48,10 +48,12 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 - Copy patterns to other channels.
 - When we change tempo mode, need to delete speed + temp + delay + cut effects.
 x BUG: Missing notes in anime.ftm.
-- BUG: Validation errors in duplicate song.
-- Add message about VRC6 Saw volume.
+x BUG: Validation errors in duplicate song.
+x Add message about VRC6 Saw volume.
 
 TESTING:
+- Create famistudio unit tests from 2.2.1 (either through WAV or register player)
+- Add new unit test for Vxx, Famitracker tempo, etc.
 - mp3/wav command line export.
 
 Delay notes

@@ -798,7 +798,7 @@ namespace FamiStudio
 
             if (project.ExpansionAudio == Project.ExpansionVrc6)
             {
-                Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio uses the full volume range and ignores the duty cycle, the will need to the re-adjusted manually to sound the same.");
+                Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio uses the full volume range and ignores the duty cycle, they will need to the adjusted manually to sound the same.");
             }
 
             return true;
