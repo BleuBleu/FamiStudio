@@ -749,7 +749,13 @@ namespace FamiStudio
                     foreach (var kv in notesCopy)
                     {
                         var note = kv.Value;
+
+                        // These effects make no sense in FamiStudio tempo mode.
                         note.ClearEffectValue(Note.EffectSpeed);
+                      //note.ClearEffectValue(Note.EffectTempo); MATTT
+                        note.ClearEffectValue(Note.EffectNoteDelay);
+                        note.ClearEffectValue(Note.EffectCutDelay);
+
                         pattern.Notes[kv.Key * newNoteLength] = note;
                     }
 
