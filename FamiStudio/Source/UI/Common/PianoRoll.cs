@@ -1452,7 +1452,7 @@ namespace FamiStudio
             }
         }
 
-        private void RenderNote(RenderGraphics g, Channel channel, bool selected, Color color, Arpeggio arpeggio, int p0, int i0, Note n0, bool released, int p1, int i1)
+        private void RenderNote(RenderGraphics g, Channel channel, bool selected, bool activeChannel, Color color, Arpeggio arpeggio, int p0, int i0, Note n0, bool released, int p1, int i1)
         {
             int x = Song.GetPatternStartNote(p0, i0) * noteSizeX - scrollX;
             int y = virtualSizeY - n0.Value * noteSizeY - scrollY;
@@ -1489,7 +1489,7 @@ namespace FamiStudio
                 noteTextPosX += noteAttackSizeX + attackIconPosX;
             }
 
-            if (Settings.ShowNoteLabels && n0.IsMusical && sx > minNoteSizeForText)
+            if (activeChannel && Settings.ShowNoteLabels && n0.IsMusical && sx > minNoteSizeForText)
             {
                 g.DrawText(n0.FriendlyName, ThemeBase.FontSmall, noteTextPosX, noteTextPosY, theme.BlackBrush);
             }
@@ -1647,7 +1647,7 @@ namespace FamiStudio
                                         break;
 
                                     if (n0.IsValid && n1.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote || n0.IsArpeggio))
-                                        RenderNote(g, channel, selected, color, arpeggio, p0, i0, n0, released, p1, i1);
+                                        RenderNote(g, channel, selected, isActiveChannel, color, arpeggio, p0, i0, n0, released, p1, i1);
 
                                     if (n1.IsStop || n1.IsRelease)
                                     {
@@ -1701,7 +1701,7 @@ namespace FamiStudio
 
                             if (n0.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote || n0.IsArpeggio))
                             {
-                                RenderNote(g, channel, selected, color, arpeggio, p0, i0, n0, released, Math.Min(Song.Length, a.maxVisiblePattern + 1), 0);
+                                RenderNote(g, channel, selected, isActiveChannel, color, arpeggio, p0, i0, n0, released, Math.Min(Song.Length, a.maxVisiblePattern + 1), 0);
                             }
                         }
                     }

@@ -43,6 +43,7 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	- Add logging so that people understand name conflicts, DPCM conflicts, etc.
 - Dont change scroll in pianoroll/sequencer when undoing + playing + follow to avoid jumps
 - Copy patterns to other channels.
+- Custom delete (Shift + Delete)
 / When we change tempo mode, need to delete speed + temp + delay + cut effects. (Tempo missing)
 - P1: Configure QWERTY keys for piano input.
 x P1: Labels on notes in piano roll.
