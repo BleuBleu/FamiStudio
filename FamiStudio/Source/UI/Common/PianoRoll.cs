@@ -271,6 +271,11 @@ namespace FamiStudio
         // Arpeggio edit mode
         Arpeggio editArpeggio = null;
 
+        // Remembering last paste-special settings
+        bool lastPasteSpecialPasteMix = false;
+        bool lastPasteSpecialPasteNotes = true;
+        int  lastPasteSpecialPasteEffectMask = Note.EffectAllMask;
+
         private bool IsSnappingAllowed => editMode == EditionMode.Channel;
         private bool IsSnappingEnabled => IsSnappingAllowed && snap;
         
@@ -1245,7 +1250,7 @@ namespace FamiStudio
             DeleteSelectedNotes();
         }
 
-        private void ReplaceNotes(Note[] notes, int startFrameIdx, bool doTransaction, bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true, bool mix = false)
+        private void ReplaceNotes(Note[] notes, int startFrameIdx, bool doTransaction, bool pasteNotes = true, int pasteFxMask = Note.EffectAllMask, bool mix = false)
         {
             TransformNotes(startFrameIdx, startFrameIdx + notes.Length - 1, doTransaction, (note, idx) =>
             {
@@ -1269,40 +1274,13 @@ namespace FamiStudio
                         note.Arpeggio = channel.SupportsArpeggios  ? newNote.Arpeggio : null;
                     }
                 }
-                if (pasteVolume)
+
+                for (int i = 0; i < Note.EffectCount; i++)
                 {
-                    if (!mix || !note.HasVolume && newNote.HasVolume)
+                    if ((pasteFxMask & (1 << i)) != 0 && (!mix || !note.HasValidEffectValue(i) && newNote.HasValidEffectValue(i)))
                     {
-                        note.HasVolume = false;
-                        if (channel.SupportsEffect(Note.EffectVolume) && newNote.HasVolume) note.Volume = newNote.Volume;
-                    }
-                }
-                if (pasteFx)
-                {
-                    if (!mix || !note.HasSpeed && newNote.HasSpeed)
-                    {
-                        note.HasSpeed = false;
-                        if (channel.SupportsEffect(Note.EffectSpeed) && newNote.HasSpeed) note.Speed = newNote.Speed;
-                    }
-                    if (!mix || !note.HasFinePitch && newNote.HasFinePitch)
-                    {
-                        note.HasFinePitch = false;
-                        if (channel.SupportsEffect(Note.EffectFinePitch) && newNote.HasFinePitch) note.FinePitch = newNote.FinePitch;
-                    }
-                    if (!mix || !note.HasVibrato && newNote.HasVibrato)
-                    {
-                        note.HasVibrato = false;
-                        if (channel.SupportsEffect(Note.EffectVibratoDepth) && newNote.HasVibrato) note.RawVibrato = newNote.RawVibrato;
-                    }
-                    if (!mix || !note.HasFdsModSpeed && newNote.HasFdsModSpeed)
-                    {
-                        note.HasFdsModSpeed = false;
-                        if (channel.SupportsEffect(Note.EffectFdsModSpeed) && newNote.HasFdsModSpeed) note.FdsModSpeed = newNote.FdsModSpeed;
-                    }
-                    if (!mix || !note.HasFdsModDepth && newNote.HasFdsModDepth)
-                    {
-                        note.HasFdsModDepth = false;
-                        if (channel.SupportsEffect(Note.EffectFdsModDepth) && newNote.HasFdsModDepth) note.FdsModDepth = newNote.FdsModDepth;
+                        note.ClearEffectValue(i);
+                        if (channel.SupportsEffect(i) && newNote.HasValidEffectValue(i)) note.SetEffectValue(i, newNote.GetEffectValue(i));
                     }
                 }
 
@@ -1312,7 +1290,7 @@ namespace FamiStudio
             SetSelection(startFrameIdx, startFrameIdx + notes.Length - 1);
         }
 
-        private void PasteNotes(bool pasteNotes = true, bool pasteVolume = true, bool pasteFx = true, bool mix = false)
+        private void PasteNotes(bool pasteNotes = true, int pasteFxMask = Note.EffectAllMask, bool mix = false)
         {
             if (!IsSelectionValid())
                 return;
@@ -1341,7 +1319,7 @@ namespace FamiStudio
                 return;
             }
 
-            ReplaceNotes(notes, selectionFrameMin, false, pasteNotes, pasteVolume, pasteFx, mix);
+            ReplaceNotes(notes, selectionFrameMin, false, pasteNotes, pasteFxMask, mix);
             NotesPasted?.Invoke();
             App.UndoRedoManager.EndTransaction();
         }
@@ -1428,10 +1406,16 @@ namespace FamiStudio
             {
                 AbortCaptureOperation();
 
-                var dlg = new PasteSpecialDialog(App.MainWindowBounds);
+                var dlg = new PasteSpecialDialog(Song.Channels[editChannel], App.MainWindowBounds, lastPasteSpecialPasteMix, lastPasteSpecialPasteNotes, lastPasteSpecialPasteEffectMask);
 
                 if (dlg.ShowDialog() == DialogResult.OK)
-                    PasteNotes(dlg.PasteNotes, dlg.PasteVolumes, dlg.PasteEffects, dlg.PasteMix);
+                {
+                    PasteNotes(dlg.PasteNotes, dlg.PasteEffectMask, dlg.PasteMix);
+
+                    lastPasteSpecialPasteMix = dlg.PasteMix;
+                    lastPasteSpecialPasteNotes = dlg.PasteNotes;
+                    lastPasteSpecialPasteEffectMask = dlg.PasteEffectMask;
+                }
             }
         }
 

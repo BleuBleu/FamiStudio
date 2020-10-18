@@ -459,6 +459,8 @@ namespace FamiStudio
         public const int EffectNoteDelayMask    = (1 << EffectNoteDelay);
         public const int EffectCutDelayMask     = (1 << EffectCutDelay);
 
+        public const int EffectAllMask          = 0x3ff; // Must be updated every time a new effect is added.
+
         public bool HasValidEffectValue(int fx)
         {
             switch (fx)

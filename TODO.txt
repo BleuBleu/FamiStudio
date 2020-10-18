@@ -42,14 +42,18 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	x fix instrument import... very bad.
 	- Add logging so that people understand name conflicts, DPCM conflicts, etc.
 - Dont change scroll in pianoroll/sequencer when undoing + playing + follow to avoid jumps
-- Configure QWERTY keys for piano input.
-- Labels on notes in piano roll.
-- Paste special : choose effects to paste.
+x Paste special : choose effects to paste.
+	x Remember last settings.
+	- Test pasting effects that are unsupported
+	- Test hi-dpi + linux + mac.
 - Copy patterns to other channels.
-- When we change tempo mode, need to delete speed + temp + delay + cut effects.
+/ When we change tempo mode, need to delete speed + temp + delay + cut effects. (Tempo missing)
 x BUG: Missing notes in anime.ftm.
 x BUG: Validation errors in duplicate song.
 x Add message about VRC6 Saw volume.
+
+- P1: Configure QWERTY keys for piano input.
+- P1: Labels on notes in piano roll.
 
 TESTING:
 - Create famistudio unit tests from 2.2.1 (either through WAV or register player)

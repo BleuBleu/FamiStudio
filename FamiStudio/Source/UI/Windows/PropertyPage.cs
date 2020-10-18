@@ -31,6 +31,7 @@ namespace FamiStudio
             public PropertyType type;
             public Label label;
             public Control control;
+            public int leftMarging;
         };
 
         private int layoutHeight;
@@ -402,13 +403,14 @@ namespace FamiStudio
                 });
         }
 
-        public void AddLabelBoolean(string label, bool value)
+        public void AddLabelBoolean(string label, bool value, int margin = 0)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    control = CreateCheckBox(value, label)
+                    control = CreateCheckBox(value, label),
+                    leftMarging = margin
                 });
         }
 
@@ -485,6 +487,18 @@ namespace FamiStudio
             return (T)GetPropertyValue(idx);
         }
 
+        public void SetPropertyValue(int idx, object value)
+        {
+            var prop = properties[idx];
+
+            switch (prop.type)
+            {
+                case PropertyType.Boolean:
+                    (prop.control as CheckBox).Checked = (bool)value;
+                    break;
+            }
+        }
+        
         public void Build()
         {
             SuspendLayout();
@@ -549,7 +563,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    prop.control.Left  = margin;
+                    prop.control.Left  = margin + prop.leftMarging;
                     prop.control.Top   = totalHeight;
                     prop.control.Width = widthNoMargin;
 
