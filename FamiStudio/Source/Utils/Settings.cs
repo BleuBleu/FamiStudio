@@ -34,6 +34,7 @@ namespace FamiStudio
         public static int FollowMode = 0;
         public static int FollowSync = 0;
         public static bool ShowTutorial = true;
+        public static bool ShowNoteLabels = true;
 
         // Audio section
         public static int InstrumentStopTime = 2;
@@ -61,6 +62,7 @@ namespace FamiStudio
             FollowMode = ini.GetInt("UI", "FollowMode", FollowModeContinuous);
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
             CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
+            ShowNoteLabels = ini.GetBool("UI", "ShowNoteLabels", true);
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
@@ -110,6 +112,7 @@ namespace FamiStudio
             ini.SetInt("UI", "FollowMode", FollowMode);
             ini.SetInt("UI", "FollowSync", FollowSync);
             ini.SetBool("UI", "CheckUpdates", CheckUpdates);
+            ini.SetBool("UI", "ShowNoteLabels", ShowNoteLabels);
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetBool("UI", "TrackPadControls", TrackPadControls);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);

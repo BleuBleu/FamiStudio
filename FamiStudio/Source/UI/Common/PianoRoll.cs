@@ -69,8 +69,9 @@ namespace FamiStudio
         const int DefaultDPCMTextPosY = 0;
         const int DefaultOctaveNameOffsetY = 11;
         const int DefaultRecordingKeyOffsetY = 12;
-        const int DefaultSlideIconPosX = 2;
-        const int DefaultSlideIconPosY = 2;
+        const int DefaultAttackIconPosX = 2;
+        const int DefaultNoteTextPosY = 1;
+        const int DefaultMinNoteSizeForText = 24;
 
         int numNotes;
         int numOctaves;
@@ -108,8 +109,9 @@ namespace FamiStudio
         int octaveSizeY;
         int virtualSizeY;
         int barSizeX;
-        int slideIconPosX;
-        int slideIconPosY;
+        int attackIconPosX;
+        int noteTextPosY;
+        int minNoteSizeForText;
         float envelopeSizeY;
 
         int ScaleForZoom(int value)
@@ -332,8 +334,9 @@ namespace FamiStudio
             dpcmTextPosY              = (int)(DefaultDPCMTextPosY * scaling);
             octaveNameOffsetY         = (int)(DefaultOctaveNameOffsetY * scaling);
             recordingKeyOffsetY       = (int)(DefaultRecordingKeyOffsetY * scaling);
-            slideIconPosX             = (int)(DefaultSlideIconPosX * scaling);
-            slideIconPosY             = (int)(DefaultSlideIconPosY * scaling);
+            attackIconPosX            = (int)(DefaultAttackIconPosX * scaling);
+            noteTextPosY              = (int)(DefaultNoteTextPosY * scaling);
+            minNoteSizeForText        = (int)(DefaultMinNoteSizeForText * scaling);
             envelopeSizeY             = DefaultEnvelopeSizeY * envelopeValueZoom * scaling;    
             octaveSizeY               = 12 * noteSizeY;
             numNotes                  = numOctaves * 12;
@@ -1466,15 +1469,20 @@ namespace FamiStudio
 
             int noteLen = Song.GetPatternStartNote(p1, i1) - Song.GetPatternStartNote(p0, i0);
             int sx = noteLen * noteSizeX;
-            int iconX = slideIconPosX;
+            int noteTextPosX = attackIconPosX;
 
             g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
             g.DrawRectangle(0, 0, sx, sy, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
 
             if (n0.HasAttack && sx > noteAttackSizeX + 4)
             {
-                g.FillRectangle(slideIconPosX, slideIconPosX, slideIconPosX + noteAttackSizeX, sy - slideIconPosX + 1, attackBrush);
-                iconX += noteAttackSizeX + slideIconPosX;
+                g.FillRectangle(attackIconPosX, attackIconPosX, attackIconPosX + noteAttackSizeX, sy - attackIconPosX + 1, attackBrush);
+                noteTextPosX += noteAttackSizeX + attackIconPosX;
+            }
+
+            if (Settings.ShowNoteLabels && n0.IsMusical && sx > minNoteSizeForText)
+            {
+                g.DrawText(n0.FriendlyName, ThemeBase.FontSmall, noteTextPosX, noteTextPosY, theme.BlackBrush);
             }
 
             if (arpeggio != null)

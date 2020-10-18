@@ -45,7 +45,7 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 x Paste special : choose effects to paste.
 	x Remember last settings.
 	- Test pasting effects that are unsupported
-	- Test hi-dpi + linux + mac.
+	/ Test hi-dpi + linux + mac.
 - Copy patterns to other channels.
 / When we change tempo mode, need to delete speed + temp + delay + cut effects. (Tempo missing)
 x BUG: Missing notes in anime.ftm.
@@ -53,7 +53,7 @@ x BUG: Validation errors in duplicate song.
 x Add message about VRC6 Saw volume.
 
 - P1: Configure QWERTY keys for piano input.
-- P1: Labels on notes in piano roll.
+x P1: Labels on notes in piano roll.
 
 TESTING:
 - Create famistudio unit tests from 2.2.1 (either through WAV or register player)
