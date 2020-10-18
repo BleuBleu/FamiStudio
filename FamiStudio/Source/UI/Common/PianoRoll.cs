@@ -1432,6 +1432,19 @@ namespace FamiStudio
             }
         }
 
+        public void DeleteSpecial()
+        {
+            if (editMode == EditionMode.Channel)
+            {
+                AbortCaptureOperation();
+
+                var dlg = new DeleteSpecialDialog(Song.Channels[editChannel], App.MainWindowBounds);
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    DeleteSelectedNotes(true, dlg.DeleteNotes, dlg.DeleteEffectMask);
+            }
+        }
+
         private bool IsNoteSelected(int patternIdx, int noteIdx)
         {
             int absoluteNoteIdx = Song.GetPatternStartNote(patternIdx, noteIdx);
@@ -2348,12 +2361,28 @@ namespace FamiStudio
                 ReplaceEnvelopeValues(GetSelectedEnvelopeValues(), selectionFrameMin + amount);
         }
         
-        private void DeleteSelectedNotes(bool doTransaction = true)
+        private void DeleteSelectedNotes(bool doTransaction = true, bool deleteNotes = true, int deleteEffectsMask = Note.EffectAllMask)
         {
             TransformNotes(selectionFrameMin, selectionFrameMax, doTransaction, (note, idx) =>
             {
                 if (note != null)
-                    note.Clear(false);
+                {
+                    if (deleteNotes && deleteEffectsMask == Note.EffectAllMask)
+                    {
+                        note.Clear(false);
+                    }
+                    else
+                    {
+                        if (deleteNotes)
+                            note.Clear(true);
+
+                        for (int i = 0; i < Note.EffectCount; i++)
+                        {
+                            if ((deleteEffectsMask & (1 << i)) != 0)
+                                note.ClearEffectValue(i);
+                        }
+                    }
+                }
                 return note;
             });
         }
@@ -2420,9 +2449,16 @@ namespace FamiStudio
                 if (e.KeyCode == Keys.Delete)
                 {
                     if (editMode == EditionMode.Channel)
-                        DeleteSelectedNotes();
+                    {
+                        if (ctrl && shift)
+                            DeleteSpecial();
+                        else
+                            DeleteSelectedNotes();
+                    }
                     else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+                    {
                         DeleteSelectedEnvelopeValues();
+                    }
                 }
 
                 if (editMode == EditionMode.Channel)

@@ -97,6 +97,7 @@
     <Compile Include="Source\Player\RegisterPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
+    <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
