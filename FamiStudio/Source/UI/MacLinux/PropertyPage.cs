@@ -26,6 +26,7 @@ namespace FamiStudio
             public PropertyType type;
             public Label label;
             public Widget control;
+            public int leftMargin;
         };
 
         private object userData;
@@ -300,13 +301,14 @@ namespace FamiStudio
                 });
         }
 
-        public void AddLabelBoolean(string label, bool value)
+        public void AddLabelBoolean(string label, bool value, int margin = 0)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    control = CreateCheckBox(value, label)
+                    control = CreateCheckBox(value, label),
+                    leftMargin = margin
                 });
         }
 
@@ -442,6 +444,19 @@ namespace FamiStudio
             return (T)GetPropertyValue(idx);
         }
 
+
+        public void SetPropertyValue(int idx, object value)
+        {
+            var prop = properties[idx];
+
+            switch (prop.type)
+            {
+                case PropertyType.Boolean:
+                    (prop.control as CheckButton).Active = (bool)value;
+                    break;
+            }
+        }
+
         public void Build()
         {
             Resize((uint)properties.Count, 2);
@@ -467,7 +482,9 @@ namespace FamiStudio
                     if (prop.control is ColorSelector img)
                         img.DesiredWidth = Toplevel.WidthRequest - 10; // (10 = Border * 2)
 
-                    Attach(prop.control, 0, 2, (uint)i, (uint)(i + 1));
+
+
+                    Attach(prop.control, 0, 2, (uint)i, (uint)(i + 1), AttachOptions.Expand | AttachOptions.Fill, AttachOptions.Expand | AttachOptions.Fill, (uint)prop.leftMargin, 0);
                     prop.control.Show();
                 }
             }
