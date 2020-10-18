@@ -55,9 +55,9 @@ namespace FamiStudio
         public unsafe ConfigDialog(Rectangle mainWinRect)
         {
 #if FAMISTUDIO_LINUX
-            int width  = 550;
+            int width  = 570;
 #else
-            int width  = 530;
+            int width  = 550;
 #endif
             int height = 350;
             int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;

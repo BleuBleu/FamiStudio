@@ -1293,7 +1293,7 @@ namespace FamiStudio
             SetSelection(startFrameIdx, startFrameIdx + notes.Length - 1);
         }
 
-        private void PasteNotes(bool pasteNotes = true, int pasteFxMask = Note.EffectAllMask, bool mix = false)
+        private void PasteNotes(bool pasteNotes = true, int pasteFxMask = Note.EffectAllMask, bool mix = false, int repeat = 1)
         {
             if (!IsSelectionValid())
                 return;
@@ -1314,15 +1314,25 @@ namespace FamiStudio
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios  || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
 
-            var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument, createMissingArpeggios, createMissingSamples);
-
-            if (notes == null)
+            for (int i = 0; i < repeat; i++)
             {
-                App.UndoRedoManager.AbortTransaction();
-                return;
+                var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument, createMissingArpeggios, createMissingSamples);
+
+                if (notes == null)
+                {
+                    App.UndoRedoManager.AbortTransaction();
+                    return;
+                }
+
+                ReplaceNotes(notes, selectionFrameMin, false, pasteNotes, pasteFxMask, mix);
+
+                if (i != repeat - 1)
+                {
+                    int selectionSize = selectionFrameMax - selectionFrameMin + 1;
+                    SetSelection(selectionFrameMin + selectionSize, selectionFrameMax + selectionSize);
+                }
             }
 
-            ReplaceNotes(notes, selectionFrameMin, false, pasteNotes, pasteFxMask, mix);
             NotesPasted?.Invoke();
             App.UndoRedoManager.EndTransaction();
         }
@@ -1413,20 +1423,11 @@ namespace FamiStudio
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    for (int i = 0; i < dlg.PasteRepeat; i++)
-                    {
-                        PasteNotes(dlg.PasteNotes, dlg.PasteEffectMask, dlg.PasteMix);
+                    PasteNotes(dlg.PasteNotes, dlg.PasteEffectMask, dlg.PasteMix, dlg.PasteRepeat);
 
-                        lastPasteSpecialPasteMix = dlg.PasteMix;
-                        lastPasteSpecialPasteNotes = dlg.PasteNotes;
-                        lastPasteSpecialPasteEffectMask = dlg.PasteEffectMask;
-
-                        if (i != dlg.PasteRepeat - 1)
-                        {
-                            int selectionSize = selectionFrameMax - selectionFrameMin + 1;
-                            SetSelection(selectionFrameMin + selectionSize, selectionFrameMax + selectionSize);
-                        }
-                    }
+                    lastPasteSpecialPasteMix = dlg.PasteMix;
+                    lastPasteSpecialPasteNotes = dlg.PasteNotes;
+                    lastPasteSpecialPasteEffectMask = dlg.PasteEffectMask;
                 }
             }
         }
