@@ -1413,11 +1413,20 @@ namespace FamiStudio
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    PasteNotes(dlg.PasteNotes, dlg.PasteEffectMask, dlg.PasteMix);
+                    for (int i = 0; i < dlg.PasteRepeat; i++)
+                    {
+                        PasteNotes(dlg.PasteNotes, dlg.PasteEffectMask, dlg.PasteMix);
 
-                    lastPasteSpecialPasteMix = dlg.PasteMix;
-                    lastPasteSpecialPasteNotes = dlg.PasteNotes;
-                    lastPasteSpecialPasteEffectMask = dlg.PasteEffectMask;
+                        lastPasteSpecialPasteMix = dlg.PasteMix;
+                        lastPasteSpecialPasteNotes = dlg.PasteNotes;
+                        lastPasteSpecialPasteEffectMask = dlg.PasteEffectMask;
+
+                        if (i != dlg.PasteRepeat - 1)
+                        {
+                            int selectionSize = selectionFrameMax - selectionFrameMin + 1;
+                            SetSelection(selectionFrameMin + selectionSize, selectionFrameMax + selectionSize);
+                        }
+                    }
                 }
             }
         }

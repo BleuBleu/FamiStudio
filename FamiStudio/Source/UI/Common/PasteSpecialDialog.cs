@@ -37,6 +37,7 @@ namespace FamiStudio
                 }
             }
 
+            dialog.Properties.AddIntegerRange("Repeat :", 1, 1, 32);
             dialog.Properties.Build();
             dialog.Properties.PropertyChanged += Properties_PropertyChanged;
         }
@@ -52,18 +53,18 @@ namespace FamiStudio
             {
                 bool allEffects = (bool)value;
 
-                for (int i = 3; i < dialog.Properties.PropertyCount; i++)
+                foreach (var kv in propToEffect)
                 {
-                    props.SetPropertyValue(i, allEffects);
+                    props.SetPropertyValue(kv.Key, allEffects);
                 }
             }
-            else if (idx >= 3)
+            else if (propToEffect.ContainsKey(idx))
             {
                 bool allEffects = true;
 
-                for (int i = 3; i < dialog.Properties.PropertyCount; i++)
+                foreach (var kv in propToEffect)
                 {
-                    if (!props.GetPropertyValue<bool>(i))
+                    if (!props.GetPropertyValue<bool>(kv.Key))
                     {
                         allEffects = false;
                         break;
@@ -89,11 +90,11 @@ namespace FamiStudio
             {
                 int mask = 0;
 
-                for (int i = 3; i < dialog.Properties.PropertyCount; i++)
+                foreach (var kv in propToEffect)
                 {
-                    if (dialog.Properties.GetPropertyValue<bool>(i))
+                    if (dialog.Properties.GetPropertyValue<bool>(kv.Key))
                     {
-                        int effect = propToEffect[i];
+                        int effect = kv.Value;
                         mask |= (1 << effect);
                     }
                 }
@@ -101,5 +102,7 @@ namespace FamiStudio
                 return mask;
             }
         }
+
+        public int PasteRepeat => dialog.Properties.GetPropertyValue<int>(dialog.Properties.PropertyCount - 1);
     }
 }
