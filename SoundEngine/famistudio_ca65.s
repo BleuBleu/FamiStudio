@@ -147,28 +147,31 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; More information at: https://famistudio.org/doc/song/#tempo-modes
 ; FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
 
-; Must be enabled if any song use the volume track. The volume track allows manipulating the volume at the track level
+; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
 FAMISTUDIO_USE_VOLUME_TRACK   = 1
 
-; Must be enabled if any song use the pitch track. The pitch track allows manipulating the pitch at the track level
+; Must be enabled if any song uses the pitch track. The pitch track allows manipulating the pitch at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#pitch
 FAMISTUDIO_USE_PITCH_TRACK    = 1
 
-; Must be enabled if any song use slide notes. Slide notes allows portamento and slide effects.
+; Must be enabled if any song uses slide notes. Slide notes allows portamento and slide effects.
 ; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
 FAMISTUDIO_USE_SLIDE_NOTES    = 1
 
-; Must be enabled if any song use the vibrato speed/depth effect track. 
+; Must be enabled if any song uses the vibrato speed/depth effect track. 
 ; More information at: https://famistudio.org/doc/pianoroll/#vibrato-depth-speed
 FAMISTUDIO_USE_VIBRATO        = 1
 
-; Must be enabled if any song use arpeggios (not to be confused with instrument arpeggio envelopes, those are always
+; Must be enabled if any song uses arpeggios (not to be confused with instrument arpeggio envelopes, those are always
 ; supported).
 ; More information at: (TODO)
 FAMISTUDIO_USE_ARPEGGIO       = 1
+
+; Must be enabled if any song uses the "Duty Cycle" effect (equivalent of FamiTracker Vxx, also called "Timbre").  
+; FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1
 
 .endif
 
@@ -278,6 +281,10 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
     FAMISTUDIO_USE_ARPEGGIO = 0
 .endif
 
+.ifndef FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+    FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 0
+.endif
+
 .ifndef FAMISTUDIO_CFG_THREAD
     FAMISTUDIO_CFG_THREAD = 0
 .endif
@@ -326,36 +333,43 @@ FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2+2+2+2+2+2
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 9
     FAMISTUDIO_NUM_CHANNELS         = 11
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3
 .endif
 .if FAMISTUDIO_EXP_VRC6
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+3+3+3
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 6
     FAMISTUDIO_NUM_CHANNELS         = 8
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 6
 .endif
 .if FAMISTUDIO_EXP_S5B
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2+2+2
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 6
-    FAMISTUDIO_NUM_CHANNELS         = 8    
+    FAMISTUDIO_NUM_CHANNELS         = 8
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3
 .endif
 .if FAMISTUDIO_EXP_N163
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+(FAMISTUDIO_EXP_N163_CHN_CNT*2)
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 3+FAMISTUDIO_EXP_N163_CHN_CNT
     FAMISTUDIO_NUM_CHANNELS         = 5+FAMISTUDIO_EXP_N163_CHN_CNT
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
 .endif
 .if FAMISTUDIO_EXP_MMC5
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+3+3
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 5
     FAMISTUDIO_NUM_CHANNELS         = 7
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 5   
 .endif
 .if FAMISTUDIO_EXP_FDS
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 4
     FAMISTUDIO_NUM_CHANNELS         = 6
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
 .endif
 .if FAMISTUDIO_EXP_NONE
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 3
     FAMISTUDIO_NUM_CHANNELS         = 5
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
 .endif
 
 FAMISTUDIO_CH0_ENVS = 0
@@ -478,6 +492,9 @@ famistudio_chn_volume_track:      .res FAMISTUDIO_NUM_CHANNELS
 .endif
 .if FAMISTUDIO_USE_VIBRATO || FAMISTUDIO_USE_ARPEGGIO
 famistudio_chn_env_override:      .res FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, bit 0 = arpeggio.
+.endif
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+famistudio_duty_cycle:            .res FAMISTUDIO_NUM_DUTY_CYCLES
 .endif
 .if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
 famistudio_chn_inst_changed:      .res FAMISTUDIO_NUM_CHANNELS-5
@@ -853,7 +870,6 @@ famistudio_music_stop:
 
 @set_channels:
 
-    lda #0
     sta famistudio_chn_repeat,x
     sta famistudio_chn_instrument,x
     sta famistudio_chn_note,x
@@ -867,17 +883,22 @@ famistudio_music_stop:
     .if FAMISTUDIO_CFG_EQUALIZER
         sta famistudio_chn_note_counter,x
     .endif    
-
-@nextchannel:
     inx
     cpx #FAMISTUDIO_NUM_CHANNELS
     bne @set_channels
 
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+ldx #0
+@set_duty_cycles:
+    sta famistudio_duty_cycle, x
+    inx
+    cpx #FAMISTUDIO_NUM_DUTY_CYCLES
+    bne @set_duty_cycles
+.endif
+
 .if FAMISTUDIO_USE_SLIDE_NOTES
     ldx #0
-    lda #0
 @set_slides:
-
     sta famistudio_slide_step, x
     inx
     cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
@@ -2506,6 +2527,15 @@ famistudio_set_instrument:
         lda #0
         sta famistudio_env_repeat,x
         sta famistudio_env_ptr,x
+        .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+            stx @tmp_x
+            ldx @chan_idx
+            lda famistudio_channel_to_dutycycle,x 
+            tax
+            lda famistudio_duty_cycle,x
+            ldx @tmp_x
+        .endif
+        sta famistudio_env_value,x
     @pitch_env:
     ; Pitch envelopes.
     ldx @chan_idx
@@ -3105,6 +3135,18 @@ famistudio_channel_update:
     jmp @read_byte
 .endif
 
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+@special_code_duty_cycle_effect:
+    stx @tmp_chan_idx
+    lda famistudio_channel_to_dutycycle,x
+    tax 
+    lda (@channel_data_ptr),y
+    sta famistudio_duty_cycle,x
+    famistudio_inc_16 @channel_data_ptr
+    ldx @tmp_chan_idx
+    jmp @read_byte
+.endif
+
 @special_code_disable_attack:
     lda #1
     sta @no_attack_flag    
@@ -3387,6 +3429,9 @@ famistudio_channel_update:
 @special_code_clear_arpeggio_override_flag:
 @special_code_reset_arpeggio:
 .endif
+.if !FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+@special_code_duty_cycle_effect:
+.endif
 .if !FAMISTUDIO_USE_SLIDE_NOTES
 @special_code_slide:
 .endif
@@ -3395,6 +3440,7 @@ famistudio_channel_update:
     ; - have vibrato effect in your songs, but didnt enable "FAMISTUDIO_USE_VIBRATO"
     ; - have arpeggiated chords in your songs, but didnt enable "FAMISTUDIO_USE_ARPEGGIO"
     ; - have slide notes in your songs, but didnt enable "FAMISTUDIO_USE_SLIDE_NOTES"
+    ; - have a duty cycle effect in your songs, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT
     brk 
 
 @famistudio_special_code_jmp_lo:
@@ -3406,9 +3452,10 @@ famistudio_channel_update:
     .byte <@special_code_clear_arpeggio_override_flag ; $66
     .byte <@special_code_reset_arpeggio               ; $67
     .byte <@special_code_fine_pitch                   ; $68
+    .byte <@special_code_duty_cycle_effect            ; $69
 .if FAMISTUDIO_EXP_FDS        
-    .byte <@special_code_fds_mod_speed                ; $69
-    .byte <@special_code_fds_mod_depth                ; $6a
+    .byte <@special_code_fds_mod_speed                ; $6a
+    .byte <@special_code_fds_mod_depth                ; $6b
 .endif        
 @famistudio_special_code_jmp_hi:
     .byte >@special_code_slide                        ; $61
@@ -3419,9 +3466,10 @@ famistudio_channel_update:
     .byte >@special_code_clear_arpeggio_override_flag ; $66
     .byte >@special_code_reset_arpeggio               ; $67
     .byte >@special_code_fine_pitch                   ; $68
+    .byte >@special_code_duty_cycle_effect            ; $69    
 .if FAMISTUDIO_EXP_FDS        
-    .byte >@special_code_fds_mod_speed                ; $69
-    .byte >@special_code_fds_mod_depth                ; $6a
+    .byte >@special_code_fds_mod_speed                ; $6a
+    .byte >@special_code_fds_mod_depth                ; $6b
 .endif
 
 ;======================================================================================================================
@@ -4150,6 +4198,22 @@ famistudio_channel_to_slide:
 .endif
 .if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 11
     .byte $0a
+.endif
+
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+famistudio_channel_to_dutycycle:
+    .byte $00
+    .byte $01
+    .byte $ff
+    .byte $02
+    .byte $ff
+.if FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_VRC6
+    .byte $03
+    .byte $04
+.endif
+.if FAMISTUDIO_EXP_VRC6
+    .byte $05
+.endif
 .endif
 
 ; Duty lookup table.

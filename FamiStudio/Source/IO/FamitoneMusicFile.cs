@@ -792,16 +792,22 @@ namespace FamiStudio
                             }
                         }
 
-                        if (note.HasFdsModSpeed)
+                        if (note.HasDutyCycle)
                         {
                             patternBuffer.Add($"${0x69:x2}");
+                            patternBuffer.Add($"${note.DutyCycle:x2}");
+                        }
+
+                        if (note.HasFdsModSpeed)
+                        {
+                            patternBuffer.Add($"${0x6a:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
                         }
 
                         if (note.HasFdsModDepth)
                         {
-                            patternBuffer.Add($"${0x6a:x2}");
+                            patternBuffer.Add($"${0x6b:x2}");
                             patternBuffer.Add($"${note.FdsModDepth:x2}");
                         }
 
