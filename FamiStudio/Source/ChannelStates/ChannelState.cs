@@ -8,10 +8,9 @@ namespace FamiStudio
         protected int apuIdx;
         protected int channelType;
         protected Note note = new Note(Note.NoteInvalid);
-        protected bool dutyCycleEnvelopeOverride = true;
+        protected int dutyCycle = 0;
         protected bool pitchEnvelopeOverride = false;
         protected bool arpeggioEnvelopeOverride = false;
-        protected Envelope dutyEnvelope = new Envelope(Envelope.DutyCycle);
         protected Envelope[] envelopes = new Envelope[Envelope.Count];
         protected int[] envelopeIdx = new int[Envelope.Count];
         protected int[] envelopeValues = new int[Envelope.Count];
@@ -34,7 +33,6 @@ namespace FamiStudio
             note.Value = Note.NoteStop;
             note.Volume = Note.VolumeMax;
             note.FinePitch = 0;
-            dutyEnvelope.Length = 1;
             Channel.GetShiftsForType(type, numN163Channels, out pitchShift, out slideShift);
         }
 
@@ -100,10 +98,10 @@ namespace FamiStudio
                     }
                 }
 
-                if (newNote.HasDutyCycle && dutyCycleEnvelopeOverride)
+                if (newNote.HasDutyCycle)
                 {
-                    dutyEnvelope.Values[0] = (sbyte)newNote.DutyCycle;
-                    envelopeIdx[Envelope.DutyCycle] = 0;
+                    dutyCycle = newNote.DutyCycle;
+                    envelopeValues[Envelope.DutyCycle] = dutyCycle;
                 }
             }
         }
@@ -168,22 +166,17 @@ namespace FamiStudio
 
                 if (instrumentChanged || note.HasAttack && !note.IsStop)
                 {
-                    if (note.Instrument != null)
-                        dutyCycleEnvelopeOverride = note.Instrument.Envelopes[Envelope.DutyCycle].IsEmpty;
-
                     for (int j = 0; j < Envelope.Count; j++)
                     {
                         if ((j != Envelope.Pitch     || !pitchEnvelopeOverride) &&
                             (j != Envelope.Arpeggio  || !arpeggioEnvelopeOverride))
                         {
-                            if (j == Envelope.DutyCycle && dutyCycleEnvelopeOverride)
-                                envelopes[j] = dutyEnvelope;
-                            else
-                                envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
+                            envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
                         }
                         envelopeIdx[j] = 0;
                     }
 
+                    envelopeValues[Envelope.DutyCycle] = dutyCycle;
                     envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
                     noteTriggered = true;
                 }
@@ -207,12 +200,11 @@ namespace FamiStudio
             {
                 for (int j = 0; j < Envelope.Count; j++)
                 {
-                    if (envelopes[j] == null ||
-                        envelopes[j].Length <= 0)
+                    if (envelopes[j] == null || envelopes[j].IsEmpty)
                     {
                         if (j == Envelope.Volume)
                             envelopeValues[j] = 15;
-                        else
+                        else if (j != Envelope.DutyCycle)
                             envelopeValues[j] = 0;
                         continue;
                     }
