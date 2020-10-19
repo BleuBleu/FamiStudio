@@ -23,19 +23,22 @@ namespace FamiStudio
     {
         private Factory factory;
         private DirectWriteFactory directWriteFactory;
-        private WindowRenderTarget renderTarget;
+        private RenderTarget renderTarget;
         private Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
         private Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
         private Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
         private StrokeStyle strokeStyleMiter;
 
+        // Only used when doing offline rendering.
+        private SharpDX.Direct3D11.Device d3dDevice;
+        private SharpDX.Direct3D11.Texture2D offscreenTexture;
+        private SharpDX.Direct3D11.Texture2D stagingTexture;
+
         public Factory Factory => factory;
-        public WindowRenderTarget RenderTarget => renderTarget;
 
         public Direct2DGraphics(UserControl control)
         {
             factory = new SharpDX.Direct2D1.Factory();
-            directWriteFactory = new SharpDX.DirectWrite.Factory();
 
             HwndRenderTargetProperties properties = new HwndRenderTargetProperties();
             properties.Hwnd = control.Handle;
@@ -43,9 +46,54 @@ namespace FamiStudio
             properties.PresentOptions = PresentOptions.None;
 
             renderTarget = new WindowRenderTarget(factory, new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)), properties);
+
+            Initialize();
+        }
+
+        public Direct2DGraphics(int imageSizeX, int imageSizeY)
+        {
+            d3dDevice = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, SharpDX.Direct3D11.DeviceCreationFlags.BgraSupport);
+
+            offscreenTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+            {
+                BindFlags = SharpDX.Direct3D11.BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
+                CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.None,
+                Format = Format.B8G8R8A8_UNorm,
+                Width = imageSizeX,
+                Height = imageSizeY,
+                MipLevels = 1,
+                ArraySize = 1,
+                OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
+                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                Usage = SharpDX.Direct3D11.ResourceUsage.Default
+            });
+
+            stagingTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+            {
+                BindFlags = SharpDX.Direct3D11.BindFlags.None,
+                CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.Read,
+                Format = Format.B8G8R8A8_UNorm,
+                Width = imageSizeX,
+                Height = imageSizeY,
+                MipLevels = 1,
+                ArraySize = 1,
+                OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
+                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                Usage = SharpDX.Direct3D11.ResourceUsage.Staging
+            });
+
+            factory = new SharpDX.Direct2D1.Factory();
+            renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
+
+            Initialize();
+        }
+
+        private void Initialize()
+        {
+            directWriteFactory = new SharpDX.DirectWrite.Factory();
+
             renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
             renderTarget.AntialiasMode = AntialiasMode.Aliased;
-
             strokeStyleMiter = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
         }
 
@@ -59,25 +107,13 @@ namespace FamiStudio
                 grad.Dispose();
             solidGradientCache.Clear();
 
-            strokeStyleMiter.Dispose();
-
-            if (renderTarget != null)
-            {
-                renderTarget.Dispose();
-                renderTarget = null;
-            }
-
-            if (directWriteFactory != null)
-            {
-                directWriteFactory.Dispose();
-                directWriteFactory = null;
-            }
-
-            if (factory != null)
-            {
-                factory.Dispose();
-                factory = null;
-            }
+            Utils.DisposeAndNullify(ref strokeStyleMiter);
+            Utils.DisposeAndNullify(ref renderTarget);
+            Utils.DisposeAndNullify(ref directWriteFactory);
+            Utils.DisposeAndNullify(ref factory);
+            Utils.DisposeAndNullify(ref offscreenTexture);
+            Utils.DisposeAndNullify(ref stagingTexture);
+            Utils.DisposeAndNullify(ref d3dDevice);
         }
 
         public void BeginDraw()
@@ -92,7 +128,7 @@ namespace FamiStudio
 
         public void Resize(int width, int height)
         {
-            renderTarget.Resize(new Size2(width, height));
+            (renderTarget as WindowRenderTarget).Resize(new Size2(width, height));
         }
 
         public bool AntiAliasing
@@ -438,6 +474,25 @@ namespace FamiStudio
             verticalGradientCache[key] = brush;
 
             return brush;
+        }
+
+        public unsafe void GetBitmap(out uint[,] data)
+        {
+            data = new uint[stagingTexture.Description.Height, stagingTexture.Description.Width];
+            d3dDevice.ImmediateContext.CopyResource(offscreenTexture, stagingTexture);
+            var mapSource = d3dDevice.ImmediateContext.MapSubresource(stagingTexture, 0, SharpDX.Direct3D11.MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
+
+            uint* row = (uint*)mapSource.DataPointer.ToPointer();
+
+            for (int y = 0; y < stagingTexture.Description.Height; y++)
+            {
+                uint* p = row;
+                for (int x = 0; x < stagingTexture.Description.Width; x++)
+                    data[y, x] = *p++;
+                row += mapSource.RowPitch / 4;
+            }
+
+            d3dDevice.ImmediateContext.UnmapSubresource(stagingTexture, 0);
         }
     }
 }
