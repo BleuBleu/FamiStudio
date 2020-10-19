@@ -298,6 +298,7 @@ namespace FamiStudio
         {
             var channel = newChannel == null ? song.GetChannelByType(channelType) : newChannel;
             var pattern = channel.CreatePattern();
+            pattern.color = color;
 
             foreach (var kv in notes)
                 pattern.Notes[kv.Key] = kv.Value.Clone();
