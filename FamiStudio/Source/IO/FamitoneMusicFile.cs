@@ -57,6 +57,7 @@ namespace FamiStudio
         private bool usesSlideNotes = false;
         private bool usesVibrato = false;
         private bool usesArpeggio = false;
+        private bool usesDutyCycleEffect = false;
 
         public enum FamiToneKernel
         {
@@ -259,8 +260,10 @@ namespace FamiStudio
             var instrumentEnvelopes = new Dictionary<Envelope, uint>();
 
             var defaultEnv = new byte[] { 0xc0, 0x7f, 0x00, 0x00 };
+            var defaultDutyEnv = new byte[] { 0x7f, 0x00, 0x00 }; // This is a "do nothing" envelope, simply loops, never sets a value.
             var defaultPitchEnv = new byte[] { 0x00, 0xc0, 0x7f, 0x00, 0x01 };
             var defaultEnvCRC = CRC32.Compute(defaultEnv);
+            var defaultDutyEnvCRC = CRC32.Compute(defaultDutyEnv);
             var defaultPitchEnvCRC = CRC32.Compute(defaultPitchEnv);
             var defaultEnvName = "";
             var defaultPitchEnvName = "";
@@ -268,7 +271,10 @@ namespace FamiStudio
             uniqueEnvelopes.Add(defaultEnvCRC, defaultEnv);
 
             if (kernel == FamiToneKernel.FamiStudio)
+            {
+                uniqueEnvelopes.Add(defaultDutyEnvCRC, defaultDutyEnv);
                 uniqueEnvelopes.Add(defaultPitchEnvCRC, defaultPitchEnv);
+            }
 
             foreach (var instrument in project.Instruments)
             {
@@ -306,6 +312,8 @@ namespace FamiStudio
                     {
                         if (kernel == FamiToneKernel.FamiStudio && i == Envelope.Pitch)
                             instrumentEnvelopes[env] = defaultPitchEnvCRC;
+                        else if (kernel == FamiToneKernel.FamiStudio && i == Envelope.DutyCycle)
+                            instrumentEnvelopes[env] = defaultDutyEnvCRC;
                         else
                             instrumentEnvelopes[env] = defaultEnvCRC;
                     }
@@ -796,6 +804,7 @@ namespace FamiStudio
                         {
                             patternBuffer.Add($"${0x69:x2}");
                             patternBuffer.Add($"${note.DutyCycle:x2}");
+                            usesDutyCycleEffect = true;
                         }
 
                         if (note.HasFdsModSpeed)
@@ -898,6 +907,7 @@ namespace FamiStudio
                                     note.HasVolume      || 
                                     note.HasVibrato     ||
                                     note.HasFinePitch   ||
+                                    note.HasDutyCycle   ||
                                     note.HasFdsModSpeed || 
                                     note.HasFdsModDepth ||
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
@@ -1098,6 +1108,10 @@ namespace FamiStudio
                                 note.HasVolume    = false;
                                 note.IsSlideNote  = false;
                                 note.HasFinePitch = false;
+                              //note.HasTempo     = false; MATTT
+                                note.HasDutyCycle = false;
+                                note.HasNoteDelay = false;
+                                note.HasCutDelay  = false;
                                 note.Arpeggio     = null;
                             }
                         }
@@ -1198,6 +1212,8 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Vibrato effect is used, you must set FAMISTUDIO_USE_VIBRATO = 1.");
                     if (usesArpeggio)
                         Log.LogMessage(LogSeverity.Info, "Arpeggios are used, you must set FAMISTUDIO_USE_ARPEGGIO = 1.");
+                    if (usesDutyCycleEffect)
+                        Log.LogMessage(LogSeverity.Info, "Duty Cycle effect is used, you must set FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1.");
                 }
             }
 

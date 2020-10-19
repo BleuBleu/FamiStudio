@@ -493,9 +493,6 @@ famistudio_chn_volume_track:      .res FAMISTUDIO_NUM_CHANNELS
 .if FAMISTUDIO_USE_VIBRATO || FAMISTUDIO_USE_ARPEGGIO
 famistudio_chn_env_override:      .res FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, bit 0 = arpeggio.
 .endif
-.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-famistudio_duty_cycle:            .res FAMISTUDIO_NUM_DUTY_CYCLES
-.endif
 .if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
 famistudio_chn_inst_changed:      .res FAMISTUDIO_NUM_CHANNELS-5
 .endif
@@ -509,6 +506,9 @@ famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = n
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_wave_len:     .res FAMISTUDIO_EXP_N163_CHN_CNT
+.endif
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+famistudio_duty_cycle:            .res FAMISTUDIO_NUM_DUTY_CYCLES
 .endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
@@ -2964,6 +2964,7 @@ famistudio_channel_update:
     @tmp_chan_idx         = famistudio_r0
     @tmp_slide_from       = famistudio_r1
     @tmp_slide_idx        = famistudio_r1
+    @tmp_duty_cycle       = famistudio_r1
     @no_attack_flag       = famistudio_r2
     @slide_delta_lo       = famistudio_ptr1_hi
     @channel_data_ptr     = famistudio_ptr0
@@ -3142,8 +3143,14 @@ famistudio_channel_update:
     tax 
     lda (@channel_data_ptr),y
     sta famistudio_duty_cycle,x
-    famistudio_inc_16 @channel_data_ptr
+    sta @tmp_duty_cycle
     ldx @tmp_chan_idx
+    lda famistudio_channel_to_duty,x
+    tax 
+    lda @tmp_duty_cycle
+    sta famistudio_env_value,x
+    ldx @tmp_chan_idx
+    famistudio_inc_16 @channel_data_ptr
     jmp @read_byte
 .endif
 
@@ -4201,6 +4208,7 @@ famistudio_channel_to_slide:
 .endif
 
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+; For a given channel, returns the index of the duty cycle in the "famistudio_duty_cycle" array.
 famistudio_channel_to_dutycycle:
     .byte $00
     .byte $01
@@ -4213,6 +4221,21 @@ famistudio_channel_to_dutycycle:
 .endif
 .if FAMISTUDIO_EXP_VRC6
     .byte $05
+.endif
+
+; For a given channel, returns the index of the duty cycle envelope.
+famistudio_channel_to_duty:
+    .byte FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+    .byte FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+    .byte $ff
+    .byte FAMISTUDIO_CH3_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+    .byte $ff
+.if FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_VRC6
+    .byte FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+    .byte FAMISTUDIO_CH6_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+.endif
+.if FAMISTUDIO_EXP_VRC6
+    .byte FAMISTUDIO_CH7_ENVS+FAMISTUDIO_ENV_DUTY_OFF
 .endif
 .endif
 
