@@ -749,13 +749,6 @@ namespace FamiStudio
                     foreach (var kv in notesCopy)
                     {
                         var note = kv.Value;
-
-                        // These effects make no sense in FamiStudio tempo mode.
-                        note.ClearEffectValue(Note.EffectSpeed);
-                      //note.ClearEffectValue(Note.EffectTempo); MATTT
-                        note.ClearEffectValue(Note.EffectNoteDelay);
-                        note.ClearEffectValue(Note.EffectCutDelay);
-
                         pattern.Notes[kv.Key * newNoteLength] = note;
                     }
 
@@ -777,8 +770,52 @@ namespace FamiStudio
             barLength     = newBarLength;
             patternLength = newPatternLength;
 
+            RemoveUnsupportedEffects();
             UpdatePatternStartNotes();
             DeleteNotesPastMaxInstanceLength();
+        }
+
+        public void RemoveUnsupportedEffects()
+        {
+            foreach (var channel in channels)
+            {
+                foreach (var pattern in channel.Patterns)
+                {
+                    foreach (var kv in pattern.Notes)
+                    {
+                        if (kv.Value != null)
+                        {
+                            var note = kv.Value;
+
+                            for (int i = 0; i < Note.EffectCount; i++)
+                            {
+                                if (note.HasValidEffectValue(i) && !channel.SupportsEffect(i))
+                                    note.ClearEffectValue(i);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void RemoveUnsupportedInstruments()
+        {
+            foreach (var channel in channels)
+            {
+                foreach (var pattern in channel.Patterns)
+                {
+                    foreach (var kv in pattern.Notes)
+                    {
+                        if (kv.Value != null)
+                        {
+                            var note = kv.Value;
+
+                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument) || channel.Type == Channel.Dpcm)
+                                note.Instrument = null;
+                        }
+                    }
+                }
+            }
         }
 
         public void ChangeId(int newId)

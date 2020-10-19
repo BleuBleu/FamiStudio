@@ -846,10 +846,10 @@ namespace FamiStudio
         {
             Debug.Assert(UsesFamiTrackerTempo);
 
+            tempoMode = TempoFamiStudio;
+
             foreach (var song in songs)
                 song.ConvertToFamiStudioTempo();
-
-            tempoMode = TempoFamiStudio;
         }
 
         public void ConvertToFamiTrackerTempo(bool setDefaults)

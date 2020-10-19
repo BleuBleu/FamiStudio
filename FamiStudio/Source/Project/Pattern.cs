@@ -294,9 +294,9 @@ namespace FamiStudio
             return maxInstanceLength;
         }
 
-        public Pattern ShallowClone()
+        public Pattern ShallowClone(Channel newChannel = null)
         {
-            var channel = song.GetChannelByType(channelType);
+            var channel = newChannel == null ? song.GetChannelByType(channelType) : newChannel;
             var pattern = channel.CreatePattern();
 
             foreach (var kv in notes)

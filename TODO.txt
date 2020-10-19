@@ -32,9 +32,8 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 - Enhanced FamiTracker compatibility.
 	- Delayed notes.
 	- Delayed cuts.
-	- Vxx.
+	/ Vxx.
 	- Tempo changes.
-	- Groove calculator.
 	- Fix 1 frame missing in NSF
 	- Fix computation of slide notes in FamiTracker tempo mode.
 / Song merge 
@@ -42,11 +41,9 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	x fix instrument import... very bad.
 	- Add logging so that people understand name conflicts, DPCM conflicts, etc.
 - Dont change scroll in pianoroll/sequencer when undoing + playing + follow to avoid jumps
-- Copy patterns to other channels.
-- Custom delete (Shift + Delete)
-/ When we change tempo mode, need to delete speed + temp + delay + cut effects. (Tempo missing)
-- P1: Configure QWERTY keys for piano input.
-x P1: Labels on notes in piano roll.
+- Configure QWERTY keys for piano input.
+- ROM (add new features) + Update to 2.3.0
+- Demo, update to 2.3.0
 
 TESTING:
 - Create famistudio unit tests from 2.2.1 (either through WAV or register player)

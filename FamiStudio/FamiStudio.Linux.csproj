@@ -350,6 +350,8 @@
     <EmbeddedResource Include="Resources\PALToNTSC.png" />
     <EmbeddedResource Include="Resources\Duplicate%402x.png" />
     <EmbeddedResource Include="Resources\Duplicate.png" />
+    <EmbeddedResource Include="Resources\DuplicateMove%402x.png" />
+    <EmbeddedResource Include="Resources\DuplicateMove.png" />
     <EmbeddedResource Include="Resources\Instance%402x.png" />
     <EmbeddedResource Include="Resources\Instance.png" />
     <EmbeddedResource Include="Resources\Snap1%402x.png" />

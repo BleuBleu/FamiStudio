@@ -96,7 +96,7 @@ namespace FamiStudio
         int minSelectedPatternIdx = -1;
         int maxSelectedPatternIdx = -1;
         int   selectionDragAnchorPatternIdx = -1;
-        float selectionDragAnchorPatternFraction = -1.0f;
+        float selectionDragAnchorPatternXFraction = -1.0f;
         CaptureOperation captureOperation = CaptureOperation.None;
         bool panning = false; // TODO: Make this a capture operation.
         bool continuouslyFollowing = false;
@@ -132,6 +132,7 @@ namespace FamiStudio
         RenderBitmap bmpCustomLength;
         RenderBitmap bmpInstanciate;
         RenderBitmap bmpDuplicate;
+        RenderBitmap bmpDuplicateMove;
 
         public delegate void TrackBarDelegate(int trackIdx, int barIdx);
         public delegate void ChannelDelegate(int channelIdx);
@@ -292,6 +293,7 @@ namespace FamiStudio
             bmpCustomLength = g.CreateBitmapFromResource("CustomPattern");
             bmpInstanciate = g.CreateBitmapFromResource("Instance");
             bmpDuplicate = g.CreateBitmapFromResource("Duplicate");
+            bmpDuplicateMove = g.CreateBitmapFromResource("DuplicateMove");
 
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
             seekBarRecBrush = g.CreateSolidBrush(ThemeBase.DarkRedFillColor2);
@@ -532,17 +534,24 @@ namespace FamiStudio
 
                     pt.Y -= headerSizeY;
 
-                    for (int j = minSelectedChannelIdx; j <= maxSelectedChannelIdx; j++)
+                    var dragChannelIdxStart = (captureStartY - headerSizeY) / trackSizeY;
+                    var dragChannelIdxCurrent = pt.Y / trackSizeY;
+                    var channelIdxDelta = dragChannelIdxCurrent - dragChannelIdxStart;
+
+                    for (int j = minSelectedChannelIdx + channelIdxDelta; j <= maxSelectedChannelIdx + channelIdxDelta; j++)
                     {
+                        if (j < 0 || j > Song.Channels.Length)
+                            continue;
+
                         var y = j * trackSizeY;
 
                         // Center.
                         var patternSizeX = Song.GetPatternLength(patternIdx) * noteSizeX;
-                        var anchorOffsetLeftX = patternSizeX * selectionDragAnchorPatternFraction;
-                        var anchorOffsetRightX = patternSizeX * (1.0f - selectionDragAnchorPatternFraction);
+                        var anchorOffsetLeftX = patternSizeX * selectionDragAnchorPatternXFraction;
+                        var anchorOffsetRightX = patternSizeX * (1.0f - selectionDragAnchorPatternXFraction);
 
-                        bool isCopy = ModifierKeys.HasFlag(Keys.Control);
-                        var bmpCopy = isCopy && ModifierKeys.HasFlag(Keys.Shift) ? bmpDuplicate : bmpInstanciate;
+                        bool isCopy = ModifierKeys.HasFlag(Keys.Control) || channelIdxDelta != 0;
+                        var bmpCopy = isCopy && ModifierKeys.HasFlag(Keys.Shift) ? bmpDuplicate : (channelIdxDelta != 0 ? bmpDuplicateMove : bmpInstanciate);
 
                         g.FillAndDrawRectangle(pt.X - anchorOffsetLeftX, y, pt.X - anchorOffsetLeftX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
                         if (isCopy)
@@ -893,8 +902,7 @@ namespace FamiStudio
                         }
 
                         selectionDragAnchorPatternIdx = patternIdx;
-                        selectionDragAnchorPatternFraction = (e.X - trackNameSizeX + scrollX - (int)(Song.GetPatternStartNote(patternIdx) * noteSizeX)) / (Song.GetPatternLength(patternIdx) * noteSizeX);
-
+                        selectionDragAnchorPatternXFraction = (e.X - trackNameSizeX + scrollX - (int)(Song.GetPatternStartNote(patternIdx) * noteSizeX)) / (Song.GetPatternLength(patternIdx) * noteSizeX);
                         StartCaptureOperation(e, CaptureOperation.ClickPattern);
 
                         ConditionalInvalidate();
@@ -1079,8 +1087,6 @@ namespace FamiStudio
                 }
                 else if (captureOperation == CaptureOperation.DragSelection && IsSelectionValid()) // No clue how we end up here with invalid selection.
                 {
-                    var copy = ModifierKeys.HasFlag(Keys.Control);
-                    var duplicate = copy && ModifierKeys.HasFlag(Keys.Shift);
                     var noteIdx = (int)((e.X - trackNameSizeX + scrollX) / noteSizeX);
 
                     if (noteIdx >= 0 && noteIdx < Song.GetPatternStartNote(Song.Length))
@@ -1088,6 +1094,13 @@ namespace FamiStudio
                         var patternIdx = Song.FindPatternInstanceIndex((int)((e.X - trackNameSizeX + scrollX) / noteSizeX), out _);
                         var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
                         var tmpPatterns = GetSelectedPatterns(out var customSettings);
+
+                        var dragChannelIdxStart = (captureStartY - headerSizeY) / trackSizeY;
+                        var dragChannelIdxCurrent = (e.Y - headerSizeY) / trackSizeY;
+                        var channelIdxDelta = dragChannelIdxCurrent - dragChannelIdxStart;
+
+                        var copy = ModifierKeys.HasFlag(Keys.Control);
+                        var duplicate = copy && ModifierKeys.HasFlag(Keys.Shift) || channelIdxDelta != 0;
 
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
@@ -1098,15 +1111,16 @@ namespace FamiStudio
                         {
                             for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                             {
+                                var ni = i + channelIdxDelta;
                                 var nj = j + patternIdxDelta;
-                                if (nj >= 0 && nj < Song.Length)
+                                if (nj >= 0 && nj < Song.Length && ni >= 0 && ni < Song.Channels.Length)
                                 {
                                     var sourcePattern = tmpPatterns[j - minSelectedPatternIdx, i - minSelectedChannelIdx];
 
                                     if (duplicate && sourcePattern != null)
-                                        Song.Channels[i].PatternInstances[nj] = sourcePattern.ShallowClone();
+                                        Song.Channels[ni].PatternInstances[nj] = sourcePattern.ShallowClone(Song.Channels[ni]);
                                     else
-                                        Song.Channels[i].PatternInstances[nj] = sourcePattern;
+                                        Song.Channels[ni].PatternInstances[nj] = sourcePattern;
                                 }
                             }
                         }
@@ -1136,8 +1150,14 @@ namespace FamiStudio
                             }
                         }
 
+                        Song.RemoveUnsupportedEffects();
+                        Song.RemoveUnsupportedInstruments();
+
                         App.UndoRedoManager.EndTransaction();
 
+
+                        minSelectedChannelIdx = Utils.Clamp(minSelectedChannelIdx + channelIdxDelta, 0, Song.Channels.Length - 1);
+                        maxSelectedChannelIdx = Utils.Clamp(maxSelectedChannelIdx + channelIdxDelta, 0, Song.Channels.Length - 1);
                         minSelectedPatternIdx = Utils.Clamp(minSelectedPatternIdx + patternIdxDelta, 0, Song.Length - 1);
                         maxSelectedPatternIdx = Utils.Clamp(maxSelectedPatternIdx + patternIdxDelta, 0, Song.Length - 1);
 
@@ -1160,9 +1180,12 @@ namespace FamiStudio
             if (captureOperation == CaptureOperation.DragSelection)
             {
                 selectionDragAnchorPatternIdx = -1;
-                selectionDragAnchorPatternFraction = -1.0f;
+                selectionDragAnchorPatternXFraction = -1.0f;
                 captureOperation = CaptureOperation.None;
             }
+
+            captureStartX = -1;
+            captureStartY = -1;
         }
 
         private void DeleteSelection(bool trans = true, bool clearCustomSettings = false)
@@ -1416,7 +1439,7 @@ namespace FamiStudio
 
             UpdateToolTip(e);
 
-            if (captureOperation == CaptureOperation.ClickPattern && captureStartX > 0 && Math.Abs(e.X - captureStartX) > 5)
+            if (captureOperation == CaptureOperation.ClickPattern && (captureStartX > 0 && Math.Abs(e.X - captureStartX) > 5) || (captureStartY > 0 && Math.Abs(e.Y - captureStartY) > 5))
             {
                 captureOperation = CaptureOperation.DragSelection;
                 ConditionalInvalidate();

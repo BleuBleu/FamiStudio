@@ -209,7 +209,7 @@ namespace FamiStudio
                     {
                         if (patternLen != prevLength)
                         {
-                            pattern = pattern.ShallowClone(); ;
+                            pattern = pattern.ShallowClone();
                             patternInstances[p] = pattern;
                         }
                     }
