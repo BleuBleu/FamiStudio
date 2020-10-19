@@ -890,7 +890,7 @@ famistudio_music_stop:
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
 ldx #0
 @set_duty_cycles:
-    sta famistudio_duty_cycle, x
+    sta famistudio_duty_cycle,x
     inx
     cpx #FAMISTUDIO_NUM_DUTY_CYCLES
     bne @set_duty_cycles
@@ -2110,6 +2110,7 @@ famistudio_update:
 
 .endif
 
+;----------------------------------------------------------------------------------------------------------------------
     ldx #0
     @channel_loop:
         jsr famistudio_update_row
