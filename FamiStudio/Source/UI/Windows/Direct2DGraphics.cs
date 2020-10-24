@@ -28,6 +28,7 @@ namespace FamiStudio
         private Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
         private Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
         private StrokeStyle strokeStyleMiter;
+        private float windowScaling = 1.0f;
 
         // Only used when doing offline rendering.
         private SharpDX.Direct3D11.Device d3dDevice;
@@ -35,10 +36,12 @@ namespace FamiStudio
         private SharpDX.Direct3D11.Texture2D stagingTexture;
 
         public Factory Factory => factory;
+        public float WindowScaling => windowScaling;
 
         public Direct2DGraphics(UserControl control)
         {
             factory = new SharpDX.Direct2D1.Factory();
+            windowScaling = Direct2DTheme.MainWindowScaling;
 
             HwndRenderTargetProperties properties = new HwndRenderTargetProperties();
             properties.Hwnd = control.Handle;
@@ -82,6 +85,7 @@ namespace FamiStudio
                 Usage = SharpDX.Direct3D11.ResourceUsage.Staging
             });
 
+            windowScaling = 1.0f; // No scaling for now in videos.
             factory = new SharpDX.Direct2D1.Factory();
             renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
 
@@ -384,14 +388,14 @@ namespace FamiStudio
             bool needsScaling = false;
             System.Drawing.Bitmap bmp;
 
-            if (Direct2DTheme.MainWindowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
+            if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
             {
                 bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@15x.png")) as System.Drawing.Bitmap;
             }
-            else if (Direct2DTheme.MainWindowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
+            else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
             {
                 bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@2x.png")) as System.Drawing.Bitmap;
-                needsScaling = Direct2DTheme.MainWindowScaling != 2.0f;
+                needsScaling = windowScaling != 2.0f;
             }
             else
             {
@@ -401,8 +405,8 @@ namespace FamiStudio
             // Pre-resize all images so we dont have to deal with scaling later.
             if (needsScaling)
             {
-                var newWidth  = Math.Max(1, (int)(bmp.Width  * (Direct2DTheme.MainWindowScaling / 2.0f)));
-                var newHeight = Math.Max(1, (int)(bmp.Height * (Direct2DTheme.MainWindowScaling / 2.0f)));
+                var newWidth  = Math.Max(1, (int)(bmp.Width  * (windowScaling / 2.0f)));
+                var newHeight = Math.Max(1, (int)(bmp.Height * (windowScaling / 2.0f)));
 
                 bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
             }
@@ -476,20 +480,24 @@ namespace FamiStudio
             return brush;
         }
 
-        public unsafe void GetBitmap(out uint[,] data)
+        public unsafe void GetBitmap(byte[] data)
         {
-            data = new uint[stagingTexture.Description.Height, stagingTexture.Description.Width];
+            int textureWidth  = stagingTexture.Description.Width;
+            int textureHeight = stagingTexture.Description.Height;
+
+            Debug.Assert(data.Length == offscreenTexture.Description.Width * offscreenTexture.Description.Height * 4);
+
             d3dDevice.ImmediateContext.CopyResource(offscreenTexture, stagingTexture);
             var mapSource = d3dDevice.ImmediateContext.MapSubresource(stagingTexture, 0, SharpDX.Direct3D11.MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
 
-            uint* row = (uint*)mapSource.DataPointer.ToPointer();
+            byte* row = (byte*)mapSource.DataPointer.ToPointer();
 
-            for (int y = 0; y < stagingTexture.Description.Height; y++)
+            for (int y = 0; y < textureHeight; y++)
             {
-                uint* p = row;
-                for (int x = 0; x < stagingTexture.Description.Width; x++)
-                    data[y, x] = *p++;
-                row += mapSource.RowPitch / 4;
+                byte* p = row;
+                for (int x = 0; x < textureWidth * 4; x++)
+                    data[y * textureWidth * 4 + x] = *p++;
+                row += mapSource.RowPitch;
             }
 
             d3dDevice.ImmediateContext.UnmapSubresource(stagingTexture, 0);

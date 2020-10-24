@@ -119,6 +119,40 @@ namespace FamiStudio
             "S5BSquare3", // S5B
         };
 
+        // TODO: This is really UI specific, move somewhere else...
+        public static string[] ChannelIcons =
+        {
+            "Square",
+            "Square",
+            "Triangle",
+            "Noise",
+            "DPCM",
+            "Square",
+            "Square",
+            "Saw",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "Square",
+            "Square",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "DPCM",
+            "Square",
+            "Square",
+            "Square"
+        };
+
         public bool IsFdsWaveChannel  => type == Channel.FdsWave;
         public bool IsN163WaveChannel => type >= Channel.N163Wave1 && type <= Channel.N163Wave8;
         public bool IsVrc7FmChannel   => type >= Channel.Vrc7Fm1 && type <= Channel.Vrc7Fm6;

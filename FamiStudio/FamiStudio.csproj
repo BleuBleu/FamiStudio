@@ -94,6 +94,7 @@
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\RomFile.cs" />
     <Compile Include="Source\IO\RomFileBase.cs" />
+    <Compile Include="Source\IO\VideoFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
@@ -331,6 +332,9 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
+    <EmbeddedResource Include="Resources\ExportVideo.png" />
+    <EmbeddedResource Include="Resources\VideoWatermark.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

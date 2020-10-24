@@ -22,6 +22,7 @@ namespace FamiStudio
         private   int slidePitch = 0;
         private   int slideShift = 0;
         private   int pitchShift = 0;
+        private   byte noteValueBeforeSlide = 0;
         private   IRegisterListener registerListener;
 
         public ChannelState(int apu, int type, bool pal, int numN163Channels = 1)
@@ -56,7 +57,10 @@ namespace FamiStudio
                     if (newNote.IsSlideNote)
                     {
                         if (channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, famitrackerBaseTempo, noteTable, out slidePitch, out slideStep, out _))
+                        {
+                            noteValueBeforeSlide = newNote.Value;
                             newNote.Value = (byte)newNote.SlideNoteTarget;
+                        }
                     }
 
                     if (!newNote.HasVolume      && note.HasVolume)      { newNote.Volume      = note.Volume;      }
@@ -321,6 +325,18 @@ namespace FamiStudio
         {
             noteTriggered = false;
         }
+
+        public Note CurrentNote
+        {
+            get
+            {
+                var n = note.Clone();
+                if (n.IsSlideNote)
+                    n.Value = noteValueBeforeSlide;
+                return n;
+            }
+        }
+        public int  CurrentVolume => envelopeValues[Envelope.Volume];
     };
 
     public interface IRegisterListener

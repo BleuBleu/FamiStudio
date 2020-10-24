@@ -30,11 +30,7 @@ namespace FamiStudio
             }
 
             var project = song.Project;
-            var player = new WavPlayer(sampleRate, loopCount);
-
-            player.Loop = LoopMode.Song;
-            player.ChannelMask = channelMask;
-
+            var player = new WavPlayer(sampleRate, loopCount, channelMask);
             var wavData = player.GetSongSamples(song, project.PalMode, duration);
             var mp3Data = new byte[wavData.Length * sizeof(short) * 4];
             var mp3Size = 0;

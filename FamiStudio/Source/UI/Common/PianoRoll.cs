@@ -125,7 +125,8 @@ namespace FamiStudio
             Channel,
             Enveloppe,
             DPCM,
-            Arpeggio
+            Arpeggio,
+            VideoRecording
         };
 
         enum SnapResolution
@@ -255,6 +256,7 @@ namespace FamiStudio
         int scrollY = 0;
         int zoomLevel = 0;
         int selectedEffectIdx = 0;
+        float noteScaleY = 1.0f;
         string noteTooltip = "";
 
         EditionMode editMode = EditionMode.None;
@@ -278,6 +280,10 @@ namespace FamiStudio
         bool lastPasteSpecialPasteNotes = true;
         int  lastPasteSpecialPasteEffectMask = Note.EffectAllMask;
 
+        // Video stuff
+        Song videoSong;
+        Color videoKeyColor;
+
         private bool IsSnappingAllowed => editMode == EditionMode.Channel;
         private bool IsSnappingEnabled => IsSnappingAllowed && snap;
         
@@ -298,24 +304,24 @@ namespace FamiStudio
         {
             UpdateRenderCoords();
         }
-        
-        private void UpdateRenderCoords()
+
+        private void UpdateRenderCoords(float overrideScale = -1.0f)
         {
-            var scaling = RenderTheme.MainWindowScaling;
+            var scaling = overrideScale > 0.0f ? overrideScale : RenderTheme.MainWindowScaling;
 
             numOctaves                = DefaultNumOctaves;
-            headerSizeY               = (int)((editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio ? 2 : 1) * DefaultHeaderSizeY * scaling);
+            headerSizeY               = (int)((editMode == EditionMode.DPCM || editMode == EditionMode.None ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2)) * DefaultHeaderSizeY * scaling);
             effectPanelSizeY          = (int)(DefaultEffectPanelSizeY * scaling);
             effectButtonSizeY         = (int)(DefaultEffectButtonSizeY * scaling);
             noteSizeX                 = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
-            noteSizeY                 = (int)(DefaultNoteSizeY * scaling);
+            noteSizeY                 = (int)(DefaultNoteSizeY * scaling * noteScaleY);
             noteAttackSizeX           = (int)(DefaultNoteAttackSizeX * scaling);
-            releaseNoteSizeY          = (int)(DefaultReleaseNoteSizeY * scaling);
+            releaseNoteSizeY          = (int)(DefaultReleaseNoteSizeY * scaling * noteScaleY);
             envelopeMax               = (int)(DefaultEnvelopeMax * scaling);      
-            whiteKeySizeY             = (int)(DefaultWhiteKeySizeY * scaling);    
+            whiteKeySizeY             = (int)(DefaultWhiteKeySizeY * scaling * noteScaleY);    
             whiteKeySizeX             = (int)(DefaultWhiteKeySizeX * scaling);
             recordKeyPosX             = (int)((DefaultWhiteKeySizeX - 10) * scaling);
-            blackKeySizeY             = (int)(DefaultBlackKeySizeY * scaling);    
+            blackKeySizeY             = (int)(DefaultBlackKeySizeY * scaling * noteScaleY);    
             blackKeySizeX             = (int)(DefaultBlackKeySizeX * scaling);
             effectIconPosX            = (int)(DefaultEffectIconPosX * scaling);
             effectIconPosY            = (int)(DefaultEffectIconPosY * scaling);
@@ -408,6 +414,25 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        public void StartVideoRecording(RenderGraphics g, Song song, int zoom, bool thinNotes, out int outNoteSizeY)
+        {
+            editChannel = 0;
+            editMode = EditionMode.VideoRecording;
+            videoSong = song;
+            zoomLevel = zoom;
+            noteScaleY = thinNotes ? 0.667f : 1.0f;
+
+            UpdateRenderCoords(1.0f);
+            OnRenderInitialized(g);
+
+            outNoteSizeY = noteSizeY;
+        }
+
+        public void EndVideoRecording()
+        {
+            OnRenderTerminated();
+        }
+
         private void BuildSupportEffectList()
         {
             if (editChannel >= 0)
@@ -495,7 +520,7 @@ namespace FamiStudio
 
         private Song Song
         {
-            get { return App?.Song; }
+            get { return videoSong != null ? videoSong : App?.Song; }
         }
 
         private Envelope EditEnvelope
@@ -620,7 +645,7 @@ namespace FamiStudio
             for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
             {
                 int idx = z - MinZoomLevel;
-                int x = (int)(noteSizeX * (float)Math.Pow(2.0, z) - 1);
+                int x = (int)(DefaultNoteSizeX * g.WindowScaling * (float)Math.Pow(2.0, z) - 1);
 
                 stopNoteGeometry[idx, 0] = g.CreateConvexPath(new[]
                 {
@@ -745,7 +770,7 @@ namespace FamiStudio
             if (IsBlackKey(key))
             {
                 return new Rectangle(
-                    0,
+                    editMode == EditionMode.VideoRecording ? whiteKeySizeX - blackKeySizeX : 0,
                     virtualSizeY - octaveSizeY * octave - (key + 1) * noteSizeY - scrollY,
                     blackKeySizeX,
                     blackKeySizeY);
@@ -780,7 +805,7 @@ namespace FamiStudio
 
         private RenderBrush GetSeekBarBrush()
         {
-            return (App.IsRecording && editMode == EditionMode.Channel) ? seekBarRecBrush : seekBarBrush;
+            return (editMode == EditionMode.Channel && App.IsRecording) ? seekBarRecBrush : seekBarBrush;
         }
 
         class RenderArea
@@ -948,7 +973,7 @@ namespace FamiStudio
 
             if (((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && editEnvelope < Envelope.RegularCount) || (editMode == EditionMode.Channel))
             {
-                var seekFrame = editMode == EditionMode.Enveloppe|| editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio) : App.CurrentFrame;
+                var seekFrame = editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio) : App.CurrentFrame;
                 if (seekFrame >= 0)
                 {
                     g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
@@ -1013,8 +1038,8 @@ namespace FamiStudio
             g.PushClip(0, 0, whiteKeySizeX, Height);
             g.FillRectangle(0, 0, whiteKeySizeX, Height, whiteKeyBrush);
 
-            int playOctave = -1;
-            int playNote = -1;
+            var playOctave = -1;
+            var playNote = -1;
             var draggingNote = captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragNewNote;
             var dragOctave = (dragLastNoteValue - 1) / 12;
             var dragNote   = (dragLastNoteValue - 1) % 12;
@@ -1058,10 +1083,11 @@ namespace FamiStudio
                         g.DrawLine(0, y, whiteKeySizeX, y, theme.DarkGreyLineBrush2);
                 }
 
-                g.DrawText("C" + i, ThemeBase.FontSmall, 1, octaveBaseY - octaveNameOffsetY, theme.BlackBrush);
+                if (editMode == EditionMode.Channel)
+                    g.DrawText("C" + i, ThemeBase.FontSmall, 1, octaveBaseY - octaveNameOffsetY, theme.BlackBrush);
             }
 
-            if (App.IsRecording)
+            if (App != null && App.IsRecording)
             {
                 for (int i = 0; i < RecordingNoteToKeyMap.Count; i++)
                 { 
@@ -1468,13 +1494,13 @@ namespace FamiStudio
 
         private void RenderNote(RenderGraphics g, Channel channel, bool selected, bool activeChannel, Color color, Arpeggio arpeggio, int p0, int i0, Note n0, bool released, int p1, int i1)
         {
-            int x = Song.GetPatternStartNote(p0, i0) * noteSizeX - scrollX;
+            int x = channel.Song.GetPatternStartNote(p0, i0) * noteSizeX - scrollX;
             int y = virtualSizeY - n0.Value * noteSizeY - scrollY;
             int sy = released ? releaseNoteSizeY : noteSizeY;
 
             if (n0.IsSlideNote)
             {
-                if (channel.ComputeSlideNoteParams(n0, p0, i0, Song.FamitrackerSpeed, Song.NativeTempoNTSC, null, out _, out _, out int duration))
+                if (channel.ComputeSlideNoteParams(n0, p0, i0, channel.Song.FamitrackerSpeed, Song.NativeTempoNTSC, null, out _, out _, out int duration))
                 {
                     int slideSizeX = duration;
                     int slideSizeY = n0.SlideNoteTarget - n0.Value;
@@ -1490,7 +1516,7 @@ namespace FamiStudio
 
             g.PushTranslation(x, y);
 
-            int noteLen = Song.GetPatternStartNote(p1, i1) - Song.GetPatternStartNote(p0, i0);
+            int noteLen = channel.Song.GetPatternStartNote(p1, i1) - channel.Song.GetPatternStartNote(p0, i0);
             int sx = noteLen * noteSizeX;
             int noteTextPosX = attackIconPosX;
 
@@ -1503,7 +1529,7 @@ namespace FamiStudio
                 noteTextPosX += noteAttackSizeX + attackIconPosX;
             }
 
-            if (activeChannel && Settings.ShowNoteLabels && n0.IsMusical && sx > minNoteSizeForText)
+            if (activeChannel && Settings.ShowNoteLabels && editMode == EditionMode.Channel && n0.IsMusical && sx > minNoteSizeForText)
             {
                 g.DrawText(n0.FriendlyName, ThemeBase.FontSmall, noteTextPosX, noteTextPosY, theme.BlackBrush);
             }
@@ -1522,9 +1548,9 @@ namespace FamiStudio
             g.PopTransform();
         }
 
-        private void RenderReleaseStopNote(RenderGraphics g, int value, bool selected, Color color, Arpeggio arpeggio, int p1, int i1, Note n1, bool released)
+        private void RenderReleaseStopNote(RenderGraphics g, Song song, int value, bool selected, Color color, Arpeggio arpeggio, int p1, int i1, Note n1, bool released)
         {
-            int x = Song.GetPatternStartNote(p1, i1) * noteSizeX - scrollX;
+            int x = song.GetPatternStartNote(p1, i1) * noteSizeX - scrollX;
             int y = virtualSizeY - value * noteSizeY - scrollY;
 
             var paths = n1.IsStop ? (released ? stopReleaseNoteGeometry : stopNoteGeometry) : releaseNoteGeometry;
@@ -1549,14 +1575,17 @@ namespace FamiStudio
 
         private void RenderNotes(RenderGraphics g, RenderArea a)
         {
+            var song = Song;
+
             g.PushTranslation(whiteKeySizeX, headerAndEffectSizeY);
             g.PushClip(0, 0, Width, Height);
             g.Clear(ThemeBase.DarkGreyFillColor2);
 
             if (editMode == EditionMode.Channel ||
+                editMode == EditionMode.VideoRecording ||
                 editMode == EditionMode.DPCM)
             {
-                int maxX = editMode == EditionMode.Channel ? Song.GetPatternStartNote(a.maxVisiblePattern) * noteSizeX - scrollX : Width;
+                int maxX = editMode == EditionMode.Channel ? song.GetPatternStartNote(a.maxVisiblePattern) * noteSizeX - scrollX : Width;
 
                 // Draw the note backgrounds
                 for (int i = a.minVisibleOctave; i < a.maxVisibleOctave; i++)
@@ -1575,21 +1604,22 @@ namespace FamiStudio
 
                 DrawSelectionRect(g, Height);
 
-                if (editMode == EditionMode.Channel)
+                if (editMode == EditionMode.Channel || 
+                    editMode == EditionMode.VideoRecording)
                 {
                     // Draw the vertical bars.
                     for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                     {
-                        var patternLen = Song.GetPatternLength(p);
-                        var barLength = Song.GetPatternBarLength(p);
+                        var patternLen = song.GetPatternLength(p);
+                        var barLength = song.GetPatternBarLength(p);
 
-                        if (Song.UsesFamiStudioTempo)
+                        if (song.UsesFamiStudioTempo)
                         {
-                            var noteLength = Song.GetPatternNoteLength(p);
+                            var noteLength = song.GetPatternNoteLength(p);
 
                             for (int i = p == 0 ? 1 : 0; i < patternLen; i++)
                             {
-                                int x = (Song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
+                                int x = (song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
 
                                 if (i % barLength == 0) 
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, i == 0 ? 3.0f : 1.0f);
@@ -1603,7 +1633,7 @@ namespace FamiStudio
                         {
                             for (int i = p == 0 ? 1 : 0; i < patternLen; i++)
                             {
-                                int x = (Song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
+                                int x = (song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
 
                                 if (i % barLength == 0)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, i == 0 ? 3.0f : 1.0f);
@@ -1615,16 +1645,21 @@ namespace FamiStudio
 
                     g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
 
-                    int seekX = App.CurrentFrame * noteSizeX - scrollX;
-                    g.DrawLine(seekX, 0, seekX, Height, GetSeekBarBrush(), 3);
+                    if (editMode != EditionMode.VideoRecording)
+                    {
+                        int seekX = App.CurrentFrame * noteSizeX - scrollX;
+                        g.DrawLine(seekX, 0, seekX, Height, GetSeekBarBrush(), 3);
+                    }
+
+                    var ghostChannelMask = App != null ? App.GhostChannelMask : 0;
 
                     // Pattern drawing.
-                    for (int c = 0; c < Song.Channels.Length; c++)
+                    for (int c = 0; c < song.Channels.Length; c++)
                     {
-                        var channel = Song.Channels[c];
+                        var channel = song.Channels[c];
                         var isActiveChannel = c == editChannel;
 
-                        if (isActiveChannel || (App.GhostChannelMask & (1 << c)) != 0)
+                        if (isActiveChannel || (ghostChannelMask & (1 << c)) != 0)
                         {
                             var selected = false;
                             var color = ThemeBase.LightGreyFillColor1;
@@ -1645,12 +1680,12 @@ namespace FamiStudio
 
                             for (int p1 = a.minVisiblePattern; p1 < a.maxVisiblePattern; p1++)
                             {
-                                var pattern = Song.Channels[c].PatternInstances[p1];
+                                var pattern = song.Channels[c].PatternInstances[p1];
 
                                 if (pattern == null)
                                     continue;
 
-                                var patternLen = Song.GetPatternLength(p1);
+                                var patternLen = song.GetPatternLength(p1);
 
                                 foreach (var kv in pattern.Notes)
                                 {
@@ -1669,7 +1704,7 @@ namespace FamiStudio
                                         int value = n0.Value >= Note.MusicalNoteMin && n0.Value <= Note.MusicalNoteMax ? n0.Value : 49; // C4 by default.
 
                                         if (value >= a.minVisibleNote && value <= a.maxVisibleNote)
-                                            RenderReleaseStopNote(g, value, selected, color, arpeggio, p1, i1, n1, released);
+                                            RenderReleaseStopNote(g, song, value, selected, color, arpeggio, p1, i1, n1, released);
 
                                         if (n1.IsRelease)
                                             released = true;
@@ -1684,7 +1719,7 @@ namespace FamiStudio
                                         else
                                         {
                                             i0 = i1 + 1;
-                                            if (p0 < 0 || i0 >= Song.GetPatternLength(p0))
+                                            if (p0 < 0 || i0 >= song.GetPatternLength(p0))
                                             {
                                                 i0 = 0;
                                                 p0++;
@@ -1720,13 +1755,16 @@ namespace FamiStudio
                         }
                     }
 
-                    var channelType = Song.Channels[editChannel].Type;
-                    var channelName = Song.Channels[editChannel].Name;
+                    if (editMode == EditionMode.Channel)
+                    {
+                        var channelType = song.Channels[editChannel].Type;
+                        var channelName = song.Channels[editChannel].Name;
 
-                    if (channelType >= Channel.ExpansionAudioStart)
-                        channelName += $" ({Song.Project.ExpansionAudioName})";
+                        if (channelType >= Channel.ExpansionAudioStart)
+                            channelName += $" ({song.Project.ExpansionAudioName})";
 
-                    g.DrawText($"Editing Channel {channelName}", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                        g.DrawText($"Editing Channel {channelName}", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                    }
                 }
                 else
                 {
@@ -1868,6 +1906,26 @@ namespace FamiStudio
             {
                 g.DrawText(noteTooltip, ThemeBase.FontMediumBigRight, 0, Height - tooltipTextPosY, whiteKeyBrush, Width - tooltipTextPosX);
             }
+        }
+
+        public void RenderVideoFrame(RenderGraphics g, int channel, int patternIndex, int noteIndex, float centerNote, int highlightKey, Color highlightColor)
+        {
+            Debug.Assert(editMode == EditionMode.VideoRecording);
+
+            int noteY = (int)Math.Round(virtualSizeY - centerNote * noteSizeY + noteSizeY / 2);
+
+            editChannel = channel;
+            scrollX = Song.GetPatternStartNote(patternIndex, noteIndex) * noteSizeX;
+            scrollY = noteY - (Height - headerAndEffectSizeY) / 2;
+            playingNote = highlightKey;
+            videoKeyColor = highlightColor;
+
+            Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
+            Utils.DisposeAndNullify(ref blackKeyPressedBrush);
+            whiteKeyPressedBrush = g.CreateSolidBrush(highlightColor);
+            blackKeyPressedBrush = g.CreateSolidBrush(highlightColor);
+
+            OnRender(g);
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -3002,7 +3060,7 @@ namespace FamiStudio
                 int maxScrollX = 0;
                 int maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
 
-                if (editMode == EditionMode.Channel)
+                if (editMode == EditionMode.Channel || editMode == EditionMode.VideoRecording)
                     maxScrollX = Math.Max(Song.GetPatternStartNote(Song.Length) * noteSizeX - ScrollMargin, 0);
                 else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                     maxScrollX = Math.Max(EditEnvelope.Length * noteSizeX - ScrollMargin, 0);

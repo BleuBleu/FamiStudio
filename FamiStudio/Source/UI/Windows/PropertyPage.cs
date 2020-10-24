@@ -32,6 +32,8 @@ namespace FamiStudio
             public Label label;
             public Control control;
             public int leftMarging;
+            public string fileChooserPrompt;
+            public string fileChooserFilter;
         };
 
         private int layoutHeight;
@@ -119,6 +121,29 @@ namespace FamiStudio
             return label;
         }
 
+        private Label CreateLinkLabel(string str, string url, string tooltip = null)
+        {
+            var label = new LinkLabel();
+
+            label.Text = str;
+            label.Font = font;
+            label.LinkColor = ThemeBase.LightGreyFillColor1;
+            label.Links.Add(0, str.Length, url);
+            label.LinkClicked += Label_LinkClicked;
+            label.AutoSize = true;
+            label.ForeColor = ThemeBase.LightGreyFillColor2;
+            label.BackColor = BackColor;
+            toolTip.SetToolTip(label, tooltip);
+
+            return label;
+        }
+
+        private void Label_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            var link = sender as LinkLabel;
+            Utils.OpenUrl(link.Links[0].LinkData as string);
+        }
+
         private TextBox CreateColoredTextBox(string txt, Color backColor)
         {
             var textBox = new TextBox();
@@ -130,13 +155,14 @@ namespace FamiStudio
             return textBox;
         }
 
-        private TextBox CreateTextBox(string txt, int maxLength)
+        private TextBox CreateTextBox(string txt, int maxLength, string tooltip = null)
         {
             var textBox = new TextBox();
 
             textBox.Text = txt;
             textBox.Font = font;
             textBox.MaxLength = maxLength;
+            toolTip.SetToolTip(textBox, tooltip);
 
             return textBox;
         }
@@ -301,15 +327,47 @@ namespace FamiStudio
                 });
         }
 
-        public void AddString(string label, string value, int maxLength = 0)
+        public void AddString(string label, string value, int maxLength = 0, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.String,
                     label = CreateLabel(label),
-                    control = CreateTextBox(value, maxLength)
+                    control = CreateTextBox(value, maxLength, tooltip)
                 });
+        }
+
+        public void AddFileChooser(string label, string value, string prompt, string filetypes, string tooltip = null)
+        {
+            var textBox = CreateTextBox(value, 0, tooltip);
+            textBox.ReadOnly = true;
+            textBox.Click += FileChooser_Click;
+
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.String,
+                    label = CreateLabel(label),
+                    control = textBox,
+                    fileChooserPrompt = prompt,
+                    fileChooserFilter = filetypes
+                });
+        }
+
+        private void FileChooser_Click(object sender, EventArgs e)
+        {
+            foreach (var prop in properties)
+            {
+                if (prop.control == sender)
+                {
+                    var dummy = "";
+                    string filename = PlatformUtils.ShowOpenFileDialog(prop.fileChooserPrompt, prop.fileChooserFilter, ref dummy);
+                    if (filename != null)
+                        (prop.control as TextBox).Text = filename;
+                    break;
+                }
+            }
         }
 
         public void AddLabel(string label, string value, string tooltip = null)
@@ -320,6 +378,17 @@ namespace FamiStudio
                     type = PropertyType.String,
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateLabel(value, tooltip)
+                });
+        }
+
+        public void AddLinkLabel(string label, string value, string url, string tooltip = null)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.String,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateLinkLabel(value, url, tooltip)
                 });
         }
 

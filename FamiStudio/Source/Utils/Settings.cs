@@ -50,6 +50,9 @@ namespace FamiStudio
         public static string LastSampleFolder = "";
         public static string LastExportFolder = "";
 
+        // Misc
+        public static string FFmpegExecutablePath = "";
+
         public static void Load()
         {
             var ini = new IniFile();
@@ -74,6 +77,7 @@ namespace FamiStudio
             LastInstrumentFolder = ini.GetString("Folders", "LastInstrumentFolder", "");
             LastSampleFolder = ini.GetString("Folders", "LastSampleFolder", "");
             LastExportFolder = ini.GetString("Folders", "LastExportFolder", "");
+            FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
             if (DpiScaling != 100 && DpiScaling != 150 && DpiScaling != 200)
                 DpiScaling = 0;
@@ -90,12 +94,25 @@ namespace FamiStudio
                 LastExportFolder = "";
 
             // Try to point to the demo songs initially.
-            if (!Directory.Exists(LastFileFolder) || string.IsNullOrEmpty(LastFileFolder))
+            if (string.IsNullOrEmpty(LastFileFolder) || !Directory.Exists(LastFileFolder))
             {
                 var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 var demoSongsPath = Path.Combine(appPath, "Demo Songs");
                 LastFileFolder = Directory.Exists(demoSongsPath) ? demoSongsPath : "";
             }
+
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+            // Linux or Mac is more likely to have standard path for ffmpeg.
+            if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
+            {
+                if (File.Exists("/usr/bin/ffmpeg"))
+                    FFmpegExecutablePath = "/usr/bin/ffmpeg";
+                else if (File.Exists("/usr/local/bin/ffmpeg"))
+                    FFmpegExecutablePath = "/usr/local/bin/ffmpeg";
+                else
+                    FFmpegExecutablePath = "ffmpeg"; // Hope for the best!
+            }
+#endif
 
             // No deprecation at the moment.
             Version = SettingsVersion;
@@ -124,6 +141,7 @@ namespace FamiStudio
             ini.SetString("Folders", "LastInstrumentFolder", LastInstrumentFolder);
             ini.SetString("Folders", "LastSampleFolder", LastSampleFolder);
             ini.SetString("Folders", "LastExportFolder", LastExportFolder);
+            ini.SetString("FFmpeg", "ExecutablePath", FFmpegExecutablePath);
 
             Directory.CreateDirectory(GetConfigFilePath());
 

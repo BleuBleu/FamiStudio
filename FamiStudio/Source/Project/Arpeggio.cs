@@ -76,5 +76,27 @@ namespace FamiStudio
 
             return notes.ToArray();
         }
+
+        public bool GetChordMinMaxOffset(out int minOffset, out int maxOffset)
+        {
+            if (envelope.IsEmpty)
+            {
+                minOffset = 0;
+                maxOffset = 0;
+                return false;
+            }
+
+            minOffset = envelope.Values[0];
+            maxOffset = envelope.Values[0];
+
+            for (int i = 1; i < envelope.Length; i++)
+            {
+                var val = envelope.Values[i];
+                minOffset = Math.Min(minOffset, val);
+                maxOffset = Math.Max(maxOffset, val);
+            }
+
+            return true;
+        }
     }
 }

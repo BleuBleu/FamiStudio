@@ -37,6 +37,11 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	- Fix 1 frame missing in NSF
 	- Fix computation of slide notes in FamiTracker tempo mode.
 	- Think of FTM import, slide conversions, etc.
+- Video export:
+	- Test with scaling.
+	x Blue lines shovel knight?
+	x ffmpeg location
+	- linux/macos
 / Song merge 
 	x Add unique ID validation.
 	x fix instrument import... very bad.
@@ -45,6 +50,10 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 / ROM (add new features) + Update to 2.3.0
 - Sound engine demo, re-export data at the very end.
 - Update documentation (sound engine, copy/delete special, etc.)
+- BUG: Dont display label on released notes.
+- BUG: If you start selecting in the header in sequencer (right click) and go outside the window, it starts a drag!
+- BUG: Missing page up/down on MacOS.
+- BUG: Linux, inconsistencies between GTK/OpenTK keyboard reads... Get rid of Open TK!
 - RESIZE ALL NSF BINARIES, THEY GOT SMALLER!
 
 => Configure QWERTY keys for piano input? Will be super annoying to do, need to do on all 3 platforms...
@@ -55,6 +64,7 @@ TESTING:
 - Test note labels in 150 + 200% scaling.
 - Test paste special on mac + hi-dpi.
 - mp3/wav command line export.
+- Rested hi-dpi, changed some stuff for video.
 
 Delay notes
 ===========

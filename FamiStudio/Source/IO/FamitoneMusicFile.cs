@@ -1361,16 +1361,7 @@ namespace FamiStudio
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
         public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmOffset, MachineType machine)
         {
-            var tempFolder = Path.Combine(Path.GetTempPath(), "FamiStudio");
-
-            try
-            {
-                Directory.Delete(tempFolder, true);
-            }
-            catch {}
-
-            Directory.CreateDirectory(tempFolder);
-
+            var tempFolder = Utils.GetTemporaryDiretory();
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 

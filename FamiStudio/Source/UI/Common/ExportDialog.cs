@@ -12,6 +12,7 @@ namespace FamiStudio
         enum ExportFormat
         {
             WavMp3,
+            Video,
             Nsf,
             Rom,
             Text,
@@ -26,6 +27,7 @@ namespace FamiStudio
         string[] ExportFormatNames =
         {
             "WAV / MP3",
+            "Video",
             "NSF",
             "ROM / FDS",
             "FamiStudio Text",
@@ -40,6 +42,7 @@ namespace FamiStudio
         string[] ExportIcons =
         {
             "ExportWav",
+            "ExportVideo",
             "ExportNsf",
             "ExportRom",
             "ExportText",
@@ -114,6 +117,17 @@ namespace FamiStudio
                     page.AddStringListMulti("Channels :", GetChannelNames(), null); // 8
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
+                    break;
+                case ExportFormat.Video:
+                    // MATTT: Linux/Mac + settings.
+                    page.AddFileChooser("Path To FFmpeg:", Settings.FFmpegExecutablePath, "Please select FFmpeg executable", "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe", "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 0
+                    page.AddLinkLabel("", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
+                    page.AddStringList("Song :", songNames, songNames[0]); // 2
+                    page.AddStringList("Audio Bit Rate (kb/s) :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
+                    page.AddStringList("Video Bit Rate (mb/s):", new[] { "2", "4", "8", "10", "12", "14", "16", "18", "20" }, "12"); // 4
+                    page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 5
+                    page.AddBoolean("Thin Notes :", false, "Draws notes a bit thinner, recommended if song has lots of channels."); // 6
+                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 7
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
@@ -251,6 +265,39 @@ namespace FamiStudio
                     else
                         WaveFile.Save(song, filename, sampleRate, loopCount, duration, channelMask);
                 }
+            }
+        }
+
+        private void ExportVideo()
+        {
+            var filename = PlatformUtils.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
+
+            if (filename != null)
+            {
+                var zoomValues = new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" };
+
+                var props = dialog.GetPropertyPage((int)ExportFormat.Video);
+                var ffmpeg = props.GetPropertyValue<string>(0);
+                var songName = props.GetPropertyValue<string>(2);
+                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(3));
+                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4));
+                var pianoRollZoom = Array.IndexOf(zoomValues, props.GetPropertyValue<string>(5)) - 3;
+                var thinNotes = props.GetPropertyValue<bool>(6);
+                var selectedChannels = props.GetPropertyValue<bool[]>(7);
+                var song = project.GetSong(songName);
+
+                var channelMask = 0;
+                for (int i = 0; i < selectedChannels.Length; i++)
+                {
+                    if (selectedChannels[i])
+                        channelMask |= (1 << i);
+                }
+
+                // Update settings right away.
+                Settings.FFmpegExecutablePath = ffmpeg;
+                Settings.Save();
+
+                new VideoFile().Save(song, ffmpeg, filename, channelMask, audioBitRate, videoBitRate, pianoRollZoom, thinNotes);
             }
         }
 
@@ -406,6 +453,7 @@ namespace FamiStudio
                 switch (selectedFormat)
                 {
                     case ExportFormat.WavMp3: ExportWavMp3(); break;
+                    case ExportFormat.Video: ExportVideo(); break;
                     case ExportFormat.Nsf: ExportNsf(); break;
                     case ExportFormat.Rom: ExportRom(); break;
                     case ExportFormat.Text: ExportText(); break;

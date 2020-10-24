@@ -609,21 +609,6 @@ namespace FamiStudio
             }
         }
 
-        private void OpenUrl(string url)
-        {
-            try
-            {
-#if FAMISTUDIO_LINUX
-                Process.Start("xdg-open", url);
-#elif FAMISTUDIO_MACOS
-                Process.Start("open", url);
-#else
-                Process.Start(url);
-#endif
-            }
-            catch { }
-        }
-
         private void CheckNewReleaseDone()
         {
             if (newReleaseAvailable)
@@ -632,7 +617,7 @@ namespace FamiStudio
 
                 if (PlatformUtils.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    OpenUrl("http://www.famistudio.org");
+                    Utils.OpenUrl("http://www.famistudio.org");
                 }
             }
         }
@@ -652,7 +637,7 @@ namespace FamiStudio
 
         public void ShowHelp()
         {
-            OpenUrl("http://www.famistudio.org/doc/index.html");
+            Utils.OpenUrl("http://www.famistudio.org/doc/index.html");
         }
 
         private void UpdateTitle()
@@ -819,6 +804,12 @@ namespace FamiStudio
             return false;
         }
 
+        private unsafe void VideoTest()
+        {
+            var vf = new VideoFile();
+            vf.Save(project.Songs[0], "d:\\dump\\ffmpeg\\ffmpeg.exe", "d:\\dump\\test3.mp4", 0x1f, 128, 12, -1, false);
+        }
+
         public void KeyDown(KeyEventArgs e)
         {
             bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
@@ -880,6 +871,10 @@ namespace FamiStudio
 
                     Play();
                 }
+            }
+            else if (e.KeyCode == Keys.V)
+            {
+                VideoTest();
             }
             else if (e.KeyCode == Keys.Home)
             {

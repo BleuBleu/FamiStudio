@@ -259,34 +259,8 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
-            bmpTracks[Channel.Square1] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.Square2] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.Triangle] = g.CreateBitmapFromResource("Triangle");
-            bmpTracks[Channel.Noise] = g.CreateBitmapFromResource("Noise");
-            bmpTracks[Channel.Dpcm] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.Vrc6Square1] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.Vrc6Square2] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.Vrc7Fm1] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.Vrc7Fm2] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.Vrc7Fm3] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.Vrc7Fm4] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.Vrc7Fm5] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.Vrc7Fm6] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.Vrc6Saw] = g.CreateBitmapFromResource("Saw");
-            bmpTracks[Channel.FdsWave] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.Mmc5Square1] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.Mmc5Square2] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.N163Wave1] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.N163Wave2] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.N163Wave3] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.N163Wave4] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.N163Wave5] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.N163Wave6] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.N163Wave7] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.N163Wave8] = g.CreateBitmapFromResource("DPCM");
-            bmpTracks[Channel.S5BSquare1] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.S5BSquare2] = g.CreateBitmapFromResource("Square");
-            bmpTracks[Channel.S5BSquare3] = g.CreateBitmapFromResource("Square");
+            for (int i = 0; i < Channel.Count; i++)
+                bmpTracks[i] = g.CreateBitmapFromResource(Channel.ChannelIcons[i]);
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
             bmpLoopPoint = g.CreateBitmapFromResource("LoopSmallFill");
