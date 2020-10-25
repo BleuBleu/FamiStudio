@@ -808,7 +808,11 @@ namespace FamiStudio
         private unsafe void VideoTest()
         {
             var vf = new VideoFile();
+#if FAMISTUDIO_LINUX
+            vf.Save(project.Songs[0], Settings.FFmpegExecutablePath, "/home/mat/Downloads/test.mp4", 0x1f, 128, 12, -1, false);
+#else
             vf.Save(project.Songs[0], Settings.FFmpegExecutablePath, "d:\\dump\\test3.mp4", 0x1f, 128, 12, -1, false);
+#endif
         }
 
         public void KeyDown(KeyEventArgs e)

@@ -406,6 +406,11 @@ namespace FamiStudio
             var oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
 
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+            var dummyControl = new DummyGLControl();
+            dummyControl.Move(0, 0, videoResX, videoResY);
+#endif
+
             // Setup piano roll and images.
             var pianoRoll = new PianoRoll();
 #if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
@@ -445,7 +450,7 @@ namespace FamiStudio
 
                         // Render the full screen overlay.
 #if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-                        videoGraphics.BeginDraw(null, videoResY);
+                        videoGraphics.BeginDraw(dummyControl, videoResY);
 #else
                         videoGraphics.BeginDraw();
 #endif
@@ -496,7 +501,7 @@ namespace FamiStudio
                             }
 
 #if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-                            channelGraphics.BeginDraw(null, channelResY);
+                            channelGraphics.BeginDraw(pianoRoll, channelResY);
 #else
                             channelGraphics.BeginDraw();
 #endif
@@ -697,4 +702,10 @@ namespace FamiStudio
             return null;
         }
     }
+
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+    class DummyGLControl : GLControl
+    {
+    };
+#endif
 }

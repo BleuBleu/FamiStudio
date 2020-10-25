@@ -191,7 +191,7 @@ namespace FamiStudio
             windowScaling = GLTheme.MainWindowScaling;
         }
 
-        public void BeginDraw(GLControl control, int windowSizeY)
+        public virtual void BeginDraw(GLControl control, int windowSizeY)
         {
 #if FAMISTUDIO_LINUX
             var lineWidths = new float[2];
@@ -220,7 +220,7 @@ namespace FamiStudio
             GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
         }
 
-        public void EndDraw()
+        public virtual void EndDraw()
         {
             control = null;
         }
@@ -854,24 +854,56 @@ namespace FamiStudio
 
     public class GLOffscreenGraphics : GLGraphics
     {
+        protected int fbo;
+        protected int texture;
+        protected int resX;
+        protected int resY;
+
         public GLOffscreenGraphics(int imageSizeX, int imageSizeY)
         {
-            // MATTT: Just a test to see what Linux/Mac supports.
-            var count = GL.GetInteger(GetPName.NumExtensions);
-            var OpenGLExtensions = new HashSet<string>();
-            for (var i = 0; i < count; i++)
-            {
-                var extension = GL.GetString(StringNameIndexed.Extensions, i);
-                OpenGLExtensions.Add(extension);
-            }
+            resX = imageSizeX;
+            resY = imageSizeY;
+
+            texture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, texture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, imageSizeX, imageSizeY, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToBorder);
+
+            fbo = GL.Ext.GenFramebuffer();
+            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
+            GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, texture, 0);
+            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, 0);
+        }
+
+        public override void BeginDraw(GLControl control, int windowSizeY)
+        {
+            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, fbo);
+            GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+
+            base.BeginDraw(control, windowSizeY);
+        }
+
+        public override void EndDraw()
+        {
+            base.EndDraw();
+
+            GL.Ext.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
         }
 
         public unsafe void GetBitmap(byte[] data)
         {
+            fixed (byte* p = &data[0])
+                GL.ReadPixels(0, 0, resX, resY, PixelFormat.Rgba, PixelType.UnsignedByte, new IntPtr(p));
         }
 
         public override void Dispose()
         {
+            if (texture != 0) GL.DeleteTextures(1, ref texture);
+            if (fbo != 0) GL.Ext.DeleteFramebuffers(1, ref fbo);
+
             base.Dispose();
         }
     };

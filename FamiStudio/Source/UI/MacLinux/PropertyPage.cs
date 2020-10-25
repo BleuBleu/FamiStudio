@@ -280,9 +280,9 @@ namespace FamiStudio
             button.Label = text;
             button.TooltipText = tooltip;
             button.Clicked += Button_Clicked; 		
-			return button;
-		}
-		
+            return button;
+        }
+
         public void AddColoredString(string value, System.Drawing.Color color)
         {
             properties.Add(
