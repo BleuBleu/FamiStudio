@@ -895,10 +895,24 @@ namespace FamiStudio
 
         public unsafe void GetBitmap(byte[] data)
         {
+            byte[] tmp = new byte[data.Length];
+
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fbo);
-            fixed (byte* p = &data[0])
-                GL.ReadPixels(0, 0, resX, resY, PixelFormat.Rgba, PixelType.UnsignedByte, new IntPtr(p));
+            fixed (byte* p = &tmp[0])
+                GL.ReadPixels(0, 0, resX, resY, PixelFormat.Bgra, PixelType.UnsignedByte, new IntPtr(p));
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
+
+            // Flip image vertically to match D3D. 
+            for (int y = 0; y < resY; y++)
+            {
+                int y0 = y;
+                int y1 = resY - y - 1;
+
+                y0 *= resX * 4;
+                y1 *= resX * 4;
+
+                Array.Copy(tmp, y0, data, y1, resX * 4);
+            }
         }
 
         public override void Dispose()
