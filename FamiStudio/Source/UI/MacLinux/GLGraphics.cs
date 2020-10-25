@@ -173,26 +173,22 @@ namespace FamiStudio
     public class GLGraphics : IDisposable
     {
 #if FAMISTUDIO_LINUX
-        private bool supportsLineWidth = false;
+        protected bool supportsLineWidth = false;
 #endif
-        private bool antialiasing = false;
-        private float windowScaling = 1.0f;
-        private int windowSizeY;
-        private GLControl control;
-        private Rectangle scissor;
-        private Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
-        private Stack<Rectangle> clipStack = new Stack<Rectangle>();
-        private Stack<Vector4> transformStack = new Stack<Vector4>();
-        private Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
-        public  float WindowScaling => windowScaling;
+        protected bool antialiasing = false;
+        protected float windowScaling = 1.0f;
+        protected int windowSizeY;
+        protected GLControl control;
+        protected Rectangle scissor;
+        protected Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
+        protected Stack<Rectangle> clipStack = new Stack<Rectangle>();
+        protected Stack<Vector4> transformStack = new Stack<Vector4>();
+        protected Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
+        public float WindowScaling => windowScaling;
 
         public GLGraphics()
         {
             windowScaling = GLTheme.MainWindowScaling;
-        }
-
-        public GLGraphics(int imageSizeX, int imageSizeY)
-        {
         }
 
         public void BeginDraw(GLControl control, int windowSizeY)
@@ -229,7 +225,7 @@ namespace FamiStudio
             control = null;
         }
 
-        private Rectangle FlipRectangleY(Rectangle rc)
+        protected Rectangle FlipRectangleY(Rectangle rc)
         {
             return new Rectangle(
                 rc.Left,
@@ -282,7 +278,7 @@ namespace FamiStudio
             clipStack.Push(scissor);
             scissor = new Rectangle(
                 (int)(transform.Z + control.Left + x0),
-                (int)(transform.W + control.Top  + y0),
+                (int)(transform.W + control.Top + y0),
                 x1 - x0,
                 y1 - y0);
             scissor = FlipRectangleY(scissor);
@@ -326,7 +322,7 @@ namespace FamiStudio
             GL.End();
             GL.Disable(EnableCap.Texture2D);
         }
-        
+
         public void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
         {
             GL.Enable(EnableCap.Texture2D);
@@ -397,8 +393,8 @@ namespace FamiStudio
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && width > 1)
             {
-                DrawThickLineAsPolygon(new[] { 
-                    x0, y0, 
+                DrawThickLineAsPolygon(new[] {
+                    x0, y0,
                     x1, y1 }, brush, width);
             }
             else
@@ -455,10 +451,10 @@ namespace FamiStudio
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && width > 1)
             {
-                DrawThickLineAsPolygon(new[] { 
-                    x0, y0, 
-                    x1, y0, 
-                    x1, y1, 
+                DrawThickLineAsPolygon(new[] {
+                    x0, y0,
+                    x1, y0,
+                    x1, y1,
                     x0, y1,
                     x0, y0 }, brush, width);
             }
@@ -644,7 +640,7 @@ namespace FamiStudio
             GL.PopMatrix();
         }
 
-        private void DrawThickLineAsPolygon(float[] points, GLBrush brush, float width)
+        protected void DrawThickLineAsPolygon(float[] points, GLBrush brush, float width)
         {
             GL.Begin(BeginMode.Quads);
             for (int i = 0; i < points.Length / 2 - 1; i++)
@@ -773,7 +769,7 @@ namespace FamiStudio
             return brush;
         }
 
-        private T ReadFontParam<T>(string[] values, string key)
+        protected T ReadFontParam<T>(string[] values, string key)
         {
             for (int i = 1; i < values.Length; i += 2)
             {
@@ -803,61 +799,80 @@ namespace FamiStudio
                 switch (splits[0])
                 {
                     case "common":
-                    {
-                        baseValue = ReadFontParam<int>(splits, "base");
-                        texSizeX  = ReadFontParam<int>(splits, "scaleW");
-                        texSizeY  = ReadFontParam<int>(splits, "scaleH");
+                        {
+                            baseValue = ReadFontParam<int>(splits, "base");
+                            texSizeX = ReadFontParam<int>(splits, "scaleW");
+                            texSizeY = ReadFontParam<int>(splits, "scaleH");
 
-                        int glTex = existingTexture;
-                        if (glTex == 0)
-                            glTex = CreateGLTexture(pixbuf);
+                            int glTex = existingTexture;
+                            if (glTex == 0)
+                                glTex = CreateGLTexture(pixbuf);
 
-                        font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
-                        break;
-                    }
+                            font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
+                            break;
+                        }
                     case "char":
-                    {
-                        var charInfo = new GLFont.CharInfo();
+                        {
+                            var charInfo = new GLFont.CharInfo();
 
-                        int c = ReadFontParam<int>(splits, "id");
-                        int x = ReadFontParam<int>(splits, "x");
-                        int y = ReadFontParam<int>(splits, "y");
+                            int c = ReadFontParam<int>(splits, "id");
+                            int x = ReadFontParam<int>(splits, "x");
+                            int y = ReadFontParam<int>(splits, "y");
 
-                        charInfo.width    = ReadFontParam<int>(splits, "width");
-                        charInfo.height   = ReadFontParam<int>(splits, "height");
-                        charInfo.xoffset  = ReadFontParam<int>(splits, "xoffset");
-                        charInfo.yoffset  = ReadFontParam<int>(splits, "yoffset");
-                        charInfo.xadvance = ReadFontParam<int>(splits, "xadvance");
-                        charInfo.u0 = (x + 0.0f) / (float)texSizeX;
-                        charInfo.v0 = (y + 0.0f) / (float)texSizeY;
-                        charInfo.u1 = (x + 0.0f + charInfo.width) / (float)texSizeX;
-                        charInfo.v1 = (y + 0.0f + charInfo.height) / (float)texSizeY;
+                            charInfo.width = ReadFontParam<int>(splits, "width");
+                            charInfo.height = ReadFontParam<int>(splits, "height");
+                            charInfo.xoffset = ReadFontParam<int>(splits, "xoffset");
+                            charInfo.yoffset = ReadFontParam<int>(splits, "yoffset");
+                            charInfo.xadvance = ReadFontParam<int>(splits, "xadvance");
+                            charInfo.u0 = (x + 0.0f) / (float)texSizeX;
+                            charInfo.v0 = (y + 0.0f) / (float)texSizeY;
+                            charInfo.u1 = (x + 0.0f + charInfo.width) / (float)texSizeX;
+                            charInfo.v1 = (y + 0.0f + charInfo.height) / (float)texSizeY;
 
-                        font.AddChar((char)c, charInfo);
+                            font.AddChar((char)c, charInfo);
 
-                        break;
-                    }
+                            break;
+                        }
                     case "kerning":
-                    {
-                        int c0 = ReadFontParam<int>(splits, "first");
-                        int c1 = ReadFontParam<int>(splits, "second");
-                        int amount = ReadFontParam<int>(splits, "amount");
-                        font.AddKerningPair(c0, c1, amount);
-                        break;
-                    }
+                        {
+                            int c0 = ReadFontParam<int>(splits, "first");
+                            int c1 = ReadFontParam<int>(splits, "second");
+                            int amount = ReadFontParam<int>(splits, "amount");
+                            font.AddKerningPair(c0, c1, amount);
+                            break;
+                        }
                 }
             }
 
             return font;
         }
 
-
-        public void Dispose()
+        public virtual void Dispose()
         {
+        }
+    };
+
+    public class GLOffscreenGraphics : GLGraphics
+    {
+        public GLOffscreenGraphics(int imageSizeX, int imageSizeY)
+        {
+            // MATTT: Just a test to see what Linux/Mac supports.
+            var count = GL.GetInteger(GetPName.NumExtensions);
+            var OpenGLExtensions = new HashSet<string>();
+            for (var i = 0; i < count; i++)
+            {
+                var extension = GL.GetString(StringNameIndexed.Extensions, i);
+                OpenGLExtensions.Add(extension);
+            }
         }
 
         public unsafe void GetBitmap(byte[] data)
         {
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
         }
     };
 }
