@@ -534,16 +534,10 @@ namespace FamiStudio
                                         int videoB = videoImage[videoIdx + 2];
 
                                         // Integer alpha blend.
-#if FAMISTUDIO_WINDOWS
                                         // Note that alpha is pre-multiplied, so we if we multiply again, image will look aliased.
                                         channelR = (byte)((channelR * (255 - videoA) + videoR * 255 /*videoA*/) >> 8);
                                         channelG = (byte)((channelG * (255 - videoA) + videoG * 255 /*videoA*/) >> 8);
                                         channelB = (byte)((channelB * (255 - videoA) + videoB * 255 /*videoA*/) >> 8);
-#else
-                                        channelR = (byte)((channelR * (255 - videoA) + videoR * videoA) >> 8);
-                                        channelG = (byte)((channelG * (255 - videoA) + videoG * videoA) >> 8);
-                                        channelB = (byte)((channelB * (255 - videoA) + videoB * videoA) >> 8);
-#endif
                                     }
 
                                     // We byteswap here to match what ffmpeg expect.
