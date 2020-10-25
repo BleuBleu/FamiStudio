@@ -294,7 +294,7 @@ namespace FamiStudio
 
         public void Clear(Color color)
         {
-            GL.ClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, 1.0f);
+            GL.ClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit);
         }
 
@@ -895,8 +895,10 @@ namespace FamiStudio
 
         public unsafe void GetBitmap(byte[] data)
         {
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fbo);
             fixed (byte* p = &data[0])
                 GL.ReadPixels(0, 0, resX, resY, PixelFormat.Rgba, PixelType.UnsignedByte, new IntPtr(p));
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
         }
 
         public override void Dispose()

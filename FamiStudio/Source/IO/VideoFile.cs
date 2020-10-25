@@ -534,10 +534,16 @@ namespace FamiStudio
                                         int videoB = videoImage[videoIdx + 2];
 
                                         // Integer alpha blend.
+#if FAMISTUDIO_WINDOWS
                                         // Note that alpha is pre-multiplied, so we if we multiply again, image will look aliased.
                                         channelR = (byte)((channelR * (255 - videoA) + videoR * 255 /*videoA*/) >> 8);
                                         channelG = (byte)((channelG * (255 - videoA) + videoG * 255 /*videoA*/) >> 8);
                                         channelB = (byte)((channelB * (255 - videoA) + videoB * 255 /*videoA*/) >> 8);
+#else
+                                        channelR = (byte)((channelR * (255 - videoA) + videoR * videoA) >> 8);
+                                        channelG = (byte)((channelG * (255 - videoA) + videoG * videoA) >> 8);
+                                        channelB = (byte)((channelB * (255 - videoA) + videoB * videoA) >> 8);
+#endif
                                     }
 
                                     // We byteswap here to match what ffmpeg expect.
@@ -546,7 +552,7 @@ namespace FamiStudio
                                     videoImage[videoIdx + 1] = channelB;
                                     videoImage[videoIdx + 0] = 255;
 
-                                    //// To export images to debug.
+                                    // To export images to debug.
                                     //videoImage[videoIdx + 0] = channelR;
                                     //videoImage[videoIdx + 1] = channelG;
                                     //videoImage[videoIdx + 2] = channelB;
@@ -577,12 +583,19 @@ namespace FamiStudio
 
                         stream.Write(videoImage);
 
-                        //// Dump debug images.
+                        // Dump debug images.
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+                        //var pb = new Gdk.Pixbuf(channelImage, true, 8, channelResX, channelResY, channelResX * 4);
+                        //pb.Save($"/home/mat/Downloads/channel.png", "png");
+                        //var pb = new Gdk.Pixbuf(videoImage, true, 8, videoResX, videoResY, videoResX * 4);
+                        //pb.Save($"/home/mat/Downloads/frame_{f:D4}.png", "png");
+#else
                         //fixed (byte* vp = &videoImage[0])
                         //{
                         //    var b = new System.Drawing.Bitmap(videoResX, videoResY, videoResX * 4, System.Drawing.Imaging.PixelFormat.Format32bppArgb, new IntPtr(vp));
                         //    b.Save($"d:\\dump\\pr\\frame_{f:D4}.png");
                         //}
+#endif
                     }
                 }
 
