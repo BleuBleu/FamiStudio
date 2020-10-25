@@ -16,17 +16,22 @@ namespace FamiStudio
         Boolean,
         StringList,
         StringListMulti,
-        Color
+        Color,
+        Label,
+        Button
     };
 
     public class PropertyPage : Gtk.Table
     {
+        public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
+
         class Property
         {
             public PropertyType type;
             public Label label;
             public Widget control;
             public int leftMargin;
+            public ButtonPropertyClicked click;
         };
 
         private object userData;
@@ -105,6 +110,16 @@ namespace FamiStudio
             return label;
         }
 
+        private LinkButton CreateLinkLabel(string str, string url, string tooltip = null)
+        {
+            var label = new LinkButton(url, str);
+
+            label.SetAlignment(0.0f, 0.5f);
+            label.TooltipText = tooltip;
+
+            return label;
+        }
+
         private Entry CreateColoredTextBox(string txt, System.Drawing.Color backColor)
         {
             var textBox = new Entry();
@@ -116,13 +131,14 @@ namespace FamiStudio
             return textBox;
         }
 
-        private Entry CreateTextBox(string txt, int maxLength)
+        private Entry CreateTextBox(string txt, int maxLength, string tooltip = null)
         {
             var textBox = new Entry();
 
             textBox.Text = txt;
             textBox.MaxLength = maxLength;
             textBox.WidthRequest = 50;
+            textBox.TooltipText = tooltip;
 
             return textBox;
         }
@@ -279,14 +295,53 @@ namespace FamiStudio
                 });
         }
 
+        public void AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
+        {
+            var textBox = new Button();
+            textBox.Label = value;
+            textBox.TooltipText = tooltip;
+            textBox.Clicked += Button_Clicked; 
+
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Button,
+                    label = CreateLabel(label),
+                    control = textBox,
+                    click = clickDelegate
+                });
+        }
+
+        void Button_Clicked(object sender, EventArgs e)
+        {
+            for (int i = 0; i < properties.Count; i++)
+            {
+                if (properties[i].control == sender)
+                {
+                    properties[i].click(this, i);
+                }
+            }
+        }
+
         public void AddLabel(string label, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.Boolean,
+                    type = PropertyType.Label,
                     label = CreateLabel(label, tooltip),
                     control = CreateLabel(value, tooltip)
+                });
+        }
+
+        public void AddLinkLabel(string label, string value, string url, string tooltip = null)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Label,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateLinkLabel(value, url, tooltip)
                 });
         }
 
@@ -297,7 +352,7 @@ namespace FamiStudio
                 {
                     type = PropertyType.Boolean,
                     label = CreateLabel(label, tooltip),
-                    control = CreateCheckBox(value, tooltip)
+                    control = CreateCheckBox(value)
                 });
         }
 
@@ -434,6 +489,8 @@ namespace FamiStudio
                     return (prop.control as ComboBox).ActiveText;
                 case PropertyType.StringListMulti:
                     return (prop.control as CheckBoxList).GetSelected();
+                case PropertyType.Button:
+                    return (prop.control as Button).Label;
             }
 
             return null;
@@ -444,7 +501,6 @@ namespace FamiStudio
             return (T)GetPropertyValue(idx);
         }
 
-
         public void SetPropertyValue(int idx, object value)
         {
             var prop = properties[idx];
@@ -453,6 +509,9 @@ namespace FamiStudio
             {
                 case PropertyType.Boolean:
                     (prop.control as CheckButton).Active = (bool)value;
+                    break;
+                case PropertyType.Button:
+                    (prop.control as Button).Label = (string)value;
                     break;
             }
         }

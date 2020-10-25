@@ -170,11 +170,13 @@ namespace FamiStudio
         }
     }
 
-    public class GLGraphics
+    public class GLGraphics : IDisposable
     {
 #if FAMISTUDIO_LINUX
         private bool supportsLineWidth = false;
 #endif
+        private bool antialiasing = false;
+        private float windowScaling = 1.0f;
         private int windowSizeY;
         private GLControl control;
         private Rectangle scissor;
@@ -182,8 +184,14 @@ namespace FamiStudio
         private Stack<Rectangle> clipStack = new Stack<Rectangle>();
         private Stack<Vector4> transformStack = new Stack<Vector4>();
         private Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
+        public  float WindowScaling => windowScaling;
 
         public GLGraphics()
+        {
+            windowScaling = GLTheme.MainWindowScaling;
+        }
+
+        public GLGraphics(int imageSizeX, int imageSizeY)
         {
         }
 
@@ -232,8 +240,8 @@ namespace FamiStudio
 
         public bool AntiAliasing
         {
-            get { return false; }
-            set { }
+            get { return antialiasing; }
+            set { antialiasing = value; }
         }
 
         public void PushTranslation(float x, float y)
@@ -384,6 +392,8 @@ namespace FamiStudio
             GL.PushMatrix();
             GL.Translate(0.5f, 0.5f, 0);
             GL.Color4(brush.Color0);
+            if (antialiasing)
+                GL.Enable(EnableCap.LineSmooth);
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && width > 1)
             {
@@ -419,7 +429,17 @@ namespace FamiStudio
                     GL.End();
                 }
             }
+            if (antialiasing)
+                GL.Disable(EnableCap.LineSmooth);
             GL.PopMatrix();
+        }
+
+        public void DrawLine(float[,] points, GLBrush brush)
+        {
+            for (int i = 0; i < points.GetLength(0) - 1; i++)
+            {
+                DrawLine(points[i + 0, 0], points[i + 0, 1], points[i + 1, 0], points[i + 1, 1], brush);
+            }
         }
 
         public void DrawRectangle(RectangleF rect, GLBrush brush, float width = 1.0f)
@@ -829,6 +849,15 @@ namespace FamiStudio
             }
 
             return font;
+        }
+
+
+        public void Dispose()
+        {
+        }
+
+        public unsafe void GetBitmap(byte[] data)
+        {
         }
     };
 }

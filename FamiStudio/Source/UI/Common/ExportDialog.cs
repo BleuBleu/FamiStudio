@@ -120,7 +120,7 @@ namespace FamiStudio
                     break;
                 case ExportFormat.Video:
                     // MATTT: Linux/Mac + settings.
-                    page.AddFileChooser("Path To FFmpeg:", Settings.FFmpegExecutablePath, "Please select FFmpeg executable", "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe", "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 0
+                    page.AddButton("Path To FFmpeg:", Settings.FFmpegExecutablePath, FFmpegPathButtonClicked, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 0
                     page.AddLinkLabel("", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
                     page.AddStringList("Song :", songNames, songNames[0]); // 2
                     page.AddStringList("Audio Bit Rate (kb/s) :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
@@ -199,6 +199,19 @@ namespace FamiStudio
                     props.SetPropertyEnabled(6, (string)value == "Duration");
                 }
             }
+        }
+
+        private void FFmpegPathButtonClicked(PropertyPage props, int propertyIndex)
+        {
+            var dummy = "";
+#if FAMISTUDIO_WINDOWS
+            var ffmpegExeFilter = "FFmpeg Executable (ffmpeg.exe)|ffmpegExe.exe";
+#else
+            var ffmpegExeFilter = "FFmpeg Executable (ffmpeg)|*.*";
+#endif
+            string filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
+            if (filename != null)
+                props.SetPropertyValue(propertyIndex, filename);
         }
 
         private int[] GetSongIds(bool[] selectedSongs)

@@ -804,10 +804,11 @@ namespace FamiStudio
             return false;
         }
 
+        // MATTT: For testing only!!!
         private unsafe void VideoTest()
         {
             var vf = new VideoFile();
-            vf.Save(project.Songs[0], "d:\\dump\\ffmpeg\\ffmpeg.exe", "d:\\dump\\test3.mp4", 0x1f, 128, 12, -1, false);
+            vf.Save(project.Songs[0], Settings.FFmpegExecutablePath, "d:\\dump\\test3.mp4", 0x1f, 128, 12, -1, false);
         }
 
         public void KeyDown(KeyEventArgs e)

@@ -408,8 +408,12 @@ namespace FamiStudio
 
             // Setup piano roll and images.
             var pianoRoll = new PianoRoll();
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+            pianoRoll.Move(0, 0, channelResX, channelResY);
+#else
             pianoRoll.Width  = channelResX;
             pianoRoll.Height = channelResY;
+#endif
             pianoRoll.StartVideoRecording(channelGraphics, song, pianoRollZoom, thinNotes, out var noteSizeY);
 
             // Build the scrolling data.
@@ -440,7 +444,11 @@ namespace FamiStudio
                         var frame = metadata[f];
 
                         // Render the full screen overlay.
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+                        videoGraphics.BeginDraw(null, videoResY);
+#else
                         videoGraphics.BeginDraw();
+#endif
                         videoGraphics.Clear(Color.FromArgb(0, 0, 0, 0));
                         videoGraphics.FillRectangle(0, 0, videoResX, gradientSizeY, blackGradientBrush);
 
@@ -487,7 +495,11 @@ namespace FamiStudio
                                     color = Color.FromArgb(128 + s.volume * 127 / 15, s.note.Instrument != null ? s.note.Instrument.Color : ThemeBase.DarkGreyFillColor2);
                             }
 
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+                            channelGraphics.BeginDraw(null, channelResY);
+#else
                             channelGraphics.BeginDraw();
+#endif
                             pianoRoll.RenderVideoFrame(channelGraphics, Channel.ChannelTypeToIndex(s.channel.Type), frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], s.note.Value, color);
                             channelGraphics.EndDraw();
 
