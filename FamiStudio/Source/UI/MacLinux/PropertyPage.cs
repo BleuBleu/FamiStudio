@@ -277,7 +277,7 @@ namespace FamiStudio
         private Button CreateButton(string text, string tooltip)
         {
             var button = new Button();
-            button.Label = value;
+            button.Label = text;
             button.TooltipText = tooltip;
             button.Clicked += Button_Clicked; 		
 			return button;
