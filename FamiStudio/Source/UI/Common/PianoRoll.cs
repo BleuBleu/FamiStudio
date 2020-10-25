@@ -1908,14 +1908,14 @@ namespace FamiStudio
             }
         }
 
-        public void RenderVideoFrame(RenderGraphics g, int channel, int patternIndex, int noteIndex, float centerNote, int highlightKey, Color highlightColor)
+        public void RenderVideoFrame(RenderGraphics g, int channel, int patternIndex, float noteIndex, float centerNote, int highlightKey, Color highlightColor)
         {
             Debug.Assert(editMode == EditionMode.VideoRecording);
 
             int noteY = (int)Math.Round(virtualSizeY - centerNote * noteSizeY + noteSizeY / 2);
 
             editChannel = channel;
-            scrollX = Song.GetPatternStartNote(patternIndex, noteIndex) * noteSizeX;
+            scrollX = (int)Math.Round((Song.GetPatternStartNote(patternIndex) + noteIndex) * noteSizeX);
             scrollY = noteY - (Height - headerAndEffectSizeY) / 2;
             playingNote = highlightKey;
             videoKeyColor = highlightColor;

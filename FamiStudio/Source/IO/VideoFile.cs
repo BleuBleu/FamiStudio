@@ -8,7 +8,7 @@ using System.Drawing;
 using System.IO;
 
 #if FAMISTUDIO_WINDOWS
-using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
+    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
@@ -249,6 +249,41 @@ namespace FamiStudio
             }
         }
 
+        void SmoothFamiTrackerTempo(VideoFrameMetadata[] frames)
+        {
+            var numFrames = frames.Length;
+
+            for (int f = 0; f < numFrames; )
+            {
+                var thisFrame = frames[f];
+
+                var currentPlayPattern = thisFrame.playPattern;
+                var currentPlayNote    = thisFrame.playNote;
+
+                // Keep moving forward until we see that we have advanced by 1 row.
+                int nf = f + 1;
+                for (; nf < numFrames; nf++)
+                {
+                    var nextFrame = frames[nf];
+                    if (nextFrame.playPattern != thisFrame.playPattern ||
+                        nextFrame.playNote    != thisFrame.playNote)
+                    {
+                        break;
+                    }
+                }
+
+                var numFramesSameNote = nf - f;
+
+                // Smooth out movement linearly.
+                for (int i = 0; i < numFramesSameNote; i++)
+                {
+                    frames[f + i].playNote += i / (float)numFramesSameNote;
+                }
+
+                f = nf;
+            }
+        }
+
         Process LaunchFFmpeg(string ffmpegExecutable, string commandLine, bool redirectStdIn, bool redirectStdOut, bool hideWindow)
         {
             var psi = new ProcessStartInfo(ffmpegExecutable, commandLine);
@@ -380,6 +415,9 @@ namespace FamiStudio
             // Build the scrolling data.
             var numVisibleNotes = (int)Math.Floor(channelResY / (float)noteSizeY);
             ComputeChannelsScroll(metadata, channelMask, numVisibleNotes);
+
+            if (song.UsesFamiTrackerTempo)
+                SmoothFamiTrackerTempo(metadata);
 
             var videoImage   = new byte[videoResY * videoResX * 4];
             var channelImage = new byte[channelResY * channelResX * 4];
@@ -580,11 +618,11 @@ namespace FamiStudio
 
     class VideoFrameMetadata
     {
-        public int playPattern;
-        public int playNote;
-        public int wavOffset;
-        public Note[] channelNotes;
-        public int[] channelVolumes;
+        public int     playPattern;
+        public float   playNote;
+        public int     wavOffset;
+        public Note[]  channelNotes;
+        public int[]   channelVolumes;
         public float[] scroll;
     };
 

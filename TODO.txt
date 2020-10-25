@@ -39,6 +39,7 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	- Think of FTM import, slide conversions, etc.
 - Video export:
 	- Test with scaling.
+	- Thin release notes seem off by 1 px?
 	x Blue lines shovel knight?
 	x ffmpeg location
 	- linux/macos
