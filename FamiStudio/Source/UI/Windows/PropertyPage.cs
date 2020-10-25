@@ -21,19 +21,22 @@ namespace FamiStudio
         Boolean,
         StringList,
         StringListMulti,
-        Color
+        Color,
+        Label,
+        Button
     };
 
     public partial class PropertyPage : UserControl
     {
+        public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
+
         class Property
         {
             public PropertyType type;
             public Label label;
             public Control control;
             public int leftMarging;
-            public string fileChooserPrompt;
-            public string fileChooserFilter;
+            public ButtonPropertyClicked click;
         };
 
         private int layoutHeight;
@@ -308,6 +311,30 @@ namespace FamiStudio
             return listBox;
         }
 
+        private Button CreateButton(string text, string tooltip)
+        {
+            var button = new Button();
+            button.Text = text;
+            button.Click += TextBox_Click;
+            button.FlatStyle = FlatStyle.Flat;
+            button.Font = font;
+            button.ForeColor = ThemeBase.LightGreyFillColor2;
+            button.Height = 32;
+            toolTip.SetToolTip(button, tooltip);
+            return button;
+        }
+
+        private void TextBox_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < properties.Count; i++)
+            {
+                if (properties[i].control == sender)
+                {
+                    properties[i].click(this, i);
+                }
+            }
+        }
+
         public void UpdateMultiStringList(int idx, string[] values, bool[] selected)
         {
             var listBox = (properties[idx].control as PaddedCheckedListBox);
@@ -338,36 +365,16 @@ namespace FamiStudio
                 });
         }
 
-        public void AddFileChooser(string label, string value, string prompt, string filetypes, string tooltip = null)
+        public void AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
         {
-            var textBox = CreateTextBox(value, 0, tooltip);
-            textBox.ReadOnly = true;
-            textBox.Click += FileChooser_Click;
-
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.String,
+                    type = PropertyType.Button,
                     label = CreateLabel(label),
-                    control = textBox,
-                    fileChooserPrompt = prompt,
-                    fileChooserFilter = filetypes
+                    control = CreateButton(value, tooltip),
+                    click = clickDelegate
                 });
-        }
-
-        private void FileChooser_Click(object sender, EventArgs e)
-        {
-            foreach (var prop in properties)
-            {
-                if (prop.control == sender)
-                {
-                    var dummy = "";
-                    string filename = PlatformUtils.ShowOpenFileDialog(prop.fileChooserPrompt, prop.fileChooserFilter, ref dummy);
-                    if (filename != null)
-                        (prop.control as TextBox).Text = filename;
-                    break;
-                }
-            }
         }
 
         public void AddLabel(string label, string value, string tooltip = null)
@@ -375,7 +382,7 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.String,
+                    type = PropertyType.Label,
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateLabel(value, tooltip)
                 });
@@ -386,7 +393,7 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.String,
+                    type = PropertyType.Label,
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateLinkLabel(value, url, tooltip)
                 });
@@ -564,6 +571,9 @@ namespace FamiStudio
             {
                 case PropertyType.Boolean:
                     (prop.control as CheckBox).Checked = (bool)value;
+                    break;
+                case PropertyType.Button:
+                    (prop.control as Button).Text = (string)value;
                     break;
             }
         }

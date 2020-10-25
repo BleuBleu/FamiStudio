@@ -66,6 +66,8 @@ TESTING:
 - Test paste special on mac + hi-dpi.
 - mp3/wav command line export.
 - Rested hi-dpi, changed some stuff for video.
+- Test export dialog hi-dpi (that ffmpeg button has harcoded 40 height)
+- Test paste special hi-dpi/
 
 Delay notes
 ===========

@@ -205,7 +205,7 @@ namespace FamiStudio
         {
             var dummy = "";
 #if FAMISTUDIO_WINDOWS
-            var ffmpegExeFilter = "FFmpeg Executable (ffmpeg.exe)|ffmpegExe.exe";
+            var ffmpegExeFilter = "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe";
 #else
             var ffmpegExeFilter = "FFmpeg Executable (ffmpeg)|*.*";
 #endif

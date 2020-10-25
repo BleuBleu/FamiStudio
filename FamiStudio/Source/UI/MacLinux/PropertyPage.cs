@@ -274,6 +274,15 @@ namespace FamiStudio
             return new CheckBoxList(values, selected);
         }
 
+        private Button CreateButton(string text, string tooltip)
+        {
+            var button = new Button();
+            button.Label = value;
+            button.TooltipText = tooltip;
+            button.Clicked += Button_Clicked; 		
+			return button;
+		}
+		
         public void AddColoredString(string value, System.Drawing.Color color)
         {
             properties.Add(
@@ -297,17 +306,12 @@ namespace FamiStudio
 
         public void AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
         {
-            var textBox = new Button();
-            textBox.Label = value;
-            textBox.TooltipText = tooltip;
-            textBox.Clicked += Button_Clicked; 
-
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Button,
                     label = CreateLabel(label),
-                    control = textBox,
+                    control = CreateButton(value, tooltip),
                     click = clickDelegate
                 });
         }
