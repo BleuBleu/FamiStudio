@@ -19,7 +19,7 @@ using System.IO;
     using RenderBrush    = FamiStudio.GLBrush;
     using RenderPath     = FamiStudio.GLConvexPath;
     using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLGraphics;
+    using RenderGraphics = FamiStudio.GLOffscreenGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
 #endif
 
