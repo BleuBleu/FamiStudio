@@ -12,7 +12,7 @@ using System.IO;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
-    using RenderGraphics = FamiStudio.Direct2DGraphics;
+    using RenderGraphics = FamiStudio.Direct2DOffscreenGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
     using RenderBitmap   = FamiStudio.GLBitmap;

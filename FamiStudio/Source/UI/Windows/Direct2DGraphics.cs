@@ -21,19 +21,14 @@ namespace FamiStudio
 {
     public class Direct2DGraphics : IDisposable
     {
-        private Factory factory;
-        private DirectWriteFactory directWriteFactory;
-        private RenderTarget renderTarget;
-        private Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
-        private Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
-        private Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
-        private StrokeStyle strokeStyleMiter;
-        private float windowScaling = 1.0f;
-
-        // Only used when doing offline rendering.
-        private SharpDX.Direct3D11.Device d3dDevice;
-        private SharpDX.Direct3D11.Texture2D offscreenTexture;
-        private SharpDX.Direct3D11.Texture2D stagingTexture;
+        protected Factory factory;
+        protected DirectWriteFactory directWriteFactory;
+        protected RenderTarget renderTarget;
+        protected Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
+        protected Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
+        protected Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
+        protected StrokeStyle strokeStyleMiter;
+        protected float windowScaling = 1.0f;
 
         public Factory Factory => factory;
         public float WindowScaling => windowScaling;
@@ -53,46 +48,11 @@ namespace FamiStudio
             Initialize();
         }
 
-        public Direct2DGraphics(int imageSizeX, int imageSizeY)
+        protected Direct2DGraphics()
         {
-            d3dDevice = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, SharpDX.Direct3D11.DeviceCreationFlags.BgraSupport);
-
-            offscreenTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
-            {
-                BindFlags = SharpDX.Direct3D11.BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
-                CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.None,
-                Format = Format.B8G8R8A8_UNorm,
-                Width = imageSizeX,
-                Height = imageSizeY,
-                MipLevels = 1,
-                ArraySize = 1,
-                OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
-                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-                Usage = SharpDX.Direct3D11.ResourceUsage.Default
-            });
-
-            stagingTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
-            {
-                BindFlags = SharpDX.Direct3D11.BindFlags.None,
-                CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.Read,
-                Format = Format.B8G8R8A8_UNorm,
-                Width = imageSizeX,
-                Height = imageSizeY,
-                MipLevels = 1,
-                ArraySize = 1,
-                OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
-                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-                Usage = SharpDX.Direct3D11.ResourceUsage.Staging
-            });
-
-            windowScaling = 1.0f; // No scaling for now in videos.
-            factory = new SharpDX.Direct2D1.Factory();
-            renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
-
-            Initialize();
         }
 
-        private void Initialize()
+        protected void Initialize()
         {
             directWriteFactory = new SharpDX.DirectWrite.Factory();
 
@@ -101,7 +61,7 @@ namespace FamiStudio
             strokeStyleMiter = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             foreach (var grad in verticalGradientCache.Values)
                 grad.Dispose();
@@ -115,9 +75,6 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref renderTarget);
             Utils.DisposeAndNullify(ref directWriteFactory);
             Utils.DisposeAndNullify(ref factory);
-            Utils.DisposeAndNullify(ref offscreenTexture);
-            Utils.DisposeAndNullify(ref stagingTexture);
-            Utils.DisposeAndNullify(ref d3dDevice);
         }
 
         public void BeginDraw()
@@ -480,9 +437,66 @@ namespace FamiStudio
             return brush;
         }
 
+    }
+
+    public class Direct2DOffscreenGraphics : Direct2DGraphics
+    {
+        // Only used when doing offline rendering.
+        protected SharpDX.Direct3D11.Device d3dDevice;
+        protected SharpDX.Direct3D11.Texture2D offscreenTexture;
+        protected SharpDX.Direct3D11.Texture2D stagingTexture;
+
+        public Direct2DOffscreenGraphics(int imageSizeX, int imageSizeY)
+        {
+            d3dDevice = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, SharpDX.Direct3D11.DeviceCreationFlags.BgraSupport);
+
+            offscreenTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+            {
+                BindFlags = SharpDX.Direct3D11.BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
+                CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.None,
+                Format = Format.B8G8R8A8_UNorm,
+                Width = imageSizeX,
+                Height = imageSizeY,
+                MipLevels = 1,
+                ArraySize = 1,
+                OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
+                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                Usage = SharpDX.Direct3D11.ResourceUsage.Default
+            });
+
+            stagingTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+            {
+                BindFlags = SharpDX.Direct3D11.BindFlags.None,
+                CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.Read,
+                Format = Format.B8G8R8A8_UNorm,
+                Width = imageSizeX,
+                Height = imageSizeY,
+                MipLevels = 1,
+                ArraySize = 1,
+                OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
+                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                Usage = SharpDX.Direct3D11.ResourceUsage.Staging
+            });
+
+            windowScaling = 1.0f; // No scaling for now in videos.
+            factory = new SharpDX.Direct2D1.Factory();
+            renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
+
+            Initialize();
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            Utils.DisposeAndNullify(ref offscreenTexture);
+            Utils.DisposeAndNullify(ref stagingTexture);
+            Utils.DisposeAndNullify(ref d3dDevice);
+        }
+
         public unsafe void GetBitmap(byte[] data)
         {
-            int textureWidth  = stagingTexture.Description.Width;
+            int textureWidth = stagingTexture.Description.Width;
             int textureHeight = stagingTexture.Description.Height;
 
             Debug.Assert(data.Length == offscreenTexture.Description.Width * offscreenTexture.Description.Height * 4);
