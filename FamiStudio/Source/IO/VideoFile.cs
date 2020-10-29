@@ -339,15 +339,11 @@ namespace FamiStudio
         // Some OpenGL implementation applies sRGB to the alpha channel which is super 
         // wrong. We can detect that assuming the gradient we draw should be at 50% 
         // opacity in the middle.
-        bool DetectBadOpenGLAlpha(RenderGraphics g, byte[] videoImage)
+        bool DetectBadOpenGLAlpha(GLControl ctrl, RenderGraphics g, byte[] videoImage)
         {
             var blackGradientBrush = g.CreateVerticalGradientBrush(0, 256, Color.FromArgb(255, 0, 0, 0), Color.FromArgb(0, 0, 0, 0));
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-            g.BeginDraw(dummyControl, videoResY);
-#else
-            g.BeginDraw();
-#endif
+            g.BeginDraw(ctrl, videoResY);
             g.Clear(Color.FromArgb(0, 0, 0, 0));
             g.FillRectangle(0, 0, videoResX, 256, blackGradientBrush);
             g.EndDraw();
@@ -477,7 +473,7 @@ namespace FamiStudio
             var oscilloscope = new float[channelResY, 2];
 
 #if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-            var badAlpha = DetectBadOpenGLAlpha(videoGraphics, videoImage);
+            var badAlpha = DetectBadOpenGLAlpha(dummyControl, videoGraphics, videoImage);
 #endif
 
             // Start ffmpeg with pipe input.
