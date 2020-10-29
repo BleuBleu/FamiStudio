@@ -553,6 +553,8 @@ namespace FamiStudio
                             selected[i] = listBox.GetItemChecked(i);
                         return selected;
                     }
+                case PropertyType.Button:
+                    return (prop.control as Button).Text;
             }
 
             return null;

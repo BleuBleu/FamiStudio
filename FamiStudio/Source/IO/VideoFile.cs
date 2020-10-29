@@ -27,7 +27,6 @@ namespace FamiStudio
 {
     class VideoFile
     {
-        const int gradientSizeY = 300;
         const int channelIconTextSpacing = 8;
         const int channelIconPosY = 26;
         const int channelTextPosY = 30;
@@ -340,18 +339,31 @@ namespace FamiStudio
         // Some OpenGL implementation applies sRGB to the alpha channel which is super 
         // wrong. We can detect that assuming the gradient we draw should be at 50% 
         // opacity in the middle.
-        bool DetectBadOpenGLAlpha(byte[] videoImage)
+        bool DetectBadOpenGLAlpha(RenderGraphics g, byte[] videoImage)
         {
-            float midGradientAlpha = videoImage[gradientSizeY / 2 * videoResX * 4 + 3] / 255.0f;
+            var blackGradientBrush = g.CreateVerticalGradientBrush(0, 256, Color.FromArgb(255, 0, 0, 0), Color.FromArgb(0, 0, 0, 0));
+
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+            g.BeginDraw(dummyControl, videoResY);
+#else
+            g.BeginDraw();
+#endif
+            g.Clear(Color.FromArgb(0, 0, 0, 0));
+            g.FillRectangle(0, 0, videoResX, 256, blackGradientBrush);
+            g.EndDraw();
+            g.GetBitmap(videoImage);
+
+            blackGradientBrush.Dispose();
+
+            float midGradientAlpha = videoImage[128 * videoResX * 4 + 3] / 255.0f;
             float diff = Math.Abs(midGradientAlpha - 0.5f);
             return diff > 0.05f;
         }
 
-        // This is really a 1/2.0 gamma curve with a smoother tail. Not real sRGB.
+        // This is really a 1.0 / 2.0 gamma curve, not real sRGB.
         static readonly byte[] SRGBToLinear =
         {
-            //0,16,23,28,32,36,39,42,45,48,50,53,55,58,60,62,64,66,68,70,71,73,75,
-            0,1,2,4,7,10,14,18,23,27,32,38,43,48,52,57,61,65,68,71,73,74,75, // Smooth tail.
+            0,16,23,28,32,36,39,42,45,48,50,53,55,58,60,62,64,66,68,70,71,73,75,
             77,78,80,81,83,84,86,87,89,90,92,93,94,96,97,98,100,101,102,103,105,
             106,107,108,109,111,112,113,114,115,116,117,118,119,121,122,123,124,
             125,126,127,128,129,130,131,132,133,134,135,135,136,137,138,139,140,
@@ -367,7 +379,6 @@ namespace FamiStudio
             243,243,244,244,245,245,246,246,247,247,248,248,249,249,250,250,251,
             251,252,252,253,253,254,254,255
         };
-
 #endif
 
         class VideoChannelState
@@ -401,7 +412,6 @@ namespace FamiStudio
             var videoGraphics   = new RenderGraphics(videoResX, videoResY);
 
             var theme = RenderTheme.CreateResourcesForGraphics(videoGraphics);
-            var blackGradientBrush = videoGraphics.CreateVerticalGradientBrush(0, gradientSizeY, Color.FromArgb(255, 0, 0, 0), Color.FromArgb(0, 0, 0, 0));
             var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 
             // Generate WAV data for each individual channel for the oscilloscope.
@@ -462,10 +472,13 @@ namespace FamiStudio
             if (song.UsesFamiTrackerTempo)
                 SmoothFamiTrackerTempo(metadata);
 
-            var badAlpha     = false;
             var videoImage   = new byte[videoResY * videoResX * 4];
             var channelImage = new byte[channelResY * channelResX * 4];
-            var oscilloscope = new float[channelResY, 2]; 
+            var oscilloscope = new float[channelResY, 2];
+
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+            var badAlpha = DetectBadOpenGLAlpha(videoGraphics, videoImage);
+#endif
 
             // Start ffmpeg with pipe input.
             var tempFolder = Utils.GetTemporaryDiretory();
@@ -490,7 +503,6 @@ namespace FamiStudio
                         videoGraphics.BeginDraw();
 #endif
                         videoGraphics.Clear(Color.FromArgb(0, 0, 0, 0));
-                        videoGraphics.FillRectangle(0, 0, videoResX, gradientSizeY, blackGradientBrush);
 
                         foreach (var s in channelStates)
                         {
@@ -518,13 +530,6 @@ namespace FamiStudio
                         videoGraphics.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
                         videoGraphics.EndDraw();
                         videoGraphics.GetBitmap(videoImage);
-
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-                        if (f == 0)
-                        {
-                            badAlpha = DetectBadOpenGLAlpha(videoImage);
-                        }
-#endif
 
                         // Render the piano rolls for each channels.
                         foreach (var s in channelStates)
@@ -563,19 +568,22 @@ namespace FamiStudio
                                     int videoIdx   = (channelPosY + x) * videoResX * 4 + (channelPosX + y) * 4;
                                     int channelIdx = (channelResY - y - 1) * channelResX * 4 + (channelResX - x - 1) * 4;
 
-                                    byte videoA = videoImage[videoIdx + 3];
+                                    byte videoA    = videoImage[videoIdx + 3];
+                                    byte gradientA = (byte)(x < 255 ? 255 - x : 0); // Doing the gradient on CPU to look same on GL/D2D.
 
                                     byte channelR = channelImage[channelIdx + 0];
                                     byte channelG = channelImage[channelIdx + 1];
                                     byte channelB = channelImage[channelIdx + 2];
 
-                                    if (videoA != 0)
+                                    if (videoA != 0 || gradientA != 0)
                                     {
 #if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
                                         // Fix bad sRGB alpha.
                                         if (badAlpha)
                                             videoA = SRGBToLinear[videoA];
 #endif
+                                        videoA = Math.Max(videoA, gradientA);
+
                                         int videoR = videoImage[videoIdx + 0];
                                         int videoG = videoImage[videoIdx + 1];
                                         int videoB = videoImage[videoIdx + 2];
@@ -668,7 +676,6 @@ namespace FamiStudio
                     c.bmp.Dispose();
                 theme.Terminate();
                 bmpWatermark.Dispose();
-                blackGradientBrush.Dispose();
                 channelGraphics.Dispose();
                 videoGraphics.Dispose();
             }
