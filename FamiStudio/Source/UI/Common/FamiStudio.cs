@@ -810,6 +810,8 @@ namespace FamiStudio
             var vf = new VideoFile();
 #if FAMISTUDIO_LINUX
             vf.Save(project.Songs[0], Settings.FFmpegExecutablePath, "/home/mat/Downloads/test.mp4", 0x1f, 128, 12, -1, false);
+#elif FAMISTUDIO_MACOS
+            vf.Save(project.Songs[0], "/Users/mat/Downloads/ffmpeg", "/Users/mat/Downloads/test3.mp4", 0x1f, 128, 12, -1, false);
 #else
             vf.Save(project.Songs[0], Settings.FFmpegExecutablePath, "d:\\dump\\test3.mp4", 0x1f, 128, 12, -1, false);
 #endif
