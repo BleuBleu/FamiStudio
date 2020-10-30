@@ -257,7 +257,6 @@
     <Compile Include="Source\UI\MacLinux\FamiStudioFormGtk.cs" />
     <Compile Include="Source\UI\MacLinux\FamiStudioControls.cs" />
     <Compile Include="Source\UI\MacLinux\GLWidget.cs" />
-    <Compile Include="Source\UI\MacLinux\OpenTkUtils.cs" />
     <Compile Include="Source\UI\MacLinux\GtkUtils.cs" />
     <None Include="Resources\FamiStudio_128.png" />
     <EmbeddedResource Include="Resources\FamiStudio_16.png" />
