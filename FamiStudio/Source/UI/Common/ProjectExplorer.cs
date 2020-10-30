@@ -1074,8 +1074,8 @@ namespace FamiStudio
 
             if (filename != null)
             {
-                var log = new ListLogOutput();
-                using (var scopedLog = new ScopedLogOutput(log, LogSeverity.Warning))
+                var dlgLog = new LogDialog(ParentForm, false);
+                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -1150,10 +1150,7 @@ namespace FamiStudio
                     else
                         App.UndoRedoManager.EndTransaction();
 
-                    if (!log.IsEmpty)
-                    {
-                        new LogDialog(log.Messages).ShowDialog(ParentForm);
-                    }
+                    dlgLog.ShowDialogIfMessages();
                 }
             }
 

@@ -591,5 +591,11 @@ namespace FamiStudio
         {
             Console.WriteLine("    " + msg);
         }
+
+        public void ReportProgress(float progress)
+        {
+        }
+
+        public bool AbortOperation => false;
     }
 }

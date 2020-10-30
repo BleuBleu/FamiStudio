@@ -283,12 +283,14 @@ namespace FamiStudio
             }
         }
 
-        Process LaunchFFmpeg(string ffmpegExecutable, string commandLine, bool redirectStdIn, bool redirectStdOut, bool hideWindow)
+        Process LaunchFFmpeg(string ffmpegExecutable, string commandLine, bool redirectStdIn, bool redirectStdOut)
         {
             var psi = new ProcessStartInfo(ffmpegExecutable, commandLine);
 
             psi.UseShellExecute = false;
             psi.WorkingDirectory = Path.GetDirectoryName(ffmpegExecutable);
+            psi.CreateNoWindow = true;
+            psi.WindowStyle = ProcessWindowStyle.Hidden;
 
             if (redirectStdIn)
             {
@@ -300,12 +302,6 @@ namespace FamiStudio
                 psi.RedirectStandardOutput = true;
             }
 
-            if (hideWindow)
-            {
-                psi.CreateNoWindow = true;
-                psi.WindowStyle = ProcessWindowStyle.Hidden;
-            }
-
             return Process.Start(psi);
         }
 
@@ -313,7 +309,7 @@ namespace FamiStudio
         {
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true, false);
+                var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true);
                 var output = process.StandardOutput.ReadToEnd();
 
                 var ret = true;
@@ -334,7 +330,7 @@ namespace FamiStudio
                 return false;
             }
         }
-
+        
 #if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
         // Some OpenGL implementation applies sRGB to the alpha channel which is super 
         // wrong. We can detect that assuming the gradient we draw should be at 50% 
@@ -386,7 +382,7 @@ namespace FamiStudio
             public int videoChannelIndex;
             public int songChannelIndex;
             public int patternIndex;
-
+            public string channelText;
             public int volume;
             public Note note;
             public Channel channel;
@@ -399,8 +395,12 @@ namespace FamiStudio
             if (channelMask == 0)
                 return false;
 
+            Log.LogMessage(LogSeverity.Info, "Detecting FFmpeg...");
+
             if (!DetectFFmpeg(ffmpegExecutable))
                 return false;
+
+            Log.LogMessage(LogSeverity.Info, "Initializing channels...");
 
             var frameRate = song.Project.PalMode ? "5000773/100000" : "6009883/100000";
             var numChannels = Utils.NumberOfSetBits(channelMask);
@@ -426,13 +426,13 @@ namespace FamiStudio
                     continue;
 
                 var pattern = song.Channels[i].PatternInstances[0];
-
                 var state = new VideoChannelState();
 
                 state.videoChannelIndex = channelIndex;
                 state.songChannelIndex = i;
                 state.channel = song.Channels[i];
                 state.patternIndex = 0;
+                state.channelText = state.channel.Name + (state.channel.IsExpansionChannel ? $" ({song.Project.ExpansionAudioShortName})" : "");
                 state.bmp = videoGraphics.CreateBitmapFromResource(Channel.ChannelIcons[song.Channels[i].Type] + "@2x"); // HACK: Grab the 200% scaled version directly.
                 state.wav = new WavPlayer(sampleRate, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1); 
 
@@ -487,13 +487,21 @@ namespace FamiStudio
 
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -c:v libx264 -pix_fmt yuv420p -b:v {videoBitRate}M -an {tempVideoFile}", true, false, false);
+                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -c:v libx264 -pix_fmt yuv420p -b:v {videoBitRate}M -an {tempVideoFile}", true, false);
 
                 // Generate each of the video frames.
                 using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
                 {
                     for (int f = 0; f < metadata.Length; f++)
                     {
+                        if (Log.ShouldAbortOperation)
+                            break;
+
+                        if ((f % 100) == 0)
+                            Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
+
+                        Log.ReportProgress(f / (float)(metadata.Length - 1));
+
                         var frame = metadata[f];
 
                         // Render the full screen overlay.
@@ -509,13 +517,12 @@ namespace FamiStudio
                             int channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
                             int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
 
-                            var text = s.channel.Name;
-                            var channelNameSizeX = videoGraphics.MeasureString(text, ThemeBase.FontBig);
+                            var channelNameSizeX = videoGraphics.MeasureString(s.channelText, ThemeBase.FontBig);
                             var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmp.Size.Width + channelIconTextSpacing) / 2;
 
                             videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmp.Size.Width, channelIconPosY + s.bmp.Size.Height, theme.LightGreyFillBrush1);
                             videoGraphics.DrawBitmap(s.bmp, channelIconPosX, channelIconPosY);
-                            videoGraphics.DrawText(text, ThemeBase.FontBig, channelIconPosX + s.bmp.Size.Width + channelIconTextSpacing, channelTextPosY, theme.LightGreyFillBrush1);
+                            videoGraphics.DrawText(s.channelText, ThemeBase.FontBig, channelIconPosX + s.bmp.Size.Width + channelIconTextSpacing, channelTextPosY, theme.LightGreyFillBrush1);
 
                             if (s.videoChannelIndex > 0)
                                 videoGraphics.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, 5);
@@ -652,11 +659,15 @@ namespace FamiStudio
                 process.Dispose();
                 process = null;
 
+                Log.LogMessage(LogSeverity.Info, "Exporting audio...");
+
                 // Save audio to temporary file.
                 WaveFile.Save(song, tempAudioFile, sampleRate, 1, -1, channelMask);
 
+                Log.LogMessage(LogSeverity.Info, "Mixing audio and video...");
+
                 // Run ffmpeg again to combine audio + video.
-                process = LaunchFFmpeg(ffmpegExecutable, $"-y -i {tempVideoFile} -i {tempAudioFile} -c:v copy -c:a aac -b:a {audioBitRate}k {filename}", false, false, false);
+                process = LaunchFFmpeg(ffmpegExecutable, $"-y -i {tempVideoFile} -i {tempAudioFile} -c:v copy -c:a aac -b:a {audioBitRate}k {filename}", false, false);
                 process.WaitForExit();
                 process.Dispose();
                 process = null;

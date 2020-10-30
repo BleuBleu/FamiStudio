@@ -36,12 +36,13 @@ namespace FamiStudio
             Width = width;
         }
 
-        public PropertyDialog(int x, int y, int width, int height)
+        public PropertyDialog(int x, int y, int width, int height, bool canAccept = true)
         {
             width = (int)(width * Direct2DTheme.DialogScaling);
             Init();
             StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Width = width;
+            buttonYes.Visible = canAccept;
         }
 
         private void Init()
@@ -79,6 +80,9 @@ namespace FamiStudio
 
             if (top)
                 Location = new Point(Location.X, Location.Y - Height);
+
+            if (StartPosition == FormStartPosition.CenterParent)
+                CenterToParent();
         }
 
         private void propertyPage_PropertyWantsClose(int idx)

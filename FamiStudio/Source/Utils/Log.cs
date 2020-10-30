@@ -17,20 +17,22 @@ namespace FamiStudio
     public interface ILogOutput
     {
         void LogMessage(string msg);
+        void ReportProgress(float progress);
+        bool AbortOperation { get; }
     }
 
-    public class ListLogOutput : ILogOutput
-    {
-        private List<string> messages = new List<string>();
+    //public class ListLogOutput : ILogOutput
+    //{
+    //    private List<string> messages = new List<string>();
 
-        public void LogMessage(string msg)
-        {
-            messages.Add(msg);
-        }
+    //    public void LogMessage(string msg)
+    //    {
+    //        messages.Add(msg);
+    //    }
 
-        public bool IsEmpty => messages.Count == 0;
-        public List<string> Messages => messages;
-    }
+    //    public bool IsEmpty => messages.Count == 0;
+    //    public List<string> Messages => messages;
+    //}
 
     public class ScopedLogOutput : IDisposable
     {
@@ -65,6 +67,22 @@ namespace FamiStudio
             {
                 LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
                 Debug.WriteLine(SeverityStrings[(int)severity] + msg);
+            }
+        }
+
+        public static void ReportProgress(float progress)
+        {
+            if (LogOutput != null)
+            {
+                LogOutput.ReportProgress(progress);
+            }
+        }
+
+        public static bool ShouldAbortOperation 
+        {
+            get
+            {
+                return LogOutput != null && LogOutput.AbortOperation;
             }
         }
     };

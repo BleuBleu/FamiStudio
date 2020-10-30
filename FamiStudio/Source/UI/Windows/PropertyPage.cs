@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 #if FAMISTUDIO_WINDOWS
-    using RenderTheme = FamiStudio.Direct2DTheme;
+using RenderTheme = FamiStudio.Direct2DTheme;
 #else
     using RenderTheme = FamiStudio.GLTheme;
 #endif
@@ -23,7 +24,9 @@ namespace FamiStudio
         StringListMulti,
         Color,
         Label,
-        Button
+        Button,
+        MultilineString,
+        ProgressBar
     };
 
     public partial class PropertyPage : UserControl
@@ -53,6 +56,9 @@ namespace FamiStudio
         public int LayoutHeight => layoutHeight;
         public int PropertyCount => properties.Count;
         public object UserData { get => userData; set => userData = value; }
+
+        [DllImport("user32.dll")]
+        static extern bool HideCaret(IntPtr hWnd);
 
         public PropertyPage()
         {
@@ -170,6 +176,31 @@ namespace FamiStudio
             return textBox;
         }
 
+        private TextBox CreateMultilineTextBox(string txt)
+        {
+            var textBox = new TextBox();
+
+            textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
+            textBox.Text = string.Join("\r\n", txt);
+            textBox.BackColor = ThemeBase.DarkGreyFillColor1;
+            textBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            textBox.ForeColor = ThemeBase.LightGreyFillColor2;
+            textBox.Location = new System.Drawing.Point(5, 5);
+            textBox.Multiline = true;
+            textBox.ReadOnly = true;
+            textBox.Height = 300;
+            textBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            textBox.Select(0, 0);
+            textBox.GotFocus += TextBox_GotFocus;
+
+            return textBox;
+        }
+
+        private void TextBox_GotFocus(object sender, EventArgs e)
+        {
+            HideCaret((sender as TextBox).Handle);
+        }
+
         private PictureBox CreatePictureBox(Color color)
         {
             var pictureBox = new NoInterpolationPictureBox();
@@ -235,6 +266,18 @@ namespace FamiStudio
             toolTip.SetToolTip(upDown, tooltip);
 
             return upDown;
+        }
+
+        private ProgressBar CreateProgressBar(float value)
+        {
+            var progress = new ProgressBar();
+
+            progress.Font = font;
+            progress.Minimum = 0;
+            progress.Maximum = 1000;
+            progress.Value = (int)Math.Round(value * 1000);
+
+            return progress;
         }
 
         private void UpDown_ValueChanged(object sender, EventArgs e)
@@ -365,6 +408,17 @@ namespace FamiStudio
                 });
         }
 
+        public void AddMultilineString(string label, string value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.MultilineString,
+                    label = CreateLabel(label),
+                    control = CreateMultilineTextBox(value)
+                });
+        }
+
         public void AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
         {
             properties.Add(
@@ -417,6 +471,17 @@ namespace FamiStudio
                     type = PropertyType.IntegerRange,
                     label = CreateLabel(label, tooltip),
                     control = CreateNumericUpDown(value, min, max, tooltip)
+                });
+        }
+
+        public void AddProgressBar(string label, float value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.ProgressBar,
+                    label = CreateLabel(label),
+                    control = CreateProgressBar(value)
                 });
         }
 
@@ -526,6 +591,16 @@ namespace FamiStudio
             }
         }
 
+        public void AppendText(int idx, string line)
+        {
+            var textBox = properties[idx].control as TextBox;
+            textBox.AppendText(line + "\r\n");
+            textBox.SelectionStart = textBox.Text.Length - 1;
+            textBox.SelectionLength = 0;
+            textBox.ScrollToCaret();
+            textBox.Focus();
+        }
+
         public object GetPropertyValue(int idx)
         {
             var prop = properties[idx];
@@ -534,6 +609,7 @@ namespace FamiStudio
             {
                 case PropertyType.String:
                 case PropertyType.ColoredString:
+                case PropertyType.MultilineString:
                     return (prop.control as TextBox).Text;
                 case PropertyType.IntegerRange:
                     return (int)(prop.control as NumericUpDown).Value;
@@ -576,6 +652,12 @@ namespace FamiStudio
                     break;
                 case PropertyType.Button:
                     (prop.control as Button).Text = (string)value;
+                    break;
+                case PropertyType.MultilineString:
+                    (prop.control as TextBox).Text = (string)value;
+                    break;
+                case PropertyType.ProgressBar:
+                    (prop.control as ProgressBar).Value = (int)Math.Round((float)value * 1000);
                     break;
             }
         }

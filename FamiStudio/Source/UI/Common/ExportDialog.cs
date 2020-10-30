@@ -457,24 +457,36 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialog()
+        public void ShowDialog(FamiStudioForm parentForm)
         {
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                var selectedFormat = (ExportFormat)dialog.SelectedIndex;
+                dialog.Hide();
 
-                switch (selectedFormat)
+                var dlgLog = new LogDialog(parentForm, true, true);
+                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Info))
                 {
-                    case ExportFormat.WavMp3: ExportWavMp3(); break;
-                    case ExportFormat.Video: ExportVideo(); break;
-                    case ExportFormat.Nsf: ExportNsf(); break;
-                    case ExportFormat.Rom: ExportRom(); break;
-                    case ExportFormat.Text: ExportText(); break;
-                    case ExportFormat.FamiTracker: ExportFamiTracker(); break;
-                    case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
-                    case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
-                    case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
-                    case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
+                    var selectedFormat = (ExportFormat)dialog.SelectedIndex;
+
+                    switch (selectedFormat)
+                    {
+                        case ExportFormat.WavMp3: ExportWavMp3(); break;
+                        case ExportFormat.Video: ExportVideo(); break;
+                        case ExportFormat.Nsf: ExportNsf(); break;
+                        case ExportFormat.Rom: ExportRom(); break;
+                        case ExportFormat.Text: ExportText(); break;
+                        case ExportFormat.FamiTracker: ExportFamiTracker(); break;
+                        case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
+                        case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
+                        case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
+                        case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
+                    }
+
+                    if (dlgLog.HasMessages)
+                    {
+                        Log.LogMessage(LogSeverity.Info, "Done!");
+                        Log.ReportProgress(1.0f);
+                    }
                 }
             }
         }

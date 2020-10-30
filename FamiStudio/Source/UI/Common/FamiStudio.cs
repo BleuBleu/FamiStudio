@@ -408,9 +408,8 @@ namespace FamiStudio
                 return;
             }
 
-            var log = new ListLogOutput();
-
-            using (var scopedLog = new ScopedLogOutput(log, LogSeverity.Warning))
+            var dlgLog = new LogDialog(mainForm, false);
+            using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
             {
                 project = OpenProjectFile(filename);
 
@@ -423,12 +422,8 @@ namespace FamiStudio
                     NewProject();
                 }
 
-                if (!log.IsEmpty)
-                {
-                    mainForm.Refresh();
-                    var logDlg = new LogDialog(log.Messages);
-                    logDlg.ShowDialog(mainForm);
-                }
+                mainForm.Refresh();
+                dlgLog.ShowDialogIfMessages();
             }
         }
 
@@ -510,20 +505,8 @@ namespace FamiStudio
 
         public void Export()
         {
-            var log = new ListLogOutput();
-
-            using (var scopedLog = new ScopedLogOutput(log, LogSeverity.Info))
-            {
-                var dlg = new ExportDialog(mainForm.Bounds, project);
-
-                dlg.ShowDialog();
-
-                if (!log.IsEmpty)
-                {
-                    var logDlg = new LogDialog(log.Messages);
-                    logDlg.ShowDialog(mainForm);
-                }
-            }
+            var dlgExp = new ExportDialog(mainForm.Bounds, project);
+            dlgExp.ShowDialog(mainForm);
         }
 
         public void OpenConfigDialog()
