@@ -336,7 +336,7 @@ namespace FamiStudio
                 return n;
             }
         }
-        public int  CurrentVolume => envelopeValues[Envelope.Volume];
+        public int  CurrentVolume => MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
     };
 
     public interface IRegisterListener
