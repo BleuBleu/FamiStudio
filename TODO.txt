@@ -37,18 +37,14 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	- Fix 1 frame missing in NSF
 	- Fix computation of slide notes in FamiTracker tempo mode.
 	- Think of FTM import, slide conversions, etc.
-- Video export:
-	- Thin release notes seem off by 1 px?
 / Song merge 
 	x Add unique ID validation.
 	x fix instrument import... very bad.
 	- Add logging so that people understand name conflicts, DPCM conflicts, etc.
-- Dont change scroll in pianoroll/sequencer when undoing + playing + follow to avoid jumps
 / ROM (add new features) + Update to 2.3.0
 - Sound engine demo, re-export data at the very end.
 - Update documentation (sound engine, copy/delete special, etc.)
 - BUG: Missing page up/down on MacOS.
-- BUG: Linux, inconsistencies between GTK/OpenTK keyboard reads... Get rid of Open TK!
 - BUG: No loop point, no loop mode = seek freeze.
 - RESIZE ALL NSF BINARIES, THEY GOT SMALLER!
 

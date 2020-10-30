@@ -316,7 +316,7 @@ namespace FamiStudio
             noteSizeX                 = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);        
             noteSizeY                 = (int)(DefaultNoteSizeY * scaling * noteScaleY);
             noteAttackSizeX           = (int)(DefaultNoteAttackSizeX * scaling);
-            releaseNoteSizeY          = (int)(DefaultReleaseNoteSizeY * scaling * noteScaleY);
+            releaseNoteSizeY          = (int)(DefaultReleaseNoteSizeY * scaling * noteScaleY) & 0xfe; // Keep even
             envelopeMax               = (int)(DefaultEnvelopeMax * scaling);      
             whiteKeySizeY             = (int)(DefaultWhiteKeySizeY * scaling * noteScaleY);    
             whiteKeySizeX             = (int)(DefaultWhiteKeySizeX * scaling);
