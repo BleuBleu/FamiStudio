@@ -1529,7 +1529,7 @@ namespace FamiStudio
                 noteTextPosX += noteAttackSizeX + attackIconPosX;
             }
 
-            if (activeChannel && Settings.ShowNoteLabels && editMode == EditionMode.Channel && n0.IsMusical && sx > minNoteSizeForText)
+            if (activeChannel && Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && n0.IsMusical && sx > minNoteSizeForText)
             {
                 g.DrawText(n0.FriendlyName, ThemeBase.FontSmall, noteTextPosX, noteTextPosY, theme.BlackBrush);
             }

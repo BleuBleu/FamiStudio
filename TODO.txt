@@ -38,11 +38,7 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	- Fix computation of slide notes in FamiTracker tempo mode.
 	- Think of FTM import, slide conversions, etc.
 - Video export:
-	- Test with scaling.
 	- Thin release notes seem off by 1 px?
-	x Blue lines shovel knight?
-	x ffmpeg location
-	- linux/macos
 / Song merge 
 	x Add unique ID validation.
 	x fix instrument import... very bad.
@@ -51,7 +47,6 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 / ROM (add new features) + Update to 2.3.0
 - Sound engine demo, re-export data at the very end.
 - Update documentation (sound engine, copy/delete special, etc.)
-- BUG: Dont display label on released notes.
 - BUG: If you start selecting in the header in sequencer (right click) and go outside the window, it starts a drag!
 - BUG: Missing page up/down on MacOS.
 - BUG: Linux, inconsistencies between GTK/OpenTK keyboard reads... Get rid of Open TK!
@@ -62,13 +57,14 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 
 TESTING:
 - Create famistudio unit tests from 2.2.1 (either through WAV or register player)
+- Test video with scaling.
 - Add new unit test for Vxx, Famitracker tempo, etc.
 - Test note labels in 150 + 200% scaling.
 - Test paste special on mac + hi-dpi.
 - mp3/wav command line export.
 - Rested hi-dpi, changed some stuff for video.
 - Test export dialog hi-dpi (that ffmpeg button has harcoded 40 height)
-- Test paste special hi-dpi/
+- Test paste special hi-dpi.
 
 Delay notes
 ===========
