@@ -524,11 +524,17 @@ namespace FamiStudio
                         var anchorOffsetLeftX = patternSizeX * selectionDragAnchorPatternXFraction;
                         var anchorOffsetRightX = patternSizeX * (1.0f - selectionDragAnchorPatternXFraction);
 
-                        bool isCopy = ModifierKeys.HasFlag(Keys.Control) || channelIdxDelta != 0;
-                        var bmpCopy = isCopy && ModifierKeys.HasFlag(Keys.Shift) ? bmpDuplicate : (channelIdxDelta != 0 ? bmpDuplicateMove : bmpInstanciate);
+                        var instance  = ModifierKeys.HasFlag(Keys.Control);
+                        var duplicate = instance && ModifierKeys.HasFlag(Keys.Shift);
+
+                        var bmpCopy = (RenderBitmap)null;
+                        if (channelIdxDelta != 0)
+                            bmpCopy = (duplicate || instance) ? bmpDuplicate : bmpDuplicateMove;
+                        else
+                            bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstanciate : null);
 
                         g.FillAndDrawRectangle(pt.X - anchorOffsetLeftX, y, pt.X - anchorOffsetLeftX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
-                        if (isCopy)
+                        if (bmpCopy != null)
                             g.DrawBitmap(bmpCopy, pt.X - anchorOffsetLeftX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, y + trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
 
                         // Left side
@@ -537,7 +543,7 @@ namespace FamiStudio
                             patternSizeX = Song.GetPatternLength(p) * noteSizeX;
                             anchorOffsetLeftX += patternSizeX;
                             g.FillAndDrawRectangle(pt.X - anchorOffsetLeftX, y, pt.X - anchorOffsetLeftX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
-                            if (isCopy)
+                            if (bmpCopy != null)
                                 g.DrawBitmap(bmpCopy, pt.X - anchorOffsetLeftX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, y + trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
                         }
 
@@ -546,7 +552,7 @@ namespace FamiStudio
                         {
                             patternSizeX = Song.GetPatternLength(p) * noteSizeX;
                             g.FillAndDrawRectangle(pt.X + anchorOffsetRightX, y, pt.X + anchorOffsetRightX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
-                            if (isCopy)
+                            if (bmpCopy != null)
                                 g.DrawBitmap(bmpCopy, pt.X + anchorOffsetRightX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, y + trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
                             anchorOffsetRightX += patternSizeX;
                         }
@@ -795,6 +801,8 @@ namespace FamiStudio
                     StartCaptureOperation(e, CaptureOperation.Select);
                     UpdateSelection(e.X, true);
                 }
+
+                return;
             }
             else if (e.Y > headerSizeY && (left || right))
             {
@@ -1025,7 +1033,7 @@ namespace FamiStudio
         {
             if (captureOperation == CaptureOperation.DragSelection)
             {
-                Cursor.Current = ModifierKeys.HasFlag(Keys.Control) ? Cursors.CopyCursor : Cursors.DragCursor;
+                Cursor.Current = Cursors.DragCursor;
             }
             else
             {
@@ -1092,9 +1100,14 @@ namespace FamiStudio
                                     var sourcePattern = tmpPatterns[j - minSelectedPatternIdx, i - minSelectedChannelIdx];
 
                                     if (duplicate && sourcePattern != null)
+                                    {
                                         Song.Channels[ni].PatternInstances[nj] = sourcePattern.ShallowClone(Song.Channels[ni]);
+                                        Song.Channels[ni].PatternInstances[nj].Color = ThemeBase.RandomCustomColor(); ;
+                                    }
                                     else
+                                    {
                                         Song.Channels[ni].PatternInstances[nj] = sourcePattern;
+                                    }
                                 }
                             }
                         }
@@ -1413,7 +1426,7 @@ namespace FamiStudio
 
             UpdateToolTip(e);
 
-            if (captureOperation == CaptureOperation.ClickPattern && (captureStartX > 0 && Math.Abs(e.X - captureStartX) > 5) || (captureStartY > 0 && Math.Abs(e.Y - captureStartY) > 5))
+            if (captureOperation == CaptureOperation.ClickPattern && ((captureStartX > 0 && Math.Abs(e.X - captureStartX) > 5) || (captureStartY > 0 && Math.Abs(e.Y - captureStartY) > 5)))
             {
                 captureOperation = CaptureOperation.DragSelection;
                 ConditionalInvalidate();

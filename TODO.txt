@@ -47,7 +47,6 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 / ROM (add new features) + Update to 2.3.0
 - Sound engine demo, re-export data at the very end.
 - Update documentation (sound engine, copy/delete special, etc.)
-- BUG: If you start selecting in the header in sequencer (right click) and go outside the window, it starts a drag!
 - BUG: Missing page up/down on MacOS.
 - BUG: Linux, inconsistencies between GTK/OpenTK keyboard reads... Get rid of Open TK!
 - BUG: No loop point, no loop mode = seek freeze.
