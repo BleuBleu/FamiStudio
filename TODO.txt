@@ -55,6 +55,7 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 - BUG: If you start selecting in the header in sequencer (right click) and go outside the window, it starts a drag!
 - BUG: Missing page up/down on MacOS.
 - BUG: Linux, inconsistencies between GTK/OpenTK keyboard reads... Get rid of Open TK!
+- BUG: No loop point, no loop mode = seek freeze.
 - RESIZE ALL NSF BINARIES, THEY GOT SMALLER!
 
 => Configure QWERTY keys for piano input? Will be super annoying to do, need to do on all 3 platforms...
