@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 #if FAMISTUDIO_WINDOWS
 using RenderTheme = FamiStudio.Direct2DTheme;
@@ -118,6 +119,8 @@ namespace FamiStudio
 
         private Label CreateLabel(string str, string tooltip = null)
         {
+            Debug.Assert(!string.IsNullOrEmpty(str));
+
             var label = new Label();
 
             label.Text = str;
@@ -403,7 +406,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.String,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateTextBox(value, maxLength, tooltip)
                 });
         }
@@ -414,7 +417,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.MultilineString,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label) : null,
                     control = CreateMultilineTextBox(value)
                 });
         }
@@ -425,7 +428,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.Button,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateButton(value, tooltip),
                     click = clickDelegate
                 });
@@ -469,7 +472,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.IntegerRange,
-                    label = CreateLabel(label, tooltip),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateNumericUpDown(value, min, max, tooltip)
                 });
         }
@@ -480,7 +483,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.ProgressBar,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label) : null,
                     control = CreateProgressBar(value)
                 });
         }
@@ -508,7 +511,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.DomainRange,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label) : null,
                     control = CreateDomainUpDown(values, value)
                 });
         }
@@ -539,7 +542,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    label = CreateLabel(label, tooltip),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateCheckBox(value, "", tooltip)
                 });
         }
@@ -561,7 +564,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.StringList,
-                    label = CreateLabel(label, tooltip),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateDropDownList(values, value, tooltip)
                 });
         }

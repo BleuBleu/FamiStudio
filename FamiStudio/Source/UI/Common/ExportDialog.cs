@@ -121,7 +121,7 @@ namespace FamiStudio
                 case ExportFormat.Video:
                     // MATTT: Linux/Mac + settings.
                     page.AddButton("Path To FFmpeg:", Settings.FFmpegExecutablePath, FFmpegPathButtonClicked, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 0
-                    page.AddLinkLabel("", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
+                    page.AddLinkLabel(null, "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
                     page.AddStringList("Song :", songNames, songNames[0]); // 2
                     page.AddStringList("Audio Bit Rate (kb/s) :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
                     page.AddStringList("Video Bit Rate (mb/s):", new[] { "2", "4", "8", "10", "12", "14", "16", "18", "20" }, "12"); // 4

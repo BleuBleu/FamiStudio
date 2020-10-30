@@ -13,11 +13,12 @@ namespace FamiStudio
         public PropertyPage Properties => propertyPage;
         private bool top = false;
 
-        public PropertyDialog(int width, Rectangle mainWinRect)
+        public PropertyDialog(int width, Rectangle mainWinRect, bool canAccept = true)
         {
             StartPosition = FormStartPosition.CenterParent;
             Init();
             Width = width;
+            buttonYes.Visible = canAccept;
         }
 
         public PropertyDialog(Point pt, int width, bool leftAlign = false, bool topAlign = false)
@@ -36,13 +37,12 @@ namespace FamiStudio
             Width = width;
         }
 
-        public PropertyDialog(int x, int y, int width, int height, bool canAccept = true)
+        public PropertyDialog(int x, int y, int width, int height)
         {
             width = (int)(width * Direct2DTheme.DialogScaling);
             Init();
             StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Width = width;
-            buttonYes.Visible = canAccept;
         }
 
         private void Init()
@@ -118,6 +118,16 @@ namespace FamiStudio
         {
             DialogResult = DialogResult.Cancel;
             Close();
+        }
+
+        public void UpdateModalEvents()
+        {
+            Application.DoEvents();
+        }
+
+        public void ShowModal(FamiStudioForm form)
+        {
+            Show(form);
         }
     }
 }
