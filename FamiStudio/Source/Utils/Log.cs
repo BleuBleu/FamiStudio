@@ -21,19 +21,6 @@ namespace FamiStudio
         bool AbortOperation { get; }
     }
 
-    //public class ListLogOutput : ILogOutput
-    //{
-    //    private List<string> messages = new List<string>();
-
-    //    public void LogMessage(string msg)
-    //    {
-    //        messages.Add(msg);
-    //    }
-
-    //    public bool IsEmpty => messages.Count == 0;
-    //    public List<string> Messages => messages;
-    //}
-
     public class ScopedLogOutput : IDisposable
     {
         public ScopedLogOutput(ILogOutput log, LogSeverity minSeverity = LogSeverity.Info)

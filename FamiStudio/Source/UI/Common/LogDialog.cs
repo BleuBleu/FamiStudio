@@ -13,12 +13,7 @@ namespace FamiStudio
 
         public unsafe LogDialog(FamiStudioForm parentForm, bool showImmediately = false, bool progressBar = false)
         {
-            int width  = 800;
-            int height = 400;
-            int x = parentForm.Bounds.Left + (parentForm.Bounds.Width  - width)  / 2;
-            int y = parentForm.Bounds.Top  + (parentForm.Bounds.Height - height) / 2;
-
-            dialog = new PropertyDialog(x, y, width, height, false);
+            dialog = new PropertyDialog(800, parentForm.Bounds, false);
             dialog.Properties.AddMultilineString(null, ""); // 0
             if (progressBar)
                 dialog.Properties.AddProgressBar(null, 0.0f); // 1
@@ -45,34 +40,34 @@ namespace FamiStudio
 
         public void LogMessage(string msg)
         {
+            dialog.UpdateModalEvents();
+
             if (AbortOperation)
                 return;
 
             hasMessages = true;
             dialog.Properties.AppendText(0, msg);
-            Application.DoEvents();
 
             if (showImmediately && !dialog.Visible)
-            {
-                dialog.Show(parentForm);
-                Application.DoEvents();
-            }
+                dialog.ShowModal(parentForm);
+
+            dialog.UpdateModalEvents();
         }
 
         public void ReportProgress(float progress)
         {
+            dialog.UpdateModalEvents();
+
             if (AbortOperation)
                 return;
 
             hasMessages = true;
             dialog.Properties.SetPropertyValue(1, progress);
-            Application.DoEvents();
 
             if (showImmediately && !dialog.Visible)
-            {
-                dialog.Show(parentForm);
-                Application.DoEvents();
-            }
+                dialog.ShowModal(parentForm);
+
+            dialog.UpdateModalEvents();
         }
 
         public bool HasMessages => hasMessages;

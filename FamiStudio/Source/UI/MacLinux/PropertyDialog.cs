@@ -22,10 +22,13 @@ namespace FamiStudio
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, Rectangle mainWinRect) : base(WindowType.Toplevel)
+        public PropertyDialog(int width, Rectangle mainWinRect, bool canAccept = true) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = width;
+            
+            if (!canAccept)
+                buttonYes.Hide();
 
 #if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
@@ -187,5 +190,22 @@ namespace FamiStudio
 
             return result;
         }
+
+        public void ShowModal(FamiStudioForm parent = null)
+        {
+            Show();
+        }
+
+        public void UpdateModalEvents()
+        {
+            if (result != System.Windows.Forms.DialogResult.None)
+            {
+                Hide();
+            }
+
+            PlatformUtils.ProcessPendingEvents();
+        }
+
+        public System.Windows.Forms.DialogResult DialogResult => result;
     }
 }

@@ -96,8 +96,13 @@ namespace FamiStudio
 
         public static void ProcessPendingEvents()
         {
-            while (Gtk.Application.EventsPending())
+#if FAMISTUDIO_WINDOWS
+            Application.DoEvents();
+#else
+            // HACK: Arbitrary number of iterations.
+            for (int i = 0; i < 16; i++)
                 Gtk.Application.RunIteration();
+#endif
         }
 
         private static string[] GetExtensionList(string str)

@@ -107,6 +107,7 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
+    <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
@@ -277,7 +278,6 @@
     </Content>
     <Compile Include="Source\Utils\RtMidi.cs" />
     <Compile Include="Source\UI\MacLinux\TutorialDialog.cs" />
-    <Compile Include="Source\UI\MacLinux\LogDialog.cs" />
     <Content Include="..\LICENSE">
       <Link>LICENSE</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

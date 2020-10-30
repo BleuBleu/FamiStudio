@@ -18,7 +18,9 @@ namespace FamiStudio
         StringListMulti,
         Color,
         Label,
-        Button
+        Button,
+        MultilineString,
+        ProgressBar
     };
 
     public class PropertyPage : Gtk.Table
@@ -101,6 +103,8 @@ namespace FamiStudio
 
         private Label CreateLabel(string str, string tooltip = null)
         {
+            Debug.Assert(!string.IsNullOrEmpty(str));
+
             var label = new Label();
 
             label.Text = str;
@@ -141,6 +145,25 @@ namespace FamiStudio
             textBox.TooltipText = tooltip;
 
             return textBox;
+        }
+
+        private ScrolledWindow CreateMultilineTextBox(string txt)
+        {
+            var textView = new TextView();
+            textView.Buffer.Text = txt;
+            textView.Editable = false;
+            textView.CursorVisible = false;
+            textView.Show();
+
+            var scroll = new ScrolledWindow(null, null);
+            scroll.HscrollbarPolicy = PolicyType.Never;
+            scroll.VscrollbarPolicy = PolicyType.Automatic;
+            scroll.HeightRequest = 400;
+            scroll.ShadowType = ShadowType.EtchedIn;
+            scroll.Show();
+            scroll.Add(textView);
+
+            return scroll;
         }
 
         private CheckButton CreateCheckBox(bool value, string text = null, string tooltip = null)
@@ -233,6 +256,12 @@ namespace FamiStudio
             return upDown;
         }
 
+        private ProgressBar CreateProgressBar(float value)
+        {
+            var progress = new ProgressBar();
+            return progress;
+        }
+
         private void UpDown_ValueChanged1(object sender, EventArgs e)
         {
             int idx = GetPropertyIndex(sender as Widget);
@@ -299,8 +328,19 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.String,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label) : null,
                     control = CreateTextBox(value, maxLength)
+                });
+        }
+
+        public void AddMultilineString(string label, string value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.MultilineString,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateMultilineTextBox(value)
                 });
         }
 
@@ -310,7 +350,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.Button,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateButton(value, tooltip),
                     click = clickDelegate
                 });
@@ -333,7 +373,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.Label,
-                    label = CreateLabel(label, tooltip),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateLabel(value, tooltip)
                 });
         }
@@ -355,7 +395,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    label = CreateLabel(label, tooltip),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateCheckBox(value)
                 });
         }
@@ -387,8 +427,19 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.IntegerRange,
-                    label = CreateLabel(label, tooltip),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateNumericUpDown(value, min, max, tooltip)
+                });
+        }
+
+        public void AddProgressBar(string label, float value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.ProgressBar,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateProgressBar(value)
                 });
         }
 
@@ -411,7 +462,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.DomainRange,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label) : null,
                     control = CreateDomainUpDown(values, value)
                 });
         }
@@ -429,7 +480,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.StringList,
-                    label = CreateLabel(label, tooltip),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateDropDownList(values, value, tooltip)
                 });
         }
@@ -470,6 +521,13 @@ namespace FamiStudio
                     (prop.control as SpinButton).Update();
             }
 #endif
+        }
+
+        public void AppendText(int idx, string line)
+        {
+            var scroll = properties[idx].control as ScrolledWindow;
+            var txt = scroll.Child as TextView;
+            txt.Buffer.Insert(txt.Buffer.EndIter, line + "\n");
         }
 
         public object GetPropertyValue(int idx)
@@ -517,6 +575,9 @@ namespace FamiStudio
                 case PropertyType.Button:
                     (prop.control as Button).Label = (string)value;
                     break;
+                case PropertyType.ProgressBar:
+                    (prop.control as ProgressBar).Fraction = (float)value;
+                    break;
             }
         }
 
@@ -544,8 +605,6 @@ namespace FamiStudio
                     // HACK: Cant be bothered to deal with GTK+2 aspect ratios.
                     if (prop.control is ColorSelector img)
                         img.DesiredWidth = Toplevel.WidthRequest - 10; // (10 = Border * 2)
-
-
 
                     Attach(prop.control, 0, 2, (uint)i, (uint)(i + 1), AttachOptions.Expand | AttachOptions.Fill, AttachOptions.Expand | AttachOptions.Fill, (uint)prop.leftMargin, 0);
                     prop.control.Show();
