@@ -298,6 +298,10 @@
     <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
     <EmbeddedResource Include="Resources\ExportVideo.png" />
     <EmbeddedResource Include="Resources\VideoWatermark.png" />
+    <EmbeddedResource Include="Resources\FM%402x.png" />
+    <EmbeddedResource Include="Resources\FM.png" />
+    <EmbeddedResource Include="Resources\WaveTable%402x.png" />
+    <EmbeddedResource Include="Resources\WaveTable.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall%402x.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall.png" />
     <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />

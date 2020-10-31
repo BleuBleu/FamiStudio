@@ -327,6 +327,10 @@
     <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
     <EmbeddedResource Include="Resources\ExportVideo.png" />
     <EmbeddedResource Include="Resources\VideoWatermark.png" />
+    <EmbeddedResource Include="Resources\FM%402x.png" />
+    <EmbeddedResource Include="Resources\FM.png" />
+    <EmbeddedResource Include="Resources\WaveTable%402x.png" />
+    <EmbeddedResource Include="Resources\WaveTable.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
