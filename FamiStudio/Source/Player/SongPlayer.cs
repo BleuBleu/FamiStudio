@@ -71,8 +71,11 @@ namespace FamiStudio
                     // (like SFX) and avoids cutting the last couple frames of audio.
                     if (reachedEnd)
                     {
-                        while (sampleQueue.Count != 0)
-                            Thread.Sleep(1);
+                        if (audioStream.IsStarted)
+                        {
+                            while (sampleQueue.Count != 0)
+                                Thread.Sleep(1);
+                        }
                         break;
                     }
                 }

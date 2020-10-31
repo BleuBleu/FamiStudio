@@ -50,9 +50,9 @@ namespace FamiStudio
 
         private void PropertyDialog_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (Parent != null)
+            if (Owner != null)
             {
-                Parent.Enabled = true;
+                Owner.Enabled = true;
             }
         }
 
