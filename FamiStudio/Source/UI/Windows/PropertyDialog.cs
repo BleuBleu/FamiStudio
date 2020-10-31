@@ -19,6 +19,7 @@ namespace FamiStudio
             Init();
             Width = width;
             buttonYes.Visible = canAccept;
+            FormClosed += PropertyDialog_FormClosed;
         }
 
         public PropertyDialog(Point pt, int width, bool leftAlign = false, bool topAlign = false)
@@ -31,6 +32,7 @@ namespace FamiStudio
 
             StartPosition = FormStartPosition.Manual;
             Location = pt;
+            FormClosed += PropertyDialog_FormClosed;
 
             Init();
 
@@ -43,6 +45,15 @@ namespace FamiStudio
             Init();
             StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Width = width;
+            FormClosed += PropertyDialog_FormClosed;
+        }
+
+        private void PropertyDialog_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (Parent != null)
+            {
+                Parent.Enabled = true;
+            }
         }
 
         private void Init()
@@ -127,6 +138,7 @@ namespace FamiStudio
 
         public void ShowModal(FamiStudioForm form)
         {
+            form.Enabled = false;
             Show(form);
         }
     }
