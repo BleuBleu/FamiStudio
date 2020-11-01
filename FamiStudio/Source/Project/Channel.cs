@@ -213,16 +213,16 @@ namespace FamiStudio
         {
             switch (effect)
             {
-                case Note.EffectVolume: return type != Dpcm;
-                case Note.EffectFinePitch: return type != Noise && type != Dpcm;
+                case Note.EffectVolume:       return type != Dpcm;
+                case Note.EffectFinePitch:    return type != Noise && type != Dpcm;
                 case Note.EffectVibratoSpeed: return type != Noise && type != Dpcm;
                 case Note.EffectVibratoDepth: return type != Noise && type != Dpcm;
-                case Note.EffectFdsModDepth: return type == FdsWave;
-                case Note.EffectFdsModSpeed: return type == FdsWave;
-                case Note.EffectSpeed: return song.UsesFamiTrackerTempo;
-                case Note.EffectDutyCycle: return type == Square1 || type == Square2 || type == Vrc6Square1 || type == Vrc6Square2 || type == Noise;
-                case Note.EffectNoteDelay: return song.UsesFamiTrackerTempo;
-                case Note.EffectCutDelay: return song.UsesFamiTrackerTempo;
+                case Note.EffectFdsModDepth:  return type == FdsWave;
+                case Note.EffectFdsModSpeed:  return type == FdsWave;
+                case Note.EffectSpeed:        return song.UsesFamiTrackerTempo;
+                case Note.EffectDutyCycle:    return type == Square1 || type == Square2 || type == Vrc6Square1 || type == Vrc6Square2 || type == Noise;
+                case Note.EffectNoteDelay:    return song.UsesFamiTrackerTempo;
+                case Note.EffectCutDelay:     return song.UsesFamiTrackerTempo;
             }
 
             return true;

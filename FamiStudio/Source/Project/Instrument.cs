@@ -206,6 +206,13 @@ namespace FamiStudio
                 idMap.Add(id, this);
 
             Debug.Assert(project.GetInstrument(id) == this);
+
+            for (int i = 0; i < Envelope.Count; i++)
+            {
+                bool envelopeExists = envelopes[i] != null;
+                bool envelopeShouldExists = IsEnvelopeActive(i);
+                Debug.Assert(envelopeExists == envelopeShouldExists);
+            }
 #endif
         }
 

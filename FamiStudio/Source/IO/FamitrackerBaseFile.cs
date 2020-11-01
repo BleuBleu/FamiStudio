@@ -275,7 +275,7 @@ namespace FamiStudio
             return arp;
         }
 
-        protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, Dictionary<Pattern, byte> patternLengths)
+        protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, Dictionary<Pattern, byte> patternLengths, bool allowSongEffects)
         {
             Note note = null;
 
@@ -284,49 +284,72 @@ namespace FamiStudio
                 case Effect_None:
                     return;
                 case Effect_Jump:
-                    pattern.Song.SetLoopPoint(fx.param);
+                    if (allowSongEffects)
+                        pattern.Song.SetLoopPoint(fx.param);
                     return;
                 case Effect_Skip:
                     patternLengths[pattern] = (byte)(n + 1);
                     return;
                 case Effect_Speed:
-                    if (fx.param <= 0x1f) // We only support speed change for now.
-                        pattern.GetOrCreateNoteAt(n).Speed = Math.Max((byte)1, (byte)fx.param);
-                    else
-                        Log.LogMessage(LogSeverity.Warning, $"Only speed changes are supported, not tempo. Will be ignored. {GetPatternString(pattern, n)}");
+                    if (pattern.Channel.SupportsEffect(Note.EffectSpeed))
+                    {
+                        if (fx.param <= 0x1f) // We only support speed change for now.
+                            pattern.GetOrCreateNoteAt(n).Speed = Math.Max((byte)1, (byte)fx.param);
+                        else
+                            Log.LogMessage(LogSeverity.Warning, $"Only speed changes are supported, not tempo. Will be ignored. {GetPatternString(pattern, n)}");
+                    }
                     return;
                 case Effect_Pitch:
-                    pattern.GetOrCreateNoteAt(n).FinePitch = (sbyte)(0x80 - fx.param);
+                    if (pattern.Channel.SupportsEffect(Note.EffectFinePitch))
+                    {
+                        pattern.GetOrCreateNoteAt(n).FinePitch = (sbyte)(0x80 - fx.param);
+                    }
                     return;
                 case Effect_Vibrato:
-                    note = pattern.GetOrCreateNoteAt(n);
-                    note.VibratoDepth = (byte)(fx.param & 0x0f);
-                    note.VibratoSpeed = (byte)VibratoSpeedImportLookup[fx.param >> 4];
-
-                    if (note.VibratoDepth == 0 ||
-                        note.VibratoSpeed == 0)
+                    if (pattern.Channel.SupportsEffect(Note.EffectVibratoDepth))
                     {
-                        note.RawVibrato = 0;
+                        note = pattern.GetOrCreateNoteAt(n);
+                        note.VibratoDepth = (byte)(fx.param & 0x0f);
+                        note.VibratoSpeed = (byte)VibratoSpeedImportLookup[fx.param >> 4];
+
+                        if (note.VibratoDepth == 0 ||
+                            note.VibratoSpeed == 0)
+                        {
+                            note.RawVibrato = 0;
+                        }
                     }
                     return;
                 case Effect_FdsModSpeedHi:
-                    // TODO: If both hi/lo effects arent in a pair, this is likely not going to work.
-                    note = pattern.GetOrCreateNoteAt(n);
-                    if (!note.HasFdsModSpeed) note.FdsModSpeed = 0;
-                    note.FdsModSpeed = (ushort)(((note.FdsModSpeed) & 0x00ff) | (fx.param << 8));
+                    if (pattern.Channel.SupportsEffect(Note.EffectFdsModSpeed))
+                    {
+                        // TODO: If both hi/lo effects arent in a pair, this is likely not going to work.
+                        note = pattern.GetOrCreateNoteAt(n);
+                        if (!note.HasFdsModSpeed) note.FdsModSpeed = 0;
+                        note.FdsModSpeed = (ushort)(((note.FdsModSpeed) & 0x00ff) | (fx.param << 8));
+                    }
                     return;
                 case Effect_FdsModSpeedLo:
-                    // TODO: If both hi/lo effects arent in a pair, this is likely not going to work.
-                    note = pattern.GetOrCreateNoteAt(n);
-                    if (!note.HasFdsModSpeed) note.FdsModSpeed = 0;
-                    note.FdsModSpeed = (ushort)(((note.FdsModSpeed) & 0xff00) | (fx.param << 0));
+                    if (pattern.Channel.SupportsEffect(Note.EffectFdsModSpeed))
+                    {
+                        // TODO: If both hi/lo effects arent in a pair, this is likely not going to work.
+                        note = pattern.GetOrCreateNoteAt(n);
+                        if (!note.HasFdsModSpeed) note.FdsModSpeed = 0;
+                        note.FdsModSpeed = (ushort)(((note.FdsModSpeed) & 0xff00) | (fx.param << 0));
+                    }
                     return;
                 case Effect_FdsModDepth:
-                    pattern.GetOrCreateNoteAt(n).FdsModDepth = fx.param;
+                    if (pattern.Channel.SupportsEffect(Note.EffectFdsModDepth))
+                    {
+                        pattern.GetOrCreateNoteAt(n).FdsModDepth = fx.param;
+                    }
                     return;
                 case Effect_DutyCycle:
-                    pattern.GetOrCreateNoteAt(n).DutyCycle = fx.param;
+                    if (pattern.Channel.SupportsEffect(Note.EffectDutyCycle))
+                    {
+                        pattern.GetOrCreateNoteAt(n).DutyCycle = fx.param;
+                    }
                     return;
+                case Effect_Halt:
                 case Effect_PortaUp:
                 case Effect_PortaDown:
                 case Effect_Portamento:
@@ -760,6 +783,41 @@ namespace FamiStudio
             }
         }
 
+        protected void ApplyHaltEffect(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        {
+            // Find the first Cxx effect and truncate the song.
+            for (int p = 0; p < s.Length; p++)
+            {
+                for (int c = 0; c < s.Channels.Length; c++)
+                {
+                    var pattern = s.Channels[c].PatternInstances[p];
+                    var patternLength = s.GetPatternLength(p);
+
+                    if (patternFxData.TryGetValue(pattern, out var fxData))
+                    {
+                        for (int i = 0; i < fxData.GetLength(0) && i < patternLength; i++)
+                        {
+                            for (int j = 0; j < fxData.GetLength(1); j++)
+                            {
+                                var fx = fxData[i, j];
+
+                                if (fx.fx == Effect_Halt)
+                                {
+                                    if (s.PatternHasCustomSettings(p))
+                                        s.GetPatternCustomSettings(p).patternLength = i + 1;
+                                    else
+                                        s.SetPatternCustomSettings(p, i + 1);
+                                    s.SetLength(p + 1);
+                                    s.SetLoopPoint(-1);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         protected bool FinishImport()
         {
             foreach (var s in project.Songs)
@@ -787,6 +845,7 @@ namespace FamiStudio
                 else
                     s.SetBarLength(barLength);
 
+                ApplyHaltEffect(s, patternFxData);
                 CreateArpeggios(s, patternFxData);
                 CreateSlideNotes(s, patternFxData);
 

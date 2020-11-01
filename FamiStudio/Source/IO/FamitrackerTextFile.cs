@@ -73,7 +73,9 @@ namespace FamiStudio
             {
                 var line = lines[i].Trim();
 
+#if !DEBUG
                 try
+#endif
                 { 
                     if (line.StartsWith("TITLE"))
                     {
@@ -178,7 +180,8 @@ namespace FamiStudio
                                 int pitch = int.Parse(param[4]);
                                 int loop  = int.Parse(param[5]);
 
-                                project.MapDPCMSample(note, dpcms[dpcm], pitch, loop != 0);
+                                if (dpcms.TryGetValue(dpcm, out var foundSample))
+                                    project.MapDPCMSample(note, foundSample, pitch, loop != 0);
                             }
                         }
                     }
@@ -190,10 +193,13 @@ namespace FamiStudio
                         var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
 
                         int idx = int.Parse(param[0]);
-                        int vol = int.Parse(param[1]);
-                        int arp = int.Parse(param[2]);
-                        int pit = int.Parse(param[3]);
-                        int dut = int.Parse(param[5]);
+                        int[] commonEnvelopes = new int[]
+                        {
+                            int.Parse(param[1]), // Envelope.Volume
+                            int.Parse(param[2]), // Envelope.Arpeggio
+                            int.Parse(param[3]), // Envelope.Pitch
+                            int.Parse(param[5])  // Envelope.DutyCycle
+                        };
 
                         var instrument = CreateUniquelyNamedInstrument(expansion, param[param.Length - 1]);
 
@@ -208,10 +214,12 @@ namespace FamiStudio
                                 Log.LogMessage(LogSeverity.Warning, $"N163 instrument '{instrument.Name}' has more than 1 waveform ({wavCount}). All others will be ignored.");
                         }
 
-                        if (vol >= 0 && instrument.IsEnvelopeActive(Envelope.Volume))    instrument.Envelopes[Envelope.Volume]    = envelopes[expansion, Envelope.Volume][vol].ShallowClone();
-                        if (arp >= 0 && instrument.IsEnvelopeActive(Envelope.Arpeggio))  instrument.Envelopes[Envelope.Arpeggio]  = envelopes[expansion, Envelope.Arpeggio][arp].ShallowClone();
-                        if (pit >= 0 && instrument.IsEnvelopeActive(Envelope.Pitch))     instrument.Envelopes[Envelope.Pitch]     = envelopes[expansion, Envelope.Pitch][pit].ShallowClone();
-                        if (dut >= 0 && instrument.IsEnvelopeActive(Envelope.DutyCycle)) instrument.Envelopes[Envelope.DutyCycle] = envelopes[expansion, Envelope.DutyCycle][dut].ShallowClone();
+                        for (int envTypeIdx = 0; envTypeIdx <= Envelope.DutyCycle; envTypeIdx++)
+                        {
+                            int envIdx = commonEnvelopes[envTypeIdx];
+                            if (envIdx >= 0 && instrument.IsEnvelopeActive(envTypeIdx) && envelopes[expansion, envTypeIdx].TryGetValue(envIdx, out var foundEnv) && foundEnv != null)
+                                instrument.Envelopes[envTypeIdx] = envelopes[expansion, envTypeIdx][envIdx].ShallowClone();
+                        }
 
                         instruments[idx] = instrument;
                     }
@@ -397,8 +405,9 @@ namespace FamiStudio
                                 if (famitoneNote >= Note.MusicalNoteMin && famitoneNote <= Note.MusicalNoteMax)
                                 {
                                     var note = pattern.GetOrCreateNoteAt(n);
+                                    instruments.TryGetValue(Convert.ToInt32(noteData[1], 16), out var foundInstrument);
                                     note.Value = (byte)famitoneNote;
-                                    note.Instrument = j == 5 ? null : instruments[Convert.ToInt32(noteData[1], 16)];
+                                    note.Instrument = j == 5 ? null : foundInstrument;
                                 }
                                 else
                                 {
@@ -430,11 +439,12 @@ namespace FamiStudio
                                 fx.param = Convert.ToByte(fxStr.Substring(1), 16);
                                 patternFxData[pattern][n, k] = fx;
 
-                                ApplySimpleEffects(fx, pattern, n, patternLengths);
+                                ApplySimpleEffects(fx, pattern, n, patternLengths, true);
                             }
                         }
                     }
                 }
+#if !DEBUG
                 catch (Exception e)
                 {
                     Log.LogMessage(LogSeverity.Error, $"Line {i} could not be parsed correctly.");
@@ -443,6 +453,7 @@ namespace FamiStudio
 
                     return null;
                 }
+#endif
             }
 
             FinishImport();

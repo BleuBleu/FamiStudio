@@ -134,7 +134,7 @@ namespace FamiStudio
 
                     if (envType != Envelope.Count)
                     {
-                        if (instrument.Envelopes[envType] != null)
+                        if (instrument.Envelopes[envType] != null && envelopesArray[index, i] != null)
                             instrument.Envelopes[envType] = envelopesArray[index, i];
                     }
                 }
@@ -487,11 +487,15 @@ namespace FamiStudio
                 var song    = project.Songs[songIdx];
                 var channel = song.Channels[chanIdx];
                 var pattern = channel.GetPattern($"{patIdx:X2}");
+                var dummy   = false;
 
                 // Famitracker can have patterns that arent actually used in the song. 
                 // Skip with a dummy pattern.
                 if (pattern == null)
-                    pattern = new Pattern();
+                {
+                    pattern = new Pattern(project.GenerateUniqueId(), song, channel.Type, $"{patIdx:X2}");
+                    dummy = true;
+                }
 
                 var fxCount = songEffectColumnCount[song][chanIdx];
                 var fxData  = new RowFxData[song.PatternLength, fxCount + 1];
@@ -545,7 +549,7 @@ namespace FamiStudio
                         if (n < song.PatternLength)
                             fxData[n, j] = fx;
 
-                        ApplySimpleEffects(fx, pattern, n, patternLengths);
+                        ApplySimpleEffects(fx, pattern, n, patternLengths, !dummy);
                     }
                 }
             }
@@ -567,9 +571,9 @@ namespace FamiStudio
 
                 Array.Copy(bytes, idx, data, 0, size); idx += size;
 
-                samples[i] = CreateUniquelyNamedSample(name, data);
+                samples[index] = CreateUniquelyNamedSample(name, data);
 
-                if (samples[i] == null)
+                if (samples[index] == null)
                     Log.LogMessage(LogSeverity.Warning, $"Cannot allocate DPCM sample '{name}'. Maximum total size allowed is 16KB.");
             }
 
