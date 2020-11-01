@@ -1074,7 +1074,7 @@ namespace FamiStudio
 
             if (filename != null)
             {
-                var dlgLog = new LogDialog(ParentForm, false);
+                var dlgLog = new LogDialog(ParentForm);
                 using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Project);

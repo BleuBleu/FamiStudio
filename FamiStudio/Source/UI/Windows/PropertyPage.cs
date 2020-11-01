@@ -184,7 +184,7 @@ namespace FamiStudio
             var textBox = new TextBox();
 
             textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
-            textBox.Text = string.Join("\r\n", txt);
+            textBox.Text = txt;
             textBox.BackColor = ThemeBase.DarkGreyFillColor1;
             textBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             textBox.ForeColor = ThemeBase.LightGreyFillColor2;

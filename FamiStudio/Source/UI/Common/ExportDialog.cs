@@ -463,7 +463,7 @@ namespace FamiStudio
             {
                 dialog.Hide();
 
-                var dlgLog = new LogDialog(parentForm, true, true);
+                var dlgLog = new LogProgressDialog(parentForm);
                 using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Info))
                 {
                     var selectedFormat = (ExportFormat)dialog.SelectedIndex;

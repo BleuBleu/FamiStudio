@@ -133,7 +133,8 @@ namespace FamiStudio
 
         public void UpdateModalEvents()
         {
-            Application.DoEvents();
+            if (Visible)
+                Application.DoEvents();
         }
 
         public void ShowModal(FamiStudioForm form)

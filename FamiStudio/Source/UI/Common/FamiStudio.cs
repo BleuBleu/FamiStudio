@@ -408,7 +408,7 @@ namespace FamiStudio
                 return;
             }
 
-            var dlgLog = new LogDialog(mainForm, false);
+            var dlgLog = new LogDialog(mainForm);
             using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
             {
                 project = OpenProjectFile(filename);

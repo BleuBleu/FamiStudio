@@ -8,19 +8,15 @@ namespace FamiStudio
     {
         private PropertyDialog dialog;
         private FamiStudioForm parentForm;
-        private bool hasMessages = false;
-        private bool showImmediately;
+        private List<string>   messages = new List<string>();
 
-        public unsafe LogDialog(FamiStudioForm parentForm, bool showImmediately = false, bool progressBar = false)
+        public unsafe LogDialog(FamiStudioForm parentForm)
         {
+            this.parentForm = parentForm;
+
             dialog = new PropertyDialog(800, parentForm.Bounds, false);
             dialog.Properties.AddMultilineString(null, ""); // 0
-            if (progressBar)
-                dialog.Properties.AddProgressBar(null, 0.0f); // 1
             dialog.Properties.Build();
-
-            this.parentForm = parentForm;
-            this.showImmediately = showImmediately;
         }
 
         public DialogResult ShowDialog()
@@ -30,8 +26,9 @@ namespace FamiStudio
 
         public DialogResult ShowDialogIfMessages()
         {
-            if (hasMessages)
+            if (HasMessages)
             {
+                dialog.Properties.SetPropertyValue(0, string.Join("\r\n", messages));
                 return ShowDialog();
             }
 
@@ -40,37 +37,11 @@ namespace FamiStudio
 
         public void LogMessage(string msg)
         {
-            dialog.UpdateModalEvents();
-
-            if (AbortOperation)
-                return;
-
-            hasMessages = true;
-            dialog.Properties.AppendText(0, msg);
-
-            if (showImmediately && !dialog.Visible)
-                dialog.ShowModal(parentForm);
-
-            dialog.UpdateModalEvents();
+            messages.Add(msg);
         }
 
-        public void ReportProgress(float progress)
-        {
-            dialog.UpdateModalEvents();
-
-            if (AbortOperation)
-                return;
-
-            hasMessages = true;
-            dialog.Properties.SetPropertyValue(1, progress);
-
-            if (showImmediately && !dialog.Visible)
-                dialog.ShowModal(parentForm);
-
-            dialog.UpdateModalEvents();
-        }
-
-        public bool HasMessages => hasMessages;
+        public bool HasMessages => messages.Count > 0;
         public bool AbortOperation => dialog.DialogResult != DialogResult.None;
+        public void ReportProgress(float progress) { }
     }
 }
