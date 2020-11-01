@@ -2,7 +2,6 @@ using Gtk;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -370,8 +369,7 @@ namespace FamiStudio
 
         public Point GetCursorPosition()
         {
-            var mouseState = Mouse.GetCursorState();
-            return new Point(mouseState.X, mouseState.Y);
+            return PointToScreen(lastMousePos);
         }
 
         public void RefreshCursor()
