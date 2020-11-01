@@ -38,20 +38,14 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	- Fix computation of slide notes in FamiTracker tempo mode.
 	- Think of FTM import, slide conversions, etc.
 	- FamiStudio text + famitracker in/out
-/ Song merge 
-	x Add unique ID validation.
-	x fix instrument import... very bad.
-	- Add logging so that people understand name conflicts, DPCM conflicts, etc.
 / ROM (add new features) + Update to 2.3.0
-- Sound engine demo, re-export data at the very end.
-- Update documentation (sound engine, copy/delete special, etc.)
-- BUG: Missing page up/down on MacOS.
-- BUG: No loop point, no loop mode = seek freeze.
-	- 2 problems: lastTickCurrentFrame is not set to -1 when the thread ends by itself.
-	- The playing again, once stuck, will make the thread get stuck in the reachedEnd loop. WTF.
-- RESIZE ALL NSF BINARIES, THEY GOT SMALLER!
 
 => Configure QWERTY keys for piano input? Will be super annoying to do, need to do on all 3 platforms...
+
+CLOSING:
+- RESIZE ALL NSF BINARIES, THEY GOT SMALLER!
+- Update documentation (sound engine, copy/delete special, etc.)
+- Sound engine demo, re-export data at the very end.
 
 TESTING:
 - Create famistudio unit tests from 2.2.1 (either through WAV or register player)

@@ -28,7 +28,7 @@ namespace FamiStudio
         {
             if (HasMessages)
             {
-                dialog.Properties.SetPropertyValue(0, string.Join("\r\n", messages));
+                dialog.Properties.AppendText(0, string.Join("\r\n", messages));
                 return ShowDialog();
             }
 

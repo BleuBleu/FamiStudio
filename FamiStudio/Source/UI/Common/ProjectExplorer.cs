@@ -1002,65 +1002,52 @@ namespace FamiStudio
 
             if (filename != null)
             {
-                Project otherProject = App.OpenProjectFile(filename, false);
-
-                if (otherProject == null)
+                var dlgLog = new LogDialog(ParentForm);
+                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                 {
-                    return;
-                }
+                    Project otherProject = App.OpenProjectFile(filename, false);
 
-                if (otherProject.ExpansionAudio != Project.ExpansionNone &&
-                    otherProject.ExpansionAudio != App.Project.ExpansionAudio)
-                {
-                    PlatformUtils.MessageBox($"Cannot import from a project that uses a different audio expansion.", "Import Song", MessageBoxButtons.OK);
-                    return;
-                }
-
-                if (otherProject.TempoMode != App.Project.TempoMode)
-                {
-                    PlatformUtils.MessageBox($"Cannot import from a project that uses a different tempo mode.", "Import Song", MessageBoxButtons.OK);
-                    return;
-                }
-
-                var songs = new List<Song>();
-                var songNames = new List<string>();
-
-                foreach (var song in otherProject.Songs)
-                {
-                    // Cant have duplicated song names.
-                    if (App.Project.GetSong(song.Name) != null)
-                        continue;
-
-                    songs.Add(song);
-                    songNames.Add(song.Name);
-                }
-
-                var dlg = new PropertyDialog(300, ParentForm.Bounds);
-                dlg.Properties.AddLabel(null, "Select songs to import:");
-                dlg.Properties.AddStringListMulti(null, songNames.ToArray(), null);
-                dlg.Properties.Build();
-
-                if (dlg.ShowDialog() == DialogResult.OK)
-                {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                    var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                    var songIds = new List<int>();
-
-                    for (int i = 0; i < selected.Length; i++)
+                    if (otherProject == null)
                     {
-                        if (selected[i])
-                            songIds.Add(songs[i].Id);
+                        return;
                     }
 
-                    if (songIds.Count > 0)
+                    var songNames = new List<string>();
+                    foreach (var song in otherProject.Songs)
+                        songNames.Add(song.Name);
+
+                    var dlg = new PropertyDialog(300, ParentForm.Bounds);
+                    dlg.Properties.AddLabel(null, "Select songs to import:");
+                    dlg.Properties.AddStringListMulti(null, songNames.ToArray(), null);
+                    dlg.Properties.Build();
+
+                    if (dlg.ShowDialog() == DialogResult.OK)
                     {
-                        otherProject.RemoveAllSongsBut(songIds.ToArray());
-                        App.Project.Merge(otherProject);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                        var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                        var songIds = new List<int>();
+
+                        for (int i = 0; i < selected.Length; i++)
+                        {
+                            if (selected[i])
+                                songIds.Add(otherProject.Songs[i].Id);
+                        }
+
+                        bool success = false;
+                        if (songIds.Count > 0)
+                        {
+                            otherProject.RemoveAllSongsBut(songIds.ToArray());
+                            success = App.Project.MergeSongs(otherProject);
+                        }
+
+                        if (success)
+                            App.UndoRedoManager.EndTransaction();
+                        else
+                            App.UndoRedoManager.AbortTransaction();
                     }
 
-                    App.Project.SortInstruments();
-                    App.UndoRedoManager.EndTransaction();
+                    dlgLog.ShowDialogIfMessages();
                 }
             }
 
@@ -1091,23 +1078,16 @@ namespace FamiStudio
 
                         if (instrumentProject != null)
                         {
-                            var instruments = new List<Instrument>();
                             var instrumentNames = new List<string>();
 
                             foreach (var instrument in instrumentProject.Instruments)
                             {
-                                // MATTT : Message here.
-                                if (instrument.ExpansionType == Project.ExpansionNone ||
-                                    instrument.ExpansionType == App.Project.ExpansionAudio)
-                                {
-                                    var instName = instrument.Name;
+                                var instName = instrument.Name;
 
-                                    if (instrument.ExpansionType != Project.ExpansionNone)
-                                        instName += $" ({Project.ExpansionShortNames[instrument.ExpansionType]})";
+                                if (instrument.ExpansionType != Project.ExpansionNone)
+                                    instName += $" ({Project.ExpansionShortNames[instrument.ExpansionType]})";
 
-                                    instruments.Add(instrument);
-                                    instrumentNames.Add(instName);
-                                }
+                                instrumentNames.Add(instName);
                             }
 
                             var dlg = new PropertyDialog(300, ParentForm.Bounds);
@@ -1118,32 +1098,18 @@ namespace FamiStudio
                             if (dlg.ShowDialog() == DialogResult.OK)
                             {
                                 var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                var instrumentsToMerge = new List<Instrument>();
 
                                 for (int i = 0; i < selected.Length; i++)
                                 {
-                                    var inst = instruments[i];
-
                                     if (selected[i])
-                                    {
-                                        if (App.Project.GetInstrument(inst.Name) == null)
-                                        {
-                                            // Change instrument id since it may overlap with an ID used in this project.
-                                            inst.ChangeId(App.Project.GenerateUniqueId());
-                                            App.Project.Instruments.Add(inst);
-                                        }
-                                        else
-                                        {
-                                            // MATTT : Message here.
-                                        }
-                                    }
+                                        instrumentsToMerge.Add(instrumentProject.Instruments[i]);
                                 }
 
-                                success = true;
+                                success = App.Project.MergeOtherProjectInstruments(instrumentsToMerge);
                             }
                         }
                     }
-
-                    App.Project.SortInstruments();
 
                     if (!success)
                         App.UndoRedoManager.AbortTransaction();

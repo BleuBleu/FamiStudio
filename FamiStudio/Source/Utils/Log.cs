@@ -53,8 +53,8 @@ namespace FamiStudio
             if ((int)severity >= (int)MinSeverity && LogOutput != null)
             {
                 LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
-                Debug.WriteLine(SeverityStrings[(int)severity] + msg);
             }
+            Debug.WriteLine(SeverityStrings[(int)severity] + msg);
         }
 
         public static void ReportProgress(float progress)

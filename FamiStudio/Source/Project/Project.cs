@@ -458,6 +458,23 @@ namespace FamiStudio
             ReplaceArpeggio(arpeggio, null);
         }
 
+        public void ReplaceSample(DPCMSample oldSample, DPCMSample newSample)
+        {
+            foreach (var mapping in samplesMapping)
+            {
+                if (mapping != null && mapping.Sample == oldSample)
+                {
+                    mapping.Sample = newSample;
+                }
+            }
+        }
+
+        public void DeleteSample(DPCMSample sample)
+        {
+            samples.Remove(sample);
+            ReplaceSample(sample, null);
+        }
+
         public void DeleteAllSamples()
         {
             for (int i = 0; i < samplesMapping.Length; i++)
@@ -779,10 +796,27 @@ namespace FamiStudio
             }
         }
 
-        public void Merge(Project other)
+        public void Cleanup()
         {
-            Debug.Assert(other.ExpansionAudio == ExpansionNone || other.ExpansionAudio == ExpansionAudio);
-            Debug.Assert(other.TempoMode == TempoMode);
+            DeleteUnusedInstruments();
+            DeleteUnusedSamples();
+            DeleteUnusedArpeggios();
+        }
+
+        public bool MergeSongs(Project other)
+        {
+            if (other.expansionAudio != ExpansionNone &&
+                other.expansionAudio != expansionAudio)
+            {
+                Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses a different audio expansion.");
+                return false;
+            }
+
+            if (other.tempoMode != tempoMode)
+            {
+                Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses a different tempo mode.");
+                return false;
+            }
 
             // Change all the IDs in the source project.
             List<int> allOtherIds = new List<int>();
@@ -802,22 +836,168 @@ namespace FamiStudio
                 }
             }
 
-            // MATTT: Check sample name uniqueness and merge DPCM mapping too.
-            // MATTT: Check instrument/arpeggios names and make unique.
+            other.Validate();
 
-            // Add everything.
-            foreach (var inst in other.Instruments)
-                instruments.Add(inst);
-            foreach (var arp in other.Arpeggios)
-                arpeggios.Add(arp);
-            foreach (var sample in other.Samples) 
-                samples.Add(sample);
+            // Ignore songs that have name conflicts.
+            for (int i = 0; i < other.songs.Count;)
+            {
+                var otherSong = other.songs[i];
+                if (GetSong(otherSong.Name) != null)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Project already contains a song named '{otherSong.Name}', ignoring.");
+                    other.DeleteSong(otherSong);
+                }
+                else
+                {
+                    i++;
+                }
+            }
+
+            if (other.Songs.Count == 0)
+            {
+                Log.LogMessage(LogSeverity.Warning, "No songs to import. Aborting.");
+                return false;
+            }
+
+            other.Cleanup();
+            other.Validate();
+
+            // Match existing instruments by name.
+            for (int i = 0; i < other.instruments.Count;)
+            {
+                var otherInstrument = other.instruments[i];
+                var existingInstrument = GetInstrument(otherInstrument.Name);
+                if (existingInstrument != null)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Project already contains an instrument named '{existingInstrument.Name}', assuming it is the same.");
+
+                    other.ReplaceInstrument(otherInstrument, existingInstrument);
+                    other.DeleteInstrument(otherInstrument);
+                }
+                else
+                {
+                    instruments.Add(otherInstrument);
+                    i++;
+                }
+            }
+
+            other.Cleanup();
+            other.Validate();
+            Validate();
+
+            // Match existing arpeggios by name.
+            for (int i = 0; i < other.arpeggios.Count;)
+            {
+                var otherArpeggio = other.arpeggios[i];
+                var existingArpeggio = GetArpeggio(otherArpeggio.Name);
+                if (existingArpeggio != null)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Project already contains an arpeggio named '{existingArpeggio.Name}', assuming it is the same.");
+
+                    other.ReplaceArpeggio(otherArpeggio, existingArpeggio);
+                    other.DeleteArpeggio(otherArpeggio);
+                }
+                else
+                {
+                    arpeggios.Add(otherArpeggio);
+                    i++;
+                }
+            }
+
+            other.Cleanup();
+            other.Validate();
+            Validate();
+
+            // Match existing samples by name.
+            for (int i = 0; i < other.samples.Count;)
+            {
+                var otherSample = other.samples[i];
+                var existingSample = GetSample(otherSample.Name);
+                if (existingSample != null)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Project already contains a DPCM sample named '{existingSample.Name}', assuming it is the same.");
+
+                    other.ReplaceSample(otherSample, existingSample);
+                    other.DeleteSample(otherSample);
+                }
+                else
+                {
+                    samples.Add(otherSample);
+                    i++;
+                }
+            }
+
+            other.Cleanup();
+            other.Validate();
+            Validate();
+
+            // Merge sample mappings.
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                var thisMapping  = samplesMapping[i];
+                var otherMapping = other.samplesMapping[i];
+
+                if (otherMapping != null)
+                {
+                    if (thisMapping == null)
+                    {
+                        samplesMapping[i] = otherMapping;
+                    }
+                    else
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Project already has a sample mapped at key {Note.GetFriendlyName(Note.DPCMNoteMin + i)}, ignoring.");
+                    }
+                }
+            }
+
+            other.Cleanup();
+            other.Validate();
+            Validate();
+
+            // Finally add the songs.
             foreach (var song in other.Songs)
+            {
+                song.SetProject(this);
                 songs.Add(song);
+            }
 
             SortInstruments();
             SortArpeggios();
             Validate();
+
+            return true;
+        }
+
+        public bool MergeOtherProjectInstruments(List<Instrument> otherInstruments)
+        {
+            bool merged = false;
+
+            foreach (var otherInstrument in otherInstruments)
+            {
+                var existingInstrument = GetInstrument(otherInstrument.Name);
+                if (existingInstrument != null)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Project already contains an instrument named '{existingInstrument.Name}', ignoring.");
+                }
+                else
+                {
+                    if (otherInstrument.ExpansionType == Project.ExpansionNone ||
+                        otherInstrument.ExpansionType == expansionAudio)
+                    {
+                        merged = true;
+                        otherInstrument.ChangeId(GenerateUniqueId());
+                        instruments.Add(otherInstrument);
+                    }
+                    else
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Instrument named '{otherInstrument.Name}' uses an expansion audio incompatible with this project. Ignoring.");
+                    }
+                }
+            }
+
+            SortInstruments();
+
+            return merged;
         }
 
         public void MergeIdenticalInstruments()

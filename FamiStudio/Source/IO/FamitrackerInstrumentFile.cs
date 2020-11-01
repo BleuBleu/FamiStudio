@@ -217,6 +217,8 @@ namespace FamiStudio
                 }
             }
 
+            project.SortInstruments();
+
             return instrument;
         }
     }

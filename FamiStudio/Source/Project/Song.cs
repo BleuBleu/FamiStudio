@@ -286,6 +286,11 @@ namespace FamiStudio
             return false;
         }
 
+        public void SetProject(Project newProject)
+        {
+            project = newProject;
+        }
+
         public void SetLength(int newLength)
         {
             Debug.Assert(newLength <= MaxLength);
