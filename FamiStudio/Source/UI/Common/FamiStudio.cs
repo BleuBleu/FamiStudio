@@ -1014,7 +1014,7 @@ namespace FamiStudio
             {
                 songPlayer.Stop();
 
-                // HACK: Update continuous follow mode onle last time so it catches up to the 
+                // HACK: Update continuous follow mode only last time so it catches up to the 
                 // real final player position.
                 lastTickCurrentFrame = songPlayer.CurrentFrame;
                 Sequencer.UpdateFollowMode(true);
@@ -1142,8 +1142,7 @@ namespace FamiStudio
 
         public void Tick()
         {
-            if (IsPlaying)
-                lastTickCurrentFrame = songPlayer.CurrentFrame;
+            lastTickCurrentFrame = IsPlaying ? songPlayer.CurrentFrame : -1;
 
             if (audioDeviceChanged)
             {
