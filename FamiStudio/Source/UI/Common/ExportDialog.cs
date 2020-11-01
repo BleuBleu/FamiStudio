@@ -125,7 +125,7 @@ namespace FamiStudio
                     page.AddStringList("Song :", songNames, songNames[0]); // 2
                     page.AddStringList("Audio Bit Rate (kb/s) :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
                     page.AddStringList("Video Bit Rate (mb/s):", new[] { "2", "4", "8", "10", "12", "14", "16", "18", "20" }, "12"); // 4
-                    page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 5
+                    page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 5
                     page.AddBoolean("Thin Notes :", false, "Draws notes a bit thinner, recommended if song has lots of channels."); // 6
                     page.AddStringListMulti("Channels :", GetChannelNames(), null); // 7
                     break;
