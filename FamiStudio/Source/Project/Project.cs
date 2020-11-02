@@ -735,7 +735,7 @@ namespace FamiStudio
             }
         }
 
-        public void CleanupUnmappedSamples()
+        public void DeleteUnmappedSamples()
         {
             var usedSamples = new HashSet<DPCMSample>();
             foreach (var mapping in samplesMapping)
@@ -790,9 +790,7 @@ namespace FamiStudio
 
             if (deleteUnusedData)
             {
-                DeleteUnusedInstruments();
-                DeleteUnusedSamples();
-                DeleteUnusedArpeggios();
+                Cleanup();
             }
         }
 

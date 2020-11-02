@@ -27,16 +27,16 @@ namespace FamiStudio
         public const int FinePitchMin     = -128;
         public const int FinePitchMax     =  127;
 
-        public const int FlagsNone       = 0x00;
-        public const int FlagsNoAttack   = 0x01;
-
-        public const int NoteInvalid     = 0xff;
-        public const int NoteStop        = 0x00;
-        public const int MusicalNoteMin  = 0x01;
-        public const int MusicalNoteMax  = 0x60;
-        public const int NoteRelease     = 0x80;
-        public const int DPCMNoteMin     = 0x0c;
-        public const int DPCMNoteMax     = 0x4b;
+        public const int FlagsNone        = 0x00;
+        public const int FlagsNoAttack    = 0x01;
+                                          
+        public const int NoteInvalid      = 0xff;
+        public const int NoteStop         = 0x00;
+        public const int MusicalNoteMin   = 0x01;
+        public const int MusicalNoteMax   = 0x60;
+        public const int NoteRelease      = 0x80;
+        public const int DPCMNoteMin      = 0x0c;
+        public const int DPCMNoteMax      = 0x4b;
 
         public readonly static Note EmptyNote = new Note();
 

@@ -2093,21 +2093,10 @@ famistudio_update:
 .update:
 
     .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
-    lda famistudio_tempo_acc_lo
-    adc famistudio_tempo_step_lo
-    sta famistudio_tempo_acc_lo
-    lda famistudio_tempo_acc_hi
-    adc famistudio_tempo_step_hi
-    cmp famistudio_song_speed
-    bcs .update_row ; Overflow, row update is needed
-    sta famistudio_tempo_acc_hi ; No row update, skip to the envelopes update
-    jmp .update_envelopes
 
-.update_row:
-    sec
-    sbc famistudio_song_speed
-    sta famistudio_tempo_acc_hi
+    lda famistudio_tempo_acc_hi
+    cmp famistudio_song_speed
+    bcc .update_envelopes
 
     .else ; FamiStudio tempo
 
@@ -2144,11 +2133,10 @@ famistudio_update:
 .store_frame_count:
     sta famistudio_tempo_frame_cnt
 
-.update_row:
-
     .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
+.update_row:
     ldx #0
     .channel_loop:
         jsr famistudio_update_row
@@ -2402,7 +2390,26 @@ famistudio_update:
         bne .s5b_channel_loop
     .endif
 
-    .if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
+    .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
+    lda famistudio_tempo_acc_hi
+    cmp famistudio_song_speed
+    bcc .increment_tempo
+
+    sec
+    sbc famistudio_song_speed
+    sta famistudio_tempo_acc_hi
+
+.increment_tempo:
+
+    clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
+    lda famistudio_tempo_acc_lo
+    adc famistudio_tempo_step_lo
+    sta famistudio_tempo_acc_lo
+    lda famistudio_tempo_acc_hi
+    adc famistudio_tempo_step_hi
+    sta famistudio_tempo_acc_hi
+
+    .else
     ; See if we need to run a double frame (playing NTSC song on PAL)
     dec famistudio_tempo_frame_cnt
     beq .skip_frame

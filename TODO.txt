@@ -33,8 +33,7 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	- Delayed notes.
 	- Delayed cuts.
 	x Vxx.
-	- Tempo changes.
-	- Fix 1 frame missing in NSF
+	x Fix 1 frame missing in NSF (should be easy to change the accumulator)
 	- Fix computation of slide notes in FamiTracker tempo mode.
 	- Think of FTM import, slide conversions, etc.
 	- FamiStudio text + famitracker in/out

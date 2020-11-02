@@ -3032,7 +3032,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamples);
                         App.Project.UnmapDPCMSample(noteValue);
-                        App.Project.CleanupUnmappedSamples();
+                        App.Project.DeleteUnmappedSamples();
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                     }
