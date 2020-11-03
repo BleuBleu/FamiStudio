@@ -110,6 +110,22 @@ namespace FamiStudio
             }
         }
 
+        private void ResetFamiStudioTempo(bool force)
+        {
+            if (!famitrackerTempo)
+            {
+                var newNoteLength = song.GetPatternNoteLength(playPattern);
+                var newTempoEnvelope = FamiStudioTempoUtils.GetTempoEnvelope(newNoteLength, song.Project.PalMode);
+
+                if (newTempoEnvelope != tempoEnvelope || force)
+                {
+                    tempoEnvelope = newTempoEnvelope;
+                    tempoEnvelopeCounter = tempoEnvelope[0];
+                    tempoEnvelopeIndex = 0;
+                }
+            }
+        }
+
         public bool ShouldFamitrackerTempoAdvance()
         {
             return !famitrackerTempo || famitrackerTempoCounter <= 0;
@@ -129,22 +145,6 @@ namespace FamiStudio
                     famitrackerTempoCounter += (60 * ticksPerSec) - tempoRemainder;
                 }
                 famitrackerTempoCounter -= tempoDecrement;
-            }
-        }
-
-        private void ResetFamiStudioTempo(bool force)
-        {
-            if (!famitrackerTempo)
-            {
-                var newNoteLength = song.GetPatternNoteLength(playPattern);
-                var newTempoEnvelope = FamiStudioTempoUtils.GetTempoEnvelope(newNoteLength, song.Project.PalMode);
-
-                if (newTempoEnvelope != tempoEnvelope || force)
-                {
-                    tempoEnvelope = newTempoEnvelope;
-                    tempoEnvelopeCounter = tempoEnvelope[0];
-                    tempoEnvelopeIndex = 0;
-                }
             }
         }
 
@@ -184,11 +184,11 @@ namespace FamiStudio
             playNote = 0;
             frameNumber = 0;
             famitrackerTempoCounter = 0;
-            ResetFamiStudioTempo(true);
             channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback, listener);
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, GetNesApuExpansionAudio(song.Project), song.Project.ExpansionNumChannels, dmcCallback);
 
+            ResetFamiStudioTempo(true);
             UpdateChannelsMuting();
 
             //Debug.WriteLine($"START SEEKING!!"); 
@@ -203,7 +203,7 @@ namespace FamiStudio
 
                 while (song.GetPatternStartNote(playPattern) + playNote < startNote)
                 {
-                    if (!PlaySongFrameInternal())
+                    if (!PlaySongFrameInternal(true))
                         break;
                 }
 
@@ -223,7 +223,7 @@ namespace FamiStudio
             return true;
         }
 
-        protected bool PlaySongFrameInternal()
+        protected bool PlaySongFrameInternal(bool seeking)
         {
             //Debug.WriteLine($"PlaySongFrameInternal {playPosition}!");
             //Debug.WriteLine($"PlaySongFrameInternal {song.GetPatternStartNote(playPattern) + playNote}!");
@@ -236,7 +236,7 @@ namespace FamiStudio
                 {
                     //Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
 
-                    if (!AdvanceSong(song.Length, LoopMode.None))
+                    if (!AdvanceSong(song.Length, seeking ? LoopMode.None : loopMode))
                         return false;
 
                     AdvanceChannels();
@@ -255,13 +255,16 @@ namespace FamiStudio
 #endif
             }
 
+            if (!seeking)
+                playPosition = song.GetPatternStartNote(playPattern) + playNote;
+
             frameNumber++;
             return true;
         }
 
         public bool PlaySongFrame()
         {
-            if (!PlaySongFrameInternal())
+            if (!PlaySongFrameInternal(false))
                 return false;
 
             UpdateChannelsMuting();
