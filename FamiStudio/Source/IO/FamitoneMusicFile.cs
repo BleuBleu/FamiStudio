@@ -130,6 +130,16 @@ namespace FamiStudio
                     int tempoPal  = 256 * song.FamitrackerTempo / (50 * 60 / 24);
                     int tempoNtsc = 256 * song.FamitrackerTempo / (60 * 60 / 24);
 
+                    if (kernel == FamiToneKernel.FamiStudio)
+                    {
+                        // Pack the initial speed in the upper byte of the tempo.
+                        int initialSpeed = FindEffectParam(song, 0, 0, Note.EffectSpeed);
+                        if (initialSpeed < 0)
+                            initialSpeed = song.FamitrackerSpeed;
+                        tempoPal  |= (initialSpeed << 10);
+                        tempoNtsc |= (initialSpeed << 10);
+                    }
+
                     line += $",{tempoPal},{tempoNtsc}";
                     lines.Add(line);
 

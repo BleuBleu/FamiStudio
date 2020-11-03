@@ -1098,13 +1098,17 @@ famistudio_music_play:
     sta famistudio_tempo_step_lo
     iny
     lda (song_list_ptr),y
+    and #3 ; We pack the initial speed in the leftover bits.
     sta famistudio_tempo_step_hi
+
+    lda (song_list_ptr),y
+    lsr
+    lsr
+    sta famistudio_tempo_acc_hi
+    sta famistudio_song_speed
 
     lda #0 ; Reset tempo accumulator
     sta famistudio_tempo_acc_lo
-    lda #6 ; Default speed
-    sta famistudio_tempo_acc_hi
-    sta famistudio_song_speed ; Apply default speed, this also enables music
 .else
     lda (song_list_ptr),y
     sta famistudio_tempo_env_ptr_lo
