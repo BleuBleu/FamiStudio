@@ -349,6 +349,18 @@ namespace FamiStudio
                         pattern.GetOrCreateNoteAt(n).DutyCycle = fx.param;
                     }
                     return;
+                case Effect_Delay:
+                    if (pattern.Channel.SupportsEffect(Note.EffectNoteDelay))
+                    {
+                        pattern.GetOrCreateNoteAt(n).NoteDelay = Math.Min((byte)31, fx.param);
+                    }
+                    return;
+                case Effect_NoteCut:
+                    if (pattern.Channel.SupportsEffect(Note.EffectCutDelay))
+                    {
+                        pattern.GetOrCreateNoteAt(n).CutDelay = Math.Min((byte)31, fx.param);
+                    }
+                    return;
                 case Effect_Halt:
                 case Effect_PortaUp:
                 case Effect_PortaDown:

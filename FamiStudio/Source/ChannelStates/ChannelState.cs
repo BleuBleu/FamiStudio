@@ -8,6 +8,7 @@ namespace FamiStudio
         protected int apuIdx;
         protected int channelType;
         protected int delayedNoteCounter = 0;
+        protected int delayedCutCounter = 0;
         protected int delayedNoteSlidePitch = 0;
         protected int delayedNoteSlideStep = 0;
         protected Note delayedNote = null;
@@ -48,6 +49,7 @@ namespace FamiStudio
             {
                 PlayNote(delayedNote, delayedNoteSlidePitch, delayedNoteSlideStep);
                 delayedNote = null;
+                delayedNoteCounter = 0;
             }
 
             var channel = song.GetChannelByType(channelType);
@@ -78,7 +80,7 @@ namespace FamiStudio
                 if (newNote.HasNoteDelay)
                 {
                     delayedNote = newNote;
-                    delayedNoteCounter = newNote.NoteDelay;
+                    delayedNoteCounter = newNote.NoteDelay + 1;
                     delayedNoteSlidePitch = noteSlidePitch;
                     delayedNoteSlideStep  = noteSlideStep;
                     return;
@@ -225,10 +227,18 @@ namespace FamiStudio
                 dutyCycle = note.DutyCycle;
                 envelopeValues[Envelope.DutyCycle] = dutyCycle;
             }
+
+            if (note.HasCutDelay)
+            {
+                delayedCutCounter = note.CutDelay + 1;
+            }
         }
 
         private void UpdateDelayedNote()
         {
+            Debug.Assert(delayedCutCounter  >= 0);
+            Debug.Assert(delayedNoteCounter >= 0);
+
             if (delayedNote != null)
             {
                 Debug.Assert(delayedNoteCounter > 0);
@@ -242,6 +252,14 @@ namespace FamiStudio
             else
             {
                 Debug.Assert(delayedNoteCounter == 0);
+            }
+
+            if (delayedCutCounter > 0)
+            {
+                if (--delayedCutCounter == 0)
+                {
+                    PlayNote(new Note(Note.NoteStop));
+                }
             }
         }
 

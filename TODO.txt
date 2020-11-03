@@ -30,10 +30,11 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 2.3.0
 =====
 - Enhanced FamiTracker compatibility.
-	- Delayed notes.
-	- Delayed cuts.
+	x Delayed notes.
+	x Delayed cuts.
 	x Vxx.
 	x Fix 1 frame missing in NSF (should be easy to change the accumulator)
+	- NSF.
 	- Fix computation of slide notes in FamiTracker tempo mode.
 	- Think of FTM import, slide conversions, etc.
 	- FamiStudio text + famitracker in/out
@@ -48,7 +49,10 @@ CLOSING:
 - Sound engine demo, re-export data at the very end.
 
 TESTING:
-- NSF unit test: they dont test release notes.
+- Unit test
+	- add note delays
+	- add cut delays
+	- add Vxx
 - Create famistudio unit tests from 2.2.1 (create a special unit test player that writes every note at every frame, like metadata player)
 - Test video with scaling.
 - Add new unit test for Vxx, Famitracker tempo, etc.
