@@ -107,6 +107,7 @@
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\MultiMediaNotifications.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />

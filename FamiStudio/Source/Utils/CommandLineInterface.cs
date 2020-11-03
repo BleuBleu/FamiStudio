@@ -542,6 +542,14 @@ namespace FamiStudio
             }
         }
 
+        private void RunUnitTest(string filename)
+        {
+            if (!ValidateExtension(filename, ".txt"))
+                return;
+
+            new UnitTestPlayer().GenerateUnitTestOutput(project.Songs[0], filename, HasOption("pal"));
+        }
+
         public bool Run()
         {
             if (HasOption("?") || HasOption("help"))
@@ -573,6 +581,7 @@ namespace FamiStudio
                             case "famitone2-asm-sfx-export": FamiTone2SfxExport(outputFilename, false); break;
                             case "famistudio-asm-export": FamiTone2MusicExport(outputFilename, true); break;
                             case "famistudio-asm-sfx-export": FamiTone2SfxExport(outputFilename, true); break;
+                            case "unit-test": RunUnitTest(outputFilename); break;
                             default:
                                 Console.WriteLine($"Unknown command {args[1]}. Use -help or -? for help.");
                                 break;
