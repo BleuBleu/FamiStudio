@@ -306,7 +306,6 @@ namespace FamiStudio
                         playNote = 0;
                         advancedPattern = true;
                         forceResetTempo = true;
-                        loopCount++;
                     }
                     else 
                     {
