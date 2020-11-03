@@ -175,6 +175,9 @@ namespace FamiStudio
                                 if (note.HasFinePitch)   noteLine += $" FinePitch=\"{note.FinePitch}\"";
                                 if (note.HasFdsModSpeed) noteLine += $" FdsModSpeed=\"{note.FdsModSpeed}\"";
                                 if (note.HasFdsModDepth) noteLine += $" FdsModDepth=\"{note.FdsModDepth}\"";
+                                if (note.HasDutyCycle)   noteLine += $" DutyCycle=\"{note.DutyCycle}\"";
+                                if (note.HasNoteDelay)   noteLine += $" NoteDelay=\"{note.NoteDelay}\"";
+                                if (note.HasCutDelay)    noteLine += $" CutDelay=\"{note.CutDelay}\"";
                                 if (note.IsMusical && note.IsSlideNote) noteLine += $" SlideTarget=\"{Note.GetFriendlyName(note.SlideNoteTarget)}\""; 
 
                                 lines.Add(noteLine);
@@ -405,17 +408,34 @@ namespace FamiStudio
                             var time = int.Parse(parameters["Time"]);
                             var note = pattern.GetOrCreateNoteAt(time);
 
-                            if (parameters.TryGetValue("Value",        out var valueStr))     note.Value           = (byte)Note.FromFriendlyName(valueStr);
-                            if (parameters.TryGetValue("Instrument",   out var instStr))      note.Instrument      = project.GetInstrument(instStr);
-                            if (parameters.TryGetValue("Arpeggio",     out var arpStr))       note.Arpeggio        = project.GetArpeggio(arpStr);
-                            if (parameters.TryGetValue("Attack",       out var attackStr))    note.HasAttack       = bool.Parse(attackStr);
-                            if (parameters.TryGetValue("Volume",       out var volumeStr))    note.Volume          = byte.Parse(volumeStr);
-                            if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr))  note.VibratoSpeed    = byte.Parse(vibSpeedStr);
-                            if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr))  note.VibratoDepth    = byte.Parse(vibDepthStr);
-                            if (parameters.TryGetValue("FinePitch",    out var finePitchStr)) note.FinePitch       = sbyte.Parse(finePitchStr);
-                            if (parameters.TryGetValue("SlideTarget",  out var slideStr))     note.SlideNoteTarget = (byte)Note.FromFriendlyName(slideStr);
-                            if (parameters.TryGetValue("FdsModSpeed",  out var modSpeedStr))  note.FdsModSpeed     = ushort.Parse(modSpeedStr);
-                            if (parameters.TryGetValue("FdsModDepth",  out var modDepthStr))  note.FdsModDepth     = byte.Parse(modDepthStr);
+                            if (parameters.TryGetValue("Value", out var valueStr))
+                                note.Value = (byte)Note.FromFriendlyName(valueStr);
+                            if (parameters.TryGetValue("Instrument", out var instStr) && channel.SupportsInstrument(project.GetInstrument(instStr)))
+                                note.Instrument = project.GetInstrument(instStr);
+                            if (parameters.TryGetValue("Arpeggio", out var arpStr) && channel.SupportsArpeggios)
+                                note.Arpeggio = project.GetArpeggio(arpStr);
+                            if (parameters.TryGetValue("SlideTarget", out var slideStr) && channel.SupportsSlideNotes)
+                                note.SlideNoteTarget = (byte)Note.FromFriendlyName(slideStr);
+                            if (parameters.TryGetValue("Attack", out var attackStr))
+                                note.HasAttack = bool.Parse(attackStr);
+                            if (parameters.TryGetValue("Volume", out var volumeStr) && channel.SupportsEffect(Note.EffectVolume))
+                                note.Volume = byte.Parse(volumeStr);
+                            if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr) && channel.SupportsEffect(Note.EffectVibratoSpeed))
+                                note.VibratoSpeed = byte.Parse(vibSpeedStr);
+                            if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr) && channel.SupportsEffect(Note.EffectVibratoDepth))
+                                note.VibratoDepth = byte.Parse(vibDepthStr);
+                            if (parameters.TryGetValue("FinePitch", out var finePitchStr) && channel.SupportsEffect(Note.EffectFinePitch))
+                                note.FinePitch = sbyte.Parse(finePitchStr);
+                            if (parameters.TryGetValue("FdsModSpeed", out var modSpeedStr) && channel.SupportsEffect(Note.EffectFdsModSpeed))
+                                note.FdsModSpeed = ushort.Parse(modSpeedStr);
+                            if (parameters.TryGetValue("FdsModDepth", out var modDepthStr) && channel.SupportsEffect(Note.EffectFdsModDepth))
+                                note.FdsModDepth = byte.Parse(modDepthStr);
+                            if (parameters.TryGetValue("DutyCycle", out var dutyCycleStr) && channel.SupportsEffect(Note.EffectDutyCycle))
+                                note.DutyCycle = byte.Parse(dutyCycleStr);
+                            if (parameters.TryGetValue("NoteDelay", out var noteDelayStr) && channel.SupportsEffect(Note.EffectNoteDelay))
+                                note.NoteDelay = byte.Parse(noteDelayStr);
+                            if (parameters.TryGetValue("CutDelay", out var cutDelayStr) && channel.SupportsEffect(Note.EffectCutDelay))
+                                note.CutDelay = byte.Parse(cutDelayStr);
 
                             break;
                         }

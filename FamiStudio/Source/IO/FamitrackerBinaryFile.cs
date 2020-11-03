@@ -528,7 +528,7 @@ namespace FamiStudio
                         {
                             pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop;
                         }
-                        else if (note != 0 || octave != 0)
+                        else if (note != 0)
                         {
                             if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
                                 pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];

@@ -980,6 +980,12 @@ namespace FamiStudio
                                 effectString += $" P{(byte)(-note.FinePitch + 0x80):X2}";
                             if (note.HasFdsModDepth)
                                 effectString += $" H{note.FdsModDepth:X2}";
+                            if (note.HasDutyCycle)
+                                effectString += $" V{note.DutyCycle:X2}";
+                            if (note.HasNoteDelay)
+                                effectString += $" G{note.NoteDelay:X2}";
+                            if (note.HasCutDelay)
+                                effectString += $" S{note.CutDelay:X2}";
 
                             if (note.IsMusical && note.Arpeggio != prevArpeggio)
                             {

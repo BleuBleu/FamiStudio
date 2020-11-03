@@ -39,6 +39,7 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	- Think of FTM import, slide conversions, etc.
 	- FamiStudio text + famitracker in/out
 	- We have 2 frame zero now, figure that out. See if impact on the video export.
+	- 0cc/j0cc/Dn text import? How much has the format changed?
 / ROM (add new features) + Update to 2.3.0
 
 => Configure QWERTY keys for piano input? Will be super annoying to do, need to do on all 3 platforms...
