@@ -1096,17 +1096,13 @@ famistudio_music_play:
     sta famistudio_tempo_step_lo
     iny
     lda (@song_list_ptr),y
-    and #3 ; We pack the initial speed in the leftover bits.
     sta famistudio_tempo_step_hi
-
-    lda (@song_list_ptr),y
-    lsr
-    lsr
-    sta famistudio_tempo_acc_hi
-    sta famistudio_song_speed
 
     lda #0 ; Reset tempo accumulator
     sta famistudio_tempo_acc_lo
+    lda #6 ; Default speed
+    sta famistudio_tempo_acc_hi
+    sta famistudio_song_speed ; Apply default speed, this also enables music
 .else
     lda (@song_list_ptr),y
     sta famistudio_tempo_env_ptr_lo
@@ -2063,6 +2059,8 @@ famistudio_update:
     lda famistudio_tempo_acc_hi
     cmp famistudio_song_speed
     bcc @update_envelopes
+    sbc famistudio_song_speed ; Carry is set.
+    sta famistudio_tempo_acc_hi    
 
 .else ; FamiStudio tempo
 
@@ -2357,16 +2355,6 @@ famistudio_update:
 .endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    lda famistudio_tempo_acc_hi
-    cmp famistudio_song_speed
-    bcc @increment_tempo
-
-    sec
-    sbc famistudio_song_speed
-    sta famistudio_tempo_acc_hi
-
-@increment_tempo:
-
     clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
     lda famistudio_tempo_acc_lo
     adc famistudio_tempo_step_lo
@@ -2374,7 +2362,6 @@ famistudio_update:
     lda famistudio_tempo_acc_hi
     adc famistudio_tempo_step_hi
     sta famistudio_tempo_acc_hi
-
 .else
     ; See if we need to run a double frame (playing NTSC song on PAL)
     dec famistudio_tempo_frame_cnt
