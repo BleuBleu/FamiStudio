@@ -906,14 +906,8 @@ namespace FamiStudio
             project.DeleteUnusedInstruments();
             project.UpdateAllLastValidNotesAndVolume();
 
-            if (reverseDpcm)
-            {
-                foreach (var sample in project.Samples)
-                {
-                    for (int i = 0; i < sample.Data.Length; i++)
-                        sample.Data[i] = Utils.ReverseBits(sample.Data[i]);
-                }
-            }
+            foreach (var sample in project.Samples)
+                sample.ReverseBits = reverseDpcm;
 
             return project;
         }

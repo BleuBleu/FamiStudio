@@ -235,11 +235,11 @@ namespace FamiStudio
             renderTarget.FillRectangle(new RawRectangleF(x0, y0, x1, y1), brush);
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, Brush fillBrush, Brush lineBrush)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, Brush fillBrush, Brush lineBrush, float width = 1.0f)
         {
             var rect = new RawRectangleF(x0, y0, x1, y1);
             renderTarget.FillRectangle(rect, fillBrush);
-            DrawRectangle(rect, lineBrush);
+            DrawRectangle(rect, lineBrush, width);
         }
 
         public void FillConvexPath(Geometry geo, Brush brush, bool smooth = false)

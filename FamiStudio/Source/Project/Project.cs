@@ -121,7 +121,12 @@ namespace FamiStudio
             foreach (var s in samples)
             {
                 if (offset >= addr && offset < addr + s.Data.Length)
-                    return s.Data[offset - addr];
+                {
+                    byte b = s.Data[offset - addr];
+                    if (s.ReverseBits)
+                        b = Utils.ReverseBits(b);
+                    return b;
+                }
                 addr = (addr + s.Data.Length + 63) & 0xffc0;
             }
             return 0x55;
@@ -260,6 +265,32 @@ namespace FamiStudio
                     samplesMapping[note].Sample = sample;
                     samplesMapping[note].Pitch = pitch;
                     samplesMapping[note].Loop = loop;
+                }
+            }
+        }
+
+        public void TransposeDPCMMapping(int oldNote, int newNote)
+        {
+            Debug.Assert(NoteSupportsDPCM(oldNote));
+            Debug.Assert(NoteSupportsDPCM(newNote));
+
+            foreach (var song in songs)
+            {
+                var channel = song.Channels[Channel.Dpcm];
+
+                foreach (var pattern in channel.Patterns)
+                {
+                    bool dirty = false;
+                    foreach (var note in pattern.Notes.Values)
+                    {
+                        if (note.Value == oldNote)
+                        {
+                            note.Value = (byte)newNote;
+                            dirty = true;
+                        }
+                    }
+                    if (dirty)
+                        pattern.ClearLastValidNoteCache();
                 }
             }
         }
@@ -764,7 +795,7 @@ namespace FamiStudio
 
             foreach (var sample in samples)
             {
-                sampleData.AddRange(sample.Data);
+                sampleData.AddRange(sample.GetDataWithReverse());
                 var paddedSize = ((sampleData.Count + 63) & 0xffc0) - sampleData.Count;
                 for (int i = 0; i < paddedSize; i++)
                     sampleData.Add(0x55);

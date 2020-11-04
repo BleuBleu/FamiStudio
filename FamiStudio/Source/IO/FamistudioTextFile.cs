@@ -31,7 +31,7 @@ namespace FamiStudio
             // DPCM samples
             foreach (var sample in project.Samples)
             {
-                lines.Add($"\tDPCMSample Name=\"{sample.Name}\" Data=\"{String.Join("", sample.Data.Select(x => $"{x:x2}"))}\"");
+                lines.Add($"\tDPCMSample Name=\"{sample.Name}\" ReverseBits=\"{sample.ReverseBits.ToString()}\" Data=\"{String.Join("", sample.Data.Select(x => $"{x:x2}"))}\"");
             }
 
             // DPCM mappings
@@ -275,7 +275,8 @@ namespace FamiStudio
                             var data = new byte[str.Length / 2];
                             for (int i = 0; i < data.Length; i++)
                                 data[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
-                            project.CreateDPCMSample(parameters["Name"], data);
+                            var sample = project.CreateDPCMSample(parameters["Name"], data);
+                            if (parameters.TryGetValue("ReverseBits", out var reverseStr)) sample.ReverseBits = bool.Parse(reverseStr);
                             break;
                         }
                         case "DPCMMapping":

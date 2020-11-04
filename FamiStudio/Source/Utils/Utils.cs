@@ -86,6 +86,12 @@ namespace FamiStudio
             return (byte)((BitLookups[b & 0xf] << 4) | BitLookups[b >> 4]);
         }
 
+        public static void ReverseBits(byte[] bytes)
+        {
+            for (int i = 0; i < bytes.Length; i++)
+                bytes[i] = ReverseBits(bytes[i]);
+        }
+
         public static string MakeNiceAsmName(string name)
         {
             string niceName = "";
