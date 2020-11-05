@@ -787,19 +787,6 @@ namespace FamiStudio
             return false;
         }
 
-        // MATTT: For testing only!!!
-        private unsafe void VideoTest()
-        {
-            var vf = new VideoFile();
-#if FAMISTUDIO_LINUX
-            vf.Save(project.Songs[0], Settings.FFmpegExecutablePath, "/home/mat/Downloads/test.mp4", 0x1f, 128, 12, -1, false);
-#elif FAMISTUDIO_MACOS
-            vf.Save(project.Songs[0], "/Users/mat/Downloads/ffmpeg", "/Users/mat/Downloads/test3.mp4", 0x1f, 128, 12, -1, false);
-#else
-            vf.Save(project.Songs[0], Settings.FFmpegExecutablePath, "d:\\dump\\test3.mp4", 0x1f, 128, 12, -1, false);
-#endif
-        }
-
         public void KeyDown(KeyEventArgs e)
         {
             bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
@@ -861,10 +848,6 @@ namespace FamiStudio
 
                     Play();
                 }
-            }
-            else if (e.KeyCode == Keys.V)
-            {
-                VideoTest();
             }
             else if (e.KeyCode == Keys.Home)
             {
