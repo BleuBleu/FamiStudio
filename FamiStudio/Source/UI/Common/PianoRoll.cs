@@ -1633,23 +1633,26 @@ namespace FamiStudio
                                     if (i1 >= patternLen)
                                         break;
 
-                                    // Draw the effect icons.
-                                    var effectPosY = 0;
-                                    for (int fx = 0; fx < Note.EffectCount; fx++)
+                                    if (editMode != EditionMode.VideoRecording)
                                     {
-                                        if (n1.HasValidEffectValue(fx))
+                                        // Draw the effect icons.
+                                        var effectPosY = 0;
+                                        for (int fx = 0; fx < Note.EffectCount; fx++)
                                         {
-                                            // These 2 effects usually come in a pair, so let's draw only 1 icon.
-                                            if (fx == Note.EffectVibratoDepth && n1.HasValidEffectValue(Note.EffectVibratoSpeed))
-                                                continue;
+                                            if (n1.HasValidEffectValue(fx))
+                                            {
+                                                // These 2 effects usually come in a pair, so let's draw only 1 icon.
+                                                if (fx == Note.EffectVibratoDepth && n1.HasValidEffectValue(Note.EffectVibratoSpeed))
+                                                    continue;
 
-                                            bool drawOpaque = !showEffectsPanel || fx == selectedEffectIdx || fx == Note.EffectVibratoDepth && selectedEffectIdx == Note.EffectVibratoSpeed || fx == Note.EffectVibratoSpeed && selectedEffectIdx == Note.EffectVibratoDepth;
+                                                bool drawOpaque = !showEffectsPanel || fx == selectedEffectIdx || fx == Note.EffectVibratoDepth && selectedEffectIdx == Note.EffectVibratoSpeed || fx == Note.EffectVibratoSpeed && selectedEffectIdx == Note.EffectVibratoDepth;
 
-                                            int iconX = channel.Song.GetPatternStartNote(p1, i1) * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2 - scrollX;
-                                            int iconY = effectPosY + effectIconPosY;
-                                            g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, drawOpaque ? theme.LightGreyFillBrush2 : iconTransparentBrush);
-                                            g.DrawBitmap(bmpEffects[fx], iconX, iconY, 1.0f);
-                                            effectPosY += effectIconSizeX + effectIconPosY + 1;
+                                                int iconX = channel.Song.GetPatternStartNote(p1, i1) * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2 - scrollX;
+                                                int iconY = effectPosY + effectIconPosY;
+                                                g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, drawOpaque ? theme.LightGreyFillBrush2 : iconTransparentBrush);
+                                                g.DrawBitmap(bmpEffects[fx], iconX, iconY, 1.0f);
+                                                effectPosY += effectIconSizeX + effectIconPosY + 1;
+                                            }
                                         }
                                     }
 
