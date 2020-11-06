@@ -1056,8 +1056,8 @@ namespace FamiStudio
                 {
                     var lastFrame = -1;
                     var lastValue = channel.GetLastValidEffectValue(a.minVisiblePattern - 1, selectedEffectIdx);
-                    var minValue = Note.GetEffectMinValue(Song, selectedEffectIdx);
-                    var maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
+                    var minValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
+                    var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
 
                     for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                     {
@@ -1120,8 +1120,8 @@ namespace FamiStudio
                             if (selectedEffectIdx >= 0 && note.HasValidEffectValue(selectedEffectIdx))
                             {
                                 var effectValue = note.GetEffectValue(selectedEffectIdx);
-                                var effectMinValue = Note.GetEffectMinValue(Song, selectedEffectIdx);
-                                var effectMaxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
+                                var effectMinValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
+                                var effectMaxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
                                 var sizeY = (float)Math.Floor((effectValue - effectMinValue) / (float)(effectMaxValue - effectMinValue) * effectPanelSizeY);
 
                                 g.PushTranslation(x + time * noteSizeX, 0);
@@ -1649,7 +1649,7 @@ namespace FamiStudio
                                             int iconY = effectPosY + effectIconPosY;
                                             g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, drawOpaque ? theme.LightGreyFillBrush2 : iconTransparentBrush);
                                             g.DrawBitmap(bmpEffects[fx], iconX, iconY, 1.0f);
-                                            effectPosY += effectIconSizeX + effectIconPosY;
+                                            effectPosY += effectIconSizeX + effectIconPosY + 1;
                                         }
                                     }
 
@@ -1959,8 +1959,8 @@ namespace FamiStudio
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[effectPatternIdx];
-            var minValue = Note.GetEffectMinValue(Song, selectedEffectIdx);
-            var maxValue = Note.GetEffectMaxValue(Song, selectedEffectIdx);
+            var minValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
+            var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
 
             var note = pattern.GetOrCreateNoteAt(effectNoteIdx);
 

@@ -538,7 +538,7 @@ namespace FamiStudio
             return true;
         }
 
-        public static int GetEffectMinValue(Song song, int fx)
+        public static int GetEffectMinValue(Song song, Channel channel, int fx)
         {
             switch (fx)
             {
@@ -548,7 +548,7 @@ namespace FamiStudio
             return 0;
         }
 
-        public static int GetEffectMaxValue(Song song, int fx)
+        public static int GetEffectMaxValue(Song song, Channel channel, int fx)
         {
             switch (fx)
             {
@@ -559,7 +559,7 @@ namespace FamiStudio
                 case EffectSpeed        : return 31;
                 case EffectFdsModDepth  : return 63;
                 case EffectFdsModSpeed  : return 4095;
-                case EffectDutyCycle    : return song.Project.ExpansionAudio == Project.ExpansionVrc6 ? 7 : 3;
+                case EffectDutyCycle    : return channel.IsExpansionChannel && song.Project.ExpansionAudio == Project.ExpansionVrc6 ? 7 : 3;
                 case EffectNoteDelay    : return 31;
                 case EffectCutDelay     : return 31;
             }
