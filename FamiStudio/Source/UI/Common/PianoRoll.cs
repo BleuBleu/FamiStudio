@@ -1633,7 +1633,7 @@ namespace FamiStudio
                                     if (i1 >= patternLen)
                                         break;
 
-                                    if (editMode != EditionMode.VideoRecording)
+                                    if (isActiveChannel && editMode != EditionMode.VideoRecording)
                                     {
                                         // Draw the effect icons.
                                         var effectPosY = 0;
