@@ -39,7 +39,7 @@ namespace FamiStudio
         const int DefaultHeaderSizeY = 17;
         const int DefaultDPCMHeaderSizeY = 17;
         const int DefaultEffectPanelSizeY = 176;
-        const int DefaultEffectButtonSizeY = 17;
+        const int DefaultEffectButtonSizeY = 18;
         const int DefaultNoteSizeX = 16;
         const int DefaultNoteSizeY = 12;
         const int DefaultNoteAttackSizeX = 3;
@@ -61,8 +61,8 @@ namespace FamiStudio
         const int DefaultEffectIconSizeX = 12;
         const int DefaultEffectValuePosTextOffsetY = 12;
         const int DefaultEffectValueNegTextOffsetY = 3;
-        const int DefaultBigTextPosX = 10;
-        const int DefaultBigTextPosY = 10;
+        const int DefaultBigTextPosX = 16;
+        const int DefaultBigTextPosY = 16;
         const int DefaultTooltipTextPosX = 10;
         const int DefaultTooltipTextPosY = 30;
         const int DefaultDPCMTextPosX = 2;
@@ -178,7 +178,6 @@ namespace FamiStudio
         RenderBitmap bmpEffectExpanded;
         RenderBitmap bmpEffectCollapsed;
         RenderBitmap bmpSlide;
-        RenderBitmap bmpSlideSmall;
         RenderBitmap bmpSnap;
         RenderBitmap bmpSnapRed;
         RenderBitmap[] bmpSnapResolution = new RenderBitmap[(int)SnapResolution.Max];
@@ -225,13 +224,6 @@ namespace FamiStudio
             false, // DragSelection
             false, // AltZoom
             false  // DragSample
-        };
-
-        readonly int[] effectsToDrawInline = new[]
-        {
-            Note.EffectCutDelay,
-            Note.EffectNoteDelay,
-            Note.EffectDutyCycle
         };
 
         int captureNoteIdx = 0;
@@ -643,7 +635,6 @@ namespace FamiStudio
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
             bmpSlide = g.CreateBitmapFromResource("Slide");
-            bmpSlideSmall = g.CreateBitmapFromResource("SlideSmall");
             bmpSnap = g.CreateBitmapFromResource("Snap");
             bmpSnapRed = g.CreateBitmapFromResource("SnapRed");
             bmpSnapResolution[(int)SnapResolution.OneQuarter] = g.CreateBitmapFromResource("Snap1_4");
@@ -742,7 +733,6 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpEffectExpanded);
             Utils.DisposeAndNullify(ref bmpEffectCollapsed);
             Utils.DisposeAndNullify(ref bmpSlide);
-            Utils.DisposeAndNullify(ref bmpSlideSmall);
             Utils.DisposeAndNullify(ref bmpSnap);
             Utils.DisposeAndNullify(ref bmpSnapRed);
 
@@ -915,72 +905,6 @@ namespace FamiStudio
                 int maxX = Song.GetPatternStartNote(a.maxVisiblePattern) * noteSizeX - scrollX;
                 g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
                 g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.DarkGreyLineBrush1);
-
-                // Draw the effect icons.
-                for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
-                {
-                    var pattern = Song.Channels[editChannel].PatternInstances[p];
-                    if (pattern != null)
-                    {
-                        var patternLen = Song.GetPatternLength(p);
-                        var patternX = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
-
-                        foreach (var kv in pattern.Notes)
-                        {
-                            var n = kv.Key;
-                            var note = kv.Value;
-
-                            if (n >= patternLen)
-                                break;
-
-                            for (int i = Note.EffectCount - 1; i >= 0; i--)
-                            {
-                                if (Array.IndexOf(effectsToDrawInline, i) >= 0)
-                                    continue;
-                                if (showEffectsPanel && i == selectedEffectIdx)
-                                    continue;
-
-                                //if (note.HasValidEffectValue(i))
-                                //{
-                                //    int iconX = patternX + n * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2;
-                                //    int iconY = headerSizeY / 2 + effectIconPosY;
-                                //    g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, showEffectsPanel ? iconTransparentBrush : theme.LightGreyFillBrush2);
-                                //    g.DrawBitmap(bmpEffects[i], iconX, iconY, showEffectsPanel ? 0.3f : 1.0f);
-                                //    break;
-                                //}
-                            }
-                        }
-                    }
-                }
-
-                // When showing the effect panel, make sure to draw the selectd effect icons on top of everything.
-                if (showEffectsPanel)
-                {
-                    for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
-                    {
-                        var pattern = Song.Channels[editChannel].PatternInstances[p];
-                        if (pattern != null)
-                        {
-                            var patternLen = Song.GetPatternLength(p);
-                            var patternX = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
-
-                            foreach (var kv in pattern.Notes)
-                            {
-                                if (kv.Key >= patternLen)
-                                    break;
-
-                                var note = kv.Value;
-                                if (selectedEffectIdx >= 0 && note.HasValidEffectValue(selectedEffectIdx))
-                                {
-                                    int iconX = patternX + kv.Key * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2;
-                                    int iconY = headerSizeY / 2 + effectIconPosY;
-                                    g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.LightGreyFillBrush2);
-                                    g.DrawBitmap(bmpEffects[selectedEffectIdx], iconX, iconY);
-                                }
-                            }
-                        }
-                    }
-                }
             }
 
             g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
@@ -1709,20 +1633,23 @@ namespace FamiStudio
                                     if (i1 >= patternLen)
                                         break;
 
-                                    //if (n1.IsValid)
+                                    // Draw the effect icons.
+                                    var effectPosY = 0;
+                                    for (int fx = 0; fx < Note.EffectCount; fx++)
                                     {
-                                        var effectPosY = 0;
-                                        //foreach (var fx in effectsToDrawInline)
-                                        for (int fx = 0; fx < Note.EffectCount; fx++)
+                                        if (n1.HasValidEffectValue(fx))
                                         {
-                                            if (n1.HasValidEffectValue(fx))
-                                            {
-                                                int iconX = channel.Song.GetPatternStartNote(p1, i1) * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2 - scrollX;
-                                                int iconY = effectPosY + 2;
-                                                g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, showEffectsPanel && fx != selectedEffectIdx ? iconTransparentBrush : theme.LightGreyFillBrush2);
-                                                g.DrawBitmap(bmpEffects[fx], iconX, iconY, 1.0f);
-                                                effectPosY += effectIconSizeX + 2;
-                                            }
+                                            // These 2 effects usually come in a pair, so let's draw only 1 icon.
+                                            if (fx == Note.EffectVibratoDepth && n1.HasValidEffectValue(Note.EffectVibratoSpeed))
+                                                continue;
+
+                                            bool drawOpaque = !showEffectsPanel || fx == selectedEffectIdx || fx == Note.EffectVibratoDepth && selectedEffectIdx == Note.EffectVibratoSpeed || fx == Note.EffectVibratoSpeed && selectedEffectIdx == Note.EffectVibratoDepth;
+
+                                            int iconX = channel.Song.GetPatternStartNote(p1, i1) * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2 - scrollX;
+                                            int iconY = effectPosY + effectIconPosY;
+                                            g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, drawOpaque ? theme.LightGreyFillBrush2 : iconTransparentBrush);
+                                            g.DrawBitmap(bmpEffects[fx], iconX, iconY, 1.0f);
+                                            effectPosY += effectIconSizeX + effectIconPosY;
                                         }
                                     }
 

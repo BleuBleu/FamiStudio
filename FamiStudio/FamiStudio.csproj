@@ -445,9 +445,6 @@
     <EmbeddedResource Include="Resources\Slide%4015x.png" />
     <EmbeddedResource Include="Resources\Slide%402x.png" />
     <EmbeddedResource Include="Resources\Slide.png" />
-    <EmbeddedResource Include="Resources\SlideSmall%4015x.png" />
-    <EmbeddedResource Include="Resources\SlideSmall%402x.png" />
-    <EmbeddedResource Include="Resources\SlideSmall.png" />
     <EmbeddedResource Include="Resources\Warning%402x.png" />
     <EmbeddedResource Include="Resources\Warning.png" />
     <EmbeddedResource Include="Resources\Instrument%402x.png" />
@@ -491,7 +488,6 @@
     <EmbeddedResource Include="Resources\DPCM%402x.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall%402x.png" />
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
-    <EmbeddedResource Include="Resources\JumpSmall%402x.png" />
     <EmbeddedResource Include="Resources\Noise%402x.png" />
     <EmbeddedResource Include="Resources\Pitch%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmall%402x.png" />
@@ -539,7 +535,6 @@
     <Content Include="NesSndEmu.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="Resources\JumpSmall.png" />
     <EmbeddedResource Include="Resources\SpeedSmall.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />
