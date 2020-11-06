@@ -535,6 +535,13 @@ namespace FamiStudio
 
         public static bool EffectWantsPreviousValue(int fx)
         {
+            switch (fx)
+            {
+                case EffectNoteDelay:
+                case EffectCutDelay:
+                    return false;
+            }
+
             return true;
         }
 
