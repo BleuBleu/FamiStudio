@@ -100,6 +100,8 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
+    <Compile Include="Source\UI\Common\LogDialog.cs" />
+    <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
@@ -258,7 +260,6 @@
     </Content>
     <Compile Include="Source\Utils\RtMidi.cs" />
     <Compile Include="Source\UI\MacLinux\TutorialDialog.cs" />
-    <Compile Include="Source\UI\MacLinux\LogDialog.cs" />
     <Content Include="ShineMp3.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -412,9 +413,6 @@
     <EmbeddedResource Include="Resources\Slide%4015x.png" />
     <EmbeddedResource Include="Resources\Slide%402x.png" />
     <EmbeddedResource Include="Resources\Slide.png" />
-    <EmbeddedResource Include="Resources\SlideSmall%4015x.png" />
-    <EmbeddedResource Include="Resources\SlideSmall%402x.png" />
-    <EmbeddedResource Include="Resources\SlideSmall.png" />
     <EmbeddedResource Include="Resources\Warning%402x.png" />
     <EmbeddedResource Include="Resources\Warning.png" />
     <EmbeddedResource Include="Resources\Instrument%402x.png" />
@@ -458,7 +456,6 @@
     <EmbeddedResource Include="Resources\DPCM%402x.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall%402x.png" />
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
-    <EmbeddedResource Include="Resources\JumpSmall%402x.png" />
     <EmbeddedResource Include="Resources\Noise%402x.png" />
     <EmbeddedResource Include="Resources\Pitch%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmall%402x.png" />
