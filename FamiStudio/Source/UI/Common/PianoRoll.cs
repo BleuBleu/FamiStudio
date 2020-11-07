@@ -2102,6 +2102,9 @@ namespace FamiStudio
 
             if (editMode == EditionMode.DPCM && left && foundNote)
             {
+                // In case we were dragging a sample.
+                EndCaptureOperation(e);
+
                 var mapping = App.Project.GetDPCMMapping(noteValue);
                 if (left && mapping != null)
                 {
@@ -2220,7 +2223,7 @@ namespace FamiStudio
         private void EndSampleDrag(MouseEventArgs e)
         {
             bool success = false;
-            if (GetNoteForCoord(e.X, e.Y, out _, out _, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue)
+            if (GetNoteForCoord(e.X, e.Y, out _, out _, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
             {
                 App.Project.MapDPCMSample(noteValue, draggedSample.Sample, draggedSample.Pitch, draggedSample.Loop);
                 success = true;
@@ -3045,8 +3048,6 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
                         StartCaptureOperation(e, CaptureOperation.DragSample);
-                        draggedSample = mapping;
-                        App.Project.UnmapDPCMSample(noteValue);
                     }
                     else if (right && mapping != null)
                     {
@@ -3625,6 +3626,12 @@ namespace FamiStudio
 
         private void UpdateSampleDrag(MouseEventArgs e)
         {
+            if (draggedSample == null && GetNoteForCoord(e.X, e.Y, out _, out _, out var noteValue) && noteValue != captureNoteValue)
+            {
+                draggedSample = App.Project.GetDPCMMapping(captureNoteValue);
+                App.Project.UnmapDPCMSample(captureNoteValue);
+            }
+
             ConditionalInvalidate();
         }
 
