@@ -500,7 +500,6 @@
     <EmbeddedResource Include="Resources\CollapsedSmall.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall.png" />
     <None Include="Resources\FamiStudio.ico" />
-    <EmbeddedResource Include="Resources\JumpSmall.png" />
     <EmbeddedResource Include="Resources\SpeedSmall.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />
