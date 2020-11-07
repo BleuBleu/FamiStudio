@@ -345,7 +345,6 @@ namespace FamiStudio
             octaveNameOffsetY = (int)(DefaultOctaveNameOffsetY * scaling);
             recordingKeyOffsetY = (int)(DefaultRecordingKeyOffsetY * scaling);
             attackIconPosX = (int)(DefaultAttackIconPosX * scaling);
-            noteTextPosY = (int)(DefaultNoteTextPosY * scaling);
             minNoteSizeForText = (int)(DefaultMinNoteSizeForText * scaling);
             envelopeSizeY = DefaultEnvelopeSizeY * envelopeValueZoom * scaling;
             octaveSizeY = 12 * noteSizeY;
@@ -353,6 +352,7 @@ namespace FamiStudio
             virtualSizeY = numNotes * noteSizeY;
             barSizeX = noteSizeX * (Song == null ? 16 : Song.BarLength);
             headerAndEffectSizeY = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
+            noteTextPosY = scaling > 1 ? 0 : 1; // Pretty hacky.
         }
 
         public void StartEditPattern(int trackIdx, int patternIdx)
