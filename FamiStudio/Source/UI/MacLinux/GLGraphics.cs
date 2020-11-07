@@ -562,10 +562,10 @@ namespace FamiStudio
             }
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f)
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
-            DrawRectangle(x0, y0, x1, y1, lineBrush);
+            DrawRectangle(x0, y0, x1, y1, lineBrush, width);
         }
 
         public GLConvexPath CreateConvexPath(Point[] points)
