@@ -847,6 +847,8 @@ namespace FamiStudio
                 return false;
             }
 
+            other.SetExpansionAudio(expansionAudio);
+
             // Change all the IDs in the source project.
             List<int> allOtherIds = new List<int>();
             foreach (var inst in other.Instruments)
