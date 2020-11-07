@@ -288,6 +288,11 @@ namespace FamiStudio
             }
         }
 
+        public bool HasAnyEffect
+        {
+            get { return EffectMask != 0; }
+        }
+
         public string FriendlyName
         {
             get

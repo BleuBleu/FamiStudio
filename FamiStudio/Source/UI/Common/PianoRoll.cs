@@ -1633,9 +1633,10 @@ namespace FamiStudio
                                     if (i1 >= patternLen)
                                         break;
 
-                                    if (isActiveChannel && editMode != EditionMode.VideoRecording)
+                                    if (isActiveChannel && editMode != EditionMode.VideoRecording && n1.HasAnyEffect)
                                     {
                                         // Draw the effect icons.
+                                        // TODO: Iterate on the bits of the effect mask. 
                                         var effectPosY = 0;
                                         for (int fx = 0; fx < Note.EffectCount; fx++)
                                         {
