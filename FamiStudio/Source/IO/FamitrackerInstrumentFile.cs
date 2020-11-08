@@ -41,7 +41,10 @@ namespace FamiStudio
 
             // Skip unsupported types.
             if (envType == Envelope.Count)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported, ignoring.");
                 return;
+            }
 
             Envelope env = instrument.Envelopes[envType];
 

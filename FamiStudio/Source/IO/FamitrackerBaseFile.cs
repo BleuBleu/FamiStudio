@@ -175,11 +175,10 @@ namespace FamiStudio
         // FamiStudio -> FamiTracker
         protected static int[] ReverseEnvelopeTypeLookup =
         {
-             0, // SEQ_VOLUME
-             1, // SEQ_ARPEGGIO
-             2, // SEQ_PITCH
-             4, // SEQ_HIPITCH
-            -1  // SEQ_DUTYCYCLE
+             0, // Volume
+             1, // Arpeggio
+             2, // Pitch
+             4, // DutyCycle
         };
 
         protected struct RowFxData

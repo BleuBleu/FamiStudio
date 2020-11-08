@@ -143,6 +143,10 @@ namespace FamiStudio
 
                             envelopes[expansion, famistudioType][idx] = env;
                         }
+                        else
+                        {
+                            Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported, ignoring.");
+                        }
                     }
                     else if (line.StartsWith("DPCMDEF"))
                     {

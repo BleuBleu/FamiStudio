@@ -34,10 +34,10 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	x Delayed cuts.
 	x Vxx.
 	x Fix 1 frame missing in NSF (should be easy to change the accumulator)
+	x FamiStudio text + famitracker in/out
 	- NSF.
 	- Fix computation of slide notes in FamiTracker tempo mode.
-	- Think of FTM import, slide conversions, etc.
-	- FamiStudio text + famitracker in/out
+	- FTM slide conversions, in/out, etc.
 	- We have 2 frame zero now, figure that out. See if impact on the video export.
 	- 0cc/j0cc/Dn text import? How much has the format changed?
 / ROM (add new features) + Update to 2.3.0
@@ -48,6 +48,7 @@ CLOSING:
 - RESIZE ALL NSF BINARIES, THEY GOT SMALLER!
 - Update documentation (sound engine, copy/delete special, etc.)
 - Sound engine demo, re-export data at the very end.
+- Is the frame rate of the piano roll bad now? See if icons, labels changed anything...
 
 TESTING:
 - Unit test
