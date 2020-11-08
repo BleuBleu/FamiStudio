@@ -61,8 +61,8 @@ namespace FamiStudio
         const int DefaultEffectIconSizeX = 12;
         const int DefaultEffectValuePosTextOffsetY = 12;
         const int DefaultEffectValueNegTextOffsetY = 3;
-        const int DefaultBigTextPosX = 16;
-        const int DefaultBigTextPosY = 16;
+        const int DefaultBigTextPosX = 10;
+        const int DefaultBigTextPosY = 10;
         const int DefaultTooltipTextPosX = 10;
         const int DefaultTooltipTextPosY = 30;
         const int DefaultDPCMTextPosX = 2;
@@ -1590,6 +1590,7 @@ namespace FamiStudio
                     }
 
                     var ghostChannelMask = App != null ? App.GhostChannelMask : 0;
+                    var maxEffectPosY = 0;
 
                     // Pattern drawing.
                     for (int c = 0; c < song.Channels.Length; c++)
@@ -1655,6 +1656,7 @@ namespace FamiStudio
                                                 effectPosY += effectIconSizeX + effectIconPosY + 1;
                                             }
                                         }
+                                        maxEffectPosY = Math.Max(maxEffectPosY, effectPosY);
                                     }
 
                                     if (n0.IsValid && n1.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote || n0.IsArpeggio))
@@ -1725,7 +1727,7 @@ namespace FamiStudio
                         if (channelType >= Channel.ExpansionAudioStart)
                             channelName += $" ({song.Project.ExpansionAudioName})";
 
-                        g.DrawText($"Editing Channel {channelName}", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                        g.DrawText($"Editing Channel {channelName}", ThemeBase.FontBig, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
                     }
                 }
                 else
