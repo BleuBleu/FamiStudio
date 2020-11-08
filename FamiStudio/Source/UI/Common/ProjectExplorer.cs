@@ -405,6 +405,7 @@ namespace FamiStudio
             selectedSong = App.Project.Songs[0];
             selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
             expandedInstrument = null;
+            selectedArpeggio = null;
             SongSelected?.Invoke(selectedSong);
             RefreshButtons();
             ConditionalInvalidate();
