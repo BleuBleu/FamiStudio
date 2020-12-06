@@ -22,6 +22,7 @@ namespace FamiStudio
         protected bool customRelease = false;
         protected bool noteTriggered = false;
         protected ushort[] noteTable = null;
+        protected bool palPlayback = false;
         protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
         private   int slidePitch = 0;
@@ -34,6 +35,7 @@ namespace FamiStudio
         {
             apuIdx = apu;
             channelType = type;
+            palPlayback = pal;
             maximumPeriod = NesApu.GetPitchLimitForChannelType(channelType);
             noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
             note.Value = Note.NoteStop;
@@ -42,7 +44,7 @@ namespace FamiStudio
             Channel.GetShiftsForType(type, numN163Channels, out pitchShift, out slideShift);
         }
 
-        public void Advance(Song song, int patternIdx, int noteIdx, ref int famitrackerSpeed, int famitrackerBaseTempo)
+        public void Advance(Song song, int patternIdx, int noteIdx, ref int famitrackerSpeed)
         {
             // When advancing row, if there was a delayed note, play it immediately. That's how FamiTracker does it.
             if (delayedNote != null)
@@ -73,7 +75,7 @@ namespace FamiStudio
 
                 if (newNote.IsValid && newNote.IsSlideNote)
                 {
-                    channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, famitrackerBaseTempo, noteTable, out noteSlidePitch, out noteSlideStep, out _);
+                    channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, noteTable, palPlayback, out noteSlidePitch, out noteSlideStep);
                 }
 
                 // Store note for later if delayed.

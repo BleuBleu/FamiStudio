@@ -874,7 +874,7 @@ namespace FamiStudio
                                 }
 
                                 // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed. Also we assume NTSC here.
-                                var stepSizeFloat = channel.ComputeRawSlideNoteParams(noteValue, slideTarget, p, time, song.FamitrackerSpeed, Song.NativeTempoNTSC, noteTable);
+                                var stepSizeFloat = channel.ComputeRawSlideNoteParams(noteValue, slideTarget, p, time, song.FamitrackerSpeed, false, noteTable); // MATTT: Fix this!
 
                                 if (channel.IsN163WaveChannel)
                                 {

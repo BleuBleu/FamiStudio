@@ -866,8 +866,8 @@ namespace FamiStudio
                                 var noteTablePal  = NesApu.GetNoteTableForChannelType(channel.Type, true,  song.Project.ExpansionNumChannels);
 
                                 var found = true;
-                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTableNtsc, out _, out int stepSizeNtsc, out _);
-                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTablePal,  out _, out int stepSizePal,  out _);
+                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, noteTableNtsc, false, out _, out int stepSizeNtsc);
+                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, noteTablePal,  true,  out _, out int stepSizePal);
 
                                 if (song.Project.UsesExpansionAudio || machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;

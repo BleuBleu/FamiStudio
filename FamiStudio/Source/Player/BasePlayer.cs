@@ -29,7 +29,6 @@ namespace FamiStudio
         protected int playPattern = 0;
         protected int playNote = 0;
         protected int famitrackerSpeed = 6;
-        protected int famitrackerNativeTempo = Song.NativeTempoNTSC;
         protected byte[] tempoEnvelope;
         protected int tempoEnvelopeIndex;
         protected int tempoEnvelopeCounter;
@@ -152,7 +151,7 @@ namespace FamiStudio
         {
             foreach (var channel in channelStates)
             {
-                channel.Advance(song, playPattern, playNote, ref famitrackerSpeed, famitrackerNativeTempo);
+                channel.Advance(song, playPattern, playNote, ref famitrackerSpeed);
             }
         }
 
@@ -177,7 +176,6 @@ namespace FamiStudio
             song = s;
             famitrackerTempo = song.UsesFamiTrackerTempo;
             famitrackerSpeed = song.FamitrackerSpeed;
-            famitrackerNativeTempo = pal ? Song.NativeTempoPAL : Song.NativeTempoNTSC;
             palPlayback = pal;
             playPosition = startNote;
             playPattern = 0;

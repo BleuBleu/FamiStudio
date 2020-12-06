@@ -37,10 +37,12 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 	x FamiStudio text + famitracker in/out
 	- NSF.
 	- Fix computation of slide notes in FamiTracker tempo mode.
-	- FTM slide conversions, in/out, etc.
-	- We have 2 frame zero now, figure that out. See if impact on the video export.
-	- 0cc/j0cc/Dn text import? How much has the format changed?
-/ ROM (add new features) + Update to 2.3.0
+		1) Do compute slide param, fix everything
+		2) Do FamiTracker import, fix everything.
+		3) NSF.
+- We have 2 frame zero now, figure that out. See if impact on the video export.
+- Change bar, note, BPM vocabulary. If going to re-record tutorials, this is my chance 
+- BUG: batman.fms, mcgrew.
 
 => Configure QWERTY keys for piano input? Will be super annoying to do, need to do on all 3 platforms...
 
@@ -49,6 +51,7 @@ CLOSING:
 - Update documentation (sound engine, copy/delete special, etc.)
 - Sound engine demo, re-export data at the very end.
 - Is the frame rate of the piano roll bad now? See if icons, labels changed anything...
+- ROM (add new features) + Update to 2.3.0
 
 TESTING:
 - Unit test
@@ -85,7 +88,24 @@ Delay notes
 x) Change NSF to loop over channels, no more macro shit. 
 2) In FamiTracker mode, advance check will need to be inside the loop.
 3) Convert to other assemblers.
-	
+
+2.3.0 New Features
+==================
+- MP3 export
+- Video export
+- Sound engine code size reduction
+- Song merge
+- Vxx support
+- Special paste improvements (repeat, effects, etc.)
+- Special delete
+- Copy patterns to different channels
+- Note labels
+- FamiTracker tempo improvements
+	- Delayed notes
+	- Delayed cuts
+- DPCM improvements (explicity bit reverse option, drag&drop)
+- 
+
 Linux notes
 ===========
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe

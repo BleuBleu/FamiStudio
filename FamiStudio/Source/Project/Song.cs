@@ -823,6 +823,76 @@ namespace FamiStudio
             }
         }
 
+        public bool ApplySpeedEffectAt(int patternIdx, int noteIdx, ref int speed)
+        {
+            if (UsesFamiStudioTempo)
+                return false;
+
+            foreach (var channel in channels)
+            {
+                var pattern = channel.PatternInstances[patternIdx];
+                if (pattern != null)
+                {
+                    if (pattern.Notes.TryGetValue(noteIdx, out var note) && note != null && note.HasSpeed)
+                    {
+                        speed = note.Speed;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public int CountNotesBetween(int p0, int n0, int p1, int n1)
+        {
+            int noteCount = 0;
+
+            while (p0 != p1)
+            {
+                noteCount += GetPatternLength(p0) - n0;
+                p0++;
+                n0 = 0;
+            }
+
+            noteCount += (n1 - n0);
+
+            return noteCount;
+        }
+
+        public float CountFramesBetween(int p0, int n0, int p1, int n1, int currentSpeed, bool pal)
+        {
+            // This is simply an approximation that is used to compute slide notes.
+            // It doesn't take into account the real state of the tempo accumulator.
+            if (project.UsesFamiTrackerTempo)
+            {
+                float frameCount = 0;
+
+                while (p0 != p1 || n0 != n1)
+                {
+                    ApplySpeedEffectAt(p0, n0, ref currentSpeed);
+                    float tempoRatio = (pal ? NativeTempoPAL : NativeTempoNTSC) / (float)famitrackerTempo;
+                    frameCount += currentSpeed * tempoRatio;
+
+                    if (n0 == GetPatternLength(p0))
+                    {
+                        n0 = 0;
+                        p0++;
+                    }
+                    else
+                    {
+                        n0++;
+                    }
+                }
+
+                return frameCount;
+            }
+            else
+            {
+                return CountNotesBetween(p0, n0, p1, n1);
+            }
+        }
+
         public void ChangeId(int newId)
         {
             id = newId;

@@ -556,6 +556,8 @@ namespace FamiStudio
             {
                 case EffectFinePitch:
                     return FinePitchMin;
+                case EffectSpeed:
+                    return 1;
             }
             return 0;
         }

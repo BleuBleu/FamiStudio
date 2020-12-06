@@ -1436,17 +1436,15 @@ namespace FamiStudio
             int y = virtualSizeY - n0.Value * noteSizeY - scrollY;
             int sy = released ? releaseNoteSizeY : noteSizeY;
 
-            if (n0.IsSlideNote)
+            if (n0.IsSlideNote && n0.Value != n0.SlideNoteTarget)
             {
-                if (channel.ComputeSlideNoteParams(n0, p0, i0, channel.Song.FamitrackerSpeed, Song.NativeTempoNTSC, null, out _, out _, out int duration))
-                {
-                    int slideSizeX = duration;
-                    int slideSizeY = n0.SlideNoteTarget - n0.Value;
+                int duration = channel.GetSlideNoteDuration(n0, p0, i0);
+                int slideSizeX = duration;
+                int slideSizeY = n0.SlideNoteTarget - n0.Value;
 
-                    g.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), slideSizeX, -slideSizeY);
-                    g.FillConvexPath(slideNoteGeometry[zoomLevel - MinZoomLevel], g.GetSolidBrush(color, 1.0f, 0.2f), true);
-                    g.PopTransform();
-                }
+                g.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), slideSizeX, -slideSizeY);
+                g.FillConvexPath(slideNoteGeometry[zoomLevel - MinZoomLevel], g.GetSolidBrush(color, 1.0f, 0.2f), true);
+                g.PopTransform();
             }
 
             if (released)
