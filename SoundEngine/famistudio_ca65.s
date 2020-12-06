@@ -147,6 +147,10 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; More information at: https://famistudio.org/doc/song/#tempo-modes
 ; FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
 
+; Must be enabled if the songs uses delayed notes or delayed cuts. This is obviously only available when using
+; FamiTracker tempo mode as FamiStudio tempo mode does not need this.
+; FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1
+
 ; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
@@ -261,6 +265,10 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
     FAMISTUDIO_USE_FAMITRACKER_TEMPO = 0
 .endif
 
+.ifndef FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+    FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 0
+.endif
+
 .ifndef FAMISTUDIO_USE_VOLUME_TRACK
     FAMISTUDIO_USE_VOLUME_TRACK = 0
 .endif
@@ -304,6 +312,10 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
 
 .if FAMISTUDIO_CFG_SFX_SUPPORT && FAMISTUDIO_CFG_SMOOTH_VIBRATO
     .error "Smooth vibrato and SFX canoot be used at the same time."
+.endif
+
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS && (FAMISTUDIO_USE_FAMITRACKER_TEMPO == 0)
+    .error "Delayed notes or cuts only make sense when using FamiTracker tempo."
 .endif
 
 .if (FAMISTUDIO_EXP_VRC6 + FAMISTUDIO_EXP_VRC7 + FAMISTUDIO_EXP_MMC5 + FAMISTUDIO_EXP_S5B + FAMISTUDIO_EXP_FDS + FAMISTUDIO_EXP_N163) > 1
@@ -492,6 +504,10 @@ famistudio_chn_volume_track:      .res FAMISTUDIO_NUM_CHANNELS
 .endif
 .if FAMISTUDIO_USE_VIBRATO || FAMISTUDIO_USE_ARPEGGIO
 famistudio_chn_env_override:      .res FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, bit 0 = arpeggio.
+.endif
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+famistudio_chn_note_delay:        .res FAMISTUDIO_NUM_CHANNELS
+famistudio_chn_cut_delay:         .res FAMISTUDIO_NUM_CHANNELS
 .endif
 .if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
 famistudio_chn_inst_changed:      .res FAMISTUDIO_NUM_CHANNELS-5
@@ -883,6 +899,12 @@ famistudio_music_stop:
     .if FAMISTUDIO_CFG_EQUALIZER
         sta famistudio_chn_note_counter,x
     .endif    
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        lda #$ff
+        sta famistudio_chn_note_delay,x
+        sta famistudio_chn_cut_delay,x
+        lda #0
+    .endif
     inx
     cpx #FAMISTUDIO_NUM_CHANNELS
     bne @set_channels
@@ -1078,6 +1100,11 @@ famistudio_music_play:
         lda #$f0
         sta famistudio_chn_volume_track,x
     .endif
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        lda #$ff
+        sta famistudio_chn_note_delay,x
+        sta famistudio_chn_cut_delay,x
+    .endif    
 
 @nextchannel:
     inx

@@ -58,6 +58,7 @@ namespace FamiStudio
         private bool usesVibrato = false;
         private bool usesArpeggio = false;
         private bool usesDutyCycleEffect = false;
+        private bool usesDelayedNotesOrCuts = false;
 
         public enum FamiToneKernel
         {
@@ -766,6 +767,11 @@ namespace FamiStudio
                             usesVibrato = true;
                         }
 
+                        if (note.HasNoteDelay ||note.HasCutDelay)
+                        {
+                            usesDelayedNotesOrCuts = true;
+                        }
+
                         if (note.IsMusical)
                         {
                             // Set/clear override when changing arpeggio
@@ -1202,6 +1208,8 @@ namespace FamiStudio
                 {
                     if (usesFamiTrackerTempo)
                         Log.LogMessage(LogSeverity.Info, "Project uses FamiTracker tempo, you must set FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1.");
+                    if (usesDelayedNotesOrCuts)
+                        Log.LogMessage(LogSeverity.Info, "Project uses delayed notes or cuts, you must set FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1.");
                     if (usesVolumeTrack)
                         Log.LogMessage(LogSeverity.Info, "Volume track is used, you must set FAMISTUDIO_USE_VOLUME_TRACK = 1.");
                     if (usesPitchTrack)
