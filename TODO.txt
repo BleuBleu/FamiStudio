@@ -29,15 +29,14 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 
 2.3.0
 =====
-- Enhanced FamiTracker compatibility.
-	- Convert NSF to other assemblers.
-	- Fix computation of slide notes in FamiTracker tempo mode.
-		1) Do compute slide param, fix everything
-		2) Do FamiTracker import, fix everything.
-		3) NSF.
+- Fix computation of slide notes in FamiTracker tempo mode.
+	1) Do compute slide param, fix everything
+	2) Do FamiTracker import, fix everything.
+	3) NSF.
 - We have 2 frame zero now, figure that out. See if impact on the video export.
 - Change bar, note, BPM vocabulary. If going to re-record tutorials, this is my chance 
 - BUG: batman.fms, mcgrew.
+- BUG: Clamp values to valid effect ranges when pasting (paste VRC6 duty to square).
 
 => Configure QWERTY keys for piano input? Will be super annoying to do, need to do on all 3 platforms...
 
@@ -47,14 +46,14 @@ CLOSING:
 - Sound engine demo, re-export data at the very end.
 - Is the frame rate of the piano roll bad now? See if icons, labels changed anything...
 - ROM (add new features) + Update to 2.3.0
+- Recompile NesSndEmu on Mac + Linux (MMC5 fixes).
 
 TESTING:
 ========
-- Unit test
-	- BEFORE CHANGE THE TESTS! Run units tests in 2.2.1 to validate.
-	- add note + cut delays (create a special FamiTracker tempo, with some random expansion).
-	- add Vxx
-- Retest NSF no attack notes (flags were changed).
+- Unit test.
+	-> MMC5 last unit test note stops abruply?
+	- add note + cut delays (create a special FamiTracker tempo, with some random expansion). With slides too.
+	- add Vxx to regular tests.
 - Test video with scaling.
 - Test note labels in 150 + 200% scaling.
 - Test paste special on mac + hi-dpi.
