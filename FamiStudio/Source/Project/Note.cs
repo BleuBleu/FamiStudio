@@ -139,7 +139,7 @@ namespace FamiStudio
         public byte Volume
         {
             get { Debug.Assert(HasVolume); return FxVolume; }
-            set { Debug.Assert(value >= 0 && value <= VolumeMax); FxVolume = value; HasVolume = true; }
+            set { FxVolume = (byte)Utils.Clamp(value, 0, VolumeMax); HasVolume = true; }
         }
 
         public byte RawVibrato
@@ -157,10 +157,8 @@ namespace FamiStudio
             get { Debug.Assert(HasVibrato); return (byte)(FxVibrato >> 4); }
             set
             {
-                Debug.Assert(value >= 0 && value <= VibratoSpeedMax);
-
                 FxVibrato &= 0x0f;
-                FxVibrato |= (byte)(value << 4);
+                FxVibrato |= (byte)((byte)Utils.Clamp(value, 0, VibratoSpeedMax) << 4);
                 HasVibrato = true;
             }
         }
@@ -170,10 +168,8 @@ namespace FamiStudio
             get { Debug.Assert(HasVibrato); return (byte)(FxVibrato & 0x0f); }
             set
             {
-                Debug.Assert(value >= 0 && value <= VibratoDepthMax);
-
                 FxVibrato &= 0xf0;
-                FxVibrato |= value;
+                FxVibrato |= (byte)Utils.Clamp(value, 0, VibratoDepthMax);
 
                 if (HasVibrato)
                     VibratoSpeed = (byte)Utils.Clamp(VibratoSpeed, 0, VibratoSpeedMax);
@@ -191,37 +187,37 @@ namespace FamiStudio
         public byte Speed
         {
             get { Debug.Assert(HasSpeed); return FxSpeed; }
-            set { Debug.Assert(value > 0 && value <= 31); FxSpeed = value; HasSpeed = true; }
+            set { FxSpeed = (byte)Utils.Clamp(value, 0, 31); HasSpeed = true; }
         }
 
         public byte FdsModDepth
         {
             get { Debug.Assert(HasFdsModDepth); return FxFdsModDepth; }
-            set { Debug.Assert(value >= 0 && value <= 63); FxFdsModDepth = value; HasFdsModDepth = true; }
+            set { FxFdsModDepth = (byte)Utils.Clamp(value, 0, 63); HasFdsModDepth = true; }
         }
 
         public ushort FdsModSpeed
         {
             get { Debug.Assert(HasFdsModSpeed); return FxFdsModSpeed; }
-            set { Debug.Assert(value >= 0 && value <= 4096); FxFdsModSpeed = value; HasFdsModSpeed = true; }
+            set { FxFdsModSpeed = (ushort)Utils.Clamp(value, 0, 4095); HasFdsModSpeed = true; }
         }
 
         public byte DutyCycle
         {
             get { Debug.Assert(HasDutyCycle); return FxDutyCycle; }
-            set { Debug.Assert(value >= 0 && value <= 7); FxDutyCycle = value; HasDutyCycle = true; }
+            set { FxDutyCycle = (byte)Utils.Clamp(value, 0, 7); HasDutyCycle = true; }
         }
 
         public byte NoteDelay
         {
             get { Debug.Assert(HasNoteDelay); return FxNoteDelay; }
-            set { Debug.Assert(value >= 0 && value <= 31); FxNoteDelay = value; HasNoteDelay = true; }
+            set { FxNoteDelay = (byte)Utils.Clamp(value, 0, 31); HasNoteDelay = true; }
         }
 
         public byte CutDelay
         {
             get { Debug.Assert(HasCutDelay); return FxCutDelay; }
-            set { Debug.Assert(value >= 0 && value <= 31); FxCutDelay = value; HasCutDelay = true; }
+            set { FxCutDelay = (byte)Utils.Clamp(value, 0, 31); HasCutDelay = true; }
         }
 
         public bool HasVolume
@@ -579,6 +575,14 @@ namespace FamiStudio
             }
 
             return 0;
+        }
+
+        public static int ClampEffectValue(Song song, Channel channel, int fx, int value)
+        {
+            return Utils.Clamp(
+                value,
+                GetEffectMinValue(song, channel, fx),
+                GetEffectMaxValue(song, channel, fx));
         }
 
         public static int GetEffectDefaultValue(Song song, int fx)

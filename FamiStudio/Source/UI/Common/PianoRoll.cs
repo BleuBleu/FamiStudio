@@ -1247,7 +1247,11 @@ namespace FamiStudio
                     if ((pasteFxMask & (1 << i)) != 0 && (!mix || !note.HasValidEffectValue(i) && newNote.HasValidEffectValue(i)))
                     {
                         note.ClearEffectValue(i);
-                        if (channel.SupportsEffect(i) && newNote.HasValidEffectValue(i)) note.SetEffectValue(i, newNote.GetEffectValue(i));
+                        if (channel.SupportsEffect(i) && newNote.HasValidEffectValue(i))
+                        {
+                            int clampedEffectValue = Note.ClampEffectValue(Song, channel, i, newNote.GetEffectValue(i));
+                            note.SetEffectValue(i, clampedEffectValue);
+                        }
                     }
                 }
 
