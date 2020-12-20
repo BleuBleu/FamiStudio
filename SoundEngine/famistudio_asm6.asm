@@ -146,25 +146,29 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; More information at: https://famistudio.org/doc/song/#tempo-modes
 ; FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
 
-; Must be enabled if any song use the volume track. The volume track allows manipulating the volume at the track level
+; Must be enabled if the songs uses delayed notes or delayed cuts. This is obviously only available when using
+; FamiTracker tempo mode as FamiStudio tempo mode does not need this.
+; FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1
+
+; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
 FAMISTUDIO_USE_VOLUME_TRACK   = 1
 
-; Must be enabled if any song use the pitch track. The pitch track allows manipulating the pitch at the track level
+; Must be enabled if any song uses the pitch track. The pitch track allows manipulating the pitch at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#pitch
 FAMISTUDIO_USE_PITCH_TRACK    = 1
 
-; Must be enabled if any song use slide notes. Slide notes allows portamento and slide effects.
+; Must be enabled if any song uses slide notes. Slide notes allows portamento and slide effects.
 ; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
 FAMISTUDIO_USE_SLIDE_NOTES    = 1
 
-; Must be enabled if any song use the vibrato speed/depth effect track. 
+; Must be enabled if any song uses the vibrato speed/depth effect track. 
 ; More information at: https://famistudio.org/doc/pianoroll/#vibrato-depth-speed
 FAMISTUDIO_USE_VIBRATO        = 1
 
-; Must be enabled if any song use arpeggios (not to be confused with instrument arpeggio envelopes, those are always
+; Must be enabled if any song uses arpeggios (not to be confused with instrument arpeggio envelopes, those are always
 ; supported).
 ; More information at: (TODO)
 FAMISTUDIO_USE_ARPEGGIO       = 1
@@ -260,6 +264,10 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
     FAMISTUDIO_USE_FAMITRACKER_TEMPO = 0
 .endif
 
+.ifndef FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+    FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 0
+.endif
+
 .ifndef FAMISTUDIO_USE_VOLUME_TRACK
     FAMISTUDIO_USE_VOLUME_TRACK = 0
 .endif
@@ -303,6 +311,10 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
 
 .if FAMISTUDIO_CFG_SFX_SUPPORT && FAMISTUDIO_CFG_SMOOTH_VIBRATO
     .error "Smooth vibrato and SFX canoot be used at the same time."
+.endif
+
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS && (FAMISTUDIO_USE_FAMITRACKER_TEMPO = 0)
+    .error "Delayed notes or cuts only make sense when using FamiTracker tempo."
 .endif
 
 .if (FAMISTUDIO_EXP_VRC6 + FAMISTUDIO_EXP_VRC7 + FAMISTUDIO_EXP_MMC5 + FAMISTUDIO_EXP_S5B + FAMISTUDIO_EXP_FDS + FAMISTUDIO_EXP_N163) > 1
@@ -491,6 +503,10 @@ famistudio_chn_volume_track:      .dsb FAMISTUDIO_NUM_CHANNELS
 .if FAMISTUDIO_USE_VIBRATO || FAMISTUDIO_USE_ARPEGGIO
 famistudio_chn_env_override:      .dsb FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, bit 0 = arpeggio.
 .endif
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+famistudio_chn_note_delay:        .dsb FAMISTUDIO_NUM_CHANNELS
+famistudio_chn_cut_delay:         .dsb FAMISTUDIO_NUM_CHANNELS
+.endif
 .if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
 famistudio_chn_inst_changed:      .dsb FAMISTUDIO_NUM_CHANNELS-5
 .endif
@@ -514,6 +530,9 @@ famistudio_tempo_step_lo:         .dsb 1
 famistudio_tempo_step_hi:         .dsb 1
 famistudio_tempo_acc_lo:          .dsb 1
 famistudio_tempo_acc_hi:          .dsb 1
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+famistudio_tempo_advance_row:     .dsb 1
+.endif
 .else
 famistudio_tempo_env_ptr_lo:      .dsb 1
 famistudio_tempo_env_ptr_hi:      .dsb 1
@@ -885,6 +904,12 @@ famistudio_music_stop:
     .if FAMISTUDIO_CFG_EQUALIZER
         sta famistudio_chn_note_counter,x
     .endif    
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        lda #$ff
+        sta famistudio_chn_note_delay,x
+        sta famistudio_chn_cut_delay,x
+        lda #0
+    .endif
     inx
     cpx #FAMISTUDIO_NUM_CHANNELS
     bne @set_channels
@@ -1080,6 +1105,11 @@ famistudio_music_play:
         lda #$f0
         sta famistudio_chn_volume_track,x
     .endif
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        lda #$ff
+        sta famistudio_chn_note_delay,x
+        sta famistudio_chn_cut_delay,x
+    .endif    
 
 @nextchannel:
     inx
@@ -1223,7 +1253,7 @@ famistudio_music_pause:
 .endif
 .ifdef FAMISTUDIO_CH12_ENVS
     sta famistudio_env_value+FAMISTUDIO_CH12_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-.endif        
+.endif
     lda famistudio_song_speed ; <= 0 pauses the music
     ora #$80
     bne @done
@@ -2007,6 +2037,64 @@ famistudio_update_row:
 
     rts
 
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_ROW_WITH_DELAYS (internal)
+;
+; Advance the song for a given channel, but while managing notes/cuts delays. 
+;
+; [in] x: channel index (also true when leaving the function)
+;======================================================================================================================
+
+famistudio_update_row_with_delays:
+
+    ; Is the tempo telling us to advance by 1 row?
+    lda famistudio_tempo_advance_row
+    beq @check_delayed_note
+
+    ; Tempo says we need to advance, was there a delayed note wairing?
+    lda famistudio_chn_note_delay,x
+    bmi @advance
+
+    ; Need to clear any pending delayed note before advancing (will be inaudible).
+    @clear_delayed_note:
+    lda #$ff
+    sta famistudio_chn_note_delay,x
+    jsr famistudio_update_row ; This is the update for the de delayed note.
+    jmp @advance
+
+    ; Tempo said we didnt need to advance, see if there is delayed note with a counter that reached zero.
+    @check_delayed_note:
+    lda famistudio_chn_note_delay,x
+    bmi @check_delayed_cut
+    sec
+    sbc #1
+    sta famistudio_chn_note_delay,x
+    bpl @check_delayed_cut ; When wrapping from 0 -> 0xff, we play the note.
+
+    ; Finally, advance by 1 row.
+    @advance:
+    jsr famistudio_update_row
+
+    ; Handle delayed cuts.
+    @check_delayed_cut:
+    lda famistudio_chn_cut_delay,x
+    bmi @done
+    sec
+    sbc #1
+    sta famistudio_chn_cut_delay,x
+    bpl @done ; When wrapping from 0 -> 0xff, we play the note.
+
+    ; Write a stop note.
+    lda #0
+    sta famistudio_chn_note,x
+
+    @done:
+    rts
+
+.endif
+
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE (public)
 ;
@@ -2048,9 +2136,19 @@ famistudio_update:
 
     lda famistudio_tempo_acc_hi
     cmp famistudio_song_speed
-    bcc @update_envelopes
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        ldx #0
+        stx famistudio_tempo_advance_row    
+        bcc @update_row
+    .else
+        bcc @update_envelopes
+    .endif
     sbc famistudio_song_speed ; Carry is set.
     sta famistudio_tempo_acc_hi    
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        ldx #1
+        stx famistudio_tempo_advance_row
+    .endif
 
 .else ; FamiStudio tempo
 
@@ -2093,7 +2191,11 @@ famistudio_update:
 @update_row:
     ldx #0
     @channel_loop:
-        jsr famistudio_update_row
+        .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+            jsr famistudio_update_row_with_delays
+        .else
+            jsr famistudio_update_row
+        .endif
         inx
         cpx #FAMISTUDIO_NUM_CHANNELS
         bne @channel_loop
@@ -2944,7 +3046,7 @@ famistudio_channel_update:
     tmp_slide_from       = famistudio_r1
     tmp_slide_idx        = famistudio_r1
     tmp_duty_cycle       = famistudio_r1
-    no_attack_flag       = famistudio_r2
+    update_flags         = famistudio_r2 ; bit 7 = no attack, bit 6 = has set delayed cut.
     slide_delta_lo       = famistudio_ptr1_hi
     channel_data_ptr     = famistudio_ptr0
     special_code_jmp_ptr = famistudio_ptr1
@@ -2959,7 +3061,7 @@ famistudio_channel_update:
 
 @no_repeat:
     lda #0
-    sta no_attack_flag
+    sta update_flags
     lda famistudio_chn_ptr_lo,x
     sta channel_data_ptr+0
     lda famistudio_chn_ptr_hi,x
@@ -3133,9 +3235,26 @@ famistudio_channel_update:
     jmp @read_byte
 .endif
 
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+@special_code_note_delay:
+    lda (channel_data_ptr),y
+    sta famistudio_chn_note_delay,x
+    famistudio_inc_16 channel_data_ptr
+    jmp @done
+
+@special_code_cut_delay:
+    lda #$40
+    sta update_flags
+    lda (channel_data_ptr),y
+    sta famistudio_chn_cut_delay,x
+    famistudio_inc_16 channel_data_ptr
+    jmp @read_byte 
+.endif
+
 @special_code_disable_attack:
-    lda #1
-    sta no_attack_flag    
+    lda #$80
+    ora update_flags
+    sta update_flags
     jmp @read_byte 
 
 .if FAMISTUDIO_USE_SLIDE_NOTES
@@ -3250,8 +3369,15 @@ famistudio_channel_update:
     sta famistudio_slide_step,y
 .endif
 @sec_and_done:
-    lda no_attack_flag
-    bne @no_attack
+    bit update_flags
+    bmi @no_attack
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+    ; Any note with an attack clears any pending delayed cut, unless it was set during this update (flags bit 6).
+    bvs @check_stop_note 
+    lda #$ff
+    sta famistudio_chn_cut_delay,x
+.endif    
+    @check_stop_note:
     lda famistudio_chn_note,x ; Dont trigger attack on stop notes.
     beq @no_attack
 .if FAMISTUDIO_EXP_VRC7
@@ -3421,6 +3547,10 @@ famistudio_channel_update:
 .if !FAMISTUDIO_USE_SLIDE_NOTES
 @special_code_slide:
 .endif
+.if !FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+@special_code_note_delay:
+@special_code_cut_delay:
+.endif
     ; If you hit this, this mean you either:
     ; - have fine pitches in your songs, but didnt enable "FAMISTUDIO_USE_PITCH_TRACK"
     ; - have vibrato effect in your songs, but didnt enable "FAMISTUDIO_USE_VIBRATO"
@@ -3439,9 +3569,11 @@ famistudio_channel_update:
     .byte <@special_code_reset_arpeggio               ; $67
     .byte <@special_code_fine_pitch                   ; $68
     .byte <@special_code_duty_cycle_effect            ; $69
+    .byte <@special_code_note_delay                   ; $6a
+    .byte <@special_code_cut_delay                    ; $6b
 .if FAMISTUDIO_EXP_FDS        
-    .byte <@special_code_fds_mod_speed                ; $6a
-    .byte <@special_code_fds_mod_depth                ; $6b
+    .byte <@special_code_fds_mod_speed                ; $6c
+    .byte <@special_code_fds_mod_depth                ; $6d
 .endif        
 @famistudio_special_code_jmp_hi:
     .byte >@special_code_slide                        ; $61
@@ -3452,10 +3584,12 @@ famistudio_channel_update:
     .byte >@special_code_clear_arpeggio_override_flag ; $66
     .byte >@special_code_reset_arpeggio               ; $67
     .byte >@special_code_fine_pitch                   ; $68
-    .byte >@special_code_duty_cycle_effect            ; $69    
+    .byte >@special_code_duty_cycle_effect            ; $69
+    .byte >@special_code_note_delay                   ; $6a
+    .byte >@special_code_cut_delay                    ; $6b    
 .if FAMISTUDIO_EXP_FDS        
-    .byte >@special_code_fds_mod_speed                ; $6a
-    .byte >@special_code_fds_mod_depth                ; $6b
+    .byte >@special_code_fds_mod_speed                ; $6c
+    .byte >@special_code_fds_mod_depth                ; $6d
 .endif
 
 ;======================================================================================================================

@@ -21,6 +21,10 @@
     .ifdef FAMISTUDIO_CFG_PAL_SUPPORT
         NSF_PAL_SUPPORT=1
     .endif
+    .ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
+        FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1
+    .endif
+
     .include "../../SoundEngine/famistudio_ca65.s"
 
 .else

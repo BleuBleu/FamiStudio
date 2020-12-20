@@ -30,12 +30,7 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 2.3.0
 =====
 - Enhanced FamiTracker compatibility.
-	x Delayed notes.
-	x Delayed cuts.
-	x Vxx.
-	x Fix 1 frame missing in NSF (should be easy to change the accumulator)
-	x FamiStudio text + famitracker in/out
-	- NSF.
+	- Convert NSF to other assemblers.
 	- Fix computation of slide notes in FamiTracker tempo mode.
 		1) Do compute slide param, fix everything
 		2) Do FamiTracker import, fix everything.
@@ -48,46 +43,25 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 
 CLOSING:
 - RESIZE ALL NSF BINARIES, THEY GOT SMALLER!
-- Update documentation (sound engine, copy/delete special, etc.)
+- Update documentation (sound engine, copy/delete special, new nomenclature for bars, tempo, etc.)
 - Sound engine demo, re-export data at the very end.
 - Is the frame rate of the piano roll bad now? See if icons, labels changed anything...
 - ROM (add new features) + Update to 2.3.0
 
 TESTING:
+========
 - Unit test
-	- add note delays
-	- add cut delays
+	- BEFORE CHANGE THE TESTS! Run units tests in 2.2.1 to validate.
+	- add note + cut delays (create a special FamiTracker tempo, with some random expansion).
 	- add Vxx
-- Create famistudio unit tests from 2.2.1 (create a special unit test player that writes every note at every frame, like metadata player)
+- Retest NSF no attack notes (flags were changed).
 - Test video with scaling.
-- Add new unit test for Vxx, Famitracker tempo, etc.
 - Test note labels in 150 + 200% scaling.
 - Test paste special on mac + hi-dpi.
 - mp3/wav command line export.
 - Rested hi-dpi, changed some stuff for video.
 - Test export dialog hi-dpi (that ffmpeg button has harcoded 40 height)
-- Test paste special hi-dpi.
 - Test modal log export window on MacOS + event processing might be missing?
-
-Delay notes
-===========
-- If there are both a delay + delayed cut, the note delay takes precedence, and the delayed cut starts counting from when the delayed note kicks it.
-	C-4
-	D-4 G08 S04
-- Every time we advance to the next note
-	- If there was a note delayed, it is played immediated if there arent any new note. If there is a new note the delayed note is played, then the new one. Making the delayed note inaudible (but it is applied).
-	- If there was a queued cut, it is aborted.
-- Delayed cuts can go for very long.
-	advance = update tempo
-	for each channel
-		if (advance || (has delayed note && delay == 0))
-			if (has delayed note)
-				advance row
-			advance row
-		
-x) Change NSF to loop over channels, no more macro shit. 
-2) In FamiTracker mode, advance check will need to be inside the loop.
-3) Convert to other assemblers.
 
 2.3.0 New Features
 ==================

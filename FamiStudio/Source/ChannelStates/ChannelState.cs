@@ -117,6 +117,9 @@ namespace FamiStudio
                     noteValueBeforeSlide = newNote.Value;
                     newNote.Value = newNote.SlideNoteTarget;
                 }
+
+                // A new valid note always cancels any delayed cut.
+                delayedCutCounter = 0;
             }
 
             if (newNote.IsStop)

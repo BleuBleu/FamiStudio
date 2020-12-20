@@ -728,6 +728,7 @@ namespace FamiStudio
                         if (note == null)
                             note = emptyNote;
 
+                        // We don't allow delaying speed effect at the moment.
                         if (isSpeedChannel && song.UsesFamiTrackerTempo)
                         {
                             var speed = FindEffectParam(song, p, time, Note.EffectSpeed);
@@ -740,6 +741,13 @@ namespace FamiStudio
                         }
 
                         it.Next();
+
+                        if (note.HasNoteDelay)
+                        {
+                            patternBuffer.Add($"${0x6a:x2}");
+                            patternBuffer.Add($"${note.NoteDelay - 1:x2}");
+                            usesDelayedNotesOrCuts = true;
+                        }
 
                         if (note.HasVolume)
                         {
@@ -765,11 +773,6 @@ namespace FamiStudio
                                 patternBuffer.Add($"${0x65:x2}");
 
                             usesVibrato = true;
-                        }
-
-                        if (note.HasNoteDelay ||note.HasCutDelay)
-                        {
-                            usesDelayedNotesOrCuts = true;
                         }
 
                         if (note.IsMusical)
@@ -815,15 +818,22 @@ namespace FamiStudio
 
                         if (note.HasFdsModSpeed)
                         {
-                            patternBuffer.Add($"${0x6a:x2}");
+                            patternBuffer.Add($"${0x6c:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
                         }
 
                         if (note.HasFdsModDepth)
                         {
-                            patternBuffer.Add($"${0x6b:x2}");
+                            patternBuffer.Add($"${0x6d:x2}");
                             patternBuffer.Add($"${note.FdsModDepth:x2}");
+                        }
+
+                        if (note.HasCutDelay)
+                        {
+                            patternBuffer.Add($"${0x6b:x2}");
+                            patternBuffer.Add($"${note.CutDelay:x2}");
+                            usesDelayedNotesOrCuts = true;
                         }
 
                         if (note.IsValid)
