@@ -640,6 +640,8 @@ namespace FamiStudio
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
 
+            project.ValidateId(id);
+
             if (idMap.TryGetValue(id, out var foundObj))
                 Debug.Assert(foundObj == this);
             else
@@ -874,14 +876,10 @@ namespace FamiStudio
                     float tempoRatio = (pal ? NativeTempoPAL : NativeTempoNTSC) / (float)famitrackerTempo;
                     frameCount += currentSpeed * tempoRatio;
 
-                    if (n0 == GetPatternLength(p0))
+                    if (++n0 >= GetPatternLength(p0))
                     {
                         n0 = 0;
                         p0++;
-                    }
-                    else
-                    {
-                        n0++;
                     }
                 }
 

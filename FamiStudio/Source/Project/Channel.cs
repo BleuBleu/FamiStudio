@@ -490,6 +490,20 @@ namespace FamiStudio
             return Song.CountNotesBetween(patternIdx, noteIdx, nextPatternIdx, nextNoteIdx);
         }
 
+        public Note GetNoteAt(int patternIdx, int noteIdx)
+        {
+            if (patternIdx < song.Length)
+            {
+                var pattern = patternInstances[patternIdx];
+                if (pattern != null && pattern.Notes.ContainsKey(noteIdx))
+                {
+                    return pattern.Notes[noteIdx];
+                }
+            }
+
+            return null;
+        }
+
         public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, ushort[] noteTable, bool pal, out int pitchDelta, out int stepSize)
         {
             Debug.Assert(note.IsMusical);
@@ -505,10 +519,43 @@ namespace FamiStudio
                 FindNextNoteForSlide(patternIdx, noteIdx, 256, out var nextPatternIdx, out var nextNoteIdx); // 256 is kind of arbitrary. 
 
                 // Approximate how many frames seperates these 2 notes (MATTT: Delayed notes/cuts).
-                var frameCount = Song.CountFramesBetween(patternIdx, noteIdx, nextPatternIdx, nextNoteIdx, famitrackerSpeed, pal); // MATTT : How about we return the number of frames in float?
-                var floatStep  = Math.Abs(pitchDelta) / (frameCount + 1); // MATTT: Should be frameCount - 1, or +1, right ??
+                var frameCount = 0.0f;
+                if (patternIdx != nextPatternIdx || noteIdx != nextNoteIdx)
+                {
+                    // Take delayed notes/cuts into avvound.
+                    var delayFrames = -(note.HasNoteDelay ? note.NoteDelay : 0);
+                    if (Song.UsesFamiTrackerTempo)
+                    {
+                        var nextNote = GetNoteAt(nextPatternIdx, nextNoteIdx);
+                        if (nextNote != null)
+                        {
+                            if (nextNote.HasNoteDelay)
+                            {
+                                if (nextNote.HasCutDelay)
+                                    delayFrames += Math.Min(nextNote.NoteDelay, nextNote.CutDelay);
+                                else
+                                    delayFrames += nextNote.NoteDelay;
+                            }
+                            else if (nextNote.HasCutDelay)
+                            {
+                                delayFrames += nextNote.CutDelay;
+                            }
+                        }
+                    }
 
-                stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
+                    frameCount = Song.CountFramesBetween(patternIdx, noteIdx, nextPatternIdx, nextNoteIdx, famitrackerSpeed, pal) + delayFrames;
+                }
+                else
+                {
+                    Debug.Assert(note.HasCutDelay && Song.UsesFamiTrackerTempo);
+
+                    // Slide note starts and end on same note, this mean we have a delayed cut.s
+                    frameCount = note.HasCutDelay ? note.CutDelay : 0;
+                }
+
+                var absStepPerFrame = Math.Abs(pitchDelta) / Math.Max(1, frameCount);
+
+                stepSize = Utils.Clamp((int)Math.Ceiling(absStepPerFrame) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
 
                 return true;
             }
@@ -519,6 +566,7 @@ namespace FamiStudio
             }
         }
 
+        // MATTT: Review if that's needed.
         public float ComputeRawSlideNoteParams(int noteValue, int slideTarget, int patternIdx, int noteIdx, int famitrackerSpeed, bool pal, ushort[] noteTable)
         {
             Debug.Assert(noteValue >= Note.MusicalNoteMin && noteValue <= Note.MusicalNoteMax);
@@ -534,7 +582,6 @@ namespace FamiStudio
             return floatStep;
         }
 
-        // MATTT: Take delayed cuts into account.
         public void FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes, out int nextPatternIdx, out int nextNoteIdx)
         {
             nextPatternIdx = patternIdx;
@@ -544,11 +591,17 @@ namespace FamiStudio
             var patternLength = song.GetPatternLength(patternIdx);
             var pattern = patternInstances[patternIdx];
 
+            if (pattern.Notes.ContainsKey(noteIdx) &&
+                pattern.Notes[noteIdx].HasCutDelay)
+            {
+                return;
+            }
+
             for (var it = pattern.GetNoteIterator(noteIdx + 1, patternLength); !it.Done && noteCount < maxNotes; it.Next(), noteCount++)
             {
                 var time = it.CurrentTime;
                 var note = it.CurrentNote;
-                if (note != null && (note.IsMusical || note.IsStop))
+                if (note != null && (note.IsMusical || note.IsStop || note.HasCutDelay))
                 {
                     nextPatternIdx = patternIdx;
                     nextNoteIdx    = time;

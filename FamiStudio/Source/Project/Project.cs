@@ -1183,6 +1183,29 @@ namespace FamiStudio
             SortArpeggios();
         }
 
+        // This is to fix issues with older versions where ids go corrupted somehow,
+        // likely using the old import instrument function.
+        public void EnsureNextIdIsLargeEnough()
+        {
+            foreach (var inst in instruments)
+                nextUniqueId = Math.Max(nextUniqueId, inst.Id);
+            foreach (var arp in arpeggios)
+                nextUniqueId = Math.Max(nextUniqueId, arp.Id);
+            foreach (var sample in samples)
+                nextUniqueId = Math.Max(nextUniqueId, sample.Id);
+            foreach (var song in songs)
+            {
+                nextUniqueId = Math.Max(nextUniqueId, song.Id);
+                foreach (var channels in song.Channels)
+                {
+                    foreach (var pattern in channels.Patterns)
+                        nextUniqueId = Math.Max(nextUniqueId, pattern.Id);
+                }
+            }
+
+            nextUniqueId++;
+        }
+
 #if DEBUG
         private void ValidateDPCMSamples(Dictionary<int, object> idMap)
         {
@@ -1215,6 +1238,11 @@ namespace FamiStudio
             {
                 arp.Validate(this, idMap);
             }
+        }
+
+        public void ValidateId(int id)
+        {
+            Debug.Assert(id < nextUniqueId);
         }
 #endif
 
@@ -1349,6 +1377,11 @@ namespace FamiStudio
             buffer.InitializeList(ref songs, songCount);
             foreach (var song in songs)
                 song.SerializeState(buffer);
+
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
+            {
+                EnsureNextIdIsLargeEnough();
+            }
         }
 
         public Project DeepClone()

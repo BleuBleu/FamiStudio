@@ -116,7 +116,7 @@ namespace FamiStudio
                 foreach (var kv in notes)
                 {
                     var note = kv.Value;
-                    if (note != null && note.IsValid && !note.IsRelease)
+                    if (note != null && (note.IsValid || note.HasCutDelay) && !note.IsRelease)
                     {
                         firstValidNoteTime = kv.Key;
                         break;
@@ -394,6 +394,8 @@ namespace FamiStudio
         public void Validate(Channel channel, Dictionary<int, object> idMap)
         {
             Debug.Assert(this.song == channel.Song);
+
+            song.Project.ValidateId(id);
 
             if (idMap.TryGetValue(id, out var foundObj))
                 Debug.Assert(foundObj == this);

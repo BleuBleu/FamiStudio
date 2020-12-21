@@ -41,6 +41,8 @@ namespace FamiStudio
         public void Validate(Project project, Dictionary<int, object> idMap)
         {
 #if DEBUG
+            project.ValidateId(id);
+
             if (idMap.TryGetValue(id, out var foundObj))
                 Debug.Assert(foundObj == this);
             else

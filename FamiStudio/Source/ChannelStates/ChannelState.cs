@@ -272,6 +272,7 @@ namespace FamiStudio
         {
             UpdateDelayedNote();
             UpdateEnvelopes();
+            UpdateSlide();
             UpdateAPU();
         }
 
@@ -320,7 +321,10 @@ namespace FamiStudio
                         envelopeIdx[j] = idx;
                 }
             }
+        }
 
+        private void UpdateSlide()
+        {
             if (slideStep != 0)
             {
                 slidePitch += slideStep;

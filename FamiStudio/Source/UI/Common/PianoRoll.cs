@@ -1442,7 +1442,8 @@ namespace FamiStudio
 
             if (n0.IsSlideNote && n0.Value != n0.SlideNoteTarget)
             {
-                int duration = channel.GetSlideNoteDuration(n0, p0, i0);
+                // We will get zero for notes that start a slide and have an immediate delayed cut.
+                int duration = Math.Max(1, channel.GetSlideNoteDuration(n0, p0, i0)); 
                 int slideSizeX = duration;
                 int slideSizeY = n0.SlideNoteTarget - n0.Value;
 
