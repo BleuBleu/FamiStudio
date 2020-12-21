@@ -75,7 +75,7 @@ namespace FamiStudio
 
                 if (newNote.IsValid && newNote.IsSlideNote)
                 {
-                    channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, noteTable, palPlayback, out noteSlidePitch, out noteSlideStep);
+                    channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, noteTable, palPlayback, true, out noteSlidePitch, out noteSlideStep, out _);
                 }
 
                 // Store note for later if delayed.

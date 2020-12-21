@@ -504,11 +504,15 @@ namespace FamiStudio
             return null;
         }
 
-        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, ushort[] noteTable, bool pal, out int pitchDelta, out int stepSize)
+        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, ushort[] noteTable, bool pal, bool applyShifts, out int pitchDelta, out int stepSize, out float stepSizeFloat)
         {
             Debug.Assert(note.IsMusical);
 
-            GetShiftsForType(type, song.Project.ExpansionNumChannels, out _, out var slideShift);
+            var slideShift = 0;
+
+            if (applyShifts)
+                GetShiftsForType(type, song.Project.ExpansionNumChannels, out _, out slideShift);
+
             pitchDelta = noteTable[note.Value] - noteTable[note.SlideNoteTarget];
 
             if (pitchDelta != 0)
@@ -556,30 +560,17 @@ namespace FamiStudio
                 var absStepPerFrame = Math.Abs(pitchDelta) / Math.Max(1, frameCount);
 
                 stepSize = Utils.Clamp((int)Math.Ceiling(absStepPerFrame) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
+                stepSizeFloat = pitchDelta / Math.Max(1, frameCount);
 
                 return true;
             }
             else
             {
                 stepSize = 0;
+                stepSizeFloat = 0.0f;
+
                 return false;
             }
-        }
-
-        // MATTT: Review if that's needed.
-        public float ComputeRawSlideNoteParams(int noteValue, int slideTarget, int patternIdx, int noteIdx, int famitrackerSpeed, bool pal, ushort[] noteTable)
-        {
-            Debug.Assert(noteValue >= Note.MusicalNoteMin && noteValue <= Note.MusicalNoteMax);
-
-            // Find the next note to calculate the slope.
-            FindNextNoteForSlide(patternIdx, noteIdx, 256, out var nextPatternIdx, out var nextNoteIdx); // 256 is kind of arbitrary. 
-
-            // Approximate how many frames seperates these 2 notes (MATTT: Delayed notes/cuts).
-            var pitchDelta = noteTable[noteValue] - noteTable[slideTarget];
-            var frameCount = Song.CountFramesBetween(patternIdx, noteIdx, nextPatternIdx, nextNoteIdx, famitrackerSpeed, pal);
-            var floatStep = pitchDelta / frameCount;
-
-            return floatStep;
         }
 
         public void FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes, out int nextPatternIdx, out int nextNoteIdx)

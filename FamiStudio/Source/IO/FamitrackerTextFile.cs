@@ -827,6 +827,7 @@ namespace FamiStudio
                     var prevInstrument = (Instrument)null;
                     var prevSlideEffect = Effect_None;
                     var prevArpeggio = (Arpeggio)null;
+                    var famitrackerSpeed = song.FamitrackerSpeed;
                     
                     for (int p = 0; p < song.Length; p++)
                     {
@@ -842,6 +843,8 @@ namespace FamiStudio
                         {
                             var time = it.CurrentTime;
                             var note = it.CurrentNote;
+
+                            song.ApplySpeedEffectAt(p, time, ref famitrackerSpeed);
 
                             // Keeps the code a lot simpler.
                             if (note == null)
@@ -873,8 +876,10 @@ namespace FamiStudio
                                     }
                                 }
 
-                                // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed. Also we assume NTSC here.
-                                var stepSizeFloat = channel.ComputeRawSlideNoteParams(noteValue, slideTarget, p, time, song.FamitrackerSpeed, false, noteTable); // MATTT: Fix this!
+                                var tempNote = note.Clone();
+                                tempNote.Value = note.Value;
+                                tempNote.SlideNoteTarget = slideTarget;
+                                channel.ComputeSlideNoteParams(tempNote, p, time, famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat); 
 
                                 if (channel.IsN163WaveChannel)
                                 {

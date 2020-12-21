@@ -29,15 +29,18 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 
 2.3.0
 =====
+
 - Fix computation of slide notes in FamiTracker tempo mode.
-	-> Do FamiTracker import, fix everything.
+	-> FamiTracker export
+	-> FamiTracker import
+	-> Make sure to try with crazy speed changes.
+	
 - We have 2 frame zero now, figure that out. See if impact on the video export.
 - Change bar, note, BPM vocabulary. If going to re-record tutorials, this is my chance 
 
 => Configure QWERTY keys for piano input? Will be super annoying to do, need to do on all 3 platforms...
 
 CLOSING:
-- RESIZE ALL NSF BINARIES, THEY GOT SMALLER!
 - Update documentation (sound engine, copy/delete special, new nomenclature for bars, tempo, etc.)
 - Sound engine demo, re-export data at the very end.
 - Is the frame rate of the piano roll bad now? See if icons, labels changed anything...
