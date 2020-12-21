@@ -870,7 +870,7 @@ namespace FamiStudio
             {
                 float frameCount = 0;
 
-                while (p0 != p1 || n0 != n1)
+                while ((p0 != p1 || n0 != n1) && p0 < songLength)
                 {
                     ApplySpeedEffectAt(p0, n0, ref currentSpeed);
                     float tempoRatio = (pal ? NativeTempoPAL : NativeTempoNTSC) / (float)famitrackerTempo;
@@ -888,6 +888,31 @@ namespace FamiStudio
             else
             {
                 return CountNotesBetween(p0, n0, p1, n1);
+            }
+        }
+
+        public void AdvanceNumberOfFrames(int frameCount, int initialCount, int currentSpeed, bool pal, ref int p, ref int n)
+        {
+            float count = initialCount;
+
+            while (count < frameCount && p < songLength)
+            {
+                if (UsesFamiTrackerTempo)
+                {
+                    ApplySpeedEffectAt(p, n, ref currentSpeed);
+                    float tempoRatio = (pal ? NativeTempoPAL : NativeTempoNTSC) / (float)famitrackerTempo;
+                    count += currentSpeed * tempoRatio;
+                }
+                else
+                {
+                    count++;
+                }
+
+                if (++n >= GetPatternLength(p))
+                {
+                    n = 0;
+                    p++;
+                }
             }
         }
 

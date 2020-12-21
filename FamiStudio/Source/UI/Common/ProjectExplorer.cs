@@ -739,17 +739,31 @@ namespace FamiStudio
             {
                 var buttonType = buttons[buttonIdx].type;
 
-                if (buttonType == ButtonType.SongHeader && subButtonType == SubButtonType.Add)
+                if (buttonType == ButtonType.SongHeader)
                 {
-                    tooltip = "{MouseLeft} Add new song";
+                    if (subButtonType == SubButtonType.Add)
+                    {
+                        tooltip = "{MouseLeft} Add new song";
+                    }
+                    else if (subButtonType == SubButtonType.LoadSong)
+                    {
+                        tooltip = "{MouseLeft} Import/merge song from another project";
+                    }
                 }
                 else if (buttonType == ButtonType.Song)
                 {
                     tooltip = "{MouseLeft} Make song current - {MouseLeft}{MouseLeft} Song properties - {MouseRight} Delete song";
                 }
-                else if (buttonType == ButtonType.InstrumentHeader && subButtonType == SubButtonType.Add)
+                else if (buttonType == ButtonType.InstrumentHeader)
                 {
-                    tooltip = "{MouseLeft} Add new instrument";
+                    if (subButtonType == SubButtonType.Add)
+                    {
+                        tooltip = "{MouseLeft} Add new instrument";
+                    }
+                    else if (subButtonType == SubButtonType.LoadInstrument)
+                    {
+                        tooltip = "{MouseLeft} Import/merge instrument from another project";
+                    }
                 }
                 else if (buttonType == ButtonType.ProjectSettings)
                 {
