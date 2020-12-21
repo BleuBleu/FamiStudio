@@ -249,7 +249,7 @@ namespace FamiStudio
             if (relative || !canResize || length == 0 || release >= 0)
                 return;
 
-            if (loop > 0)
+            if (loop >= 0)
             {
                 // Looping envelope can be optimized if they all have the same value.
                 for (int i = 1; i < length; i++)
