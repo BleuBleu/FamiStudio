@@ -84,7 +84,7 @@ namespace FamiStudio
             this.project = project;
             this.id = id;
             this.name = name;
-            this.color = Color.Azure;
+            this.color = ThemeBase.RandomCustomColor();
 
             CreateCustomSettings();
             SetDefaultsForTempoMode(project.TempoMode);
@@ -964,6 +964,10 @@ namespace FamiStudio
 
             if (buffer.Version < 5)
                 ConvertJumpSkipEffects();
+
+            // Before 2.3.0, songs had an invalid color by default.
+            if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
+                color = ThemeBase.RandomCustomColor();
         }
     }
 }
