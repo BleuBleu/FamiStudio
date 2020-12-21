@@ -221,7 +221,7 @@ namespace FamiStudio
                 }
             }
             
-            // MATTT: What is this???
+            // Fine pitch will always we read, so make sure it has a value.
             if (!note.HasFinePitch)
             {
                 note.FinePitch = 0;

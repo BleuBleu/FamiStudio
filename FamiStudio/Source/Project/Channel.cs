@@ -522,7 +522,7 @@ namespace FamiStudio
                 // Find the next note to calculate the slope.
                 FindNextNoteForSlide(patternIdx, noteIdx, 256, out var nextPatternIdx, out var nextNoteIdx); // 256 is kind of arbitrary. 
 
-                // Approximate how many frames seperates these 2 notes (MATTT: Delayed notes/cuts).
+                // Approximate how many frames seperates these 2 notes.
                 var frameCount = 0.0f;
                 if (patternIdx != nextPatternIdx || noteIdx != nextNoteIdx)
                 {
@@ -553,7 +553,7 @@ namespace FamiStudio
                 {
                     Debug.Assert(note.HasCutDelay && Song.UsesFamiTrackerTempo);
 
-                    // Slide note starts and end on same note, this mean we have a delayed cut.s
+                    // Slide note starts and end on same note, this mean we have a delayed cut.
                     frameCount = note.HasCutDelay ? note.CutDelay : 0;
                 }
 

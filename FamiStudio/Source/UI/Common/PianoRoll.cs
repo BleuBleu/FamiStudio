@@ -1779,7 +1779,7 @@ namespace FamiStudio
                 int minVisibleValue = maxValue - Math.Max((int)Math.Ceiling((scrollY + Height) / envelopeSizeY), 0);
 
                 var env = EditEnvelope;
-                var spacing = editEnvelope == Envelope.DutyCycle ? 4 : (editEnvelope == Envelope.Arpeggio ? 12 : 16); // MATTT: editEnvelope shouldnt be accessed
+                var spacing = editEnvelope == Envelope.DutyCycle ? 4 : (editEnvelope == Envelope.Arpeggio ? 12 : 16);
 
                 for (int i = minVisibleValue; i <= maxVisibleValue; i++)
                 {
