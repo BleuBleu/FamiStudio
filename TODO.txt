@@ -1,9 +1,9 @@
 Tips & Tricks
 =============
-x #00 - Basic controls & onboarding (pan, zoom, trackpad, tooltips, piano roll view rect, demo songs)
-x #01 - Sequencer basics (pattern add, delete, edit, instance & copy).
-x #02 - Piano roll basics (add note, delete note, snapping, dragging, select, transpose with KB).
-x #03 - Channels in piano roll (force display, muting & soloing, etc.)
+#00 - Basic controls & onboarding (pan, zoom, trackpad, tooltips, piano roll view rect, demo songs)
+#01 - Sequencer basics (pattern add, delete, edit, instance & copy).
+#02 - Piano roll basics (add note, delete note, snapping, dragging, select, transpose with KB).
+#03 - Channels in piano roll (force display, muting & soloing, etc.)
 #04 - Volume envelopes & release notes
 #05 - Toggling note attacks (combination with release)
 #06 - Slide notes (combination with release notes)
@@ -29,22 +29,16 @@ x #03 - Channels in piano roll (force display, muting & soloing, etc.)
 
 2.3.0
 =====
-- We have 2 frame zero now, figure that out. See if impact on the video export.
-- Change bar, note, BPM vocabulary. If going to re-record tutorials, this is my chance 
-
-=> Configure QWERTY keys for piano input? Will be super annoying to do, need to do on all 3 platforms...
+- We have 2 frame zero now, does it matter? Figure that out. See if impact on the video export.
 
 CLOSING:
 - Update documentation (sound engine, copy/delete special, new nomenclature for bars, tempo, etc.)
-- Sound engine demo, re-export data at the very end.
-- Is the frame rate of the piano roll bad now? See if icons, labels changed anything...
-- ROM (add new features) + Update to 2.3.0
-- MATTT
 
 TESTING:
 ========
-- Unit test.
-	- add note + cut delays (create a special FamiTracker tempo, with some random expansion). With slides too.
+- Test speed/custom pattern settings a lot. Both FT and FS tempo mode.
+- Re-test FamiStudio text import/export.
+- Unit test : add note + cut delays (create a special FamiTracker tempo, with some random expansion). With slides too.
 - Test video with scaling.
 - Test note labels in 150 + 200% scaling.
 - Test paste special on mac + hi-dpi.
@@ -52,6 +46,7 @@ TESTING:
 - Rested hi-dpi, changed some stuff for video.
 - Test export dialog hi-dpi (that ffmpeg button has harcoded 40 height)
 - Test modal log export window on MacOS + event processing might be missing?
+- Re-test ROM export.
 
 2.3.0 New Features
 ==================
@@ -68,7 +63,6 @@ TESTING:
 	- Delayed notes
 	- Delayed cuts
 - DPCM improvements (explicity bit reverse option, drag&drop)
-- 
 
 Linux notes
 ===========
@@ -116,3 +110,4 @@ Backlog:
 - Mac: Clicking on FS without the window doesn't give it focus...?
 - Installer on Japanese machine?
 - FamiTracker tempo mode never plays the 1st frame in the NSF.
+- Keyboard recording VS. non-QWERTY keyboards.

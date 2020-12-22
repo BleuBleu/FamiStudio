@@ -350,7 +350,7 @@ namespace FamiStudio
             octaveSizeY = 12 * noteSizeY;
             numNotes = numOctaves * 12;
             virtualSizeY = numNotes * noteSizeY;
-            barSizeX = noteSizeX * (Song == null ? 16 : Song.BarLength);
+            barSizeX = noteSizeX * (Song == null ? 16 : Song.BeatLength);
             headerAndEffectSizeY = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
             noteTextPosY = scaling > 1 ? 0 : 1; // Pretty hacky.
         }
@@ -1552,7 +1552,7 @@ namespace FamiStudio
                     for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                     {
                         var patternLen = song.GetPatternLength(p);
-                        var barLength = song.GetPatternBarLength(p);
+                        var beatLength = song.GetPatternBeatLength(p);
 
                         if (song.UsesFamiStudioTempo)
                         {
@@ -1562,7 +1562,7 @@ namespace FamiStudio
                             {
                                 int x = (song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
 
-                                if (i % barLength == 0)
+                                if (i % beatLength == 0)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, i == 0 ? 3.0f : 1.0f);
                                 else if (i % noteLength == 0)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush2);
@@ -1576,7 +1576,7 @@ namespace FamiStudio
                             {
                                 int x = (song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
 
-                                if (i % barLength == 0)
+                                if (i % beatLength == 0)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, i == 0 ? 3.0f : 1.0f);
                                 else if (zoomLevel >= -1)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush2);
@@ -2552,10 +2552,10 @@ namespace FamiStudio
                             TransposeNotes(ctrl ? -12 : -1);
                             break;
                         case Keys.Right:
-                            MoveNotes(ctrl ? (Song.Project.UsesFamiTrackerTempo ? Song.BarLength : Song.NoteLength) : 1);
+                            MoveNotes(ctrl ? (Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : 1);
                             break;
                         case Keys.Left:
-                            MoveNotes(ctrl ? -(Song.Project.UsesFamiTrackerTempo ? Song.BarLength : Song.NoteLength) : -1);
+                            MoveNotes(ctrl ? -(Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : -1);
                             break;
                     }
                 }

@@ -114,11 +114,11 @@ namespace FamiStudio
 
                 if (song.UsesFamiTrackerTempo)
                 {
-                    songStr += $" PatternLength=\"{song.PatternLength}\" BarLength=\"{song.BarLength}\" FamiTrackerTempo=\"{song.FamitrackerTempo}\" FamiTrackerSpeed=\"{song.FamitrackerSpeed}\"";
+                    songStr += $" PatternLength=\"{song.PatternLength}\" BeatLength=\"{song.BeatLength}\" FamiTrackerTempo=\"{song.FamitrackerTempo}\" FamiTrackerSpeed=\"{song.FamitrackerSpeed}\"";
                 }
                 else
                 {
-                    songStr += $" PatternLength=\"{song.PatternLength / song.NoteLength}\" BarLength=\"{song.BarLength / song.NoteLength}\" NoteLength=\"{song.NoteLength}\"";
+                    songStr += $" PatternLength=\"{song.PatternLength / song.NoteLength}\" BeatLength=\"{song.BeatLength / song.NoteLength}\" NoteLength=\"{song.NoteLength}\"";
                 }
 
                 lines.Add(songStr);
@@ -135,10 +135,10 @@ namespace FamiStudio
                         }
                         else
                         {
-                            var noteLength    = song.GetPatternNoteLength(i);
-                            var barLength     = song.GetPatternBarLength(i);
+                            var noteLength = song.GetPatternNoteLength(i);
+                            var beatLength = song.GetPatternBeatLength(i);
 
-                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength / noteLength}\" NoteLength=\"{noteLength}\" BarLength=\"{barLength / noteLength}\"");
+                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength / noteLength}\" NoteLength=\"{noteLength}\" BeatLength=\"{beatLength / noteLength}\"");
                         }
                     }
                 }
@@ -359,7 +359,7 @@ namespace FamiStudio
                         {
                             song = project.CreateSong(parameters["Name"]);
                             song.SetLength(int.Parse(parameters["Length"]));
-                            song.SetBarLength(int.Parse(parameters["BarLength"]));
+                            song.SetBeatLength(int.Parse(parameters["BeatLength"]));
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
 
                             if (song.UsesFamiTrackerTempo)
@@ -372,7 +372,7 @@ namespace FamiStudio
                             {
                                 var noteLength = int.Parse(parameters["NoteLength"]);
                                 song.ResizeNotes(noteLength, false);
-                                song.SetBarLength(int.Parse(parameters["BarLength"]) * noteLength);
+                                song.SetBeatLength(int.Parse(parameters["BeatLength"]) * noteLength);
                                 song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]) * noteLength);
                             }
                             break;
@@ -387,9 +387,9 @@ namespace FamiStudio
                             {
                                 var patternLength = int.Parse(parameters["Length"]);
                                 var noteLength = int.Parse(parameters["NoteLength"]);
-                                var barLength = int.Parse(parameters["BarLength"]);
+                                var beatLength = int.Parse(parameters["BeatLength"]);
 
-                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, noteLength, barLength * noteLength);
+                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, beatLength * noteLength, noteLength);
                             }
                             break;
                         }

@@ -1014,8 +1014,8 @@ namespace FamiStudio
                         Song.SetPatternCustomSettings(
                             i + minSelectedPatternIdx, 
                             customSettings[i].patternLength,
-                            customSettings[i].noteLength,
-                            customSettings[i].barLength);
+                            customSettings[i].beatLength,
+                            customSettings[i].noteLength);
                     }
                     else
                     {
@@ -1126,8 +1126,8 @@ namespace FamiStudio
                                         Song.SetPatternCustomSettings(
                                             nj,
                                             customSettings[j - minSelectedPatternIdx].patternLength,
-                                            customSettings[j - minSelectedPatternIdx].noteLength,
-                                            customSettings[j - minSelectedPatternIdx].barLength);
+                                            customSettings[j - minSelectedPatternIdx].beatLength, 
+                                            customSettings[j - minSelectedPatternIdx].noteLength);
                                     }
                                     else
                                     {
@@ -1458,16 +1458,18 @@ namespace FamiStudio
 
             if (song.UsesFamiTrackerTempo)
             {
-                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx), 1, Pattern.MaxLength, CommonTooltips.NotesPerPattern); // 1
+                dlg.Properties.AddIntegerRange("Notes Per Beat :", song.GetPatternBeatLength(patternIdx), 1, Pattern.MaxLength, CommonTooltips.NotesPerBar); // 1
+                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx), 1, Pattern.MaxLength, CommonTooltips.NotesPerPattern); // 2
+                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiTrackerBPM(song.Project.PalMode, song.FamitrackerSpeed, song.FamitrackerTempo, song.GetPatternBeatLength(patternIdx)).ToString("n1"), CommonTooltips.BPM); // 3
             }
             else
             {
                 var noteLength = song.GetPatternNoteLength(patternIdx);
 
                 dlg.Properties.AddIntegerRange("Frames Per Notes:", noteLength, Song.MinNoteLength, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 1
-                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx) / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 2
-                dlg.Properties.AddIntegerRange("Notes Per Bar :", song.GetPatternBarLength(patternIdx) / noteLength, 1, Pattern.MaxLength, CommonTooltips.NotesPerBar); // 3
-                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiStudioBPM(song.Project.PalMode, noteLength).ToString(), CommonTooltips.BPM); // 4
+                dlg.Properties.AddIntegerRange("Notes Per Beat :", song.GetPatternBeatLength(patternIdx) / noteLength, 1, Pattern.MaxLength, CommonTooltips.NotesPerBar); // 2
+                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx) / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 3
+                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiStudioBPM(song.Project.PalMode, noteLength, song.GetPatternBeatLength(patternIdx)).ToString("n1"), CommonTooltips.BPM); // 4
             }
 
             for (var i = 1; i < dlg.Properties.PropertyCount && i < 6; i++)
@@ -1484,24 +1486,25 @@ namespace FamiStudio
 
                 if (song.UsesFamiTrackerTempo)
                 {
-                    var patternLength = dlg.Properties.GetPropertyValue<int>(1);
+                    var beatLength    = dlg.Properties.GetPropertyValue<int>(1);
+                    var patternLength = dlg.Properties.GetPropertyValue<int>(2);
 
                     if (custom)
-                        song.SetPatternCustomSettings(patternIdx, patternLength);
+                        song.SetPatternCustomSettings(patternIdx, patternLength, beatLength);
                     else
                         song.ClearPatternCustomSettings(patternIdx);
                 }
                 else
                 {
-                    var noteLength     = song.NoteLength;
-                    var patternLength  = song.PatternLength;
-                    var barLength      = song.BarLength;
+                    var noteLength    = song.NoteLength;
+                    var patternLength = song.PatternLength;
+                    var beatLength    = song.BeatLength;
 
                     if (custom)
                     { 
-                        noteLength       = dlg.Properties.GetPropertyValue<int>(1);
-                        patternLength    = dlg.Properties.GetPropertyValue<int>(2) * noteLength;
-                        barLength        = dlg.Properties.GetPropertyValue<int>(3) * noteLength;
+                        noteLength    = dlg.Properties.GetPropertyValue<int>(1);
+                        beatLength    = dlg.Properties.GetPropertyValue<int>(2) * noteLength;
+                        patternLength = dlg.Properties.GetPropertyValue<int>(3) * noteLength;
                     }
 
                     if (noteLength != song.GetPatternNoteLength(patternIdx))
@@ -1512,7 +1515,7 @@ namespace FamiStudio
                     }
 
                     if (custom)
-                        song.SetPatternCustomSettings(patternIdx, patternLength, noteLength, barLength);
+                        song.SetPatternCustomSettings(patternIdx, patternLength, beatLength, noteLength);
                     else
                         song.ClearPatternCustomSettings(patternIdx);
                 }
@@ -1532,12 +1535,19 @@ namespace FamiStudio
                 for (var i = 1; i < props.PropertyCount && i < 6; i++)
                     props.SetPropertyEnabled(i, (bool)value);
             }
-            else if (Song.UsesFamiStudioTempo && idx == 1)
+            else if (Song.UsesFamiStudioTempo && (idx == 1 || idx == 2))
             {
-                var noteLength = (int)value;
+                var noteLength = props.GetPropertyValue<int>(1);
+                var beatLength = props.GetPropertyValue<int>(2);
 
                 props.UpdateIntegerRange(2, 1, Pattern.MaxLength / noteLength);
-                props.SetLabelText(4, Song.ComputeFamiStudioBPM(song.Project.PalMode, noteLength).ToString());
+                props.SetLabelText(4, Song.ComputeFamiStudioBPM(song.Project.PalMode, noteLength, beatLength * noteLength).ToString("n1"));
+            }
+            else if (Song.UsesFamiTrackerTempo && idx == 1)
+            {
+                var beatLength = (int)value;
+
+                props.SetLabelText(3, Song.ComputeFamiTrackerBPM(song.Project.PalMode, song.FamitrackerSpeed, song.FamitrackerTempo, beatLength).ToString("n1"));
             }
         }
 

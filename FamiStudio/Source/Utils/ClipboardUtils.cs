@@ -616,7 +616,7 @@ namespace FamiStudio
                     serializer.Serialize(ref customSettings[i].useCustomSettings);
                     serializer.Serialize(ref customSettings[i].patternLength);
                     serializer.Serialize(ref customSettings[i].noteLength);
-                    serializer.Serialize(ref customSettings[i].barLength);
+                    serializer.Serialize(ref customSettings[i].beatLength);
                 }
             }
 
@@ -677,7 +677,7 @@ namespace FamiStudio
                     serializer.Serialize(ref customSettings[i].useCustomSettings);
                     serializer.Serialize(ref customSettings[i].patternLength);
                     serializer.Serialize(ref customSettings[i].noteLength);
-                    serializer.Serialize(ref customSettings[i].barLength);
+                    serializer.Serialize(ref customSettings[i].beatLength);
                 }
             }
             else

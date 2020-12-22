@@ -909,7 +909,7 @@ namespace FamiStudio
             else
                 song.ResizeNotes(1, false);
 
-            song.SetSensibleBarLength();
+            song.SetSensibleBeatLength();
             song.DeleteEmptyPatterns();
             song.UpdatePatternStartNotes();
             project.DeleteUnusedInstruments();

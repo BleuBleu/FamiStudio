@@ -875,10 +875,12 @@ namespace FamiStudio
                 s.DeleteNotesPastMaxInstanceLength();
                 s.UpdatePatternStartNotes();
 
+                // FamiTracker always assumes 4 rows per beat for BPM calculation, but let's assume
+                // the artists properly set first row highlight to that.
                 if (barLength == -1)
-                    s.SetSensibleBarLength();
+                    s.SetSensibleBeatLength();
                 else
-                    s.SetBarLength(barLength);
+                    s.SetBeatLength(barLength);
 
                 ApplyHaltEffect(s, patternFxData);
                 CreateArpeggios(s, patternFxData);

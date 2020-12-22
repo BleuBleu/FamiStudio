@@ -1513,16 +1513,16 @@ namespace FamiStudio
             {
                 dlg.Properties.AddIntegerRange("Tempo :", song.FamitrackerTempo, 32, 255, CommonTooltips.Tempo); // 3
                 dlg.Properties.AddIntegerRange("Speed :", song.FamitrackerSpeed, 1, 31, CommonTooltips.Speed); // 4
-                dlg.Properties.AddIntegerRange("Notes per Pattern :", song.PatternLength, 16, 256, CommonTooltips.NotesPerPattern); // 5
-                dlg.Properties.AddIntegerRange("Notes per Bar :", song.BarLength, 2, 256, CommonTooltips.NotesPerBar); // 6
-                dlg.Properties.AddLabel("BPM :", song.BPM.ToString(), CommonTooltips.BPM); // 7
+                dlg.Properties.AddIntegerRange("Notes per Beat :", song.BeatLength, 2, 256, CommonTooltips.NotesPerBar); // 5
+                dlg.Properties.AddIntegerRange("Notes per Pattern :", song.PatternLength, 16, 256, CommonTooltips.NotesPerPattern); // 6
+                dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 7
             }
             else
             {
                 dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, Song.MinNoteLength, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 3
-                dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 2, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 4
-                dlg.Properties.AddIntegerRange("Notes per Bar : ", song.BarLength / song.NoteLength, 2, 256, CommonTooltips.NotesPerBar); // 5
-                dlg.Properties.AddLabel("BPM :", song.BPM.ToString(), CommonTooltips.BPM); // 6
+                dlg.Properties.AddIntegerRange("Notes per Beat : ", song.BeatLength / song.NoteLength, 2, 256, CommonTooltips.NotesPerBar); // 4
+                dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 2, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 5
+                dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 6
             }
 
             dlg.Properties.Build();
@@ -1545,8 +1545,8 @@ namespace FamiStudio
                     {
                         song.FamitrackerTempo = dlg.Properties.GetPropertyValue<int>(3);
                         song.FamitrackerSpeed = dlg.Properties.GetPropertyValue<int>(4);
-                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(5));
-                        song.SetBarLength(dlg.Properties.GetPropertyValue<int>(6));
+                        song.SetBeatLength(dlg.Properties.GetPropertyValue<int>(5));
+                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(6));
                     }
                     else
                     {
@@ -1557,9 +1557,9 @@ namespace FamiStudio
                             var convertTempo = PlatformUtils.MessageBox($"You changed the note length, do you want FamiStudio to attempt convert the tempo by resizing notes?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
                             song.ResizeNotes(newNoteLength, convertTempo);
                         }
-                        
-                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(4) * song.NoteLength);
-                        song.SetBarLength(dlg.Properties.GetPropertyValue<int>(5) * song.NoteLength);
+
+                        song.SetBeatLength(dlg.Properties.GetPropertyValue<int>(4) * song.NoteLength);
+                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(5) * song.NoteLength);
                     }
 
                     song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
@@ -1581,19 +1581,21 @@ namespace FamiStudio
         {
             var song = props.UserData as Song;
 
-            if (selectedSong.UsesFamiTrackerTempo && (idx == 3 || idx == 4)) // 3/4 = Tempo/Speed
+            if (selectedSong.UsesFamiTrackerTempo && (idx == 3 || idx == 4 || idx == 5)) // 3/4 = Tempo/Speed, 5 = beat length
             {
                 var tempo = props.GetPropertyValue<int>(3);
                 var speed = props.GetPropertyValue<int>(4);
+                var beatLength = props.GetPropertyValue<int>(5);
 
-                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(selectedSong.Project.PalMode, speed, tempo).ToString());
+                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(selectedSong.Project.PalMode, speed, tempo, beatLength).ToString("n1"));
             }
-            else if (idx == 3) // 3 = Note length
+            else if (idx == 3 || idx == 4) // 3 = note length, 4 = beat length.
             {
-                int noteLength = (int)value;
+                var noteLength = props.GetPropertyValue<int>(3);
+                var beatLength = props.GetPropertyValue<int>(4);
 
-                props.UpdateIntegerRange(4, 1, Pattern.MaxLength / noteLength);
-                props.SetLabelText(6, Song.ComputeFamiStudioBPM(selectedSong.Project.PalMode, noteLength).ToString());
+                props.UpdateIntegerRange(5, 1, Pattern.MaxLength / noteLength);
+                props.SetLabelText(6, Song.ComputeFamiStudioBPM(selectedSong.Project.PalMode, noteLength, beatLength * noteLength).ToString("n1"));
             }
         }
 
