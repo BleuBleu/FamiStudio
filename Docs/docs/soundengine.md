@@ -43,6 +43,8 @@ Features that can be toggled on/off depending on the needs of your projects:
 * Slide notes.
 * Vibrato effect.
 * Arpeggios (not to be confused with arpeggio instrument envelopes which are always enabled).
+* Duty cycle effect track
+* Delayed notes/cuts (only when FamiTracker tempo is enabled)
 
 ## RAM/CODE usage
 
@@ -218,36 +220,41 @@ These are parameters that configures the engine, but are independent of the data
 
 Every feature supported in FamiStudio is supported by this sound engine. If you know for sure that you are not using specific features in your music, you can disable them to save memory/processing time. Using a feature in your song and failing to enable it will likely lead to crashes (BRK), or undefined behavior. They all have the form FAMISTUDIO_USE_XXX.
 
-    ; Must be enabled if the songs you will be importing have been created 
-    ; using FamiTracker tempo mode. If you are using FamiStudio tempo mode,
-    ; this must be undefined. You cannot mix and match tempo modes, the 
-    ; engine can only run in one mode or the other. 
+    ; Must be enabled if the songs you will be importing have been created using FamiTracker tempo mode. 
+    ; If you are using FamiStudio tempo mode, this must be undefined. You cannot mix and match tempo modes, 
+    ; the engine can only run in one mode or the other. 
     ; More information at: https://famistudio.org/doc/song/#tempo-modes
     FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
-
-    ; Must be enabled if any song use the volume track. The volume track 
-    ; allows manipulating the volume at the track level independently from
-    ; instruments.
+    
+    ; Must be enabled if the songs uses delayed notes or delayed cuts. This is obviously only available when using
+    ; FamiTracker tempo mode as FamiStudio tempo mode does not need this.
+    FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1
+    
+    ; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track
+    ; level independently from instruments.
     ; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
     FAMISTUDIO_USE_VOLUME_TRACK   = 1
-
-    ; Must be enabled if any song use the pitch track. The pitch track allows manipulating the pitch at the track level
-    ; independently from instruments.
+    
+    ; Must be enabled if any song uses the pitch track. The pitch track allows manipulating the pitch at the track
+    ; level independently from instruments.
     ; More information at: https://famistudio.org/doc/pianoroll/#pitch
     FAMISTUDIO_USE_PITCH_TRACK    = 1
-
-    ; Must be enabled if any song use slide notes. Slide notes allows portamento and slide effects.
+    
+    ; Must be enabled if any song uses slide notes. Slide notes allows portamento and slide effects.
     ; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
     FAMISTUDIO_USE_SLIDE_NOTES    = 1
-
-    ; Must be enabled if any song use the vibrato speed/depth effect track. 
+    
+    ; Must be enabled if any song uses the vibrato speed/depth effect track. 
     ; More information at: https://famistudio.org/doc/pianoroll/#vibrato-depth-speed
     FAMISTUDIO_USE_VIBRATO        = 1
-
-    ; Must be enabled if any song use arpeggios (not to be confused 
-    ; with instrument arpeggio envelopes, those are always supported).
+    
+    ; Must be enabled if any song uses arpeggios (not to be confused with instrument arpeggio envelopes, those 
+    ; are always supported).
     ; More information at: (TODO)
     FAMISTUDIO_USE_ARPEGGIO       = 1
+    
+    ; Must be enabled if any song uses the "Duty Cycle" effect (equivalent of FamiTracker Vxx, also called "Timbre").  
+    FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1
     
 ## Exporting Music/SFX to the engine
 

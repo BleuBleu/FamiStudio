@@ -31,8 +31,11 @@ Tips & Tricks
 =====
 CLOSING:
 - Update documentation (sound engine, copy/delete special, new nomenclature for bars, tempo, etc.)
+	- Update sound engine code size at the end.
+	- Tempo : After the rain tempo screenshot makes no sense! (37.5 BPM). 
 - Look at all the demo songs, make sure their BPMs are sensical. 
 - Make Gimmick samples real notes.
+- Retire FT2 friendly songs.
 
 TESTING:
 ========

@@ -13,7 +13,7 @@ The song can be exported in one of two modes:
 
 You can also export each channel to individual by enabling "Separate channel file". 
 
-Note that the quality of the MP3 encoding may not going to be as good as full fledge mp3 encoder such as LAME, but is good enought for sending quick previews to people.
+Note that the quality of the MP3 encoding may not going to be as good as full fledge mp3 encoder such as LAME, but should be good enough for sending quick previews to people.
 
 ![](images/ExportWav.png#center)
 
@@ -25,15 +25,15 @@ Video export is a great way to add a visual element to your songs when sharing t
 
 ![](images/VideoScreenshot.jpg#center)
 
-The exported videos are always 1080p / 60FPS at the moment (or 50FPS if you song is PAL). 
+The exported videos are always 1080p / 60FPS at the moment (or 50FPS in PAL mode). 
+
+![](images/ExportVideo.png#center)
 
 Besides the audio/video quality settings, there are a few options to control the look and feel of the video:
 
-* Piano roll zoom : The higher the zoom, the faster notes will scroll by. 
-* Thin notes : This will make the notes narrower (in the X direction). This is useful when exporting songs that have more than 5 channels.
-* Channels : It is recommended to not export channels that have no notes, this will leave more space to the other channels.
-
-![](images/ExportVideo.png#center)
+* **Piano roll zoom** : The higher the zoom, the faster notes will scroll by. 
+* **Thin notes** : This will make the notes narrower (in the X direction). This is useful when exporting songs that have more than 5 channels.
+* **Channels** : It is recommended to not export channels that do not have any notes, this will leave more space to the other channels.
 
 ## Nintendo Sound Format
 
@@ -285,13 +285,19 @@ NSF (and NSFE) files can be imported in FamiStudio. This includes NSF with expan
 
 ![](images/ImportNsf.png#center)
 
-You will need to chose the song to import and specify a duration (in sec) to extract from the NSF. Most NSF file will not contain the names of songs so they will usually have placeholder names. 
+Most NSF file will not contain the names of songs so they will usually have placeholder names. Besides the song to import, are the most important settings :
+
+* **Duration** : Time (in sec) to extract from the NSF. 
+* **Pattern Length** : Number of frames in a pattern.
+* **Start frame** : Used to offset the entire song by a number of frames. This is useful when a song has an intro that is not the same length as the other patterns.
+* **Remove intro silence** : Some songs start with a bit of silence, this will wait until any sound is produce to start recording.
+* **Reverse DPCM bits** : This will set the "Reverse Bits" flag on all the imported samples. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should.
 
 NSF file are essentially programs designed to run on actual hardware. They will contain no instrument, no envelopes, no repeating pattern, etc. All the volumes and pitches will be set through the effect panel. They are going to appear extremely messy and unoptimized. 
 
 That being said, NSF can still be extremely useful to reverse engineer how songs were made. In fact, this is how most of the Demo Songs that come with FamiStudio were made. 
 
-In the example below, we can imagine that the notes on the right were all using the same instrument with a decreasing volume envelope. The notes of the left were clearly using a vibrato effect or a pitch envelope. 
+In the example below, we can imagine that the notes on the right were all using the same instrument with a decreasing volume envelope, and a 2-1 release. The note of the left were clearly using a vibrato effect or a pitch envelope. 
 
 ![](images/NsfMess.png#center)
 

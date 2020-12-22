@@ -29,6 +29,8 @@ The configuration dialog dialog is accessed from the toolbar.
 
 * **Show Piano Roll View Range**: Displays a yellow rectangle in the sequencer representing the view range of the piano roll.
 
+* **Show Note Labels**: Displays note labels (e.q. "C#3") in the piano roll.
+
 * **Trackpad controls**: Enabling trackpad controls will switch to a control scheme that is better suited for trackpad users:
 
     * Vertical mouse wheel up/down will scroll up/down instead of zooming in/out. This is the equivalent of swiping your fingers up/down on the trackpad.
