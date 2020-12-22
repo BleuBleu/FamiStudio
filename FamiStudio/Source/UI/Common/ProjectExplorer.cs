@@ -197,18 +197,21 @@ namespace FamiStudio
 
             public string GetText(Project project)
             {
-                switch (type)
+                if (project != null)
                 {
-                    case ButtonType.ProjectSettings: return string.IsNullOrEmpty(project.Author) ? $"{project.Name}": $"{project.Name} ({project.Author})";
-                    case ButtonType.SongHeader: return "Songs";
-                    case ButtonType.Song: return song.Name;
-                    case ButtonType.InstrumentHeader: return "Instruments";
-                    case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
-                    case ButtonType.ArpeggioHeader: return "Arpeggios";
-                    case ButtonType.Arpeggio: return arpeggio == null ? "None" : arpeggio.Name;
-                    case ButtonType.ParamCheckbox:
-                    case ButtonType.ParamSlider:
-                    case ButtonType.ParamList: return Instrument.GetRealTimeParamName(instrumentParam);
+                    switch (type)
+                    {
+                        case ButtonType.ProjectSettings: return string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
+                        case ButtonType.SongHeader: return "Songs";
+                        case ButtonType.Song: return song.Name;
+                        case ButtonType.InstrumentHeader: return "Instruments";
+                        case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
+                        case ButtonType.ArpeggioHeader: return "Arpeggios";
+                        case ButtonType.Arpeggio: return arpeggio == null ? "None" : arpeggio.Name;
+                        case ButtonType.ParamCheckbox:
+                        case ButtonType.ParamSlider:
+                        case ButtonType.ParamList: return Instrument.GetRealTimeParamName(instrumentParam);
+                    }
                 }
 
                 return "";
@@ -523,7 +526,7 @@ namespace FamiStudio
 
         protected bool ShowExpandButtons()
         {
-            if (App.Project.ExpansionAudio != Project.ExpansionNone)
+            if (App.Project != null && App.Project.ExpansionAudio != Project.ExpansionNone)
                 return App.Project.Instruments.Find(i => i.GetRealTimeParams() != null) != null;
 
             return false;

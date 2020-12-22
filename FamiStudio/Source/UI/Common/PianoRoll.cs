@@ -1733,7 +1733,7 @@ namespace FamiStudio
                         g.DrawText($"Editing Channel {channelName}", ThemeBase.FontBig, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
                     }
                 }
-                else
+                else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.
                 {
                     for (int i = 0; i < Note.MusicalNoteMax; i++)
                     {
