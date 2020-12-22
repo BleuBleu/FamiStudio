@@ -8,14 +8,14 @@ shatterhand_music_data:
 	.byte .lobyte(@tempo_env9), .hibyte(@tempo_env9), 0, 0
 
 @instruments:
-	.word @env3,@env0,@env0,@env7
-	.word @env5,@env1,@env0,@env7
-	.word @env9,@env8,@env0,@env7
-	.word @env13,@env6,@env0,@env7
-	.word @env2,@env0,@env0,@env4
+	.word @env3,@env0,@env9,@env7
+	.word @env5,@env1,@env9,@env7
+	.word @env10,@env8,@env9,@env7
+	.word @env14,@env6,@env9,@env7
+	.word @env2,@env0,@env9,@env4
+	.word @env2,@env0,@env12,@env4
 	.word @env2,@env0,@env11,@env4
-	.word @env2,@env0,@env10,@env4
-	.word @env12,@env8,@env0,@env7
+	.word @env13,@env8,@env9,@env7
 
 @samples:
 @env0:
@@ -37,14 +37,16 @@ shatterhand_music_data:
 @env8:
 	.byte $c0,$c1,$c2,$00,$02
 @env9:
-	.byte $00,$cb,$ca,$09,$c9,$00,$04
+	.byte $7f,$00,$00
 @env10:
-	.byte $c2,$7f,$00,$00
+	.byte $00,$cb,$ca,$09,$c9,$00,$04
 @env11:
-	.byte $c1,$7f,$00,$00
+	.byte $c2,$7f,$00,$00
 @env12:
-	.byte $00,$ca,$c6,$c3,$c0,$00,$04
+	.byte $c1,$7f,$00,$00
 @env13:
+	.byte $00,$ca,$c6,$c3,$c0,$00,$04
+@env14:
 	.byte $00,$cb,$cb,$c5,$03,$c4,$03,$c3,$03,$c2,$00,$09
 @tempo_env9:
 	.byte $01,$08,$03,$04,$80

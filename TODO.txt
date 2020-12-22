@@ -29,10 +29,10 @@ Tips & Tricks
 
 2.3.0
 =====
-- We have 2 frame zero now, does it matter? Figure that out. See if impact on the video export.
-
 CLOSING:
 - Update documentation (sound engine, copy/delete special, new nomenclature for bars, tempo, etc.)
+- Look at all the demo songs, make sure their BPMs are sensical. 
+- Make Gimmick samples real notes.
 
 TESTING:
 ========
@@ -48,6 +48,7 @@ TESTING:
 - Test modal log export window on MacOS + event processing might be missing?
 - Re-test ROM export.
 - Re-test ffmpeg export on all platforms (added quotes).
+- Re-test FamiTone2 export.
 
 2.3.0 New Features
 ==================
