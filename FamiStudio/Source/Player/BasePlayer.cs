@@ -226,6 +226,9 @@ namespace FamiStudio
             //Debug.WriteLine($"PlaySongFrameInternal {playPosition}!");
             //Debug.WriteLine($"PlaySongFrameInternal {song.GetPatternStartNote(playPattern) + playNote}!");
 
+            // Increment before for register listeners to get correct frame number.
+            frameNumber++;
+
             int numFramesToRun = UpdateFamiStudioTempo();
 
             for (int i = 0; i < numFramesToRun; i++)
@@ -256,7 +259,6 @@ namespace FamiStudio
             if (!seeking)
                 playPosition = song.GetPatternStartNote(playPattern) + playNote;
 
-            frameNumber++;
             return true;
         }
 
