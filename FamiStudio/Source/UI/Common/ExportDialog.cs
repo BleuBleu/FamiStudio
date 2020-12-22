@@ -446,9 +446,10 @@ namespace FamiStudio
             var exportFormat = (AssemblyFormat)Enum.Parse(typeof(AssemblyFormat), props.GetPropertyValue<string>(0));
             var ext = exportFormat == AssemblyFormat.CA65 ? "s" : "asm";
             var mode = (MachineType)Enum.Parse(typeof(MachineType), props.GetPropertyValue<string>(1));
+            var engineName = famiStudio ? "FamiStudio" : "FamiTone2";
             var songIds = GetSongIds(props.GetPropertyValue<bool[]>(2));
 
-            var filename = PlatformUtils.ShowSaveFileDialog("Export FamiTone2 Code", $"FamiTone2 Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
+            var filename = PlatformUtils.ShowSaveFileDialog($"Export {engineName} Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 FamitoneSoundEffectFile f = new FamitoneSoundEffectFile();
