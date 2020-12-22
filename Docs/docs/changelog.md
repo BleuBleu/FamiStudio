@@ -2,6 +2,14 @@
 
 Version history / release notes for each release.
 
+## Version 2.2.2 (Hotfix)
+
+Changes:
+* Fixed page Up/Down keys not working on Linux and MacOS.
+* Fixed a deadlock that could happen when playing a non-looping song from the very last frame.
+* Fixed many issues with FamiTracker files.
+* Added support for Cxx (Halt) FamiTracker effect.
+
 ## Version 2.2.1 (Hotfix)
 
 Changes:

@@ -232,6 +232,7 @@ Note that only a small subset of features is supported. Only the following effec
 * 3xx (Portamento) : Will be converted to slide notes.
 * 4xy (Vibrato) : Vibrator speed will be slightly modified, see table above for mapping.
 * Bxx (Jump) : Will be converted to loop point. 
+* Cxx (Half) : Will truncate the song at the location of the effect and remove the loop point.
 * Dxx (Skip) : Will be converted to a custom pattern length.
 * Fxx (Speed) : Only speed is supported.
 * Pxx (Fine pitch) : Fully supported.

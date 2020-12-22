@@ -85,6 +85,10 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.Oem2;
             else if (k == Gdk.Key.BackSpace)
                 return System.Windows.Forms.Keys.Back;
+            else if (k == Gdk.Key.Prior)
+                return System.Windows.Forms.Keys.PageUp;
+            else if (k == Gdk.Key.Next)
+                return System.Windows.Forms.Keys.PageDown;
 
             Trace.WriteLine($"Unknown key pressed {k}");
 

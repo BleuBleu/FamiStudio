@@ -48,7 +48,7 @@ namespace FamiStudio
         public static System.Windows.Forms.Keys ToWinFormKey(Key k)
         {
             if (k >= Key.A && k <= Key.Z)
-                return System.Windows.Forms.Keys.A + (k - Key.A);   
+                return System.Windows.Forms.Keys.A + (k - Key.A);
             else if (k >= Key.Number0 && k <= Key.Number9)
                 return System.Windows.Forms.Keys.D0 + (k - Key.Number0);
             else if (k == Key.ControlRight || k == Key.ControlLeft || k == Key.Command || k == Key.WinLeft)
@@ -95,6 +95,10 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.Oem2;
             else if (k == Key.BackSpace)
                 return System.Windows.Forms.Keys.Back;
+            else if (k == Key.PageUp)
+                return System.Windows.Forms.Keys.PageUp;
+            else if (k == Key.PageDown)
+                return System.Windows.Forms.Keys.PageDown;
 
             Trace.WriteLine($"Unknown key pressed {k}");
 
