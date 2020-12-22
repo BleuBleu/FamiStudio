@@ -210,7 +210,13 @@ namespace FamiStudio
 #endif
             string filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
             if (filename != null)
+            {
                 props.SetPropertyValue(propertyIndex, filename);
+
+                // Update settings right away.
+                Settings.FFmpegExecutablePath = filename;
+                Settings.Save();
+            }
         }
 
         private int[] GetSongIds(bool[] selectedSongs)
@@ -304,10 +310,6 @@ namespace FamiStudio
                     if (selectedChannels[i])
                         channelMask |= (1 << i);
                 }
-
-                // Update settings right away.
-                Settings.FFmpegExecutablePath = ffmpeg;
-                Settings.Save();
 
                 new VideoFile().Save(song, ffmpeg, filename, channelMask, audioBitRate, videoBitRate, pianoRollZoom, thinNotes);
             }

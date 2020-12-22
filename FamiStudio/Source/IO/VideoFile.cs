@@ -483,7 +483,7 @@ namespace FamiStudio
 
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -c:v libx264 -pix_fmt yuv420p -b:v {videoBitRate}M -an {tempVideoFile}", true, false);
+                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -c:v libx264 -pix_fmt yuv420p -b:v {videoBitRate}M -an \"{tempVideoFile}\"", true, false);
 
                 // Generate each of the video frames.
                 using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
@@ -663,7 +663,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, "Mixing audio and video...");
 
                 // Run ffmpeg again to combine audio + video.
-                process = LaunchFFmpeg(ffmpegExecutable, $"-y -i {tempVideoFile} -i {tempAudioFile} -c:v copy -c:a aac -b:a {audioBitRate}k {filename}", false, false);
+                process = LaunchFFmpeg(ffmpegExecutable, $"-y -i \"{tempVideoFile}\" -i \"{tempAudioFile}\" -c:v copy -c:a aac -b:a {audioBitRate}k \"{filename}\"", false, false);
                 process.WaitForExit();
                 process.Dispose();
                 process = null;

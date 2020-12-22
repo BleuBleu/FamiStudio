@@ -2,13 +2,29 @@
 
 Version history / release notes for each release.
 
-## Version 2.2.2 (Hotfix)
+## Version 2.3.0
 
 Changes:
-* Fixed page Up/Down keys not working on Linux and MacOS.
-* Fixed a deadlock that could happen when playing a non-looping song from the very last frame.
-* Fixed many issues with FamiTracker files.
+
+* MP3 export
+* Video export
+* Song merge functionality
+* Duty cycle effect track support (equivalent of Vxx in FamiTracker) 
+* Special paste improvements (repeat, effects, etc.)
+* Special delete
+* Copy patterns to different channels in sequencer
+* Option to display note labels in piano roll
+* FamiTracker tempo improvements (delayed notes, cuts, fixes).
 * Added support for Cxx (Halt) FamiTracker effect.
+* Option to export each channel to a seperate WAV/MP3 file. 
+* Small DPCM improvements (Drag & drop, bit reverse option)
+* Small tempo improvements
+* Sound engine code size reduction
+
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/X1zPjnM1wb0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
 
 ## Version 2.2.1 (Hotfix)
 

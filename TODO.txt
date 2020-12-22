@@ -47,6 +47,7 @@ TESTING:
 - Test export dialog hi-dpi (that ffmpeg button has harcoded 40 height)
 - Test modal log export window on MacOS + event processing might be missing?
 - Re-test ROM export.
+- Re-test ffmpeg export on all platforms (added quotes).
 
 2.3.0 New Features
 ==================
