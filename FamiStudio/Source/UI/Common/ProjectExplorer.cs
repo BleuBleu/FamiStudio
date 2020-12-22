@@ -1513,15 +1513,15 @@ namespace FamiStudio
             {
                 dlg.Properties.AddIntegerRange("Tempo :", song.FamitrackerTempo, 32, 255, CommonTooltips.Tempo); // 3
                 dlg.Properties.AddIntegerRange("Speed :", song.FamitrackerSpeed, 1, 31, CommonTooltips.Speed); // 4
-                dlg.Properties.AddIntegerRange("Notes per Beat :", song.BeatLength, 2, 256, CommonTooltips.NotesPerBar); // 5
-                dlg.Properties.AddIntegerRange("Notes per Pattern :", song.PatternLength, 16, 256, CommonTooltips.NotesPerPattern); // 6
+                dlg.Properties.AddIntegerRange("Notes per Beat :", song.BeatLength, 1, 256, CommonTooltips.NotesPerBar); // 5
+                dlg.Properties.AddIntegerRange("Notes per Pattern :", song.PatternLength, 1, 256, CommonTooltips.NotesPerPattern); // 6
                 dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 7
             }
             else
             {
                 dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, Song.MinNoteLength, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 3
-                dlg.Properties.AddIntegerRange("Notes per Beat : ", song.BeatLength / song.NoteLength, 2, 256, CommonTooltips.NotesPerBar); // 4
-                dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 2, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 5
+                dlg.Properties.AddIntegerRange("Notes per Beat : ", song.BeatLength / song.NoteLength, 1, 256, CommonTooltips.NotesPerBar); // 4
+                dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 1, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 5
                 dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 6
             }
 
