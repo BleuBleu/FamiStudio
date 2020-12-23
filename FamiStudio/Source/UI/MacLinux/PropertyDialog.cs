@@ -211,7 +211,7 @@ namespace FamiStudio
 #endif
             }
 
-            PlatformUtils.ProcessPendingEvents();
+            PlatformUtils.ProcessPendingEvents(1);
         }
 
         public System.Windows.Forms.DialogResult DialogResult => result;
