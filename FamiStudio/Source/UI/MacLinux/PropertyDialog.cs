@@ -214,6 +214,19 @@ namespace FamiStudio
             PlatformUtils.ProcessPendingEvents(1);
         }
 
+        public void StayModelUntilClosed()
+        {
+#if FAMISTUDIO_MACOS
+            if (Visible)
+            {
+                while (result == System.Windows.Forms.DialogResult.None)
+                    Application.RunIteration();
+
+                Hide();
+            }
+#endif
+        }
+
         public System.Windows.Forms.DialogResult DialogResult => result;
     }
 }

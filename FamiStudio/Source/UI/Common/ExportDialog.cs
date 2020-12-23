@@ -499,6 +499,8 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Done!");
                         Log.ReportProgress(1.0f);
                     }
+
+                    dlgLog.StayModelUntilClosed();
                 }
             }
         }

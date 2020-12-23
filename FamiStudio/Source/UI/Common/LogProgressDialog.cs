@@ -45,6 +45,11 @@ namespace FamiStudio
             dialog.UpdateModalEvents();
         }
 
+        public void StayModelUntilClosed()
+        {
+            dialog.StayModelUntilClosed();
+        }
+
         public bool HasMessages => hasMessages;
         public bool AbortOperation => dialog.DialogResult != DialogResult.None;
     }
