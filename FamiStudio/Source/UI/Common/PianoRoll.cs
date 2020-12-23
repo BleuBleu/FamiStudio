@@ -1021,7 +1021,7 @@ namespace FamiStudio
                         g.DrawLine(0, y, whiteKeySizeX, y, theme.DarkGreyLineBrush2);
                 }
 
-                if (editMode == EditionMode.Channel)
+                if (editMode == EditionMode.Channel || editMode == EditionMode.DPCM)
                     g.DrawText("C" + i, ThemeBase.FontSmall, 1, octaveBaseY - octaveNameOffsetY, theme.BlackBrush);
             }
 
@@ -2114,7 +2114,7 @@ namespace FamiStudio
                 var mapping = App.Project.GetDPCMMapping(noteValue);
                 if (left && mapping != null)
                 {
-                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160);
+                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, false, e.Y > Height / 2);
                     dlg.Properties.AddColoredString(mapping.Sample.Name, ThemeBase.LightGreyFillColor2);
                     dlg.Properties.AddIntegerRange("Pitch :", mapping.Pitch, 0, 15);
                     dlg.Properties.AddBoolean("Loop :", mapping.Loop);
@@ -2249,7 +2249,9 @@ namespace FamiStudio
             {
                 App.UndoRedoManager.RestoreTransaction();
                 App.UndoRedoManager.AbortTransaction();
-                SystemSounds.Beep.Play();
+
+                if (noteValue != captureNoteValue && draggedSample != null)
+                    SystemSounds.Beep.Play();
             }
 
             ConditionalInvalidate();
@@ -3343,11 +3345,20 @@ namespace FamiStudio
                     {
                         if (App.Project.NoteSupportsDPCM(noteValue))
                         {
+                            newNoteTooltip = $"{Note.GetFriendlyName(noteValue)}";
+
                             var mapping = App.Project.GetDPCMMapping(noteValue);
                             if (mapping == null)
+                            {
                                 tooltip = "{MouseLeft} Load DPCM sample - {MouseWheel} Pan";
+                            }
                             else
+                            {
                                 tooltip = "{S} {MouseLeft} Save sample to file - {MouseLeft}{MouseLeft} Sample properties - {MouseRight} Delete sample {MouseWheel} Pan";
+
+                                if (mapping.Sample != null)
+                                    newNoteTooltip += $" ({mapping.Sample.Name})";
+                            }
                         }
                         else
                             tooltip = "Samples must be between C1 and D6";
