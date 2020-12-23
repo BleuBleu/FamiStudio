@@ -120,7 +120,12 @@ namespace FamiStudio
                     break;
                 case ExportFormat.Video:
                     page.AddButton("Path To FFmpeg:", Settings.FFmpegExecutablePath, FFmpegPathButtonClicked, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 0
-                    page.AddLinkLabel(null, "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
+#if FAMISTUDIO_MACOS
+                    // GTK LinkButtons dont work on MacOS, use a button (https://github.com/quodlibet/quodlibet/issues/2306)
+                    page.AddButton(" ", "Download FFmpeg here", FFmpegDownloadButtonClicked); // 1
+#else
+                    page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
+#endif
                     page.AddStringList("Song :", songNames, songNames[0]); // 2
                     page.AddStringList("Audio Bit Rate (Kb/s) :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
                     page.AddStringList("Video Bit Rate (Mb/s):", new[] { "2", "4", "8", "10", "12", "14", "16", "18", "20" }, "12"); // 4
@@ -217,6 +222,11 @@ namespace FamiStudio
                 Settings.FFmpegExecutablePath = filename;
                 Settings.Save();
             }
+        }
+
+        private void FFmpegDownloadButtonClicked(PropertyPage props, int propertyIndex)
+        {
+            Utils.OpenUrl("https://famistudio.org/doc/ffmpeg/");
         }
 
         private int[] GetSongIds(bool[] selectedSongs)
