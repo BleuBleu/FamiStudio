@@ -214,7 +214,7 @@ namespace FamiStudio
             PlatformUtils.ProcessPendingEvents(1);
         }
 
-        public void StayModelUntilClosed()
+        public void StayModalUntilClosed()
         {
 #if FAMISTUDIO_MACOS
             if (Visible)

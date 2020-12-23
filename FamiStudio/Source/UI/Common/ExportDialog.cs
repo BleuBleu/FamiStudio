@@ -500,7 +500,7 @@ namespace FamiStudio
                         Log.ReportProgress(1.0f);
                     }
 
-                    dlgLog.StayModelUntilClosed();
+                    dlgLog.StayModalUntilClosed();
                 }
             }
         }
