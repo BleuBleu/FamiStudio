@@ -194,6 +194,10 @@ namespace FamiStudio
         public void ShowModal(FamiStudioForm parent = null)
         {
             Show();
+
+#if FAMISTUDIO_MACOS
+            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
+#endif
         }
 
         public void UpdateModalEvents()
@@ -201,6 +205,10 @@ namespace FamiStudio
             if (result != System.Windows.Forms.DialogResult.None)
             {
                 Hide();
+
+#if FAMISTUDIO_MACOS
+                MacUtils.RestoreMainNSWindowFocus();
+#endif
             }
 
             PlatformUtils.ProcessPendingEvents();
