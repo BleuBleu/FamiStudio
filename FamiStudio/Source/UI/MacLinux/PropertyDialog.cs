@@ -216,7 +216,6 @@ namespace FamiStudio
 
         public void StayModalUntilClosed()
         {
-#if FAMISTUDIO_MACOS
             if (Visible)
             {
                 while (result == System.Windows.Forms.DialogResult.None)
@@ -224,7 +223,6 @@ namespace FamiStudio
 
                 Hide();
             }
-#endif
         }
 
         public System.Windows.Forms.DialogResult DialogResult => result;
