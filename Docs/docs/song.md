@@ -1,12 +1,12 @@
 # Editing projects
 
-## Editing project properties
-
-The project explorer displays the name of the project, the list of songs and instruments in the current project. 
+The project explorer displays the name of the project, the list of songs and instruments in the current project. This section is going to focus on the very top part, which is the project and the songs.
 
 ![](images/ProjectExplorer.png#center)
 
-Double-clicking on project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information are used when exporting to NSF, for example.
+## Editing project properties
+
+Double-clicking on project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information is used when exporting to NSF, for example.
 
 ![](images/EditProject.png#center)
 
@@ -24,17 +24,17 @@ The tempo mode will affect how the tempo of you songs is calculated, how much co
 
 ### FamiStudio Tempo Mode
 
-FamiStudio tempo modes gives full control over every frame (1/60th of a second on NTSC, 1/50th on PAL). his is the default mode. In this mode you will see the individual frames in the piano roll and will have more precise control on where each note starts/end. On the other hand, it makes suddent tempo changes harder to manage, and it is also harder to achieve "non-integral" tempos. It can faithfully recreate the vast majority of the NES music library very easily. 
+FamiStudio tempo modes gives full control over every frame (1/60th of a second on NTSC, 1/50th on PAL). It is the default mode. In this mode you will see the individual frames in the piano roll and will have more precise control on where each note starts/end. On the other hand, it makes suddent tempo changes harder to manage, and it is also harder to achieve "non-integral" tempos. It can faithfully recreate the vast majority of the NES music library very easily. 
 
-For example, a C-D-E chords where each note is stopped for 1 frame between each note will look like this using FamiStudio tempo. The dashed lines seperate individual frames, so you can place a stop note 1 frame before the new note starts. Very easy and visual.
+For example, a C-D-E scale where each note is stopped for 1 frame between each note will look like this using FamiStudio tempo. The dashed lines seperate individual frames, so you can place a stop note (triangle) 1 frame before the new note starts. Very intuituve and visual.
 
 ![](images/TempoExampleFamiStudio.png#center) 
 
 ### FamiTracker Tempo Mode
 
-FamiTracker tempo a limited visual granularity, relies on effects (delayed notes/cuts) to get frame-level precision. It uses the speed/tempo paradigm. Please check out the [FamiTracker documentation](http://famitracker.com/wiki/index.php?title=Fxx) for a detailed explanation on how the playback speed is affected. If you import a FamiTracker Text or FTM file, it will be in this tempo mode. 
+FamiTracker tempo has a limited visual granularity and relies on effects (delayed notes/cuts) to get frame-level precision. It uses the speed/tempo paradigm. Please check out the [FamiTracker documentation](http://famitracker.com/wiki/index.php?title=Fxx) for a detailed explanation on how the playback speed is affected. If you import a FamiTracker Text or FTM file, the project will be in this tempo mode. 
 
-Same example, but using FamiTracker tempo. Here we dont have the individual frames so we need to use a "delayed cut" effect to achieve the same result. It is not very visual and feels like using a Tracker. Moreover, this would not always work correctly on PAL.
+Same example, but using FamiTracker tempo. Here we dont have the individual frames so we need to use a "delayed cut" effect to achieve the same result. The delayed cut tells the sound engine to insert a stop note after 9 frames have elapsed, achieving the exact same result. That being said, one might argue that it is not very visual and feels like using a Tracker. Moreover, this would not always work correctly on PAL.
 
 ![](images/TempoExampleFamiTracker.png#center) 
 
@@ -98,7 +98,7 @@ Configuring tempo in FamiStudio is definately less intuitive than in a regular D
 
 The key thing to understand is that the piano roll simply gives you a series of, what I am going to loosely call, **notes** (**rows** if you come from FamiTracker). It is up to the composer to configure these notes and achieve the desired tempo and time signature.
 
-For example, let's look at the simple melody of the children song "A, B, C, ...". On the right side are the song settings that were used to achieve this. In this example, the project was set to use the FamiStudio tempo mode, but the same logic applies to the FamiTracker tempo mode. Please refer to the next section for more information about tempo modes.
+For example, let's look at the simple melody of the children song "A, B, C, ...". On the right side are the song settings that were used to achieve this. In this example, the project was set to use the FamiStudio tempo mode, but the same logic applies to the FamiTracker tempo mode. 
 
 [![](images/TempoABC.png#center)](images/TempoABC.png#center)
 *Click on the image to zoom in.*
@@ -112,7 +112,7 @@ Observations:
 * Beats are seperated by thin black lines.
 * Patterns are seperated by thick black lines.
 
-Here we chosen to have 1 bar = 1 pattern, we could have chosen to fit the whole song in a single pattern, this is totally arbitrary. 
+Here we chosen to have 1 bar = 1 pattern, we could have chosen to fit the whole song in a single pattern, this is totally arbitrary. You should try to use a pattern size is a good tradeoff between reusability (being able to copy patterns and re-use them) and size (having many small patterns is annoying).
 
 The **Frames per Note** setting is the main driver of tempo and determines the base length our "notes". The more frames (1/60th of a second) we wait, the slower the song will play. So 8 frames per note give us a BPM of 112.5. When using FamiTracker tempo, this is the equalivalent of the **Speed** parameter.
 
