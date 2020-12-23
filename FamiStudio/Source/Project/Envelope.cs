@@ -59,7 +59,16 @@ namespace FamiStudio
             canResize = type != FdsWaveform && type != FdsModulation && type != N163Waveform;
             canRelease = type == Volume;
             canLoop = type <= DutyCycle;
-            length = canResize ? 0 : maxLength;
+
+            if (canResize)
+            {
+                // Give envelope a default size, more intuitive.
+                length = type == DutyCycle ? 1 : 8;
+            }
+            else
+            {
+                length = maxLength;
+            }
         }
 
         public int Length
