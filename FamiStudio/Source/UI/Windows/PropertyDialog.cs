@@ -17,7 +17,7 @@ namespace FamiStudio
         {
             StartPosition = FormStartPosition.CenterParent;
             Init();
-            Width = width;
+            Width = (int)(width * Direct2DTheme.DialogScaling);
             buttonYes.Visible = canAccept;
             FormClosed += PropertyDialog_FormClosed;
         }

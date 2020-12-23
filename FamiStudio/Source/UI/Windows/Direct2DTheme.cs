@@ -43,7 +43,9 @@ namespace FamiStudio
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
                 var def = FontDefinitions[i];
-                def.Size = (int)(def.Size * mainWindowScaling);
+
+                if (!def.NoScaling)
+                    def.Size = (int)(def.Size * mainWindowScaling);
 
                 var format = new TextFormat(directWriteFactory, def.Name, fontCollection, def.Bold ? FontWeight.Bold : FontWeight.Regular, FontStyle.Normal, FontStretch.Normal, def.Size);
 

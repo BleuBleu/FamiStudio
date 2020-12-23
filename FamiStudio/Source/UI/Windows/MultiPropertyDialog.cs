@@ -88,6 +88,8 @@ namespace FamiStudio
             buttonNo.Left  = Width  - buttonNo.Width  - 12;
             buttonNo.Top   = Height - buttonNo.Height - 12;
 
+            CenterToParent();
+
             base.OnShown(e);
         }
 

@@ -31,7 +31,8 @@ namespace FamiStudio
                 {
                     var def = FontDefinitions[i];
 
-                    def.Size = (int)(def.Size * MainWindowScaling);
+                    if (!def.NoScaling)
+                        def.Size = (int)(def.Size * MainWindowScaling);
 
                     var suffix   = def.Bold ? "Bold" : "";
                     var basename = $"{def.Name}{def.Size}{suffix}";

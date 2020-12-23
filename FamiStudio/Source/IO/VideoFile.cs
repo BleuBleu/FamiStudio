@@ -513,12 +513,12 @@ namespace FamiStudio
                             int channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
                             int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
 
-                            var channelNameSizeX = videoGraphics.MeasureString(s.channelText, ThemeBase.FontBig);
+                            var channelNameSizeX = videoGraphics.MeasureString(s.channelText, ThemeBase.FontBigUnscaled);
                             var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmp.Size.Width + channelIconTextSpacing) / 2;
 
                             videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmp.Size.Width, channelIconPosY + s.bmp.Size.Height, theme.LightGreyFillBrush1);
                             videoGraphics.DrawBitmap(s.bmp, channelIconPosX, channelIconPosY);
-                            videoGraphics.DrawText(s.channelText, ThemeBase.FontBig, channelIconPosX + s.bmp.Size.Width + channelIconTextSpacing, channelTextPosY, theme.LightGreyFillBrush1);
+                            videoGraphics.DrawText(s.channelText, ThemeBase.FontBigUnscaled, channelIconPosX + s.bmp.Size.Width + channelIconTextSpacing, channelTextPosY, theme.LightGreyFillBrush1);
 
                             if (s.videoChannelIndex > 0)
                                 videoGraphics.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, 5);

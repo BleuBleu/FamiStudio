@@ -191,7 +191,7 @@ namespace FamiStudio
             textBox.Location = new System.Drawing.Point(5, 5);
             textBox.Multiline = true;
             textBox.ReadOnly = true;
-            textBox.Height = 300;
+            textBox.Height = (int)(300 * RenderTheme.DialogScaling);
             textBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             textBox.Select(0, 0);
             textBox.GotFocus += TextBox_GotFocus;
@@ -350,7 +350,7 @@ namespace FamiStudio
 
             listBox.IntegralHeight = false;
             listBox.Font = font;
-            listBox.Height = 200;
+            listBox.Height = (int)(200 * RenderTheme.DialogScaling);
             listBox.CheckOnClick = true;
             listBox.SelectionMode = SelectionMode.One;
 
@@ -365,7 +365,7 @@ namespace FamiStudio
             button.FlatStyle = FlatStyle.Flat;
             button.Font = font;
             button.ForeColor = ThemeBase.LightGreyFillColor2;
-            button.Height = 32;
+            button.Height = (int)(32 * RenderTheme.DialogScaling);
             toolTip.SetToolTip(button, tooltip);
             return button;
         }
