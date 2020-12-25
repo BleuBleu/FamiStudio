@@ -32,8 +32,19 @@ Tips & Tricks (Review this list)
 CLOSING:
 - Update documentation (sound engine, copy/delete special, new nomenclature for bars, tempo, etc.)
 	- Update sound engine code size at the end.
-	- Tempo : After the rain tempo screenshot makes no sense! (37.5 BPM). 
 - Create new song for trailer.
+
+2.3.0 Trailer
+=============
+1) Video export
+2) MP3 export + export to seperate channels
+3) FamiTracker compatibility improvements (delayed notes/cuts) + Vxx support
+4) Special paste improvements (repeat, effects, etc.)
+5) Special delete
+6) Song merge
+7) Copy patterns to different channels
+8) Note labels
+9) DPCM improvements (explicity bit reverse option, drag&drop)
 
 2.3.0 New Features
 ==================
@@ -46,9 +57,7 @@ CLOSING:
 - Special delete
 - Copy patterns to different channels
 - Note labels
-- FamiTracker tempo improvements
-	- Delayed notes
-	- Delayed cuts
+- FamiTracker tempo improvements (delayed notes/cuts)
 - DPCM improvements (explicity bit reverse option, drag&drop)
 
 Linux notes
