@@ -33,6 +33,7 @@ namespace FamiStudio
 
             dialog.Properties.Build();
             dialog.Properties.PropertyChanged += Properties_PropertyChanged;
+            dialog.Name = "DeleteSpecialDialog";
         }
 
         private void Properties_PropertyChanged(PropertyPage props, int idx, object value)
