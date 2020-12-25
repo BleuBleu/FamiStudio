@@ -1,5 +1,5 @@
-Tips & Tricks
-=============
+Tips & Tricks (Review this list)
+================================
 #00 - Basic controls & onboarding (pan, zoom, trackpad, tooltips, piano roll view rect, demo songs)
 #01 - Sequencer basics (pattern add, delete, edit, instance & copy).
 #02 - Piano roll basics (add note, delete note, snapping, dragging, select, transpose with KB).
@@ -17,7 +17,7 @@ Tips & Tricks
 #14 - Importing from FamiTracker
 #15 - Importing NSFs (bit reverse, etc.)
 #16 - FamiStudio vs. FamiTracker tempo (PAL, etc.)
-#17 - DPCM samples (import, save, etc)
+#17 - DPCM samples (import, save, transpose, bit reverse, etc)
 #18 - Replacing an instrument by another (copy envelopes, etc.)
 #19 - Arpeggios (replacing, etc.)
 #20 - Exporting to FamiTracker
@@ -33,25 +33,7 @@ CLOSING:
 - Update documentation (sound engine, copy/delete special, new nomenclature for bars, tempo, etc.)
 	- Update sound engine code size at the end.
 	- Tempo : After the rain tempo screenshot makes no sense! (37.5 BPM). 
-- Look at all the demo songs, make sure their BPMs are sensical. 
-- Make Gimmick samples real notes.
-- Retire FT2 friendly songs.
-
-TESTING:
-========
-- Test speed/custom pattern settings a lot. Both FT and FS tempo mode.
-- Re-test FamiStudio text import/export.
-- Unit test : add note + cut delays (create a special FamiTracker tempo, with some random expansion). With slides too.
-- Test video with scaling.
-- Test note labels in 150 + 200% scaling.
-- Test paste special on mac + hi-dpi.
-- mp3/wav command line export.
-- Rested hi-dpi, changed some stuff for video.
-- Test export dialog hi-dpi (that ffmpeg button has harcoded 40 height)
-- Test modal log export window on MacOS + event processing might be missing?
-- Re-test ROM export.
-- Re-test ffmpeg export on all platforms (added quotes).
-- Re-test FamiTone2 export.
+- Create new song for trailer.
 
 2.3.0 New Features
 ==================
