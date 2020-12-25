@@ -457,9 +457,9 @@ namespace FamiStudio
             }
             else if (allowNsf && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
             {
-                NsfImportDialog dlg = new NsfImportDialog(filename, mainForm.Bounds);
+                NsfImportDialog dlg = new NsfImportDialog(filename);
 
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (dlg.ShowDialog(mainForm) == DialogResult.OK)
                 {
                     project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits);
                 }
@@ -505,15 +505,15 @@ namespace FamiStudio
 
         public void Export()
         {
-            var dlgExp = new ExportDialog(mainForm.Bounds, project);
+            var dlgExp = new ExportDialog(project);
             dlgExp.ShowDialog(mainForm);
         }
 
         public void OpenConfigDialog()
         {
-            var dlg = new ConfigDialog(mainForm.Bounds);
+            var dlg = new ConfigDialog();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(mainForm) == DialogResult.OK)
             {
                 InitializeMidi();
                 InvalidateEverything(true);
@@ -607,9 +607,9 @@ namespace FamiStudio
 
         public void OpenTransformDialog()
         {
-            var dlg = new TransformDialog(mainForm.Bounds, this);
+            var dlg = new TransformDialog(this);
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(mainForm) == DialogResult.OK)
             {
                 Sequencer.Reset();
                 PianoRoll.Reset();

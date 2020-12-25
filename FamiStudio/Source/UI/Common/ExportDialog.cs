@@ -56,18 +56,16 @@ namespace FamiStudio
         Project project;
         MultiPropertyDialog dialog;
 
-        public unsafe ExportDialog(Rectangle mainWinRect, Project project)
+        public unsafe ExportDialog(Project project)
         {
             int width  = 600;
             int height = 550;
-            int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
-            int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
 
 #if FAMISTUDIO_LINUX
             height += 30;
 #endif
 
-            this.dialog = new MultiPropertyDialog(x, y, width, height, 200);
+            this.dialog = new MultiPropertyDialog(width, height, 200);
             this.project = project;
 
             for (int i = 0; i < (int)ExportFormat.Max; i++)
@@ -471,7 +469,7 @@ namespace FamiStudio
 
         public void ShowDialog(FamiStudioForm parentForm)
         {
-            if (dialog.ShowDialog() == DialogResult.OK)
+            if (dialog.ShowDialog(parentForm) == DialogResult.OK)
             {
                 dialog.Hide();
 

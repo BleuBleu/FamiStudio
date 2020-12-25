@@ -16,14 +16,9 @@ namespace FamiStudio
         private bool inPropertyChanged = false;
         private Dictionary<int, int> propToEffect = new Dictionary<int, int>();
 
-        public unsafe PasteSpecialDialog(Channel channel, Rectangle mainWinRect, bool mix = false, bool notes = true, int effectsMask = Note.EffectAllMask)
+        public unsafe PasteSpecialDialog(Channel channel, bool mix = false, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            int width  = 200;
-            int height = 300;
-            int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
-            int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
-
-            dialog = new PropertyDialog(x, y, width, height);
+            dialog = new PropertyDialog(200);
             dialog.Properties.AddLabelBoolean("Mix With Existing Notes", mix);
             dialog.Properties.AddLabelBoolean("Paste Notes", notes);
             dialog.Properties.AddLabelBoolean("Paste Effects", effectsMask == Note.EffectAllMask);
@@ -77,9 +72,9 @@ namespace FamiStudio
             inPropertyChanged = false;
         }
 
-        public DialogResult ShowDialog()
+        public DialogResult ShowDialog(FamiStudioForm parent)
         {
-            return dialog.ShowDialog();
+            return dialog.ShowDialog(parent);
         }
 
         public bool PasteMix        => dialog.Properties.GetPropertyValue<bool>(0);

@@ -1387,9 +1387,9 @@ namespace FamiStudio
             {
                 AbortCaptureOperation();
 
-                var dlg = new PasteSpecialDialog(Song.Channels[editChannel], App.MainWindowBounds, lastPasteSpecialPasteMix, lastPasteSpecialPasteNotes, lastPasteSpecialPasteEffectMask);
+                var dlg = new PasteSpecialDialog(Song.Channels[editChannel], lastPasteSpecialPasteMix, lastPasteSpecialPasteNotes, lastPasteSpecialPasteEffectMask);
 
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                 {
                     PasteNotes(dlg.PasteNotes, dlg.PasteEffectMask, dlg.PasteMix, dlg.PasteRepeat);
 
@@ -1406,9 +1406,9 @@ namespace FamiStudio
             {
                 AbortCaptureOperation();
 
-                var dlg = new DeleteSpecialDialog(Song.Channels[editChannel], App.MainWindowBounds);
+                var dlg = new DeleteSpecialDialog(Song.Channels[editChannel]);
 
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                     DeleteSelectedNotes(true, dlg.DeleteNotes, dlg.DeleteEffectMask);
             }
         }
@@ -2121,7 +2121,7 @@ namespace FamiStudio
                     dlg.Properties.AddBoolean("Reverse Bits :", mapping.Sample.ReverseBits);
                     dlg.Properties.Build();
 
-                    if (dlg.ShowDialog() == DialogResult.OK)
+                    if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                     {
                         var newName = dlg.Properties.GetPropertyValue<string>(0);
 

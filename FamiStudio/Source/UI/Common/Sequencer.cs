@@ -1478,7 +1478,7 @@ namespace FamiStudio
             dlg.Properties.PropertyChanged += PatternCustomSettings_PropertyChanged;
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
 
@@ -1561,7 +1561,7 @@ namespace FamiStudio
             dlg.Properties.AddColor(pattern.Color);
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 

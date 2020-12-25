@@ -52,7 +52,7 @@ namespace FamiStudio
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
 
-        public unsafe ConfigDialog(Rectangle mainWinRect)
+        public unsafe ConfigDialog()
         {
 #if FAMISTUDIO_LINUX
             int width  = 570;
@@ -60,10 +60,8 @@ namespace FamiStudio
             int width  = 550;
 #endif
             int height = 350;
-            int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
-            int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
 
-            this.dialog = new MultiPropertyDialog(x, y, width, height);
+            this.dialog = new MultiPropertyDialog(width, height);
 
             for (int i = 0; i < (int)ConfigSection.Max; i++)
             {
@@ -157,9 +155,9 @@ namespace FamiStudio
         }
 #endif
 
-        public DialogResult ShowDialog()
+        public DialogResult ShowDialog(FamiStudioForm parent)
         {
-            var dialogResult = dialog.ShowDialog();
+            var dialogResult = dialog.ShowDialog(parent);
 
             if (dialogResult == DialogResult.OK)
             {

@@ -1034,12 +1034,12 @@ namespace FamiStudio
                     foreach (var song in otherProject.Songs)
                         songNames.Add(song.Name);
 
-                    var dlg = new PropertyDialog(300, ParentForm.Bounds);
+                    var dlg = new PropertyDialog(300);
                     dlg.Properties.AddLabel(null, "Select songs to import:");
                     dlg.Properties.AddStringListMulti(null, songNames.ToArray(), null);
                     dlg.Properties.Build();
 
-                    if (dlg.ShowDialog() == DialogResult.OK)
+                    if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -1108,12 +1108,12 @@ namespace FamiStudio
                                 instrumentNames.Add(instName);
                             }
 
-                            var dlg = new PropertyDialog(300, ParentForm.Bounds);
+                            var dlg = new PropertyDialog(300);
                             dlg.Properties.AddLabel(null, "Select instruments to import:");
                             dlg.Properties.AddStringListMulti(null, instrumentNames.ToArray(), null);
                             dlg.Properties.Build();
 
-                            if (dlg.ShowDialog() == DialogResult.OK)
+                            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                             {
                                 var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
                                 var instrumentsToMerge = new List<Instrument>();
@@ -1204,7 +1204,7 @@ namespace FamiStudio
                                 dlg.Properties.AddStringList("Expansion:", expNames, Project.ExpansionNames[Project.ExpansionNone] ); // 0
                                 dlg.Properties.Build();
 
-                                if (dlg.ShowDialog() == DialogResult.OK)
+                                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                                     instrumentType = dlg.Properties.GetPropertyValue<string>(0) == Project.ExpansionNames[Project.ExpansionNone] ? Project.ExpansionNone : App.Project.ExpansionAudio;
                                 else
                                     return;
@@ -1418,7 +1418,7 @@ namespace FamiStudio
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
 
@@ -1531,7 +1531,7 @@ namespace FamiStudio
             dlg.Properties.Build();
             dlg.Properties.PropertyChanged += SongProperties_PropertyChanged;
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
 
@@ -1611,7 +1611,7 @@ namespace FamiStudio
                 dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[Envelope.Pitch].Relative); // 2
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 
@@ -1662,7 +1662,7 @@ namespace FamiStudio
             dlg.Properties.AddColor(arpeggio.Color); // 1
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 

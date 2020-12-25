@@ -25,7 +25,7 @@ namespace FamiStudio
         private HBox mainHbox;
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
-        public MultiPropertyDialog(int x, int y, int width, int height, int tabWidth = 160)
+        public MultiPropertyDialog(int width, int height, int tabWidth = 160)
 #if FAMISTUDIO_MACOS
              : base(WindowType.Toplevel)
 #endif
@@ -89,11 +89,9 @@ namespace FamiStudio
             KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
+            SetPosition(WindowPosition.CenterOnParent);
 #if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
-            SetPosition(WindowPosition.CenterOnParent);
-#else
-            Move(x, y);
 #endif
         }
 
@@ -190,13 +188,22 @@ namespace FamiStudio
             return base.OnKeyPressEvent(evnt);
         }
 
-        public System.Windows.Forms.DialogResult ShowDialog()
+        public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent)
         {
 #if FAMISTUDIO_LINUX
             Run();
             Hide();
 #else
             Show();
+
+            if (WindowPosition == WindowPosition.CenterOnParent)
+            {
+                var mainWinRect = parent.Bounds;
+                int x = mainWinRect.Left + (mainWinRect.Width  - Allocation.Width) / 2;
+                int y = mainWinRect.Top  + (mainWinRect.Height - Allocation.Height) / 2;
+                Move(x, y);
+            }
+
             MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
 
             while (result == System.Windows.Forms.DialogResult.None)

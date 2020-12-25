@@ -1,5 +1,6 @@
 using Gtk;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Resources;
@@ -22,7 +23,7 @@ namespace FamiStudio
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, Rectangle mainWinRect, bool canAccept = true) : base(WindowType.Toplevel)
+        public PropertyDialog(int width, bool canAccept = true) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = width;
@@ -32,13 +33,8 @@ namespace FamiStudio
 
 #if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
-            SetPosition(WindowPosition.CenterOnParent);
-#else
-            int x = mainWinRect.Left + (mainWinRect.Width  - width) / 2;
-            int y = mainWinRect.Top  + (mainWinRect.Height - width) / 2;
-
-            Move(x, y);
 #endif
+            SetPosition(WindowPosition.CenterOnParent);
         }
 
         public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false) : base(WindowType.Toplevel)
@@ -51,13 +47,6 @@ namespace FamiStudio
             this.topAlign  = topAlign;
 
             Move(pt.X, pt.Y);
-        }
-
-        public PropertyDialog(int x, int y, int width, int height) : base(WindowType.Toplevel)
-        {
-            Init();
-            WidthRequest = width;
-            Move(x, y);
         }
 
         private void Init()
@@ -163,12 +152,14 @@ namespace FamiStudio
             return base.OnKeyPressEvent(evnt);
         }
 
-        public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent = null)
+        public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent)
         {
             Show();
 
             if (topAlign || leftAlign)
             {
+                Debug.Assert(WindowPosition == WindowPosition.None);
+
                 var pt = initialLocation;
                 if (leftAlign) pt.X -= Allocation.Width;
                 if (topAlign)  pt.Y -= Allocation.Height;
@@ -176,6 +167,14 @@ namespace FamiStudio
             }
 
 #if FAMISTUDIO_MACOS
+            if (WindowPosition == WindowPosition.CenterOnParent)
+            {
+                var mainWinRect = parent.Bounds;
+                int x = mainWinRect.Left + (mainWinRect.Width  - Allocation.Width)  / 2;
+                int y = mainWinRect.Top  + (mainWinRect.Height - Allocation.Height) / 2;
+                Move(x, y);
+            }
+
             MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
 #endif
 
