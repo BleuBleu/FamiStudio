@@ -211,7 +211,7 @@ namespace FamiStudio
 #endif
             }
 
-            PlatformUtils.ProcessPendingEvents(1);
+            Application.RunIteration(false);
         }
 
         public void StayModalUntilClosed()

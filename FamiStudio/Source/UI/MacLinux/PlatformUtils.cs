@@ -94,17 +94,6 @@ namespace FamiStudio
             }
         }
 
-        public static void ProcessPendingEvents(int numIterations = 16)
-        {
-#if FAMISTUDIO_WINDOWS
-            Application.DoEvents();
-#else
-            // HACK: Arbitrary number of iterations.
-            for (int i = 0; i < numIterations; i++)
-                Gtk.Application.RunIteration();
-#endif
-        }
-
         private static string[] GetExtensionList(string str)
         {
             var splits = str.Split('|');
