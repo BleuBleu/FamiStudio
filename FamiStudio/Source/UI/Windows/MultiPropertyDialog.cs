@@ -22,7 +22,7 @@ namespace FamiStudio
         Font font;
         Font fontBold;
 
-        public MultiPropertyDialog(int x, int y, int width, int height, int tabsWidth = 150)
+        public MultiPropertyDialog(int width, int height, int tabsWidth = 150)
         {
             InitializeComponent();
 
