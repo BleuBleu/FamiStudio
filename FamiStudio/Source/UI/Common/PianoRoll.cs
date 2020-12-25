@@ -1730,7 +1730,7 @@ namespace FamiStudio
                         if (channelType >= Channel.ExpansionAudioStart)
                             channelName += $" ({song.Project.ExpansionAudioName})";
 
-                        g.DrawText($"Editing Channel {channelName}", ThemeBase.FontBig, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
+                        g.DrawText($"Editing {channelName} Channel", ThemeBase.FontBig, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
                     }
                 }
                 else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.

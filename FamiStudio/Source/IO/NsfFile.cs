@@ -897,14 +897,20 @@ namespace FamiStudio
             var factors = Utils.GetFactors(song.PatternLength, Song.MaxNoteLength);
             if (factors.Length > 0)
             {
-                var noteLen1 = factors[0];
-                var noteLen2 = song.PatternLength / noteLen1;
-                var noteLen  = Math.Min(noteLen1, noteLen2);
+                var noteLen = factors[0];
+
+                // Look for a factor that generates a note length < 10 and gives a pattern length that is a multiple of 16.
+                foreach (var factor in factors)
+                {
+                    if (factor <= 10)
+                    {
+                        noteLen = factor;
+                        if (((song.PatternLength / noteLen) % 16) == 0)
+                            break;
+                    }
+                }
                                 
-                if (noteLen <= Song.MaxNoteLength)
-                    song.ResizeNotes(noteLen, false);
-                else
-                    song.ResizeNotes(1, false);
+                song.ResizeNotes(noteLen, false);
             }
             else
                 song.ResizeNotes(1, false);
