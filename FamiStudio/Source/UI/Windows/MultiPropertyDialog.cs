@@ -62,16 +62,26 @@ namespace FamiStudio
             return page;
         }
 
-        protected override void OnShown(EventArgs e)
+        protected override void OnHandleCreated(EventArgs e)
         {
-            int maxHeight = Math.Max((int)(32 * Direct2DTheme.DialogScaling * tabs.Count), Width / 2);
-
             // Property pages need to be visible when doing the layout otherwise
-            // they have the wrong size.
+            // they have the wrong size. 
+            for (int i = 0; i < tabs.Count; i++)
+            {
+                tabs[i].properties.Visible = i == selectedIndex;
+            }
+
+            base.OnHandleCreated(e);
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            SuspendLayout();
+
+            int maxHeight = Math.Max((int)(32 * Direct2DTheme.DialogScaling * tabs.Count), Width / 2);
             for (int i = 0; i < tabs.Count; i++)
             {
                 maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
-                tabs[i].properties.Visible = i == selectedIndex;
             }
 
             tableLayout.Height = maxHeight;
@@ -88,11 +98,12 @@ namespace FamiStudio
             buttonNo.Left  = Width  - buttonNo.Width  - 12;
             buttonNo.Top   = Height - buttonNo.Height - 12;
 
+            ResumeLayout();
             CenterToParent();
 
-            base.OnShown(e);
+            base.OnLoad(e);
         }
-
+        
         public PropertyPage GetPropertyPage(int idx)
         {
             return tabs[idx].properties;
