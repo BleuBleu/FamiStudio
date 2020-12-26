@@ -242,6 +242,8 @@ void Nes_Fds::stop_seeking(blip_time_t& clock)
 		if (shadow_regs[i] >= 0)
 			write_register(clock += 4, regs_addr + i, shadow_regs[i]);
 	}
+
+	update_volume();
 }
 
 void Nes_Fds::write_shadow_register(int addr, int data)
