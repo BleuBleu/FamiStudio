@@ -375,7 +375,7 @@ namespace FamiStudio
             UpdatePatternStartNotes();
         }
 
-        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customBeatLength = 0, int customNoteLength = 0)
+        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customBeatLength, int customNoteLength = 0)
         {
             Debug.Assert(customPatternLength > 0 && customPatternLength < Pattern.MaxLength);
 
@@ -702,7 +702,7 @@ namespace FamiStudio
                             // Converts old Skip effects to custom pattern instances lengths.
                             if (note.FxSkip != 0xff)
                             {
-                                SetPatternCustomSettings(i, kv.Key + 1);
+                                SetPatternCustomSettings(i, kv.Key + 1, BeatLength);
                             }
                         }
                     }

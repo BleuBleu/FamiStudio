@@ -812,7 +812,7 @@ namespace FamiStudio
                                     if (s.PatternHasCustomSettings(p))
                                         s.GetPatternCustomSettings(p).patternLength = i + 1;
                                     else
-                                        s.SetPatternCustomSettings(p, i + 1);
+                                        s.SetPatternCustomSettings(p, i + 1, s.BeatLength);
                                     s.SetLength(p + 1);
                                     s.SetLoopPoint(-1);
                                     return;
@@ -867,7 +867,7 @@ namespace FamiStudio
                         if (pattern != null && patternLengths.TryGetValue(pattern, out var instLength))
                         {
                             if (instLength < s.GetPatternLength(p))
-                                s.SetPatternCustomSettings(p, instLength);
+                                s.SetPatternCustomSettings(p, instLength, s.BeatLength);
                         }
                     }
                 }

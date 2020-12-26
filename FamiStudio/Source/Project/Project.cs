@@ -847,7 +847,7 @@ namespace FamiStudio
                 return false;
             }
 
-            other.SetExpansionAudio(expansionAudio);
+            other.SetExpansionAudio(expansionAudio, expansionNumChannels);
 
             // Change all the IDs in the source project.
             List<int> allOtherIds = new List<int>();
@@ -867,6 +867,8 @@ namespace FamiStudio
                 }
             }
 
+            // Purely to pass validation.
+            other.EnsureNextIdIsLargeEnough(); 
             other.Validate();
 
             // Ignore songs that have name conflicts.

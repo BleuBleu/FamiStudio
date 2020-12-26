@@ -381,7 +381,11 @@ namespace FamiStudio
                         {
                             if (project.UsesFamiTrackerTempo)
                             {
-                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]));
+                                    var beatLength = song.BeatLength;
+                                    if (parameters.TryGetValue("BeatLength", out var beatLengthStr))
+                                        beatLength = int.Parse(beatLengthStr);
+
+                                    song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]), beatLength);
                             }
                             else
                             {
