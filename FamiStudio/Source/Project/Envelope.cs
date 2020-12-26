@@ -62,8 +62,7 @@ namespace FamiStudio
 
             if (canResize)
             {
-                // Give envelope a default size, more intuitive.
-                length = type == DutyCycle ? 1 : 8;
+                ClearToDefault(type);
             }
             else
             {
@@ -83,6 +82,23 @@ namespace FamiStudio
                 if (release >= length)
                     release = -1;
             }
+        }
+
+        public void ClearToDefault(int type)
+        {
+            // Give envelope a default size, more intuitive.
+            if (canResize)
+                length = type == DutyCycle || type == Volume ? 1 : 8;
+
+            Array.Clear(values, 0, values.Length);
+
+            if (type == Volume)
+            {
+                values[0] = Note.VolumeMax;
+            }
+
+            loop = -1;
+            release = -1;
         }
 
         public int Loop
@@ -385,14 +401,25 @@ namespace FamiStudio
                 if (length == 0)
                     return true;
 
-                foreach (var val in values)
+                for (int i = 0; i < length; i++)
                 {
-                    if (val != 0)
+                    if (values[i] != 0)
                         return false;
                 }
 
                 return true;
             }
+        }
+
+        public bool AllValuesEqual(sbyte val)
+        {
+            for (int i = 0; i < length; i++)
+            {
+                if (values[i] != val)
+                    return false;
+            }
+
+            return true;
         }
 
         public static void GetMinMaxValue(Instrument instrument, int type, out int min, out int max)

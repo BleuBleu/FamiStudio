@@ -134,6 +134,19 @@ namespace FamiStudio
                 projectExplorer = pe;
             }
 
+            private bool IsEnvelopeEmpty(Envelope env, int type)
+            {
+                // HACK: Volume envelope have 15 by default. 
+                if (type == Envelope.Volume)
+                {
+                    return env.AllValuesEqual(Note.VolumeMax);
+                }
+                else
+                {
+                    return env.IsEmpty;
+                }
+            }
+
             public SubButtonType[] GetSubButtons(out bool[] active)
             {
                 switch (type)
@@ -168,7 +181,7 @@ namespace FamiStudio
                                 if (instrument.Envelopes[idx] != null)
                                 {
                                     buttons[j] = (SubButtonType)idx;
-                                    active[j] = !instrument.Envelopes[idx].IsEmpty; 
+                                    active[j] = !IsEnvelopeEmpty(instrument.Envelopes[idx], idx);
                                     j++;
                                 }
                             }
@@ -1354,7 +1367,7 @@ namespace FamiStudio
                         if (subButtonType < SubButtonType.EnvelopeMax)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);
-                            instrument.Envelopes[(int)subButtonType].Length = 0;
+                            instrument.Envelopes[(int)subButtonType].ClearToDefault((int)subButtonType);
                             App.UndoRedoManager.EndTransaction();
                             ConditionalInvalidate();
                         }
