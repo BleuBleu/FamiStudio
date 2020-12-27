@@ -841,6 +841,8 @@ namespace FamiStudio
                 }
                 else
                 {
+                    if (ctrl && shift)
+                        Seek(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartNote(song.LoopPoint) : 0);
                     if (ctrl)
                         Seek(song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _)));
                     else if (shift)
