@@ -346,8 +346,16 @@ namespace FamiStudio
         {
             if (UsesFamiTrackerTempo)
             {
-                var beatLengths = Utils.GetFactors(patternLength);
-                beatLength = beatLengths[beatLengths.Length / 2];
+                // FamiTracker always assumes 4 rows per beat for BPM calculation, let's try to favor that when possible.
+                if ((patternLength % 4) == 0)
+                {
+                    beatLength = 4;
+                }
+                else
+                {
+                    var beatLengths = Utils.GetFactors(patternLength);
+                    beatLength = beatLengths[beatLengths.Length / 2];
+                }
             }
             else
             {

@@ -55,8 +55,8 @@ namespace FamiStudio
             idx += sizeof(int); // m_iVibratoStyle;
             if (blockVersion >= 4)
             {
-                idx += sizeof(int); // m_iFirstHighlight;
-                barLength = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                barLength = BitConverter.ToInt32(bytes, idx); idx += sizeof(int); 
+                idx += sizeof(int); // m_iSecondHighlight
             }
 
             var numN163Channels = 0;
