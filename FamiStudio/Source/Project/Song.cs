@@ -899,6 +899,21 @@ namespace FamiStudio
             }
         }
 
+        public void AdvanceNumberOfNotes(int noteCount, ref int p, ref int n)
+        {
+            float count = 0;
+
+            while (count < noteCount && p < songLength)
+            {
+                count++;
+                if (++n >= GetPatternLength(p))
+                {
+                    n = 0;
+                    p++;
+                }
+            }
+        }
+
         public void AdvanceNumberOfFrames(int frameCount, int initialCount, int currentSpeed, bool pal, ref int p, ref int n)
         {
             float count = initialCount;

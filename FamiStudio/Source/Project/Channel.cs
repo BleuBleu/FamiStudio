@@ -573,7 +573,7 @@ namespace FamiStudio
             }
         }
 
-        public void FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes, out int nextPatternIdx, out int nextNoteIdx)
+        public bool FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes, out int nextPatternIdx, out int nextNoteIdx)
         {
             nextPatternIdx = patternIdx;
             nextNoteIdx    = noteIdx;
@@ -585,7 +585,7 @@ namespace FamiStudio
             if (pattern.Notes.ContainsKey(noteIdx) &&
                 pattern.Notes[noteIdx].HasCutDelay)
             {
-                return;
+                return true;
             }
 
             for (var it = pattern.GetNoteIterator(noteIdx + 1, patternLength); !it.Done && noteCount < maxNotes; it.Next(), noteCount++)
@@ -596,7 +596,7 @@ namespace FamiStudio
                 {
                     nextPatternIdx = patternIdx;
                     nextNoteIdx    = time;
-                    return;
+                    return true;
                 }
             }
 
@@ -607,7 +607,7 @@ namespace FamiStudio
                 {
                     nextPatternIdx = p;
                     nextNoteIdx    = noteCount + pattern.FirstValidNoteTime > maxNotes ? pattern.FirstValidNoteTime - (maxNotes - noteCount) : pattern.FirstValidNoteTime; // MATTT : Test this!
-                    return;
+                    return true;
                 }
                 else
                 {
@@ -620,7 +620,13 @@ namespace FamiStudio
             {
                 nextPatternIdx = song.Length;
                 nextNoteIdx    = 0;
+                return true;
             }
+
+            // Didnt find anything, just advance to the max note location and return false.
+            song.AdvanceNumberOfNotes(maxNotes, ref nextPatternIdx, ref nextNoteIdx);
+
+            return false;
         }
 
         public bool FindPreviousMatchingNote(int noteValue, ref int patternIdx, ref int noteIdx)
