@@ -1465,6 +1465,7 @@ namespace FamiStudio
             g.DrawRectangle(0, 0, sx, sy, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
 
             if (n0.HasAttack && sx > noteAttackSizeX + 4)
+            if (activeChannel && n0.HasAttack && sx > noteAttackSizeX + 4)
             {
                 g.FillRectangle(attackIconPosX, attackIconPosX, attackIconPosX + noteAttackSizeX, sy - attackIconPosX + 1, attackBrush);
                 noteTextPosX += noteAttackSizeX + attackIconPosX;
