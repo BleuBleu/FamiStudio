@@ -1596,8 +1596,15 @@ namespace FamiStudio
                     var ghostChannelMask = App != null ? App.GhostChannelMask : 0;
                     var maxEffectPosY = 0;
 
-                    // Pattern drawing.
+                    // Render the active channel last.
+                    var channelsToRender = new int[song.Channels.Length];
                     for (int c = 0; c < song.Channels.Length; c++)
+                        channelsToRender[c] = c;
+
+                    Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]);
+
+                    // Pattern drawing.
+                    foreach (var c in channelsToRender)
                     {
                         var channel = song.Channels[c];
                         var isActiveChannel = c == editChannel;
