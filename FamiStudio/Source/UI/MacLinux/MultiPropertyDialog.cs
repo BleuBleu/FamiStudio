@@ -2,9 +2,15 @@
 using System;
 using System.Collections.Generic;
 
+#if FAMISTUDIO_LINUX
+    using BaseWindow = Gtk.Dialog;
+#else
+    using BaseWindow = Gtk.Window;
+#endif
+
 namespace FamiStudio
 {
-    public class MultiPropertyDialog : Window
+    public class MultiPropertyDialog : BaseWindow
     {
         class PropertyPageTab
         {
@@ -19,7 +25,10 @@ namespace FamiStudio
         private HBox mainHbox;
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
-        public MultiPropertyDialog(int x, int y, int width, int height, int tabWidth = 160) : base(WindowType.Toplevel)
+        public MultiPropertyDialog(int width, int height, int tabWidth = 160)
+#if FAMISTUDIO_MACOS
+             : base(WindowType.Toplevel)
+#endif
         {
             var buttonsHBox = new HBox(false, 0);
 
@@ -42,8 +51,6 @@ namespace FamiStudio
             buttonsAlign.Show();
             buttonsAlign.Add(buttonsHBox);
 
-            var vbox  = new VBox();
-
             buttonsVBox = new VBox();
             buttonsVBox.Show();
             buttonsVBox.WidthRequest = tabWidth;
@@ -62,11 +69,16 @@ namespace FamiStudio
             mainHbox.PackStart(buttonsVBoxPadding, false, false, 0);
             mainHbox.PackStart(propsVBox, true, true, 0);
 
+#if FAMISTUDIO_LINUX
+            var vbox = VBox;
+#else
+            var vbox  = new VBox();
+            Add(vbox);
+#endif
+
             vbox.Show();
             vbox.PackStart(mainHbox);
             vbox.PackStart(buttonsAlign, false, false, 0);
-
-            Add(vbox);
 
             WidthRequest  = width;
             HeightRequest = height;
@@ -77,11 +89,9 @@ namespace FamiStudio
             KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
+            SetPosition(WindowPosition.CenterOnParent);
 #if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
-            SetPosition(WindowPosition.CenterOnParent);
-#else
-            Move(x, y);
 #endif
         }
 
@@ -144,15 +154,23 @@ namespace FamiStudio
             }
         }
 
+        private void EndDialog(System.Windows.Forms.DialogResult res)
+        {
+            result = res;
+#if FAMISTUDIO_LINUX
+            Respond(0);
+#endif
+        }
+
         private void ButtonNo_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
-            result = System.Windows.Forms.DialogResult.Cancel;
+            EndDialog(System.Windows.Forms.DialogResult.Cancel);
         }
 
         private void ButtonYes_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
             tabs[selectedIndex].properties.NotifyClosing();
-            result = System.Windows.Forms.DialogResult.OK;
+            EndDialog(System.Windows.Forms.DialogResult.OK);
         }
 
         protected override bool OnKeyPressEvent(Gdk.EventKey evnt)
@@ -160,28 +178,39 @@ namespace FamiStudio
             if (evnt.Key == Gdk.Key.Return)
             {
                 tabs[selectedIndex].properties.NotifyClosing();
-                result = System.Windows.Forms.DialogResult.OK;
+                EndDialog(System.Windows.Forms.DialogResult.OK);
             }
             else if (evnt.Key == Gdk.Key.Escape)
             {
-                result = System.Windows.Forms.DialogResult.Cancel;
+                EndDialog(System.Windows.Forms.DialogResult.Cancel);
             }
 
             return base.OnKeyPressEvent(evnt);
         }
 
-        public System.Windows.Forms.DialogResult ShowDialog()
+        public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent)
         {
+#if FAMISTUDIO_LINUX
+            Run();
+            Hide();
+#else
             Show();
-#if FAMISTUDIO_MACOS
+
+            if (WindowPosition == WindowPosition.CenterOnParent)
+            {
+                var mainWinRect = parent.Bounds;
+                int x = mainWinRect.Left + (mainWinRect.Width  - Allocation.Width) / 2;
+                int y = mainWinRect.Top  + (mainWinRect.Height - Allocation.Height) / 2;
+                Move(x, y);
+            }
+
             MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
 
             while (result == System.Windows.Forms.DialogResult.None)
                 Application.RunIteration();
 
             Hide();
-#if FAMISTUDIO_MACOS
+
             MacUtils.RestoreMainNSWindowFocus();
 #endif
 

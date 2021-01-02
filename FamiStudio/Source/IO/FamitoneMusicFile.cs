@@ -57,6 +57,8 @@ namespace FamiStudio
         private bool usesSlideNotes = false;
         private bool usesVibrato = false;
         private bool usesArpeggio = false;
+        private bool usesDutyCycleEffect = false;
+        private bool usesDelayedNotesOrCuts = false;
 
         public enum FamiToneKernel
         {
@@ -82,10 +84,11 @@ namespace FamiStudio
                     env = new Envelope(Envelope.Volume); 
                     instrument.Envelopes[Envelope.Volume] = env;
                 }
-                if (env.Length == 0)
+                if (env.Length == 0 || env.AllValuesEqual(Note.VolumeMax))
                 {
-                    env.Length = 1;
-                    env.Loop   = -1;
+                    env.Length  =  1;
+                    env.Loop    = -1;
+                    env.Release = -1;
                     env.Values[0] = 15;
                 }
             }
@@ -259,8 +262,10 @@ namespace FamiStudio
             var instrumentEnvelopes = new Dictionary<Envelope, uint>();
 
             var defaultEnv = new byte[] { 0xc0, 0x7f, 0x00, 0x00 };
+            var defaultDutyEnv = new byte[] { 0x7f, 0x00, 0x00 }; // This is a "do nothing" envelope, simply loops, never sets a value.
             var defaultPitchEnv = new byte[] { 0x00, 0xc0, 0x7f, 0x00, 0x01 };
             var defaultEnvCRC = CRC32.Compute(defaultEnv);
+            var defaultDutyEnvCRC = CRC32.Compute(defaultDutyEnv);
             var defaultPitchEnvCRC = CRC32.Compute(defaultPitchEnv);
             var defaultEnvName = "";
             var defaultPitchEnvName = "";
@@ -268,7 +273,10 @@ namespace FamiStudio
             uniqueEnvelopes.Add(defaultEnvCRC, defaultEnv);
 
             if (kernel == FamiToneKernel.FamiStudio)
+            {
+                uniqueEnvelopes.Add(defaultDutyEnvCRC, defaultDutyEnv);
                 uniqueEnvelopes.Add(defaultPitchEnvCRC, defaultPitchEnv);
+            }
 
             foreach (var instrument in project.Instruments)
             {
@@ -306,6 +314,8 @@ namespace FamiStudio
                     {
                         if (kernel == FamiToneKernel.FamiStudio && i == Envelope.Pitch)
                             instrumentEnvelopes[env] = defaultPitchEnvCRC;
+                        else if (kernel == FamiToneKernel.FamiStudio && i == Envelope.DutyCycle)
+                            instrumentEnvelopes[env] = defaultDutyEnvCRC;
                         else
                             instrumentEnvelopes[env] = defaultEnvCRC;
                     }
@@ -719,6 +729,7 @@ namespace FamiStudio
                         if (note == null)
                             note = emptyNote;
 
+                        // We don't allow delaying speed effect at the moment.
                         if (isSpeedChannel && song.UsesFamiTrackerTempo)
                         {
                             var speed = FindEffectParam(song, p, time, Note.EffectSpeed);
@@ -731,6 +742,13 @@ namespace FamiStudio
                         }
 
                         it.Next();
+
+                        if (note.HasNoteDelay)
+                        {
+                            patternBuffer.Add($"${0x6a:x2}");
+                            patternBuffer.Add($"${note.NoteDelay - 1:x2}");
+                            usesDelayedNotesOrCuts = true;
+                        }
 
                         if (note.HasVolume)
                         {
@@ -792,17 +810,31 @@ namespace FamiStudio
                             }
                         }
 
-                        if (note.HasFdsModSpeed)
+                        if (note.HasDutyCycle)
                         {
                             patternBuffer.Add($"${0x69:x2}");
+                            patternBuffer.Add($"${note.DutyCycle:x2}");
+                            usesDutyCycleEffect = true;
+                        }
+
+                        if (note.HasFdsModSpeed)
+                        {
+                            patternBuffer.Add($"${0x6c:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
                             patternBuffer.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
                         }
 
                         if (note.HasFdsModDepth)
                         {
-                            patternBuffer.Add($"${0x6a:x2}");
+                            patternBuffer.Add($"${0x6d:x2}");
                             patternBuffer.Add($"${note.FdsModDepth:x2}");
+                        }
+
+                        if (note.HasCutDelay)
+                        {
+                            patternBuffer.Add($"${0x6b:x2}");
+                            patternBuffer.Add($"${note.CutDelay:x2}");
+                            usesDelayedNotesOrCuts = true;
                         }
 
                         if (note.IsValid)
@@ -851,8 +883,8 @@ namespace FamiStudio
                                 var noteTablePal  = NesApu.GetNoteTableForChannelType(channel.Type, true,  song.Project.ExpansionNumChannels);
 
                                 var found = true;
-                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTableNtsc, out _, out int stepSizeNtsc, out _);
-                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, Song.NativeTempoNTSC, noteTablePal,  out _, out int stepSizePal,  out _);
+                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
+                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, noteTablePal,  true,  true, out _, out int stepSizePal,  out _);
 
                                 if (song.Project.UsesExpansionAudio || machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
@@ -892,6 +924,7 @@ namespace FamiStudio
                                     note.HasVolume      || 
                                     note.HasVibrato     ||
                                     note.HasFinePitch   ||
+                                    note.HasDutyCycle   ||
                                     note.HasFdsModSpeed || 
                                     note.HasFdsModDepth ||
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
@@ -1092,6 +1125,9 @@ namespace FamiStudio
                                 note.HasVolume    = false;
                                 note.IsSlideNote  = false;
                                 note.HasFinePitch = false;
+                                note.HasDutyCycle = false;
+                                note.HasNoteDelay = false;
+                                note.HasCutDelay  = false;
                                 note.Arpeggio     = null;
                             }
                         }
@@ -1182,6 +1218,8 @@ namespace FamiStudio
                 {
                     if (usesFamiTrackerTempo)
                         Log.LogMessage(LogSeverity.Info, "Project uses FamiTracker tempo, you must set FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1.");
+                    if (usesDelayedNotesOrCuts)
+                        Log.LogMessage(LogSeverity.Info, "Project uses delayed notes or cuts, you must set FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1.");
                     if (usesVolumeTrack)
                         Log.LogMessage(LogSeverity.Info, "Volume track is used, you must set FAMISTUDIO_USE_VOLUME_TRACK = 1.");
                     if (usesPitchTrack)
@@ -1192,6 +1230,8 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Vibrato effect is used, you must set FAMISTUDIO_USE_VIBRATO = 1.");
                     if (usesArpeggio)
                         Log.LogMessage(LogSeverity.Info, "Arpeggios are used, you must set FAMISTUDIO_USE_ARPEGGIO = 1.");
+                    if (usesDutyCycleEffect)
+                        Log.LogMessage(LogSeverity.Info, "Duty Cycle effect is used, you must set FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1.");
                 }
             }
 
@@ -1339,16 +1379,7 @@ namespace FamiStudio
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
         public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmOffset, MachineType machine)
         {
-            var tempFolder = Path.Combine(Path.GetTempPath(), "FamiStudio");
-
-            try
-            {
-                Directory.Delete(tempFolder, true);
-            }
-            catch {}
-
-            Directory.CreateDirectory(tempFolder);
-
+            var tempFolder = Utils.GetTemporaryDiretory();
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 

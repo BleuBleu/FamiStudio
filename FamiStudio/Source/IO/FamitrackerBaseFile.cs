@@ -175,11 +175,10 @@ namespace FamiStudio
         // FamiStudio -> FamiTracker
         protected static int[] ReverseEnvelopeTypeLookup =
         {
-             0, // SEQ_VOLUME
-             1, // SEQ_ARPEGGIO
-             2, // SEQ_PITCH
-             4, // SEQ_HIPITCH
-            -1  // SEQ_DUTYCYCLE
+             0, // Volume
+             1, // Arpeggio
+             2, // Pitch
+             4, // DutyCycle
         };
 
         protected struct RowFxData
@@ -341,6 +340,24 @@ namespace FamiStudio
                     if (pattern.Channel.SupportsEffect(Note.EffectFdsModDepth))
                     {
                         pattern.GetOrCreateNoteAt(n).FdsModDepth = fx.param;
+                    }
+                    return;
+                case Effect_DutyCycle:
+                    if (pattern.Channel.SupportsEffect(Note.EffectDutyCycle))
+                    {
+                        pattern.GetOrCreateNoteAt(n).DutyCycle = fx.param;
+                    }
+                    return;
+                case Effect_Delay:
+                    if (pattern.Channel.SupportsEffect(Note.EffectNoteDelay))
+                    {
+                        pattern.GetOrCreateNoteAt(n).NoteDelay = Math.Min((byte)31, fx.param);
+                    }
+                    return;
+                case Effect_NoteCut:
+                    if (pattern.Channel.SupportsEffect(Note.EffectCutDelay))
+                    {
+                        pattern.GetOrCreateNoteAt(n).CutDelay = Math.Min((byte)31, fx.param);
                     }
                     return;
                 case Effect_Halt:
@@ -579,12 +596,9 @@ namespace FamiStudio
                 {
                     var pattern = c.PatternInstances[p];
 
-                    if (pattern == null || !patternFxData.ContainsKey(pattern) || processedPatterns.Contains(pattern))
+                    if (pattern == null)
                         continue;
 
-                    processedPatterns.Add(pattern);
-
-                    var fxData = patternFxData[pattern];
                     var patternLen = s.GetPatternLength(p);
 
                     for (var it = pattern.GetNoteIterator(0, patternLen); !it.Done; it.Next())
@@ -593,14 +607,12 @@ namespace FamiStudio
                         var note = it.CurrentNote;
 
                         // Look for speed changes.
-                        foreach (var c2 in s.Channels)
-                        {
-                            var pattern2 = c2.PatternInstances[p];
+                        s.ApplySpeedEffectAt(p, n, ref songSpeed);
 
-                            if (pattern2 != null && pattern2.Notes.TryGetValue(n, out var note2) && note2.HasSpeed)
-                                songSpeed = note2.Speed;
-                        }
+                        if (!patternFxData.ContainsKey(pattern) || processedPatterns.Contains(pattern))
+                            continue;
 
+                        var fxData = patternFxData[pattern];
                         var slideTarget = 0;
 
                         for (int i = 0; i < fxData.GetLength(1); i++)
@@ -664,7 +676,7 @@ namespace FamiStudio
                             if (note.IsMusical)
                             {
                                 var slideSource = note.Value;
-                                var noteTable   = NesApu.GetNoteTableForChannelType(c.Type, false, s.Project.ExpansionNumChannels);
+                                var noteTable   = NesApu.GetNoteTableForChannelType(c.Type, s.Project.PalMode, s.Project.ExpansionNumChannels);
                                 var pitchLimit  = NesApu.GetPitchLimitForChannelType(c.Type);
 
                                 // If we have a new note with auto-portamento enabled, we need to
@@ -688,24 +700,18 @@ namespace FamiStudio
                                 // this for slides (octave never changes).
                                 var octaveSlideShift = c.IsVrc7FmChannel && note.Value >= 12 ? 1 : 0;
 
+                                // 3xx/Qxy/Rxy : We know which note we are sliding to and the speed, but we 
+                                //               don't know how many frames it will take to get there.
                                 if (slideTarget != 0)
                                 {
-                                    // TODO: We assume a tempo of 150 here. This is wrong.
-                                    var numFrames = Math.Max(1, Math.Abs((noteTable[slideSource] - noteTable[slideTarget]) / ((slideSpeed << octaveSlideShift) * songSpeed)));
+                                    // Advance in the song until we have the correct number of frames.
+                                    var numFrames = Math.Max(1, Math.Abs((noteTable[slideSource] - noteTable[slideTarget]) / (slideSpeed << octaveSlideShift)));
                                     note.SlideNoteTarget = (byte)slideTarget;
 
-                                    var nn = n + numFrames;
+                                    // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
                                     var np = p;
-                                    while (nn >= s.GetPatternLength(np))
-                                    {
-                                        nn -= s.GetPatternLength(np);
-                                        np++;
-                                    }
-                                    if (np >= s.Length)
-                                    {
-                                        np = s.Length;
-                                        nn = 0;
-                                    }
+                                    var nn = n;
+                                    s.AdvanceNumberOfFrames(numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode, ref np, ref nn);
 
                                     // Still to see if there is a note between the current one and the 
                                     // next note, this could append if you add a note before the slide 
@@ -740,13 +746,17 @@ namespace FamiStudio
                                     // 3xx, Qxx and Rxx stops when its done.
                                     slideSpeed = 0;
                                 }
-                                // Find the next note that would stop the slide or change the FX settings.
+
+                                // 1xx/2xy : We know the speed at which we are sliding, but need to figure out what makes it stop.
                                 else if (slideSpeed != 0 && FindNextNoteForSlide(c, p, n, out var np, out var nn, patternFxData))
                                 {
-                                    // Compute the pitch delta and find the closest target note.
-                                    var numFrames = (s.GetPatternStartNote(np, nn) - s.GetPatternStartNote(p, n)) * songSpeed;
+                                    // See how many frames until the slide stops.
+                                    var numFrames = (int)Math.Round(s.CountFramesBetween(p, n, np, nn, songSpeed, s.Project.PalMode));
 
-                                    // TODO: PAL.
+                                    // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
+                                    numFrames = Math.Max(1, numFrames - (note.HasNoteDelay ? note.NoteDelay : 0));
+
+                                    // Compute the pitch delta and find the closest target note.
                                     var newNotePitch = Utils.Clamp(noteTable[slideSource] + numFrames * (slideSpeed << octaveSlideShift), 0, pitchLimit);
                                     var newNote = FindBestMatchingNote(noteTable, newNotePitch, Math.Sign(slideSpeed));
 
@@ -773,6 +783,8 @@ namespace FamiStudio
                             lastNoteArpeggio   = note.Arpeggio;
                         }
                     }
+
+                    processedPatterns.Add(pattern);
                 }
             }
         }
@@ -800,7 +812,7 @@ namespace FamiStudio
                                     if (s.PatternHasCustomSettings(p))
                                         s.GetPatternCustomSettings(p).patternLength = i + 1;
                                     else
-                                        s.SetPatternCustomSettings(p, i + 1);
+                                        s.SetPatternCustomSettings(p, i + 1, s.BeatLength);
                                     s.SetLength(p + 1);
                                     s.SetLoopPoint(-1);
                                     return;
@@ -809,6 +821,35 @@ namespace FamiStudio
                         }
                     }
                 }
+            }
+        }
+
+        protected void PrintAdditionalWarnings()
+        {
+            foreach (var s in project.Songs)
+            {
+                for (int p = 0; p < s.Length; p++)
+                {
+                    for (int c = 0; c < s.Channels.Length; c++)
+                    {
+                        var pattern = s.Channels[c].PatternInstances[p];
+                        if (pattern != null)
+                        {
+                            for (var it = pattern.GetNoteIterator(0, s.GetPatternLength(p)); !it.Done; it.Next())
+                            {
+                                if (it.CurrentNote != null && it.CurrentNote.HasNoteDelay && it.CurrentNote.HasSpeed)
+                                {
+                                    Log.LogMessage(LogSeverity.Warning, $"Speed changes (Fxx) cannot be combined with note delays (Gxx). Speed changes will always be applied immediately and will ignore the delay. {GetPatternString(pattern, it.CurrentTime)}");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (project.ExpansionAudio == Project.ExpansionVrc6)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio uses the full volume range and ignores the duty cycle, they will need to the adjusted manually to sound the same. In most cases, this mean reducing the volume by half using either the volume track or volume envelopes.");
             }
         }
 
@@ -826,7 +867,7 @@ namespace FamiStudio
                         if (pattern != null && patternLengths.TryGetValue(pattern, out var instLength))
                         {
                             if (instLength < s.GetPatternLength(p))
-                                s.SetPatternCustomSettings(p, instLength);
+                                s.SetPatternCustomSettings(p, instLength, s.BeatLength);
                         }
                     }
                 }
@@ -834,10 +875,12 @@ namespace FamiStudio
                 s.DeleteNotesPastMaxInstanceLength();
                 s.UpdatePatternStartNotes();
 
+                // FamiTracker always assumes 4 rows per beat for BPM calculation, but let's assume
+                // the artists properly set first row highlight to that.
                 if (barLength == -1)
-                    s.SetSensibleBarLength();
+                    s.SetSensibleBeatLength();
                 else
-                    s.SetBarLength(barLength);
+                    s.SetBeatLength(barLength);
 
                 ApplyHaltEffect(s, patternFxData);
                 CreateArpeggios(s, patternFxData);
@@ -848,6 +891,8 @@ namespace FamiStudio
 
             project.UpdateAllLastValidNotesAndVolume();
             project.Validate();
+
+            PrintAdditionalWarnings();
 
             return true;
         }

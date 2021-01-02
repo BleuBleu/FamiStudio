@@ -101,7 +101,8 @@ namespace PrintCodeSize
                 "FAMISTUDIO_USE_VOLUME_TRACK=1",
                 "FAMISTUDIO_USE_PITCH_TRACK=1",
                 "FAMISTUDIO_USE_VIBRATO=1",
-                "FAMISTUDIO_USE_ARPEGGIO=1"
+                "FAMISTUDIO_USE_ARPEGGIO=1",
+                "FAMISTUDIO_USE_DUTYCYCLE_EFFECT=1"
             };
 
             var featureDesc = new[]
@@ -111,7 +112,8 @@ namespace PrintCodeSize
                 "Volume Track",
                 "Fine Pitch Track",
                 "Vibrato Effect",
-                "Arpeggio Chords"
+                "Arpeggio Chords",
+                "Duty Cycle Track"
             };
 
             var codeMatrix = new int[expansionDefines.GetLength(0), featureDefines.Length];

@@ -103,6 +103,7 @@ namespace FamiStudio
             Add,
             DPCM,
             LoadInstrument,
+            LoadSong,
             ExpandInstrument,
             Max
         }
@@ -133,16 +134,30 @@ namespace FamiStudio
                 projectExplorer = pe;
             }
 
+            private bool IsEnvelopeEmpty(Envelope env, int type)
+            {
+                // HACK: Volume envelope have 15 by default. 
+                if (type == Envelope.Volume)
+                {
+                    return env.AllValuesEqual(Note.VolumeMax);
+                }
+                else
+                {
+                    return env.IsEmpty;
+                }
+            }
+
             public SubButtonType[] GetSubButtons(out bool[] active)
             {
                 switch (type)
                 {
                     case ButtonType.SongHeader:
-                        active = new[] { true };
-                        return new[] { SubButtonType.Add };
+                        active = new[] { true, true };
+                        return new[] { SubButtonType.Add,
+                                       SubButtonType.LoadSong };
                     case ButtonType.InstrumentHeader:
                         active = new[] { true ,true };
-                        return new[] { SubButtonType.Add ,
+                        return new[] { SubButtonType.Add,
                                        SubButtonType.LoadInstrument };
                     case ButtonType.ArpeggioHeader:
                         active = new[] { true };
@@ -166,7 +181,7 @@ namespace FamiStudio
                                 if (instrument.Envelopes[idx] != null)
                                 {
                                     buttons[j] = (SubButtonType)idx;
-                                    active[j] = !instrument.Envelopes[idx].IsEmpty; 
+                                    active[j] = !IsEnvelopeEmpty(instrument.Envelopes[idx], idx);
                                     j++;
                                 }
                             }
@@ -195,18 +210,21 @@ namespace FamiStudio
 
             public string GetText(Project project)
             {
-                switch (type)
+                if (project != null)
                 {
-                    case ButtonType.ProjectSettings: return string.IsNullOrEmpty(project.Author) ? $"{project.Name}": $"{project.Name} ({project.Author})";
-                    case ButtonType.SongHeader: return "Songs";
-                    case ButtonType.Song: return song.Name;
-                    case ButtonType.InstrumentHeader: return "Instruments";
-                    case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
-                    case ButtonType.ArpeggioHeader: return "Arpeggios";
-                    case ButtonType.Arpeggio: return arpeggio == null ? "None" : arpeggio.Name;
-                    case ButtonType.ParamCheckbox:
-                    case ButtonType.ParamSlider:
-                    case ButtonType.ParamList: return Instrument.GetRealTimeParamName(instrumentParam);
+                    switch (type)
+                    {
+                        case ButtonType.ProjectSettings: return string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
+                        case ButtonType.SongHeader: return "Songs";
+                        case ButtonType.Song: return song.Name;
+                        case ButtonType.InstrumentHeader: return "Instruments";
+                        case ButtonType.Instrument: return instrument == null ? "DPCM Samples" : instrument.Name;
+                        case ButtonType.ArpeggioHeader: return "Arpeggios";
+                        case ButtonType.Arpeggio: return arpeggio == null ? "None" : arpeggio.Name;
+                        case ButtonType.ParamCheckbox:
+                        case ButtonType.ParamSlider:
+                        case ButtonType.ParamList: return Instrument.GetRealTimeParamName(instrumentParam);
+                    }
                 }
 
                 return "";
@@ -277,6 +295,7 @@ namespace FamiStudio
                         return projectExplorer.bmpAdd;
                     case SubButtonType.DPCM:
                         return projectExplorer.bmpDPCM;
+                    case SubButtonType.LoadSong:
                     case SubButtonType.LoadInstrument:
                         return projectExplorer.bmpLoadInstrument;
                     case SubButtonType.ExpandInstrument:
@@ -402,6 +421,7 @@ namespace FamiStudio
             selectedSong = App.Project.Songs[0];
             selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
             expandedInstrument = null;
+            selectedArpeggio = null;
             SongSelected?.Invoke(selectedSong);
             RefreshButtons();
             ConditionalInvalidate();
@@ -519,7 +539,7 @@ namespace FamiStudio
 
         protected bool ShowExpandButtons()
         {
-            if (App.Project.ExpansionAudio != Project.ExpansionNone)
+            if (App.Project != null && App.Project.ExpansionAudio != Project.ExpansionNone)
                 return App.Project.Instruments.Find(i => i.GetRealTimeParams() != null) != null;
 
             return false;
@@ -735,17 +755,31 @@ namespace FamiStudio
             {
                 var buttonType = buttons[buttonIdx].type;
 
-                if (buttonType == ButtonType.SongHeader && subButtonType == SubButtonType.Add)
+                if (buttonType == ButtonType.SongHeader)
                 {
-                    tooltip = "{MouseLeft} Add new song";
+                    if (subButtonType == SubButtonType.Add)
+                    {
+                        tooltip = "{MouseLeft} Add new song";
+                    }
+                    else if (subButtonType == SubButtonType.LoadSong)
+                    {
+                        tooltip = "{MouseLeft} Import/merge song from another project";
+                    }
                 }
                 else if (buttonType == ButtonType.Song)
                 {
                     tooltip = "{MouseLeft} Make song current - {MouseLeft}{MouseLeft} Song properties - {MouseRight} Delete song";
                 }
-                else if (buttonType == ButtonType.InstrumentHeader && subButtonType == SubButtonType.Add)
+                else if (buttonType == ButtonType.InstrumentHeader)
                 {
-                    tooltip = "{MouseLeft} Add new instrument";
+                    if (subButtonType == SubButtonType.Add)
+                    {
+                        tooltip = "{MouseLeft} Add new instrument";
+                    }
+                    else if (subButtonType == SubButtonType.LoadInstrument)
+                    {
+                        tooltip = "{MouseLeft} Import/merge instrument from another project";
+                    }
                 }
                 else if (buttonType == ButtonType.ProjectSettings)
                 {
@@ -993,73 +1027,128 @@ namespace FamiStudio
                     buttonY < (sliderPosY + sliderSizeY));
         }
 
+        private void ImportSong()
+        {
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Song Files (*.fms;*.txt;*.ftm)|*.fms;*.txt;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+
+            if (filename != null)
+            {
+                var dlgLog = new LogDialog(ParentForm);
+                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
+                {
+                    Project otherProject = App.OpenProjectFile(filename, false);
+
+                    if (otherProject == null)
+                    {
+                        return;
+                    }
+
+                    var songNames = new List<string>();
+                    foreach (var song in otherProject.Songs)
+                        songNames.Add(song.Name);
+
+                    var dlg = new PropertyDialog(300);
+                    dlg.Properties.AddLabel(null, "Select songs to import:");
+                    dlg.Properties.AddStringListMulti(null, songNames.ToArray(), null);
+                    dlg.Properties.Build();
+
+                    if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                        var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                        var songIds = new List<int>();
+
+                        for (int i = 0; i < selected.Length; i++)
+                        {
+                            if (selected[i])
+                                songIds.Add(otherProject.Songs[i].Id);
+                        }
+
+                        bool success = false;
+                        if (songIds.Count > 0)
+                        {
+                            otherProject.RemoveAllSongsBut(songIds.ToArray());
+                            success = App.Project.MergeSongs(otherProject);
+                        }
+
+                        if (success)
+                            App.UndoRedoManager.EndTransaction();
+                        else
+                            App.UndoRedoManager.AbortTransaction();
+                    }
+
+                    dlgLog.ShowDialogIfMessages();
+                }
+            }
+
+            RefreshButtons();
+            ConditionalInvalidate();
+        }
+
         private void ImportInstruments()
         {
             var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm)|*.fti;*.fms;*.txt;*.ftm|FamiTracker Instrument File (*.fti)|*.fti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
 
             if (filename != null)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                var success = false;
-
-                if (filename.ToLower().EndsWith("fti"))
+                var dlgLog = new LogDialog(ParentForm);
+                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                 {
-                    success = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
-                }
-                else
-                {
-                    Project instrumentProject = App.OpenProjectFile(filename, false);
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
-                    if (instrumentProject != null)
+                    var success = false;
+
+                    if (filename.ToLower().EndsWith("fti"))
                     {
-                        var instruments = new List<Instrument>();
-                        var instrumentNames = new List<string>();
+                        success = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
+                    }
+                    else
+                    {
+                        Project instrumentProject = App.OpenProjectFile(filename, false);
 
-                        foreach (var instrument in instrumentProject.Instruments)
+                        if (instrumentProject != null)
                         {
-                            if (instrument.ExpansionType == Project.ExpansionNone ||
-                                instrument.ExpansionType == App.Project.ExpansionAudio)
+                            var instrumentNames = new List<string>();
+
+                            foreach (var instrument in instrumentProject.Instruments)
                             {
                                 var instName = instrument.Name;
 
                                 if (instrument.ExpansionType != Project.ExpansionNone)
                                     instName += $" ({Project.ExpansionShortNames[instrument.ExpansionType]})";
 
-                                instruments.Add(instrument);
                                 instrumentNames.Add(instName);
                             }
-                        }
 
-                        var dlg = new PropertyDialog(300, ParentForm.Bounds);
-                        dlg.Properties.AddLabel(null, "Select instruments to import:");
-                        dlg.Properties.AddStringListMulti(null, instrumentNames.ToArray(), null);
-                        dlg.Properties.Build();
+                            var dlg = new PropertyDialog(300);
+                            dlg.Properties.AddLabel(null, "Select instruments to import:");
+                            dlg.Properties.AddStringListMulti(null, instrumentNames.ToArray(), null);
+                            dlg.Properties.Build();
 
-                        if (dlg.ShowDialog() == DialogResult.OK)
-                        {
-                            var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-
-                            for (int i = 0; i < selected.Length; i++)
+                            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                             {
-                                if (selected[i] && App.Project.GetInstrument(instruments[i].Name) == null)
-                                {
-                                    App.Project.Instruments.Add(instruments[i]);
-                                }
-                            }
+                                var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                var instrumentsToMerge = new List<Instrument>();
 
-                            success = true;
+                                for (int i = 0; i < selected.Length; i++)
+                                {
+                                    if (selected[i])
+                                        instrumentsToMerge.Add(instrumentProject.Instruments[i]);
+                                }
+
+                                success = App.Project.MergeOtherProjectInstruments(instrumentsToMerge);
+                            }
                         }
                     }
+
+                    if (!success)
+                        App.UndoRedoManager.AbortTransaction();
+                    else
+                        App.UndoRedoManager.EndTransaction();
+
+                    dlgLog.ShowDialogIfMessages();
                 }
-
-                App.Project.SortInstruments();
-
-                if (!success)
-                    App.UndoRedoManager.AbortTransaction();
-                else
-                    App.UndoRedoManager.EndTransaction();
-
             }
 
             RefreshButtons();
@@ -1101,6 +1190,10 @@ namespace FamiStudio
                             RefreshButtons();
                             ConditionalInvalidate();
                         }
+                        else if (subButtonType == SubButtonType.LoadSong)
+                        {
+                            ImportSong();
+                        }
                     }
                     else if (button.type == ButtonType.Song)
                     {
@@ -1124,7 +1217,7 @@ namespace FamiStudio
                                 dlg.Properties.AddStringList("Expansion:", expNames, Project.ExpansionNames[Project.ExpansionNone] ); // 0
                                 dlg.Properties.Build();
 
-                                if (dlg.ShowDialog() == DialogResult.OK)
+                                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                                     instrumentType = dlg.Properties.GetPropertyValue<string>(0) == Project.ExpansionNames[Project.ExpansionNone] ? Project.ExpansionNone : App.Project.ExpansionAudio;
                                 else
                                     return;
@@ -1274,7 +1367,7 @@ namespace FamiStudio
                         if (subButtonType < SubButtonType.EnvelopeMax)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);
-                            instrument.Envelopes[(int)subButtonType].Length = 0;
+                            instrument.Envelopes[(int)subButtonType].ClearToDefault((int)subButtonType);
                             App.UndoRedoManager.EndTransaction();
                             ConditionalInvalidate();
                         }
@@ -1338,7 +1431,7 @@ namespace FamiStudio
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
 
@@ -1436,22 +1529,22 @@ namespace FamiStudio
             {
                 dlg.Properties.AddIntegerRange("Tempo :", song.FamitrackerTempo, 32, 255, CommonTooltips.Tempo); // 3
                 dlg.Properties.AddIntegerRange("Speed :", song.FamitrackerSpeed, 1, 31, CommonTooltips.Speed); // 4
-                dlg.Properties.AddIntegerRange("Notes per Pattern :", song.PatternLength, 16, 256, CommonTooltips.NotesPerPattern); // 5
-                dlg.Properties.AddIntegerRange("Notes per Bar :", song.BarLength, 2, 256, CommonTooltips.NotesPerBar); // 6
-                dlg.Properties.AddLabel("BPM :", song.BPM.ToString(), CommonTooltips.BPM); // 7
+                dlg.Properties.AddIntegerRange("Notes per Beat :", song.BeatLength, 1, 256, CommonTooltips.NotesPerBar); // 5
+                dlg.Properties.AddIntegerRange("Notes per Pattern :", song.PatternLength, 1, 256, CommonTooltips.NotesPerPattern); // 6
+                dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 7
             }
             else
             {
                 dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, Song.MinNoteLength, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 3
-                dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 2, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 4
-                dlg.Properties.AddIntegerRange("Notes per Bar : ", song.BarLength / song.NoteLength, 2, 256, CommonTooltips.NotesPerBar); // 5
-                dlg.Properties.AddLabel("BPM :", song.BPM.ToString(), CommonTooltips.BPM); // 6
+                dlg.Properties.AddIntegerRange("Notes per Beat : ", song.BeatLength / song.NoteLength, 1, 256, CommonTooltips.NotesPerBar); // 4
+                dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 1, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 5
+                dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 6
             }
 
             dlg.Properties.Build();
             dlg.Properties.PropertyChanged += SongProperties_PropertyChanged;
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectProperties);
 
@@ -1468,8 +1561,8 @@ namespace FamiStudio
                     {
                         song.FamitrackerTempo = dlg.Properties.GetPropertyValue<int>(3);
                         song.FamitrackerSpeed = dlg.Properties.GetPropertyValue<int>(4);
-                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(5));
-                        song.SetBarLength(dlg.Properties.GetPropertyValue<int>(6));
+                        song.SetBeatLength(dlg.Properties.GetPropertyValue<int>(5));
+                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(6));
                     }
                     else
                     {
@@ -1480,9 +1573,9 @@ namespace FamiStudio
                             var convertTempo = PlatformUtils.MessageBox($"You changed the note length, do you want FamiStudio to attempt convert the tempo by resizing notes?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
                             song.ResizeNotes(newNoteLength, convertTempo);
                         }
-                        
-                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(4) * song.NoteLength);
-                        song.SetBarLength(dlg.Properties.GetPropertyValue<int>(5) * song.NoteLength);
+
+                        song.SetBeatLength(dlg.Properties.GetPropertyValue<int>(4) * song.NoteLength);
+                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(5) * song.NoteLength);
                     }
 
                     song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
@@ -1504,19 +1597,21 @@ namespace FamiStudio
         {
             var song = props.UserData as Song;
 
-            if (selectedSong.UsesFamiTrackerTempo && (idx == 3 || idx == 4)) // 3/4 = Tempo/Speed
+            if (selectedSong.UsesFamiTrackerTempo && (idx == 3 || idx == 4 || idx == 5)) // 3/4 = Tempo/Speed, 5 = beat length
             {
                 var tempo = props.GetPropertyValue<int>(3);
                 var speed = props.GetPropertyValue<int>(4);
+                var beatLength = props.GetPropertyValue<int>(5);
 
-                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(selectedSong.Project.PalMode, speed, tempo).ToString());
+                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(selectedSong.Project.PalMode, speed, tempo, beatLength).ToString("n1"));
             }
-            else if (idx == 3) // 3 = Note length
+            else if (idx == 3 || idx == 4) // 3 = note length, 4 = beat length.
             {
-                int noteLength = (int)value;
+                var noteLength = props.GetPropertyValue<int>(3);
+                var beatLength = props.GetPropertyValue<int>(4);
 
-                props.UpdateIntegerRange(4, 1, Pattern.MaxLength / noteLength);
-                props.SetLabelText(6, Song.ComputeFamiStudioBPM(selectedSong.Project.PalMode, noteLength).ToString());
+                props.UpdateIntegerRange(5, 1, Pattern.MaxLength / noteLength);
+                props.SetLabelText(6, Song.ComputeFamiStudioBPM(selectedSong.Project.PalMode, noteLength, beatLength * noteLength).ToString("n1"));
             }
         }
 
@@ -1529,7 +1624,7 @@ namespace FamiStudio
                 dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[Envelope.Pitch].Relative); // 2
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 
@@ -1580,7 +1675,7 @@ namespace FamiStudio
             dlg.Properties.AddColor(arpeggio.Color); // 1
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 

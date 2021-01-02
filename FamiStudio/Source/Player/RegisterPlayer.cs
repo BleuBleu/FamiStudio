@@ -12,7 +12,6 @@ namespace FamiStudio
 
     class RegisterPlayer : BasePlayer, IRegisterListener
     {
-        int frameIndex = 0;
         List<RegisterWrite> registerWrites;
 
         public RegisterPlayer() : base(NesApu.APU_WAV_EXPORT)
@@ -26,8 +25,7 @@ namespace FamiStudio
 
             if (BeginPlaySong(song, pal, 0, this))
             {
-                while (PlaySongFrame())
-                    frameIndex++;
+                while (PlaySongFrame());
             }
 
             return registerWrites.ToArray();
@@ -39,7 +37,7 @@ namespace FamiStudio
             {
                 var write = new RegisterWrite();
 
-                write.FrameNumber = frameIndex;
+                write.FrameNumber = frameNumber;
                 write.Register    = reg;
                 write.Value       = data;
 

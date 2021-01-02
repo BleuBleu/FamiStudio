@@ -10,19 +10,14 @@ namespace FamiStudio
         private string[] songNames;
         private string filename;
 
-        public NsfImportDialog(string file, Rectangle mainWinRect)
+        public NsfImportDialog(string file)
         {
-            int width  = 350;
-            int height = 300;
-            int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
-            int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
-
             filename = file;
             songNames = NsfFile.GetSongNames(filename);
 
             if (songNames != null && songNames.Length > 0)
             {
-                dialog = new PropertyDialog(x, y, width, height);
+                dialog = new PropertyDialog(350);
                 dialog.Properties.AddStringList("Song:", songNames, songNames[0]); // 0
                 dialog.Properties.AddIntegerRange("Duration (s):", 120, 1, 600);   // 1
                 dialog.Properties.AddIntegerRange("Pattern Length:", 256, 4, 256); // 2
@@ -33,11 +28,11 @@ namespace FamiStudio
             }
         }
 
-        public DialogResult ShowDialog()
+        public DialogResult ShowDialog(FamiStudioForm parent)
         {
             if (dialog != null)
             {
-                return dialog.ShowDialog();
+                return dialog.ShowDialog(parent);
             }
             else
             {

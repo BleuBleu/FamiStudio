@@ -94,12 +94,6 @@ namespace FamiStudio
             }
         }
 
-        public static void ProcessPendingEvents()
-        {
-            while (Gtk.Application.EventsPending())
-                Gtk.Application.RunIteration();
-        }
-
         private static string[] GetExtensionList(string str)
         {
             var splits = str.Split('|');
@@ -113,7 +107,7 @@ namespace FamiStudio
             return extensions.Distinct().ToArray();
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, Window parentWindow = null)
         {
             var extensionList = GetExtensionList(extensions);
 #if FAMISTUDIO_MACOS
@@ -126,7 +120,7 @@ namespace FamiStudio
             Gtk.Rc.ReparseAll();
 
             Gtk.FileChooserDialog filechooser =
-                new Gtk.FileChooserDialog("Choose the file to open",
+                new Gtk.FileChooserDialog(title,
                     null,
                     FileChooserAction.Open,
                     "Cancel", ResponseType.Cancel,
@@ -135,12 +129,15 @@ namespace FamiStudio
             filechooser.KeepAbove = true;
             filechooser.Modal = true;
             filechooser.SkipTaskbarHint = true;
-            filechooser.TransientFor = FamiStudioForm.Instance;
+            filechooser.TransientFor = parentWindow != null ? parentWindow : FamiStudioForm.Instance;
             filechooser.SetCurrentFolder(defaultPath);
 
-            filechooser.Filter = new FileFilter();
-            foreach (var ext in extensionList)
-                filechooser.Filter.AddPattern($"*.{ext}");
+            if (extensionList.Length > 0)
+            {
+                filechooser.Filter = new FileFilter();
+                foreach (var ext in extensionList)
+                    filechooser.Filter.AddPattern($"*.{ext}");
+            }
 
             string filename = null;
             if (filechooser.Run() == (int)ResponseType.Accept)
@@ -165,7 +162,7 @@ namespace FamiStudio
             return filename;
 #else
             Gtk.FileChooserDialog filechooser =
-                new Gtk.FileChooserDialog("Choose the file to save",
+                new Gtk.FileChooserDialog(title,
                     null,
                     FileChooserAction.Save,
                     "Cancel", ResponseType.Cancel,

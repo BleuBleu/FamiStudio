@@ -16,16 +16,24 @@ namespace FamiStudio
         Boolean,
         StringList,
         StringListMulti,
-        Color
+        Color,
+        Label,
+        Button,
+        MultilineString,
+        ProgressBar
     };
 
     public class PropertyPage : Gtk.Table
     {
+        public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
+
         class Property
         {
             public PropertyType type;
             public Label label;
             public Widget control;
+            public int leftMargin;
+            public ButtonPropertyClicked click;
         };
 
         private object userData;
@@ -95,9 +103,21 @@ namespace FamiStudio
 
         private Label CreateLabel(string str, string tooltip = null)
         {
+            Debug.Assert(!string.IsNullOrEmpty(str));
+
             var label = new Label();
 
             label.Text = str;
+            label.SetAlignment(0.0f, 0.5f);
+            label.TooltipText = tooltip;
+
+            return label;
+        }
+
+        private LinkButton CreateLinkLabel(string str, string url, string tooltip = null)
+        {
+            var label = new LinkButton(url, str);
+
             label.SetAlignment(0.0f, 0.5f);
             label.TooltipText = tooltip;
 
@@ -115,15 +135,35 @@ namespace FamiStudio
             return textBox;
         }
 
-        private Entry CreateTextBox(string txt, int maxLength)
+        private Entry CreateTextBox(string txt, int maxLength, string tooltip = null)
         {
             var textBox = new Entry();
 
             textBox.Text = txt;
             textBox.MaxLength = maxLength;
             textBox.WidthRequest = 50;
+            textBox.TooltipText = tooltip;
 
             return textBox;
+        }
+
+        private ScrolledWindow CreateMultilineTextBox(string txt)
+        {
+            var textView = new TextView();
+            textView.Buffer.Text = txt;
+            textView.Editable = false;
+            textView.CursorVisible = false;
+            textView.Show();
+
+            var scroll = new ScrolledWindow(null, null);
+            scroll.HscrollbarPolicy = PolicyType.Never;
+            scroll.VscrollbarPolicy = PolicyType.Automatic;
+            scroll.HeightRequest = 400;
+            scroll.ShadowType = ShadowType.EtchedIn;
+            scroll.Show();
+            scroll.Add(textView);
+
+            return scroll;
         }
 
         private CheckButton CreateCheckBox(bool value, string text = null, string tooltip = null)
@@ -216,6 +256,12 @@ namespace FamiStudio
             return upDown;
         }
 
+        private ProgressBar CreateProgressBar(float value)
+        {
+            var progress = new ProgressBar();
+            return progress;
+        }
+
         private void UpDown_ValueChanged1(object sender, EventArgs e)
         {
             int idx = GetPropertyIndex(sender as Widget);
@@ -257,6 +303,15 @@ namespace FamiStudio
             return new CheckBoxList(values, selected);
         }
 
+        private Button CreateButton(string text, string tooltip)
+        {
+            var button = new Button();
+            button.Label = text;
+            button.TooltipText = tooltip;
+            button.Clicked += Button_Clicked; 		
+            return button;
+        }
+
         public void AddColoredString(string value, System.Drawing.Color color)
         {
             properties.Add(
@@ -273,9 +328,43 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.String,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label) : null,
                     control = CreateTextBox(value, maxLength)
                 });
+        }
+
+        public void AddMultilineString(string label, string value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.MultilineString,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateMultilineTextBox(value)
+                });
+        }
+
+        public void AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Button,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateButton(value, tooltip),
+                    click = clickDelegate
+                });
+        }
+
+        void Button_Clicked(object sender, EventArgs e)
+        {
+            for (int i = 0; i < properties.Count; i++)
+            {
+                if (properties[i].control == sender)
+                {
+                    properties[i].click(this, i);
+                }
+            }
         }
 
         public void AddLabel(string label, string value, string tooltip = null)
@@ -283,9 +372,20 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.Boolean,
-                    label = CreateLabel(label, tooltip),
+                    type = PropertyType.Label,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateLabel(value, tooltip)
+                });
+        }
+
+        public void AddLinkLabel(string label, string value, string url, string tooltip = null)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Label,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateLinkLabel(value, url, tooltip)
                 });
         }
 
@@ -295,18 +395,19 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    label = CreateLabel(label, tooltip),
-                    control = CreateCheckBox(value, tooltip)
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateCheckBox(value)
                 });
         }
 
-        public void AddLabelBoolean(string label, bool value)
+        public void AddLabelBoolean(string label, bool value, int margin = 0)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Boolean,
-                    control = CreateCheckBox(value, label)
+                    control = CreateCheckBox(value, label),
+                    leftMargin = margin
                 });
         }
 
@@ -326,8 +427,19 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.IntegerRange,
-                    label = CreateLabel(label, tooltip),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateNumericUpDown(value, min, max, tooltip)
+                });
+        }
+
+        public void AddProgressBar(string label, float value)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.ProgressBar,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateProgressBar(value)
                 });
         }
 
@@ -350,7 +462,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.DomainRange,
-                    label = CreateLabel(label),
+                    label = label != null ? CreateLabel(label) : null,
                     control = CreateDomainUpDown(values, value)
                 });
         }
@@ -368,7 +480,7 @@ namespace FamiStudio
                 new Property()
                 {
                     type = PropertyType.StringList,
-                    label = CreateLabel(label, tooltip),
+                    label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateDropDownList(values, value, tooltip)
                 });
         }
@@ -411,6 +523,13 @@ namespace FamiStudio
 #endif
         }
 
+        public void AppendText(int idx, string line)
+        {
+            var scroll = properties[idx].control as ScrolledWindow;
+            var txt = scroll.Child as TextView;
+            txt.Buffer.Insert(txt.Buffer.EndIter, line + "\n");
+        }
+
         public object GetPropertyValue(int idx)
         {
             var prop = properties[idx];
@@ -432,6 +551,8 @@ namespace FamiStudio
                     return (prop.control as ComboBox).ActiveText;
                 case PropertyType.StringListMulti:
                     return (prop.control as CheckBoxList).GetSelected();
+                case PropertyType.Button:
+                    return (prop.control as Button).Label;
             }
 
             return null;
@@ -440,6 +561,24 @@ namespace FamiStudio
         public T GetPropertyValue<T>(int idx)
         {
             return (T)GetPropertyValue(idx);
+        }
+
+        public void SetPropertyValue(int idx, object value)
+        {
+            var prop = properties[idx];
+
+            switch (prop.type)
+            {
+                case PropertyType.Boolean:
+                    (prop.control as CheckButton).Active = (bool)value;
+                    break;
+                case PropertyType.Button:
+                    (prop.control as Button).Label = (string)value;
+                    break;
+                case PropertyType.ProgressBar:
+                    (prop.control as ProgressBar).Fraction = (float)value;
+                    break;
+            }
         }
 
         public void Build()
@@ -467,7 +606,7 @@ namespace FamiStudio
                     if (prop.control is ColorSelector img)
                         img.DesiredWidth = Toplevel.WidthRequest - 10; // (10 = Border * 2)
 
-                    Attach(prop.control, 0, 2, (uint)i, (uint)(i + 1));
+                    Attach(prop.control, 0, 2, (uint)i, (uint)(i + 1), AttachOptions.Expand | AttachOptions.Fill, AttachOptions.Expand | AttachOptions.Fill, (uint)prop.leftMargin, 0);
                     prop.control.Show();
                 }
             }

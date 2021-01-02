@@ -549,7 +549,7 @@ main:
         cmp #1
         bne @draw
 
-        lda #11
+        lda #21
         jsr famistudio_sfx_sample_play
         jmp @draw
 

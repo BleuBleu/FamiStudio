@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (2.2.0)
+; FAMISTUDIO SOUND ENGINE (2.3.0)
 ;
 ; This is the FamiStudio sound engine. It is used by the NSF and ROM exporter of FamiStudio and can be used to make 
 ; games. It supports every feature from FamiStudio, some of them are toggeable to save CPU/memory.
@@ -146,28 +146,35 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; More information at: https://famistudio.org/doc/song/#tempo-modes
 ; FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
 
-; Must be enabled if any song use the volume track. The volume track allows manipulating the volume at the track level
+; Must be enabled if the songs uses delayed notes or delayed cuts. This is obviously only available when using
+; FamiTracker tempo mode as FamiStudio tempo mode does not need this.
+; FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1
+
+; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
 FAMISTUDIO_USE_VOLUME_TRACK   = 1
 
-; Must be enabled if any song use the pitch track. The pitch track allows manipulating the pitch at the track level
+; Must be enabled if any song uses the pitch track. The pitch track allows manipulating the pitch at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#pitch
 FAMISTUDIO_USE_PITCH_TRACK    = 1
 
-; Must be enabled if any song use slide notes. Slide notes allows portamento and slide effects.
+; Must be enabled if any song uses slide notes. Slide notes allows portamento and slide effects.
 ; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
 FAMISTUDIO_USE_SLIDE_NOTES    = 1
 
-; Must be enabled if any song use the vibrato speed/depth effect track. 
+; Must be enabled if any song uses the vibrato speed/depth effect track. 
 ; More information at: https://famistudio.org/doc/pianoroll/#vibrato-depth-speed
 FAMISTUDIO_USE_VIBRATO        = 1
 
-; Must be enabled if any song use arpeggios (not to be confused with instrument arpeggio envelopes, those are always
+; Must be enabled if any song uses arpeggios (not to be confused with instrument arpeggio envelopes, those are always
 ; supported).
 ; More information at: (TODO)
 FAMISTUDIO_USE_ARPEGGIO       = 1
+
+; Must be enabled if any song uses the "Duty Cycle" effect (equivalent of FamiTracker Vxx, also called "Timbre").  
+; FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1
 
 .endif
 
@@ -257,6 +264,10 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
     FAMISTUDIO_USE_FAMITRACKER_TEMPO = 0
 .endif
 
+.ifndef FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+    FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 0
+.endif
+
 .ifndef FAMISTUDIO_USE_VOLUME_TRACK
     FAMISTUDIO_USE_VOLUME_TRACK = 0
 .endif
@@ -275,6 +286,10 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
 
 .ifndef FAMISTUDIO_USE_ARPEGGIO
     FAMISTUDIO_USE_ARPEGGIO = 0
+.endif
+
+.ifndef FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+    FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 0
 .endif
 
 .ifndef FAMISTUDIO_CFG_THREAD
@@ -296,6 +311,10 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
 
 .if FAMISTUDIO_CFG_SFX_SUPPORT && FAMISTUDIO_CFG_SMOOTH_VIBRATO
     .error "Smooth vibrato and SFX canoot be used at the same time."
+.endif
+
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS && (FAMISTUDIO_USE_FAMITRACKER_TEMPO = 0)
+    .error "Delayed notes or cuts only make sense when using FamiTracker tempo."
 .endif
 
 .if (FAMISTUDIO_EXP_VRC6 + FAMISTUDIO_EXP_VRC7 + FAMISTUDIO_EXP_MMC5 + FAMISTUDIO_EXP_S5B + FAMISTUDIO_EXP_FDS + FAMISTUDIO_EXP_N163) > 1
@@ -324,36 +343,43 @@ FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2+2+2+2+2+2
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 9
     FAMISTUDIO_NUM_CHANNELS         = 11
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3
 .endif
 .if FAMISTUDIO_EXP_VRC6
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+3+3+3
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 6
     FAMISTUDIO_NUM_CHANNELS         = 8
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 6
 .endif
 .if FAMISTUDIO_EXP_S5B
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2+2+2
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 6
-    FAMISTUDIO_NUM_CHANNELS         = 8    
+    FAMISTUDIO_NUM_CHANNELS         = 8
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3
 .endif
 .if FAMISTUDIO_EXP_N163
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+(FAMISTUDIO_EXP_N163_CHN_CNT*2)
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 3+FAMISTUDIO_EXP_N163_CHN_CNT
     FAMISTUDIO_NUM_CHANNELS         = 5+FAMISTUDIO_EXP_N163_CHN_CNT
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
 .endif
 .if FAMISTUDIO_EXP_MMC5
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+3+3
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 5
     FAMISTUDIO_NUM_CHANNELS         = 7
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 5   
 .endif
 .if FAMISTUDIO_EXP_FDS
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 4
     FAMISTUDIO_NUM_CHANNELS         = 6
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
 .endif
 .if FAMISTUDIO_EXP_NONE
     FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3
     FAMISTUDIO_NUM_PITCH_ENVELOPES  = 3
     FAMISTUDIO_NUM_CHANNELS         = 5
+    FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
 .endif
 
 FAMISTUDIO_CH0_ENVS = 0
@@ -477,6 +503,10 @@ famistudio_chn_volume_track:      .dsb FAMISTUDIO_NUM_CHANNELS
 .if FAMISTUDIO_USE_VIBRATO || FAMISTUDIO_USE_ARPEGGIO
 famistudio_chn_env_override:      .dsb FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, bit 0 = arpeggio.
 .endif
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+famistudio_chn_note_delay:        .dsb FAMISTUDIO_NUM_CHANNELS
+famistudio_chn_cut_delay:         .dsb FAMISTUDIO_NUM_CHANNELS
+.endif
 .if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
 famistudio_chn_inst_changed:      .dsb FAMISTUDIO_NUM_CHANNELS-5
 .endif
@@ -491,12 +521,18 @@ famistudio_chn_vrc7_trigger:      .dsb 6 ; bit 0 = new note triggered, bit 7 = n
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_wave_len:     .dsb FAMISTUDIO_EXP_N163_CHN_CNT
 .endif
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+famistudio_duty_cycle:            .dsb FAMISTUDIO_NUM_DUTY_CYCLES
+.endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
 famistudio_tempo_step_lo:         .dsb 1
 famistudio_tempo_step_hi:         .dsb 1
 famistudio_tempo_acc_lo:          .dsb 1
 famistudio_tempo_acc_hi:          .dsb 1
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+famistudio_tempo_advance_row:     .dsb 1
+.endif
 .else
 famistudio_tempo_env_ptr_lo:      .dsb 1
 famistudio_tempo_env_ptr_hi:      .dsb 1
@@ -579,7 +615,7 @@ famistudio_ptr0_hi = famistudio_ptr0+1
 famistudio_ptr1_lo = famistudio_ptr1+0
 famistudio_ptr1_hi = famistudio_ptr1+1
 
-.ende ; MATTT
+.ende
 
 ;======================================================================================================================
 ; CODE
@@ -855,7 +891,6 @@ famistudio_music_stop:
 
 @set_channels:
 
-    lda #0
     sta famistudio_chn_repeat,x
     sta famistudio_chn_instrument,x
     sta famistudio_chn_note,x
@@ -869,17 +904,28 @@ famistudio_music_stop:
     .if FAMISTUDIO_CFG_EQUALIZER
         sta famistudio_chn_note_counter,x
     .endif    
-
-@nextchannel:
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        lda #$ff
+        sta famistudio_chn_note_delay,x
+        sta famistudio_chn_cut_delay,x
+        lda #0
+    .endif
     inx
     cpx #FAMISTUDIO_NUM_CHANNELS
     bne @set_channels
 
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+ldx #0
+@set_duty_cycles:
+    sta famistudio_duty_cycle,x
+    inx
+    cpx #FAMISTUDIO_NUM_DUTY_CYCLES
+    bne @set_duty_cycles
+.endif
+
 .if FAMISTUDIO_USE_SLIDE_NOTES
     ldx #0
-    lda #0
 @set_slides:
-
     sta famistudio_slide_step, x
     inx
     cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
@@ -1059,6 +1105,11 @@ famistudio_music_play:
         lda #$f0
         sta famistudio_chn_volume_track,x
     .endif
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        lda #$ff
+        sta famistudio_chn_note_delay,x
+        sta famistudio_chn_cut_delay,x
+    .endif    
 
 @nextchannel:
     inx
@@ -1202,7 +1253,7 @@ famistudio_music_pause:
 .endif
 .ifdef FAMISTUDIO_CH12_ENVS
     sta famistudio_env_value+FAMISTUDIO_CH12_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-.endif        
+.endif
     lda famistudio_song_speed ; <= 0 pauses the music
     ora #$80
     bne @done
@@ -1911,86 +1962,138 @@ famistudio_update_s5b_channel_sound:
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_ROW (internal)
 ;
-; Macro to advance the song for a given channel. Will read any new note or effect (if any) and load any new 
-; instrument (if any).
-;======================================================================================================================
-
-.macro famistudio_update_row channel_idx, env_idx
-
-    ldx #channel_idx
-    jsr famistudio_channel_update
-    bcc no_new_note
-    ldx #env_idx
-    ldy #channel_idx
-    lda famistudio_chn_instrument+channel_idx
-
-.if FAMISTUDIO_EXP_FDS && channel_idx >= 5
-    jsr famistudio_set_fds_instrument
-.endif
-.if FAMISTUDIO_EXP_VRC7 && channel_idx >= 5
-    jsr famistudio_set_vrc7_instrument
-.endif
-.if FAMISTUDIO_EXP_N163 && channel_idx >= 5
-    jsr famistudio_set_n163_instrument
-.endif
-.if ((!FAMISTUDIO_EXP_FDS) && (!FAMISTUDIO_EXP_VRC7) && (!FAMISTUDIO_EXP_N163)) || (channel_idx < 5)
-    jsr famistudio_set_instrument
-.endif
-
-.if FAMISTUDIO_CFG_EQUALIZER
-    new_note:
-        ldx #channel_idx
-        lda #8
-        sta famistudio_chn_note_counter, x
-        jmp done
-    no_new_note:
-        ldx #channel_idx
-        lda famistudio_chn_note_counter, x
-        beq done
-        dec famistudio_chn_note_counter, x
-    done:    
-.else
-    no_new_note:
-.endif
-
-.endm
-
-;======================================================================================================================
-; FAMISTUDIO_UPDATE_ROW_DPCM (internal)
+; Advance the song for a given channel. Will read any new note or effect (if any) and load any new 
 ;
-; Special version for DPCM.
+; [in] x: channel index (also true when leaving the function)
 ;======================================================================================================================
 
-.macro famistudio_update_row_dpcm channel_idx
-.if FAMISTUDIO_CFG_DPCM_SUPPORT
-    ldx #channel_idx
-    jsr famistudio_channel_update
-    bcc no_new_note
-    lda famistudio_chn_note+channel_idx
-    bne play_sample
-    jsr famistudio_sample_stop
-    bne no_new_note
-play_sample:
-    jsr famistudio_music_sample_play
+famistudio_update_row:
 
-.if FAMISTUDIO_CFG_EQUALIZER
-    new_note:
-        ldx #channel_idx
+.if !FAMISTUDIO_CFG_DPCM_SUPPORT
+    cpx #4
+    beq @no_new_note
+.endif
+
+    jsr famistudio_channel_update
+    bcc @no_new_note
+
+    txa
+    tay
+    ldx famistudio_channel_env,y
+    lda famistudio_chn_instrument,y
+
+    ; TODO: If samples are disabled, there is no point in doing this test most of the time.
+    cpy #4
+.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_S5B
+    bne @base_instrument
+.else
+    bcc @base_instrument
+.endif
+.if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163
+    beq @dpcm
+    .if FAMISTUDIO_EXP_FDS
+        jsr famistudio_set_fds_instrument
+        jmp @new_note
+    .endif
+    .if FAMISTUDIO_EXP_VRC7
+        jsr famistudio_set_vrc7_instrument
+        jmp @new_note
+    .endif
+    .if FAMISTUDIO_EXP_N163
+        jsr famistudio_set_n163_instrument
+        jmp @new_note
+    .endif
+.endif
+
+    @dpcm:
+.if FAMISTUDIO_CFG_DPCM_SUPPORT    
+        lda famistudio_chn_note+4
+        bne @play_sample
+        jsr famistudio_sample_stop
+        bne @no_new_note
+        @play_sample:
+            jsr famistudio_music_sample_play
+            ldx #4
+            jmp @new_note
+.endif
+
+    @base_instrument:
+        jsr famistudio_set_instrument
+
+.if FAMISTUDIO_CFG_EQUALIZER 
+    @new_note:
         lda #8
         sta famistudio_chn_note_counter, x
-        jmp done
-    no_new_note:
-        ldx #channel_idx
+        jmp @done
+    @no_new_note:
         lda famistudio_chn_note_counter, x
-        beq done
+        beq @done
         dec famistudio_chn_note_counter, x
-    done:    
+    @done:    
 .else
-    no_new_note:
+    @new_note:
+    @no_new_note:
 .endif
 
+    rts
+
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+
+;======================================================================================================================
+; FAMISTUDIO_UPDATE_ROW_WITH_DELAYS (internal)
+;
+; Advance the song for a given channel, but while managing notes/cuts delays. 
+;
+; [in] x: channel index (also true when leaving the function)
+;======================================================================================================================
+
+famistudio_update_row_with_delays:
+
+    ; Is the tempo telling us to advance by 1 row?
+    lda famistudio_tempo_advance_row
+    beq @check_delayed_note
+
+    ; Tempo says we need to advance, was there a delayed note wairing?
+    lda famistudio_chn_note_delay,x
+    bmi @advance
+
+    ; Need to clear any pending delayed note before advancing (will be inaudible).
+    @clear_delayed_note:
+    lda #$ff
+    sta famistudio_chn_note_delay,x
+    jsr famistudio_update_row ; This is the update for the de delayed note.
+    jmp @advance
+
+    ; Tempo said we didnt need to advance, see if there is delayed note with a counter that reached zero.
+    @check_delayed_note:
+    lda famistudio_chn_note_delay,x
+    bmi @check_delayed_cut
+    sec
+    sbc #1
+    sta famistudio_chn_note_delay,x
+    bpl @check_delayed_cut ; When wrapping from 0 -> 0xff, we play the note.
+
+    ; Finally, advance by 1 row.
+    @advance:
+    jsr famistudio_update_row
+
+    ; Handle delayed cuts.
+    @check_delayed_cut:
+    lda famistudio_chn_cut_delay,x
+    bmi @done
+    sec
+    sbc #1
+    sta famistudio_chn_cut_delay,x
+    bpl @done ; When wrapping from 0 -> 0xff, we play the note.
+
+    ; Write a stop note.
+    lda #0
+    sta famistudio_chn_note,x
+
+    @done:
+    rts
+
 .endif
-.endm
 
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE (public)
@@ -2030,21 +2133,22 @@ famistudio_update:
 @update:
 
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
-    lda famistudio_tempo_acc_lo
-    adc famistudio_tempo_step_lo
-    sta famistudio_tempo_acc_lo
-    lda famistudio_tempo_acc_hi
-    adc famistudio_tempo_step_hi
-    cmp famistudio_song_speed
-    bcs @update_row ; Overflow, row update is needed
-    sta famistudio_tempo_acc_hi ; No row update, skip to the envelopes update
-    jmp @update_envelopes
 
-@update_row:
-    sec
-    sbc famistudio_song_speed
-    sta famistudio_tempo_acc_hi
+    lda famistudio_tempo_acc_hi
+    cmp famistudio_song_speed
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        ldx #0
+        stx famistudio_tempo_advance_row    
+        bcc @update_row
+    .else
+        bcc @update_envelopes
+    .endif
+    sbc famistudio_song_speed ; Carry is set.
+    sta famistudio_tempo_acc_hi    
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        ldx #1
+        stx famistudio_tempo_advance_row
+    .endif
 
 .else ; FamiStudio tempo
 
@@ -2081,73 +2185,20 @@ famistudio_update:
 @store_frame_count:
     sta famistudio_tempo_frame_cnt
 
+.endif
+
+;----------------------------------------------------------------------------------------------------------------------
 @update_row:
-
-.endif
-
-    ; TODO: Turn most of these in loops, no reasons to be macros.
-    famistudio_update_row 0, FAMISTUDIO_CH0_ENVS
-    famistudio_update_row 1, FAMISTUDIO_CH1_ENVS
-    famistudio_update_row 2, FAMISTUDIO_CH2_ENVS
-    famistudio_update_row 3, FAMISTUDIO_CH3_ENVS
-    famistudio_update_row_dpcm 4
-
-.if FAMISTUDIO_EXP_VRC6
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
-    famistudio_update_row 6, FAMISTUDIO_CH6_ENVS
-    famistudio_update_row 7, FAMISTUDIO_CH7_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_VRC7
-    famistudio_update_row  5, FAMISTUDIO_CH5_ENVS
-    famistudio_update_row  6, FAMISTUDIO_CH6_ENVS
-    famistudio_update_row  7, FAMISTUDIO_CH7_ENVS
-    famistudio_update_row  8, FAMISTUDIO_CH8_ENVS
-    famistudio_update_row  9, FAMISTUDIO_CH9_ENVS
-    famistudio_update_row 10, FAMISTUDIO_CH10_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_FDS
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_MMC5
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
-    famistudio_update_row 6, FAMISTUDIO_CH6_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_S5B
-    famistudio_update_row 5, FAMISTUDIO_CH5_ENVS
-    famistudio_update_row 6, FAMISTUDIO_CH6_ENVS
-    famistudio_update_row 7, FAMISTUDIO_CH7_ENVS
-.endif
-
-.if FAMISTUDIO_EXP_N163
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 1
-        famistudio_update_row  5, FAMISTUDIO_CH5_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 2
-        famistudio_update_row  6, FAMISTUDIO_CH6_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 3
-        famistudio_update_row  7, FAMISTUDIO_CH7_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 4
-        famistudio_update_row  8, FAMISTUDIO_CH8_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 5
-        famistudio_update_row  9, FAMISTUDIO_CH9_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 6
-        famistudio_update_row 10, FAMISTUDIO_CH10_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 7
-        famistudio_update_row 11, FAMISTUDIO_CH11_ENVS
-    .endif
-    .if FAMISTUDIO_EXP_N163_CHN_CNT >= 8
-        famistudio_update_row 12, FAMISTUDIO_CH12_ENVS
-    .endif
-.endif
+    ldx #0
+    @channel_loop:
+        .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+            jsr famistudio_update_row_with_delays
+        .else
+            jsr famistudio_update_row
+        .endif
+        inx
+        cpx #FAMISTUDIO_NUM_CHANNELS
+        bne @channel_loop
 
 ;----------------------------------------------------------------------------------------------------------------------
 @update_envelopes:
@@ -2395,7 +2446,15 @@ famistudio_update:
         bne @s5b_channel_loop
 .endif
 
-.if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
+.if FAMISTUDIO_USE_FAMITRACKER_TEMPO
+    clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
+    lda famistudio_tempo_acc_lo
+    adc famistudio_tempo_step_lo
+    sta famistudio_tempo_acc_lo
+    lda famistudio_tempo_acc_hi
+    adc famistudio_tempo_step_hi
+    sta famistudio_tempo_acc_hi
+.else
     ; See if we need to run a double frame (playing NTSC song on PAL)
     dec famistudio_tempo_frame_cnt
     beq @skip_frame
@@ -2559,6 +2618,15 @@ famistudio_set_instrument:
         lda #0
         sta famistudio_env_repeat,x
         sta famistudio_env_ptr,x
+        .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+            stx tmp_x
+            ldx chan_idx
+            lda famistudio_channel_to_dutycycle,x 
+            tax
+            lda famistudio_duty_cycle,x
+            ldx tmp_x
+        .endif
+        sta famistudio_env_value,x
     @pitch_env:
     ; Pitch envelopes.
     ldx chan_idx
@@ -2582,6 +2650,7 @@ famistudio_set_instrument:
     lda (intrument_ptr),y
     sta famistudio_pitch_env_addr_hi,x
     @no_pitch:
+    ldx chan_idx
     rts
 
 .if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7
@@ -2678,6 +2747,7 @@ famistudio_set_instrument:
     iny
 
 @pitch_overriden:
+    ldx chan_idx
 .endm
 
 .endif
@@ -2728,6 +2798,7 @@ famistudio_set_vrc7_instrument:
         bne @read_patch_loop
 
     @done:
+    ldx chan_idx
     rts
 .endif
 
@@ -2853,6 +2924,7 @@ famistudio_set_fds_instrument:
                 lda (ptr),y
                 sta famistudio_fds_mod_delay
 
+    ldx #5
     rts
 .endif
 
@@ -2883,8 +2955,8 @@ famistudio_set_n163_instrument:
     ptr      = famistudio_ptr0
     wave_ptr = famistudio_ptr1
     wave_len = famistudio_r0
-    wave_pos = famistudio_r1
     chan_idx = famistudio_r1
+    wave_pos = famistudio_r2
 
     famistudio_set_exp_instrument
 
@@ -2935,6 +3007,7 @@ famistudio_set_n163_instrument:
         bne @wave_loop
 
     @done:
+    ldx chan_idx
     rts
 
 .endif
@@ -2972,30 +3045,13 @@ famistudio_channel_update:
     tmp_chan_idx         = famistudio_r0
     tmp_slide_from       = famistudio_r1
     tmp_slide_idx        = famistudio_r1
-    no_attack_flag       = famistudio_r2
+    tmp_duty_cycle       = famistudio_r1
+    update_flags         = famistudio_r2 ; bit 7 = no attack, bit 6 = has set delayed cut.
     slide_delta_lo       = famistudio_ptr1_hi
     channel_data_ptr     = famistudio_ptr0
     special_code_jmp_ptr = famistudio_ptr1
     tempo_env_ptr        = famistudio_ptr1
     volume_env_ptr       = famistudio_ptr1
-
-.if FAMISTUDIO_EXP_VRC6
-    exp_note_start = 7
-    exp_note_table_lsb = famistudio_saw_note_table_lsb
-    exp_note_table_msb = famistudio_saw_note_table_msb
-.elseif FAMISTUDIO_EXP_VRC7
-    exp_note_start = 5
-    exp_note_table_lsb = famistudio_vrc7_note_table_lsb
-    exp_note_table_msb = famistudio_vrc7_note_table_msb
-.elseif FAMISTUDIO_EXP_N163
-    exp_note_start = 5
-    exp_note_table_lsb = famistudio_n163_note_table_lsb
-    exp_note_table_msb = famistudio_n163_note_table_msb
-.elseif FAMISTUDIO_EXP_FDS
-    exp_note_start = 5
-    exp_note_table_lsb = famistudio_fds_note_table_lsb
-    exp_note_table_msb = famistudio_fds_note_table_msb
-.endif
 
     lda famistudio_chn_repeat,x
     beq @no_repeat
@@ -3005,7 +3061,7 @@ famistudio_channel_update:
 
 @no_repeat:
     lda #0
-    sta no_attack_flag
+    sta update_flags
     lda famistudio_chn_ptr_lo,x
     sta channel_data_ptr+0
     lda famistudio_chn_ptr_hi,x
@@ -3161,9 +3217,44 @@ famistudio_channel_update:
     jmp @read_byte
 .endif
 
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+@special_code_duty_cycle_effect:
+    stx tmp_chan_idx
+    lda famistudio_channel_to_dutycycle,x
+    tax 
+    lda (channel_data_ptr),y
+    sta famistudio_duty_cycle,x
+    sta tmp_duty_cycle
+    ldx tmp_chan_idx
+    lda famistudio_channel_to_duty,x
+    tax 
+    lda tmp_duty_cycle
+    sta famistudio_env_value,x
+    ldx tmp_chan_idx
+    famistudio_inc_16 channel_data_ptr
+    jmp @read_byte
+.endif
+
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+@special_code_note_delay:
+    lda (channel_data_ptr),y
+    sta famistudio_chn_note_delay,x
+    famistudio_inc_16 channel_data_ptr
+    jmp @done
+
+@special_code_cut_delay:
+    lda #$40
+    sta update_flags
+    lda (channel_data_ptr),y
+    sta famistudio_chn_cut_delay,x
+    famistudio_inc_16 channel_data_ptr
+    jmp @read_byte 
+.endif
+
 @special_code_disable_attack:
-    lda #1
-    sta no_attack_flag    
+    lda #$80
+    ora update_flags
+    sta update_flags
     jmp @read_byte 
 
 .if FAMISTUDIO_USE_SLIDE_NOTES
@@ -3188,9 +3279,9 @@ famistudio_channel_update:
 .endif
     stx tmp_slide_idx ; X contained the slide index.    
     tax
-.ifdef exp_note_start
+.ifdef FAMISTUDIO_EXP_NOTE_START
     lda tmp_chan_idx
-    cmp #exp_note_start
+    cmp #FAMISTUDIO_EXP_NOTE_START
     bcs @note_table_expansion
 .endif
     sec ; Subtract the pitch of both notes.
@@ -3278,8 +3369,15 @@ famistudio_channel_update:
     sta famistudio_slide_step,y
 .endif
 @sec_and_done:
-    lda no_attack_flag
-    bne @no_attack
+    bit update_flags
+    bmi @no_attack
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+    ; Any note with an attack clears any pending delayed cut, unless it was set during this update (flags bit 6).
+    bvs @check_stop_note 
+    lda #$ff
+    sta famistudio_chn_cut_delay,x
+.endif    
+    @check_stop_note:
     lda famistudio_chn_note,x ; Dont trigger attack on stop notes.
     beq @no_attack
 .if FAMISTUDIO_EXP_VRC7
@@ -3443,14 +3541,22 @@ famistudio_channel_update:
 @special_code_clear_arpeggio_override_flag:
 @special_code_reset_arpeggio:
 .endif
+.if !FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+@special_code_duty_cycle_effect:
+.endif
 .if !FAMISTUDIO_USE_SLIDE_NOTES
 @special_code_slide:
+.endif
+.if !FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+@special_code_note_delay:
+@special_code_cut_delay:
 .endif
     ; If you hit this, this mean you either:
     ; - have fine pitches in your songs, but didnt enable "FAMISTUDIO_USE_PITCH_TRACK"
     ; - have vibrato effect in your songs, but didnt enable "FAMISTUDIO_USE_VIBRATO"
     ; - have arpeggiated chords in your songs, but didnt enable "FAMISTUDIO_USE_ARPEGGIO"
     ; - have slide notes in your songs, but didnt enable "FAMISTUDIO_USE_SLIDE_NOTES"
+    ; - have a duty cycle effect in your songs, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT
     brk 
 
 @famistudio_special_code_jmp_lo:
@@ -3462,9 +3568,12 @@ famistudio_channel_update:
     .byte <@special_code_clear_arpeggio_override_flag ; $66
     .byte <@special_code_reset_arpeggio               ; $67
     .byte <@special_code_fine_pitch                   ; $68
+    .byte <@special_code_duty_cycle_effect            ; $69
+    .byte <@special_code_note_delay                   ; $6a
+    .byte <@special_code_cut_delay                    ; $6b
 .if FAMISTUDIO_EXP_FDS        
-    .byte <@special_code_fds_mod_speed                ; $69
-    .byte <@special_code_fds_mod_depth                ; $6a
+    .byte <@special_code_fds_mod_speed                ; $6c
+    .byte <@special_code_fds_mod_depth                ; $6d
 .endif        
 @famistudio_special_code_jmp_hi:
     .byte >@special_code_slide                        ; $61
@@ -3475,9 +3584,12 @@ famistudio_channel_update:
     .byte >@special_code_clear_arpeggio_override_flag ; $66
     .byte >@special_code_reset_arpeggio               ; $67
     .byte >@special_code_fine_pitch                   ; $68
+    .byte >@special_code_duty_cycle_effect            ; $69
+    .byte >@special_code_note_delay                   ; $6a
+    .byte >@special_code_cut_delay                    ; $6b    
 .if FAMISTUDIO_EXP_FDS        
-    .byte >@special_code_fds_mod_speed                ; $69
-    .byte >@special_code_fds_mod_depth                ; $6a
+    .byte >@special_code_fds_mod_speed                ; $6c
+    .byte >@special_code_fds_mod_depth                ; $6d
 .endif
 
 ;======================================================================================================================
@@ -3988,7 +4100,7 @@ famistudio_fds_note_table_msb:
 .endif
 .if FAMISTUDIO_EXP_N163_CHN_CNT = 4
     famistudio_exp_note_table_lsb:
-famistudio_n163_note_table_lsb:
+    famistudio_n163_note_table_lsb:
         .byte $00
         .byte $1f,$30,$42,$55,$6a,$7f,$96,$ae,$c8,$e3,$00,$1e ; Octave 0
         .byte $3e,$60,$85,$ab,$d4,$ff,$2c,$5d,$90,$c6,$00,$3d ; Octave 1
@@ -4109,6 +4221,7 @@ famistudio_n163_note_table_lsb:
 .endif
 
 ; For a given channel, returns the index of the volume envelope.
+famistudio_channel_env:
 famistudio_channel_to_volume_env:
     .byte FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .byte FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
@@ -4205,6 +4318,38 @@ famistudio_channel_to_slide:
 .endif
 .if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 11
     .byte $0a
+.endif
+
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+; For a given channel, returns the index of the duty cycle in the "famistudio_duty_cycle" array.
+famistudio_channel_to_dutycycle:
+    .byte $00
+    .byte $01
+    .byte $ff
+    .byte $02
+    .byte $ff
+.if FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_VRC6
+    .byte $03
+    .byte $04
+.endif
+.if FAMISTUDIO_EXP_VRC6
+    .byte $05
+.endif
+
+; For a given channel, returns the index of the duty cycle envelope.
+famistudio_channel_to_duty:
+    .byte FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+    .byte FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+    .byte $ff
+    .byte FAMISTUDIO_CH3_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+    .byte $ff
+.if FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_VRC6
+    .byte FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+    .byte FAMISTUDIO_CH6_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+.endif
+.if FAMISTUDIO_EXP_VRC6
+    .byte FAMISTUDIO_CH7_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+.endif
 .endif
 
 ; Duty lookup table.

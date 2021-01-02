@@ -16,7 +16,7 @@ namespace FamiStudio
         {
             base.Dispose(disposing);
 
-            if (!DesignMode)
+            if (!DesignMode && d2dGraphics != null)
             {
                 d2dGraphics.Dispose();
             }

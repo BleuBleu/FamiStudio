@@ -3,9 +3,15 @@ using System;
 using System.Reflection;
 using System.Resources;
 
+#if FAMISTUDIO_LINUX
+    using BaseWindow = Gtk.Dialog;
+#else
+    using BaseWindow = Gtk.Window;
+#endif
+
 namespace FamiStudio
 {
-    public class TutorialDialog : Window
+    public class TutorialDialog : BaseWindow
     {
         private Label label;
         private Image image;
@@ -16,7 +22,10 @@ namespace FamiStudio
 
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
-        public TutorialDialog() : base(WindowType.Toplevel)
+        public TutorialDialog()
+#if FAMISTUDIO_MACOS
+             : base(WindowType.Toplevel)
+#endif
         {
             Init();
             WidthRequest = 756;
@@ -82,13 +91,17 @@ namespace FamiStudio
             image.HeightRequest = 414;
             image.Show();
 
-            var vbox = new VBox();
+#if FAMISTUDIO_LINUX
+            var vbox = VBox;
+#else
+            var vbox  = new VBox();
+            Add(vbox);
+#endif
+
             vbox.PackStart(label, false, false, 0);
             vbox.PackStart(image, false, false, 0);
             vbox.PackStart(hbox, false, false, 0);
             vbox.Show();
-
-            Add(vbox);
 
             BorderWidth = 10;
             Resizable = false;
@@ -113,13 +126,21 @@ namespace FamiStudio
                 Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.ArrowRight{suffix}.png");
         }
 
+        private void EndDialog(System.Windows.Forms.DialogResult res)
+        {
+            result = res;
+#if FAMISTUDIO_LINUX
+            Respond(0);
+#endif
+        }
+
         void ButtonRight_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
             if (pageIndex == TutorialMessages.Messages.Length - 1)
             {
-                result = checkBoxDontShow.Active ? 
+                EndDialog(checkBoxDontShow.Active ? 
                     System.Windows.Forms.DialogResult.OK : 
-                    System.Windows.Forms.DialogResult.Cancel;
+                    System.Windows.Forms.DialogResult.Cancel);
             }
             else
             {
@@ -138,29 +159,33 @@ namespace FamiStudio
                 evnt.Key == Gdk.Key.Escape)
             {
                 ButtonRight_ButtonPressEvent(null, null);
+                return true;
             }
-
-            return base.OnKeyPressEvent(evnt);
+            else
+            {
+                return base.OnKeyPressEvent(evnt);
+            }
         }
 
         public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent = null)
         {
+#if FAMISTUDIO_MACOS
             Show();
 
-#if FAMISTUDIO_MACOS
             int x = parent.Bounds.Left + (parent.Bounds.Width  - Allocation.Width)  / 2;
             int y = parent.Bounds.Top  + (parent.Bounds.Height - Allocation.Height) / 2;
             Move(x, y);
             MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
 
             while (result == System.Windows.Forms.DialogResult.None)
                 Application.RunIteration();
 
             Hide();
 
-#if FAMISTUDIO_MACOS
             MacUtils.RestoreMainNSWindowFocus();
+#else
+            Run();
+            Hide();
 #endif
 
             return result;

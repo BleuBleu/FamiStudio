@@ -19,14 +19,14 @@ namespace FamiStudio
             public bool useCustomSettings;
             public int  patternLength;
             public int  noteLength;
-            public int  barLength;
+            public int  beatLength;
 
             public void Clear()
             {
                 useCustomSettings = false;
                 patternLength = 0;
                 noteLength = 0;
-                barLength = 0;
+                beatLength = 0;
             }
 
             public PatternCustomSetting Clone()
@@ -35,7 +35,7 @@ namespace FamiStudio
                 clone.useCustomSettings = useCustomSettings;
                 clone.patternLength = patternLength;
                 clone.noteLength = noteLength;
-                clone.barLength = barLength;
+                clone.beatLength = beatLength;
                 return clone;
             }
         };
@@ -46,7 +46,7 @@ namespace FamiStudio
         private Color color;
         private int patternLength = 96;
         private int songLength = 16;
-        private int barLength = 24;
+        private int beatLength = 40;
         private string name;
         private int loopPoint = 0;
         private PatternCustomSetting[] patternCustomSettings = new PatternCustomSetting[Song.MaxLength];
@@ -66,7 +66,7 @@ namespace FamiStudio
         public string Name { get => name; set => name = value; }
         public int Length { get => songLength; }
         public int PatternLength { get => patternLength; }
-        public int BarLength { get => barLength; }
+        public int BeatLength { get => beatLength; }
         public int LoopPoint { get => loopPoint; }
         public bool UsesFamiStudioTempo => project.UsesFamiStudioTempo;
         public bool UsesFamiTrackerTempo => project.UsesFamiTrackerTempo;
@@ -84,7 +84,7 @@ namespace FamiStudio
             this.project = project;
             this.id = id;
             this.name = name;
-            this.color = Color.Azure;
+            this.color = ThemeBase.RandomCustomColor();
 
             CreateCustomSettings();
             SetDefaultsForTempoMode(project.TempoMode);
@@ -97,16 +97,16 @@ namespace FamiStudio
             if (tempoMode == Project.TempoFamiStudio)
             {
                 noteLength = 10;
-                barLength = noteLength * 4;
+                beatLength = noteLength * 4;
             }
             else
             {
                 famitrackerTempo = Song.NativeTempoNTSC;
                 famitrackerSpeed = 10;
-                barLength = 4;
+                beatLength = 4;
             }
 
-            patternLength = barLength * 4;
+            patternLength = beatLength * 4;
         }
 
         private void CreateCustomSettings()
@@ -197,7 +197,7 @@ namespace FamiStudio
                 for (int p = 0; p < songLength; p++)
                 {
                     var patternLen        = GetPatternLength(p);
-                    var patternBarLength  = UsesFamiStudioTempo ? GetPatternBarLength(p)  : barLength;
+                    var patternBeatLength = UsesFamiStudioTempo ? GetPatternBeatLength(p)  : beatLength;
                     var patternNoteLength = UsesFamiStudioTempo ? GetPatternNoteLength(p) : 1;
                     var patternNumNotes   = patternLen / patternNoteLength;
                     var patternNewLen     = newNumNotes * patternNoteLength;
@@ -219,7 +219,7 @@ namespace FamiStudio
                             var customSettings = new PatternCustomSetting();
                             customSettings.useCustomSettings = true;
                             customSettings.patternLength = Math.Min(patternNewLen, notesLeft);
-                            customSettings.barLength = patternBarLength;
+                            customSettings.beatLength = patternBeatLength;
                             customSettings.noteLength = patternNoteLength;
                             newPatternCustomSettings.Add(customSettings);
                         }
@@ -286,6 +286,11 @@ namespace FamiStudio
             return false;
         }
 
+        public void SetProject(Project newProject)
+        {
+            project = newProject;
+        }
+
         public void SetLength(int newLength)
         {
             Debug.Assert(newLength <= MaxLength);
@@ -304,15 +309,15 @@ namespace FamiStudio
         public void SetDefaultPatternLength(int newLength)
         {
             patternLength = newLength;
-            barLength = Math.Min(barLength, patternLength);
+            beatLength = Math.Min(beatLength, patternLength);
 
             UpdatePatternStartNotes();
         }
 
-        public void SetBarLength(int newBarLength)
+        public void SetBeatLength(int newBeatLength)
         {
-            if (barLength < patternLength)
-                barLength = newBarLength;
+            if (beatLength < patternLength)
+                beatLength = newBeatLength;
         }
 
         public void SetLoopPoint(int loop)
@@ -337,18 +342,26 @@ namespace FamiStudio
             }
         }
 
-        public void SetSensibleBarLength()
+        public void SetSensibleBeatLength()
         {
             if (UsesFamiTrackerTempo)
             {
-                var barLengths = Utils.GetFactors(patternLength);
-                barLength = barLengths[barLengths.Length / 2];
+                // FamiTracker always assumes 4 rows per beat for BPM calculation, let's try to favor that when possible.
+                if ((patternLength % 4) == 0)
+                {
+                    beatLength = 4;
+                }
+                else
+                {
+                    var beatLengths = Utils.GetFactors(patternLength);
+                    beatLength = beatLengths[beatLengths.Length / 2];
+                }
             }
             else
             {
-                barLength = noteLength * 4;
-                while (barLength > patternLength)
-                    barLength /= 2;
+                beatLength = noteLength * 4;
+                while (beatLength > patternLength)
+                    beatLength /= 2;
             }
         }
 
@@ -370,7 +383,7 @@ namespace FamiStudio
             UpdatePatternStartNotes();
         }
 
-        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customNoteLength = 0, int customBarLength = 0)
+        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customBeatLength, int customNoteLength = 0)
         {
             Debug.Assert(customPatternLength > 0 && customPatternLength < Pattern.MaxLength);
 
@@ -380,18 +393,18 @@ namespace FamiStudio
             if (project.UsesFamiTrackerTempo)
             {
                 Debug.Assert(customNoteLength == 0);
-                Debug.Assert(customBarLength == 0);
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
+                patternCustomSettings[patternIdx].beatLength = customBeatLength;
             }
             else
             {
                 Debug.Assert(customPatternLength % customNoteLength == 0);
                 Debug.Assert(customNoteLength != 0);
-                Debug.Assert(customBarLength != 0);
+                Debug.Assert(customBeatLength != 0);
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
-                patternCustomSettings[patternIdx].barLength = customBarLength;
+                patternCustomSettings[patternIdx].beatLength = customBeatLength;
                 patternCustomSettings[patternIdx].noteLength = customNoteLength;
             }
 
@@ -414,10 +427,10 @@ namespace FamiStudio
             return settings.useCustomSettings ? settings.noteLength : noteLength;
         }
 
-        public int GetPatternBarLength(int patternIdx)
+        public int GetPatternBeatLength(int patternIdx)
         {
             var settings = patternCustomSettings[patternIdx];
-            return settings.useCustomSettings && UsesFamiStudioTempo ? settings.barLength : barLength;
+            return settings.useCustomSettings ? settings.beatLength : beatLength;
         }
         
         public int GetPatternLength(int patternIdx)
@@ -580,24 +593,24 @@ namespace FamiStudio
             noteLength = newNoteLength;
         }
 
-        public static int ComputeFamiTrackerBPM(bool palPlayback, int speed, int tempo)
+        public static float ComputeFamiTrackerBPM(bool palPlayback, int speed, int tempo, int beatLength)
         {
-            return tempo * (palPlayback ? 5 : 6) / speed;
+            return tempo * (palPlayback ? 20 : 24) / (float)(speed * beatLength);
         }
 
-        public static int ComputeFamiStudioBPM(bool palSource, int noteLength)
+        public static float ComputeFamiStudioBPM(bool palSource, int noteLength, int beatLength)
         {
-            return (palSource? 750 : 900) / noteLength;
+            return (palSource? 3000 : 3600) / (float)(beatLength);
         }
 
-        public int BPM
+        public float BPM
         {
             get
             {
                 if (UsesFamiStudioTempo)
-                    return ComputeFamiStudioBPM(project.PalMode, noteLength);
+                    return ComputeFamiStudioBPM(project.PalMode, noteLength, beatLength);
                 else
-                    return ComputeFamiTrackerBPM(project.PalMode, famitrackerSpeed, famitrackerTempo);
+                    return ComputeFamiTrackerBPM(project.PalMode, famitrackerSpeed, famitrackerTempo, beatLength);
             }
         }
 
@@ -630,17 +643,24 @@ namespace FamiStudio
         }
 
 #if DEBUG
-        public void Validate(Project project)
+        public void Validate(Project project, Dictionary<int, object> idMap)
         {
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
+
+            project.ValidateId(id);
+
+            if (idMap.TryGetValue(id, out var foundObj))
+                Debug.Assert(foundObj == this);
+            else
+                idMap.Add(id, this);
 
             var uniqueNotes = new HashSet<Note>();
             var uniquePatterns = new HashSet<Pattern>();
 
             foreach (var channel in channels)
             {
-                channel.Validate(this);
+                channel.Validate(this, idMap);
 
                 // This is extremely heavy handed, but it is important. 
                 // Notes used to be struct and they got changed to classes later on.
@@ -690,7 +710,7 @@ namespace FamiStudio
                             // Converts old Skip effects to custom pattern instances lengths.
                             if (note.FxSkip != 0xff)
                             {
-                                SetPatternCustomSettings(i, kv.Key + 1);
+                                SetPatternCustomSettings(i, kv.Key + 1, BeatLength);
                             }
                         }
                     }
@@ -731,7 +751,7 @@ namespace FamiStudio
         public void ConvertToFamiStudioTempo()
         {
             int newNoteLength = famitrackerSpeed;
-            int newBarLength = barLength * newNoteLength;
+            int newBeatLength = beatLength * newNoteLength;
             int newPatternLength = patternLength * newNoteLength;
 
             foreach (var channel in channels)
@@ -744,7 +764,6 @@ namespace FamiStudio
                     foreach (var kv in notesCopy)
                     {
                         var note = kv.Value;
-                        note.ClearEffectValue(Note.EffectSpeed);
                         pattern.Notes[kv.Key * newNoteLength] = note;
                     }
 
@@ -758,16 +777,171 @@ namespace FamiStudio
                 {
                     patternCustomSettings[p].noteLength    = famitrackerSpeed;
                     patternCustomSettings[p].patternLength = patternCustomSettings[p].patternLength / famitrackerSpeed * famitrackerSpeed;
-                    patternCustomSettings[p].barLength     = Math.Max(patternCustomSettings[p].barLength / famitrackerSpeed, 1);
+                    patternCustomSettings[p].beatLength     = Math.Max(patternCustomSettings[p].beatLength / famitrackerSpeed, 1);
                 }
             }
 
             noteLength    = newNoteLength;
-            barLength     = newBarLength;
+            beatLength     = newBeatLength;
             patternLength = newPatternLength;
 
+            RemoveUnsupportedEffects();
             UpdatePatternStartNotes();
             DeleteNotesPastMaxInstanceLength();
+        }
+
+        public void RemoveUnsupportedEffects()
+        {
+            foreach (var channel in channels)
+            {
+                foreach (var pattern in channel.Patterns)
+                {
+                    foreach (var kv in pattern.Notes)
+                    {
+                        if (kv.Value != null)
+                        {
+                            var note = kv.Value;
+
+                            for (int i = 0; i < Note.EffectCount; i++)
+                            {
+                                if (note.HasValidEffectValue(i) && !channel.SupportsEffect(i))
+                                    note.ClearEffectValue(i);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void RemoveUnsupportedInstruments()
+        {
+            foreach (var channel in channels)
+            {
+                foreach (var pattern in channel.Patterns)
+                {
+                    foreach (var kv in pattern.Notes)
+                    {
+                        if (kv.Value != null)
+                        {
+                            var note = kv.Value;
+
+                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument) || channel.Type == Channel.Dpcm)
+                                note.Instrument = null;
+                        }
+                    }
+                }
+            }
+        }
+
+        public bool ApplySpeedEffectAt(int patternIdx, int noteIdx, ref int speed)
+        {
+            if (UsesFamiStudioTempo)
+                return false;
+
+            foreach (var channel in channels)
+            {
+                var pattern = channel.PatternInstances[patternIdx];
+                if (pattern != null)
+                {
+                    if (pattern.Notes.TryGetValue(noteIdx, out var note) && note != null && note.HasSpeed)
+                    {
+                        speed = note.Speed;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public int CountNotesBetween(int p0, int n0, int p1, int n1)
+        {
+            int noteCount = 0;
+
+            while (p0 != p1)
+            {
+                noteCount += GetPatternLength(p0) - n0;
+                p0++;
+                n0 = 0;
+            }
+
+            noteCount += (n1 - n0);
+
+            return noteCount;
+        }
+
+        public float CountFramesBetween(int p0, int n0, int p1, int n1, int currentSpeed, bool pal)
+        {
+            // This is simply an approximation that is used to compute slide notes.
+            // It doesn't take into account the real state of the tempo accumulator.
+            if (project.UsesFamiTrackerTempo)
+            {
+                float frameCount = 0;
+
+                while ((p0 != p1 || n0 != n1) && p0 < songLength)
+                {
+                    ApplySpeedEffectAt(p0, n0, ref currentSpeed);
+                    float tempoRatio = (pal ? NativeTempoPAL : NativeTempoNTSC) / (float)famitrackerTempo;
+                    frameCount += currentSpeed * tempoRatio;
+
+                    if (++n0 >= GetPatternLength(p0))
+                    {
+                        n0 = 0;
+                        p0++;
+                    }
+                }
+
+                return frameCount;
+            }
+            else
+            {
+                return CountNotesBetween(p0, n0, p1, n1);
+            }
+        }
+
+        public void AdvanceNumberOfNotes(int noteCount, ref int p, ref int n)
+        {
+            float count = 0;
+
+            while (count < noteCount && p < songLength)
+            {
+                count++;
+                if (++n >= GetPatternLength(p))
+                {
+                    n = 0;
+                    p++;
+                }
+            }
+        }
+
+        public void AdvanceNumberOfFrames(int frameCount, int initialCount, int currentSpeed, bool pal, ref int p, ref int n)
+        {
+            float count = initialCount;
+
+            while (count < frameCount && p < songLength)
+            {
+                if (UsesFamiTrackerTempo)
+                {
+                    ApplySpeedEffectAt(p, n, ref currentSpeed);
+                    float tempoRatio = (pal ? NativeTempoPAL : NativeTempoNTSC) / (float)famitrackerTempo;
+                    count += currentSpeed * tempoRatio;
+                }
+                else
+                {
+                    count++;
+                }
+
+                if (++n >= GetPatternLength(p))
+                {
+                    n = 0;
+                    p++;
+                }
+            }
+        }
+
+        public void ChangeId(int newId)
+        {
+            id = newId;
         }
 
         public void SerializeState(ProjectBuffer buffer)
@@ -778,7 +952,7 @@ namespace FamiStudio
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref patternLength);
             buffer.Serialize(ref songLength);
-            buffer.Serialize(ref barLength);
+            buffer.Serialize(ref beatLength);
             buffer.Serialize(ref name);
             buffer.Serialize(ref famitrackerTempo);
             buffer.Serialize(ref famitrackerSpeed);
@@ -795,7 +969,13 @@ namespace FamiStudio
                     buffer.Serialize(ref patternCustomSettings[i].useCustomSettings);
                     buffer.Serialize(ref patternCustomSettings[i].patternLength);
                     buffer.Serialize(ref patternCustomSettings[i].noteLength);
-                    buffer.Serialize(ref patternCustomSettings[i].barLength);
+                    buffer.Serialize(ref patternCustomSettings[i].beatLength);
+
+                    // At version 8 (FamiStudio 2.3.0), we added custom beat length for FamiTracker tempo, so we need to initialize the value here.
+                    if (buffer.Version < 8 && project.UsesFamiTrackerTempo && patternCustomSettings[i].useCustomSettings && patternCustomSettings[i].beatLength == 0)
+                    {
+                        patternCustomSettings[i].beatLength = beatLength;
+                    }
                 }
 
                 for (int i = songLength; i < MaxLength; i++)
@@ -813,6 +993,10 @@ namespace FamiStudio
 
             if (buffer.Version < 5)
                 ConvertJumpSkipEffects();
+
+            // Before 2.3.0, songs had an invalid color by default.
+            if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
+                color = ThemeBase.RandomCustomColor();
         }
     }
 }

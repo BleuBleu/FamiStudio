@@ -31,7 +31,6 @@ namespace FamiStudio
         int Version { get; }
         Project Project { get; }
         void InitializeList<T>(ref List<T> list, int count) where T : new();
-        void InitializeArray<T>(ref T[] array, int count) where T : new();
     };
 
     public class ProjectSaveBuffer : ProjectBuffer
@@ -171,10 +170,6 @@ namespace FamiStudio
         }
 
         public void InitializeList<T>(ref List<T> list, int count) where T : new()
-        {
-        }
-
-        public void InitializeArray<T>(ref T[] array, int count) where T : new()
         {
         }
 
@@ -351,13 +346,6 @@ namespace FamiStudio
             list.Clear();
             for (int i = 0; i < count; i++)
                 list.Add(new T());
-        }
-
-        public void InitializeArray<T>(ref T[] array, int count) where T : new()
-        {
-            array = new T[count];
-            for (int i = 0; i < count; i++)
-                array[i] = new T();
         }
 
         public Project Project => project;

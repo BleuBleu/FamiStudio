@@ -10,6 +10,13 @@ style "check"
     fg[PRELIGHT] = "#3A4043" # DarkGreyFillColor2 + 0x10
 }
 
+style "check_light"
+{
+    fg[NORMAL] = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE] = "#C6CDDA" # LightGreyFillColor2
+    fg[PRELIGHT] = "#C6CDDA" # DarkGreyFillColor2
+}
+
 style "spin"
 {
     bg[NORMAL] = "#2A3033" # DarkGreyFillColor2
@@ -56,6 +63,8 @@ style "all"
 widget_class "*" style "all"
 widget_class "*GtkLabel*" style "label"
 widget_class "*GtkCheckButton*Label*" style "check"
+widget "PasteSpecialDialog.*.GtkCheckButton*Label*" style "check_light"
+widget "DeleteSpecialDialog.*.GtkCheckButton*Label*" style "check_light"
 widget_class "*Spin*" style "spin"
 widget_class "*GtkTextView*" style "text_view"
 widget_class "*FlatButton*" style "flatbutton"

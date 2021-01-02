@@ -7,7 +7,13 @@ namespace FamiStudio
     {
         protected int apuIdx;
         protected int channelType;
+        protected int delayedNoteCounter = 0;
+        protected int delayedCutCounter = 0;
+        protected int delayedNoteSlidePitch = 0;
+        protected int delayedNoteSlideStep = 0;
+        protected Note delayedNote = null;
         protected Note note = new Note(Note.NoteInvalid);
+        protected int dutyCycle = 0;
         protected bool pitchEnvelopeOverride = false;
         protected bool arpeggioEnvelopeOverride = false;
         protected Envelope[] envelopes = new Envelope[Envelope.Count];
@@ -16,17 +22,20 @@ namespace FamiStudio
         protected bool customRelease = false;
         protected bool noteTriggered = false;
         protected ushort[] noteTable = null;
+        protected bool palPlayback = false;
         protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
         private   int slidePitch = 0;
         private   int slideShift = 0;
         private   int pitchShift = 0;
+        private   byte noteValueBeforeSlide = 0;
         private   IRegisterListener registerListener;
 
         public ChannelState(int apu, int type, bool pal, int numN163Channels = 1)
         {
             apuIdx = apu;
             channelType = type;
+            palPlayback = pal;
             maximumPeriod = NesApu.GetPitchLimitForChannelType(channelType);
             noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
             note.Value = Note.NoteStop;
@@ -35,40 +44,16 @@ namespace FamiStudio
             Channel.GetShiftsForType(type, numN163Channels, out pitchShift, out slideShift);
         }
 
-        public void ProcessEffects(Song song, int patternIdx, int noteIdx, ref int speed, bool allowJump = true)
+        public void Advance(Song song, int patternIdx, int noteIdx, ref int famitrackerSpeed)
         {
-            var pattern = song.GetChannelByType(channelType).PatternInstances[patternIdx];
-
-            if (pattern == null)
-                return;
-
-            if (pattern.Notes.TryGetValue(noteIdx, out var tmpNote))
+            // When advancing row, if there was a delayed note, play it immediately. That's how FamiTracker does it.
+            if (delayedNote != null)
             {
-                if (tmpNote.HasSpeed)
-                {
-                    speed = tmpNote.Speed;
-                }
-
-                if (tmpNote.HasVibrato)
-                {
-                    if (tmpNote.VibratoDepth != 0 && tmpNote.VibratoDepth != 0)
-                    {
-                        envelopes[Envelope.Pitch] = Envelope.CreateVibratoEnvelope(tmpNote.VibratoSpeed, tmpNote.VibratoDepth);
-                        envelopeIdx[Envelope.Pitch] = 0;
-                        envelopeValues[Envelope.Pitch] = 0;
-                        pitchEnvelopeOverride = true;
-                    }
-                    else
-                    {
-                        envelopes[Envelope.Pitch] = null;
-                        pitchEnvelopeOverride = false;
-                    }
-                }
+                PlayNote(delayedNote, delayedNoteSlidePitch, delayedNoteSlideStep);
+                delayedNote = null;
+                delayedNoteCounter = 0;
             }
-        }
 
-        public void Advance(Song song, int patternIdx, int noteIdx, int famitrackerSpeed, int famitrackerBaseTempo)
-        {
             var channel = song.GetChannelByType(channelType);
             var pattern = channel.PatternInstances[patternIdx];
 
@@ -77,109 +62,132 @@ namespace FamiStudio
 
             if (pattern.Notes.TryGetValue(noteIdx, out var newNote))
             { 
-                newNote = newNote.Clone();
-
-                if (newNote.IsValid)
+                // We dont delay speed effects. This is not what FamiTracker does, but I dont care.
+                // There is a special place in hell for people who delay speed effect.
+                if (newNote.HasSpeed)
                 {
-                    if (!newNote.IsRelease)
-                        slideStep = 0;
-
-                    if (newNote.IsSlideNote)
-                    {
-                        if (channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, famitrackerBaseTempo, noteTable, out slidePitch, out slideStep, out _))
-                            newNote.Value = (byte)newNote.SlideNoteTarget;
-                    }
-
-                    if (!newNote.HasVolume      && note.HasVolume)      { newNote.Volume      = note.Volume;      }
-                    if (!newNote.HasFinePitch   && note.HasFinePitch)   { newNote.FinePitch   = note.FinePitch;   }
-                    if (!newNote.HasFdsModDepth && note.HasFdsModDepth) { newNote.FdsModDepth = note.FdsModDepth; }
-                    if (!newNote.HasFdsModSpeed && note.HasFdsModSpeed) { newNote.FdsModSpeed = note.FdsModSpeed; }
-                    if (newNote.Instrument == null && note.Instrument != null) { newNote.Instrument = note.Instrument; }
-                    if (newNote.Arpeggio   == null && note.Arpeggio   != null && newNote.IsValid && !newNote.IsMusical) { newNote.Arpeggio   = note.Arpeggio;   }
-
-                    PlayNote(newNote);
+                    famitrackerSpeed = newNote.Speed;
                 }
-                else
-                { 
-                    if (newNote.HasVolume)      { note.Volume      = newNote.Volume;      }
-                    if (newNote.HasFinePitch)   { note.FinePitch   = newNote.FinePitch;   }
-                    if (newNote.HasFdsModDepth) { note.FdsModDepth = newNote.FdsModDepth; }
-                    if (newNote.HasFdsModSpeed) { note.FdsModSpeed = newNote.FdsModSpeed; }
-                    if (newNote.Instrument != null) { note.Instrument = newNote.Instrument; }
+
+                // Slide params needs to be computed right away since we wont have access to the play position/channel later.
+                int noteSlidePitch = 0;
+                int noteSlideStep  = 0;
+
+                if (newNote.IsValid && newNote.IsSlideNote)
+                {
+                    channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, noteTable, palPlayback, true, out noteSlidePitch, out noteSlideStep, out _);
                 }
+
+                // Store note for later if delayed.
+                if (newNote.HasNoteDelay)
+                {
+                    delayedNote = newNote;
+                    delayedNoteCounter = newNote.NoteDelay + 1;
+                    delayedNoteSlidePitch = noteSlidePitch;
+                    delayedNoteSlideStep  = noteSlideStep;
+                    return;
+                }
+
+                PlayNote(newNote, noteSlidePitch, noteSlideStep);
             }
         }
 
-        public void PlayNote(Note newNote)
+        public void PlayNote(Note newNote, int noteSlidePitch = 0, int noteSlideStep = 0)
         {
-            if (!newNote.HasFinePitch)
-                 newNote.FinePitch = 0;
+            newNote = newNote.Clone();
 
-            if (newNote.IsRelease)
+            // Pass on the same effect values if this note doesn't specify them.
+            if (!newNote.HasVolume         && note.HasVolume)          newNote.Volume      = note.Volume;
+            if (!newNote.HasFinePitch      && note.HasFinePitch)       newNote.FinePitch   = note.FinePitch;
+            if (!newNote.HasFdsModDepth    && note.HasFdsModDepth)     newNote.FdsModDepth = note.FdsModDepth;
+            if (!newNote.HasFdsModSpeed    && note.HasFdsModSpeed)     newNote.FdsModSpeed = note.FdsModSpeed;
+            if (newNote.Instrument == null && note.Instrument != null) newNote.Instrument  = note.Instrument;
+            if (newNote.Arpeggio   == null && note.Arpeggio   != null && newNote.IsValid && !newNote.IsMusical) newNote.Arpeggio = note.Arpeggio;
+
+            if (newNote.IsValid)
             {
-                // Channels with custom release code will do their own thing.
-                if (customRelease)
+                // Any note that isnt a release cancels the current slide.
+                if (!newNote.IsRelease)
+                    slideStep = 0;
+
+                if (newNote.IsSlideNote)
                 {
-                    note = newNote;
+                    slidePitch = noteSlidePitch;
+                    slideStep  = noteSlideStep;
+                    noteValueBeforeSlide = newNote.Value;
+                    newNote.Value = newNote.SlideNoteTarget;
                 }
-                else
+
+                // A new valid note always cancels any delayed cut.
+                delayedCutCounter = 0;
+            }
+
+            if (newNote.IsStop)
+            {
+                note = newNote;
+            }
+            else if (newNote.IsRelease)
+            {
+                // Jump to release point.
+                if (note.Instrument != null)
                 {
-                    if (note.Instrument != null)
+                    for (int j = 0; j < Envelope.Count; j++)
                     {
-                        for (int j = 0; j < Envelope.Count; j++)
-                        {
-                            if (envelopes[j] != null && envelopes[j].Release >= 0)
-                                envelopeIdx[j] = envelopes[j].Release;
-                        }
+                        if (envelopes[j] != null && envelopes[j].Release >= 0)
+                            envelopeIdx[j] = envelopes[j].Release;
                     }
                 }
+
+                // Channels with custom release code (VRC7) will do their own thing.
+                if (!customRelease)
+                    newNote.Value = note.Value;
+
+                note = newNote;
             }
-            else
+            else if (newNote.IsMusical)
             {
                 bool instrumentChanged = note.Instrument != newNote.Instrument;
                 bool arpeggioChanged   = note.Arpeggio   != newNote.Arpeggio;
 
                 note = newNote;
 
-                if (note.IsMusical)
+                // Set/clear override when changing arpeggio
+                if (arpeggioChanged)
                 {
-                    // Set/clear override when changing arpeggio
-                    if (arpeggioChanged)
+                    if (note.Arpeggio != null)
                     {
-                        if (note.Arpeggio != null)
-                        {
-                            envelopes[Envelope.Arpeggio] = note.Arpeggio.Envelope;
-                            arpeggioEnvelopeOverride = true;
-                        }
-                        else
-                        {
-                            envelopes[Envelope.Arpeggio] = null;
-                            arpeggioEnvelopeOverride = false;
-                        }
+                        envelopes[Envelope.Arpeggio] = note.Arpeggio.Envelope;
+                        arpeggioEnvelopeOverride = true;
+                    }
+                    else
+                    {
+                        envelopes[Envelope.Arpeggio] = null;
+                        arpeggioEnvelopeOverride = false;
+                    }
 
-                        envelopeIdx[Envelope.Arpeggio] = 0;
-                        envelopeValues[Envelope.Arpeggio] = 0;
-                    }
-                    // If same arpeggio, but note has an attack, reset it.
-                    else if (note.HasAttack && arpeggioEnvelopeOverride)
-                    {
-                        envelopeIdx[Envelope.Arpeggio] = 0;
-                        envelopeValues[Envelope.Arpeggio] = 0;
-                    }
+                    envelopeIdx[Envelope.Arpeggio] = 0;
+                    envelopeValues[Envelope.Arpeggio] = 0;
+                }
+                // If same arpeggio, but note has an attack, reset it.
+                else if (note.HasAttack && arpeggioEnvelopeOverride)
+                {
+                    envelopeIdx[Envelope.Arpeggio] = 0;
+                    envelopeValues[Envelope.Arpeggio] = 0;
                 }
 
-                if (instrumentChanged || note.HasAttack && !note.IsStop)
+                if (instrumentChanged || note.HasAttack)
                 {
                     for (int j = 0; j < Envelope.Count; j++)
                     {
-                        if ((j != Envelope.Pitch    || !pitchEnvelopeOverride) &&
-                            (j != Envelope.Arpeggio || !arpeggioEnvelopeOverride))
+                        if ((j != Envelope.Pitch     || !pitchEnvelopeOverride) &&
+                            (j != Envelope.Arpeggio  || !arpeggioEnvelopeOverride))
                         {
                             envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
                         }
                         envelopeIdx[j] = 0;
                     }
 
+                    envelopeValues[Envelope.DutyCycle] = dutyCycle;
                     envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
                     noteTriggered = true;
                 }
@@ -189,20 +197,96 @@ namespace FamiStudio
                     LoadInstrument(note.Instrument);
                 }
             }
+            else
+            {
+                // Empty notes just keep whatever value we had.
+                Debug.Assert(!newNote.IsValid);
+                newNote.Value = note.Value;
+                note = newNote;
+            }
+
+            if (note.HasVibrato)
+            {
+                if (note.VibratoDepth != 0 && note.VibratoDepth != 0)
+                {
+                    envelopes[Envelope.Pitch] = Envelope.CreateVibratoEnvelope(note.VibratoSpeed, note.VibratoDepth);
+                    envelopeIdx[Envelope.Pitch] = 0;
+                    envelopeValues[Envelope.Pitch] = 0;
+                    pitchEnvelopeOverride = true;
+                }
+                else
+                {
+                    envelopes[Envelope.Pitch] = null;
+                    pitchEnvelopeOverride = false;
+                }
+            }
+            
+            // Fine pitch will always we read, so make sure it has a value.
+            if (!note.HasFinePitch)
+            {
+                note.FinePitch = 0;
+            }
+
+            if (note.HasDutyCycle)
+            {
+                dutyCycle = note.DutyCycle;
+                envelopeValues[Envelope.DutyCycle] = dutyCycle;
+            }
+
+            if (note.HasCutDelay)
+            {
+                delayedCutCounter = note.CutDelay + 1;
+            }
         }
 
-        public void UpdateEnvelopes()
+        private void UpdateDelayedNote()
+        {
+            Debug.Assert(delayedCutCounter  >= 0);
+            Debug.Assert(delayedNoteCounter >= 0);
+
+            if (delayedNote != null)
+            {
+                Debug.Assert(delayedNoteCounter > 0);
+
+                if (--delayedNoteCounter == 0)
+                {
+                    PlayNote(delayedNote, delayedNoteSlidePitch, delayedNoteSlideStep);
+                    delayedNote = null;
+                }
+            }
+            else
+            {
+                Debug.Assert(delayedNoteCounter == 0);
+            }
+
+            if (delayedCutCounter > 0)
+            {
+                if (--delayedCutCounter == 0)
+                {
+                    PlayNote(new Note(Note.NoteStop));
+                }
+            }
+        }
+
+        public void Update()
+        {
+            UpdateDelayedNote();
+            UpdateEnvelopes();
+            UpdateSlide();
+            UpdateAPU();
+        }
+
+        private void UpdateEnvelopes()
         {
             if (note.Instrument != null)
             {
                 for (int j = 0; j < Envelope.Count; j++)
                 {
-                    if (envelopes[j] == null ||
-                        envelopes[j].Length <= 0)
+                    if (envelopes[j] == null || envelopes[j].IsEmpty)
                     {
                         if (j == Envelope.Volume)
                             envelopeValues[j] = 15;
-                        else
+                        else if (j != Envelope.DutyCycle)
                             envelopeValues[j] = 0;
                         continue;
                     }
@@ -237,7 +321,10 @@ namespace FamiStudio
                         envelopeIdx[j] = idx;
                 }
             }
+        }
 
+        private void UpdateSlide()
+        {
             if (slideStep != 0)
             {
                 slidePitch += slideStep;
@@ -319,6 +406,18 @@ namespace FamiStudio
         {
             noteTriggered = false;
         }
+
+        public Note CurrentNote
+        {
+            get
+            {
+                var n = note.Clone();
+                if (n.IsSlideNote)
+                    n.Value = noteValueBeforeSlide;
+                return n;
+            }
+        }
+        public int  CurrentVolume => MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
     };
 
     public interface IRegisterListener

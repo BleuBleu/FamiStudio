@@ -10,10 +10,10 @@ You can also use it to preview instrument by clicking on the keyboard. The curre
 
 Horizontal lines in the piano rolls are align with the notes of the piano. The vertical lines represents multiple levels of subdivisions:
 
-* Thick black lines seperate patterns (not shown in this image)
-* Thin black lines seperate bars (a bar is a simple group of notes, purely a visual aid)
-* Thin gray lines seperate notes
 * Thin dashes gray lines seperate individual NTSC frames, 1/60th of a sec. (FamiStudio tempo mode only)
+* Thin gray lines seperate notes
+* Thin black lines seperate beats
+* Thick black lines seperate patterns
 
 In FamiTracker tempo mode, you do not have access to the individual frames, so the dashes lines will not be visible.
 
@@ -112,11 +112,27 @@ Much like the sequencer, selcted notes can be copy (or cut) by pressing CTRL+C (
 
 ## Special paste
 
-If you want to paste notes, without their associated effets or volume track (or vice-versa). You can use a "special paste" by pressing CTRL+SHIFT+V. This will open a popup dialog asking you to choose what you want to paste.
+"Special paste" is a more advanced form of pasting. It is used to to do things like pasting notes without their associated effets or volume track (or vice-versa), or to just paste specific effects. You can use a "special paste" by pressing CTRL+SHIFT+V. This will open a popup dialog.
 
 ![](images/PasteSpecial.png#center)
 
-The default behavior of pasting is to completely replace everything by the content of the clipboard. Using the "Mix with existing notes" option will preserve any existing data (notes, volumes, effects) and only insert new data if there is nothing there already.
+* **Mix With Existing Notes** : The default behavior of pasting is to completely replace everything by the content of the clipboard. Using the "Mix with existing notes" option will preserve any existing data (notes, volumes, effects) and only insert new data if there is nothing there already.
+
+* **Paste Notes** : Will paste the actual notes (including slide notes and arpeggio information).
+
+* **Paste Effects** : You can choose the list of effect that you with to paste. Unchecked effect will not be pasted.
+
+* **Repeat** : You can repeat the same paste operation multiple times to quickly repeat a sequence of note/effect values mutiple times. The start of the next paste will be where the last one ended.
+
+## Special delete
+
+Much like Special paste, "Special delete" is a more advanced form of deletion. You can bring up the special delete dialong by selecting a rango of notes and pressing CTRL+SHIFT+DELETE. 
+
+![](images/DeleteSpecial.png#center)
+
+* **Delete Notes** : If checked, will delete all the selected notes.
+
+* **Delete Effects** : You can choose here the list of effects to delete. All unchecked effects will be preserved.
 
 ## Copy & pasting notes between projects 
 
@@ -128,15 +144,20 @@ This can be used as a way of transfering instruments from one project to another
 
 ## Editing volume tracks & effects
 
-The effect panel can be opened by clicking the little triangle at the top-left of the piano roll. Right now, only a handful of effects are supported:
+The effect panel can be opened by clicking the little triangle at the top-left of the piano roll. 
+
+Here is the list of effects currently supported, note that not every effect is available on every channel:
 
 * **Volume**: The overall volume of the channel.
 * **Vib Speed**: Vibrato speed, used in conjuction with vibrato depth to create a vibrato effect.
 * **Vib Depth**: Vibrato depth, used in conjuction with vibrato speed to create a vibrato effect.
 * **Pitch**: Allow tweaking the fine-pitch of a channel.
+* **Duty Cycle** : Allow changing the duty cycle of an instrument without using a duty cycle envelope (only instruments with no duty cycle envelopes will use the specifed value).
 * **FDS Speed**: Famicom Disk System audio modulation speed (FDS audio expansion only).
 * **FDS Depth**: Famicom Disk System audio modulation depth (FDS audio expansion only).
 * **Speed**: Changes the speed of the song (FamiTracker tempo mode only)
+* **Note Delay**: Number of frames to delay the current note (FamiTracker tempo mode only)
+* **Cut Delay**: Stop the note after the specified number of frames (FamiTracker tempo mode only)
 
 Effects are edited by selecting and effect and dragging up or down to change the value. Right-clicking on an effect value deletes it. 
 
@@ -158,4 +179,14 @@ The depth values for the vibrato are indentical to FamiTracker but the speeds ar
 
 Controls the global pitch of the track. Can be used to make an entire channel slightly out of tune.
 
+## Duty Cycle
 
+Allow changing the duty cycle of an instrument without using a duty cycle envelope. This can only affect instruments with no duty cycle envelopes. This effect is mostly just there for compatibility with FamiTracker. Unless you have special cases where you often need to change the duty cycle, you should always favor creating different instruments instead of using this effect. 
+
+## Speed
+
+This changes the speed parameter of the FamiTracker tempo settings and is only available in FamiTracker tempo mode. Larger values will make the song scroll slower. Please refer to the [Editing Songs & Project](song.md) section for more information about tempo management.
+
+## Note and Cut delay
+
+Note delays allows delaying the moment a note is played by a few frames while cut delay will stop a note after a few frames. This also is only available in FamiTracker tempo mode. Please refer to the [Editing Songs & Project](song.md) section for more information about tempo management.

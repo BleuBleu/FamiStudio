@@ -14,6 +14,7 @@ namespace FamiStudio
 
         public int Type => type;
         public string Name => ChannelNames[(int)type];
+        public string ExportName => ChannelExportNames[(int)type];
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
@@ -118,6 +119,40 @@ namespace FamiStudio
             "S5BSquare3", // S5B
         };
 
+        // TODO: This is really UI specific, move somewhere else...
+        public static string[] ChannelIcons =
+        {
+            "Square",
+            "Square",
+            "Triangle",
+            "Noise",
+            "DPCM",
+            "Square",
+            "Square",
+            "Saw",
+            "FM",
+            "FM",
+            "FM",
+            "FM",
+            "FM",
+            "FM",
+            "WaveTable",
+            "Square",
+            "Square",
+            "DPCM",
+            "WaveTable",
+            "WaveTable",
+            "WaveTable",
+            "WaveTable",
+            "WaveTable",
+            "WaveTable",
+            "WaveTable",
+            "WaveTable",
+            "Square",
+            "Square",
+            "Square"
+        };
+
         public bool IsFdsWaveChannel  => type == Channel.FdsWave;
         public bool IsN163WaveChannel => type >= Channel.N163Wave1 && type <= Channel.N163Wave8;
         public bool IsVrc7FmChannel   => type >= Channel.Vrc7Fm1 && type <= Channel.Vrc7Fm6;
@@ -178,13 +213,16 @@ namespace FamiStudio
         {
             switch (effect)
             {
-                case Note.EffectVolume: return type != Dpcm;
-                case Note.EffectFinePitch: return type != Noise && type != Dpcm;
+                case Note.EffectVolume:       return type != Dpcm;
+                case Note.EffectFinePitch:    return type != Noise && type != Dpcm;
                 case Note.EffectVibratoSpeed: return type != Noise && type != Dpcm;
                 case Note.EffectVibratoDepth: return type != Noise && type != Dpcm;
-                case Note.EffectFdsModDepth: return type == FdsWave;
-                case Note.EffectFdsModSpeed: return type == FdsWave;
-                case Note.EffectSpeed: return song.UsesFamiTrackerTempo;
+                case Note.EffectFdsModDepth:  return type == FdsWave;
+                case Note.EffectFdsModSpeed:  return type == FdsWave;
+                case Note.EffectSpeed:        return song.UsesFamiTrackerTempo;
+                case Note.EffectDutyCycle:    return type == Square1 || type == Square2 || type == Mmc5Square1 || type == Mmc5Square2 || type == Vrc6Square1 || type == Vrc6Square2 || type == Noise;
+                case Note.EffectNoteDelay:    return song.UsesFamiTrackerTempo;
+                case Note.EffectCutDelay:     return song.UsesFamiTrackerTempo;
             }
 
             return true;
@@ -205,7 +243,7 @@ namespace FamiStudio
                     {
                         if (patternLen != prevLength)
                         {
-                            pattern = pattern.ShallowClone(); ;
+                            pattern = pattern.ShallowClone();
                             patternInstances[p] = pattern;
                         }
                     }
@@ -444,81 +482,151 @@ namespace FamiStudio
             }
         }
 
-        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, int famitrackerBaseTempo, ushort[] noteTable, out int pitchDelta, out int stepSize, out int noteDuration)
+        // Duration in number of notes, simply to draw in the piano roll.
+        public int GetSlideNoteDuration(Note note, int patternIdx, int noteIdx)
+        {
+            Debug.Assert(note.IsMusical);
+            FindNextNoteForSlide(patternIdx, noteIdx, 256, out var nextPatternIdx, out var nextNoteIdx); // 256 is kind of arbitrary. 
+            return Song.CountNotesBetween(patternIdx, noteIdx, nextPatternIdx, nextNoteIdx);
+        }
+
+        public Note GetNoteAt(int patternIdx, int noteIdx)
+        {
+            if (patternIdx < song.Length)
+            {
+                var pattern = patternInstances[patternIdx];
+                if (pattern != null && pattern.Notes.ContainsKey(noteIdx))
+                {
+                    return pattern.Notes[noteIdx];
+                }
+            }
+
+            return null;
+        }
+
+        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, ushort[] noteTable, bool pal, bool applyShifts, out int pitchDelta, out int stepSize, out float stepSizeFloat)
         {
             Debug.Assert(note.IsMusical);
 
-            // Find the next note to calculate the slope.
-            noteDuration = FindNextNoteForSlide(patternIdx, noteIdx, 256); // 256 is kind of arbitrary. 
-            stepSize = 0;
-            pitchDelta = 0;
+            var slideShift = 0;
 
-            if (noteTable == null)
+            if (applyShifts)
+                GetShiftsForType(type, song.Project.ExpansionNumChannels, out _, out slideShift);
+
+            pitchDelta = noteTable[note.Value] - noteTable[note.SlideNoteTarget];
+
+            if (pitchDelta != 0)
             {
-                return note.Value != note.SlideNoteTarget;
+                pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
+
+                // Find the next note to calculate the slope.
+                FindNextNoteForSlide(patternIdx, noteIdx, 256, out var nextPatternIdx, out var nextNoteIdx); // 256 is kind of arbitrary. 
+
+                // Approximate how many frames seperates these 2 notes.
+                var frameCount = 0.0f;
+                if (patternIdx != nextPatternIdx || noteIdx != nextNoteIdx)
+                {
+                    // Take delayed notes/cuts into avvound.
+                    var delayFrames = -(note.HasNoteDelay ? note.NoteDelay : 0);
+                    if (Song.UsesFamiTrackerTempo)
+                    {
+                        var nextNote = GetNoteAt(nextPatternIdx, nextNoteIdx);
+                        if (nextNote != null)
+                        {
+                            if (nextNote.HasNoteDelay)
+                            {
+                                if (nextNote.HasCutDelay)
+                                    delayFrames += Math.Min(nextNote.NoteDelay, nextNote.CutDelay);
+                                else
+                                    delayFrames += nextNote.NoteDelay;
+                            }
+                            else if (nextNote.HasCutDelay)
+                            {
+                                delayFrames += nextNote.CutDelay;
+                            }
+                        }
+                    }
+
+                    frameCount = Song.CountFramesBetween(patternIdx, noteIdx, nextPatternIdx, nextNoteIdx, famitrackerSpeed, pal) + delayFrames;
+                }
+                else
+                {
+                    Debug.Assert(note.HasCutDelay && Song.UsesFamiTrackerTempo);
+
+                    // Slide note starts and end on same note, this mean we have a delayed cut.
+                    frameCount = note.HasCutDelay ? note.CutDelay : 0;
+                }
+
+                var absStepPerFrame = Math.Abs(pitchDelta) / Math.Max(1, frameCount);
+
+                stepSize = Utils.Clamp((int)Math.Ceiling(absStepPerFrame) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
+                stepSizeFloat = pitchDelta / Math.Max(1, frameCount);
+
+                return true;
             }
             else
             {
-                GetShiftsForType(type, song.Project.ExpansionNumChannels, out _, out var slideShift);
-
-                pitchDelta = noteTable[note.Value] - noteTable[note.SlideNoteTarget];
-
-                if (pitchDelta != 0)
-                {
-                    pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
-
-                    var frameCount = song.UsesFamiTrackerTempo ? Math.Floor(noteDuration * (famitrackerSpeed * famitrackerBaseTempo / (float)song.FamitrackerTempo) + 1) : noteDuration + 1;
-                    var floatStep  = Math.Abs(pitchDelta) / (float)frameCount;
-
-                    stepSize = Utils.Clamp((int)Math.Ceiling(floatStep) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
-
-                    return true;
-                }
+                stepSize = 0;
+                stepSizeFloat = 0.0f;
 
                 return false;
             }
         }
 
-        public float ComputeRawSlideNoteParams(int noteValue, int slideTarget, int patternIdx, int noteIdx, int famitrackerSpeed, int famitrackerBaseTempo, ushort[] noteTable)
+        public bool FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes, out int nextPatternIdx, out int nextNoteIdx)
         {
-            Debug.Assert(noteValue >= Note.MusicalNoteMin && noteValue <= Note.MusicalNoteMax);
+            nextPatternIdx = patternIdx;
+            nextNoteIdx    = noteIdx;
 
-            // Find the next note to calculate the slope.
-            var noteDuration = FindNextNoteForSlide(patternIdx, noteIdx, 256); // 256 is kind of arbitrary. 
-            var pitchDelta = noteTable[noteValue] - noteTable[slideTarget];
-            var frameCount = song.UsesFamiTrackerTempo ? Math.Floor(noteDuration * (famitrackerSpeed * famitrackerBaseTempo / (float)song.FamitrackerTempo) + 1) : noteDuration + 1;
-
-            return (float)(pitchDelta / frameCount);
-        }
-
-        public int FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes)
-        {
             var noteCount = 0;
             var patternLength = song.GetPatternLength(patternIdx);
             var pattern = patternInstances[patternIdx];
+
+            if (pattern.Notes.ContainsKey(noteIdx) &&
+                pattern.Notes[noteIdx].HasCutDelay)
+            {
+                return true;
+            }
 
             for (var it = pattern.GetNoteIterator(noteIdx + 1, patternLength); !it.Done && noteCount < maxNotes; it.Next(), noteCount++)
             {
                 var time = it.CurrentTime;
                 var note = it.CurrentNote;
-                if (note != null && (note.IsMusical || note.IsStop))
-                    return song.GetPatternStartNote(patternIdx, time) - song.GetPatternStartNote(patternIdx, noteIdx);
+                if (note != null && (note.IsMusical || note.IsStop || note.HasCutDelay))
+                {
+                    nextPatternIdx = patternIdx;
+                    nextNoteIdx    = time;
+                    return true;
+                }
             }
 
             for (int p = patternIdx + 1; p < song.Length && noteCount < maxNotes; p++)
             {
                 pattern = patternInstances[p];
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
-                    return song.GetPatternStartNote(p, pattern.FirstValidNoteTime) - song.GetPatternStartNote(patternIdx, noteIdx);
+                {
+                    nextPatternIdx = p;
+                    nextNoteIdx    = noteCount + pattern.FirstValidNoteTime > maxNotes ? pattern.FirstValidNoteTime - (maxNotes - noteCount) : pattern.FirstValidNoteTime; // MATTT : Test this!
+                    return true;
+                }
                 else
+                {
                     noteCount += song.GetPatternLength(p);
+                }
             }
 
             // This mean we hit the end of the song.
             if (noteCount < maxNotes)
-                return song.GetPatternStartNote(song.Length) - song.GetPatternStartNote(patternIdx, noteIdx);
+            {
+                nextPatternIdx = song.Length;
+                nextNoteIdx    = 0;
+                return true;
+            }
 
-            return maxNotes;
+            // Didnt find anything, just advance to the max note location and return false.
+            song.AdvanceNumberOfNotes(maxNotes, ref nextPatternIdx, ref nextNoteIdx);
+
+            return false;
         }
 
         public bool FindPreviousMatchingNote(int noteValue, ref int patternIdx, ref int noteIdx)
@@ -623,14 +731,14 @@ namespace FamiStudio
         }
 
 #if DEBUG
-        public void Validate(Song song)
+        public void Validate(Song song, Dictionary<int, object> idMap)
         {
             Debug.Assert(this == song.GetChannelByType(type));
             Debug.Assert(this.song == song);
             foreach (var inst in patternInstances)
                 Debug.Assert(inst == null || patterns.Contains(inst));
             foreach (var pat in patterns)
-                pat.Validate(this);
+                pat.Validate(this, idMap);
         }
 #endif
 

@@ -58,6 +58,10 @@ Holding CTRL+SHIFT while dragging will create a completely independant copy of t
 
 ![](images/CopyPattern.png#center)
 
+Dragging a pattern to a different channel will create a copy, but delete the original. This is because internally, patterns cannot be shared accross different channels. The pattern will loose its name and may change color. Holding CTRL+SHIFT will preserve the original (create a copy). 
+
+![](images/MovePatternDifferentChannel.png#center)
+
 ## Cut/copy/pasting patterns
 
 When one or multiple patterns are selected, press CTRL+C (or CTRL+X for cut). Move the selection somewhere else and paste with CTRL+V. Copy and pasting always create instances of patterns.

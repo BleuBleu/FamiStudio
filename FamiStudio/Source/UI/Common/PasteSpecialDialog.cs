@@ -1,35 +1,104 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
+
+#if FAMISTUDIO_WINDOWS
+    using RenderTheme = FamiStudio.Direct2DTheme;
+#else
+    using RenderTheme = FamiStudio.GLTheme;
+#endif
 
 namespace FamiStudio
 {
     class PasteSpecialDialog
     {
         private PropertyDialog dialog;
+        private bool inPropertyChanged = false;
+        private Dictionary<int, int> propToEffect = new Dictionary<int, int>();
 
-        public unsafe PasteSpecialDialog(Rectangle mainWinRect)
+        public unsafe PasteSpecialDialog(Channel channel, bool mix = false, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            int width  = 200;
-            int height = 300;
-            int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
-            int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
+            dialog = new PropertyDialog(200);
+            dialog.Properties.AddLabelBoolean("Mix With Existing Notes", mix);
+            dialog.Properties.AddLabelBoolean("Paste Notes", notes);
+            dialog.Properties.AddLabelBoolean("Paste Effects", effectsMask == Note.EffectAllMask);
 
-            dialog = new PropertyDialog(x, y, width, height);
-            dialog.Properties.AddLabelBoolean("Paste Notes", true);
-            dialog.Properties.AddLabelBoolean("Paste Volumes", true);
-            dialog.Properties.AddLabelBoolean("Paste Effects", true);
-            dialog.Properties.AddLabelBoolean("Mix With Existing Notes", false);
+            for (int i = 0; i < Note.EffectCount; i++)
+            {
+                if (channel.SupportsEffect(i))
+                {
+                    propToEffect[dialog.Properties.PropertyCount] = i;
+                    dialog.Properties.AddLabelBoolean(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));
+                }
+            }
+
+            dialog.Properties.AddIntegerRange("Repeat :", 1, 1, 32);
             dialog.Properties.Build();
+            dialog.Properties.PropertyChanged += Properties_PropertyChanged;
+            dialog.Name = "PasteSpecialDialog";
         }
 
-        public DialogResult ShowDialog()
+        private void Properties_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            return dialog.ShowDialog();
+            if (inPropertyChanged)
+                return;
+
+            inPropertyChanged = true; // Prevent recursion.
+
+            if (idx == 2)
+            {
+                bool allEffects = (bool)value;
+
+                foreach (var kv in propToEffect)
+                {
+                    props.SetPropertyValue(kv.Key, allEffects);
+                }
+            }
+            else if (propToEffect.ContainsKey(idx))
+            {
+                bool allEffects = true;
+
+                foreach (var kv in propToEffect)
+                {
+                    if (!props.GetPropertyValue<bool>(kv.Key))
+                    {
+                        allEffects = false;
+                        break;
+                    }
+                }
+
+                props.SetPropertyValue(2, allEffects);
+            }
+
+            inPropertyChanged = false;
         }
 
-        public bool PasteNotes   => dialog.Properties.GetPropertyValue<bool>(0);
-        public bool PasteVolumes => dialog.Properties.GetPropertyValue<bool>(1);
-        public bool PasteEffects => dialog.Properties.GetPropertyValue<bool>(2);
-        public bool PasteMix     => dialog.Properties.GetPropertyValue<bool>(3);
+        public DialogResult ShowDialog(FamiStudioForm parent)
+        {
+            return dialog.ShowDialog(parent);
+        }
+
+        public bool PasteMix        => dialog.Properties.GetPropertyValue<bool>(0);
+        public bool PasteNotes      => dialog.Properties.GetPropertyValue<bool>(1);
+        public int  PasteEffectMask
+        {
+            get
+            {
+                int mask = 0;
+
+                foreach (var kv in propToEffect)
+                {
+                    if (dialog.Properties.GetPropertyValue<bool>(kv.Key))
+                    {
+                        int effect = kv.Value;
+                        mask |= (1 << effect);
+                    }
+                }
+
+                return mask;
+            }
+        }
+
+        public int PasteRepeat => dialog.Properties.GetPropertyValue<int>(dialog.Properties.PropertyCount - 1);
     }
 }

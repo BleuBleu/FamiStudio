@@ -17,19 +17,8 @@ namespace FamiStudio
     public interface ILogOutput
     {
         void LogMessage(string msg);
-    }
-
-    public class ListLogOutput : ILogOutput
-    {
-        private List<string> messages = new List<string>();
-
-        public void LogMessage(string msg)
-        {
-            messages.Add(msg);
-        }
-
-        public bool IsEmpty => messages.Count == 0;
-        public List<string> Messages => messages;
+        void ReportProgress(float progress);
+        bool AbortOperation { get; }
     }
 
     public class ScopedLogOutput : IDisposable
@@ -64,7 +53,23 @@ namespace FamiStudio
             if ((int)severity >= (int)MinSeverity && LogOutput != null)
             {
                 LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
-                Debug.WriteLine(SeverityStrings[(int)severity] + msg);
+            }
+            Debug.WriteLine(SeverityStrings[(int)severity] + msg);
+        }
+
+        public static void ReportProgress(float progress)
+        {
+            if (LogOutput != null)
+            {
+                LogOutput.ReportProgress(progress);
+            }
+        }
+
+        public static bool ShouldAbortOperation 
+        {
+            get
+            {
+                return LogOutput != null && LogOutput.AbortOperation;
             }
         }
     };

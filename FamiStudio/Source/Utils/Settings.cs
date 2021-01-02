@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,6 +34,7 @@ namespace FamiStudio
         public static int FollowMode = 0;
         public static int FollowSync = 0;
         public static bool ShowTutorial = true;
+        public static bool ShowNoteLabels = true;
 
         // Audio section
         public static int InstrumentStopTime = 2;
@@ -48,6 +50,9 @@ namespace FamiStudio
         public static string LastSampleFolder = "";
         public static string LastExportFolder = "";
 
+        // Misc
+        public static string FFmpegExecutablePath = "";
+
         public static void Load()
         {
             var ini = new IniFile();
@@ -60,6 +65,7 @@ namespace FamiStudio
             FollowMode = ini.GetInt("UI", "FollowMode", FollowModeContinuous);
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
             CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
+            ShowNoteLabels = ini.GetBool("UI", "ShowNoteLabels", true);
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
@@ -71,6 +77,7 @@ namespace FamiStudio
             LastInstrumentFolder = ini.GetString("Folders", "LastInstrumentFolder", "");
             LastSampleFolder = ini.GetString("Folders", "LastSampleFolder", "");
             LastExportFolder = ini.GetString("Folders", "LastExportFolder", "");
+            FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
             if (DpiScaling != 100 && DpiScaling != 150 && DpiScaling != 200)
                 DpiScaling = 0;
@@ -79,14 +86,33 @@ namespace FamiStudio
 
             if (MidiDevice == null)
                 MidiDevice = "";
-            if (!Directory.Exists(LastFileFolder))
-                LastFileFolder = "";
             if (!Directory.Exists(LastInstrumentFolder))
                 LastInstrumentFolder = "";
             if (!Directory.Exists(LastSampleFolder))
                 LastSampleFolder = "";
             if (!Directory.Exists(LastExportFolder))
                 LastExportFolder = "";
+
+            // Try to point to the demo songs initially.
+            if (string.IsNullOrEmpty(LastFileFolder) || !Directory.Exists(LastFileFolder))
+            {
+                var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var demoSongsPath = Path.Combine(appPath, "Demo Songs");
+                LastFileFolder = Directory.Exists(demoSongsPath) ? demoSongsPath : "";
+            }
+
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+            // Linux or Mac is more likely to have standard path for ffmpeg.
+            if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
+            {
+                if (File.Exists("/usr/bin/ffmpeg"))
+                    FFmpegExecutablePath = "/usr/bin/ffmpeg";
+                else if (File.Exists("/usr/local/bin/ffmpeg"))
+                    FFmpegExecutablePath = "/usr/local/bin/ffmpeg";
+                else
+                    FFmpegExecutablePath = "ffmpeg"; // Hope for the best!
+            }
+#endif
 
             // No deprecation at the moment.
             Version = SettingsVersion;
@@ -103,6 +129,7 @@ namespace FamiStudio
             ini.SetInt("UI", "FollowMode", FollowMode);
             ini.SetInt("UI", "FollowSync", FollowSync);
             ini.SetBool("UI", "CheckUpdates", CheckUpdates);
+            ini.SetBool("UI", "ShowNoteLabels", ShowNoteLabels);
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetBool("UI", "TrackPadControls", TrackPadControls);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
@@ -114,6 +141,7 @@ namespace FamiStudio
             ini.SetString("Folders", "LastInstrumentFolder", LastInstrumentFolder);
             ini.SetString("Folders", "LastSampleFolder", LastSampleFolder);
             ini.SetString("Folders", "LastExportFolder", LastExportFolder);
+            ini.SetString("FFmpeg", "ExecutablePath", FFmpegExecutablePath);
 
             Directory.CreateDirectory(GetConfigFilePath());
 

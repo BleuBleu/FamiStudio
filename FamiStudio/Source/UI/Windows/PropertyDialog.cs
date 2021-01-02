@@ -13,11 +13,13 @@ namespace FamiStudio
         public PropertyPage Properties => propertyPage;
         private bool top = false;
 
-        public PropertyDialog(int width, Rectangle mainWinRect)
+        public PropertyDialog(int width, bool canAccept = true)
         {
             StartPosition = FormStartPosition.CenterParent;
             Init();
-            Width = width;
+            Width = (int)(width * Direct2DTheme.DialogScaling);
+            buttonYes.Visible = canAccept;
+            FormClosed += PropertyDialog_FormClosed;
         }
 
         public PropertyDialog(Point pt, int width, bool leftAlign = false, bool topAlign = false)
@@ -30,6 +32,7 @@ namespace FamiStudio
 
             StartPosition = FormStartPosition.Manual;
             Location = pt;
+            FormClosed += PropertyDialog_FormClosed;
 
             Init();
 
@@ -42,6 +45,15 @@ namespace FamiStudio
             Init();
             StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Width = width;
+            FormClosed += PropertyDialog_FormClosed;
+        }
+
+        private void PropertyDialog_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (Owner != null)
+            {
+                Owner.Enabled = true;
+            }
         }
 
         private void Init()
@@ -79,6 +91,9 @@ namespace FamiStudio
 
             if (top)
                 Location = new Point(Location.X, Location.Y - Height);
+
+            if (StartPosition == FormStartPosition.CenterParent)
+                CenterToParent();
         }
 
         private void propertyPage_PropertyWantsClose(int idx)
@@ -114,6 +129,22 @@ namespace FamiStudio
         {
             DialogResult = DialogResult.Cancel;
             Close();
+        }
+
+        public void UpdateModalEvents()
+        {
+            if (Visible)
+                Application.DoEvents();
+        }
+
+        public void ShowModal(FamiStudioForm form)
+        {
+            form.Enabled = false;
+            Show(form);
+        }
+
+        public void StayModalUntilClosed()
+        {
         }
     }
 }

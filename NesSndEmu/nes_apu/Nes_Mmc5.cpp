@@ -34,11 +34,18 @@ void Nes_Mmc5::reset()
 	frame_period = false /*pal_mode*/ ? 8314 : 7458;
 	last_time = 0;
 	frame_delay = 1;
-	write_register(0, 0x5015, 0x00);
 	osc_enables = 0;
 
-	for (cpu_addr_t addr = start_addr; addr <= 0x4013; addr++)
-		write_register(0, addr, (addr & 3) ? 0x00 : 0x10);
+	square1.regs[0] = 0x10;
+	square1.regs[1] = 0x08; // MMC5 has no sweep.
+	square1.regs[2] = 0x00;
+	square1.regs[3] = 0x00;
+	square2.regs[0] = 0x10;
+	square2.regs[1] = 0x08; // MMC5 has no sweep.
+	square2.regs[2] = 0x00;
+	square2.regs[3] = 0x00;
+
+	write_register(0, 0x5015, 0x00);
 }
 
 void Nes_Mmc5::volume(double v)
@@ -89,6 +96,11 @@ void Nes_Mmc5::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 		Nes_Osc* osc = oscs[osc_index];
 
 		int reg = addr & 3;
+
+		// No sweep.
+		if (reg == 1)
+			return;
+
 		osc->regs[reg] = data;
 		osc->reg_written[reg] = true;
 

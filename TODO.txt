@@ -1,21 +1,65 @@
-Post 2.2.0
-==========
-- Dont change scroll in pianoroll/sequencer when undoing + playing + follow to avoid jumps
-x Fix FamiStudio text format + DONT delete unused stuff.
-- Labels on notes in piano roll.
-- Warning when +16KB on samples on FTM.
+Tips & Tricks (Review this list)
+================================
+#00 - Basic controls & onboarding (pan, zoom, trackpad, tooltips, piano roll view rect, demo songs)
+#01 - Sequencer basics (pattern add, delete, edit, instance & copy).
+#02 - Piano roll basics (add note, delete note, snapping, dragging, select, transpose with KB).
+#03 - Channels in piano roll (force display, muting & soloing, etc.)
+#04 - Volume envelopes & release notes
+#05 - Toggling note attacks (combination with release)
+#06 - Slide notes (combination with release notes)
+#07 - Pitch envelopes (absolute & relative, paste text values)
+#08 - Effect panel (speed, FDS mod, etc.)
+#09 - Quickly copy notes
+#10 - Copy & paste (special paste, mix paste, drag & copy, between projects, etc.)
+#11 - Custom pattern settings & loop points.
+#12 - Recording with Keyboard or MIDI controller (page up/down, keys, etc.)
+#13 - Importing instruments
+#14 - Importing from FamiTracker
+#15 - Importing NSFs (bit reverse, etc.)
+#16 - FamiStudio vs. FamiTracker tempo (PAL, etc.)
+#17 - DPCM samples (import, save, transpose, bit reverse, etc)
+#18 - Replacing an instrument by another (copy envelopes, etc.)
+#19 - Arpeggios (replacing, etc.)
+#20 - Exporting to FamiTracker
+#21 - Exporting to a NSF / ROM / FDS Disk
+#22 - FDS audio (waveform, modulation, etc.)
+#23 - VRC7 audio (release envelope)
+#24 - N163 audio (wavetable, number of channels => quality, etc.)
+#25 - Command line processing 
 
-2.2.0 Release
+2.3.0
+=====
+CLOSING:
+- Update documentation (sound engine, copy/delete special, new nomenclature for bars, tempo, etc.)
+	- Update sound engine code size at the end.
+- Create new song for trailer.
+
+2.3.0 Trailer
 =============
-- Update NESDEV wiki.
+1) Video export
+2) MP3 export + export to seperate channels
+3) FamiTracker compatibility improvements (delayed notes/cuts) + Vxx support
+4) Special paste improvements (repeat, effects, etc.)
+5) Special delete
+6) Song merge
+7) Copy patterns to different channels
+8) Note labels
+9) DPCM improvements (explicity bit reverse option, drag&drop)
 
-MaxWar wish list.
-=================
-- Copy patterns to other channels.
-- Option for no-sound when no-pattern?
-- Loop end point
-- MIDI import/export.
-	
+2.3.0 New Features
+==================
+- MP3 export
+- Video export
+- Sound engine code size reduction
+- Song merge
+- Vxx support
+- Special paste improvements (repeat, effects, etc.)
+- Special delete
+- Copy patterns to different channels
+- Note labels
+- FamiTracker tempo improvements (delayed notes/cuts)
+- DPCM improvements (explicity bit reverse option, drag&drop)
+
 Linux notes
 ===========
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe
@@ -62,3 +106,4 @@ Backlog:
 - Mac: Clicking on FS without the window doesn't give it focus...?
 - Installer on Japanese machine?
 - FamiTracker tempo mode never plays the 1st frame in the NSF.
+- Keyboard recording VS. non-QWERTY keyboards.

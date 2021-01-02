@@ -2,18 +2,38 @@
 
 The export dialog is access through the main toolbar.
 
-## Wave File
+## Wave / MP3 File
 
-Only a single song can be exported at a time. You can choose the sample rate, it is recommended to stick to 44.1KHz if you want the sound to be exactly as you hear it in FamiStudio. Lower sample rate might lack high frequencies.
+Only a single song can be exported at a time. You can choose the sample rate (and bitrate in case of MP3). It is recommended to stick to 44.1KHz if you want the sound to be exactly as you hear it in FamiStudio. Lower sample rate might lack high frequencies.
 
 The song can be exported in one of two modes:
 
 * Play N Times: Will play the song a specified number of times.
 * Duration : Will loop though the song for the specified number of seconds.
 
+You can also export each channel to individual by enabling "Separate channel file". 
+
+Note that the quality of the MP3 encoding may not going to be as good as full fledge mp3 encoder such as LAME, but should be good enough for sending quick previews to people.
+
 ![](images/ExportWav.png#center)
 
 Channels can optionally be muted. This can be used, for example, to create stereo mix using and external application.
+
+## Video
+
+Video export is a great way to add a visual element to your songs when sharing them on YouTube/social media. For this to work, you will need to [manually download FFmpeg](ffmpeg.md) and extract it somewhere on your computer. 
+
+![](images/VideoScreenshot.jpg#center)
+
+The exported videos are always 1080p / 60FPS at the moment (or 50FPS in PAL mode). 
+
+![](images/ExportVideo.png#center)
+
+Besides the audio/video quality settings, there are a few options to control the look and feel of the video:
+
+* **Piano roll zoom** : The higher the zoom, the faster notes will scroll by. 
+* **Thin notes** : This will make the notes narrower (in the X direction). This is useful when exporting songs that have more than 5 channels.
+* **Channels** : It is recommended to not export channels that do not have any notes, this will leave more space to the other channels.
 
 ## Nintendo Sound Format
 
@@ -116,8 +136,8 @@ Here is an example of a very short file:
 			Envelope Type="DutyCycle" Length="1" Values="2"
 		Instrument Name="Lead2"
 			Envelope Type="Volume" Length="12" Values="15,12,11,9,7,6,5,4,3,2,1,1"
-		Song Name="Tutorial Song" Length="5" LoopPoint="1" PatternLength="16" BarLength="4" NoteLength="7"
-			PatternCustomSettings Time="0" Length="10" NoteLength="7" BarLength="4"
+		Song Name="Tutorial Song" Length="5" LoopPoint="1" PatternLength="16" BeatLength="4" NoteLength="7"
+			PatternCustomSettings Time="0" Length="10" NoteLength="7" BeatLength="4"
 			Channel Type="Square1"
 				Pattern Name="Intro1"
 					Note Time="0" Value="G3" Instrument="Lead"
@@ -176,14 +196,14 @@ Song | Name | Yes | The name of the song.
 | Length | Yes | The length of the song in number of patterns.
 | LoopPoint | Yes | The loop point of the song, -1 to disable.
 | PatternLength | Yes | The number of notes in a pattern.
-| BarLength | Yes | The number of notes in a bar.
+| BeatLength | Yes | The number of notes in a beat.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
 | Tempo | Yes | (FamiTracker tempo only) The FamiTracker tempo.
 | Speed | Yes | (FamiTracker tempo only) The FamiTracker speed.
 PatternCustomSettings | Time | Yes | Index of the column of pattern that uses these custom settings.
 | Length | Yes | The custom length (in notes or frames) of the pattern.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
-| BarLength | Yes | (FamiStudio tempo only) The number of notes in a bar.
+| BeatLength | Yes | (FamiStudio tempo only) The number of notes in a beat.
 Channel | Type | Yes | Square1, Square2, Triangle, Noise, DPCM, VRC6Square1, VRC6Square2, VRC6Saw, VRC7FM1, VRC7FM2, VRC7FM3, VRC7FM4, VRC7FM5, VRC7FM6, FDS, MMC5Square1, MMC5Square2, MMC5DPCM, N163Wave1, N163Wave2, N163Wave3, N163Wave4, N163Wave5, N163Wave6, N163Wave7, N163Wave8, S5BSquare1, S5BSquare2 or S5BSquare3 
 Pattern | Name | Yes | Name of the pattern.
 Note | Time | Yes | The frame (or note) number inside the pattern where this note is.
@@ -198,6 +218,9 @@ Note | Time | Yes | The frame (or note) number inside the pattern where this not
 | SlideTarget | | The slide note target, from C0 to B7.
 | FdsModSpeed | | FDS modulation speed, 0 to 4095.
 | FdsModDepth | | FDS modulation depth, 0 to 63.
+| DutyCycle | | Duty cycle, 0 to 3 on most channels, 0 to 7 on VRC6 squares.
+| NoteDelay | | Number of frames to delay the note, 0 to 31.
+| CutDelay | | Stops the note after a number of frames, 0 to 31.
 PatternInstance | Time | Yes | Index of the column of patterns where to place this instance.
 | Pattern | Yes | Name of the pattern to instantiate.
 
@@ -234,10 +257,12 @@ Note that only a small subset of features is supported. Only the following effec
 * Bxx (Jump) : Will be converted to loop point. 
 * Cxx (Half) : Will truncate the song at the location of the effect and remove the loop point.
 * Dxx (Skip) : Will be converted to a custom pattern length.
-* Fxx (Speed) : Only speed is supported.
+* Fxx (Speed) : Only speed is supported. Speed changed are not allowed to be delayed with Gxx. 
+* Gxx (Note delay) : Fully supported.
 * Pxx (Fine pitch) : Fully supported.
 * Hxx (FDS Modulation depth) : Fully supported.
 * Ixx/Jxx (FDS Modulation speed) : Fully supported, but combined in one 16-bit value.
+* Sxx (delayed cut) : Fully supported. 
 
 Besides effects, there are also other limitations:
 
@@ -260,13 +285,19 @@ NSF (and NSFE) files can be imported in FamiStudio. This includes NSF with expan
 
 ![](images/ImportNsf.png#center)
 
-You will need to chose the song to import and specify a duration (in sec) to extract from the NSF. Most NSF file will not contain the names of songs so they will usually have placeholder names. 
+Most NSF file will not contain the names of songs so they will usually have placeholder names. Besides the song to import, are the most important settings :
+
+* **Duration** : Time (in sec) to extract from the NSF. 
+* **Pattern Length** : Number of frames in a pattern.
+* **Start frame** : Used to offset the entire song by a number of frames. This is useful when a song has an intro that is not the same length as the other patterns.
+* **Remove intro silence** : Some songs start with a bit of silence, this will wait until any sound is produce to start recording.
+* **Reverse DPCM bits** : This will set the "Reverse Bits" flag on all the imported samples. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should.
 
 NSF file are essentially programs designed to run on actual hardware. They will contain no instrument, no envelopes, no repeating pattern, etc. All the volumes and pitches will be set through the effect panel. They are going to appear extremely messy and unoptimized. 
 
 That being said, NSF can still be extremely useful to reverse engineer how songs were made. In fact, this is how most of the Demo Songs that come with FamiStudio were made. 
 
-In the example below, we can imagine that the notes on the right were all using the same instrument with a decreasing volume envelope. The notes of the left were clearly using a vibrato effect or a pitch envelope. 
+In the example below, we can imagine that the notes on the right were all using the same instrument with a decreasing volume envelope, and a 2-1 release. The note of the left were clearly using a vibrato effect or a pitch envelope. 
 
 ![](images/NsfMess.png#center)
 

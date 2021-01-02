@@ -1,39 +1,136 @@
-# Editing project properties
+# Editing projects
 
-The project explorer displays the name of the project, the list of songs and instruments in the current project. 
+The project explorer displays the name of the project, the list of songs and instruments in the current project. This section is going to focus on the very top part, which is the project and the songs.
 
 ![](images/ProjectExplorer.png#center)
 
-Double-clicking on project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information are used when exporting to NSF, for example.
+## Editing project properties
+
+Double-clicking on project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information is used when exporting to NSF, for example.
 
 ![](images/EditProject.png#center)
+
+## Expansion audio
 
 The project properties is also where you select your [Expansion Audio](expansion.md). Expansion will add extra channels on top of the default 5 that the NES supported. Note that changing the expansion audio in a project will delete all data (patterns, notes, instrument) related to the previous expansion.
 
 Please visit the [Expansion Audio](expansion.md) section for more detail about each expansion.
 
-## Tempo Modes
+## Tempo modes
+
+FamiStudio supports two tempo modes : **FamiStudio** and **FamiTracker**. 
 
 The tempo mode will affect how the tempo of you songs is calculated, how much control you have over the notes of your song and how your song plays on PAL systems. Note that changing the tempo mode when you have songs created is possible, but not recommended, the conversion is quite crude at the moment.
 
-FamiStudio supports two tempo modes : **FamiTracker** and **FamiStudio**, this handy table will summarize the differences between the 2 tempo modes.
+### FamiStudio Tempo Mode
 
-&nbsp; | FamiTracker Tempo | FamiStudio Tempo
---- | --- | ---
-Granularity | Maximum precision is dictated by the speed parameter. Anything finer has to use effects which operate at a frame-level. Very few FamiTracker effects are supported. | Gives control over every frame (1/60th or 1/50th or a second).
-Paradigm | Makes a lot of sense in a tracker where information density is important. | Makes a lot of sense in a DAW where simply zooming in/out can reveal more detail.
-Editing | Mostly machine-agnostic when it comes to editing. Your are not explicitely making the song in PAL or NTSC, except for some effects like delayed notes/cuts, slides, etc. which makes assumption on the duration of a frame. | You are explicitely editing in NTSC or PAL space.
-Playback | Playback to NTSC or PAL is done by changing the speed at which the internal counter is incremented. This breaks down at low speed values. | Playback to NTSC or PAL is done by either running the sound engine twice (when playing NTSC song on PAL) or idling (when running a PAL song on NTSC) at strategically chosen frames. The frames where where skipping/idling can happen are deterministic.
-Support | Will no longuer receive any improvement in FamiStudio | Will keep improving in the future.
-Compatiblity | Better suited if you need to export to FamiTracker | Will export to FamiTracker, but at a speed of 1, tempo 150.
+FamiStudio tempo modes gives full control over every frame (1/60th of a second on NTSC, 1/50th on PAL). It is the default mode. In this mode you will see the individual frames in the piano roll and will have more precise control on where each note starts/end. On the other hand, it makes suddent tempo changes harder to manage, and it is also harder to achieve "non-integral" tempos. It can faithfully recreate the vast majority of the NES music library very easily. 
 
-### FamiStudio tempo mode (default) 
+For example, a C-D-E scale where each note is stopped for 1 frame between each note will look like this using FamiStudio tempo. The dashed lines seperate individual frames, so you can place a stop note (triangle) 1 frame before the new note starts. Very intuituve and visual.
 
-In this mode, you always have control over every single frame (1/60th of a second in NTSC, 1/50th in PAL). You will be able to choose a **Note Length** which has a fixed number a frames. More frames means a slower tempo. Unlike FamiTracker tempo which is (mostly) machine-agnostic when it comes to editing, in FamiStudio tempo, your project is authored for a specific machine (NTSC or PAL) and a conversion is applied at playback if necessary (PAL playing on NTSC or vice-versa).
+![](images/TempoExampleFamiStudio.png#center) 
 
-One of the big different with FamiTracker tempo is in the way it handles PAL to NTSC or NTSC to PAL conversion. 
+### FamiTracker Tempo Mode
 
-#### NTSC to PAL
+FamiTracker tempo has a limited visual granularity and relies on effects (delayed notes/cuts) to get frame-level precision. It uses the speed/tempo paradigm. Please check out the [FamiTracker documentation](http://famitracker.com/wiki/index.php?title=Fxx) for a detailed explanation on how the playback speed is affected. If you import a FamiTracker Text or FTM file, the project will be in this tempo mode. 
+
+Same example, but using FamiTracker tempo. Here we dont have the individual frames so we need to use a "delayed cut" effect to achieve the same result. The delayed cut tells the sound engine to insert a stop note after 9 frames have elapsed, achieving the exact same result. That being said, one might argue that it is not very visual and feels like using a Tracker. Moreover, this would not always work correctly on PAL.
+
+![](images/TempoExampleFamiTracker.png#center) 
+
+### Which one to use?
+
+You should use FamiStudio tempo mode if:
+
+* You want to be able to visually control the position of every note at a frame-level precision.
+* You are not too strict about the BPM you want to achieve.
+* You are not planning to do sophisticated tempo changes during the song.
+
+You should use FamiTracker tempo mode if:
+
+* You are OK with using effects tracks (delayed notes, cuts) to finely tune the start/end of each notes.
+* You want to achieve a very specific BPM, even if this mean some notes will be uneven.
+* You want to have complex tempo changes during the song.
+* You need compatibility with FamiTracker.
+
+# Editing songs
+
+Right below the project name are the songs.
+
+## Adding/Deleting songs
+
+To add new songs, simply click on the little "+" icon on the song header.
+
+## Importing/Merging songs
+
+To merge a song coming from another project, click on the little folder icon on the song header. 
+
+Songs from another project must use the same audio expansion and tempo mode. Also, please note that instruments, samples and arpeggios, used by the other song will be matched by their name. In other words, instruments with the same names are assumed to be the same. If you project already contains an instrument called "Piano" and you try to import a song using another one called "Piano", the existing one will be used. You are responsible to uniquely name your instruments if they are truly different.
+
+## Editing song properties
+
+Double-clicking on the a song will allow you to change its name, color and other attributes. Names must be unique.
+
+This dialog will look different depending on the **Tempo Mode** of the current project.
+
+FamiStudio Tempo | FamiTracker tempo
+--- | ---
+![](images/EditSong.png#center) | ![](images/EditSongFamiTracker.png#center) 
+
+Common properties:
+
+* **Song length**: The number of patterns in the song
+* **Notes Per Pattern**: Default number of notes in a pattern. Pattern length can be customized on a per-pattern basis in the Sequencer.
+* **Notes Per Beat**: Number of notes in a beat. The piano roll will draw a darker line at every beat. Simply a visual aid, does not affect the audio in any way, although it does affect the displayed BPM calculation. It is recommended to keep that at 4.
+
+Properties unique FamiTracker tempo mode:
+
+* **Speed**: How much the timer is increment each frame, values other than 150 might create uneven notes
+* **Tempo**: How many frames to wait before advancing to the next note (at least when using the integral tempo or 150)
+
+Properties unique FamiStudio tempo mode:
+
+* **Frames Per Notes**: How many frames (1/60th) in a typical notes. Values between 5 and 16 are recommended as they create the least error on PAL system.
+
+## Tempo
+
+Configuring tempo in FamiStudio is definately less intuitive than in a regular DAW, so please bear with me. This is both for technical reasons (the fact that the NES runs at 50/60 FPS) and historical reasons (influence from FamiTracker).
+
+The key thing to understand is that the piano roll simply gives you a series of, what I am going to loosely call, **notes** (**rows** if you come from FamiTracker). It is up to the composer to configure these notes and achieve the desired tempo and time signature.
+
+For example, let's look at the simple melody of the children song "A, B, C, ...". On the right side are the song settings that were used to achieve this. In this example, the project was set to use the FamiStudio tempo mode, but the same logic applies to the FamiTracker tempo mode. 
+
+[![](images/TempoABC.png#center)](images/TempoABC.png#center)
+*Click on the image to zoom in.*
+
+Here is a zoomed-in version of the first beat.
+![](images/TempoABCZoom.png#center)
+Observations:
+
+* Frames are seperated by dashes grey line (they will disapear if you zoom out enough).
+* Notes are seperated by thin grey lines.
+* Beats are seperated by thin black lines.
+* Patterns are seperated by thick black lines.
+
+Here we chosen to have 1 bar = 1 pattern, we could have chosen to fit the whole song in a single pattern, this is totally arbitrary. You should try to use a pattern size is a good tradeoff between reusability (being able to copy patterns and re-use them) and size (having many small patterns is annoying).
+
+The **Frames per Note** setting is the main driver of tempo and determines the base length our "notes". The more frames (1/60th of a second) we wait, the slower the song will play. So 8 frames per note give us a BPM of 112.5. When using FamiTracker tempo, this is the equalivalent of the **Speed** parameter.
+
+Also we have chosen to assemble 4 notes into a beat, and 4 beats in a pattern (16 notes), which is how we get something that looks like a 4/4 time signature. This also means our smallest granularity for our melody is 1/16th of a note. That being said, you can move notes at the frame-level, so you actually have a lot more control than this.
+
+### Composite notes
+
+Note that you arent not limited to the BPM values suggested by the different note lengths. You can create in-between ones by putting multiples notes into a larger one. For example, Gimmick! uses a 11 frames per note, but puts 2 notes inside it. One of 5 frames and one of 6 frames. This creates an approximate tempo of 163.6 BPM and the different note lengths is not audible.
+
+![](images/GimmickNote.png#center)
+
+The FamiTracker documentation has a [handy chart](http://famitracker.com/wiki/index.php?title=Common_tempo_values) for these. Note that you are limited to 18 frames per note a the moment.
+
+## FamiStudio Tempo & PAL conversion
+
+This is a more technical discussion of how FamiStudio tempo handles NTSC -> PAL and PAL -> NTSC conversion.
+
+### NTSC to PAL
 
 For example, in the image below, we have a NTSC song with 6 frames (1/60th of a sec) per note. On PAL system (50 FPS), if were were to play back this song, it would play 20% slower.
 
@@ -78,7 +175,7 @@ Number of NTSC frames (1/60 sec) | Number of frames skipped by PAL | Positions o
 17 | 17 double frames over 6 notes | 01000001000001000 |52.9
 18 |  3 double frames over 1 notes | 010000010000010000 |50.0
 
-#### PAL to NTSC
+### PAL to NTSC
 
 The sample principle apply when playing PAL songs on NTSC, but instead of running 2 frames rapidly, the sound engine will simply "do nothing" (idle) every once in a while to avoid going too fast. 
 
@@ -111,48 +208,3 @@ The position of potential double or idle frames where chosen to try to:
 * Avoid placing a double/idle frame on the first frame of the note, where the attack usually is
 * Avoid placing a double/idle frame on the last frame of the note, where a stop note could be
 * Avoid placing a double/idle frames on the 2 middle notes, to allow 1/2 notes to be used occasionally and improve support for composite notes.
-
-### Composite notes
-
-Note that you arent not limited to the BPM values suggested by the different note lengths. You can create in-between ones by putting multiples notes into a larger one. For example, Gimmick! uses a 11 frames per note, but puts 2 notes inside it. One of 5 frames and one of 6 frames. This creates an approximate tempo of 163.6 BPM and the different note lengths is not audible.
-
-![](images/GimmickNote.png#center)
-
-The FamiTracker documentation has a [handy chart](http://famitracker.com/wiki/index.php?title=Common_tempo_values) for these. Note that you are limited to 18 frames per note a the moment.
-
-### FamiTracker tempo mode
-
-This mode is mostly for compatibility with FamiTracker. It uses the speed/tempo paradigm. Please check out the [FamiTracker documentation](http://famitracker.com/wiki/index.php?title=Fxx) for a detailed explanation on how the playback speed is affected. If you import a FamiTracker Text or FTM file, it will be in this tempo mode. 
-
-Only use this mode if you have specific compatibility needs with FamiTracker (such as exporting to an audio engine that only supports this tempo mode), as it will not receive any future improvement. When using this tempo mode, the *Speed* effect will be available in the effect panel.
-
-Delayed notes and delayed cuts are not supported and will likely never be as they are inherentely a tracker-centric feature.
-
-# Editing song properties
-
-Double-clicking on the a song will allow you to change its name, color and other attributes. Names must be unique.
-
-This dialog will look very different depending on the **Tempo Mode** of the current project.
-
-FamiStudio Tempo | FamiTracker tempo
---- | ---
-![](images/EditSong.png#center) | ![](images/EditSongFamiTracker.png#center) 
-
-Common properties:
-
-* **Song length**: The number of patterns in the song
-* **Notes Per Pattern**: Default number of notes in a pattern. Pattern length can be customized on a per-pattern basis in the Sequencer.
-* **Notes Per Bar**: Number of notes in a bar. The piano roll will draw a darker line at every bar. Simply a visual aid, does not affect the audio in any way
-
-Properties unique FamiTracker tempo mode:
-
-* **Speed**: How much the timer is increment each frame, values other than 150 might create uneven notes
-* **Tempo**: How many frames to wait before advancing to the next note (at least when using the integral tempo or 150)
-
-Properties unique FamiStudio tempo mode:
-
-* **Frames Per Notes**: How many frames (1/60th) in a typical notes. Values between 5 and 16 are recommended as they create the least error on PAL system.
-
-These parameters will affect the look of the piano roll. 
-
-![](images/PianoRollFrames.png#center)

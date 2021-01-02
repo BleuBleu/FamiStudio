@@ -2,7 +2,6 @@ using Gtk;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Input;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -37,6 +36,8 @@ namespace FamiStudio
         private GLControl captureControl = null;
         private System.Windows.Forms.MouseButtons captureButton   = System.Windows.Forms.MouseButtons.None;
         private System.Windows.Forms.MouseButtons lastButtonPress = System.Windows.Forms.MouseButtons.None;
+        private bool[] keys = new bool[256];
+        private System.Windows.Forms.Keys modifiers = System.Windows.Forms.Keys.None;
 
         public FamiStudioForm(FamiStudio famistudio) : base(WindowType.Toplevel)
         {
@@ -47,7 +48,7 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
-            glWidget = new GLWidget(new GraphicsMode(new ColorFormat(8, 8, 8, 0), 0, 0), 1, 0, GraphicsContextFlags.Default);
+            glWidget = new GLWidget(new GraphicsMode(new ColorFormat(8, 8, 8, 8), 0, 0), 1, 0, GraphicsContextFlags.Default);
             glWidget.WidthRequest = 1280;
             glWidget.HeightRequest = 720;
             glWidget.Initialized += GLWidgetInitialize;
@@ -67,9 +68,17 @@ namespace FamiStudio
             glWidget.MotionNotifyEvent  += GlWidget_MotionNotifyEvent;
             glWidget.Resized            += GlWidget_Resized;
 
+            FocusOutEvent += Handle_FocusOutEvent;
+
             doubleClickTime = Gtk.Settings.GetForScreen(Gdk.Screen.Default).DoubleClickTime;
 
             Add(glWidget);
+        }
+
+        void Handle_FocusOutEvent(object o, FocusOutEventArgs args)
+        {
+            Array.Clear(keys, 0, keys.Length);
+            modifiers = System.Windows.Forms.Keys.None;
         }
 
         void GlWidget_Resized(object sender, EventArgs e)
@@ -209,9 +218,34 @@ namespace FamiStudio
             }
         }
 
+        private void SetKeyMap(System.Windows.Forms.Keys k, bool set)
+        {
+            var regularKey = k & ~System.Windows.Forms.Keys.Modifiers;
+            if (regularKey > 0 && (int)regularKey < keys.Length)
+            {
+                keys[(int)regularKey] = set;
+            }
+            else
+            {
+                var mods = k & System.Windows.Forms.Keys.Modifiers;
+                if (mods > 0)
+                {
+                    if (set)
+                        modifiers |= mods;
+                    else
+                        modifiers &= ~mods;
+                }
+            }
+        }
+
         protected override bool OnKeyPressEvent(Gdk.EventKey evnt)
         {
-            var args = new System.Windows.Forms.KeyEventArgs(GtkUtils.ToWinFormKey(evnt.Key) | GtkUtils.ToWinFormKey(evnt.State));
+            var winKey = GtkUtils.ToWinFormKey(evnt.Key);
+            var winMod = GtkUtils.ToWinFormKey(evnt.State);
+
+            SetKeyMap(winKey, true);
+
+            var args = new System.Windows.Forms.KeyEventArgs(winKey | winMod);
             famistudio.KeyDown(args);
             foreach (var ctrl in controls.Controls)
                 ctrl.KeyDown(args);
@@ -221,7 +255,13 @@ namespace FamiStudio
 
         protected override bool OnKeyReleaseEvent(Gdk.EventKey evnt)
         {
-            var args = new System.Windows.Forms.KeyEventArgs(GtkUtils.ToWinFormKey(evnt.Key) | GtkUtils.ToWinFormKey(evnt.State));
+            var winKey = GtkUtils.ToWinFormKey(evnt.Key);
+            var winMod = GtkUtils.ToWinFormKey(evnt.State);
+
+            SetKeyMap(winKey, false);
+
+            var args = new System.Windows.Forms.KeyEventArgs(winKey | winMod);
+
             famistudio.KeyUp(args);
             foreach (var ctrl in controls.Controls)
                 ctrl.KeyUp(args);
@@ -329,8 +369,7 @@ namespace FamiStudio
 
         public Point GetCursorPosition()
         {
-            var mouseState = Mouse.GetCursorState();
-            return new Point(mouseState.X, mouseState.Y);
+            return PointToScreen(lastMousePos);
         }
 
         public void RefreshCursor()
@@ -349,12 +388,12 @@ namespace FamiStudio
 
         public System.Windows.Forms.Keys GetModifierKeys()
         {
-            return OpenTkUtils.GetModifierKeys();
+            return modifiers;
         }
 
         public static bool IsKeyDown(System.Windows.Forms.Keys k)
         {
-            return Keyboard.GetState().IsKeyDown(OpenTkUtils.FromWinFormKey(k));
+            return (int)k < instance.keys.Length ? instance.keys[(int)k] : false;
         }
 
         public Rectangle Bounds

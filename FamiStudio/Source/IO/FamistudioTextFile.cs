@@ -31,7 +31,7 @@ namespace FamiStudio
             // DPCM samples
             foreach (var sample in project.Samples)
             {
-                lines.Add($"\tDPCMSample Name=\"{sample.Name}\" Data=\"{String.Join("", sample.Data.Select(x => $"{x:x2}"))}\"");
+                lines.Add($"\tDPCMSample Name=\"{sample.Name}\" ReverseBits=\"{sample.ReverseBits.ToString()}\" Data=\"{String.Join("", sample.Data.Select(x => $"{x:x2}"))}\"");
             }
 
             // DPCM mappings
@@ -114,11 +114,11 @@ namespace FamiStudio
 
                 if (song.UsesFamiTrackerTempo)
                 {
-                    songStr += $" PatternLength=\"{song.PatternLength}\" BarLength=\"{song.BarLength}\" FamiTrackerTempo=\"{song.FamitrackerTempo}\" FamiTrackerSpeed=\"{song.FamitrackerSpeed}\"";
+                    songStr += $" PatternLength=\"{song.PatternLength}\" BeatLength=\"{song.BeatLength}\" FamiTrackerTempo=\"{song.FamitrackerTempo}\" FamiTrackerSpeed=\"{song.FamitrackerSpeed}\"";
                 }
                 else
                 {
-                    songStr += $" PatternLength=\"{song.PatternLength / song.NoteLength}\" BarLength=\"{song.BarLength / song.NoteLength}\" NoteLength=\"{song.NoteLength}\"";
+                    songStr += $" PatternLength=\"{song.PatternLength / song.NoteLength}\" BeatLength=\"{song.BeatLength / song.NoteLength}\" NoteLength=\"{song.NoteLength}\"";
                 }
 
                 lines.Add(songStr);
@@ -135,10 +135,10 @@ namespace FamiStudio
                         }
                         else
                         {
-                            var noteLength    = song.GetPatternNoteLength(i);
-                            var barLength     = song.GetPatternBarLength(i);
+                            var noteLength = song.GetPatternNoteLength(i);
+                            var beatLength = song.GetPatternBeatLength(i);
 
-                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength / noteLength}\" NoteLength=\"{noteLength}\" BarLength=\"{barLength / noteLength}\"");
+                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength / noteLength}\" NoteLength=\"{noteLength}\" BeatLength=\"{beatLength / noteLength}\"");
                         }
                     }
                 }
@@ -175,6 +175,9 @@ namespace FamiStudio
                                 if (note.HasFinePitch)   noteLine += $" FinePitch=\"{note.FinePitch}\"";
                                 if (note.HasFdsModSpeed) noteLine += $" FdsModSpeed=\"{note.FdsModSpeed}\"";
                                 if (note.HasFdsModDepth) noteLine += $" FdsModDepth=\"{note.FdsModDepth}\"";
+                                if (note.HasDutyCycle)   noteLine += $" DutyCycle=\"{note.DutyCycle}\"";
+                                if (note.HasNoteDelay)   noteLine += $" NoteDelay=\"{note.NoteDelay}\"";
+                                if (note.HasCutDelay)    noteLine += $" CutDelay=\"{note.CutDelay}\"";
                                 if (note.IsMusical && note.IsSlideNote) noteLine += $" SlideTarget=\"{Note.GetFriendlyName(note.SlideNoteTarget)}\""; 
 
                                 lines.Add(noteLine);
@@ -272,7 +275,8 @@ namespace FamiStudio
                             var data = new byte[str.Length / 2];
                             for (int i = 0; i < data.Length; i++)
                                 data[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
-                            project.CreateDPCMSample(parameters["Name"], data);
+                            var sample = project.CreateDPCMSample(parameters["Name"], data);
+                            if (parameters.TryGetValue("ReverseBits", out var reverseStr)) sample.ReverseBits = bool.Parse(reverseStr);
                             break;
                         }
                         case "DPCMMapping":
@@ -355,7 +359,7 @@ namespace FamiStudio
                         {
                             song = project.CreateSong(parameters["Name"]);
                             song.SetLength(int.Parse(parameters["Length"]));
-                            song.SetBarLength(int.Parse(parameters["BarLength"]));
+                            song.SetBeatLength(int.Parse(parameters["BeatLength"]));
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
 
                             if (song.UsesFamiTrackerTempo)
@@ -368,7 +372,7 @@ namespace FamiStudio
                             {
                                 var noteLength = int.Parse(parameters["NoteLength"]);
                                 song.ResizeNotes(noteLength, false);
-                                song.SetBarLength(int.Parse(parameters["BarLength"]) * noteLength);
+                                song.SetBeatLength(int.Parse(parameters["BeatLength"]) * noteLength);
                                 song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]) * noteLength);
                             }
                             break;
@@ -377,15 +381,19 @@ namespace FamiStudio
                         {
                             if (project.UsesFamiTrackerTempo)
                             {
-                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]));
+                                    var beatLength = song.BeatLength;
+                                    if (parameters.TryGetValue("BeatLength", out var beatLengthStr))
+                                        beatLength = int.Parse(beatLengthStr);
+
+                                    song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]), beatLength);
                             }
                             else
                             {
                                 var patternLength = int.Parse(parameters["Length"]);
                                 var noteLength = int.Parse(parameters["NoteLength"]);
-                                var barLength = int.Parse(parameters["BarLength"]);
+                                var beatLength = int.Parse(parameters["BeatLength"]);
 
-                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, noteLength, barLength * noteLength);
+                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, beatLength * noteLength, noteLength);
                             }
                             break;
                         }
@@ -405,17 +413,34 @@ namespace FamiStudio
                             var time = int.Parse(parameters["Time"]);
                             var note = pattern.GetOrCreateNoteAt(time);
 
-                            if (parameters.TryGetValue("Value",        out var valueStr))     note.Value           = (byte)Note.FromFriendlyName(valueStr);
-                            if (parameters.TryGetValue("Instrument",   out var instStr))      note.Instrument      = project.GetInstrument(instStr);
-                            if (parameters.TryGetValue("Arpeggio",     out var arpStr))       note.Arpeggio        = project.GetArpeggio(arpStr);
-                            if (parameters.TryGetValue("Attack",       out var attackStr))    note.HasAttack       = bool.Parse(attackStr);
-                            if (parameters.TryGetValue("Volume",       out var volumeStr))    note.Volume          = byte.Parse(volumeStr);
-                            if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr))  note.VibratoSpeed    = byte.Parse(vibSpeedStr);
-                            if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr))  note.VibratoDepth    = byte.Parse(vibDepthStr);
-                            if (parameters.TryGetValue("FinePitch",    out var finePitchStr)) note.FinePitch       = sbyte.Parse(finePitchStr);
-                            if (parameters.TryGetValue("SlideTarget",  out var slideStr))     note.SlideNoteTarget = (byte)Note.FromFriendlyName(slideStr);
-                            if (parameters.TryGetValue("FdsModSpeed",  out var modSpeedStr))  note.FdsModSpeed     = ushort.Parse(modSpeedStr);
-                            if (parameters.TryGetValue("FdsModDepth",  out var modDepthStr))  note.FdsModDepth     = byte.Parse(modDepthStr);
+                            if (parameters.TryGetValue("Value", out var valueStr))
+                                note.Value = (byte)Note.FromFriendlyName(valueStr);
+                            if (parameters.TryGetValue("Instrument", out var instStr) && channel.SupportsInstrument(project.GetInstrument(instStr)))
+                                note.Instrument = project.GetInstrument(instStr);
+                            if (parameters.TryGetValue("Arpeggio", out var arpStr) && channel.SupportsArpeggios)
+                                note.Arpeggio = project.GetArpeggio(arpStr);
+                            if (parameters.TryGetValue("SlideTarget", out var slideStr) && channel.SupportsSlideNotes)
+                                note.SlideNoteTarget = (byte)Note.FromFriendlyName(slideStr);
+                            if (parameters.TryGetValue("Attack", out var attackStr))
+                                note.HasAttack = bool.Parse(attackStr);
+                            if (parameters.TryGetValue("Volume", out var volumeStr) && channel.SupportsEffect(Note.EffectVolume))
+                                note.Volume = byte.Parse(volumeStr);
+                            if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr) && channel.SupportsEffect(Note.EffectVibratoSpeed))
+                                note.VibratoSpeed = byte.Parse(vibSpeedStr);
+                            if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr) && channel.SupportsEffect(Note.EffectVibratoDepth))
+                                note.VibratoDepth = byte.Parse(vibDepthStr);
+                            if (parameters.TryGetValue("FinePitch", out var finePitchStr) && channel.SupportsEffect(Note.EffectFinePitch))
+                                note.FinePitch = sbyte.Parse(finePitchStr);
+                            if (parameters.TryGetValue("FdsModSpeed", out var modSpeedStr) && channel.SupportsEffect(Note.EffectFdsModSpeed))
+                                note.FdsModSpeed = ushort.Parse(modSpeedStr);
+                            if (parameters.TryGetValue("FdsModDepth", out var modDepthStr) && channel.SupportsEffect(Note.EffectFdsModDepth))
+                                note.FdsModDepth = byte.Parse(modDepthStr);
+                            if (parameters.TryGetValue("DutyCycle", out var dutyCycleStr) && channel.SupportsEffect(Note.EffectDutyCycle))
+                                note.DutyCycle = byte.Parse(dutyCycleStr);
+                            if (parameters.TryGetValue("NoteDelay", out var noteDelayStr) && channel.SupportsEffect(Note.EffectNoteDelay))
+                                note.NoteDelay = byte.Parse(noteDelayStr);
+                            if (parameters.TryGetValue("CutDelay", out var cutDelayStr) && channel.SupportsEffect(Note.EffectCutDelay))
+                                note.CutDelay = byte.Parse(cutDelayStr);
 
                             break;
                         }

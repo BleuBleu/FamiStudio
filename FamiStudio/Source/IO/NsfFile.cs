@@ -895,25 +895,34 @@ namespace FamiStudio
             NsfClose(nsf);
 
             var factors = Utils.GetFactors(song.PatternLength, Song.MaxNoteLength);
-            if (factors.Length > 0 && factors[0] <= Song.MaxNoteLength)
-                song.ResizeNotes(factors[0], false);
+            if (factors.Length > 0)
+            {
+                var noteLen = factors[0];
+
+                // Look for a factor that generates a note length < 10 and gives a pattern length that is a multiple of 16.
+                foreach (var factor in factors)
+                {
+                    if (factor <= 10)
+                    {
+                        noteLen = factor;
+                        if (((song.PatternLength / noteLen) % 16) == 0)
+                            break;
+                    }
+                }
+                                
+                song.ResizeNotes(noteLen, false);
+            }
             else
                 song.ResizeNotes(1, false);
 
-            song.SetSensibleBarLength();
+            song.SetSensibleBeatLength();
             song.DeleteEmptyPatterns();
             song.UpdatePatternStartNotes();
             project.DeleteUnusedInstruments();
             project.UpdateAllLastValidNotesAndVolume();
 
-            if (reverseDpcm)
-            {
-                foreach (var sample in project.Samples)
-                {
-                    for (int i = 0; i < sample.Data.Length; i++)
-                        sample.Data[i] = Utils.ReverseBits(sample.Data[i]);
-                }
-            }
+            foreach (var sample in project.Samples)
+                sample.ReverseBits = reverseDpcm;
 
             return project;
         }

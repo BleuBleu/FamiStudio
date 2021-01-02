@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace FamiStudio
@@ -84,6 +86,12 @@ namespace FamiStudio
             return (byte)((BitLookups[b & 0xf] << 4) | BitLookups[b >> 4]);
         }
 
+        public static void ReverseBits(byte[] bytes)
+        {
+            for (int i = 0; i < bytes.Length; i++)
+                bytes[i] = ReverseBits(bytes[i]);
+        }
+
         public static string MakeNiceAsmName(string name)
         {
             string niceName = "";
@@ -124,6 +132,48 @@ namespace FamiStudio
         public static int[] GetFactors(int n)
         {
             return GetFactors(n, n);
+        }
+
+        public static string AddFileSuffix(string filename, string suffix)
+        {
+            var extension = Path.GetExtension(filename);
+            var filenameNoExtension = filename.Substring(0, filename.Length - extension.Length);
+
+            return filenameNoExtension + suffix + extension;
+        }
+
+        public static float SmoothStep(float t)
+        {
+            return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+        }
+
+        public static string GetTemporaryDiretory()
+        {
+            var tempFolder = Path.Combine(Path.GetTempPath(), "FamiStudio");
+
+            try
+            {
+                Directory.Delete(tempFolder, true);
+            }
+            catch { }
+
+            Directory.CreateDirectory(tempFolder);
+            return tempFolder;
+        }
+
+        public static void OpenUrl(string url)
+        {
+            try
+            {
+#if FAMISTUDIO_LINUX
+                Process.Start("xdg-open", url);
+#elif FAMISTUDIO_MACOS
+                Process.Start("open", url);
+#else
+                Process.Start(url);
+#endif
+            }
+            catch { }
         }
     }
 }

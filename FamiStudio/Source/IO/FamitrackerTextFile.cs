@@ -143,6 +143,10 @@ namespace FamiStudio
 
                             envelopes[expansion, famistudioType][idx] = env;
                         }
+                        else
+                        {
+                            Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported, ignoring.");
+                        }
                     }
                     else if (line.StartsWith("DPCMDEF"))
                     {
@@ -823,6 +827,7 @@ namespace FamiStudio
                     var prevInstrument = (Instrument)null;
                     var prevSlideEffect = Effect_None;
                     var prevArpeggio = (Arpeggio)null;
+                    var famitrackerSpeed = song.FamitrackerSpeed;
                     
                     for (int p = 0; p < song.Length; p++)
                     {
@@ -838,6 +843,8 @@ namespace FamiStudio
                         {
                             var time = it.CurrentTime;
                             var note = it.CurrentNote;
+
+                            song.ApplySpeedEffectAt(p, time, ref famitrackerSpeed);
 
                             // Keeps the code a lot simpler.
                             if (note == null)
@@ -869,8 +876,10 @@ namespace FamiStudio
                                     }
                                 }
 
-                                // TODO: We use the initial FamiTracker speed here, this is wrong, it might have changed. Also we assume NTSC here.
-                                var stepSizeFloat = channel.ComputeRawSlideNoteParams(noteValue, slideTarget, p, time, song.FamitrackerSpeed, Song.NativeTempoNTSC, noteTable);
+                                var tempNote = note.Clone();
+                                tempNote.Value = note.Value;
+                                tempNote.SlideNoteTarget = slideTarget;
+                                channel.ComputeSlideNoteParams(tempNote, p, time, famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat); 
 
                                 if (channel.IsN163WaveChannel)
                                 {
@@ -980,6 +989,12 @@ namespace FamiStudio
                                 effectString += $" P{(byte)(-note.FinePitch + 0x80):X2}";
                             if (note.HasFdsModDepth)
                                 effectString += $" H{note.FdsModDepth:X2}";
+                            if (note.HasDutyCycle)
+                                effectString += $" V{note.DutyCycle:X2}";
+                            if (note.HasNoteDelay)
+                                effectString += $" G{note.NoteDelay:X2}";
+                            if (note.HasCutDelay)
+                                effectString += $" S{note.CutDelay:X2}";
 
                             if (note.IsMusical && note.Arpeggio != prevArpeggio)
                             {

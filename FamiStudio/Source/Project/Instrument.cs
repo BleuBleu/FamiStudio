@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Drawing;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -194,6 +195,32 @@ namespace FamiStudio
             var serializer = new ProjectCrcBuffer(crc);
             SerializeState(serializer);
             return serializer.CRC;
+        }
+
+        public void Validate(Project project, Dictionary<int, object> idMap)
+        {
+#if DEBUG
+            project.ValidateId(id);
+
+            if (idMap.TryGetValue(id, out var foundObj))
+                Debug.Assert(foundObj == this);
+            else
+                idMap.Add(id, this);
+
+            Debug.Assert(project.GetInstrument(id) == this);
+
+            for (int i = 0; i < Envelope.Count; i++)
+            {
+                bool envelopeExists = envelopes[i] != null;
+                bool envelopeShouldExists = IsEnvelopeActive(i);
+                Debug.Assert(envelopeExists == envelopeShouldExists);
+            }
+#endif
+        }
+
+        public void ChangeId(int newId)
+        {
+            id = newId;
         }
 
         public void SerializeState(ProjectBuffer buffer)

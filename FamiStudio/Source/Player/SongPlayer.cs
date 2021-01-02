@@ -15,6 +15,7 @@ namespace FamiStudio
 
         public SongPlayer() : base(NesApu.APU_SONG)
         {
+            loopMode = LoopMode.LoopPoint;
         }
 
         public override void Shutdown()

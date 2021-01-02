@@ -38,7 +38,7 @@ namespace FamiStudio
             Marshal.FreeCoTaskMem(p);
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, object parentWindowUnused = null)
         {
             var ofd = new OpenFileDialog()
             {

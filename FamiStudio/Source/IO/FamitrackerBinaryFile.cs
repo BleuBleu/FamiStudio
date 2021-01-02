@@ -55,8 +55,8 @@ namespace FamiStudio
             idx += sizeof(int); // m_iVibratoStyle;
             if (blockVersion >= 4)
             {
-                idx += sizeof(int); // m_iFirstHighlight;
-                barLength = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                barLength = BitConverter.ToInt32(bytes, idx); idx += sizeof(int); 
+                idx += sizeof(int); // m_iSecondHighlight
             }
 
             var numN163Channels = 0;
@@ -119,7 +119,7 @@ namespace FamiStudio
             return true;
         }
 
-        private void ReadCommonEnvelopes(Instrument instrument, ref int idx, Envelope[,] envelopesArray)
+        private void ReadCommonEnvelopes(Instrument instrument, int instIdx, ref int idx, Envelope[,] envelopesArray)
         {
             idx += sizeof(int); // SEQ_COUNT
 
@@ -136,6 +136,10 @@ namespace FamiStudio
                     {
                         if (instrument.Envelopes[envType] != null && envelopesArray[index, i] != null)
                             instrument.Envelopes[envType] = envelopesArray[index, i];
+                    }
+                    else
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported (instrument {instIdx:X2}), ignoring.");
                     }
                 }
             }
@@ -172,7 +176,7 @@ namespace FamiStudio
 
         private void ReadInstrument2A03(Instrument instrument, int instIdx, ref int idx)
         {
-            ReadCommonEnvelopes(instrument, ref idx, envelopes);
+            ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopes);
 
             // We only consider the first 2A03 instrument with samples. Rest is ignored.
             if (!samplesLoaded)
@@ -208,7 +212,7 @@ namespace FamiStudio
 
         private void ReadInstrumentVRC6(Instrument instrument, int instIdx, ref int idx)
         {
-            ReadCommonEnvelopes(instrument, ref idx, envelopesExp);
+            ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopesExp);
         }
 
         private void ReadInstrumentVRC7(Instrument instrument, int instIdx, ref int idx)
@@ -253,7 +257,7 @@ namespace FamiStudio
 
         private void ReadInstrumentN163(Instrument instrument, int instIdx, ref int idx)
         {
-            ReadCommonEnvelopes(instrument, ref idx, envelopesExp);
+            ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopesExp);
 
             var fileWaveSize = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
@@ -275,7 +279,7 @@ namespace FamiStudio
 
         private void ReadInstrumentS5B(Instrument instrument, int instIdx, ref int idx)
         {
-            ReadCommonEnvelopes(instrument, ref idx, envelopesExp);
+            ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopesExp);
         }
 
         private bool ReadInstruments(int idx)
@@ -528,7 +532,7 @@ namespace FamiStudio
                         {
                             pattern.GetOrCreateNoteAt(n).Value = Note.NoteStop;
                         }
-                        else if (note != 0 && octave != 0)
+                        else if (note != 0)
                         {
                             if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
                                 pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];

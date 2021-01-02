@@ -29,7 +29,7 @@ namespace FamiStudio
             if (Settings.DpiScaling != 0)
                 mainWindowScaling = Settings.DpiScaling / 100.0f;
             else
-                mainWindowScaling = Math.Min(2.0f, (int)(dialogScaling * 2.0f) / 2.0f); // Round to 1/2 (so only 100%, 150% and 175%) are supported.
+                mainWindowScaling = Math.Min(2.0f, (int)(dialogScaling * 2.0f) / 2.0f); // Round to 1/2 (so only 100%, 150% and 200%) are supported.
 
             InitializeFonts();
         }
@@ -43,7 +43,9 @@ namespace FamiStudio
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
                 var def = FontDefinitions[i];
-                def.Size = (int)(def.Size * mainWindowScaling);
+
+                if (!def.NoScaling)
+                    def.Size = (int)(def.Size * mainWindowScaling);
 
                 var format = new TextFormat(directWriteFactory, def.Name, fontCollection, def.Bold ? FontWeight.Bold : FontWeight.Regular, FontStyle.Normal, FontStretch.Normal, def.Size);
 

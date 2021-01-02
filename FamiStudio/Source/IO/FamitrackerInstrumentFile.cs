@@ -41,7 +41,10 @@ namespace FamiStudio
 
             // Skip unsupported types.
             if (envType == Envelope.Count)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported, ignoring.");
                 return;
+            }
 
             Envelope env = instrument.Envelopes[envType];
 
@@ -77,16 +80,22 @@ namespace FamiStudio
             var bytes = System.IO.File.ReadAllBytes(filename);
 
             if (!bytes.Skip(0).Take(3).SequenceEqual(Encoding.ASCII.GetBytes("FTI")))
+            {
+                Log.LogMessage(LogSeverity.Error, "Incompatible file.");
                 return null;
+            }
             if (!bytes.Skip(3).Take(3).SequenceEqual(Encoding.ASCII.GetBytes("2.4")))
+            {
+                Log.LogMessage(LogSeverity.Error, "Incompatible FTI version.");
                 return null;
+            }
 
             var instType = InstrumentTypeLookup[bytes[6]];
 
             // Needs to match the current expansion audio. Our enum happens to match (-1) for now.
             if (instType != Project.ExpansionNone && instType != project.ExpansionAudio)
             {
-                Log.LogMessage(LogSeverity.Error, "Incompatible audio expansion.");
+                Log.LogMessage(LogSeverity.Error, "Audio expansion does not match the current project expansion.");
                 return null;
             }
 
@@ -168,6 +177,11 @@ namespace FamiStudio
                 // Only read the first wave for now.
                 for (int j = 0; j < waveSize; j++)
                     wavEnv.Values[j] = (sbyte)bytes[offset++];
+
+                if (waveCount > 1)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Multiple N163 waveforms detected, only loading the first one.");
+                }
             }
 
             // Samples
@@ -205,6 +219,8 @@ namespace FamiStudio
                         project.MapDPCMSample(idx + 1, sampleMap[sample - 1], pitch);
                 }
             }
+
+            project.SortInstruments();
 
             return instrument;
         }

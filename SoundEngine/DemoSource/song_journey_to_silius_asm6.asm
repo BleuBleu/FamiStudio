@@ -8,58 +8,58 @@ journey_to_silius_music_data:
 	db <(@tempo_env5), >(@tempo_env5), 0, 0
 
 @instruments:
-	dw @env2,@env0,@env0,@env4
-	dw @env3,@env0,@env0,@env4
-	dw @env11,@env0,@env0,@env8
-	dw @env16,@env0,@env0,@env8
-	dw @env3,@env0,@env12,@env4
-	dw @env7,@env0,@env12,@env8
-	dw @env5,@env0,@env9,@env4
-	dw @env16,@env0,@env9,@env8
-	dw @env6,@env13,@env0,@env8
-	dw @env15,@env14,@env0,@env8
-	dw @env6,@env14,@env0,@env8
-	dw @env1,@env10,@env0,@env8
-	dw @env1,@env0,@env0,@env8
+	dw @env2,@env0,@env9,@env4
+	dw @env3,@env0,@env9,@env4
+	dw @env12,@env0,@env9,@env8
+	dw @env17,@env0,@env9,@env8
+	dw @env3,@env0,@env13,@env4
+	dw @env7,@env0,@env13,@env8
+	dw @env5,@env0,@env10,@env4
+	dw @env17,@env0,@env10,@env8
+	dw @env6,@env14,@env9,@env8
+	dw @env16,@env15,@env9,@env8
+	dw @env6,@env15,@env9,@env8
+	dw @env1,@env11,@env9,@env8
+	dw @env1,@env0,@env9,@env8
 
 @samples:
-	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$0c	;1 (Sample 1)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$0a	;2 (Sample 1)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$0e	;3 (Sample 1)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$09	;4 (Sample 1)
-	db $10+<(FAMISTUDIO_DPCM_PTR),$3e,$0d	;5 (Sample 2)
-	db $10+<(FAMISTUDIO_DPCM_PTR),$3e,$08	;6 (Sample 2)
-	db $20+<(FAMISTUDIO_DPCM_PTR),$3f,$0d	;7 (Sample 3)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$0f	;8 (Sample 1)
-	db $30+<(FAMISTUDIO_DPCM_PTR),$3e,$0c	;9 (Sample 4)
-	db $30+<(FAMISTUDIO_DPCM_PTR),$3e,$0f	;10 (Sample 4)
-	db $10+<(FAMISTUDIO_DPCM_PTR),$3e,$0a	;11 (Sample 2)
-	db $10+<(FAMISTUDIO_DPCM_PTR),$3e,$0e	;12 (Sample 2)
-	db $40+<(FAMISTUDIO_DPCM_PTR),$3f,$0a	;13 (Sample 5)
-	db $40+<(FAMISTUDIO_DPCM_PTR),$3f,$0e	;14 (Sample 5)
-	db $20+<(FAMISTUDIO_DPCM_PTR),$3f,$0e	;15 (Sample 3)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;16 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;1 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;2 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;3 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;4 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;5 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;6 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;7 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;8 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;9 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;10 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;11 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;12 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;13 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;14 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;15 
+	db $10+<(FAMISTUDIO_DPCM_PTR),$3e,$08	;16 (Sample 2)
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;17 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;18 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$09	;18 (Sample 1)
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;19 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;20 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;21 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;22 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;23 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$0a	;20 (Sample 1)
+	db $10+<(FAMISTUDIO_DPCM_PTR),$3e,$0a	;21 (Sample 2)
+	db $40+<(FAMISTUDIO_DPCM_PTR),$3f,$0a	;22 (Sample 5)
+	db $30+<(FAMISTUDIO_DPCM_PTR),$3e,$0c	;23 (Sample 4)
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;24 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;25 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$0c	;25 (Sample 1)
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;26 
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;27 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;28 
+	db $20+<(FAMISTUDIO_DPCM_PTR),$3f,$0d	;28 (Sample 3)
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;29 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;30 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;31 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;32 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;33 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;34 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;35 
+	db $10+<(FAMISTUDIO_DPCM_PTR),$3e,$0d	;30 (Sample 2)
+	db $20+<(FAMISTUDIO_DPCM_PTR),$3f,$0e	;31 (Sample 3)
+	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$0e	;32 (Sample 1)
+	db $10+<(FAMISTUDIO_DPCM_PTR),$3e,$0e	;33 (Sample 2)
+	db $40+<(FAMISTUDIO_DPCM_PTR),$3f,$0e	;34 (Sample 5)
+	db $30+<(FAMISTUDIO_DPCM_PTR),$3e,$0f	;35 (Sample 4)
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;36 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;37 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$3f,$0f	;37 (Sample 1)
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;38 
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;39 
 	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;40 
@@ -106,22 +106,24 @@ journey_to_silius_music_data:
 @env8:
 	db $00,$c0,$7f,$00,$01
 @env9:
-	db $c2,$7f,$00,$00
+	db $7f,$00,$00
 @env10:
-	db $c0,$bf,$be,$bd,$bc,$bb,$ba,$b9,$b8,$b7,$00,$09
+	db $c2,$7f,$00,$00
 @env11:
-	db $00,$c5,$c9,$c9,$c8,$00,$04
+	db $c0,$bf,$be,$bd,$bc,$bb,$ba,$b9,$b8,$b7,$00,$09
 @env12:
-	db $c1,$7f,$00,$00
+	db $00,$c5,$c9,$c9,$c8,$00,$04
 @env13:
-	db $c0,$c3,$00,$01
+	db $c1,$7f,$00,$00
 @env14:
-	db $c0,$c6,$00,$01
+	db $c0,$c3,$00,$01
 @env15:
-	db $00,$cd,$ce,$cc,$c8,$c9,$c7,$c6,$c4,$c3,$c1,$c0,$00,$0b
+	db $c0,$c6,$00,$01
 @env16:
-	db $04,$c4,$7f,$00,$01
+	db $00,$cd,$ce,$cc,$c8,$c9,$c7,$c6,$c4,$c3,$c1,$c0,$00,$0b
 @env17:
+	db $04,$c4,$7f,$00,$01
+@env18:
 	db $00,$c0,$be,$bc,$bc,$bd,$bf,$c1,$c3,$c4,$c4,$c2,$00,$01
 @tempo_env5:
 	db $06,$04,$04,$04,$04,$09,$80
@@ -366,7 +368,7 @@ journey_to_silius_music_data:
 @ref82:
 	db $93,$38,$91,$39,$91,$3b,$91,$36,$91,$38,$91,$39,$91,$3b,$91
 @ref83:
-	db $3d,$cd,$63,<(@env17),>(@env17),$cf
+	db $3d,$cd,$63,<(@env18),>(@env18),$cf
 @ref84:
 	db $cd,$63,<(@env8),>(@env8),$65,$81,$62,$61,$06,$3d,$30,$cd
 	db $fd
@@ -623,13 +625,13 @@ journey_to_silius_music_data:
 	db $cf
 @song0ch4loop:
 @ref108:
-	db $01,$91,$01,$91,$01,$91,$01,$91,$01,$91,$01,$91,$01,$91,$01,$91
+	db $19,$91,$19,$91,$19,$91,$19,$91,$19,$91,$19,$91,$19,$91,$19,$91
 @ref109:
-	db $02,$91,$02,$91,$03,$91,$04,$91,$04,$91,$05,$91,$04,$91,$05,$91
+	db $14,$91,$14,$91,$20,$91,$12,$91,$12,$91,$1e,$91,$12,$91,$1e,$91
 	db $ff,$10
 	dw @ref108
 @ref110:
-	db $06,$91,$06,$91,$07,$91,$04,$91,$04,$91,$05,$91,$04,$91,$05,$91
+	db $10,$91,$10,$91,$1c,$91,$12,$91,$12,$91,$1e,$91,$12,$91,$1e,$91
 	db $ff,$10
 	dw @ref108
 	db $ff,$10
@@ -651,17 +653,17 @@ journey_to_silius_music_data:
 	db $ff,$10
 	dw @ref108
 @ref111:
-	db $01,$91,$01,$91,$01,$91,$01,$91,$01,$91,$01,$91,$01,$91,$02,$91
+	db $19,$91,$19,$91,$19,$91,$19,$91,$19,$91,$19,$91,$19,$91,$14,$91
 @ref112:
-	db $02,$91,$02,$91,$02,$91,$02,$91,$02,$91,$02,$91,$02,$91,$02,$91
+	db $14,$91,$14,$91,$14,$91,$14,$91,$14,$91,$14,$91,$14,$91,$14,$91
 @ref113:
-	db $01,$91,$01,$91,$01,$91,$08,$91,$01,$91,$08,$91,$01,$91,$01,$91
+	db $19,$91,$19,$91,$19,$91,$25,$91,$19,$91,$25,$91,$19,$91,$19,$91
 @ref114:
-	db $09,$91,$0a,$91,$09,$91,$09,$91,$09,$91,$0a,$91,$09,$91,$09,$91
+	db $17,$91,$23,$91,$17,$91,$17,$91,$17,$91,$23,$91,$17,$91,$17,$91
 @ref115:
-	db $02,$91,$02,$91,$02,$91,$03,$91,$09,$91,$0a,$91,$09,$91,$09,$91
+	db $14,$91,$14,$91,$14,$91,$20,$91,$17,$91,$23,$91,$17,$91,$17,$91
 @ref116:
-	db $01,$91,$08,$91,$01,$91,$01,$91,$01,$91,$08,$91,$01,$91,$01,$91
+	db $19,$91,$25,$91,$19,$91,$19,$91,$19,$91,$25,$91,$19,$91,$19,$91
 	db $ff,$10
 	dw @ref113
 	db $ff,$10
@@ -671,13 +673,13 @@ journey_to_silius_music_data:
 	db $ff,$10
 	dw @ref116
 @ref117:
-	db $04,$91,$04,$91,$05,$91,$04,$91,$04,$91,$04,$91,$05,$91,$04,$91
+	db $12,$91,$12,$91,$1e,$91,$12,$91,$12,$91,$12,$91,$1e,$91,$12,$91
 @ref118:
-	db $02,$91,$02,$91,$03,$91,$02,$91,$02,$91,$02,$91,$03,$91,$02,$91
+	db $14,$91,$14,$91,$20,$91,$14,$91,$14,$91,$14,$91,$20,$91,$14,$91
 @ref119:
-	db $01,$91,$01,$91,$08,$91,$01,$91,$08,$91,$01,$91,$01,$91,$08,$91
+	db $19,$91,$19,$91,$25,$91,$19,$91,$25,$91,$19,$91,$19,$91,$25,$91
 @ref120:
-	db $01,$91,$01,$91,$08,$91,$01,$91,$01,$91,$08,$91,$01,$91,$08,$91
+	db $19,$91,$19,$91,$25,$91,$19,$91,$19,$91,$25,$91,$19,$91,$25,$91
 	db $ff,$10
 	dw @ref117
 	db $ff,$10
@@ -685,29 +687,29 @@ journey_to_silius_music_data:
 	db $ff,$10
 	dw @ref119
 @ref121:
-	db $01,$91,$01,$91,$01,$91,$01,$91,$01,$cd
+	db $19,$91,$19,$91,$19,$91,$19,$91,$19,$cd
 @ref122:
-	db $01,$cd,$01,$cd
+	db $19,$cd,$19,$cd
 @ref123:
-	db $01,$b9,$01,$a5,$01,$91,$08,$91,$01,$91
+	db $19,$b9,$19,$a5,$19,$91,$25,$91,$19,$91
 @ref124:
-	db $09,$cd,$09,$cd
+	db $17,$cd,$17,$cd
 @ref125:
-	db $09,$b9,$09,$a5,$09,$91,$0a,$91,$09,$91
+	db $17,$b9,$17,$a5,$17,$91,$23,$91,$17,$91
 @ref126:
-	db $0b,$cd,$0b,$cd
+	db $15,$cd,$15,$cd
 @ref127:
-	db $0b,$b9,$0b,$a5,$0b,$91,$0a,$91,$0b,$91
+	db $15,$b9,$15,$a5,$15,$91,$23,$91,$15,$91
 @ref128:
-	db $09,$cd,$09,$cd
+	db $17,$cd,$17,$cd
 @ref129:
-	db $09,$b9,$09,$a5,$0a,$91,$09,$91,$0a,$91
+	db $17,$b9,$17,$a5,$23,$91,$17,$91,$23,$91
 	db $ff,$10
 	dw @ref120
 @ref130:
-	db $09,$91,$09,$91,$0a,$91,$09,$91,$09,$91,$0a,$91,$09,$91,$0a,$91
+	db $17,$91,$17,$91,$23,$91,$17,$91,$17,$91,$23,$91,$17,$91,$23,$91
 @ref131:
-	db $0b,$91,$0b,$91,$0c,$91,$0b,$91,$0b,$91,$0c,$91,$0b,$91,$0c,$91
+	db $15,$91,$15,$91,$21,$91,$15,$91,$15,$91,$21,$91,$15,$91,$21,$91
 	db $ff,$10
 	dw @ref130
 	db $ff,$10
@@ -719,13 +721,13 @@ journey_to_silius_music_data:
 	db $ff,$10
 	dw @ref120
 @ref132:
-	db $01,$91,$01,$91,$01,$91,$08,$91,$01,$91,$01,$91,$0a,$91,$08,$91
+	db $19,$91,$19,$91,$19,$91,$25,$91,$19,$91,$19,$91,$23,$91,$25,$91
 @ref133:
-	db $09,$91,$09,$91,$09,$91,$0a,$91,$09,$91,$09,$91,$0c,$91,$0a,$91
+	db $17,$91,$17,$91,$17,$91,$23,$91,$17,$91,$17,$91,$21,$91,$23,$91
 @ref134:
-	db $0d,$91,$0d,$91,$0d,$91,$0e,$91,$0d,$91,$0d,$91,$02,$91,$0e,$91
+	db $16,$91,$16,$91,$16,$91,$22,$91,$16,$91,$16,$91,$14,$91,$22,$91
 @ref135:
-	db $0b,$91,$0b,$91,$0b,$91,$0c,$91,$0b,$91,$0b,$91,$0f,$91,$0c,$91
+	db $15,$91,$15,$91,$15,$91,$21,$91,$15,$91,$15,$91,$1f,$91,$21,$91
 	db $ff,$10
 	dw @ref132
 	db $ff,$10

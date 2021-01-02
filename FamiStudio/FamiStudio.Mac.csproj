@@ -78,11 +78,13 @@
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\FdsFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
+    <Compile Include="Source\IO\Mp3File.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\RomFile.cs" />
     <Compile Include="Source\IO\RomFileBase.cs" />
+    <Compile Include="Source\IO\VideoFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
@@ -94,8 +96,12 @@
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
+    <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
+    <Compile Include="Source\UI\Common\LogDialog.cs" />
+    <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
@@ -254,7 +260,9 @@
     </Content>
     <Compile Include="Source\Utils\RtMidi.cs" />
     <Compile Include="Source\UI\MacLinux\TutorialDialog.cs" />
-    <Compile Include="Source\UI\MacLinux\LogDialog.cs" />
+    <Content Include="ShineMp3.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -289,6 +297,19 @@
     <Content Include="NotSoFatso.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
+    <EmbeddedResource Include="Resources\ExportVideo.png" />
+    <EmbeddedResource Include="Resources\VideoWatermark.png" />
+    <EmbeddedResource Include="Resources\FM%402x.png" />
+    <EmbeddedResource Include="Resources\FM.png" />
+    <EmbeddedResource Include="Resources\WaveTable%402x.png" />
+    <EmbeddedResource Include="Resources\WaveTable.png" />
+    <EmbeddedResource Include="Resources\CutDelaySmall%402x.png" />
+    <EmbeddedResource Include="Resources\CutDelaySmall.png" />
+    <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />
+    <EmbeddedResource Include="Resources\NoteDelaySmall.png" />
+    <EmbeddedResource Include="Resources\DutyCycleSmall%402x.png" />
+    <EmbeddedResource Include="Resources\DutyCycleSmall.png" />
     <EmbeddedResource Include="Resources\Follow%402x.png" />
     <EmbeddedResource Include="Resources\Follow.png" />
     <EmbeddedResource Include="Resources\YellowChecker.png" />
@@ -317,6 +338,8 @@
     <EmbeddedResource Include="Resources\PALToNTSC.png" />
     <EmbeddedResource Include="Resources\Duplicate%402x.png" />
     <EmbeddedResource Include="Resources\Duplicate.png" />
+    <EmbeddedResource Include="Resources\DuplicateMove%402x.png" />
+    <EmbeddedResource Include="Resources\DuplicateMove.png" />
     <EmbeddedResource Include="Resources\Instance%402x.png" />
     <EmbeddedResource Include="Resources\Instance.png" />
     <EmbeddedResource Include="Resources\Snap1%402x.png" />
@@ -390,9 +413,6 @@
     <EmbeddedResource Include="Resources\Slide%4015x.png" />
     <EmbeddedResource Include="Resources\Slide%402x.png" />
     <EmbeddedResource Include="Resources\Slide.png" />
-    <EmbeddedResource Include="Resources\SlideSmall%4015x.png" />
-    <EmbeddedResource Include="Resources\SlideSmall%402x.png" />
-    <EmbeddedResource Include="Resources\SlideSmall.png" />
     <EmbeddedResource Include="Resources\Warning%402x.png" />
     <EmbeddedResource Include="Resources\Warning.png" />
     <EmbeddedResource Include="Resources\Instrument%402x.png" />
@@ -436,7 +456,6 @@
     <EmbeddedResource Include="Resources\DPCM%402x.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall%402x.png" />
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
-    <EmbeddedResource Include="Resources\JumpSmall%402x.png" />
     <EmbeddedResource Include="Resources\Noise%402x.png" />
     <EmbeddedResource Include="Resources\Pitch%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmall%402x.png" />
@@ -481,7 +500,6 @@
     <EmbeddedResource Include="Resources\CollapsedSmall.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall.png" />
     <None Include="Resources\FamiStudio.ico" />
-    <EmbeddedResource Include="Resources\JumpSmall.png" />
     <EmbeddedResource Include="Resources\SpeedSmall.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />

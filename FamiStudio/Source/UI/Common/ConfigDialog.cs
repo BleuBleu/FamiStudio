@@ -52,18 +52,16 @@ namespace FamiStudio
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
 
-        public unsafe ConfigDialog(Rectangle mainWinRect)
+        public unsafe ConfigDialog()
         {
 #if FAMISTUDIO_LINUX
-            int width  = 550;
+            int width  = 570;
 #else
-            int width  = 530;
+            int width  = 550;
 #endif
             int height = 350;
-            int x = mainWinRect.Left + (mainWinRect.Width  - width)  / 2;
-            int y = mainWinRect.Top  + (mainWinRect.Height - height) / 2;
 
-            this.dialog = new MultiPropertyDialog(x, y, width, height);
+            this.dialog = new MultiPropertyDialog(width, height);
 
             for (int i = 0; i < (int)ConfigSection.Max; i++)
             {
@@ -97,10 +95,11 @@ namespace FamiStudio
                     page.AddStringList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex]); // 3
                     page.AddBoolean("Check for updates:", Settings.CheckUpdates); // 4
                     page.AddBoolean("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
-                    page.AddBoolean("Trackpad controls:", Settings.TrackPadControls); // 6
+                    page.AddBoolean("Show Note Labels:", Settings.ShowNoteLabels); // 6
+                    page.AddBoolean("Trackpad controls:", Settings.TrackPadControls); // 7
 #if FAMISTUDIO_MACOS
-                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 7
-                    page.SetPropertyEnabled(4, Settings.TrackPadControls);
+                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 8
+                    page.SetPropertyEnabled(8, Settings.TrackPadControls);
                     page.PropertyChanged += Page_PropertyChanged;
 #endif
 #if FAMISTUDIO_LINUX
@@ -156,9 +155,9 @@ namespace FamiStudio
         }
 #endif
 
-        public DialogResult ShowDialog()
+        public DialogResult ShowDialog(FamiStudioForm parent)
         {
-            var dialogResult = dialog.ShowDialog();
+            var dialogResult = dialog.ShowDialog(parent);
 
             if (dialogResult == DialogResult.OK)
             {
@@ -176,9 +175,10 @@ namespace FamiStudio
                 Settings.FollowSync = Array.IndexOf(FollowSyncStrings, followSyncString);
                 Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(4);
                 Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(5);
-                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(6);
+                Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
+                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(7);
 #if FAMISTUDIO_MACOS
-                Settings.ReverseTrackPad = pageUI.GetPropertyValue<bool>(7);
+                Settings.ReverseTrackPad = pageUI.GetPropertyValue<bool>(8);
 #endif
 
                 // Sound

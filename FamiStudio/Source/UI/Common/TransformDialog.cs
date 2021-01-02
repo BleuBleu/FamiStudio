@@ -26,19 +26,10 @@ namespace FamiStudio
         private MultiPropertyDialog dialog;
         private FamiStudio app;
 
-        public unsafe TransformDialog(Rectangle mainWinRect, FamiStudio famistudio)
+        public unsafe TransformDialog(FamiStudio famistudio)
         {
-            int width = 450;
-            int height = 400;
-            int x = mainWinRect.Left + (mainWinRect.Width - width) / 2;
-            int y = mainWinRect.Top + (mainWinRect.Height - height) / 2;
-
-#if FAMISTUDIO_LINUX
-            height += 30;
-#endif
-
             app = famistudio;
-            dialog = new MultiPropertyDialog(x, y, width, height);
+            dialog = new MultiPropertyDialog(450, 430);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
@@ -154,9 +145,9 @@ namespace FamiStudio
             }
         }
 
-        public DialogResult ShowDialog()
+        public DialogResult ShowDialog(FamiStudioForm parent)
         {
-            var dialogResult = dialog.ShowDialog();
+            var dialogResult = dialog.ShowDialog(parent);
 
             if (dialogResult == DialogResult.OK)
             {

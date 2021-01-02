@@ -25,17 +25,17 @@ namespace FamiStudio
 
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;
-        protected int tempoCounter = 0;
+        protected int famitrackerTempoCounter = 0;
         protected int playPattern = 0;
         protected int playNote = 0;
         protected int famitrackerSpeed = 6;
-        protected int famitrackerNativeTempo = Song.NativeTempoNTSC;
         protected byte[] tempoEnvelope;
         protected int tempoEnvelopeIndex;
         protected int tempoEnvelopeCounter;
         protected int sampleRate;
         protected int loopCount = 0;
         protected int maxLoopCount = -1;
+        protected int frameNumber = 0;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
         protected Song song;
@@ -74,7 +74,7 @@ namespace FamiStudio
         }
 
         // Returns the number of frames to run (0, 1 or 2)
-        public int UpdateTempoEnvelope()
+        public int UpdateFamiStudioTempo()
         {
             if (famitrackerTempo || song.Project.PalMode == palPlayback)
             {
@@ -109,29 +109,6 @@ namespace FamiStudio
             }
         }
 
-        public bool UpdateTempo(int speed, int tempo)
-        {
-            if (famitrackerTempo)
-            {
-                // Tempo/speed logic straight from Famitracker.
-                var tempoDecrement = (tempo * 24) / speed;
-                var tempoRemainder = (tempo * 24) % speed;
-
-                if (tempoCounter <= 0)
-                {
-                    int ticksPerSec = palPlayback ? 50 : 60;
-                    tempoCounter += (60 * ticksPerSec) - tempoRemainder;
-                }
-                tempoCounter -= tempoDecrement;
-
-                return tempoCounter <= 0;
-            }
-            else
-            {
-                return true;
-            }
-        }
-
         private void ResetFamiStudioTempo(bool force)
         {
             if (!famitrackerTempo)
@@ -148,21 +125,41 @@ namespace FamiStudio
             }
         }
 
+        public bool ShouldFamitrackerTempoAdvance()
+        {
+            return !famitrackerTempo || famitrackerTempoCounter <= 0;
+        }
+
+        public void UpdateFamitrackerTempo(int speed, int tempo)
+        {
+            if (famitrackerTempo)
+            {
+                // Tempo/speed logic straight from Famitracker.
+                var tempoDecrement = (tempo * 24) / speed;
+                var tempoRemainder = (tempo * 24) % speed;
+
+                if (famitrackerTempoCounter <= 0)
+                {
+                    int ticksPerSec = palPlayback ? 50 : 60;
+                    famitrackerTempoCounter += (60 * ticksPerSec) - tempoRemainder;
+                }
+                famitrackerTempoCounter -= tempoDecrement;
+            }
+        }
+
         protected void AdvanceChannels()
         {
             foreach (var channel in channelStates)
             {
-                channel.Advance(song, playPattern, playNote, famitrackerSpeed, famitrackerNativeTempo);
-                channel.ProcessEffects(song, playPattern, playNote, ref famitrackerSpeed);
+                channel.Advance(song, playPattern, playNote, ref famitrackerSpeed);
             }
         }
 
-        protected void UpdateChannelsEnvelopesAndAPU()
+        protected void UpdateChannels()
         {
             foreach (var channel in channelStates)
             {
-                channel.UpdateEnvelopes();
-                channel.UpdateAPU();
+                channel.Update();
             }
         }
 
@@ -179,17 +176,17 @@ namespace FamiStudio
             song = s;
             famitrackerTempo = song.UsesFamiTrackerTempo;
             famitrackerSpeed = song.FamitrackerSpeed;
-            famitrackerNativeTempo = pal ? Song.NativeTempoPAL : Song.NativeTempoNTSC;
             palPlayback = pal;
             playPosition = startNote;
             playPattern = 0;
             playNote = 0;
-            tempoCounter = 0;
-            ResetFamiStudioTempo(true);
+            frameNumber = 0;
+            famitrackerTempoCounter = 0;
             channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback, listener);
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, GetNesApuExpansionAudio(song.Project), song.Project.ExpansionNumChannels, dmcCallback);
 
+            ResetFamiStudioTempo(true);
             UpdateChannelsMuting();
 
             //Debug.WriteLine($"START SEEKING!!"); 
@@ -198,29 +195,25 @@ namespace FamiStudio
             {
                 NesApu.StartSeeking(apuIndex);
 
+                AdvanceChannels();
+                UpdateChannels();
+                UpdateFamitrackerTempo(famitrackerSpeed, song.FamitrackerTempo);
+
                 while (song.GetPatternStartNote(playPattern) + playNote < startNote)
                 {
-                    //Debug.WriteLine($"Seek Frame {song.GetPatternStartNote(playPattern) + playNote}!");
-
-                    int numFramesToRun = UpdateTempoEnvelope();
-
-                    for (int i = 0; i < numFramesToRun; i++)
-                    {
-                        //Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
-
-                        AdvanceChannels();
-                        UpdateChannelsEnvelopesAndAPU();
-
-                        if (!AdvanceSong(song.Length, LoopMode.None))
-                            return false;
-                    }
+                    if (!PlaySongFrameInternal(true))
+                        break;
                 }
 
                 NesApu.StopSeeking(apuIndex);
             }
+            else
+            {
+                AdvanceChannels();
+                UpdateChannels();
+                UpdateFamitrackerTempo(famitrackerSpeed, song.FamitrackerTempo);
+            }
 
-            AdvanceChannels();
-            UpdateChannelsEnvelopesAndAPU();
             EndFrame();
 
             playPosition = song.GetPatternStartNote(playPattern) + playNote;
@@ -228,26 +221,30 @@ namespace FamiStudio
             return true;
         }
 
-        public bool PlaySongFrame()
+        protected bool PlaySongFrameInternal(bool seeking)
         {
-            //Debug.WriteLine($"PlaySongFrame {playPosition}!");
+            //Debug.WriteLine($"PlaySongFrameInternal {playPosition}!");
+            //Debug.WriteLine($"PlaySongFrameInternal {song.GetPatternStartNote(playPattern) + playNote}!");
 
-            int numFramesToRun = UpdateTempoEnvelope();
+            // Increment before for register listeners to get correct frame number.
+            frameNumber++;
+
+            int numFramesToRun = UpdateFamiStudioTempo();
 
             for (int i = 0; i < numFramesToRun; i++)
             {
-                //Debug.WriteLine($"  Running Frame {playPosition}!");
-
-                if (UpdateTempo(famitrackerSpeed, song.FamitrackerTempo))
+                if (ShouldFamitrackerTempoAdvance())
                 {
-                    // Advance to next note.
-                    if (!AdvanceSong(song.Length, loopMode))
+                    //Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
+
+                    if (!AdvanceSong(song.Length, seeking ? LoopMode.None : loopMode))
                         return false;
 
                     AdvanceChannels();
-
-                    playPosition = song.GetPatternStartNote(playPattern) + playNote;
                 }
+
+                UpdateChannels();
+                UpdateFamitrackerTempo(famitrackerSpeed, song.FamitrackerTempo);
 
 #if DEBUG
                 if (i > 0)
@@ -257,14 +254,18 @@ namespace FamiStudio
                         Debug.WriteLine("*********** INVALID SKIPPED NOTE!");
                 }
 #endif
-
-                // Update envelopes + APU registers.
-                foreach (var channel in channelStates)
-                {
-                    channel.UpdateEnvelopes();
-                    channel.UpdateAPU();
-                }
             }
+
+            if (!seeking)
+                playPosition = song.GetPatternStartNote(playPattern) + playNote;
+
+            return true;
+        }
+
+        public bool PlaySongFrame()
+        {
+            if (!PlaySongFrameInternal(false))
+                return false;
 
             UpdateChannelsMuting();
             EndFrame();
@@ -305,7 +306,6 @@ namespace FamiStudio
                         playNote = 0;
                         advancedPattern = true;
                         forceResetTempo = true;
-                        loopCount++;
                     }
                     else 
                     {

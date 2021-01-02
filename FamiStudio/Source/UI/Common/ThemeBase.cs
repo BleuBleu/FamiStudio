@@ -35,6 +35,8 @@ namespace FamiStudio
             MediumBigRight,
             Big,
             BigBold,
+            BigCenter,
+            BigUnscaled,
             Huge,
             Max
         };
@@ -44,6 +46,7 @@ namespace FamiStudio
             public string Name;
             public bool   Bold;
             public bool   Ellipsis;
+            public bool   NoScaling;
             public int    Alignment; // TODO: Create an enum.
             public int    Size;
         };
@@ -63,6 +66,8 @@ namespace FamiStudio
             new RenderFontDefinition() { Name = "QuickSand", Size = 16, Alignment = 2 }, // MediumBigRight
             new RenderFontDefinition() { Name = "QuickSand", Size = 20 }, // Big
             new RenderFontDefinition() { Name = "QuickSand", Size = 20, Bold = true }, // BigBold
+            new RenderFontDefinition() { Name = "QuickSand", Size = 20, Alignment = 1 }, // BigCenter
+            new RenderFontDefinition() { Name = "QuickSand", Size = 20, NoScaling = true }, // BigUnscaled
             new RenderFontDefinition() { Name = "QuickSand", Size = 28, Alignment = 1 } // Huge
         };
 
@@ -81,6 +86,8 @@ namespace FamiStudio
         public static RenderFont FontMediumBigRight           => Fonts[(int)RenderFontStyle.MediumBigRight];
         public static RenderFont FontBig                      => Fonts[(int)RenderFontStyle.Big];
         public static RenderFont FontBigBold                  => Fonts[(int)RenderFontStyle.BigBold];
+        public static RenderFont FontBigCenter                => Fonts[(int)RenderFontStyle.BigCenter];
+        public static RenderFont FontBigUnscaled              => Fonts[(int)RenderFontStyle.BigUnscaled];
         public static RenderFont FontHuge                     => Fonts[(int)RenderFontStyle.Huge];
 
         public static Color DarkGreyLineColor1    = Color.FromArgb(  0,   0,   0);

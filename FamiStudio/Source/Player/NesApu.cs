@@ -347,6 +347,8 @@ namespace FamiStudio
                     TrebleEq(apuIdx, expansion, -15, 2000, sampleRate);
                     break;
                 case APU_EXPANSION_MMC5:
+                    WriteRegister(apuIdx, MMC5_PL1_VOL, 0x10);
+                    WriteRegister(apuIdx, MMC5_PL2_VOL, 0x10);
                     WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
                     break;
                 case APU_EXPANSION_VRC7:

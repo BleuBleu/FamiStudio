@@ -42,12 +42,10 @@
     <_ProjectFileVersion>15.0.28307.799</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)FamiStudio\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IntDir>Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)FamiStudio\</OutDir>
   </PropertyGroup>

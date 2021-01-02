@@ -170,24 +170,28 @@ namespace FamiStudio
         }
     }
 
-    public class GLGraphics
+    public class GLGraphics : IDisposable
     {
 #if FAMISTUDIO_LINUX
-        private bool supportsLineWidth = false;
+        protected bool supportsLineWidth = false;
 #endif
-        private int windowSizeY;
-        private GLControl control;
-        private Rectangle scissor;
-        private Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
-        private Stack<Rectangle> clipStack = new Stack<Rectangle>();
-        private Stack<Vector4> transformStack = new Stack<Vector4>();
-        private Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
+        protected bool antialiasing = false;
+        protected float windowScaling = 1.0f;
+        protected int windowSizeY;
+        protected GLControl control;
+        protected Rectangle scissor;
+        protected Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
+        protected Stack<Rectangle> clipStack = new Stack<Rectangle>();
+        protected Stack<Vector4> transformStack = new Stack<Vector4>();
+        protected Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
+        public float WindowScaling => windowScaling;
 
         public GLGraphics()
         {
+            windowScaling = GLTheme.MainWindowScaling;
         }
 
-        public void BeginDraw(GLControl control, int windowSizeY)
+        public virtual void BeginDraw(GLControl control, int windowSizeY)
         {
 #if FAMISTUDIO_LINUX
             var lineWidths = new float[2];
@@ -216,12 +220,12 @@ namespace FamiStudio
             GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
         }
 
-        public void EndDraw()
+        public virtual void EndDraw()
         {
             control = null;
         }
 
-        private Rectangle FlipRectangleY(Rectangle rc)
+        protected Rectangle FlipRectangleY(Rectangle rc)
         {
             return new Rectangle(
                 rc.Left,
@@ -232,8 +236,8 @@ namespace FamiStudio
 
         public bool AntiAliasing
         {
-            get { return false; }
-            set { }
+            get { return antialiasing; }
+            set { antialiasing = value; }
         }
 
         public void PushTranslation(float x, float y)
@@ -274,7 +278,7 @@ namespace FamiStudio
             clipStack.Push(scissor);
             scissor = new Rectangle(
                 (int)(transform.Z + control.Left + x0),
-                (int)(transform.W + control.Top  + y0),
+                (int)(transform.W + control.Top + y0),
                 x1 - x0,
                 y1 - y0);
             scissor = FlipRectangleY(scissor);
@@ -290,7 +294,7 @@ namespace FamiStudio
 
         public void Clear(Color color)
         {
-            GL.ClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, 1.0f);
+            GL.ClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit);
         }
 
@@ -318,7 +322,7 @@ namespace FamiStudio
             GL.End();
             GL.Disable(EnableCap.Texture2D);
         }
-        
+
         public void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
         {
             GL.Enable(EnableCap.Texture2D);
@@ -384,11 +388,13 @@ namespace FamiStudio
             GL.PushMatrix();
             GL.Translate(0.5f, 0.5f, 0);
             GL.Color4(brush.Color0);
+            if (antialiasing)
+                GL.Enable(EnableCap.LineSmooth);
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && width > 1)
             {
-                DrawThickLineAsPolygon(new[] { 
-                    x0, y0, 
+                DrawThickLineAsPolygon(new[] {
+                    x0, y0,
                     x1, y1 }, brush, width);
             }
             else
@@ -419,7 +425,17 @@ namespace FamiStudio
                     GL.End();
                 }
             }
+            if (antialiasing)
+                GL.Disable(EnableCap.LineSmooth);
             GL.PopMatrix();
+        }
+
+        public void DrawLine(float[,] points, GLBrush brush)
+        {
+            for (int i = 0; i < points.GetLength(0) - 1; i++)
+            {
+                DrawLine(points[i + 0, 0], points[i + 0, 1], points[i + 1, 0], points[i + 1, 1], brush);
+            }
         }
 
         public void DrawRectangle(RectangleF rect, GLBrush brush, float width = 1.0f)
@@ -435,10 +451,10 @@ namespace FamiStudio
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && width > 1)
             {
-                DrawThickLineAsPolygon(new[] { 
-                    x0, y0, 
-                    x1, y0, 
-                    x1, y1, 
+                DrawThickLineAsPolygon(new[] {
+                    x0, y0,
+                    x1, y0,
+                    x1, y1,
                     x0, y1,
                     x0, y0 }, brush, width);
             }
@@ -546,10 +562,10 @@ namespace FamiStudio
             }
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f)
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
-            DrawRectangle(x0, y0, x1, y1, lineBrush);
+            DrawRectangle(x0, y0, x1, y1, lineBrush, width);
         }
 
         public GLConvexPath CreateConvexPath(Point[] points)
@@ -624,7 +640,7 @@ namespace FamiStudio
             GL.PopMatrix();
         }
 
-        private void DrawThickLineAsPolygon(float[] points, GLBrush brush, float width)
+        protected void DrawThickLineAsPolygon(float[] points, GLBrush brush, float width)
         {
             GL.Begin(BeginMode.Quads);
             for (int i = 0; i < points.Length / 2 - 1; i++)
@@ -753,7 +769,7 @@ namespace FamiStudio
             return brush;
         }
 
-        private T ReadFontParam<T>(string[] values, string key)
+        protected T ReadFontParam<T>(string[] values, string key)
         {
             for (int i = 1; i < values.Length; i += 2)
             {
@@ -783,52 +799,128 @@ namespace FamiStudio
                 switch (splits[0])
                 {
                     case "common":
-                    {
-                        baseValue = ReadFontParam<int>(splits, "base");
-                        texSizeX  = ReadFontParam<int>(splits, "scaleW");
-                        texSizeY  = ReadFontParam<int>(splits, "scaleH");
+                        {
+                            baseValue = ReadFontParam<int>(splits, "base");
+                            texSizeX = ReadFontParam<int>(splits, "scaleW");
+                            texSizeY = ReadFontParam<int>(splits, "scaleH");
 
-                        int glTex = existingTexture;
-                        if (glTex == 0)
-                            glTex = CreateGLTexture(pixbuf);
+                            int glTex = existingTexture;
+                            if (glTex == 0)
+                                glTex = CreateGLTexture(pixbuf);
 
-                        font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
-                        break;
-                    }
+                            font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
+                            break;
+                        }
                     case "char":
-                    {
-                        var charInfo = new GLFont.CharInfo();
+                        {
+                            var charInfo = new GLFont.CharInfo();
 
-                        int c = ReadFontParam<int>(splits, "id");
-                        int x = ReadFontParam<int>(splits, "x");
-                        int y = ReadFontParam<int>(splits, "y");
+                            int c = ReadFontParam<int>(splits, "id");
+                            int x = ReadFontParam<int>(splits, "x");
+                            int y = ReadFontParam<int>(splits, "y");
 
-                        charInfo.width    = ReadFontParam<int>(splits, "width");
-                        charInfo.height   = ReadFontParam<int>(splits, "height");
-                        charInfo.xoffset  = ReadFontParam<int>(splits, "xoffset");
-                        charInfo.yoffset  = ReadFontParam<int>(splits, "yoffset");
-                        charInfo.xadvance = ReadFontParam<int>(splits, "xadvance");
-                        charInfo.u0 = (x + 0.0f) / (float)texSizeX;
-                        charInfo.v0 = (y + 0.0f) / (float)texSizeY;
-                        charInfo.u1 = (x + 0.0f + charInfo.width) / (float)texSizeX;
-                        charInfo.v1 = (y + 0.0f + charInfo.height) / (float)texSizeY;
+                            charInfo.width = ReadFontParam<int>(splits, "width");
+                            charInfo.height = ReadFontParam<int>(splits, "height");
+                            charInfo.xoffset = ReadFontParam<int>(splits, "xoffset");
+                            charInfo.yoffset = ReadFontParam<int>(splits, "yoffset");
+                            charInfo.xadvance = ReadFontParam<int>(splits, "xadvance");
+                            charInfo.u0 = (x + 0.0f) / (float)texSizeX;
+                            charInfo.v0 = (y + 0.0f) / (float)texSizeY;
+                            charInfo.u1 = (x + 0.0f + charInfo.width) / (float)texSizeX;
+                            charInfo.v1 = (y + 0.0f + charInfo.height) / (float)texSizeY;
 
-                        font.AddChar((char)c, charInfo);
+                            font.AddChar((char)c, charInfo);
 
-                        break;
-                    }
+                            break;
+                        }
                     case "kerning":
-                    {
-                        int c0 = ReadFontParam<int>(splits, "first");
-                        int c1 = ReadFontParam<int>(splits, "second");
-                        int amount = ReadFontParam<int>(splits, "amount");
-                        font.AddKerningPair(c0, c1, amount);
-                        break;
-                    }
+                        {
+                            int c0 = ReadFontParam<int>(splits, "first");
+                            int c1 = ReadFontParam<int>(splits, "second");
+                            int amount = ReadFontParam<int>(splits, "amount");
+                            font.AddKerningPair(c0, c1, amount);
+                            break;
+                        }
                 }
             }
 
             return font;
+        }
+
+        public virtual void Dispose()
+        {
+        }
+    };
+
+    public class GLOffscreenGraphics : GLGraphics
+    {
+        protected int fbo;
+        protected int texture;
+        protected int resX;
+        protected int resY;
+
+        public GLOffscreenGraphics(int imageSizeX, int imageSizeY)
+        {
+            resX = imageSizeX;
+            resY = imageSizeY;
+
+            texture = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, texture);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, imageSizeX, imageSizeY, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToBorder);
+
+            fbo = GL.Ext.GenFramebuffer();
+            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
+            GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, texture, 0);
+            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, 0);
+        }
+
+        public override void BeginDraw(GLControl control, int windowSizeY)
+        {
+            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, fbo);
+            GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+
+            base.BeginDraw(control, windowSizeY);
+        }
+
+        public override void EndDraw()
+        {
+            base.EndDraw();
+
+            GL.Ext.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+        }
+
+        public unsafe void GetBitmap(byte[] data)
+        {
+            byte[] tmp = new byte[data.Length];
+
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fbo);
+            fixed (byte* p = &tmp[0])
+                GL.ReadPixels(0, 0, resX, resY, PixelFormat.Bgra, PixelType.UnsignedByte, new IntPtr(p));
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
+
+            // Flip image vertically to match D3D. 
+            for (int y = 0; y < resY; y++)
+            {
+                int y0 = y;
+                int y1 = resY - y - 1;
+
+                y0 *= resX * 4;
+                y1 *= resX * 4;
+
+                Array.Copy(tmp, y0, data, y1, resX * 4);
+            }
+        }
+
+        public override void Dispose()
+        {
+            if (texture != 0) GL.DeleteTextures(1, ref texture);
+            if (fbo != 0) GL.Ext.DeleteFramebuffers(1, ref fbo);
+
+            base.Dispose();
         }
     };
 }

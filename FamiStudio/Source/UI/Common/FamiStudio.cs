@@ -408,9 +408,8 @@ namespace FamiStudio
                 return;
             }
 
-            var log = new ListLogOutput();
-
-            using (var scopedLog = new ScopedLogOutput(log, LogSeverity.Warning))
+            var dlgLog = new LogDialog(mainForm);
+            using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
             {
                 project = OpenProjectFile(filename);
 
@@ -423,12 +422,8 @@ namespace FamiStudio
                     NewProject();
                 }
 
-                if (!log.IsEmpty)
-                {
-                    mainForm.Refresh();
-                    var logDlg = new LogDialog(log.Messages);
-                    logDlg.ShowDialog(mainForm);
-                }
+                mainForm.Refresh();
+                dlgLog.ShowDialogIfMessages();
             }
         }
 
@@ -462,9 +457,9 @@ namespace FamiStudio
             }
             else if (allowNsf && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
             {
-                NsfImportDialog dlg = new NsfImportDialog(filename, mainForm.Bounds);
+                NsfImportDialog dlg = new NsfImportDialog(filename);
 
-                if (dlg.ShowDialog() == DialogResult.OK)
+                if (dlg.ShowDialog(mainForm) == DialogResult.OK)
                 {
                     project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits);
                 }
@@ -510,27 +505,15 @@ namespace FamiStudio
 
         public void Export()
         {
-            var log = new ListLogOutput();
-
-            using (var scopedLog = new ScopedLogOutput(log, LogSeverity.Info))
-            {
-                var dlg = new ExportDialog(mainForm.Bounds, project);
-
-                dlg.ShowDialog();
-
-                if (!log.IsEmpty)
-                {
-                    var logDlg = new LogDialog(log.Messages);
-                    logDlg.ShowDialog(mainForm);
-                }
-            }
+            var dlgExp = new ExportDialog(project);
+            dlgExp.ShowDialog(mainForm);
         }
 
         public void OpenConfigDialog()
         {
-            var dlg = new ConfigDialog(mainForm.Bounds);
+            var dlg = new ConfigDialog();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(mainForm) == DialogResult.OK)
             {
                 InitializeMidi();
                 InvalidateEverything(true);
@@ -609,21 +592,6 @@ namespace FamiStudio
             }
         }
 
-        private void OpenUrl(string url)
-        {
-            try
-            {
-#if FAMISTUDIO_LINUX
-                Process.Start("xdg-open", url);
-#elif FAMISTUDIO_MACOS
-                Process.Start("open", url);
-#else
-                Process.Start(url);
-#endif
-            }
-            catch { }
-        }
-
         private void CheckNewReleaseDone()
         {
             if (newReleaseAvailable)
@@ -632,16 +600,16 @@ namespace FamiStudio
 
                 if (PlatformUtils.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    OpenUrl("http://www.famistudio.org");
+                    Utils.OpenUrl("http://www.famistudio.org");
                 }
             }
         }
 
         public void OpenTransformDialog()
         {
-            var dlg = new TransformDialog(mainForm.Bounds, this);
+            var dlg = new TransformDialog(this);
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(mainForm) == DialogResult.OK)
             {
                 Sequencer.Reset();
                 PianoRoll.Reset();
@@ -652,7 +620,7 @@ namespace FamiStudio
 
         public void ShowHelp()
         {
-            OpenUrl("http://www.famistudio.org/doc/index.html");
+            Utils.OpenUrl("http://www.famistudio.org/doc/index.html");
         }
 
         private void UpdateTitle()
@@ -873,6 +841,8 @@ namespace FamiStudio
                 }
                 else
                 {
+                    if (ctrl && shift)
+                        Seek(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartNote(song.LoopPoint) : 0);
                     if (ctrl)
                         Seek(song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _)));
                     else if (shift)

@@ -176,7 +176,7 @@ namespace FamiStudio
             buttons[ButtonRedo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
             buttons[ButtonTransform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
             buttons[ButtonConfig].ToolTip    = "{MouseLeft} Edit Application Settings";
-            buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space}";
+            buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
@@ -448,20 +448,18 @@ namespace FamiStudio
 
         private void OnLoop()
         {
-            App.LoopMode = (LoopMode)(((int)App.LoopMode + 1) % 3);
+            App.LoopMode = App.LoopMode == LoopMode.LoopPoint ? LoopMode.Pattern : LoopMode.LoopPoint;
         }
 
         private RenderBitmap OnLoopGetBitmap()
         {
             switch (App.LoopMode)
             {
-                case LoopMode.None:
-                case LoopMode.LoopPoint: return bmpLoopNone;
-                case LoopMode.Song: return bmpLoopSong;
-                case LoopMode.Pattern: return bmpLoopPattern;
+                case LoopMode.Pattern:
+                    return bmpLoopPattern;
+                default:
+                    return App.Song.LoopPoint < 0 ? bmpLoopNone : bmpLoopSong;
             }
-
-            return null;
         }
 
         private void OnMachine()
