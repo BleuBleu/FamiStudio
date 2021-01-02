@@ -1,64 +1,44 @@
 Tips & Tricks (Review this list)
 ================================
-#00 - Basic controls & onboarding (pan, zoom, trackpad, tooltips, piano roll view rect, demo songs)
-#01 - Sequencer basics (pattern add, delete, edit, instance & copy).
-#02 - Piano roll basics (add note, delete note, snapping, dragging, select, transpose with KB).
-#03 - Channels in piano roll (force display, muting & soloing, etc.)
-#04 - Volume envelopes & release notes
-#05 - Toggling note attacks (combination with release)
-#06 - Slide notes (combination with release notes)
-#07 - Pitch envelopes (absolute & relative, paste text values)
-#08 - Effect panel (speed, FDS mod, etc.)
-#09 - Quickly copy notes
-#10 - Copy & paste (special paste, mix paste, drag & copy, between projects, etc.)
-#11 - Custom pattern settings & loop points.
-#12 - Recording with Keyboard or MIDI controller (page up/down, keys, etc.)
-#13 - Importing instruments
-#14 - Importing from FamiTracker
-#15 - Importing NSFs (bit reverse, etc.)
-#16 - FamiStudio vs. FamiTracker tempo (PAL, etc.)
-#17 - DPCM samples (import, save, transpose, bit reverse, etc)
-#18 - Replacing an instrument by another (copy envelopes, etc.)
-#19 - Arpeggios (replacing, etc.)
-#20 - Exporting to FamiTracker
-#21 - Exporting to a NSF / ROM / FDS Disk
-#22 - FDS audio (waveform, modulation, etc.)
-#23 - VRC7 audio (release envelope)
-#24 - N163 audio (wavetable, number of channels => quality, etc.)
-#25 - Command line processing 
+Is #00 necessary???
+
+#00 - Basic controls & onboarding (tutorial, pan, zoom, trackpad, tooltips, piano roll view rect, demo songs, documentation)
+	Sequencer basics (pattern add, delete, edit, undo/redo, instance & copy).
+	Piano roll basics (add note, delete note, snapping, dragging, select, transpose with KB).
+	Channels in piano roll (force display, muting & soloing, etc.)
+	
+#01 - Volume envelopes & release notes (first envelope tutotrial, delete/copy, resize, loop/release, drag, keyboard, etc.)
+#02 - Toggling note attacks (combination with release)
+#03 - Slide notes (combination with release notes)
+#04 - Pitch envelopes (absolute & relative, paste text values)
+#05 - Effect panel (speed, different channe have different fx, FamiTracker tempo, etc.)
+#06 - Copying & Pasting (special paste, special delete, mix paste, drag & copy, between projects, etc. Review all ways to duplicate note fast)
+#xx - Custom pattern settings & loop points.
+#xx - Recording with Keyboard or MIDI controller (page up/down, keys, etc.)
+#xx - Importing instruments & songs
+#xx - Importing from FamiTracker
+#xx - Importing NSFs (bit reverse, tempo, etc.)
+#xx - Tempo modes (FamiStudio / FamiTracker, PAL, toolbar icon, etc.)
+#xx - DPCM samples (import, save, transpose, pitch, bit reverse, etc)
+#xx - Replacing an instrument by another (copy envelopes, etc.)
+#xx - Arpeggios (comparison with arpeggio envelopes, replacing, difference with FamiTracker (no-attack), etc.)
+#xx - Exporting to FamiTracker
+#xx - Exporting to a NSF / ROM / FDS Disk
+#xx - Exporting to Video.
+#xx - VRC6 / MMC5 / S5B audio expansions
+#xx - FDS audio expansion (waveform, modulation, master volume, FDS disk export, etc.)
+#xx - VRC7 audio expansion (release envelope, only 1 custom patch at a time, etc.)
+#xx - N163 audio expansion (wavetable, number of channels => quality, etc.)
+#xx - Cleaning up your project.
+#xx - Using the sound engine in your Homebrew game.
+#xx - Command line processing (ex: export a FamiTracker file to mp3).
 
 2.3.0
 =====
-CLOSING:
-- Update documentation (sound engine, copy/delete special, new nomenclature for bars, tempo, etc.)
-	- Update sound engine code size at the end.
-- Create new song for trailer.
-
-2.3.0 Trailer
-=============
-1) Video export
-2) MP3 export + export to seperate channels
-3) FamiTracker compatibility improvements (delayed notes/cuts) + Vxx support
-4) Special paste improvements (repeat, effects, etc.)
-5) Special delete
-6) Song merge
-7) Copy patterns to different channels
-8) Note labels
-9) DPCM improvements (explicity bit reverse option, drag&drop)
-
-2.3.0 New Features
-==================
-- MP3 export
-- Video export
-- Sound engine code size reduction
-- Song merge
-- Vxx support
-- Special paste improvements (repeat, effects, etc.)
-- Special delete
-- Copy patterns to different channels
-- Note labels
-- FamiTracker tempo improvements (delayed notes/cuts)
-- DPCM improvements (explicity bit reverse option, drag&drop)
+- TEST: Retest every feature once on all platforms, just to be safe (envelope change...)
+- BUG: MacOS : 
+	- Choosing ffmpeg path makes the window appear below the dialog.
+	- The export dialog isnt centered when exporting video
 
 Linux notes
 ===========
@@ -105,5 +85,5 @@ Backlog:
 - Mac: Paste special: Text is super dark
 - Mac: Clicking on FS without the window doesn't give it focus...?
 - Installer on Japanese machine?
-- FamiTracker tempo mode never plays the 1st frame in the NSF.
 - Keyboard recording VS. non-QWERTY keyboards.
+- BUG: After cleanup, selected arpeggio + instrument seems wrong. (added notes make arpeggion sound, but none selected.)
