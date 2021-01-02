@@ -33,13 +33,6 @@ Is #00 necessary???
 #xx - Using the sound engine in your Homebrew game.
 #xx - Command line processing (ex: export a FamiTracker file to mp3).
 
-2.3.0
-=====
-- TEST: Retest every feature once on all platforms, just to be safe (envelope change...)
-- BUG: MacOS : 
-	- Choosing ffmpeg path makes the window appear below the dialog.
-	- The export dialog isnt centered when exporting video
-
 Linux notes
 ===========
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe
