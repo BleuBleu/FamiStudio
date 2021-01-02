@@ -1189,23 +1189,28 @@ namespace FamiStudio
         // likely using the old import instrument function.
         public void EnsureNextIdIsLargeEnough()
         {
+            var largestUniqueId = 0;
+
             foreach (var inst in instruments)
-                nextUniqueId = Math.Max(nextUniqueId, inst.Id);
+                largestUniqueId = Math.Max(largestUniqueId, inst.Id);
             foreach (var arp in arpeggios)
-                nextUniqueId = Math.Max(nextUniqueId, arp.Id);
+                largestUniqueId = Math.Max(largestUniqueId, arp.Id);
             foreach (var sample in samples)
-                nextUniqueId = Math.Max(nextUniqueId, sample.Id);
+                largestUniqueId = Math.Max(largestUniqueId, sample.Id);
             foreach (var song in songs)
             {
-                nextUniqueId = Math.Max(nextUniqueId, song.Id);
+                largestUniqueId = Math.Max(largestUniqueId, song.Id);
                 foreach (var channels in song.Channels)
                 {
                     foreach (var pattern in channels.Patterns)
-                        nextUniqueId = Math.Max(nextUniqueId, pattern.Id);
+                        largestUniqueId = Math.Max(largestUniqueId, pattern.Id);
                 }
             }
 
-            nextUniqueId++;
+            if (largestUniqueId >= nextUniqueId)
+            {
+                nextUniqueId = largestUniqueId + 1;
+            }
         }
 
 #if DEBUG
