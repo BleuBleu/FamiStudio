@@ -211,7 +211,15 @@ namespace FamiStudio
 #else
             var ffmpegExeFilter = "FFmpeg Executable (ffmpeg)|*.*";
 #endif
+
+#if FAMISTUDIO_MACOS
+            dialog.TemporarelyHide();
+#endif
             string filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
+#if FAMISTUDIO_MACOS
+            dialog.TemporarelyShow();
+#endif
+
             if (filename != null)
             {
                 props.SetPropertyValue(propertyIndex, filename);

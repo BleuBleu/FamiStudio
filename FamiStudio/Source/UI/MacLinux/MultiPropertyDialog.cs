@@ -188,6 +188,25 @@ namespace FamiStudio
             return base.OnKeyPressEvent(evnt);
         }
 
+#if FAMISTUDIO_MACOS
+        private int tempPosX;
+        private int tempPosY;
+
+        public void TemporarelyHide()
+        {
+            GetPosition(out tempPosX, out tempPosY);
+            Hide();
+            MacUtils.RestoreMainNSWindowFocus();
+        }
+
+        public void TemporarelyShow()
+        {
+            Show();
+            Move(tempPosX, tempPosY);
+            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
+        }
+#endif
+
         public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent)
         {
 #if FAMISTUDIO_LINUX

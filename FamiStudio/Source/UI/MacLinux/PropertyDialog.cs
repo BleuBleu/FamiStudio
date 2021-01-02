@@ -195,6 +195,14 @@ namespace FamiStudio
             Show();
 
 #if FAMISTUDIO_MACOS
+            if (WindowPosition == WindowPosition.CenterOnParent)
+            {
+                var mainWinRect = parent.Bounds;
+                int x = mainWinRect.Left + (mainWinRect.Width - Allocation.Width) / 2;
+                int y = mainWinRect.Top + (mainWinRect.Height - Allocation.Height) / 2;
+                Move(x, y);
+            }
+
             MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
 #endif
         }
