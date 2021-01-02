@@ -79,7 +79,7 @@ DPCM (Delta Pulse Coded Modulation)samples are very low quality 1-bit digital sa
 
 You can assign a sample to a key of the piano. Clicking anywhere on a note that does not have a DPCM sample associated will prompt you to open a .DMC file. 
 
-No DMC edition tool is provided, you can use [FamiTracker](http://famitracker.com/), [RJDMC](http://forums.famitracker.com/viewtopic.php?t=95) or any other tool. DPCM samples are assumed to have unique names and 2 samples with the same name will be assume to be the same. Note that only notes between C1 and D6 are allowed to have DPCM samples.
+No DMC edition tool is provided, you can use [FamiTracker](http://famitracker.com/), [RJDMC](http://forums.famitracker.com/viewtopic.php?t=95), [MakeDPCM](https://www.romhacking.net/utilities/1451/) or any other tool. DPCM samples are assumed to have unique names and 2 samples with the same name will be assume to be the same. Note that only notes between C1 and D6 are allowed to have DPCM samples.
 
 ## Unassigning a DPCM sample
 
