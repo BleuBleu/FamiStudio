@@ -48,7 +48,7 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
-            glWidget = new GLWidget(new GraphicsMode(new ColorFormat(8, 8, 8, 8), 0, 0), 1, 0, GraphicsContextFlags.Default);
+            glWidget = new GLWidget(new GraphicsMode(new ColorFormat(8, 8, 8, 0), 0, 0), 1, 0, GraphicsContextFlags.Default);
             glWidget.WidthRequest = 1280;
             glWidget.HeightRequest = 720;
             glWidget.Initialized += GLWidgetInitialize;

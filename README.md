@@ -11,7 +11,7 @@ All releases are available in the [Releases](https://github.com/BleuBleu/FamiStu
 ## Compiling
 FamiStudio is composed of a few projects:
 - The main FamiStudio application is written in C#. 
-- NesSndEmu & NotSoFatso are C++ DLLs and are provided as binaries since they rarely change. 
+- NesSndEmu, NotSoFatso & ShineMp3 are C++ DLLs and are provided as binaries since they rarely change. 
 - The Setup project (Windows only)
 
 ### Windows
