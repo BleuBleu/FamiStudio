@@ -2,6 +2,12 @@
 
 Version history / release notes for each release.
 
+## Version 2.3.1 (Linux Hotfix)
+
+Fixes:
+
+* Fix startup crash on Linux.
+
 ## Version 2.3.0
 
 Changes:
