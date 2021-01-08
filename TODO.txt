@@ -17,12 +17,12 @@ Is #00 necessary???
 #xx - Recording with Keyboard or MIDI controller (page up/down, keys, etc.)
 #xx - Importing instruments & songs
 #xx - Importing from FamiTracker
-#xx - Importing NSFs (bit reverse, tempo, etc.)
+#xx - Importing NSFs (bit reverse, tempo, reverse engineer instruments, etc.)
 #xx - Tempo modes (FamiStudio / FamiTracker, PAL, toolbar icon, etc.)
 #xx - DPCM samples (import, save, transpose, pitch, bit reverse, etc)
-#xx - Replacing an instrument by another (copy envelopes, etc.)
+#-- - Replacing an instrument by another (copy envelopes, etc.)
 #xx - Arpeggios (comparison with arpeggio envelopes, replacing, difference with FamiTracker (no-attack), etc.)
-#xx - Exporting to FamiTracker
+#xx - Importing/Exporting from/to FamiTracker (fti, etc)
 #xx - Exporting to a NSF / ROM / FDS Disk
 #xx - Exporting to Video.
 #xx - VRC6 / MMC5 / S5B audio expansions
@@ -32,6 +32,28 @@ Is #00 necessary???
 #xx - Cleaning up your project.
 #xx - Using the sound engine in your Homebrew game.
 #xx - Command line processing (ex: export a FamiTracker file to mp3).
+
+FamiStudio 2.3.2 (if any issues)
+================================
+- Change the copyright year. 
+- Bug changing VRC7 paremeters. 
+	- Doesnt always work
+	- If you drag, will change 2 params at once?
+- 
+
+FamiStudio 2.4.0
+================
+- Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
+	- Load wav/DMC
+	- Trim, copy, paste, etc.
+	- Volume adjustment, fade, speed, LPF, etc.
+	- Sample rate
+- Make # of buffered frames configurable (+ dont use PAL buffer size when not needed)
+- Try to preserve pattern names when copying.
+- Right click to select from anywhere? (Not just header) => Change tooltip.
+- Drag seek bar
+- Copy envelope tooltip is missing hand for "drag".
+- Play keyboard from everywhere (not just record mode).
 
 Linux notes
 ===========
