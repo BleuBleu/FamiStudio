@@ -46,6 +46,7 @@ FamiStudio 2.4.0
 - Drag seek bar
 - Copy envelope tooltip is missing hand for "drag".
 - Play keyboard from everywhere (not just record mode).
+- Multiple loops for video export?
 
 Linux notes
 ===========
