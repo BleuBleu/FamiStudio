@@ -38,10 +38,9 @@ FamiStudio 2.3.2 (if any issues)
 x Change the copyright year. 
 x Bug playback studX
 x Crash studX.
-- Version check on FamiStudio files (BarLength/BeatLength).
-- Bug changing VRC7 paremeters. 
-	- Doesnt always work
-	- If you drag, will change 2 params at once?
+x Bug changing VRC7 paremeters. 
+x Crash backup.ftm
+x Version check on FamiStudio files (BarLength/BeatLength for 2.2.x).
 
 Linux notes
 ===========
