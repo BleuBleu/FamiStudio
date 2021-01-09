@@ -251,6 +251,7 @@ namespace FamiStudio
                 var song = (Song)null;
                 var channel = (Channel)null;
                 var pattern = (Pattern)null;
+                var version = "9.9.9";
 
                 foreach (var line in lines)
                 {
@@ -261,6 +262,7 @@ namespace FamiStudio
                         case "Project":
                         {
                             project = new Project();
+                            parameters.TryGetValue("Version", out version);
                             if (parameters.TryGetValue("Name", out var name)) project.Name = name;
                             if (parameters.TryGetValue("Author", out var author)) project.Author = author;
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
@@ -359,7 +361,7 @@ namespace FamiStudio
                         {
                             song = project.CreateSong(parameters["Name"]);
                             song.SetLength(int.Parse(parameters["Length"]));
-                            song.SetBeatLength(int.Parse(parameters["BeatLength"]));
+                            song.SetBeatLength(int.Parse(parameters[string.CompareOrdinal(version, "2.3.0") >= 0 ? "BeatLength" : "BarLength"]));
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
 
                             if (song.UsesFamiTrackerTempo)
@@ -372,7 +374,7 @@ namespace FamiStudio
                             {
                                 var noteLength = int.Parse(parameters["NoteLength"]);
                                 song.ResizeNotes(noteLength, false);
-                                song.SetBeatLength(int.Parse(parameters["BeatLength"]) * noteLength);
+                                song.SetBeatLength(song.BeatLength * noteLength);
                                 song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]) * noteLength);
                             }
                             break;
@@ -381,17 +383,17 @@ namespace FamiStudio
                         {
                             if (project.UsesFamiTrackerTempo)
                             {
-                                    var beatLength = song.BeatLength;
-                                    if (parameters.TryGetValue("BeatLength", out var beatLengthStr))
-                                        beatLength = int.Parse(beatLengthStr);
+                                var beatLength = song.BeatLength;
+                                if (parameters.TryGetValue(string.CompareOrdinal(version, "2.3.0") >= 0 ? "BeatLength" : "BarLength", out var beatLengthStr))
+                                    beatLength = int.Parse(beatLengthStr);
 
-                                    song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]), beatLength);
+                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]), beatLength);
                             }
                             else
                             {
                                 var patternLength = int.Parse(parameters["Length"]);
                                 var noteLength = int.Parse(parameters["NoteLength"]);
-                                var beatLength = int.Parse(parameters["BeatLength"]);
+                                var beatLength = int.Parse(parameters[string.CompareOrdinal(version, "2.3.0") >= 0 ? "BeatLength" : "BarLength"]);
 
                                 song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, beatLength * noteLength, noteLength);
                             }
