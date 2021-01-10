@@ -40,13 +40,12 @@ FamiStudio 2.4.0
 	- Trim, copy, paste, etc.
 	- Volume adjustment, fade, speed, LPF, etc.
 	- Sample rate
+- MIDI in/out? Not sure...
 - Make # of buffered frames configurable (+ dont use PAL buffer size when not needed)
 - Try to preserve pattern names when copying.
 - Right click to select from anywhere? (Not just header) => Change tooltip.
 - Drag seek bar
-- Copy envelope tooltip is missing hand for "drag".
 - Play keyboard from everywhere (not just record mode).
-- Multiple loops for video export?
 
 Linux notes
 ===========
