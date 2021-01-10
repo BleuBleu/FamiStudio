@@ -28,6 +28,7 @@ namespace FamiStudio
         private bool audioDeviceChanged = false;
         private bool pianoRollScrollChanged = false;
         private bool recordingMode = false;
+        private bool qwertyPiano = false;
         private bool followMode = false;
         private int tutorialCounter = 3;
         private int baseRecordingOctave = 3;
@@ -45,6 +46,7 @@ namespace FamiStudio
         public bool RealTimeUpdate => songPlayer != null && songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || pianoRollScrollChanged;
         public bool IsPlaying => songPlayer != null && songPlayer.IsPlaying;
         public bool IsRecording => recordingMode;
+        public bool IsQwertyPianoEnabled => qwertyPiano;
         public bool FollowModeEnabled { get => followMode; set => followMode = value; }
         public int BaseRecordingOctave => baseRecordingOctave;
         public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : songPlayer.CurrentFrame;
@@ -679,7 +681,7 @@ namespace FamiStudio
 
             instrumentPlayer.PlayNote(channel, note);
 
-            if (allowRecording && IsRecording)
+            if (allowRecording && recordingMode)
                 PianoRoll.RecordNote(note);
         }
 
@@ -696,7 +698,7 @@ namespace FamiStudio
                 instrumentPlayer.StopAllNotes();
             }
 
-            if (allowRecording && IsRecording)
+            if (allowRecording && recordingMode)
                 PianoRoll.RecordNote(new Note(Note.NoteStop));
         }
 
@@ -802,15 +804,17 @@ namespace FamiStudio
                 StopRecording();
             }
 
-            if (IsRecording && !ctrl && !shift && HandleRecordingKey(e, true))
+            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e, true))
             {
-                return;
+                if (recordingMode)
+                    return;
             }
-            else if (IsRecording && e.KeyCode == Keys.Tab)
+
+            if (recordingMode && e.KeyCode == Keys.Tab)
             {
                 PianoRoll.AdvanceRecording(CurrentFrame, true);
             }
-            else if (IsRecording && e.KeyCode == Keys.Back)
+            else if (recordingMode && e.KeyCode == Keys.Back)
             {
                 PianoRoll.DeleteRecording(CurrentFrame);
             }
@@ -862,7 +866,7 @@ namespace FamiStudio
                     Seek(0);
                 }
             }
-            if (!IsRecording && e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D9)
+            if (!recordingMode && e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D9)
             {
                 if (ctrl)
                     GhostChannelMask ^= (1 << (int)(e.KeyCode - Keys.D1));
@@ -892,6 +896,10 @@ namespace FamiStudio
             else if (ctrl && e.KeyCode == Keys.O)
             {
                 OpenProject();
+            }
+            else if (shift && e.KeyCode == Keys.K)
+            {
+                ToggleQwertyPiano();
             }
 #if FAMISTUDIO_WINDOWS
             else if (e.KeyData == Keys.Up    ||
@@ -946,8 +954,11 @@ namespace FamiStudio
             bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
             bool shift = e.Modifiers.HasFlag(Keys.Shift);
 
-            if (IsRecording && !ctrl && !shift && HandleRecordingKey(e, false))
-                return;
+            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e, false))
+            {
+                if (recordingMode)
+                    return;
+            }
 
 #if FAMISTUDIO_WINDOWS
             if (!Sequencer.Focused) Sequencer.UnfocusedKeyUp(e);
@@ -1000,6 +1011,7 @@ namespace FamiStudio
             Debug.Assert(!recordingMode);
             Stop();
             recordingMode = true;
+            qwertyPiano = true;
             InvalidateEverything();
         }
 
@@ -1016,10 +1028,19 @@ namespace FamiStudio
 
         public void ToggleRecording()
         {
-            if (IsRecording)
+            if (recordingMode)
                 StopRecording();
             else
                 StartRecording();
+        }
+
+        public void ToggleQwertyPiano()
+        {
+            if (!recordingMode)
+            {
+                qwertyPiano = !qwertyPiano;
+                ToolBar.Invalidate();
+            }
         }
 
         public void Seek(int frame)
@@ -1187,7 +1208,7 @@ namespace FamiStudio
             if (buffer.IsReading)
             {
                 // Move seek bar on undo/redo when recording.
-                if (IsRecording)
+                if (recordingMode)
                     Seek(currentFrame);
 
                 RefreshSequencerLayout();

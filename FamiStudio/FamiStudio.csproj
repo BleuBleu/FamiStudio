@@ -333,6 +333,8 @@
     <EmbeddedResource Include="Resources\FM.png" />
     <EmbeddedResource Include="Resources\WaveTable%402x.png" />
     <EmbeddedResource Include="Resources\WaveTable.png" />
+    <EmbeddedResource Include="Resources\QwertyPiano%402x.png" />
+    <EmbeddedResource Include="Resources\QwertyPiano.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

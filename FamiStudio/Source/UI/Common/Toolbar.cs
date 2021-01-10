@@ -38,10 +38,11 @@ namespace FamiStudio
         const int ButtonRec       = 12;
         const int ButtonRewind    = 13;
         const int ButtonLoop      = 14;
-        const int ButtonMachine   = 15;
-        const int ButtonFollow    = 16;
-        const int ButtonHelp      = 17;
-        const int ButtonCount     = 18;
+        const int ButtonQwerty    = 15;
+        const int ButtonMachine   = 16;
+        const int ButtonFollow    = 17;
+        const int ButtonHelp      = 18;
+        const int ButtonCount     = 19;
 
         const int DefaultTimecodeOffsetX         = 40; // Offset from config button.
         const int DefaultTimecodePosY            = 4;
@@ -161,6 +162,7 @@ namespace FamiStudio
             buttons[ButtonRec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[ButtonRewind]    = new Button { Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[ButtonQwerty]    = new Button { Bmp = g.CreateBitmapFromResource("QwertyPiano"), Click = OnQwerty, Enabled = OnQwertyEnabled };
             buttons[ButtonMachine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
             buttons[ButtonFollow]    = new Button { Bmp = g.CreateBitmapFromResource("Follow"), Click = OnFollow, Enabled = OnFollowEnabled };
             buttons[ButtonHelp]      = new Button { Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
@@ -180,6 +182,7 @@ namespace FamiStudio
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
+            buttons[ButtonQwerty].ToolTip    = "{MouseLeft} Toggle keyboard piano input";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
             buttons[ButtonFollow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
@@ -449,6 +452,16 @@ namespace FamiStudio
         private void OnLoop()
         {
             App.LoopMode = App.LoopMode == LoopMode.LoopPoint ? LoopMode.Pattern : LoopMode.LoopPoint;
+        }
+
+        private void OnQwerty()
+        {
+            App.ToggleQwertyPiano();
+        }
+
+        private ButtonStatus OnQwertyEnabled()
+        {
+            return App.IsQwertyPianoEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
         private RenderBitmap OnLoopGetBitmap()
