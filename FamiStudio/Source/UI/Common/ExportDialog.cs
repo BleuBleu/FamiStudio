@@ -129,7 +129,8 @@ namespace FamiStudio
                     page.AddStringList("Video Bit Rate (Mb/s):", new[] { "2", "4", "8", "10", "12", "14", "16", "18", "20" }, "12"); // 4
                     page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 5
                     page.AddBoolean("Thin Notes :", false, "Draws notes a bit thinner, recommended if song has lots of channels."); // 6
-                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 7
+                    page.AddIntegerRange("Loop Count :", 1, 1, 8); // 7
+                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 8
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
@@ -317,7 +318,8 @@ namespace FamiStudio
                 var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4));
                 var pianoRollZoom = Array.IndexOf(zoomValues, props.GetPropertyValue<string>(5)) - 3;
                 var thinNotes = props.GetPropertyValue<bool>(6);
-                var selectedChannels = props.GetPropertyValue<bool[]>(7);
+                var loopCount = props.GetPropertyValue<int>(7);
+                var selectedChannels = props.GetPropertyValue<bool[]>(8);
                 var song = project.GetSong(songName);
 
                 var channelMask = 0;
@@ -327,7 +329,7 @@ namespace FamiStudio
                         channelMask |= (1 << i);
                 }
 
-                new VideoFile().Save(song, ffmpeg, filename, channelMask, audioBitRate, videoBitRate, pianoRollZoom, thinNotes);
+                new VideoFile().Save(project, song.Id, loopCount, ffmpeg, filename, channelMask, audioBitRate, videoBitRate, pianoRollZoom, thinNotes);
             }
         }
 

@@ -330,6 +330,35 @@ namespace FamiStudio
                 return false;
             }
         }
+
+        void ExtendSongForLooping(Song song, int loopCount)
+        {
+            // For looping, we simply extend the song by copying pattern instances.
+            if (loopCount > 1 && song.LoopPoint >= 0 && song.LoopPoint < song.Length)
+            {
+                var originalLength = song.Length;
+                var loopSectionLength = originalLength - song.LoopPoint;
+
+                song.SetLength(Math.Min(Song.MaxLength, originalLength + loopSectionLength * (loopCount - 1)));
+
+                var srcPatIdx = song.LoopPoint;
+
+                for (var i = originalLength; i < song.Length; i++)
+                {
+                    foreach (var c in song.Channels)
+                        c.PatternInstances[i] = c.PatternInstances[srcPatIdx];
+
+                    if (song.PatternHasCustomSettings(srcPatIdx))
+                    {
+                        var customSettings = song.GetPatternCustomSettings(srcPatIdx);
+                        song.SetPatternCustomSettings(i, customSettings.patternLength, customSettings.beatLength, customSettings.noteLength);
+                    }
+
+                    if (++srcPatIdx >= originalLength)
+                        srcPatIdx = song.LoopPoint;
+                }
+            }
+        }
         
 #if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
         // Some OpenGL implementation applies sRGB to the alpha channel which is super 
@@ -386,15 +415,20 @@ namespace FamiStudio
             public short[] wav;
         };
 
-        public unsafe bool Save(Song song, string ffmpegExecutable, string filename, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom, bool thinNotes)
+        public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom, bool thinNotes)
         {
-            if (channelMask == 0)
+            if (channelMask == 0 || loopCount < 1)
                 return false;
 
             Log.LogMessage(LogSeverity.Info, "Detecting FFmpeg...");
 
             if (!DetectFFmpeg(ffmpegExecutable))
                 return false;
+
+            var project = originalProject.DeepClone();
+            var song = project.GetSong(songId);
+
+            ExtendSongForLooping(song, loopCount);
 
             Log.LogMessage(LogSeverity.Info, "Initializing channels...");
 
