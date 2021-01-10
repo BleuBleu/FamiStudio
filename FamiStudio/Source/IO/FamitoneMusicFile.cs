@@ -748,6 +748,12 @@ namespace FamiStudio
                             patternBuffer.Add($"${0x6a:x2}");
                             patternBuffer.Add($"${note.NoteDelay - 1:x2}");
                             usesDelayedNotesOrCuts = true;
+
+                            // HACK : A note delay will cause the famistudio_channel_update function to 
+                            // decrease the reference note counter, so we need to bump it. This should have 
+                            // been fixed in the SoundEngine by jumping to @no_ref, but this is a hot-fix 
+                            // version and I dont want to change the assembly.
+                            numValidNotes++;
                         }
 
                         if (note.HasVolume)
@@ -919,6 +925,7 @@ namespace FamiStudio
                                 if (note == null)
                                     note = emptyNote;
 
+                                // TODO: Change this, this is a shit show.
                                 if (numEmptyNotes >= maxRepeatCount || 
                                     note.IsValid        ||
                                     note.HasVolume      || 
@@ -927,6 +934,8 @@ namespace FamiStudio
                                     note.HasDutyCycle   ||
                                     note.HasFdsModSpeed || 
                                     note.HasFdsModDepth ||
+                                    note.HasNoteDelay   ||
+                                    note.HasCutDelay    ||
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
                                 {
                                     break;
@@ -1021,7 +1030,7 @@ namespace FamiStudio
             int bestFactor = 1;
 
             // Take the channel with the most speed effect as the speed channel.
-            // This was a really dumb optimziation in FT2...
+            // This was a really dumb optimization in FT2...
             var speedEffectCount = new int[song.Channels.Length];
             for (int c = 0; c < song.Channels.Length; c++)
             {
@@ -1107,16 +1116,17 @@ namespace FamiStudio
 
         private void RemoveUnsupportedFeatures()
         {
-            if (kernel != FamiToneKernel.FamiStudio)
+            foreach (var song in project.Songs)
             {
-                foreach (var song in project.Songs)
+                foreach (var channel in song.Channels)
                 {
-                    foreach (var channel in song.Channels)
+                    foreach (var pattern in channel.Patterns)
                     {
-                        foreach (var pattern in channel.Patterns)
+                        foreach (var note in pattern.Notes.Values)
                         {
-                            foreach (var note in pattern.Notes.Values)
-                            {
+                            // FamiTone2 supports very few effects.
+                            if (kernel == FamiToneKernel.FamiTone2)
+                            { 
                                 if (note.IsRelease)
                                     note.Value = Note.NoteInvalid;
 
@@ -1130,10 +1140,23 @@ namespace FamiStudio
                                 note.HasCutDelay  = false;
                                 note.Arpeggio     = null;
                             }
+                            else
+                            {
+                                // Note delays for empty notes are useless and will only confuse the exporter.
+                                // We also don't support delays on speed effects.
+                                if (note.HasNoteDelay && (!note.IsValid && (note.EffectMask & (~(Note.EffectNoteDelayMask | Note.EffectSpeed))) == 0))
+                                {
+                                    note.HasNoteDelay = false;
+                                }
+                            }
                         }
                     }
                 }
+            }
 
+            // Remove releases in envelopes + expansion audio for FamiTone2.
+            if (kernel == FamiToneKernel.FamiTone2)
+            {
                 foreach (var instrument in project.Instruments)
                 {
                     var env = instrument.Envelopes[Envelope.Volume];

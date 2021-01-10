@@ -658,15 +658,15 @@ namespace FamiStudio
                             {
                                 portamentoSpeed = fx.param;
                             }
-                            if (fx.fx == Effect_SlideUp)
+                            if (fx.fx == Effect_SlideUp && note != null && note.IsMusical)
                             {
                                 slideTarget = note.Value + (fx.param & 0xf);
                                 slideSpeed = (-((fx.param >> 4) * 2 + 1)) << slideShift;
                             }
-                            if (fx.fx == Effect_SlideDown)
+                            if (fx.fx == Effect_SlideDown && note != null && note.IsMusical)
                             {
                                 slideTarget = note.Value - (fx.param & 0xf);
-                                slideSpeed =  (((fx.param >> 4) * 2 + 1)) << slideShift;
+                                slideSpeed = (((fx.param >> 4) * 2 + 1)) << slideShift;
                             }
                         }
 

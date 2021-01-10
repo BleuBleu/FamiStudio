@@ -69,7 +69,24 @@ namespace FamiStudio
 
             var lines = File.ReadAllLines(filename);
 
-            for (int i = 0; i < lines.Length; i++)
+            var headerLine = lines[0].Trim();
+
+            if (headerLine.StartsWith("# FamiTracker text export"))
+            {
+                var version = headerLine.Substring(26); 
+                if (version != "0.4.2")
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Invalid FamiTracker text version. Only version 0.4.2 is supported.");
+                    return null;
+                }
+            }
+            else
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Missing header, file is likely not a FamiTracker text export.");
+                return null;
+            }
+
+            for (int i = 1; i < lines.Length; i++)
             {
                 var line = lines[i].Trim();
 

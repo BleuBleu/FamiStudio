@@ -805,14 +805,14 @@ namespace FamiStudio
                         if (buttons[buttonIdx].instrument == null)
                             tooltip = "{MouseLeft} Select instrument";
                         else
-                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{MouseLeft} Instrument properties\n{MouseRight} Delete instrument - {Drag} Replace instrument";
+                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{MouseLeft} Instrument properties\n{MouseRight} Delete instrument - {MouseLeft} {Drag} Replace instrument";
                     }
                     else
                     {
                         if (subButtonType == SubButtonType.DPCM)
                             tooltip = "{MouseLeft} Edit DPCM samples";
                         else if (subButtonType < SubButtonType.EnvelopeMax)
-                            tooltip = $"{{MouseLeft}} Edit {Envelope.EnvelopeNames[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{Drag}} Copy envelope";
+                            tooltip = $"{{MouseLeft}} Edit {Envelope.EnvelopeNames[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{MouseLeft}} {{Drag}} Copy envelope";
                     }
                 }
             }
@@ -842,7 +842,7 @@ namespace FamiStudio
             {
                 if (captureOperation == CaptureOperation.MoveSlider)
                 {
-                    UpdateSliderValue(sliderDragButton, e);
+                    UpdateSliderValue(sliderDragButton, e, false);
                     ConditionalInvalidate();
                 }
             }
@@ -992,7 +992,7 @@ namespace FamiStudio
             base.OnResize(e);
         }
 
-        bool UpdateSliderValue(Button button, MouseEventArgs e)
+        bool UpdateSliderValue(Button button, MouseEventArgs e, bool mustBeInside)
         {
             var buttonIdx = buttons.IndexOf(button);
             Debug.Assert(buttonIdx >= 0);
@@ -1002,6 +1002,14 @@ namespace FamiStudio
             var actualWidth = Width - scrollBarSizeX;
             var buttonX = e.X;
             var buttonY = e.Y + scrollY - buttonIdx * buttonSizeY;
+
+            bool insideSlider = (buttonX > (actualWidth - sliderPosX) &&
+                                 buttonX < (actualWidth - sliderPosX + sliderSizeX) &&
+                                 buttonY > (sliderPosY) &&
+                                 buttonY < (sliderPosY + sliderSizeY));
+
+            if (mustBeInside && !insideSlider)
+                return false;
 
             var paramVal = button.instrument.GetRealTimeParamValue(button.instrumentParam);
             var paramMin = Instrument.GetRealTimeParamMinValue(button.instrumentParam);
@@ -1021,10 +1029,7 @@ namespace FamiStudio
 
             button.instrument.SetRealTimeParamValue(button.instrumentParam, paramVal);
 
-            return (buttonX > (actualWidth - sliderPosX) &&
-                    buttonX < (actualWidth - sliderPosX + sliderSizeX) &&
-                    buttonY > (sliderPosY) &&
-                    buttonY < (sliderPosY + sliderSizeY));
+            return insideSlider;
         }
 
         private void ImportSong()
@@ -1265,13 +1270,17 @@ namespace FamiStudio
                     }
                     else if (button.type == ButtonType.ParamSlider)
                     {
-                        if (UpdateSliderValue(button, e))
-                        {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, selectedInstrument.Id);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, selectedInstrument.Id);
 
+                        if (UpdateSliderValue(button, e, true))
+                        {
                             sliderDragButton = button;
                             StartCaptureOperation(e, CaptureOperation.MoveSlider);
                             ConditionalInvalidate();
+                        }
+                        else
+                        {
+                            App.UndoRedoManager.AbortTransaction();
                         }
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
