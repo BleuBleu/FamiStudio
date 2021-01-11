@@ -90,7 +90,7 @@ namespace FamiStudio
         public static RenderFont FontBigUnscaled              => Fonts[(int)RenderFontStyle.BigUnscaled];
         public static RenderFont FontHuge                     => Fonts[(int)RenderFontStyle.Huge];
 
-        public static Color DarkGreyLineColor1    = Color.FromArgb(  0,   0,   0);
+        public static Color DarkGreyLineColor1    = Color.FromArgb( 25,  28,  31);
         public static Color DarkGreyLineColor2    = Color.FromArgb( 33,  37,  41);
         public static Color DarkGreyLineColor3    = Color.FromArgb( 38,  42,  46);
         public static Color DarkGreyFillColor1    = Color.FromArgb( 42,  48,  51);

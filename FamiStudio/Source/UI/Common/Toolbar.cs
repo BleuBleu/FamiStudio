@@ -132,7 +132,7 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
-            toolbarBrush = g.CreateHorizontalGradientBrush(0, 81, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
+            toolbarBrush = g.CreateVerticalGradientBrush(0, Height, ThemeBase.DarkGreyFillColor2, ThemeBase.DarkGreyFillColor1);
             warningBrush = g.CreateSolidBrush(ThemeBase.Darken(ThemeBase.CustomColors[0, 0]));
 
             bmpLoopNone    = g.CreateBitmapFromResource("LoopNone");
@@ -555,10 +555,10 @@ namespace FamiStudio
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            var timeCodeColor = App.IsRecording ? theme.DarkRedFillBrush2 : theme.DarkGreyFillBrush1;
-            var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush1;
+            var timeCodeColor = App.IsRecording ? theme.DarkRedFillBrush2 : theme.BlackBrush;
+            var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush2;
 
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.BlackBrush);
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.LightGreyFillBrush2);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -611,7 +611,7 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
             var message = tooltip;
-            var messageBrush = theme.BlackBrush;
+            var messageBrush = theme.LightGreyFillBrush2;
             var messageFont = ThemeBase.FontMedium;
             var messageFontCenter = ThemeBase.FontMediumCenter;
 

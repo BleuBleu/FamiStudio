@@ -332,7 +332,7 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            g.Clear(ThemeBase.DarkGreyFillColor1);
+            g.Clear(ThemeBase.DarkGreyLineColor2);
 
             var seekX = noteSizeX * App.CurrentFrame - scrollX;
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
@@ -341,7 +341,7 @@ namespace FamiStudio
             var maxVisiblePattern = Utils.Clamp(Song.FindPatternInstanceIndex(maxVisibleNoteIdx, out _) + 1, 0, Song.Length);
 
             // Track name background
-            g.FillRectangle(0, 0, trackNameSizeX, Height, whiteKeyBrush);
+            g.FillRectangle(0, 0, trackNameSizeX, Height, theme.DarkGreyFillBrush1); 
 
             if (IsSelectionValid() && fullColumnSelection)
             {
@@ -357,7 +357,7 @@ namespace FamiStudio
 
             // Header
             g.DrawLine(0, 0, Width, 0, theme.BlackBrush);
-            g.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, headerSizeY, theme.DarkGreyLineBrush1);
+            g.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, headerSizeY, theme.BlackBrush);
             g.PushTranslation(trackNameSizeX, 0);
             g.PushClip(0, 0, Width, Height);
 
@@ -366,7 +366,7 @@ namespace FamiStudio
                 if (i != 0)
                 {
                     var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) - scrollX;
-                    g.DrawLine(px, 0, px, Height, theme.DarkGreyLineBrush1);
+                    g.DrawLine(px, 0, px, Height, theme.BlackBrush);
                 }
             }
 
@@ -389,7 +389,10 @@ namespace FamiStudio
                 g.PopClip();
 
                 if (i == Song.LoopPoint)
+                {
+                    g.FillRectangle(headerIconPosX, headerIconPosY, headerIconPosX + bmpLoopPoint.Size.Width, headerIconPosY + bmpLoopPoint.Size.Height, theme.DarkGreyLineBrush2);
                     g.DrawBitmap(bmpLoopPoint, headerIconPosX, headerIconPosY);
+                }
 
                 g.PopTransform();
             }
@@ -409,14 +412,14 @@ namespace FamiStudio
 
             // Track names
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
-                g.DrawText(Song.Channels[i].Name, i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium, trackNamePosX, y + trackNamePosY, theme.BlackBrush);
+                g.DrawText(Song.Channels[i].Name, i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium, trackNamePosX, y + trackNamePosY, theme.LightGreyFillBrush2);
 
             // Ghost note icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
                 g.DrawBitmap(bmpGhostNote, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
 
             // Vertical line seperating the track labels.
-            g.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, theme.DarkGreyLineBrush1);
+            g.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, theme.BlackBrush);
 
             // Grey background rectangles ever other pattern + vertical lines 
             g.PushClip(trackNameSizeX, 0, Width, Height);
@@ -427,7 +430,7 @@ namespace FamiStudio
                 {
                     var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) - scrollX;
                     var sx = (int)(Song.GetPatternLength(i) * noteSizeX);
-                    g.FillRectangle(px, 0, px + sx, Height, theme.DarkGreyFillBrush2);
+                    g.FillRectangle(px, 0, px + sx, Height, theme.DarkGreyFillBrush1);
                 }
             }
             for (int i = minVisiblePattern; i <= maxVisiblePattern; i++)
@@ -435,7 +438,7 @@ namespace FamiStudio
                 if (i != 0)
                 {
                     var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) - scrollX;
-                    g.DrawLine(px, 0, px, Height, theme.DarkGreyLineBrush1);
+                    g.DrawLine(px, 0, px, Height, theme.BlackBrush);
                 }
             }
 
@@ -452,7 +455,7 @@ namespace FamiStudio
 
             // Horizontal lines
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
-                g.DrawLine(0, y, Width, y, theme.DarkGreyLineBrush1);
+                g.DrawLine(0, y, Width, y, theme.BlackBrush);
 
             g.PushClip(trackNameSizeX, 0, Width, Height);
 
@@ -475,7 +478,7 @@ namespace FamiStudio
 
                         g.PushTranslation(px, py);
                         g.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY - 1, 0.9f));
-                        g.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, theme.DarkGreyLineBrush1);
+                        g.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, theme.BlackBrush);
                         g.PushClip(0, 0, sx, trackSizeY);
                         g.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, bmp.Size.Height, 1.0f);
                         g.DrawText(pattern.Name, ThemeBase.FontSmall, patternNamePosX, patternNamePosY, theme.BlackBrush);
@@ -563,7 +566,7 @@ namespace FamiStudio
             g.PopClip();
             g.PopTransform();
 
-            g.DrawLine(0, Height - 1, Width, Height - 1, theme.DarkGreyLineBrush1);
+            g.DrawLine(0, Height - 1, Width, Height - 1, theme.BlackBrush);
         }
 
         public void NotifyPatternChange(Pattern pattern)

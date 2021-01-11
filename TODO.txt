@@ -45,7 +45,8 @@ FamiStudio 2.4.0
 - Try to preserve pattern names when copying.
 - Right click to select from anywhere? (Not just header) => Change tooltip.
 - Drag seek bar
-- Play keyboard from everywhere (not just record mode).
+x Full dark mode.
+x Play keyboard from everywhere (not just record mode).
 
 Linux notes
 ===========

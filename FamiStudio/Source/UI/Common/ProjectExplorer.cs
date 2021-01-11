@@ -234,8 +234,10 @@ namespace FamiStudio
             {
                 switch (type)
                 {
+                    case ButtonType.ProjectSettings:
                     case ButtonType.SongHeader:
-                    case ButtonType.InstrumentHeader: return ThemeBase.LightGreyFillColor2;
+                    case ButtonType.ArpeggioHeader:
+                    case ButtonType.InstrumentHeader: return ThemeBase.DarkGreyFillColor2;
                     case ButtonType.Song: return song.Color;
                     case ButtonType.Arpeggio: return arpeggio == null ? ThemeBase.LightGreyFillColor1 : arpeggio.Color;
                     case ButtonType.ParamCheckbox:
@@ -253,7 +255,6 @@ namespace FamiStudio
                 {
                     return ThemeBase.FontMediumBoldCenterEllipsis;
                 }
-                if (type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.ArpeggioHeader)
                 {
                     return ThemeBase.FontMediumBoldCenter;
                 }
@@ -266,6 +267,21 @@ namespace FamiStudio
                 else
                 {
                     return ThemeBase.FontMedium;
+                }
+            }
+
+            public RenderBrush GetTextColor(RenderTheme theme)
+            {
+                if (type == ButtonType.ProjectSettings ||
+                    type == ButtonType.SongHeader || 
+                    type == ButtonType.InstrumentHeader ||
+                    type == ButtonType.ArpeggioHeader)
+                {
+                    return theme.LightGreyFillBrush2;
+                }
+                else
+                {
+                    return theme.BlackBrush;
                 }
             }
 
@@ -505,7 +521,7 @@ namespace FamiStudio
             bmpButtonRight = g.CreateBitmapFromResource("ButtonRight");
             bmpSong = g.CreateBitmapFromResource("Music");
             bmpAdd = g.CreateBitmapFromResource("Add");
-            bmpDPCM = g.CreateBitmapFromResource("DPCM");
+            bmpDPCM = g.CreateBitmapFromResource("DPCMBlack");
             bmpLoadInstrument = g.CreateBitmapFromResource("InstrumentOpen");
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
         }
@@ -598,7 +614,7 @@ namespace FamiStudio
                     leftPadding = expandButtonSizeX;
                 }
 
-                g.DrawText(button.GetText(App.Project), button.GetFont(), icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, theme.BlackBrush, actualWidth - buttonTextNoIconPosX * 2);
+                g.DrawText(button.GetText(App.Project), button.GetFont(), icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, button.GetTextColor(theme), actualWidth - buttonTextNoIconPosX * 2);
 
                 if (icon != null)
                     g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY);

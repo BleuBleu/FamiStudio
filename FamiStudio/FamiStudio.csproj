@@ -335,6 +335,8 @@
     <EmbeddedResource Include="Resources\WaveTable.png" />
     <EmbeddedResource Include="Resources\QwertyPiano%402x.png" />
     <EmbeddedResource Include="Resources\QwertyPiano.png" />
+    <EmbeddedResource Include="Resources\DPCMBlack%402x.png" />
+    <EmbeddedResource Include="Resources\DPCMBlack.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -414,8 +416,6 @@
     <EmbeddedResource Include="Resources\Transform.png" />
     <EmbeddedResource Include="Resources\Duty%402x.png" />
     <EmbeddedResource Include="Resources\Duty.png" />
-    <EmbeddedResource Include="Resources\LengthSmallFill%402x.png" />
-    <EmbeddedResource Include="Resources\LengthSmallFill.png" />
     <EmbeddedResource Include="Resources\NTSC%402x.png" />
     <EmbeddedResource Include="Resources\NTSC.png" />
     <EmbeddedResource Include="Resources\PAL%402x.png" />

@@ -618,7 +618,7 @@ namespace FamiStudio
             selectionBgInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, ThemeBase.LightGreyFillColor1));
             selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
             attackBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.BlackColor));
-            iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, ThemeBase.LightGreyFillColor2));
+            iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, ThemeBase.DarkGreyLineColor2));
             dashedLineBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
@@ -838,21 +838,21 @@ namespace FamiStudio
                 {
                     g.PushTranslation(env.Loop * noteSizeX - scrollX, 0);
                     g.FillRectangle(0, 0, ((env.Release >= 0 ? env.Release : env.Length) - env.Loop) * noteSizeX, headerAndEffectSizeY, theme.DarkGreyFillBrush2);
-                    g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                    g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.BlackBrush);
                     g.DrawBitmap(bmpLoop, effectIconPosX + 1, effectIconPosY);
                     g.PopTransform();
                 }
                 if (env.Release >= 0)
                 {
                     g.PushTranslation(env.Release * noteSizeX - scrollX, 0);
-                    g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                    g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.BlackBrush);
                     g.DrawBitmap(bmpRelease, effectIconPosX + 1, effectIconPosY);
                     g.PopTransform();
                 }
                 if (env.Length > 0)
                 {
                     g.PushTranslation(env.Length * noteSizeX - scrollX, 0);
-                    g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
+                    g.DrawLine(0, 0, 0, headerAndEffectSizeY, theme.BlackBrush);
                     g.PopTransform();
                 }
 
@@ -866,12 +866,12 @@ namespace FamiStudio
                 {
                     int x = n * noteSizeX - scrollX;
                     if (x != 0)
-                        g.DrawLine(x, 0, x, headerSizeY / 2, theme.DarkGreyLineBrush1, 1.0f);
+                        g.DrawLine(x, 0, x, headerSizeY / 2, theme.BlackBrush, 1.0f);
                     if (zoomLevel >= 1 && n != env.Length)
                         g.DrawText(n.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, theme.LightGreyFillBrush1, noteSizeX);
                 }
 
-                g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.DarkGreyLineBrush1);
+                g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.BlackBrush);
             }
             else if (editMode == EditionMode.Channel)
             {
@@ -895,7 +895,7 @@ namespace FamiStudio
                     var sx = Song.GetPatternLength(p) * noteSizeX;
                     int px = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
                     if (p != 0)
-                        g.DrawLine(px, 0, px, headerSizeY, theme.DarkGreyLineBrush1, 3.0f);
+                        g.DrawLine(px, 0, px, headerSizeY, theme.BlackBrush, 3.0f);
                     var pattern = Song.Channels[editChannel].PatternInstances[p];
                     g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, px, effectNamePosY, theme.LightGreyFillBrush1, sx);
                     if (pattern != null)
@@ -903,8 +903,8 @@ namespace FamiStudio
                 }
 
                 int maxX = Song.GetPatternStartNote(a.maxVisiblePattern) * noteSizeX - scrollX;
-                g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
-                g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.DarkGreyLineBrush1);
+                g.DrawLine(maxX, 0, maxX, Height, theme.BlackBrush, 3.0f);
+                g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.BlackBrush);
             }
 
             g.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, theme.BlackBrush);
@@ -928,7 +928,7 @@ namespace FamiStudio
         private void RenderEffectList(RenderGraphics g)
         {
             g.PushClip(0, 0, whiteKeySizeX, headerAndEffectSizeY);
-            g.FillRectangle(0, 0, whiteKeySizeX, Height, whiteKeyBrush);
+            g.FillRectangle(0, 0, whiteKeySizeX, Height, theme.DarkGreyFillBrush1);
             g.DrawLine(whiteKeySizeX - 1, 0, whiteKeySizeX - 1, headerAndEffectSizeY, theme.BlackBrush);
 
             // Effect icons
@@ -955,7 +955,7 @@ namespace FamiStudio
                         g.PushTranslation(0, effectButtonY);
                         g.DrawLine(0, -1, whiteKeySizeX, -1, theme.BlackBrush);
                         g.DrawBitmap(bmpEffects[effectIdx], effectIconPosX, effectIconPosY);
-                        g.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.BlackBrush);
+                        g.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? ThemeBase.FontSmallBold : ThemeBase.FontSmall, effectNamePosX, effectNamePosY, theme.LightGreyFillBrush2);
                         g.PopTransform();
                     }
 
@@ -1016,9 +1016,9 @@ namespace FamiStudio
 
                     int y = octaveBaseY - j * noteSizeY;
                     if (j == 0)
-                        g.DrawLine(0, y, whiteKeySizeX, y, theme.DarkGreyLineBrush1);
+                        g.DrawLine(0, y, whiteKeySizeX, y, theme.BlackBrush);
                     else if (j == 5)
-                        g.DrawLine(0, y, whiteKeySizeX, y, theme.DarkGreyLineBrush2);
+                        g.DrawLine(0, y, whiteKeySizeX, y, theme.BlackBrush);
                 }
 
                 if (editMode == EditionMode.Channel || editMode == EditionMode.DPCM)
@@ -1035,7 +1035,7 @@ namespace FamiStudio
                 }
             }
 
-            g.DrawLine(whiteKeySizeX - 1, 0, whiteKeySizeX - 1, Height, theme.DarkGreyLineBrush1);
+            g.DrawLine(whiteKeySizeX - 1, 0, whiteKeySizeX - 1, Height, theme.BlackBrush);
 
             g.PopClip();
             g.PopTransform();
@@ -1145,8 +1145,8 @@ namespace FamiStudio
                             }
                         }
 
-                        g.DrawLine(x, 0, x, headerAndEffectSizeY, theme.DarkGreyLineBrush1);
-                        g.DrawLine(0, headerAndEffectSizeY - 1, Width, headerAndEffectSizeY - 1, theme.DarkGreyLineBrush1);
+                        g.DrawLine(x, 0, x, headerAndEffectSizeY, theme.BlackBrush);
+                        g.DrawLine(0, headerAndEffectSizeY - 1, Width, headerAndEffectSizeY - 1, theme.BlackBrush);
                     }
                 }
 
@@ -1154,11 +1154,11 @@ namespace FamiStudio
                 for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                 {
                     int x = Song.GetPatternStartNote(p) * noteSizeX - scrollX;
-                    if (p != 0) g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, 3.0f);
+                    if (p != 0) g.DrawLine(x, 0, x, Height, theme.BlackBrush, 3.0f);
                 }
 
                 int maxX = Song.GetPatternStartNote(a.maxVisiblePattern) * noteSizeX - scrollX;
-                g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
+                g.DrawLine(maxX, 0, maxX, Height, theme.BlackBrush, 3.0f);
 
                 int seekX = App.CurrentFrame * noteSizeX - scrollX;
                 g.DrawLine(seekX, 0, seekX, effectPanelSizeY, GetSeekBarBrush(), 3);
@@ -1521,7 +1521,7 @@ namespace FamiStudio
 
             g.PushTranslation(whiteKeySizeX, headerAndEffectSizeY);
             g.PushClip(0, 0, Width, Height);
-            g.Clear(ThemeBase.DarkGreyFillColor2);
+            g.Clear(ThemeBase.DarkGreyLineColor2);
 
             if (editMode == EditionMode.Channel ||
                 editMode == EditionMode.VideoRecording ||
@@ -1537,10 +1537,10 @@ namespace FamiStudio
                     for (int j = 0; j < 12; j++)
                     {
                         int y = octaveBaseY - j * noteSizeY;
-                        if (IsBlackKey(j))
+                        if (!IsBlackKey(j))
                             g.FillRectangle(0, y - noteSizeY, maxX, y, theme.DarkGreyFillBrush1);
                         if (i * 12 + j != numNotes)
-                            g.DrawLine(0, y, maxX, y, theme.DarkGreyLineBrush2);
+                            g.DrawLine(0, y, maxX, y, theme.BlackBrush);
                     }
                 }
 
@@ -1564,9 +1564,9 @@ namespace FamiStudio
                                 int x = (song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
 
                                 if (i % beatLength == 0)
-                                    g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, i == 0 ? 3.0f : 1.0f);
+                                    g.DrawLine(x, 0, x, Height, theme.BlackBrush, i == 0 ? 3.0f : 1.0f);
                                 else if (i % noteLength == 0)
-                                    g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush2);
+                                    g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1);
                                 else if (zoomLevel >= DrawFrameZoomLevel)
                                     g.DrawLine(x, 0, x, Height, dashedLineBrush /*theme.DarkGreyLineBrush3*/);
                             }
@@ -1578,14 +1578,14 @@ namespace FamiStudio
                                 int x = (song.GetPatternStartNote(p) + i) * noteSizeX - scrollX;
 
                                 if (i % beatLength == 0)
-                                    g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1, i == 0 ? 3.0f : 1.0f);
+                                    g.DrawLine(x, 0, x, Height, theme.BlackBrush, i == 0 ? 3.0f : 1.0f);
                                 else if (zoomLevel >= -1)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush2);
                             }
                         }
                     }
 
-                    g.DrawLine(maxX, 0, maxX, Height, theme.DarkGreyLineBrush1, 3.0f);
+                    g.DrawLine(maxX, 0, maxX, Height, theme.BlackBrush, 3.0f);
 
                     if (editMode != EditionMode.VideoRecording)
                     {
@@ -1662,8 +1662,8 @@ namespace FamiStudio
 
                                                 int iconX = channel.Song.GetPatternStartNote(p1, i1) * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2 - scrollX;
                                                 int iconY = effectPosY + effectIconPosY;
-                                                g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, drawOpaque ? theme.LightGreyFillBrush2 : iconTransparentBrush);
-                                                g.DrawBitmap(bmpEffects[fx], iconX, iconY, 1.0f);
+                                                g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.DarkGreyLineBrush2);
+                                                g.DrawBitmap(bmpEffects[fx], iconX, iconY, drawOpaque ? 1.0f : 0.4f);
                                                 effectPosY += effectIconSizeX + effectIconPosY + 1;
                                             }
                                         }
@@ -1793,7 +1793,7 @@ namespace FamiStudio
                 {
                     var value = i - 64;
                     var y = (virtualSizeY - envelopeSizeY * i) - scrollY;
-                    g.DrawLine(0, y, env.Length * noteSizeX - scrollX, y, theme.DarkGreyLineBrush2, (value % spacing) == 0 ? 3 : 1);
+                    g.DrawLine(0, y, env.Length * noteSizeX - scrollX, y, theme.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
                 }
 
                 DrawSelectionRect(g, Height);
@@ -1802,15 +1802,15 @@ namespace FamiStudio
                 for (int b = 0; b < env.Length; b++)
                 {
                     int x = b * noteSizeX - scrollX;
-                    if (b != 0) g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush2);
+                    if (b != 0) g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1);
                 }
 
                 if (env.Loop >= 0)
-                    g.DrawLine(env.Loop * noteSizeX - scrollX, 0, env.Loop * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
+                    g.DrawLine(env.Loop * noteSizeX - scrollX, 0, env.Loop * noteSizeX - scrollX, Height, theme.BlackBrush);
                 if (env.Release >= 0)
-                    g.DrawLine(env.Release * noteSizeX - scrollX, 0, env.Release * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
+                    g.DrawLine(env.Release * noteSizeX - scrollX, 0, env.Release * noteSizeX - scrollX, Height, theme.BlackBrush);
                 if (env.Length > 0)
-                    g.DrawLine(env.Length * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, Height, theme.DarkGreyLineBrush1);
+                    g.DrawLine(env.Length * noteSizeX - scrollX, 0, env.Length * noteSizeX - scrollX, Height, theme.BlackBrush);
 
                 if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && editEnvelope < Envelope.RegularCount)
                 {
