@@ -255,6 +255,7 @@ namespace FamiStudio
                 {
                     return ThemeBase.FontMediumBoldCenterEllipsis;
                 }
+                else if (type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.ArpeggioHeader)
                 {
                     return ThemeBase.FontMediumBoldCenter;
                 }
