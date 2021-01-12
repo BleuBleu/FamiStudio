@@ -1154,6 +1154,20 @@ namespace FamiStudio
                 }
             }
 
+            // Empty arpeggios confuses the exporter.
+            for (int i = 0; i < project.Arpeggios.Count; )
+            {
+                var arp = project.Arpeggios[i];
+                if (arp.Envelope.IsEmpty)
+                {
+                    project.DeleteArpeggio(arp);
+                }
+                else
+                {
+                    i++;
+                }
+            }
+
             // Remove releases in envelopes + expansion audio for FamiTone2.
             if (kernel == FamiToneKernel.FamiTone2)
             {
