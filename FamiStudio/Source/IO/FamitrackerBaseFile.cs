@@ -379,7 +379,7 @@ namespace FamiStudio
 
         private string GetPatternString(Pattern pattern, int n)
         {
-            return $"(Channel={Channel.ChannelNames[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n})";
+            return $"(Channel={Channel.ChannelNames[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n:X2})";
         }
 
         private int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
@@ -741,6 +741,10 @@ namespace FamiStudio
                                             nextNote.HasAttack = false;
                                             it.Resync();
                                         }
+                                        else if (nextNote != null && nextNote.IsRelease)
+                                        {
+                                            Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nn)}");
+                                        }
                                     }
 
                                     // 3xx, Qxx and Rxx stops when its done.
@@ -771,6 +775,10 @@ namespace FamiStudio
                                         nextNote.Value = (byte)newNote;
                                         nextNote.HasAttack = false;
                                         it.Resync();
+                                    }
+                                    else if (nextNote != null && nextNote.IsRelease)
+                                    {
+                                        Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nn)}");
                                     }
                                 }
                             }
