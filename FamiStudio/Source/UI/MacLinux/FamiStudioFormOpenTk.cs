@@ -90,12 +90,14 @@ namespace FamiStudio
             this.VSync = VSyncMode.On;
             this.famistudio = famistudio;
 
-            controls = new FamiStudioControls(this);
-
+            // Must be called before creating the FamiStudio controls
+            // since this is where we detect the desktop scaling.
             MacUtils.Initialize(WindowInfo.Handle);
 
-            // There are some severe maximize bugs in OpenTK. Simply disable the maximize and bypass all the frame zooming thing.
-            WindowShouldZoomToFrameHandler = WindowShouldZoomToFrame;
+			controls = new FamiStudioControls(this);
+
+			// There are some severe maximize bugs in OpenTK. Simply disable the maximize and bypass all the frame zooming thing.
+			WindowShouldZoomToFrameHandler = WindowShouldZoomToFrame;
             ResetCursorRectsHandler = ResetCursorRects;
 
             MacUtils.RemoveMaximizeButton(WindowInfo.Handle);
