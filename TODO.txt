@@ -33,19 +33,6 @@ Is #00 necessary???
 #xx - Using the sound engine in your Homebrew game.
 #xx - Command line processing (ex: export a FamiTracker file to mp3).
 
-FamiStudio 2.3.2 (if any issues)
-================================
-x Change the copyright year. 
-x Bug playback studX
-x Crash studX.
-x Bug changing VRC7 paremeters. 
-x Crash backup.ftm
-x Version check on FamiStudio files (BarLength/BeatLength for 2.2.x).
-x Video loop count
-x Retina slide note scaling issue
-- VRC7 background noise? 
-	- Recompile NesSndEmu on all platforms.
-
 Linux notes
 ===========
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe
