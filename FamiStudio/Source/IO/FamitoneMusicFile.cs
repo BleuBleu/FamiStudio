@@ -700,6 +700,11 @@ namespace FamiStudio
                         // to a section where the instrument was set from a previous pattern.
                         instrument = null;
                         arpeggio = null;
+
+                        // If this channel potentially uses any arpeggios, clear the override since the last
+                        // note may have overridden it. TODO: Actually check if thats the case!
+                        if (channel.UsesArpeggios)
+                            patternBuffer.Add($"${0x66:x2}");
                     }
 
                     if (isSpeedChannel && project.UsesFamiStudioTempo)
