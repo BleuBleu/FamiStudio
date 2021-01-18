@@ -56,9 +56,17 @@ void Nes_Vrc7::enable_channel(int idx, bool enabled)
 	if (opll)
 	{
 		if (enabled)
+		{
 			OPLL_setMask(opll, opll->mask & ~(1 << idx));
+		}
 		else
+		{
 			OPLL_setMask(opll, opll->mask |  (1 << idx));
+			
+			// The mask only stops updating the channel, whatever was left in 
+			// the output buffer remains and creates noise.
+			opll->ch_out[idx] = 0; 
+		}
 	}
 }
 

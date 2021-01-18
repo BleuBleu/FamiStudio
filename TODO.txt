@@ -42,6 +42,9 @@ x Bug changing VRC7 paremeters.
 x Crash backup.ftm
 x Version check on FamiStudio files (BarLength/BeatLength for 2.2.x).
 x Video loop count
+x Retina slide note scaling issue
+- VRC7 background noise? 
+	- Recompile NesSndEmu on all platforms.
 
 Linux notes
 ===========
