@@ -16,7 +16,7 @@ namespace FamiStudio
         void Serialize(ref uint b);
         void Serialize(ref ulong b);
         void Serialize(ref float b);
-        void Serialize(ref System.Drawing.Color b);
+        void Serialize(ref System.Drawing.Color b, bool forceThemeColor = true);
         void Serialize(ref string b);
         void Serialize(ref byte[] values);
         void Serialize(ref sbyte[] values);
@@ -106,7 +106,7 @@ namespace FamiStudio
             idx += sizeof(float);
         }
 
-        public void Serialize(ref System.Drawing.Color b)
+        public void Serialize(ref System.Drawing.Color b, bool forceThemeColor = true)
         {
             int argb = b.ToArgb();
             Serialize(ref argb);
@@ -272,11 +272,14 @@ namespace FamiStudio
             idx += sizeof(float);
         }
 
-        public void Serialize(ref System.Drawing.Color b)
+        public void Serialize(ref System.Drawing.Color c, bool forceThemeColor = true)
         {
             int argb = 0;
             Serialize(ref argb);
-            b = System.Drawing.Color.FromArgb(argb);
+            c = System.Drawing.Color.FromArgb(argb);
+
+            if (forceThemeColor)
+                ThemeBase.EnforceThemeColor(ref c);
         }
 
         public void Serialize(ref string str)
@@ -426,7 +429,7 @@ namespace FamiStudio
             crc = CRC32.Compute(BitConverter.GetBytes(f), crc);
         }
 
-        public void Serialize(ref System.Drawing.Color b)
+        public void Serialize(ref System.Drawing.Color b, bool forceThemeColor = true)
         {
             // Ignore colors for CRC
         }

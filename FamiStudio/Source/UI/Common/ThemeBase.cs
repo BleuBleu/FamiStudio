@@ -194,6 +194,20 @@ namespace FamiStudio
             }
         }
 
+        public static void EnforceThemeColor(ref Color color)
+        {
+            for (int j = 0; j < CustomColors.GetLength(1); j++)
+            {
+                for (int i = 0; i < CustomColors.GetLength(0); i++)
+                {
+                    if (CustomColors[i, j] == color)
+                        return;
+                }
+            }
+
+            color = RandomCustomColor();
+        }
+
         public virtual void InitializeForGraphics(RenderGraphics g)
         {
             whiteBrush = g.CreateSolidBrush(WhiteColor);
