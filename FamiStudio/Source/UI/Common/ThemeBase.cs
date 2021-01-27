@@ -164,9 +164,9 @@ namespace FamiStudio
             },
             {
                 Color.FromArgb(unchecked((int)0xff795548)),
-                Color.FromArgb(unchecked((int)0xff607d8b)),
-                Color.FromArgb(unchecked((int)0xff767d8a)), // LightGreyFillColor1
-                Color.FromArgb(unchecked((int)0xffc6cdda))  // LightGreyFillColor2
+                Color.FromArgb(unchecked((int)0xff476ba1)),
+                Color.FromArgb(unchecked((int)0xff4fad88)),
+                Color.FromArgb(unchecked((int)0xffc791d6))
             }
         };
 
