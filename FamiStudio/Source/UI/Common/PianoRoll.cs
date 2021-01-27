@@ -330,6 +330,9 @@ namespace FamiStudio
         {
             var scaling = overrideScale > 0.0f ? overrideScale : RenderTheme.MainWindowScaling;
 
+            minZoomLevel = MinZoomLevel;
+            maxZoomLevel = editMode == EditionMode.DPCM ? MaxWaveZoomLevel : MaxZoomLevel;
+            zoomLevel = Utils.Clamp(zoomLevel, minZoomLevel, maxZoomLevel);
             numOctaves = DefaultNumOctaves;
             headerSizeY = (int)((editMode == EditionMode.DPCMMapping || editMode == EditionMode.DPCM || editMode == EditionMode.None ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2)) * DefaultHeaderSizeY * scaling);
             effectPanelSizeY = (int)(DefaultEffectPanelSizeY * scaling);
@@ -371,8 +374,6 @@ namespace FamiStudio
             barSizeX = noteSizeX * (Song == null ? 16 : Song.BeatLength);
             headerAndEffectSizeY = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
             noteTextPosY = scaling > 1 ? 0 : 1; // Pretty hacky.
-            minZoomLevel = MinZoomLevel;
-            maxZoomLevel = editMode == EditionMode.DPCM ? MaxWaveZoomLevel : MaxZoomLevel;
         }
 
         public void StartEditPattern(int trackIdx, int patternIdx)
@@ -525,6 +526,8 @@ namespace FamiStudio
                 zoomLevel--;
                 width /= 2;
             }
+
+            scrollX = 0;
         }
 
         private void CenterEnvelopeScroll(Envelope envelope, int envelopeType, Instrument instrument = null)
