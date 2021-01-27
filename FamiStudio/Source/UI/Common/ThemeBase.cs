@@ -154,11 +154,11 @@ namespace FamiStudio
                 Color.FromArgb(unchecked((int)0xff009688)),
                 Color.FromArgb(unchecked((int)0xff4caf50)),
                 Color.FromArgb(unchecked((int)0xff8bc34a)),
-                Color.FromArgb(unchecked((int)0xffcddc39))
+                Color.FromArgb(unchecked((int)0xffb9dc39))
             },
             {
-                Color.FromArgb(unchecked((int)0xffffeb3b)),
-                Color.FromArgb(unchecked((int)0xffffc107)),
+                Color.FromArgb(unchecked((int)0xfcbdc21)),
+                Color.FromArgb(unchecked((int)0xffffae07)),
                 Color.FromArgb(unchecked((int)0xffff9800)),
                 Color.FromArgb(unchecked((int)0xffff5722))
             },
