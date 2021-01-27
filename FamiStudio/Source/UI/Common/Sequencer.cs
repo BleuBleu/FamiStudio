@@ -270,7 +270,7 @@ namespace FamiStudio
             bmpDuplicateMove = g.CreateBitmapFromResource("DuplicateMove");
 
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
-            seekBarRecBrush = g.CreateSolidBrush(ThemeBase.DarkRedFillColor2);
+            seekBarRecBrush = g.CreateSolidBrush(ThemeBase.DarkRedFillColor);
             pianoRollViewRectBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("YellowChecker"), true, true);
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, trackNameSizeX, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             patternHeaderBrush = g.CreateVerticalGradientBrush(0, patternHeaderSizeY, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
@@ -278,11 +278,11 @@ namespace FamiStudio
             selectedPatternInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(32, ThemeBase.LightGreyFillColor1));
             dashedLineVerticalBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
 
-            seekGeometry = g.CreateConvexPath(new[]
+            seekGeometry = g.CreateGeometry(new float[,]
             {
-                new Point(-headerSizeY / 2, 1),
-                new Point(0, headerSizeY - 2),
-                new Point( headerSizeY / 2, 1)
+                { -headerSizeY / 2, 1 },
+                { 0, headerSizeY - 2 },
+                { headerSizeY / 2, 1 }
             });
         }
 
@@ -398,7 +398,7 @@ namespace FamiStudio
             }
 
             g.PushTranslation(seekX, 0);
-            g.FillAndDrawConvexPath(seekGeometry, GetSeekBarBrush(), theme.BlackBrush);
+            g.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), theme.BlackBrush);
             g.PopTransform();
 
             g.PopClip();
@@ -575,11 +575,22 @@ namespace FamiStudio
                 patternBitmapCache.Remove(pattern.Id);
         }
 
-        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, float scaleY, uint[] data)
+        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, float scaleY, bool dpcm, uint[] data)
         {
             var y = Math.Min((int)Math.Round((note.Value - minNote) / (float)(maxNote - minNote) * scaleY * patternSizeY), patternSizeY - noteSizeY);
             var instrument = note.Instrument;
-            var color = instrument == null ? ThemeBase.LightGreyFillColor1 : instrument.Color;
+
+            var color = ThemeBase.LightGreyFillColor1;
+            if (dpcm)
+            {
+                var mapping = App.Project.GetDPCMMapping(note.Value);
+                if (mapping != null && mapping.Sample != null)
+                    color = mapping.Sample.Color;
+            }
+            else if (instrument != null)
+            {
+                color = instrument.Color;
+            }
 
             for (int j = 0; j < noteSizeY; j++)
                 for (int x = t0; x < t1; x++)
@@ -634,7 +645,7 @@ namespace FamiStudio
                     if (note.IsMusical || note.IsStop)
                     {
                         if (lastValid != null && lastValid.IsValid)
-                            DrawPatternBitmapNote(lastTime, kv.Key, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, data);
+                            DrawPatternBitmapNote(lastTime, kv.Key, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, p.ChannelType == Channel.Dpcm, data);
 
                         lastTime  = kv.Key;
                         lastValid = note.IsStop ? null : note;
@@ -642,7 +653,7 @@ namespace FamiStudio
                 }
 
                 if (lastValid != null && lastValid.IsValid)
-                    DrawPatternBitmapNote(lastTime, patternLen, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, data);
+                    DrawPatternBitmapNote(lastTime, patternLen, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, p.ChannelType == Channel.Dpcm, data);
             }
 
             bmp = g.CreateBitmap(patternSizeX, patternSizeY, data);

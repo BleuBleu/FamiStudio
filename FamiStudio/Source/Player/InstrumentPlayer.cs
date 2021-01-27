@@ -167,5 +167,17 @@ namespace FamiStudio
             audioStream.Stop();
             while (sampleQueue.TryDequeue(out _)) ;
         }
+
+        public void PlayRawPcmSample(short[] data, int sampleRate)
+        {
+            audioStream.PlayImmediate(data, sampleRate);
+        }
+
+        public void StopRawPcmSample()
+        {
+            audioStream.StopImmediate();
+        }
+
+        public int RawPcmSamplePlayPosition => audioStream.ImmediatePlayPosition;
     }
 }

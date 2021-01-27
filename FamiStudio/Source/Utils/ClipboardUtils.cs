@@ -228,7 +228,7 @@ namespace FamiStudio
                 mapping.SerializeState(serializer);
 
                 var sampleName = mapping.Sample.Name;
-                var sampleData = mapping.Sample.Data;
+                var sampleData = mapping.Sample.ProcessedData;
 
                 serializer.Serialize(ref sampleName);
                 serializer.Serialize(ref sampleData);

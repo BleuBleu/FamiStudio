@@ -37,6 +37,19 @@ namespace FamiStudio
             return (x < 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
         }
 
+        public static float Frac(float x)
+        {
+            return x - (int)x;
+        }
+
+        public static int IntegerPow(int x, int y)
+        {
+            int result = 1;
+            for (long i = 0; i < y; i++)
+                result *= x;
+            return result;
+        }
+
         public static int NumDecimalDigits(int n)
         {
             int digits = 1;

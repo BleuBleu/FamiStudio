@@ -10,14 +10,12 @@ using System.IO;
 #if FAMISTUDIO_WINDOWS
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DOffscreenGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
-    using RenderPath     = FamiStudio.GLConvexPath;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLOffscreenGraphics;
     using RenderTheme    = FamiStudio.GLTheme;

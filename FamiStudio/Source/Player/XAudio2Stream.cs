@@ -13,6 +13,8 @@ namespace FamiStudio
     {
         private XAudio2 xaudio2;
         private MasteringVoice masteringVoice;
+
+        // Regular voice for streaming NES audio data.
         private WaveFormat waveFormat;
         private SourceVoice sourceVoice;
         private AudioBuffer[] audioBuffersRing;
@@ -22,15 +24,21 @@ namespace FamiStudio
         private GetBufferDataCallback bufferFill;
         private Task playingTask;
 
+        // Immediate voice for playing raw PCM data (used by DPCM editor).
+        private SourceVoice immediateVoice;
+        private AudioBuffer immediateAudioBuffer;
+        private bool immediateDonePlaying;
+        private readonly object immediateLock = new object();
+
         public delegate short[] GetBufferDataCallback();
 
-        public XAudio2Stream(int rate, int channels, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public XAudio2Stream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             xaudio2 = new XAudio2();
             //xaudio2 = new XAudio2(XAudio2Version.Version27); // To simulate Windows 7 behavior.
             //xaudio2.CriticalError += Xaudio2_CriticalError;
             masteringVoice = new MasteringVoice(xaudio2);
-            waveFormat = new WaveFormat(rate, 16, channels);
+            waveFormat = new WaveFormat(rate, 16, 1);
             audioBuffersRing = new AudioBuffer[numBuffers];
             memBuffers = new DataPointer[audioBuffersRing.Length];
 
@@ -102,6 +110,7 @@ namespace FamiStudio
         public void Dispose()
         {
             Stop();
+            StopImmediate();
 
             for (int i = 0; i < audioBuffersRing.Length; i++)
             {
@@ -146,6 +155,65 @@ namespace FamiStudio
                 sourceVoice.SubmitSourceBuffer(audioBuffersRing[nextBuffer], null);
 
                 nextBuffer = ++nextBuffer % audioBuffersRing.Length;
+            }
+        }
+
+        public void PlayImmediate(short[] data, int sampleRate)
+        {
+            StopImmediate();
+
+            immediateDonePlaying = false;
+
+            immediateAudioBuffer = new AudioBuffer();
+            immediateAudioBuffer.AudioDataPointer = Utilities.AllocateMemory(data.Length * sizeof(short));
+            immediateAudioBuffer.AudioBytes = data.Length * sizeof(short);
+            Marshal.Copy(data, 0, immediateAudioBuffer.AudioDataPointer, data.Length);
+
+            var waveFormat = new WaveFormat(sampleRate, 16, 1);
+
+            immediateVoice = new SourceVoice(xaudio2, waveFormat);
+            immediateVoice.BufferEnd += ImmediateVoice_BufferEnd;
+            immediateVoice.SubmitSourceBuffer(immediateAudioBuffer, null);
+            immediateVoice.Start();
+        }
+
+        public void StopImmediate()
+        {
+            if (immediateVoice != null)
+            {
+                immediateVoice.Stop();
+                immediateVoice.FlushSourceBuffers();
+                immediateVoice.BufferEnd -= ImmediateVoice_BufferEnd;
+                immediateVoice.DestroyVoice();
+                immediateVoice.Dispose();
+                immediateVoice = null;
+
+                Utilities.FreeMemory(immediateAudioBuffer.AudioDataPointer);
+                immediateAudioBuffer = null;
+                immediateDonePlaying = true;
+            }
+        }
+
+        private void ImmediateVoice_BufferEnd(IntPtr obj)
+        {
+            immediateDonePlaying = true;
+        }
+
+        public int ImmediatePlayPosition
+        {
+            get
+            {
+                lock (immediateLock)
+                {
+                    if (immediateVoice != null && !immediateDonePlaying)
+                    {
+                        return (int)immediateVoice.State.SamplesPlayed;
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }
             }
         }
     }

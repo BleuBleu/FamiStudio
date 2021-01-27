@@ -10,11 +10,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FamiStudio", "FamiStudio\Fa
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{73FE63B6-BCB4-4A20-BF03-D49E722FA3C4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NesSndEmu", "NesSndEmu\SndEmu.vcxproj", "{CE0D60E2-1356-4531-825F-A159850FB9D5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NesSndEmu", "ThirdParty\NesSndEmu\SndEmu.vcxproj", "{CE0D60E2-1356-4531-825F-A159850FB9D5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NotSoFatso", "NotSoFatso\NotSoFatso.vcxproj", "{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NotSoFatso", "ThirdParty\NotSoFatso\NotSoFatso.vcxproj", "{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShineMp3", "ShineMp3\ShineMp3.vcxproj", "{86110C9F-8D3F-4BDE-8B99-D98952288A5D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShineMp3", "ThirdParty\ShineMp3\ShineMp3.vcxproj", "{86110C9F-8D3F-4BDE-8B99-D98952288A5D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,17 +56,12 @@ Global
 		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|Any CPU.ActiveCfg = Release|Win32
 		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|x64.ActiveCfg = Release|Win32
 		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|x86.ActiveCfg = Release|Win32
-		{23F5A2AC-7A19-4FFF-98DD-06C61437D3D3}.Release|x86.Build.0 = Release|Win32
 		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Debug|x64.ActiveCfg = Debug|x64
-		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Debug|x64.Build.0 = Debug|x64
 		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Debug|x86.ActiveCfg = Debug|Win32
-		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Debug|x86.Build.0 = Debug|Win32
 		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Release|Any CPU.ActiveCfg = Release|Win32
 		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Release|x64.ActiveCfg = Release|x64
-		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Release|x64.Build.0 = Release|x64
 		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Release|x86.ActiveCfg = Release|Win32
-		{86110C9F-8D3F-4BDE-8B99-D98952288A5D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

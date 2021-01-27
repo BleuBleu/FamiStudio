@@ -98,7 +98,7 @@ namespace FamiStudio
         private static int refCount = 0;
         private PaStreamCallback streamCallback;
 
-        public PortAudioStream(int rate, int channels, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public PortAudioStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             if (refCount == 0)
             {

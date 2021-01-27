@@ -511,10 +511,22 @@ namespace FamiStudio
 
             if (channel.Type == Channel.Dpcm)
             {
-                var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0) - 1;
+                // Subtracting one here is not correct. But it is a fact that a lot of games
+                // seemed to favor tight sample packing and did not care about playing one
+                // extra sample of garbage.
+                var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0) - 1; // DPCMTODO : Review this!
 
                 if (len > 0) 
                 {
+                    //// If the length of the sample - 1 appears to by 64-byte aligned, we will 
+                    //// simply truncate the last byte. This is not correct as we effectively 
+                    //// lose 1 byte of data, but this avoid having to add many bytes of padding 
+                    //// between samples.
+                    //if (((len - 1) & 0x3f) == 0)
+                    //{
+                    //    len--;
+                    //}
+
                     var sampleData = new byte[len];
                     for (int i = 0; i < len; i++)
                         sampleData[i] = (byte)NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEDATA, i);

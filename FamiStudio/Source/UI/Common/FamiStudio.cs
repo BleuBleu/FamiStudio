@@ -33,6 +33,9 @@ namespace FamiStudio
         private int tutorialCounter = 3;
         private int baseRecordingOctave = 3;
         private int lastTickCurrentFrame = -1;
+        private int previewDPCMSampleId = -1;
+        private int previewDPCMSampleRate = 44100;
+        private bool previewDPCMIsSource = false;
         private Keys lastRecordingKeyDown = Keys.None; 
         private bool[] keyStates = new bool[256];
 #if FAMISTUDIO_WINDOWS
@@ -43,7 +46,7 @@ namespace FamiStudio
         private string newReleaseString = null;
         private string newReleaseUrl = null;
 
-        public bool RealTimeUpdate => songPlayer != null && songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || pianoRollScrollChanged;
+        public bool RealTimeUpdate => songPlayer != null && songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || PianoRoll.IsEditingDPCMSample || pianoRollScrollChanged;
         public bool IsPlaying => songPlayer != null && songPlayer.IsPlaying;
         public bool IsRecording => recordingMode;
         public bool IsQwertyPianoEnabled => qwertyPiano;
@@ -56,6 +59,11 @@ namespace FamiStudio
         public Song Song => song;
         public UndoRedoManager UndoRedoManager => undoRedoManager;
         public LoopMode LoopMode { get => songPlayer.Loop; set => songPlayer.Loop = value; }
+
+        public int  PreviewDPCMWavPosition => instrumentPlayer.RawPcmSamplePlayPosition;
+        public int  PreviewDPCMSampleId    => previewDPCMSampleId;
+        public bool PreviewDPCMIsSource    => previewDPCMIsSource;
+        public int  PreviewDPCMSampleRate  => previewDPCMSampleRate;
 
         public Toolbar ToolBar => mainForm.ToolBar;
         public Sequencer Sequencer => mainForm.Sequencer;
@@ -119,6 +127,7 @@ namespace FamiStudio
             Sequencer.PatternsPasted += PianoRoll_NotesPasted;
             PianoRoll.PatternChanged += pianoRoll_PatternChanged;
             PianoRoll.ManyPatternChanged += PianoRoll_ManyPatternChanged;
+            PianoRoll.DPCMSampleChanged += PianoRoll_DPCMSampleChanged;
             PianoRoll.EnvelopeChanged += pianoRoll_EnvelopeChanged;
             PianoRoll.ControlActivated += PianoRoll_ControlActivated;
             PianoRoll.NotesPasted += PianoRoll_NotesPasted;
@@ -137,6 +146,8 @@ namespace FamiStudio
             ProjectExplorer.ArpeggioColorChanged += ProjectExplorer_ArpeggioColorChanged;
             ProjectExplorer.ArpeggioDeleted += ProjectExplorer_ArpeggioDeleted;
             ProjectExplorer.ArpeggioDraggedOutside += ProjectExplorer_ArpeggioDraggedOutside;
+            ProjectExplorer.DPCMSampleEdited += ProjectExplorer_DPCMSampleEdited;
+            ProjectExplorer.DPCMSampleColorChanged += ProjectExplorer_DPCMSampleColorChanged;
 
             InitializeMidi();
             InitializeMultiMediaNotifications();
@@ -304,10 +315,10 @@ namespace FamiStudio
             ToolBar.DisplayWarning(msg, beep);
         }
 
-        private void UndoRedoManager_PreUndoRedo(TransactionScope scope)
+        private void UndoRedoManager_PreUndoRedo(TransactionScope scope, TransactionFlags flags)
         {
             // Special category for stuff that is so important, we should stop the song.
-            if (scope == TransactionScope.ProjectProperties)
+            if (flags.HasFlag(TransactionFlags.StopAudio))
             {
                 Stop();
                 StopInstrumentPlayer();
@@ -315,9 +326,9 @@ namespace FamiStudio
             }
         }
 
-        private void UndoRedoManager_PostUndoRedo(TransactionScope scope)
+        private void UndoRedoManager_PostUndoRedo(TransactionScope scope, TransactionFlags flags)
         {
-            if (scope == TransactionScope.ProjectProperties)
+            if (flags.HasFlag(TransactionFlags.StopAudio))
             {
                 palPlayback = project.PalMode;
                 StartInstrumentPlayer();
@@ -723,6 +734,40 @@ namespace FamiStudio
             instrumentPlayer.Start(project, palPlayback);
         }
 
+        public void PreviewDPCMSample(DPCMSample sample, bool source)
+        {
+            previewDPCMSampleId = sample.Id;
+            previewDPCMIsSource = source;
+
+            byte[] dmcData = null;
+            int    dmcRateIndex = 15;
+
+            if (source)
+            {
+                if (sample.SourceDataIsWav)
+                {
+                    previewDPCMSampleRate = sample.SourceWavData.SampleRate;
+                    instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate);
+                    return;
+                }
+                else
+                {
+                    dmcData = sample.SourceDmcData.Data;
+                }
+            }
+            else
+            {
+                dmcData = sample.ProcessedData;
+                dmcRateIndex = sample.PreviewRate;
+            }
+
+            previewDPCMSampleRate = (int)Math.Round(DPCMSample.DpcmSampleRatesNtsc[DPCMSample.DpcmSampleRatesNtsc.Length - 1]); // DPCMTODO : What about PAL?
+
+            var playRate = (int)Math.Round(DPCMSample.DpcmSampleRatesNtsc[dmcRateIndex]); // DPCMTODO : What about PAL?
+            WaveUtils.DpcmToWave(dmcData, 31, out short[] wave); // DPCMTODO Hardcoded 31 here.
+            instrumentPlayer.PlayRawPcmSample(wave, playRate);
+        }
+
         public bool PalPlayback
         {
             get
@@ -1040,6 +1085,7 @@ namespace FamiStudio
             {
                 qwertyPiano = !qwertyPiano;
                 ToolBar.Invalidate();
+                PianoRoll.Invalidate();
             }
         }
 
@@ -1171,11 +1217,16 @@ namespace FamiStudio
             Sequencer.Invalidate();
         }
 
+        private void PianoRoll_DPCMSampleChanged()
+        {
+            ProjectExplorer.ConditionalInvalidate();
+        }
+
         private void projectExplorer_InstrumentEdited(Instrument instrument, int envelope)
         {
             if (instrument == null)
             {
-                PianoRoll.StartEditDPCMSamples();
+                PianoRoll.StartEditDPCMMapping();
             }
             else
             {
@@ -1186,6 +1237,11 @@ namespace FamiStudio
         private void ProjectExplorer_ArpeggioEdited(Arpeggio arpeggio)
         {
             PianoRoll.StartEditArpeggio(arpeggio);
+        }
+
+        private void ProjectExplorer_DPCMSampleEdited(DPCMSample sample)
+        {
+            PianoRoll.StartEditDPCMSample(sample);
         }
 
         private void pianoRoll_EnvelopeChanged()
@@ -1234,6 +1290,12 @@ namespace FamiStudio
 
         private void ProjectExplorer_ArpeggioColorChanged(Arpeggio arpeggio)
         {
+            PianoRoll.ConditionalInvalidate();
+        }
+
+        private void ProjectExplorer_DPCMSampleColorChanged(DPCMSample sample)
+        {
+            Sequencer.InvalidatePatternCache();
             PianoRoll.ConditionalInvalidate();
         }
 

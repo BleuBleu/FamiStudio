@@ -33,20 +33,66 @@ Is #00 necessary???
 #xx - Using the sound engine in your Homebrew game.
 #xx - Command line processing (ex: export a FamiTracker file to mp3).
 
+2.3.3
+=====
+- SoundEngine + no looping still loops?
+- 
+
 FamiStudio 2.4.0
 ================
-- Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
-	- Load wav/DMC
-	- Trim, copy, paste, etc.
-	- Volume adjustment, fade, speed, LPF, etc.
-	- Sample rate
-- MIDI in/out? Not sure...
+/ Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
 - Make # of buffered frames configurable (+ dont use PAL buffer size when not needed)
 - Try to preserve pattern names when copying.
 - Right click to select from anywhere? (Not just header) => Change tooltip.
-- Drag seek bar
+- Drag seek bar + snap!
+- MIDI in/out? Not sure... People will complain it doesnt work as expected.
 x Full dark mode.
 x Play keyboard from everywhere (not just record mode).
+- Add validation on song index on nsf import (command line can pass anything).
+/ Show keyboard keys on piano when piano input is ON.
+- Highlight piano keys when they are pressed with QWERTY
+Sequencer:
+- Paste special 
+- Multiple custom pattern settings editing 
+- Rotate mousewheen over param list/sliders should change value.
+- Make the scrollbar in project explorer actually a scroll bar.
+- Review project explorer transactions... We use .Project when just renaming an instrument or arpeggio???
+- Remove gray colors from random colors.
+- Convert more const int to enums.
+
+Dark mode:
+- Video icons are too bright now.
+- N163 wave envelope icon is grey. Should be black.
+
+Test:
+- Retest Win7 device lost. DPCM geometry re-creation isnt clear to me.
+- Transaction (w/o DPCM), test a LOT!
+
+DPCM Editor
+===========
+- DMC Trims (regular + zero)
+- Project explorer :
+	- Source data icon	
+	/ DPCM Mapping editor, show mapped size
+- Submit first pass.
+
+==========
+
+- Volume adjustment + 4 point envelope option.
+/ Bit reverse
+- Sample rate
+- Let go over 16KB, but show warning.
+- Cleanup will remove the source data and reset param to something "neutral".
+- Do we want to allow modif on DMC or just WAV?	=> BOTH! Bit reverse will be a good option for DMC input.
+/ Refactor audio streams to support more than 1 voices (and different rates)
+- Make sure clipboard still works (much copy source data as well).
+- Limit wav size to 2 sec. DMC size to 16KB.
+- Change DPCM mapping to add existing sample instead.
+- What is the quality setting in RJDMC?
+- "Z" needs piano roll focus.
+- Allow scroll up/down keyboard even in sample.
+- What about space to play DPCM?
+- FamiStudio text format. Give warning of loss source data.
 
 Linux notes
 ===========

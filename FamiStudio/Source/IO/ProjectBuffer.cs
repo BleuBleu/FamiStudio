@@ -15,6 +15,7 @@ namespace FamiStudio
         void Serialize(ref int b, bool id = false);
         void Serialize(ref uint b);
         void Serialize(ref ulong b);
+        void Serialize(ref float b);
         void Serialize(ref System.Drawing.Color b);
         void Serialize(ref string b);
         void Serialize(ref byte[] values);
@@ -97,6 +98,12 @@ namespace FamiStudio
         {
             buffer.AddRange(BitConverter.GetBytes(i));
             idx += sizeof(ulong);
+        }
+
+        public void Serialize(ref float f)
+        {
+            buffer.AddRange(BitConverter.GetBytes(f));
+            idx += sizeof(float);
         }
 
         public void Serialize(ref System.Drawing.Color b)
@@ -259,6 +266,12 @@ namespace FamiStudio
             idx += sizeof(ulong);
         }
 
+        public void Serialize(ref float f)
+        {
+            f = BitConverter.ToSingle(buffer, idx);
+            idx += sizeof(float);
+        }
+
         public void Serialize(ref System.Drawing.Color b)
         {
             int argb = 0;
@@ -406,6 +419,11 @@ namespace FamiStudio
         public void Serialize(ref ulong i)
         {
             crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref float f)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(f), crc);
         }
 
         public void Serialize(ref System.Drawing.Color b)

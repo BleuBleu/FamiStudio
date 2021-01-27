@@ -20,7 +20,7 @@ namespace FamiStudio
         int source;
         int[] buffers;
 
-        public OpenALStream(int rate, int channels, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public OpenALStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             if (context == null)
                 context = new AudioContext();

@@ -26,7 +26,7 @@ namespace FamiStudio
         {
             // Assume we are in PAL mode since it will always have a larger buffer.
             int bufferSize = (int)Math.Ceiling(sampleRate / 50.0070) * sizeof(short);
-            audioStream = new AudioStream(sampleRate, 1, bufferSize, NumAudioBuffers, AudioBufferFillCallback);
+            audioStream = new AudioStream(sampleRate, bufferSize, NumAudioBuffers, AudioBufferFillCallback);
         }
 
         protected short[] AudioBufferFillCallback()

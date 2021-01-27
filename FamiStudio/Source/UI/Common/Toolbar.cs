@@ -555,7 +555,7 @@ namespace FamiStudio
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            var timeCodeColor = App.IsRecording ? theme.DarkRedFillBrush2 : theme.BlackBrush;
+            var timeCodeColor = App.IsRecording ? theme.DarkRedFillBrush : theme.BlackBrush;
             var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush2;
 
             g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.LightGreyFillBrush2);

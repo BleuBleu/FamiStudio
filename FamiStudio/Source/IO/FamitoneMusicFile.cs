@@ -454,7 +454,7 @@ namespace FamiStudio
                     if (mapping != null && mapping.Sample != null)
                     {
                         sampleOffset = project.GetAddressForSample(mapping.Sample) >> 6;
-                        sampleSize = mapping.Sample.Data.Length >> 4;
+                        sampleSize = mapping.Sample.ProcessedData.Length >> 4;
                         sampleName = $"({mapping.Sample.Name})";
                         samplePitchAndLoop = mapping.Pitch | ((mapping.Loop ? 1 : 0) << 6);
                     }

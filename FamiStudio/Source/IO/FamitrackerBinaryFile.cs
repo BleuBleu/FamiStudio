@@ -194,7 +194,7 @@ namespace FamiStudio
                         if (index > 0 && pitch != 0)
                         {
                             var sample = samples[index - 1];
-                            if (sample != null && sample.Data != null)
+                            if (sample != null && sample.ProcessedData != null)
                             {
                                 samplesLoaded = true;
                                 project.MapDPCMSample(i * 12 + j + 1, sample, pitch & 0x0f, (pitch & 0x80) != 0);

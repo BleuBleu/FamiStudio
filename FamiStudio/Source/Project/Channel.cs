@@ -606,7 +606,7 @@ namespace FamiStudio
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
                 {
                     nextPatternIdx = p;
-                    nextNoteIdx    = noteCount + pattern.FirstValidNoteTime > maxNotes ? pattern.FirstValidNoteTime - (maxNotes - noteCount) : pattern.FirstValidNoteTime; // MATTT : Test this!
+                    nextNoteIdx    = noteCount + pattern.FirstValidNoteTime > maxNotes ? pattern.FirstValidNoteTime - (maxNotes - noteCount) : pattern.FirstValidNoteTime; // DPCMTODO : Test this!
                     return true;
                 }
                 else

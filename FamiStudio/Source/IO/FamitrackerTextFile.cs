@@ -182,7 +182,7 @@ namespace FamiStudio
                             var param = line.Substring(6).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                             foreach (var s in param)
                             {
-                                currentDpcm.Data[dpcmWriteIdx++] = Convert.ToByte(s, 16);
+                                currentDpcm.ProcessedData[dpcmWriteIdx++] = Convert.ToByte(s, 16);
                             }
                         }
                     }
@@ -726,8 +726,8 @@ namespace FamiStudio
                 for (int i = 0; i < project.Samples.Count; i++)
                 {
                     var sample = project.Samples[i];
-                    lines.Add($"DPCMDEF{i,4}{sample.Data.Length,6} \"{sample.Name}\"");
-                    lines.Add($"DPCM : {String.Join(" ", sample.Data.Select(x => $"{x:X2}"))}");
+                    lines.Add($"DPCMDEF{i,4}{sample.ProcessedData.Length,6} \"{sample.Name}\"");
+                    lines.Add($"DPCM : {String.Join(" ", sample.ProcessedData.Select(x => $"{x:X2}"))}");
                 }
                 lines.Add("");
             }
