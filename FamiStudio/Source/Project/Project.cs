@@ -231,33 +231,35 @@ namespace FamiStudio
             return songs.Find(s => s.Name == name) == null;
         }
 
-        // DPCMTODO : Rename this and revisit all usages.
-        public DPCMSample CreateDPCMSample(string name, byte[] data)
+        // DPCMTODO : Revisit all usages.
+        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
         {
-            var sampleSize = GetTotalSampleSize();
-            var sample = samples.Find(s => s.Name == name);
+            // Already exist, this should not happen.
+            if (samples.Find(s => s.Name == name) != null)
+            {
+                Debug.Assert(false);
+                return null;
+            }
 
-            // DPCMTODO: Review all this! We should create a unique name!
-            if (sample != null)
-            {
-                if (sampleSize - sample.ProcessedData.Length + data.Length <= MaxSampleSize)
-                    sample.ProcessedData = data;
-            }
-            else if (sampleSize + data.Length <= MaxSampleSize)
-            {
-                sample = new DPCMSample(GenerateUniqueId(), name);
-                sample.SetDmcSourceData(data);
-                sample.Process();
-                samples.Add(sample);
-                SortSamples();
-            }
+            var sample = new DPCMSample(GenerateUniqueId(), name);
+            sample.SetDmcSourceData(data);
+            sample.Process();
+            samples.Add(sample);
+            SortSamples();
 
             return sample;
         }
 
         public DPCMSample CreateDPCMSampleFromWavData(string name, short[] data, int sampleRate)
         {
-            var sample = new DPCMSample(GenerateUniqueId(), name); // DPCMTODO
+            // Already exist, this should not happen.
+            if (samples.Find(s => s.Name == name) != null)
+            {
+                Debug.Assert(false);
+                return null;
+            }
+
+            var sample = new DPCMSample(GenerateUniqueId(), name);
             sample.SetWavSourceData(data, sampleRate);
             sample.Process();
             samples.Add(sample);

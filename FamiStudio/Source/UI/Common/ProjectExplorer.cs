@@ -1209,6 +1209,58 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private void LoadDPCMSample()
+        {
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc)|*.wav;*.dmc|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+
+            if (filename != null)
+            {
+                var sampleName = Path.GetFileNameWithoutExtension(filename);
+                if (sampleName.Length > 16)
+                    sampleName = sampleName.Substring(0, 16);
+                sampleName = App.Project.GenerateUniqueDPCMSampleName(sampleName);
+
+                var dlgLog = new LogDialog(ParentForm);
+                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
+                {
+                    if (Path.GetExtension(filename).ToLower() == ".wav")
+                    {
+                        var wavData = WaveFile.Load(filename, out var sampleRate);
+                        if (wavData != null)
+                        {
+                            var maximumSamples = sampleRate * 2;
+                            if (wavData.Length > maximumSamples)
+                            {
+                                Array.Resize(ref wavData, maximumSamples);
+                                Log.LogMessage(LogSeverity.Warning, "The maximum supported length for a WAV file is 2.0 seconds. Truncating.");
+                            }
+
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                            App.Project.CreateDPCMSampleFromWavData(sampleName, wavData, sampleRate);
+                            App.UndoRedoManager.EndTransaction();
+                        }
+                    }
+                    else if (Path.GetExtension(filename).ToLower() == ".dmc")
+                    {
+                        var dmcData = File.ReadAllBytes(filename);
+                        if (dmcData.Length > 8192)
+                        {
+                            Array.Resize(ref dmcData, 8192);
+                            Log.LogMessage(LogSeverity.Warning, "The maximum supported size for a DMC is 8KB. Truncating.");
+                        }
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                        App.Project.CreateDPCMSampleFromDmcData(sampleName, dmcData);
+                        App.UndoRedoManager.EndTransaction();
+                    }
+
+                    RefreshButtons();
+                    ConditionalInvalidate();
+
+                    dlgLog.ShowDialogIfMessages();
+                }
+            }
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -1403,38 +1455,7 @@ namespace FamiStudio
                     {
                         if (subButtonType == SubButtonType.Load)
                         {
-                            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc)|*.wav;*.dmc|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
-
-                            if (filename != null)
-                            {
-                                // DPCMTODO : Transaction!
-                                if (Path.GetExtension(filename).ToLower() == ".wav")
-                                {
-                                    var wavData = WaveFile.Load(filename, out var sampleRate);
-                                    if (wavData != null)
-                                    {
-                                        var sampleName = Path.GetFileNameWithoutExtension(filename);
-
-                                        if (sampleName.Length > 16)
-                                            sampleName = sampleName.Substring(0, 16);
-
-                                        var name = App.Project.GenerateUniqueDPCMSampleName(sampleName);
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamplesMapping);
-                                        App.Project.CreateDPCMSampleFromWavData(name, wavData, sampleRate);
-                                        App.UndoRedoManager.EndTransaction();
-                                    }
-                                }
-                                else if (Path.GetExtension(filename).ToLower() == ".dmc")
-                                {
-                                    Debug.Assert(false); // TODO!
-                                }
-
-                                //var name = Path.GetFileNameWithoutExtension(filename);
-                                //var sample = App.Project.CreateDPCMSample(name, File.ReadAllBytes(filename));
-                                //App.UndoRedoManager.EndTransaction();
-                                RefreshButtons();
-                                ConditionalInvalidate();
-                            }
+                            LoadDPCMSample();
                         }
                     }
                     else if (button.type == ButtonType.Dpcm)

@@ -239,7 +239,7 @@ namespace FamiStudio
             while (!project.IsDPCMSampleNameUnique(name))
                 name = baseName + "-" + j++;
 
-            return project.CreateDPCMSample(name, data);
+            return project.CreateDPCMSampleFromDmcData(name, data);
         }
 
         protected Song CreateUniquelyNamedSong(string baseName)

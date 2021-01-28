@@ -264,7 +264,7 @@ namespace FamiStudio
                         var sample = serializer.Project.FindMatchingSample(sampleData);
 
                         if (sample == null)
-                            sample = serializer.Project.CreateDPCMSample(sampleName, sampleData);
+                            sample = serializer.Project.CreateDPCMSampleFromDmcData(sampleName, sampleData);
 
                         serializer.Project.MapDPCMSample(note, sample, mapping.Pitch, mapping.Loop);
                     }

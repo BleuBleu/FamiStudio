@@ -10,7 +10,8 @@ namespace FamiStudio
         Project,
         ProjectNoDPCMSamples,
         DPCMSample,
-        DCPMSamplesMapping,
+        DPCMSamples,
+        DPCMSamplesMapping,
         Song,
         Channel,
         Pattern,
@@ -91,7 +92,10 @@ namespace FamiStudio
                 case TransactionScope.DPCMSample:
                     project.GetSample(objectId).SerializeState(buffer);
                     break;
-                case TransactionScope.DCPMSamplesMapping:
+                case TransactionScope.DPCMSamples:
+                    project.SerializeDPCMState(buffer);
+                    break;
+                case TransactionScope.DPCMSamplesMapping:
                     project.SerializeDPCMSamplesMapping(buffer);
                     break;
                 case TransactionScope.Instrument:

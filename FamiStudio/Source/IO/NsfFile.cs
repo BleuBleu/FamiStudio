@@ -533,7 +533,7 @@ namespace FamiStudio
 
                     var sample = project.FindMatchingSample(sampleData);
                     if (sample == null)
-                        sample = project.CreateDPCMSample($"Sample {project.Samples.Count + 1}", sampleData);
+                        sample = project.CreateDPCMSampleFromDmcData($"Sample {project.Samples.Count + 1}", sampleData);
 
                     var loop  = NsfGetState(nsf, channel.Type, STATE_DPCMLOOP, 0) != 0;
                     var pitch = NsfGetState(nsf, channel.Type, STATE_DPCMPITCH, 0);

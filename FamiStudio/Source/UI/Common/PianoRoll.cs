@@ -2495,7 +2495,7 @@ namespace FamiStudio
                         var newName = dlg.Properties.GetPropertyValue<string>(0);
 
                         App.Stop();
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamplesMapping);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                         if (App.Project.RenameSample(mapping.Sample, newName))
                         {
                             mapping.Pitch = dlg.Properties.GetPropertyValue<int>(1);
@@ -3495,7 +3495,7 @@ namespace FamiStudio
 
                             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                             {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamplesMapping);
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                                 var sampleName = dlg.Properties.GetPropertyValue<string>(1);
                                 App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
                                 App.UndoRedoManager.EndTransaction();
@@ -3510,7 +3510,7 @@ namespace FamiStudio
                     }
                     else if (right && mapping != null)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DCPMSamplesMapping);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                         App.Project.UnmapDPCMSample(noteValue);
                         App.Project.DeleteUnmappedSamples();
                         App.UndoRedoManager.EndTransaction();

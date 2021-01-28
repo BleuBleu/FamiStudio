@@ -277,7 +277,7 @@ namespace FamiStudio
                             var data = new byte[str.Length / 2];
                             for (int i = 0; i < data.Length; i++)
                                 data[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
-                            var sample = project.CreateDPCMSample(parameters["Name"], data);
+                            var sample = project.CreateDPCMSampleFromDmcData(parameters["Name"], data);
                             if (parameters.TryGetValue("ReverseBits", out var reverseStr)) sample.ReverseBits = bool.Parse(reverseStr);
                             break;
                         }

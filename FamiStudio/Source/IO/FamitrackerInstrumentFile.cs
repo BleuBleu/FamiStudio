@@ -205,7 +205,7 @@ namespace FamiStudio
                     var sampleData = new byte[sampleSize];
                     Array.Copy(bytes, offset, sampleData, 0, sampleSize); offset += sampleSize;
 
-                    sampleMap[sampleIdx] = project.CreateDPCMSample(sampleName, sampleData);
+                    sampleMap[sampleIdx] = project.CreateDPCMSampleFromDmcData(sampleName, sampleData);
                 }
 
                 for (int i = 0; i < assignedCount; i++)
