@@ -123,6 +123,7 @@
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
+    <Compile Include="Source\Utils\WaveUtils.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
     <Compile Include="Source\UI\Common\PasteSpecialDialog.cs" />
