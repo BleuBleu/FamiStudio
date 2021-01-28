@@ -333,6 +333,8 @@
     <EmbeddedResource Include="Resources\QwertyPiano.png" />
     <EmbeddedResource Include="Resources\DPCMBlack%402x.png" />
     <EmbeddedResource Include="Resources\DPCMBlack.png" />
+    <EmbeddedResource Include="Resources\PlaySource%402x.png" />
+    <EmbeddedResource Include="Resources\PlaySource.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall%402x.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall.png" />
     <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />
