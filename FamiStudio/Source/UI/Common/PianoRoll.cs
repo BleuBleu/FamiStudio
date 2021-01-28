@@ -2053,24 +2053,32 @@ namespace FamiStudio
             return (x + scrollX) / (float)viewSize * viewTime;
         }
 
-        private void RenderWave(RenderGraphics g, RenderArea a, short[] data, int rate, RenderBrush brush, bool showSelection, bool drawSamples)
+        private void RenderWave(RenderGraphics g, RenderArea a, short[] data, int rate, RenderBrush brush, bool isSource, bool drawSamples)
         {
             var viewWidth = Width - whiteKeySizeX;
             var halfHeight = (Height - headerAndEffectSizeY) / 2;
             var viewTime = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
 
-            var minVisibleSample = Math.Max((int)Math.Floor  (a.minVisibleWaveTime * rate), 0);
-            var maxVisibleSample = Math.Min((int)Math.Ceiling(a.maxVisibleWaveTime * rate), data.Length - 1);
-            var numVisibleSample = maxVisibleSample - minVisibleSample;
+            var unclampedMinVisibleSample = (int)Math.Floor(a.minVisibleWaveTime * rate);
+            var unclampedMaxVisibleSample = (int)Math.Ceiling(a.maxVisibleWaveTime * rate);
+            var unclampedNumVisibleSample = unclampedMaxVisibleSample - unclampedMinVisibleSample;
 
-            if (numVisibleSample > 0)
+            if (unclampedNumVisibleSample > 0)
             {
+                var sampleSkip = 1;
+                while (unclampedNumVisibleSample / (sampleSkip * 2) > viewWidth)
+                    sampleSkip *= 2;
+
+                var minVisibleSample = Utils.RoundDownAndClamp(unclampedMinVisibleSample, sampleSkip, 0);
+                var maxVisibleSample = Utils.RoundUpAndClamp(unclampedMaxVisibleSample, sampleSkip, data.Length - 1);
+                var numVisibleSample = Utils.DivideAndRoundUp(maxVisibleSample - minVisibleSample, sampleSkip);
+
                 var points = new float[numVisibleSample, 2];
-                var times  = showSelection ? new float[numVisibleSample] : null;
+                var times = isSource && drawSamples ? new float[numVisibleSample] : null;
                 var scaleX = 1.0f / (rate * viewTime) * viewWidth;
                 var biasX = -scrollX;
 
-                for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i++, j++)
+                for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i += sampleSkip, j++)
                 {
                     points[j, 0] = i * scaleX + biasX;
                     points[j, 1] = halfHeight + data[i] / (float)short.MinValue * halfHeight;
@@ -2092,7 +2100,7 @@ namespace FamiStudio
 
                     for (int i = 0; i < points.GetLength(0); i++)
                     {
-                        var selected = showSelection && selectionValid && times[i] >= selectionWaveTimeMin && times[i] <= selectionWaveTimeMax;
+                        var selected = isSource && selectionValid && times[i] >= selectionWaveTimeMin && times[i] <= selectionWaveTimeMax;
                         var sampleScale = selected ? 1.5f : 1.0f;
 
                         g.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
@@ -2109,19 +2117,27 @@ namespace FamiStudio
             var realHeight = Height - headerAndEffectSizeY;
             var viewTime = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
 
-            var minVisibleSample = (int)Math.Floor  (a.minVisibleWaveTime * rate);
-            var maxVisibleSample = (int)Math.Ceiling(a.maxVisibleWaveTime * rate);
+            var unclampedMinVisibleSample = (int)Math.Floor  (a.minVisibleWaveTime * rate);
+            var unclampedMaxVisibleSample = (int)Math.Ceiling(a.maxVisibleWaveTime * rate);
+            var unclampedNumVisibleSample = unclampedMaxVisibleSample - unclampedMinVisibleSample;
 
-            // Align to bytes.
-            minVisibleSample = Math.Max((minVisibleSample & ~7), 0);
-            maxVisibleSample = Math.Min((maxVisibleSample +  7) & ~7, data.Length * 8 - 1);
-
-            var numVisibleSample = maxVisibleSample - minVisibleSample;
-
-            if (numVisibleSample > 0)
+            if (unclampedNumVisibleSample > 0)
             {
+                var sampleSkip = 1;
+                while (unclampedNumVisibleSample / (sampleSkip * 2) > viewWidth)
+                    sampleSkip *= 2;
+
+                var minVisibleSample = Utils.RoundDownAndClamp(unclampedMinVisibleSample, sampleSkip, 0);
+                var maxVisibleSample = Utils.RoundUpAndClamp  (unclampedMaxVisibleSample, sampleSkip, data.Length * 8 - 1);
+
+                // Align to bytes.
+                minVisibleSample = Utils.RoundDownAndClamp(minVisibleSample, 8, 0);
+                maxVisibleSample = Utils.RoundUpAndClamp  (maxVisibleSample, 8, data.Length * 8 - 1);
+
+                var numVisibleSample = Utils.DivideAndRoundUp (maxVisibleSample - minVisibleSample, sampleSkip); 
+
                 var points = new float[numVisibleSample, 2];
-                var times = isSource ? new float[numVisibleSample] : null;
+                var times = isSource && drawSamples ? new float[numVisibleSample] : null;
                 var scaleX = 1.0f / (rate * viewTime) * viewWidth;
                 var biasX = -scrollX;
 
@@ -2130,7 +2146,7 @@ namespace FamiStudio
                 // DPCMTODO : Make sure we are displaying the current value, not previous or next!
                 for (int i = 0; i < minVisibleSample; i++)
                 {
-                    var bit = i / 8;
+                    var bit  = (i >> 3);
                     var mask = (1 << (i & 7));
 
                     if ((data[bit] & mask) != 0)
@@ -2139,20 +2155,23 @@ namespace FamiStudio
                         dpcmCounter = Math.Max(dpcmCounter - 1, 0);
                 }
 
-                for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i++, j++)
+                for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i++)
                 {
-                    points[j, 0] = i * scaleX + biasX;
-                    points[j, 1] = (-dpcmCounter / 64.0f + 0.5f) * realHeight + realHeight / 2; // DPCMTODO : Is that centered correctly? Also negative value?
+                    if ((i & (sampleSkip - 1)) == 0)
+                    {
+                        points[j, 0] = i * scaleX + biasX;
+                        points[j, 1] = (-dpcmCounter / 64.0f + 0.5f) * realHeight + realHeight / 2; // DPCMTODO : Is that centered correctly? Also negative value?
+                        if (times != null) times[j] = i / (float)rate;
+                        j++;
+                    }
 
-                    var bit = i / 8;
+                    var bit  = (i >> 3);
                     var mask = (1 << (i & 7));
 
                     if ((data[bit] & mask) != 0)
                         dpcmCounter = Math.Min(dpcmCounter + 1, 63);
                     else
                         dpcmCounter = Math.Max(dpcmCounter - 1, 0);
-
-                    if (times != null) times[j] = i / (float)rate;
                 }
 
                 // Direct2D doesn't have a way to drawing lines with more than 2 points. Using a temporary 
@@ -2218,7 +2237,7 @@ namespace FamiStudio
             }
 
             // TODO: Make this a constants.
-            bool showSamples = zoomLevel > 5; 
+            bool showSamples = zoomLevel > 5;
 
             // Source waveform
             if (editSample.SourceDataIsWav)

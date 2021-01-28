@@ -50,6 +50,21 @@ namespace FamiStudio
             return result;
         }
 
+        public static int RoundDownAndClamp(int x, int factor, int min)
+        {
+            return Math.Max((x & ~(factor- 1)), min);
+        }
+
+        public static int RoundUpAndClamp(int x, int factor, int max)
+        {
+            return Math.Min((x + factor - 1) & ~(factor - 1), max);
+        }
+
+        public static int DivideAndRoundUp(int x, int y)
+        {
+            return (x + y - 1) / y;
+        }
+
         public static int NumDecimalDigits(int n)
         {
             int digits = 1;
