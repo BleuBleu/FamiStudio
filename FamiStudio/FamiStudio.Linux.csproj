@@ -110,6 +110,7 @@
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
+    <Compile Include="Source\UI\Common\ParamProviders.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
