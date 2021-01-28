@@ -227,6 +227,8 @@
     <EmbeddedResource Include="Rom\rom_pal.nes" />
     <EmbeddedResource Include="Rom\fds.fds" />
     <EmbeddedResource Include="Rom\fds_famitracker.fds" />
+    <EmbeddedResource Include="Resources\QuickSand8.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand8_0.png" />
     <EmbeddedResource Include="Resources\QuickSand10.fnt" />
     <EmbeddedResource Include="Resources\QuickSand10_0.png" />
     <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
