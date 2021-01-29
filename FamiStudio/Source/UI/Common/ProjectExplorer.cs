@@ -527,7 +527,7 @@ namespace FamiStudio
             bmpInstrument[Project.ExpansionMmc5]    = g.CreateBitmapFromResource("Instrument");
             bmpInstrument[Project.ExpansionN163]    = g.CreateBitmapFromResource("InstrumentNamco");
             bmpInstrument[Project.ExpansionS5B]     = g.CreateBitmapFromResource("InstrumentSunsoft");
-
+            
             bmpEnvelopes[Envelope.Volume]        = g.CreateBitmapFromResource("Volume");
             bmpEnvelopes[Envelope.Arpeggio]      = g.CreateBitmapFromResource("Arpeggio");
             bmpEnvelopes[Envelope.Pitch]         = g.CreateBitmapFromResource("Pitch");
@@ -1677,7 +1677,7 @@ namespace FamiStudio
 
         private void EditSongProperties(Point pt, Song song)
         {
-            var dlg = new PropertyDialog(PointToScreen(pt), 220, true);
+            var dlg = new PropertyDialog(PointToScreen(pt), 240, true);
 
             dlg.Properties.UserData = song;
             dlg.Properties.AddColoredString(song.Name, song.Color); // 0
@@ -1776,7 +1776,7 @@ namespace FamiStudio
 
         private void EditInstrumentProperties(Point pt, Instrument instrument)
         {
-            var dlg = new PropertyDialog(PointToScreen(pt), 160, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColor(instrument.Color); // 1
             if (instrument.IsEnvelopeActive(Envelope.Pitch))
@@ -1829,7 +1829,7 @@ namespace FamiStudio
 
         private void EditArpeggioProperties(Point pt, Arpeggio arpeggio)
         {
-            var dlg = new PropertyDialog(PointToScreen(pt), 160, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(arpeggio.Name, arpeggio.Color); // 0
             dlg.Properties.AddColor(arpeggio.Color); // 1
             dlg.Properties.Build();
@@ -1858,7 +1858,7 @@ namespace FamiStudio
 
         private void EditDPCMSampleProperties(Point pt, DPCMSample sample)
         {
-            var dlg = new PropertyDialog(PointToScreen(pt), 160, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(sample.Name, sample.Color); // 0
             dlg.Properties.AddColor(sample.Color); // 1
             dlg.Properties.Build();
