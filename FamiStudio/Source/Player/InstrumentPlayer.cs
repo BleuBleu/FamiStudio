@@ -168,7 +168,7 @@ namespace FamiStudio
             while (sampleQueue.TryDequeue(out _)) ;
         }
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+#if FAMISTUDIO_MACOS
         // DPCMTODO!
         public void PlayRawPcmSample(short[] data, int sampleRate)
         {
