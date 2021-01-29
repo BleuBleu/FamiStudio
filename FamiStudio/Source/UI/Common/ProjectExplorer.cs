@@ -454,13 +454,14 @@ namespace FamiStudio
         {
             Debug.Assert(captureOperation != CaptureOperation.MoveSlider);
 
-            if (theme == null)
+            buttons.Clear();
+            var project = App.Project;
+
+            if (theme == null || project == null)
                 return;
 
-            var project = App.Project;
             var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
 
-            buttons.Clear();
             buttons.Add(new Button(this) { type = ButtonType.ProjectSettings, text = projectText, font = ThemeBase.FontMediumBoldCenterEllipsis });
             buttons.Add(new Button(this) { type = ButtonType.SongHeader, text = "Songs", font = ThemeBase.FontMediumBoldCenter });
 
