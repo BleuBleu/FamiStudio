@@ -37,6 +37,8 @@ namespace FamiStudio
 
         public void Dispose()
         {
+            StopImmediate();
+
             AL.DeleteBuffers(buffers);
             AL.DeleteSource(source);
         }
