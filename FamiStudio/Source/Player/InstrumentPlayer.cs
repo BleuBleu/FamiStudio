@@ -168,6 +168,18 @@ namespace FamiStudio
             while (sampleQueue.TryDequeue(out _)) ;
         }
 
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+        // DPCMTODO!
+        public void PlayRawPcmSample(short[] data, int sampleRate)
+        {
+        }
+
+        public void StopRawPcmSample()
+        {
+        }
+
+        public int RawPcmSamplePlayPosition => 0;
+#else
         public void PlayRawPcmSample(short[] data, int sampleRate)
         {
             audioStream.PlayImmediate(data, sampleRate);
@@ -179,5 +191,6 @@ namespace FamiStudio
         }
 
         public int RawPcmSamplePlayPosition => audioStream.ImmediatePlayPosition;
+#endif
     }
 }
