@@ -20,7 +20,7 @@ x Play keyboard from everywhere (not just record mode).
 - Make the scrollbar in project explorer actually a scroll bar.
 - Convert more const int to enums.
 - BUG : Sunsoft instruments have expand button???
-
+- Use TransactionFlags.StopAudio more often and avoir stopping starting audio manuall. Add a "BeginTransaction" event.
 Sequencer:
 - Paste special 
 - Multiple custom pattern settings editing 
@@ -38,7 +38,7 @@ DPCM Editor
 x Open DMC.
 x Limit wav size to 2 sec. DMC size to 8KB.
 x Optimize rendering of huge waves.
-- Delete sample (right click)
+x Delete sample (right click)
 - Source data icon
 - Let go over 16KB, but show warning.
 - How to pack samples and align everything?

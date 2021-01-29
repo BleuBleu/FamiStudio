@@ -1554,7 +1554,7 @@ namespace FamiStudio
                         {
                             App.PreviewDPCMSample(button.sample, true);
                         }
-                        else
+                        else if (subButtonType == SubButtonType.Max)
                         {
                             if (PlatformUtils.MessageBox($"Are you sure you want to delete DPCM Sample '{button.sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
