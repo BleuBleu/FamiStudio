@@ -98,6 +98,11 @@ namespace FamiStudio
         private static int refCount = 0;
         private PaStreamCallback streamCallback;
 
+        private IntPtr  immediateStream = new IntPtr();
+        private short[] immediateStreamData = null;
+        private int     immediateStreamPosition = -1;
+        private PaStreamCallback immediateStreamCallback;
+
         public PortAudioStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             if (refCount == 0)
@@ -107,6 +112,7 @@ namespace FamiStudio
             }
 
             streamCallback = new PaStreamCallback(StreamCallback);
+            immediateStreamCallback = new PaStreamCallback(ImmediateStreamCallback);
 
             Pa_OpenDefaultStream(out stream, 0, 1, PaSampleFormat.Int16, 44100, 0, streamCallback, IntPtr.Zero);
             bufferFill = bufferFillCallback;
@@ -138,6 +144,8 @@ namespace FamiStudio
                 var err = Pa_CloseStream(stream);
                 stream = IntPtr.Zero;
             }
+
+            StopImmediate();
 
             refCount--;
             if (refCount == 0)
@@ -181,49 +189,61 @@ namespace FamiStudio
             return PaStreamCallbackResult.Continue;
         }
 
+        PaStreamCallbackResult ImmediateStreamCallback(IntPtr input, IntPtr output, uint frameCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData)
+        {
+            int numSamplesToCopy = (int)Math.Min(frameCount, immediateStreamData.Length - immediateStreamPosition);
+
+            if (numSamplesToCopy <= 0)
+                return PaStreamCallbackResult.Abort;
+
+            Marshal.Copy(immediateStreamData, immediateStreamPosition, output, numSamplesToCopy);
+            immediateStreamPosition += (int)frameCount;
+
+            if (immediateStreamPosition >= immediateStreamData.Length)
+            {
+                immediateStreamData = null;
+                immediateStreamPosition = -1;
+
+                return PaStreamCallbackResult.Complete;
+            }
+            else
+            {
+                return PaStreamCallbackResult.Continue;
+            }
+        }
+
         public unsafe void PlayImmediate(short[] data, int sampleRate)
         {
-            //StopImmediate();
+            StopImmediate();
 
-            //immediateSource = AL.GenSource();
-            //immediateBuffers = AL.GenBuffers(1);
+            Pa_OpenDefaultStream(out immediateStream, 0, 1, PaSampleFormat.Int16, sampleRate, 0, immediateStreamCallback, IntPtr.Zero);
 
-            //fixed (short* p = &data[0])
-            //    AL.BufferData(immediateBuffers[0], ALFormat.Mono16, new IntPtr(p), data.Length * sizeof(short), sampleRate);
-
-            //AL.SourceQueueBuffer(immediateSource, immediateBuffers[0]);
-            //AL.SourcePlay(immediateSource);
+            if (immediateStream != IntPtr.Zero)
+            {
+                immediateStreamData = data;
+                immediateStreamPosition = 0;
+                Pa_StartStream(immediateStream);
+            }
         }
 
         public void StopImmediate()
         {
-            //if (immediateSource >= 0)
-            //{
-            //    AL.SourceStop(immediateSource);
-            //    AL.Source(immediateSource, ALSourcei.Buffer, 0);
-            //    AL.DeleteBuffers(immediateBuffers);
-            //    AL.DeleteSource(immediateSource);
-
-            //    immediateBuffers = null;
-            //    immediateSource = -1;
-            //}
+            if (immediateStream != IntPtr.Zero)
+            {
+                Pa_AbortStream(immediateStream);
+                //Pa_StopStream(immediateStream);
+                Pa_CloseStream(immediateStream);
+                immediateStream = IntPtr.Zero;
+                immediateStreamData = null;
+                immediateStreamPosition = -1;
+            }
         }
 
         public int ImmediatePlayPosition
         {
             get
             {
-                var playPos = -1;
-
-                //// TODO : Make sure we support the AL_EXT_OFFSET extension.
-                //if (immediateSource >= 0)
-                //{
-                //    AL.GetSource(immediateSource, ALGetSourcei.SourceState, out int state);
-                //    if ((ALSourceState)state == ALSourceState.Playing)
-                //        AL.GetSource(immediateSource, ALGetSourcei.SampleOffset, out playPos);
-                //}
-
-                return playPos;
+                return immediateStreamPosition;
             }
         }
     }
