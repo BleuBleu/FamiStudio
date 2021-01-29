@@ -20,6 +20,9 @@ namespace FamiStudio
         int source;
         int[] buffers;
 
+        int   immediateSource = -1;
+        int[] immediateBuffers;
+
         public OpenALStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             if (context == null)
@@ -119,6 +122,52 @@ namespace FamiStudio
                     //DebugStream();
                     AL.SourcePlay(source);
                 }
+            }
+        }
+
+        public unsafe void PlayImmediate(short[] data, int sampleRate)
+        {
+            StopImmediate();
+
+            immediateSource  = AL.GenSource();
+            immediateBuffers = AL.GenBuffers(1);
+
+            fixed (short* p = &data[0])
+                AL.BufferData(immediateBuffers[0], ALFormat.Mono16, new IntPtr(p), data.Length * sizeof(short), sampleRate);
+
+            AL.SourceQueueBuffer(immediateSource, immediateBuffers[0]);
+            AL.SourcePlay(immediateSource);
+        } 
+
+        public void StopImmediate()
+        {
+            if (immediateSource >= 0)
+            {
+                AL.SourceStop(immediateSource);
+                AL.Source(immediateSource, ALSourcei.Buffer, 0);
+                AL.DeleteBuffers(immediateBuffers);
+                AL.DeleteSource(immediateSource);
+
+                immediateBuffers = null;
+                immediateSource = -1;
+            }
+        }
+
+        public int ImmediatePlayPosition
+        {
+            get
+            {
+                var playPos = -1;
+
+                // TODO : Make sure we support the AL_EXT_OFFSET extension.
+                if (immediateSource >= 0)
+                {
+                    AL.GetSource(immediateSource, ALGetSourcei.SourceState, out int state);
+                    if ((ALSourceState)state == ALSourceState.Playing)
+                        AL.GetSource(immediateSource, ALGetSourcei.SampleOffset, out playPos);
+                }
+
+                return playPos;
             }
         }
     }
