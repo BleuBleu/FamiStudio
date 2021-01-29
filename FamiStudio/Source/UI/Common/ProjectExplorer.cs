@@ -194,7 +194,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            var expandButton = projectExplorer.ShowExpandButtons() && instrument.IsExpansionInstrument;
+                            var expandButton = projectExplorer.ShowExpandButtons() && InstrumentParamProvider.HasParams(instrument);
                             var numSubButtons = instrument.NumActiveEnvelopes + (expandButton ? 1 : 0);
                             var buttons = new SubButtonType[numSubButtons];
                             active = new bool[numSubButtons];
@@ -294,7 +294,7 @@ namespace FamiStudio
                     case SubButtonType.Play:
                         return projectExplorer.bmpPlay;
                     case SubButtonType.DPCM:
-                        return projectExplorer.bmpDPCM;
+                        return projectExplorer.bmpWave;
                     case SubButtonType.Load:
                         return projectExplorer.bmpLoad;
                     case SubButtonType.Expand:
@@ -352,6 +352,7 @@ namespace FamiStudio
         RenderBitmap   bmpDPCM;
         RenderBitmap   bmpLoad;
         RenderBitmap   bmpPlay;
+        RenderBitmap   bmpWave;
         RenderBitmap   bmpExpand;
         RenderBitmap   bmpExpanded;
         RenderBitmap   bmpCheckBoxYes;
@@ -547,6 +548,7 @@ namespace FamiStudio
             bmpPlay = g.CreateBitmapFromResource("PlaySource");
             bmpDPCM = g.CreateBitmapFromResource("DPCMBlack");
             bmpLoad = g.CreateBitmapFromResource("InstrumentOpen");
+            bmpWave = g.CreateBitmapFromResource("Wave");
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
 
             RefreshButtons();
@@ -572,6 +574,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpPlay);
             Utils.DisposeAndNullify(ref bmpDPCM);
             Utils.DisposeAndNullify(ref bmpLoad);
+            Utils.DisposeAndNullify(ref bmpWave);
             Utils.DisposeAndNullify(ref sliderFillBrush);
         }
 
