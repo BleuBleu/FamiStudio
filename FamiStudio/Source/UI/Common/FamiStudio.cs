@@ -367,8 +367,10 @@ namespace FamiStudio
                     }
                 }
 
-                undoRedoManager.PreUndoRedo  -= UndoRedoManager_PreUndoRedo;
-                undoRedoManager.PostUndoRedo -= UndoRedoManager_PostUndoRedo;
+                undoRedoManager.PreUndoRedo      -= UndoRedoManager_PreUndoRedo;
+                undoRedoManager.PostUndoRedo     -= UndoRedoManager_PostUndoRedo;
+                undoRedoManager.TransactionBegan -= UndoRedoManager_PreUndoRedo;
+                undoRedoManager.TransactionEnded -= UndoRedoManager_PostUndoRedo;
                 undoRedoManager.Updated -= UndoRedoManager_Updated;
                 undoRedoManager = null;
                 project = null;
@@ -400,8 +402,10 @@ namespace FamiStudio
 			palPlayback = project.PalMode;
 
             undoRedoManager = new UndoRedoManager(project, this);
-            undoRedoManager.PreUndoRedo  += UndoRedoManager_PreUndoRedo;
-            undoRedoManager.PostUndoRedo += UndoRedoManager_PostUndoRedo;
+            undoRedoManager.PreUndoRedo      += UndoRedoManager_PreUndoRedo;
+            undoRedoManager.PostUndoRedo     += UndoRedoManager_PostUndoRedo;
+            undoRedoManager.TransactionBegan += UndoRedoManager_PreUndoRedo;
+            undoRedoManager.TransactionEnded += UndoRedoManager_PostUndoRedo;
             undoRedoManager.Updated += UndoRedoManager_Updated;
 
             songPlayer.CurrentFrame = 0;

@@ -2513,8 +2513,7 @@ namespace FamiStudio
                     {
                         var newName = dlg.Properties.GetPropertyValue<string>(0);
 
-                        App.Stop();
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
                         if (App.Project.RenameSample(mapping.Sample, newName))
                         {
                             mapping.Pitch = dlg.Properties.GetPropertyValue<int>(1);

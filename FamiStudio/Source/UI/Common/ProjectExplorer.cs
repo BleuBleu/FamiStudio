@@ -450,10 +450,13 @@ namespace FamiStudio
 
             return widgetType;
         }
-        
-        public void RefreshButtons()
+
+        public void RefreshButtons(bool invalidate = true)
         {
             Debug.Assert(captureOperation != CaptureOperation.MoveSlider);
+
+            if (invalidate)
+                ConditionalInvalidate();
 
             buttons.Clear();
             var project = App.Project;
@@ -1142,7 +1145,6 @@ namespace FamiStudio
             }
 
             RefreshButtons();
-            ConditionalInvalidate();
         }
 
         private void ImportInstruments()
@@ -1211,7 +1213,6 @@ namespace FamiStudio
             }
 
             RefreshButtons();
-            ConditionalInvalidate();
         }
 
         private void LoadDPCMSample()
@@ -1259,7 +1260,6 @@ namespace FamiStudio
                     }
 
                     RefreshButtons();
-                    ConditionalInvalidate();
 
                     dlgLog.ShowDialogIfMessages();
                 }
@@ -1299,7 +1299,6 @@ namespace FamiStudio
                             App.Project.CreateSong();
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
-                            ConditionalInvalidate();
                         }
                         else if (subButtonType == SubButtonType.Load)
                         {
@@ -1338,7 +1337,6 @@ namespace FamiStudio
                             App.Project.CreateInstrument(instrumentType);
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
-                            ConditionalInvalidate();
                         }
                         if (subButtonType == SubButtonType.Load)
                         {
@@ -1360,7 +1358,7 @@ namespace FamiStudio
                         {                         
                             expandedInstrument = expandedInstrument == selectedInstrument ? null : selectedInstrument;
                             expandedSample = null;
-                            RefreshButtons();
+                            RefreshButtons(false);
                         }
                         if (subButtonType == SubButtonType.DPCM)
                         {
@@ -1436,7 +1434,6 @@ namespace FamiStudio
                             App.Project.CreateArpeggio();
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
-                            ConditionalInvalidate();
                         }
                     }
                     else if (button.type == ButtonType.Arpeggio)
@@ -1478,7 +1475,6 @@ namespace FamiStudio
                             expandedSample = expandedSample == button.sample ? null : button.sample;
                             expandedInstrument = null;
                             RefreshButtons();
-                            ConditionalInvalidate();
                         }
                     }
                 }
@@ -1490,7 +1486,6 @@ namespace FamiStudio
                         if (PlatformUtils.MessageBox($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             bool selectNewSong = song == selectedSong;
-                            App.Stop();
                             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
                             App.Project.DeleteSong(song);
                             if (selectNewSong)
@@ -1498,7 +1493,6 @@ namespace FamiStudio
                             SongSelected?.Invoke(selectedSong);
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
-                            ConditionalInvalidate();
                         }
                     }
                     else if (button.type == ButtonType.Instrument && button.instrument != null)
@@ -1517,17 +1511,14 @@ namespace FamiStudio
                             if (PlatformUtils.MessageBox($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 bool selectNewInstrument = instrument == selectedInstrument;
-                                App.StopEverything(); 
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
                                 App.Project.DeleteInstrument(instrument);
                                 if (selectNewInstrument)
                                     selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
                                 SongSelected?.Invoke(selectedSong);
                                 InstrumentDeleted?.Invoke(instrument);
                                 App.UndoRedoManager.EndTransaction();
-                                App.StartInstrumentPlayer();
                                 RefreshButtons();
-                                ConditionalInvalidate();
                             }
                         }
                     }
@@ -1538,17 +1529,14 @@ namespace FamiStudio
                         if (PlatformUtils.MessageBox($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             bool selectNewArpeggio = arpeggio == selectedArpeggio;
-                            App.StopEverything();
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
                             App.Project.DeleteArpeggio(arpeggio);
                             if (selectNewArpeggio)
                                 selectedArpeggio = App.Project.Arpeggios.Count > 0 ? App.Project.Arpeggios[0] : null;
                             SongSelected?.Invoke(selectedSong);
                             ArpeggioDeleted?.Invoke(arpeggio);
                             App.UndoRedoManager.EndTransaction();
-                            App.StartInstrumentPlayer();
                             RefreshButtons();
-                            ConditionalInvalidate();
                         }
                     }
                     else if (button.type == ButtonType.Dpcm)
@@ -1561,14 +1549,11 @@ namespace FamiStudio
                         {
                             if (PlatformUtils.MessageBox($"Are you sure you want to delete DPCM Sample '{button.sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
-                                App.StopEverything(); // DPCMTODO: Make this built-it in "TransactionFlags.StopAudio".
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples, TransactionFlags.StopAudio);
                                 App.Project.DeleteSample(button.sample);
                                 DPCMSampleDeleted?.Invoke(button.sample);
                                 App.UndoRedoManager.EndTransaction();
-                                App.StartInstrumentPlayer();
-                                RefreshButtons(); // DPCMTODO: Merge refresh + conditional invalidate.
-                                ConditionalInvalidate();
+                                RefreshButtons();
                             }
                         }
                     }
@@ -1595,8 +1580,6 @@ namespace FamiStudio
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-
                 project.Name = dlg.Properties.GetPropertyValue<string>(0);
                 project.Author = dlg.Properties.GetPropertyValue<string>(1);
                 project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
@@ -1611,6 +1594,8 @@ namespace FamiStudio
                 var changedNumChannels      = numChannels  != project.ExpansionNumChannels;
                 var changedAuthoringMachine = palAuthoring != project.PalMode;
 
+                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, changedExpansion || changedNumChannels || changedTempoMode || changedAuthoringMachine ? TransactionFlags.StopAudio : TransactionFlags.None);
+
                 if (changedExpansion || changedNumChannels)
                 {
                     if (project.ExpansionAudio == Project.ExpansionNone ||
@@ -1618,17 +1603,14 @@ namespace FamiStudio
                         PlatformUtils.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         selectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
-                        App.StopEverything();
                         project.SetExpansionAudio(expansion, numChannels);
                         ProjectModified?.Invoke();
-                        App.StartInstrumentPlayer();
                         Reset();
                     }
                 }
 
                 if (changedTempoMode)
                 {
-                    App.StopEverything();
                     if (tempoMode == Project.TempoFamiStudio)
                     {
                         if (!project.AreSongsEmpty)
@@ -1643,7 +1625,6 @@ namespace FamiStudio
                     }
 
                     ProjectModified?.Invoke();
-                    App.StartInstrumentPlayer();
                     Reset();
                 }
 
@@ -1709,8 +1690,6 @@ namespace FamiStudio
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-
-                App.Stop();
                 App.Seek(0);
 
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
@@ -1743,7 +1722,7 @@ namespace FamiStudio
                     song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
                     SongModified?.Invoke(song);
                     App.UndoRedoManager.EndTransaction();
-                    RefreshButtons();
+                    RefreshButtons(false);
                 }
                 else
                 {
@@ -1819,7 +1798,6 @@ namespace FamiStudio
                     }
                     InstrumentColorChanged?.Invoke(instrument);
                     RefreshButtons();
-                    ConditionalInvalidate();
                     App.UndoRedoManager.EndTransaction();
                 }
                 else
@@ -1848,7 +1826,6 @@ namespace FamiStudio
                     arpeggio.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
                     ArpeggioColorChanged?.Invoke(arpeggio);
                     RefreshButtons();
-                    ConditionalInvalidate();
                     App.UndoRedoManager.EndTransaction();
                 }
                 else
@@ -1877,7 +1854,6 @@ namespace FamiStudio
                     sample.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
                     DPCMSampleColorChanged?.Invoke(sample);
                     RefreshButtons();
-                    ConditionalInvalidate();
                     App.UndoRedoManager.EndTransaction();
                 }
                 else
@@ -1948,7 +1924,6 @@ namespace FamiStudio
 
                 ClampScroll();
                 RefreshButtons();
-                ConditionalInvalidate();
             }
         }
     }

@@ -20,8 +20,6 @@ x Play keyboard from everywhere (not just record mode).
 - Make the scrollbar in project explorer actually a scroll bar.
 - Convert more const int to enums.
 - BUG : Sunsoft instruments have expand button???
-- Use TransactionFlags.StopAudio more often and avoir stopping starting audio manuall. Add a "BeginTransaction" event.
-Sequencer:
 - Paste special 
 - Multiple custom pattern settings editing 
 
@@ -35,11 +33,6 @@ Test:
 
 DPCM Editor
 ===========
-x Open DMC.
-x Limit wav size to 2 sec. DMC size to 8KB.
-x Optimize rendering of huge waves.
-x Delete sample (right click)
-- Source data icon
 - Let go over 16KB, but show warning.
 - How to pack samples and align everything?
 
@@ -50,10 +43,8 @@ x Delete sample (right click)
 	=> Make sure the order i parse the bits matches what the HW does! Low -> High? Or High to Low! (Test on real HW + emualtor)
 - Sample rate
 - Cleanup will remove the source data and reset param to something "neutral".
-/ Refactor audio streams to support more than 1 voices (and different rates)
 - Make sure clipboard still works (much copy source data as well).
-
-- Change DPCM mapping to add existing sample instead.
+/ Change DPCM mapping to add existing sample instead. => DRAG & DROP!
 - What is the quality setting in RJDMC?
 - "Z" needs piano roll focus.
 - Allow scroll up/down keyboard even in sample.
