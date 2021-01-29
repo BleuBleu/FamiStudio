@@ -389,6 +389,7 @@ namespace FamiStudio
         public event ArpeggioPointDelegate ArpeggioDraggedOutside;
         public event DPCMSampleDelegate DPCMSampleEdited;
         public event DPCMSampleDelegate DPCMSampleColorChanged;
+        public event DPCMSampleDelegate DPCMSampleDeleted;
         public event EmptyDelegate ProjectModified;
 
         public ProjectExplorer()
@@ -1512,7 +1513,7 @@ namespace FamiStudio
                             if (PlatformUtils.MessageBox($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 bool selectNewInstrument = instrument == selectedInstrument;
-                                App.StopEverything();
+                                App.StopEverything(); 
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
                                 App.Project.DeleteInstrument(instrument);
                                 if (selectNewInstrument)
@@ -1549,7 +1550,23 @@ namespace FamiStudio
                     else if (button.type == ButtonType.Dpcm)
                     {
                         if (subButtonType == SubButtonType.Play)
+                        {
                             App.PreviewDPCMSample(button.sample, true);
+                        }
+                        else
+                        {
+                            if (PlatformUtils.MessageBox($"Are you sure you want to delete DPCM Sample '{button.sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                App.StopEverything(); // DPCMTODO: Make this built-it in "TransactionFlags.StopAudio".
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples, TransactionFlags.StopAudio);
+                                App.Project.DeleteSample(button.sample);
+                                DPCMSampleDeleted?.Invoke(button.sample);
+                                App.UndoRedoManager.EndTransaction();
+                                App.StartInstrumentPlayer();
+                                RefreshButtons(); // DPCMTODO: Merge refresh + conditional invalidate.
+                                ConditionalInvalidate();
+                            }
+                        }
                     }
                 }
             }

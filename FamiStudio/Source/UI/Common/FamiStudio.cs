@@ -148,6 +148,7 @@ namespace FamiStudio
             ProjectExplorer.ArpeggioDraggedOutside += ProjectExplorer_ArpeggioDraggedOutside;
             ProjectExplorer.DPCMSampleEdited += ProjectExplorer_DPCMSampleEdited;
             ProjectExplorer.DPCMSampleColorChanged += ProjectExplorer_DPCMSampleColorChanged;
+            ProjectExplorer.DPCMSampleDeleted += ProjectExplorer_DPCMSampleDeleted;
 
             InitializeMidi();
             InitializeMultiMediaNotifications();
@@ -201,7 +202,12 @@ namespace FamiStudio
         {
             PianoRoll.Reset();
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
-            PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
+            PianoRoll.CurrentArpeggio   = ProjectExplorer.SelectedArpeggio;
+        }
+
+        private void ProjectExplorer_DPCMSampleDeleted(DPCMSample sample)
+        {
+            PianoRoll.Reset();
         }
 
         private void PianoRoll_NotesPasted()
