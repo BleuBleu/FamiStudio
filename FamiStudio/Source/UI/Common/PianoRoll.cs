@@ -2503,29 +2503,16 @@ namespace FamiStudio
                 if (left && mapping != null)
                 {
                     var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, false, e.Y > Height / 2);
-                    dlg.Properties.AddColoredString(mapping.Sample.Name, ThemeBase.LightGreyFillColor2);
-                    dlg.Properties.AddIntegerRange("Pitch :", mapping.Pitch, 0, 15);
-                    dlg.Properties.AddBoolean("Loop :", mapping.Loop);
-                    dlg.Properties.AddBoolean("Reverse Bits :", mapping.Sample.ReverseBits);
+                    dlg.Properties.AddIntegerRange("Pitch :", mapping.Pitch, 0, 15); // 0
+                    dlg.Properties.AddBoolean("Loop :", mapping.Loop); // 1
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                     {
-                        var newName = dlg.Properties.GetPropertyValue<string>(0);
-
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
-                        if (App.Project.RenameSample(mapping.Sample, newName))
-                        {
-                            mapping.Pitch = dlg.Properties.GetPropertyValue<int>(1);
-                            mapping.Loop = dlg.Properties.GetPropertyValue<bool>(2);
-                            mapping.Sample.ReverseBits = dlg.Properties.GetPropertyValue<bool>(3);
-                            App.UndoRedoManager.EndTransaction();
-                        }
-                        else
-                        {
-                            App.UndoRedoManager.AbortTransaction();
-                            SystemSounds.Beep.Play();
-                        }
+                        mapping.Pitch = dlg.Properties.GetPropertyValue<int>(0);
+                        mapping.Loop  = dlg.Properties.GetPropertyValue<bool>(1);
+                        App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                     }
                 }
