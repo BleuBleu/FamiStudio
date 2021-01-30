@@ -22,9 +22,6 @@ x Play keyboard from everywhere (not just record mode).
 - Paste special 
 - Multiple custom pattern settings editing 
 
-Dark mode:
-- Video icons are too bright now.
-
 Test:
 - Retest Win7 device lost. DPCM geometry re-creation isnt clear to me.
 - Transaction (w/o DPCM), test a LOT!

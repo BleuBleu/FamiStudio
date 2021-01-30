@@ -548,7 +548,7 @@ namespace FamiStudio
                             var channelNameSizeX = videoGraphics.MeasureString(s.channelText, ThemeBase.FontBigUnscaled);
                             var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmp.Size.Width + channelIconTextSpacing) / 2;
 
-                            videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmp.Size.Width, channelIconPosY + s.bmp.Size.Height, theme.LightGreyFillBrush1);
+                            videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmp.Size.Width, channelIconPosY + s.bmp.Size.Height, theme.DarkGreyLineBrush2);
                             videoGraphics.DrawBitmap(s.bmp, channelIconPosX, channelIconPosY);
                             videoGraphics.DrawText(s.channelText, ThemeBase.FontBigUnscaled, channelIconPosX + s.bmp.Size.Width + channelIconTextSpacing, channelTextPosY, theme.LightGreyFillBrush1);
 
