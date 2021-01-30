@@ -582,10 +582,10 @@ namespace FamiStudio
                 if (smooth)
                     GL.Enable(EnableCap.PolygonSmooth);
                 GL.Color4(brush.Color0);
-                GL.Begin(BeginMode.TriangleFan);
-                for (int i = 0; i < geo.Points.GetLength(0); i++)
-                    GL.Vertex2(geo.Points[i, 0], geo.Points[i, 1]);
-                GL.End();
+                GL.EnableClientState(ArrayCap.VertexArray);
+                GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
+                GL.DrawArrays(BeginMode.TriangleFan, 0, geo.Points.GetLength(0));
+                GL.DisableClientState(ArrayCap.VertexArray);
                 if (smooth)
                     GL.Disable(EnableCap.PolygonSmooth);
             }
@@ -637,10 +637,10 @@ namespace FamiStudio
 #endif
             {
                 GL.LineWidth(lineWidth);
-                GL.Begin(geo.Closed ? BeginMode.LineLoop : BeginMode.LineStrip);
-                for (int i = 0; i < geo.Points.GetLength(0); i++)
-                    GL.Vertex2(geo.Points[i, 0], geo.Points[i, 1]);
-                GL.End();
+                GL.EnableClientState(ArrayCap.VertexArray);
+                GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
+                GL.DrawArrays(geo.Closed ? BeginMode.LineLoop : BeginMode.LineStrip, 0, geo.Points.GetLength(0));
+                GL.DisableClientState(ArrayCap.VertexArray);
             }
             GL.Disable(EnableCap.LineSmooth);
             GL.PopMatrix();
