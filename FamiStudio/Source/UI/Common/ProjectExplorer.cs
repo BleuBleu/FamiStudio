@@ -106,6 +106,8 @@ namespace FamiStudio
             Add,
             DPCM,
             Load,
+            Save,
+            EditWave,
             Play,
             Expand,
             Max
@@ -226,8 +228,8 @@ namespace FamiStudio
                         }
                         break;
                     case ButtonType.Dpcm:
-                        active = new[] { true, true, true };
-                        return new[] { SubButtonType.DPCM, SubButtonType.Play, SubButtonType.Expand };
+                        active = new[] { true, true, true, true };
+                        return new[] { SubButtonType.EditWave, SubButtonType.Save, SubButtonType.Play, SubButtonType.Expand };
                 }
 
                 active = null;
@@ -293,7 +295,11 @@ namespace FamiStudio
                         return projectExplorer.bmpAdd;
                     case SubButtonType.Play:
                         return projectExplorer.bmpPlay;
+                    case SubButtonType.Save:
+                        return projectExplorer.bmpSave;
                     case SubButtonType.DPCM:
+                        return projectExplorer.bmpDPCM;
+                    case SubButtonType.EditWave:
                         return projectExplorer.bmpWaveEdit;
                     case SubButtonType.Load:
                         return projectExplorer.bmpLoad;
@@ -352,6 +358,7 @@ namespace FamiStudio
         RenderBitmap   bmpDPCM;
         RenderBitmap   bmpLoad;
         RenderBitmap   bmpPlay;
+        RenderBitmap   bmpSave;
         RenderBitmap   bmpWaveEdit;
         RenderBitmap   bmpExpand;
         RenderBitmap   bmpExpanded;
@@ -552,6 +559,7 @@ namespace FamiStudio
             bmpDPCM = g.CreateBitmapFromResource("DPCMBlack");
             bmpLoad = g.CreateBitmapFromResource("InstrumentOpen");
             bmpWaveEdit = g.CreateBitmapFromResource("WaveEdit");
+            bmpSave = g.CreateBitmapFromResource("SaveSmall");
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
 
             RefreshButtons();
@@ -578,6 +586,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpDPCM);
             Utils.DisposeAndNullify(ref bmpLoad);
             Utils.DisposeAndNullify(ref bmpWaveEdit);
+            Utils.DisposeAndNullify(ref bmpSave);
             Utils.DisposeAndNullify(ref sliderFillBrush);
         }
 
@@ -872,9 +881,11 @@ namespace FamiStudio
                 else if (buttonType == ButtonType.Dpcm)
                 {
                     if (subButtonType == SubButtonType.Play)
-                    {
                         tooltip = "{MouseLeft} Preview processed DPCM sample\n{MouseRight} Play source sample";
-                    }
+                    else if (subButtonType == SubButtonType.EditWave)
+                        tooltip = "{MouseLeft} Edit waveform";
+                    else if (subButtonType == SubButtonType.Save)
+                        tooltip = "{MouseLeft} Export processed DMC file\n{MouseRight} Export source data (DMC or WAV)";
                 }
             }
 
@@ -1360,7 +1371,7 @@ namespace FamiStudio
                             expandedSample = null;
                             RefreshButtons(false);
                         }
-                        if (subButtonType == SubButtonType.DPCM)
+                        else if (subButtonType == SubButtonType.DPCM)
                         {
                             InstrumentEdited?.Invoke(selectedInstrument, Envelope.Count);
                         }
@@ -1462,9 +1473,15 @@ namespace FamiStudio
                     }
                     else if (button.type == ButtonType.Dpcm)
                     {
-                        if (subButtonType == SubButtonType.DPCM)
+                        if (subButtonType == SubButtonType.EditWave)
                         {
                             DPCMSampleEdited?.Invoke(button.sample);
+                        }
+                        else if (subButtonType == SubButtonType.Save)
+                        {
+                            var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+                            if (filename != null)
+                                File.WriteAllBytes(filename, button.sample.ProcessedData);
                         }
                         else if (subButtonType == SubButtonType.Play)
                         {
@@ -1544,6 +1561,21 @@ namespace FamiStudio
                         if (subButtonType == SubButtonType.Play)
                         {
                             App.PreviewDPCMSample(button.sample, true);
+                        }
+                        else if (subButtonType == SubButtonType.Save)
+                        {
+                            if (button.sample.SourceDataIsWav)
+                            {
+                                var filename = PlatformUtils.ShowSaveFileDialog("Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
+                                if (filename != null)
+                                    WaveFile.Save(button.sample.SourceWavData.Samples, filename, button.sample.SourceWavData.SampleRate);
+                            }
+                            else
+                            {
+                                var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+                                if (filename != null)
+                                    File.WriteAllBytes(filename, button.sample.SourceDmcData.Data);
+                            }
                         }
                         else if (subButtonType == SubButtonType.Max)
                         {
