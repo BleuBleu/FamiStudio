@@ -19,15 +19,11 @@ x Play keyboard from everywhere (not just record mode).
 - Rotate mousewheen over param list/sliders should change value.
 - Make the scrollbar in project explorer actually a scroll bar.
 - Convert more const int to enums.
-- BUG : Sunsoft instruments have expand button???
-
-Sequencer:
 - Paste special 
 - Multiple custom pattern settings editing 
 
 Dark mode:
 - Video icons are too bright now.
-- N163 wave envelope icon is grey. Should be black.
 
 Test:
 - Retest Win7 device lost. DPCM geometry re-creation isnt clear to me.
@@ -35,30 +31,33 @@ Test:
 
 DPCM Editor
 ===========
-x Open DMC.
-x Limit wav size to 2 sec. DMC size to 8KB.
-x Optimize rendering of huge waves.
-- Delete sample (right click)
-- Source data icon
+Trim:
+	- DMC Trims (regular + zero)
+	- Make trim zero an option that only affects the output!
 - Let go over 16KB, but show warning.
 - How to pack samples and align everything?
-
-- Volume adjustment + 4 point envelope option.
-- DMC Trims (regular + zero)
+- Basic volume adjustment (0-200%)
+- Option to normalize volume
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
 / Bit reverse
 	=> Make sure the order i parse the bits matches what the HW does! Low -> High? Or High to Low! (Test on real HW + emualtor)
+- Figure out if DMC is pre-increment or post-increment.	
 - Sample rate
 - Cleanup will remove the source data and reset param to something "neutral".
-/ Refactor audio streams to support more than 1 voices (and different rates)
 - Make sure clipboard still works (much copy source data as well).
-
-- Change DPCM mapping to add existing sample instead.
+/ Change DPCM mapping to add existing sample instead. => DRAG & DROP!
 - What is the quality setting in RJDMC?
 - "Z" needs piano roll focus.
 - Allow scroll up/down keyboard even in sample.
 - What about space to play DPCM?
 - FamiStudio text format. Give warning of loss source data.
+- Tooltips everywhere!
+- Make volume of preview match the real sound engine.
+- Print more info in piano roll (source data, number of samples, size, etc.)
+- "DPCM Samples" section size doesnt match the sample size?
+
+Later:
+- 4 point volume envelope.
 
 Tips & Tricks (Review this list)
 ================================

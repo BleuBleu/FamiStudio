@@ -28,7 +28,6 @@ namespace FamiStudio
         private SourceVoice immediateVoice;
         private AudioBuffer immediateAudioBuffer;
         private bool immediateDonePlaying;
-        private readonly object immediateLock = new object();
 
         public delegate short[] GetBufferDataCallback();
 
@@ -203,16 +202,13 @@ namespace FamiStudio
         {
             get
             {
-                lock (immediateLock)
+                if (immediateVoice != null && !immediateDonePlaying)
                 {
-                    if (immediateVoice != null && !immediateDonePlaying)
-                    {
-                        return (int)immediateVoice.State.SamplesPlayed;
-                    }
-                    else
-                    {
-                        return -1;
-                    }
+                    return (int)immediateVoice.State.SamplesPlayed;
+                }
+                else
+                {
+                    return -1;
                 }
             }
         }

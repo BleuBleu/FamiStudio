@@ -2513,8 +2513,7 @@ namespace FamiStudio
                     {
                         var newName = dlg.Properties.GetPropertyValue<string>(0);
 
-                        App.Stop();
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
                         if (App.Project.RenameSample(mapping.Sample, newName))
                         {
                             mapping.Pitch = dlg.Properties.GetPropertyValue<int>(1);
@@ -3484,18 +3483,9 @@ namespace FamiStudio
             {
                 if (App.Project.NoteSupportsDPCM(noteValue))
                 {
-                    var save = FamiStudioForm.IsKeyDown(Keys.S);
                     var mapping = App.Project.GetDPCMMapping(noteValue);
 
-                    if (left && save && mapping != null && mapping.Sample != null)
-                    {
-                        var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
-                        if (filename != null)
-                        {
-                            File.WriteAllBytes(filename, mapping.Sample.ProcessedData);
-                        }
-                    }
-                    else if (left && mapping == null)
+                    if (left && mapping == null)
                     {
                         if (App.Project.Samples.Count == 0)
                         {

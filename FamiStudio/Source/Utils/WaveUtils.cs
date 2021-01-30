@@ -198,5 +198,13 @@ namespace FamiStudio
                 return false;
             }
         }
+
+        static public void AdjustVolume(short[] wave, float volume)
+        {
+            for (int i = 0; i < wave.Length; i++)
+            {
+                wave[i] = (short)Utils.Clamp((int)Math.Round(wave[i] * volume), short.MinValue, short.MaxValue);
+            }
+        }
     }
 }

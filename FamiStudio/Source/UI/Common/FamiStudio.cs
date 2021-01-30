@@ -148,6 +148,7 @@ namespace FamiStudio
             ProjectExplorer.ArpeggioDraggedOutside += ProjectExplorer_ArpeggioDraggedOutside;
             ProjectExplorer.DPCMSampleEdited += ProjectExplorer_DPCMSampleEdited;
             ProjectExplorer.DPCMSampleColorChanged += ProjectExplorer_DPCMSampleColorChanged;
+            ProjectExplorer.DPCMSampleDeleted += ProjectExplorer_DPCMSampleDeleted;
 
             InitializeMidi();
             InitializeMultiMediaNotifications();
@@ -201,7 +202,12 @@ namespace FamiStudio
         {
             PianoRoll.Reset();
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
-            PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
+            PianoRoll.CurrentArpeggio   = ProjectExplorer.SelectedArpeggio;
+        }
+
+        private void ProjectExplorer_DPCMSampleDeleted(DPCMSample sample)
+        {
+            PianoRoll.Reset();
         }
 
         private void PianoRoll_NotesPasted()
@@ -361,8 +367,10 @@ namespace FamiStudio
                     }
                 }
 
-                undoRedoManager.PreUndoRedo  -= UndoRedoManager_PreUndoRedo;
-                undoRedoManager.PostUndoRedo -= UndoRedoManager_PostUndoRedo;
+                undoRedoManager.PreUndoRedo      -= UndoRedoManager_PreUndoRedo;
+                undoRedoManager.PostUndoRedo     -= UndoRedoManager_PostUndoRedo;
+                undoRedoManager.TransactionBegan -= UndoRedoManager_PreUndoRedo;
+                undoRedoManager.TransactionEnded -= UndoRedoManager_PostUndoRedo;
                 undoRedoManager.Updated -= UndoRedoManager_Updated;
                 undoRedoManager = null;
                 project = null;
@@ -394,8 +402,10 @@ namespace FamiStudio
 			palPlayback = project.PalMode;
 
             undoRedoManager = new UndoRedoManager(project, this);
-            undoRedoManager.PreUndoRedo  += UndoRedoManager_PreUndoRedo;
-            undoRedoManager.PostUndoRedo += UndoRedoManager_PostUndoRedo;
+            undoRedoManager.PreUndoRedo      += UndoRedoManager_PreUndoRedo;
+            undoRedoManager.PostUndoRedo     += UndoRedoManager_PostUndoRedo;
+            undoRedoManager.TransactionBegan += UndoRedoManager_PreUndoRedo;
+            undoRedoManager.TransactionEnded += UndoRedoManager_PostUndoRedo;
             undoRedoManager.Updated += UndoRedoManager_Updated;
 
             songPlayer.CurrentFrame = 0;

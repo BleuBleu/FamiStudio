@@ -142,6 +142,8 @@ namespace FamiStudio
 
         public event UndoRedoDelegate PreUndoRedo;
         public event UndoRedoDelegate PostUndoRedo;
+        public event UndoRedoDelegate TransactionBegan;
+        public event UndoRedoDelegate TransactionEnded;
         public event UpdatedDelegate  Updated;
 
         private FamiStudio app;
@@ -173,6 +175,7 @@ namespace FamiStudio
             transactions.Add(trans);
             trans.Begin();
             index++;
+            TransactionBegan?.Invoke(scope, flags);
             project.Validate();
         }
 
@@ -183,6 +186,7 @@ namespace FamiStudio
             var trans = transactions[transactions.Count - 1];
             Debug.Assert(trans.StateAfter == null);
             trans.End();
+            TransactionEnded?.Invoke(trans.Scope, trans.Flags);
             Updated?.Invoke();
             project.Validate();
         }
@@ -191,8 +195,10 @@ namespace FamiStudio
         {
             Debug.Assert(!transactions.Last().IsEnded);
             Debug.Assert(index == transactions.Count);
+            var trans = transactions[transactions.Count - 1];
             transactions.RemoveAt(transactions.Count - 1);
             index--;
+            TransactionEnded?.Invoke(trans.Scope, trans.Flags);
             Updated?.Invoke();
             project.Validate();
         }

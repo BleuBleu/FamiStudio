@@ -1569,7 +1569,7 @@ namespace FamiStudio
         {
             bool multiplePatternSelected = (maxSelectedChannelIdx != minSelectedChannelIdx) || (minSelectedPatternIdx != maxSelectedPatternIdx);
 
-            var dlg = new PropertyDialog(PointToScreen(pt), 160);
+            var dlg = new PropertyDialog(PointToScreen(pt), 240);
             dlg.Properties.AddColoredString(pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
             dlg.Properties.AddColor(pattern.Color);

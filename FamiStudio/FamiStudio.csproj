@@ -341,6 +341,10 @@
     <EmbeddedResource Include="Resources\DPCMBlack.png" />
     <EmbeddedResource Include="Resources\PlaySource%402x.png" />
     <EmbeddedResource Include="Resources\PlaySource.png" />
+    <EmbeddedResource Include="Resources\WaveEdit%402x.png" />
+    <EmbeddedResource Include="Resources\WaveEdit.png" />
+    <EmbeddedResource Include="Resources\SaveSmall%402x.png" />
+    <EmbeddedResource Include="Resources\SaveSmall.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
