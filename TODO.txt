@@ -19,13 +19,11 @@ x Play keyboard from everywhere (not just record mode).
 - Rotate mousewheen over param list/sliders should change value.
 - Make the scrollbar in project explorer actually a scroll bar.
 - Convert more const int to enums.
-- BUG : Sunsoft instruments have expand button???
 - Paste special 
 - Multiple custom pattern settings editing 
 
 Dark mode:
 - Video icons are too bright now.
-- N163 wave envelope icon is grey. Should be black.
 
 Test:
 - Retest Win7 device lost. DPCM geometry re-creation isnt clear to me.
@@ -33,14 +31,17 @@ Test:
 
 DPCM Editor
 ===========
+Trim:
+	- DMC Trims (regular + zero)
+	- Make trim zero an option that only affects the output!
 - Let go over 16KB, but show warning.
 - How to pack samples and align everything?
-
-- Volume adjustment + 4 point envelope option.
-- DMC Trims (regular + zero)
+- Basic volume adjustment (0-200%)
+- Option to normalize volume
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
 / Bit reverse
 	=> Make sure the order i parse the bits matches what the HW does! Low -> High? Or High to Low! (Test on real HW + emualtor)
+- Figure out if DMC is pre-increment or post-increment.	
 - Sample rate
 - Cleanup will remove the source data and reset param to something "neutral".
 - Make sure clipboard still works (much copy source data as well).
@@ -50,6 +51,9 @@ DPCM Editor
 - Allow scroll up/down keyboard even in sample.
 - What about space to play DPCM?
 - FamiStudio text format. Give warning of loss source data.
+
+Later:
+- 4 point volume envelope.
 
 Tips & Tricks (Review this list)
 ================================

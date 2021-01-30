@@ -82,18 +82,53 @@ namespace FamiStudio
             sourceData = new DPCMSampleWavSourceData(data, rate);
         }
 
+        private bool RequiresWaveProcessing()
+        {
+            return volumeAdjust != 100;
+        }
+
+        private void ProcessWave(short[] data, float rate)
+        {
+            if (volumeAdjust != 100)
+            {
+                WaveUtils.AdjustVolume(data, Math.Max(0, volumeAdjust) / 100.0f);
+            }
+        }
+
         public void Process()
         {
             if (SourceDataIsWav)
             {
-                WaveUtils.WaveToDpcm(SourceWavData.Samples, SourceWavData.SampleRate, 33144, 31, out processedData); // DPCMTODO : hardcoded 33144
+                var wavData = SourceWavData.Samples;
+
+                if (RequiresWaveProcessing())
+                {
+                    wavData = new short[SourceWavData.Samples.Length];
+                    Array.Copy(SourceWavData.Samples, wavData, wavData.Length);
+
+                    ProcessWave(wavData, SourceWavData.SampleRate);
+                }
+
+                WaveUtils.WaveToDpcm(wavData, SourceWavData.SampleRate, 33144, 31, out processedData); // DPCMTODO : hardcoded 33144
             }
             else
             {
                 // DPCMTODO : round to 64-bytes here!
                 // DPCMTODO : Do bit reverse and everything else too!
-                processedData = new byte[SourceDmcData.Data.Length];
-                Array.Copy(SourceDmcData.Data, processedData, SourceDmcData.Data.Length);
+
+                if (RequiresWaveProcessing())
+                {
+                    WaveUtils.DpcmToWave(SourceDmcData.Data, 31, out var wavData);
+                    ProcessWave(wavData, 33144); // DPCMTODO : hardcoded 33144
+                    WaveUtils.WaveToDpcm(wavData, 33144, 33144, 31, out processedData); // DPCMTODO : hardcoded 33144
+
+                    Debug.Assert(processedData.Length == SourceDmcData.Data.Length);
+                }
+                else
+                {
+                    processedData = new byte[SourceDmcData.Data.Length];
+                    Array.Copy(SourceDmcData.Data, processedData, SourceDmcData.Data.Length);
+                }
             }
 
             if (reverseBits)
