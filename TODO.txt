@@ -51,6 +51,10 @@ Trim:
 - Allow scroll up/down keyboard even in sample.
 - What about space to play DPCM?
 - FamiStudio text format. Give warning of loss source data.
+- Tooltips everywhere!
+- Make volume of preview match the real sound engine.
+- Print more info in piano roll (source data, number of samples, size, etc.)
+- "DPCM Samples" section size doesnt match the sample size?
 
 Later:
 - 4 point volume envelope.
