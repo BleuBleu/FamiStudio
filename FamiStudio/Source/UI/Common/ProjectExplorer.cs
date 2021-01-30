@@ -294,7 +294,7 @@ namespace FamiStudio
                     case SubButtonType.Play:
                         return projectExplorer.bmpPlay;
                     case SubButtonType.DPCM:
-                        return projectExplorer.bmpWave;
+                        return projectExplorer.bmpWaveEdit;
                     case SubButtonType.Load:
                         return projectExplorer.bmpLoad;
                     case SubButtonType.Expand:
@@ -352,7 +352,7 @@ namespace FamiStudio
         RenderBitmap   bmpDPCM;
         RenderBitmap   bmpLoad;
         RenderBitmap   bmpPlay;
-        RenderBitmap   bmpWave;
+        RenderBitmap   bmpWaveEdit;
         RenderBitmap   bmpExpand;
         RenderBitmap   bmpExpanded;
         RenderBitmap   bmpCheckBoxYes;
@@ -551,7 +551,7 @@ namespace FamiStudio
             bmpPlay = g.CreateBitmapFromResource("PlaySource");
             bmpDPCM = g.CreateBitmapFromResource("DPCMBlack");
             bmpLoad = g.CreateBitmapFromResource("InstrumentOpen");
-            bmpWave = g.CreateBitmapFromResource("Wave");
+            bmpWaveEdit = g.CreateBitmapFromResource("WaveEdit");
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
 
             RefreshButtons();
@@ -577,7 +577,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpPlay);
             Utils.DisposeAndNullify(ref bmpDPCM);
             Utils.DisposeAndNullify(ref bmpLoad);
-            Utils.DisposeAndNullify(ref bmpWave);
+            Utils.DisposeAndNullify(ref bmpWaveEdit);
             Utils.DisposeAndNullify(ref sliderFillBrush);
         }
 
