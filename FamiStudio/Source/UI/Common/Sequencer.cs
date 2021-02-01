@@ -818,7 +818,7 @@ namespace FamiStudio
 
                 return;
             }
-            else if (e.Y > headerSizeY && (left || right))
+            else if (e.Y > headerSizeY && left)
             {
                 if (e.Y > headerSizeY)
                 {
