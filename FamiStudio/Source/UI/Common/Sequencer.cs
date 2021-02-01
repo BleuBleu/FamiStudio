@@ -923,6 +923,11 @@ namespace FamiStudio
                         PatternModified?.Invoke();
                     }
                 }
+                else if (right && pattern == null && canCapture)
+                {
+                    StartCaptureOperation(e, CaptureOperation.Select);
+                    UpdateSelection(e.X, true);
+                }
             }
         }
 

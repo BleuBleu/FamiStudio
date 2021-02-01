@@ -3182,7 +3182,7 @@ namespace FamiStudio
                 StartCaptureOperation(e, CaptureOperation.Select, false);
                 UpdateSelection(e.X, true);
             }
-            else if (right && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && IsMouseInHeaderTopPart(e))
+            else if (right && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && (IsMouseInHeaderTopPart(e) || IsMouseInNoteArea(e)))
             {
                 StartCaptureOperation(e, CaptureOperation.Select);
                 UpdateSelection(e.X, true);
@@ -3228,7 +3228,7 @@ namespace FamiStudio
 
                 ResizeEnvelope(e);
             }
-            else if ((left || right) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && IsMouseInNoteArea(e) && EditEnvelope.Length > 0)
+            else if (left && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && IsMouseInNoteArea(e) && EditEnvelope.Length > 0)
             {
                 StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
 
@@ -3279,13 +3279,13 @@ namespace FamiStudio
                 var channel = Song.Channels[editChannel];
                 var pattern = channel.PatternInstances[patternIdx];
 
-                if (pattern == null)
-                    return;
-
                 var supportsInstrument = channel.SupportsInstrument(currentInstrument);
 
                 if (left)
                 {
+                    if (pattern == null)
+                        return;
+
                     var ctrl = ModifierKeys.HasFlag(Keys.Control);
                     var shift = ModifierKeys.HasFlag(Keys.Shift);
                     var slide = FamiStudioForm.IsKeyDown(Keys.S);
@@ -3424,7 +3424,7 @@ namespace FamiStudio
                 }
                 else if (right)
                 {
-                    if (pattern.Notes.TryGetValue(noteIdx, out var note) && (note.IsStop || note.IsRelease))
+                    if (pattern != null && pattern.Notes.TryGetValue(noteIdx, out var note) && (note.IsStop || note.IsRelease))
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         pattern.Notes.Remove(noteIdx);
@@ -3432,17 +3432,19 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
                     }
+                    else if (channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
+                    {
+                        var foundPattern = channel.PatternInstances[patternIdx];
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, foundPattern.Id);
+                        foundPattern.Notes.Remove(noteIdx);
+                        foundPattern.ClearLastValidNoteCache();
+                        App.UndoRedoManager.EndTransaction();
+                        changed = true;
+                    }
                     else
                     {
-                        if (channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
-                        {
-                            var foundPattern = channel.PatternInstances[patternIdx];
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, foundPattern.Id);
-                            foundPattern.Notes.Remove(noteIdx);
-                            foundPattern.ClearLastValidNoteCache();
-                            App.UndoRedoManager.EndTransaction();
-                            changed = true;
-                        }
+                        StartCaptureOperation(e, CaptureOperation.Select, false);
+                        UpdateSelection(e.X, true);
                     }
                 }
 
