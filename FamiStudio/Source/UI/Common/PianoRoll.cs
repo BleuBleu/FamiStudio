@@ -3426,11 +3426,41 @@ namespace FamiStudio
                 {
                     if (pattern != null && pattern.Notes.TryGetValue(noteIdx, out var note) && (note.IsStop || note.IsRelease))
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                        pattern.Notes.Remove(noteIdx);
-                        pattern.ClearLastValidNoteCache();
-                        App.UndoRedoManager.EndTransaction();
-                        changed = true;
+                        var select = false;
+
+                        if (note.IsStop || note.IsRelease)
+                        {
+                            int prevPatternIdx = patternIdx;
+                            int prevNoteIdx    = noteIdx;
+
+                            // For stop and release note, we actually dont know their position since it depends on the
+                            // previous note. 
+                            if (channel.FindPreviousMusicalNote(ref prevPatternIdx, ref prevNoteIdx))
+                            {
+                                // See if the previous musical note matches where the user clicked.
+                                if (!channel.PatternInstances[prevPatternIdx].Notes.TryGetValue(prevNoteIdx, out var prevMusicalNote) || prevMusicalNote.Value != noteValue)
+                                    select = true;
+                            }
+                            // When stop or releases are "orphans" (no previous note), they are drawn at C4, so check for that too.
+                            else if (noteValue != 49)
+                            {
+                                select = true;
+                            }
+                        }
+
+                        if (select)
+                        {
+                            StartCaptureOperation(e, CaptureOperation.Select, false);
+                            UpdateSelection(e.X, true);
+                        }
+                        else
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                            pattern.Notes.Remove(noteIdx);
+                            pattern.ClearLastValidNoteCache();
+                            App.UndoRedoManager.EndTransaction();
+                            changed = true;
+                        }
                     }
                     else if (channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
                     {

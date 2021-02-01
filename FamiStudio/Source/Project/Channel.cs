@@ -629,6 +629,70 @@ namespace FamiStudio
             return false;
         }
 
+        public bool FindPreviousMusicalNote(ref int patternIdx, ref int noteIdx)
+        {
+            int p = patternIdx;
+            int n = noteIdx;
+
+            var pattern = patternInstances[p];
+            if (pattern != null)
+            {
+                int prevTime = -1;
+                Note prevNote = null;
+
+                foreach (var kv in pattern.Notes)
+                {
+                    var time = kv.Key;
+                    if (time >= noteIdx)
+                        break;
+
+                    var note = kv.Value;
+                    if (note.IsMusical)
+                    {
+                        prevTime = time;
+                        prevNote = note;
+                    }
+                    else if (note.IsStop)
+                    {
+                        prevTime = -1;
+                        prevNote = null;
+                    }
+                }
+
+                if (prevNote != null)
+                {
+                    patternIdx = p;
+                    noteIdx    = prevTime;
+                    return true;
+                }
+            }
+
+            p--;
+            while (p >= 0)
+            {
+                pattern = patternInstances[p];
+                if (pattern != null)
+                {
+                    var lastPatternNoteIdx = song.GetPatternLength(p) - 1;
+                    n = pattern.GetLastValidNoteTimeAt(lastPatternNoteIdx);
+                    if (n >= 0)
+                    {
+                        var lastNote = pattern.GetLastValidNoteAt(lastPatternNoteIdx);
+                        if (lastNote.IsMusical)
+                        {
+                            noteIdx    = n;
+                            patternIdx = p;
+                            return true;
+                        }
+                    }
+                }
+
+                if (--p < 0) break;
+            }
+
+            return false;
+        }
+
         public bool FindPreviousMatchingNote(int noteValue, ref int patternIdx, ref int noteIdx)
         {
             int p = patternIdx;
