@@ -157,7 +157,7 @@ namespace FamiStudio
             }
         }
 
-        public void PlayImmediate(short[] data, int sampleRate)
+        public void PlayImmediate(short[] data, int sampleRate, float volume)
         {
             StopImmediate();
 
@@ -172,6 +172,7 @@ namespace FamiStudio
 
             immediateVoice = new SourceVoice(xaudio2, waveFormat);
             immediateVoice.BufferEnd += ImmediateVoice_BufferEnd;
+            immediateVoice.SetVolume(volume);
             immediateVoice.SubmitSourceBuffer(immediateAudioBuffer, null);
             immediateVoice.Start();
         }

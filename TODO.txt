@@ -17,11 +17,12 @@ x Full dark mode.
 x Play keyboard from everywhere (not just record mode).
 x Add validation on song index on nsf import (command line can pass anything).
 / Show keyboard keys on piano when piano input is ON.
-- Highlight piano keys when they are pressed with QWERTY
-- Rotate mousewheen over param list/sliders should change value.
+- Double-click = select whole note
+- Highlight piano keys when they are pressed with QWERTY or MIDI.
+- Rotate mousewheel over param list/sliders should change value.
 - Make the scrollbar in project explorer actually a scroll bar.
-- Convert more const int to enums.
-- Paste special 
+- Convert more const int to enums? (Low priority)
+- Paste special in sequencer.
 - Multiple custom pattern settings editing 
 - Create scripts for packaging builds.
 
@@ -52,7 +53,7 @@ Trim:
 - What about space to play DPCM?
 - FamiStudio text format. Give warning of loss source data.
 - Tooltips everywhere!
-- Make volume of preview match the real sound engine.
+/ Make volume of preview match the real sound engine.
 - Print more info in piano roll (source data, number of samples, size, etc.)
 - "DPCM Samples" section size doesnt match the sample size?
 

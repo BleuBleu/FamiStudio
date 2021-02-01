@@ -757,7 +757,7 @@ namespace FamiStudio
                 if (sample.SourceDataIsWav)
                 {
                     previewDPCMSampleRate = sample.SourceWavData.SampleRate;
-                    instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate);
+                    instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate, NesApu.DPCMVolume);
                     return;
                 }
                 else
@@ -775,7 +775,7 @@ namespace FamiStudio
 
             var playRate = (int)Math.Round(DPCMSample.DpcmSampleRatesNtsc[dmcRateIndex]); // DPCMTODO : What about PAL?
             WaveUtils.DpcmToWave(dmcData, 31, out short[] wave); // DPCMTODO Hardcoded 31 here.
-            instrumentPlayer.PlayRawPcmSample(wave, playRate);
+            instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume);
         }
 
         public bool PalPlayback

@@ -178,6 +178,9 @@ namespace FamiStudio
         public const float FpsPAL  = 50.0070f;
         public const float FpsNTSC = 60.0988f;
 
+        // Volume set in Nes_Apu::volume for the DMC channel. 
+        public const float DPCMVolume = 0.42545f;
+
         public static readonly ushort[]   NoteTableNTSC    = new ushort[97];
         public static readonly ushort[]   NoteTablePAL     = new ushort[97];
         public static readonly ushort[]   NoteTableVrc6Saw = new ushort[97];

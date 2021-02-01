@@ -168,9 +168,9 @@ namespace FamiStudio
             while (sampleQueue.TryDequeue(out _)) ;
         }
 
-        public void PlayRawPcmSample(short[] data, int sampleRate)
+        public void PlayRawPcmSample(short[] data, int sampleRate, float volume)
         {
-            audioStream.PlayImmediate(data, sampleRate);
+            audioStream.PlayImmediate(data, sampleRate, volume);
         }
 
         public void StopRawPcmSample()
