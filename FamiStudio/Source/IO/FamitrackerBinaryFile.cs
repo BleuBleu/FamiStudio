@@ -353,7 +353,8 @@ namespace FamiStudio
             for (int i = 0; i < count; ++i)
             {
                 var loopPoint = loops[i];
-                var releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int) * 2; // Skip settings
+                var releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var setting = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
                 var type = types[i];
 
                 var env = envelopeArray[indices[i], types[i]];
@@ -373,7 +374,10 @@ namespace FamiStudio
 
                 env.Loop = loopPoint;
                 env.Release = releasePoint;
-                env.Relative = type == 2;
+                env.Relative = type == 2 /* SEQ_PITCH */;
+
+                if (type == 1 /*SEQ_ARPEGGIO*/ && setting != 0)
+                    Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {indices[i]} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
             }
 
             return true;
@@ -408,7 +412,8 @@ namespace FamiStudio
                 var type         = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
                 var seqCount     = bytes[idx++];
                 var loopPoint    = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
-                var releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int) * 2; // Skip settings
+                var releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var setting      = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
                 indices[i] = index;
                 types[i] = type;
@@ -439,7 +444,10 @@ namespace FamiStudio
 
                 for (int j = 0; j < seqCount; ++j)
                     env.Values[j] = (sbyte)bytes[idx++];
-            }
+
+                if (type == 1 /*SEQ_ARPEGGIO*/ && setting != 0)
+                    Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {indices[i]} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
+           }
 
             return true;
         }
