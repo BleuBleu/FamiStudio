@@ -827,6 +827,11 @@ namespace FamiStudio
             if (nsf == null)
                 return null;
 
+            var trackCount = NsfGetTrackCount(nsf);
+
+            if (songIndex < 0 || songIndex > trackCount)
+                return null;
+
             var palSource = (NsfIsPal(nsf) & 1) == 1;
             var numFrames = duration * (palSource ? 50 : 60);
 

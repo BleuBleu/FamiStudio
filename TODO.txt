@@ -15,7 +15,7 @@ x FindPreviousMatchingNote() should work for stop + release, hybrid of FindPrevi
 x Drag seek bar + snap!
 x Full dark mode.
 x Play keyboard from everywhere (not just record mode).
-- Add validation on song index on nsf import (command line can pass anything).
+x Add validation on song index on nsf import (command line can pass anything).
 / Show keyboard keys on piano when piano input is ON.
 - Highlight piano keys when they are pressed with QWERTY
 - Rotate mousewheen over param list/sliders should change value.
