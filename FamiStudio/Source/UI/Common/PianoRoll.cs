@@ -3433,9 +3433,9 @@ namespace FamiStudio
                             int prevPatternIdx = patternIdx;
                             int prevNoteIdx    = noteIdx;
 
-                            // For stop and release note, we actually dont know their position since it depends on the
-                            // previous note. 
-                            if (channel.FindPreviousMusicalNote(ref prevPatternIdx, ref prevNoteIdx))
+                            // For stop and release note, we actually don't know their position since it 
+                            // depends on the previous note. We need to search for it.
+                            if (channel.FindPreviousMatchingNote(-1, ref prevPatternIdx, ref prevNoteIdx))
                             {
                                 // See if the previous musical note matches where the user clicked.
                                 if (!channel.PatternInstances[prevPatternIdx].Notes.TryGetValue(prevNoteIdx, out var prevMusicalNote) || prevMusicalNote.Value != noteValue)
@@ -3836,8 +3836,6 @@ namespace FamiStudio
                     {
                         if (Song.Channels[editChannel].PatternInstances[patternIdx] == null)
                             tooltip = "{MouseWheel} Pan";
-                        else
-                            tooltip = "{MouseLeft} {Drag} Add/drag note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseWheel} Pan\n{MouseRight} Delete note - {S} {MouseLeft} {Drag} Create/edit slide note - {A} {MouseLeft} Toggle note attack";
 
                         newNoteTooltip = $"{Note.GetFriendlyName(noteValue)} [{patternIdx:D3} : {noteIdx:D3}]";
                         if (Song.Channels[editChannel].FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
@@ -3848,6 +3846,12 @@ namespace FamiStudio
                                 newNoteTooltip += $" ({note.Instrument.Name})";
                             if (note.IsArpeggio)
                                 newNoteTooltip += $" (Arpeggio: {note.Arpeggio.Name})";
+
+                            tooltip = "{MouseLeft} {Drag} Add/drag note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseWheel} Pan\n{S} {MouseLeft} {Drag} Create/edit slide note - {A} {MouseLeft} Toggle note attack - {MouseRight} Delete note";
+                        }
+                        else
+                        {
+                            tooltip = "{MouseLeft} Add note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseWheel} Pan\n{MouseRight} Select";
                         }
                     }
                 }

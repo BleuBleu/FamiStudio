@@ -8,7 +8,8 @@ FamiStudio 2.4.0
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
 - Make # of buffered frames configurable (+ dont use PAL buffer size when not needed)
 - Try to preserve pattern names when copying.
-- Right click to select from anywhere? (Not just header) => Change tooltip.
+x Right click to select from anywhere? (Not just header) => Change tooltip.
+x FindPreviousMatchingNote() should work for stop + release, hybrid of FindPreviousMatchingNote + FindPreviousMusicalNote.
 - Drag seek bar + snap!
 - MIDI in/out? Not sure... People will complain it doesnt work as expected.
 x Full dark mode.
