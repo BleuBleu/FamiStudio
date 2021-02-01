@@ -10,7 +10,7 @@ FamiStudio 2.4.0
 - Try to preserve pattern names when copying.
 x Right click to select from anywhere? (Not just header) => Change tooltip.
 x FindPreviousMatchingNote() should work for stop + release, hybrid of FindPreviousMatchingNote + FindPreviousMusicalNote.
-- Drag seek bar + snap!
+x Drag seek bar + snap!
 - MIDI in/out? Not sure... People will complain it doesnt work as expected.
 x Full dark mode.
 x Play keyboard from everywhere (not just record mode).

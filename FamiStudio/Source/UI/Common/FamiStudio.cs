@@ -1103,7 +1103,7 @@ namespace FamiStudio
         {
             bool wasPlaying = songPlayer.IsPlaying;
             if (wasPlaying) Stop();
-            songPlayer.CurrentFrame = Math.Min(frame, song.GetPatternStartNote(song.Length) - 1);
+            songPlayer.CurrentFrame = Utils.Clamp(frame, 0, song.GetPatternStartNote(song.Length) - 1);
             if (wasPlaying) Play();
             InvalidateEverything();
         }

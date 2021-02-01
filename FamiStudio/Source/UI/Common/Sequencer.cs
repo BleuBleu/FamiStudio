@@ -83,12 +83,14 @@ namespace FamiStudio
             Select,
             ClickPattern,
             DragSelection,
-            AltZoom
+            AltZoom,
+            DragSeekBar
         }
 
         bool showSelection = true;
         int captureStartX = -1;
         int captureStartY = -1;
+        int dragSeekPosition = -1;
         bool fullColumnSelection = false;
         int firstSelectedPatternIdx = -1;
         int minSelectedChannelIdx = -1;
@@ -330,11 +332,16 @@ namespace FamiStudio
             return App.IsRecording ? seekBarRecBrush : seekBarBrush;
         }
 
+        public int GetSeekFrameToDraw()
+        {
+            return captureOperation == CaptureOperation.DragSeekBar ? dragSeekPosition : App.CurrentFrame;
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
             g.Clear(ThemeBase.DarkGreyLineColor2);
 
-            var seekX = noteSizeX * App.CurrentFrame - scrollX;
+            var seekX = noteSizeX * GetSeekFrameToDraw() - scrollX;
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
             var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / noteSizeX), Song.GetPatternStartNote(Song.Length));
             var minVisiblePattern = Utils.Clamp(Song.FindPatternInstanceIndex(minVisibleNoteIdx, out _) + 0, 0, Song.Length);
@@ -806,8 +813,8 @@ namespace FamiStudio
                     }
                     else
                     {
-                        int frame = (int)Math.Round((e.X - trackNameSizeX + scrollX) / (float)noteSizeX);
-                        App.Seek(frame);
+                        StartCaptureOperation(e, CaptureOperation.DragSeekBar);
+                        UpdateSeekDrag(e.X);
                     }
                 }
                 else if (right && canCapture)
@@ -1171,6 +1178,11 @@ namespace FamiStudio
                         PatternModified?.Invoke();
                     }
                 }
+                else if (captureOperation == CaptureOperation.DragSeekBar)
+                {
+                    UpdateSeekDrag(e.X);
+                    App.Seek(dragSeekPosition);
+                }
 
                 Capture = false;
                 panning = false;
@@ -1280,6 +1292,12 @@ namespace FamiStudio
                 UpdateCursor();
                 ConditionalInvalidate();
             }
+        }
+
+        private void UpdateSeekDrag(int mouseX)
+        {
+            dragSeekPosition = (int)Math.Round((mouseX - trackNameSizeX + scrollX) / (float)noteSizeX);
+            ConditionalInvalidate();
         }
 
         private void UpdateSelection(int mouseX, bool first = false)
@@ -1461,6 +1479,10 @@ namespace FamiStudio
             else if (captureOperation == CaptureOperation.AltZoom)
             {
                 UpdateAltZoom(e);
+            }
+            else if (captureOperation == CaptureOperation.DragSeekBar)
+            {
+                UpdateSeekDrag(e.X);
             }
 
             UpdateCursor();

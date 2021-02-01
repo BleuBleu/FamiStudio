@@ -213,7 +213,8 @@ namespace FamiStudio
             DragNewNote,
             DragSelection,
             AltZoom,
-            DragSample
+            DragSample,
+            DragSeekBar
         }
 
         static readonly bool[] captureNeedsThreshold = new[]
@@ -233,7 +234,8 @@ namespace FamiStudio
             false, // DragNewNote
             false, // DragSelection
             false, // AltZoom
-            false  // DragSample
+            false, // DragSample
+            false  // DragSeekBar
         };
 
         int captureNoteIdx = 0;
@@ -248,6 +250,7 @@ namespace FamiStudio
         int effectNoteIdx;
         int selectionFrameMin = -1;
         int selectionFrameMax = -1;
+        int dragSeekPosition = -1;
         float selectionWaveTimeMin = -1.0f;
         float selectionWaveTimeMax = -1.0f;
         int[] supportedEffects;
@@ -907,6 +910,11 @@ namespace FamiStudio
             }
         }
 
+        public int GetSeekFrameToDraw()
+        {
+            return captureOperation == CaptureOperation.DragSeekBar ? dragSeekPosition : App.CurrentFrame;
+        }
+
         class RenderArea
         {
             public int maxVisibleNote;
@@ -1026,7 +1034,7 @@ namespace FamiStudio
 
             if (((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && editEnvelope < Envelope.RegularCount) || (editMode == EditionMode.Channel))
             {
-                var seekFrame = editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio) : App.CurrentFrame;
+                var seekFrame = editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio) : GetSeekFrameToDraw();
                 if (seekFrame >= 0)
                 {
                     g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
@@ -1284,7 +1292,7 @@ namespace FamiStudio
                 int maxX = Song.GetPatternStartNote(a.maxVisiblePattern) * noteSizeX - scrollX;
                 g.DrawLine(maxX, 0, maxX, Height, theme.BlackBrush, 3.0f);
 
-                int seekX = App.CurrentFrame * noteSizeX - scrollX;
+                int seekX = GetSeekFrameToDraw() * noteSizeX - scrollX;
                 g.DrawLine(seekX, 0, seekX, effectPanelSizeY, GetSeekBarBrush(), 3);
 
                 g.DrawLine(0, effectPanelSizeY - 1, Width, effectPanelSizeY - 1, theme.BlackBrush);
@@ -1729,7 +1737,7 @@ namespace FamiStudio
 
                     if (editMode != EditionMode.VideoRecording)
                     {
-                        int seekX = App.CurrentFrame * noteSizeX - scrollX;
+                        int seekX = GetSeekFrameToDraw() * noteSizeX - scrollX;
                         g.DrawLine(seekX, 0, seekX, Height, GetSeekBarBrush(), 3);
                     }
 
@@ -2600,6 +2608,9 @@ namespace FamiStudio
                     case CaptureOperation.DragSample:
                         UpdateSampleDrag(e);
                         break;
+                    case CaptureOperation.DragSeekBar:
+                        UpdateSeekDrag(e.X);
+                        break;
                 }
             }
         }
@@ -2676,6 +2687,10 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.DragSample:
                         EndSampleDrag(e);
+                        break;
+                    case CaptureOperation.DragSeekBar:
+                        UpdateSeekDrag(e.X);
+                        App.Seek(dragSeekPosition);
                         break;
                 }
 
@@ -3175,7 +3190,8 @@ namespace FamiStudio
             }
             else if (left && editMode == EditionMode.Channel && IsMouseInHeader(e))
             {
-                App.Seek((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
+                StartCaptureOperation(e, CaptureOperation.DragSeekBar);
+                UpdateSeekDrag(e.X);
             }
             else if (right && editMode == EditionMode.Channel && IsMouseInHeader(e))
             {
@@ -3678,6 +3694,13 @@ namespace FamiStudio
             float maxSelectionTime = Math.Max(time, captureWaveTime);
 
             SetWaveSelection(minSelectionTime, maxSelectionTime);
+            ConditionalInvalidate();
+        }
+
+        private void UpdateSeekDrag(int mouseX)
+        {
+            dragSeekPosition = (int)Math.Floor((mouseX - whiteKeySizeX + scrollX) / (float)noteSizeX);
+            dragSeekPosition = SnapNote(dragSeekPosition);
             ConditionalInvalidate();
         }
 
@@ -4323,6 +4346,8 @@ namespace FamiStudio
                 UpdateSelection(pt.X, false);
             else if (captureOperation == CaptureOperation.SelectWave)
                 UpdateWaveSelection(pt.X, false);
+            else if (captureOperation == CaptureOperation.DragSeekBar)
+                UpdateSeekDrag(pt.X);
 
             UpdateFollowMode();
         }
