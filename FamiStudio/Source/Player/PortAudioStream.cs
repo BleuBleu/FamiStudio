@@ -212,7 +212,7 @@ namespace FamiStudio
             }
         }
 
-        public unsafe void PlayImmediate(short[] data, int sampleRate)
+        public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
         {
             StopImmediate();
 
@@ -220,7 +220,13 @@ namespace FamiStudio
 
             if (immediateStream != IntPtr.Zero)
             {
-                immediateStreamData = data;
+                // Cant find volume adjustment in port audio.
+                short vol = (short)(volume * 32768);
+
+                immediateStreamData = new short[data.Length];
+                for (int i = 0; i < data.Length; i++)
+                    immediateStreamData[i] = (short)((data[i] * vol) >> 15);
+
                 immediateStreamPosition = 0;
                 Pa_StartStream(immediateStream);
             }
