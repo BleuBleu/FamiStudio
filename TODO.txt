@@ -7,11 +7,12 @@ FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
 - Make # of buffered frames configurable (+ dont use PAL buffer size when not needed)
-- Try to preserve pattern names when copying.
+x Try to preserve pattern names when copying.
+	x Also, dont duplicate all pattern, do it by instance.
+- MIDI in/out? Not sure... People will complain it doesnt work as expected.
 x Right click to select from anywhere? (Not just header) => Change tooltip.
 x FindPreviousMatchingNote() should work for stop + release, hybrid of FindPreviousMatchingNote + FindPreviousMusicalNote.
 x Drag seek bar + snap!
-- MIDI in/out? Not sure... People will complain it doesnt work as expected.
 x Full dark mode.
 x Play keyboard from everywhere (not just record mode).
 - Add validation on song index on nsf import (command line can pass anything).
@@ -23,7 +24,6 @@ x Play keyboard from everywhere (not just record mode).
 - Paste special 
 - Multiple custom pattern settings editing 
 - Create scripts for packaging builds.
-- 
 
 Test:
 - Retest Win7 device lost. DPCM geometry re-creation isnt clear to me.

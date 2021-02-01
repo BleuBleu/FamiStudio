@@ -1115,6 +1115,8 @@ namespace FamiStudio
                         if (!copy)
                             DeleteSelection(false, customSettings != null && !copy);
 
+                        var duplicatePatternMap = new Dictionary<Pattern, Pattern>(); ;
+
                         for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
                         {
                             for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
@@ -1127,8 +1129,22 @@ namespace FamiStudio
 
                                     if (duplicate && sourcePattern != null)
                                     {
-                                        Song.Channels[ni].PatternInstances[nj] = sourcePattern.ShallowClone(Song.Channels[ni]);
-                                        Song.Channels[ni].PatternInstances[nj].Color = ThemeBase.RandomCustomColor(); ;
+                                        Pattern duplicatedPattern = null;
+                                        if (!duplicatePatternMap.TryGetValue(sourcePattern, out duplicatedPattern))
+                                        {
+                                            var destChannel = Song.Channels[ni];
+
+                                            duplicatedPattern = sourcePattern.ShallowClone(destChannel);
+                                            duplicatePatternMap.Add(sourcePattern, duplicatedPattern);
+
+                                            var newName = sourcePattern.Name;
+                                            if (!destChannel.IsPatternNameUnique(newName))
+                                                newName = destChannel.GenerateUniquePatternName(sourcePattern.Name + "-");
+
+                                            destChannel.RenamePattern(duplicatedPattern, newName);
+                                        }
+                                        Song.Channels[ni].PatternInstances[nj] = duplicatedPattern;
+                                        Song.Channels[ni].PatternInstances[nj].Color = ThemeBase.RandomCustomColor();
                                     }
                                     else
                                     {
