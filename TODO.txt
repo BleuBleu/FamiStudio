@@ -21,6 +21,8 @@ x Play keyboard from everywhere (not just record mode).
 - Convert more const int to enums.
 - Paste special 
 - Multiple custom pattern settings editing 
+- Create scripts for packaging builds.
+- 
 
 Test:
 - Retest Win7 device lost. DPCM geometry re-creation isnt clear to me.
