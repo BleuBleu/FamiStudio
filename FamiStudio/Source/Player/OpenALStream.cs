@@ -127,7 +127,7 @@ namespace FamiStudio
             }
         }
 
-        public unsafe void PlayImmediate(short[] data, int sampleRate)
+        public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
         {
             StopImmediate();
 
@@ -137,6 +137,7 @@ namespace FamiStudio
             fixed (short* p = &data[0])
                 AL.BufferData(immediateBuffers[0], ALFormat.Mono16, new IntPtr(p), data.Length * sizeof(short), sampleRate);
 
+            AL.Source(immediateSource, ALSourcef.Gain, volume);
             AL.SourceQueueBuffer(immediateSource, immediateBuffers[0]);
             AL.SourcePlay(immediateSource);
         } 
