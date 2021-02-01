@@ -135,7 +135,7 @@ namespace FamiStudio
         public RenderBrush LightRedFillBrush    { get => lightRedFillBrush;    protected set => lightRedFillBrush    = value; }
         public RenderBrush DarkRedFillBrush     { get => darkRedFillBrush;     protected set => darkRedFillBrush     = value; }
 
-        private static int nextColorIdx = 48;
+        private static int nextColorIdx = 39;
 
         //
         // These are some of the shades (300 to 800) for most of the Google Material Design colors.
@@ -144,7 +144,7 @@ namespace FamiStudio
         // https://material.io/design/color/the-color-system.html
         //
 
-        public static Color[,] CustomColors = new Color[16, 6]
+        public static Color[,] CustomColors = new Color[17, 6]
         {
             {
                 Color.FromArgb(unchecked((int)0xffe57373)),
@@ -274,6 +274,15 @@ namespace FamiStudio
                 Color.FromArgb(unchecked((int)0xffe64a19)),
                 Color.FromArgb(unchecked((int)0xffd84315)),
             },
+            {
+                Color.FromArgb(unchecked((int)0xffa1887f)),
+                Color.FromArgb(unchecked((int)0xff8d6e63)),
+                Color.FromArgb(unchecked((int)0xff795548)),
+                Color.FromArgb(unchecked((int)0xff6d4c41)),
+                Color.FromArgb(unchecked((int)0xff5d4037)),
+                Color.FromArgb(unchecked((int)0xff4e342e)),
+            }
+
         };
 
         private Dictionary<Color, RenderBrush> customColorBrushes = new Dictionary<Color, RenderBrush>();
