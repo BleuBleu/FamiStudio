@@ -25,6 +25,7 @@ x Add validation on song index on nsf import (command line can pass anything).
 - Paste special in sequencer.
 - Multiple custom pattern settings editing 
 - Create scripts for packaging builds.
+x Right click select in fx panel too.
 
 Test:
 - Retest Win7 device lost. DPCM geometry re-creation isnt clear to me.

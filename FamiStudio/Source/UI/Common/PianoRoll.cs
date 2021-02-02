@@ -3505,13 +3505,20 @@ namespace FamiStudio
                 var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
                 if (pattern != null)
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                    if (pattern.Notes.TryGetValue(noteIdx, out var note))
+                    if (pattern.Notes.TryGetValue(noteIdx, out var note) && note != null && note.HasValidEffectValue(selectedEffectIdx))
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                         note.ClearEffectValue(selectedEffectIdx);
-                    pattern.ClearLastValidNoteCache();
-                    PatternChanged?.Invoke(pattern);
-                    App.UndoRedoManager.EndTransaction();
-                    ConditionalInvalidate();
+                        pattern.ClearLastValidNoteCache();
+                        PatternChanged?.Invoke(pattern);
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                    }
+                    else
+                    {
+                        StartCaptureOperation(e, CaptureOperation.Select, false);
+                        UpdateSelection(e.X, true);
+                    }
                 }
             }
             else if (editMode == EditionMode.DPCMMapping && (left || right) && GetNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx, out noteValue))
