@@ -423,9 +423,9 @@ namespace FamiStudio
         private void OnPlay()
         {
             if (App.IsPlaying)
-                App.Stop();
+                App.StopSong();
             else
-                App.Play();
+                App.PlaySong();
         }
 
         private RenderBitmap OnPlayGetBitmap()
@@ -435,8 +435,8 @@ namespace FamiStudio
 
         private void OnRewind()
         {
-            App.Stop();
-            App.Seek(0);
+            App.StopSong();
+            App.SeekSong(0);
         }
 
         private RenderBitmap OnRecordGetBitmap()

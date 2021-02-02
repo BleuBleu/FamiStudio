@@ -1197,7 +1197,7 @@ namespace FamiStudio
                 else if (captureOperation == CaptureOperation.DragSeekBar)
                 {
                     UpdateSeekDrag(e.X);
-                    App.Seek(dragSeekPosition);
+                    App.SeekSong(dragSeekPosition);
                 }
 
                 Capture = false;

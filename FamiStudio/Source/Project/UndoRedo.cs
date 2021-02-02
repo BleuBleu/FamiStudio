@@ -23,8 +23,9 @@ namespace FamiStudio
 
     public enum TransactionFlags
     {
-        None      = 0,
-        StopAudio = 1
+        None              = 0,
+        StopAudio         = 1,
+        ReinitializeAudio = 2
     };
 
     public class Transaction

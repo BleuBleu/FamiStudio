@@ -1626,7 +1626,14 @@ namespace FamiStudio
                 var changedNumChannels      = numChannels  != project.ExpansionNumChannels;
                 var changedAuthoringMachine = palAuthoring != project.PalMode;
 
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, changedExpansion || changedNumChannels || changedTempoMode || changedAuthoringMachine ? TransactionFlags.StopAudio : TransactionFlags.None);
+                var transFlags = TransactionFlags.None;
+
+                if (changedAuthoringMachine)
+                    transFlags = TransactionFlags.ReinitializeAudio;
+                else if (changedExpansion || changedNumChannels || changedTempoMode)
+                    transFlags = TransactionFlags.StopAudio;
+
+                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, transFlags);
 
                 if (changedExpansion || changedNumChannels)
                 {
@@ -1722,7 +1729,7 @@ namespace FamiStudio
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                App.Seek(0);
+                App.SeekSong(0);
 
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 

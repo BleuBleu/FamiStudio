@@ -17,12 +17,6 @@ namespace FamiStudio
 
     public class BasePlayer
     {
-#if FAMISTUDIO_LINUX
-        protected const int NumAudioBuffers = 4; // ALSA seems to like to have one extra buffer.
-#else
-        protected const int NumAudioBuffers = 3;
-#endif
-
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;
         protected int famitrackerTempoCounter = 0;

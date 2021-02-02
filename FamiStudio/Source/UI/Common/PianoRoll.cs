@@ -2683,14 +2683,14 @@ namespace FamiStudio
                         UpdateNoteDrag(e, true, !captureThresholdMet);
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
-                        App.StopIntrumentNote();
+                        App.StopInstrument();
                         break;
                     case CaptureOperation.DragSample:
                         EndSampleDrag(e);
                         break;
                     case CaptureOperation.DragSeekBar:
                         UpdateSeekDrag(e.X);
-                        App.Seek(dragSeekPosition);
+                        App.SeekSong(dragSeekPosition);
                         break;
                 }
 
@@ -2709,7 +2709,7 @@ namespace FamiStudio
                     App.UndoRedoManager.AbortTransaction();
 
                 ConditionalInvalidate();
-                App.StopIntrumentNote();
+                App.StopInstrument();
 
                 captureOperation = CaptureOperation.None;
                 Capture = false;
@@ -3086,7 +3086,7 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
 
                 channel.DeleteNotesBetween(startFrame, endFrame);
-                App.Seek(startFrame);
+                App.SeekSong(startFrame);
                 EnsureSeekBarVisible();
                 App.UndoRedoManager.EndTransaction();
 
@@ -3106,7 +3106,7 @@ namespace FamiStudio
                 if (doTransaction)
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
 
-                App.Seek(snappedFrame);
+                App.SeekSong(snappedFrame);
                 EnsureSeekBarVisible();
 
                 if (doTransaction)

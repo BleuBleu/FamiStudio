@@ -37,6 +37,12 @@ namespace FamiStudio
         public static bool ShowNoteLabels = true;
 
         // Audio section
+#if FAMISTUDIO_LINUX
+        const int DefaultNumBufferedAudioFrames = 4; // ALSA seems to like to have one extra buffer.
+#else
+        const int DefaultNumBufferedAudioFrames = 3;
+#endif
+        public static int NumBufferedAudioFrames = DefaultNumBufferedAudioFrames;
         public static int InstrumentStopTime = 2;
         public static bool SquareSmoothVibrato = true;
         public static bool NoDragSoungWhenPlaying = false;
@@ -69,10 +75,11 @@ namespace FamiStudio
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
+            NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
-            MidiDevice = ini.GetString("MIDI", "Device", "");
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
+            MidiDevice = ini.GetString("MIDI", "Device", "");
             LastFileFolder = ini.GetString("Folders", "LastFileFolder", "");
             LastInstrumentFolder = ini.GetString("Folders", "LastInstrumentFolder", "");
             LastSampleFolder = ini.GetString("Folders", "LastSampleFolder", "");
@@ -100,6 +107,9 @@ namespace FamiStudio
                 var demoSongsPath = Path.Combine(appPath, "Demo Songs");
                 LastFileFolder = Directory.Exists(demoSongsPath) ? demoSongsPath : "";
             }
+
+            // Clamp to something reasonable.
+            NumBufferedAudioFrames = Utils.Clamp(NumBufferedAudioFrames, 2, 16);
 
 #if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
             // Linux or Mac is more likely to have standard path for ffmpeg.
@@ -133,6 +143,7 @@ namespace FamiStudio
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetBool("UI", "TrackPadControls", TrackPadControls);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
+            ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);

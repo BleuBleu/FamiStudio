@@ -6,7 +6,7 @@
 FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
-- Make # of buffered frames configurable (+ dont use PAL buffer size when not needed)
+x Make # of buffered frames configurable (+ dont use PAL buffer size when not needed)
 x Try to preserve pattern names when copying.
 	x Also, dont duplicate all pattern, do it by instance.
 - MIDI in/out? Not sure... People will complain it doesnt work as expected.

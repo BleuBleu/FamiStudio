@@ -18,7 +18,7 @@ namespace FamiStudio
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
         bool IsRunning => playerThread != null;
 
-        public InstrumentPlayer() : base(NesApu.APU_INSTRUMENT)
+        public InstrumentPlayer(bool pal) : base(NesApu.APU_INSTRUMENT, pal, DefaultSampleRate, Settings.NumBufferedAudioFrames)
         {
         }
 
