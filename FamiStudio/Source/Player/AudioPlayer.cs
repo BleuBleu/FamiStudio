@@ -16,11 +16,6 @@ namespace FamiStudio
 {
     public class AudioPlayer : BasePlayer
     {
-#if FAMISTUDIO_LINUX
-        protected const int DefaultNumAudioBuffers = 4; // ALSA seems to like to have one extra buffer.
-#else
-        protected const int DefaultNumAudioBuffers = 3;
-#endif
         protected const int DefaultSampleRate = 44100;
 
         protected AudioStream audioStream;
@@ -28,9 +23,9 @@ namespace FamiStudio
         protected AutoResetEvent frameEvent = new AutoResetEvent(true);
         protected ManualResetEvent stopEvent = new ManualResetEvent(false);
         protected ConcurrentQueue<short[]> sampleQueue = new ConcurrentQueue<short[]>();
-        protected int numBufferedFrames = DefaultNumAudioBuffers;
+        protected int numBufferedFrames = 3;
 
-        protected AudioPlayer(int apuIndex, bool pal, int sampleRate = DefaultSampleRate, int numBuffers = DefaultNumAudioBuffers) : base(apuIndex, sampleRate)
+        protected AudioPlayer(int apuIndex, bool pal, int sampleRate, int numBuffers) : base(apuIndex, sampleRate)
         {
             int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short);
             numBufferedFrames = numBuffers;
