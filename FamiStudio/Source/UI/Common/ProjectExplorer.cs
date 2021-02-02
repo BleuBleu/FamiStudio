@@ -321,7 +321,8 @@ namespace FamiStudio
             None,
             DragInstrument,
             DragArpeggio,
-            MoveSlider
+            MoveSlider,
+            ScrollBar
         };
 
         static readonly bool[] captureNeedsThreshold = new[]
@@ -329,6 +330,7 @@ namespace FamiStudio
             false,
             true,
             true,
+            false,
             false
         };
 
@@ -337,6 +339,7 @@ namespace FamiStudio
         int mouseLastY = 0;
         int captureMouseX = -1;
         int captureMouseY = -1;
+        int captureScrollY = -1;
         int envelopeDragIdx = -1;
         bool captureThresholdMet = false;
         Button sliderDragButton = null;
@@ -765,8 +768,12 @@ namespace FamiStudio
 
         private int GetButtonAtCoord(int x, int y, out SubButtonType sub)
         {
-            var buttonIndex = (y + scrollY) / buttonSizeY;
             sub = SubButtonType.Max;
+
+            if (needsScrollBar && x >= Width - scrollBarSizeX)
+                return -1;
+
+            var buttonIndex = (y + scrollY) / buttonSizeY;
 
             if (buttonIndex >= 0 && buttonIndex < buttons.Count)
             {
@@ -888,6 +895,10 @@ namespace FamiStudio
                         tooltip = "{MouseLeft} Export processed DMC file\n{MouseRight} Export source data (DMC or WAV)";
                 }
             }
+            else if (needsScrollBar && e.X > Width - scrollBarSizeX)
+            {
+                tooltip = "{MouseLeft} {Drag} Scroll";
+            }
 
             App.ToolTip = tooltip;
         }
@@ -915,6 +926,12 @@ namespace FamiStudio
                 if (captureOperation == CaptureOperation.MoveSlider)
                 {
                     UpdateSliderValue(sliderDragButton, e, false);
+                    ConditionalInvalidate();
+                }
+                else if (captureOperation == CaptureOperation.ScrollBar)
+                {
+                    scrollY = captureScrollY + ((e.Y - captureMouseY) * virtualSizeY / Height);
+                    ClampScroll();
                     ConditionalInvalidate();
                 }
             }
@@ -1037,6 +1054,7 @@ namespace FamiStudio
             Debug.Assert(captureOperation == CaptureOperation.None);
             captureMouseX = e.X;
             captureMouseY = e.Y;
+            captureScrollY = scrollY;
             Capture = true;
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
@@ -1590,6 +1608,10 @@ namespace FamiStudio
                         }
                     }
                 }
+            }
+            else if (left && needsScrollBar && e.X > Width - scrollBarSizeX)
+            {
+                StartCaptureOperation(e, CaptureOperation.ScrollBar);
             }
         }
 

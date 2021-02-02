@@ -1,34 +1,23 @@
 2.3.3
 =====
-- SoundEngine + no looping still loops?
+- MMC5 phase reset problem.
 - 
 
 FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
-x Make # of buffered frames configurable (+ dont use PAL buffer size when not needed)
-x Try to preserve pattern names when copying.
-	x Also, dont duplicate all pattern, do it by instance.
-- MIDI in/out? Not sure... People will complain it doesnt work as expected.
-x Right click to select from anywhere? (Not just header) => Change tooltip.
-x FindPreviousMatchingNote() should work for stop + release, hybrid of FindPreviousMatchingNote + FindPreviousMusicalNote.
-x Drag seek bar + snap!
-x Full dark mode.
-x Play keyboard from everywhere (not just record mode).
-x Add validation on song index on nsf import (command line can pass anything).
 / Show keyboard keys on piano when piano input is ON.
+- MIDI in/out? Not sure... People will complain it doesnt work as expected.
 - Double-click = select whole note
 - Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Rotate mousewheel over param list/sliders should change value (what about undo redo?).
-- Make the scrollbar in project explorer actually a scroll bar.
 - Convert more const int to enums? (Low priority)
 - Paste special in sequencer.
 - Multiple custom pattern settings editing 
 - Create scripts for packaging builds.
-x Right click select in fx panel too.
 
 Test:
-- Retest Win7 device lost. DPCM geometry re-creation isnt clear to me.
+- Retest Win7 device lost.
 - Transaction (w/o DPCM), test a LOT!
 
 DPCM Editor
