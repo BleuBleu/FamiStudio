@@ -19,7 +19,7 @@ x Add validation on song index on nsf import (command line can pass anything).
 / Show keyboard keys on piano when piano input is ON.
 - Double-click = select whole note
 - Highlight piano keys when they are pressed with QWERTY or MIDI.
-- Rotate mousewheel over param list/sliders should change value.
+- Rotate mousewheel over param list/sliders should change value (what about undo redo?).
 - Make the scrollbar in project explorer actually a scroll bar.
 - Convert more const int to enums? (Low priority)
 - Paste special in sequencer.
@@ -37,6 +37,7 @@ Trim:
 	- Make trim zero an option that only affects the output!
 - Let go over 16KB, but show warning.
 - How to pack samples and align everything?
+	- Memory block vs. Build dynamically.
 - Basic volume adjustment (0-200%)
 - Option to normalize volume
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.

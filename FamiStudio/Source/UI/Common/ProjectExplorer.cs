@@ -1628,9 +1628,9 @@ namespace FamiStudio
 
                 var transFlags = TransactionFlags.None;
 
-                if (changedAuthoringMachine)
+                if (changedAuthoringMachine || changedExpansion || changedNumChannels)
                     transFlags = TransactionFlags.ReinitializeAudio;
-                else if (changedExpansion || changedNumChannels || changedTempoMode)
+                else if (changedTempoMode)
                     transFlags = TransactionFlags.StopAudio;
 
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, transFlags);
