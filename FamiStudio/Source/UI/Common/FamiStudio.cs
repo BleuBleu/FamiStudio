@@ -47,6 +47,7 @@ namespace FamiStudio
         private string newReleaseUrl = null;
 
         public bool RealTimeUpdate => songPlayer != null && songPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || PianoRoll.IsEditingDPCMSample || pianoRollScrollChanged;
+        public bool RealTimeUpdateUpdatesProjectExplorer => PianoRoll.IsEditingDPCMSample;
         public bool IsPlaying => songPlayer != null && songPlayer.IsPlaying;
         public bool IsRecording => recordingMode;
         public bool IsQwertyPianoEnabled => qwertyPiano;
@@ -1266,7 +1267,7 @@ namespace FamiStudio
             Sequencer.Tick();
 
             if (RealTimeUpdate)
-                InvalidateEverything();
+                InvalidateEverything(RealTimeUpdateUpdatesProjectExplorer);
 
             pianoRollScrollChanged = false;
 

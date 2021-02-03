@@ -43,6 +43,26 @@ namespace FamiStudio
             return counter * (65536 / 64) - 32768;
         }
 
+        static public byte[] CopyDpcm(byte[] data)
+        {
+            var newData = new byte[data.Length];
+            Array.Copy(data, newData, newData.Length);
+            return newData;
+        }
+
+        static public short[] CopyWave(short[] data)
+        {
+            var newData = new short[data.Length];
+            Array.Copy(data, newData, newData.Length);
+            return newData;
+        }
+
+        static public void ReverseDpcmBits(byte[] data)
+        {
+            for (int i = 0; i < data.Length; i++)
+                data[i] = Utils.ReverseBits(data[i]);
+        }
+
         static public void WaveToDpcm(short[] wave, int minSample, int maxSample, float waveSampleRate, float dpcmSampleRate, int dpcmCounterStart, WaveToDpcmRoundingMode roundMode, out byte[] dpcm)
         {
             var waveNumSamples = maxSample - minSample;

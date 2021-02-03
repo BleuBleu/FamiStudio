@@ -246,10 +246,13 @@ namespace FamiStudio
                     }
                     else if (type == ButtonType.Instrument && instrument == null)
                     {
-                        var mappedSamplesSize = projectExplorer.App.Project.GetTotalMappedSampleSize();
                         var label = "DPCM Instrument";
-                        if (mappedSamplesSize > 0)
-                            label += $" ({mappedSamplesSize} bytes)";
+                        if (projectExplorer.App.Project != null)
+                        {
+                            var mappedSamplesSize = projectExplorer.App.Project.GetTotalMappedSampleSize();
+                            if (mappedSamplesSize > 0)
+                                label += $" ({mappedSamplesSize} bytes)";
+                        }
                         return label;
                     }
                     else if (type == ButtonType.Dpcm)
@@ -258,10 +261,13 @@ namespace FamiStudio
                     }
                     else if (type == ButtonType.DpcmHeader)
                     {
-                        var samplesSize = projectExplorer.App.Project.GetTotalSampleSize();
                         var label = "DPCM Samples";
-                        if (samplesSize > 0)
-                            label += $" ({samplesSize} bytes)";
+                        if (projectExplorer.App.Project != null)
+                        {
+                            var samplesSize = projectExplorer.App.Project.GetTotalSampleSize();
+                            if (samplesSize > 0)
+                                label += $" ({samplesSize} bytes)";
+                        }
                         return label;
                     }
 
@@ -595,7 +601,8 @@ namespace FamiStudio
 
         public void ConditionalInvalidate()
         {
-            Invalidate();
+            if (!App.RealTimeUpdate || !App.RealTimeUpdateUpdatesProjectExplorer)
+                Invalidate();
         }
 
         protected bool ShowExpandButtons()
@@ -986,7 +993,7 @@ namespace FamiStudio
                                 App.UndoRedoManager.EndTransaction();
 
                                 InstrumentEdited?.Invoke(instrumentDst, envelopeDragIdx);
-                                Invalidate();
+                                ConditionalInvalidate();
                             }
                         }
                     }
@@ -1027,7 +1034,7 @@ namespace FamiStudio
                                 App.UndoRedoManager.EndTransaction();
 
                                 ArpeggioEdited?.Invoke(arpeggioDst);
-                                Invalidate();
+                                ConditionalInvalidate();
                             }
                         }
                     }

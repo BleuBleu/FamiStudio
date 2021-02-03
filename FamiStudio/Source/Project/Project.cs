@@ -818,7 +818,7 @@ namespace FamiStudio
         {
             int size = 0;
             foreach (var sample in samples)
-                size += (sample.ProcessedData.Length + 63) & 0xffc0;
+                size += sample.ProcessedData.Length;
             return Math.Min(MaxSampleSize, size);
         }
 

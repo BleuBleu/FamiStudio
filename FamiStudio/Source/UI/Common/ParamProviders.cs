@@ -214,7 +214,7 @@ namespace FamiStudio
                 new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1)
                     { GetValue = () => { return sample.TrimZeroVolume ? 1 : 0; }, SetValue = (v) => { sample.TrimZeroVolume = v != 0; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Reverse Bits", 0, 1)
-                    { GetValue = () => { return sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { sample.ReverseBits = v != 0; sample.Process(); } }
+                    { GetValue = () => { return !sample.SourceDataIsWav && sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { if (!sample.SourceDataIsWav) { sample.ReverseBits = v != 0; sample.Process(); } } }
             };
         }
     }

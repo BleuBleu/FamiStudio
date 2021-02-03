@@ -131,11 +131,14 @@ namespace FamiStudio
             // DPCMTODO : What about PAL?
             var targetSampleRate = DpcmSampleRatesNtsc[sampleRate];
 
-            // Fast path for when there is nothing to do.
+            // Fast path for when there is (almost) nothing to do.
             if (!SourceDataIsWav && volumeAdjust == 100 && !trimZeroVolume)
             {
-                processedData = new byte[SourceDmcData.Data.Length];
-                Array.Copy(SourceDmcData.Data, processedData, processedData.Length);
+                processedData = WaveUtils.CopyDpcm(SourceDmcData.Data);
+
+                // Bit reverse.
+                if (reverseBits)
+                    WaveUtils.ReverseDpcmBits(processedData);
             }
             else
             {
@@ -145,14 +148,23 @@ namespace FamiStudio
                 // DPCMTODO : Make this part of the source data interface.
                 if (SourceDataIsWav)
                 {
-                    sourceWavData = new short[SourceWavData.Samples.Length];
+                    sourceWavData = WaveUtils.CopyWave(SourceWavData.Samples);
                     sourceSampleRate = SourceWavData.SampleRate;
-                    Array.Copy(SourceWavData.Samples, sourceWavData, sourceWavData.Length);
                 }
                 else
                 {
                     sourceSampleRate = DpcmSampleRatesNtsc[DpcmSampleRatesNtsc.Length - 1]; // DPCMTODO : Sample rate, is this right? What about PAL?
-                    WaveUtils.DpcmToWave(SourceDmcData.Data, NesApu.DACDefaultValueDiv2, out sourceWavData);
+
+                    var dmcData = SourceDmcData.Data;
+
+                    // Bit reverse.
+                    if (reverseBits)
+                    {
+                        dmcData = WaveUtils.CopyDpcm(dmcData);
+                        WaveUtils.ReverseDpcmBits(dmcData);
+                    }
+
+                    WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out sourceWavData);
                 }
 
                 if (volumeAdjust != 100)
@@ -226,13 +238,6 @@ namespace FamiStudio
                         processedData[i] = 0x55;
                 }
             }
-
-            // Bit reverse.
-            if (reverseBits)
-            {
-                for (int i = 0; i < processedData.Length; i++)
-                    processedData[i] = Utils.ReverseBits(processedData[i]);
-            }
         }
 
         public void ChangeId(int newId)
@@ -283,6 +288,7 @@ namespace FamiStudio
             }
 
             color = ThemeBase.RandomCustomColor();
+            paddingMode = DPCMPaddingMode.Unpadded;
 
             // Process to apply bit reverse, etc.
             Process();
