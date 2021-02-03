@@ -821,7 +821,7 @@ namespace FamiStudio
             previewDPCMSampleRate = (int)Math.Round(DPCMSample.DpcmSampleRatesNtsc[DPCMSample.DpcmSampleRatesNtsc.Length - 1]); // DPCMTODO : What about PAL?
 
             var playRate = (int)Math.Round(DPCMSample.DpcmSampleRatesNtsc[dmcRateIndex]); // DPCMTODO : What about PAL?
-            WaveUtils.DpcmToWave(dmcData, 31, out short[] wave); // DPCMTODO Hardcoded 31 here.
+            WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out short[] wave);
             instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume);
         }
 

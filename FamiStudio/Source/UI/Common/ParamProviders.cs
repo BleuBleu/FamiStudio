@@ -198,10 +198,12 @@ namespace FamiStudio
                     { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.PreviewRate]; }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
                 new DPCMSampleParamInfo(sample, "Sample Rate", 0, 15, true)
                     { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.SampleRate]; }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Reverse Bits", 0, 1)
-                    { GetValue = () => { return sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { sample.ReverseBits = v != 0; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200)
-                    { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } }
+                    { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
+                new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1)
+                    { GetValue = () => { return sample.TrimZeroVolume ? 1 : 0; }, SetValue = (v) => { sample.TrimZeroVolume = v != 0; sample.Process(); } },
+                new DPCMSampleParamInfo(sample, "Reverse Bits", 0, 1)
+                    { GetValue = () => { return sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { sample.ReverseBits = v != 0; sample.Process(); } }
             };
         }
     }

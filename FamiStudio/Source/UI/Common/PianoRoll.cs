@@ -180,6 +180,7 @@ namespace FamiStudio
         RenderBrush attackBrush;
         RenderBrush iconTransparentBrush;
         RenderBrush dashedLineBrush;
+        RenderBrush processedRangeBrush;
         RenderBitmap bmpLoop;
         RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
@@ -683,6 +684,7 @@ namespace FamiStudio
             attackBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.BlackColor));
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, ThemeBase.DarkGreyLineColor2));
             dashedLineBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
+            processedRangeBrush = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.DarkGreyFillColor2));
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
             bmpEffects[Note.EffectVolume] = g.CreateBitmapFromResource("VolumeSmall");
@@ -799,6 +801,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref attackBrush);
             Utils.DisposeAndNullify(ref iconTransparentBrush);
             Utils.DisposeAndNullify(ref dashedLineBrush);
+            Utils.DisposeAndNullify(ref processedRangeBrush);
             Utils.DisposeAndNullify(ref bmpLoop);
             Utils.DisposeAndNullify(ref bmpRelease);
             Utils.DisposeAndNullify(ref bmpEffectExpanded);
@@ -2061,13 +2064,13 @@ namespace FamiStudio
             return (x + scrollX) / (float)viewSize * viewTime;
         }
 
-        private void RenderWave(RenderGraphics g, RenderArea a, short[] data, int rate, RenderBrush brush, bool isSource, bool drawSamples)
+        private void RenderWave(RenderGraphics g, RenderArea a, short[] data, float rate, RenderBrush brush, bool isSource, bool drawSamples)
         {
-            var viewWidth = Width - whiteKeySizeX;
+            var viewWidth  = Width - whiteKeySizeX;
             var halfHeight = (Height - headerAndEffectSizeY) / 2;
-            var viewTime = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
+            var viewTime   = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
 
-            var unclampedMinVisibleSample = (int)Math.Floor(a.minVisibleWaveTime * rate);
+            var unclampedMinVisibleSample = (int)Math.Floor  (a.minVisibleWaveTime * rate);
             var unclampedMaxVisibleSample = (int)Math.Ceiling(a.maxVisibleWaveTime * rate);
             var unclampedNumVisibleSample = unclampedMaxVisibleSample - unclampedMinVisibleSample;
 
@@ -2077,14 +2080,14 @@ namespace FamiStudio
                 while (unclampedNumVisibleSample / (sampleSkip * 2) > viewWidth)
                     sampleSkip *= 2;
 
-                var minVisibleSample = Utils.RoundDownAndClamp(unclampedMinVisibleSample, sampleSkip, 0);
-                var maxVisibleSample = Utils.RoundUpAndClamp(unclampedMaxVisibleSample, sampleSkip, data.Length - 1);
+                var minVisibleSample = Utils.RoundDownAndClamp(unclampedMinVisibleSample,     sampleSkip, 0);
+                var maxVisibleSample = Utils.RoundUpAndClamp  (unclampedMaxVisibleSample + 1, sampleSkip, data.Length - 1);
                 var numVisibleSample = Utils.DivideAndRoundUp(maxVisibleSample - minVisibleSample, sampleSkip);
 
                 var points = new float[numVisibleSample, 2];
                 var times = isSource && drawSamples ? new float[numVisibleSample] : null;
                 var scaleX = 1.0f / (rate * viewTime) * viewWidth;
-                var biasX = -scrollX;
+                var biasX  = (float)-scrollX;
 
                 for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i += sampleSkip, j++)
                 {
@@ -2119,37 +2122,37 @@ namespace FamiStudio
             }
         }
 
-        private void RenderDmc(RenderGraphics g, RenderArea a, byte[] data, float rate, RenderBrush brush, bool isSource, bool drawSamples)
+        private void RenderDmc(RenderGraphics g, RenderArea a, byte[] data, float rate, float baseTime, RenderBrush brush, bool isSource, bool drawSamples)
         {
-            var viewWidth = Width - whiteKeySizeX;
+            var viewWidth  = Width - whiteKeySizeX;
             var realHeight = Height - headerAndEffectSizeY;
-            var viewTime = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
+            var viewTime   = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
 
-            var unclampedMinVisibleSample = (int)Math.Floor  (a.minVisibleWaveTime * rate);
-            var unclampedMaxVisibleSample = (int)Math.Ceiling(a.maxVisibleWaveTime * rate);
+            var unclampedMinVisibleSample = (int)Math.Floor  ((a.minVisibleWaveTime - baseTime) * rate);
+            var unclampedMaxVisibleSample = (int)Math.Ceiling((a.maxVisibleWaveTime - baseTime) * rate);
             var unclampedNumVisibleSample = unclampedMaxVisibleSample - unclampedMinVisibleSample;
 
-            if (unclampedNumVisibleSample > 0)
+            if (unclampedNumVisibleSample > 0 && unclampedMaxVisibleSample > 0 && unclampedMinVisibleSample < data.Length * 8 - 1)
             {
                 var sampleSkip = 1;
                 while (unclampedNumVisibleSample / (sampleSkip * 2) > viewWidth)
                     sampleSkip *= 2;
 
-                var minVisibleSample = Utils.RoundDownAndClamp(unclampedMinVisibleSample, sampleSkip, 0);
-                var maxVisibleSample = Utils.RoundUpAndClamp  (unclampedMaxVisibleSample, sampleSkip, data.Length * 8 - 1);
+                var minVisibleSample = Utils.RoundDownAndClamp(unclampedMinVisibleSample,     sampleSkip, 0);
+                var maxVisibleSample = Utils.RoundUpAndClamp  (unclampedMaxVisibleSample + 1, sampleSkip, data.Length * 8);
 
                 // Align to bytes.
                 minVisibleSample = Utils.RoundDownAndClamp(minVisibleSample, 8, 0);
-                maxVisibleSample = Utils.RoundUpAndClamp  (maxVisibleSample, 8, data.Length * 8 - 1);
+                maxVisibleSample = Utils.RoundUpAndClamp  (maxVisibleSample, 8, data.Length * 8);
 
                 var numVisibleSample = Utils.DivideAndRoundUp (maxVisibleSample - minVisibleSample, sampleSkip); 
 
                 var points = new float[numVisibleSample, 2];
                 var times = isSource && drawSamples ? new float[numVisibleSample] : null;
                 var scaleX = 1.0f / (rate * viewTime) * viewWidth;
-                var biasX = -scrollX;
+                var biasX  = GetPixelForWaveTime(baseTime, scrollX);
 
-                var dpcmCounter = 31; // DPCMTODO : Hardcoded start value!
+                var dpcmCounter = NesApu.DACDefaultValueDiv2;
 
                 // DPCMTODO : Make sure we are displaying the current value, not previous or next!
                 for (int i = 0; i < minVisibleSample; i++)
@@ -2216,6 +2219,11 @@ namespace FamiStudio
             g.PushTranslation(whiteKeySizeX, headerAndEffectSizeY);
             g.PushClip(0, 0, Width, Height);
 
+            // Processed range.
+            g.FillRectangle(
+                GetPixelForWaveTime(editSample.MinProcessingTime, scrollX), 0,
+                GetPixelForWaveTime(editSample.MaxProcessingTime, scrollX), Height, theme.DarkGreyFillBrush1);
+
             // Horizontal center line
             var centerY = (Height - headerSizeY) * 0.5f;
             g.DrawLine(0, centerY, Width, centerY, theme.BlackBrush);
@@ -2250,16 +2258,16 @@ namespace FamiStudio
             // Source waveform
             if (editSample.SourceDataIsWav)
             {
-                RenderWave(g, a, editSample.SourceWavData.Samples, editSample.SourceWavData.SampleRate, theme.LightGreyFillBrush1, true, showSamples);
+                RenderWave(g, a, editSample.SourceWavData.Samples, editSample.SourceSampleRate, theme.LightGreyFillBrush1, true, showSamples);
             }
             else
             {
-                RenderDmc(g, a, editSample.SourceDmcData.Data, DPCMSample.DpcmSampleRatesNtsc[DPCMSample.DpcmSampleRatesNtsc.Length - 1], theme.LightGreyFillBrush1, true, showSamples); // DPCMTODO
+                RenderDmc(g, a, editSample.SourceDmcData.Data, editSample.SourceSampleRate, 0.0f, theme.LightGreyFillBrush1, true, showSamples); // DPCMTODO
             }
 
             // Processed waveform
             var processedBrush = g.GetSolidBrush(editSample.Color);
-            RenderDmc(g, a, editSample.ProcessedData, DPCMSample.DpcmSampleRatesNtsc[editSample.SampleRate], processedBrush, false, showSamples); // DPCMTODO : What about PAL?
+            RenderDmc(g, a, editSample.ProcessedData, DPCMSample.DpcmSampleRatesNtsc[editSample.SampleRate], editSample.MinProcessingTime, processedBrush, false, showSamples); // DPCMTODO : What about PAL?
 
             // Play position
             var playPosition = App.PreviewDPCMWavPosition;
@@ -2267,6 +2275,8 @@ namespace FamiStudio
             if (playPosition >= 0 && App.PreviewDPCMSampleId == editSample.Id)
             {
                 var playTime = playPosition / (float)App.PreviewDPCMSampleRate;
+                if (!App.PreviewDPCMIsSource)
+                    playTime += editSample.MinProcessingTime;
                 var seekX = GetPixelForWaveTime(playTime, scrollX);
                 g.DrawLine(seekX, 0, seekX, Height, App.PreviewDPCMIsSource ? theme.LightGreyFillBrush1 : processedBrush, 3);
             }
@@ -2897,27 +2907,6 @@ namespace FamiStudio
             }
         }
 
-        private void TrimWaveSilence()
-        {
-            Debug.Assert(editMode == EditionMode.DPCM);
-
-            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
-
-            if (editSample.SourceData.TrimSilence())
-            {
-                editSample.Process();
-                App.UndoRedoManager.EndTransaction();
-                DPCMSampleChanged?.Invoke();
-            }
-            else
-            {
-                App.UndoRedoManager.AbortTransaction();
-            }
-
-            ClearSelection();
-            ConditionalInvalidate();
-        }
-
 #if FAMISTUDIO_WINDOWS
         public void UnfocusedKeyDown(KeyEventArgs e)
         {
@@ -3026,10 +3015,6 @@ namespace FamiStudio
                 if (e.KeyCode == Keys.Delete)
                 {
                     DeleteSelectedWaveSection();
-                }
-                else if (e.KeyCode == Keys.Z)
-                {
-                    TrimWaveSilence();
                 }
             }
         }

@@ -43,14 +43,15 @@ namespace FamiStudio
         //    }
         //};
 
-        static public void Resample(short[] source, short[] dest)
+        static public void Resample(short[] source, int minSample, int maxSample, short[] dest)
         {
-            var ratio = source.Length / (float)dest.Length;
+            var numSourceSamples = maxSample - minSample;
+            var ratio = numSourceSamples / (float)dest.Length;
 
             // Linear filtering, will suffer from aliasing when downsampling by less than 1/2...
             for (int i = 0; i < dest.Length; i++)
             {
-                var srcPos = i * ratio;
+                var srcPos = minSample + i * ratio;
 
                 var idx0 = Math.Min((int)Math.Floor  (srcPos), source.Length - 1);
                 var idx1 = Math.Min((int)Math.Ceiling(srcPos), source.Length - 1);
@@ -69,22 +70,20 @@ namespace FamiStudio
             return counter * (65536 / 64) - 32768;
         }
 
-        static public void WaveToDpcm(short[] wave, float waveSampleRate, float dpcmSampleRate, int dpcmCounterStart, out byte[] dpcm)
+        static public void WaveToDpcm(short[] wave, int minSample, int maxSample, float waveSampleRate, float dpcmSampleRate, int dpcmCounterStart, out byte[] dpcm)
         {
-            var dpcmNumSamples = (int)Math.Round(wave.Length * (dpcmSampleRate / (float)waveSampleRate));
+            var waveNumSamples = maxSample - minSample;
+            var dpcmNumSamples = (int)Math.Round(waveNumSamples * (dpcmSampleRate / (float)waveSampleRate));
 
             // Resample to the correct rate 
             var resampledWave = new short[dpcmNumSamples];
-            Resample(wave, resampledWave);
+            Resample(wave, minSample, maxSample, resampledWave);
 
             var dpcmSize = (dpcmNumSamples + 7) / 8; // Round up to byte. 
-            var dpcmSizePadded = (dpcmSize + 15) & ~15; // Technically we should make the size 16x + 1. DPCMTODO
+            dpcm = new byte[dpcmSize];
 
-            dpcm = new byte[dpcmSizePadded];
-
-            // We might not (fully) write the last few bytes, so pre-fill.
-            for (int i = dpcmSize - 1; i < dpcmSizePadded; i++)
-                dpcm[i] = 0x55; 
+            // We might not (fully) write the last byte, so pre-fill.
+            dpcm[dpcm.Length - 1] = (byte)((dpcmNumSamples & 1) != 0 ? 0x55 : 0xaa);
 
             // DPCM conversion.
             var dpcmCounter = dpcmCounterStart;
@@ -97,7 +96,8 @@ namespace FamiStudio
                 var index = i / 8;
                 var mask  = (1 << (i & 7));
 
-                if (dpcmSample < waveSample)
+                // When samples are equal, look at the next one. This is helpful when re-converting back to DMC.
+                if (dpcmSample < waveSample || (dpcmSample == waveSample && i != resampledWave.Length - 1 && resampledWave[i + 1] > waveSample))
                 {
                     dpcm[index] |= (byte)mask;
                     dpcmCounter = Math.Min(dpcmCounter + 1, 63);
@@ -156,6 +156,55 @@ namespace FamiStudio
             else
             {
                 return false;
+            }
+        }
+
+        static public void GetDmcNonZeroVolumeRange(byte[] dmc, out int nonZeroMinByte, out int nonZeroMaxByte)
+        {
+            nonZeroMinByte = 0;
+            nonZeroMaxByte = dmc.Length;
+
+            // Very coarse, only remove entire byte alternative 0/1s.
+            for (int i = 0; i < dmc.Length; i++)
+            {
+                if (dmc[i] != 0x55 && dmc[i] != 0xaa)
+                {
+                    nonZeroMinByte = i;
+                    break;
+                }
+            }
+
+            for (int i = dmc.Length - 1; i >= 0; i--)
+            {
+                if (dmc[i] != 0x55 && dmc[i] != 0xaa)
+                {
+                    nonZeroMaxByte = i + 1;
+                    break;
+                }
+            }
+        }
+
+        static public void GetWaveNonZeroVolumeRange(short[] wave, int threshold, out int nonZeroMin, out int nonZeroMax)
+        {
+            nonZeroMin = 0;
+            nonZeroMax = wave.Length - 1;
+
+            for (int i = 0; i < wave.Length; i++)
+            {
+                if (Math.Abs(wave[i]) > threshold)
+                {
+                    nonZeroMin = i;
+                    break;
+                }
+            }
+
+            for (int i = wave.Length - 1; i >= 0; i--)
+            {
+                if (Math.Abs(wave[i]) > threshold)
+                {
+                    nonZeroMax = i + 1;
+                    break;
+                }
             }
         }
 

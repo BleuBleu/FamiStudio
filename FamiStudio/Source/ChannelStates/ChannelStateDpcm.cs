@@ -22,7 +22,7 @@
                     WriteRegister(NesApu.APU_DMC_START, FamiStudio.StaticProject.GetAddressForSample(mapping.Sample) >> 6);
                     WriteRegister(NesApu.APU_DMC_LEN, mapping.Sample.ProcessedData.Length >> 4);
                     WriteRegister(NesApu.APU_DMC_FREQ, mapping.Pitch | (mapping.Loop ? 0x40 : 0x00));
-                    WriteRegister(NesApu.APU_DMC_RAW, 32);
+                    WriteRegister(NesApu.APU_DMC_RAW, NesApu.DACDefaultValue);
                     WriteRegister(NesApu.APU_SND_CHN, 0x1f);
                 }
             }

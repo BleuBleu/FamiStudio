@@ -19,28 +19,31 @@ FamiStudio 2.4.0
 Test:
 - Retest Win7 device lost.
 - Transaction (w/o DPCM), test a LOT!
+- Re-export, recompile and change ROM version.
+- 
 
 DPCM Editor
 ===========
+x Change default 4011 to 64, not 32 (in both sound engine + c#).
+x Make default 32 a constant, swap 31 everything.
 Trim:
 	- DMC Trims (regular + zero)
 	- Make trim zero an option that only affects the output!
 - Let go over 16KB, but show warning.
-- How to pack samples and align everything?
-	- Memory block vs. Build dynamically.
-- Basic volume adjustment (0-200%)
+- How to pack samples and align everything? => Build dynamically, store offset in sample. 
+/ Basic volume adjustment (0-200%)
 - Option to normalize volume
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
 / Bit reverse
-	=> Make sure the order i parse the bits matches what the HW does! Low -> High? Or High to Low! (Test on real HW + emualtor)
-- Figure out if DMC is pre-increment or post-increment.	
+	x Make sure the order i parse the bits matches what the HW does! Low -> High? Or High to Low! (Test on real HW + emualtor)
+x Figure out if DMC is pre-increment or post-increment.	=> POST
 - Sample rate
 - Cleanup will remove the source data and reset param to something "neutral".
 - Make sure clipboard still works (much copy source data as well).
 / Change DPCM mapping to add existing sample instead. => DRAG & DROP!
 - What is the quality setting in RJDMC?
-- "Z" needs piano roll focus.
-- Allow scroll up/down keyboard even in sample.
+x "Z" needs piano roll focus. => WILL NOT BE NEEDED IF TRIM IS OPTION.
+- Allow scroll up/down piano even in sample.
 - What about space to play DPCM?
 - FamiStudio text format. Give warning of loss source data.
 - Tooltips everywhere!

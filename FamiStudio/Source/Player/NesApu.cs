@@ -181,6 +181,13 @@ namespace FamiStudio
         // Volume set in Nes_Apu::volume for the DMC channel. 
         public const float DPCMVolume = 0.42545f;
 
+        // Default "center" value for the DPCM channel. May be configurable one day.
+        public const int DACDefaultValue = 64;
+
+        // All of our DPCM processing uses 1/2 values (0-63) since the
+        // DMC channel increments/decrements by steps of 2 anyways.
+        public const int DACDefaultValueDiv2 = DACDefaultValue / 2;
+
         public static readonly ushort[]   NoteTableNTSC    = new ushort[97];
         public static readonly ushort[]   NoteTablePAL     = new ushort[97];
         public static readonly ushort[]   NoteTableVrc6Saw = new ushort[97];
