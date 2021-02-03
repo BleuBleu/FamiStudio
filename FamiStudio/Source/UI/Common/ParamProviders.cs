@@ -207,7 +207,7 @@ namespace FamiStudio
                     { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.PreviewRate]; }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
                 new DPCMSampleParamInfo(sample, "Sample Rate", 0, 15, true)
                     { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.SampleRate]; }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Padding Mode", 0, 15, true)
+                new DPCMSampleParamInfo(sample, "Padding Mode", 0, 4, true)
                     { GetValue = () => { return (int)sample.PaddingMode; }, GetValueString = () => { return PaddingModeStrings[(int)sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = (DPCMPaddingMode)v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200)
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
