@@ -2074,7 +2074,7 @@ namespace FamiStudio
             var unclampedMaxVisibleSample = (int)Math.Ceiling(a.maxVisibleWaveTime * rate);
             var unclampedNumVisibleSample = unclampedMaxVisibleSample - unclampedMinVisibleSample;
 
-            if (unclampedNumVisibleSample > 0)
+            if (unclampedNumVisibleSample > 0 && unclampedMaxVisibleSample > 0 && unclampedMinVisibleSample < data.Length)
             {
                 var sampleSkip = 1;
                 while (unclampedNumVisibleSample / (sampleSkip * 2) > viewWidth)
@@ -2084,39 +2084,43 @@ namespace FamiStudio
                 var maxVisibleSample = Utils.RoundUpAndClamp  (unclampedMaxVisibleSample + 1, sampleSkip, data.Length - 1);
                 var numVisibleSample = Utils.DivideAndRoundUp(maxVisibleSample - minVisibleSample, sampleSkip);
 
-                var points = new float[numVisibleSample, 2];
-                var times = isSource && drawSamples ? new float[numVisibleSample] : null;
-                var scaleX = 1.0f / (rate * viewTime) * viewWidth;
-                var biasX  = (float)-scrollX;
-
-                for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i += sampleSkip, j++)
+                if (numVisibleSample > 0)
                 {
-                    points[j, 0] = i * scaleX + biasX;
-                    points[j, 1] = halfHeight + data[i] / (float)short.MinValue * halfHeight;
-                    if (times != null) times[j] = i / (float)rate;
-                }
 
-                // Direct2D doesn't have a way to drawing lines with more than 2 points. Using a temporary 
-                // geometry is ugly, but still 6x faster than manually drawing each line segment.
-                RenderGeometry geo = g.CreateGeometry(points, false);
+                    var points = new float[numVisibleSample, 2];
+                    var times = isSource && drawSamples ? new float[numVisibleSample] : null;
+                    var scaleX = 1.0f / (rate * viewTime) * viewWidth;
+                    var biasX = (float)-scrollX;
 
-                g.AntiAliasing = true;
-                g.DrawGeometry(geo, brush);
-                g.AntiAliasing = false;
-                geo.Dispose();
-
-                if (drawSamples)
-                {
-                    var selectionValid = IsWaveSelectionValid();
-
-                    for (int i = 0; i < points.GetLength(0); i++)
+                    for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i += sampleSkip, j++)
                     {
-                        var selected = isSource && selectionValid && times[i] >= selectionWaveTimeMin && times[i] <= selectionWaveTimeMax;
-                        var sampleScale = selected ? 1.5f : 1.0f;
+                        points[j, 0] = i * scaleX + biasX;
+                        points[j, 1] = halfHeight + data[i] / (float)short.MinValue * halfHeight;
+                        if (times != null) times[j] = i / (float)rate;
+                    }
 
-                        g.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
-                        g.FillGeometry(sampleGeometry, selected ? theme.WhiteBrush : brush);
-                        g.PopTransform();
+                    // Direct2D doesn't have a way to drawing lines with more than 2 points. Using a temporary 
+                    // geometry is ugly, but still 6x faster than manually drawing each line segment.
+                    RenderGeometry geo = g.CreateGeometry(points, false);
+
+                    g.AntiAliasing = true;
+                    g.DrawGeometry(geo, brush);
+                    g.AntiAliasing = false;
+                    geo.Dispose();
+
+                    if (drawSamples)
+                    {
+                        var selectionValid = IsWaveSelectionValid();
+
+                        for (int i = 0; i < points.GetLength(0); i++)
+                        {
+                            var selected = isSource && selectionValid && times[i] >= selectionWaveTimeMin && times[i] <= selectionWaveTimeMax;
+                            var sampleScale = selected ? 1.5f : 1.0f;
+
+                            g.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
+                            g.FillGeometry(sampleGeometry, selected ? theme.WhiteBrush : brush);
+                            g.PopTransform();
+                        }
                     }
                 }
             }
@@ -2145,67 +2149,70 @@ namespace FamiStudio
                 minVisibleSample = Utils.RoundDownAndClamp(minVisibleSample, 8, 0);
                 maxVisibleSample = Utils.RoundUpAndClamp  (maxVisibleSample, 8, data.Length * 8);
 
-                var numVisibleSample = Utils.DivideAndRoundUp (maxVisibleSample - minVisibleSample, sampleSkip); 
+                var numVisibleSample = Utils.DivideAndRoundUp(maxVisibleSample - minVisibleSample, sampleSkip);
 
-                var points = new float[numVisibleSample, 2];
-                var times = isSource && drawSamples ? new float[numVisibleSample] : null;
-                var scaleX = 1.0f / (rate * viewTime) * viewWidth;
-                var biasX  = GetPixelForWaveTime(baseTime, scrollX);
-
-                var dpcmCounter = NesApu.DACDefaultValueDiv2;
-
-                // DPCMTODO : Make sure we are displaying the current value, not previous or next!
-                for (int i = 0; i < minVisibleSample; i++)
+                if (numVisibleSample > 0)
                 {
-                    var bit  = (i >> 3);
-                    var mask = (1 << (i & 7));
+                    var points = new float[numVisibleSample, 2];
+                    var times = isSource && drawSamples ? new float[numVisibleSample] : null;
+                    var scaleX = 1.0f / (rate * viewTime) * viewWidth;
+                    var biasX = GetPixelForWaveTime(baseTime, scrollX);
 
-                    if ((data[bit] & mask) != 0)
-                        dpcmCounter = Math.Min(dpcmCounter + 1, 63);
-                    else
-                        dpcmCounter = Math.Max(dpcmCounter - 1, 0);
-                }
+                    var dpcmCounter = NesApu.DACDefaultValueDiv2;
 
-                for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i++)
-                {
-                    if ((i & (sampleSkip - 1)) == 0)
+                    // DPCMTODO : Make sure we are displaying the current value, not previous or next!
+                    for (int i = 0; i < minVisibleSample; i++)
                     {
-                        points[j, 0] = i * scaleX + biasX;
-                        points[j, 1] = (-dpcmCounter / 64.0f + 0.5f) * realHeight + realHeight / 2; // DPCMTODO : Is that centered correctly? Also negative value?
-                        if (times != null) times[j] = i / (float)rate;
-                        j++;
+                        var bit = (i >> 3);
+                        var mask = (1 << (i & 7));
+
+                        if ((data[bit] & mask) != 0)
+                            dpcmCounter = Math.Min(dpcmCounter + 1, 63);
+                        else
+                            dpcmCounter = Math.Max(dpcmCounter - 1, 0);
                     }
 
-                    var bit  = (i >> 3);
-                    var mask = (1 << (i & 7));
-
-                    if ((data[bit] & mask) != 0)
-                        dpcmCounter = Math.Min(dpcmCounter + 1, 63);
-                    else
-                        dpcmCounter = Math.Max(dpcmCounter - 1, 0);
-                }
-
-                // Direct2D doesn't have a way to drawing lines with more than 2 points. Using a temporary 
-                // geometry is ugly, but still 6x faster than manually drawing each line segment.
-                RenderGeometry geo = g.CreateGeometry(points, false);
-
-                g.AntiAliasing = true;
-                g.DrawGeometry(geo, brush);
-                g.AntiAliasing = false;
-                geo.Dispose();
-
-                if (drawSamples)
-                {
-                    var selectionValid = IsWaveSelectionValid();
-
-                    for (int i = 0; i < points.GetLength(0); i++)
+                    for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i++)
                     {
-                        var selected = isSource && selectionValid && times[i] >= selectionWaveTimeMin && times[i] <= selectionWaveTimeMax;
-                        var sampleScale = selected ? 1.5f : 1.0f;
+                        if ((i & (sampleSkip - 1)) == 0)
+                        {
+                            points[j, 0] = i * scaleX + biasX;
+                            points[j, 1] = (-dpcmCounter / 64.0f + 0.5f) * realHeight + realHeight / 2; // DPCMTODO : Is that centered correctly? Also negative value?
+                            if (times != null) times[j] = i / (float)rate;
+                            j++;
+                        }
 
-                        g.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
-                        g.FillGeometry(sampleGeometry, brush);
-                        g.PopTransform();
+                        var bit = (i >> 3);
+                        var mask = (1 << (i & 7));
+
+                        if ((data[bit] & mask) != 0)
+                            dpcmCounter = Math.Min(dpcmCounter + 1, 63);
+                        else
+                            dpcmCounter = Math.Max(dpcmCounter - 1, 0);
+                    }
+
+                    // Direct2D doesn't have a way to drawing lines with more than 2 points. Using a temporary 
+                    // geometry is ugly, but still 6x faster than manually drawing each line segment.
+                    RenderGeometry geo = g.CreateGeometry(points, false);
+
+                    g.AntiAliasing = true;
+                    g.DrawGeometry(geo, brush);
+                    g.AntiAliasing = false;
+                    geo.Dispose();
+
+                    if (drawSamples)
+                    {
+                        var selectionValid = IsWaveSelectionValid();
+
+                        for (int i = 0; i < points.GetLength(0); i++)
+                        {
+                            var selected = isSource && selectionValid && times[i] >= selectionWaveTimeMin && times[i] <= selectionWaveTimeMax;
+                            var sampleScale = selected ? 1.5f : 1.0f;
+
+                            g.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
+                            g.FillGeometry(sampleGeometry, brush);
+                            g.PopTransform();
+                        }
                     }
                 }
             }
@@ -2903,6 +2910,7 @@ namespace FamiStudio
                 }
 
                 ClearSelection();
+                ClampScroll();
                 ConditionalInvalidate();
             }
         }
