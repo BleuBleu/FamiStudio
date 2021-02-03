@@ -7,42 +7,15 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    static class WaveUtils
+    public enum WaveToDpcmRoundingMode
     {
-        //public interface IWave
-        //{
-        //    void SerializeState(ProjectBuffer buffer);
-        //    bool Trim(float timeStart, float timeEnd);
-        //    bool TrimSilence();
-        //    int NumSamples { get; }
-        //    float SampleRate;
-        //};
+        None,
+        RoundTo16Bytes,
+        RoundTo16BytesPlusOne
+    };
 
-        //// Mono, 16-bit PCM wave
-        //public class PCMWave
-        //{
-        //    float 
-
-        //    public PCMWave(short samples[], float rate)
-        //    {
-
-        //    }
-
-        //    public DPCMWave ToDPCM()
-        //    {
-        //        return null;
-        //    }
-        //};
-
-        //// Mono, 1-bit DPCM wave
-        //public class DPCMWave
-        //{
-        //    public PCMWave ToPCM()
-        //    {
-        //        return null;
-        //    }
-        //};
-
+    public static class WaveUtils
+    {
         static public void Resample(short[] source, int minSample, int maxSample, short[] dest)
         {
             var numSourceSamples = maxSample - minSample;
@@ -70,10 +43,24 @@ namespace FamiStudio
             return counter * (65536 / 64) - 32768;
         }
 
-        static public void WaveToDpcm(short[] wave, int minSample, int maxSample, float waveSampleRate, float dpcmSampleRate, int dpcmCounterStart, out byte[] dpcm)
+        static public void WaveToDpcm(short[] wave, int minSample, int maxSample, float waveSampleRate, float dpcmSampleRate, int dpcmCounterStart, WaveToDpcmRoundingMode roundMode, out byte[] dpcm)
         {
             var waveNumSamples = maxSample - minSample;
-            var dpcmNumSamples = (int)Math.Round(waveNumSamples * (dpcmSampleRate / (float)waveSampleRate));
+            var dpcmNumSamplesFloat = waveNumSamples * (dpcmSampleRate / (float)waveSampleRate);
+            var dpcmNumSamples = 0;
+
+            switch (roundMode)
+            {
+                case WaveToDpcmRoundingMode.RoundTo16Bytes:
+                    dpcmNumSamples = (int)Math.Round(dpcmNumSamplesFloat / 128.0f) * 128;
+                    break;
+                case WaveToDpcmRoundingMode.RoundTo16BytesPlusOne:
+                    dpcmNumSamples = (int)Math.Round(dpcmNumSamplesFloat / 128.0f) * 128 + 8;
+                    break;
+                default:
+                    dpcmNumSamples = (int)Math.Round(dpcmNumSamplesFloat);
+                    break;
+            }
 
             // Resample to the correct rate 
             var resampledWave = new short[dpcmNumSamples];
@@ -82,8 +69,10 @@ namespace FamiStudio
             var dpcmSize = (dpcmNumSamples + 7) / 8; // Round up to byte. 
             dpcm = new byte[dpcmSize];
 
-            // We might not (fully) write the last byte, so pre-fill.
-            dpcm[dpcm.Length - 1] = (byte)((dpcmNumSamples & 1) != 0 ? 0x55 : 0xaa);
+            // We might not (fully) write the last few bytes, so pre-fill.
+            // DPCMTODO: Decide on 0xaa or 0x55 depending on odd/even number of raw samples.
+            for (int i = dpcmSize - 1, j = 0; i >= 0 && j < 32; i--, j++)
+                dpcm[i] = 0x55;
 
             // DPCM conversion.
             var dpcmCounter = dpcmCounterStart;

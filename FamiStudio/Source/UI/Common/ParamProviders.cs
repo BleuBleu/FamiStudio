@@ -190,6 +190,15 @@ namespace FamiStudio
             "15 (33.1 KHz)",
         };
 
+        static readonly string[] PaddingModeStrings =
+        {
+            "Unpadded",
+            "Pad to 16",
+            "Pad to 16+1",
+            "Round to 16",
+            "Round to 16+1"
+         };
+
         static public ParamInfo[] GetParams(DPCMSample sample)
         {
             return new[]
@@ -198,6 +207,8 @@ namespace FamiStudio
                     { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.PreviewRate]; }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
                 new DPCMSampleParamInfo(sample, "Sample Rate", 0, 15, true)
                     { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.SampleRate]; }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
+                new DPCMSampleParamInfo(sample, "Padding Mode", 0, 15, true)
+                    { GetValue = () => { return (int)sample.PaddingMode; }, GetValueString = () => { return PaddingModeStrings[(int)sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = (DPCMPaddingMode)v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200)
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1)
