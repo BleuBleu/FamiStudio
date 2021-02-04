@@ -93,9 +93,10 @@ namespace FamiStudio
             controls = new FamiStudioControls(this);
 
             MacUtils.Initialize(WindowInfo.Handle);
+			Cursors.Initialize();
 
-            // There are some severe maximize bugs in OpenTK. Simply disable the maximize and bypass all the frame zooming thing.
-            WindowShouldZoomToFrameHandler = WindowShouldZoomToFrame;
+			// There are some severe maximize bugs in OpenTK. Simply disable the maximize and bypass all the frame zooming thing.
+			WindowShouldZoomToFrameHandler = WindowShouldZoomToFrame;
             ResetCursorRectsHandler = ResetCursorRects;
 
             MacUtils.RemoveMaximizeButton(WindowInfo.Handle);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,6 +16,7 @@ namespace FamiStudio
         public static IntPtr SizeNS     = MacUtils.SelRegisterName("resizeUpDownCursor");
         public static IntPtr DragCursor = MacUtils.SelRegisterName("closedHandCursor");
         public static IntPtr CopyCursor = MacUtils.SelRegisterName("dragCopyCursor");
+        public static IntPtr Eyedrop    = MacUtils.SelRegisterName("arrowCursor");
 #else
         public static Gdk.Cursor Default;
         public static Gdk.Cursor SizeWE;
@@ -24,11 +26,27 @@ namespace FamiStudio
         public static Gdk.Cursor Eyedrop;
 #endif
 
+#if FAMISTUDIO_MACOS
+        private static IntPtr CreateCursorFromResource(string name, int x, int y)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var suffix = GLTheme.MainWindowScaling > 1 ? "@2x" : "";
+            using (var stream = assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}{suffix}.png"))
+            {
+                byte[] buffer = new byte[stream.Length];
+                stream.Read(buffer, 0, buffer.Length);
+
+                // MATTT: 2x hotspot on retina!!
+                return MacUtils.CreateCursorFromImage(buffer, x, y);
+            }
+        }
+#else
         private static Gdk.Cursor CreateCursorFromResource(string name, int x, int y)
         {
             var pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
             return new Gdk.Cursor(Gdk.Display.Default, pixbuf, x, y);
         }
+#endif
 
         public static void Initialize()
         {

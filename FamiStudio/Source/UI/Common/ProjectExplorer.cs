@@ -482,9 +482,6 @@ namespace FamiStudio
         {
             Debug.Assert(captureOperation != CaptureOperation.MoveSlider);
 
-            if (invalidate)
-                ConditionalInvalidate();
-
             buttons.Clear();
             var project = App.Project;
 
@@ -545,6 +542,9 @@ namespace FamiStudio
             }
 
             UpdateRenderCoords();
+
+            if (invalidate)
+                ConditionalInvalidate();
         }
 
         protected override void OnRenderInitialized(RenderGraphics g)

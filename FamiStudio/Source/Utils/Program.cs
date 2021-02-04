@@ -35,7 +35,9 @@ namespace FamiStudio
             Settings.Load();
             RenderTheme.Initialize();
             PlatformUtils.Initialize();
+#if !FAMISTUDIO_MACOS
             Cursors.Initialize();
+#endif
             FamiStudioTempoUtils.Initialize();
             NesApu.InitializeNoteTables();
 
