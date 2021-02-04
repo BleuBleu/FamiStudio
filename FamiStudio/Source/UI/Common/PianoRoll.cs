@@ -316,14 +316,16 @@ namespace FamiStudio
 
         public delegate void EmptyDelegate();
         public delegate void PatternDelegate(Pattern pattern);
+        public delegate void InstrumentDelegate(Instrument instrument);
 
-        public event PatternDelegate PatternChanged;
-        public event EmptyDelegate   ManyPatternChanged;
-        public event EmptyDelegate   DPCMSampleChanged;
-        public event EmptyDelegate   EnvelopeChanged;
-        public event EmptyDelegate   ControlActivated;
-        public event EmptyDelegate   NotesPasted;
-        public event EmptyDelegate   ScrollChanged;
+        public event PatternDelegate    PatternChanged;
+        public event EmptyDelegate      ManyPatternChanged;
+        public event EmptyDelegate      DPCMSampleChanged;
+        public event EmptyDelegate      EnvelopeChanged;
+        public event EmptyDelegate      ControlActivated;
+        public event EmptyDelegate      NotesPasted;
+        public event EmptyDelegate      ScrollChanged;
+        public event InstrumentDelegate InstrumentEyedropped;
 
         public PianoRoll()
         {
@@ -3171,6 +3173,8 @@ namespace FamiStudio
             if (captureOperation != CaptureOperation.None)
                 return;
 
+            UpdateCursor();
+
             if (left && IsMouseInPiano(e))
             {
                 StartCaptureOperation(e, CaptureOperation.PlayPiano);
@@ -3299,6 +3303,7 @@ namespace FamiStudio
                     var shift = ModifierKeys.HasFlag(Keys.Shift);
                     var slide = FamiStudioForm.IsKeyDown(Keys.S);
                     var attack = FamiStudioForm.IsKeyDown(Keys.A);
+                    var eyedrop = FamiStudioForm.IsKeyDown(Keys.I);
 
                     if (slide && channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
                     {
@@ -3317,6 +3322,16 @@ namespace FamiStudio
                         channel.PatternInstances[patternIdx].ClearLastValidNoteCache();
                         App.UndoRedoManager.EndTransaction();
                         changed = true;
+                    }
+                    else if (eyedrop)
+                    {
+                        if (channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx) &&
+                            channel.PatternInstances[patternIdx].Notes.TryGetValue(noteIdx, out var note) && note != null)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
+                            InstrumentEyedropped?.Invoke(note.Instrument);
+                            App.UndoRedoManager.EndTransaction();
+                        }
                     }
                     else if (ctrl || shift && channel.SupportsReleaseNotes)
                     {
@@ -3341,6 +3356,7 @@ namespace FamiStudio
                             note.Instrument = editChannel == Channel.Dpcm ? null : currentInstrument;
                             pattern.ClearLastValidNoteCache();
                             StartCaptureOperation(e, CaptureOperation.CreateDragSlideNoteTarget, true);
+                            changed = true;
                         }
                         else
                         {
@@ -3423,13 +3439,12 @@ namespace FamiStudio
 
                         if (dragStarted)
                         {
+                            changed = true;
                             dragLastNoteValue = -1;
                             UpdateNoteDrag(e, false);
                             ConditionalInvalidate();
                         }
                     }
-
-                    changed = true;
                 }
                 else if (right)
                 {
@@ -3870,7 +3885,7 @@ namespace FamiStudio
                             if (note.IsArpeggio)
                                 newNoteTooltip += $" (Arpeggio: {note.Arpeggio.Name})";
 
-                            tooltip = "{MouseLeft} {Drag} Add/drag note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseWheel} Pan\n{S} {MouseLeft} {Drag} Create/edit slide note - {A} {MouseLeft} Toggle note attack - {MouseRight} Delete note";
+                            tooltip = "{MouseLeft} {Drag} Add/drag note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseWheel} Pan\n{S} {MouseLeft} {Drag} Slide note - {A} {MouseLeft} Toggle note attack - {I} {MouseLeft} Instrument Eyedrop - {MouseRight} Delete note";
                         }
                         else
                         {
@@ -4208,6 +4223,8 @@ namespace FamiStudio
                 Cursor.Current = Cursors.SizeNS;
             else if (ModifierKeys.HasFlag(Keys.Control) && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
                 Cursor.Current = Cursors.CopyCursor;
+            else if (editMode == EditionMode.Channel && FamiStudioForm.IsKeyDown(Keys.I))
+                Cursor.Current = Cursors.Eyedrop;
             else
                 Cursor.Current = Cursors.Default;
         }
@@ -4235,6 +4252,8 @@ namespace FamiStudio
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+
+            UpdateCursor();
 
             bool middle = e.Button.HasFlag(MouseButtons.Middle);
 

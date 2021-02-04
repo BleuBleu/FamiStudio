@@ -345,6 +345,7 @@
     <EmbeddedResource Include="Resources\WaveEdit.png" />
     <EmbeddedResource Include="Resources\SaveSmall%402x.png" />
     <EmbeddedResource Include="Resources\SaveSmall.png" />
+    <EmbeddedResource Include="Resources\Eyedrop.cur" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

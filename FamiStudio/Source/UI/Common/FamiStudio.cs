@@ -133,6 +133,7 @@ namespace FamiStudio
             PianoRoll.ControlActivated += PianoRoll_ControlActivated;
             PianoRoll.NotesPasted += PianoRoll_NotesPasted;
             PianoRoll.ScrollChanged += PianoRoll_ScrollChanged;
+            PianoRoll.InstrumentEyedropped += PianoRoll_InstrumentEyedropped;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
             ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
@@ -170,6 +171,11 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        private void PianoRoll_InstrumentEyedropped(Instrument instrument)
+        {
+            ProjectExplorer.SelectedInstrument = instrument;
         }
 
         private void PianoRoll_ScrollChanged()

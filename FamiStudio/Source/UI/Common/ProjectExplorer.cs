@@ -379,8 +379,19 @@ namespace FamiStudio
         RenderBitmap[] bmpEnvelopes = new RenderBitmap[Envelope.Count];
 
         public Song SelectedSong => selectedSong;
-        public Instrument SelectedInstrument => selectedInstrument;
         public Arpeggio SelectedArpeggio => selectedArpeggio;
+        public Instrument SelectedInstrument
+        {
+            get
+            {
+                return selectedInstrument;
+            }
+            set
+            {
+                selectedInstrument = value;
+                ConditionalInvalidate();
+            }
+        }
 
         public delegate void EmptyDelegate();
         public delegate void InstrumentEnvelopeDelegate(Instrument instrument, int envelope);
@@ -1285,10 +1296,10 @@ namespace FamiStudio
                     else if (Path.GetExtension(filename).ToLower() == ".dmc")
                     {
                         var dmcData = File.ReadAllBytes(filename);
-                        if (dmcData.Length > 8192)
+                        if (dmcData.Length > 4096)
                         {
-                            Array.Resize(ref dmcData, 8192);
-                            Log.LogMessage(LogSeverity.Warning, "The maximum supported size for a DMC is 8KB. Truncating.");
+                            Array.Resize(ref dmcData, 4096);
+                            Log.LogMessage(LogSeverity.Warning, "The maximum supported size for a DMC is 4KB. Truncating.");
                         }
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
                         App.Project.CreateDPCMSampleFromDmcData(sampleName, dmcData);
