@@ -11,12 +11,12 @@ namespace FamiStudio
     class Cursors
     {
 #if FAMISTUDIO_MACOS
-        public static IntPtr Default    = MacUtils.SelRegisterName("arrowCursor");
-        public static IntPtr SizeWE     = MacUtils.SelRegisterName("resizeLeftRightCursor");
-        public static IntPtr SizeNS     = MacUtils.SelRegisterName("resizeUpDownCursor");
-        public static IntPtr DragCursor = MacUtils.SelRegisterName("closedHandCursor");
-        public static IntPtr CopyCursor = MacUtils.SelRegisterName("dragCopyCursor");
-        public static IntPtr Eyedrop    = MacUtils.SelRegisterName("arrowCursor");
+        public static IntPtr Default;
+        public static IntPtr SizeWE;
+        public static IntPtr SizeNS;
+        public static IntPtr DragCursor;
+        public static IntPtr CopyCursor;
+        public static IntPtr Eyedrop;
 #else
         public static Gdk.Cursor Default;
         public static Gdk.Cursor SizeWE;
@@ -56,6 +56,13 @@ namespace FamiStudio
             SizeNS     = Gdk.Cursor.NewFromName(Gdk.Display.Default, "row-resize");
             DragCursor = Gdk.Cursor.NewFromName(Gdk.Display.Default, "grab");
             CopyCursor = Gdk.Cursor.NewFromName(Gdk.Display.Default, "copy");
+            Eyedrop    = CreateCursorFromResource("EyedropCursor", 7, 24);
+#else
+            Default    = MacUtils.GetCursorByName("arrowCursor");
+            SizeWE     = MacUtils.GetCursorByName("resizeLeftRightCursor");
+            SizeNS     = MacUtils.GetCursorByName("resizeUpDownCursor");
+            DragCursor = MacUtils.GetCursorByName("closedHandCursor");
+            CopyCursor = MacUtils.GetCursorByName("dragCopyCursor");
             Eyedrop    = CreateCursorFromResource("EyedropCursor", 7, 24);
 #endif
         }

@@ -459,12 +459,17 @@ namespace FamiStudio
             return new System.Drawing.Point((int)Math.Round(x), (int)Math.Round(y));
         }
 
+        public static IntPtr GetCursorByName(string name)
+        {
+            var sel = MacUtils.SelRegisterName(name);
+            return SendIntPtr(clsNSCursor, sel);
+        }
+
         public static void SetWindowCursor(IntPtr nsWin, IntPtr target, IntPtr cursor)
         {
             var nsView = SendIntPtr(nsWin, selContentView);
             var rect = SendRect(nsView, selBounds);
-            var nsCursor = SendIntPtr(clsNSCursor, cursor);
-            SendVoid(target, selAddCursorRectCursor, rect, nsCursor);
+            SendVoid(target, selAddCursorRectCursor, rect, cursor);
         }
 
         public static void InvalidateCursor(IntPtr nsWin)

@@ -137,7 +137,6 @@
     <Compile Include="Source\Project\Project.cs" />
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\Channel.cs" />
-    <Compile Include="Source\UI\MacLinux\Cursors.cs" />
     <Compile Include="Source\UI\MacLinux\GLControl.cs" />
     <Compile Include="Source\UI\MacLinux\GLGraphics.cs" />
     <Compile Include="Source\UI\MacLinux\GLTheme.cs" />
@@ -269,6 +268,7 @@
     </Content>
     <EmbeddedResource Include="Resources\EyedropCursor.png" />
     <EmbeddedResource Include="Resources\EyedropCursor%402x.png" />
+    <Compile Include="Source\UI\MacLinux\MacCursors.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
