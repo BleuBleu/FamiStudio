@@ -1134,13 +1134,12 @@ namespace FamiStudio
                                         {
                                             var destChannel = Song.Channels[ni];
 
-                                            duplicatedPattern = sourcePattern.ShallowClone(destChannel);
-                                            duplicatePatternMap.Add(sourcePattern, duplicatedPattern);
-
                                             var newName = sourcePattern.Name;
                                             if (!destChannel.IsPatternNameUnique(newName))
                                                 newName = destChannel.GenerateUniquePatternName(sourcePattern.Name + "-");
 
+                                            duplicatedPattern = sourcePattern.ShallowClone(destChannel);
+                                            duplicatePatternMap.Add(sourcePattern, duplicatedPattern);
                                             destChannel.RenamePattern(duplicatedPattern, newName);
                                         }
                                         Song.Channels[ni].PatternInstances[nj] = duplicatedPattern;
