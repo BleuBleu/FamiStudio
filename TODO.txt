@@ -15,12 +15,15 @@ FamiStudio 2.4.0
 - Paste special in sequencer.
 - Multiple custom pattern settings editing 
 - Create scripts for packaging builds.
-- Eyedropper tool
+- Dark theme:
+	- Icons when dragging patterns are bad.
+- When copy patterns accross channels, sometimes the name becomes 1-1, even though there is no name conflicts. (trim unused patterns???)
 
 Test:
 - Retest Win7 device lost.
 - Transaction (w/o DPCM), test a LOT!
 - Re-export, recompile and change ROM version.
+- Test looping sample.
 
 DPCM Editor
 ===========
@@ -28,6 +31,10 @@ DPCM Editor
 - Preview rate should be relative to sample rate.
 - Let go over 16KB, but show warning.
 - How to pack samples and align everything? => Build dynamically, store offset in sample. 
+x Real-time update VS. change param values.
+- Real-time params => right click = reset to default.
+- Changing DPCM param values doesnt do transaction?? => Serialize more stuff. 
+- Clamp to 4081(?) bytes. 
 
 / Basic volume adjustment (0-200%)
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.

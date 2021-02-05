@@ -19,15 +19,15 @@ namespace FamiStudio
 
         private static IntPtr CreateCursorFromResource(string name, int x, int y)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            var suffix = GLTheme.MainWindowScaling > 1 ? "@2x" : "";
-            using (var stream = assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}{suffix}.png"))
+            var suffix       = GLTheme.MainWindowScaling > 1 ? "@2x" : "";
+            var hotSpotScale = GLTheme.MainWindowScaling > 1 ? 2 : 1;
+
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{name}{suffix}.png"))
             {
-                byte[] buffer = new byte[stream.Length];
+                var buffer = new byte[stream.Length];
                 stream.Read(buffer, 0, buffer.Length);
 
-                // MATTT: 2x hotspot on retina!!
-                return MacUtils.CreateCursorFromImage(buffer, x, y);
+                return MacUtils.CreateCursorFromImage(buffer, x * hotSpotScale, y * hotSpotScale);
             }
         }
 
