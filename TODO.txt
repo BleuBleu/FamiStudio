@@ -15,8 +15,7 @@ FamiStudio 2.4.0
 - Paste special in sequencer.
 - Multiple custom pattern settings editing 
 - Create scripts for packaging builds.
-- Dark theme:
-	- Icons when dragging patterns are bad.
+- Create new pattern when there is none.
 - When copy patterns accross channels, sometimes the name becomes 1-1, even though there is no name conflicts. (trim unused patterns???)
 
 Test:
