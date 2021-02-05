@@ -1143,7 +1143,6 @@ namespace FamiStudio
                                             destChannel.RenamePattern(duplicatedPattern, newName);
                                         }
                                         Song.Channels[ni].PatternInstances[nj] = duplicatedPattern;
-                                        Song.Channels[ni].PatternInstances[nj].Color = ThemeBase.RandomCustomColor();
                                     }
                                     else
                                     {
