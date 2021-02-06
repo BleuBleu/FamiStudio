@@ -431,6 +431,8 @@ namespace FamiStudio
                                 note.VibratoSpeed = byte.Parse(vibSpeedStr);
                             if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr) && channel.SupportsEffect(Note.EffectVibratoDepth))
                                 note.VibratoDepth = byte.Parse(vibDepthStr);
+                            if (parameters.TryGetValue("Speed", out var speedStr) && channel.SupportsEffect(Note.EffectSpeed))
+                                note.Speed = byte.Parse(speedStr);
                             if (parameters.TryGetValue("FinePitch", out var finePitchStr) && channel.SupportsEffect(Note.EffectFinePitch))
                                 note.FinePitch = sbyte.Parse(finePitchStr);
                             if (parameters.TryGetValue("FdsModSpeed", out var modSpeedStr) && channel.SupportsEffect(Note.EffectFdsModSpeed))
