@@ -112,6 +112,10 @@ The format describe one object per line followed by some attributes and values. 
 
 	Object Attribute1="Value1" Attribute2="Value2"
 
+Double quotes in values can be escaped by doubling them, similar to some CSV dialects:
+
+	Object Attribute1="Example ""Quoted"" Value1" Attribute2="Value2"
+
 The general structure of a file has these objects nested like this:
 
 * **Project** : The root of the file.
