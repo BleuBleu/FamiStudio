@@ -1,8 +1,10 @@
 #!/bin/sh
 
+# Build
 mdtool build -c:Release -t:Clean ../FamiStudio.Linux.sln
 mdtool build -c:Release -t:Build ../FamiStudio.Linux.sln
 
+# Compress
 version=`cat Version.txt`
 filename=FamiStudio$version-LinuxAMD64.zip
 
