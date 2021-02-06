@@ -214,6 +214,7 @@ Note | Time | Yes | The frame (or note) number inside the pattern where this not
 | Volume | | The volume of the note, 0 to 15.
 | VibratoSpeed | | The Vibrato speed, 0 to 12.
 | VibratoDepth | | The Vibrato depth, 0 to 15.
+| Speed | | (FamiTracker tempo only) Updates the FamiTracker speed to a new value.
 | FinePitch | | The fine pitch, -128 to 127.
 | SlideTarget | | The slide note target, from C0 to B7.
 | FdsModSpeed | | FDS modulation speed, 0 to 4095.
