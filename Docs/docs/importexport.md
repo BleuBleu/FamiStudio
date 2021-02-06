@@ -198,8 +198,8 @@ Song | Name | Yes | The name of the song.
 | PatternLength | Yes | The number of notes in a pattern.
 | BeatLength | Yes | The number of notes in a beat.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
-| Tempo | Yes | (FamiTracker tempo only) The FamiTracker tempo.
-| Speed | Yes | (FamiTracker tempo only) The FamiTracker speed.
+| FamiTrackerTempo | Yes | (FamiTracker tempo only) The FamiTracker tempo.
+| FamiTrackerSpeed | Yes | (FamiTracker tempo only) The FamiTracker speed.
 PatternCustomSettings | Time | Yes | Index of the column of pattern that uses these custom settings.
 | Length | Yes | The custom length (in notes or frames) of the pattern.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
