@@ -275,10 +275,10 @@ namespace FamiStudio
                         switch (character)
                         {
                             case '=':
-                                throw new Exception($"Unexpected equals sign between attributes.");
+                                throw new Exception("Unexpected equals sign between attributes.");
 
                             case '"':
-                                throw new Exception($"Unexpected double quote between attributes.");
+                                throw new Exception("Unexpected double quote between attributes.");
 
                             default:
                                 if (!char.IsWhiteSpace(character))
