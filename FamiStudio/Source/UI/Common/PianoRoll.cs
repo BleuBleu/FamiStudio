@@ -3288,6 +3288,9 @@ namespace FamiStudio
             }
             else if (editMode == EditionMode.Channel && GetNoteForCoord(e.X, e.Y, out int patternIdx, out int noteIdx, out byte noteValue))
             {
+                if (patternIdx >= Song.Length)
+                    return;
+
                 var changed = false;
                 var channel = Song.Channels[editChannel];
                 var pattern = channel.PatternInstances[patternIdx];
@@ -3297,7 +3300,10 @@ namespace FamiStudio
                 if (left)
                 {
                     if (pattern == null)
-                        return;
+                    {
+                        pattern = channel.CreatePattern();
+                        channel.PatternInstances[patternIdx] = pattern;
+                    }
 
                     var ctrl = ModifierKeys.HasFlag(Keys.Control);
                     var shift = ModifierKeys.HasFlag(Keys.Shift);
@@ -4179,11 +4185,11 @@ namespace FamiStudio
 
                 p0 = Song.FindPatternInstanceIndex(dragFrameMin + 0, out _);
                 p1 = Song.FindPatternInstanceIndex(dragFrameMax + 1, out _);
-                for (int p = p0; p <= p1; p++)
+                for (int p = p0; p <= p1 && p < Song.Length; p++)
                     PatternChanged?.Invoke(channel.PatternInstances[p]);
                 p0 = Song.FindPatternInstanceIndex(dragFrameMin + deltaNoteIdx + 0, out _);
                 p1 = Song.FindPatternInstanceIndex(dragFrameMax + deltaNoteIdx + 1, out _);
-                for (int p = p0; p <= p1; p++)
+                for (int p = p0; p <= p1 && p < Song.Length; p++)
                     PatternChanged?.Invoke(channel.PatternInstances[p]);
             }
 
