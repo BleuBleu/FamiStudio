@@ -424,7 +424,7 @@ namespace FamiStudio
         public event DPCMSampleDelegate DPCMSampleColorChanged;
         public event DPCMSampleDelegate DPCMSampleDeleted;
         public event DPCMSamplePointDelegate DPCMSampleDraggedOutside;
-        public event DPCMSamplePointDelegate DPCMSampleDroppedOutside;
+        public event DPCMSamplePointDelegate DPCMSampleMapped;
         public event EmptyDelegate ProjectModified;
 
         public ProjectExplorer()
@@ -1077,10 +1077,11 @@ namespace FamiStudio
                     if (App.Project.NoteSupportsDPCM(mappingNote))
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                        App.Project.UnmapDPCMSample(mappingNote);
                         App.Project.MapDPCMSample(mappingNote, draggedSample);
                         App.UndoRedoManager.EndTransaction();
 
-                        DPCMSampleDroppedOutside(draggedSample, PointToScreen(new Point(e.X, e.Y)));
+                        DPCMSampleMapped?.Invoke(draggedSample, PointToScreen(new Point(e.X, e.Y)));
                     }
                 }
             }

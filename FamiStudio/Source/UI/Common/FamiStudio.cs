@@ -153,7 +153,7 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleColorChanged += ProjectExplorer_DPCMSampleColorChanged;
             ProjectExplorer.DPCMSampleDeleted += ProjectExplorer_DPCMSampleDeleted;
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
-            ProjectExplorer.DPCMSampleDroppedOutside += ProjectExplorer_DPCMSampleDroppedOutside;
+            ProjectExplorer.DPCMSampleMapped += ProjectExplorer_DPCMSampleMapped;
 
             InitializeSongPlayer();
             InitializeMidi();
@@ -181,8 +181,9 @@ namespace FamiStudio
             return PianoRoll.GetDPCMSampleMappingNoteAtPos(PianoRoll.PointToClient(pos));
         }
 
-        private void ProjectExplorer_DPCMSampleDroppedOutside(DPCMSample instrument, Point pos)
+        private void ProjectExplorer_DPCMSampleMapped(DPCMSample instrument, Point pos)
         {
+            Sequencer.InvalidatePatternCache();
             PianoRoll.ConditionalInvalidate();
         }
 

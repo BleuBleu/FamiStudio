@@ -3601,6 +3601,7 @@ namespace FamiStudio
                                 var sampleName = dlg.Properties.GetPropertyValue<string>(1);
                                 App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
                                 App.UndoRedoManager.EndTransaction();
+                                ManyPatternChanged?.Invoke(); // This will invalidate the pattern cache.
                                 ConditionalInvalidate();
                             }
                         }
