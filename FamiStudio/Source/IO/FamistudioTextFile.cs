@@ -202,7 +202,7 @@ namespace FamiStudio
 
         private static string GenerateAttribute(string key, object value)
         {
-            return $" {key}=\"{value}\"";
+            return $" {key}=\"{value.ToString().Replace("\"", "\"\"")}\"";
         }
 
         private static string[] SplitStringKeepQuotes(string str)
