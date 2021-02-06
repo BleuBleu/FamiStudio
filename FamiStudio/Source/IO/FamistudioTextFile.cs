@@ -402,8 +402,6 @@ namespace FamiStudio
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine($"At end of line, state={state} type={type} key={key} value={value} parameters={parameters}");
-
             switch (state)
             {
                 case LineParserState.EmptyLine:
