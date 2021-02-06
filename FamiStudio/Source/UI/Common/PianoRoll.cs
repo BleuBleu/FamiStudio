@@ -2666,6 +2666,7 @@ namespace FamiStudio
             bool success = false;
             if (GetNoteForCoord(e.X, e.Y, out _, out _, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
             {
+                App.Project.UnmapDPCMSample(noteValue);
                 App.Project.MapDPCMSample(noteValue, draggedSample.Sample, draggedSample.Pitch, draggedSample.Loop);
                 success = true;
             }
