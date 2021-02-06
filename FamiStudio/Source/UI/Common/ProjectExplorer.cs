@@ -262,12 +262,13 @@ namespace FamiStudio
                     else if (type == ButtonType.DpcmHeader)
                     {
                         var label = "DPCM Samples";
-                        if (projectExplorer.App.Project != null)
-                        {
-                            var samplesSize = projectExplorer.App.Project.GetTotalSampleSize();
-                            if (samplesSize > 0)
-                                label += $" ({samplesSize} bytes)";
-                        }
+                        // Not useful info.
+                        //if (projectExplorer.App.Project != null)
+                        //{
+                        //    var samplesSize = projectExplorer.App.Project.GetTotalSampleSize();
+                        //    if (samplesSize > 0)
+                        //        label += $" ({samplesSize} bytes)";
+                        //}
                         return label;
                     }
 
@@ -327,6 +328,7 @@ namespace FamiStudio
             None,
             DragInstrument,
             DragArpeggio,
+            DragSample,
             MoveSlider,
             ScrollBar
         };
@@ -357,6 +359,7 @@ namespace FamiStudio
         DPCMSample expandedSample = null;
         Arpeggio draggedArpeggio = null;
         Arpeggio selectedArpeggio = null;
+        DPCMSample draggedSample = null;
         List<Button> buttons = new List<Button>();
 
         RenderTheme theme;
@@ -392,6 +395,7 @@ namespace FamiStudio
                 ConditionalInvalidate();
             }
         }
+        public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null; 
 
         public delegate void EmptyDelegate();
         public delegate void InstrumentEnvelopeDelegate(Instrument instrument, int envelope);
@@ -400,6 +404,7 @@ namespace FamiStudio
         public delegate void SongDelegate(Song song);
         public delegate void ArpeggioDelegate(Arpeggio arpeggio);
         public delegate void ArpeggioPointDelegate(Arpeggio arpeggio, Point pos);
+        public delegate void DPCMSamplePointDelegate(DPCMSample instrument, Point pos);
         public delegate void DPCMSampleDelegate(DPCMSample sample);
 
         public event InstrumentEnvelopeDelegate InstrumentEdited;
@@ -407,17 +412,19 @@ namespace FamiStudio
         public event InstrumentDelegate InstrumentColorChanged;
         public event InstrumentDelegate InstrumentReplaced;
         public event InstrumentDelegate InstrumentDeleted;
-        public event InstrumentPointDelegate InstrumentDraggedOutside;
+        public event InstrumentPointDelegate InstrumentDroppedOutside;
         public event SongDelegate SongModified;
         public event SongDelegate SongSelected;
         public event ArpeggioDelegate ArpeggioSelected;
         public event ArpeggioDelegate ArpeggioEdited;
         public event ArpeggioDelegate ArpeggioColorChanged;
         public event ArpeggioDelegate ArpeggioDeleted;
-        public event ArpeggioPointDelegate ArpeggioDraggedOutside;
+        public event ArpeggioPointDelegate ArpeggioDroppedOutside;
         public event DPCMSampleDelegate DPCMSampleEdited;
         public event DPCMSampleDelegate DPCMSampleColorChanged;
         public event DPCMSampleDelegate DPCMSampleDeleted;
+        public event DPCMSamplePointDelegate DPCMSampleDraggedOutside;
+        public event DPCMSamplePointDelegate DPCMSampleDroppedOutside;
         public event EmptyDelegate ProjectModified;
 
         public ProjectExplorer()
@@ -774,7 +781,7 @@ namespace FamiStudio
             {
                 Cursor.Current = envelopeDragIdx == -1 ? Cursors.DragCursor : Cursors.CopyCursor;
             }
-            else if (captureOperation == CaptureOperation.DragArpeggio && captureThresholdMet)
+            else if ((captureOperation == CaptureOperation.DragArpeggio || captureOperation == CaptureOperation.DragSample) && captureThresholdMet)
             {
                 Cursor.Current = Cursors.DragCursor;
             }
@@ -952,6 +959,13 @@ namespace FamiStudio
                     ClampScroll();
                     ConditionalInvalidate();
                 }
+                else if (captureOperation == CaptureOperation.DragSample)
+                {
+                    if (!ClientRectangle.Contains(e.X, e.Y))
+                    {
+                        DPCMSampleDraggedOutside?.Invoke(draggedSample, PointToScreen(new Point(e.X, e.Y)));
+                    }
+                }
             }
 
             if (middle)
@@ -1011,7 +1025,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    InstrumentDraggedOutside(draggedInstrument, PointToScreen(new Point(e.X, e.Y)));
+                    InstrumentDroppedOutside(draggedInstrument, PointToScreen(new Point(e.X, e.Y)));
                 }
             }
             else if (captureOperation == CaptureOperation.DragArpeggio)
@@ -1052,7 +1066,22 @@ namespace FamiStudio
                 }
                 else
                 {
-                    ArpeggioDraggedOutside(draggedArpeggio, PointToScreen(new Point(e.X, e.Y)));
+                    ArpeggioDroppedOutside?.Invoke(draggedArpeggio, PointToScreen(new Point(e.X, e.Y)));
+                }
+            }
+            else if (captureOperation == CaptureOperation.DragSample)
+            {
+                if (!ClientRectangle.Contains(e.X, e.Y))
+                {
+                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(PointToScreen(new Point(e.X, e.Y)));
+                    if (App.Project.NoteSupportsDPCM(mappingNote))
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                        App.Project.MapDPCMSample(mappingNote, draggedSample);
+                        App.UndoRedoManager.EndTransaction();
+
+                        DPCMSampleDroppedOutside(draggedSample, PointToScreen(new Point(e.X, e.Y)));
+                    }
                 }
             }
             else if (captureOperation == CaptureOperation.MoveSlider)
@@ -1062,6 +1091,7 @@ namespace FamiStudio
 
             draggedArpeggio = null;
             draggedInstrument = null;
+            draggedSample = null;
             sliderDragButton = null;
             captureOperation = CaptureOperation.None;
             Capture = false;
@@ -1528,6 +1558,12 @@ namespace FamiStudio
                             expandedSample = expandedSample == button.sample ? null : button.sample;
                             expandedInstrument = null;
                             RefreshButtons();
+                        }
+                        else if (subButtonType == SubButtonType.Max)
+                        {
+                            draggedSample = button.sample;
+                            StartCaptureOperation(e, CaptureOperation.DragSample);
+                            ConditionalInvalidate();
                         }
                     }
                 }

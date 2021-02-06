@@ -60,6 +60,7 @@ namespace FamiStudio
         public Song Song => song;
         public UndoRedoManager UndoRedoManager => undoRedoManager;
         public LoopMode LoopMode { get => songPlayer != null ? songPlayer.Loop : LoopMode.LoopPoint; set => songPlayer.Loop = value; }
+        public DPCMSample DraggedSample => ProjectExplorer.DraggedSample;
 
         public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
         public int  PreviewDPCMSampleId    => previewDPCMSampleId;
@@ -139,7 +140,7 @@ namespace FamiStudio
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
             ProjectExplorer.InstrumentReplaced += projectExplorer_InstrumentReplaced;
             ProjectExplorer.InstrumentDeleted += ProjectExplorer_InstrumentDeleted;
-            ProjectExplorer.InstrumentDraggedOutside += ProjectExplorer_InstrumentDraggedOutside;
+            ProjectExplorer.InstrumentDroppedOutside += ProjectExplorer_InstrumentDroppedOutside;
             ProjectExplorer.SongModified += projectExplorer_SongModified;
             ProjectExplorer.SongSelected += projectExplorer_SongSelected;
             ProjectExplorer.ProjectModified += ProjectExplorer_ProjectModified;
@@ -147,10 +148,12 @@ namespace FamiStudio
             ProjectExplorer.ArpeggioEdited += ProjectExplorer_ArpeggioEdited;
             ProjectExplorer.ArpeggioColorChanged += ProjectExplorer_ArpeggioColorChanged;
             ProjectExplorer.ArpeggioDeleted += ProjectExplorer_ArpeggioDeleted;
-            ProjectExplorer.ArpeggioDraggedOutside += ProjectExplorer_ArpeggioDraggedOutside;
+            ProjectExplorer.ArpeggioDroppedOutside += ProjectExplorer_ArpeggioDroppedOutside;
             ProjectExplorer.DPCMSampleEdited += ProjectExplorer_DPCMSampleEdited;
             ProjectExplorer.DPCMSampleColorChanged += ProjectExplorer_DPCMSampleColorChanged;
             ProjectExplorer.DPCMSampleDeleted += ProjectExplorer_DPCMSampleDeleted;
+            ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
+            ProjectExplorer.DPCMSampleDroppedOutside += ProjectExplorer_DPCMSampleDroppedOutside;
 
             InitializeSongPlayer();
             InitializeMidi();
@@ -171,6 +174,22 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        public int GetDPCMSampleMappingNoteAtPos(Point pos)
+        {
+            return PianoRoll.GetDPCMSampleMappingNoteAtPos(PianoRoll.PointToClient(pos));
+        }
+
+        private void ProjectExplorer_DPCMSampleDroppedOutside(DPCMSample instrument, Point pos)
+        {
+            PianoRoll.ConditionalInvalidate();
+        }
+
+        private void ProjectExplorer_DPCMSampleDraggedOutside(DPCMSample instrument, Point pos)
+        {
+            if (PianoRoll.ClientRectangle.Contains(PianoRoll.PointToClient(pos)))
+                PianoRoll.ConditionalInvalidate();
         }
 
         private void PianoRoll_InstrumentEyedropped(Instrument instrument)
@@ -224,22 +243,18 @@ namespace FamiStudio
             ProjectExplorer.ConditionalInvalidate();
         }
 
-        private void ProjectExplorer_InstrumentDraggedOutside(Instrument instrument, Point pos)
+        private void ProjectExplorer_InstrumentDroppedOutside(Instrument instrument, Point pos)
         {
-            var pianoRollClientPos = PianoRoll.PointToClient(pos);
-
-            if (PianoRoll.ClientRectangle.Contains(pianoRollClientPos))
+            if (PianoRoll.ClientRectangle.Contains(PianoRoll.PointToClient(pos)))
             {
                 PianoRoll.ReplaceSelectionInstrument(instrument);
                 PianoRoll.Focus();
             }
         }
 
-        private void ProjectExplorer_ArpeggioDraggedOutside(Arpeggio arpeggio, Point pos)
+        private void ProjectExplorer_ArpeggioDroppedOutside(Arpeggio arpeggio, Point pos)
         {
-            var pianoRollClientPos = PianoRoll.PointToClient(pos);
-
-            if (PianoRoll.ClientRectangle.Contains(pianoRollClientPos))
+            if (PianoRoll.ClientRectangle.Contains(PianoRoll.PointToClient(pos)))
             {
                 PianoRoll.ReplaceSelectionArpeggio(arpeggio);
                 PianoRoll.Focus();

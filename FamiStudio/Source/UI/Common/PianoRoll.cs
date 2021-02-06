@@ -181,6 +181,7 @@ namespace FamiStudio
         RenderBrush iconTransparentBrush;
         RenderBrush dashedLineBrush;
         RenderBrush processedRangeBrush;
+        RenderBrush invalidDpcmMappingBrush;
         RenderBitmap bmpLoop;
         RenderBitmap bmpRelease;
         RenderBitmap bmpEffectExpanded;
@@ -310,6 +311,11 @@ namespace FamiStudio
 
         private bool IsSnappingAllowed => editMode == EditionMode.Channel;
         private bool IsSnappingEnabled => IsSnappingAllowed && snap;
+
+        public bool IsEditingInstrument        => editMode == EditionMode.Enveloppe; 
+        public bool IsEditingArpeggio          => editMode == EditionMode.Arpeggio;
+        public bool IsEditingDPCMSample        => editMode == EditionMode.DPCM;
+        public bool IsEditingDPCMSampleMapping => editMode == EditionMode.DPCMMapping;
 
         public Instrument CurrentInstrument { get => currentInstrument; set => currentInstrument = value; }
         public Arpeggio CurrentArpeggio { get => currentArpeggio; set => currentArpeggio = value; }
@@ -601,21 +607,6 @@ namespace FamiStudio
             }
         }
 
-        public bool IsEditingInstrument
-        {
-            get { return editMode == EditionMode.Enveloppe; }
-        }
-
-        public bool IsEditingArpeggio
-        {
-            get { return editMode == EditionMode.Arpeggio; }
-        }
-
-        public bool IsEditingDPCMSample
-        {
-            get { return editMode == EditionMode.DPCM; }
-        }
-
         public bool ShowSelection
         {
             get { return showSelection; }
@@ -687,6 +678,7 @@ namespace FamiStudio
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, ThemeBase.DarkGreyLineColor2));
             dashedLineBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
             processedRangeBrush = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.DarkGreyFillColor2));
+            invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.BlackColor));
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
             bmpEffects[Note.EffectVolume] = g.CreateBitmapFromResource("VolumeSmall");
@@ -804,6 +796,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref iconTransparentBrush);
             Utils.DisposeAndNullify(ref dashedLineBrush);
             Utils.DisposeAndNullify(ref processedRangeBrush);
+            Utils.DisposeAndNullify(ref invalidDpcmMappingBrush);
             Utils.DisposeAndNullify(ref bmpLoop);
             Utils.DisposeAndNullify(ref bmpRelease);
             Utils.DisposeAndNullify(ref bmpEffectExpanded);
@@ -1896,6 +1889,24 @@ namespace FamiStudio
                 }
                 else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.
                 {
+                    // Draw 2 dark rectangle to show invalid range. 
+                    g.PushTranslation(0, -scrollY);
+                    g.FillRectangle(0, virtualSizeY, Width, virtualSizeY - Note.DPCMNoteMin * noteSizeY, invalidDpcmMappingBrush);
+                    g.FillRectangle(0, 0, Width, virtualSizeY - Note.DPCMNoteMax * noteSizeY, invalidDpcmMappingBrush);
+                    g.PopTransform();
+
+                    //int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
+
+                    //for (int j = 0; j < 12; j++)
+                    //{
+                    //    int y = octaveBaseY - j * noteSizeY;
+                    //    if (!IsBlackKey(j))
+                    //        g.FillRectangle(0, y - noteSizeY, maxX, y, theme.DarkGreyFillBrush1);
+                    //    if (i * 12 + j != numNotes)
+                    //        g.DrawLine(0, y, maxX, y, theme.BlackBrush);
+                    //}
+
+
                     for (int i = 0; i < Note.MusicalNoteMax; i++)
                     {
                         var mapping = App.Project.GetDPCMMapping(i);
@@ -1916,7 +1927,19 @@ namespace FamiStudio
                             g.PopTransform();
                         }
                     }
+
+                    DPCMSample dragSample = null;
+
                     if (captureOperation == CaptureOperation.DragSample && draggedSample != null)
+                    {
+                        dragSample = draggedSample.Sample;
+                    }
+                    else if (captureOperation == CaptureOperation.None && App.DraggedSample != null)
+                    {
+                        dragSample = App.DraggedSample;
+                    }
+
+                    if (dragSample != null)
                     {
                         var pt = PointToClient(Cursor.Position);
 
@@ -1924,9 +1947,13 @@ namespace FamiStudio
                         {
                             var y = virtualSizeY - noteValue * noteSizeY - scrollY;
                             g.PushTranslation(0, y);
-                            g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, noteSizeY, 0.8f), selectionNoteBrush, 2);
+                            g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(dragSample.Color, noteSizeY, 0.8f), selectionNoteBrush, 2);
                             g.PopTransform();
                         }
+                    }
+                    else if (App.DraggedSample != null && captureOperation == CaptureOperation.None)
+                    {
+
                     }
                     g.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxSampleSize} Bytes)", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush); // DPCMTODO
                 }
@@ -3032,6 +3059,16 @@ namespace FamiStudio
         protected override void OnKeyUp(KeyEventArgs e)
         {
             UpdateCursor();
+        }
+
+        public int GetDPCMSampleMappingNoteAtPos(Point pos)
+        {
+            if (editMode == EditionMode.DPCMMapping && GetNoteForCoord(pos.X, pos.Y, out _, out _, out var noteValue))
+            {
+                return noteValue;
+            }
+
+            return Note.NoteInvalid;
         }
 
         protected bool EnsureSeekBarVisible(float percent = ContinuousFollowPercent)
@@ -4238,7 +4275,8 @@ namespace FamiStudio
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            
+
+            bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();

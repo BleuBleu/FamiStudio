@@ -11,12 +11,10 @@ FamiStudio 2.4.0
 - Double-click = select whole note
 - Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Rotate mousewheel over param list/sliders should change value (what about undo redo?).
-- Convert more const int to enums? (Low priority)
 - Paste special in sequencer.
 - Multiple custom pattern settings editing 
-- Create scripts for packaging builds.
-- Create new pattern when there is none.
-- When copy patterns accross channels, sometimes the name becomes 1-1, even though there is no name conflicts. (trim unused patterns???)
+- BUG : Tutorial=False not saving (escape?)
+- Convert more const int to enums? (Low priority)
 
 Test:
 - Retest Win7 device lost.
@@ -42,7 +40,6 @@ x Real-time update VS. change param values.
 x Figure out if DMC is pre-increment or post-increment.	=> POST
 - Cleanup will remove the source data and reset param to something "neutral".
 - Make sure clipboard still works (much copy source data as well).
-/ Change DPCM mapping to add existing sample instead. => DRAG & DROP!
 - What is the quality setting in RJDMC?
 - Allow scroll up/down piano even in sample.
 - What about space to play DPCM?
