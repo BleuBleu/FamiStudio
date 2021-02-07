@@ -759,6 +759,7 @@ namespace FamiStudio
         {
             get
             {
+                // DPCMTODO: This test isnt thorough enough.
                 if (samples.Count == 0)
                     return false;
 

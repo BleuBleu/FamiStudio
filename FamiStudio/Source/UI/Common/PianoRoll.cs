@@ -265,6 +265,7 @@ namespace FamiStudio
         int dragFrameMin = -1;
         int dragFrameMax = -1;
         int dragLastNoteValue = -1;
+        bool dragNewNoteCreatedPattern = false;
         SortedList<int, Note> dragNotes = new SortedList<int, Note>();
 
         bool showSelection = false;
@@ -3337,12 +3338,6 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    if (pattern == null)
-                    {
-                        pattern = channel.CreatePattern();
-                        channel.PatternInstances[patternIdx] = pattern;
-                    }
-
                     var ctrl = ModifierKeys.HasFlag(Keys.Control);
                     var shift = ModifierKeys.HasFlag(Keys.Shift);
                     var slide = FamiStudioForm.IsKeyDown(Keys.S);
@@ -3379,7 +3374,16 @@ namespace FamiStudio
                     }
                     else if (ctrl || shift && channel.SupportsReleaseNotes)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                        if (pattern != null)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                        }
+                        else
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                            pattern = channel.CreatePatternAndInstance(patternIdx);
+                        }
+
                         var note = pattern.GetOrCreateNoteAt(noteIdx);
                         note.Value = (byte)(ctrl ? Note.NoteStop : Note.NoteRelease);
                         note.Instrument = null;
@@ -3393,6 +3397,16 @@ namespace FamiStudio
                     {
                         if (supportsInstrument)
                         {
+                            if (pattern != null)
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                            }
+                            else
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                                pattern = channel.CreatePatternAndInstance(patternIdx);
+                            }
+
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                             SnapPatternNote(patternIdx, ref noteIdx);
                             var note = pattern.GetOrCreateNoteAt(noteIdx);
@@ -3411,12 +3425,16 @@ namespace FamiStudio
                     {
                         var prevPatternIdx = patternIdx;
                         var prevNoteIdx = noteIdx;
+                        var note = (Note)null;
 
-                        channel.PatternInstances[patternIdx].Notes.TryGetValue(noteIdx, out var note);
+                        if (pattern != null)
+                            channel.PatternInstances[patternIdx].Notes.TryGetValue(noteIdx, out note);
 
                         var stopOrRelease = note != null && (note.IsStop || note.IsRelease);
                         var musicalNote = note != null && (note.IsMusical);
                         var dragStarted = false;
+
+                        dragNewNoteCreatedPattern = false;
 
                         if (stopOrRelease || (musicalNote && note.Value == noteValue) || channel.FindPreviousMatchingNote(noteValue, ref prevPatternIdx, ref prevNoteIdx))
                         {
@@ -3461,7 +3479,17 @@ namespace FamiStudio
                         {
                             if (supportsInstrument)
                             {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                                if (pattern != null)
+                                {
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                                }
+                                else
+                                {
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                                    pattern = channel.CreatePatternAndInstance(patternIdx);
+                                    dragNewNoteCreatedPattern = true;
+                                }
+
                                 StartCaptureOperation(e, CaptureOperation.DragNewNote, true);
 
                                 var newNote = new Note(noteValue);
@@ -3616,7 +3644,6 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                         App.Project.UnmapDPCMSample(noteValue);
-                        App.Project.DeleteUnmappedSamples();
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                     }
@@ -4063,9 +4090,19 @@ namespace FamiStudio
                     App.UndoRedoManager.UndoScope == TransactionScope.Pattern ||
                     App.UndoRedoManager.UndoScope == TransactionScope.Channel));
 
+            var channel = Song.Channels[editChannel];
+
             App.UndoRedoManager.RestoreTransaction(false);
 
             GetNoteForCoord(e.X, e.Y, out var patternIdx, out var noteIdx, out var noteValue, true /* captureOperation != CaptureOperation.DragSelection*/);
+
+            if (dragNewNoteCreatedPattern)
+            {
+                Debug.Assert(App.UndoRedoManager.UndoScope == TransactionScope.Channel);
+                
+                if (channel.PatternInstances[patternIdx] == null)
+                    channel.CreatePatternAndInstance(patternIdx);
+            }
 
             int deltaNoteIdx = Song.GetPatternStartNote(patternIdx, noteIdx) - captureNoteIdx;
             int deltaNoteValue = noteValue - captureNoteValue;
@@ -4090,11 +4127,18 @@ namespace FamiStudio
                 {
                     App.UndoRedoManager.AbortTransaction();
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+
+                    if (captureOperation == CaptureOperation.DragNewNote)
+                    {
+                        if (channel.PatternInstances[newPatternMinIdx] == null)
+                            channel.CreatePatternAndInstance(newPatternMinIdx);
+
+                        dragNewNoteCreatedPattern = true;
+                    }
                 }
             }
 
             var copy = ModifierKeys.HasFlag(Keys.Control) && captureOperation != CaptureOperation.DragNewNote;
-            var channel = Song.Channels[editChannel];
             var keepFx = captureOperation != CaptureOperation.DragSelection;
 
             // If not copying, delete original notes.

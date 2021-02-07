@@ -318,6 +318,13 @@ namespace FamiStudio
             return pat;
         }
 
+        public Pattern CreatePatternAndInstance(int idx, string name = null)
+        {
+            var pattern = CreatePattern(name);
+            patternInstances[idx] = pattern;
+            return pattern;
+        }
+
         public void ColorizePatterns()
         {
             foreach (var pat in patterns)
