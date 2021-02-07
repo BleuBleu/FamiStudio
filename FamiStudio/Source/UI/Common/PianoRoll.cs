@@ -3983,11 +3983,11 @@ namespace FamiStudio
                             var mapping = App.Project.GetDPCMMapping(noteValue);
                             if (mapping == null)
                             {
-                                tooltip = "{MouseLeft} Load DPCM sample - {MouseWheel} Pan";
+                                tooltip = "{MouseLeft} Assign DPCM sample - {MouseWheel} Pan";
                             }
                             else
                             {
-                                tooltip = "{S} {MouseLeft} Save sample to file - {MouseLeft}{MouseLeft} Sample properties - {MouseRight} Delete sample {MouseWheel} Pan";
+                                tooltip = "{MouseLeft}{MouseLeft} Sample properties - {MouseRight} Unassign DPCM sample {MouseWheel} Pan";
 
                                 if (mapping.Sample != null)
                                     newNoteTooltip += $" ({mapping.Sample.Name})";
