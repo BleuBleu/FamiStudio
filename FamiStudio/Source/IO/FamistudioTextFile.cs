@@ -18,20 +18,20 @@ namespace FamiStudio
             var lines = new List<string>();
 
             var versionString = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
-            var projectLine = $"Project Version=\"{versionString}\" TempoMode=\"{Project.TempoModeNames[project.TempoMode]}\"";
+            var projectLine = $"Project{GenerateAttribute("Version", versionString)}{GenerateAttribute("TempoMode", Project.TempoModeNames[project.TempoMode])}";
 
-            if (project.Name      != "")     projectLine += $" Name=\"{project.Name}\"";
-            if (project.Author    != "")     projectLine += $" Author=\"{project.Author}\"";
-            if (project.Copyright != "")     projectLine += $" Copyright=\"{project.Copyright}\"";
-            if (project.UsesExpansionAudio)  projectLine += $" Expansion=\"{Project.ExpansionShortNames[project.ExpansionAudio]}\"";
-            if (project.PalMode)             projectLine += $" PAL=\"{true}\"";
+            if (project.Name      != "")     projectLine += GenerateAttribute("Name", project.Name);
+            if (project.Author    != "")     projectLine += GenerateAttribute("Author", project.Author);
+            if (project.Copyright != "")     projectLine += GenerateAttribute("Copyright", project.Copyright);
+            if (project.UsesExpansionAudio)  projectLine += GenerateAttribute("Expansion", Project.ExpansionShortNames[project.ExpansionAudio]);
+            if (project.PalMode)             projectLine += GenerateAttribute("PAL", true);
 
             lines.Add(projectLine);
 
             // DPCM samples
             foreach (var sample in project.Samples)
             {
-                lines.Add($"\tDPCMSample Name=\"{sample.Name}\" ReverseBits=\"{sample.ReverseBits.ToString()}\" Data=\"{String.Join("", sample.ProcessedData.Select(x => $"{x:x2}"))}\"");
+                lines.Add($"\tDPCMSample{GenerateAttribute("Name", sample.Name)}{GenerateAttribute("ReverseBits", sample.ReverseBits)}{GenerateAttribute("Data", String.Join("", sample.ProcessedData.Select(x => $"{x:x2}")))}");
             }
 
             // DPCM mappings
@@ -40,40 +40,40 @@ namespace FamiStudio
                 var mapping = project.SamplesMapping[i];
 
                 if (mapping != null && mapping.Sample != null)
-                    lines.Add($"\tDPCMMapping Note=\"{Note.GetFriendlyName(i + Note.DPCMNoteMin)}\" Sample=\"{mapping.Sample.Name}\" Pitch=\"{mapping.Pitch}\" Loop=\"{mapping.Loop}\"");
+                    lines.Add($"\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(i + Note.DPCMNoteMin))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}");
             }
 
             // Instruments
             foreach (var instrument in project.Instruments)
             {
-                var instrumentLine = $"\tInstrument Name=\"{instrument.Name}\"";
+                var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}";
                 if (instrument.IsExpansionInstrument)
                 {
-                    instrumentLine += $" Expansion=\"{Project.ExpansionShortNames[project.ExpansionAudio]}\"";
+                    instrumentLine += GenerateAttribute("Expansion", Project.ExpansionShortNames[project.ExpansionAudio]);
 
                     if (instrument.ExpansionType == Project.ExpansionFds)
                     {
-                        instrumentLine += $" FdsWavePreset=\"{Envelope.PresetNames[instrument.FdsWavePreset]}\"";
-                        instrumentLine += $" FdsModPreset=\"{Envelope.PresetNames[instrument.FdsModPreset]}\"";
-                        if (instrument.FdsMasterVolume != 0) instrumentLine += $" FdsMasterVolume=\"{instrument.FdsMasterVolume}\"";
-                        if (instrument.FdsModSpeed     != 0) instrumentLine += $" FdsModSpeed=\"{instrument.FdsModSpeed}\"";
-                        if (instrument.FdsModDepth     != 0) instrumentLine += $" FdsModDepth=\"{instrument.FdsModDepth}\"";
-                        if (instrument.FdsModDelay     != 0) instrumentLine += $" FdsModDelay=\"{instrument.FdsModDelay}\"";
+                        instrumentLine += GenerateAttribute("FdsWavePreset", Envelope.PresetNames[instrument.FdsWavePreset]);
+                        instrumentLine += GenerateAttribute("FdsModPreset", Envelope.PresetNames[instrument.FdsModPreset]);
+                        if (instrument.FdsMasterVolume != 0) instrumentLine += GenerateAttribute("FdsMasterVolume", instrument.FdsMasterVolume);
+                        if (instrument.FdsModSpeed     != 0) instrumentLine += GenerateAttribute("FdsModSpeed", instrument.FdsModSpeed);
+                        if (instrument.FdsModDepth     != 0) instrumentLine += GenerateAttribute("FdsModDepth", instrument.FdsModDepth);
+                        if (instrument.FdsModDelay     != 0) instrumentLine += GenerateAttribute("FdsModDelay", instrument.FdsModDelay);
                     }
                     else if (instrument.ExpansionType == Project.ExpansionN163)
                     {
-                        instrumentLine += $" N163WavePreset=\"{Envelope.PresetNames[instrument.N163WavePreset]}\"";
-                        instrumentLine += $" N163WaveSize=\"{instrument.N163WaveSize}\"";
-                        instrumentLine += $" N163WavePos=\"{instrument.N163WavePos}\"";
+                        instrumentLine += GenerateAttribute("N163WavePreset", Envelope.PresetNames[instrument.N163WavePreset]);
+                        instrumentLine += GenerateAttribute("N163WaveSize", instrument.N163WaveSize);
+                        instrumentLine += GenerateAttribute("N163WavePos", instrument.N163WavePos);
                     }
                     else if (instrument.ExpansionType == Project.ExpansionVrc7)
                     {
-                        instrumentLine += $" Vrc7Patch=\"{instrument.Vrc7Patch}\"";
+                        instrumentLine += GenerateAttribute("Vrc7Patch", instrument.Vrc7Patch);
 
                         if (instrument.Vrc7Patch == 0)
                         {
                             for (int i = 0; i < 8; i++)
-                                instrumentLine += $" Vrc7Reg{i}=\"{instrument.Vrc7PatchRegs[i]}\"";
+                                instrumentLine += GenerateAttribute($"Vrc7Reg{i}", instrument.Vrc7PatchRegs[i]);
                         }
                     }
                 }
@@ -84,13 +84,13 @@ namespace FamiStudio
                     var env = instrument.Envelopes[i];
                     if (env != null && !env.IsEmpty)
                     {
-                        var envelopeLine = $"\t\tEnvelope Type=\"{Envelope.EnvelopeShortNames[i]}\" Length=\"{env.Length}\"";
+                        var envelopeLine = $"\t\tEnvelope{GenerateAttribute("Type", Envelope.EnvelopeShortNames[i])}{GenerateAttribute("Length", env.Length)}";
 
-                        if (env.Loop     >= 0) envelopeLine += $" Loop=\"{env.Loop}\"";
-                        if (env.Release  >= 0) envelopeLine += $" Release=\"{env.Release}\"";
-                        if (env.Relative)      envelopeLine += $" Relative=\"{env.Relative}\"";
+                        if (env.Loop     >= 0) envelopeLine += GenerateAttribute("Loop", env.Loop);
+                        if (env.Release  >= 0) envelopeLine += GenerateAttribute("Release", env.Release);
+                        if (env.Relative)      envelopeLine += GenerateAttribute("Relative", env.Relative);
 
-                        envelopeLine += $" Values=\"{String.Join(",", env.Values.Take(env.Length))}\"";
+                        envelopeLine += GenerateAttribute("Values", String.Join(",", env.Values.Take(env.Length)));
 
                         lines.Add(envelopeLine);
                     }
@@ -101,24 +101,24 @@ namespace FamiStudio
             foreach (var arpeggio in project.Arpeggios)
             {
                 var env = arpeggio.Envelope;
-                var arpeggioLine = $"\tArpeggio Name=\"{arpeggio.Name}\" Length=\"{env.Length}\"";
-                if (env.Loop >= 0) arpeggioLine += $" Loop=\"{env.Loop}\"";
-                arpeggioLine += $" Values=\"{String.Join(",", env.Values.Take(env.Length))}\"";
+                var arpeggioLine = $"\tArpeggio{GenerateAttribute("Name", arpeggio.Name)}{GenerateAttribute("Length", env.Length)}";
+                if (env.Loop >= 0) arpeggioLine += GenerateAttribute("Loop", env.Loop);
+                arpeggioLine += GenerateAttribute("Values", String.Join(",", env.Values.Take(env.Length)));
                 lines.Add(arpeggioLine);
             }
 
             // Songs
             foreach (var song in project.Songs)
             {
-                var songStr = $"\tSong Name=\"{song.Name}\" Length=\"{song.Length}\" LoopPoint=\"{song.LoopPoint}\"";
+                var songStr = $"\tSong{GenerateAttribute("Name", song.Name)}{GenerateAttribute("Length", song.Length)}{GenerateAttribute("LoopPoint", song.LoopPoint)}";
 
                 if (song.UsesFamiTrackerTempo)
                 {
-                    songStr += $" PatternLength=\"{song.PatternLength}\" BeatLength=\"{song.BeatLength}\" FamiTrackerTempo=\"{song.FamitrackerTempo}\" FamiTrackerSpeed=\"{song.FamitrackerSpeed}\"";
+                    songStr += $"{GenerateAttribute("PatternLength", song.PatternLength)}{GenerateAttribute("BeatLength", song.BeatLength)}{GenerateAttribute("FamiTrackerTempo", song.FamitrackerTempo)}{GenerateAttribute("FamiTrackerSpeed", song.FamitrackerSpeed)}";
                 }
                 else
                 {
-                    songStr += $" PatternLength=\"{song.PatternLength / song.NoteLength}\" BeatLength=\"{song.BeatLength / song.NoteLength}\" NoteLength=\"{song.NoteLength}\"";
+                    songStr += $"{GenerateAttribute("PatternLength", song.PatternLength / song.NoteLength)}{GenerateAttribute("BeatLength", song.BeatLength / song.NoteLength)}{GenerateAttribute("NoteLength", song.NoteLength)}";
                 }
 
                 lines.Add(songStr);
@@ -131,25 +131,25 @@ namespace FamiStudio
 
                         if (song.UsesFamiTrackerTempo)
                         {
-                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength}\"");
+                            lines.Add($"\t\tPatternCustomSettings{GenerateAttribute("Time", i)}{GenerateAttribute("Length", patternLength)}");
                         }
                         else
                         {
                             var noteLength = song.GetPatternNoteLength(i);
                             var beatLength = song.GetPatternBeatLength(i);
 
-                            lines.Add($"\t\tPatternCustomSettings Time=\"{i}\" Length=\"{patternLength / noteLength}\" NoteLength=\"{noteLength}\" BeatLength=\"{beatLength / noteLength}\"");
+                            lines.Add($"\t\tPatternCustomSettings{GenerateAttribute("Time", i)}{GenerateAttribute("Length", patternLength / noteLength)}{GenerateAttribute("NoteLength", noteLength)}{GenerateAttribute("BeatLength", beatLength / noteLength)}");
                         }
                     }
                 }
 
                 foreach (var channel in song.Channels)
                 {
-                    lines.Add($"\t\tChannel Type=\"{Channel.ChannelExportNames[channel.Type]}\"");
+                    lines.Add($"\t\tChannel{GenerateAttribute("Type", Channel.ChannelExportNames[channel.Type])}");
 
                     foreach (var pattern in channel.Patterns)
                     {
-                        lines.Add($"\t\t\tPattern Name=\"{pattern.Name}\"");
+                        lines.Add($"\t\t\tPattern{GenerateAttribute("Name", pattern.Name)}");
 
                         foreach (var kv in pattern.Notes)
                         {
@@ -157,28 +157,28 @@ namespace FamiStudio
 
                             if (!note.IsEmpty)
                             {
-                                var noteLine = $"\t\t\t\tNote Time=\"{kv.Key}\"";
+                                var noteLine = $"\t\t\t\tNote{GenerateAttribute("Time", kv.Key)}";
 
                                 if (note.IsValid)
                                 {
-                                    noteLine += $" Value=\"{note.FriendlyName}\"";
+                                    noteLine += GenerateAttribute("Value", note.FriendlyName);
                                     if (note.Instrument != null)
-                                        noteLine += $" Instrument=\"{note.Instrument.Name}\"";
+                                        noteLine += GenerateAttribute("Instrument", note.Instrument.Name);
                                     if (note.IsArpeggio)
-                                        noteLine += $" Arpeggio=\"{note.Arpeggio.Name}\"";
+                                        noteLine += GenerateAttribute("Arpeggio", note.Arpeggio.Name);
                                 }
 
-                                if (!note.HasAttack)     noteLine += $" Attack=\"{false.ToString()}\"";
-                                if (note.HasVolume)      noteLine += $" Volume=\"{note.Volume}\"";
-                                if (note.HasVibrato)     noteLine += $" VibratoSpeed=\"{note.VibratoSpeed}\" VibratoDepth=\"{note.VibratoDepth}\"";
-                                if (note.HasSpeed)       noteLine += $" Speed=\"{note.Speed}\"";
-                                if (note.HasFinePitch)   noteLine += $" FinePitch=\"{note.FinePitch}\"";
-                                if (note.HasFdsModSpeed) noteLine += $" FdsModSpeed=\"{note.FdsModSpeed}\"";
-                                if (note.HasFdsModDepth) noteLine += $" FdsModDepth=\"{note.FdsModDepth}\"";
-                                if (note.HasDutyCycle)   noteLine += $" DutyCycle=\"{note.DutyCycle}\"";
-                                if (note.HasNoteDelay)   noteLine += $" NoteDelay=\"{note.NoteDelay}\"";
-                                if (note.HasCutDelay)    noteLine += $" CutDelay=\"{note.CutDelay}\"";
-                                if (note.IsMusical && note.IsSlideNote) noteLine += $" SlideTarget=\"{Note.GetFriendlyName(note.SlideNoteTarget)}\""; 
+                                if (!note.HasAttack)     noteLine += GenerateAttribute("Attack", false);
+                                if (note.HasVolume)      noteLine += GenerateAttribute("Volume", note.Volume);
+                                if (note.HasVibrato)     noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
+                                if (note.HasSpeed)       noteLine += GenerateAttribute("Speed", note.Speed);
+                                if (note.HasFinePitch)   noteLine += GenerateAttribute("FinePitch", note.FinePitch);
+                                if (note.HasFdsModSpeed) noteLine += GenerateAttribute("FdsModSpeed", note.FdsModSpeed);
+                                if (note.HasFdsModDepth) noteLine += GenerateAttribute("FdsModDepth", note.FdsModDepth);
+                                if (note.HasDutyCycle)   noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
+                                if (note.HasNoteDelay)   noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
+                                if (note.HasCutDelay)    noteLine += GenerateAttribute("CutDelay", note.CutDelay);
+                                if (note.IsMusical && note.IsSlideNote) noteLine += GenerateAttribute("SlideTarget", Note.GetFriendlyName(note.SlideNoteTarget));
 
                                 lines.Add(noteLine);
                             }
@@ -190,7 +190,7 @@ namespace FamiStudio
                         var pattern = channel.PatternInstances[p];
 
                         if (pattern != null)
-                            lines.Add($"\t\t\tPatternInstance Time=\"{p}\" Pattern=\"{pattern.Name}\"");
+                            lines.Add($"\t\t\tPatternInstance{GenerateAttribute("Time", p)}{GenerateAttribute("Pattern", pattern.Name)}");
                     }
                 }
             }
@@ -198,6 +198,11 @@ namespace FamiStudio
             File.WriteAllLines(filename, lines);
 
             return true;
+        }
+
+        private static string GenerateAttribute(string key, object value)
+        {
+            return $" {key}=\"{value}\"";
         }
 
         private static string[] SplitStringKeepQuotes(string str)
