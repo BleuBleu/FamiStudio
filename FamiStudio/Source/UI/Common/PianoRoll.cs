@@ -3684,13 +3684,12 @@ namespace FamiStudio
                 else if (editMode == EditionMode.DPCM)
                 {
                     maxScrollX = Math.Max((int)Math.Ceiling(GetPixelForWaveTime(Math.Max(editSample.SourceDuration, editSample.ProcessedDuration))) - ScrollMargin, 0);
-                    minScrollY = maxScrollY;
+                    minScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0) / 2;
+                    maxScrollY = minScrollY;
                 }
 
-                if (scrollX < minScrollX) scrollX = minScrollX;
-                if (scrollX > maxScrollX) scrollX = maxScrollX;
-                if (scrollY < minScrollY) scrollY = minScrollY;
-                if (scrollY > maxScrollY) scrollY = maxScrollY;
+                scrollX = Utils.Clamp(scrollX, minScrollX, maxScrollX);
+                scrollY = Utils.Clamp(scrollY, minScrollY, maxScrollY);
             }
 
             ScrollChanged?.Invoke();
