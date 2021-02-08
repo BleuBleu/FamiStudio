@@ -343,7 +343,7 @@ namespace FamiStudio
 #if DEBUG
                 var kernel = FamiToneKernel.GetValueForName(props.GetPropertyValue<string>(5));
 #else
-                var kernel = FamitoneMusicFile.FamiToneKernel.FamiStudio;
+                var kernel = FamiToneKernel.FamiStudio;
 #endif
 
                 new NsfFile().Save(project, kernel, filename,
