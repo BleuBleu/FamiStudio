@@ -70,39 +70,6 @@ namespace FamiStudio
             return nextUniqueId++;
         }
 
-        public int GetSampleForAddress(int offset)
-        {
-            int addr = 0;
-            foreach (var s in samples)
-            {
-                if (offset >= addr && offset < addr + s.ProcessedData.Length)
-                {
-                    byte b = s.ProcessedData[offset - addr];
-                    if (s.ReverseBits)
-                        b = Utils.ReverseBits(b);
-                    return b;
-                }
-                // DPCMTODO : Remove all 64 bytes rounding, move to data-processing.
-                addr = (addr + s.ProcessedData.Length + 63) & 0xffc0;
-            }
-            return 0x55;
-        }
-
-        public int GetAddressForSample(DPCMSample sample)
-        {
-            int addr = 0;
-            foreach (var s in samples)
-            {
-                if (s == sample)
-                {
-                    return addr;
-                }
-                // DPCMTODO : Remove all 64 bytes rounding, move to data-processing.
-                addr = (addr + s.ProcessedData.Length + 63) & 0xffc0;
-            }
-            return addr;
-        }
-
         public bool PalMode
         {
             get
@@ -771,40 +738,103 @@ namespace FamiStudio
 
         public int GetTotalSampleSize()
         {
-            int size = 0;
-            foreach (var sample in samples)
-                size += sample.ProcessedData.Length;
-            return Math.Min(MaxSampleSize, size);
+            lock (DPCMSample.ProcessedDataLock)
+            {
+                int size = 0;
+                foreach (var sample in samples)
+                    size += sample.ProcessedData.Length;
+                return Math.Min(MaxSampleSize, size);
+            }
+        }
+
+        public int GetSampleForAddress(int offset)
+        {
+            lock (DPCMSample.ProcessedDataLock)
+            {
+                var addr = 0;
+                var visitedSamples = new HashSet<DPCMSample>();
+
+                foreach (var mapping in samplesMapping)
+                {
+                    if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                    {
+                        var addrEnd = addr + ((mapping.Sample.ProcessedData.Length + 63) & 0xffc0);
+
+                        if (offset >= addr && offset < addrEnd)
+                            return mapping.Sample.ProcessedData[offset - addr];
+
+                        addr = addrEnd;
+                        if (addr >= MaxSampleSize)
+                            break;
+                    }
+                }
+
+                return addr;
+            }
+        }
+
+        public int GetAddressForSample(DPCMSample sample)
+        {
+            lock (DPCMSample.ProcessedDataLock)
+            {
+                var addr = 0;
+                var visitedSamples = new HashSet<DPCMSample>();
+
+                foreach (var mapping in samplesMapping)
+                {
+                    if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                    {
+                        if (mapping.Sample == sample)
+                            return addr;
+                        addr += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
+
+                        if (addr >= MaxSampleSize)
+                            break;
+                    }
+                }
+
+                return addr;
+            }
         }
 
         public int GetTotalMappedSampleSize()
         {
-            var size = 0;
+            lock (DPCMSample.ProcessedDataLock)
+            {
+                var size = 0;
+                var visitedSamples = new HashSet<DPCMSample>();
+
+                foreach (var mapping in samplesMapping)
+                {
+                    if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                    {
+                        size += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
+                        visitedSamples.Add(mapping.Sample);
+                    }
+                }
+
+                return size;
+            }
+        }
+
+        public byte[] GetPackedSampleData()
+        {
+            var sampleData = new List<byte>(MaxSampleSize);
             var visitedSamples = new HashSet<DPCMSample>();
 
             foreach (var mapping in samplesMapping)
             {
                 if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
                 {
-                    size += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
+                    sampleData.AddRange(mapping.Sample.ProcessedData);
+                    var paddedSize = ((sampleData.Count + 63) & 0xffc0) - sampleData.Count;
+                    for (int i = 0; i < paddedSize; i++)
+                        sampleData.Add(0x55);
                     visitedSamples.Add(mapping.Sample);
+
+                    if (sampleData.Count >= MaxSampleSize)
+                        break;
                 }
-            }
-
-            return size;
-        }
-
-        public byte[] GetPackedSampleData()
-        {
-            var sampleData = new List<byte>();
-
-            foreach (var sample in samples)
-            {
-                // DPCMTODO : Remove all 64 bytes rounding, move to data-processing.
-                sampleData.AddRange(sample.ProcessedData); 
-                var paddedSize = ((sampleData.Count + 63) & 0xffc0) - sampleData.Count;
-                for (int i = 0; i < paddedSize; i++)
-                    sampleData.Add(0x55);
             }
 
             if (sampleData.Count > MaxSampleSize)

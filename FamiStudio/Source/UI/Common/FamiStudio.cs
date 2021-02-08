@@ -135,6 +135,8 @@ namespace FamiStudio
             PianoRoll.NotesPasted += PianoRoll_NotesPasted;
             PianoRoll.ScrollChanged += PianoRoll_ScrollChanged;
             PianoRoll.InstrumentEyedropped += PianoRoll_InstrumentEyedropped;
+            PianoRoll.DPCMSampleMapped += PianoRoll_DPCMSampleMapped;
+            PianoRoll.DPCMSampleUnmapped += PianoRoll_DPCMSampleMapped;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
             ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
@@ -174,6 +176,12 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        private void PianoRoll_DPCMSampleMapped(int note)
+        {
+            Sequencer.InvalidatePatternCache();
+            ProjectExplorer.ConditionalInvalidate();
         }
 
         public int GetDPCMSampleMappingNoteAtPos(Point pos)

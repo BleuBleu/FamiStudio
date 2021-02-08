@@ -324,15 +324,18 @@ namespace FamiStudio
         public delegate void EmptyDelegate();
         public delegate void PatternDelegate(Pattern pattern);
         public delegate void InstrumentDelegate(Instrument instrument);
+        public delegate void DPCMMappingDelegate(int note);
 
-        public event PatternDelegate    PatternChanged;
-        public event EmptyDelegate      ManyPatternChanged;
-        public event EmptyDelegate      DPCMSampleChanged;
-        public event EmptyDelegate      EnvelopeChanged;
-        public event EmptyDelegate      ControlActivated;
-        public event EmptyDelegate      NotesPasted;
-        public event EmptyDelegate      ScrollChanged;
-        public event InstrumentDelegate InstrumentEyedropped;
+        public event PatternDelegate     PatternChanged;
+        public event EmptyDelegate       ManyPatternChanged;
+        public event EmptyDelegate       DPCMSampleChanged;
+        public event EmptyDelegate       EnvelopeChanged;
+        public event EmptyDelegate       ControlActivated;
+        public event EmptyDelegate       NotesPasted;
+        public event EmptyDelegate       ScrollChanged;
+        public event InstrumentDelegate  InstrumentEyedropped;
+        public event DPCMMappingDelegate DPCMSampleMapped;
+        public event DPCMMappingDelegate DPCMSampleUnmapped;
 
         public PianoRoll()
         {
@@ -480,6 +483,7 @@ namespace FamiStudio
 
             ClearSelection();
             UpdateRenderCoords();
+            CenterDPCMMappingScroll();
             ClampScroll();
             ConditionalInvalidate();
         }
@@ -560,6 +564,11 @@ namespace FamiStudio
 
             scrollX = 0;
             scrollY = midY - Height / 2;
+        }
+
+        private void CenterDPCMMappingScroll()
+        {
+            scrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0) / 2;
         }
 
         private void CenterScroll(int patternIdx = 0)
@@ -2669,6 +2678,7 @@ namespace FamiStudio
             {
                 App.Project.UnmapDPCMSample(noteValue);
                 App.Project.MapDPCMSample(noteValue, draggedSample.Sample, draggedSample.Pitch, draggedSample.Loop);
+                DPCMSampleMapped?.Invoke(noteValue);
                 success = true;
             }
 
@@ -3630,7 +3640,7 @@ namespace FamiStudio
                                 var sampleName = dlg.Properties.GetPropertyValue<string>(1);
                                 App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
                                 App.UndoRedoManager.EndTransaction();
-                                ManyPatternChanged?.Invoke(); // This will invalidate the pattern cache.
+                                DPCMSampleMapped?.Invoke(noteValue);
                                 ConditionalInvalidate();
                             }
                         }
@@ -3645,6 +3655,7 @@ namespace FamiStudio
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                         App.Project.UnmapDPCMSample(noteValue);
                         App.UndoRedoManager.EndTransaction();
+                        DPCMSampleUnmapped?.Invoke(noteValue);
                         ConditionalInvalidate();
                     }
                 }

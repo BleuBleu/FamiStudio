@@ -110,6 +110,7 @@ namespace FamiStudio
             EditWave,
             Play,
             Expand,
+            Overflow,
             Max
         }
 
@@ -191,8 +192,17 @@ namespace FamiStudio
                     case ButtonType.Instrument:
                         if (instrument == null)
                         {
-                            active = new[] { true };
-                            return new[] { SubButtonType.DPCM };
+                            var project = projectExplorer.App.Project;
+                            if (project != null && project.GetTotalMappedSampleSize() > Project.MaxSampleSize)
+                            {
+                                active = new[] { true, true };
+                                return new[] { SubButtonType.DPCM, SubButtonType.Overflow };
+                            }
+                            else
+                            {
+                                active = new[] { true };
+                                return new[] { SubButtonType.DPCM };
+                            }
                         }
                         else
                         {
@@ -310,6 +320,8 @@ namespace FamiStudio
                         return projectExplorer.bmpWaveEdit;
                     case SubButtonType.Load:
                         return projectExplorer.bmpLoad;
+                    case SubButtonType.Overflow:
+                        return projectExplorer.bmpOverflow;
                     case SubButtonType.Expand:
                     {
                         if (instrument != null)
@@ -338,6 +350,7 @@ namespace FamiStudio
             false,
             true,
             true,
+            false,
             false,
             false
         };
@@ -374,6 +387,7 @@ namespace FamiStudio
         RenderBitmap   bmpWaveEdit;
         RenderBitmap   bmpExpand;
         RenderBitmap   bmpExpanded;
+        RenderBitmap   bmpOverflow;
         RenderBitmap   bmpCheckBoxYes;
         RenderBitmap   bmpCheckBoxNo;
         RenderBitmap   bmpButtonLeft;
@@ -576,6 +590,7 @@ namespace FamiStudio
 
             bmpExpand = g.CreateBitmapFromResource("InstrumentExpand");
             bmpExpanded = g.CreateBitmapFromResource("InstrumentExpanded");
+            bmpOverflow = g.CreateBitmapFromResource("Warning");
             bmpCheckBoxYes = g.CreateBitmapFromResource("CheckBoxYes");
             bmpCheckBoxNo = g.CreateBitmapFromResource("CheckBoxNo");
             bmpButtonLeft = g.CreateBitmapFromResource("ButtonLeft");
@@ -603,6 +618,7 @@ namespace FamiStudio
 
             Utils.DisposeAndNullify(ref bmpExpand);
             Utils.DisposeAndNullify(ref bmpExpanded);
+            Utils.DisposeAndNullify(ref bmpOverflow);
             Utils.DisposeAndNullify(ref bmpCheckBoxYes);
             Utils.DisposeAndNullify(ref bmpCheckBoxNo);
             Utils.DisposeAndNullify(ref bmpButtonLeft);
@@ -908,6 +924,8 @@ namespace FamiStudio
                             tooltip = "{MouseLeft} Edit DPCM samples";
                         else if (subButtonType < SubButtonType.EnvelopeMax)
                             tooltip = $"{{MouseLeft}} Edit {EnvelopeType.Names[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{MouseLeft}} {{Drag}} Copy envelope";
+                        else if (subButtonType == SubButtonType.Overflow)
+                            tooltip = "DPCM sample limit size limit is 16384 bytes. Some samples will not play correctly.";
                     }
                 }
                 else if (buttonType == ButtonType.Dpcm)
@@ -1082,6 +1100,7 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
 
                         DPCMSampleMapped?.Invoke(draggedSample, PointToScreen(new Point(e.X, e.Y)));
+                        ConditionalInvalidate();
                     }
                 }
             }
@@ -1163,6 +1182,8 @@ namespace FamiStudio
 
             paramVal = button.param.SnapAndClampValue(paramVal);
             button.param.SetValue(paramVal);
+
+            App.Project.GetPackedSampleData();
 
             return insideSlider;
         }
@@ -1598,7 +1619,7 @@ namespace FamiStudio
                         }
                         else if (subButtonType == SubButtonType.Max)
                         {
-                            if (PlatformUtils.MessageBox($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            if (PlatformUtils.MessageBox($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 bool selectNewInstrument = instrument == selectedInstrument;
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
@@ -1612,11 +1633,11 @@ namespace FamiStudio
                             }
                         }
                     }
-                    else if (button.type == ButtonType.Arpeggio)
+                    else if (button.type == ButtonType.Arpeggio && button.arpeggio != null)
                     {
                         var arpeggio = button.arpeggio;
 
-                        if (arpeggio != null && PlatformUtils.MessageBox($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        if (PlatformUtils.MessageBox($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             bool selectNewArpeggio = arpeggio == selectedArpeggio;
                             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
