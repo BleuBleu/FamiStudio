@@ -120,56 +120,56 @@ namespace FamiStudio
 
         protected static readonly int[] ChanIdLookup = new[]
         {
-            Channel.Square1,        // CHANID_SQUARE1
-            Channel.Square2,        // CHANID_SQUARE2
-            Channel.Triangle,       // CHANID_TRIANGLE
-            Channel.Noise,          // CHANID_NOISE
-            Channel.Dpcm,           // CHANID_DPCM
-            Channel.Vrc6Square1,    // CHANID_VRC6_PULSE1
-            Channel.Vrc6Square2,    // CHANID_VRC6_PULSE2
-            Channel.Vrc6Saw,        // CHANID_VRC6_SAWTOOTH
-            Channel.Mmc5Square1,    // CHANID_MMC5_SQUARE1
-            Channel.Mmc5Square2,    // CHANID_MMC5_SQUARE2
-            Channel.Mmc5Dpcm,       // CHANID_MMC5_VOICE
-            Channel.N163Wave1,      // CHANID_N163_CHAN1
-            Channel.N163Wave2,      // CHANID_N163_CHAN2
-            Channel.N163Wave3,      // CHANID_N163_CHAN3
-            Channel.N163Wave4,      // CHANID_N163_CHAN4
-            Channel.N163Wave5,      // CHANID_N163_CHAN5
-            Channel.N163Wave6,      // CHANID_N163_CHAN6
-            Channel.N163Wave7,      // CHANID_N163_CHAN7
-            Channel.N163Wave8,      // CHANID_N163_CHAN8
-            Channel.FdsWave,        // CHANID_FDS
-            Channel.Vrc7Fm1,        // CHANID_VRC7_CH1
-            Channel.Vrc7Fm2,        // CHANID_VRC7_CH2
-            Channel.Vrc7Fm3,        // CHANID_VRC7_CH3
-            Channel.Vrc7Fm4,        // CHANID_VRC7_CH4
-            Channel.Vrc7Fm5,        // CHANID_VRC7_CH5
-            Channel.Vrc7Fm6,        // CHANID_VRC7_CH6
-            Channel.S5BSquare1,     // CHANID_S5B_CH1
-            Channel.S5BSquare2,     // CHANID_S5B_CH2
-            Channel.S5BSquare3      // CHANID_S5B_CH3
+            ChannelType.Square1,        // CHANID_SQUARE1
+            ChannelType.Square2,        // CHANID_SQUARE2
+            ChannelType.Triangle,       // CHANID_TRIANGLE
+            ChannelType.Noise,          // CHANID_NOISE
+            ChannelType.Dpcm,           // CHANID_DPCM
+            ChannelType.Vrc6Square1,    // CHANID_VRC6_PULSE1
+            ChannelType.Vrc6Square2,    // CHANID_VRC6_PULSE2
+            ChannelType.Vrc6Saw,        // CHANID_VRC6_SAWTOOTH
+            ChannelType.Mmc5Square1,    // CHANID_MMC5_SQUARE1
+            ChannelType.Mmc5Square2,    // CHANID_MMC5_SQUARE2
+            ChannelType.Mmc5Dpcm,       // CHANID_MMC5_VOICE
+            ChannelType.N163Wave1,      // CHANID_N163_CHAN1
+            ChannelType.N163Wave2,      // CHANID_N163_CHAN2
+            ChannelType.N163Wave3,      // CHANID_N163_CHAN3
+            ChannelType.N163Wave4,      // CHANID_N163_CHAN4
+            ChannelType.N163Wave5,      // CHANID_N163_CHAN5
+            ChannelType.N163Wave6,      // CHANID_N163_CHAN6
+            ChannelType.N163Wave7,      // CHANID_N163_CHAN7
+            ChannelType.N163Wave8,      // CHANID_N163_CHAN8
+            ChannelType.FdsWave,        // CHANID_FDS
+            ChannelType.Vrc7Fm1,        // CHANID_VRC7_CH1
+            ChannelType.Vrc7Fm2,        // CHANID_VRC7_CH2
+            ChannelType.Vrc7Fm3,        // CHANID_VRC7_CH3
+            ChannelType.Vrc7Fm4,        // CHANID_VRC7_CH4
+            ChannelType.Vrc7Fm5,        // CHANID_VRC7_CH5
+            ChannelType.Vrc7Fm6,        // CHANID_VRC7_CH6
+            ChannelType.S5BSquare1,     // CHANID_S5B_CH1
+            ChannelType.S5BSquare2,     // CHANID_S5B_CH2
+            ChannelType.S5BSquare3      // CHANID_S5B_CH3
         };
 
         protected static int[] InstrumentTypeLookup =
         {
-            Project.ExpansionCount,  // INST_NONE: Should never happen.
-            Project.ExpansionNone,   // INST_2A03
-            Project.ExpansionVrc6,   // INST_VRC6
-            Project.ExpansionVrc7,   // INST_VRC7
-            Project.ExpansionFds,    // INST_FDS
-            Project.ExpansionN163,   // INST_N163
-            Project.ExpansionS5B     // INST_S5B
+            ExpansionType.Count,  // INST_NONE: Should never happen.
+            ExpansionType.None,   // INST_2A03
+            ExpansionType.Vrc6,   // INST_VRC6
+            ExpansionType.Vrc7,   // INST_VRC7
+            ExpansionType.Fds,    // INST_FDS
+            ExpansionType.N163,   // INST_N163
+            ExpansionType.S5B     // INST_S5B
         };
 
         // FamiTracker -> FamiStudio
         protected static int[] EnvelopeTypeLookup =
         {
-            Envelope.Volume,   // SEQ_VOLUME
-            Envelope.Arpeggio, // SEQ_ARPEGGIO
-            Envelope.Pitch,    // SEQ_PITCH
-            Envelope.Count,    // SEQ_HIPITCH
-            Envelope.DutyCycle // SEQ_DUTYCYCLE
+            EnvelopeType.Volume,   // SEQ_VOLUME
+            EnvelopeType.Arpeggio, // SEQ_ARPEGGIO
+            EnvelopeType.Pitch,    // SEQ_PITCH
+            EnvelopeType.Count,    // SEQ_HIPITCH
+            EnvelopeType.DutyCycle // SEQ_DUTYCYCLE
         };
 
         // FamiStudio -> FamiTracker
@@ -196,20 +196,20 @@ namespace FamiStudio
         {
             switch (exp)
             {
-                case SndChip_NONE : return Project.ExpansionNone;
-                case SndChip_VRC6 : return Project.ExpansionVrc6;
-                case SndChip_VRC7 : return Project.ExpansionVrc7;
-                case SndChip_FDS  : return Project.ExpansionFds;
-                case SndChip_MMC5 : return Project.ExpansionMmc5;
-                case SndChip_N163 : return Project.ExpansionN163;
-                case SndChip_S5B  : return Project.ExpansionS5B;
+                case SndChip_NONE : return ExpansionType.None;
+                case SndChip_VRC6 : return ExpansionType.Vrc6;
+                case SndChip_VRC7 : return ExpansionType.Vrc7;
+                case SndChip_FDS  : return ExpansionType.Fds;
+                case SndChip_MMC5 : return ExpansionType.Mmc5;
+                case SndChip_N163 : return ExpansionType.N163;
+                case SndChip_S5B  : return ExpansionType.S5B;
             }
 
             Log.LogMessage(LogSeverity.Error, "Unsupported audio expansion.");
             return -1; // We dont support exotic combinations.
         }
 
-        protected Instrument CreateUniquelyNamedInstrument(int type, string baseName)
+        protected Instrument CreateUniquelyNamedInstrument(int expansion, string baseName)
         {
             string name = baseName;
             var j = 2;
@@ -217,7 +217,7 @@ namespace FamiStudio
             while (!project.IsInstrumentNameUnique(name))
                 name = baseName + "-" + j++;
 
-            return project.CreateInstrument(type, name);
+            return project.CreateInstrument(expansion, name);
         }
 
         protected void RenameInstrumentEnsureUnique(Instrument instrument, string baseName)
@@ -379,7 +379,7 @@ namespace FamiStudio
 
         private string GetPatternString(Pattern pattern, int n)
         {
-            return $"(Channel={Channel.ChannelNames[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n})";
+            return $"(Channel={ChannelType.Names[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n})";
         }
 
         private int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
@@ -847,7 +847,7 @@ namespace FamiStudio
                 }
             }
 
-            if (project.ExpansionAudio == Project.ExpansionVrc6)
+            if (project.ExpansionAudio == ExpansionType.Vrc6)
             {
                 Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio uses the full volume range and ignores the duty cycle, they will need to the adjusted manually to sound the same. In most cases, this mean reducing the volume by half using either the volume track or volume envelopes.");
             }

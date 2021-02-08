@@ -492,7 +492,7 @@ namespace FamiStudio
 
         private ButtonStatus OnMachineEnabled()
         {
-            return App.Project != null && App.Project.ExpansionAudio == Project.ExpansionNone ? ButtonStatus.Enabled : ButtonStatus.Disabled;
+            return App.Project != null && App.Project.ExpansionAudio == ExpansionType.None ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
         private RenderBitmap OnMachineGetBitmap()

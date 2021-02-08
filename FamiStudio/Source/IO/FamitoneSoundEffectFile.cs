@@ -16,7 +16,7 @@ namespace FamiStudio
         private string dw = ".word";
         private string ll = "@";
 
-        private void SetupFormat(AssemblyFormat format)
+        private void SetupFormat(int format)
         {
             switch (format)
             {
@@ -54,13 +54,13 @@ namespace FamiStudio
             return writes;
         }
 
-        public bool Save(Project project, int[] songIds, AssemblyFormat format, MachineType mode, string filename)
+        public bool Save(Project project, int[] songIds, int format, int machine, string filename)
         {
             SetupFormat(format);
 
             var modeStrings = new List<string>();
-            if (mode == MachineType.NTSC || mode == MachineType.Dual) modeStrings.Add("ntsc");
-            if (mode == MachineType.PAL  || mode == MachineType.Dual) modeStrings.Add("pal");
+            if (machine == MachineType.NTSC || machine == MachineType.Dual) modeStrings.Add("ntsc");
+            if (machine == MachineType.PAL  || machine == MachineType.Dual) modeStrings.Add("pal");
 
             var lines = new List<string>();
 

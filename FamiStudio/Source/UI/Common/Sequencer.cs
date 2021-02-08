@@ -128,7 +128,7 @@ namespace FamiStudio
         RenderBrush dashedLineVerticalBrush;
         RenderPath seekGeometry;
 
-        RenderBitmap[] bmpTracks = new RenderBitmap[Channel.Count];
+        RenderBitmap[] bmpTracks = new RenderBitmap[ChannelType.Count];
         RenderBitmap bmpGhostNote;
         RenderBitmap bmpLoopPoint;
         RenderBitmap bmpCustomLength;
@@ -261,8 +261,8 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
-            for (int i = 0; i < Channel.Count; i++)
-                bmpTracks[i] = g.CreateBitmapFromResource(Channel.ChannelIcons[i]);
+            for (int i = 0; i < ChannelType.Count; i++)
+                bmpTracks[i] = g.CreateBitmapFromResource(ChannelType.Icons[i]);
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
             bmpLoopPoint = g.CreateBitmapFromResource("LoopSmallFill");
@@ -292,7 +292,7 @@ namespace FamiStudio
         {
             theme.Terminate();
 
-            for (int i = 0; i < Channel.Count; i++)
+            for (int i = 0; i < ChannelType.Count; i++)
                 Utils.DisposeAndNullify(ref bmpTracks[i]);
 
             Utils.DisposeAndNullify(ref bmpGhostNote);
@@ -652,7 +652,7 @@ namespace FamiStudio
                     if (note.IsMusical || note.IsStop)
                     {
                         if (lastValid != null && lastValid.IsValid)
-                            DrawPatternBitmapNote(lastTime, kv.Key, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, p.ChannelType == Channel.Dpcm, data);
+                            DrawPatternBitmapNote(lastTime, kv.Key, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, p.ChannelType == ChannelType.Dpcm, data);
 
                         lastTime  = kv.Key;
                         lastValid = note.IsStop ? null : note;
@@ -660,7 +660,7 @@ namespace FamiStudio
                 }
 
                 if (lastValid != null && lastValid.IsValid)
-                    DrawPatternBitmapNote(lastTime, patternLen, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, p.ChannelType == Channel.Dpcm, data);
+                    DrawPatternBitmapNote(lastTime, patternLen, lastValid, patternSizeX, patternSizeY, minNote, maxNote, scaleY, p.ChannelType == ChannelType.Dpcm, data);
             }
 
             bmp = g.CreateBitmap(patternSizeX, patternSizeY, data);

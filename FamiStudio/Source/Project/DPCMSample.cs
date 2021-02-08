@@ -259,21 +259,6 @@ namespace FamiStudio
 #endif
         }
 
-        // DPCMTODO : Remove this!
-        public byte[] GetDataWithReverse()
-        {
-            //if (reverseBits)
-            //{
-            //    var copy = processedData.Clone() as byte[];
-            //    Utils.ReverseBits(copy);
-            //    return copy;
-            //}
-            //else
-            {
-                return processedData;
-            }
-        }
-
         // At version 9 (FamiStudio 2.4.0) we added a proper DPCM sample editor
         // and refactored the DPCM samples a bit. 
         public void SerializeStatePreVer9(ProjectBuffer buffer)

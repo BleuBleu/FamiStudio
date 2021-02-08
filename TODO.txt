@@ -1,20 +1,19 @@
 2.3.3
 =====
-- MMC5 phase reset problem.
+- MMC5 phase reset problem (CF207.
+- *** CF207 DPCM crash???
+- Crash right click None arpeggio
 - 
 
 FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
-/ Show keyboard keys on piano when piano input is ON.
-- MIDI in/out? Not sure... People will complain it doesnt work as expected.
-- Double-click = select whole note
+- Double-right-click = select whole note
 - Highlight piano keys when they are pressed with QWERTY or MIDI.
-- Rotate mousewheel over param list/sliders should change value (what about undo redo?).
+- Right-click on real-time param => reset to default.
 - Paste special in sequencer.
 - Multiple custom pattern settings editing 
-- BUG : Tutorial=False not saving (escape?)
-- Convert more const int to enums? (Low priority)
+- BUG : Tutorial=False not saving (2 reports, macos + windows).
 
 Test:
 - Retest Win7 device lost.
@@ -32,6 +31,7 @@ x Real-time update VS. change param values.
 - Real-time params => right click = reset to default.
 - Changing DPCM param values doesnt do transaction?? => Serialize more stuff. 
 - Clamp to 4081(?) bytes. 
+- Verify if I post-increment DMC everywhere.
 
 / Basic volume adjustment (0-200%)
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
@@ -41,17 +41,16 @@ x Figure out if DMC is pre-increment or post-increment.	=> POST
 - Cleanup will remove the source data and reset param to something "neutral".
 - Make sure clipboard still works (much copy source data as well).
 - What is the quality setting in RJDMC?
-- Allow scroll up/down piano even in sample.
 - What about space to play DPCM?
 - FamiStudio text format. Give warning of loss source data.
 - Tooltips everywhere!
-/ Make volume of preview match the real sound engine.
 - Print more info in piano roll (source data, number of samples, size, etc.)
-- "DPCM Samples" section size doesnt match the sample size?
 
-Later:
-- Option to normalize volume
-- 4 point volume envelope.
+FamiStudio 2.5.0
+- FamiStudio tempo 2.0?
+- MIDI in/out? Not sure... People will complain it doesnt work as expected.
+- DPCM : Option to normalize volume
+- DPCM : 4 point volume envelope.
 
 Tips & Tricks (Review this list)
 ================================

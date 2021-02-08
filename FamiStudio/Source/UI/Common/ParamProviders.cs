@@ -61,24 +61,24 @@ namespace FamiStudio
         static public bool HasParams(Instrument instrument)
         {
             return
-                instrument.ExpansionType == Project.ExpansionFds ||
-                instrument.ExpansionType == Project.ExpansionN163 ||
-                instrument.ExpansionType == Project.ExpansionVrc7;
+                instrument.ExpansionType == ExpansionType.Fds  ||
+                instrument.ExpansionType == ExpansionType.N163 ||
+                instrument.ExpansionType == ExpansionType.Vrc7;
         }
 
         static public ParamInfo[] GetParams(Instrument instrument)
         {
             switch (instrument.ExpansionType)
             {
-                case Project.ExpansionFds:
+                case ExpansionType.Fds:
                     return new[]
                     {
                         new InstrumentParamInfo(instrument, "Master Volume", 0, 3, true)
                             { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsVolumeStrings[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } },
-                        new InstrumentParamInfo(instrument, "Wave Preset", 0, Envelope.WavePresetMax - 1, true)
-                            { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return Envelope.PresetNames[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; instrument.UpdateFdsWaveEnvelope(); } },
-                        new InstrumentParamInfo(instrument, "Mod Preset", 0, Envelope.WavePresetMax - 1, true )
-                            { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return Envelope.PresetNames[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; instrument.UpdateFdsModulationEnvelope(); } },
+                        new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, true)
+                            { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; instrument.UpdateFdsWaveEnvelope(); } },
+                        new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.Count - 1, true )
+                            { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; instrument.UpdateFdsModulationEnvelope(); } },
                         new InstrumentParamInfo(instrument, "Mod Speed", 0, 4095)
                             { GetValue = () => { return instrument.FdsModSpeed; }, SetValue = (v) => { instrument.FdsModSpeed = (ushort)v; } },
                         new InstrumentParamInfo(instrument, "Mod Depth", 0, 63)
@@ -87,18 +87,18 @@ namespace FamiStudio
                             { GetValue = () => { return instrument.FdsModDelay; }, SetValue = (v) => { instrument.FdsModDelay = (byte)v; } },
                     };
 
-                case Project.ExpansionN163:
+                case ExpansionType.N163:
                     return new[]
                     {
-                        new InstrumentParamInfo(instrument, "Wave Preset", 0, Envelope.WavePresetMax - 1, true)
-                            { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return Envelope.PresetNames[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} },
+                        new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, true)
+                            { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} },
                         new InstrumentParamInfo(instrument, "Wave Size", 4, 248, false, 4)
                             { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;} },
                         new InstrumentParamInfo(instrument, "Wave Position", 0, 244, false, 4)
                             { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;} },
                     };
 
-                case Project.ExpansionVrc7:
+                case ExpansionType.Vrc7:
                     return new[]
                     {
                         new InstrumentParamInfo(instrument, "Patch", 0, 15, true)

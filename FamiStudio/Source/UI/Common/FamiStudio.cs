@@ -723,7 +723,7 @@ namespace FamiStudio
 
             if (instrument == null)
             {
-                channel = Channel.Dpcm;
+                channel = ChannelType.Dpcm;
             }
             else
             {
@@ -756,7 +756,7 @@ namespace FamiStudio
         public void StopOrReleaseIntrumentNote(bool allowRecording = false)
         {
             if (ProjectExplorer.SelectedInstrument != null && 
-                (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || ProjectExplorer.SelectedInstrument.ExpansionType == Project.ExpansionVrc7) &&
+                (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || ProjectExplorer.SelectedInstrument.ExpansionType == ExpansionType.Vrc7) &&
                 song.Channels[Sequencer.SelectedChannel].SupportsInstrument(ProjectExplorer.SelectedInstrument))
             {
                 instrumentPlayer.ReleaseNote(Sequencer.SelectedChannel);

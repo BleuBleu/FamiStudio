@@ -93,14 +93,14 @@ namespace FamiStudio
         enum SubButtonType
         {
             // Let's keep this enum and Envelope.XXX values in sync for convenience.
-            VolumeEnvelope = Envelope.Volume,
-            ArpeggioEnvelope = Envelope.Arpeggio,
-            PitchEnvelope = Envelope.Pitch,
-            DutyCycle = Envelope.DutyCycle,
-            FdsWaveformEnvelope = Envelope.FdsWaveform,
-            FdsModulationEnvelope = Envelope.FdsModulation,
-            N163WaveformEnvelope = Envelope.N163Waveform,
-            EnvelopeMax = Envelope.Count,
+            VolumeEnvelope        = EnvelopeType.Volume,
+            ArpeggioEnvelope      = EnvelopeType.Arpeggio,
+            PitchEnvelope         = EnvelopeType.Pitch,
+            DutyCycle             = EnvelopeType.DutyCycle,
+            FdsWaveformEnvelope   = EnvelopeType.FdsWaveform,
+            FdsModulationEnvelope = EnvelopeType.FdsModulation,
+            N163WaveformEnvelope  = EnvelopeType.N163Waveform,
+            EnvelopeMax           = EnvelopeType.Count,
 
             // Other buttons
             Add,
@@ -116,13 +116,13 @@ namespace FamiStudio
         // From right to left. Looks more visually pleasing than the enum order.
         static readonly int[] EnvelopeDisplayOrder =
         {
-            Envelope.Arpeggio,
-            Envelope.Pitch,
-            Envelope.Volume,
-            Envelope.DutyCycle,
-            Envelope.FdsModulation,
-            Envelope.FdsWaveform,
-            Envelope.N163Waveform
+            EnvelopeType.Arpeggio,
+            EnvelopeType.Pitch,
+            EnvelopeType.Volume,
+            EnvelopeType.DutyCycle,
+            EnvelopeType.FdsModulation,
+            EnvelopeType.FdsWaveform,
+            EnvelopeType.N163Waveform
         };
 
         class Button
@@ -160,7 +160,7 @@ namespace FamiStudio
             private bool IsEnvelopeEmpty(Envelope env, int type)
             {
                 // HACK: Volume envelope have 15 by default. 
-                if (type == Envelope.Volume)
+                if (type == EnvelopeType.Volume)
                 {
                     return env.AllValuesEqual(Note.VolumeMax);
                 }
@@ -201,7 +201,7 @@ namespace FamiStudio
                             var buttons = new SubButtonType[numSubButtons];
                             active = new bool[numSubButtons];
 
-                            for (int i = 0, j = 0; i < Envelope.Count; i++)
+                            for (int i = 0, j = 0; i < EnvelopeType.Count; i++)
                             {
                                 int idx = EnvelopeDisplayOrder[i];
                                 if (instrument.Envelopes[idx] != null)
@@ -378,8 +378,8 @@ namespace FamiStudio
         RenderBitmap   bmpCheckBoxNo;
         RenderBitmap   bmpButtonLeft;
         RenderBitmap   bmpButtonRight;
-        RenderBitmap[] bmpInstrument = new RenderBitmap[Project.ExpansionCount];
-        RenderBitmap[] bmpEnvelopes = new RenderBitmap[Envelope.Count];
+        RenderBitmap[] bmpInstrument = new RenderBitmap[ExpansionType.Count];
+        RenderBitmap[] bmpEnvelopes = new RenderBitmap[EnvelopeType.Count];
 
         public Song SelectedSong => selectedSong;
         public Arpeggio SelectedArpeggio => selectedArpeggio;
@@ -504,7 +504,7 @@ namespace FamiStudio
                 buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, icon = bmpSong, textBrush = theme.BlackBrush });
 
             buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments", font = ThemeBase.FontMediumBoldCenter });
-            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = ThemeBase.LightGreyFillColor1, textBrush = theme.BlackBrush, icon = bmpInstrument[Project.ExpansionNone] });
+            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = ThemeBase.LightGreyFillColor1, textBrush = theme.BlackBrush, icon = bmpInstrument[ExpansionType.None] });
 
             foreach (var instrument in project.Instruments)
             {
@@ -545,7 +545,7 @@ namespace FamiStudio
 
             foreach (var arpeggio in project.Arpeggios)
             {
-                buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio, text = arpeggio.Name, color = arpeggio.Color, textBrush = theme.BlackBrush, icon = bmpEnvelopes[Envelope.Arpeggio] });
+                buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio, text = arpeggio.Name, color = arpeggio.Color, textBrush = theme.BlackBrush, icon = bmpEnvelopes[EnvelopeType.Arpeggio] });
             }
 
             UpdateRenderCoords();
@@ -558,21 +558,21 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
-            bmpInstrument[Project.ExpansionNone]    = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[Project.ExpansionVrc6]    = g.CreateBitmapFromResource("InstrumentKonami");
-            bmpInstrument[Project.ExpansionVrc7]    = g.CreateBitmapFromResource("InstrumentKonami");
-            bmpInstrument[Project.ExpansionFds]     = g.CreateBitmapFromResource("InstrumentFds");
-            bmpInstrument[Project.ExpansionMmc5]    = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[Project.ExpansionN163]    = g.CreateBitmapFromResource("InstrumentNamco");
-            bmpInstrument[Project.ExpansionS5B]     = g.CreateBitmapFromResource("InstrumentSunsoft");
+            bmpInstrument[ExpansionType.None] = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[ExpansionType.Vrc6] = g.CreateBitmapFromResource("InstrumentKonami");
+            bmpInstrument[ExpansionType.Vrc7] = g.CreateBitmapFromResource("InstrumentKonami");
+            bmpInstrument[ExpansionType.Fds]  = g.CreateBitmapFromResource("InstrumentFds");
+            bmpInstrument[ExpansionType.Mmc5] = g.CreateBitmapFromResource("Instrument");
+            bmpInstrument[ExpansionType.N163] = g.CreateBitmapFromResource("InstrumentNamco");
+            bmpInstrument[ExpansionType.S5B]  = g.CreateBitmapFromResource("InstrumentSunsoft");
             
-            bmpEnvelopes[Envelope.Volume]        = g.CreateBitmapFromResource("Volume");
-            bmpEnvelopes[Envelope.Arpeggio]      = g.CreateBitmapFromResource("Arpeggio");
-            bmpEnvelopes[Envelope.Pitch]         = g.CreateBitmapFromResource("Pitch");
-            bmpEnvelopes[Envelope.DutyCycle]     = g.CreateBitmapFromResource("Duty");
-            bmpEnvelopes[Envelope.FdsWaveform]   = g.CreateBitmapFromResource("Wave");
-            bmpEnvelopes[Envelope.FdsModulation] = g.CreateBitmapFromResource("Mod");
-            bmpEnvelopes[Envelope.N163Waveform]  = g.CreateBitmapFromResource("Wave");
+            bmpEnvelopes[EnvelopeType.Volume]        = g.CreateBitmapFromResource("Volume");
+            bmpEnvelopes[EnvelopeType.Arpeggio]      = g.CreateBitmapFromResource("Arpeggio");
+            bmpEnvelopes[EnvelopeType.Pitch]         = g.CreateBitmapFromResource("Pitch");
+            bmpEnvelopes[EnvelopeType.DutyCycle]     = g.CreateBitmapFromResource("Duty");
+            bmpEnvelopes[EnvelopeType.FdsWaveform]   = g.CreateBitmapFromResource("Wave");
+            bmpEnvelopes[EnvelopeType.FdsModulation] = g.CreateBitmapFromResource("Mod");
+            bmpEnvelopes[EnvelopeType.N163Waveform]  = g.CreateBitmapFromResource("Wave");
 
             bmpExpand = g.CreateBitmapFromResource("InstrumentExpand");
             bmpExpanded = g.CreateBitmapFromResource("InstrumentExpanded");
@@ -596,9 +596,9 @@ namespace FamiStudio
         {
             theme.Terminate();
 
-            for (int i = 0; i < Project.ExpansionCount; i++)
+            for (int i = 0; i < ExpansionType.Count; i++)
                 Utils.DisposeAndNullify(ref bmpInstrument[i]);
-            for (int i = 0; i < Envelope.Count; i++)
+            for (int i = 0; i < EnvelopeType.Count; i++)
                 Utils.DisposeAndNullify(ref bmpEnvelopes[i]);
 
             Utils.DisposeAndNullify(ref bmpExpand);
@@ -627,7 +627,7 @@ namespace FamiStudio
         {
             if (App.Project != null)
             {
-                if (App.Project.ExpansionAudio != Project.ExpansionNone && App.Project.Instruments.Find(i => InstrumentParamProvider.HasParams(i)) != null)
+                if (App.Project.ExpansionAudio != ExpansionType.None && App.Project.Instruments.Find(i => InstrumentParamProvider.HasParams(i)) != null)
                     return true;
 
                 if (App.Project.Samples.Count > 0)
@@ -907,7 +907,7 @@ namespace FamiStudio
                         if (subButtonType == SubButtonType.DPCM)
                             tooltip = "{MouseLeft} Edit DPCM samples";
                         else if (subButtonType < SubButtonType.EnvelopeMax)
-                            tooltip = $"{{MouseLeft}} Edit {Envelope.EnvelopeNames[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{MouseLeft}} {{Drag}} Copy envelope";
+                            tooltip = $"{{MouseLeft}} Edit {EnvelopeType.Names[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{MouseLeft}} {{Drag}} Copy envelope";
                     }
                 }
                 else if (buttonType == ButtonType.Dpcm)
@@ -1011,7 +1011,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            if (PlatformUtils.MessageBox($"Are you sure you want to copy the {Envelope.EnvelopeNames[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            if (PlatformUtils.MessageBox($"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
                                 instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
@@ -1254,8 +1254,8 @@ namespace FamiStudio
                             {
                                 var instName = instrument.Name;
 
-                                if (instrument.ExpansionType != Project.ExpansionNone)
-                                    instName += $" ({Project.ExpansionShortNames[instrument.ExpansionType]})";
+                                if (instrument.ExpansionType != ExpansionType.None)
+                                    instName += $" ({ExpansionType.ShortNames[instrument.ExpansionType]})";
 
                                 instrumentNames.Add(instName);
                             }
@@ -1396,17 +1396,17 @@ namespace FamiStudio
                     {
                         if (subButtonType == SubButtonType.Add)
                         {
-                            var instrumentType = Project.ExpansionNone;
+                            var instrumentType = ExpansionType.None;
 
                             if (App.Project.NeedsExpansionInstruments)
                             {
-                                var expNames = new[] { Project.ExpansionNames[Project.ExpansionNone], App.Project.ExpansionAudioName };
+                                var expNames = new[] { ExpansionType.Names[ExpansionType.None], App.Project.ExpansionAudioName };
                                 var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 260, true);
-                                dlg.Properties.AddStringList("Expansion:", expNames, Project.ExpansionNames[Project.ExpansionNone] ); // 0
+                                dlg.Properties.AddStringList("Expansion:", expNames, ExpansionType.Names[ExpansionType.None] ); // 0
                                 dlg.Properties.Build();
 
                                 if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
-                                    instrumentType = dlg.Properties.GetPropertyValue<string>(0) == Project.ExpansionNames[Project.ExpansionNone] ? Project.ExpansionNone : App.Project.ExpansionAudio;
+                                    instrumentType = dlg.Properties.GetPropertyValue<string>(0) == ExpansionType.Names[ExpansionType.None] ? ExpansionType.None : App.Project.ExpansionAudio;
                                 else
                                     return;
                             }
@@ -1440,7 +1440,7 @@ namespace FamiStudio
                         }
                         else if (subButtonType == SubButtonType.DPCM)
                         {
-                            InstrumentEdited?.Invoke(selectedInstrument, Envelope.Count);
+                            InstrumentEdited?.Invoke(selectedInstrument, EnvelopeType.Count);
                         }
                         else if (subButtonType < SubButtonType.EnvelopeMax)
                         {
@@ -1678,11 +1678,11 @@ namespace FamiStudio
             dlg.Properties.AddString("Title :", project.Name, 31); // 0
             dlg.Properties.AddString("Author :", project.Author, 31); // 1
             dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
-            dlg.Properties.AddStringList("Expansion Audio :", Project.ExpansionNames, project.ExpansionAudioName, CommonTooltips.ExpansionAudio); // 3
+            dlg.Properties.AddStringList("Expansion Audio :", ExpansionType.Names, project.ExpansionAudioName, CommonTooltips.ExpansionAudio); // 3
             dlg.Properties.AddIntegerRange("Channels :", project.ExpansionNumChannels, 1, 8, CommonTooltips.ExpansionNumChannels); // 4 (Namco)
-            dlg.Properties.AddStringList("Tempo Mode :", Project.TempoModeNames, Project.TempoModeNames[project.TempoMode], CommonTooltips.TempoMode); // 5
-            dlg.Properties.AddStringList("Authoring Machine :", Project.MachineNames, Project.MachineNames[project.PalMode ? 1 : 0], CommonTooltips.AuthoringMachine); // 6
-            dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == Project.ExpansionN163);
+            dlg.Properties.AddStringList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 5
+            dlg.Properties.AddStringList("Authoring Machine :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 6
+            dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == ExpansionType.N163);
             dlg.Properties.SetPropertyEnabled(6, project.UsesFamiStudioTempo);
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             dlg.Properties.Build();
@@ -1693,9 +1693,9 @@ namespace FamiStudio
                 project.Author = dlg.Properties.GetPropertyValue<string>(1);
                 project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
 
-                var tempoMode    = Array.IndexOf(Project.TempoModeNames, dlg.Properties.GetPropertyValue<string>(5));
-                var expansion    = Array.IndexOf(Project.ExpansionNames, dlg.Properties.GetPropertyValue<string>(3));
-                var palAuthoring = Array.IndexOf(Project.MachineNames,   dlg.Properties.GetPropertyValue<string>(6)) == 1;
+                var tempoMode    = TempoType.GetValueForName    (dlg.Properties.GetPropertyValue<string>(5));
+                var expansion    = ExpansionType.GetValueForName(dlg.Properties.GetPropertyValue<string>(3));
+                var palAuthoring = MachineType.GetValueForName  (dlg.Properties.GetPropertyValue<string>(6)) == 1;
                 var numChannels  = dlg.Properties.GetPropertyValue<int>(4);
 
                 var changedTempoMode        = tempoMode    != project.TempoMode;
@@ -1714,7 +1714,7 @@ namespace FamiStudio
 
                 if (changedExpansion || changedNumChannels)
                 {
-                    if (project.ExpansionAudio == Project.ExpansionNone ||
+                    if (project.ExpansionAudio == ExpansionType.None ||
                         (!changedExpansion && changedNumChannels) ||
                         PlatformUtils.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
@@ -1727,13 +1727,13 @@ namespace FamiStudio
 
                 if (changedTempoMode)
                 {
-                    if (tempoMode == Project.TempoFamiStudio)
+                    if (tempoMode == TempoType.FamiStudio)
                     {
                         if (!project.AreSongsEmpty)
                             PlatformUtils.MessageBox($"Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.", "Change tempo mode", MessageBoxButtons.OK);
                         project.ConvertToFamiStudioTempo();
                     }
-                    else if (tempoMode == Project.TempoFamiTracker)
+                    else if (tempoMode == TempoType.FamiTracker)
                     {
                         if (!project.AreSongsEmpty)
                             PlatformUtils.MessageBox($"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
@@ -1757,11 +1757,11 @@ namespace FamiStudio
 
         private void ProjectProperties_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            var noExpansion = props.GetPropertyValue<string>(3) == Project.ExpansionNames[Project.ExpansionNone];
+            var noExpansion = props.GetPropertyValue<string>(3) == ExpansionType.Names[ExpansionType.None];
 
             if (idx == 3) // Expansion
             {
-                props.SetPropertyEnabled(4, (string)value == Project.ExpansionNames[Project.ExpansionN163]);
+                props.SetPropertyEnabled(4, (string)value == ExpansionType.Names[ExpansionType.N163]);
                 props.SetPropertyEnabled(6, props.GetPropertyValue<string>(5) == "FamiStudio" && noExpansion);
 
                 if (noExpansion)
@@ -1771,7 +1771,7 @@ namespace FamiStudio
             }
             else if (idx == 5) // Tempo Mode
             {
-                props.SetPropertyEnabled(6, (string)value == Project.TempoModeNames[Project.TempoFamiStudio]);
+                props.SetPropertyEnabled(6, (string)value == TempoType.Names[TempoType.FamiStudio]);
             }
         }
 
@@ -1877,8 +1877,8 @@ namespace FamiStudio
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColor(instrument.Color); // 1
-            if (instrument.IsEnvelopeActive(Envelope.Pitch))
-                dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[Envelope.Pitch].Relative); // 2
+            if (instrument.IsEnvelopeActive(EnvelopeType.Pitch))
+                dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[EnvelopeType.Pitch].Relative); // 2
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -1890,26 +1890,26 @@ namespace FamiStudio
                 if (App.Project.RenameInstrument(instrument, newName))
                 {
                     instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
-                    if (instrument.IsEnvelopeActive(Envelope.Pitch))
+                    if (instrument.IsEnvelopeActive(EnvelopeType.Pitch))
                     {
                         var newRelative = dlg.Properties.GetPropertyValue<bool>(2);
-                        if (instrument.Envelopes[Envelope.Pitch].Relative != newRelative)
+                        if (instrument.Envelopes[EnvelopeType.Pitch].Relative != newRelative)
                         {
-                            if (!instrument.Envelopes[Envelope.Pitch].IsEmpty)
+                            if (!instrument.Envelopes[EnvelopeType.Pitch].IsEmpty)
                             {
                                 if (newRelative)
                                 {
                                     if (PlatformUtils.MessageBox("Do you want to try to convert the pitch envelope from absolute to relative?", "Pitch Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                                        instrument.Envelopes[Envelope.Pitch].ConvertToRelative();
+                                        instrument.Envelopes[EnvelopeType.Pitch].ConvertToRelative();
                                 }
                                 else
                                 {
                                     if (PlatformUtils.MessageBox("Do you want to try to convert the pitch envelope from relative to absolute?", "Pitch Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                                        instrument.Envelopes[Envelope.Pitch].ConvertToAbsolute();
+                                        instrument.Envelopes[EnvelopeType.Pitch].ConvertToAbsolute();
                                 }
                             }
 
-                            instrument.Envelopes[Envelope.Pitch].Relative = newRelative;
+                            instrument.Envelopes[EnvelopeType.Pitch].Relative = newRelative;
                         }
                     }
                     InstrumentColorChanged?.Invoke(instrument);

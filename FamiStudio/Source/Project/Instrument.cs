@@ -10,80 +10,36 @@ namespace FamiStudio
     {
         private int id;
         private string name;
-        private int expansion = Project.ExpansionNone;
-        private Envelope[] envelopes = new Envelope[Envelope.Count];
+        private int expansion = global::FamiStudio.ExpansionType.None;
+        private Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         private Color color;
 
         // FDS
         private byte fdsMasterVolume = 0;
-        private byte fdsWavPreset = Envelope.WavePresetSine;
-        private byte fdsModPreset = Envelope.WavePresetFlat;
+        private byte fdsWavPreset = WavePresetType.Sine;
+        private byte fdsModPreset = WavePresetType.Flat;
         private ushort fdsModSpeed;
         private byte fdsModDepth;
         private byte fdsModDelay;
 
         // N163
-        private byte n163WavePreset = Envelope.WavePresetSine;
+        private byte n163WavePreset = WavePresetType.Sine;
         private byte n163WaveSize = 16;
         private byte n163WavePos = 0;
 
         // VRC7
-        private byte vrc7Patch = 1;
+        private byte vrc7Patch = Vrc7InstrumentPatch.Bell;
         private byte[] vrc7PatchRegs = new byte[8];
 
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public Color Color { get => color; set => color = value; }
         public int ExpansionType => expansion;
-        public bool IsExpansionInstrument => expansion != Project.ExpansionNone;
+        public bool IsExpansionInstrument => expansion != global::FamiStudio.ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
-        public int DutyCycleRange => expansion == Project.ExpansionNone ? 4 : 8;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
-        public bool HasReleaseEnvelope => envelopes[Envelope.Volume] != null && envelopes[Envelope.Volume].Release >= 0;
+        public bool HasReleaseEnvelope => envelopes[EnvelopeType.Volume] != null && envelopes[EnvelopeType.Volume].Release >= 0;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
-
-        public const int Vrc7PresetCustom = 0;
-        public const int Vrc7PresetBell = 1;
-        public const int Vrc7PresetGuitar = 2;
-        public const int Vrc7PresetPiano = 3;
-        public const int Vrc7PresetFlute = 4;
-        public const int Vrc7PresetClarinet = 5;
-        public const int Vrc7PresetRattlingBell = 6;
-        public const int Vrc7PresetTrumpet = 7;
-        public const int Vrc7PresetReedOrgan = 8;
-        public const int Vrc7PresetSoftBell = 9;
-        public const int Vrc7PresetXylophone = 10;
-        public const int Vrc7PresetVibraphone = 11;
-        public const int Vrc7PresetBrass = 12;
-        public const int Vrc7PresetBassGuitar = 13;
-        public const int Vrc7PresetSynthetizer = 14;
-        public const int Vrc7PresetChorus = 15;
-
-        public struct Vrc7PatchInfo
-        {
-            public string name;
-            public byte[] data;
-        };
-
-        public static readonly Vrc7PatchInfo[] Vrc7Patches = new[]
-        {
-            new Vrc7PatchInfo() { name = "Custom",       data = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Custom      
-            new Vrc7PatchInfo() { name = "Bell",         data = new byte[] { 0x03, 0x21, 0x05, 0x06, 0xe8, 0x81, 0x42, 0x27 } }, // Bell        
-            new Vrc7PatchInfo() { name = "Guitar",       data = new byte[] { 0x13, 0x41, 0x14, 0x0d, 0xd8, 0xf6, 0x23, 0x12 } }, // Guitar      
-            new Vrc7PatchInfo() { name = "Piano",        data = new byte[] { 0x11, 0x11, 0x08, 0x08, 0xfa, 0xb2, 0x20, 0x12 } }, // Piano       
-            new Vrc7PatchInfo() { name = "Flute",        data = new byte[] { 0x31, 0x61, 0x0c, 0x07, 0xa8, 0x64, 0x61, 0x27 } }, // Flute       
-            new Vrc7PatchInfo() { name = "Clarinet",     data = new byte[] { 0x32, 0x21, 0x1e, 0x06, 0xe1, 0x76, 0x01, 0x28 } }, // Clarinet    
-            new Vrc7PatchInfo() { name = "RattlingBell", data = new byte[] { 0x02, 0x01, 0x06, 0x00, 0xa3, 0xe2, 0xf4, 0xf4 } }, // RattlingBell
-            new Vrc7PatchInfo() { name = "Trumpet",      data = new byte[] { 0x21, 0x61, 0x1d, 0x07, 0x82, 0x81, 0x11, 0x07 } }, // Trumpet     
-            new Vrc7PatchInfo() { name = "ReedOrgan",    data = new byte[] { 0x23, 0x21, 0x22, 0x17, 0xa2, 0x72, 0x01, 0x17 } }, // ReedOrgan   
-            new Vrc7PatchInfo() { name = "SoftBell",     data = new byte[] { 0x35, 0x11, 0x25, 0x00, 0x40, 0x73, 0x72, 0x01 } }, // SoftBell    
-            new Vrc7PatchInfo() { name = "Xylophone",    data = new byte[] { 0xb5, 0x01, 0x0f, 0x0F, 0xa8, 0xa5, 0x51, 0x02 } }, // Xylophone   
-            new Vrc7PatchInfo() { name = "Vibraphone",   data = new byte[] { 0x17, 0xc1, 0x24, 0x07, 0xf8, 0xf8, 0x22, 0x12 } }, // Vibraphone  
-            new Vrc7PatchInfo() { name = "Brass",        data = new byte[] { 0x71, 0x23, 0x11, 0x06, 0x65, 0x74, 0x18, 0x16 } }, // Brass       
-            new Vrc7PatchInfo() { name = "BassGuitar",   data = new byte[] { 0x01, 0x02, 0xd3, 0x05, 0xc9, 0x95, 0x03, 0x02 } }, // BassGuitar  
-            new Vrc7PatchInfo() { name = "Synthesizer",  data = new byte[] { 0x61, 0x63, 0x0c, 0x00, 0x94, 0xC0, 0x33, 0xf6 } }, // Synthesizer 
-            new Vrc7PatchInfo() { name = "Chorus",       data = new byte[] { 0x21, 0x72, 0x0d, 0x00, 0xc1, 0xd5, 0x56, 0x06 } }  // Chorus      
-        };
 
         public Instrument()
         {
@@ -95,50 +51,50 @@ namespace FamiStudio
             this.expansion = expansion;
             this.name = name;
             this.color = ThemeBase.RandomCustomColor();
-            for (int i = 0; i < Envelope.Count; i++)
+            for (int i = 0; i < EnvelopeType.Count; i++)
             {
                 if (IsEnvelopeActive(i))
                     envelopes[i] = new Envelope(i);
             }
 
-            if (expansion == Project.ExpansionFds)
+            if (expansion == global::FamiStudio.ExpansionType.Fds)
             {
                 UpdateFdsWaveEnvelope();
                 UpdateFdsModulationEnvelope();
             }
-            else if (expansion == Project.ExpansionN163)
+            else if (expansion == global::FamiStudio.ExpansionType.N163)
             {
                 UpdateN163WaveEnvelope();
             }
-            else if (expansion == Project.ExpansionVrc7)
+            else if (expansion == global::FamiStudio.ExpansionType.Vrc7)
             {
-                vrc7Patch = 1;
-                Array.Copy(Vrc7Patches[1].data, vrc7PatchRegs, 8);
+                vrc7Patch = Vrc7InstrumentPatch.Bell;
+                Array.Copy(Vrc7InstrumentPatch.Infos[Vrc7InstrumentPatch.Bell].data, vrc7PatchRegs, 8);
             }
         }
 
         public bool IsEnvelopeActive(int envelopeType)
         {
-            if (envelopeType == Envelope.Volume ||
-                envelopeType == Envelope.Pitch  ||
-                envelopeType == Envelope.Arpeggio)
+            if (envelopeType == EnvelopeType.Volume ||
+                envelopeType == EnvelopeType.Pitch  ||
+                envelopeType == EnvelopeType.Arpeggio)
             {
                 return true;
             }
-            else if (envelopeType == Envelope.DutyCycle)
+            else if (envelopeType == EnvelopeType.DutyCycle)
             {
-                return expansion == Project.ExpansionNone ||
-                       expansion == Project.ExpansionVrc6 ||
-                       expansion == Project.ExpansionMmc5;
+                return expansion == global::FamiStudio.ExpansionType.None ||
+                       expansion == global::FamiStudio.ExpansionType.Vrc6 ||
+                       expansion == global::FamiStudio.ExpansionType.Mmc5;
             }
-            else if (envelopeType == Envelope.FdsWaveform ||
-                     envelopeType == Envelope.FdsModulation)
+            else if (envelopeType == EnvelopeType.FdsWaveform ||
+                     envelopeType == EnvelopeType.FdsModulation)
             {
-                return expansion == Project.ExpansionFds;
+                return expansion == global::FamiStudio.ExpansionType.Fds;
             }
-            else if (envelopeType == Envelope.N163Waveform)
+            else if (envelopeType == EnvelopeType.N163Waveform)
             {
-                return expansion == Project.ExpansionN163;
+                return expansion == global::FamiStudio.ExpansionType.N163;
             }
 
             return false;
@@ -204,7 +160,7 @@ namespace FamiStudio
             {
                 vrc7Patch = value;
                 if (vrc7Patch != 0)
-                    Array.Copy(Vrc7Patches[vrc7Patch].data, vrc7PatchRegs, 8);
+                    Array.Copy(Vrc7InstrumentPatch.Infos[vrc7Patch].data, vrc7PatchRegs, 8);
             }
         }
 
@@ -215,23 +171,23 @@ namespace FamiStudio
 
         public void UpdateFdsWaveEnvelope()
         {
-            envelopes[Envelope.FdsWaveform].SetFromPreset(Envelope.FdsWaveform, fdsWavPreset);
+            envelopes[EnvelopeType.FdsWaveform].SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
         }
 
         public void UpdateFdsModulationEnvelope()
         {
-            envelopes[Envelope.FdsModulation].SetFromPreset(Envelope.FdsModulation, fdsModPreset);
+            envelopes[EnvelopeType.FdsModulation].SetFromPreset(EnvelopeType.FdsModulation, fdsModPreset);
         }
 
         public void UpdateN163WaveEnvelope()
         {
-            envelopes[Envelope.N163Waveform].MaxLength = n163WaveSize;
-            envelopes[Envelope.N163Waveform].SetFromPreset(Envelope.N163Waveform, n163WavePreset);
+            envelopes[EnvelopeType.N163Waveform].MaxLength = n163WaveSize;
+            envelopes[EnvelopeType.N163Waveform].SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
         }
 
-        public static string GetVrc7PatchName(int idx)
+        public static string GetVrc7PatchName(int preset)
         {
-            return Vrc7Patches[idx].name;
+            return Vrc7InstrumentPatch.Infos[preset].name;
         }
 
         public uint ComputeCRC(uint crc = 0)
@@ -253,7 +209,7 @@ namespace FamiStudio
 
             Debug.Assert(project.GetInstrument(id) == this);
 
-            for (int i = 0; i < Envelope.Count; i++)
+            for (int i = 0; i < EnvelopeType.Count; i++)
             {
                 bool envelopeExists = envelopes[i] != null;
                 bool envelopeShouldExists = IsEnvelopeActive(i);
@@ -288,7 +244,7 @@ namespace FamiStudio
                 {
                     switch (expansion)
                     {
-                        case Project.ExpansionFds:
+                        case global::FamiStudio.ExpansionType.Fds:
                             buffer.Serialize(ref fdsMasterVolume);
                             buffer.Serialize(ref fdsWavPreset);
                             buffer.Serialize(ref fdsModPreset);
@@ -296,13 +252,13 @@ namespace FamiStudio
                             buffer.Serialize(ref fdsModDepth); 
                             buffer.Serialize(ref fdsModDelay);
                             break;
-                        case Project.ExpansionN163:
+                        case global::FamiStudio.ExpansionType.N163:
                             buffer.Serialize(ref n163WavePreset);
                             buffer.Serialize(ref n163WaveSize);
                             buffer.Serialize(ref n163WavePos);
                             break;
 
-                        case Project.ExpansionVrc7:
+                        case global::FamiStudio.ExpansionType.Vrc7:
                             buffer.Serialize(ref vrc7Patch);
                             buffer.Serialize(ref vrc7PatchRegs[0]);
                             buffer.Serialize(ref vrc7PatchRegs[1]);
@@ -320,7 +276,7 @@ namespace FamiStudio
             byte envelopeMask = 0;
             if (buffer.IsWriting)
             {
-                for (int i = 0; i < Envelope.Count; i++)
+                for (int i = 0; i < EnvelopeType.Count; i++)
                 {
                     if (envelopes[i] != null)
                         envelopeMask = (byte)(envelopeMask | (1 << i));
@@ -328,7 +284,7 @@ namespace FamiStudio
             }
             buffer.Serialize(ref envelopeMask);
 
-            for (int i = 0; i < Envelope.Count; i++)
+            for (int i = 0; i < EnvelopeType.Count; i++)
             {
                 if ((envelopeMask & (1 << i)) != 0)
                 {
@@ -344,13 +300,60 @@ namespace FamiStudio
 
             if (buffer.Version < 5)
             {
-                envelopes[Envelope.DutyCycle] = new Envelope(Envelope.DutyCycle);
+                envelopes[EnvelopeType.DutyCycle] = new Envelope(EnvelopeType.DutyCycle);
                 if (dutyCycle != 0)
                 {
-                    envelopes[Envelope.DutyCycle].Length = 1;
-                    envelopes[Envelope.DutyCycle].Values[0] = (sbyte)dutyCycle;
+                    envelopes[EnvelopeType.DutyCycle].Length = 1;
+                    envelopes[EnvelopeType.DutyCycle].Values[0] = (sbyte)dutyCycle;
                 }
             }
         }
+    }
+
+    public static class Vrc7InstrumentPatch
+    {
+        public const byte Custom       =  0;
+        public const byte Bell         =  1;
+        public const byte Guitar       =  2;
+        public const byte Piano        =  3;
+        public const byte Flute        =  4;
+        public const byte Clarinet     =  5;
+        public const byte RattlingBell =  6;
+        public const byte Trumpet      =  7;
+        public const byte ReedOrgan    =  8;
+        public const byte SoftBell     =  9;
+        public const byte Xylophone    = 10;
+        public const byte Vibraphone   = 11;
+        public const byte Brass        = 12;
+        public const byte BassGuitar   = 13;
+        public const byte Synthetizer  = 14;
+        public const byte Chorus       = 15;
+
+        public struct Vrc7PatchInfo
+        {
+            public string name;
+            public byte[] data;
+        };
+
+        public static readonly Vrc7PatchInfo[] Infos = new[]
+        {
+            new Vrc7PatchInfo() { name = "Custom",       data = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Custom      
+            new Vrc7PatchInfo() { name = "Bell",         data = new byte[] { 0x03, 0x21, 0x05, 0x06, 0xe8, 0x81, 0x42, 0x27 } }, // Bell        
+            new Vrc7PatchInfo() { name = "Guitar",       data = new byte[] { 0x13, 0x41, 0x14, 0x0d, 0xd8, 0xf6, 0x23, 0x12 } }, // Guitar      
+            new Vrc7PatchInfo() { name = "Piano",        data = new byte[] { 0x11, 0x11, 0x08, 0x08, 0xfa, 0xb2, 0x20, 0x12 } }, // Piano       
+            new Vrc7PatchInfo() { name = "Flute",        data = new byte[] { 0x31, 0x61, 0x0c, 0x07, 0xa8, 0x64, 0x61, 0x27 } }, // Flute       
+            new Vrc7PatchInfo() { name = "Clarinet",     data = new byte[] { 0x32, 0x21, 0x1e, 0x06, 0xe1, 0x76, 0x01, 0x28 } }, // Clarinet    
+            new Vrc7PatchInfo() { name = "RattlingBell", data = new byte[] { 0x02, 0x01, 0x06, 0x00, 0xa3, 0xe2, 0xf4, 0xf4 } }, // RattlingBell
+            new Vrc7PatchInfo() { name = "Trumpet",      data = new byte[] { 0x21, 0x61, 0x1d, 0x07, 0x82, 0x81, 0x11, 0x07 } }, // Trumpet     
+            new Vrc7PatchInfo() { name = "ReedOrgan",    data = new byte[] { 0x23, 0x21, 0x22, 0x17, 0xa2, 0x72, 0x01, 0x17 } }, // ReedOrgan   
+            new Vrc7PatchInfo() { name = "SoftBell",     data = new byte[] { 0x35, 0x11, 0x25, 0x00, 0x40, 0x73, 0x72, 0x01 } }, // SoftBell    
+            new Vrc7PatchInfo() { name = "Xylophone",    data = new byte[] { 0xb5, 0x01, 0x0f, 0x0F, 0xa8, 0xa5, 0x51, 0x02 } }, // Xylophone   
+            new Vrc7PatchInfo() { name = "Vibraphone",   data = new byte[] { 0x17, 0xc1, 0x24, 0x07, 0xf8, 0xf8, 0x22, 0x12 } }, // Vibraphone  
+            new Vrc7PatchInfo() { name = "Brass",        data = new byte[] { 0x71, 0x23, 0x11, 0x06, 0x65, 0x74, 0x18, 0x16 } }, // Brass       
+            new Vrc7PatchInfo() { name = "BassGuitar",   data = new byte[] { 0x01, 0x02, 0xd3, 0x05, 0xc9, 0x95, 0x03, 0x02 } }, // BassGuitar  
+            new Vrc7PatchInfo() { name = "Synthesizer",  data = new byte[] { 0x61, 0x63, 0x0c, 0x00, 0x94, 0xC0, 0x33, 0xf6 } }, // Synthesizer 
+            new Vrc7PatchInfo() { name = "Chorus",       data = new byte[] { 0x21, 0x72, 0x0d, 0x00, 0xc1, 0xd5, 0x56, 0x06 } }  // Chorus      
+        };
+
     }
 }

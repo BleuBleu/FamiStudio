@@ -16,9 +16,9 @@ namespace FamiStudio
         protected int dutyCycle = 0;
         protected bool pitchEnvelopeOverride = false;
         protected bool arpeggioEnvelopeOverride = false;
-        protected Envelope[] envelopes = new Envelope[Envelope.Count];
-        protected int[] envelopeIdx = new int[Envelope.Count];
-        protected int[] envelopeValues = new int[Envelope.Count];
+        protected Envelope[] envelopes = new Envelope[EnvelopeType.Count];
+        protected int[] envelopeIdx = new int[EnvelopeType.Count];
+        protected int[] envelopeValues = new int[EnvelopeType.Count];
         protected bool customRelease = false;
         protected bool noteTriggered = false;
         protected ushort[] noteTable = null;
@@ -131,7 +131,7 @@ namespace FamiStudio
                 // Jump to release point.
                 if (note.Instrument != null)
                 {
-                    for (int j = 0; j < Envelope.Count; j++)
+                    for (int j = 0; j < EnvelopeType.Count; j++)
                     {
                         if (envelopes[j] != null && envelopes[j].Release >= 0)
                             envelopeIdx[j] = envelopes[j].Release;
@@ -156,39 +156,39 @@ namespace FamiStudio
                 {
                     if (note.Arpeggio != null)
                     {
-                        envelopes[Envelope.Arpeggio] = note.Arpeggio.Envelope;
+                        envelopes[EnvelopeType.Arpeggio] = note.Arpeggio.Envelope;
                         arpeggioEnvelopeOverride = true;
                     }
                     else
                     {
-                        envelopes[Envelope.Arpeggio] = null;
+                        envelopes[EnvelopeType.Arpeggio] = null;
                         arpeggioEnvelopeOverride = false;
                     }
 
-                    envelopeIdx[Envelope.Arpeggio] = 0;
-                    envelopeValues[Envelope.Arpeggio] = 0;
+                    envelopeIdx[EnvelopeType.Arpeggio] = 0;
+                    envelopeValues[EnvelopeType.Arpeggio] = 0;
                 }
                 // If same arpeggio, but note has an attack, reset it.
                 else if (note.HasAttack && arpeggioEnvelopeOverride)
                 {
-                    envelopeIdx[Envelope.Arpeggio] = 0;
-                    envelopeValues[Envelope.Arpeggio] = 0;
+                    envelopeIdx[EnvelopeType.Arpeggio] = 0;
+                    envelopeValues[EnvelopeType.Arpeggio] = 0;
                 }
 
                 if (instrumentChanged || note.HasAttack)
                 {
-                    for (int j = 0; j < Envelope.Count; j++)
+                    for (int j = 0; j < EnvelopeType.Count; j++)
                     {
-                        if ((j != Envelope.Pitch     || !pitchEnvelopeOverride) &&
-                            (j != Envelope.Arpeggio  || !arpeggioEnvelopeOverride))
+                        if ((j != EnvelopeType.Pitch     || !pitchEnvelopeOverride) &&
+                            (j != EnvelopeType.Arpeggio  || !arpeggioEnvelopeOverride))
                         {
                             envelopes[j] = note.Instrument == null ? null : note.Instrument.Envelopes[j];
                         }
                         envelopeIdx[j] = 0;
                     }
 
-                    envelopeValues[Envelope.DutyCycle] = dutyCycle;
-                    envelopeValues[Envelope.Pitch] = 0; // In case we use relative envelopes.
+                    envelopeValues[EnvelopeType.DutyCycle] = dutyCycle;
+                    envelopeValues[EnvelopeType.Pitch] = 0; // In case we use relative envelopes.
                     noteTriggered = true;
                 }
 
@@ -209,14 +209,14 @@ namespace FamiStudio
             {
                 if (note.VibratoDepth != 0 && note.VibratoDepth != 0)
                 {
-                    envelopes[Envelope.Pitch] = Envelope.CreateVibratoEnvelope(note.VibratoSpeed, note.VibratoDepth);
-                    envelopeIdx[Envelope.Pitch] = 0;
-                    envelopeValues[Envelope.Pitch] = 0;
+                    envelopes[EnvelopeType.Pitch] = Envelope.CreateVibratoEnvelope(note.VibratoSpeed, note.VibratoDepth);
+                    envelopeIdx[EnvelopeType.Pitch] = 0;
+                    envelopeValues[EnvelopeType.Pitch] = 0;
                     pitchEnvelopeOverride = true;
                 }
                 else
                 {
-                    envelopes[Envelope.Pitch] = null;
+                    envelopes[EnvelopeType.Pitch] = null;
                     pitchEnvelopeOverride = false;
                 }
             }
@@ -230,7 +230,7 @@ namespace FamiStudio
             if (note.HasDutyCycle)
             {
                 dutyCycle = note.DutyCycle;
-                envelopeValues[Envelope.DutyCycle] = dutyCycle;
+                envelopeValues[EnvelopeType.DutyCycle] = dutyCycle;
             }
 
             if (note.HasCutDelay)
@@ -280,13 +280,13 @@ namespace FamiStudio
         {
             if (note.Instrument != null)
             {
-                for (int j = 0; j < Envelope.Count; j++)
+                for (int j = 0; j < EnvelopeType.Count; j++)
                 {
                     if (envelopes[j] == null || envelopes[j].IsEmpty)
                     {
-                        if (j == Envelope.Volume)
+                        if (j == EnvelopeType.Volume)
                             envelopeValues[j] = 15;
-                        else if (j != Envelope.DutyCycle)
+                        else if (j != EnvelopeType.DutyCycle)
                             envelopeValues[j] = 0;
                         continue;
                     }
@@ -303,7 +303,7 @@ namespace FamiStudio
 
                     if (env.Relative)
                     {
-                        Debug.Assert(j == Envelope.Pitch);
+                        Debug.Assert(j == EnvelopeType.Pitch);
                         envelopeValues[j] += envelopes[j].Values[idx];
                     }
                     else
@@ -369,7 +369,7 @@ namespace FamiStudio
             arpeggioEnvelopeOverride = false;
             note.Arpeggio = null;
             note.Instrument = null;
-            for (int i = 0; i < Envelope.Count; i++)
+            for (int i = 0; i < EnvelopeType.Count; i++)
                 envelopes[i] = null;
         }
 
@@ -386,20 +386,20 @@ namespace FamiStudio
 
         protected int GetPeriod()
         {
-            var noteVal = Utils.Clamp(note.Value + envelopeValues[Envelope.Arpeggio], 0, noteTable.Length - 1);
-            var pitch = (note.FinePitch + envelopeValues[Envelope.Pitch]) << pitchShift;
+            var noteVal = Utils.Clamp(note.Value + envelopeValues[EnvelopeType.Arpeggio], 0, noteTable.Length - 1);
+            var pitch = (note.FinePitch + envelopeValues[EnvelopeType.Pitch]) << pitchShift;
             var slide = slideShift < 0 ? (slidePitch >> -slideShift) : (slidePitch << slideShift); // Remove the fraction part.
             return Utils.Clamp(noteTable[noteVal] + pitch + slide, 0, maximumPeriod);
         }
 
         protected int GetVolume()
         {
-            return MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
+            return MultiplyVolumes(note.Volume, envelopeValues[EnvelopeType.Volume]);
         }
 
         protected int GetDuty()
         {
-            return envelopeValues[Envelope.DutyCycle];
+            return envelopeValues[EnvelopeType.DutyCycle];
         }
 
         public virtual void UpdateAPU()
@@ -417,7 +417,7 @@ namespace FamiStudio
                 return n;
             }
         }
-        public int  CurrentVolume => MultiplyVolumes(note.Volume, envelopeValues[Envelope.Volume]);
+        public int  CurrentVolume => MultiplyVolumes(note.Volume, envelopeValues[EnvelopeType.Volume]);
     };
 
     public interface IRegisterListener
