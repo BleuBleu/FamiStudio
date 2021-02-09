@@ -858,6 +858,7 @@ namespace FamiStudio
 
         private void UpdateToolTip(MouseEventArgs e)
         {
+            var redTooltip = false;
             var tooltip = "";
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
@@ -921,21 +922,34 @@ namespace FamiStudio
                     else
                     {
                         if (subButtonType == SubButtonType.DPCM)
+                        {
                             tooltip = "{MouseLeft} Edit DPCM samples";
+                        }
                         else if (subButtonType < SubButtonType.EnvelopeMax)
+                        {
                             tooltip = $"{{MouseLeft}} Edit {EnvelopeType.Names[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{MouseLeft}} {{Drag}} Copy envelope";
+                        }
                         else if (subButtonType == SubButtonType.Overflow)
+                        {
                             tooltip = "DPCM sample limit size limit is 16384 bytes. Some samples will not play correctly.";
+                            redTooltip = true;
+                        }
                     }
                 }
                 else if (buttonType == ButtonType.Dpcm)
                 {
                     if (subButtonType == SubButtonType.Play)
+                    {
                         tooltip = "{MouseLeft} Preview processed DPCM sample\n{MouseRight} Play source sample";
+                    }
                     else if (subButtonType == SubButtonType.EditWave)
+                    {
                         tooltip = "{MouseLeft} Edit waveform";
+                    }
                     else if (subButtonType == SubButtonType.Save)
+                    {
                         tooltip = "{MouseLeft} Export processed DMC file\n{MouseRight} Export source data (DMC or WAV)";
+                    }
                 }
             }
             else if (needsScrollBar && e.X > Width - scrollBarSizeX)
@@ -943,7 +957,7 @@ namespace FamiStudio
                 tooltip = "{MouseLeft} {Drag} Scroll";
             }
 
-            App.ToolTip = tooltip;
+            App.SetToolTip(tooltip, redTooltip);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

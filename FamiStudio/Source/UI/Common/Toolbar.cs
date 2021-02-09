@@ -109,7 +109,7 @@ namespace FamiStudio
         DateTime warningTime;
         string warning = "";
 
-
+        bool redTooltip = false;
         string tooltip = "";
         RenderTheme theme;
         RenderBrush toolbarBrush;
@@ -292,16 +292,13 @@ namespace FamiStudio
             timecodePosX = (int)(buttons[ButtonConfig].X + DefaultTimecodeOffsetX * scaling);
         }
 
-        public string ToolTip
+        public void SetToolTip(string msg, bool red = false)
         {
-            get { return tooltip; }
-            set
+            if (tooltip != msg || red != redTooltip)
             {
-                if (tooltip != value)
-                {
-                    tooltip = value;
-                    ConditionalInvalidate();
-                }
+                tooltip = msg;
+                redTooltip = red;
+                ConditionalInvalidate();
             }
         }
 
@@ -322,6 +319,7 @@ namespace FamiStudio
         public void Reset()
         {
             tooltip = "";
+            redTooltip = false;
         }
 
         private void ConditionalInvalidate()
@@ -555,7 +553,7 @@ namespace FamiStudio
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            var timeCodeColor = App.IsRecording ? theme.DarkRedFillBrush : theme.BlackBrush;
+            var timeCodeColor = App.IsRecording ? theme.LightRedFillBrush : theme.BlackBrush;
             var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush2;
 
             g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.LightGreyFillBrush2);
@@ -611,7 +609,7 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
             var message = tooltip;
-            var messageBrush = theme.LightGreyFillBrush2;
+            var messageBrush = redTooltip ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
             var messageFont = ThemeBase.FontMedium;
             var messageFontCenter = ThemeBase.FontMediumCenter;
 
@@ -707,12 +705,12 @@ namespace FamiStudio
             {
                 if (btn.Visible && btn.IsPointIn(e.X, e.Y, Width))
                 {
-                    ToolTip = btn.ToolTip;
+                    SetToolTip(btn.ToolTip);
                     return;
                 }
             }
 
-            ToolTip = "";
+            SetToolTip("");
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

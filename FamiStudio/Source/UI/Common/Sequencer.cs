@@ -1451,7 +1451,7 @@ namespace FamiStudio
                 }
             }
 
-            App.ToolTip = tooltip;
+            App.SetToolTip(tooltip);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

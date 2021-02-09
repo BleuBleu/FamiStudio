@@ -4009,7 +4009,7 @@ namespace FamiStudio
                 }
             }
 
-            App.ToolTip = tooltip;
+            App.SetToolTip(tooltip);
 
             if (noteTooltip != newNoteTooltip)
             {

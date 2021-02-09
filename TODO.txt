@@ -25,8 +25,10 @@ DPCM Editor
 ===========
 - Sample rate, does it work?
 - Preview rate should be relative to sample rate.
-- Let go over 16KB, but show warning.
-- How to pack samples and align everything? => Build dynamically, store offset in sample. 
+- How to pack samples and align everything? 
+	- Do it like before, protect with lock.
+	- 3 operations should stop playback : map/unmap, delete. Anything else is thread safe.
+	- If samples changes size, sound glitch, dont care.
 x Real-time update VS. change param values.
 - Real-time params => right click = reset to default.
 - Changing DPCM param values doesnt do transaction?? => Serialize more stuff. 
@@ -38,7 +40,7 @@ x Real-time update VS. change param values.
 / Bit reverse
 	x Make sure the order i parse the bits matches what the HW does! Low -> High? Or High to Low! (Test on real HW + emualtor)
 x Figure out if DMC is pre-increment or post-increment.	=> POST
-- Cleanup will remove the source data and reset param to something "neutral".
+- Cleanup will remove the source data and reset param to something "neutral". + unmap unused notes.
 - Make sure clipboard still works (much copy source data as well).
 - What is the quality setting in RJDMC?
 - What about space to play DPCM?
@@ -47,10 +49,10 @@ x Figure out if DMC is pre-increment or post-increment.	=> POST
 - Print more info in piano roll (source data, number of samples, size, etc.)
 
 FamiStudio 2.5.0
-- FamiStudio tempo 2.0?
-- MIDI in/out? Not sure... People will complain it doesnt work as expected.
-- DPCM : Option to normalize volume
-- DPCM : 4 point volume envelope.
+================
+- FamiStudio Tempo 2.0? Arbitrary BPM.
+- MIDI in/out
+- DPCM : More stuff, normalize volume, 4 point volume envelope.
 
 Tips & Tricks (Review this list)
 ================================

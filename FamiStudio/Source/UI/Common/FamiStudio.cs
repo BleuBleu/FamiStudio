@@ -55,7 +55,6 @@ namespace FamiStudio
         public int BaseRecordingOctave => baseRecordingOctave;
         public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.CurrentFrame : 0);
         public int ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : 0xffff; set => songPlayer.ChannelMask = value; }
-        public string ToolTip { get => ToolBar.ToolTip; set => ToolBar.ToolTip = value; }
         public Project Project => project;
         public Song Song => song;
         public UndoRedoManager UndoRedoManager => undoRedoManager;
@@ -176,6 +175,11 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        public void SetToolTip(string msg, bool red = false)
+        {
+            ToolBar.SetToolTip(msg, red);
         }
 
         private void PianoRoll_DPCMSampleMapped(int note)
