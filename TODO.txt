@@ -10,8 +10,6 @@ FamiStudio 2.4.0
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
 - Double-right-click = select whole note
 - Highlight piano keys when they are pressed with QWERTY or MIDI.
-- Paste special in sequencer.
-- BUG : Tutorial=False not saving (2 reports: macos + windows).
 
 Test:
 - Retest Win7 device lost.

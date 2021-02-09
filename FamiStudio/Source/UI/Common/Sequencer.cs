@@ -998,11 +998,8 @@ namespace FamiStudio
             }
         }
 
-        public void Paste()
+        private void PasteInternal(bool insert, bool extend, int repeat)
         {
-            if (!IsSelectionValid())
-                return;
-
             var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, false, out var missingArpeggios, out var missingSamples);
 
             bool createMissingInstrument = false;
@@ -1019,7 +1016,8 @@ namespace FamiStudio
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 
-            var patterns = ClipboardUtils.LoadPatterns(App.Project, Song, createMissingInstrument, createMissingArpeggios, createMissingSamples, out var customSettings);
+            var song = Song;
+            var patterns = ClipboardUtils.LoadPatterns(App.Project, song, createMissingInstrument, createMissingArpeggios, createMissingSamples, out var customSettings);
 
             if (patterns == null)
             {
@@ -1027,42 +1025,134 @@ namespace FamiStudio
                 return;
             }
 
-            for (int i = 0; i < patterns.GetLength(0); i++)
-            {
-                for (int j = 0; j < patterns.GetLength(1); j++)
-                {
-                    var pattern = patterns[i, j];
+            var numColumnsToPaste = patterns.GetLength(0) * repeat;
 
-                    if (pattern != null && (i + minSelectedPatternIdx) < Song.Length && Song.Project.IsChannelActive(pattern.ChannelType))
+            if (numColumnsToPaste == 0)
+            {
+                App.UndoRedoManager.AbortTransaction();
+                return;
+            }
+
+            if (insert)
+            {
+                if (extend)
+                {
+                    song.SetLength(Math.Min(numColumnsToPaste + song.Length, Song.MaxLength));
+                }
+
+                // Move everything to the right.
+                for (int i = song.Length - 1; i >= minSelectedPatternIdx + numColumnsToPaste; i--)
+                {
+                    var srcIndex = i - numColumnsToPaste;
+
+                    for (int j = 0; j < song.Channels.Length; j++)
                     {
-                        var channelIdx = Channel.ChannelTypeToIndex(pattern.ChannelType);
-                        Song.Channels[channelIdx].PatternInstances[i + minSelectedPatternIdx] = pattern;
+                        song.Channels[j].PatternInstances[i] = song.Channels[j].PatternInstances[srcIndex];
+                    }
+
+                    if (song.PatternHasCustomSettings(srcIndex))
+                    {
+                        var srcCustomSettings = song.GetPatternCustomSettings(srcIndex);
+                        song.SetPatternCustomSettings(i, srcCustomSettings.patternLength, srcCustomSettings.beatLength, srcCustomSettings.noteLength);
+                    }
+                }
+
+                // Clear everything where we are pasting.
+                for (int i = minSelectedPatternIdx; i < maxSelectedPatternIdx + numColumnsToPaste; i++)
+                {
+                    song.ClearPatternCustomSettings(i);
+
+                    for (int j = 0; j < song.Channels.Length; j++)
+                    {
+                        song.Channels[j].PatternInstances[i] = null;
                     }
                 }
             }
+            
+            // Then do the actual paste.
+            var startPatternIndex = minSelectedPatternIdx;
 
-            if (customSettings != null)
+            for (int r = 0; r < repeat; r++)
             {
                 for (int i = 0; i < patterns.GetLength(0); i++)
                 {
-                    if (customSettings[i].useCustomSettings)
+                    for (int j = 0; j < patterns.GetLength(1); j++)
                     {
-                        Song.SetPatternCustomSettings(
-                            i + minSelectedPatternIdx, 
-                            customSettings[i].patternLength,
-                            customSettings[i].beatLength,
-                            customSettings[i].noteLength);
-                    }
-                    else
-                    {
-                        Song.ClearPatternCustomSettings(i + minSelectedPatternIdx);
+                        var pattern = patterns[i, j];
+
+                        if (pattern != null && (i + startPatternIndex) < song.Length && song.Project.IsChannelActive(pattern.ChannelType))
+                        {
+                            var channelIdx = Channel.ChannelTypeToIndex(pattern.ChannelType);
+                            song.Channels[channelIdx].PatternInstances[i + startPatternIndex] = pattern;
+                        }
                     }
                 }
+
+                if (customSettings != null)
+                {
+                    for (int i = 0; i < patterns.GetLength(0); i++)
+                    {
+                        if (customSettings[i].useCustomSettings)
+                        {
+                            Song.SetPatternCustomSettings(
+                                i + startPatternIndex,
+                                customSettings[i].patternLength,
+                                customSettings[i].beatLength,
+                                customSettings[i].noteLength);
+                        }
+                        else
+                        {
+                            Song.ClearPatternCustomSettings(i + minSelectedPatternIdx);
+                        }
+                    }
+                }
+
+                startPatternIndex += patterns.GetLength(0);
             }
+
+            maxSelectedPatternIdx = minSelectedPatternIdx + numColumnsToPaste;
+            minSelectedChannelIdx = 0;
+            maxSelectedChannelIdx = Song.Channels.Length - 1;
 
             App.UndoRedoManager.EndTransaction();
             PatternsPasted?.Invoke();
             ConditionalInvalidate();
+        }
+
+        public void Paste()
+        {
+            if (!IsSelectionValid())
+                return;
+
+            PasteInternal(false, false, 1);
+        }
+
+        public void PasteSpecial()
+        {
+            if (!IsSelectionValid())
+                return;
+
+            var dialog = new PropertyDialog(200);
+            dialog.Properties.AddLabelBoolean("Insert", false); // 0
+            dialog.Properties.AddLabelBoolean("Extend song", false); // 1
+            dialog.Properties.AddIntegerRange("Repeat :", 1, 1, 32); // 2
+            dialog.Properties.SetPropertyEnabled(1, false);
+            dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
+            dialog.Properties.Build();
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                PasteInternal(
+                    dialog.Properties.GetPropertyValue<bool>(0),
+                    dialog.Properties.GetPropertyValue<bool>(1),
+                    dialog.Properties.GetPropertyValue<int>(2));
+            }
+        }
+
+        private void PasteSpecialDialog_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            if (idx == 0)
+                props.SetPropertyEnabled(1, (bool)value);
         }
 
         protected void UpdateCursor()
@@ -1282,7 +1372,8 @@ namespace FamiStudio
             }
             else if (showSelection)
             {
-                bool ctrl = ModifierKeys.HasFlag(Keys.Control);
+                bool ctrl  = ModifierKeys.HasFlag(Keys.Control);
+                bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
                 if (ctrl)
                 {
@@ -1290,8 +1381,10 @@ namespace FamiStudio
                         Copy();
                     else if (e.KeyCode == Keys.X)
                         Cut();
-                    else if (e.KeyCode == Keys.V)
+                    else if (e.KeyCode == Keys.V && !shift)
                         Paste();
+                    else if (e.KeyCode == Keys.V && shift)
+                        PasteSpecial();
                 }
 
                 if (e.KeyCode == Keys.Delete && IsSelectionValid())

@@ -1098,7 +1098,7 @@ namespace FamiStudio
             if (PianoRoll.ShowSelection)
                 PianoRoll.PasteSpecial();
             else
-                Sequencer.Paste();
+                Sequencer.PasteSpecial();
         }
 
         public void KeyUp(KeyEventArgs e)
