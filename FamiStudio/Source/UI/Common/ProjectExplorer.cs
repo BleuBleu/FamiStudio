@@ -193,7 +193,7 @@ namespace FamiStudio
                         if (instrument == null)
                         {
                             var project = projectExplorer.App.Project;
-                            if (project != null && project.GetTotalMappedSampleSize() > Project.MaxSampleSize)
+                            if (project != null && project.GetTotalMappedSampleSize() > Project.MaxTotalSampleDataSize)
                             {
                                 active = new[] { true, true };
                                 return new[] { SubButtonType.DPCM, SubButtonType.Overflow };
@@ -899,16 +899,16 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamCheckbox && e.X >= Width - scrollBarSizeX - checkBoxPosX)
                 {
-                    tooltip = "{MouseLeft} Toggle value";
+                    tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
                 }
                 else if (buttonType == ButtonType.ParamSlider && e.X >= Width - scrollBarSizeX - sliderPosX)
                 {
-                    tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)";
+                    tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
                     
                 }
                 else if (buttonType == ButtonType.ParamList && e.X >= Width - scrollBarSizeX - sliderPosX)
                 {
-                    tooltip = "{MouseLeft} Change value";
+                    tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
                 }
                 else if (buttonType == ButtonType.Instrument)
                 {
@@ -1362,10 +1362,10 @@ namespace FamiStudio
                     else if (Path.GetExtension(filename).ToLower() == ".dmc")
                     {
                         var dmcData = File.ReadAllBytes(filename);
-                        if (dmcData.Length > 4096)
+                        if (dmcData.Length > DPCMSample.MaxSampleSize)
                         {
-                            Array.Resize(ref dmcData, 4096);
-                            Log.LogMessage(LogSeverity.Warning, "The maximum supported size for a DMC is 4KB. Truncating.");
+                            Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
+                            Log.LogMessage(LogSeverity.Warning, $"The maximum supported size for a DMC is {DPCMSample.MaxSampleSize} bytes. Truncating.");
                         }
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
                         App.Project.CreateDPCMSampleFromDmcData(sampleName, dmcData);
@@ -1402,94 +1402,94 @@ namespace FamiStudio
             {
                 var button = buttons[buttonIdx];
 
-                if (left)
+                if (left && button.type == ButtonType.SongHeader)
                 {
-                    if (button.type == ButtonType.SongHeader)
+                    if (subButtonType == SubButtonType.Add)
                     {
-                        if (subButtonType == SubButtonType.Add)
-                        {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                            App.Project.CreateSong();
-                            App.UndoRedoManager.EndTransaction();
-                            RefreshButtons();
-                        }
-                        else if (subButtonType == SubButtonType.Load)
-                        {
-                            ImportSong();
-                        }
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
+                        App.Project.CreateSong();
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
                     }
-                    else if (button.type == ButtonType.Song)
+                    else if (subButtonType == SubButtonType.Load)
                     {
-                        if (button.song != selectedSong)
-                        {
-                            selectedSong = button.song;
-                            SongSelected?.Invoke(selectedSong);
-                            ConditionalInvalidate();
-                        }
+                        ImportSong();
                     }
-                    else if (button.type == ButtonType.InstrumentHeader)
+                }
+                else if (left && button.type == ButtonType.Song)
+                {
+                    if (button.song != selectedSong)
                     {
-                        if (subButtonType == SubButtonType.Add)
-                        {
-                            var instrumentType = ExpansionType.None;
-
-                            if (App.Project.NeedsExpansionInstruments)
-                            {
-                                var expNames = new[] { ExpansionType.Names[ExpansionType.None], App.Project.ExpansionAudioName };
-                                var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 260, true);
-                                dlg.Properties.AddStringList("Expansion:", expNames, ExpansionType.Names[ExpansionType.None] ); // 0
-                                dlg.Properties.Build();
-
-                                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
-                                    instrumentType = dlg.Properties.GetPropertyValue<string>(0) == ExpansionType.Names[ExpansionType.None] ? ExpansionType.None : App.Project.ExpansionAudio;
-                                else
-                                    return;
-                            }
-
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                            App.Project.CreateInstrument(instrumentType);
-                            App.UndoRedoManager.EndTransaction();
-                            RefreshButtons();
-                        }
-                        if (subButtonType == SubButtonType.Load)
-                        {
-                            ImportInstruments();
-                        }
-                    }
-                    else if (button.type == ButtonType.Instrument)
-                    {
-                        selectedInstrument = button.instrument;
-
-                        if (selectedInstrument != null)
-                        {
-                            envelopeDragIdx = -1;
-                            draggedInstrument = selectedInstrument;
-                            StartCaptureOperation(e, CaptureOperation.DragInstrument);
-                        }
-
-                        if (subButtonType == SubButtonType.Expand)
-                        {                         
-                            expandedInstrument = expandedInstrument == selectedInstrument ? null : selectedInstrument;
-                            expandedSample = null;
-                            RefreshButtons(false);
-                        }
-                        else if (subButtonType == SubButtonType.DPCM)
-                        {
-                            InstrumentEdited?.Invoke(selectedInstrument, EnvelopeType.Count);
-                        }
-                        else if (subButtonType < SubButtonType.EnvelopeMax)
-                        {
-                            InstrumentEdited?.Invoke(selectedInstrument, (int)subButtonType);
-                            envelopeDragIdx = (int)subButtonType;
-                        }
-
-                        InstrumentSelected?.Invoke(selectedInstrument);
+                        selectedSong = button.song;
+                        SongSelected?.Invoke(selectedSong);
                         ConditionalInvalidate();
                     }
-                    else if (button.type == ButtonType.ParamSlider)
+                }
+                else if (left && button.type == ButtonType.InstrumentHeader)
+                {
+                    if (subButtonType == SubButtonType.Add)
                     {
-                        App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+                        var instrumentType = ExpansionType.None;
 
+                        if (App.Project.NeedsExpansionInstruments)
+                        {
+                            var expNames = new[] { ExpansionType.Names[ExpansionType.None], App.Project.ExpansionAudioName };
+                            var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 260, true);
+                            dlg.Properties.AddStringList("Expansion:", expNames, ExpansionType.Names[ExpansionType.None] ); // 0
+                            dlg.Properties.Build();
+
+                            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                                instrumentType = dlg.Properties.GetPropertyValue<string>(0) == ExpansionType.Names[ExpansionType.None] ? ExpansionType.None : App.Project.ExpansionAudio;
+                            else
+                                return;
+                        }
+
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                        App.Project.CreateInstrument(instrumentType);
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
+                    }
+                    if (subButtonType == SubButtonType.Load)
+                    {
+                        ImportInstruments();
+                    }
+                }
+                else if (left && button.type == ButtonType.Instrument)
+                {
+                    selectedInstrument = button.instrument;
+
+                    if (selectedInstrument != null)
+                    {
+                        envelopeDragIdx = -1;
+                        draggedInstrument = selectedInstrument;
+                        StartCaptureOperation(e, CaptureOperation.DragInstrument);
+                    }
+
+                    if (subButtonType == SubButtonType.Expand)
+                    {                         
+                        expandedInstrument = expandedInstrument == selectedInstrument ? null : selectedInstrument;
+                        expandedSample = null;
+                        RefreshButtons(false);
+                    }
+                    else if (subButtonType == SubButtonType.DPCM)
+                    {
+                        InstrumentEdited?.Invoke(selectedInstrument, EnvelopeType.Count);
+                    }
+                    else if (subButtonType < SubButtonType.EnvelopeMax)
+                    {
+                        InstrumentEdited?.Invoke(selectedInstrument, (int)subButtonType);
+                        envelopeDragIdx = (int)subButtonType;
+                    }
+
+                    InstrumentSelected?.Invoke(selectedInstrument);
+                    ConditionalInvalidate();
+                }
+                else if ((left || right) && button.type == ButtonType.ParamSlider)
+                {
+                    App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+
+                    if (left)
+                    {
                         if (UpdateSliderValue(button, e, true))
                         {
                             sliderDragButton = button;
@@ -1501,200 +1501,218 @@ namespace FamiStudio
                             App.UndoRedoManager.AbortTransaction();
                         }
                     }
-                    else if (button.type == ButtonType.ParamCheckbox)
+                    else
                     {
-                        var actualWidth = Width - scrollBarSizeX;
-
-                        if (e.X >= actualWidth - checkBoxPosX)
-                        {
-                            App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-                            var val = button.param.GetValue();
-                            button.param.SetValue(val == 0 ? 1 : 0);
-                            App.UndoRedoManager.EndTransaction();
-                            ConditionalInvalidate();
-                        }
-                    }
-                    else if (button.type == ButtonType.ParamList)
-                    {
-                        var actualWidth = Width - scrollBarSizeX;
-                        var buttonX = e.X;
-                        var leftButton  = buttonX > (actualWidth - sliderPosX) && buttonX < (actualWidth - sliderPosX + bmpButtonLeft.Size.Width);
-                        var rightButton = buttonX > (actualWidth - sliderPosX + sliderSizeX - bmpButtonRight.Size.Width) && buttonX < (actualWidth - sliderPosX + sliderSizeX);
-                        var delta = leftButton ? -1 : (rightButton ? 1 : 0);
-
-                        if (leftButton || rightButton)
-                        {
-                            App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-
-                            var val = button.param.GetValue();
-
-                            if (rightButton)
-                                val = button.param.SnapAndClampValue(button.param.GetValue() + 1);
-                            else
-                                val = button.param.SnapAndClampValue(button.param.GetValue() - 1);
-
-                            button.param.SetValue(val);
-
-                            App.UndoRedoManager.EndTransaction();
-                            ConditionalInvalidate();
-                        }
-                    }
-                    if (button.type == ButtonType.ArpeggioHeader)
-                    {
-                        if (subButtonType == SubButtonType.Add)
-                        {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                            App.Project.CreateArpeggio();
-                            App.UndoRedoManager.EndTransaction();
-                            RefreshButtons();
-                        }
-                    }
-                    else if (button.type == ButtonType.Arpeggio)
-                    {
-                        selectedArpeggio = button.arpeggio;
-
-                        envelopeDragIdx = -1;
-                        draggedArpeggio = selectedArpeggio;
-                        StartCaptureOperation(e, CaptureOperation.DragArpeggio);
-
-                        if (subButtonType < SubButtonType.EnvelopeMax)
-                        {
-                            envelopeDragIdx = (int)subButtonType;
-                            ArpeggioEdited?.Invoke(selectedArpeggio);
-                        }
-
-                        ArpeggioSelected?.Invoke(selectedArpeggio);
+                        button.param.SetValue(button.param.DefaultValue);
+                        App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
                     }
-                    else if (button.type == ButtonType.DpcmHeader)
+                }
+                else if ((left || right) && button.type == ButtonType.ParamCheckbox)
+                {
+                    var actualWidth = Width - scrollBarSizeX;
+
+                    if (e.X >= actualWidth - checkBoxPosX)
                     {
-                        if (subButtonType == SubButtonType.Load)
+                        App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+
+                        if (left)
                         {
-                            LoadDPCMSample();
+                            var val = button.param.GetValue();
+                            button.param.SetValue(val == 0 ? 1 : 0);
                         }
+                        else
+                        {
+                            button.param.SetValue(button.param.DefaultValue);
+                        }
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
                     }
-                    else if (button.type == ButtonType.Dpcm)
+                }
+                else if ((left || right) && button.type == ButtonType.ParamList)
+                {
+                    var actualWidth = Width - scrollBarSizeX;
+                    var buttonX = e.X;
+                    var leftButton  = buttonX > (actualWidth - sliderPosX) && buttonX < (actualWidth - sliderPosX + bmpButtonLeft.Size.Width);
+                    var rightButton = buttonX > (actualWidth - sliderPosX + sliderSizeX - bmpButtonRight.Size.Width) && buttonX < (actualWidth - sliderPosX + sliderSizeX);
+                    var delta = leftButton ? -1 : (rightButton ? 1 : 0);
+
+                    if (left && (leftButton || rightButton))
                     {
-                        if (subButtonType == SubButtonType.EditWave)
+                        App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+
+                        var val = button.param.GetValue();
+
+                        if (rightButton)
+                            val = button.param.SnapAndClampValue(button.param.GetValue() + 1);
+                        else
+                            val = button.param.SnapAndClampValue(button.param.GetValue() - 1);
+
+                        button.param.SetValue(val);
+
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                    }
+                    else if (right && buttonX > (actualWidth - sliderPosX))
+                    {
+                        App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+                        button.param.SetValue(button.param.DefaultValue);
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                    }
+                }
+                else if (left && button.type == ButtonType.ArpeggioHeader)
+                {
+                    if (subButtonType == SubButtonType.Add)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                        App.Project.CreateArpeggio();
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
+                    }
+                }
+                else if (left && button.type == ButtonType.Arpeggio)
+                {
+                    selectedArpeggio = button.arpeggio;
+
+                    envelopeDragIdx = -1;
+                    draggedArpeggio = selectedArpeggio;
+                    StartCaptureOperation(e, CaptureOperation.DragArpeggio);
+
+                    if (subButtonType < SubButtonType.EnvelopeMax)
+                    {
+                        envelopeDragIdx = (int)subButtonType;
+                        ArpeggioEdited?.Invoke(selectedArpeggio);
+                    }
+
+                    ArpeggioSelected?.Invoke(selectedArpeggio);
+                    ConditionalInvalidate();
+                }
+                else if (left && button.type == ButtonType.DpcmHeader)
+                {
+                    if (subButtonType == SubButtonType.Load)
+                    {
+                        LoadDPCMSample();
+                    }
+                }
+                else if (left && button.type == ButtonType.Dpcm)
+                {
+                    if (subButtonType == SubButtonType.EditWave)
+                    {
+                        DPCMSampleEdited?.Invoke(button.sample);
+                    }
+                    else if (subButtonType == SubButtonType.Save)
+                    {
+                        var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+                        if (filename != null)
+                            File.WriteAllBytes(filename, button.sample.ProcessedData);
+                    }
+                    else if (subButtonType == SubButtonType.Play)
+                    {
+                        App.PreviewDPCMSample(button.sample, false);
+                    }
+                    else if (subButtonType == SubButtonType.Expand)
+                    {
+                        expandedSample = expandedSample == button.sample ? null : button.sample;
+                        expandedInstrument = null;
+                        RefreshButtons();
+                    }
+                    else if (subButtonType == SubButtonType.Max)
+                    {
+                        draggedSample = button.sample;
+                        StartCaptureOperation(e, CaptureOperation.DragSample);
+                        ConditionalInvalidate();
+                    }
+                }
+                else if (right && button.type == ButtonType.Song && App.Project.Songs.Count > 1)
+                {
+                    var song = button.song;
+                    if (PlatformUtils.MessageBox($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        bool selectNewSong = song == selectedSong;
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
+                        App.Project.DeleteSong(song);
+                        if (selectNewSong)
+                            selectedSong = App.Project.Songs[0];
+                        SongSelected?.Invoke(selectedSong);
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
+                    }
+                }
+                else if (right && button.type == ButtonType.Instrument && button.instrument != null)
+                {
+                    var instrument = button.instrument;
+
+                    if (subButtonType < SubButtonType.EnvelopeMax)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);
+                        instrument.Envelopes[(int)subButtonType].ClearToDefault((int)subButtonType);
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                    }
+                    else if (subButtonType == SubButtonType.Max)
+                    {
+                        if (PlatformUtils.MessageBox($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
-                            DPCMSampleEdited?.Invoke(button.sample);
-                        }
-                        else if (subButtonType == SubButtonType.Save)
-                        {
-                            var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
-                            if (filename != null)
-                                File.WriteAllBytes(filename, button.sample.ProcessedData);
-                        }
-                        else if (subButtonType == SubButtonType.Play)
-                        {
-                            App.PreviewDPCMSample(button.sample, false);
-                        }
-                        else if (subButtonType == SubButtonType.Expand)
-                        {
-                            expandedSample = expandedSample == button.sample ? null : button.sample;
-                            expandedInstrument = null;
+                            bool selectNewInstrument = instrument == selectedInstrument;
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
+                            App.Project.DeleteInstrument(instrument);
+                            if (selectNewInstrument)
+                                selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
+                            SongSelected?.Invoke(selectedSong);
+                            InstrumentDeleted?.Invoke(instrument);
+                            App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
-                        }
-                        else if (subButtonType == SubButtonType.Max)
-                        {
-                            draggedSample = button.sample;
-                            StartCaptureOperation(e, CaptureOperation.DragSample);
-                            ConditionalInvalidate();
                         }
                     }
                 }
-                else if (right)
+                else if (right && button.type == ButtonType.Arpeggio && button.arpeggio != null)
                 {
-                    if (button.type == ButtonType.Song && App.Project.Songs.Count > 1)
+                    var arpeggio = button.arpeggio;
+
+                    if (PlatformUtils.MessageBox($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
-                        var song = button.song;
-                        if (PlatformUtils.MessageBox($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        bool selectNewArpeggio = arpeggio == selectedArpeggio;
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
+                        App.Project.DeleteArpeggio(arpeggio);
+                        if (selectNewArpeggio)
+                            selectedArpeggio = App.Project.Arpeggios.Count > 0 ? App.Project.Arpeggios[0] : null;
+                        SongSelected?.Invoke(selectedSong);
+                        ArpeggioDeleted?.Invoke(arpeggio);
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
+                    }
+                }
+                else if (right && button.type == ButtonType.Dpcm)
+                {
+                    if (subButtonType == SubButtonType.Play)
+                    {
+                        App.PreviewDPCMSample(button.sample, true);
+                    }
+                    else if (subButtonType == SubButtonType.Save)
+                    {
+                        if (button.sample.SourceDataIsWav)
                         {
-                            bool selectNewSong = song == selectedSong;
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                            App.Project.DeleteSong(song);
-                            if (selectNewSong)
-                                selectedSong = App.Project.Songs[0];
-                            SongSelected?.Invoke(selectedSong);
+                            var filename = PlatformUtils.ShowSaveFileDialog("Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
+                            if (filename != null)
+                                WaveFile.Save(button.sample.SourceWavData.Samples, filename, button.sample.SourceWavData.SampleRate);
+                        }
+                        else
+                        {
+                            var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+                            if (filename != null)
+                                File.WriteAllBytes(filename, button.sample.SourceDmcData.Data);
+                        }
+                    }
+                    else if (subButtonType == SubButtonType.Max)
+                    {
+                        if (PlatformUtils.MessageBox($"Are you sure you want to delete DPCM Sample '{button.sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples, TransactionFlags.StopAudio);
+                            App.Project.DeleteSample(button.sample);
+                            DPCMSampleDeleted?.Invoke(button.sample);
                             App.UndoRedoManager.EndTransaction();
                             RefreshButtons();
-                        }
-                    }
-                    else if (button.type == ButtonType.Instrument && button.instrument != null)
-                    {
-                        var instrument = button.instrument;
-
-                        if (subButtonType < SubButtonType.EnvelopeMax)
-                        {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);
-                            instrument.Envelopes[(int)subButtonType].ClearToDefault((int)subButtonType);
-                            App.UndoRedoManager.EndTransaction();
-                            ConditionalInvalidate();
-                        }
-                        else if (subButtonType == SubButtonType.Max)
-                        {
-                            if (PlatformUtils.MessageBox($"Are you sure you want to delete '{instrument.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                            {
-                                bool selectNewInstrument = instrument == selectedInstrument;
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                                App.Project.DeleteInstrument(instrument);
-                                if (selectNewInstrument)
-                                    selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
-                                SongSelected?.Invoke(selectedSong);
-                                InstrumentDeleted?.Invoke(instrument);
-                                App.UndoRedoManager.EndTransaction();
-                                RefreshButtons();
-                            }
-                        }
-                    }
-                    else if (button.type == ButtonType.Arpeggio && button.arpeggio != null)
-                    {
-                        var arpeggio = button.arpeggio;
-
-                        if (PlatformUtils.MessageBox($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        {
-                            bool selectNewArpeggio = arpeggio == selectedArpeggio;
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                            App.Project.DeleteArpeggio(arpeggio);
-                            if (selectNewArpeggio)
-                                selectedArpeggio = App.Project.Arpeggios.Count > 0 ? App.Project.Arpeggios[0] : null;
-                            SongSelected?.Invoke(selectedSong);
-                            ArpeggioDeleted?.Invoke(arpeggio);
-                            App.UndoRedoManager.EndTransaction();
-                            RefreshButtons();
-                        }
-                    }
-                    else if (button.type == ButtonType.Dpcm)
-                    {
-                        if (subButtonType == SubButtonType.Play)
-                        {
-                            App.PreviewDPCMSample(button.sample, true);
-                        }
-                        else if (subButtonType == SubButtonType.Save)
-                        {
-                            if (button.sample.SourceDataIsWav)
-                            {
-                                var filename = PlatformUtils.ShowSaveFileDialog("Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
-                                if (filename != null)
-                                    WaveFile.Save(button.sample.SourceWavData.Samples, filename, button.sample.SourceWavData.SampleRate);
-                            }
-                            else
-                            {
-                                var filename = PlatformUtils.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
-                                if (filename != null)
-                                    File.WriteAllBytes(filename, button.sample.SourceDmcData.Data);
-                            }
-                        }
-                        else if (subButtonType == SubButtonType.Max)
-                        {
-                            if (PlatformUtils.MessageBox($"Are you sure you want to delete DPCM Sample '{button.sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples, TransactionFlags.StopAudio);
-                                App.Project.DeleteSample(button.sample);
-                                DPCMSampleDeleted?.Invoke(button.sample);
-                                App.UndoRedoManager.EndTransaction();
-                                RefreshButtons();
-                            }
                         }
                     }
                 }

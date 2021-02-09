@@ -172,7 +172,7 @@ namespace FamiStudio
                     // We start putting the samples right after the code, so the first page is not a
                     // full one. If we have near 16KB of samples, we might go over the 4 page limit.
                     // In this case, we will introduce padding until the next page.
-                    if (nsfBytes.Count + totalSampleSize > Project.MaxSampleSize)
+                    if (nsfBytes.Count + totalSampleSize > Project.MaxTotalSampleDataSize)
                     {
                         dpcmPadding = NsfPageSize - (nsfBytes.Count & (NsfPageSize - 1));
                         nsfBytes.AddRange(new byte[dpcmPadding]);

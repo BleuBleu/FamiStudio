@@ -10,10 +10,9 @@ FamiStudio 2.4.0
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
 - Double-right-click = select whole note
 - Highlight piano keys when they are pressed with QWERTY or MIDI.
-- Right-click on real-time param => reset to default.
 - Paste special in sequencer.
 - Multiple custom pattern settings editing 
-- BUG : Tutorial=False not saving (2 reports, macos + windows).
+- BUG : Tutorial=False not saving (2 reports: macos + windows).
 
 Test:
 - Retest Win7 device lost.
@@ -26,13 +25,10 @@ DPCM Editor
 - Sample rate, does it work?
 - Preview rate should be relative to sample rate.
 - How to pack samples and align everything? 
-	- Do it like before, protect with lock.
 	- 3 operations should stop playback : map/unmap, delete. Anything else is thread safe.
-	- If samples changes size, sound glitch, dont care.
 x Real-time update VS. change param values.
-- Real-time params => right click = reset to default.
+- Real-time params => right click = reset to default. + tooltip.
 - Changing DPCM param values doesnt do transaction?? => Serialize more stuff. 
-- Clamp to 4081(?) bytes. 
 - Verify if I post-increment DMC everywhere.
 
 / Basic volume adjustment (0-200%)
