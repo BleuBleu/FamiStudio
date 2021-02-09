@@ -1280,7 +1280,10 @@ namespace FamiStudio
                     {
                         var dlg = new TutorialDialog();
                         if (dlg.ShowDialog(mainForm) == DialogResult.OK)
+                        {
                             Settings.ShowTutorial = false;
+                            Settings.Save();
+                        }
                     }
                 }
             }
