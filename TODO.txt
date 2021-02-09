@@ -11,7 +11,6 @@ FamiStudio 2.4.0
 - Double-right-click = select whole note
 - Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Paste special in sequencer.
-- Multiple custom pattern settings editing 
 - BUG : Tutorial=False not saving (2 reports: macos + windows).
 
 Test:
@@ -27,7 +26,6 @@ DPCM Editor
 - How to pack samples and align everything? 
 	- 3 operations should stop playback : map/unmap, delete. Anything else is thread safe.
 x Real-time update VS. change param values.
-- Real-time params => right click = reset to default. + tooltip.
 - Changing DPCM param values doesnt do transaction?? => Serialize more stuff. 
 - Verify if I post-increment DMC everywhere.
 
