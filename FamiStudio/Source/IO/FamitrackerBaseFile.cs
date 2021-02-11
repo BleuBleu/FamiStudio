@@ -380,7 +380,7 @@ namespace FamiStudio
 
         private string GetPatternString(Pattern pattern, int n)
         {
-            return $"(Channel={Channel.ChannelNames[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n:X2})";
+            return $"(Song={pattern.Song.Name}, Channel={Channel.ChannelNames[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n:X2})";
         }
 
         private int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)

@@ -181,7 +181,7 @@ namespace FamiStudio
 
                     if (effect.Count > 255)
                     {
-                        Log.LogMessage(LogSeverity.Warning, $"Effect was longer than 256 bytes ({effect.Count}) and was truncated.");
+                        Log.LogMessage(LogSeverity.Warning, $"Effect ({song.Name}) was longer than 256 bytes ({effect.Count}) and was truncated.");
                         effect.RemoveRange(255, effect.Count - 255);
                     }
 
