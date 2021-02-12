@@ -1504,7 +1504,7 @@ namespace FamiStudio
 
         public static int GetValueForShortName(string str)
         {
-            return Array.IndexOf(Names, str);
+            return Array.IndexOf(ShortNames, str);
         }
     }
 
