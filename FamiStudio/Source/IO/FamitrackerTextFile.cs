@@ -161,7 +161,7 @@ namespace FamiStudio
 
                             envelopes[expansion, famistudioType][idx] = env;
 
-                            if (famistudioType == Envelope.Arpeggio && arp != 0)
+                            if (famistudioType == EnvelopeType.Arpeggio && arp != 0)
                                 Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {idx} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
                         }
                         else
