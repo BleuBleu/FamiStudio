@@ -139,6 +139,7 @@ namespace FamiStudio
                         var idx  = int.Parse(param[1]);
                         var loop = int.Parse(param[2]);
                         var rel  = int.Parse(param[3]);
+                        var arp  = int.Parse(param[4]);
 
                         var famistudioType = EnvelopeTypeLookup[type];
 
@@ -159,6 +160,9 @@ namespace FamiStudio
                                 env.Values[j] = sbyte.Parse(curve[j]);
 
                             envelopes[expansion, famistudioType][idx] = env;
+
+                            if (famistudioType == Envelope.Arpeggio && arp != 0)
+                                Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {idx} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
                         }
                         else
                         {

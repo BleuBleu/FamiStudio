@@ -2,6 +2,23 @@
 
 Version history / release notes for each release.
 
+## Version 2.3.2 (Hotfix)
+
+Changes:
+
+- Added loop count to video export.
+
+Fixes: 
+
+- Fixed scaling issues on Retina display.
+- Fixed lingering noise when dragging/adding notes in VRC7.
+- Fixed multiple FamiTracker import (Text + Binary) issues/crashes.
+- Fixed potential desync in NSF/sound engine when using delayed notes.
+- Fixed various issues with expansion instruments UI (sliders/checkboxes for VRC7/FDS/N163).
+- Fixed import of older FamiStudio text files (pre 2.3.0).
+- Fixed NSF/sound engine crash when exporting empty arpeggios.
+- Fixed issue with arpeggios sometimes persisting when a song loops. 
+
 ## Version 2.3.1 (Linux Hotfix)
 
 Fixes:

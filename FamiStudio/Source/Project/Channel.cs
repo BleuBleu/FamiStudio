@@ -244,6 +244,25 @@ namespace FamiStudio
             }
         }
 
+        public bool UsesArpeggios
+        {
+            get
+            {
+                foreach (var pattern in patterns)
+                {
+                    foreach (var note in pattern.Notes.Values)
+                    {
+                        if (note != null && note.IsArpeggio)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+        }
+
         public void DeleteUnusedPatterns()
         {
             HashSet<Pattern> usedPatterns = new HashSet<Pattern>();

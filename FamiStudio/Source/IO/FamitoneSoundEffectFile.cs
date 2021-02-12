@@ -174,7 +174,7 @@ namespace FamiStudio
                             numEmptyFrames -= 127;
                         }
                     }
-                    else
+                    else if (lastZeroVolumeIdx >= 0)
                     {
                         effect.RemoveRange(lastZeroVolumeIdx, effect.Count - lastZeroVolumeIdx);
                     }

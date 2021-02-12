@@ -102,7 +102,7 @@ namespace FamiStudio
             if (!newNote.HasFdsModDepth    && note.HasFdsModDepth)     newNote.FdsModDepth = note.FdsModDepth;
             if (!newNote.HasFdsModSpeed    && note.HasFdsModSpeed)     newNote.FdsModSpeed = note.FdsModSpeed;
             if (newNote.Instrument == null && note.Instrument != null) newNote.Instrument  = note.Instrument;
-            if (newNote.Arpeggio   == null && note.Arpeggio   != null && newNote.IsValid && !newNote.IsMusical) newNote.Arpeggio = note.Arpeggio;
+            if (newNote.Arpeggio   == null && note.Arpeggio   != null && !newNote.IsMusical) newNote.Arpeggio = note.Arpeggio;
 
             if (newNote.IsValid)
             {
