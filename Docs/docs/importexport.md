@@ -164,6 +164,7 @@ Project | Version | Yes | The FamiStudio version that exported the file.
 | Author | | Author of the project
 | Copyright | | Copyright of the project
 DPCMSample | Name | Yes | The name of the sample.
+| ReverseBits | Yes | When True, each the bits of each nibble in Data should be reversed for playback.
 | Data | Yes | The data as a series of hexadecimal nibbles.
 DPCMMapping | Note | Yes | Piano note to map the sample to (Between C1 and D6).
 | Sample | Yes | Name of the DPCMSample to map.
