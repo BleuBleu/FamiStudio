@@ -2573,7 +2573,7 @@ namespace FamiStudio
 
                     if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                         mapping.Pitch = dlg.Properties.GetPropertyValue<int>(0);
                         mapping.Loop  = dlg.Properties.GetPropertyValue<bool>(1);
                         App.UndoRedoManager.EndTransaction();
@@ -3636,7 +3636,7 @@ namespace FamiStudio
 
                             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                             {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
                                 var sampleName = dlg.Properties.GetPropertyValue<string>(1);
                                 App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
                                 App.UndoRedoManager.EndTransaction();
@@ -3652,7 +3652,7 @@ namespace FamiStudio
                     }
                     else if (right && mapping != null)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
                         App.Project.UnmapDPCMSample(noteValue);
                         App.UndoRedoManager.EndTransaction();
                         DPCMSampleUnmapped?.Invoke(noteValue);

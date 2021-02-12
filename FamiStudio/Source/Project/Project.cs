@@ -752,7 +752,7 @@ namespace FamiStudio
             lock (DPCMSample.ProcessedDataLock)
             {
                 var addr = 0;
-                var visitedSamples = new HashSet<DPCMSample>();
+                var visitedSamples = new List<DPCMSample>(samples.Count);
 
                 foreach (var mapping in samplesMapping)
                 {
@@ -761,7 +761,14 @@ namespace FamiStudio
                         var addrEnd = addr + ((mapping.Sample.ProcessedData.Length + 63) & 0xffc0);
 
                         if (offset >= addr && offset < addrEnd)
-                            return mapping.Sample.ProcessedData[offset - addr];
+                        {
+                            var idx = offset - addr;
+
+                            if (idx < mapping.Sample.ProcessedData.Length)
+                                return mapping.Sample.ProcessedData[idx];
+                            else
+                                return 0x55;
+                        }
 
                         addr = addrEnd;
                         if (addr >= MaxTotalSampleDataSize)
@@ -778,7 +785,7 @@ namespace FamiStudio
             lock (DPCMSample.ProcessedDataLock)
             {
                 var addr = 0;
-                var visitedSamples = new HashSet<DPCMSample>();
+                var visitedSamples = new List<DPCMSample>(samples.Count);
 
                 foreach (var mapping in samplesMapping)
                 {
@@ -802,7 +809,7 @@ namespace FamiStudio
             lock (DPCMSample.ProcessedDataLock)
             {
                 var size = 0;
-                var visitedSamples = new HashSet<DPCMSample>();
+                var visitedSamples = new List<DPCMSample>(samples.Count);
 
                 foreach (var mapping in samplesMapping)
                 {
@@ -820,7 +827,7 @@ namespace FamiStudio
         public byte[] GetPackedSampleData()
         {
             var sampleData = new List<byte>(MaxTotalSampleDataSize);
-            var visitedSamples = new HashSet<DPCMSample>();
+            var visitedSamples = new List<DPCMSample>(samples.Count);
 
             foreach (var mapping in samplesMapping)
             {

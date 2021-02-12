@@ -1108,7 +1108,7 @@ namespace FamiStudio
                     var mappingNote = App.GetDPCMSampleMappingNoteAtPos(PointToScreen(new Point(e.X, e.Y)));
                     if (App.Project.NoteSupportsDPCM(mappingNote))
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
                         App.Project.UnmapDPCMSample(mappingNote);
                         App.Project.MapDPCMSample(mappingNote, draggedSample);
                         App.UndoRedoManager.EndTransaction();
