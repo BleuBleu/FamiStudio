@@ -1,10 +1,3 @@
-2.3.3
-=====
-- MMC5 phase reset problem (CF207.
-- *** CF207 DPCM crash???
-- Crash right click None arpeggio
-- 
-
 FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
