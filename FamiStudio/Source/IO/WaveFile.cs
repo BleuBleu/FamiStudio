@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -31,12 +32,31 @@ namespace FamiStudio
             public int subChunk2Size;
         };
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        unsafe struct FormatSubChunk
+        {
+            // Format Subchunk
+            public short audioFormat;
+            public short numChannels;
+            public int sampleRate;
+            public int byteRate;
+            public short blockAlign;
+            public short bitsPerSample;
+        };
+
+        const int FormatSubChunkSize = 16;
+
         public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, int channelMask)
         {
             var project = song.Project;
             var player = new WavPlayer(sampleRate, loopCount, channelMask);
             var samples = player.GetSongSamples(song, project.PalMode, duration);
 
+            Save(samples, filename, sampleRate);
+        }
+
+        public unsafe static void Save(short[] samples, string filename, int sampleRate)
+        {
             using (var file = new FileStream(filename, FileMode.Create))
             {
                 var header = new WaveHeader();
@@ -88,6 +108,93 @@ namespace FamiStudio
                 foreach (var s in samples)
                     file.Write(BitConverter.GetBytes(s), 0, sizeof(short));
             }
+        }
+
+        public unsafe static short[] Load(string filename, out int sampleRate)
+        {
+            try
+            {
+                var bytes = File.ReadAllBytes(filename);
+
+                if (bytes != null && bytes.Length >= 12)
+                {
+                    if (bytes[0]  == (byte)'R' &&
+                        bytes[1]  == (byte)'I' &&
+                        bytes[2]  == (byte)'F' &&
+                        bytes[3]  == (byte)'F' &&
+                        bytes[8]  == (byte)'W' &&
+                        bytes[9]  == (byte)'A' &&
+                        bytes[10] == (byte)'V' &&
+                        bytes[11] == (byte)'E')
+                    {
+                        // Look for format and data chunks, ignore everything else.
+                        var subChunkOffset = 12;
+                        var fmtOffset = -1;
+                        var dataOffset = -1;
+                        var dataSize = -1;
+
+                        while (subChunkOffset + 8 < bytes.Length && (fmtOffset < 0 || dataOffset < 0))
+                        {
+                            var subChunkSize = BitConverter.ToInt32(bytes, subChunkOffset + 4);
+
+                            if (bytes[subChunkOffset + 0] == (byte)'f' &&
+                                bytes[subChunkOffset + 1] == (byte)'m' &&
+                                bytes[subChunkOffset + 2] == (byte)'t' &&
+                                bytes[subChunkOffset + 3] == (byte)' ')
+                            {
+                                fmtOffset = subChunkOffset + 8;
+                            }
+                            else if (bytes[subChunkOffset + 0] == (byte)'d' &&
+                                     bytes[subChunkOffset + 1] == (byte)'a' &&
+                                     bytes[subChunkOffset + 2] == (byte)'t' &&
+                                     bytes[subChunkOffset + 3] == (byte)'a')
+                            {
+                                dataOffset = subChunkOffset + 8;
+                                dataSize = subChunkSize;
+                            }
+
+                            subChunkOffset += subChunkSize + 8;
+                        }
+
+                        if (fmtOffset >= 0 && dataOffset >= 0)
+                        {
+                            var fmt = new FormatSubChunk();
+                            Marshal.Copy(bytes, fmtOffset, new IntPtr(&fmt), FormatSubChunkSize);
+
+                            if (fmt.audioFormat == 1 && fmt.bitsPerSample == 16 && fmt.numChannels <= 2)
+                            {
+                                short[] wavData = new short[dataSize / sizeof(short)];
+                                fixed (short* p = &wavData[0])
+                                    Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
+
+                                if (fmt.numChannels == 2)
+                                {
+                                    var stereoData = wavData;
+                                    wavData = new short[wavData.Length / 2];
+
+                                    for (int i = 0; i < stereoData.Length; i += 2)
+                                        wavData[i / 2] = (short)((stereoData[i + 0] + stereoData[i + 1]) / 2);
+
+                                    Log.LogMessage(LogSeverity.Warning, "Wave file is stereo and has been downmixed to mono.");
+                                }
+
+                                sampleRate = fmt.sampleRate;
+                                return wavData;
+                            }
+                            else
+                            {
+                                Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 16-bit, uncompressed, mono and stereo wave files are supported.");
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            sampleRate = 0;
+            return null;
         }
     }
 }

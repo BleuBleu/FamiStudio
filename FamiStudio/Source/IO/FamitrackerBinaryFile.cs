@@ -62,7 +62,7 @@ namespace FamiStudio
             var numN163Channels = 0;
             if (blockVersion >= 5)
             {
-                if (expansion == Project.ExpansionN163)
+                if (expansion == ExpansionType.N163)
                     numN163Channels = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             }
 
@@ -132,7 +132,7 @@ namespace FamiStudio
                 {
                     var envType = EnvelopeTypeLookup[i];
 
-                    if (envType != Envelope.Count)
+                    if (envType != EnvelopeType.Count)
                     {
                         if (instrument.Envelopes[envType] != null && envelopesArray[index, i] != null)
                             instrument.Envelopes[envType] = envelopesArray[index, i];
@@ -166,7 +166,7 @@ namespace FamiStudio
 
             env.Loop     = loopPoint;
             env.Release  = releasePoint;
-            env.Relative = type == Envelope.Pitch;
+            env.Relative = type == EnvelopeType.Pitch;
 
             idx += sizeof(int); // Skip settings.
 
@@ -194,7 +194,7 @@ namespace FamiStudio
                         if (index > 0 && pitch != 0)
                         {
                             var sample = samples[index - 1];
-                            if (sample != null && sample.Data != null)
+                            if (sample != null && sample.ProcessedData != null)
                             {
                                 samplesLoaded = true;
                                 project.MapDPCMSample(i * 12 + j + 1, sample, pitch & 0x0f, (pitch & 0x80) != 0);
@@ -232,8 +232,8 @@ namespace FamiStudio
 
         private void ReadInstrumentFds(Instrument instrument, int instIdx, ref int idx)
         {
-            var wavEnv = instrument.Envelopes[Envelope.FdsWaveform];
-            var modEnv = instrument.Envelopes[Envelope.FdsModulation];
+            var wavEnv = instrument.Envelopes[EnvelopeType.FdsWaveform];
+            var modEnv = instrument.Envelopes[EnvelopeType.FdsModulation];
 
             for (int i = 0; i < 0x40; i++)
                 wavEnv.Values[i] = (sbyte)bytes[idx++];
@@ -241,8 +241,8 @@ namespace FamiStudio
             for (int i = 0; i < 0x20; i++)
                 modEnv.Values[i] = (sbyte)bytes[idx++];
 
-            instrument.FdsWavePreset = Envelope.WavePresetCustom;
-            instrument.FdsModPreset  = Envelope.WavePresetCustom;
+            instrument.FdsWavePreset = WavePresetType.Custom;
+            instrument.FdsModPreset  = WavePresetType.Custom;
 
             modEnv.ConvertFdsModulationToAbsolute();
 
@@ -250,9 +250,9 @@ namespace FamiStudio
             instrument.FdsModDepth =   (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             instrument.FdsModDelay =   (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
-            ReadSingleEnvelope(Envelope.Volume,   instrument.Envelopes[Envelope.Volume],   ref idx);
-            ReadSingleEnvelope(Envelope.Arpeggio, instrument.Envelopes[Envelope.Arpeggio], ref idx);
-            ReadSingleEnvelope(Envelope.Pitch,    instrument.Envelopes[Envelope.Pitch],    ref idx);
+            ReadSingleEnvelope(EnvelopeType.Volume,   instrument.Envelopes[EnvelopeType.Volume],   ref idx);
+            ReadSingleEnvelope(EnvelopeType.Arpeggio, instrument.Envelopes[EnvelopeType.Arpeggio], ref idx);
+            ReadSingleEnvelope(EnvelopeType.Pitch,    instrument.Envelopes[EnvelopeType.Pitch],    ref idx);
         }
 
         private void ReadInstrumentN163(Instrument instrument, int instIdx, ref int idx)
@@ -261,14 +261,14 @@ namespace FamiStudio
 
             var fileWaveSize = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
-            instrument.N163WavePreset = Envelope.WavePresetCustom;
+            instrument.N163WavePreset = WavePresetType.Custom;
             instrument.N163WaveSize   = (byte)fileWaveSize;
             instrument.N163WavePos    = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
             var wavCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int); 
 
             for (int j = 0; j < fileWaveSize; j++)
-                instrument.Envelopes[Envelope.N163Waveform].Values[j] = (sbyte)bytes[idx++];
+                instrument.Envelopes[EnvelopeType.N163Waveform].Values[j] = (sbyte)bytes[idx++];
 
             if (wavCount > 1)
                 Log.LogMessage(LogSeverity.Warning, $"N163 instrument index {instIdx} has more than 1 waveform ({wavCount}). All others will be ignored.");
@@ -300,12 +300,12 @@ namespace FamiStudio
 
                 switch (type)
                 {
-                    case Project.ExpansionNone: ReadInstrument2A03(instrument,  index, ref idx); break;
-                    case Project.ExpansionVrc6: ReadInstrumentVRC6(instrument,  index, ref idx); break;
-                    case Project.ExpansionVrc7: ReadInstrumentVRC7(instrument,  index, ref idx); break;
-                    case Project.ExpansionFds:  ReadInstrumentFds(instrument,   index, ref idx); break;
-                    case Project.ExpansionN163: ReadInstrumentN163(instrument,  index, ref idx); break;
-                    case Project.ExpansionS5B:  ReadInstrumentS5B(instrument,   index, ref idx); break;
+                    case ExpansionType.None: ReadInstrument2A03(instrument, index, ref idx); break;
+                    case ExpansionType.Vrc6: ReadInstrumentVRC6(instrument, index, ref idx); break;
+                    case ExpansionType.Vrc7: ReadInstrumentVRC7(instrument, index, ref idx); break;
+                    case ExpansionType.Fds:  ReadInstrumentFds(instrument,  index, ref idx); break;
+                    case ExpansionType.N163: ReadInstrumentN163(instrument, index, ref idx); break;
+                    case ExpansionType.S5B:  ReadInstrumentS5B(instrument,  index, ref idx); break;
                     default:
                         return false;
                 }
@@ -390,7 +390,7 @@ namespace FamiStudio
 
         private bool ReadSequencesVrc6(int idx)
         {
-            if (project.ExpansionAudio != Project.ExpansionVrc6)
+            if (project.ExpansionAudio != ExpansionType.Vrc6)
                 return true;
 
             return ReadSequences2A03Vrc6(idx, envelopesExp);
@@ -398,7 +398,7 @@ namespace FamiStudio
 
         private bool ReadSequencesN163(int idx)
         {
-            if (project.ExpansionAudio != Project.ExpansionN163)
+            if (project.ExpansionAudio != ExpansionType.N163)
                 return true;
 
             var count = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
@@ -529,7 +529,7 @@ namespace FamiStudio
                         if (volume != 16)
                             pattern.GetOrCreateNoteAt(n).Volume = (byte)(volume & 0x0f);
 
-                        if (blockVersion < 5 && project.ExpansionAudio == Project.ExpansionFds && channel.Type == Channel.FdsWave && octave < 6 && octave != 0)
+                        if (blockVersion < 5 && project.ExpansionAudio == ExpansionType.Fds && channel.Type == ChannelType.FdsWave && octave < 6 && octave != 0)
                             octave += 2;
 
                         if (note == 13)
@@ -542,9 +542,9 @@ namespace FamiStudio
                         }
                         else if (note != 0)
                         {
-                            if (instrument < MaxInstruments && channel.Type != Channel.Dpcm)
+                            if (instrument < MaxInstruments && channel.Type != ChannelType.Dpcm)
                                 pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];
-                            if (channel.Type == Channel.Noise)
+                            if (channel.Type == ChannelType.Noise)
                                 pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note + 15);
                             else
                                 pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note);
@@ -642,7 +642,7 @@ namespace FamiStudio
             };
 
             project = new Project();
-            project.TempoMode = Project.TempoFamiTracker;
+            project.TempoMode = TempoType.FamiTracker;
 
             foreach (var kv in blocksToRead)
             {

@@ -16,17 +16,20 @@ namespace FamiStudio
 {
     public class AudioPlayer : BasePlayer
     {
+        protected const int DefaultSampleRate = 44100;
+
         protected AudioStream audioStream;
         protected Thread playerThread;
         protected AutoResetEvent frameEvent = new AutoResetEvent(true);
         protected ManualResetEvent stopEvent = new ManualResetEvent(false);
         protected ConcurrentQueue<short[]> sampleQueue = new ConcurrentQueue<short[]>();
+        protected int numBufferedFrames = 3;
 
-        protected AudioPlayer(int apuIndex, int sampleRate = 44100) : base(apuIndex, sampleRate)
+        protected AudioPlayer(int apuIndex, bool pal, int sampleRate, int numBuffers) : base(apuIndex, sampleRate)
         {
-            // Assume we are in PAL mode since it will always have a larger buffer.
-            int bufferSize = (int)Math.Ceiling(sampleRate / 50.0070) * sizeof(short);
-            audioStream = new AudioStream(sampleRate, 1, bufferSize, NumAudioBuffers, AudioBufferFillCallback);
+            int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short);
+            numBufferedFrames = numBuffers;
+            audioStream = new AudioStream(sampleRate, bufferSize, numBufferedFrames, AudioBufferFillCallback);
         }
 
         protected short[] AudioBufferFillCallback()
@@ -61,7 +64,7 @@ namespace FamiStudio
             // the audio thread, otherwise, we risk starving on the first frame.
             if (!audioStream.IsStarted)
             {
-                if (sampleQueue.Count == NumAudioBuffers)
+                if (sampleQueue.Count == numBufferedFrames)
                 {
                     audioStream.Start();
                 }

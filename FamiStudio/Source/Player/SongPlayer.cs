@@ -13,7 +13,7 @@ namespace FamiStudio
             public bool pal;
         };
 
-        public SongPlayer() : base(NesApu.APU_SONG)
+        public SongPlayer(bool pal) : base(NesApu.APU_SONG, pal, DefaultSampleRate, Settings.NumBufferedAudioFrames)
         {
             loopMode = LoopMode.LoopPoint;
         }

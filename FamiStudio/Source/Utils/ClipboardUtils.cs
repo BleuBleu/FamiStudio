@@ -228,7 +228,7 @@ namespace FamiStudio
                 mapping.SerializeState(serializer);
 
                 var sampleName = mapping.Sample.Name;
-                var sampleData = mapping.Sample.Data;
+                var sampleData = mapping.Sample.ProcessedData;
 
                 serializer.Serialize(ref sampleName);
                 serializer.Serialize(ref sampleData);
@@ -264,7 +264,7 @@ namespace FamiStudio
                         var sample = serializer.Project.FindMatchingSample(sampleData);
 
                         if (sample == null)
-                            sample = serializer.Project.CreateDPCMSample(sampleName, sampleData);
+                            sample = serializer.Project.CreateDPCMSampleFromDmcData(sampleName, sampleData);
 
                         serializer.Project.MapDPCMSample(note, sample, mapping.Pitch, mapping.Loop);
                     }
@@ -316,7 +316,7 @@ namespace FamiStudio
                 {
                     needMerge = true;
 
-                    if (!checkOnly && createMissing && (instType == Project.ExpansionNone || instType == serializer.Project.ExpansionAudio))
+                    if (!checkOnly && createMissing && (instType == ExpansionType.None || instType == serializer.Project.ExpansionAudio))
                     {
                         var instrument = serializer.Project.CreateInstrument(instType, instName);
                         serializer.RemapId(instId, instrument.Id);
@@ -554,7 +554,7 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         uniquePatterns.Add(pattern);
-                        if (pattern.ChannelType == Channel.Dpcm)
+                        if (pattern.ChannelType == ChannelType.Dpcm)
                         {
                             foreach (var n in pattern.Notes.Values)
                             {
@@ -663,7 +663,7 @@ namespace FamiStudio
                 }
             }
 
-            var tempoMode = 0;
+            var tempoMode = TempoType.FamiStudio;
             var hasCustomSettings = false;
             serializer.Serialize(ref hasCustomSettings);
             serializer.Serialize(ref tempoMode);

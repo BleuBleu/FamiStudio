@@ -49,6 +49,10 @@ namespace FamiStudio
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, int int1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, NSPoint point1);
+        //public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, NSPointF point1);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, uint uint1, IntPtr intPtr1, IntPtr intPtr2, bool bool1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
@@ -97,6 +101,7 @@ namespace FamiStudio
         static IntPtr clsNSSavePanel;
         static IntPtr clsNSAlert;
         static IntPtr clsNSCursor;
+        static IntPtr clsNSImage;
         static IntPtr clsNSPasteboard;
         static IntPtr clsNSData;
 
@@ -113,6 +118,7 @@ namespace FamiStudio
         static IntPtr selDataForType = SelRegisterName("dataForType:");
         static IntPtr selDataWithBytesLength = SelRegisterName("dataWithBytes:length:");
         static IntPtr selInitWithCharactersLength = SelRegisterName("initWithCharacters:length:");
+        static IntPtr selInitWithImageHotSpot = SelRegisterName("initWithImage:hotSpot:");
         static IntPtr selFileURLWithPath = SelRegisterName("fileURLWithPath:");
         static IntPtr selPath = SelRegisterName("path");
         static IntPtr selUTF8String = SelRegisterName("UTF8String");
@@ -129,6 +135,7 @@ namespace FamiStudio
         static IntPtr selOpenPanel = SelRegisterName("openPanel");
         static IntPtr selSavePanel = SelRegisterName("savePanel");
         static IntPtr selSetTitle = SelRegisterName("setTitle:");
+        static IntPtr selInitWithData = SelRegisterName("initWithData:");
         static IntPtr selSetDirectoryURL = SelRegisterName("setDirectoryURL:");
         static IntPtr selSetAllowedFileTypes = SelRegisterName("setAllowedFileTypes:");
         static IntPtr selSetCanChooseDirectories = SelRegisterName("setCanChooseDirectories:");
@@ -142,6 +149,7 @@ namespace FamiStudio
         static IntPtr selAddButtonWithTitle = SelRegisterName("addButtonWithTitle:");
         static IntPtr selInvalidateCursorRectsForView = SelRegisterName("invalidateCursorRectsForView:");
         static IntPtr selBounds = SelRegisterName("bounds");
+        static IntPtr selRelease = SelRegisterName("release");
         static IntPtr selAddCursorRectCursor = SelRegisterName("addCursorRect:cursor:");
 
         static IntPtr generalPasteboard;
@@ -163,6 +171,7 @@ namespace FamiStudio
             clsNSSavePanel = ObjCGetClass("NSSavePanel");
             clsNSAlert = ObjCGetClass("NSAlert");
             clsNSCursor = ObjCGetClass("NSCursor");
+            clsNSImage = ObjCGetClass("NSImage");
             clsNSPasteboard = ObjCGetClass("NSPasteboard");
             clsNSData = ObjCGetClass("NSData");
 
@@ -450,12 +459,17 @@ namespace FamiStudio
             return new System.Drawing.Point((int)Math.Round(x), (int)Math.Round(y));
         }
 
+        public static IntPtr GetCursorByName(string name)
+        {
+            var sel = MacUtils.SelRegisterName(name);
+            return SendIntPtr(clsNSCursor, sel);
+        }
+
         public static void SetWindowCursor(IntPtr nsWin, IntPtr target, IntPtr cursor)
         {
             var nsView = SendIntPtr(nsWin, selContentView);
             var rect = SendRect(nsView, selBounds);
-            var nsCursor = SendIntPtr(clsNSCursor, cursor);
-            SendVoid(target, selAddCursorRectCursor, rect, nsCursor);
+            SendVoid(target, selAddCursorRectCursor, rect, cursor);
         }
 
         public static void InvalidateCursor(IntPtr nsWin)
@@ -497,6 +511,30 @@ namespace FamiStudio
             SendIntPtr(btn, selSetHidden, 1);
         }
 
+        public unsafe static IntPtr CreateCursorFromImage(byte[] imageData, int hotX, int hotY)
+        {
+            fixed (byte* ptr = &imageData[0])
+            {
+                var nsData = SendIntPtr(clsNSData, selDataWithBytesLength, new IntPtr(ptr), imageData.Length);
+
+                var nsImage = SendIntPtr(clsNSImage, selAlloc);
+                nsImage = SendIntPtr(nsImage, selInitWithData, nsData);
+
+                var nsPoint = new NSPoint();
+                //var nsPoint = new NSPointF();
+                nsPoint.X = hotX;
+                nsPoint.Y = hotY;
+                
+                var nsCursor = SendIntPtr(clsNSCursor, selAlloc);
+                nsCursor = SendIntPtr(nsCursor, selInitWithImageHotSpot, nsImage, nsPoint);
+
+                SendVoid(nsData,  selRelease);
+                SendVoid(nsImage, selRelease);
+
+                return nsCursor;
+            }
+        }
+
         public static string ShowOpenDialog(string title, string[] extensions, string path = null)
         {
             var openPanel = SendIntPtr(clsNSOpenPanel, selOpenPanel);
@@ -506,7 +544,7 @@ namespace FamiStudio
             {
                 var url = ToNSURL(path);
                 SendIntPtr(openPanel, selSetDirectoryURL, url);
-            }
+            }   
 
             var fileTypesArray = ToNSArray(extensions);
             SendIntPtr(openPanel, selSetAllowedFileTypes, fileTypesArray);

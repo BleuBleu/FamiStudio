@@ -100,13 +100,15 @@ namespace FamiStudio
         }
     }
 
-    public class GLConvexPath : IDisposable
+    public class GLGeometry : IDisposable
     {
-        public Point[] Points { get; private set; }
+        public float[,] Points { get; private set; }
+        public bool     Closed { get; private set; }
 
-        public GLConvexPath(Point[] points)
+        public GLGeometry(float[,] points, bool closed)
         {
             Points = points;
+            Closed = closed;
         }
 
         public void Dispose()
@@ -243,21 +245,21 @@ namespace FamiStudio
         public void PushTranslation(float x, float y)
         {
             transformStack.Push(transform);
-            transform.Z += (int)x;
-            transform.W += (int)y;
+            transform.Z += x;
+            transform.W += y;
 
             GL.PushMatrix();
             GL.Translate(x, y, 0);
         }
 
-        public void PushTransform(int tx, int ty, int sx, int sy)
+        public void PushTransform(float tx, float ty, float sx, float sy)
         {
             transformStack.Push(transform);
 
-            transform.X *= (int)sx;
-            transform.Y *= (int)sy;
-            transform.Z += (int)tx;
-            transform.W += (int)ty;
+            transform.X *= sx;
+            transform.Y *= sy;
+            transform.Z += tx;
+            transform.W += ty;
 
             GL.PushMatrix();
             GL.Translate(tx, ty, 0);
@@ -568,22 +570,22 @@ namespace FamiStudio
             DrawRectangle(x0, y0, x1, y1, lineBrush, width);
         }
 
-        public GLConvexPath CreateConvexPath(Point[] points)
+        public GLGeometry CreateGeometry(float[,] points, bool closed = true)
         {
-            return new GLConvexPath(points);
+            return new GLGeometry(points, closed);
         }
 
-        public void FillConvexPath(GLConvexPath geo, GLBrush brush, bool smooth = false)
+        public void FillGeometry(GLGeometry geo, GLBrush brush, bool smooth = false)
         {
             if (!brush.IsGradient)
             {
                 if (smooth)
                     GL.Enable(EnableCap.PolygonSmooth);
                 GL.Color4(brush.Color0);
-                GL.Begin(BeginMode.TriangleFan);
-                foreach (var pt in geo.Points)
-                    GL.Vertex2(pt.X, pt.Y);
-                GL.End();
+                GL.EnableClientState(ArrayCap.VertexArray);
+                GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
+                GL.DrawArrays(BeginMode.TriangleFan, 0, geo.Points.GetLength(0));
+                GL.DisableClientState(ArrayCap.VertexArray);
                 if (smooth)
                     GL.Disable(EnableCap.PolygonSmooth);
             }
@@ -592,22 +594,22 @@ namespace FamiStudio
                 Debug.Assert(brush.GradientSizeX == 0.0f);
 
                 GL.Begin(BeginMode.TriangleFan);
-                foreach (var pt in geo.Points)
+                for (int i = 0; i < geo.Points.GetLength(0); i++)
                 {
-                    float lerp = pt.Y / (float)brush.GradientSizeY;
+                    float lerp = geo.Points[i, 1] / (float)brush.GradientSizeY;
                     byte r = (byte)(brush.Color0.R * (1.0f - lerp) + (brush.Color1.R * lerp));
                     byte g = (byte)(brush.Color0.G * (1.0f - lerp) + (brush.Color1.G * lerp));
                     byte b = (byte)(brush.Color0.B * (1.0f - lerp) + (brush.Color1.B * lerp));
                     byte a = (byte)(brush.Color0.A * (1.0f - lerp) + (brush.Color1.A * lerp));
 
                     GL.Color4(r, g, b, a);
-                    GL.Vertex2(pt.X, pt.Y);
+                    GL.Vertex2(geo.Points[i, 0], geo.Points[i, 1]);
                 }
                 GL.End();
             }
         }
 
-        public void DrawConvexPath(GLConvexPath geo, GLBrush brush, float lineWidth = 1.0f)
+        public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f)
         {
             GL.PushMatrix();
             GL.Translate(0.5f, 0.5f, 0);
@@ -616,14 +618,18 @@ namespace FamiStudio
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && lineWidth > 1)
             {
-                var pts = new float[geo.Points.Length * 2 + 2];
-                for (int i = 0; i < geo.Points.Length; i++)
+                var pts = new float[geo.Points.Length * 2 + (geo.Closed ? 2 : 0)];
+                for (int i = 0; i < geo.Points.GetLength(0); i++)
                 {
-                    pts[i * 2 + 0] = geo.Points[i].X;
-                    pts[i * 2 + 1] = geo.Points[i].Y;
+                    pts[i * 2 + 0] = geo.Points[i, 0];
+                    pts[i * 2 + 1] = geo.Points[i, 1];
                 }
-                pts[geo.Points.Length * 2 + 0] = geo.Points[0].X;
-                pts[geo.Points.Length * 2 + 1] = geo.Points[0].Y;
+
+                if (geo.Closed)
+                {
+                    pts[geo.Points.Length * 2 + 0] = geo.Points[0, 0];
+                    pts[geo.Points.Length * 2 + 1] = geo.Points[0, 1];
+                }
 
                 DrawThickLineAsPolygon(pts, brush, lineWidth);
             }
@@ -631,10 +637,10 @@ namespace FamiStudio
 #endif
             {
                 GL.LineWidth(lineWidth);
-                GL.Begin(BeginMode.LineLoop);
-                foreach (var pt in geo.Points)
-                    GL.Vertex2(pt.X, pt.Y);
-                GL.End();
+                GL.EnableClientState(ArrayCap.VertexArray);
+                GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
+                GL.DrawArrays(geo.Closed ? BeginMode.LineLoop : BeginMode.LineStrip, 0, geo.Points.GetLength(0));
+                GL.DisableClientState(ArrayCap.VertexArray);
             }
             GL.Disable(EnableCap.LineSmooth);
             GL.PopMatrix();
@@ -664,10 +670,10 @@ namespace FamiStudio
             GL.End();
         }
 
-        public void FillAndDrawConvexPath(GLConvexPath geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f)
+        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f)
         {
-            FillConvexPath(geo, fillBrush);
-            DrawConvexPath(geo, lineBrush, lineWidth);
+            FillGeometry(geo, fillBrush);
+            DrawGeometry(geo, lineBrush, lineWidth);
         }
 
         public unsafe GLBitmap CreateBitmap(int width, int height, uint[] data)
@@ -738,7 +744,7 @@ namespace FamiStudio
             return bmp.Size.Width;
         }
 
-        public GLBrush GetSolidBrush(Color color, float dimming, float alphaDimming)
+        public GLBrush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
         {
             Color color2 = Color.FromArgb(
                 Utils.Clamp((int)(color.A * alphaDimming), 0, 255),

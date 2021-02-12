@@ -1,6 +1,14 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (2.3.0)
+; FAMISTUDIO SOUND ENGINE (2.4.0)
+; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
+; Copying and distribution of this file, with or without
+; modification, are permitted in any medium without royalty provided
+; the copyright notice and this notice are preserved in all source
+; code copies. This file is offered as-is, without any warranty.
+;======================================================================================================================
+
+;======================================================================================================================
 ; This is the FamiStudio sound engine. It is used by the NSF and ROM exporter of FamiStudio and can be used to make 
 ; games. It supports every feature from FamiStudio, some of them are toggeable to save CPU/memory.
 ;
@@ -1486,7 +1494,7 @@ reg_sweep\@ = \9
     sta reg_lo\@
     lda <.pitch\@+1
 
-    .if (pulse_prev\@ != 0) & (FAMISTUDIO_CFG_SFX_SUPPORT = 0)
+    .if (pulse_prev\@ != 0) & ((FAMISTUDIO_CFG_SFX_SUPPORT = 0) | (idx\@ > 4))
         .if (reg_sweep\@ != 0) & (FAMISTUDIO_CFG_SMOOTH_VIBRATO != 0)
             ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
             tax ; X = new hi-period
@@ -3702,7 +3710,7 @@ sample_play:
     lda [.sample_data_ptr],y ; Pitch and loop
     sta FAMISTUDIO_APU_DMC_FREQ
 
-    lda #32 ; Reset DAC counter
+    lda #64 ; Reset DAC counter
     sta FAMISTUDIO_APU_DMC_RAW
     lda #%00011111 ; Start DMC
     sta FAMISTUDIO_APU_SND_CHN

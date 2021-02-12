@@ -321,7 +321,7 @@ namespace FamiStudio
                     {
                         if ((mask & (1 << i)) != 0)
                         {
-                            var channelFilename = Utils.AddFileSuffix(filename, "_" + song.Channels[i].ExportName);
+                            var channelFilename = Utils.AddFileSuffix(filename, "_" + song.Channels[i].ShortName);
 
                             if (mp3)
                                 Mp3File.Save(song, channelFilename, sampleRate, bitrate, loopCount, duration, 1 << i);
@@ -363,7 +363,7 @@ namespace FamiStudio
             {
                 new NsfFile().Save(
                     project,
-                    FamitoneMusicFile.FamiToneKernel.FamiStudio,
+                    FamiToneKernel.FamiStudio,
                     filename,
                     exportSongIds,
                     project.Name,
@@ -460,7 +460,7 @@ namespace FamiStudio
 
         private void FamiTone2MusicExport(string filename, bool famiStudio)
         {
-            var kernel = famiStudio ? FamitoneMusicFile.FamiToneKernel.FamiStudio : FamitoneMusicFile.FamiToneKernel.FamiTone2;
+            var kernel = famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2;
             var engineName = famiStudio ? "famistudio" : "famitone2";
             var formatString = ParseOption($"{engineName}-asm-format", "nesasm");
 

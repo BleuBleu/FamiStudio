@@ -88,6 +88,25 @@ namespace FamiStudio
             }
         }
 
+        [DllImport("DwmApi")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            // From https://stackoverflow.com/questions/57124243/winforms-dark-title-bar-on-windows-10
+            try
+            {
+                if (DwmSetWindowAttribute(Handle, 19, new[] { 1 }, 4) != 0)
+                    DwmSetWindowAttribute(Handle, 20, new[] { 1 }, 4);
+            }
+            catch
+            {
+                // Will likely fail on Win7/8.
+            }
+        }
+
         public void Run()
         {
             Application.Run(this);

@@ -94,7 +94,7 @@ namespace FamiStudio
 
         public void SetDefaultsForTempoMode(int tempoMode)
         {
-            if (tempoMode == Project.TempoFamiStudio)
+            if (tempoMode == TempoType.FamiStudio)
             {
                 noteLength = 10;
                 beatLength = noteLength * 4;
@@ -115,7 +115,7 @@ namespace FamiStudio
                 patternCustomSettings[i] = new PatternCustomSetting();
         }
 
-        public void CreateChannels(bool preserve = false, int numChannelsToPreserve = Channel.ExpansionAudioStart)
+        public void CreateChannels(bool preserve = false, int numChannelsToPreserve = ChannelType.ExpansionAudioStart)
         {
             int channelCount = project.GetActiveChannelCount();
 
@@ -130,7 +130,7 @@ namespace FamiStudio
                 channels = new Channel[channelCount];
             }
 
-            for (int i = 0; i < Channel.Count; i++)
+            for (int i = 0; i < ChannelType.Count; i++)
             {
                 var idx = Channel.ChannelTypeToIndex(i);
                 if (project.IsChannelActive(i) && channels[idx] == null)
@@ -620,7 +620,7 @@ namespace FamiStudio
             {
                 for (int p = 0; p < songLength; p++)
                 {
-                    var pattern = channels[Channel.Dpcm].PatternInstances[p];
+                    var pattern = channels[ChannelType.Dpcm].PatternInstances[p];
                     if (pattern != null)
                     {
                         foreach (var note in pattern.Notes.Values)
@@ -825,7 +825,7 @@ namespace FamiStudio
                         {
                             var note = kv.Value;
 
-                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument) || channel.Type == Channel.Dpcm)
+                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument) || channel.Type == ChannelType.Dpcm)
                                 note.Instrument = null;
                         }
                     }
@@ -899,19 +899,41 @@ namespace FamiStudio
             }
         }
 
-        public void AdvanceNumberOfNotes(int noteCount, ref int p, ref int n)
+        public bool AdvanceNumberOfNotes(int noteCount, ref int p, ref int n)
         {
             float count = 0;
 
-            while (count < noteCount && p < songLength)
+            if (noteCount > 0)
             {
-                count++;
-                if (++n >= GetPatternLength(p))
+                while (count < noteCount && p < songLength)
                 {
-                    n = 0;
-                    p++;
+                    count++;
+                    if (++n >= GetPatternLength(p))
+                    {
+                        n = 0;
+                        p++;
+                    }
                 }
+
+                return p < songLength;
             }
+            else if (noteCount < 0)
+            {
+                noteCount = -noteCount;
+                while (count < noteCount && p >= 0)
+                {
+                    count++;
+                    if (--n < 0)
+                    {
+                        p--;
+                        n = GetPatternLength(p) - 1;
+                    }
+                }
+
+                return p >= 0;
+            }
+
+            return true;
         }
 
         public void AdvanceNumberOfFrames(int frameCount, int initialCount, int currentSpeed, bool pal, ref int p, ref int n)

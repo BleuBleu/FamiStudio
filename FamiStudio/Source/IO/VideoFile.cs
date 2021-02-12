@@ -10,14 +10,12 @@ using System.IO;
 #if FAMISTUDIO_WINDOWS
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DOffscreenGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
-    using RenderPath     = FamiStudio.GLConvexPath;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLOffscreenGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
@@ -463,7 +461,7 @@ namespace FamiStudio
                 state.channel = song.Channels[i];
                 state.patternIndex = 0;
                 state.channelText = state.channel.Name + (state.channel.IsExpansionChannel ? $" ({song.Project.ExpansionAudioShortName})" : "");
-                state.bmp = videoGraphics.CreateBitmapFromResource(Channel.ChannelIcons[song.Channels[i].Type] + "@2x"); // HACK: Grab the 200% scaled version directly.
+                state.bmp = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[song.Channels[i].Type] + "@2x"); // HACK: Grab the 200% scaled version directly.
                 state.wav = new WavPlayer(sampleRate, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1); 
 
                 channelStates.Add(state);
@@ -550,7 +548,7 @@ namespace FamiStudio
                             var channelNameSizeX = videoGraphics.MeasureString(s.channelText, ThemeBase.FontBigUnscaled);
                             var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmp.Size.Width + channelIconTextSpacing) / 2;
 
-                            videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmp.Size.Width, channelIconPosY + s.bmp.Size.Height, theme.LightGreyFillBrush1);
+                            videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmp.Size.Width, channelIconPosY + s.bmp.Size.Height, theme.DarkGreyLineBrush2);
                             videoGraphics.DrawBitmap(s.bmp, channelIconPosX, channelIconPosY);
                             videoGraphics.DrawText(s.channelText, ThemeBase.FontBigUnscaled, channelIconPosX + s.bmp.Size.Width + channelIconTextSpacing, channelTextPosY, theme.LightGreyFillBrush1);
 
@@ -578,7 +576,7 @@ namespace FamiStudio
 
                             if (s.note.IsMusical)
                             {
-                                if (s.channel.Type == Channel.Dpcm)
+                                if (s.channel.Type == ChannelType.Dpcm)
                                     color = Color.FromArgb(210, ThemeBase.MediumGreyFillColor1);
                                 else
                                     color = Color.FromArgb(128 + s.volume * 127 / 15, s.note.Instrument != null ? s.note.Instrument.Color : ThemeBase.DarkGreyFillColor2);

@@ -485,7 +485,7 @@ namespace FamiStudio
             }
 
             // At version 3 (FamiStudio 1.2.0), we extended the range of notes.
-            if (buffer.Version < 3 && channelType != Channel.Noise)
+            if (buffer.Version < 3 && channelType != global::FamiStudio.ChannelType.Noise)
             {
                 foreach (var note in notes.Values)
                 {
