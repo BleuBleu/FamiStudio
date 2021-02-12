@@ -773,6 +773,8 @@ namespace FamiStudio
                         addr = addrEnd;
                         if (addr >= MaxTotalSampleDataSize)
                             break;
+
+                        visitedSamples.Add(mapping.Sample);
                     }
                 }
 
@@ -797,6 +799,8 @@ namespace FamiStudio
 
                         if (addr >= MaxTotalSampleDataSize)
                             break;
+
+                        visitedSamples.Add(mapping.Sample);
                     }
                 }
 
@@ -1453,6 +1457,7 @@ namespace FamiStudio
             var newProject = new Project();
             var loadSerializer = new ProjectLoadBuffer(newProject, saveSerializer.GetBuffer(), Version);
             newProject.SerializeState(loadSerializer);
+            newProject.Validate();
             return newProject;
         }
     }
