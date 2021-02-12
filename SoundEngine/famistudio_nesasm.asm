@@ -1,6 +1,14 @@
 ;======================================================================================================================
 ; FAMISTUDIO SOUND ENGINE (2.4.0)
+; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
+; Copying and distribution of this file, with or without
+; modification, are permitted in any medium without royalty provided
+; the copyright notice and this notice are preserved in all source
+; code copies. This file is offered as-is, without any warranty.
+;======================================================================================================================
+
+;======================================================================================================================
 ; This is the FamiStudio sound engine. It is used by the NSF and ROM exporter of FamiStudio and can be used to make 
 ; games. It supports every feature from FamiStudio, some of them are toggeable to save CPU/memory.
 ;

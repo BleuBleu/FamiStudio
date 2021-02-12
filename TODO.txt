@@ -3,23 +3,24 @@ FamiStudio 2.4.0
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
 - Double-right-click = select whole note
 - Highlight piano keys when they are pressed with QWERTY or MIDI.
-- SoundEngine: 2 issues by brad.
 
 Test:
 - Retest Win7 device lost.
 - Transaction (w/o DPCM), test a LOT!
 - Re-export, recompile and change ROM version.
 - Test looping sample.
+- ROM: Make sure square pops, and doesnt in NSF.
+- 
 
 DPCM Editor
 ===========
+- Verify if I post-increment DMC everywhere.
 - Sample rate, does it work?
 - Preview rate should be relative to sample rate? Humm. I think its ok.
 x How to pack samples and align everything? 
 	x 3 operations should stop playback : map/unmap, delete. Anything else is thread safe.
 x Real-time update VS. change param values.
 - Changing DPCM param values doesnt do transaction?? => Serialize more stuff. 
-- Verify if I post-increment DMC everywhere.
 - Min/max processing is dumb. Just show the range of DMC. 
 
 / Basic volume adjustment (0-200%)

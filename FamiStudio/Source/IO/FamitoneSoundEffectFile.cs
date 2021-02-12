@@ -194,6 +194,12 @@ namespace FamiStudio
                 }
             }
 
+            if (format == AssemblyFormat.CA65)
+            {
+                lines.Add("");
+                lines.Add(".export sounds");
+            }
+
             File.WriteAllLines(filename, lines.ToArray());
 
             return true;

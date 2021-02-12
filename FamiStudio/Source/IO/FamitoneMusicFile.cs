@@ -19,6 +19,7 @@ namespace FamiStudio
         private string hi = ".hibyte";
 
         private int machine = MachineType.NTSC;
+        private int assemblyFormat = AssemblyFormat.NESASM;
         private List<List<string>> globalPacketPatternBuffers = new List<List<string>>();
         private Dictionary<byte, string> vibratoEnvelopeNames = new Dictionary<byte, string>();
         private Dictionary<Arpeggio, string> arpeggioEnvelopeNames = new Dictionary<Arpeggio, string>();
@@ -127,6 +128,13 @@ namespace FamiStudio
             }
 
             lines.Add("");
+
+            if (assemblyFormat == AssemblyFormat.CA65)
+            {
+                lines.Add($".export {name}_music_data");
+                lines.Add($".global FAMISTUDIO_DPCM_PTR");
+                lines.Add("");
+            }
 
             return size;
         }
@@ -1073,6 +1081,8 @@ namespace FamiStudio
         
         private void SetupFormat(int format)
         {
+            assemblyFormat = format;
+
             switch (format)
             {
                 case AssemblyFormat.NESASM:
