@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -205,232 +206,37 @@ namespace FamiStudio
             return $" {key}=\"{value.ToString().Replace("\"", "\"\"")}\"";
         }
 
-        private enum LineParserState
-        {
-            EmptyLine,
-            Type,
-            BetweenAttributes,
-            Key,
-            AfterKey,
-            BeforeValue,
-            Value,
-            ValueDoubleQuote,
-        }
+        private static readonly Regex NameRegex = new Regex("^\\s*([^\"=\\s]+)\\s*(.*)\\s*$", RegexOptions.Compiled);
+
+        private static readonly Regex AttributeRegex = new Regex("([^\"=\\s]+)\\s*=\\s*\"((?:\"\"|[^\"])+)\"", RegexOptions.Compiled);
 
         private static string SplitLine(string line, ref Dictionary<string, string> parameters)
         {
-            var state = LineParserState.EmptyLine;
-            string type = null;
-            string key = null;
-            string value = null;
-
             parameters.Clear();
 
-            foreach (var character in line)
+            var nameSeparated = NameRegex.Match(line);
+
+            if (nameSeparated.Success)
             {
-                switch (state)
+                var type = nameSeparated.Groups[1].Value;
+                var attributes = nameSeparated.Groups[2].Value;
+
+                // Ensure that everything following the type looks like an attribute.
+                if (string.IsNullOrWhiteSpace(AttributeRegex.Replace(attributes, "")))
                 {
-                    case LineParserState.EmptyLine:
-                        switch (character)
-                        {
-                            case '=':
-                                throw new Exception("Unexpected equals sign at the start of a line.");
+                    foreach (Match match in AttributeRegex.Matches(attributes))
+                    {
+                        var key = match.Groups[1].Value;
+                        var value = match.Groups[2].Value.Replace("\"\"", "\"");
 
-                            case '"':
-                                throw new Exception("Unexpected double quote at the start of a line.");
+                        parameters[key] = value;
+                    }
 
-                            default:
-                                if (!char.IsWhiteSpace(character))
-                                {
-                                    state = LineParserState.Type;
-                                    type = character.ToString();
-                                }
-                                break;
-                        }
-                        break;
-
-                    case LineParserState.Type:
-                        switch (character)
-                        {
-                            case '=':
-                                throw new Exception("Unexpected equals sign following type.");
-
-                            case '"':
-                                throw new Exception("Unexpected double quote following type.");
-
-                            default:
-                                if (char.IsWhiteSpace(character))
-                                {
-                                    state = LineParserState.BetweenAttributes;
-                                }
-                                else
-                                {
-                                    type += character;
-                                }
-                                break;
-                        }
-                        break;
-
-                    case LineParserState.BetweenAttributes:
-                        switch (character)
-                        {
-                            case '=':
-                                throw new Exception("Unexpected equals sign between attributes.");
-
-                            case '"':
-                                throw new Exception("Unexpected double quote between attributes.");
-
-                            default:
-                                if (!char.IsWhiteSpace(character))
-                                {
-                                    state = LineParserState.Key;
-                                    key = character.ToString();
-                                }
-                                break;
-                        }
-                        break;
-
-                    case LineParserState.Key:
-                        switch (character)
-                        {
-                            case '=':
-                                if (parameters.ContainsKey(key))
-                                {
-                                    throw new Exception($"Attribute \"{key}\" declared multiple times on the same line.");
-                                }
-
-                                state = LineParserState.BeforeValue;
-                                break;
-
-                            case '"':
-                                throw new Exception("Unexpected double quote during key.");
-
-                            default:
-                                if (char.IsWhiteSpace(character))
-                                {
-                                    if (parameters.ContainsKey(key))
-                                    {
-                                        throw new Exception($"Attribute \"{key}\" declared multiple times on the same line.");
-                                    }
-
-                                    state = LineParserState.AfterKey;
-                                }
-                                else
-                                {
-                                    key += character.ToString();
-                                }
-                                break;
-                        }
-                        break;
-
-                    case LineParserState.AfterKey:
-                        switch (character)
-                        {
-                            case '=':
-                                state = LineParserState.BeforeValue;
-                                break;
-
-                            default:
-                                if (!char.IsWhiteSpace(character))
-                                {
-                                    throw new Exception($"Unexpected character \"{character}\" after key.");
-                                }
-                                break;
-                        }
-                        break;
-
-                    case LineParserState.BeforeValue:
-                        switch (character)
-                        {
-                            case '=':
-                                throw new Exception("Multiple equals signs following key.");
-
-                            case '"':
-                                state = LineParserState.Value;
-                                value = "";
-                                break;
-
-                            default:
-                                if (!char.IsWhiteSpace(character))
-                                {
-                                    throw new Exception($"Unexpected character \"{character}\" following equals sign.");
-                                }
-                                break;
-                        }
-                        break;
-
-                    case LineParserState.Value:
-                        switch (character)
-                        {
-                            case '"':
-                                state = LineParserState.ValueDoubleQuote;
-                                break;
-
-                            default:
-                                value += character;
-                                break;
-                        }
-                        break;
-
-                    case LineParserState.ValueDoubleQuote:
-                        switch (character)
-                        {
-                            case '=':
-                                throw new Exception("Unexpected equals sign after value.");
-
-                            case '"':
-                                state = LineParserState.Value;
-                                value += "\"";
-                                break;
-
-                            default:
-                                if (char.IsWhiteSpace(character))
-                                {
-                                    parameters.Add(key, value);
-                                    state = LineParserState.BetweenAttributes;
-                                }
-                                else
-                                {
-                                    parameters.Add(key, value);
-
-                                    key = character.ToString();
-                                    state = LineParserState.Key;
-                                }
-                                break;
-                        }
-                        break;
+                    return type;
                 }
             }
 
-            switch (state)
-            {
-                case LineParserState.EmptyLine:
-                    return null;
-
-                case LineParserState.Type:
-                case LineParserState.BetweenAttributes:
-                    return type;
-
-                case LineParserState.Key:
-                    throw new Exception("Unexpected line break during a key.");
-
-                case LineParserState.AfterKey:
-                    throw new Exception("Unexpected line break after a key.");
-
-                case LineParserState.BeforeValue:
-                    throw new Exception("Unexpected line break before a value.");
-
-                case LineParserState.Value:
-                    throw new Exception("Unexpected line break during a value.");
-
-                case LineParserState.ValueDoubleQuote:
-                    parameters.Add(key, value);
-                    return type;
-
-                default:
-                    // This cannot happen, but is required by the compiler.
-                    throw new NotImplementedException();
-            }
+            return null;
         }
 
         public static bool LooksLikeFamiStudioText(string filename)
