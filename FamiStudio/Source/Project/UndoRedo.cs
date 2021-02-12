@@ -118,8 +118,10 @@ namespace FamiStudio
                     break;
             }
 
+            ThemeBase.SerializeState(buffer);
+
             if (serializeAppState)
-                app.SerializeState(buffer); 
+                app.SerializeState(buffer);
         }
 
         private byte[] CaptureState()

@@ -17,12 +17,12 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.ExpansionType == Project.ExpansionFds);
+                Debug.Assert(instrument.ExpansionType == ExpansionType.Fds);
 
-                if (instrument.ExpansionType == Project.ExpansionFds)
+                if (instrument.ExpansionType == ExpansionType.Fds)
                 {
-                    var wav = instrument.Envelopes[Envelope.FdsWaveform];
-                    var mod = instrument.Envelopes[Envelope.FdsModulation].BuildFdsModulationTable();
+                    var wav = instrument.Envelopes[EnvelopeType.FdsWaveform];
+                    var mod = instrument.Envelopes[EnvelopeType.FdsModulation].BuildFdsModulationTable();
 
                     Debug.Assert(wav.Length == 0x40);
                     Debug.Assert(mod.Length == 0x20);
@@ -64,7 +64,7 @@ namespace FamiStudio
 
                     if (note.Instrument != null)
                     {
-                        Debug.Assert(note.Instrument.ExpansionType == Project.ExpansionFds);
+                        Debug.Assert(note.Instrument.ExpansionType == ExpansionType.Fds);
                         modDelayCounter = note.Instrument.FdsModDelay;
                         modDepth = note.Instrument.FdsModDepth;
                         modSpeed = note.Instrument.FdsModSpeed;

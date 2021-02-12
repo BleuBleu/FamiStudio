@@ -168,6 +168,7 @@ Project | Version | Yes | The FamiStudio version that exported the file.
 | Author | | Author of the project
 | Copyright | | Copyright of the project
 DPCMSample | Name | Yes | The name of the sample.
+| ReverseBits | Yes | When True, each the bits of each nibble in Data should be reversed for playback.
 | Data | Yes | The data as a series of hexadecimal nibbles.
 DPCMMapping | Note | Yes | Piano note to map the sample to (Between C1 and D6).
 | Sample | Yes | Name of the DPCMSample to map.
@@ -202,8 +203,8 @@ Song | Name | Yes | The name of the song.
 | PatternLength | Yes | The number of notes in a pattern.
 | BeatLength | Yes | The number of notes in a beat.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
-| Tempo | Yes | (FamiTracker tempo only) The FamiTracker tempo.
-| Speed | Yes | (FamiTracker tempo only) The FamiTracker speed.
+| FamiTrackerTempo | Yes | (FamiTracker tempo only) The FamiTracker tempo.
+| FamiTrackerSpeed | Yes | (FamiTracker tempo only) The FamiTracker speed.
 PatternCustomSettings | Time | Yes | Index of the column of pattern that uses these custom settings.
 | Length | Yes | The custom length (in notes or frames) of the pattern.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
@@ -218,6 +219,7 @@ Note | Time | Yes | The frame (or note) number inside the pattern where this not
 | Volume | | The volume of the note, 0 to 15.
 | VibratoSpeed | | The Vibrato speed, 0 to 12.
 | VibratoDepth | | The Vibrato depth, 0 to 15.
+| Speed | | (FamiTracker tempo only) Updates the FamiTracker speed to a new value.
 | FinePitch | | The fine pitch, -128 to 127.
 | SlideTarget | | The slide note target, from C0 to B7.
 | FdsModSpeed | | FDS modulation speed, 0 to 4095.

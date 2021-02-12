@@ -8,22 +8,22 @@ namespace FamiStudio
     {
         readonly static int[] InstrumentTypeLookup =
         {
-            Project.ExpansionCount, // INST_NONE: Should never happen.
-            Project.ExpansionNone,  // INST_2A03
-            Project.ExpansionVrc6,  // INST_VRC6
-            Project.ExpansionVrc7,  // INST_VRC7
-            Project.ExpansionFds,   // INST_FDS
-            Project.ExpansionN163,  // INST_N163
-            Project.ExpansionS5B    // INST_S5B
+            ExpansionType.Count, // INST_NONE: Should never happen.
+            ExpansionType.None,  // INST_2A03
+            ExpansionType.Vrc6,  // INST_VRC6
+            ExpansionType.Vrc7,  // INST_VRC7
+            ExpansionType.Fds,   // INST_FDS
+            ExpansionType.N163,  // INST_N163
+            ExpansionType.S5B    // INST_S5B
         };
 
         readonly static int[] EnvelopeTypeLookup =
         {
-            Envelope.Volume,   // SEQ_VOLUME
-            Envelope.Arpeggio, // SEQ_ARPEGGIO
-            Envelope.Pitch,    // SEQ_PITCH
-            Envelope.Count,    // SEQ_HIPITCH
-            Envelope.DutyCycle // SEQ_DUTYCYCLE
+            EnvelopeType.Volume,   // SEQ_VOLUME
+            EnvelopeType.Arpeggio, // SEQ_ARPEGGIO
+            EnvelopeType.Pitch,    // SEQ_PITCH
+            EnvelopeType.Count,    // SEQ_HIPITCH
+            EnvelopeType.DutyCycle // SEQ_DUTYCYCLE
         };
 
         const int SEQ_COUNT = 5;
@@ -40,7 +40,7 @@ namespace FamiStudio
                 seq[j] = (sbyte)bytes[offset++];
 
             // Skip unsupported types.
-            if (envType == Envelope.Count)
+            if (envType == EnvelopeType.Count)
             {
                 Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported, ignoring.");
                 return;
@@ -63,7 +63,7 @@ namespace FamiStudio
                     releasePoint++;
             }
 
-            if (envType == Envelope.Pitch)
+            if (envType == EnvelopeType.Pitch)
                 env.Relative = true;
 
             if (env != null)
@@ -93,7 +93,7 @@ namespace FamiStudio
             var instType = InstrumentTypeLookup[bytes[6]];
 
             // Needs to match the current expansion audio. Our enum happens to match (-1) for now.
-            if (instType != Project.ExpansionNone && instType != project.ExpansionAudio)
+            if (instType != ExpansionType.None && instType != project.ExpansionAudio)
             {
                 Log.LogMessage(LogSeverity.Error, "Audio expansion does not match the current project expansion.");
                 return null;
@@ -111,30 +111,30 @@ namespace FamiStudio
 
             var instrument = project.CreateInstrument(instType, name);
 
-            if (instType == Project.ExpansionFds)
+            if (instType == ExpansionType.Fds)
             {
-                var wavEnv = instrument.Envelopes[Envelope.FdsWaveform];
+                var wavEnv = instrument.Envelopes[EnvelopeType.FdsWaveform];
                 for (int i = 0; i < wavEnv.Length; i++)
                     wavEnv.Values[i] = (sbyte)bytes[offset++];
 
-                var modEnv = instrument.Envelopes[Envelope.FdsModulation];
+                var modEnv = instrument.Envelopes[EnvelopeType.FdsModulation];
                 for (int i = 0; i < modEnv.Length; i++)
                     modEnv.Values[i] = (sbyte)bytes[offset++];
 
-                instrument.FdsWavePreset = Envelope.WavePresetCustom;
-                instrument.FdsModPreset = Envelope.WavePresetCustom;
+                instrument.FdsWavePreset = WavePresetType.Custom;
+                instrument.FdsModPreset = WavePresetType.Custom;
 
                 modEnv.ConvertFdsModulationToAbsolute();
 
                 // Skip mod speed/depth/delay.
                 offset += sizeof(int) * 3;
 
-                ReadEnvelope(bytes, ref offset, instrument, Envelope.Volume);
-                ReadEnvelope(bytes, ref offset, instrument, Envelope.Arpeggio);
-                ReadEnvelope(bytes, ref offset, instrument, Envelope.Pitch);
+                ReadEnvelope(bytes, ref offset, instrument, EnvelopeType.Volume);
+                ReadEnvelope(bytes, ref offset, instrument, EnvelopeType.Arpeggio);
+                ReadEnvelope(bytes, ref offset, instrument, EnvelopeType.Pitch);
             }
-            else if (instType == Project.ExpansionNone ||
-                     instType == Project.ExpansionN163)
+            else if (instType == ExpansionType.None ||
+                     instType == ExpansionType.N163)
             {
                 var seqCount = bytes[offset++];
 
@@ -151,7 +151,7 @@ namespace FamiStudio
                         ReadEnvelope(bytes, ref offset, instrument, EnvelopeTypeLookup[i]);
                 }
             }
-            else if (instType == Project.ExpansionVrc7)
+            else if (instType == ExpansionType.Vrc7)
             {
                 instrument.Vrc7Patch = (byte)BitConverter.ToInt32(bytes, offset); offset += 4;
 
@@ -162,17 +162,17 @@ namespace FamiStudio
                 }
             }
 
-            if (instType == Project.ExpansionN163)
+            if (instType == ExpansionType.N163)
             {
                 int waveSize  = BitConverter.ToInt32(bytes, offset); offset += 4;
                 int wavePos   = BitConverter.ToInt32(bytes, offset); offset += 4;
                 int waveCount = BitConverter.ToInt32(bytes, offset); offset += 4;
 
-                instrument.N163WavePreset = Envelope.WavePresetCustom;
+                instrument.N163WavePreset = WavePresetType.Custom;
                 instrument.N163WaveSize   = (byte)waveSize;
                 instrument.N163WavePos    = (byte)wavePos;
 
-                var wavEnv = instrument.Envelopes[Envelope.N163Waveform];
+                var wavEnv = instrument.Envelopes[EnvelopeType.N163Waveform];
 
                 // Only read the first wave for now.
                 for (int j = 0; j < waveSize; j++)
@@ -185,7 +185,7 @@ namespace FamiStudio
             }
 
             // Samples
-            if (instType == Project.ExpansionNone)
+            if (instType == ExpansionType.None)
             {
                 // Skip over the sample mappings for now, we will load them after the actual sample data.
                 var assignedCount = BitConverter.ToInt32(bytes, offset); offset += 4;

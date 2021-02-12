@@ -9,7 +9,7 @@ namespace FamiStudio
 
         public ChannelStateMmc5Square(int apuIdx, int channelType) : base(apuIdx, channelType, false)
         {
-            regOffset = (channelType - Channel.Mmc5Square1) * 4;
+            regOffset = (channelType - ChannelType.Mmc5Square1) * 4;
         }
 
         public override void UpdateAPU()

@@ -264,25 +264,25 @@ namespace FamiStudio
         {
             switch (channelType)
             {
-                case Channel.Vrc6Saw:
+                case ChannelType.Vrc6Saw:
                     return NoteTableVrc6Saw;
-                case Channel.FdsWave:
+                case ChannelType.FdsWave:
                     return NoteTableFds;
-                case Channel.N163Wave1:
-                case Channel.N163Wave2:
-                case Channel.N163Wave3:
-                case Channel.N163Wave4:
-                case Channel.N163Wave5:
-                case Channel.N163Wave6:
-                case Channel.N163Wave7:
-                case Channel.N163Wave8:
+                case ChannelType.N163Wave1:
+                case ChannelType.N163Wave2:
+                case ChannelType.N163Wave3:
+                case ChannelType.N163Wave4:
+                case ChannelType.N163Wave5:
+                case ChannelType.N163Wave6:
+                case ChannelType.N163Wave7:
+                case ChannelType.N163Wave8:
                     return NoteTableN163[numN163Channels - 1];
-                case Channel.Vrc7Fm1:
-                case Channel.Vrc7Fm2:
-                case Channel.Vrc7Fm3:
-                case Channel.Vrc7Fm4:
-                case Channel.Vrc7Fm5:
-                case Channel.Vrc7Fm6:
+                case ChannelType.Vrc7Fm1:
+                case ChannelType.Vrc7Fm2:
+                case ChannelType.Vrc7Fm3:
+                case ChannelType.Vrc7Fm4:
+                case ChannelType.Vrc7Fm5:
+                case ChannelType.Vrc7Fm6:
                     return NoteTableVrc7;
                 default:
                     return pal ? NoteTablePAL : NoteTableNTSC;
@@ -293,26 +293,26 @@ namespace FamiStudio
         {
             switch (channelType)
             {
-                case Channel.FdsWave:
-                case Channel.Vrc6Saw:
-                case Channel.Vrc6Square1:
-                case Channel.Vrc6Square2:
+                case ChannelType.FdsWave:
+                case ChannelType.Vrc6Saw:
+                case ChannelType.Vrc6Square1:
+                case ChannelType.Vrc6Square2:
                     return NesApu.MaximumPeriod12Bit;
-                case Channel.Vrc7Fm1:
-                case Channel.Vrc7Fm2:
-                case Channel.Vrc7Fm3:
-                case Channel.Vrc7Fm4:
-                case Channel.Vrc7Fm5:
-                case Channel.Vrc7Fm6:
+                case ChannelType.Vrc7Fm1:
+                case ChannelType.Vrc7Fm2:
+                case ChannelType.Vrc7Fm3:
+                case ChannelType.Vrc7Fm4:
+                case ChannelType.Vrc7Fm5:
+                case ChannelType.Vrc7Fm6:
                     return NesApu.MaximumPeriod15Bit;
-                case Channel.N163Wave1:
-                case Channel.N163Wave2:
-                case Channel.N163Wave3:
-                case Channel.N163Wave4:
-                case Channel.N163Wave5:
-                case Channel.N163Wave6:
-                case Channel.N163Wave7:
-                case Channel.N163Wave8:
+                case ChannelType.N163Wave1:
+                case ChannelType.N163Wave2:
+                case ChannelType.N163Wave3:
+                case ChannelType.N163Wave4:
+                case ChannelType.N163Wave5:
+                case ChannelType.N163Wave6:
+                case ChannelType.N163Wave7:
+                case ChannelType.N163Wave8:
                     return NesApu.MaximumPeriod16Bit;
             }
 

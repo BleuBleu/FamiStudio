@@ -55,7 +55,6 @@ namespace FamiStudio
         public int BaseRecordingOctave => baseRecordingOctave;
         public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.CurrentFrame : 0);
         public int ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : 0xffff; set => songPlayer.ChannelMask = value; }
-        public string ToolTip { get => ToolBar.ToolTip; set => ToolBar.ToolTip = value; }
         public Project Project => project;
         public Song Song => song;
         public UndoRedoManager UndoRedoManager => undoRedoManager;
@@ -135,6 +134,8 @@ namespace FamiStudio
             PianoRoll.NotesPasted += PianoRoll_NotesPasted;
             PianoRoll.ScrollChanged += PianoRoll_ScrollChanged;
             PianoRoll.InstrumentEyedropped += PianoRoll_InstrumentEyedropped;
+            PianoRoll.DPCMSampleMapped += PianoRoll_DPCMSampleMapped;
+            PianoRoll.DPCMSampleUnmapped += PianoRoll_DPCMSampleMapped;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
             ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
@@ -174,6 +175,17 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        public void SetToolTip(string msg, bool red = false)
+        {
+            ToolBar.SetToolTip(msg, red);
+        }
+
+        private void PianoRoll_DPCMSampleMapped(int note)
+        {
+            Sequencer.InvalidatePatternCache();
+            ProjectExplorer.ConditionalInvalidate();
         }
 
         public int GetDPCMSampleMappingNoteAtPos(Point pos)
@@ -723,7 +735,7 @@ namespace FamiStudio
 
             if (instrument == null)
             {
-                channel = Channel.Dpcm;
+                channel = ChannelType.Dpcm;
             }
             else
             {
@@ -756,7 +768,7 @@ namespace FamiStudio
         public void StopOrReleaseIntrumentNote(bool allowRecording = false)
         {
             if (ProjectExplorer.SelectedInstrument != null && 
-                (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || ProjectExplorer.SelectedInstrument.ExpansionType == Project.ExpansionVrc7) &&
+                (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || ProjectExplorer.SelectedInstrument.ExpansionType == ExpansionType.Vrc7) &&
                 song.Channels[Sequencer.SelectedChannel].SupportsInstrument(ProjectExplorer.SelectedInstrument))
             {
                 instrumentPlayer.ReleaseNote(Sequencer.SelectedChannel);
@@ -1086,7 +1098,7 @@ namespace FamiStudio
             if (PianoRoll.ShowSelection)
                 PianoRoll.PasteSpecial();
             else
-                Sequencer.Paste();
+                Sequencer.PasteSpecial();
         }
 
         public void KeyUp(KeyEventArgs e)
@@ -1268,7 +1280,10 @@ namespace FamiStudio
                     {
                         var dlg = new TutorialDialog();
                         if (dlg.ShowDialog(mainForm) == DialogResult.OK)
+                        {
                             Settings.ShowTutorial = false;
+                            Settings.Save();
+                        }
                     }
                 }
             }

@@ -20,7 +20,7 @@ namespace FamiStudio
 
                 WriteRegister(NesApu.APU_TRI_LO, (period >> 0) & 0xff);
                 WriteRegister(NesApu.APU_TRI_HI, (period >> 8) & 0x07);
-                WriteRegister(NesApu.APU_TRI_LINEAR, 0x80 | envelopeValues[Envelope.Volume]);
+                WriteRegister(NesApu.APU_TRI_LINEAR, 0x80 | envelopeValues[EnvelopeType.Volume]);
             }
 
             base.UpdateAPU();

@@ -6,15 +6,6 @@ using System.IO;
 
 namespace FamiStudio
 {
-    public enum DPCMPaddingMode
-    {
-        Unpadded,
-        PadTo16Bytes,
-        PadTo16BytesPlusOne,
-        RoundTo16Bytes,
-        RoundTo16BytesPlusOne
-    };
-    
     public class DPCMSample
     {
         // General properties.
@@ -36,7 +27,7 @@ namespace FamiStudio
         private int  volumeAdjust = 100;
         private bool reverseBits;
         private bool trimZeroVolume;
-        private DPCMPaddingMode paddingMode = DPCMPaddingMode.PadTo16Bytes;
+        private int paddingMode = DPCMPaddingType.PadTo16Bytes;
 
         public int Id => id;
         public string Name { get => name; set => name = value; }
@@ -55,7 +46,10 @@ namespace FamiStudio
         public bool   ReverseBits    { get => reverseBits;    set => reverseBits    = value; }
         public bool   TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
         public int    VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
-        public DPCMPaddingMode PaddingMode { get => paddingMode; set => paddingMode = value; }
+        public int    PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
+
+        public static object ProcessedDataLock = new object();
+        public const int MaxSampleSize = (255 << 4) + 1;
 
         // DPCMTODO: Make those in the source data interface.
 
@@ -113,129 +107,139 @@ namespace FamiStudio
         public void SetDmcSourceData(byte[] data)
         {
             sourceData  = new DPCMSampleDmcSourceData(data);
-            paddingMode = DPCMPaddingMode.Unpadded;
+            paddingMode = DPCMPaddingType.Unpadded;
         }
 
         public void SetWavSourceData(short[] data, int rate)
         {
             sourceData  = new DPCMSampleWavSourceData(data, rate);
-            paddingMode = DPCMPaddingMode.PadTo16Bytes;
+            paddingMode = DPCMPaddingType.PadTo16Bytes;
         }
 
         public void Process()
         {
-            // DPCMTODO : Not right, user will be able to set the processing region maybe?
-            minProcessingTime = 0;
-            maxProcessingTime = SourceDuration;
-
-            // DPCMTODO : What about PAL?
-            var targetSampleRate = DpcmSampleRatesNtsc[sampleRate];
-
-            // Fast path for when there is (almost) nothing to do.
-            if (!SourceDataIsWav && volumeAdjust == 100 && !trimZeroVolume)
+            lock (ProcessedDataLock)
             {
-                processedData = WaveUtils.CopyDpcm(SourceDmcData.Data);
+                // DPCMTODO : Not right, user will be able to set the processing region maybe?
+                minProcessingTime = 0;
+                maxProcessingTime = SourceDuration;
 
-                // Bit reverse.
-                if (reverseBits)
-                    WaveUtils.ReverseDpcmBits(processedData);
-            }
-            else
-            {
-                short[] sourceWavData;
-                float sourceSampleRate;
+                // DPCMTODO : What about PAL?
+                var targetSampleRate = DpcmSampleRatesNtsc[sampleRate];
 
-                // DPCMTODO : Make this part of the source data interface.
-                if (SourceDataIsWav)
+                // Fast path for when there is (almost) nothing to do.
+                if (!SourceDataIsWav && volumeAdjust == 100 && !trimZeroVolume)
                 {
-                    sourceWavData = WaveUtils.CopyWave(SourceWavData.Samples);
-                    sourceSampleRate = SourceWavData.SampleRate;
-                }
-                else
-                {
-                    sourceSampleRate = DpcmSampleRatesNtsc[DpcmSampleRatesNtsc.Length - 1]; // DPCMTODO : Sample rate, is this right? What about PAL?
-
-                    var dmcData = SourceDmcData.Data;
+                    processedData = WaveUtils.CopyDpcm(SourceDmcData.Data);
 
                     // Bit reverse.
                     if (reverseBits)
+                        WaveUtils.ReverseDpcmBits(processedData);
+                }
+                else
+                {
+                    short[] sourceWavData;
+                    float sourceSampleRate;
+
+                    // DPCMTODO : Make this part of the source data interface.
+                    if (SourceDataIsWav)
                     {
-                        dmcData = WaveUtils.CopyDpcm(dmcData);
-                        WaveUtils.ReverseDpcmBits(dmcData);
+                        sourceWavData = WaveUtils.CopyWave(SourceWavData.Samples);
+                        sourceSampleRate = SourceWavData.SampleRate;
+                    }
+                    else
+                    {
+                        sourceSampleRate = DpcmSampleRatesNtsc[DpcmSampleRatesNtsc.Length - 1]; // DPCMTODO : Sample rate, is this right? What about PAL?
+
+                        var dmcData = SourceDmcData.Data;
+
+                        // Bit reverse.
+                        if (reverseBits)
+                        {
+                            dmcData = WaveUtils.CopyDpcm(dmcData);
+                            WaveUtils.ReverseDpcmBits(dmcData);
+                        }
+
+                        WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out sourceWavData);
                     }
 
-                    WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out sourceWavData);
+                    if (volumeAdjust != 100)
+                    {
+                        WaveUtils.AdjustVolume(sourceWavData, Math.Max(0, volumeAdjust) / 100.0f);
+                    }
+
+                    var minProcessingSample = 0;
+                    var maxProcessingSample = sourceWavData.Length;
+
+                    if (trimZeroVolume)
+                    {
+                        WaveUtils.GetWaveNonZeroVolumeRange(sourceWavData, SourceDataIsWav ? 512 : 1024, out minProcessingSample, out maxProcessingSample);
+
+                        minProcessingTime = minProcessingSample / sourceSampleRate;
+                        maxProcessingTime = maxProcessingSample / sourceSampleRate;
+                    }
+
+                    var roundMode = WaveToDpcmRoundingMode.None;
+
+                    switch (paddingMode)
+                    {
+                        case DPCMPaddingType.RoundTo16Bytes:
+                            roundMode = WaveToDpcmRoundingMode.RoundTo16Bytes;
+                            break;
+                        case DPCMPaddingType.RoundTo16BytesPlusOne:
+                            roundMode = WaveToDpcmRoundingMode.RoundTo16BytesPlusOne;
+                            break;
+                    }
+
+                    WaveUtils.WaveToDpcm(sourceWavData, minProcessingSample, maxProcessingSample, sourceSampleRate, targetSampleRate, NesApu.DACDefaultValueDiv2, roundMode, out processedData); // DPCMTODO : hardcoded 33144
                 }
 
-                if (volumeAdjust != 100)
+                // If trimming is enabled, remove any extra 0x55 / 0xaa from the beginning and end.
+                // We cannot do this on rounded samples since 
+                if (trimZeroVolume && paddingMode != DPCMPaddingType.RoundTo16Bytes && paddingMode != DPCMPaddingType.RoundTo16BytesPlusOne)
                 {
-                    WaveUtils.AdjustVolume(sourceWavData, Math.Max(0, volumeAdjust) / 100.0f);
+                    WaveUtils.GetDmcNonZeroVolumeRange(processedData, out var minFinalNonZeroByte, out var maxFinalNonZeroByte);
+
+                    minProcessingTime += 8 * (minFinalNonZeroByte) / targetSampleRate;
+                    maxProcessingTime -= 8 * (processedData.Length - maxFinalNonZeroByte) / targetSampleRate;
+
+                    var untrimmedProcessedData = processedData;
+                    processedData = new byte[maxFinalNonZeroByte - minFinalNonZeroByte];
+                    Array.Copy(untrimmedProcessedData, minFinalNonZeroByte, processedData, 0, processedData.Length);
                 }
 
-                var minProcessingSample = 0;
-                var maxProcessingSample = sourceWavData.Length;
-
-                if (trimZeroVolume)
+                // Optional padding.
+                if (paddingMode == DPCMPaddingType.PadTo16Bytes ||
+                    paddingMode == DPCMPaddingType.PadTo16BytesPlusOne)
                 {
-                    WaveUtils.GetWaveNonZeroVolumeRange(sourceWavData, SourceDataIsWav ? 512 : 1024, out minProcessingSample, out maxProcessingSample);
+                    var newSize = 0;
 
-                    minProcessingTime = minProcessingSample / sourceSampleRate;
-                    maxProcessingTime = maxProcessingSample / sourceSampleRate;
+                    switch (paddingMode)
+                    {
+                        case DPCMPaddingType.PadTo16Bytes:
+                            newSize = Utils.RoundUp(processedData.Length, 16);
+                            break;
+                        case DPCMPaddingType.PadTo16BytesPlusOne:
+                            newSize = Utils.RoundUp(processedData.Length - 1, 16) + 1;
+                            break;
+                    }
+
+                    var oldSize = processedData.Length;
+                    if (newSize != oldSize)
+                    {
+                        Array.Resize(ref processedData, newSize);
+
+                        // DPCMTODO: Look at last byte and decide if 0x55 or 0xaa is better.
+                        for (int i = oldSize; i < newSize; i++)
+                            processedData[i] = 0x55;
+                    }
                 }
 
-                var roundMode = WaveToDpcmRoundingMode.None;
-
-                switch (paddingMode)
+                // Clamp to max length.
+                if (processedData.Length > MaxSampleSize)
                 {
-                    case DPCMPaddingMode.RoundTo16Bytes:
-                        roundMode = WaveToDpcmRoundingMode.RoundTo16Bytes;
-                        break;
-                    case DPCMPaddingMode.RoundTo16BytesPlusOne:
-                        roundMode = WaveToDpcmRoundingMode.RoundTo16BytesPlusOne;
-                        break;
-                }
-
-                WaveUtils.WaveToDpcm(sourceWavData, minProcessingSample, maxProcessingSample, sourceSampleRate, targetSampleRate, NesApu.DACDefaultValueDiv2, roundMode, out processedData); // DPCMTODO : hardcoded 33144
-            }
-
-            // If trimming is enabled, remove any extra 0x55 / 0xaa from the beginning and end.
-            // We cannot do this on rounded samples since 
-            if (trimZeroVolume && paddingMode != DPCMPaddingMode.RoundTo16Bytes && paddingMode != DPCMPaddingMode.RoundTo16BytesPlusOne)
-            {
-                WaveUtils.GetDmcNonZeroVolumeRange(processedData, out var minFinalNonZeroByte, out var maxFinalNonZeroByte);
-
-                minProcessingTime += 8 * (minFinalNonZeroByte) / targetSampleRate;
-                maxProcessingTime -= 8 * (processedData.Length - maxFinalNonZeroByte) / targetSampleRate;
-
-                var untrimmedProcessedData = processedData;
-                processedData = new byte[maxFinalNonZeroByte - minFinalNonZeroByte];
-                Array.Copy(untrimmedProcessedData, minFinalNonZeroByte, processedData, 0, processedData.Length);
-            }
-
-            // Optional padding.
-            if (paddingMode == DPCMPaddingMode.PadTo16Bytes ||
-                paddingMode == DPCMPaddingMode.PadTo16BytesPlusOne)
-            {
-                var newSize = 0;
-
-                switch (paddingMode)
-                {
-                    case DPCMPaddingMode.PadTo16Bytes:
-                        newSize = Utils.RoundUp(processedData.Length, 16);
-                        break;
-                    case DPCMPaddingMode.PadTo16BytesPlusOne:
-                        newSize = Utils.RoundUp(processedData.Length - 1, 16) + 1;
-                        break;
-                }
-
-                var oldSize = processedData.Length;
-                if (newSize != oldSize)
-                {
-                    Array.Resize(ref processedData, newSize);
-
-                    // DPCMTODO: Look at last byte and decide if 0x55 or 0xaa is better.
-                    for (int i = oldSize; i < newSize; i++)
-                        processedData[i] = 0x55;
+                    maxProcessingTime -= 8 * (processedData.Length - MaxSampleSize) / targetSampleRate;
+                    Array.Resize(ref processedData, DPCMSample.MaxSampleSize);
                 }
             }
         }
@@ -259,21 +263,6 @@ namespace FamiStudio
 #endif
         }
 
-        // DPCMTODO : Remove this!
-        public byte[] GetDataWithReverse()
-        {
-            //if (reverseBits)
-            //{
-            //    var copy = processedData.Clone() as byte[];
-            //    Utils.ReverseBits(copy);
-            //    return copy;
-            //}
-            //else
-            {
-                return processedData;
-            }
-        }
-
         // At version 9 (FamiStudio 2.4.0) we added a proper DPCM sample editor
         // and refactored the DPCM samples a bit. 
         public void SerializeStatePreVer9(ProjectBuffer buffer)
@@ -288,7 +277,7 @@ namespace FamiStudio
             }
 
             color = ThemeBase.RandomCustomColor();
-            paddingMode = DPCMPaddingMode.Unpadded;
+            paddingMode = DPCMPaddingType.Unpadded;
 
             // Process to apply bit reverse, etc.
             Process();
@@ -448,4 +437,28 @@ namespace FamiStudio
             return false;
         }
     }
+
+    public static class DPCMPaddingType
+    {
+        public const int Unpadded              = 0;
+        public const int PadTo16Bytes          = 1;
+        public const int PadTo16BytesPlusOne   = 2;
+        public const int RoundTo16Bytes        = 3;
+        public const int RoundTo16BytesPlusOne = 4;
+
+        public static readonly string[] Names =
+        {
+            "Unpadded",
+            "Pad to 16",
+            "Pad to 16+1",
+            "Round to 16",
+            "Round to 16+1"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
+    };
+
 }

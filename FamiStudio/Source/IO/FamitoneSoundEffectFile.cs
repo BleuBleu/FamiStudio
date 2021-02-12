@@ -16,7 +16,7 @@ namespace FamiStudio
         private string dw = ".word";
         private string ll = "@";
 
-        private void SetupFormat(AssemblyFormat format)
+        private void SetupFormat(int format)
         {
             switch (format)
             {
@@ -54,13 +54,13 @@ namespace FamiStudio
             return writes;
         }
 
-        public bool Save(Project project, int[] songIds, AssemblyFormat format, MachineType mode, string filename)
+        public bool Save(Project project, int[] songIds, int format, int machine, string filename)
         {
             SetupFormat(format);
 
             var modeStrings = new List<string>();
-            if (mode == MachineType.NTSC || mode == MachineType.Dual) modeStrings.Add("ntsc");
-            if (mode == MachineType.PAL  || mode == MachineType.Dual) modeStrings.Add("pal");
+            if (machine == MachineType.NTSC || machine == MachineType.Dual) modeStrings.Add("ntsc");
+            if (machine == MachineType.PAL  || machine == MachineType.Dual) modeStrings.Add("pal");
 
             var lines = new List<string>();
 
@@ -174,14 +174,14 @@ namespace FamiStudio
                             numEmptyFrames -= 127;
                         }
                     }
-                    else
+                    else if (lastZeroVolumeIdx >= 0)
                     {
                         effect.RemoveRange(lastZeroVolumeIdx, effect.Count - lastZeroVolumeIdx);
                     }
 
                     if (effect.Count > 255)
                     {
-                        Log.LogMessage(LogSeverity.Warning, $"Effect was longer than 256 bytes ({effect.Count}) and was truncated.");
+                        Log.LogMessage(LogSeverity.Warning, $"Effect ({song.Name}) was longer than 256 bytes ({effect.Count}) and was truncated.");
                         effect.RemoveRange(255, effect.Count - 255);
                     }
 
@@ -192,6 +192,12 @@ namespace FamiStudio
                     for (int i = 0; i < (effect.Count + 15) / 16; i++)
                         lines.Add($"\t{db} {string.Join(",", effect.Skip(i * 16).Take(Math.Min(16, effect.Count - i * 16)).Select(x => $"${x:x2}"))}");
                 }
+            }
+
+            if (format == AssemblyFormat.CA65)
+            {
+                lines.Add("");
+                lines.Add(".export sounds");
             }
 
             File.WriteAllLines(filename, lines.ToArray());

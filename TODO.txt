@@ -1,57 +1,46 @@
-2.3.3
-=====
-- MMC5 phase reset problem.
-- 
-
 FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
-/ Show keyboard keys on piano when piano input is ON.
-- MIDI in/out? Not sure... People will complain it doesnt work as expected.
-- Double-click = select whole note
+- Double-right-click = select whole note
 - Highlight piano keys when they are pressed with QWERTY or MIDI.
-- Rotate mousewheel over param list/sliders should change value (what about undo redo?).
-- Paste special in sequencer.
-- Multiple custom pattern settings editing 
-- BUG : Tutorial=False not saving (escape?)
-- Convert more const int to enums? (Low priority)
 
 Test:
 - Retest Win7 device lost.
 - Transaction (w/o DPCM), test a LOT!
 - Re-export, recompile and change ROM version.
 - Test looping sample.
+- ROM: Make sure square pops, and doesnt in NSF.
+- 
 
 DPCM Editor
 ===========
+- Verify if I post-increment DMC everywhere.
 - Sample rate, does it work?
-- Preview rate should be relative to sample rate.
-- Let go over 16KB, but show warning.
-- How to pack samples and align everything? => Build dynamically, store offset in sample. 
+- Preview rate should be relative to sample rate? Humm. I think its ok.
+x How to pack samples and align everything? 
+	x 3 operations should stop playback : map/unmap, delete. Anything else is thread safe.
 x Real-time update VS. change param values.
-- Real-time params => right click = reset to default.
 - Changing DPCM param values doesnt do transaction?? => Serialize more stuff. 
-- Clamp to 4081(?) bytes. 
+- Min/max processing is dumb. Just show the range of DMC. 
 
 / Basic volume adjustment (0-200%)
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
 / Bit reverse
 	x Make sure the order i parse the bits matches what the HW does! Low -> High? Or High to Low! (Test on real HW + emualtor)
 x Figure out if DMC is pre-increment or post-increment.	=> POST
-- Cleanup will remove the source data and reset param to something "neutral".
+- Cleanup will remove the source data and reset param to something "neutral". + unmap unused notes.
 - Make sure clipboard still works (much copy source data as well).
 - What is the quality setting in RJDMC?
-- Allow scroll up/down piano even in sample.
 - What about space to play DPCM?
 - FamiStudio text format. Give warning of loss source data.
 - Tooltips everywhere!
-/ Make volume of preview match the real sound engine.
 - Print more info in piano roll (source data, number of samples, size, etc.)
-- "DPCM Samples" section size doesnt match the sample size?
 
-Later:
-- Option to normalize volume
-- 4 point volume envelope.
+FamiStudio 2.5.0
+================
+- FamiStudio Tempo 2.0? Arbitrary BPM.
+- MIDI in/out
+- DPCM : More stuff, normalize volume, 4 point volume envelope.
 
 Tips & Tricks (Review this list)
 ================================

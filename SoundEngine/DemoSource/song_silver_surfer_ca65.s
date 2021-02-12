@@ -7,6 +7,9 @@ silver_surfer_c_stephen_ruddy_music_data:
 	.word @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4
 	.byte .lobyte(@tempo_env6), .hibyte(@tempo_env6), 0, 0
 
+.export silver_surfer_c_stephen_ruddy_music_data
+.global FAMISTUDIO_DPCM_PTR
+
 @instruments:
 	.word @env59,@env38,@env34,@env31
 	.word @env50,@env43,@env34,@env31
@@ -179,7 +182,7 @@ silver_surfer_c_stephen_ruddy_music_data:
 	.byte $33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89
 @song0ch0loop:
 @ref2:
-	.byte $fb,.lobyte(@tempo_env6),.hibyte(@tempo_env6),$7f,$64,.lobyte(@env18),.hibyte(@env18),$a4,$25,$c5,$64,.lobyte(@env0),.hibyte(@env0),$62,$27,$b1,$f9,$91,$64,.lobyte(@env18),.hibyte(@env18),$2a,$ad
+	.byte $66,$fb,.lobyte(@tempo_env6),.hibyte(@tempo_env6),$7f,$64,.lobyte(@env18),.hibyte(@env18),$a4,$25,$c5,$64,.lobyte(@env0),.hibyte(@env0),$62,$27,$b1,$f9,$91,$64,.lobyte(@env18),.hibyte(@env18),$2a,$ad
 @ref3:
 	.byte $62,$2c,$f7,$b1,$f9,$91
 @ref4:

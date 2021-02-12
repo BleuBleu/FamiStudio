@@ -11,7 +11,7 @@ namespace FamiStudio
 
         public ChannelStateVrc7(int apuIdx, int channelType) : base(apuIdx, channelType, false)
         {
-            channelIdx = channelType - Channel.Vrc7Fm1;
+            channelIdx = channelType - ChannelType.Vrc7Fm1;
             customRelease = true;
         }
 
@@ -25,9 +25,9 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.ExpansionType == Project.ExpansionVrc7);
+                Debug.Assert(instrument.ExpansionType == ExpansionType.Vrc7);
 
-                if (instrument.ExpansionType == Project.ExpansionVrc7)
+                if (instrument.ExpansionType == ExpansionType.Vrc7)
                 {
                     if (instrument.Vrc7Patch == 0)
                     {

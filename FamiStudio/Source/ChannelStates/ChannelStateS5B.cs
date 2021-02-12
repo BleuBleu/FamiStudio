@@ -8,7 +8,7 @@ namespace FamiStudio
 
         public ChannelStateS5B(int apuIdx, int channelType, bool pal) : base(apuIdx, channelType, pal)
         {
-            channelIdx = channelType - Channel.S5BSquare1;
+            channelIdx = channelType - ChannelType.S5BSquare1;
         }
 
         public override void UpdateAPU()

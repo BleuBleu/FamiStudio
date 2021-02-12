@@ -1,6 +1,14 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (2.3.0)
+; FAMISTUDIO SOUND ENGINE (2.4.0)
+; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
+; Copying and distribution of this file, with or without
+; modification, are permitted in any medium without royalty provided
+; the copyright notice and this notice are preserved in all source
+; code copies. This file is offered as-is, without any warranty.
+;======================================================================================================================
+
+;======================================================================================================================
 ; This is the FamiStudio sound engine. It is used by the NSF and ROM exporter of FamiStudio and can be used to make 
 ; games. It supports every feature from FamiStudio, some of them are toggeable to save CPU/memory.
 ;
@@ -601,7 +609,7 @@ famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 ; Feel free to alias those with other ZP values in your programs to save a few bytes.
 ;======================================================================================================================
 
-.segment .string(FAMISTUDIO_CA65_ZP_SEGMENT)
+.segment .string(FAMISTUDIO_CA65_ZP_SEGMENT) : zeropage
 
 famistudio_r0:   .res 1
 famistudio_r1:   .res 1
@@ -618,6 +626,17 @@ famistudio_ptr1_hi = famistudio_ptr1+1
 ;======================================================================================================================
 ; CODE
 ;======================================================================================================================
+
+.export famistudio_init
+.export famistudio_music_play
+.export famistudio_music_pause
+.export famistudio_music_stop
+.export famistudio_update
+.if FAMISTUDIO_CFG_SFX_SUPPORT
+.export famistudio_sfx_init
+.export famistudio_sfx_play
+.export famistudio_sfx_sample_play
+.endif
 
 .segment .string(FAMISTUDIO_CA65_CODE_SEGMENT)
 
@@ -1450,7 +1469,7 @@ famistudio_get_note_pitch_vrc6_saw:
     sta reg_lo
     lda @pitch+1
 
-    .if (!.blank(pulse_prev)) && (!FAMISTUDIO_CFG_SFX_SUPPORT)
+    .if (!.blank(pulse_prev)) && ((!FAMISTUDIO_CFG_SFX_SUPPORT) || (idx > 4))
         .if (!.blank(reg_sweep)) && FAMISTUDIO_CFG_SMOOTH_VIBRATO
             ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
             tax ; X = new hi-period
@@ -3671,7 +3690,7 @@ sample_play:
     lda (@sample_data_ptr),y ; Pitch and loop
     sta FAMISTUDIO_APU_DMC_FREQ
 
-    lda #32 ; Reset DAC counter
+    lda #64 ; Reset DAC counter
     sta FAMISTUDIO_APU_DMC_RAW
     lda #%00011111 ; Start DMC
     sta FAMISTUDIO_APU_SND_CHN
