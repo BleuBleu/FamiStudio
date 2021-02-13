@@ -16,9 +16,11 @@ namespace FamiStudio
         public bool IsList;
 
         public delegate int GetValueDelegate();
+        public delegate bool EnabledDelegate();
         public delegate void SetValueDelegate(int value);
         public delegate string GetValueStringDelegate();
 
+        public EnabledDelegate IsEnabled;
         public GetValueDelegate GetValue;
         public SetValueDelegate SetValue;
         public GetValueStringDelegate GetValueString;
@@ -207,7 +209,7 @@ namespace FamiStudio
                 new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1, 0)
                     { GetValue = () => { return sample.TrimZeroVolume ? 1 : 0; }, SetValue = (v) => { sample.TrimZeroVolume = v != 0; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Reverse Bits", 0, 1, 0)
-                    { GetValue = () => { return !sample.SourceDataIsWav && sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { if (!sample.SourceDataIsWav) { sample.ReverseBits = v != 0; sample.Process(); } } }
+                    { GetValue = () => { return !sample.SourceDataIsWav && sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { if (!sample.SourceDataIsWav) { sample.ReverseBits = v != 0; sample.Process(); } }, IsEnabled = () => { return !sample.SourceDataIsWav; } }
             };
         }
     }

@@ -160,6 +160,7 @@ namespace FamiStudio
             Console.WriteLine($"  -nsf-import-pattern-length:<length> : Pattern length to split the NSF into (default:256).");
             Console.WriteLine($"  -nsf-import-start-frame:<frame> : Frame to skips before starting the NSF capture (default:0).");
             Console.WriteLine($"  -nsf-import-reverse-dpcm : Reverse bits of DPCM samples (default:disabled).");
+            Console.WriteLine($"  -nsf-import-preserve-padding : Preserve 1-byte of padding after DPCM samples (default:disabled).");
             Console.WriteLine($"");
             Console.WriteLine($"WAV export specific options");
             Console.WriteLine($"  -wav-export-rate:<rate> : Sample rate of the exported wave : 11025, 22050, 44100 or 48000 (default:44100).");
@@ -225,8 +226,9 @@ namespace FamiStudio
                 var patternLen  = ParseOption("nsf-import-pattern-length", 256);
                 var startFrame  = ParseOption("nsf-import-start-frame", 0);
                 var reverseDpcm = HasOption("nsf-import-reverse-dpcm");
-
-                project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, true, reverseDpcm);
+                var preservePad = HasOption("nsf-import-preserve-padding");
+                
+                project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, true, reverseDpcm, preservePad);
             }
 
             if (project == null)

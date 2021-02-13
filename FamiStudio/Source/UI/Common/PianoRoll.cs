@@ -1930,7 +1930,6 @@ namespace FamiStudio
                             {
                                 string text = $"{mapping.Sample.Name} (Pitch: {mapping.Pitch}";
                                 if (mapping.Loop) text += ", Looping";
-                                if (mapping.Sample.ReverseBits) text += ", Reversed Bits";
                                 text += ")";
                                 g.DrawText(text, ThemeBase.FontSmall, dpcmTextPosX, dpcmTextPosY, theme.BlackBrush);
                             }
@@ -1965,7 +1964,7 @@ namespace FamiStudio
                     {
 
                     }
-                    g.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxTotalSampleDataSize} Bytes)", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush); // DPCMTODO
+                    g.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush); // DPCMTODO
                 }
             }
             else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)

@@ -16,7 +16,7 @@ namespace FamiStudio
         // Source data
         private IDPCMSampleSourceData sourceData;
 
-        // Processed data
+        // Processed data 
         private byte[] processedData;
         private float minProcessingTime;
         private float maxProcessingTime;
@@ -191,7 +191,7 @@ namespace FamiStudio
                             break;
                     }
 
-                    WaveUtils.WaveToDpcm(sourceWavData, minProcessingSample, maxProcessingSample, sourceSampleRate, targetSampleRate, NesApu.DACDefaultValueDiv2, roundMode, out processedData); // DPCMTODO : hardcoded 33144
+                    WaveUtils.WaveToDpcm(sourceWavData, minProcessingSample, maxProcessingSample, sourceSampleRate, targetSampleRate, NesApu.DACDefaultValueDiv2, roundMode, out processedData);
                 }
 
                 // If trimming is enabled, remove any extra 0x55 / 0xaa from the beginning and end.
@@ -227,11 +227,12 @@ namespace FamiStudio
                     var oldSize = processedData.Length;
                     if (newSize != oldSize)
                     {
+                        var lastByte = processedData[processedData.Length - 1];
                         Array.Resize(ref processedData, newSize);
 
-                        // DPCMTODO: Look at last byte and decide if 0x55 or 0xaa is better.
+                        var fillValue = (byte)((lastByte & 0x80) != 0 ? 0xaa : 0x55);
                         for (int i = oldSize; i < newSize; i++)
-                            processedData[i] = 0x55;
+                            processedData[i] = fillValue;
                     }
                 }
 

@@ -89,13 +89,9 @@ namespace FamiStudio
             var dpcmSize = (dpcmNumSamples + 7) / 8; // Round up to byte. 
             dpcm = new byte[dpcmSize];
 
-            // We might not (fully) write the last few bytes, so pre-fill.
-            // DPCMTODO: Decide on 0xaa or 0x55 depending on odd/even number of raw samples.
-            for (int i = dpcmSize - 1, j = 0; i >= 0 && j < 32; i--, j++)
-                dpcm[i] = 0x55;
-
             // DPCM conversion.
             var dpcmCounter = dpcmCounterStart;
+            var lastBit = 0;
 
             for (int i = 0; i < resampledWave.Length; i++)
             {
@@ -110,12 +106,27 @@ namespace FamiStudio
                 {
                     dpcm[index] |= (byte)mask;
                     dpcmCounter = Math.Min(dpcmCounter + 1, 63);
+                    lastBit = 1;
                 }
                 else
                 {
-                    dpcm[index] &= (byte)~mask;
                     dpcmCounter = Math.Max(dpcmCounter - 1, 0);
+                    lastBit = 0;
                 }
+            }
+
+            // We might not (fully) write the last byte, so fill with 0x55 or 0xaa.
+            for (int i = resampledWave.Length; i < Utils.RoundUp(resampledWave.Length, 8); i++)
+            {
+                if (lastBit == 0)
+                {
+                    var index = i / 8;
+                    var mask = (1 << (i & 7));
+
+                    dpcm[index] |= (byte)mask;
+                }
+
+                lastBit ^= 1;
             }
         }
 
@@ -129,12 +140,10 @@ namespace FamiStudio
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    // DPCMTODO : Do we increment before or after?
                     wave[i * 8 + j] = (short)DpcmCounterToWaveSample(dpcmCounter);
 
                     var mask = 1 << j;
 
-                    // TODO: Validate if hardware clamps or wraps.
                     if ((dpcm[i] & (byte)mask) != 0)
                         dpcmCounter = Math.Min(dpcmCounter + 1, 63);
                     else

@@ -17,7 +17,8 @@ namespace FamiStudio
         // Version 8 = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
         // Version 9 = FamiStudio 2.4.0 (DPCM sample editor)
         public static int Version = 9;
-        public static int MaxTotalSampleDataSize = 0x4000;
+        public static int MaxMappedSampleSize = 0x4000;
+        public static int MaxSampleAddress = 255 * 64;
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
         private List<DPCMSample> samples = new List<DPCMSample>();
@@ -743,7 +744,7 @@ namespace FamiStudio
                 int size = 0;
                 foreach (var sample in samples)
                     size += sample.ProcessedData.Length;
-                return Math.Min(MaxTotalSampleDataSize, size);
+                return Math.Min(MaxMappedSampleSize, size);
             }
         }
 
@@ -771,7 +772,7 @@ namespace FamiStudio
                         }
 
                         addr = addrEnd;
-                        if (addr >= MaxTotalSampleDataSize)
+                        if (addr >= MaxMappedSampleSize)
                             break;
 
                         visitedSamples.Add(mapping.Sample);
@@ -797,8 +798,8 @@ namespace FamiStudio
                             return addr;
                         addr += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
 
-                        if (addr >= MaxTotalSampleDataSize)
-                            break;
+                        if (addr >= MaxMappedSampleSize)
+                            return -1;
 
                         visitedSamples.Add(mapping.Sample);
                     }
@@ -830,7 +831,7 @@ namespace FamiStudio
 
         public byte[] GetPackedSampleData()
         {
-            var sampleData = new List<byte>(MaxTotalSampleDataSize);
+            var sampleData = new List<byte>(MaxMappedSampleSize);
             var visitedSamples = new List<DPCMSample>(samples.Count);
 
             foreach (var mapping in samplesMapping)
@@ -843,13 +844,13 @@ namespace FamiStudio
                         sampleData.Add(0x55);
                     visitedSamples.Add(mapping.Sample);
 
-                    if (sampleData.Count >= MaxTotalSampleDataSize)
+                    if (sampleData.Count >= MaxMappedSampleSize)
                         break;
                 }
             }
 
-            if (sampleData.Count > MaxTotalSampleDataSize)
-                sampleData.RemoveRange(MaxTotalSampleDataSize, sampleData.Count - MaxTotalSampleDataSize);
+            if (sampleData.Count > MaxMappedSampleSize)
+                sampleData.RemoveRange(MaxMappedSampleSize, sampleData.Count - MaxMappedSampleSize);
 
             return sampleData.ToArray();
         }

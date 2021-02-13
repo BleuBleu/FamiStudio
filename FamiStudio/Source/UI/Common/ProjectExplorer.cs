@@ -132,6 +132,7 @@ namespace FamiStudio
             public Color color = ThemeBase.DarkGreyFillColor2;
             public RenderFont font = ThemeBase.FontMedium;
             public RenderBrush textBrush;
+            public RenderBrush textDisabledBrush;
             public RenderBitmap icon;
 
             public ButtonType type;
@@ -156,6 +157,8 @@ namespace FamiStudio
 
                 if (pe.theme != null)
                     textBrush = pe.theme.LightGreyFillBrush2;
+
+                textDisabledBrush = pe.disabledBrush;
             }
 
             private bool IsEnvelopeEmpty(Envelope env, int type)
@@ -193,7 +196,7 @@ namespace FamiStudio
                         if (instrument == null)
                         {
                             var project = projectExplorer.App.Project;
-                            if (project != null && project.GetTotalMappedSampleSize() > Project.MaxTotalSampleDataSize)
+                            if (project != null && project.GetTotalMappedSampleSize() > Project.MaxMappedSampleSize)
                             {
                                 active = new[] { true, true };
                                 return new[] { SubButtonType.DPCM, SubButtonType.Overflow };
@@ -378,6 +381,7 @@ namespace FamiStudio
         RenderTheme theme;
 
         RenderBrush    sliderFillBrush;
+        RenderBrush    disabledBrush;
         RenderBitmap   bmpSong;
         RenderBitmap   bmpAdd;
         RenderBitmap   bmpDPCM;
@@ -603,6 +607,7 @@ namespace FamiStudio
             bmpWaveEdit = g.CreateBitmapFromResource("WaveEdit");
             bmpSave = g.CreateBitmapFromResource("SaveSmall");
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
+            disabledBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
 
             RefreshButtons();
         }
@@ -631,6 +636,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpWaveEdit);
             Utils.DisposeAndNullify(ref bmpSave);
             Utils.DisposeAndNullify(ref sliderFillBrush);
+            Utils.DisposeAndNullify(ref disabledBrush);
         }
 
         public void ConditionalInvalidate()
@@ -706,7 +712,9 @@ namespace FamiStudio
                     leftPadding = expandButtonSizeX;
                 }
 
-                g.DrawText(button.Text, button.Font, icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, button.textBrush, actualWidth - buttonTextNoIconPosX * 2);
+                var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
+
+                g.DrawText(button.Text, button.Font, icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, actualWidth - buttonTextNoIconPosX * 2);
 
                 if (icon != null)
                     g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY);
@@ -725,13 +733,13 @@ namespace FamiStudio
 
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         g.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
-                        g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, theme.BlackBrush);
+                        g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? theme.BlackBrush : disabledBrush);
                         g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
                     {
-                        g.DrawBitmap(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY);
+                        g.DrawBitmap(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f);
                     }
                     else if (button.type == ButtonType.ParamList)
                     {
@@ -739,8 +747,8 @@ namespace FamiStudio
                         var paramNext = button.param.SnapAndClampValue(paramVal + 1);
 
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
-                        g.DrawBitmap(bmpButtonLeft, 0, 0, paramVal == paramPrev ? 0.25f : 1.0f);
-                        g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0, paramVal == paramNext ? 0.25f : 1.0f);
+                        g.DrawBitmap(bmpButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f);
+                        g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f);
                         g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }

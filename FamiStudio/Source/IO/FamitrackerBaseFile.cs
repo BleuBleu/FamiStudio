@@ -232,7 +232,7 @@ namespace FamiStudio
             project.RenameInstrument(instrument, name);
         }
 
-        protected DPCMSample CreateUniquelyNamedSample(string baseName, byte[] data)
+        protected DPCMSample CreateUniquelyNamedSampleFromDmcData(string baseName, byte[] data)
         {
             string name = baseName;
             var j = 2;
@@ -870,10 +870,21 @@ namespace FamiStudio
             {
                 Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio uses the full volume range and ignores the duty cycle, they will need to the adjusted manually to sound the same. In most cases, this mean reducing the volume by half using either the volume track or volume envelopes.");
             }
+
+            var mappedSamplesSize = project.GetTotalMappedSampleSize();
+            if (mappedSamplesSize > Project.MaxMappedSampleSize)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Project uses {mappedSamplesSize} bytes of sample data. The limit is {Project.MaxMappedSampleSize} bytes. Some samples will not play correctly or at all.");
+            }
         }
 
         protected bool FinishImport()
         {
+            foreach (var s in project.Samples)
+            {
+                s.Process();
+            }
+
             foreach (var s in project.Songs)
             {
                 foreach (var c in s.Channels)

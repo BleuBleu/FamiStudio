@@ -62,6 +62,7 @@ namespace FamiStudio
             project = new Project();
             project.TempoMode = TempoType.FamiTracker;
 
+            int dpcmInstrumentIndex = -1;
             DPCMSample currentDpcm = null;
             int dpcmWriteIdx = 0;
             Song song = null;
@@ -172,42 +173,48 @@ namespace FamiStudio
                     else if (line.StartsWith("DPCMDEF"))
                     {
                         var param = SplitStringKeepQuotes(line.Substring(7));
-                        currentDpcm = CreateUniquelyNamedSample(param[2], new byte[int.Parse(param[1])]);
+                        currentDpcm = CreateUniquelyNamedSampleFromDmcData(param[2], new byte[int.Parse(param[1])]);
                         dpcms[int.Parse(param[0])] = currentDpcm;
                         dpcmWriteIdx = 0;
-
-                        if (currentDpcm == null)
-                            Log.LogMessage(LogSeverity.Warning, $"Cannot allocate DPCM sample '{param[2]}'. Maximum total size allowed is 16KB.");
                     }
                     else if (line.StartsWith("DPCM"))
                     {
-                        if (currentDpcm != null) // Can happen if more than 16KB of samples
+                        if (currentDpcm != null)
                         {
                             var param = line.Substring(6).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                             foreach (var s in param)
                             {
-                                currentDpcm.ProcessedData[dpcmWriteIdx++] = Convert.ToByte(s, 16);
+                                currentDpcm.SourceDmcData.Data[dpcmWriteIdx++] = Convert.ToByte(s, 16);
                             }
                         }
                     }
                     else if (line.StartsWith("KEYDPCM"))
                     {
-                        var param = line.Substring(7).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (param[0] == "0")
-                        {
-                            int octave   = int.Parse(param[1]);
-                            int semitone = int.Parse(param[2]);
-                            int note = octave * 12 + semitone + 1;
+                        var param    = line.Substring(7).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        int instIdx = int.Parse(param[0]);
+                        int octave   = int.Parse(param[1]);
+                        int semitone = int.Parse(param[2]);
+                        int note     = octave * 12 + semitone + 1;
 
+                        if (dpcmInstrumentIndex < 0 || instIdx == dpcmInstrumentIndex)
+                        {
                             if (project.NoteSupportsDPCM(note))
                             {
-                                int dpcm  = int.Parse(param[3]);
+                                int dpcm = int.Parse(param[3]);
                                 int pitch = int.Parse(param[4]);
-                                int loop  = int.Parse(param[5]);
+                                int loop = int.Parse(param[5]);
 
                                 if (dpcms.TryGetValue(dpcm, out var foundSample))
+                                {
                                     project.MapDPCMSample(note, foundSample, pitch, loop != 0);
+                                }
                             }
+
+                            dpcmInstrumentIndex = instIdx;
+                        }
+                        else
+                        {
+                            Log.LogMessage(LogSeverity.Warning, $"Multiple instruments are using DPCM samples. Samples from instrument {instIdx} will be loaded, but not assigned to the DPCM instrument.");
                         }
                     }
                     else if (line.StartsWith("INST2A03") || line.StartsWith("INSTVRC6") || line.StartsWith("INSTN163"))
