@@ -18,15 +18,15 @@ namespace FamiStudio
 
         // Processed data 
         private byte[] processedData;
-        private float minProcessingTime;
-        private float maxProcessingTime;
+        private float processedDataStartTime;
 
         // Processing parameters.
-        private int  sampleRate = 15;
-        private int  previewRate = 15;
-        private int  volumeAdjust = 100;
+        private int sampleRate = 15;
+        private int previewRate = 15;
+        private int volumeAdjust = 100;
         private bool reverseBits;
         private bool trimZeroVolume;
+        private bool palSource;
         private int paddingMode = DPCMPaddingType.PadTo16Bytes;
 
         public int Id => id;
@@ -37,14 +37,17 @@ namespace FamiStudio
         public IDPCMSampleSourceData SourceData { get => sourceData; }
         public DPCMSampleWavSourceData SourceWavData { get => sourceData as DPCMSampleWavSourceData; }
         public DPCMSampleDmcSourceData SourceDmcData { get => sourceData as DPCMSampleDmcSourceData; }
-        public float MinProcessingTime => minProcessingTime;
-        public float MaxProcessingTime => maxProcessingTime;
+
+        public float ProcessedDataStartTime => processedDataStartTime;
+        public float ProcessedDataEndTime => processedDataStartTime + processedData.Length * 8 / DpcmSampleMaximumRate[palSource ? 1 : 0];
+        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits;
 
         public byte[] ProcessedData  { get => processedData;  set => processedData  = value; }
         public int    SampleRate     { get => sampleRate;     set => sampleRate     = value; }
         public int    PreviewRate    { get => previewRate;    set => previewRate    = value; }
         public bool   ReverseBits    { get => reverseBits;    set => reverseBits    = value; }
         public bool   TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
+        public bool   SourceIsPal    { get => palSource;      set => palSource      = value; }
         public int    VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
         public int    PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
 
@@ -64,7 +67,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    return SourceDmcData.Data.Length * 8 / DpcmSampleRatesNtsc[DpcmSampleRatesNtsc.Length - 1]; // DPCMTODO: We assume the input sample rate here.
+                    return SourceDmcData.Data.Length * 8 / DpcmSampleMaximumRate[palSource ? 1 : 0]; // DPCMTODO: We assume the input sample rate here.
                 }
             }
         }
@@ -79,7 +82,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    return DpcmSampleRatesNtsc[DpcmSampleRatesNtsc.Length - 1]; // DPCMTODO: We assume the input sample rate here.
+                    return DpcmSampleMaximumRate[palSource ? 1 : 0]; // DPCMTODO: We assume the input sample rate here.
                 }
             }
         }
@@ -88,7 +91,7 @@ namespace FamiStudio
         {
             get
             {
-                return processedData.Length * 8 / DpcmSampleRatesNtsc[sampleRate];
+                return processedData.Length * 8 / DpcmSampleRates[palSource ? 1 : 0, sampleRate];
             }
         }
 
@@ -106,26 +109,49 @@ namespace FamiStudio
 
         public void SetDmcSourceData(byte[] data)
         {
-            sourceData  = new DPCMSampleDmcSourceData(data);
+            sourceData = new DPCMSampleDmcSourceData(data);
             paddingMode = DPCMPaddingType.Unpadded;
         }
 
         public void SetWavSourceData(short[] data, int rate)
         {
-            sourceData  = new DPCMSampleWavSourceData(data, rate);
+            sourceData = new DPCMSampleWavSourceData(data, rate);
             paddingMode = DPCMPaddingType.PadTo16Bytes;
+        }
+
+        public void RemoveWavSourceData()
+        {
+            if (SourceDataIsWav)
+            {
+                SetDmcSourceData(processedData);
+                sampleRate = 15; // DPCMTODO : Does that make any sense??
+                previewRate = 15;
+                volumeAdjust = 100;
+                trimZeroVolume = false;
+                paddingMode = DPCMPaddingType.Unpadded;
+            }
+        }
+
+        public void PermanentlyApplyAllProcessing()
+        {
+            SetDmcSourceData(processedData);
+            sampleRate = 15; // DPCMTODO : Does that make any sense??
+            previewRate = 15;
+            volumeAdjust = 100;
+            trimZeroVolume = false;
+            reverseBits = false;
+            SourceIsPal = false; // DPCMTODO : Does that make any sense??
+            paddingMode = DPCMPaddingType.Unpadded;
         }
 
         public void Process()
         {
             lock (ProcessedDataLock)
             {
-                // DPCMTODO : Not right, user will be able to set the processing region maybe?
-                minProcessingTime = 0;
-                maxProcessingTime = SourceDuration;
+                processedDataStartTime = 0;
 
                 // DPCMTODO : What about PAL?
-                var targetSampleRate = DpcmSampleRatesNtsc[sampleRate];
+                var targetSampleRate = DpcmSampleRates[palSource ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.
                 if (!SourceDataIsWav && volumeAdjust == 100 && !trimZeroVolume)
@@ -149,7 +175,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        sourceSampleRate = DpcmSampleRatesNtsc[DpcmSampleRatesNtsc.Length - 1]; // DPCMTODO : Sample rate, is this right? What about PAL?
+                        sourceSampleRate = DpcmSampleMaximumRate[palSource ? 1 : 0]; // DPCMTODO : Sample rate, is this right? What about PAL?
 
                         var dmcData = SourceDmcData.Data;
 
@@ -174,9 +200,7 @@ namespace FamiStudio
                     if (trimZeroVolume)
                     {
                         WaveUtils.GetWaveNonZeroVolumeRange(sourceWavData, SourceDataIsWav ? 512 : 1024, out minProcessingSample, out maxProcessingSample);
-
-                        minProcessingTime = minProcessingSample / sourceSampleRate;
-                        maxProcessingTime = maxProcessingSample / sourceSampleRate;
+                        processedDataStartTime = minProcessingSample / sourceSampleRate;
                     }
 
                     var roundMode = WaveToDpcmRoundingMode.None;
@@ -200,8 +224,7 @@ namespace FamiStudio
                 {
                     WaveUtils.GetDmcNonZeroVolumeRange(processedData, out var minFinalNonZeroByte, out var maxFinalNonZeroByte);
 
-                    minProcessingTime += 8 * (minFinalNonZeroByte) / targetSampleRate;
-                    maxProcessingTime -= 8 * (processedData.Length - maxFinalNonZeroByte) / targetSampleRate;
+                    processedDataStartTime += 8 * (minFinalNonZeroByte) / targetSampleRate;
 
                     var untrimmedProcessedData = processedData;
                     processedData = new byte[maxFinalNonZeroByte - minFinalNonZeroByte];
@@ -239,7 +262,6 @@ namespace FamiStudio
                 // Clamp to max length.
                 if (processedData.Length > MaxSampleSize)
                 {
-                    maxProcessingTime -= 8 * (processedData.Length - MaxSampleSize) / targetSampleRate;
                     Array.Resize(ref processedData, DPCMSample.MaxSampleSize);
                 }
             }
@@ -313,45 +335,57 @@ namespace FamiStudio
             }
         }
 
-        // From NESDEV wiki.
-        public static float[] DpcmSampleRatesNtsc =
+        // [0] = NTSC
+        // [1] = PAL
+        public static float[] DpcmSampleMaximumRate =
         {
-            4181.71f,
-            4709.93f,
-            5264.04f,
-            5593.04f,
-            6257.95f,
-            7046.35f,
-            7919.35f,
-            8363.42f,
-            9419.86f,
-            11186.1f,
-            12604.0f,
-            13982.6f,
-            16884.6f,
-            21306.8f,
-            24858.0f,
-            33143.9f
+            33143.9f,
+            33252.1f
         };
 
-        public static float[] DpcmSampleRatesPal =
+        // From NESDEV wiki.
+        // [0,x] = NTSC
+        // [1,x] = PAL
+        public static float[,] DpcmSampleRates =
         {
-            4177.40f,
-            4696.63f,
-            5261.41f,
-            5579.22f,
-            6023.94f,
-            7044.94f,
-            7917.18f,
-            8397.01f,
-            9446.63f,
-            11233.8f,
-            12595.5f,
-            14089.9f,
-            16965.4f,
-            21315.5f,
-            25191.0f,
-            33252.1f
+            // NTSC
+            {
+                4181.71f,
+                4709.93f,
+                5264.04f,
+                5593.04f,
+                6257.95f,
+                7046.35f,
+                7919.35f,
+                8363.42f,
+                9419.86f,
+                11186.1f,
+                12604.0f,
+                13982.6f,
+                16884.6f,
+                21306.8f,
+                24858.0f,
+                33143.9f
+            },
+            // PAL
+            {
+                4177.40f,
+                4696.63f,
+                5261.41f,
+                5579.22f,
+                6023.94f,
+                7044.94f,
+                7917.18f,
+                8397.01f,
+                9446.63f,
+                11233.8f,
+                12595.5f,
+                14089.9f,
+                16965.4f,
+                21315.5f,
+                25191.0f,
+                33252.1f
+            }
         };
     }
 

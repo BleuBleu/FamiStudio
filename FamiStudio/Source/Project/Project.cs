@@ -876,6 +876,7 @@ namespace FamiStudio
         public void Cleanup()
         {
             DeleteUnusedInstruments();
+            UnmapUnusedSamples();
             DeleteUnusedSamples();
             DeleteUnusedArpeggios();
         }
@@ -1167,6 +1168,56 @@ namespace FamiStudio
             SortInstruments();
         }
 
+        public void UnmapUnusedSamples()
+        {
+            var usedMappingIndices = new HashSet<int>();
+
+            foreach (var song in songs)
+            {
+                var channel = song.Channels[ChannelType.Dpcm];
+
+                for (int p = 0; p < song.Length; p++)
+                {
+                    var pattern = channel.PatternInstances[p];
+                    if (pattern != null)
+                    {
+                        foreach (var note in pattern.Notes.Values)
+                        {
+                            var mapping = GetDPCMMapping(note.Value);
+                            if (mapping != null && mapping.Sample != null)
+                            {
+                                usedMappingIndices.Add(note.Value - Note.DPCMNoteMin);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null && !usedMappingIndices.Contains(i))
+                {
+                    samplesMapping[i] = null;
+                }
+            }
+        }
+
+        public void DeleteSampleWavSourceData()
+        {
+            foreach (var sample in samples)
+            {
+                sample.RemoveWavSourceData();
+            }
+        }
+
+        public void PermanentlyApplyAllSamplesProcessing()
+        {
+            foreach (var sample in samples)
+            {
+                sample.PermanentlyApplyAllProcessing();
+            }
+        }
+
         public void DeleteUnusedSamples()
         {
             var usedSamples = new HashSet<DPCMSample>();
@@ -1183,7 +1234,7 @@ namespace FamiStudio
                         foreach (var note in pattern.Notes.Values)
                         {
                             var mapping = GetDPCMMapping(note.Value);
-                            if (note.IsValid && !note.IsStop && note.Instrument == null && mapping != null && mapping.Sample != null)
+                            if (mapping != null && mapping.Sample != null)
                             {
                                 usedSamples.Add(mapping.Sample);
                             }

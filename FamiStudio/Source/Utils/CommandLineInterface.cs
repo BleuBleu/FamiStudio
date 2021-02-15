@@ -183,6 +183,9 @@ namespace FamiStudio
             Console.WriteLine($"ROM export specific options");
             Console.WriteLine($"  -rom-export-mode:<mode> : Target machine: ntsc, pal or dual (default:project mode).");
             Console.WriteLine($"");
+            Console.WriteLine($"FamiStudio text export specific options");
+            Console.WriteLine($"  -famistudio-txt-cleanup : Cleanup unused data on export (default:disabled).");
+            Console.WriteLine($"");
             Console.WriteLine($"FamiStudio sound engine export specific options");
             Console.WriteLine($"  -famistudio-asm-format:<format> : Assembly format to export to : nesasm, ca65 or asm6 (default:nesasm).");
             Console.WriteLine($"  -famistudio-asm-seperate-files : Export songs to individual files, output filename is the output path (default:disabled).");
@@ -456,7 +459,9 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                new FamistudioTextFile().Save(project, filename, exportSongIds, false);
+                var cleanup = HasOption("famistudio-txt-cleanup");
+
+                new FamistudioTextFile().Save(project, filename, exportSongIds, cleanup);
             }
         }
 

@@ -13,9 +13,6 @@ namespace FamiStudio
 {
     public class FamiStudio
     {
-        // TODO: Get rid of this!
-        public static Project StaticProject { get; set; }
-
         private FamiStudioForm mainForm;
         private Project project;
         private Song song;
@@ -72,6 +69,9 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
         public Rectangle MainWindowBounds => mainForm.Bounds;
 
+        public static Project    StaticProject  { get; set; }
+        public static FamiStudio StaticInstance { get; private set; }
+
         static readonly Dictionary<Keys, int> RecordingKeyToNoteMap = new Dictionary<Keys, int>
         {
             { Keys.D1,        -1 }, // Special: Stop note.
@@ -119,6 +119,8 @@ namespace FamiStudio
 
         public FamiStudio(string filename)
         {
+            StaticInstance = this;
+
             mainForm = new FamiStudioForm(this);
 
             Sequencer.PatternClicked += sequencer_PatternClicked;
@@ -853,9 +855,9 @@ namespace FamiStudio
                 dmcRateIndex = sample.PreviewRate;
             }
 
-            previewDPCMSampleRate = (int)Math.Round(DPCMSample.DpcmSampleRatesNtsc[DPCMSample.DpcmSampleRatesNtsc.Length - 1]); // DPCMTODO : What about PAL?
+            previewDPCMSampleRate = (int)Math.Round(DPCMSample.DpcmSampleMaximumRate[sample.SourceIsPal ? 1 : 0]); // DPCMTODO : What about PAL?
 
-            var playRate = (int)Math.Round(DPCMSample.DpcmSampleRatesNtsc[dmcRateIndex]); // DPCMTODO : What about PAL?
+            var playRate = (int)Math.Round(DPCMSample.DpcmSampleRates[palPlayback ? 1 : 0, dmcRateIndex]); // DPCMTODO : What about PAL?
             WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out short[] wave);
             instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume);
         }
@@ -888,7 +890,7 @@ namespace FamiStudio
                     InitializeInstrumentPlayer();
                 }
 
-                InvalidateEverything();
+                InvalidateEverything(true);
             }
         }
         

@@ -2174,7 +2174,7 @@ namespace FamiStudio
             var unclampedMaxVisibleSample = (int)Math.Ceiling((a.maxVisibleWaveTime - baseTime) * rate);
             var unclampedNumVisibleSample = unclampedMaxVisibleSample - unclampedMinVisibleSample;
 
-            if (unclampedNumVisibleSample > 0 && unclampedMaxVisibleSample > 0 && unclampedMinVisibleSample < data.Length * 8 - 1)
+            if (unclampedNumVisibleSample > 0 && unclampedMaxVisibleSample > 0 && unclampedMinVisibleSample < data.Length * 8)
             {
                 var sampleSkip = 1;
                 while (unclampedNumVisibleSample / (sampleSkip * 2) > viewWidth)
@@ -2187,7 +2187,7 @@ namespace FamiStudio
                 minVisibleSample = Utils.RoundDownAndClamp(minVisibleSample, 8, 0);
                 maxVisibleSample = Utils.RoundUpAndClamp  (maxVisibleSample, 8, data.Length * 8);
 
-                var numVisibleSample = Utils.DivideAndRoundUp(maxVisibleSample - minVisibleSample, sampleSkip);
+                var numVisibleSample = Utils.DivideAndRoundUp(maxVisibleSample - minVisibleSample + 1, sampleSkip);
 
                 if (numVisibleSample > 0)
                 {
@@ -2198,7 +2198,6 @@ namespace FamiStudio
 
                     var dpcmCounter = NesApu.DACDefaultValueDiv2;
 
-                    // DPCMTODO : Make sure we are displaying the current value, not previous or next!
                     for (int i = 0; i < minVisibleSample; i++)
                     {
                         var bit = (i >> 3);
@@ -2210,7 +2209,7 @@ namespace FamiStudio
                             dpcmCounter = Math.Max(dpcmCounter - 1, 0);
                     }
 
-                    for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i++)
+                    for (int i = minVisibleSample, j = 0; i <= maxVisibleSample; i++)
                     {
                         if ((i & (sampleSkip - 1)) == 0)
                         {
@@ -2220,13 +2219,16 @@ namespace FamiStudio
                             j++;
                         }
 
-                        var bit = (i >> 3);
-                        var mask = (1 << (i & 7));
+                        if (i < maxVisibleSample)
+                        {
+                            var bit = (i >> 3);
+                            var mask = (1 << (i & 7));
 
-                        if ((data[bit] & mask) != 0)
-                            dpcmCounter = Math.Min(dpcmCounter + 1, 63);
-                        else
-                            dpcmCounter = Math.Max(dpcmCounter - 1, 0);
+                            if ((data[bit] & mask) != 0)
+                                dpcmCounter = Math.Min(dpcmCounter + 1, 63);
+                            else
+                                dpcmCounter = Math.Max(dpcmCounter - 1, 0);
+                        }
                     }
 
                     // Direct2D doesn't have a way to drawing lines with more than 2 points. Using a temporary 
@@ -2266,8 +2268,8 @@ namespace FamiStudio
 
             // Processed range.
             g.FillRectangle(
-                GetPixelForWaveTime(editSample.MinProcessingTime, scrollX), 0,
-                GetPixelForWaveTime(editSample.MaxProcessingTime, scrollX), Height, theme.DarkGreyFillBrush1);
+                GetPixelForWaveTime(editSample.ProcessedDataStartTime, scrollX), 0,
+                GetPixelForWaveTime(editSample.ProcessedDataEndTime,   scrollX), Height, theme.DarkGreyFillBrush1);
 
             // Horizontal center line
             var centerY = (Height - headerSizeY) * 0.5f;
@@ -2312,7 +2314,7 @@ namespace FamiStudio
 
             // Processed waveform
             var processedBrush = g.GetSolidBrush(editSample.Color);
-            RenderDmc(g, a, editSample.ProcessedData, DPCMSample.DpcmSampleRatesNtsc[editSample.SampleRate], editSample.MinProcessingTime, processedBrush, false, showSamples); // DPCMTODO : What about PAL?
+            RenderDmc(g, a, editSample.ProcessedData, DPCMSample.DpcmSampleRates[editSample.SourceIsPal ? 1 : 0, editSample.SampleRate], editSample.ProcessedDataStartTime, processedBrush, false, showSamples); // DPCMTODO : What about PAL?
 
             // Play position
             var playPosition = App.PreviewDPCMWavPosition;
@@ -2321,7 +2323,7 @@ namespace FamiStudio
             {
                 var playTime = playPosition / (float)App.PreviewDPCMSampleRate;
                 if (!App.PreviewDPCMIsSource)
-                    playTime += editSample.MinProcessingTime;
+                    playTime += editSample.ProcessedDataStartTime;
                 var seekX = GetPixelForWaveTime(playTime, scrollX);
                 g.DrawLine(seekX, 0, seekX, Height, App.PreviewDPCMIsSource ? theme.LightGreyFillBrush1 : processedBrush, 3);
             }

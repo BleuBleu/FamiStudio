@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,18 +21,33 @@ namespace FamiStudio
             var versionString = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
             var projectLine = $"Project Version=\"{versionString}\" TempoMode=\"{TempoType.Names[project.TempoMode]}\"";
 
-            if (project.Name      != "")     projectLine += $" Name=\"{project.Name}\"";
-            if (project.Author    != "")     projectLine += $" Author=\"{project.Author}\"";
-            if (project.Copyright != "")     projectLine += $" Copyright=\"{project.Copyright}\"";
-            if (project.UsesExpansionAudio)  projectLine += $" Expansion=\"{ExpansionType.ShortNames[project.ExpansionAudio]}\"";
-            if (project.PalMode)             projectLine += $" PAL=\"{true}\"";
+            if (project.Name      != "")    projectLine += $" Name=\"{project.Name}\"";
+            if (project.Author    != "")    projectLine += $" Author=\"{project.Author}\"";
+            if (project.Copyright != "")    projectLine += $" Copyright=\"{project.Copyright}\"";
+            if (project.UsesExpansionAudio) projectLine += $" Expansion=\"{ExpansionType.ShortNames[project.ExpansionAudio]}\"";
+            if (project.PalMode)            projectLine += $" PAL=\"{true}\"";
 
             lines.Add(projectLine);
 
             // DPCM samples
             foreach (var sample in project.Samples)
             {
-                lines.Add($"\tDPCMSample Name=\"{sample.Name}\" ReverseBits=\"{sample.ReverseBits.ToString()}\" Data=\"{String.Join("", sample.ProcessedData.Select(x => $"{x:x2}"))}\"");
+                // We don't include any DPCM sample source data or processing data. We simply write the final
+                // processed data. Including giant WAV files or asking other importers to implement all the 
+                // processing options is unrealistic.
+                if (sample.HasAnyProcessingOptions)
+                {
+                    if (sample.SourceDataIsWav)
+                        Log.LogMessage(LogSeverity.Warning, $"Sample {sample.Name} has WAV data as source. Only the final processed DMC data will be exported.");
+                    else
+                        Log.LogMessage(LogSeverity.Warning, $"Sample {sample.Name} has processing option(s) enabled. Only the final processed DMC data will be exported.");
+                }
+
+                sample.PermanentlyApplyAllProcessing();
+
+                Debug.Assert(!sample.HasAnyProcessingOptions);
+
+                lines.Add($"\tDPCMSample Name=\"{sample.Name}\" Data=\"{String.Join("", sample.ProcessedData.Select(x => $"{x:x2}"))}\"");
             }
 
             // DPCM mappings

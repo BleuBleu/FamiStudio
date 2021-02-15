@@ -174,24 +174,49 @@ namespace FamiStudio
     {
         // DPCMTODO : How to handle PAL????
 
-        static readonly string[] FrequencyStringsNtsc =
+        // From NESDEV wiki.
+        // [0,x] = NTSC
+        // [1,x] = PAL
+        static readonly string[,] FrequencyStrings =
         {
-            "0 (4.2 KHz)",
-            "1 (4.7 KHz)",
-            "2 (5.3 KHz)",
-            "3 (5.6 KHz)",
-            "4 (6.3 KHz)",
-            "5 (7.0 KHz)",
-            "6 (8.9 KHz)",
-            "7 (8.3 KHz)",
-            "8 (9.4 KHz)",
-            "9 (11.1 KHz)",
-            "10 (12.6 KHz)",
-            "11 (14.9 KHz)",
-            "12 (16.9 KHz)",
-            "13 (21.3 KHz)",
-            "14 (24.9 KHz)",
-            "15 (33.1 KHz)",
+            // NTSC
+            {
+                "0 (4.2 KHz)",
+                "1 (4.7 KHz)",
+                "2 (5.3 KHz)",
+                "3 (5.6 KHz)",
+                "4 (6.3 KHz)",
+                "5 (7.0 KHz)",
+                "6 (7.9 KHz)",
+                "7 (8.3 KHz)",
+                "8 (9.4 KHz)",
+                "9 (11.1 KHz)",
+                "10 (12.6 KHz)",
+                "11 (13.9 KHz)",
+                "12 (16.9 KHz)",
+                "13 (21.3 KHz)",
+                "14 (24.9 KHz)",
+                "15 (33.1 KHz)"
+            },
+            // PAL
+            {
+                "0 (4.2 KHz)",
+                "1 (4.7 KHz)",
+                "2 (5.3 KHz)",
+                "3 (5.6 KHz)",
+                "4 (6.0 KHz)",
+                "5 (7.0 KHz)",
+                "6 (7.9 KHz)",
+                "7 (8.4 KHz)",
+                "8 (9.4 KHz)",
+                "9 (11.2 KHz)",
+                "10 (12.6 KHz)",
+                "11 (14.1 KHz)",
+                "12 (17.0 KHz)",
+                "13 (21.3 KHz)",
+                "14 (25.2 KHz)",
+                "15 (33.3 KHz)"
+            }
         };
 
         static public ParamInfo[] GetParams(DPCMSample sample)
@@ -199,13 +224,15 @@ namespace FamiStudio
             return new[]
             {
                 new DPCMSampleParamInfo(sample, "Preview Rate", 0, 15, 15, true)
-                    { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.PreviewRate]; }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
+                    { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return FrequencyStrings[FamiStudio.StaticInstance.PalPlayback ? 1 : 0, sample.PreviewRate]; }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
                 new DPCMSampleParamInfo(sample, "Sample Rate", 0, 15, 15, true)
-                    { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.SampleRate]; }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
+                    { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return FrequencyStrings[sample.SourceIsPal ? 1 : 0, sample.SampleRate]; }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Padding Mode", 0, 4, DPCMPaddingType.PadTo16Bytes, true)
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200, 100)
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
+                new DPCMSampleParamInfo(sample, "Source is PAL", 0, 1, 0)
+                    { GetValue = () => { return  sample.SourceIsPal ? 1 : 0; }, SetValue = (v) => { sample.SourceIsPal = v != 0; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1, 0)
                     { GetValue = () => { return sample.TrimZeroVolume ? 1 : 0; }, SetValue = (v) => { sample.TrimZeroVolume = v != 0; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Reverse Bits", 0, 1, 0)
@@ -214,4 +241,3 @@ namespace FamiStudio
         }
     }
 }
-
