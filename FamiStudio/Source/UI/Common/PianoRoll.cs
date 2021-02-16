@@ -69,6 +69,9 @@ namespace FamiStudio
         const int DefaultTooltipTextPosY = 30;
         const int DefaultDPCMTextPosX = 2;
         const int DefaultDPCMTextPosY = 0;
+        const int DefaultDPCMSourceDataPosX = 10;
+        const int DefaultDPCMSourceDataPosY = 38;
+        const int DefaultDPCMProcessedDataPosY = 54;
         const int DefaultOctaveNameOffsetY = 11;
         const int DefaultRecordingKeyOffsetY = 12;
         const int DefaultAttackIconPosX = 2;
@@ -107,6 +110,9 @@ namespace FamiStudio
         int tooltipTextPosY;
         int dpcmTextPosX;
         int dpcmTextPosY;
+        int dpcmSourceDataPosX;
+        int dpcmSourceDataPosY;
+        int dpcmProcessedDataPosY;
         int octaveNameOffsetY;
         int recordingKeyOffsetY;
         int octaveSizeY;
@@ -378,6 +384,9 @@ namespace FamiStudio
             tooltipTextPosY = (int)(DefaultTooltipTextPosY * scaling);
             dpcmTextPosX = (int)(DefaultDPCMTextPosX * scaling);
             dpcmTextPosY = (int)(DefaultDPCMTextPosY * scaling);
+            dpcmSourceDataPosX = (int)(DefaultDPCMSourceDataPosX * scaling);
+            dpcmSourceDataPosY = (int)(DefaultDPCMSourceDataPosY * scaling);
+            dpcmProcessedDataPosY = (int)(DefaultDPCMProcessedDataPosY * scaling);
             octaveNameOffsetY = (int)(DefaultOctaveNameOffsetY * scaling);
             recordingKeyOffsetY = (int)(DefaultRecordingKeyOffsetY * scaling);
             attackIconPosX = (int)(DefaultAttackIconPosX * scaling);
@@ -2330,6 +2339,14 @@ namespace FamiStudio
 
             // Title
             g.DrawText($"Editing DPCM Sample {editSample.Name}", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+
+            // MATTT : Pos Y
+            if (editSample.SourceDataIsWav)
+                g.DrawText($"Source Data : WAV {editSample.SourceWavData.SampleRate} Hz, {editSample.SourceWavData.Samples.Length * 2} Bytes", ThemeBase.FontMedium, dpcmSourceDataPosX, dpcmSourceDataPosY, whiteKeyBrush);
+            else
+                g.DrawText($"Source Data : DMC {editSample.SourceDmcData.Data.Length} Bytes", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY, whiteKeyBrush);
+
+            g.DrawText($"Processed Data : DMC {editSample.ProcessedData.Length} Bytes", ThemeBase.FontMedium, bigTextPosX, dpcmProcessedDataPosY, whiteKeyBrush);
 
             g.PopClip();
             g.PopTransform();

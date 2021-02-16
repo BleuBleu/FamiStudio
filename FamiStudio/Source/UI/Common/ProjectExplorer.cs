@@ -264,13 +264,13 @@ namespace FamiStudio
                         {
                             var mappedSamplesSize = projectExplorer.App.Project.GetTotalMappedSampleSize();
                             if (mappedSamplesSize > 0)
-                                label += $" ({mappedSamplesSize} bytes)";
+                                label += $" ({mappedSamplesSize} Bytes)";
                         }
                         return label;
                     }
                     else if (type == ButtonType.Dpcm)
                     {
-                        return $"{sample.Name} ({sample.ProcessedData.Length} bytes)"; 
+                        return $"{sample.Name} ({sample.ProcessedData.Length} Bytes)"; 
                     }
                     else if (type == ButtonType.DpcmHeader)
                     {
@@ -280,7 +280,7 @@ namespace FamiStudio
                         //{
                         //    var samplesSize = projectExplorer.App.Project.GetTotalSampleSize();
                         //    if (samplesSize > 0)
-                        //        label += $" ({samplesSize} bytes)";
+                        //        label += $" ({samplesSize} Bytes)";
                         //}
                         return label;
                     }
