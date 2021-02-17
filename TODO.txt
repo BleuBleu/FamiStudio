@@ -20,6 +20,7 @@ Test:
 - Test with empty wav files, empty DMC files.
 - Import FTM with too many samples, see what happens.
 - Compare quality with MakeDPCM & RJDMC.
+- Test merging of samples from other project (with WAV, etc.)
 
 Doc:
 - New screenshots dark theme.
@@ -28,7 +29,9 @@ Doc:
 
 DPCM Editor
 ===========
+- DPCMTODOs in cleanup. See if makes sense.
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
+	- Test transactions a lot, dont seem to refresh when i do cleanup.
 - Make sure clipboard still works (must copy source data as well).
 - What about space to play DPCM?
 - Tooltips everywhere!
