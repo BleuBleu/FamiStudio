@@ -152,11 +152,10 @@ namespace FamiStudio
             }
         }
 
-        static public bool TrimWave(ref short[] wave, int sampleRate, float timeStart, float timeEnd)
+        // [min, max]
+        static public bool TrimWave(ref short[] wave, int trimSampleMin, int trimSampleMax)
         {
-            var trimSampleMin = Utils.Clamp((int)Math.Ceiling(timeStart * sampleRate), 0, wave.Length - 1);
-            var trimSampleMax = Utils.Clamp((int)Math.Ceiling(timeEnd   * sampleRate), 0, wave.Length - 1);
-
+            trimSampleMax++;
             if (trimSampleMin < trimSampleMax)
             {
                 var newLength = trimSampleMin + (wave.Length - trimSampleMax);
@@ -177,12 +176,40 @@ namespace FamiStudio
             }
         }
 
+        // [min, max]
+        static public bool TrimDmc(ref byte[] dmc, int trimSampleMin, int trimSampleMax)
+        {
+            trimSampleMax++;
+
+            int trimByteMin = trimSampleMin / 8;
+            int trimByteMax = trimSampleMax / 8;
+
+            if (trimByteMin < trimByteMax)
+            {
+                var newLength = trimByteMin + (dmc.Length - trimByteMax);
+                var newDmcData = new byte[newLength];
+
+                if (trimByteMin > 0)
+                    Array.Copy(dmc, newDmcData, trimByteMin);
+                if (trimByteMax < dmc.Length)
+                    Array.Copy(dmc, trimByteMax, newDmcData, trimByteMin, dmc.Length - trimByteMax);
+
+                dmc = newDmcData;
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         static public void GetDmcNonZeroVolumeRange(byte[] dmc, out int nonZeroMinByte, out int nonZeroMaxByte)
         {
             nonZeroMinByte = 0;
             nonZeroMaxByte = dmc.Length;
 
-            // Very coarse, only remove entire byte alternative 0/1s.
+            // Very coarse, only remove entire byte of alternating 0/1s.
             for (int i = 0; i < dmc.Length; i++)
             {
                 if (dmc[i] != 0x55 && dmc[i] != 0xaa)

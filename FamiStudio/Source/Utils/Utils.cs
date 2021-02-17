@@ -60,6 +60,11 @@ namespace FamiStudio
             return Math.Min((x + factor - 1) & ~(factor - 1), max);
         }
 
+        public static int RoundDown(int x, int factor)
+        {
+            return (x & ~(factor - 1));
+        }
+
         public static int RoundUp(int x, int factor)
         {
             return (x + factor - 1) & ~(factor - 1);

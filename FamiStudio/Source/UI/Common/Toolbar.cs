@@ -206,6 +206,7 @@ namespace FamiStudio
             specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
             specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
             specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
+            specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
             specialCharacters["Drag"]       = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("Drag"),       OffsetY = 2 * scaling };
             specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseLeft"),  OffsetY = 2 * scaling };
             specialCharacters["MouseRight"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseRight"), OffsetY = 2 * scaling };

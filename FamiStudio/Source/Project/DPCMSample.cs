@@ -402,10 +402,11 @@ namespace FamiStudio
     public interface IDPCMSampleSourceData
     {
         void SerializeState(ProjectBuffer buffer);
-        bool Trim(float timeStart, float timeEnd);
+        bool Trim(int sampleStart, int sampleEnd);
         float GetSampleRate(bool pal);
         float GetDuration(bool pal);
         int DataSize { get; }
+        int NumSamples { get; }
     }
 
     public class DPCMSampleWavSourceData : IDPCMSampleSourceData
@@ -414,6 +415,7 @@ namespace FamiStudio
         private short[] wavData;
 
         public int     DataSize   => wavData.Length * 2;
+        public int     NumSamples => wavData.Length;
         public int     SampleRate => sampleRate;
         public short[] Samples    => wavData;
 
@@ -433,9 +435,9 @@ namespace FamiStudio
             buffer.Serialize(ref wavData);
         }
 
-        public bool Trim(float timeStart, float timeEnd)
+        public bool Trim(int sampleStart, int sampleEnd)
         {
-            return WaveUtils.TrimWave(ref wavData, sampleRate, timeStart, timeEnd);
+            return WaveUtils.TrimWave(ref wavData, sampleStart, sampleEnd);
         }
 
         public float GetSampleRate(bool pal)
@@ -453,8 +455,9 @@ namespace FamiStudio
     {
         private byte[] dmcData;
 
-        public byte[] Data     => dmcData;
-        public int    DataSize => dmcData.Length;
+        public byte[] Data       => dmcData;
+        public int    DataSize   => dmcData.Length;
+        public int    NumSamples => dmcData.Length * 8;
 
         public DPCMSampleDmcSourceData()
         {
@@ -470,11 +473,9 @@ namespace FamiStudio
             buffer.Serialize(ref dmcData);
         }
 
-        public bool Trim(float timeStart, float timeEnd)
+        public bool Trim(int sampleStart, int sampleEnd)
         {
-            // DPCMTODO : Here we need the sample rate (PAL/NTSC) to know what these times mean.
-            // DPCMTODO : TODO!
-            return false;
+            return WaveUtils.TrimDmc(ref dmcData, sampleStart, sampleEnd);
         }
 
         public float GetSampleRate(bool pal)

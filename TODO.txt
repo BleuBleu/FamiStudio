@@ -1,12 +1,14 @@
-hermitzmusic
-- Slide note bugs
+Brad:
+- .exportzp FAMISTUDIO_SFX_CH0
+- FamiTracker tempo pause bug.
 
 FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
 - Double-right-click = select whole note
-- Highlight piano keys when they are pressed with QWERTY or MIDI.
-- Smooth vibrato with SFX.
+- Highlight piano keys when they are pressed with QWERTY or MIDI. (LOW PRIO)
+x Smooth vibrato with SFX.
+x BUG : When using an expansion, if you go in project settings, PAL/NTSC is not read only.
 
 Test:
 - Retest Win7 device lost.
@@ -17,23 +19,21 @@ Test:
 - Rebuild NESSNDEMU + PAL DMC frequenciess (verify VRC7 bad merge!!)
 - Test with empty wav files, empty DMC files.
 - Import FTM with too many samples, see what happens.
+- Compare quality with MakeDPCM & RJDMC.
 
 Doc:
 - New screenshots dark theme.
 - Mention FamiStudio text doesnt include source sample data.
+- Smooth vibrato + SFX.
 
 DPCM Editor
 ===========
-- Sample rate, does it work?
-	=> Review all sample/PAL stuff. 
-	=> Preview rate should be relative to sample rate? Humm. I think its ok.
-- Changing DPCM param values doesnt do transaction?? => Serialize more stuff. 
+- Sample rate, do final review.
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
-- Make sure clipboard still works (much copy source data as well).
+- Make sure clipboard still works (must copy source data as well).
 - What is the quality setting in RJDMC?
 - What about space to play DPCM?
 - Tooltips everywhere!
-- Print more info in piano roll (source data, number of samples, size, etc.)
 
 FamiStudio 2.5.0
 ================
