@@ -1972,7 +1972,7 @@ namespace FamiStudio
                     {
 
                     }
-                    g.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush); // DPCMTODO
+                    g.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
                 }
             }
             else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
@@ -2329,12 +2329,12 @@ namespace FamiStudio
             }
             else
             {
-                RenderDmc(g, a, editSample.SourceDmcData.Data, editSample.SourceSampleRate, 0.0f, theme.LightGreyFillBrush1, true, showSamples); // DPCMTODO
+                RenderDmc(g, a, editSample.SourceDmcData.Data, editSample.SourceSampleRate, 0.0f, theme.LightGreyFillBrush1, true, showSamples); 
             }
 
             // Processed waveform
             var processedBrush = g.GetSolidBrush(editSample.Color);
-            RenderDmc(g, a, editSample.ProcessedData, DPCMSample.DpcmSampleRates[editSample.PalProcessing ? 1 : 0, editSample.SampleRate], editSample.ProcessedStartTime, processedBrush, false, showSamples); // DPCMTODO : What about PAL?
+            RenderDmc(g, a, editSample.ProcessedData, editSample.ProcessedSampleRate, editSample.ProcessedStartTime, processedBrush, false, showSamples); 
 
             // Play position
             var playPosition = App.PreviewDPCMWavPosition;
@@ -2638,7 +2638,7 @@ namespace FamiStudio
             captureThresholdMet = !captureNeedsThreshold[(int)op];
             captureNoteValue = numNotes - Utils.Clamp((e.Y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, numNotes);
             captureNoteIdx = noteIdx >= 0 ? noteIdx : (e.X - whiteKeySizeX + scrollX) / noteSizeX;
-            captureWaveTime = editMode == EditionMode.DPCM ? GetWaveTimeForPixel(e.X - whiteKeySizeX) : 0.0f; // DPCMTODO : Clamp! Add option to GetWaveTimeForPixel
+            captureWaveTime = editMode == EditionMode.DPCM ? GetWaveTimeForPixel(e.X - whiteKeySizeX) : 0.0f;
             if (allowSnap)
                 captureNoteIdx = SnapNote(captureNoteIdx);
         }
@@ -2812,7 +2812,7 @@ namespace FamiStudio
             maxPattern = Song.FindPatternInstanceIndex(maxFrameIdx, out maxNote);
         }
 
-        // DPCMTODO : Make those properties.
+        // TODO : Make this a property.
         private bool IsSelectionValid()
         {
             return selectionMin >= 0 && selectionMax >= 0;
@@ -2963,7 +2963,7 @@ namespace FamiStudio
             if (IsSelectionValid())
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
-                if (editSample.SourceData.Trim(selectionMin, selectionMax)) // DPCMTODO : I think this deletes 1 too many samples.
+                if (editSample.SourceData.Trim(selectionMin, selectionMax))
                 {
                     editSample.Process();
                     App.UndoRedoManager.EndTransaction();

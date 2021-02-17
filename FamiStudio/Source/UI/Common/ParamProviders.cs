@@ -174,8 +174,6 @@ namespace FamiStudio
 
     public static class DPCMSampleParamProvider
     {
-        // DPCMTODO : How to handle PAL????
-
         // From NESDEV wiki.
         // [0,x] = NTSC
         // [1,x] = PAL

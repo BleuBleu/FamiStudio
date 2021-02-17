@@ -153,7 +153,6 @@ namespace FamiStudio
             return songs.Find(s => s.Name == name) == null;
         }
 
-        // DPCMTODO : Revisit all usages.
         public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
         {
             // Already exist, this should not happen.
@@ -681,7 +680,6 @@ namespace FamiStudio
         {
             get
             {
-                // DPCMTODO: This test isnt thorough enough.
                 if (samples.Count == 0)
                     return false;
 

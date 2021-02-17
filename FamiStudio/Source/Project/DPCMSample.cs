@@ -127,7 +127,6 @@ namespace FamiStudio
             {
                 processedDataStartTime = 0;
 
-                // DPCMTODO : What about PAL?
                 var targetSampleRate = DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.

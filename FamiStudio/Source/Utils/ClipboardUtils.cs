@@ -235,6 +235,7 @@ namespace FamiStudio
             }
         }
 
+        // DPCMTODO: That wont work!
         private static bool LoadAndMergeSampleList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
         {
             int numMappings = 0;
