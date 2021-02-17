@@ -838,9 +838,10 @@ namespace FamiStudio
 
             if (source)
             {
+                previewDPCMSampleRate = (int)sample.SourceSampleRate;
+
                 if (sample.SourceDataIsWav)
                 {
-                    previewDPCMSampleRate = sample.SourceWavData.SampleRate;
                     instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate, NesApu.DPCMVolume);
                     return;
                 }
@@ -851,11 +852,10 @@ namespace FamiStudio
             }
             else
             {
+                previewDPCMSampleRate = (int)sample.ProcessedSampleRate;
                 dmcData = sample.ProcessedData;
                 dmcRateIndex = sample.PreviewRate;
             }
-
-            previewDPCMSampleRate = (int)Math.Round(DPCMSample.DpcmSampleMaximumRate[sample.PalProcessing ? 1 : 0]);
 
             var playRate = (int)Math.Round(DPCMSample.DpcmSampleRates[palPlayback ? 1 : 0, dmcRateIndex]);
             WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out short[] wave);
