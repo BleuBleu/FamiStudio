@@ -1533,8 +1533,7 @@ namespace FamiStudio
             "Famicom Disk System",
             "Nintendo MMC5",
             "Namco 163",
-            "Sunsoft 5B",
-            ""
+            "Sunsoft 5B"
         };
 
         public static readonly string[] ShortNames =
@@ -1545,8 +1544,7 @@ namespace FamiStudio
             "FDS",
             "MMC5",
             "N163",
-            "S5B",
-            ""
+            "S5B"
         };
 
         public static int GetValueForName(string str)
