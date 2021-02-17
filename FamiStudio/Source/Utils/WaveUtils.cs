@@ -205,7 +205,7 @@ namespace FamiStudio
         static public void GetWaveNonZeroVolumeRange(short[] wave, int threshold, out int nonZeroMin, out int nonZeroMax)
         {
             nonZeroMin = 0;
-            nonZeroMax = wave.Length - 1;
+            nonZeroMax = 0;
 
             for (int i = 0; i < wave.Length; i++)
             {

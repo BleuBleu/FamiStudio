@@ -71,7 +71,7 @@ namespace FamiStudio
         const int DefaultDPCMTextPosY = 0;
         const int DefaultDPCMSourceDataPosX = 10;
         const int DefaultDPCMSourceDataPosY = 38;
-        const int DefaultDPCMProcessedDataPosY = 54;
+        const int DefaultDPCMInfoSpacingY = 16;
         const int DefaultOctaveNameOffsetY = 11;
         const int DefaultRecordingKeyOffsetY = 12;
         const int DefaultAttackIconPosX = 2;
@@ -112,7 +112,7 @@ namespace FamiStudio
         int dpcmTextPosY;
         int dpcmSourceDataPosX;
         int dpcmSourceDataPosY;
-        int dpcmProcessedDataPosY;
+        int dpcmInfoSpacingY;
         int octaveNameOffsetY;
         int recordingKeyOffsetY;
         int octaveSizeY;
@@ -386,7 +386,7 @@ namespace FamiStudio
             dpcmTextPosY = (int)(DefaultDPCMTextPosY * scaling);
             dpcmSourceDataPosX = (int)(DefaultDPCMSourceDataPosX * scaling);
             dpcmSourceDataPosY = (int)(DefaultDPCMSourceDataPosY * scaling);
-            dpcmProcessedDataPosY = (int)(DefaultDPCMProcessedDataPosY * scaling);
+            dpcmInfoSpacingY = (int)(DefaultDPCMInfoSpacingY * scaling);
             octaveNameOffsetY = (int)(DefaultOctaveNameOffsetY * scaling);
             recordingKeyOffsetY = (int)(DefaultRecordingKeyOffsetY * scaling);
             attackIconPosX = (int)(DefaultAttackIconPosX * scaling);
@@ -2275,10 +2275,12 @@ namespace FamiStudio
             g.PushTranslation(whiteKeySizeX, headerAndEffectSizeY);
             g.PushClip(0, 0, Width, Height);
 
+            //editSample.GetProcessedDataRange()
+
             // Processed range.
             g.FillRectangle(
-                GetPixelForWaveTime(editSample.ProcessedDataStartTime, scrollX), 0,
-                GetPixelForWaveTime(editSample.ProcessedDataEndTime,   scrollX), Height, theme.DarkGreyFillBrush1);
+                GetPixelForWaveTime(editSample.ProcessedStartTime, scrollX), 0,
+                GetPixelForWaveTime(editSample.ProcessedEndTime,   scrollX), Height, theme.DarkGreyFillBrush1);
 
             // Horizontal center line
             var centerY = (Height - headerSizeY) * 0.5f;
@@ -2323,7 +2325,7 @@ namespace FamiStudio
 
             // Processed waveform
             var processedBrush = g.GetSolidBrush(editSample.Color);
-            RenderDmc(g, a, editSample.ProcessedData, DPCMSample.DpcmSampleRates[editSample.SourceIsPal ? 1 : 0, editSample.SampleRate], editSample.ProcessedDataStartTime, processedBrush, false, showSamples); // DPCMTODO : What about PAL?
+            RenderDmc(g, a, editSample.ProcessedData, DPCMSample.DpcmSampleRates[editSample.PalProcessing ? 1 : 0, editSample.SampleRate], editSample.ProcessedStartTime, processedBrush, false, showSamples); // DPCMTODO : What about PAL?
 
             // Play position
             var playPosition = App.PreviewDPCMWavPosition;
@@ -2332,21 +2334,16 @@ namespace FamiStudio
             {
                 var playTime = playPosition / (float)App.PreviewDPCMSampleRate;
                 if (!App.PreviewDPCMIsSource)
-                    playTime += editSample.ProcessedDataStartTime;
+                    playTime += editSample.ProcessedStartTime;
                 var seekX = GetPixelForWaveTime(playTime, scrollX);
                 g.DrawLine(seekX, 0, seekX, Height, App.PreviewDPCMIsSource ? theme.LightGreyFillBrush1 : processedBrush, 3);
             }
 
-            // Title
+            // Title + source/processed info.
             g.DrawText($"Editing DPCM Sample {editSample.Name}", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
-
-            // MATTT : Pos Y
-            if (editSample.SourceDataIsWav)
-                g.DrawText($"Source Data : WAV {editSample.SourceWavData.SampleRate} Hz, {editSample.SourceWavData.Samples.Length * 2} Bytes", ThemeBase.FontMedium, dpcmSourceDataPosX, dpcmSourceDataPosY, whiteKeyBrush);
-            else
-                g.DrawText($"Source Data : DMC {editSample.SourceDmcData.Data.Length} Bytes", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY, whiteKeyBrush);
-
-            g.DrawText($"Processed Data : DMC {editSample.ProcessedData.Length} Bytes", ThemeBase.FontMedium, bigTextPosX, dpcmProcessedDataPosY, whiteKeyBrush);
+            g.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} Ms", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY, whiteKeyBrush);
+            g.DrawText($"Processed Data (DMC) : {editSample.ProcessedSampleRate} Hz, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} Ms", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY, whiteKeyBrush);
+            g.DrawText($"Preview Playback : {editSample.GetPlaybackSampleRate(App.PalPlayback)} Hz, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} Ms", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY * 2, whiteKeyBrush);
 
             g.PopClip();
             g.PopTransform();

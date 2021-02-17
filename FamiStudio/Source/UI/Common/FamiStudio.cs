@@ -385,12 +385,12 @@ namespace FamiStudio
                 palPlayback = project.PalMode;
                 InitializeInstrumentPlayer();
                 InitializeSongPlayer();
-                InvalidateEverything();
+                InvalidateEverything(true);
             }
 
             if (flags.HasFlag(TransactionFlags.StopAudio))
             {
-                InvalidateEverything();
+                InvalidateEverything(true);
             }
         }
 
@@ -855,9 +855,9 @@ namespace FamiStudio
                 dmcRateIndex = sample.PreviewRate;
             }
 
-            previewDPCMSampleRate = (int)Math.Round(DPCMSample.DpcmSampleMaximumRate[sample.SourceIsPal ? 1 : 0]); // DPCMTODO : What about PAL?
+            previewDPCMSampleRate = (int)Math.Round(DPCMSample.DpcmSampleMaximumRate[sample.PalProcessing ? 1 : 0]);
 
-            var playRate = (int)Math.Round(DPCMSample.DpcmSampleRates[palPlayback ? 1 : 0, dmcRateIndex]); // DPCMTODO : What about PAL?
+            var playRate = (int)Math.Round(DPCMSample.DpcmSampleRates[palPlayback ? 1 : 0, dmcRateIndex]);
             WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out short[] wave);
             instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume);
         }

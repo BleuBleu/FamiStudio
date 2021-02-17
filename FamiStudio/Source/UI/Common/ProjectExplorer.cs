@@ -873,7 +873,8 @@ namespace FamiStudio
             // TODO: Store this in the button itself... this is stupid.
             if (buttonIdx >= 0)
             {
-                var buttonType = buttons[buttonIdx].type;
+                var button = buttons[buttonIdx];
+                var buttonType = button.type;
 
                 if (buttonType == ButtonType.SongHeader)
                 {
@@ -905,18 +906,38 @@ namespace FamiStudio
                 {
                     tooltip = "{MouseLeft}{MouseLeft} Project properties";
                 }
-                else if (buttonType == ButtonType.ParamCheckbox && e.X >= Width - scrollBarSizeX - checkBoxPosX)
+                else if (buttonType == ButtonType.ParamCheckbox)
                 {
-                    tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
+                    if (e.X >= Width - scrollBarSizeX - checkBoxPosX)
+                    {
+                        tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
+                    }
+                    else if (button.param.ToolTip != null)
+                    {
+                        tooltip = button.param.ToolTip;
+                    }
                 }
-                else if (buttonType == ButtonType.ParamSlider && e.X >= Width - scrollBarSizeX - sliderPosX)
+                else if (buttonType == ButtonType.ParamSlider)
                 {
-                    tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
-                    
+                    if (e.X >= Width - scrollBarSizeX - sliderPosX)
+                    {
+                        tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
+                    }
+                    else if (button.param.ToolTip != null)
+                    {
+                        tooltip = button.param.ToolTip;
+                    }
                 }
-                else if (buttonType == ButtonType.ParamList && e.X >= Width - scrollBarSizeX - sliderPosX)
+                else if (buttonType == ButtonType.ParamList)
                 {
-                    tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
+                    if (e.X >= Width - scrollBarSizeX - sliderPosX)
+                    {
+                        tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
+                    }
+                    else if (button.param.ToolTip != null)
+                    {
+                        tooltip = button.param.ToolTip;
+                    }
                 }
                 else if (buttonType == ButtonType.Instrument)
                 {

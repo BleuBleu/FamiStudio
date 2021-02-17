@@ -18,17 +18,18 @@ namespace FamiStudio
 
         // Processed data 
         private byte[] processedData;
-        private float processedDataStartTime;
+        private float  processedDataStartTime;
 
         // Processing parameters.
-        private int sampleRate = 15;
-        private int previewRate = 15;
-        private int volumeAdjust = 100;
+        private int  sampleRate = 15;
+        private int  previewRate = 15;
+        private int  volumeAdjust = 100;
+        private int  paddingMode = DPCMPaddingType.PadTo16Bytes;
         private bool reverseBits;
         private bool trimZeroVolume;
-        private bool palSource;
-        private int paddingMode = DPCMPaddingType.PadTo16Bytes;
+        private bool palProcessing;
 
+        // Properties.
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public Color Color { get => color; set => color = value; }
@@ -38,62 +39,28 @@ namespace FamiStudio
         public DPCMSampleWavSourceData SourceWavData { get => sourceData as DPCMSampleWavSourceData; }
         public DPCMSampleDmcSourceData SourceDmcData { get => sourceData as DPCMSampleDmcSourceData; }
 
-        public float ProcessedDataStartTime => processedDataStartTime;
-        public float ProcessedDataEndTime => processedDataStartTime + processedData.Length * 8 / DpcmSampleMaximumRate[palSource ? 1 : 0];
-        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits;
+        public float ProcessedStartTime  => processedDataStartTime;
+        public float ProcessedEndTime    => processedDataStartTime + ProcessedDuration;
+        public float ProcessedSampleRate => DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
+        public float ProcessedDuration   => processedData.Length * 8 / ProcessedSampleRate;
 
         public byte[] ProcessedData  { get => processedData;  set => processedData  = value; }
         public int    SampleRate     { get => sampleRate;     set => sampleRate     = value; }
         public int    PreviewRate    { get => previewRate;    set => previewRate    = value; }
         public bool   ReverseBits    { get => reverseBits;    set => reverseBits    = value; }
         public bool   TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
-        public bool   SourceIsPal    { get => palSource;      set => palSource      = value; }
+        public bool   PalProcessing  { get => palProcessing;  set => palProcessing      = value; }
         public int    VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
         public int    PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
+
+        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits;
 
         public static object ProcessedDataLock = new object();
         public const int MaxSampleSize = (255 << 4) + 1;
 
-        // DPCMTODO: Make those in the source data interface.
-
-        // In seconds.
-        public float SourceDuration
-        {
-            get
-            {
-                if (SourceDataIsWav)
-                {
-                    return SourceWavData.Samples.Length / (float)SourceWavData.SampleRate;
-                }
-                else
-                {
-                    return SourceDmcData.Data.Length * 8 / DpcmSampleMaximumRate[palSource ? 1 : 0]; // DPCMTODO: We assume the input sample rate here.
-                }
-            }
-        }
-
-        public float SourceSampleRate
-        {
-            get
-            {
-                if (SourceDataIsWav)
-                {
-                    return SourceWavData.SampleRate;
-                }
-                else
-                {
-                    return DpcmSampleMaximumRate[palSource ? 1 : 0]; // DPCMTODO: We assume the input sample rate here.
-                }
-            }
-        }
-
-        public float ProcessedDuration
-        {
-            get
-            {
-                return processedData.Length * 8 / DpcmSampleRates[palSource ? 1 : 0, sampleRate];
-            }
-        }
+        public int   SourceDataSize   => sourceData.DataSize;
+        public float SourceSampleRate => sourceData.GetSampleRate(palProcessing);
+        public float SourceDuration   => sourceData.GetDuration(palProcessing);
 
         public DPCMSample()
         {
@@ -105,6 +72,16 @@ namespace FamiStudio
             this.id = id;
             this.name = name;
             this.color = ThemeBase.RandomCustomColor();
+        }
+
+        public float GetPlaybackSampleRate(bool palPlayback)
+        {
+            return DpcmSampleRates[palPlayback ? 1 : 0, previewRate];
+        }
+
+        public float GetPlaybackDuration(bool palPlayback)
+        {
+            return processedData.Length * 8 / GetPlaybackSampleRate(palPlayback);
         }
 
         public void SetDmcSourceData(byte[] data)
@@ -140,7 +117,7 @@ namespace FamiStudio
             volumeAdjust = 100;
             trimZeroVolume = false;
             reverseBits = false;
-            SourceIsPal = false; // DPCMTODO : Does that make any sense??
+            PalProcessing = false; // DPCMTODO : Does that make any sense??
             paddingMode = DPCMPaddingType.Unpadded;
         }
 
@@ -151,7 +128,7 @@ namespace FamiStudio
                 processedDataStartTime = 0;
 
                 // DPCMTODO : What about PAL?
-                var targetSampleRate = DpcmSampleRates[palSource ? 1 : 0, sampleRate];
+                var targetSampleRate = DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.
                 if (!SourceDataIsWav && volumeAdjust == 100 && !trimZeroVolume)
@@ -165,18 +142,14 @@ namespace FamiStudio
                 else
                 {
                     short[] sourceWavData;
-                    float sourceSampleRate;
+                    float sourceSampleRate = sourceData.GetSampleRate(palProcessing);
 
-                    // DPCMTODO : Make this part of the source data interface.
                     if (SourceDataIsWav)
                     {
                         sourceWavData = WaveUtils.CopyWave(SourceWavData.Samples);
-                        sourceSampleRate = SourceWavData.SampleRate;
                     }
                     else
                     {
-                        sourceSampleRate = DpcmSampleMaximumRate[palSource ? 1 : 0]; // DPCMTODO : Sample rate, is this right? What about PAL?
-
                         var dmcData = SourceDmcData.Data;
 
                         // Bit reverse.
@@ -250,7 +223,7 @@ namespace FamiStudio
                     var oldSize = processedData.Length;
                     if (newSize != oldSize)
                     {
-                        var lastByte = processedData[processedData.Length - 1];
+                        var lastByte = processedData.Length > 0 ? processedData[processedData.Length - 1] : 0;
                         Array.Resize(ref processedData, newSize);
 
                         var fillValue = (byte)((lastByte & 0x80) != 0 ? 0xaa : 0x55);
@@ -331,7 +304,26 @@ namespace FamiStudio
 
                 sourceData.SerializeState(buffer);
                 buffer.Serialize(ref color);
-                buffer.Serialize(ref processedData);
+
+                // Processing parameters.
+                buffer.Serialize(ref sampleRate);
+                buffer.Serialize(ref previewRate);
+                buffer.Serialize(ref volumeAdjust);
+                buffer.Serialize(ref paddingMode);
+                buffer.Serialize(ref reverseBits);
+                buffer.Serialize(ref trimZeroVolume);
+                buffer.Serialize(ref palProcessing);
+
+                // The process data will not be stored in the file, it will 
+                // be reprocessed every time we reopen the file.
+                if (buffer.IsForUndoRedo)
+                {
+                    buffer.Serialize(ref processedData);
+                }
+                else if (buffer.IsReading)
+                {
+                    Process();
+                }
             }
         }
 
@@ -396,7 +388,7 @@ namespace FamiStudio
         private int pitch = 15;
 
         public DPCMSample Sample { get => sample; set => sample = value; }
-        public bool Loop { get => loop; set => loop = value; }
+        public bool Loop { get => loop;  set => loop  = value; }
         public int Pitch { get => pitch; set => pitch = value; }
 
         public void SerializeState(ProjectBuffer buffer)
@@ -411,17 +403,19 @@ namespace FamiStudio
     {
         void SerializeState(ProjectBuffer buffer);
         bool Trim(float timeStart, float timeEnd);
-        int NumSamples { get; }
+        float GetSampleRate(bool pal);
+        float GetDuration(bool pal);
+        int DataSize { get; }
     }
 
     public class DPCMSampleWavSourceData : IDPCMSampleSourceData
     {
-        int sampleRate;
-        short[] wavData;
+        private int     sampleRate;
+        private short[] wavData;
 
+        public int     DataSize   => wavData.Length * 2;
         public int     SampleRate => sampleRate;
         public short[] Samples    => wavData;
-        public int     NumSamples => wavData.Length;
 
         public DPCMSampleWavSourceData()
         {
@@ -443,14 +437,24 @@ namespace FamiStudio
         {
             return WaveUtils.TrimWave(ref wavData, sampleRate, timeStart, timeEnd);
         }
+
+        public float GetSampleRate(bool pal)
+        {
+            return sampleRate;
+        }
+
+        public float GetDuration(bool pal)
+        {
+            return wavData.Length / (float)sampleRate;
+        }
     }
 
     public class DPCMSampleDmcSourceData : IDPCMSampleSourceData
     {
-        byte[] dmcData;
+        private byte[] dmcData;
 
-        public byte[] Data       => dmcData;
-        public int    NumSamples => dmcData.Length * 8;
+        public byte[] Data     => dmcData;
+        public int    DataSize => dmcData.Length;
 
         public DPCMSampleDmcSourceData()
         {
@@ -468,8 +472,19 @@ namespace FamiStudio
 
         public bool Trim(float timeStart, float timeEnd)
         {
+            // DPCMTODO : Here we need the sample rate (PAL/NTSC) to know what these times mean.
             // DPCMTODO : TODO!
             return false;
+        }
+
+        public float GetSampleRate(bool pal)
+        {
+            return DPCMSample.DpcmSampleMaximumRate[pal ? 1 : 0];
+        }
+
+        public float GetDuration(bool pal)
+        {
+            return dmcData.Length * 8 / GetSampleRate(pal);
         }
     }
 
