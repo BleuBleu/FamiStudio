@@ -28,10 +28,8 @@ Doc:
 
 DPCM Editor
 ===========
-- Sample rate, do final review.
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
 - Make sure clipboard still works (must copy source data as well).
-- What is the quality setting in RJDMC?
 - What about space to play DPCM?
 - Tooltips everywhere!
 

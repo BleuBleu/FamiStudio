@@ -131,7 +131,7 @@ namespace FamiStudio
                 var targetSampleRate = DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.
-                if (!SourceDataIsWav && volumeAdjust == 100 && !trimZeroVolume)
+                if (!SourceDataIsWav && volumeAdjust == 100 && sampleRate == 15 && !trimZeroVolume)
                 {
                     processedData = WaveUtils.CopyDpcm(SourceDmcData.Data);
 
