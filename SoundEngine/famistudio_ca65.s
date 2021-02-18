@@ -3814,6 +3814,7 @@ famistudio_sfx_play:
 famistudio_sfx_update:
 
     @tmp = famistudio_r0
+    @tmpx = famistudio_r1
     @effect_data_ptr = famistudio_ptr0
 
     lda famistudio_sfx_repeat,x ; Check if repeat counter is not zero
@@ -3857,14 +3858,10 @@ famistudio_sfx_update:
     lda (@effect_data_ptr),y
     iny
     bne :+
-        pha
-        txa
-        pha
+        stx @tmpx
         ldx @tmp
         jsr @inc_sfx
-        pla
-        tax
-        pla
+        ldx @tmpx
     :
     sta famistudio_sfx_buffer-128,x
     ldx @tmp
