@@ -3838,6 +3838,9 @@ famistudio_sfx_update:
     bmi @get_data ; If bit 7 is set, it is a register write
     beq @eof
     iny
+    bne :+
+        jsr @inc_sfx
+    :
     sta famistudio_sfx_repeat,x ; If bit 7 is reset, it is number of repeats
     tya
     sta famistudio_sfx_offset,x
@@ -3845,11 +3848,24 @@ famistudio_sfx_update:
 
 @get_data:
     iny
+    bne :+
+        jsr @inc_sfx
+    :
     stx @tmp ; It is a register write
     adc @tmp ; Get offset in the effect output buffer
     tax
     lda (@effect_data_ptr),y
     iny
+    bne :+
+        pha
+        txa
+        pha
+        ldx @tmp
+        jsr @inc_sfx
+        pla
+        tax
+        pla
+    :
     sta famistudio_sfx_buffer-128,x
     ldx @tmp
     jmp @read_byte 
@@ -3910,6 +3926,11 @@ famistudio_sfx_update:
     sta famistudio_output_buf+10
 
 @no_noise:
+    rts
+
+@inc_sfx:
+    inc @effect_data_ptr+1
+    inc famistudio_sfx_ptr_hi,x
     rts
 
 .endif

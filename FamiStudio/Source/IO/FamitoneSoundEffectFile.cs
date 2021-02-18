@@ -179,13 +179,8 @@ namespace FamiStudio
                         effect.RemoveRange(lastZeroVolumeIdx, effect.Count - lastZeroVolumeIdx);
                     }
 
-                    if (effect.Count > 255)
-                    {
-                        Log.LogMessage(LogSeverity.Warning, $"Effect ({song.Name}) was longer than 256 bytes ({effect.Count}) and was truncated.");
-                        effect.RemoveRange(255, effect.Count - 255);
-                    }
-
                     effect.Add(0);
+                    Log.LogMessage(LogSeverity.Info, $"Effect ({song.Name}): {effect.Count} bytes.");
 
                     lines.Add($"{ll}sfx_{str}_{Utils.MakeNiceAsmName(song.Name)}:");
 
