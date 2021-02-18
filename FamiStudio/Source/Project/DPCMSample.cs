@@ -280,7 +280,7 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            buffer.Serialize(ref id);
+            buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
 
             // At version 9 (FamiStudio 2.4.0) we added a proper DPCM sample editor.
