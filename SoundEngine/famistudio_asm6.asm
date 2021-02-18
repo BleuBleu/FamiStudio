@@ -2466,13 +2466,16 @@ famistudio_update:
 .endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
-    lda famistudio_tempo_acc_lo
-    adc famistudio_tempo_step_lo
-    sta famistudio_tempo_acc_lo
-    lda famistudio_tempo_acc_hi
-    adc famistudio_tempo_step_hi
-    sta famistudio_tempo_acc_hi
+    lda famistudio_song_speed
+    bmi @skip_famitracker_tempo_update ; bit 7 = paused
+        clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
+        lda famistudio_tempo_acc_lo
+        adc famistudio_tempo_step_lo
+        sta famistudio_tempo_acc_lo
+        lda famistudio_tempo_acc_hi
+        adc famistudio_tempo_step_hi
+        sta famistudio_tempo_acc_hi
+    @skip_famitracker_tempo_update:
 .else
     ; See if we need to run a double frame (playing NTSC song on PAL)
     dec famistudio_tempo_frame_cnt
