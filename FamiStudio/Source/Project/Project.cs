@@ -153,7 +153,7 @@ namespace FamiStudio
             return songs.Find(s => s.Name == name) == null;
         }
 
-        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
+        public DPCMSample CreateDPCMSample(string name)
         {
             // Already exist, this should not happen.
             if (samples.Find(s => s.Name == name) != null)
@@ -163,28 +163,34 @@ namespace FamiStudio
             }
 
             var sample = new DPCMSample(GenerateUniqueId(), name);
-            sample.SetDmcSourceData(data);
-            sample.Process();
             samples.Add(sample);
             SortSamples();
 
             return sample;
         }
 
+        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
+        {
+            var sample = CreateDPCMSample(name);
+
+            if (sample == null)
+                return null;
+
+            sample.SetDmcSourceData(data);
+            sample.Process();
+
+            return sample;
+        }
+
         public DPCMSample CreateDPCMSampleFromWavData(string name, short[] data, int sampleRate)
         {
-            // Already exist, this should not happen.
-            if (samples.Find(s => s.Name == name) != null)
-            {
-                Debug.Assert(false);
-                return null;
-            }
+            var sample = CreateDPCMSample(name);
 
-            var sample = new DPCMSample(GenerateUniqueId(), name);
+            if (sample == null)
+                return null;
+
             sample.SetWavSourceData(data, sampleRate);
             sample.Process();
-            samples.Add(sample);
-            SortSamples();
 
             return sample;
         }

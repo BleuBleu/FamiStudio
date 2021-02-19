@@ -545,7 +545,7 @@ namespace FamiStudio
             if (exportSongIds != null)
             {
                 FamitoneSoundEffectFile f = new FamitoneSoundEffectFile();
-                f.Save(project, exportSongIds, format, machine, filename);
+                f.Save(project, exportSongIds, format, machine, famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2, filename);
             }
         }
 

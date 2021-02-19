@@ -2489,13 +2489,16 @@ famistudio_update:
 .endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
-    lda famistudio_tempo_acc_lo
-    adc famistudio_tempo_step_lo
-    sta famistudio_tempo_acc_lo
-    lda famistudio_tempo_acc_hi
-    adc famistudio_tempo_step_hi
-    sta famistudio_tempo_acc_hi
+    lda famistudio_song_speed
+    bmi @skip_famitracker_tempo_update ; bit 7 = paused
+        clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
+        lda famistudio_tempo_acc_lo
+        adc famistudio_tempo_step_lo
+        sta famistudio_tempo_acc_lo
+        lda famistudio_tempo_acc_hi
+        adc famistudio_tempo_step_hi
+        sta famistudio_tempo_acc_hi
+    @skip_famitracker_tempo_update:
 .else
     ; See if we need to run a double frame (playing NTSC song on PAL)
     dec famistudio_tempo_frame_cnt
@@ -3856,6 +3859,7 @@ famistudio_sfx_play:
 famistudio_sfx_update:
 
     @tmp = famistudio_r0
+    @tmpx = famistudio_r1
     @effect_data_ptr = famistudio_ptr0
 
     lda famistudio_sfx_repeat,x ; Check if repeat counter is not zero
@@ -3880,6 +3884,9 @@ famistudio_sfx_update:
     bmi @get_data ; If bit 7 is set, it is a register write
     beq @eof
     iny
+    bne @store_repeat
+    jsr @inc_sfx
+@store_repeat:
     sta famistudio_sfx_repeat,x ; If bit 7 is reset, it is number of repeats
     tya
     sta famistudio_sfx_offset,x
@@ -3887,11 +3894,20 @@ famistudio_sfx_update:
 
 @get_data:
     iny
+    bne @get_data2
+    jsr @inc_sfx
+@get_data2:
     stx @tmp ; It is a register write
     adc @tmp ; Get offset in the effect output buffer
     tax
     lda (@effect_data_ptr),y
     iny
+    bne @write_buffer
+    stx @tmpx
+    ldx @tmp
+    jsr @inc_sfx
+    ldx @tmpx
+@write_buffer:
     sta famistudio_sfx_buffer-128,x
     ldx @tmp
     jmp @read_byte 
@@ -3952,6 +3968,11 @@ famistudio_sfx_update:
     sta famistudio_output_buf+10
 
 @no_noise:
+    rts
+
+@inc_sfx:
+    inc @effect_data_ptr+1
+    inc famistudio_sfx_ptr_hi,x
     rts
 
 .endif

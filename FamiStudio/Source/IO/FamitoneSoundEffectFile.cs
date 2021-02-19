@@ -54,7 +54,7 @@ namespace FamiStudio
             return writes;
         }
 
-        public bool Save(Project project, int[] songIds, int format, int machine, string filename)
+        public bool Save(Project project, int[] songIds, int format, int machine, int kernel, string filename)
         {
             SetupFormat(format);
 
@@ -94,6 +94,7 @@ namespace FamiStudio
                     var volume = new int[4];
                     var regs = new int[32];
                     var effect = new List<byte>();
+                    var lastByteIsOperand = false;
 
                     for (int i = 0; i < regs.Length; i++)
                         regs[i] = -1;
@@ -157,6 +158,9 @@ namespace FamiStudio
                                 effect.Add(RegisterMap[reg.Register - 0x4000]);
                                 effect.Add((byte)reg.Value);
 
+                                if (effect.Count == 255)
+                                    lastByteIsOperand = true;
+
                                 regs[reg.Register - 0x4000] = reg.Value;
 
                                 lastChangeFrame = reg.FrameNumber;
@@ -179,10 +183,11 @@ namespace FamiStudio
                         effect.RemoveRange(lastZeroVolumeIdx, effect.Count - lastZeroVolumeIdx);
                     }
 
-                    if (effect.Count > 255)
+                    if (kernel == FamiToneKernel.FamiTone2 && effect.Count > 255)
                     {
                         Log.LogMessage(LogSeverity.Warning, $"Effect ({song.Name}) was longer than 256 bytes ({effect.Count}) and was truncated.");
-                        effect.RemoveRange(255, effect.Count - 255);
+                        var removeStart = lastByteIsOperand ? 254 : 255;
+                        effect.RemoveRange(removeStart, effect.Count - removeStart);
                     }
 
                     effect.Add(0);
@@ -191,6 +196,8 @@ namespace FamiStudio
 
                     for (int i = 0; i < (effect.Count + 15) / 16; i++)
                         lines.Add($"\t{db} {string.Join(",", effect.Skip(i * 16).Take(Math.Min(16, effect.Count - i * 16)).Select(x => $"${x:x2}"))}");
+
+                    Log.LogMessage(LogSeverity.Info, $"Effect ({song.Name}): {effect.Count} bytes.");
                 }
             }
 
