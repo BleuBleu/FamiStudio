@@ -401,6 +401,8 @@ namespace FamiStudio
                         project, filename, songIds,
                         props.GetPropertyValue<string>(1),
                         props.GetPropertyValue<string>(2));
+
+                    lastExportFilename = filename;
                 }
             }
         }
