@@ -558,7 +558,7 @@ namespace FamiStudio
             {
                 dialog.Hide();
                 Export(parentForm, false);
-                lastExportCrc = ComputeProjectCrc(project);
+                lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;
             }
         }
     }
