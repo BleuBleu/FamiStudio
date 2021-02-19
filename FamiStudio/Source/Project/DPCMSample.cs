@@ -28,6 +28,13 @@ namespace FamiStudio
         private bool reverseBits;
         private bool trimZeroVolume;
         private bool palProcessing;
+        private float[,] volumeEnvelope = new float[4, 2]
+        {
+            {  0.00f, 1.0f },
+            {  0.25f, 1.0f },
+            {  0.75f, 1.0f },
+            {  1.00f, 1.0f }
+        };
 
         // Properties.
         public int Id => id;
@@ -35,7 +42,7 @@ namespace FamiStudio
         public Color Color { get => color; set => color = value; }
 
         public bool SourceDataIsWav { get => sourceData is DPCMSampleWavSourceData; }
-        public IDPCMSampleSourceData SourceData { get => sourceData; }
+        public IDPCMSampleSourceData  SourceData { get => sourceData; }
         public DPCMSampleWavSourceData SourceWavData { get => sourceData as DPCMSampleWavSourceData; }
         public DPCMSampleDmcSourceData SourceDmcData { get => sourceData as DPCMSampleDmcSourceData; }
 
@@ -44,20 +51,22 @@ namespace FamiStudio
         public float ProcessedSampleRate => DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
         public float ProcessedDuration   => processedData.Length * 8 / ProcessedSampleRate;
 
-        public byte[] ProcessedData  { get => processedData;  set => processedData  = value; }
-        public int    SampleRate     { get => sampleRate;     set => sampleRate     = value; }
-        public int    PreviewRate    { get => previewRate;    set => previewRate    = value; }
-        public bool   ReverseBits    { get => reverseBits;    set => reverseBits    = value; }
-        public bool   TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
-        public bool   PalProcessing  { get => palProcessing;  set => palProcessing      = value; }
-        public int    VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
-        public int    PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
+        public byte[]   ProcessedData  { get => processedData;  set => processedData  = value; }
+        public int      SampleRate     { get => sampleRate;     set => sampleRate     = value; }
+        public int      PreviewRate    { get => previewRate;    set => previewRate    = value; }
+        public bool     ReverseBits    { get => reverseBits;    set => reverseBits    = value; }
+        public bool     TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
+        public bool     PalProcessing  { get => palProcessing;  set => palProcessing  = value; }
+        public int      VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
+        public int      PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
+        public float[,] VolumeEnvelope { get => volumeEnvelope; }
 
         public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits;
 
         public static object ProcessedDataLock = new object();
         public const int MaxSampleSize = (255 << 4) + 1;
 
+        public int   SourceNumSamples => sourceData.NumSamples;
         public int   SourceDataSize   => sourceData.DataSize;
         public float SourceSampleRate => sourceData.GetSampleRate(palProcessing);
         public float SourceDuration   => sourceData.GetDuration(palProcessing);
@@ -88,12 +97,21 @@ namespace FamiStudio
         {
             sourceData = new DPCMSampleDmcSourceData(data);
             paddingMode = DPCMPaddingType.Unpadded;
+            ResetVolumeEnvelope();
         }
 
         public void SetWavSourceData(short[] data, int rate)
         {
             sourceData = new DPCMSampleWavSourceData(data, rate);
             paddingMode = DPCMPaddingType.PadTo16Bytes;
+            ResetVolumeEnvelope();
+        }
+
+        public bool TrimSourceSourceData(int sampleStart, int sampleEnd)
+        {
+            bool trimmed = sourceData.Trim(sampleStart, sampleEnd);
+            ClampVolumeEnvelope();
+            return trimmed;
         }
 
         public void RemoveWavSourceData()
@@ -106,6 +124,7 @@ namespace FamiStudio
                 volumeAdjust = 100;
                 trimZeroVolume = false;
                 paddingMode = DPCMPaddingType.Unpadded;
+                ResetVolumeEnvelope();
             }
         }
 
@@ -119,6 +138,7 @@ namespace FamiStudio
             reverseBits = false;
             PalProcessing = false; // DPCMTODO : Does that make any sense??
             paddingMode = DPCMPaddingType.Unpadded;
+            ResetVolumeEnvelope();
         }
 
         public void Process()
@@ -255,7 +275,30 @@ namespace FamiStudio
                 idMap.Add(id, this);
 
             Debug.Assert(project.GetSample(id) == this);
+
+            // DPCMTODO: Validate volume envelope is sorted.
 #endif
+        }
+
+        private void ResetVolumeEnvelope()
+        {
+            volumeEnvelope[0, 0] = SourceDuration * 0.00000f;
+            volumeEnvelope[1, 0] = SourceDuration * 0.33333f;
+            volumeEnvelope[2, 0] = SourceDuration * 0.66666f;
+            volumeEnvelope[3, 0] = SourceDuration * 1.00000f;
+
+            volumeEnvelope[0, 1] = 1.0f;
+            volumeEnvelope[1, 1] = 0.5f; // 1.0f; MATTT
+            volumeEnvelope[2, 1] = 1.0f;
+            volumeEnvelope[3, 1] = 1.25f; // 1.0f; MATTT
+        }
+
+        private void ClampVolumeEnvelope()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                volumeEnvelope[i, 0] = Math.Min(SourceDuration, volumeEnvelope[i, 0]);
+            }
         }
 
         // At version 9 (FamiStudio 2.4.0) we added a proper DPCM sample editor
@@ -446,7 +489,7 @@ namespace FamiStudio
 
         public float GetDuration(bool pal)
         {
-            return wavData.Length / (float)sampleRate;
+            return (wavData.Length - 1) / (float)sampleRate;
         }
     }
 
