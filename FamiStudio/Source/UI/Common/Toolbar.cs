@@ -150,7 +150,7 @@ namespace FamiStudio
             buttons[ButtonNew]       = new Button { Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
             buttons[ButtonSave]      = new Button { Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
-            buttons[ButtonExport]    = new Button { Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
+            buttons[ButtonExport]    = new Button { Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport, RightClick = OnRepeatLastExport };
             buttons[ButtonCopy]      = new Button { Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
             buttons[ButtonCut]       = new Button { Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
             buttons[ButtonPaste]     = new Button { Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
@@ -170,7 +170,7 @@ namespace FamiStudio
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
             buttons[ButtonOpen].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
             buttons[ButtonSave].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S} - {MouseRight} Save As...";
-            buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}";
+            buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} Repeat last export";
             buttons[ButtonCopy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
             buttons[ButtonCut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
             buttons[ButtonPaste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
@@ -352,6 +352,11 @@ namespace FamiStudio
         private void OnExport()
         {
             App.Export();
+        }
+
+        private void OnRepeatLastExport()
+        {
+            App.RepeatLastExport();
         }
 
         private void OnCut()

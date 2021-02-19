@@ -1,4 +1,7 @@
-﻿namespace FamiStudio
+﻿using System;
+using System.Text;
+
+namespace FamiStudio
 {
     static class CRC32
     {
@@ -61,6 +64,17 @@
                 c = table[(c ^ data[i]) & 0xFF] ^ (c >> 8);
             }
             return c ^ 0xFFFFFFFF;
+        }
+
+        static public uint Compute(int val, uint initial = 0)
+        {
+            return Compute(BitConverter.GetBytes(val), initial);
+        }
+
+        static public uint Compute(string str, uint initial = 0)
+        {
+            byte[] bytes = Encoding.ASCII.GetBytes(str);
+            return Compute(bytes, initial);
         }
     }
 }

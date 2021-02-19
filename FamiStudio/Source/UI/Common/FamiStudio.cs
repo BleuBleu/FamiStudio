@@ -19,6 +19,7 @@ namespace FamiStudio
         private SongPlayer songPlayer;
         private InstrumentPlayer instrumentPlayer;
         private UndoRedoManager undoRedoManager;
+        private ExportDialog exportDialog;
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
         private bool palPlayback = false;
@@ -426,6 +427,7 @@ namespace FamiStudio
                 undoRedoManager.TransactionEnded -= UndoRedoManager_PostUndoRedo;
                 undoRedoManager.Updated -= UndoRedoManager_Updated;
                 undoRedoManager = null;
+                exportDialog = null;
                 project = null;
 
                 StopEverything();
@@ -458,6 +460,7 @@ namespace FamiStudio
             InitializeSongPlayer();
             InitializeInstrumentPlayer();
 
+            exportDialog = null;
             undoRedoManager = new UndoRedoManager(project, this);
             undoRedoManager.PreUndoRedo      += UndoRedoManager_PreUndoRedo;
             undoRedoManager.PostUndoRedo     += UndoRedoManager_PostUndoRedo;
@@ -584,8 +587,25 @@ namespace FamiStudio
 
         public void Export()
         {
-            var dlgExp = new ExportDialog(project);
-            dlgExp.ShowDialog(mainForm);
+            exportDialog = new ExportDialog(project);
+            exportDialog.ShowDialog(mainForm);
+        }
+
+        public void RepeatLastExport()
+        {
+            if (exportDialog == null)
+            {
+                DisplayWarning("No last export to repeat");
+            }
+            else if (!exportDialog.CanRepeatLastExport(project))
+            {
+                DisplayWarning("Project has changed too much to repeat last export.");
+                exportDialog = null;
+            }
+            else
+            {
+                exportDialog.Export(mainForm, true);
+            }
         }
 
         public void OpenConfigDialog()
