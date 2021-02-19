@@ -57,7 +57,6 @@ namespace FamiStudio
         MultiPropertyDialog dialog;
         uint lastExportCrc;
         string lastExportFilename;
-        public uint LastExportHash => lastExportCrc;
 
         public unsafe ExportDialog(Project project)
         {
