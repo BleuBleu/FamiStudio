@@ -170,7 +170,7 @@ namespace FamiStudio
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
             buttons[ButtonOpen].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
             buttons[ButtonSave].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S} - {MouseRight} Save As...";
-            buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} Repeat last export";
+            buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} Repeat last export {Ctrl} {Shift} {E}";
             buttons[ButtonCopy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
             buttons[ButtonCut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
             buttons[ButtonPaste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";

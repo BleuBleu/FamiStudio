@@ -1065,7 +1065,10 @@ namespace FamiStudio
             }
             else if (ctrl && e.KeyCode == Keys.E)
             {
-                Export();
+                if (shift)
+                    RepeatLastExport();
+                else
+                    Export();
             }
             else if (ctrl && e.KeyCode == Keys.O)
             {
