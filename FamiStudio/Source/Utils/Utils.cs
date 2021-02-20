@@ -180,9 +180,14 @@ namespace FamiStudio
             return filenameNoExtension + suffix + extension;
         }
 
-        public static float SmoothStep(float t)
+        public static float SmoothStep(float x)
         {
-            return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+            return x * x * (3 - 2 * x);
+        }
+
+        public static float SmootherStep(float x)
+        {
+            return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
         }
 
         public static string GetTemporaryDiretory()

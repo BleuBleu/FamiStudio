@@ -14,6 +14,18 @@ namespace FamiStudio
         RoundTo16BytesPlusOne
     };
 
+    public struct SampleVolumePair
+    {
+        public SampleVolumePair(int s, float v)
+        {
+            sample = s;
+            volume = v;
+        }
+
+        public int   sample;
+        public float volume;
+    };
+
     public static class WaveUtils
     {
         static public void Resample(short[] source, int minSample, int maxSample, short[] dest)
@@ -298,6 +310,33 @@ namespace FamiStudio
             for (int i = 0; i < wave.Length; i++)
             {
                 wave[i] = (short)Utils.Clamp((int)Math.Round(wave[i] * volume), short.MinValue, short.MaxValue);
+            }
+        }
+
+        // volumeEnvelope = series of time/volume pairs. 
+        static public void AdjustVolume(short[] wave, List<SampleVolumePair> volumeEnvelope)
+        {
+            // Enforce the first/last times to cover the entire range.
+            Debug.Assert(volumeEnvelope[0].sample == 0);
+            Debug.Assert(volumeEnvelope[volumeEnvelope.Count - 1].sample == wave.Length - 1);
+
+            // Simple smoothstep interpolation (which is equivalent to cosine interpolation).
+            for (int i = 0; i < volumeEnvelope.Count - 1; i++)
+            {
+                Debug.Assert(volumeEnvelope[i].sample < volumeEnvelope[i + 1].sample);
+
+                var s0 = volumeEnvelope[i + 0].sample;
+                var s1 = volumeEnvelope[i + 1].sample;
+                var v0 = volumeEnvelope[i + 0].volume;
+                var v1 = volumeEnvelope[i + 1].volume;
+
+                for (int j = s0; j <= s1; j++)
+                {
+                    var ratio  = (j - s0) / (float)(s1 - s0);
+                    var volume = Utils.Lerp(v0, v1, Utils.SmoothStep(ratio));
+
+                    wave[j] = (short)Utils.Clamp((int)Math.Round(wave[j] * volume), short.MinValue, short.MaxValue);
+                }
             }
         }
     }

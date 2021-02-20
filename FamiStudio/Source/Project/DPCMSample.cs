@@ -28,12 +28,12 @@ namespace FamiStudio
         private bool reverseBits;
         private bool trimZeroVolume;
         private bool palProcessing;
-        private float[,] volumeEnvelope = new float[4, 2]
+        private SampleVolumePair[] volumeEnvelope = new SampleVolumePair[4]
         {
-            {  0.00f, 1.0f },
-            {  0.25f, 1.0f },
-            {  0.75f, 1.0f },
-            {  1.00f, 1.0f }
+            new SampleVolumePair(0, 1.0f),
+            new SampleVolumePair(0, 1.0f),
+            new SampleVolumePair(0, 1.0f),
+            new SampleVolumePair(0, 1.0f)
         };
 
         // Properties.
@@ -59,7 +59,7 @@ namespace FamiStudio
         public bool     PalProcessing  { get => palProcessing;  set => palProcessing  = value; }
         public int      VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
         public int      PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
-        public float[,] VolumeEnvelope { get => volumeEnvelope; }
+        public SampleVolumePair[] VolumeEnvelope { get => volumeEnvelope; }
 
         public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits;
 
@@ -141,6 +141,20 @@ namespace FamiStudio
             ResetVolumeEnvelope();
         }
 
+        public bool UsesVolumeEnvelope
+        {
+            get
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    if (Math.Abs(volumeEnvelope[i].volume - 1.0f) > 0.02f)
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
         public void Process()
         {
             lock (ProcessedDataLock)
@@ -150,7 +164,7 @@ namespace FamiStudio
                 var targetSampleRate = DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.
-                if (!SourceDataIsWav && volumeAdjust == 100 && sampleRate == 15 && !trimZeroVolume)
+                if (!SourceDataIsWav && volumeAdjust == 100 && !UsesVolumeEnvelope && sampleRate == 15 && !trimZeroVolume)
                 {
                     processedData = WaveUtils.CopyDpcm(SourceDmcData.Data);
 
@@ -181,7 +195,26 @@ namespace FamiStudio
                         WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out sourceWavData);
                     }
 
-                    if (volumeAdjust != 100)
+                    if (UsesVolumeEnvelope)
+                    {
+                        var envelope = new List<SampleVolumePair>();
+
+                        volumeEnvelope[0].sample = 0;
+                        volumeEnvelope[volumeEnvelope.Length - 1].sample = SourceNumSamples - 1;
+
+                        envelope.Add(new SampleVolumePair(volumeEnvelope[0].sample, volumeEnvelope[0].volume * (volumeAdjust / 100.0f)));
+
+                        for (int i = 1; i < 4; i++)
+                        {
+                            if (volumeEnvelope[i].sample != envelope[envelope.Count - 1].sample)
+                            {
+                                envelope.Add(new SampleVolumePair(volumeEnvelope[i].sample, volumeEnvelope[i].volume * (volumeAdjust / 100.0f)));
+                            }
+                        }
+
+                        WaveUtils.AdjustVolume(sourceWavData, envelope);
+                    }
+                    else if (volumeAdjust != 100)
                     {
                         WaveUtils.AdjustVolume(sourceWavData, Math.Max(0, volumeAdjust) / 100.0f);
                     }
@@ -282,22 +315,22 @@ namespace FamiStudio
 
         private void ResetVolumeEnvelope()
         {
-            volumeEnvelope[0, 0] = SourceDuration * 0.00000f;
-            volumeEnvelope[1, 0] = SourceDuration * 0.33333f;
-            volumeEnvelope[2, 0] = SourceDuration * 0.66666f;
-            volumeEnvelope[3, 0] = SourceDuration * 1.00000f;
+            volumeEnvelope[0].sample = 0;
+            volumeEnvelope[1].sample = (int)Math.Round(SourceNumSamples * 0.33333f);
+            volumeEnvelope[2].sample = (int)Math.Round(SourceNumSamples * 0.66666f);
+            volumeEnvelope[3].sample = SourceNumSamples - 1;
 
-            volumeEnvelope[0, 1] = 1.0f;
-            volumeEnvelope[1, 1] = 0.5f; // 1.0f; MATTT
-            volumeEnvelope[2, 1] = 1.0f;
-            volumeEnvelope[3, 1] = 1.25f; // 1.0f; MATTT
+            volumeEnvelope[0].volume = 1.0f;
+            volumeEnvelope[1].volume = 0.5f;
+            volumeEnvelope[2].volume = 1.0f;
+            volumeEnvelope[3].volume = 1.25f;
         }
 
         private void ClampVolumeEnvelope()
         {
             for (int i = 0; i < 4; i++)
             {
-                volumeEnvelope[i, 0] = Math.Min(SourceDuration, volumeEnvelope[i, 0]);
+                volumeEnvelope[i].sample = Math.Min(SourceNumSamples - 1, volumeEnvelope[i].sample);
             }
         }
 

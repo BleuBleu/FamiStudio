@@ -1341,10 +1341,10 @@ namespace FamiStudio
                     // Volume envelope
                     for (int i = 0; i < 3; i++)
                     {
-                        var x0 = GetPixelForWaveTime(editSample.VolumeEnvelope[i + 0, 0], scrollX);
-                        var x1 = GetPixelForWaveTime(editSample.VolumeEnvelope[i + 1, 0], scrollX);
-                        var y0 = editSample.VolumeEnvelope[i + 0, 1] * halfPanelSizeY;
-                        var y1 = editSample.VolumeEnvelope[i + 1, 1] * halfPanelSizeY;
+                        var x0 = GetPixelForWaveTime(editSample.VolumeEnvelope[i + 0].sample / editSample.SourceSampleRate, scrollX);
+                        var x1 = GetPixelForWaveTime(editSample.VolumeEnvelope[i + 1].sample / editSample.SourceSampleRate, scrollX);
+                        var y0 = editSample.VolumeEnvelope[i + 0].volume * halfPanelSizeY;
+                        var y1 = editSample.VolumeEnvelope[i + 1].volume * halfPanelSizeY;
 
                         var points = new float[4, 2]
                         {
