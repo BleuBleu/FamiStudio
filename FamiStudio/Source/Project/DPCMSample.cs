@@ -315,15 +315,10 @@ namespace FamiStudio
 
         private void ResetVolumeEnvelope()
         {
-            volumeEnvelope[0].sample = 0;
-            volumeEnvelope[1].sample = (int)Math.Round(SourceNumSamples * 0.33333f);
-            volumeEnvelope[2].sample = (int)Math.Round(SourceNumSamples * 0.66666f);
-            volumeEnvelope[3].sample = SourceNumSamples - 1;
-
-            volumeEnvelope[0].volume = 1.0f;
-            volumeEnvelope[1].volume = 0.5f;
-            volumeEnvelope[2].volume = 1.0f;
-            volumeEnvelope[3].volume = 1.25f;
+            volumeEnvelope[0] = new SampleVolumePair(0);
+            volumeEnvelope[1] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (1.0f / 3.0f)));
+            volumeEnvelope[2] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (2.0f / 3.0f)));
+            volumeEnvelope[3] = new SampleVolumePair(SourceNumSamples - 1);
         }
 
         private void ClampVolumeEnvelope()

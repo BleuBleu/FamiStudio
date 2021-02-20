@@ -16,7 +16,7 @@ namespace FamiStudio
 
     public struct SampleVolumePair
     {
-        public SampleVolumePair(int s, float v)
+        public SampleVolumePair(int s, float v = 1.0f)
         {
             sample = s;
             volume = v;

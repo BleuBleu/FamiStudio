@@ -1343,8 +1343,8 @@ namespace FamiStudio
                     {
                         var x0 = GetPixelForWaveTime(editSample.VolumeEnvelope[i + 0].sample / editSample.SourceSampleRate, scrollX);
                         var x1 = GetPixelForWaveTime(editSample.VolumeEnvelope[i + 1].sample / editSample.SourceSampleRate, scrollX);
-                        var y0 = editSample.VolumeEnvelope[i + 0].volume * halfPanelSizeY;
-                        var y1 = editSample.VolumeEnvelope[i + 1].volume * halfPanelSizeY;
+                        var y0 = effectPanelSizeY - editSample.VolumeEnvelope[i + 0].volume * halfPanelSizeY;
+                        var y1 = effectPanelSizeY - editSample.VolumeEnvelope[i + 1].volume * halfPanelSizeY;
 
                         var points = new float[4, 2]
                         {
