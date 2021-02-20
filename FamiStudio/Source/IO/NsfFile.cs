@@ -172,7 +172,7 @@ namespace FamiStudio
                     // We start putting the samples right after the code, so the first page is not a
                     // full one. If we have near 16KB of samples, we might go over the 4 page limit.
                     // In this case, we will introduce padding until the next page.
-                    if (nsfBytes.Count + totalSampleSize > Project.MaxTotalSampleDataSize)
+                    if (nsfBytes.Count + totalSampleSize > Project.MaxMappedSampleSize)
                     {
                         dpcmPadding = NsfPageSize - (nsfBytes.Count & (NsfPageSize - 1));
                         nsfBytes.AddRange(new byte[dpcmPadding]);
@@ -339,6 +339,7 @@ namespace FamiStudio
         Song song;
         Project project;
         ChannelState[] channelStates;
+        bool preserveDpcmPadding;
 
         public int GetBestMatchingNote(int period, ushort[] noteTable, out int finePitch)
         {
@@ -511,21 +512,19 @@ namespace FamiStudio
 
             if (channel.Type == ChannelType.Dpcm)
             {
-                // Subtracting one here is not correct. But it is a fact that a lot of games
-                // seemed to favor tight sample packing and did not care about playing one
-                // extra sample of garbage.
-                var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0) - 1; // DPCMTODO : Review this!
+                var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0);
 
                 if (len > 0) 
                 {
-                    //// If the length of the sample - 1 appears to by 64-byte aligned, we will 
-                    //// simply truncate the last byte. This is not correct as we effectively 
-                    //// lose 1 byte of data, but this avoid having to add many bytes of padding 
-                    //// between samples.
-                    //if (((len - 1) & 0x3f) == 0)
-                    //{
-                    //    len--;
-                    //}
+                    // Subtracting one here is not correct. But it is a fact that a lot of games
+                    // seemed to favor tight sample packing and did not care about playing one
+                    // extra sample of garbage.
+                    if (!preserveDpcmPadding)
+                    {
+                        Debug.Assert((len & 0xf) == 1);
+                        len--;
+                        Debug.Assert((len & 0xf) == 0);
+                    }
 
                     var sampleData = new byte[len];
                     for (int i = 0; i < len; i++)
@@ -820,7 +819,7 @@ namespace FamiStudio
             return numNamcoChannels;
         }
 
-        public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence, bool reverseDpcm)
+        public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence, bool reverseDpcm, bool preserveDpcmPad)
         {
             nsf = NsfOpen(filename);
 
@@ -831,6 +830,8 @@ namespace FamiStudio
 
             if (songIndex < 0 || songIndex > trackCount)
                 return null;
+
+            preserveDpcmPadding = preserveDpcmPad;
 
             var palSource = (NsfIsPal(nsf) & 1) == 1;
             var numFrames = duration * (palSource ? 50 : 60);

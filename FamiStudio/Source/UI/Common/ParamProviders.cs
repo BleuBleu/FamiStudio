@@ -9,6 +9,7 @@ namespace FamiStudio
     public class ParamInfo
     {
         public string Name;
+        public string ToolTip;
         public int MinValue;
         public int MaxValue;
         public int DefaultValue;
@@ -16,9 +17,11 @@ namespace FamiStudio
         public bool IsList;
 
         public delegate int GetValueDelegate();
+        public delegate bool EnabledDelegate();
         public delegate void SetValueDelegate(int value);
         public delegate string GetValueStringDelegate();
 
+        public EnabledDelegate IsEnabled;
         public GetValueDelegate GetValue;
         public SetValueDelegate SetValue;
         public GetValueStringDelegate GetValueString;
@@ -33,9 +36,10 @@ namespace FamiStudio
             return Utils.Clamp(value, MinValue, MaxValue);
         }
 
-        protected ParamInfo(string name, int minVal, int maxVal, int defaultVal, bool list = false, int snap = 1)
+        protected ParamInfo(string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false, int snap = 1)
         {
             Name = name;
+            ToolTip = tooltip;
             MinValue = minVal;
             MaxValue = maxVal;
             DefaultValue = defaultVal;
@@ -47,8 +51,8 @@ namespace FamiStudio
 
     public class InstrumentParamInfo : ParamInfo
     {
-        public InstrumentParamInfo(Instrument inst, string name, int minVal, int maxVal, int defaultVal, bool list = false, int snap = 1) :
-            base(name, minVal, maxVal, defaultVal, list, snap)
+        public InstrumentParamInfo(Instrument inst, string name, int minVal, int maxVal, int defaultVal, string tooltip = null, bool list = false, int snap = 1) :
+            base(name, minVal, maxVal, defaultVal, tooltip, list, snap)
         {
         }
     }
@@ -75,11 +79,11 @@ namespace FamiStudio
                 case ExpansionType.Fds:
                     return new[]
                     {
-                        new InstrumentParamInfo(instrument, "Master Volume", 0, 3, 0, true)
+                        new InstrumentParamInfo(instrument, "Master Volume", 0, 3, 0, null, true)
                             { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsVolumeStrings[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } },
-                        new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, true)
+                        new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                             { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; instrument.UpdateFdsWaveEnvelope(); } },
-                        new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.Count - 1, WavePresetType.Flat, true )
+                        new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.Count - 1, WavePresetType.Flat, null, true )
                             { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; instrument.UpdateFdsModulationEnvelope(); } },
                         new InstrumentParamInfo(instrument, "Mod Speed", 0, 4095, 0)
                             { GetValue = () => { return instrument.FdsModSpeed; }, SetValue = (v) => { instrument.FdsModSpeed = (ushort)v; } },
@@ -92,18 +96,18 @@ namespace FamiStudio
                 case ExpansionType.N163:
                     return new[]
                     {
-                        new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, true)
+                        new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                             { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} },
-                        new InstrumentParamInfo(instrument, "Wave Size", 4, 248, 16, false, 4)
+                        new InstrumentParamInfo(instrument, "Wave Size", 4, 248, 16, null, false, 4)
                             { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;} },
-                        new InstrumentParamInfo(instrument, "Wave Position", 0, 244, 0, false, 4)
+                        new InstrumentParamInfo(instrument, "Wave Position", 0, 244, 0, null, false, 4)
                             { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;} },
                     };
 
                 case ExpansionType.Vrc7:
                     return new[]
                     {
-                        new InstrumentParamInfo(instrument, "Patch", 0, 15, 1, true)
+                        new InstrumentParamInfo(instrument, "Patch", 0, 15, 1, null, true)
                             { GetValue = ()  => { return instrument.Vrc7Patch; }, GetValueString = () => { return Instrument.GetVrc7PatchName(instrument.Vrc7Patch); }, SetValue = (v) => { instrument.Vrc7Patch = (byte)v; } },
                         new InstrumentParamInfo(instrument, "Carrier Tremolo", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
                             { GetValue = ()  => { return (instrument.Vrc7PatchRegs[1] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; } },
@@ -162,54 +166,78 @@ namespace FamiStudio
 
     public class DPCMSampleParamInfo : ParamInfo
     {
-        public DPCMSampleParamInfo(DPCMSample sample, string name, int minVal, int maxVal, int defaultVal, bool list = false) :
-            base(name, minVal, maxVal, defaultVal, list)
+        public DPCMSampleParamInfo(DPCMSample sample, string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false) :
+            base(name, minVal, maxVal, defaultVal, tooltip, list)
         {
         }
     }
 
     public static class DPCMSampleParamProvider
     {
-        // DPCMTODO : How to handle PAL????
-
-        static readonly string[] FrequencyStringsNtsc =
+        // From NESDEV wiki.
+        // [0,x] = NTSC
+        // [1,x] = PAL
+        static readonly string[,] FrequencyStrings =
         {
-            "0 (4.2 KHz)",
-            "1 (4.7 KHz)",
-            "2 (5.3 KHz)",
-            "3 (5.6 KHz)",
-            "4 (6.3 KHz)",
-            "5 (7.0 KHz)",
-            "6 (8.9 KHz)",
-            "7 (8.3 KHz)",
-            "8 (9.4 KHz)",
-            "9 (11.1 KHz)",
-            "10 (12.6 KHz)",
-            "11 (14.9 KHz)",
-            "12 (16.9 KHz)",
-            "13 (21.3 KHz)",
-            "14 (24.9 KHz)",
-            "15 (33.1 KHz)",
+            // NTSC
+            {
+                "0 (4.2 KHz)",
+                "1 (4.7 KHz)",
+                "2 (5.3 KHz)",
+                "3 (5.6 KHz)",
+                "4 (6.3 KHz)",
+                "5 (7.0 KHz)",
+                "6 (7.9 KHz)",
+                "7 (8.3 KHz)",
+                "8 (9.4 KHz)",
+                "9 (11.1 KHz)",
+                "10 (12.6 KHz)",
+                "11 (13.9 KHz)",
+                "12 (16.9 KHz)",
+                "13 (21.3 KHz)",
+                "14 (24.9 KHz)",
+                "15 (33.1 KHz)"
+            },
+            // PAL
+            {
+                "0 (4.2 KHz)",
+                "1 (4.7 KHz)",
+                "2 (5.3 KHz)",
+                "3 (5.6 KHz)",
+                "4 (6.0 KHz)",
+                "5 (7.0 KHz)",
+                "6 (7.9 KHz)",
+                "7 (8.4 KHz)",
+                "8 (9.4 KHz)",
+                "9 (11.2 KHz)",
+                "10 (12.6 KHz)",
+                "11 (14.1 KHz)",
+                "12 (17.0 KHz)",
+                "13 (21.3 KHz)",
+                "14 (25.2 KHz)",
+                "15 (33.3 KHz)"
+            }
         };
 
         static public ParamInfo[] GetParams(DPCMSample sample)
         {
             return new[]
             {
-                new DPCMSampleParamInfo(sample, "Preview Rate", 0, 15, 15, true)
-                    { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.PreviewRate]; }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
-                new DPCMSampleParamInfo(sample, "Sample Rate", 0, 15, 15, true)
-                    { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return FrequencyStringsNtsc[sample.SampleRate]; }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Padding Mode", 0, 4, DPCMPaddingType.PadTo16Bytes, true)
+                new DPCMSampleParamInfo(sample, "Preview Rate", 0, 15, 15, "Rate to use when previewing the processed\nDMC data with the play button above", true)
+                    { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return FrequencyStrings[FamiStudio.StaticInstance.PalPlayback ? 1 : 0, sample.PreviewRate]; }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
+                new DPCMSampleParamInfo(sample, "Sample Rate", 0, 15, 15, "Rate at which to resample the source data at", true)
+                    { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return FrequencyStrings[sample.PalProcessing ? 1 : 0, sample.SampleRate]; }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
+                new DPCMSampleParamInfo(sample, "Padding Mode", 0, 4, DPCMPaddingType.PadTo16Bytes, "Padding method for the processed DMC data", true)
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200, 100)
+                new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200, 100, "Volume adjustment (%)")
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1, 0)
+                new DPCMSampleParamInfo(sample, "Process as PAL", 0, 1, 0, "Use PAL sample rates for all processing\nFor DMC source data, assumes PAL sample rate")
+                    { GetValue = () => { return  sample.PalProcessing ? 1 : 0; }, SetValue = (v) => { sample.PalProcessing = v != 0; sample.Process(); } },
+                new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1, 0, "Trim parts of the source data that is considered too low to be audible")
                     { GetValue = () => { return sample.TrimZeroVolume ? 1 : 0; }, SetValue = (v) => { sample.TrimZeroVolume = v != 0; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "Reverse Bits", 0, 1, 0)
-                    { GetValue = () => { return !sample.SourceDataIsWav && sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { if (!sample.SourceDataIsWav) { sample.ReverseBits = v != 0; sample.Process(); } } }
+                new DPCMSampleParamInfo(sample, "Reverse Bits", 0, 1, 0, "For DMC source data only, reverse the bits to correct errors in some NES games")
+                    { GetValue = () => { return !sample.SourceDataIsWav && sample.ReverseBits ? 1 : 0; }, SetValue = (v) => { if (!sample.SourceDataIsWav) { sample.ReverseBits = v != 0; sample.Process(); } }, IsEnabled = () => { return !sample.SourceDataIsWav; } }
             };
         }
     }
 }
-

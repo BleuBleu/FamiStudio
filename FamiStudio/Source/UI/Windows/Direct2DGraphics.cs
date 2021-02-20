@@ -404,8 +404,6 @@ namespace FamiStudio
         public Brush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
         {
             Brush brush;
-            if (solidGradientCache.TryGetValue(color, out brush))
-                return brush;
 
             Color color2 = Color.FromArgb(
                 Utils.Clamp((int)(color.A * alphaDimming), 0, 255),
@@ -413,8 +411,11 @@ namespace FamiStudio
                 Utils.Clamp((int)(color.G * dimming), 0, 255),
                 Utils.Clamp((int)(color.B * dimming), 0, 255));
 
+            if (solidGradientCache.TryGetValue(color2, out brush))
+                return brush;
+
             brush = CreateSolidBrush(color2);
-            solidGradientCache[color] = brush;
+            solidGradientCache[color2] = brush;
 
             return brush;
         }

@@ -239,7 +239,7 @@ namespace FamiStudio
                         for (int f = segment0.endFrame - segmentTransitionNumFrames, a = 0; f < segment0.endFrame; f++, a++)
                         {
                             var lerp = a / (float)segmentTransitionNumFrames;
-                            frames[f].scroll[c] = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmoothStep(lerp));
+                            frames[f].scroll[c] = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmootherStep(lerp));
                         }
                     }
                 }

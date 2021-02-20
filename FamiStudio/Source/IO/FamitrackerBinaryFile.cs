@@ -207,6 +207,7 @@ namespace FamiStudio
             else
             {
                 idx += OctaveRange * 12 * (blockVersion > 5 ? 3 : 2);
+                Log.LogMessage(LogSeverity.Warning, $"Multiple instruments are using DPCM samples. Samples from instrument {instIdx} will be loaded, but not assigned to the DPCM instrument.");
             }
         }
 
@@ -583,10 +584,7 @@ namespace FamiStudio
 
                 Array.Copy(bytes, idx, data, 0, size); idx += size;
 
-                samples[index] = CreateUniquelyNamedSample(name, data);
-
-                if (samples[index] == null)
-                    Log.LogMessage(LogSeverity.Warning, $"Cannot allocate DPCM sample '{name}'. Maximum total size allowed is 16KB.");
+                samples[index] = CreateUniquelyNamedSampleFromDmcData(name, data);
             }
 
             return true;

@@ -132,6 +132,7 @@ namespace FamiStudio
             public Color color = ThemeBase.DarkGreyFillColor2;
             public RenderFont font = ThemeBase.FontMedium;
             public RenderBrush textBrush;
+            public RenderBrush textDisabledBrush;
             public RenderBitmap icon;
 
             public ButtonType type;
@@ -156,6 +157,8 @@ namespace FamiStudio
 
                 if (pe.theme != null)
                     textBrush = pe.theme.LightGreyFillBrush2;
+
+                textDisabledBrush = pe.disabledBrush;
             }
 
             private bool IsEnvelopeEmpty(Envelope env, int type)
@@ -193,7 +196,7 @@ namespace FamiStudio
                         if (instrument == null)
                         {
                             var project = projectExplorer.App.Project;
-                            if (project != null && project.GetTotalMappedSampleSize() > Project.MaxTotalSampleDataSize)
+                            if (project != null && project.GetTotalMappedSampleSize() > Project.MaxMappedSampleSize)
                             {
                                 active = new[] { true, true };
                                 return new[] { SubButtonType.DPCM, SubButtonType.Overflow };
@@ -261,13 +264,13 @@ namespace FamiStudio
                         {
                             var mappedSamplesSize = projectExplorer.App.Project.GetTotalMappedSampleSize();
                             if (mappedSamplesSize > 0)
-                                label += $" ({mappedSamplesSize} bytes)";
+                                label += $" ({mappedSamplesSize} Bytes)";
                         }
                         return label;
                     }
                     else if (type == ButtonType.Dpcm)
                     {
-                        return $"{sample.Name} ({sample.ProcessedData.Length} bytes)"; 
+                        return $"{sample.Name} ({sample.ProcessedData.Length} Bytes)"; 
                     }
                     else if (type == ButtonType.DpcmHeader)
                     {
@@ -277,7 +280,7 @@ namespace FamiStudio
                         //{
                         //    var samplesSize = projectExplorer.App.Project.GetTotalSampleSize();
                         //    if (samplesSize > 0)
-                        //        label += $" ({samplesSize} bytes)";
+                        //        label += $" ({samplesSize} Bytes)";
                         //}
                         return label;
                     }
@@ -378,6 +381,7 @@ namespace FamiStudio
         RenderTheme theme;
 
         RenderBrush    sliderFillBrush;
+        RenderBrush    disabledBrush;
         RenderBitmap   bmpSong;
         RenderBitmap   bmpAdd;
         RenderBitmap   bmpDPCM;
@@ -603,6 +607,7 @@ namespace FamiStudio
             bmpWaveEdit = g.CreateBitmapFromResource("WaveEdit");
             bmpSave = g.CreateBitmapFromResource("SaveSmall");
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
+            disabledBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
 
             RefreshButtons();
         }
@@ -631,6 +636,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpWaveEdit);
             Utils.DisposeAndNullify(ref bmpSave);
             Utils.DisposeAndNullify(ref sliderFillBrush);
+            Utils.DisposeAndNullify(ref disabledBrush);
         }
 
         public void ConditionalInvalidate()
@@ -706,7 +712,9 @@ namespace FamiStudio
                     leftPadding = expandButtonSizeX;
                 }
 
-                g.DrawText(button.Text, button.Font, icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, button.textBrush, actualWidth - buttonTextNoIconPosX * 2);
+                var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
+
+                g.DrawText(button.Text, button.Font, icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, actualWidth - buttonTextNoIconPosX * 2);
 
                 if (icon != null)
                     g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY);
@@ -725,13 +733,13 @@ namespace FamiStudio
 
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         g.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
-                        g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, theme.BlackBrush);
+                        g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? theme.BlackBrush : disabledBrush);
                         g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
                     {
-                        g.DrawBitmap(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY);
+                        g.DrawBitmap(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f);
                     }
                     else if (button.type == ButtonType.ParamList)
                     {
@@ -739,8 +747,8 @@ namespace FamiStudio
                         var paramNext = button.param.SnapAndClampValue(paramVal + 1);
 
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
-                        g.DrawBitmap(bmpButtonLeft, 0, 0, paramVal == paramPrev ? 0.25f : 1.0f);
-                        g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0, paramVal == paramNext ? 0.25f : 1.0f);
+                        g.DrawBitmap(bmpButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f);
+                        g.DrawBitmap(bmpButtonRight, sliderSizeX - bmpButtonRight.Size.Width, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f);
                         g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }
@@ -865,7 +873,8 @@ namespace FamiStudio
             // TODO: Store this in the button itself... this is stupid.
             if (buttonIdx >= 0)
             {
-                var buttonType = buttons[buttonIdx].type;
+                var button = buttons[buttonIdx];
+                var buttonType = button.type;
 
                 if (buttonType == ButtonType.SongHeader)
                 {
@@ -897,18 +906,38 @@ namespace FamiStudio
                 {
                     tooltip = "{MouseLeft}{MouseLeft} Project properties";
                 }
-                else if (buttonType == ButtonType.ParamCheckbox && e.X >= Width - scrollBarSizeX - checkBoxPosX)
+                else if (buttonType == ButtonType.ParamCheckbox)
                 {
-                    tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
+                    if (e.X >= Width - scrollBarSizeX - checkBoxPosX)
+                    {
+                        tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
+                    }
+                    else if (button.param.ToolTip != null)
+                    {
+                        tooltip = button.param.ToolTip;
+                    }
                 }
-                else if (buttonType == ButtonType.ParamSlider && e.X >= Width - scrollBarSizeX - sliderPosX)
+                else if (buttonType == ButtonType.ParamSlider)
                 {
-                    tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
-                    
+                    if (e.X >= Width - scrollBarSizeX - sliderPosX)
+                    {
+                        tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
+                    }
+                    else if (button.param.ToolTip != null)
+                    {
+                        tooltip = button.param.ToolTip;
+                    }
                 }
-                else if (buttonType == ButtonType.ParamList && e.X >= Width - scrollBarSizeX - sliderPosX)
+                else if (buttonType == ButtonType.ParamList)
                 {
-                    tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
+                    if (e.X >= Width - scrollBarSizeX - sliderPosX)
+                    {
+                        tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
+                    }
+                    else if (button.param.ToolTip != null)
+                    {
+                        tooltip = button.param.ToolTip;
+                    }
                 }
                 else if (buttonType == ButtonType.Instrument)
                 {
@@ -1732,11 +1761,11 @@ namespace FamiStudio
             dlg.Properties.AddString("Author :", project.Author, 31); // 1
             dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
             dlg.Properties.AddStringList("Expansion Audio :", ExpansionType.Names, project.ExpansionAudioName, CommonTooltips.ExpansionAudio); // 3
-            dlg.Properties.AddIntegerRange("Channels :", project.ExpansionNumChannels, 1, 8, CommonTooltips.ExpansionNumChannels); // 4 (Namco)
+            dlg.Properties.AddIntegerRange("N163 Channels :", project.ExpansionNumChannels, 1, 8, CommonTooltips.ExpansionNumChannels); // 4 (Namco)
             dlg.Properties.AddStringList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 5
             dlg.Properties.AddStringList("Authoring Machine :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 6
             dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == ExpansionType.N163);
-            dlg.Properties.SetPropertyEnabled(6, project.UsesFamiStudioTempo);
+            dlg.Properties.SetPropertyEnabled(6, project.UsesFamiStudioTempo && !project.UsesExpansionAudio);
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             dlg.Properties.Build();
 

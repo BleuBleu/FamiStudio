@@ -13,15 +13,13 @@ namespace FamiStudio
 {
     public class FamiStudio
     {
-        // TODO: Get rid of this!
-        public static Project StaticProject { get; set; }
-
         private FamiStudioForm mainForm;
         private Project project;
         private Song song;
         private SongPlayer songPlayer;
         private InstrumentPlayer instrumentPlayer;
         private UndoRedoManager undoRedoManager;
+        private ExportDialog exportDialog;
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
         private bool palPlayback = false;
@@ -72,6 +70,9 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
         public Rectangle MainWindowBounds => mainForm.Bounds;
 
+        public static Project    StaticProject  { get; set; }
+        public static FamiStudio StaticInstance { get; private set; }
+
         static readonly Dictionary<Keys, int> RecordingKeyToNoteMap = new Dictionary<Keys, int>
         {
             { Keys.D1,        -1 }, // Special: Stop note.
@@ -119,6 +120,8 @@ namespace FamiStudio
 
         public FamiStudio(string filename)
         {
+            StaticInstance = this;
+
             mainForm = new FamiStudioForm(this);
 
             Sequencer.PatternClicked += sequencer_PatternClicked;
@@ -383,12 +386,12 @@ namespace FamiStudio
                 palPlayback = project.PalMode;
                 InitializeInstrumentPlayer();
                 InitializeSongPlayer();
-                InvalidateEverything();
+                InvalidateEverything(true);
             }
 
             if (flags.HasFlag(TransactionFlags.StopAudio))
             {
-                InvalidateEverything();
+                InvalidateEverything(true);
             }
         }
 
@@ -424,6 +427,7 @@ namespace FamiStudio
                 undoRedoManager.TransactionEnded -= UndoRedoManager_PostUndoRedo;
                 undoRedoManager.Updated -= UndoRedoManager_Updated;
                 undoRedoManager = null;
+                exportDialog = null;
                 project = null;
 
                 StopEverything();
@@ -456,6 +460,7 @@ namespace FamiStudio
             InitializeSongPlayer();
             InitializeInstrumentPlayer();
 
+            exportDialog = null;
             undoRedoManager = new UndoRedoManager(project, this);
             undoRedoManager.PreUndoRedo      += UndoRedoManager_PreUndoRedo;
             undoRedoManager.PostUndoRedo     += UndoRedoManager_PostUndoRedo;
@@ -538,7 +543,7 @@ namespace FamiStudio
 
                 if (dlg.ShowDialog(mainForm) == DialogResult.OK)
                 {
-                    project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits);
+                    project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits, dlg.PreserveDpcmPadding);
                 }
             }
 
@@ -582,8 +587,25 @@ namespace FamiStudio
 
         public void Export()
         {
-            var dlgExp = new ExportDialog(project);
-            dlgExp.ShowDialog(mainForm);
+            exportDialog = new ExportDialog(project);
+            exportDialog.ShowDialog(mainForm);
+        }
+
+        public void RepeatLastExport()
+        {
+            if (exportDialog == null)
+            {
+                DisplayWarning("No last export to repeat");
+            }
+            else if (!exportDialog.CanRepeatLastExport(project))
+            {
+                DisplayWarning("Project has changed too much to repeat last export.");
+                exportDialog = null;
+            }
+            else
+            {
+                exportDialog.Export(mainForm, true);
+            }
         }
 
         public void OpenConfigDialog()
@@ -836,9 +858,10 @@ namespace FamiStudio
 
             if (source)
             {
+                previewDPCMSampleRate = (int)sample.SourceSampleRate;
+
                 if (sample.SourceDataIsWav)
                 {
-                    previewDPCMSampleRate = sample.SourceWavData.SampleRate;
                     instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate, NesApu.DPCMVolume);
                     return;
                 }
@@ -849,13 +872,12 @@ namespace FamiStudio
             }
             else
             {
+                previewDPCMSampleRate = (int)sample.ProcessedSampleRate;
                 dmcData = sample.ProcessedData;
                 dmcRateIndex = sample.PreviewRate;
             }
 
-            previewDPCMSampleRate = (int)Math.Round(DPCMSample.DpcmSampleRatesNtsc[DPCMSample.DpcmSampleRatesNtsc.Length - 1]); // DPCMTODO : What about PAL?
-
-            var playRate = (int)Math.Round(DPCMSample.DpcmSampleRatesNtsc[dmcRateIndex]); // DPCMTODO : What about PAL?
+            var playRate = (int)Math.Round(DPCMSample.DpcmSampleRates[palPlayback ? 1 : 0, dmcRateIndex]);
             WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out short[] wave);
             instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume);
         }
@@ -888,7 +910,7 @@ namespace FamiStudio
                     InitializeInstrumentPlayer();
                 }
 
-                InvalidateEverything();
+                InvalidateEverything(true);
             }
         }
         
@@ -1043,7 +1065,10 @@ namespace FamiStudio
             }
             else if (ctrl && e.KeyCode == Keys.E)
             {
-                Export();
+                if (shift)
+                    RepeatLastExport();
+                else
+                    Export();
             }
             else if (ctrl && e.KeyCode == Keys.O)
             {

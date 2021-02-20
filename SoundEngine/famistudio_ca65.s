@@ -130,8 +130,7 @@ FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 ; FAMISTUDIO_CFG_SFX_SUPPORT   = 1 
 ; FAMISTUDIO_CFG_SFX_STREAMS   = 2
 
-; Blaarg's smooth vibrato technique. Eliminates phase resets ("pops") on square channels. Will be ignored if SFX are
-; enabled since they are currently incompatible with each other. This might change in the future.
+; Blaarg's smooth vibrato technique. Eliminates phase resets ("pops") on square channels. 
 ; FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1 
 
 ; Enables DPCM playback support.
@@ -316,10 +315,6 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
 .endif
 .if FAMISTUDIO_EXP_VRC6
     FAMISTUDIO_EXP_NOTE_START = 7
-.endif
-
-.if FAMISTUDIO_CFG_SFX_SUPPORT && FAMISTUDIO_CFG_SMOOTH_VIBRATO
-    .error "Smooth vibrato and SFX canoot be used at the same time."
 .endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS && (FAMISTUDIO_USE_FAMITRACKER_TEMPO = 0)
@@ -1407,6 +1402,48 @@ famistudio_get_note_pitch_vrc6_saw:
 .endif
 
 ;======================================================================================================================
+; FAMISTUDIO_SMOOTH_VIBRATO (internal)
+;
+; Implementation of Blaarg's smooth vibrato to eliminate pops on square channels. Called either from regular channel
+; updates or from SFX code.
+;
+; [in] a : new hi period.
+;======================================================================================================================
+
+.macro famistudio_smooth_vibrato pulse_lo, pulse_prev, reg_hi, reg_lo, reg_sweep
+
+    .local @hi_delta_too_big
+    .local @done
+
+    ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
+    tax ; X = new hi-period
+    sec
+    sbc pulse_prev ; A = signed hi-period delta.
+    beq @done
+    stx pulse_prev
+    tay 
+    iny ; We only care about -1 ($ff) and 1. Adding one means we only check of 0 or 2, we already checked for zero (so < 3).
+    cpy #$03
+    bcs @hi_delta_too_big
+    ldx #$40
+    stx FAMISTUDIO_APU_FRAME_CNT ; Reset frame counter in case it was about to clock
+    lda famistudio_smooth_vibrato_period_lo_lookup, y ; Be sure low 8 bits of timer period are $ff (for positive delta), or $00 (for negative delta)
+    sta reg_lo
+    lda famistudio_smooth_vibrato_sweep_lookup, y ; Sweep enabled, shift = 7, set negative flag or delta is negative..
+    sta reg_sweep
+    lda #$c0
+    sta FAMISTUDIO_APU_FRAME_CNT ; Clock sweep immediately
+    lda #$08
+    sta reg_sweep ; Disable sweep
+    lda pulse_lo
+    sta reg_lo ; Restore lo-period.
+    jmp @done
+@hi_delta_too_big:
+    stx reg_hi
+@done:
+.endmacro
+
+;======================================================================================================================
 ; FAMISTUDIO_UPDATE_CHANNEL_SOUND (internal)
 ;
 ; Uber-macro used to update the APU registers for a given 2A03/VRC6/MMC5 channel. This macro is an absolute mess, but
@@ -1471,31 +1508,7 @@ famistudio_get_note_pitch_vrc6_saw:
 
     .if (!.blank(pulse_prev)) && ((!FAMISTUDIO_CFG_SFX_SUPPORT) || (idx > 4))
         .if (!.blank(reg_sweep)) && FAMISTUDIO_CFG_SMOOTH_VIBRATO
-            ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
-            tax ; X = new hi-period
-            sec
-            sbc pulse_prev ; A = signed hi-period delta.
-            beq @compute_volume
-            stx pulse_prev
-            tay 
-            iny ; We only care about -1 ($ff) and 1. Adding one means we only check of 0 or 2, we already checked for zero (so < 3).
-            cpy #$03
-            bcs @hi_delta_too_big
-            ldx #$40
-            stx FAMISTUDIO_APU_FRAME_CNT ; Reset frame counter in case it was about to clock
-            lda famistudio_smooth_vibrato_period_lo_lookup, y ; Be sure low 8 bits of timer period are $ff (for positive delta), or $00 (for negative delta)
-            sta reg_lo
-            lda famistudio_smooth_vibrato_sweep_lookup, y ; Sweep enabled, shift = 7, set negative flag or delta is negative..
-            sta reg_sweep
-            lda #$c0
-            sta FAMISTUDIO_APU_FRAME_CNT ; Clock sweep immediately
-            lda #$08
-            sta reg_sweep ; Disable sweep
-            lda @pitch+0
-            sta reg_lo ; Restore lo-period.
-            jmp @compute_volume
-        @hi_delta_too_big:
-            stx reg_hi
+            famistudio_smooth_vibrato @pitch, pulse_prev, reg_hi, reg_lo, reg_sweep
         .else
             cmp pulse_prev
             beq @compute_volume
@@ -1509,7 +1522,7 @@ famistudio_get_note_pitch_vrc6_saw:
 
 .endif ; idx = 3
 
-.if .blank(pulse_prev) || .blank(reg_sweep) || (!FAMISTUDIO_CFG_SMOOTH_VIBRATO)
+.if .blank(pulse_prev) || .blank(reg_sweep) || FAMISTUDIO_CFG_SFX_SUPPORT
     sta reg_hi
 .endif
 
@@ -2476,13 +2489,16 @@ famistudio_update:
 .endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
-    lda famistudio_tempo_acc_lo
-    adc famistudio_tempo_step_lo
-    sta famistudio_tempo_acc_lo
-    lda famistudio_tempo_acc_hi
-    adc famistudio_tempo_step_hi
-    sta famistudio_tempo_acc_hi
+    lda famistudio_song_speed
+    bmi @skip_famitracker_tempo_update ; bit 7 = paused
+        clc  ; Update frame counter that considers speed, tempo, and PAL/NTSC
+        lda famistudio_tempo_acc_lo
+        adc famistudio_tempo_step_lo
+        sta famistudio_tempo_acc_lo
+        lda famistudio_tempo_acc_hi
+        adc famistudio_tempo_step_hi
+        sta famistudio_tempo_acc_hi
+    @skip_famitracker_tempo_update:
 .else
     ; See if we need to run a double frame (playing NTSC song on PAL)
     dec famistudio_tempo_frame_cnt
@@ -2520,10 +2536,15 @@ famistudio_update:
     lda famistudio_output_buf+1    ; Pulse 1 period LSB
     sta FAMISTUDIO_APU_PL1_LO
     lda famistudio_output_buf+2    ; Pulse 1 period MSB, only applied when changed
-    cmp famistudio_pulse1_prev
-    beq @no_pulse1_upd
-    sta famistudio_pulse1_prev
-    sta FAMISTUDIO_APU_PL1_HI
+
+    .if FAMISTUDIO_CFG_SMOOTH_VIBRATO
+        famistudio_smooth_vibrato famistudio_output_buf+1, famistudio_pulse1_prev, FAMISTUDIO_APU_PL1_HI, FAMISTUDIO_APU_PL1_LO, FAMISTUDIO_APU_PL1_SWEEP
+    .else
+        cmp famistudio_pulse1_prev
+        beq @no_pulse1_upd
+        sta famistudio_pulse1_prev
+        sta FAMISTUDIO_APU_PL1_HI
+    .endif        
 
 @no_pulse1_upd:
     lda famistudio_output_buf+3    ; Pulse 2 volume
@@ -2531,10 +2552,15 @@ famistudio_update:
     lda famistudio_output_buf+4    ; Pulse 2 period LSB
     sta FAMISTUDIO_APU_PL2_LO
     lda famistudio_output_buf+5    ; Pulse 2 period MSB, only applied when changed
-    cmp famistudio_pulse2_prev
-    beq @no_pulse2_upd
-    sta famistudio_pulse2_prev
-    sta FAMISTUDIO_APU_PL2_HI
+
+    .if FAMISTUDIO_CFG_SMOOTH_VIBRATO
+        famistudio_smooth_vibrato famistudio_output_buf+4, famistudio_pulse2_prev, FAMISTUDIO_APU_PL2_HI, FAMISTUDIO_APU_PL2_LO, FAMISTUDIO_APU_PL2_SWEEP
+    .else
+        cmp famistudio_pulse2_prev
+        beq @no_pulse2_upd
+        sta famistudio_pulse2_prev
+        sta FAMISTUDIO_APU_PL2_HI
+    .endif
 
 @no_pulse2_upd:
     lda famistudio_output_buf+6    ; Triangle volume (plays or not)
@@ -3833,6 +3859,7 @@ famistudio_sfx_play:
 famistudio_sfx_update:
 
     @tmp = famistudio_r0
+    @tmpx = famistudio_r1
     @effect_data_ptr = famistudio_ptr0
 
     lda famistudio_sfx_repeat,x ; Check if repeat counter is not zero
@@ -3857,6 +3884,9 @@ famistudio_sfx_update:
     bmi @get_data ; If bit 7 is set, it is a register write
     beq @eof
     iny
+    bne @store_repeat
+    jsr @inc_sfx
+@store_repeat:
     sta famistudio_sfx_repeat,x ; If bit 7 is reset, it is number of repeats
     tya
     sta famistudio_sfx_offset,x
@@ -3864,11 +3894,20 @@ famistudio_sfx_update:
 
 @get_data:
     iny
+    bne @get_data2
+    jsr @inc_sfx
+@get_data2:
     stx @tmp ; It is a register write
     adc @tmp ; Get offset in the effect output buffer
     tax
     lda (@effect_data_ptr),y
     iny
+    bne @write_buffer
+    stx @tmpx
+    ldx @tmp
+    jsr @inc_sfx
+    ldx @tmpx
+@write_buffer:
     sta famistudio_sfx_buffer-128,x
     ldx @tmp
     jmp @read_byte 
@@ -3929,6 +3968,11 @@ famistudio_sfx_update:
     sta famistudio_output_buf+10
 
 @no_noise:
+    rts
+
+@inc_sfx:
+    inc @effect_data_ptr+1
+    inc famistudio_sfx_ptr_hi,x
     rts
 
 .endif

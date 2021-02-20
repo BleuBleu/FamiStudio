@@ -16,81 +16,60 @@ namespace FamiStudio
         // Source data
         private IDPCMSampleSourceData sourceData;
 
-        // Processed data
+        // Processed data 
         private byte[] processedData;
-        private float minProcessingTime;
-        private float maxProcessingTime;
+        private float  processedDataStartTime;
 
         // Processing parameters.
         private int  sampleRate = 15;
         private int  previewRate = 15;
         private int  volumeAdjust = 100;
+        private int  paddingMode = DPCMPaddingType.PadTo16Bytes;
         private bool reverseBits;
         private bool trimZeroVolume;
-        private int paddingMode = DPCMPaddingType.PadTo16Bytes;
+        private bool palProcessing;
+        private SampleVolumePair[] volumeEnvelope = new SampleVolumePair[4]
+        {
+            new SampleVolumePair(0, 1.0f),
+            new SampleVolumePair(0, 1.0f),
+            new SampleVolumePair(0, 1.0f),
+            new SampleVolumePair(0, 1.0f)
+        };
 
+        // Properties.
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public Color Color { get => color; set => color = value; }
 
         public bool SourceDataIsWav { get => sourceData is DPCMSampleWavSourceData; }
-        public IDPCMSampleSourceData SourceData { get => sourceData; }
+        public IDPCMSampleSourceData  SourceData { get => sourceData; }
         public DPCMSampleWavSourceData SourceWavData { get => sourceData as DPCMSampleWavSourceData; }
         public DPCMSampleDmcSourceData SourceDmcData { get => sourceData as DPCMSampleDmcSourceData; }
-        public float MinProcessingTime => minProcessingTime;
-        public float MaxProcessingTime => maxProcessingTime;
 
-        public byte[] ProcessedData  { get => processedData;  set => processedData  = value; }
-        public int    SampleRate     { get => sampleRate;     set => sampleRate     = value; }
-        public int    PreviewRate    { get => previewRate;    set => previewRate    = value; }
-        public bool   ReverseBits    { get => reverseBits;    set => reverseBits    = value; }
-        public bool   TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
-        public int    VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
-        public int    PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
+        public float ProcessedStartTime  => processedDataStartTime;
+        public float ProcessedEndTime    => processedDataStartTime + ProcessedDuration;
+        public float ProcessedSampleRate => DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
+        public float ProcessedDuration   => processedData.Length * 8 / ProcessedSampleRate;
+
+        public byte[]   ProcessedData  { get => processedData;  set => processedData  = value; }
+        public int      SampleRate     { get => sampleRate;     set => sampleRate     = value; }
+        public int      PreviewRate    { get => previewRate;    set => previewRate    = value; }
+        public bool     ReverseBits    { get => reverseBits;    set => reverseBits    = value; }
+        public bool     TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
+        public bool     PalProcessing  { get => palProcessing;  set => palProcessing  = value; }
+        public int      VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
+        public int      PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
+        public SampleVolumePair[] VolumeEnvelope { get => volumeEnvelope; }
+
+        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits;
 
         public static object ProcessedDataLock = new object();
         public const int MaxSampleSize = (255 << 4) + 1;
 
-        // DPCMTODO: Make those in the source data interface.
-
-        // In seconds.
-        public float SourceDuration
-        {
-            get
-            {
-                if (SourceDataIsWav)
-                {
-                    return SourceWavData.Samples.Length / (float)SourceWavData.SampleRate;
-                }
-                else
-                {
-                    return SourceDmcData.Data.Length * 8 / DpcmSampleRatesNtsc[DpcmSampleRatesNtsc.Length - 1]; // DPCMTODO: We assume the input sample rate here.
-                }
-            }
-        }
-
-        public float SourceSampleRate
-        {
-            get
-            {
-                if (SourceDataIsWav)
-                {
-                    return SourceWavData.SampleRate;
-                }
-                else
-                {
-                    return DpcmSampleRatesNtsc[DpcmSampleRatesNtsc.Length - 1]; // DPCMTODO: We assume the input sample rate here.
-                }
-            }
-        }
-
-        public float ProcessedDuration
-        {
-            get
-            {
-                return processedData.Length * 8 / DpcmSampleRatesNtsc[sampleRate];
-            }
-        }
+        public int   SourceNumSamples => sourceData.NumSamples;
+        public int   SourceDataSize   => sourceData.DataSize;
+        public float SourceSampleRate => sourceData.GetSampleRate(palProcessing);
+        public float SourceDuration   => sourceData.GetDuration(palProcessing);
 
         public DPCMSample()
         {
@@ -104,31 +83,88 @@ namespace FamiStudio
             this.color = ThemeBase.RandomCustomColor();
         }
 
+        public float GetPlaybackSampleRate(bool palPlayback)
+        {
+            return DpcmSampleRates[palPlayback ? 1 : 0, previewRate];
+        }
+
+        public float GetPlaybackDuration(bool palPlayback)
+        {
+            return processedData.Length * 8 / GetPlaybackSampleRate(palPlayback);
+        }
+
         public void SetDmcSourceData(byte[] data)
         {
-            sourceData  = new DPCMSampleDmcSourceData(data);
+            sourceData = new DPCMSampleDmcSourceData(data);
             paddingMode = DPCMPaddingType.Unpadded;
+            ResetVolumeEnvelope();
         }
 
         public void SetWavSourceData(short[] data, int rate)
         {
-            sourceData  = new DPCMSampleWavSourceData(data, rate);
+            sourceData = new DPCMSampleWavSourceData(data, rate);
             paddingMode = DPCMPaddingType.PadTo16Bytes;
+            ResetVolumeEnvelope();
+        }
+
+        public bool TrimSourceSourceData(int sampleStart, int sampleEnd)
+        {
+            bool trimmed = sourceData.Trim(sampleStart, sampleEnd);
+            ClampVolumeEnvelope();
+            return trimmed;
+        }
+
+        public void RemoveWavSourceData()
+        {
+            if (SourceDataIsWav)
+            {
+                SetDmcSourceData(processedData);
+                sampleRate = 15; // DPCMTODO : Does that make any sense??
+                previewRate = 15;
+                volumeAdjust = 100;
+                trimZeroVolume = false;
+                paddingMode = DPCMPaddingType.Unpadded;
+                ResetVolumeEnvelope();
+            }
+        }
+
+        public void PermanentlyApplyAllProcessing()
+        {
+            SetDmcSourceData(processedData);
+            sampleRate = 15; // DPCMTODO : Does that make any sense??
+            previewRate = 15;
+            volumeAdjust = 100;
+            trimZeroVolume = false;
+            reverseBits = false;
+            PalProcessing = false; // DPCMTODO : Does that make any sense??
+            paddingMode = DPCMPaddingType.Unpadded;
+            ResetVolumeEnvelope();
+        }
+
+        public bool UsesVolumeEnvelope
+        {
+            get
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    if (Math.Abs(volumeEnvelope[i].volume - 1.0f) > 0.02f)
+                        return true;
+                }
+
+                return false;
+            }
         }
 
         public void Process()
         {
             lock (ProcessedDataLock)
             {
-                // DPCMTODO : Not right, user will be able to set the processing region maybe?
-                minProcessingTime = 0;
-                maxProcessingTime = SourceDuration;
+                processedDataStartTime = 0;
 
-                // DPCMTODO : What about PAL?
-                var targetSampleRate = DpcmSampleRatesNtsc[sampleRate];
+                var targetSampleRate = DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.
-                if (!SourceDataIsWav && volumeAdjust == 100 && !trimZeroVolume)
+                if (!SourceDataIsWav && volumeAdjust == 100 && !UsesVolumeEnvelope && sampleRate == 15 && !trimZeroVolume)
                 {
                     processedData = WaveUtils.CopyDpcm(SourceDmcData.Data);
 
@@ -139,18 +175,14 @@ namespace FamiStudio
                 else
                 {
                     short[] sourceWavData;
-                    float sourceSampleRate;
+                    float sourceSampleRate = sourceData.GetSampleRate(palProcessing);
 
-                    // DPCMTODO : Make this part of the source data interface.
                     if (SourceDataIsWav)
                     {
                         sourceWavData = WaveUtils.CopyWave(SourceWavData.Samples);
-                        sourceSampleRate = SourceWavData.SampleRate;
                     }
                     else
                     {
-                        sourceSampleRate = DpcmSampleRatesNtsc[DpcmSampleRatesNtsc.Length - 1]; // DPCMTODO : Sample rate, is this right? What about PAL?
-
                         var dmcData = SourceDmcData.Data;
 
                         // Bit reverse.
@@ -163,7 +195,26 @@ namespace FamiStudio
                         WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out sourceWavData);
                     }
 
-                    if (volumeAdjust != 100)
+                    if (UsesVolumeEnvelope)
+                    {
+                        var envelope = new List<SampleVolumePair>();
+
+                        volumeEnvelope[0].sample = 0;
+                        volumeEnvelope[volumeEnvelope.Length - 1].sample = SourceNumSamples - 1;
+
+                        envelope.Add(new SampleVolumePair(volumeEnvelope[0].sample, volumeEnvelope[0].volume * (volumeAdjust / 100.0f)));
+
+                        for (int i = 1; i < 4; i++)
+                        {
+                            if (volumeEnvelope[i].sample != envelope[envelope.Count - 1].sample)
+                            {
+                                envelope.Add(new SampleVolumePair(volumeEnvelope[i].sample, volumeEnvelope[i].volume * (volumeAdjust / 100.0f)));
+                            }
+                        }
+
+                        WaveUtils.AdjustVolume(sourceWavData, envelope);
+                    }
+                    else if (volumeAdjust != 100)
                     {
                         WaveUtils.AdjustVolume(sourceWavData, Math.Max(0, volumeAdjust) / 100.0f);
                     }
@@ -174,9 +225,7 @@ namespace FamiStudio
                     if (trimZeroVolume)
                     {
                         WaveUtils.GetWaveNonZeroVolumeRange(sourceWavData, SourceDataIsWav ? 512 : 1024, out minProcessingSample, out maxProcessingSample);
-
-                        minProcessingTime = minProcessingSample / sourceSampleRate;
-                        maxProcessingTime = maxProcessingSample / sourceSampleRate;
+                        processedDataStartTime = minProcessingSample / sourceSampleRate;
                     }
 
                     var roundMode = WaveToDpcmRoundingMode.None;
@@ -191,7 +240,7 @@ namespace FamiStudio
                             break;
                     }
 
-                    WaveUtils.WaveToDpcm(sourceWavData, minProcessingSample, maxProcessingSample, sourceSampleRate, targetSampleRate, NesApu.DACDefaultValueDiv2, roundMode, out processedData); // DPCMTODO : hardcoded 33144
+                    WaveUtils.WaveToDpcm(sourceWavData, minProcessingSample, maxProcessingSample, sourceSampleRate, targetSampleRate, NesApu.DACDefaultValueDiv2, roundMode, out processedData);
                 }
 
                 // If trimming is enabled, remove any extra 0x55 / 0xaa from the beginning and end.
@@ -200,8 +249,7 @@ namespace FamiStudio
                 {
                     WaveUtils.GetDmcNonZeroVolumeRange(processedData, out var minFinalNonZeroByte, out var maxFinalNonZeroByte);
 
-                    minProcessingTime += 8 * (minFinalNonZeroByte) / targetSampleRate;
-                    maxProcessingTime -= 8 * (processedData.Length - maxFinalNonZeroByte) / targetSampleRate;
+                    processedDataStartTime += 8 * (minFinalNonZeroByte) / targetSampleRate;
 
                     var untrimmedProcessedData = processedData;
                     processedData = new byte[maxFinalNonZeroByte - minFinalNonZeroByte];
@@ -227,18 +275,18 @@ namespace FamiStudio
                     var oldSize = processedData.Length;
                     if (newSize != oldSize)
                     {
+                        var lastByte = processedData.Length > 0 ? processedData[processedData.Length - 1] : 0;
                         Array.Resize(ref processedData, newSize);
 
-                        // DPCMTODO: Look at last byte and decide if 0x55 or 0xaa is better.
+                        var fillValue = (byte)((lastByte & 0x80) != 0 ? 0xaa : 0x55);
                         for (int i = oldSize; i < newSize; i++)
-                            processedData[i] = 0x55;
+                            processedData[i] = fillValue;
                     }
                 }
 
                 // Clamp to max length.
                 if (processedData.Length > MaxSampleSize)
                 {
-                    maxProcessingTime -= 8 * (processedData.Length - MaxSampleSize) / targetSampleRate;
                     Array.Resize(ref processedData, DPCMSample.MaxSampleSize);
                 }
             }
@@ -260,7 +308,25 @@ namespace FamiStudio
                 idMap.Add(id, this);
 
             Debug.Assert(project.GetSample(id) == this);
+
+            // DPCMTODO: Validate volume envelope is sorted.
 #endif
+        }
+
+        private void ResetVolumeEnvelope()
+        {
+            volumeEnvelope[0] = new SampleVolumePair(0);
+            volumeEnvelope[1] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (1.0f / 3.0f)));
+            volumeEnvelope[2] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (2.0f / 3.0f)));
+            volumeEnvelope[3] = new SampleVolumePair(SourceNumSamples - 1);
+        }
+
+        private void ClampVolumeEnvelope()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                volumeEnvelope[i].sample = Math.Min(SourceNumSamples - 1, volumeEnvelope[i].sample);
+            }
         }
 
         // At version 9 (FamiStudio 2.4.0) we added a proper DPCM sample editor
@@ -285,7 +351,7 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            buffer.Serialize(ref id);
+            buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
 
             // At version 9 (FamiStudio 2.4.0) we added a proper DPCM sample editor.
@@ -308,49 +374,80 @@ namespace FamiStudio
 
                 sourceData.SerializeState(buffer);
                 buffer.Serialize(ref color);
-                buffer.Serialize(ref processedData);
+
+                // Processing parameters.
+                buffer.Serialize(ref sampleRate);
+                buffer.Serialize(ref previewRate);
+                buffer.Serialize(ref volumeAdjust);
+                buffer.Serialize(ref paddingMode);
+                buffer.Serialize(ref reverseBits);
+                buffer.Serialize(ref trimZeroVolume);
+                buffer.Serialize(ref palProcessing);
+
+                // The process data will not be stored in the file, it will 
+                // be reprocessed every time we reopen the file.
+                if (buffer.IsForUndoRedo)
+                {
+                    buffer.Serialize(ref processedData);
+                }
+                else if (buffer.IsReading)
+                {
+                    Process();
+                }
             }
         }
 
-        // From NESDEV wiki.
-        public static float[] DpcmSampleRatesNtsc =
+        // [0] = NTSC
+        // [1] = PAL
+        public static float[] DpcmSampleMaximumRate =
         {
-            4181.71f,
-            4709.93f,
-            5264.04f,
-            5593.04f,
-            6257.95f,
-            7046.35f,
-            7919.35f,
-            8363.42f,
-            9419.86f,
-            11186.1f,
-            12604.0f,
-            13982.6f,
-            16884.6f,
-            21306.8f,
-            24858.0f,
-            33143.9f
+            33143.9f,
+            33252.1f
         };
 
-        public static float[] DpcmSampleRatesPal =
+        // From NESDEV wiki.
+        // [0,x] = NTSC
+        // [1,x] = PAL
+        public static float[,] DpcmSampleRates =
         {
-            4177.40f,
-            4696.63f,
-            5261.41f,
-            5579.22f,
-            6023.94f,
-            7044.94f,
-            7917.18f,
-            8397.01f,
-            9446.63f,
-            11233.8f,
-            12595.5f,
-            14089.9f,
-            16965.4f,
-            21315.5f,
-            25191.0f,
-            33252.1f
+            // NTSC
+            {
+                4181.71f,
+                4709.93f,
+                5264.04f,
+                5593.04f,
+                6257.95f,
+                7046.35f,
+                7919.35f,
+                8363.42f,
+                9419.86f,
+                11186.1f,
+                12604.0f,
+                13982.6f,
+                16884.6f,
+                21306.8f,
+                24858.0f,
+                33143.9f
+            },
+            // PAL
+            {
+                4177.40f,
+                4696.63f,
+                5261.41f,
+                5579.22f,
+                6023.94f,
+                7044.94f,
+                7917.18f,
+                8397.01f,
+                9446.63f,
+                11233.8f,
+                12595.5f,
+                14089.9f,
+                16965.4f,
+                21315.5f,
+                25191.0f,
+                33252.1f
+            }
         };
     }
 
@@ -361,7 +458,7 @@ namespace FamiStudio
         private int pitch = 15;
 
         public DPCMSample Sample { get => sample; set => sample = value; }
-        public bool Loop { get => loop; set => loop = value; }
+        public bool Loop { get => loop;  set => loop  = value; }
         public int Pitch { get => pitch; set => pitch = value; }
 
         public void SerializeState(ProjectBuffer buffer)
@@ -375,18 +472,22 @@ namespace FamiStudio
     public interface IDPCMSampleSourceData
     {
         void SerializeState(ProjectBuffer buffer);
-        bool Trim(float timeStart, float timeEnd);
+        bool Trim(int sampleStart, int sampleEnd);
+        float GetSampleRate(bool pal);
+        float GetDuration(bool pal);
+        int DataSize { get; }
         int NumSamples { get; }
     }
 
     public class DPCMSampleWavSourceData : IDPCMSampleSourceData
     {
-        int sampleRate;
-        short[] wavData;
+        private int     sampleRate;
+        private short[] wavData;
 
+        public int     DataSize   => wavData.Length * 2;
+        public int     NumSamples => wavData.Length;
         public int     SampleRate => sampleRate;
         public short[] Samples    => wavData;
-        public int     NumSamples => wavData.Length;
 
         public DPCMSampleWavSourceData()
         {
@@ -404,17 +505,28 @@ namespace FamiStudio
             buffer.Serialize(ref wavData);
         }
 
-        public bool Trim(float timeStart, float timeEnd)
+        public bool Trim(int sampleStart, int sampleEnd)
         {
-            return WaveUtils.TrimWave(ref wavData, sampleRate, timeStart, timeEnd);
+            return WaveUtils.TrimWave(ref wavData, sampleStart, sampleEnd);
+        }
+
+        public float GetSampleRate(bool pal)
+        {
+            return sampleRate;
+        }
+
+        public float GetDuration(bool pal)
+        {
+            return (wavData.Length - 1) / (float)sampleRate;
         }
     }
 
     public class DPCMSampleDmcSourceData : IDPCMSampleSourceData
     {
-        byte[] dmcData;
+        private byte[] dmcData;
 
         public byte[] Data       => dmcData;
+        public int    DataSize   => dmcData.Length;
         public int    NumSamples => dmcData.Length * 8;
 
         public DPCMSampleDmcSourceData()
@@ -431,10 +543,19 @@ namespace FamiStudio
             buffer.Serialize(ref dmcData);
         }
 
-        public bool Trim(float timeStart, float timeEnd)
+        public bool Trim(int sampleStart, int sampleEnd)
         {
-            // DPCMTODO : TODO!
-            return false;
+            return WaveUtils.TrimDmc(ref dmcData, sampleStart, sampleEnd);
+        }
+
+        public float GetSampleRate(bool pal)
+        {
+            return DPCMSample.DpcmSampleMaximumRate[pal ? 1 : 0];
+        }
+
+        public float GetDuration(bool pal)
+        {
+            return dmcData.Length * 8 / GetSampleRate(pal);
         }
     }
 

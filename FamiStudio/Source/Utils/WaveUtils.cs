@@ -14,6 +14,18 @@ namespace FamiStudio
         RoundTo16BytesPlusOne
     };
 
+    public struct SampleVolumePair
+    {
+        public SampleVolumePair(int s, float v = 1.0f)
+        {
+            sample = s;
+            volume = v;
+        }
+
+        public int   sample;
+        public float volume;
+    };
+
     public static class WaveUtils
     {
         static public void Resample(short[] source, int minSample, int maxSample, short[] dest)
@@ -89,13 +101,9 @@ namespace FamiStudio
             var dpcmSize = (dpcmNumSamples + 7) / 8; // Round up to byte. 
             dpcm = new byte[dpcmSize];
 
-            // We might not (fully) write the last few bytes, so pre-fill.
-            // DPCMTODO: Decide on 0xaa or 0x55 depending on odd/even number of raw samples.
-            for (int i = dpcmSize - 1, j = 0; i >= 0 && j < 32; i--, j++)
-                dpcm[i] = 0x55;
-
             // DPCM conversion.
             var dpcmCounter = dpcmCounterStart;
+            var lastBit = 0;
 
             for (int i = 0; i < resampledWave.Length; i++)
             {
@@ -110,12 +118,27 @@ namespace FamiStudio
                 {
                     dpcm[index] |= (byte)mask;
                     dpcmCounter = Math.Min(dpcmCounter + 1, 63);
+                    lastBit = 1;
                 }
                 else
                 {
-                    dpcm[index] &= (byte)~mask;
                     dpcmCounter = Math.Max(dpcmCounter - 1, 0);
+                    lastBit = 0;
                 }
+            }
+
+            // We might not (fully) write the last byte, so fill with 0x55 or 0xaa.
+            for (int i = resampledWave.Length; i < Utils.RoundUp(resampledWave.Length, 8); i++)
+            {
+                if (lastBit == 0)
+                {
+                    var index = i / 8;
+                    var mask = (1 << (i & 7));
+
+                    dpcm[index] |= (byte)mask;
+                }
+
+                lastBit ^= 1;
             }
         }
 
@@ -129,12 +152,10 @@ namespace FamiStudio
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    // DPCMTODO : Do we increment before or after?
                     wave[i * 8 + j] = (short)DpcmCounterToWaveSample(dpcmCounter);
 
                     var mask = 1 << j;
 
-                    // TODO: Validate if hardware clamps or wraps.
                     if ((dpcm[i] & (byte)mask) != 0)
                         dpcmCounter = Math.Min(dpcmCounter + 1, 63);
                     else
@@ -143,11 +164,10 @@ namespace FamiStudio
             }
         }
 
-        static public bool TrimWave(ref short[] wave, int sampleRate, float timeStart, float timeEnd)
+        // [min, max]
+        static public bool TrimWave(ref short[] wave, int trimSampleMin, int trimSampleMax)
         {
-            var trimSampleMin = Utils.Clamp((int)Math.Ceiling(timeStart * sampleRate), 0, wave.Length - 1);
-            var trimSampleMax = Utils.Clamp((int)Math.Ceiling(timeEnd   * sampleRate), 0, wave.Length - 1);
-
+            trimSampleMax++;
             if (trimSampleMin < trimSampleMax)
             {
                 var newLength = trimSampleMin + (wave.Length - trimSampleMax);
@@ -168,12 +188,40 @@ namespace FamiStudio
             }
         }
 
+        // [min, max]
+        static public bool TrimDmc(ref byte[] dmc, int trimSampleMin, int trimSampleMax)
+        {
+            trimSampleMax++;
+
+            int trimByteMin = trimSampleMin / 8;
+            int trimByteMax = trimSampleMax / 8;
+
+            if (trimByteMin < trimByteMax)
+            {
+                var newLength = trimByteMin + (dmc.Length - trimByteMax);
+                var newDmcData = new byte[newLength];
+
+                if (trimByteMin > 0)
+                    Array.Copy(dmc, newDmcData, trimByteMin);
+                if (trimByteMax < dmc.Length)
+                    Array.Copy(dmc, trimByteMax, newDmcData, trimByteMin, dmc.Length - trimByteMax);
+
+                dmc = newDmcData;
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         static public void GetDmcNonZeroVolumeRange(byte[] dmc, out int nonZeroMinByte, out int nonZeroMaxByte)
         {
             nonZeroMinByte = 0;
             nonZeroMaxByte = dmc.Length;
 
-            // Very coarse, only remove entire byte alternative 0/1s.
+            // Very coarse, only remove entire byte of alternating 0/1s.
             for (int i = 0; i < dmc.Length; i++)
             {
                 if (dmc[i] != 0x55 && dmc[i] != 0xaa)
@@ -196,7 +244,7 @@ namespace FamiStudio
         static public void GetWaveNonZeroVolumeRange(short[] wave, int threshold, out int nonZeroMin, out int nonZeroMax)
         {
             nonZeroMin = 0;
-            nonZeroMax = wave.Length - 1;
+            nonZeroMax = 0;
 
             for (int i = 0; i < wave.Length; i++)
             {
@@ -262,6 +310,33 @@ namespace FamiStudio
             for (int i = 0; i < wave.Length; i++)
             {
                 wave[i] = (short)Utils.Clamp((int)Math.Round(wave[i] * volume), short.MinValue, short.MaxValue);
+            }
+        }
+
+        // volumeEnvelope = series of time/volume pairs. 
+        static public void AdjustVolume(short[] wave, List<SampleVolumePair> volumeEnvelope)
+        {
+            // Enforce the first/last times to cover the entire range.
+            Debug.Assert(volumeEnvelope[0].sample == 0);
+            Debug.Assert(volumeEnvelope[volumeEnvelope.Count - 1].sample == wave.Length - 1);
+
+            // Simple smoothstep interpolation (which is equivalent to cosine interpolation).
+            for (int i = 0; i < volumeEnvelope.Count - 1; i++)
+            {
+                Debug.Assert(volumeEnvelope[i].sample < volumeEnvelope[i + 1].sample);
+
+                var s0 = volumeEnvelope[i + 0].sample;
+                var s1 = volumeEnvelope[i + 1].sample;
+                var v0 = volumeEnvelope[i + 0].volume;
+                var v1 = volumeEnvelope[i + 1].volume;
+
+                for (int j = s0; j <= s1; j++)
+                {
+                    var ratio  = (j - s0) / (float)(s1 - s0);
+                    var volume = Utils.Lerp(v0, v1, Utils.SmoothStep(ratio));
+
+                    wave[j] = (short)Utils.Clamp((int)Math.Round(wave[j] * volume), short.MinValue, short.MaxValue);
+                }
             }
         }
     }

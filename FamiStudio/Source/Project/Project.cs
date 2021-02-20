@@ -17,7 +17,8 @@ namespace FamiStudio
         // Version 8 = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
         // Version 9 = FamiStudio 2.4.0 (DPCM sample editor)
         public static int Version = 9;
-        public static int MaxTotalSampleDataSize = 0x4000;
+        public static int MaxMappedSampleSize = 0x4000;
+        public static int MaxSampleAddress = 255 * 64;
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
         private List<DPCMSample> samples = new List<DPCMSample>();
@@ -152,8 +153,7 @@ namespace FamiStudio
             return songs.Find(s => s.Name == name) == null;
         }
 
-        // DPCMTODO : Revisit all usages.
-        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
+        public DPCMSample CreateDPCMSample(string name)
         {
             // Already exist, this should not happen.
             if (samples.Find(s => s.Name == name) != null)
@@ -163,28 +163,34 @@ namespace FamiStudio
             }
 
             var sample = new DPCMSample(GenerateUniqueId(), name);
-            sample.SetDmcSourceData(data);
-            sample.Process();
             samples.Add(sample);
             SortSamples();
 
             return sample;
         }
 
+        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
+        {
+            var sample = CreateDPCMSample(name);
+
+            if (sample == null)
+                return null;
+
+            sample.SetDmcSourceData(data);
+            sample.Process();
+
+            return sample;
+        }
+
         public DPCMSample CreateDPCMSampleFromWavData(string name, short[] data, int sampleRate)
         {
-            // Already exist, this should not happen.
-            if (samples.Find(s => s.Name == name) != null)
-            {
-                Debug.Assert(false);
-                return null;
-            }
+            var sample = CreateDPCMSample(name);
 
-            var sample = new DPCMSample(GenerateUniqueId(), name);
+            if (sample == null)
+                return null;
+
             sample.SetWavSourceData(data, sampleRate);
             sample.Process();
-            samples.Add(sample);
-            SortSamples();
 
             return sample;
         }
@@ -680,7 +686,6 @@ namespace FamiStudio
         {
             get
             {
-                // DPCMTODO: This test isnt thorough enough.
                 if (samples.Count == 0)
                     return false;
 
@@ -743,7 +748,7 @@ namespace FamiStudio
                 int size = 0;
                 foreach (var sample in samples)
                     size += sample.ProcessedData.Length;
-                return Math.Min(MaxTotalSampleDataSize, size);
+                return Math.Min(MaxMappedSampleSize, size);
             }
         }
 
@@ -771,7 +776,7 @@ namespace FamiStudio
                         }
 
                         addr = addrEnd;
-                        if (addr >= MaxTotalSampleDataSize)
+                        if (addr >= MaxMappedSampleSize)
                             break;
 
                         visitedSamples.Add(mapping.Sample);
@@ -797,8 +802,8 @@ namespace FamiStudio
                             return addr;
                         addr += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
 
-                        if (addr >= MaxTotalSampleDataSize)
-                            break;
+                        if (addr >= MaxMappedSampleSize)
+                            return -1;
 
                         visitedSamples.Add(mapping.Sample);
                     }
@@ -830,7 +835,7 @@ namespace FamiStudio
 
         public byte[] GetPackedSampleData()
         {
-            var sampleData = new List<byte>(MaxTotalSampleDataSize);
+            var sampleData = new List<byte>(MaxMappedSampleSize);
             var visitedSamples = new List<DPCMSample>(samples.Count);
 
             foreach (var mapping in samplesMapping)
@@ -843,13 +848,13 @@ namespace FamiStudio
                         sampleData.Add(0x55);
                     visitedSamples.Add(mapping.Sample);
 
-                    if (sampleData.Count >= MaxTotalSampleDataSize)
+                    if (sampleData.Count >= MaxMappedSampleSize)
                         break;
                 }
             }
 
-            if (sampleData.Count > MaxTotalSampleDataSize)
-                sampleData.RemoveRange(MaxTotalSampleDataSize, sampleData.Count - MaxTotalSampleDataSize);
+            if (sampleData.Count > MaxMappedSampleSize)
+                sampleData.RemoveRange(MaxMappedSampleSize, sampleData.Count - MaxMappedSampleSize);
 
             return sampleData.ToArray();
         }
@@ -875,6 +880,7 @@ namespace FamiStudio
         public void Cleanup()
         {
             DeleteUnusedInstruments();
+            UnmapUnusedSamples();
             DeleteUnusedSamples();
             DeleteUnusedArpeggios();
         }
@@ -1166,6 +1172,56 @@ namespace FamiStudio
             SortInstruments();
         }
 
+        public void UnmapUnusedSamples()
+        {
+            var usedMappingIndices = new HashSet<int>();
+
+            foreach (var song in songs)
+            {
+                var channel = song.Channels[ChannelType.Dpcm];
+
+                for (int p = 0; p < song.Length; p++)
+                {
+                    var pattern = channel.PatternInstances[p];
+                    if (pattern != null)
+                    {
+                        foreach (var note in pattern.Notes.Values)
+                        {
+                            var mapping = GetDPCMMapping(note.Value);
+                            if (mapping != null && mapping.Sample != null)
+                            {
+                                usedMappingIndices.Add(note.Value - Note.DPCMNoteMin);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null && !usedMappingIndices.Contains(i))
+                {
+                    samplesMapping[i] = null;
+                }
+            }
+        }
+
+        public void DeleteSampleWavSourceData()
+        {
+            foreach (var sample in samples)
+            {
+                sample.RemoveWavSourceData();
+            }
+        }
+
+        public void PermanentlyApplyAllSamplesProcessing()
+        {
+            foreach (var sample in samples)
+            {
+                sample.PermanentlyApplyAllProcessing();
+            }
+        }
+
         public void DeleteUnusedSamples()
         {
             var usedSamples = new HashSet<DPCMSample>();
@@ -1182,7 +1238,7 @@ namespace FamiStudio
                         foreach (var note in pattern.Notes.Values)
                         {
                             var mapping = GetDPCMMapping(note.Value);
-                            if (note.IsValid && !note.IsStop && note.Instrument == null && mapping != null && mapping.Sample != null)
+                            if (mapping != null && mapping.Sample != null)
                             {
                                 usedSamples.Add(mapping.Sample);
                             }
@@ -1481,8 +1537,7 @@ namespace FamiStudio
             "Famicom Disk System",
             "Nintendo MMC5",
             "Namco 163",
-            "Sunsoft 5B",
-            ""
+            "Sunsoft 5B"
         };
 
         public static readonly string[] ShortNames =
@@ -1493,8 +1548,7 @@ namespace FamiStudio
             "FDS",
             "MMC5",
             "N163",
-            "S5B",
-            ""
+            "S5B"
         };
 
         public static int GetValueForName(string str)
