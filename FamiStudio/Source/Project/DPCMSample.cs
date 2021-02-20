@@ -313,6 +313,18 @@ namespace FamiStudio
 #endif
         }
 
+        public void SortVolumeEnvelope(ref int idx)
+        {
+            ClampVolumeEnvelope();
+
+            if (volumeEnvelope[1].sample > volumeEnvelope[2].sample)
+            {
+                Utils.Swap(ref volumeEnvelope[1], ref volumeEnvelope[2]);
+                if (idx == 1) idx = 2;
+                else idx = 1;
+            }
+        }
+
         private void ResetVolumeEnvelope()
         {
             volumeEnvelope[0] = new SampleVolumePair(0);
@@ -323,7 +335,10 @@ namespace FamiStudio
 
         private void ClampVolumeEnvelope()
         {
-            for (int i = 0; i < 4; i++)
+            volumeEnvelope[0].sample = 0;
+            volumeEnvelope[3].sample = SourceNumSamples - 1;
+
+            for (int i = 1; i <= 2; i++)
             {
                 volumeEnvelope[i].sample = Math.Min(SourceNumSamples - 1, volumeEnvelope[i].sample);
             }
@@ -383,6 +398,12 @@ namespace FamiStudio
                 buffer.Serialize(ref reverseBits);
                 buffer.Serialize(ref trimZeroVolume);
                 buffer.Serialize(ref palProcessing);
+
+                for (int i = 0; i < volumeEnvelope.Length; i++)
+                {
+                    buffer.Serialize(ref volumeEnvelope[i].sample);
+                    buffer.Serialize(ref volumeEnvelope[i].volume);
+                }
 
                 // The process data will not be stored in the file, it will 
                 // be reprocessed every time we reopen the file.

@@ -222,7 +222,8 @@ namespace FamiStudio
             DragSelection,
             AltZoom,
             DragSample,
-            DragSeekBar
+            DragSeekBar,
+            DragWaveVolumeEnvelope
         }
 
         static readonly bool[] captureNeedsThreshold = new[]
@@ -243,7 +244,8 @@ namespace FamiStudio
             false, // DragSelection
             false, // AltZoom
             false, // DragSample
-            false  // DragSeekBar
+            false, // DragSeekBar
+            false  // DragWaveVolumeEnvelope
         };
 
         int captureNoteIdx = 0;
@@ -305,9 +307,10 @@ namespace FamiStudio
         int lastPasteSpecialPasteEffectMask = Note.EffectAllMask;
 
         // DPCM editing mode
+        int volumeEnvelopeDragVertex = -1;
         DPCMSample editSample = null;
 
-        // When dragging smaples
+        // When dragging samples
         DPCMSampleMapping draggedSample;
 
         // Video stuff
@@ -2766,6 +2769,9 @@ namespace FamiStudio
                     case CaptureOperation.DragSeekBar:
                         UpdateSeekDrag(e.X);
                         break;
+                    case CaptureOperation.DragWaveVolumeEnvelope:
+                        UpdateVolumeEnvelopeDrag(e);
+                        break;
                 }
             }
         }
@@ -2848,6 +2854,11 @@ namespace FamiStudio
                     case CaptureOperation.DragSeekBar:
                         UpdateSeekDrag(e.X);
                         App.SeekSong(dragSeekPosition);
+                        break;
+                    case CaptureOperation.DragWaveVolumeEnvelope:
+                        UpdateVolumeEnvelopeDrag(e);
+                        App.UndoRedoManager.EndTransaction();
+
                         break;
                 }
 
@@ -3400,6 +3411,16 @@ namespace FamiStudio
                     }
                 }
             }
+            else if (left && editMode == EditionMode.DPCM && IsMouseInEffectPanel(e))
+            {
+                var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e);
+                if (vertexIdx >= 0)
+                {
+                    volumeEnvelopeDragVertex = vertexIdx;
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
+                    StartCaptureOperation(e, CaptureOperation.DragWaveVolumeEnvelope);
+                }
+            }
             else if ((left || right) && IsMouseOnSnapResolutionButton(e))
             {
                 if (left)
@@ -3908,6 +3929,25 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private void UpdateVolumeEnvelopeDrag(MouseEventArgs e)
+        {
+            var time   = Utils.Clamp((int)Math.Round(GetWaveTimeForPixel(e.X - whiteKeySizeX) * editSample.SourceSampleRate), 0, editSample.SourceNumSamples - 1);
+            var volume = Utils.Clamp((1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY) * 2.0f, 0.0f, 2.0f);
+
+            // Cant move 1st and last vertex.
+            if (volumeEnvelopeDragVertex != 0 &&
+                volumeEnvelopeDragVertex != editSample.VolumeEnvelope.Length - 1)
+            {
+                editSample.VolumeEnvelope[volumeEnvelopeDragVertex].sample = time;
+            }
+
+            editSample.VolumeEnvelope[volumeEnvelopeDragVertex].volume = volume;
+            editSample.SortVolumeEnvelope(ref volumeEnvelopeDragVertex);
+            editSample.Process();
+
+            ConditionalInvalidate();
+        }
+
         private void UpdateSlideNoteTarget(MouseEventArgs e)
         {
             Debug.Assert(captureNoteIdx >= 0);
@@ -3961,6 +4001,36 @@ namespace FamiStudio
             }
         }
 
+        private readonly int[] vertexOrder = new int[] { 1, 2, 0, 3 };
+
+        private int GetWaveVolumeEnvelopeVertexIndex(MouseEventArgs e)
+        {
+            Debug.Assert(editMode == EditionMode.DPCM);
+            Debug.Assert(vertexOrder.Length == editSample.VolumeEnvelope.Length);
+
+            var x = e.X - whiteKeySizeX;
+            var y = e.Y - headerSizeY;
+
+            for (int i = 0; i < 4; i++)
+            {
+                var idx = vertexOrder[i];
+
+                var vx = GetPixelForWaveTime(editSample.VolumeEnvelope[idx].sample / editSample.SourceSampleRate, scrollX);
+                var vy = (int)Math.Round(effectPanelSizeY - editSample.VolumeEnvelope[idx].volume * (effectPanelSizeY * 0.5f));
+
+                var dx = Math.Abs(vx - x);
+                var dy = Math.Abs(vy - y);
+
+                if (dx < 10 * RenderTheme.MainWindowScaling &&
+                    dy < 10 * RenderTheme.MainWindowScaling)
+                {
+                    return idx;
+                }
+            }
+
+            return -1;
+        }
+
         private bool IsMouseInHeader(MouseEventArgs e)
         {
             return e.X > whiteKeySizeX && e.Y < headerSizeY;
@@ -3988,7 +4058,7 @@ namespace FamiStudio
 
         private bool IsMouseInEffectPanel(MouseEventArgs e)
         {
-            return showEffectsPanel && editMode == EditionMode.Channel && e.X > whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY;
+            return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && e.X > whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY;
         }
 
         private bool IsMouseOnSnapResolutionButton(MouseEventArgs e)

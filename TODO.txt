@@ -5,7 +5,7 @@ Brad:
 FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
-- Double-right-click = select whole note
+- Double-right-click = select whole note (or whole note drag?)
 - Highlight piano keys when they are pressed with QWERTY or MIDI. (LOW PRIO)
 x Smooth vibrato with SFX.
 x BUG : When using an expansion, if you go in project settings, PAL/NTSC is not read only.
@@ -29,6 +29,12 @@ Doc:
 
 DPCM Editor
 ===========
+- 4-point envelope
+	- Tooltip
+	- Draw center  line over BG
+	- Right click = reset.
+	- Selection in header is inconsistent.
+	- Vertices are not visible at top/bottom.
 - DPCMTODOs in cleanup. See if makes sense.
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
 	- Test transactions a lot, dont seem to refresh when i do cleanup.
