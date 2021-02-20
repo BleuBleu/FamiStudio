@@ -94,7 +94,7 @@ namespace FamiStudio
 
         public void SetDefaultsForTempoMode(int tempoMode)
         {
-            if (tempoMode == Project.TempoFamiStudio)
+            if (tempoMode == TempoType.FamiStudio)
             {
                 noteLength = 10;
                 beatLength = noteLength * 4;
@@ -115,7 +115,7 @@ namespace FamiStudio
                 patternCustomSettings[i] = new PatternCustomSetting();
         }
 
-        public void CreateChannels(bool preserve = false, int numChannelsToPreserve = Channel.ExpansionAudioStart)
+        public void CreateChannels(bool preserve = false, int numChannelsToPreserve = ChannelType.ExpansionAudioStart)
         {
             int channelCount = project.GetActiveChannelCount();
 
@@ -130,7 +130,7 @@ namespace FamiStudio
                 channels = new Channel[channelCount];
             }
 
-            for (int i = 0; i < Channel.Count; i++)
+            for (int i = 0; i < ChannelType.Count; i++)
             {
                 var idx = Channel.ChannelTypeToIndex(i);
                 if (project.IsChannelActive(i) && channels[idx] == null)
@@ -620,7 +620,7 @@ namespace FamiStudio
             {
                 for (int p = 0; p < songLength; p++)
                 {
-                    var pattern = channels[Channel.Dpcm].PatternInstances[p];
+                    var pattern = channels[ChannelType.Dpcm].PatternInstances[p];
                     if (pattern != null)
                     {
                         foreach (var note in pattern.Notes.Values)
@@ -825,7 +825,7 @@ namespace FamiStudio
                         {
                             var note = kv.Value;
 
-                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument) || channel.Type == Channel.Dpcm)
+                            if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument) || channel.Type == ChannelType.Dpcm)
                                 note.Instrument = null;
                         }
                     }

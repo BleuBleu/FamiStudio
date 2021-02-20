@@ -109,7 +109,7 @@ namespace FamiStudio
         DateTime warningTime;
         string warning = "";
 
-
+        bool redTooltip = false;
         string tooltip = "";
         RenderTheme theme;
         RenderBrush toolbarBrush;
@@ -150,7 +150,7 @@ namespace FamiStudio
             buttons[ButtonNew]       = new Button { Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
             buttons[ButtonSave]      = new Button { Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
-            buttons[ButtonExport]    = new Button { Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
+            buttons[ButtonExport]    = new Button { Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport, RightClick = OnRepeatLastExport };
             buttons[ButtonCopy]      = new Button { Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
             buttons[ButtonCut]       = new Button { Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
             buttons[ButtonPaste]     = new Button { Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
@@ -170,7 +170,7 @@ namespace FamiStudio
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
             buttons[ButtonOpen].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
             buttons[ButtonSave].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S} - {MouseRight} Save As...";
-            buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}";
+            buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} Repeat last export {Ctrl} {Shift} {E}";
             buttons[ButtonCopy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
             buttons[ButtonCut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
             buttons[ButtonPaste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
@@ -206,6 +206,7 @@ namespace FamiStudio
             specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
             specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
             specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
+            specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
             specialCharacters["Drag"]       = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("Drag"),       OffsetY = 2 * scaling };
             specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseLeft"),  OffsetY = 2 * scaling };
             specialCharacters["MouseRight"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseRight"), OffsetY = 2 * scaling };
@@ -292,16 +293,13 @@ namespace FamiStudio
             timecodePosX = (int)(buttons[ButtonConfig].X + DefaultTimecodeOffsetX * scaling);
         }
 
-        public string ToolTip
+        public void SetToolTip(string msg, bool red = false)
         {
-            get { return tooltip; }
-            set
+            if (tooltip != msg || red != redTooltip)
             {
-                if (tooltip != value)
-                {
-                    tooltip = value;
-                    ConditionalInvalidate();
-                }
+                tooltip = msg;
+                redTooltip = red;
+                ConditionalInvalidate();
             }
         }
 
@@ -322,6 +320,7 @@ namespace FamiStudio
         public void Reset()
         {
             tooltip = "";
+            redTooltip = false;
         }
 
         private void ConditionalInvalidate()
@@ -353,6 +352,11 @@ namespace FamiStudio
         private void OnExport()
         {
             App.Export();
+        }
+
+        private void OnRepeatLastExport()
+        {
+            App.RepeatLastExport();
         }
 
         private void OnCut()
@@ -492,7 +496,7 @@ namespace FamiStudio
 
         private ButtonStatus OnMachineEnabled()
         {
-            return App.Project != null && App.Project.ExpansionAudio == Project.ExpansionNone ? ButtonStatus.Enabled : ButtonStatus.Disabled;
+            return App.Project != null && App.Project.ExpansionAudio == ExpansionType.None ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
         private RenderBitmap OnMachineGetBitmap()
@@ -555,7 +559,7 @@ namespace FamiStudio
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            var timeCodeColor = App.IsRecording ? theme.DarkRedFillBrush : theme.BlackBrush;
+            var timeCodeColor = App.IsRecording ? theme.LightRedFillBrush : theme.BlackBrush;
             var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush2;
 
             g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.LightGreyFillBrush2);
@@ -611,7 +615,7 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
             var message = tooltip;
-            var messageBrush = theme.LightGreyFillBrush2;
+            var messageBrush = redTooltip ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
             var messageFont = ThemeBase.FontMedium;
             var messageFontCenter = ThemeBase.FontMediumCenter;
 
@@ -707,12 +711,12 @@ namespace FamiStudio
             {
                 if (btn.Visible && btn.IsPointIn(e.X, e.Y, Width))
                 {
-                    ToolTip = btn.ToolTip;
+                    SetToolTip(btn.ToolTip);
                     return;
                 }
             }
 
-            ToolTip = "";
+            SetToolTip("");
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

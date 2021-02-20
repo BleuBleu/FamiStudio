@@ -17,53 +17,8 @@ namespace FamiStudio
         // Version 8 = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
         // Version 9 = FamiStudio 2.4.0 (DPCM sample editor)
         public static int Version = 9;
-        public static int MaxSampleSize = 0x4000;
-
-        public const int ExpansionNone    = 0;
-        public const int ExpansionVrc6    = 1;
-        public const int ExpansionVrc7    = 2;
-        public const int ExpansionFds     = 3;
-        public const int ExpansionMmc5    = 4;
-        public const int ExpansionN163    = 5;
-        public const int ExpansionS5B     = 6;
-        public const int ExpansionCount   = 7;
-
-        public const int TempoFamiStudio  = 0;
-        public const int TempoFamiTracker = 1;
-
-        public static string [] TempoModeNames = 
-        {
-            "FamiStudio",
-            "FamiTracker"
-        };
-
-        public static string[] MachineNames =
-        {
-            "NTSC",
-            "PAL"
-        };
-
-        public static string[] ExpansionNames =
-        {
-            "None",
-            "Konami VRC6",
-            "Konami VRC7",
-            "Famicom Disk System",
-            "Nintendo MMC5",
-            "Namco 163",
-            "Sunsoft 5B"
-        };
-
-        public static string[] ExpansionShortNames =
-        {
-            "",
-            "VRC6",
-            "VRC7",
-            "FDS",
-            "MMC5",
-            "N163",
-            "S5B"
-        };
+        public static int MaxMappedSampleSize = 0x4000;
+        public static int MaxSampleAddress = 255 * 64;
 
         private DPCMSampleMapping[] samplesMapping = new DPCMSampleMapping[64]; // We only support allow samples from C1...D6 [1...63]. Stock FT2 range.
         private List<DPCMSample> samples = new List<DPCMSample>();
@@ -75,8 +30,8 @@ namespace FamiStudio
         private string name = "Untitled";
         private string author = "Unknown";
         private string copyright = "";
-        private int tempoMode = TempoFamiStudio;
-        private int expansionAudio = ExpansionNone;
+        private int tempoMode = TempoType.FamiStudio;
+        private int expansionAudio = ExpansionType.None;
         private int expansionNumChannels = 1;
 
         // This flag has different meaning depending on the tempo mode:
@@ -91,15 +46,15 @@ namespace FamiStudio
         public List<Arpeggio>      Arpeggios      => arpeggios;
         public int                 ExpansionAudio => expansionAudio;
         public int                 ExpansionNumChannels => expansionNumChannels;
-        public string              ExpansionAudioName => ExpansionNames[expansionAudio];
-        public string              ExpansionAudioShortName => ExpansionShortNames[expansionAudio];
-        public bool                UsesExpansionAudio => expansionAudio != ExpansionNone;
-        public bool                UsesFamiStudioTempo  => tempoMode == TempoFamiStudio;
-        public bool                UsesFamiTrackerTempo => tempoMode == TempoFamiTracker;
+        public string              ExpansionAudioName => ExpansionType.Names[expansionAudio];
+        public string              ExpansionAudioShortName => ExpansionType.ShortNames[expansionAudio];
+        public bool                UsesExpansionAudio   => expansionAudio != ExpansionType.None;
+        public bool                UsesFamiStudioTempo  => tempoMode == TempoType.FamiStudio;
+        public bool                UsesFamiTrackerTempo => tempoMode == TempoType.FamiTracker;
 
-        public string Filename    { get => filename; set => filename = value; }
-        public string Name        { get => name; set => name = value; }
-        public string Author      { get => author; set => author = value; }
+        public string Filename    { get => filename;  set => filename  = value; }
+        public string Name        { get => name;      set => name      = value; }
+        public string Author      { get => author;    set => author    = value; }
         public string Copyright   { get => copyright; set => copyright = value; }
         
         public Project(bool createSongAndInstrument = false)
@@ -107,46 +62,13 @@ namespace FamiStudio
             if (createSongAndInstrument)
             {
                 CreateSong();
-                CreateInstrument(ExpansionNone);
+                CreateInstrument(ExpansionType.None);
             }
         }
 
         public int GenerateUniqueId()
         {
             return nextUniqueId++;
-        }
-
-        public int GetSampleForAddress(int offset)
-        {
-            int addr = 0;
-            foreach (var s in samples)
-            {
-                if (offset >= addr && offset < addr + s.ProcessedData.Length)
-                {
-                    byte b = s.ProcessedData[offset - addr];
-                    if (s.ReverseBits)
-                        b = Utils.ReverseBits(b);
-                    return b;
-                }
-                // DPCMTODO : Remove all 64 bytes rounding, move to data-processing.
-                addr = (addr + s.ProcessedData.Length + 63) & 0xffc0;
-            }
-            return 0x55;
-        }
-
-        public int GetAddressForSample(DPCMSample sample)
-        {
-            int addr = 0;
-            foreach (var s in samples)
-            {
-                if (s == sample)
-                {
-                    return addr;
-                }
-                // DPCMTODO : Remove all 64 bytes rounding, move to data-processing.
-                addr = (addr + s.ProcessedData.Length + 63) & 0xffc0;
-            }
-            return addr;
         }
 
         public bool PalMode
@@ -231,8 +153,7 @@ namespace FamiStudio
             return songs.Find(s => s.Name == name) == null;
         }
 
-        // DPCMTODO : Revisit all usages.
-        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
+        public DPCMSample CreateDPCMSample(string name)
         {
             // Already exist, this should not happen.
             if (samples.Find(s => s.Name == name) != null)
@@ -242,28 +163,34 @@ namespace FamiStudio
             }
 
             var sample = new DPCMSample(GenerateUniqueId(), name);
-            sample.SetDmcSourceData(data);
-            sample.Process();
             samples.Add(sample);
             SortSamples();
 
             return sample;
         }
 
+        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
+        {
+            var sample = CreateDPCMSample(name);
+
+            if (sample == null)
+                return null;
+
+            sample.SetDmcSourceData(data);
+            sample.Process();
+
+            return sample;
+        }
+
         public DPCMSample CreateDPCMSampleFromWavData(string name, short[] data, int sampleRate)
         {
-            // Already exist, this should not happen.
-            if (samples.Find(s => s.Name == name) != null)
-            {
-                Debug.Assert(false);
-                return null;
-            }
+            var sample = CreateDPCMSample(name);
 
-            var sample = new DPCMSample(GenerateUniqueId(), name);
+            if (sample == null)
+                return null;
+
             sample.SetWavSourceData(data, sampleRate);
             sample.Process();
-            samples.Add(sample);
-            SortSamples();
 
             return sample;
         }
@@ -296,7 +223,7 @@ namespace FamiStudio
 
             foreach (var song in songs)
             {
-                var channel = song.Channels[Channel.Dpcm];
+                var channel = song.Channels[ChannelType.Dpcm];
 
                 foreach (var pattern in channel.Patterns)
                 {
@@ -402,9 +329,9 @@ namespace FamiStudio
             return instruments.Find(inst => inst.Name == name) == null;
         }
 
-        public Instrument CreateInstrument(int type, string name = null)
+        public Instrument CreateInstrument(int expansion, string name = null)
         {
-            if (type != ExpansionNone && type != expansionAudio)
+            if (expansion != ExpansionType.None && expansion != expansionAudio)
                 return null;
 
             if (name == null)
@@ -412,7 +339,7 @@ namespace FamiStudio
             else if (instruments.Find(inst => inst.Name == name) != null)
                 return null;
 
-            var instrument = new Instrument(GenerateUniqueId(), type, name);
+            var instrument = new Instrument(GenerateUniqueId(), expansion, name);
             instruments.Add(instrument);
             SortInstruments();
             return instrument;
@@ -669,20 +596,20 @@ namespace FamiStudio
 
         public void SetExpansionAudio(int expansion, int numChannels = 1)
         {
-            if (expansion == ExpansionN163 && numChannels == 0)
-                expansion = ExpansionNone;
+            if (expansion == ExpansionType.N163 && numChannels == 0)
+                expansion = ExpansionType.None;
 
-            if (expansion >= 0 && expansion < ExpansionCount)
+            if (expansion >= 0 && expansion < ExpansionType.Count)
             {
                 var changed = expansionAudio != expansion;
                 var oldNumChannels = expansionNumChannels;
 
                 expansionAudio = expansion;
-                expansionNumChannels = expansion == ExpansionN163 ? numChannels : 1;
+                expansionNumChannels = expansion == ExpansionType.N163 ? numChannels : 1;
 
                 foreach (var song in songs)
                 {
-                    song.CreateChannels(true, Channel.ExpansionAudioStart + (!changed && expansion == ExpansionN163 ? oldNumChannels : 0));
+                    song.CreateChannels(true, ChannelType.ExpansionAudioStart + (!changed && expansion == ExpansionType.N163 ? oldNumChannels : 0));
                 }
 
                 if (changed)
@@ -696,14 +623,14 @@ namespace FamiStudio
                 }
             }
 
-            if (expansion != ExpansionNone)
+            if (expansion != ExpansionType.None)
                 pal = false;
         }
 
         public int GetActiveChannelCount()
         {
             int channelCount = 0;
-            for (int i = 0; i < Channel.Count; i++)
+            for (int i = 0; i < ChannelType.Count; i++)
                 if (IsChannelActive(i)) channelCount++;
             return channelCount;
         }
@@ -711,36 +638,36 @@ namespace FamiStudio
         public int[] GetActiveChannelList()
         {
             var activeChannels = new List<int>();
-            for (int i = 0; i < Channel.Count; i++)
+            for (int i = 0; i < ChannelType.Count; i++)
                 if (IsChannelActive(i)) activeChannels.Add(i);
             return activeChannels.ToArray();
         }
 
         public bool IsChannelActive(int channelType)
         {
-            if (channelType <= Channel.Dpcm)
+            if (channelType <= ChannelType.Dpcm)
                 return true;
 
-            if (channelType >= Channel.Vrc6Square1 && channelType <= Channel.Vrc6Saw)
-                return expansionAudio == ExpansionVrc6;
+            if (channelType >= ChannelType.Vrc6Square1 && channelType <= ChannelType.Vrc6Saw)
+                return expansionAudio == ExpansionType.Vrc6;
 
-            if (channelType == Channel.FdsWave)
-                return expansionAudio == ExpansionFds;
+            if (channelType == ChannelType.FdsWave)
+                return expansionAudio == ExpansionType.Fds;
 
-            if (channelType >= Channel.Mmc5Square1 && channelType <= Channel.Mmc5Square2)
-                return expansionAudio == ExpansionMmc5;
+            if (channelType >= ChannelType.Mmc5Square1 && channelType <= ChannelType.Mmc5Square2)
+                return expansionAudio == ExpansionType.Mmc5;
 
-            if (channelType == Channel.Mmc5Dpcm)
+            if (channelType == ChannelType.Mmc5Dpcm)
                 return false;
 
-            if (channelType >= Channel.Vrc7Fm1 && channelType <= Channel.Vrc7Fm6)
-                return expansionAudio == ExpansionVrc7;
+            if (channelType >= ChannelType.Vrc7Fm1 && channelType <= ChannelType.Vrc7Fm6)
+                return expansionAudio == ExpansionType.Vrc7;
 
-            if (channelType >= Channel.N163Wave1 && channelType <= Channel.N163Wave8)
-                return expansionAudio == ExpansionN163 && (channelType - Channel.N163Wave1) < expansionNumChannels;
+            if (channelType >= ChannelType.N163Wave1 && channelType <= ChannelType.N163Wave8)
+                return expansionAudio == ExpansionType.N163 && (channelType - ChannelType.N163Wave1) < expansionNumChannels;
 
-            if (channelType >= Channel.S5BSquare1 && channelType <= Channel.S5BSquare3)
-                return expansionAudio == ExpansionS5B;
+            if (channelType >= ChannelType.S5BSquare1 && channelType <= ChannelType.S5BSquare3)
+                return expansionAudio == ExpansionType.S5B;
 
             Debug.Assert(false);
 
@@ -751,7 +678,7 @@ namespace FamiStudio
         {
             get
             {
-                return expansionAudio != ExpansionNone && expansionAudio != ExpansionMmc5;
+                return expansionAudio != ExpansionType.None && expansionAudio != ExpansionType.Mmc5;
             }
         }
         
@@ -816,44 +743,118 @@ namespace FamiStudio
 
         public int GetTotalSampleSize()
         {
-            int size = 0;
-            foreach (var sample in samples)
-                size += sample.ProcessedData.Length;
-            return Math.Min(MaxSampleSize, size);
+            lock (DPCMSample.ProcessedDataLock)
+            {
+                int size = 0;
+                foreach (var sample in samples)
+                    size += sample.ProcessedData.Length;
+                return Math.Min(MaxMappedSampleSize, size);
+            }
+        }
+
+        public int GetSampleForAddress(int offset)
+        {
+            lock (DPCMSample.ProcessedDataLock)
+            {
+                var addr = 0;
+                var visitedSamples = new List<DPCMSample>(samples.Count);
+
+                foreach (var mapping in samplesMapping)
+                {
+                    if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                    {
+                        var addrEnd = addr + ((mapping.Sample.ProcessedData.Length + 63) & 0xffc0);
+
+                        if (offset >= addr && offset < addrEnd)
+                        {
+                            var idx = offset - addr;
+
+                            if (idx < mapping.Sample.ProcessedData.Length)
+                                return mapping.Sample.ProcessedData[idx];
+                            else
+                                return 0x55;
+                        }
+
+                        addr = addrEnd;
+                        if (addr >= MaxMappedSampleSize)
+                            break;
+
+                        visitedSamples.Add(mapping.Sample);
+                    }
+                }
+
+                return addr;
+            }
+        }
+
+        public int GetAddressForSample(DPCMSample sample)
+        {
+            lock (DPCMSample.ProcessedDataLock)
+            {
+                var addr = 0;
+                var visitedSamples = new List<DPCMSample>(samples.Count);
+
+                foreach (var mapping in samplesMapping)
+                {
+                    if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                    {
+                        if (mapping.Sample == sample)
+                            return addr;
+                        addr += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
+
+                        if (addr >= MaxMappedSampleSize)
+                            return -1;
+
+                        visitedSamples.Add(mapping.Sample);
+                    }
+                }
+
+                return addr;
+            }
         }
 
         public int GetTotalMappedSampleSize()
         {
-            var size = 0;
-            var visitedSamples = new HashSet<DPCMSample>();
+            lock (DPCMSample.ProcessedDataLock)
+            {
+                var size = 0;
+                var visitedSamples = new List<DPCMSample>(samples.Count);
+
+                foreach (var mapping in samplesMapping)
+                {
+                    if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                    {
+                        size += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
+                        visitedSamples.Add(mapping.Sample);
+                    }
+                }
+
+                return size;
+            }
+        }
+
+        public byte[] GetPackedSampleData()
+        {
+            var sampleData = new List<byte>(MaxMappedSampleSize);
+            var visitedSamples = new List<DPCMSample>(samples.Count);
 
             foreach (var mapping in samplesMapping)
             {
                 if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
                 {
-                    size += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
+                    sampleData.AddRange(mapping.Sample.ProcessedData);
+                    var paddedSize = ((sampleData.Count + 63) & 0xffc0) - sampleData.Count;
+                    for (int i = 0; i < paddedSize; i++)
+                        sampleData.Add(0x55);
                     visitedSamples.Add(mapping.Sample);
+
+                    if (sampleData.Count >= MaxMappedSampleSize)
+                        break;
                 }
             }
 
-            return size;
-        }
-
-        public byte[] GetPackedSampleData()
-        {
-            var sampleData = new List<byte>();
-
-            foreach (var sample in samples)
-            {
-                // DPCMTODO : Remove all 64 bytes rounding, move to data-processing.
-                sampleData.AddRange(sample.GetDataWithReverse()); // DPCMTODO : Remove bit reverse here.
-                var paddedSize = ((sampleData.Count + 63) & 0xffc0) - sampleData.Count;
-                for (int i = 0; i < paddedSize; i++)
-                    sampleData.Add(0x55);
-            }
-
-            if (sampleData.Count > MaxSampleSize)
-                sampleData.RemoveRange(MaxSampleSize, sampleData.Count - MaxSampleSize);
+            if (sampleData.Count > MaxMappedSampleSize)
+                sampleData.RemoveRange(MaxMappedSampleSize, sampleData.Count - MaxMappedSampleSize);
 
             return sampleData.ToArray();
         }
@@ -879,13 +880,14 @@ namespace FamiStudio
         public void Cleanup()
         {
             DeleteUnusedInstruments();
+            UnmapUnusedSamples();
             DeleteUnusedSamples();
             DeleteUnusedArpeggios();
         }
 
         public bool MergeSongs(Project other)
         {
-            if (other.expansionAudio != ExpansionNone &&
+            if (other.expansionAudio != ExpansionType.None &&
                 other.expansionAudio != expansionAudio)
             {
                 Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses a different audio expansion.");
@@ -1065,7 +1067,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (otherInstrument.ExpansionType == Project.ExpansionNone ||
+                    if (otherInstrument.ExpansionType == ExpansionType.None ||
                         otherInstrument.ExpansionType == expansionAudio)
                     {
                         merged = true;
@@ -1110,7 +1112,7 @@ namespace FamiStudio
         {
             Debug.Assert(UsesFamiTrackerTempo);
 
-            tempoMode = TempoFamiStudio;
+            tempoMode = TempoType.FamiStudio;
 
             foreach (var song in songs)
                 song.ConvertToFamiStudioTempo();
@@ -1124,7 +1126,7 @@ namespace FamiStudio
             {
                 foreach (var song in songs)
                 {
-                    song.SetDefaultsForTempoMode(Project.TempoFamiTracker);
+                    song.SetDefaultsForTempoMode(TempoType.FamiTracker);
                     song.UpdatePatternStartNotes();
                 }
             }
@@ -1137,7 +1139,7 @@ namespace FamiStudio
                 }
             }
 
-            tempoMode = TempoFamiTracker;
+            tempoMode = TempoType.FamiTracker;
         }
 
         public void DeleteUnusedInstruments()
@@ -1170,13 +1172,13 @@ namespace FamiStudio
             SortInstruments();
         }
 
-        public void DeleteUnusedSamples()
+        public void UnmapUnusedSamples()
         {
-            var usedSamples = new HashSet<DPCMSample>();
+            var usedMappingIndices = new HashSet<int>();
 
             foreach (var song in songs)
             {
-                var channel = song.Channels[Channel.Dpcm];
+                var channel = song.Channels[ChannelType.Dpcm];
 
                 for (int p = 0; p < song.Length; p++)
                 {
@@ -1186,7 +1188,57 @@ namespace FamiStudio
                         foreach (var note in pattern.Notes.Values)
                         {
                             var mapping = GetDPCMMapping(note.Value);
-                            if (note.IsValid && !note.IsStop && note.Instrument == null && mapping != null && mapping.Sample != null)
+                            if (mapping != null && mapping.Sample != null)
+                            {
+                                usedMappingIndices.Add(note.Value - Note.DPCMNoteMin);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null && !usedMappingIndices.Contains(i))
+                {
+                    samplesMapping[i] = null;
+                }
+            }
+        }
+
+        public void DeleteSampleWavSourceData()
+        {
+            foreach (var sample in samples)
+            {
+                sample.RemoveWavSourceData();
+            }
+        }
+
+        public void PermanentlyApplyAllSamplesProcessing()
+        {
+            foreach (var sample in samples)
+            {
+                sample.PermanentlyApplyAllProcessing();
+            }
+        }
+
+        public void DeleteUnusedSamples()
+        {
+            var usedSamples = new HashSet<DPCMSample>();
+
+            foreach (var song in songs)
+            {
+                var channel = song.Channels[ChannelType.Dpcm];
+
+                for (int p = 0; p < song.Length; p++)
+                {
+                    var pattern = channel.PatternInstances[p];
+                    if (pattern != null)
+                    {
+                        foreach (var note in pattern.Notes.Values)
+                        {
+                            var mapping = GetDPCMMapping(note.Value);
+                            if (mapping != null && mapping.Sample != null)
                             {
                                 usedSamples.Add(mapping.Sample);
                             }
@@ -1417,7 +1469,7 @@ namespace FamiStudio
             }
             else
             {
-                tempoMode = TempoFamiTracker;
+                tempoMode = TempoType.FamiTracker;
             }
 
             if (buffer.Version >= 6)
@@ -1461,7 +1513,88 @@ namespace FamiStudio
             var newProject = new Project();
             var loadSerializer = new ProjectLoadBuffer(newProject, saveSerializer.GetBuffer(), Version);
             newProject.SerializeState(loadSerializer);
+            newProject.Validate();
             return newProject;
+        }
+    }
+
+    public static class ExpansionType
+    {
+        public const int None  = 0;
+        public const int Vrc6  = 1;
+        public const int Vrc7  = 2;
+        public const int Fds   = 3;
+        public const int Mmc5  = 4;
+        public const int N163  = 5;
+        public const int S5B   = 6;
+        public const int Count = 7;
+
+        public static readonly string[] Names =
+        {
+            "None",
+            "Konami VRC6",
+            "Konami VRC7",
+            "Famicom Disk System",
+            "Nintendo MMC5",
+            "Namco 163",
+            "Sunsoft 5B"
+        };
+
+        public static readonly string[] ShortNames =
+        {
+            "",
+            "VRC6",
+            "VRC7",
+            "FDS",
+            "MMC5",
+            "N163",
+            "S5B"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
+
+        public static int GetValueForShortName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
+    }
+
+    public static class MachineType
+    {
+        public const int NTSC = 0;
+        public const int PAL  = 1;
+        public const int Dual = 2;
+
+        public static readonly string[] Names =
+        {
+            "NTSC",
+            "PAL",
+            "Dual"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
+    }
+
+    public static class TempoType
+    {
+        public const int FamiStudio  = 0;
+        public const int FamiTracker = 1;
+
+        public static readonly string[] Names =
+        {
+            "FamiStudio",
+            "FamiTracker"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
         }
     }
 }

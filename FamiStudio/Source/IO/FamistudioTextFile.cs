@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,20 +19,35 @@ namespace FamiStudio
             var lines = new List<string>();
 
             var versionString = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
-            var projectLine = $"Project Version=\"{versionString}\" TempoMode=\"{Project.TempoModeNames[project.TempoMode]}\"";
+            var projectLine = $"Project Version=\"{versionString}\" TempoMode=\"{TempoType.Names[project.TempoMode]}\"";
 
-            if (project.Name      != "")     projectLine += $" Name=\"{project.Name}\"";
-            if (project.Author    != "")     projectLine += $" Author=\"{project.Author}\"";
-            if (project.Copyright != "")     projectLine += $" Copyright=\"{project.Copyright}\"";
-            if (project.UsesExpansionAudio)  projectLine += $" Expansion=\"{Project.ExpansionShortNames[project.ExpansionAudio]}\"";
-            if (project.PalMode)             projectLine += $" PAL=\"{true}\"";
+            if (project.Name      != "")    projectLine += $" Name=\"{project.Name}\"";
+            if (project.Author    != "")    projectLine += $" Author=\"{project.Author}\"";
+            if (project.Copyright != "")    projectLine += $" Copyright=\"{project.Copyright}\"";
+            if (project.UsesExpansionAudio) projectLine += $" Expansion=\"{ExpansionType.ShortNames[project.ExpansionAudio]}\"";
+            if (project.PalMode)            projectLine += $" PAL=\"{true}\"";
 
             lines.Add(projectLine);
 
             // DPCM samples
             foreach (var sample in project.Samples)
             {
-                lines.Add($"\tDPCMSample Name=\"{sample.Name}\" ReverseBits=\"{sample.ReverseBits.ToString()}\" Data=\"{String.Join("", sample.ProcessedData.Select(x => $"{x:x2}"))}\"");
+                // We don't include any DPCM sample source data or processing data. We simply write the final
+                // processed data. Including giant WAV files or asking other importers to implement all the 
+                // processing options is unrealistic.
+                if (sample.HasAnyProcessingOptions)
+                {
+                    if (sample.SourceDataIsWav)
+                        Log.LogMessage(LogSeverity.Warning, $"Sample {sample.Name} has WAV data as source. Only the final processed DMC data will be exported.");
+                    else
+                        Log.LogMessage(LogSeverity.Warning, $"Sample {sample.Name} has processing option(s) enabled. Only the final processed DMC data will be exported.");
+                }
+
+                sample.PermanentlyApplyAllProcessing();
+
+                Debug.Assert(!sample.HasAnyProcessingOptions);
+
+                lines.Add($"\tDPCMSample Name=\"{sample.Name}\" Data=\"{String.Join("", sample.ProcessedData.Select(x => $"{x:x2}"))}\"");
             }
 
             // DPCM mappings
@@ -49,28 +65,28 @@ namespace FamiStudio
                 var instrumentLine = $"\tInstrument Name=\"{instrument.Name}\"";
                 if (instrument.IsExpansionInstrument)
                 {
-                    instrumentLine += $" Expansion=\"{Project.ExpansionShortNames[project.ExpansionAudio]}\"";
+                    instrumentLine += $" Expansion=\"{ExpansionType.ShortNames[project.ExpansionAudio]}\"";
 
-                    if (instrument.ExpansionType == Project.ExpansionFds)
+                    if (instrument.ExpansionType == ExpansionType.Fds)
                     {
-                        instrumentLine += $" FdsWavePreset=\"{Envelope.PresetNames[instrument.FdsWavePreset]}\"";
-                        instrumentLine += $" FdsModPreset=\"{Envelope.PresetNames[instrument.FdsModPreset]}\"";
+                        instrumentLine += $" FdsWavePreset=\"{WavePresetType.Names[instrument.FdsWavePreset]}\"";
+                        instrumentLine += $" FdsModPreset=\"{WavePresetType.Names[instrument.FdsModPreset]}\"";
                         if (instrument.FdsMasterVolume != 0) instrumentLine += $" FdsMasterVolume=\"{instrument.FdsMasterVolume}\"";
                         if (instrument.FdsModSpeed     != 0) instrumentLine += $" FdsModSpeed=\"{instrument.FdsModSpeed}\"";
                         if (instrument.FdsModDepth     != 0) instrumentLine += $" FdsModDepth=\"{instrument.FdsModDepth}\"";
                         if (instrument.FdsModDelay     != 0) instrumentLine += $" FdsModDelay=\"{instrument.FdsModDelay}\"";
                     }
-                    else if (instrument.ExpansionType == Project.ExpansionN163)
+                    else if (instrument.ExpansionType == ExpansionType.N163)
                     {
-                        instrumentLine += $" N163WavePreset=\"{Envelope.PresetNames[instrument.N163WavePreset]}\"";
+                        instrumentLine += $" N163WavePreset=\"{WavePresetType.Names[instrument.N163WavePreset]}\"";
                         instrumentLine += $" N163WaveSize=\"{instrument.N163WaveSize}\"";
                         instrumentLine += $" N163WavePos=\"{instrument.N163WavePos}\"";
                     }
-                    else if (instrument.ExpansionType == Project.ExpansionVrc7)
+                    else if (instrument.ExpansionType == ExpansionType.Vrc7)
                     {
                         instrumentLine += $" Vrc7Patch=\"{instrument.Vrc7Patch}\"";
 
-                        if (instrument.Vrc7Patch == 0)
+                        if (instrument.Vrc7Patch == Vrc7InstrumentPatch.Custom)
                         {
                             for (int i = 0; i < 8; i++)
                                 instrumentLine += $" Vrc7Reg{i}=\"{instrument.Vrc7PatchRegs[i]}\"";
@@ -79,12 +95,12 @@ namespace FamiStudio
                 }
                 lines.Add(instrumentLine);
 
-                for (int i = 0; i < Envelope.Count; i++)
+                for (int i = 0; i < EnvelopeType.Count; i++)
                 {
                     var env = instrument.Envelopes[i];
                     if (env != null && !env.IsEmpty)
                     {
-                        var envelopeLine = $"\t\tEnvelope Type=\"{Envelope.EnvelopeShortNames[i]}\" Length=\"{env.Length}\"";
+                        var envelopeLine = $"\t\tEnvelope Type=\"{EnvelopeType.ShortNames[i]}\" Length=\"{env.Length}\"";
 
                         if (env.Loop     >= 0) envelopeLine += $" Loop=\"{env.Loop}\"";
                         if (env.Release  >= 0) envelopeLine += $" Release=\"{env.Release}\"";
@@ -145,7 +161,7 @@ namespace FamiStudio
 
                 foreach (var channel in song.Channels)
                 {
-                    lines.Add($"\t\tChannel Type=\"{Channel.ChannelExportNames[channel.Type]}\"");
+                    lines.Add($"\t\tChannel Type=\"{ChannelType.ShortNames[channel.Type]}\"");
 
                     foreach (var pattern in channel.Patterns)
                     {
@@ -266,8 +282,8 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Name", out var name)) project.Name = name;
                             if (parameters.TryGetValue("Author", out var author)) project.Author = author;
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
-                            if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudio(Array.IndexOf(Project.ExpansionShortNames, expansion));
-                            if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = Array.IndexOf(Project.TempoModeNames, tempoMode);
+                            if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudio(ExpansionType.GetValueForShortName(expansion));
+                            if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = TempoType.GetValueForName(tempoMode);
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
                             break;
                         }
@@ -278,7 +294,6 @@ namespace FamiStudio
                             for (int i = 0; i < data.Length; i++)
                                 data[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
                             var sample = project.CreateDPCMSampleFromDmcData(parameters["Name"], data);
-                            if (parameters.TryGetValue("ReverseBits", out var reverseStr)) sample.ReverseBits = bool.Parse(reverseStr);
                             break;
                         }
                         case "DPCMMapping":
@@ -292,28 +307,28 @@ namespace FamiStudio
                         }
                         case "Instrument":
                         {
-                            instrument = project.CreateInstrument(parameters.TryGetValue("Expansion", out _) ? project.ExpansionAudio : Project.ExpansionNone, parameters["Name"]);
+                            instrument = project.CreateInstrument(parameters.TryGetValue("Expansion", out _) ? project.ExpansionAudio : ExpansionType.None, parameters["Name"]);
 
-                            if (instrument.ExpansionType == Project.ExpansionFds)
+                            if (instrument.ExpansionType == ExpansionType.Fds)
                             {
-                                if (parameters.TryGetValue("FdsWavePreset",   out var wavPresetStr))    instrument.FdsWavePreset   = (byte)Array.IndexOf(Envelope.PresetNames, wavPresetStr);
-                                if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsWavePreset   = (byte)Array.IndexOf(Envelope.PresetNames, modPresetStr);
+                                if (parameters.TryGetValue("FdsWavePreset",   out var wavPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForName(wavPresetStr);
+                                if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForName(modPresetStr);
                                 if (parameters.TryGetValue("FdsMasterVolume", out var masterVolumeStr)) instrument.FdsMasterVolume = byte.Parse(masterVolumeStr);
                                 if (parameters.TryGetValue("FdsModSpeed",     out var fdsModSpeedStr))  instrument.FdsModSpeed     = ushort.Parse(fdsModSpeedStr);
                                 if (parameters.TryGetValue("FdsModDepth",     out var fdsModDepthStr))  instrument.FdsModDepth     = byte.Parse(fdsModDepthStr);
                                 if (parameters.TryGetValue("FdsModDelay",     out var fdsModDelayStr))  instrument.FdsModDelay     = byte.Parse(fdsModDelayStr);
                             }
-                            else if (instrument.ExpansionType == Project.ExpansionN163)
+                            else if (instrument.ExpansionType == ExpansionType.N163)
                             {
-                                 if (parameters.TryGetValue("N163WavePreset", out var wavPresetStr))    instrument.N163WavePreset = (byte)Array.IndexOf(Envelope.PresetNames, wavPresetStr);
+                                 if (parameters.TryGetValue("N163WavePreset", out var wavPresetStr))    instrument.N163WavePreset = (byte)WavePresetType.GetValueForName(wavPresetStr);
                                  if (parameters.TryGetValue("N163WaveSize",   out var n163WavSizeStr))  instrument.N163WaveSize   = byte.Parse(n163WavSizeStr);
                                  if (parameters.TryGetValue("N163WavePos",    out var n163WavPosStr))   instrument.N163WavePos    = byte.Parse(n163WavPosStr);
                             }
-                            else if (instrument.ExpansionType == Project.ExpansionVrc7)
+                            else if (instrument.ExpansionType == ExpansionType.Vrc7)
                             {
                                 if (parameters.TryGetValue("Vrc7Patch", out var vrc7PatchStr)) instrument.Vrc7Patch = byte.Parse(vrc7PatchStr);
 
-                                if (instrument.Vrc7Patch == 0)
+                                if (instrument.Vrc7Patch == Vrc7InstrumentPatch.Custom)
                                 {
                                     for (int i = 0; i < 8; i++)
                                     {
@@ -341,7 +356,7 @@ namespace FamiStudio
                         }
                         case "Envelope":
                         {
-                            var env = instrument.Envelopes[Array.IndexOf(Envelope.EnvelopeShortNames, parameters["Type"])];
+                            var env = instrument.Envelopes[EnvelopeType.GetValueForShortName(parameters["Type"])];
                             if (env != null)
                             {
                                 if (env.CanResize)
@@ -401,7 +416,7 @@ namespace FamiStudio
                         }
                         case "Channel":
                         {
-                            var channelType = Array.IndexOf(Channel.ChannelExportNames, parameters["Type"]);
+                            var channelType = ChannelType.GetValueForShortName(parameters["Type"]);
                             channel = song.GetChannelByType(channelType);
                             break;
                         }
@@ -431,6 +446,8 @@ namespace FamiStudio
                                 note.VibratoSpeed = byte.Parse(vibSpeedStr);
                             if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr) && channel.SupportsEffect(Note.EffectVibratoDepth))
                                 note.VibratoDepth = byte.Parse(vibDepthStr);
+                            if (parameters.TryGetValue("Speed", out var speedStr) && channel.SupportsEffect(Note.EffectSpeed))
+                                note.Speed = byte.Parse(speedStr);
                             if (parameters.TryGetValue("FinePitch", out var finePitchStr) && channel.SupportsEffect(Note.EffectFinePitch))
                                 note.FinePitch = sbyte.Parse(finePitchStr);
                             if (parameters.TryGetValue("FdsModSpeed", out var modSpeedStr) && channel.SupportsEffect(Note.EffectFdsModSpeed))

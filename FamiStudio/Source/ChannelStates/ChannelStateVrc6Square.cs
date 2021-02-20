@@ -8,7 +8,7 @@ namespace FamiStudio
 
         public ChannelStateVrc6Square(int apuIdx, int channelType) : base(apuIdx, channelType, false)
         {
-            regOffset = (channelType - Channel.Vrc6Square1) * 0x1000;
+            regOffset = (channelType - ChannelType.Vrc6Square1) * 0x1000;
         }
 
         public override void UpdateAPU()

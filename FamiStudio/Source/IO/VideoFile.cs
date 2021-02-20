@@ -239,7 +239,7 @@ namespace FamiStudio
                         for (int f = segment0.endFrame - segmentTransitionNumFrames, a = 0; f < segment0.endFrame; f++, a++)
                         {
                             var lerp = a / (float)segmentTransitionNumFrames;
-                            frames[f].scroll[c] = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmoothStep(lerp));
+                            frames[f].scroll[c] = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmootherStep(lerp));
                         }
                     }
                 }
@@ -461,7 +461,7 @@ namespace FamiStudio
                 state.channel = song.Channels[i];
                 state.patternIndex = 0;
                 state.channelText = state.channel.Name + (state.channel.IsExpansionChannel ? $" ({song.Project.ExpansionAudioShortName})" : "");
-                state.bmp = videoGraphics.CreateBitmapFromResource(Channel.ChannelIcons[song.Channels[i].Type] + "@2x"); // HACK: Grab the 200% scaled version directly.
+                state.bmp = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[song.Channels[i].Type] + "@2x"); // HACK: Grab the 200% scaled version directly.
                 state.wav = new WavPlayer(sampleRate, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1); 
 
                 channelStates.Add(state);
@@ -576,7 +576,7 @@ namespace FamiStudio
 
                             if (s.note.IsMusical)
                             {
-                                if (s.channel.Type == Channel.Dpcm)
+                                if (s.channel.Type == ChannelType.Dpcm)
                                     color = Color.FromArgb(210, ThemeBase.MediumGreyFillColor1);
                                 else
                                     color = Color.FromArgb(128 + s.volume * 127 / 15, s.note.Instrument != null ? s.note.Instrument.Color : ThemeBase.DarkGreyFillColor2);

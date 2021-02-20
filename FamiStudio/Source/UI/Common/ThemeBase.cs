@@ -431,5 +431,10 @@ namespace FamiStudio
                     Math.Min(255, color.B + 50)
                 );
         }
+
+        public static void SerializeState(ProjectBuffer buffer)
+        {
+            buffer.Serialize(ref nextColorIdx);
+        }
     }
 }
