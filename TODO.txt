@@ -29,8 +29,6 @@ Doc:
 
 DPCM Editor
 ===========
-- 4-point envelope
-	- Selection in header is inconsistent.
 - With +0.5 DPCM isnt aligned with wave. See if that makes sense.
 - DPCMTODOs in cleanup. See if makes sense.
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.

@@ -4114,7 +4114,7 @@ namespace FamiStudio
 
         private bool IsMouseInEffectPanel(MouseEventArgs e)
         {
-            return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && e.X > whiteKeySizeX && e.X > headerSizeY && e.Y < headerAndEffectSizeY;
+            return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY;
         }
 
         private bool IsMouseOnSnapResolutionButton(MouseEventArgs e)
