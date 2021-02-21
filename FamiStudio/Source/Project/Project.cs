@@ -294,6 +294,7 @@ namespace FamiStudio
 
             var song = new Song(this, GenerateUniqueId(), name);
             songs.Add(song);
+            SortSongs();
             return song;
         }
 
@@ -1049,6 +1050,9 @@ namespace FamiStudio
 
             SortInstruments();
             SortArpeggios();
+            SortSamples();
+            SortSongs();
+
             Validate();
 
             return true;

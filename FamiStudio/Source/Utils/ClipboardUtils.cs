@@ -325,6 +325,8 @@ namespace FamiStudio
                 }
             }
 
+            serializer.Project.SortSamples();
+
             return needMerge;
         }
 
@@ -384,6 +386,8 @@ namespace FamiStudio
                 }
             }
 
+            serializer.Project.SortInstruments();
+
             return needMerge;
         }
 
@@ -435,6 +439,8 @@ namespace FamiStudio
                     }
                 }
             }
+
+            serializer.Project.SortArpeggios();
 
             return needMerge;
         }
@@ -545,8 +551,6 @@ namespace FamiStudio
                 if (!note.IsEmpty)
                     notes[i] = note;
             }
-
-            project.SortInstruments();
 
             return notes;
         }

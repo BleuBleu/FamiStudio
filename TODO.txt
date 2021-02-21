@@ -1,13 +1,9 @@
-Brad:
-- .exportzp FAMISTUDIO_SFX_CH0
-
 FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
 - Double-right-click = select whole note (or whole note drag?)
-
-x Smooth vibrato with SFX.
-x BUG : When using an expansion, if you go in project settings, PAL/NTSC is not read only.
+Brad:
+- .exportzp FAMISTUDIO_SFX_CH0
 
 Test:
 - Retest Win7 device lost.
