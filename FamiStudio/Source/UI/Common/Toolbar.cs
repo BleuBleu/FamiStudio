@@ -133,7 +133,7 @@ namespace FamiStudio
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
             toolbarBrush = g.CreateVerticalGradientBrush(0, Height, ThemeBase.DarkGreyFillColor2, ThemeBase.DarkGreyFillColor1);
-            warningBrush = g.CreateSolidBrush(ThemeBase.Darken(ThemeBase.CustomColors[0, 0]));
+            warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
 
             bmpLoopNone    = g.CreateBitmapFromResource("LoopNone");
             bmpLoopSong    = g.CreateBitmapFromResource("Loop");
@@ -615,7 +615,7 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
             var message = tooltip;
-            var messageBrush = redTooltip ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
+            var messageBrush = redTooltip ? warningBrush : theme.LightGreyFillBrush2;
             var messageFont = ThemeBase.FontMedium;
             var messageFontCenter = ThemeBase.FontMediumCenter;
 
