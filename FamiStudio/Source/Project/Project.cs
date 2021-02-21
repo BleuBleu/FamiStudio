@@ -1210,7 +1210,8 @@ namespace FamiStudio
         {
             foreach (var sample in samples)
             {
-                sample.RemoveWavSourceData();
+                if (sample.SourceDataIsWav)
+                    sample.PermanentlyApplyAllProcessing();
             }
         }
 
@@ -1326,10 +1327,9 @@ namespace FamiStudio
 
             foreach (var mapping in samplesMapping)
             {
-                if (mapping != null && mapping.Sample != null)
+                if (mapping != null)
                 {
-                    Debug.Assert(GetSample(mapping.Sample.Id) == mapping.Sample);
-                    Debug.Assert(samples.Contains(mapping.Sample));
+                    mapping.Validate(this, idMap);
                 }
             }
         }

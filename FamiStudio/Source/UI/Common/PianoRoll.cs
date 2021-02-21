@@ -2339,7 +2339,7 @@ namespace FamiStudio
                         if ((i & (sampleSkip - 1)) == 0)
                         {
                             points[j, 0] = i * scaleX + biasX;
-                            points[j, 1] = (-(dpcmCounter + 0.5f) / 64.0f + 0.5f) * 2.0f * halfHeightPad + halfHeight; // DPCMTODO : Is that centered correctly? Also negative value?
+                            points[j, 1] = (-(dpcmCounter - 32) / 64.0f) * 2.0f * halfHeightPad + halfHeight; // DPCMTODO : Is that centered correctly? Also negative value?
                             if (indices != null) indices[j] = i - 1;
                             j++;
                         }

@@ -114,29 +114,15 @@ namespace FamiStudio
             return trimmed;
         }
 
-        public void RemoveWavSourceData()
-        {
-            if (SourceDataIsWav)
-            {
-                SetDmcSourceData(processedData);
-                sampleRate = 15; // DPCMTODO : Does that make any sense??
-                previewRate = 15;
-                volumeAdjust = 100;
-                trimZeroVolume = false;
-                paddingMode = DPCMPaddingType.Unpadded;
-                ResetVolumeEnvelope();
-            }
-        }
-
         public void PermanentlyApplyAllProcessing()
         {
             SetDmcSourceData(processedData);
-            sampleRate = 15; // DPCMTODO : Does that make any sense??
+            sampleRate = 15; 
             previewRate = 15;
             volumeAdjust = 100;
             trimZeroVolume = false;
             reverseBits = false;
-            PalProcessing = false; // DPCMTODO : Does that make any sense??
+            palProcessing = false;
             paddingMode = DPCMPaddingType.Unpadded;
             ResetVolumeEnvelope();
         }
@@ -308,8 +294,6 @@ namespace FamiStudio
                 idMap.Add(id, this);
 
             Debug.Assert(project.GetSample(id) == this);
-
-            // DPCMTODO: Validate volume envelope is sorted.
 #endif
         }
 
@@ -359,6 +343,8 @@ namespace FamiStudio
 
             color = ThemeBase.RandomCustomColor();
             paddingMode = DPCMPaddingType.Unpadded;
+
+            ResetVolumeEnvelope();
 
             // Process to apply bit reverse, etc.
             Process();
@@ -487,6 +473,16 @@ namespace FamiStudio
             buffer.Serialize(ref sample);
             buffer.Serialize(ref loop);
             buffer.Serialize(ref pitch);
+        }
+
+        public void Validate(Project project, Dictionary<int, object> idMap)
+        {
+            if (sample != null)
+            {
+                Debug.Assert(project.GetSample(sample.Id) == sample);
+                Debug.Assert(project.Samples.Contains(sample));
+            }
+
         }
     }
 

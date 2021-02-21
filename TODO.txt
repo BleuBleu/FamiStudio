@@ -1,18 +1,18 @@
 Brad:
 - .exportzp FAMISTUDIO_SFX_CH0
-- FamiTracker tempo pause bug.
 
 FamiStudio 2.4.0
 ================
 / Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
 - Double-right-click = select whole note (or whole note drag?)
-- Highlight piano keys when they are pressed with QWERTY or MIDI. (LOW PRIO)
+
 x Smooth vibrato with SFX.
 x BUG : When using an expansion, if you go in project settings, PAL/NTSC is not read only.
 
 Test:
 - Retest Win7 device lost.
 - Transaction (w/o DPCM), test a LOT!
+- Test HI-DPI.
 - Re-export, recompile and change ROM version.
 - Test looping sample.
 - ROM: Make sure square pops, and doesnt in NSF.
@@ -21,27 +21,18 @@ Test:
 - Import FTM with too many samples, see what happens.
 - Compare quality with MakeDPCM & RJDMC.
 - Test merging of samples from other project (with WAV, etc.)
+- Test transactions a lot, dont seem to refresh when i do cleanup.
 
 Doc:
 - New screenshots dark theme.
 - Mention FamiStudio text doesnt include source sample data.
 - Smooth vibrato + SFX.
 
-DPCM Editor
-===========
-- With +0.5 DPCM isnt aligned with wave. See if that makes sense.
-- DPCMTODOs in cleanup. See if makes sense.
-- Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
-	- Test transactions a lot, dont seem to refresh when i do cleanup.
-- Make sure clipboard still works (must copy source data as well).
-- What about space to play DPCM?
-- Tooltips everywhere!
-
 FamiStudio 2.5.0
 ================
 - FamiStudio Tempo 2.0? Arbitrary BPM.
 - MIDI in/out
-- DPCM : More stuff, normalize volume, 4 point volume envelope.
+- DPCM : More stuff, normalize volume? Playback speed?
 
 Tips & Tricks (Review this list)
 ================================
@@ -116,10 +107,11 @@ Backlog:
 =========
 - Raw FDS modulation table envelope.
 - Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
-- Instrument folders
+- Instrument folders + collapse entire sections (samples, arps, etc.)
 - Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).
 - Mac: Paste special: Text is super dark
 - Mac: Clicking on FS without the window doesn't give it focus...?
 - Installer on Japanese machine?
 - Keyboard recording VS. non-QWERTY keyboards.
 - BUG: After cleanup, selected arpeggio + instrument seems wrong. (added notes make arpeggion sound, but none selected.)
+- Highlight piano keys when they are pressed with QWERTY or MIDI. (LOW PRIO)

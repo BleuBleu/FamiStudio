@@ -107,15 +107,26 @@ namespace FamiStudio
 
             for (int i = 0; i < resampledWave.Length; i++)
             {
-                var waveSample = resampledWave[i];
-                var dpcmSample = DpcmCounterToWaveSample(dpcmCounter);
+                var up = false;
 
-                var index = i / 8;
-                var mask  = (1 << (i & 7));
-
-                // When samples are equal, look at the next one. This is helpful when re-converting back to DMC.
-                if (dpcmSample < waveSample || (dpcmSample == waveSample && i != resampledWave.Length - 1 && resampledWave[i + 1] > waveSample))
+                if (i != resampledWave.Length - 1)
                 {
+                    // Is it better to go up or down?
+                    var distUp   = Math.Abs(DpcmCounterToWaveSample(Math.Min(dpcmCounter + 1, 63)) - resampledWave[i + 1]);
+                    var distDown = Math.Abs(DpcmCounterToWaveSample(Math.Max(dpcmCounter - 1,  0)) - resampledWave[i + 1]);
+
+                    up = distUp < distDown;
+                }
+                else
+                {
+                    up = DpcmCounterToWaveSample(dpcmCounter) < resampledWave[i];
+                }
+
+                if (up)
+                {
+                    var index = i / 8;
+                    var mask  = (1 << (i & 7));
+
                     dpcm[index] |= (byte)mask;
                     dpcmCounter = Math.Min(dpcmCounter + 1, 63);
                     lastBit = 1;
