@@ -36,7 +36,6 @@ namespace FamiStudio
         const int DrawFrameZoomLevel = -1;
         const float ContinuousFollowPercent = 0.75f;
         const float DefaultZoomWaveTime = 0.25f;
-        const float WaveDisplayScaleY = 0.98f;
 
         const int DefaultNumOctaves = 8;
         const int DefaultHeaderSizeY = 17;
@@ -79,6 +78,7 @@ namespace FamiStudio
         const int DefaultNoteTextPosY = 1;
         const int DefaultMinNoteSizeForText = 24;
         const int DefaultWaveGeometrySampleSize = 2;
+        const int DefaultWaveDisplayPaddingY = 8;
 
         int numNotes;
         int numOctaves;
@@ -123,6 +123,7 @@ namespace FamiStudio
         int noteTextPosY;
         int minNoteSizeForText;
         int waveGeometrySampleSize;
+        int waveDisplayPaddingY;
         int minZoomLevel;
         int maxZoomLevel;
         float envelopeSizeY;
@@ -186,7 +187,8 @@ namespace FamiStudio
         RenderBrush selectionNoteBrush;
         RenderBrush attackBrush;
         RenderBrush iconTransparentBrush;
-        RenderBrush dashedLineBrush;
+        RenderBrush dashedVerticalLineBrush;
+        RenderBrush dashedHorizontalLineBrush;
         RenderBrush invalidDpcmMappingBrush;
         RenderBitmap bmpLoop;
         RenderBitmap bmpRelease;
@@ -394,6 +396,7 @@ namespace FamiStudio
             minNoteSizeForText = (int)(DefaultMinNoteSizeForText * scaling);
             envelopeSizeY = DefaultEnvelopeSizeY * envelopeValueZoom * scaling;
             waveGeometrySampleSize = (int)(DefaultWaveGeometrySampleSize * scaling);
+            waveDisplayPaddingY = (int)(DefaultWaveDisplayPaddingY * scaling);
             octaveSizeY = 12 * noteSizeY;
             numNotes = numOctaves * 12;
             virtualSizeY = numNotes * noteSizeY;
@@ -695,7 +698,8 @@ namespace FamiStudio
             selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
             attackBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.BlackColor));
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, ThemeBase.DarkGreyLineColor2));
-            dashedLineBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
+            dashedVerticalLineBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
+            dashedHorizontalLineBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("DashHorizontal"), true, false);
             invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.BlackColor));
             bmpLoop = g.CreateBitmapFromResource("LoopSmallFill");
             bmpRelease = g.CreateBitmapFromResource("ReleaseSmallFill");
@@ -812,7 +816,8 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref selectionNoteBrush);
             Utils.DisposeAndNullify(ref attackBrush);
             Utils.DisposeAndNullify(ref iconTransparentBrush);
-            Utils.DisposeAndNullify(ref dashedLineBrush);
+            Utils.DisposeAndNullify(ref dashedVerticalLineBrush);
+            Utils.DisposeAndNullify(ref dashedHorizontalLineBrush);
             Utils.DisposeAndNullify(ref invalidDpcmMappingBrush);
             Utils.DisposeAndNullify(ref bmpLoop);
             Utils.DisposeAndNullify(ref bmpRelease);
@@ -1337,44 +1342,68 @@ namespace FamiStudio
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
-                    // Horizontal center line
                     var halfPanelSizeY = effectPanelSizeY * 0.5f;
-                    g.DrawLine(0, halfPanelSizeY, Width, halfPanelSizeY, theme.BlackBrush);
+                    var envelopePoints = new PointF[4];
 
                     // Volume envelope
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var x = GetPixelForWaveTime(editSample.VolumeEnvelope[i + 0].sample / editSample.SourceSampleRate, scrollX);
+                        var y = halfPanelSizeY + (editSample.VolumeEnvelope[i + 0].volume - 1.0f) * -(halfPanelSizeY - waveDisplayPaddingY);
+
+                        envelopePoints[i] = new PointF(x, y);
+                    }
+
+                    // Filled part.
                     for (int i = 0; i < 3; i++)
                     {
-                        var x0 = GetPixelForWaveTime(editSample.VolumeEnvelope[i + 0].sample / editSample.SourceSampleRate, scrollX);
-                        var x1 = GetPixelForWaveTime(editSample.VolumeEnvelope[i + 1].sample / editSample.SourceSampleRate, scrollX);
-                        var y0 = effectPanelSizeY - editSample.VolumeEnvelope[i + 0].volume * halfPanelSizeY;
-                        var y1 = effectPanelSizeY - editSample.VolumeEnvelope[i + 1].volume * halfPanelSizeY;
+                        var p0 = envelopePoints[i + 0];
+                        var p1 = envelopePoints[i + 1];
 
                         var points = new float[4, 2]
                         {
-                            { x1, y1 },
-                            { x0, y0 },
-                            { x0, effectPanelSizeY },
-                            { x1, effectPanelSizeY }
+                            { envelopePoints[i + 1].X, envelopePoints[i + 1].Y },
+                            { envelopePoints[i + 0].X, envelopePoints[i + 0].Y },
+                            { envelopePoints[i + 0].X, effectPanelSizeY },
+                            { envelopePoints[i + 1].X, effectPanelSizeY }
                         };
 
                         RenderGeometry geo = g.CreateGeometry(points, false);
                         g.FillGeometry(geo, theme.DarkGreyFillBrush1);
                         geo.Dispose();
+                    }
 
-                        g.AntiAliasing = true;
-                        g.DrawLine(x0, y0, x1, y1, theme.WhiteBrush);
-                        g.AntiAliasing = false;
+                    // Horizontal center line
+                    g.DrawLine(0, halfPanelSizeY, Width, halfPanelSizeY, theme.BlackBrush);
 
-                        g.PushTransform(x0, y0, 1.0f, 1.0f);
-                        g.FillGeometry(sampleGeometry, theme.WhiteBrush);
+                    // Top/bottom dash lines (limits);
+                    var topY    = waveDisplayPaddingY;
+                    var bottomY = effectPanelSizeY - waveDisplayPaddingY;
+                    g.DrawLine(0, topY,    Width, topY,    dashedHorizontalLineBrush);
+                    g.DrawLine(0, bottomY, Width, bottomY, dashedHorizontalLineBrush);
+
+                    // Envelope line
+                    g.AntiAliasing = true;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        g.DrawLine(
+                            envelopePoints[i + 0].X, 
+                            envelopePoints[i + 0].Y,
+                            envelopePoints[i + 1].X, 
+                            envelopePoints[i + 1].Y, 
+                            theme.LightGreyFillBrush1);
+                    }
+                    g.AntiAliasing = false;
+
+                    // Envelope vertices.
+                    for (int i = 0; i < 4; i++)
+                    {
+                        g.PushTransform(
+                            envelopePoints[i + 0].X,
+                            envelopePoints[i + 0].Y, 
+                            1.0f, 1.0f);
+                        g.FillGeometry(sampleGeometry, theme.LightGreyFillBrush1);
                         g.PopTransform();
-
-                        if (i == 2)
-                        {
-                            g.PushTransform(x1, y1, 1.0f, 1.0f);
-                            g.FillGeometry(sampleGeometry, theme.WhiteBrush);
-                            g.PopTransform();
-                        }
                     }
 
                     // Selection rectangle
@@ -1807,7 +1836,7 @@ namespace FamiStudio
                                 else if (i % noteLength == 0)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1);
                                 else if (zoomLevel >= DrawFrameZoomLevel)
-                                    g.DrawLine(x, 0, x, Height, dashedLineBrush /*theme.DarkGreyLineBrush3*/);
+                                    g.DrawLine(x, 0, x, Height, dashedVerticalLineBrush /*theme.DarkGreyLineBrush3*/);
                             }
                         }
                         else
@@ -2198,9 +2227,10 @@ namespace FamiStudio
 
         private void RenderWave(RenderGraphics g, RenderArea a, short[] data, float rate, RenderBrush brush, bool isSource, bool drawSamples)
         {
-            var viewWidth  = Width - whiteKeySizeX;
-            var halfHeight = (Height - headerAndEffectSizeY) / 2;
-            var viewTime   = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
+            var viewWidth     = Width - whiteKeySizeX;
+            var halfHeight    = (Height - headerAndEffectSizeY) / 2;
+            var halfHeightPad = halfHeight - waveDisplayPaddingY;
+            var viewTime      = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
 
             var unclampedMinVisibleSample = (int)Math.Floor  (a.minVisibleWaveTime * rate);
             var unclampedMaxVisibleSample = (int)Math.Ceiling(a.maxVisibleWaveTime * rate);
@@ -2226,7 +2256,7 @@ namespace FamiStudio
                     for (int i = minVisibleSample, j = 0; i < maxVisibleSample; i += sampleSkip, j++)
                     {
                         points[j, 0] = i * scaleX + biasX;
-                        points[j, 1] = halfHeight + data[i] / (float)short.MinValue * halfHeight * WaveDisplayScaleY;
+                        points[j, 1] = halfHeight + data[i] / (float)short.MinValue * halfHeightPad;
                         if (indices != null) indices[j] = i;
                     }
 
@@ -2259,9 +2289,11 @@ namespace FamiStudio
 
         private void RenderDmc(RenderGraphics g, RenderArea a, byte[] data, float rate, float baseTime, RenderBrush brush, bool isSource, bool drawSamples)
         {
-            var viewWidth  = Width - whiteKeySizeX;
-            var realHeight = Height - headerAndEffectSizeY;
-            var viewTime   = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
+            var viewWidth     = Width - whiteKeySizeX;
+            var realHeight    = Height - headerAndEffectSizeY;
+            var halfHeight    = realHeight / 2;
+            var halfHeightPad = halfHeight - waveDisplayPaddingY;
+            var viewTime      = DefaultZoomWaveTime * (float)Math.Pow(2, -zoomLevel);
 
             var unclampedMinVisibleSample = (int)Math.Floor  ((a.minVisibleWaveTime - baseTime) * rate);
             var unclampedMaxVisibleSample = (int)Math.Ceiling((a.maxVisibleWaveTime - baseTime) * rate);
@@ -2307,7 +2339,7 @@ namespace FamiStudio
                         if ((i & (sampleSkip - 1)) == 0)
                         {
                             points[j, 0] = i * scaleX + biasX;
-                            points[j, 1] = (-dpcmCounter / 64.0f + 0.5f) * realHeight * WaveDisplayScaleY + realHeight / 2; // DPCMTODO : Is that centered correctly? Also negative value?
+                            points[j, 1] = (-(dpcmCounter + 0.5f) / 64.0f + 0.5f) * 2.0f * halfHeightPad + halfHeight; // DPCMTODO : Is that centered correctly? Also negative value?
                             if (indices != null) indices[j] = i - 1;
                             j++;
                         }
@@ -2365,8 +2397,15 @@ namespace FamiStudio
                 GetPixelForWaveTime(editSample.SourceDuration, scrollX), Height, theme.DarkGreyFillBrush1);
 
             // Horizontal center line
-            var centerY = (Height - headerAndEffectSizeY) * 0.5f;
+            var sizeY   = Height - headerAndEffectSizeY;
+            var centerY = sizeY * 0.5f;
             g.DrawLine(0, centerY, Width, centerY, theme.BlackBrush);
+
+            // Top/bottom dash lines (limits);
+            var topY    = waveDisplayPaddingY;
+            var bottomY = (Height - headerAndEffectSizeY) - waveDisplayPaddingY;
+            g.DrawLine(0, topY,    Width, topY,    dashedHorizontalLineBrush);
+            g.DrawLine(0, bottomY, Width, bottomY, dashedHorizontalLineBrush);
 
             // Vertical lines (1.0, 0.1, 0.01 seconds)
             ForEachWaveTimecode(g, a, (time, x, level, idx) =>
@@ -2374,7 +2413,7 @@ namespace FamiStudio
                 var modSeconds = Utils.IntegerPow(10, level + 1);
                 var modTenths  = Utils.IntegerPow(10, level);
 
-                var brush = dashedLineBrush;
+                var brush = dashedVerticalLineBrush;
 
                 if ((idx % modSeconds) == 0)
                     brush = theme.BlackBrush;
@@ -3411,14 +3450,25 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (left && editMode == EditionMode.DPCM && IsMouseInEffectPanel(e))
+            else if ((left || right) && editMode == EditionMode.DPCM && IsMouseInEffectPanel(e))
             {
                 var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e);
                 if (vertexIdx >= 0)
                 {
-                    volumeEnvelopeDragVertex = vertexIdx;
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
-                    StartCaptureOperation(e, CaptureOperation.DragWaveVolumeEnvelope);
+                    if (left)
+                    {
+                        volumeEnvelopeDragVertex = vertexIdx;
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
+                        StartCaptureOperation(e, CaptureOperation.DragWaveVolumeEnvelope);
+                    }
+                    else
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
+                        editSample.VolumeEnvelope[vertexIdx].volume = 1.0f;
+                        editSample.Process();
+                        App.UndoRedoManager.EndTransaction();
+                        ConditionalInvalidate();
+                    }
                 }
             }
             else if ((left || right) && IsMouseOnSnapResolutionButton(e))
@@ -3931,8 +3981,11 @@ namespace FamiStudio
 
         private void UpdateVolumeEnvelopeDrag(MouseEventArgs e)
         {
+            var halfHeight    = effectPanelSizeY * 0.5f;
+            var halfHeightPad = halfHeight - waveDisplayPaddingY;
+
             var time   = Utils.Clamp((int)Math.Round(GetWaveTimeForPixel(e.X - whiteKeySizeX) * editSample.SourceSampleRate), 0, editSample.SourceNumSamples - 1);
-            var volume = Utils.Clamp((1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY) * 2.0f, 0.0f, 2.0f);
+            var volume = Utils.Clamp(((e.Y - headerSizeY) - halfHeight) / -halfHeightPad + 1.0f, 0.0f, 2.0f);
 
             // Cant move 1st and last vertex.
             if (volumeEnvelopeDragVertex != 0 &&
@@ -4008,6 +4061,9 @@ namespace FamiStudio
             Debug.Assert(editMode == EditionMode.DPCM);
             Debug.Assert(vertexOrder.Length == editSample.VolumeEnvelope.Length);
 
+            var halfHeight    = effectPanelSizeY * 0.5f;
+            var halfHeightPad = halfHeight - waveDisplayPaddingY;
+
             var x = e.X - whiteKeySizeX;
             var y = e.Y - headerSizeY;
 
@@ -4016,7 +4072,7 @@ namespace FamiStudio
                 var idx = vertexOrder[i];
 
                 var vx = GetPixelForWaveTime(editSample.VolumeEnvelope[idx].sample / editSample.SourceSampleRate, scrollX);
-                var vy = (int)Math.Round(effectPanelSizeY - editSample.VolumeEnvelope[idx].volume * (effectPanelSizeY * 0.5f));
+                var vy = (int)Math.Round(halfHeight - (editSample.VolumeEnvelope[idx].volume - 1.0f) * halfHeightPad);
 
                 var dx = Math.Abs(vx - x);
                 var dy = Math.Abs(vy - y);
@@ -4123,7 +4179,19 @@ namespace FamiStudio
             }
             else if (IsMouseInEffectPanel(e))
             {
-                tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{Shift} {MouseLeft} Set effect value (fine) - {MouseRight} Clear effect value";
+                if (editMode == EditionMode.Channel)
+                {
+                    tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{Shift} {MouseLeft} Set effect value (fine) - {MouseRight} Clear effect value";
+                }
+                else if (editMode == EditionMode.DPCM)
+                {
+                    var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e);
+
+                    if (vertexIdx >= 0)
+                    {
+                        tooltip = "{MouseLeft} {Drag} Move volume envelope vertex\n{MouseRight} Reset volume to 100%";
+                    }
+                }
             }
             else if ((IsMouseInNoteArea(e) || IsMouseInHeader(e)) && editMode == EditionMode.DPCM)
             {

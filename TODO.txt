@@ -30,11 +30,7 @@ Doc:
 DPCM Editor
 ===========
 - 4-point envelope
-	- Tooltip
-	- Draw center  line over BG
-	- Right click = reset.
 	- Selection in header is inconsistent.
-	- Vertices are not visible at top/bottom.
 - DPCMTODOs in cleanup. See if makes sense.
 - Add more validation to DPCMSamples = mapping. I dont think the current transactions are legit.
 	- Test transactions a lot, dont seem to refresh when i do cleanup.
