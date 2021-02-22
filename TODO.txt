@@ -5,7 +5,6 @@ FamiStudio 2.4.0
 - Double-right-click = select whole note (or whole note drag?)
 - Brad: .exportzp FAMISTUDIO_SFX_CH0 + Open issue.
 - Pattern auto-creation does work if you click on the same note (note that comes from previous pattern).
-- Smarter auto rename of pattern Pattern 1-1-1 is dumb.
 - CRASH: Playing with slide notes, transaction not ended.
 - Add "BETA" version.
 

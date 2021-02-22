@@ -1236,7 +1236,7 @@ namespace FamiStudio
 
                                             var newName = sourcePattern.Name;
                                             if (!destChannel.IsPatternNameUnique(newName))
-                                                newName = destChannel.GenerateUniquePatternName(sourcePattern.Name + "-");
+                                                newName = destChannel.GenerateUniquePatternNameSmart(sourcePattern.Name);
 
                                             duplicatedPattern = sourcePattern.ShallowClone(destChannel);
                                             duplicatePatternMap.Add(sourcePattern, duplicatedPattern);

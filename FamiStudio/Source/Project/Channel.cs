@@ -244,6 +244,38 @@ namespace FamiStudio
             }
         }
 
+        public string GenerateUniquePatternNameSmart(string oldName)
+        {
+            int firstDigit;
+
+            for (firstDigit = oldName.Length - 1; firstDigit >= 0; firstDigit--)
+            {
+                if (!char.IsDigit(oldName[firstDigit]))
+                    break;
+            }
+
+            // Name doesnt end with a number.
+            if (firstDigit == oldName.Length - 1)
+            {
+                return GenerateUniquePatternName(oldName);
+            }
+            else
+            {
+                var number = int.Parse(oldName.Substring(firstDigit));
+                var baseName = oldName.Substring(0, firstDigit);
+
+                for (; ; number++)
+                {
+                    var newName = baseName + number.ToString();
+
+                    if (IsPatternNameUnique(newName))
+                    {
+                        return newName;
+                    }
+                }
+            }
+        }
+
         public bool UsesArpeggios
         {
             get
