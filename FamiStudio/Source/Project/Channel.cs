@@ -257,11 +257,15 @@ namespace FamiStudio
             // Name doesnt end with a number.
             if (firstDigit == oldName.Length - 1)
             {
+                if (!oldName.EndsWith(" "))
+                    oldName += " ";
                 return GenerateUniquePatternName(oldName);
             }
             else
             {
-                var number = int.Parse(oldName.Substring(firstDigit));
+                firstDigit++;
+
+                var number = int.Parse(oldName.Substring(firstDigit)) + 1;
                 var baseName = oldName.Substring(0, firstDigit);
 
                 for (; ; number++)
