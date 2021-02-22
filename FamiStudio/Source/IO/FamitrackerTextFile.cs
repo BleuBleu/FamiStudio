@@ -498,7 +498,7 @@ namespace FamiStudio
             foreach (var instrument in project.Instruments)
             {
                 var env = instrument.Envelopes[EnvelopeType.Pitch];
-                if (env != null && !env.IsEmpty && !env.Relative)
+                if (env != null && !env.IsEmpty(EnvelopeType.Pitch) && !env.Relative)
                 {
                     // Make relative.
                     for (int i = env.Length - 1; i > 0; i--)
@@ -543,7 +543,7 @@ namespace FamiStudio
                 {
                     var env = instrument.Envelopes[i];
 
-                    if (env == null || env.IsEmpty)
+                    if (env == null || env.IsEmpty(i))
                         continue;
 
                     uint crc = env.CRC;
@@ -790,7 +790,7 @@ namespace FamiStudio
                     for (int j = 0; j <= EnvelopeType.Pitch; j++)
                     {
                         var env = instrument.Envelopes[j];
-                        if (!env.IsEmpty)
+                        if (!env.IsEmpty(j))
                             lines.Add($"FDSMACRO{i,4} {j,5} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                     }
                 }
@@ -952,7 +952,7 @@ namespace FamiStudio
 
                                     // If the previous note matched too, we can use 3xx (auto-portamento).
                                     // Avoid using portamento on instrument with relative pitch envelopes, their previous pitch isnt reliable.
-                                    if (prevNoteValue == note.Value && (prevInstrument == null || prevInstrument.Envelopes[EnvelopeType.Pitch].IsEmpty || !prevInstrument.Envelopes[EnvelopeType.Pitch].Relative))
+                                    if (prevNoteValue == note.Value && (prevInstrument == null || prevInstrument.Envelopes[EnvelopeType.Pitch].IsEmpty(EnvelopeType.Pitch) || !prevInstrument.Envelopes[EnvelopeType.Pitch].Relative))
                                     {
                                         if (prevSlideEffect == Effect_PortaUp ||
                                             prevSlideEffect == Effect_PortaDown)

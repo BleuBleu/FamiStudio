@@ -98,7 +98,7 @@ namespace FamiStudio
                 for (int i = 0; i < EnvelopeType.Count; i++)
                 {
                     var env = instrument.Envelopes[i];
-                    if (env != null && !env.IsEmpty)
+                    if (env != null && !env.IsEmpty(i))
                     {
                         var envelopeLine = $"\t\tEnvelope Type=\"{EnvelopeType.ShortNames[i]}\" Length=\"{env.Length}\"";
 

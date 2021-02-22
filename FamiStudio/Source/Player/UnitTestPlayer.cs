@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    class UnitTestPlayer : BasePlayer, IRegisterListener
+    class UnitTestPlayer : BasePlayer
     {
         StreamWriter file;
 
@@ -20,13 +20,13 @@ namespace FamiStudio
         {
             file = new StreamWriter(filename);
 
-            if (BeginPlaySong(song, pal, 0, this))
+            if (BeginPlaySong(song, pal, 0))
                 while (PlaySongFrame()) ;
 
             file.Close();
         }
 
-        public void WriteRegister(int apuIndex, int reg, int data)
+        public override void NotifyRegisterWrite(int apuIndex, int reg, int data)
         {
             if (apuIndex == NesApu.APU_WAV_EXPORT)
                 file.WriteLine($"Frame {frameNumber} Register {reg:X4} {data:X2}");

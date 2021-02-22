@@ -2,7 +2,7 @@
 {
     public class ChannelStateDpcm : ChannelState
     {
-        public ChannelStateDpcm(int apuIdx, int channelIdx, bool pal) : base(apuIdx, channelIdx, pal)
+        public ChannelStateDpcm(IPlayerInterface player, int apuIdx, int channelIdx, bool pal) : base(player, apuIdx, channelIdx, pal)
         {
         }
 

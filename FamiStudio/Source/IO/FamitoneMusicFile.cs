@@ -141,7 +141,8 @@ namespace FamiStudio
 
         private byte[] ProcessEnvelope(Envelope env, bool allowReleases, bool newPitchEnvelope)
         {
-            if (env.IsEmpty)
+            // HACK : Pass dummy type here, volume envelopes have been taken care of already.
+            if (env.IsEmpty(EnvelopeType.Count))
                 return null;
 
             env.Truncate();
@@ -591,6 +592,38 @@ namespace FamiStudio
             return -1;
         }
 
+        // If we were using a custom VRC7 patch, but another channel uses one too, 
+        // we will need to reload our instrument next time we play a note.
+        private bool OtherVrc7UsesCustomPatch(Song song, Channel channel, Instrument instrument, int patternIdx, int noteIdx)
+        {
+            if (project.ExpansionAudio == ExpansionType.Vrc7 && 
+                channel.IsExpansionChannel &&
+                instrument != null &&
+                instrument.IsExpansionInstrument &&
+                instrument.Vrc7Patch == 0)
+            {
+                foreach (var c in song.Channels)
+                {
+                    if (c != channel && c.IsVrc7FmChannel)
+                    {
+                        var pattern = c.PatternInstances[patternIdx];
+
+                        if (pattern != null && pattern.Notes.TryGetValue(noteIdx, out Note note) &&
+                            note != null &&
+                            note.Instrument != null &&
+                            note.Instrument != instrument &&
+                            note.Instrument.IsExpansionInstrument &&
+                            note.Instrument.Vrc7Patch == 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         private int FindEffectParam(Song song, int effect)
         {
             for (int p = 0; p < song.Length; p++)
@@ -732,6 +765,11 @@ namespace FamiStudio
                                 patternBuffer.Add($"${0xfb:x2}");
                                 patternBuffer.Add($"${(byte)speed:x2}");
                             }
+                        }
+
+                        if (OtherVrc7UsesCustomPatch(song, channel, instrument, p, time))
+                        {
+                            instrument = null;
                         }
 
                         it.Next();
@@ -917,6 +955,11 @@ namespace FamiStudio
 
                                 if (note == null)
                                     note = emptyNote;
+
+                                if (OtherVrc7UsesCustomPatch(song, channel, instrument, p, time))
+                                {
+                                    instrument = null;
+                                }
 
                                 // TODO: Change this, this is a shit show.
                                 if (numEmptyNotes >= maxRepeatCount || 
@@ -1153,7 +1196,7 @@ namespace FamiStudio
             for (int i = 0; i < project.Arpeggios.Count; )
             {
                 var arp = project.Arpeggios[i];
-                if (arp.Envelope.IsEmpty)
+                if (arp.Envelope.IsEmpty(EnvelopeType.Arpeggio))
                 {
                     project.DeleteArpeggio(arp);
                 }

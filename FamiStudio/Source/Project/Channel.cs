@@ -415,11 +415,11 @@ namespace FamiStudio
                 // Find the next note to calculate the slope.
                 FindNextNoteForSlide(patternIdx, noteIdx, 256, out var nextPatternIdx, out var nextNoteIdx); // 256 is kind of arbitrary. 
 
-                // Approximate how many frames seperates these 2 notes.
+                // Approximate how many frames separates these 2 notes.
                 var frameCount = 0.0f;
                 if (patternIdx != nextPatternIdx || noteIdx != nextNoteIdx)
                 {
-                    // Take delayed notes/cuts into avvound.
+                    // Take delayed notes/cuts into account.
                     var delayFrames = -(note.HasNoteDelay ? note.NoteDelay : 0);
                     if (Song.UsesFamiTrackerTempo)
                     {

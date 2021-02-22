@@ -1,20 +1,24 @@
 FamiStudio 2.4.0
 ================
-/ Basic DPCM editor (basic, RJDMC-level features to start with, but extensible in future version)
+- PR famistudio text stuff
+- Merge mcgrew video stuff, at least what is finished.
 - Double-right-click = select whole note (or whole note drag?)
-Brad:
-- .exportzp FAMISTUDIO_SFX_CH0
+- Brad: .exportzp FAMISTUDIO_SFX_CH0 + Open issue.
+- Pattern auto-creation does work if you click on the same note (note that comes from previous pattern).
+- Smarter auto rename of pattern Pattern 1-1-1 is dumb.
+- CRASH: Playing with slide notes, transaction not ended.
+- Add "BETA" version.
 
 Test:
 - Retest Win7 device lost.
 - Transaction (w/o DPCM), test a LOT!
 - Test HI-DPI.
+	- Waveform
+	- Scrollbar in PE.
 - Re-export, recompile and change ROM version.
 - Test looping sample.
 - ROM: Make sure square pops, and doesnt in NSF.
-- Rebuild NESSNDEMU + PAL DMC frequenciess (verify VRC7 bad merge!!)
 - Test with empty wav files, empty DMC files.
-- Import FTM with too many samples, see what happens.
 - Compare quality with MakeDPCM & RJDMC.
 - Test merging of samples from other project (with WAV, etc.)
 - Test transactions a lot, dont seem to refresh when i do cleanup.

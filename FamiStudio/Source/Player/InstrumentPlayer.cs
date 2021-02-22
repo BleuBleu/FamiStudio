@@ -61,7 +61,7 @@ namespace FamiStudio
             expansionAudio = project.ExpansionAudio;
             numExpansionChannels = project.ExpansionNumChannels;
             palPlayback = pal;
-            channelStates = CreateChannelStates(project, apuIndex, numExpansionChannels, palPlayback, null);
+            channelStates = CreateChannelStates(this, project, apuIndex, numExpansionChannels, palPlayback);
 
             stopEvent.Reset();
             frameEvent.Set();
@@ -120,6 +120,9 @@ namespace FamiStudio
                     activeChannel = lastNote.channel;
                     if (activeChannel >= 0)
                     {
+                        if (lastNote.note.IsMusical)
+                            channelStates[activeChannel].ForceInstrumentReload();
+
                         channelStates[activeChannel].PlayNote(lastNote.note);
 
                         if (lastNote.note.IsRelease)

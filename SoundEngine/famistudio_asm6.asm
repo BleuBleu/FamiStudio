@@ -2818,6 +2818,7 @@ famistudio_set_vrc7_instrument:
     @read_custom_patch:
     ldx #0
     iny
+    iny
     @read_patch_loop:
         stx FAMISTUDIO_VRC7_REG_SEL
         jsr famistudio_vrc7_wait_reg_select

@@ -163,15 +163,7 @@ namespace FamiStudio
 
             private bool IsEnvelopeEmpty(Envelope env, int type)
             {
-                // HACK: Volume envelope have 15 by default. 
-                if (type == EnvelopeType.Volume)
-                {
-                    return env.AllValuesEqual(Note.VolumeMax);
-                }
-                else
-                {
-                    return env.IsEmpty;
-                }
+                return env.IsEmpty(type);
             }
 
             public SubButtonType[] GetSubButtons(out bool[] active)
@@ -1977,7 +1969,7 @@ namespace FamiStudio
                         var newRelative = dlg.Properties.GetPropertyValue<bool>(2);
                         if (instrument.Envelopes[EnvelopeType.Pitch].Relative != newRelative)
                         {
-                            if (!instrument.Envelopes[EnvelopeType.Pitch].IsEmpty)
+                            if (!instrument.Envelopes[EnvelopeType.Pitch].IsEmpty(EnvelopeType.Pitch))
                             {
                                 if (newRelative)
                                 {

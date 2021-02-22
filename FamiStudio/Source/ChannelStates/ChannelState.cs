@@ -21,18 +21,22 @@ namespace FamiStudio
         protected int[] envelopeValues = new int[EnvelopeType.Count];
         protected bool customRelease = false;
         protected bool noteTriggered = false;
+        protected bool forceInstrumentReload = false;
         protected ushort[] noteTable = null;
         protected bool palPlayback = false;
         protected int maximumPeriod = NesApu.MaximumPeriod11Bit;
         protected int slideStep = 0;
-        private   int slidePitch = 0;
-        private   int slideShift = 0;
-        private   int pitchShift = 0;
-        private   byte noteValueBeforeSlide = 0;
-        private   IRegisterListener registerListener;
+        protected int slidePitch = 0;
+        protected int slideShift = 0;
+        protected int pitchShift = 0;
+        protected byte noteValueBeforeSlide = 0;
+        protected IPlayerInterface player;
 
-        public ChannelState(int apu, int type, bool pal, int numN163Channels = 1)
+        public int GetChannelType() { return channelType; }
+
+        public ChannelState(IPlayerInterface play, int apu, int type, bool pal, int numN163Channels = 1)
         {
+            player = play;
             apuIdx = apu;
             channelType = type;
             palPlayback = pal;
@@ -146,7 +150,7 @@ namespace FamiStudio
             }
             else if (newNote.IsMusical)
             {
-                bool instrumentChanged = note.Instrument != newNote.Instrument;
+                bool instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentReload;
                 bool arpeggioChanged   = note.Arpeggio   != newNote.Arpeggio;
 
                 note = newNote;
@@ -195,6 +199,7 @@ namespace FamiStudio
                 if (instrumentChanged)
                 {
                     LoadInstrument(note.Instrument);
+                    forceInstrumentReload = false;
                 }
             }
             else
@@ -282,7 +287,7 @@ namespace FamiStudio
             {
                 for (int j = 0; j < EnvelopeType.Count; j++)
                 {
-                    if (envelopes[j] == null || envelopes[j].IsEmpty)
+                    if (envelopes[j] == null || envelopes[j].IsEmpty(j))
                     {
                         if (j == EnvelopeType.Volume)
                             envelopeValues[j] = 15;
@@ -341,17 +346,10 @@ namespace FamiStudio
             }
         }
 
-        public void SetRegisterListener(IRegisterListener listener)
-        {
-            registerListener = listener;
-        }
-
         protected void WriteRegister(int reg, int data)
         {
             NesApu.WriteRegister(apuIdx, reg, data);
-
-            if (registerListener != null)
-                registerListener.WriteRegister(apuIdx, reg, data);
+            player.NotifyRegisterWrite(apuIdx, reg, data);
         }
 
         protected bool IsSeeking
@@ -382,6 +380,15 @@ namespace FamiStudio
 
         protected virtual void LoadInstrument(Instrument instrument)
         {
+        }
+
+        public virtual void InstrumentReloadRequested()
+        {
+        }
+
+        public void ForceInstrumentReload()
+        {
+            forceInstrumentReload = true;
         }
 
         protected int GetPeriod()
@@ -419,9 +426,4 @@ namespace FamiStudio
         }
         public int  CurrentVolume => MultiplyVolumes(note.Volume, envelopeValues[EnvelopeType.Volume]);
     };
-
-    public interface IRegisterListener
-    {
-        void WriteRegister(int apuIndex, int reg, int data);
-    }
 }

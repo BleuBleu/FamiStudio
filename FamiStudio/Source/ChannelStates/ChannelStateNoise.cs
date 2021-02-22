@@ -2,7 +2,7 @@
 {
     public class ChannelStateNoise : ChannelState
     {
-        public ChannelStateNoise(int apuIdx, int channelIdx, bool pal) : base(apuIdx, channelIdx, pal)
+        public ChannelStateNoise(IPlayerInterface player, int apuIdx, int channelIdx, bool pal) : base(player, apuIdx, channelIdx, pal)
         {
         }
 

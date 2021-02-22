@@ -369,24 +369,20 @@ namespace FamiStudio
             }
         }
 
-        public bool IsEmpty
+        public static sbyte GetEnvelopeZeroValue(int type)
         {
-            get
-            {
-                if (!canResize)
-                    return false;
+            return type == EnvelopeType.Volume ? (sbyte)15: (sbyte)0;
+        }
 
-                if (length == 0)
-                    return true;
+        public bool IsEmpty(int type)
+        {
+            if (!canResize)
+                return false;
 
-                for (int i = 0; i < length; i++)
-                {
-                    if (values[i] != 0)
-                        return false;
-                }
-
+            if (length == 0)
                 return true;
-            }
+
+            return AllValuesEqual(GetEnvelopeZeroValue(type));
         }
 
         public bool AllValuesEqual(sbyte val)
