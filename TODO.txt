@@ -21,11 +21,32 @@ Test:
 - Compare quality with MakeDPCM & RJDMC.
 - Test merging of samples from other project (with WAV, etc.)
 - Test transactions a lot, dont seem to refresh when i do cleanup.
+- Revisit all demo song to fix zero volume envelopes (Gradius II has one for sure).
 
 Doc:
 - New screenshots dark theme.
 - Mention FamiStudio text doesnt include source sample data.
 - Smooth vibrato + SFX.
+
+New features:
+- DPCM sample editor (+ sample mapping changes)
+- Darker theme
+- More color choices
+- Toggle for QWERTY input
+- Reduced audio latency
+- Select from anyway by clicking in BG
+- Dragging seek bar + snap
+- Improved pattern duplication
+- Instrument eyedrop
+- Sequencer paste special
+- Multiple sound engine improvements & bug fixes 
+	- Blaarg smooth vibrato support for SFX
+	- Unlimited SFX size (Brad)
+- Create pattern automatically
+- Repeat last export
+- Multiple custom pattern editing
+- VRC7 fixes.
+- Stuff from 2.3.3
 
 FamiStudio 2.5.0
 ================

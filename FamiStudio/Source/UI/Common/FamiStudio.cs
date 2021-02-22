@@ -1272,7 +1272,7 @@ namespace FamiStudio
 
         public int GetEnvelopeFrame(Instrument instrument, int envelopeIdx, bool force = false)
         {
-            if (ProjectExplorer.SelectedInstrument == instrument || force)
+            if (instrumentPlayer != null && (ProjectExplorer.SelectedInstrument == instrument || force))
                 return instrumentPlayer.GetEnvelopeFrame(envelopeIdx);
             else
                 return -1;
