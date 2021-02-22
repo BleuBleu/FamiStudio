@@ -594,7 +594,7 @@ namespace FamiStudio
 
         // If we were using a custom VRC7 patch, but another channel uses one too, 
         // we will need to reload our instrument next time we play a note.
-        private bool OtherVrc7UsesCustomPatch(Song song, Channel channel, Instrument instrument, int patternIdx, int noteIdx)
+        private bool OtherVrc7ChannelUsesCustomPatch(Song song, Channel channel, Instrument instrument, int patternIdx, int noteIdx)
         {
             if (project.ExpansionAudio == ExpansionType.Vrc7 && 
                 channel.IsExpansionChannel &&
@@ -767,7 +767,7 @@ namespace FamiStudio
                             }
                         }
 
-                        if (OtherVrc7UsesCustomPatch(song, channel, instrument, p, time))
+                        if (OtherVrc7ChannelUsesCustomPatch(song, channel, instrument, p, time))
                         {
                             instrument = null;
                         }
@@ -956,7 +956,7 @@ namespace FamiStudio
                                 if (note == null)
                                     note = emptyNote;
 
-                                if (OtherVrc7UsesCustomPatch(song, channel, instrument, p, time))
+                                if (OtherVrc7ChannelUsesCustomPatch(song, channel, instrument, p, time))
                                 {
                                     instrument = null;
                                 }
