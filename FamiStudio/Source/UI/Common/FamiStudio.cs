@@ -1,3 +1,5 @@
+#define DEVELOPMENT_VERSION
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -667,8 +669,20 @@ namespace FamiStudio
                         newReleaseString = release["tag_name"].ToString();
                         newReleaseUrl = release["html_url"].ToString();
 
+                        var versionComparison = string.Compare(newReleaseString, Application.ProductVersion, StringComparison.OrdinalIgnoreCase);
+                        var newerVersionAvailable = versionComparison > 0;
+
+#if DEVELOPMENT_VERSION
+                        // If we were running a development version (BETA, etc.), but an official version of 
+                        // the same number appears on GitHub, prompt for update.
+                        if (!newerVersionAvailable && versionComparison == 0)
+                        {
+                            newerVersionAvailable = true;
+                        }
+#endif
+
                         // Assume > alphabetical order means newer version.
-                        if (string.Compare(newReleaseString, Application.ProductVersion, StringComparison.OrdinalIgnoreCase) > 0)
+                        if (newerVersionAvailable)
                         {
                             // Make sure this release applies to our platform (eg. a hotfix for macos should not impact Windows).
                             var assets = release["assets"];
@@ -738,8 +752,8 @@ namespace FamiStudio
 
             string title = $"FamiStudio {version} - {projectFile}";
 
-#if FALSE
-            title += " DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
+#if DEVELOPMENT_VERSION
+            title += " - DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
 #endif
 
             mainForm.Text = title;
