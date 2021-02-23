@@ -17,7 +17,7 @@ namespace FamiStudio
 
     public interface IPlayerInterface
     {
-        void RequestInstrumentReload(int channelTypeMask);
+        void NotifyInstrumentLoaded(Instrument instrument, int channelTypeMask);
         void NotifyRegisterWrite(int apuIndex, int reg, int data);
     }
 
@@ -437,13 +437,13 @@ namespace FamiStudio
             return samples;
         }
 
-        public void RequestInstrumentReload(int channelTypeMask)
+        public void NotifyInstrumentLoaded(Instrument instrument, int channelTypeMask)
         {
             foreach (var channelState in channelStates)
             {
                 if (((1 << channelState.GetChannelType()) & channelTypeMask) != 0)
                 {
-                    channelState.InstrumentReloadRequested();
+                    channelState.IntrumentLoadedNotify(instrument);
                 }
             }
         }

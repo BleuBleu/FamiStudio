@@ -382,7 +382,7 @@ namespace FamiStudio
         {
         }
 
-        public virtual void InstrumentReloadRequested()
+        public virtual void IntrumentLoadedNotify(Instrument instrument)
         {
         }
 
