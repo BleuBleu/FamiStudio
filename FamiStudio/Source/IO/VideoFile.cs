@@ -451,8 +451,6 @@ namespace FamiStudio
             var font = ThemeBase.FontBigUnscaled;
             var textOffsetY = 4;
             var channelLineWidth = 5;
-            var oscMinY = Utils.Lerp(30,  60, (resY / 1080.0f));
-            var oscMaxY = Utils.Lerp(80, 160, (resY / 1080.0f));
 
             if (channelResY < 192)
             {
@@ -590,6 +588,9 @@ namespace FamiStudio
 
                             if (s.videoChannelIndex > 0)
                                 videoGraphics.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, channelLineWidth);
+
+                            var oscMinY = (int)(channelIconPosY + s.bmp.Size.Height + 10);
+                            var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
 
                             GenerateOscilloscope(s.wav, frame.wavOffset, (int)Math.Round(sampleRate * oscilloscopeWindowSize), oscLookback, oscScale, channelPosX0 + 10, oscMinY, channelPosX1 - 10, oscMaxY, oscilloscope);
 
