@@ -284,7 +284,8 @@ namespace FamiStudio
         int scrollY = 0;
         int zoomLevel = 0;
         int selectedEffectIdx = 0;
-        float noteScaleY = 1.0f;
+        float videoScaleX = 1.0f;
+        float videoScaleY = 1.0f;
         string noteTooltip = "";
 
         EditionMode editMode = EditionMode.None;
@@ -363,15 +364,15 @@ namespace FamiStudio
             effectPanelSizeY = (int)(DefaultEffectPanelSizeY * scaling);
             effectButtonSizeY = (int)(DefaultEffectButtonSizeY * scaling);
             noteSizeX = (int)(ScaleForZoom(DefaultNoteSizeX) * scaling);
-            noteSizeY = (int)(DefaultNoteSizeY * scaling * noteScaleY);
+            noteSizeY = (int)(DefaultNoteSizeY * scaling * videoScaleY);
             noteAttackSizeX = (int)(DefaultNoteAttackSizeX * scaling);
-            releaseNoteSizeY = (int)(DefaultReleaseNoteSizeY * scaling * noteScaleY) & 0xfe; // Keep even
+            releaseNoteSizeY = (int)(DefaultReleaseNoteSizeY * scaling * videoScaleY) & 0xfe; // Keep even
             envelopeMax = (int)(DefaultEnvelopeMax * scaling);
-            whiteKeySizeY = (int)(DefaultWhiteKeySizeY * scaling * noteScaleY);
-            whiteKeySizeX = (int)(DefaultWhiteKeySizeX * scaling);
+            whiteKeySizeY = (int)(DefaultWhiteKeySizeY * scaling * videoScaleY);
+            whiteKeySizeX = (int)(DefaultWhiteKeySizeX * scaling * videoScaleX);
             recordKeyPosX = (int)((DefaultWhiteKeySizeX - 10) * scaling);
-            blackKeySizeY = (int)(DefaultBlackKeySizeY * scaling * noteScaleY);
-            blackKeySizeX = (int)(DefaultBlackKeySizeX * scaling);
+            blackKeySizeY = (int)(DefaultBlackKeySizeY * scaling * videoScaleY);
+            blackKeySizeX = (int)(DefaultBlackKeySizeX * scaling * videoScaleX);
             effectIconPosX = (int)(DefaultEffectIconPosX * scaling);
             effectIconPosY = (int)(DefaultEffectIconPosY * scaling);
             snapIconPosX = (int)(DefaultSnapIconPosX * scaling);
@@ -500,13 +501,14 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        public void StartVideoRecording(RenderGraphics g, Song song, int zoom, bool thinNotes, out int outNoteSizeY)
+        public void StartVideoRecording(RenderGraphics g, Song song, int zoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
         {
             editChannel = 0;
             editMode = EditionMode.VideoRecording;
             videoSong = song;
             zoomLevel = zoom;
-            noteScaleY = thinNotes ? 0.667f : 1.0f;
+            videoScaleX = pianoRollScaleX;
+            videoScaleY = pianoRollScaleY;
 
             UpdateRenderCoords(1.0f);
             OnRenderInitialized(g);

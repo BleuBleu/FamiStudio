@@ -127,12 +127,13 @@ namespace FamiStudio
                     page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
 #endif
                     page.AddStringList("Song :", songNames, songNames[0]); // 2
-                    page.AddStringList("Audio Bit Rate (Kb/s) :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
-                    page.AddStringList("Video Bit Rate (Mb/s):", new[] { "2", "4", "8", "10", "12", "14", "16", "18", "20" }, "12"); // 4
-                    page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 5
-                    page.AddBoolean("Thin Notes :", false, "Draws notes a bit thinner, recommended if song has lots of channels."); // 6
-                    page.AddIntegerRange("Loop Count :", 1, 1, 8); // 7
-                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 8
+                    page.AddStringList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
+                    page.AddStringList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
+                    page.AddStringList("Audio Bit Rate (Kb/s) :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 5
+                    page.AddStringList("Video Bit Rate (Mb/s):", new[] { "2", "4", "8", "10", "12", "14", "16", "18", "20" }, "12"); // 6
+                    page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
+                    page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
+                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 9
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
@@ -315,16 +316,20 @@ namespace FamiStudio
             if (filename != null)
             {
                 var zoomValues = new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" };
+                var frameRates = new[] { "50/60 FPS", "25/30 FPS" };
 
                 var props = dialog.GetPropertyPage((int)ExportFormat.Video);
                 var ffmpeg = props.GetPropertyValue<string>(0);
                 var songName = props.GetPropertyValue<string>(2);
-                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(3));
-                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4));
-                var pianoRollZoom = Array.IndexOf(zoomValues, props.GetPropertyValue<string>(5)) - 3;
-                var thinNotes = props.GetPropertyValue<bool>(6);
-                var loopCount = props.GetPropertyValue<int>(7);
-                var selectedChannels = props.GetPropertyValue<bool[]>(8);
+                var resolutionIdx = VideoResolution.GetIndexForName(props.GetPropertyValue<string>(3));
+                var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
+                var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
+                var halfFrameRate = Array.IndexOf(frameRates, props.GetPropertyValue<string>(4)) == 1;
+                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5));
+                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(6));
+                var pianoRollZoom = Array.IndexOf(zoomValues, props.GetPropertyValue<string>(7)) - 3;
+                var loopCount = props.GetPropertyValue<int>(8);
+                var selectedChannels = props.GetPropertyValue<bool[]>(9);
                 var song = project.GetSong(songName);
 
                 var channelMask = 0;
@@ -334,7 +339,7 @@ namespace FamiStudio
                         channelMask |= (1 << i);
                 }
 
-                new VideoFile().Save(project, song.Id, loopCount, ffmpeg, filename, channelMask, audioBitRate, videoBitRate, pianoRollZoom, thinNotes);
+                new VideoFile().Save(project, song.Id, loopCount, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom);
 
                 lastExportFilename = filename;
             }
