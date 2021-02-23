@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 
@@ -129,8 +130,8 @@ namespace FamiStudio
                     page.AddStringList("Song :", songNames, songNames[0]); // 2
                     page.AddStringList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
                     page.AddStringList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
-                    page.AddStringList("Audio Bit Rate (Kb/s) :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 5
-                    page.AddStringList("Video Bit Rate (Mb/s):", new[] { "2", "4", "8", "10", "12", "14", "16", "18", "20" }, "12"); // 6
+                    page.AddStringList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 5
+                    page.AddStringList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
                     page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
                     page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
                     page.AddStringListMulti("Channels :", GetChannelNames(), null); // 9
@@ -267,8 +268,8 @@ namespace FamiStudio
             if (filename != null)
             {
                 var songName = props.GetPropertyValue<string>(0);
-                var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2));
-                var bitRate = Convert.ToInt32(props.GetPropertyValue<string>(3));
+                var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2), CultureInfo.InvariantCulture);
+                var bitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
                 var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
                 var duration  = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
                 var separateFiles = props.GetPropertyValue<bool>(7);
@@ -325,8 +326,8 @@ namespace FamiStudio
                 var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
                 var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
                 var halfFrameRate = Array.IndexOf(frameRates, props.GetPropertyValue<string>(4)) == 1;
-                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5));
-                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(6));
+                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5), CultureInfo.InvariantCulture);
+                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(6), CultureInfo.InvariantCulture);
                 var pianoRollZoom = Array.IndexOf(zoomValues, props.GetPropertyValue<string>(7)) - 3;
                 var loopCount = props.GetPropertyValue<int>(8);
                 var selectedChannels = props.GetPropertyValue<bool[]>(9);

@@ -548,7 +548,7 @@ namespace FamiStudio
 
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -c:v libx264 -pix_fmt yuv420p -b:v {videoBitRate}M -an \"{tempVideoFile}\"", true, false);
+                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -c:v libx264 -pix_fmt yuv420p -b:v {videoBitRate}K -an \"{tempVideoFile}\"", true, false);
 
                 // Generate each of the video frames.
                 using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
