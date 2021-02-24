@@ -2,6 +2,29 @@
 
 Version history / release notes for each release.
 
+## Version 2.4.0
+
+Changes :
+
+- Basic DPCM sample editor
+- Darker theme and more color choices
+- Ability to use QWERTY keyboard input without using recording mode
+- Slightly reduced audio latency and configurable number of buffered frames
+- Right-clicking in the background also starts a selection
+- Seek bar can be dragged and respects snapping precision
+- Pattern duplication preserves color and names (when possible)
+- Instrument picker tool
+- Paste special in Sequencer
+- Pattern are created automatically when adding notes.
+- Repeat last export
+- Edit multiple custom patterns at once
+- Multiple VRC7 fixes
+- Multiple FamiTracker fixes
+- Multiple sound engine improvements & fixes 
+	- Blaarg smooth vibrato support for SFX
+	- Unlimited SFX size (Brad)
+	- Linker support in CA65 
+
 ## Version 2.3.2 (Hotfix)
 
 Changes:

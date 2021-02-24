@@ -9,6 +9,7 @@ Welcome to the FamiStudio documentation. Please use the __User Guide__ menu abov
 * [Editing Patterns](sequencer.md)
 * [Editing Instruments & Arpeggios](instruments.md)
 * [Editing Songs & Project](song.md)
+* [Editing DPCM Samples](dpcm.md)
 * [Importing & Exporting Your Songs](importexport.md)
 * [Using Expansion Audio](expansion.md)
 * [Cleaning-up your Project](cleanup.md)
