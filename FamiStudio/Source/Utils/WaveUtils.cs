@@ -77,6 +77,12 @@ namespace FamiStudio
 
         static public void WaveToDpcm(short[] wave, int minSample, int maxSample, float waveSampleRate, float dpcmSampleRate, int dpcmCounterStart, WaveToDpcmRoundingMode roundMode, out byte[] dpcm)
         {
+            if (wave.Length == 0)
+            {
+                dpcm = new byte[0];
+                return;
+            }
+
             var waveNumSamples = maxSample - minSample;
             var dpcmNumSamplesFloat = waveNumSamples * (dpcmSampleRate / (float)waveSampleRate);
             var dpcmNumSamples = 0;
