@@ -1,6 +1,23 @@
 # Welcome
 
-Welcome to the FamiStudio documentation. Please use the __User Guide__ menu above to navigate the the various sections of the documentation or use the __Search__ button to search for a specific topic.
+Welcome to the FamiStudio documentation. Please use the __User Guide__ menu above to navigate the the various sections or use the Table of Contents below. Also, you can use the __Search__ button to search for a specific topic.
+
+# Table of Contents 
+
+* [FamiStudio Basics](basics.md)
+* [Editing Notes](pianoroll.md)
+* [Editing Patterns](sequencer.md)
+* [Editing Instruments & Arpeggios](instruments.md)
+* [Editing Songs & Project](song.md)
+* [Editing DPCM Samples](dpcm.md)
+* [Importing & Exporting Your Songs](importexport.md)
+* [Using Expansion Audio](expansion.md)
+* [Cleaning-up your Project](cleanup.md)
+* [Configuring FamiStudio]( config.md)
+* [Command-line Processing](cmdline.md)
+* [NES Sound Engine](soundengine.md)
+* [Troubleshooting](troubleshooting.md)
+* [Change Log](changelog.md)
 
 # Tutorial
 
