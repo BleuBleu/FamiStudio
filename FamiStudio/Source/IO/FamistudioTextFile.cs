@@ -472,6 +472,8 @@ namespace FamiStudio
                     }
                 }
 
+                project.SortEverything();
+
                 return project;
             }
             catch (Exception e)

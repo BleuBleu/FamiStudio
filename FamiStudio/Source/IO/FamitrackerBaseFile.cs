@@ -920,6 +920,7 @@ namespace FamiStudio
             }
 
             project.UpdateAllLastValidNotesAndVolume();
+            project.SortEverything();
             project.Validate();
 
             PrintAdditionalWarnings();

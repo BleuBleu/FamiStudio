@@ -1048,14 +1048,18 @@ namespace FamiStudio
                 songs.Add(song);
             }
 
+            SortEverything();
+            Validate();
+
+            return true;
+        }
+
+        public void SortEverything()
+        {
             SortInstruments();
             SortArpeggios();
             SortSamples();
             SortSongs();
-
-            Validate();
-
-            return true;
         }
 
         public bool MergeOtherProjectInstruments(List<Instrument> otherInstruments)
@@ -1471,6 +1475,7 @@ namespace FamiStudio
             if (buffer.IsReading && !buffer.IsForUndoRedo)
             {
                 EnsureNextIdIsLargeEnough();
+                SortEverything();
             }
         }
 
