@@ -15,7 +15,7 @@ Welcome to the FamiStudio documentation. Please use the __User Guide__ menu abov
 * [Cleaning-up your Project](cleanup.md)
 * [Configuring FamiStudio]( config.md)
 * [Command-line Processing](cmdline.md)
-* [NES Sound Engine](soundengine.md)
+* [NES/Famicom Sound Engine](soundengine.md)
 * [Troubleshooting](troubleshooting.md)
 * [Change Log](changelog.md)
 

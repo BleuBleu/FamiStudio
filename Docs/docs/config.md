@@ -43,9 +43,13 @@ The configuration dialog dialog is accessed from the toolbar.
 
 ![](images/ConfigSound.png#center)
 
+* **Number of buffered frames** : Number of NES/Famicom frames to buffer ahead of time. Higher values help prevent audio starvation, but also raise latency. The minimum is 2 and requires a relatively fast CPU to run without audio starvation.
+
 * **Stop instrument after**: When instruments have release notes, there is no way for FamiStudio to know when to stop the notes. This allows stopping any sound after a specified number of seconds. This only applies to MIDI or when previewing instruments on the piano roll and has no impact on the actual song.
 
-* **Prevent popping on square channels**: The NES had a bug where the phase of square channels will reset around some notes (A-3, A-2, D-2, A-1, F-1, D-1, and B-0 on NTSC, or A#3, A#2, D#2, A#1, F#1, D#1, and C-0 on PAL), resulting in audible clicks or pops. This option will work around that bug using the Smooth Vibrato technique by Blargg, resulting in smooth pitch changes. Note that this option will not carry over to FamiTracker if you export.
+* **Prevent popping on square channels**: The NES/Famicom had a bug where the phase of square channels will reset around some notes (A-3, A-2, D-2, A-1, F-1, D-1, and B-0 on NTSC, or A#3, A#2, D#2, A#1, F#1, D#1, and C-0 on PAL), resulting in audible clicks or pops. This option will work around that bug using the Smooth Vibrato technique by Blargg, resulting in smooth pitch changes. Note that this option will not carry over to FamiTracker if you export.
+
+* **Mute piano roll interactions during playback** : When enabled, dragging/adding notes in the piano roll will not preview the notes when the song is playing. Some users find this distracting.
 
 ## MIDI Configuration
 

@@ -63,7 +63,7 @@ namespace FamiStudio
                     page.AddBoolean("Merge identical instruments:", true);                    // 0
                     page.AddBoolean("Delete unused instruments:", true);                      // 1
                     page.AddBoolean("Unassign unused DPCM instrument keys:", true);           // 2
-                    page.AddBoolean("Delete unused samples:", true);                          // 3
+                    page.AddBoolean("Delete unassigned samples:", true);                      // 3
                     page.AddBoolean("Delete DPCM samples WAV source data:", false);           // 4
                     page.AddBoolean("Permanently apply all DPCM samples processing:", false); // 5
                     page.AddBoolean("Delete unused arpeggios:", true);                        // 6
@@ -176,7 +176,7 @@ namespace FamiStudio
 
                 if (deleteUnusedSamples)
                 {
-                    app.Project.DeleteUnusedSamples();
+                    app.Project.DeleteUnmappedSamples();
                 }
 
                 if (applyAllSamplesProcessing)

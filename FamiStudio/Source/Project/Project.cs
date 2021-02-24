@@ -882,7 +882,7 @@ namespace FamiStudio
         {
             DeleteUnusedInstruments();
             UnmapUnusedSamples();
-            DeleteUnusedSamples();
+            DeleteUnmappedSamples();
             DeleteUnusedArpeggios();
         }
 
@@ -1224,42 +1224,6 @@ namespace FamiStudio
             foreach (var sample in samples)
             {
                 sample.PermanentlyApplyAllProcessing();
-            }
-        }
-
-        public void DeleteUnusedSamples()
-        {
-            var usedSamples = new HashSet<DPCMSample>();
-
-            foreach (var song in songs)
-            {
-                var channel = song.Channels[ChannelType.Dpcm];
-
-                for (int p = 0; p < song.Length; p++)
-                {
-                    var pattern = channel.PatternInstances[p];
-                    if (pattern != null)
-                    {
-                        foreach (var note in pattern.Notes.Values)
-                        {
-                            var mapping = GetDPCMMapping(note.Value);
-                            if (mapping != null && mapping.Sample != null)
-                            {
-                                usedSamples.Add(mapping.Sample);
-                            }
-                        }
-                    }
-                }
-            }
-
-            samples = new List<DPCMSample>(usedSamples);
-
-            for (int i = 0; i < samplesMapping.Length; i++)
-            {
-                if (samplesMapping[i] != null && !usedSamples.Contains(samplesMapping[i].Sample))
-                {
-                    samplesMapping[i] = null;
-                }
             }
         }
 

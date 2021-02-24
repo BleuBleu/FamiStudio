@@ -8,7 +8,7 @@ Patterns are laid out on one of the five channels that NES support (more if you 
 
 ## Seeking
 
-Clicking in the timeline (header) of the sequencer will move the play position.
+Clicking in the timeline (header) of the sequencer will move the play position. You can also drag the seek back to more it more accurately.
 
 ## Changing the active channel
 
@@ -40,7 +40,7 @@ Clicking a pattern selects it and opens the piano roll for the current channel a
 
 ![](images/EditPattern.png#center)
 
-You can select multiple patterns by right-cliking and dragging in the header bar of the Sequencer. To un-select everything, simply press Esc. When multiple patterns are selected, only the color can be edited.
+You can select multiple patterns by right-cliking and dragging in the header bar of the Sequencer or in an empty space in the sequencer. To un-select everything, simply press Esc. When multiple patterns are selected, only the color can be edited.
 
 ![](images/PatternSelection2.png#center)
 
@@ -54,17 +54,27 @@ When one or multiple patterns are selected, dragging them will move them in the 
 
 ![](images/InstancePattern.png#center)
 
-Holding CTRL+SHIFT while dragging will create a completely independant copy of the selected patterns. This will be showned by a "copy" icon when dragging. They will change name and possibly color as well. 
+Holding CTRL+SHIFT while dragging will create a completely independant copy of the selected patterns. This will be showned by a "copy" icon when dragging. They will be renamed in the process.
 
 ![](images/CopyPattern.png#center)
 
-Dragging a pattern to a different channel will create a copy, but delete the original. This is because internally, patterns cannot be shared accross different channels. The pattern will loose its name and may change color. Holding CTRL+SHIFT will preserve the original (create a copy). 
+Dragging a pattern to a different channel will create a copy, but delete the original. This is because internally, patterns cannot be shared accross different channels. The pattern may be renamed in the processs. Holding CTRL+SHIFT will preserve the original (create a copy). 
 
 ![](images/MovePatternDifferentChannel.png#center)
 
 ## Cut/copy/pasting patterns
 
 When one or multiple patterns are selected, press CTRL+C (or CTRL+X for cut). Move the selection somewhere else and paste with CTRL+V. Copy and pasting always create instances of patterns.
+
+## Paste Special
+
+Pressing CTRL+SHIFT+V will open the **Paste Special** dialog which gives more options than a regular paste.
+
+![](images/PasteSpecialSequencer.png#center)
+
+* **Insert** : Will insert the copied patterns and move all the existing ones to the right.
+* **Extend song** : Will extend the song duration to accomodate the newly inserted patterns (Only available when Insert is enabled).
+* **Repeat** : Allows pasting the copied patterns multiple times in a row.
 
 ## Copy/pasting patterns between projects
 
@@ -84,7 +94,7 @@ You can move the loop point around by holding the **L** key and clicking at a lo
 
 ## Custom pattern settings
 
-Double clicking on the header of sequencer will allow you to set some customs settings for a column of patterns. This will allow you to change the number of notes and tempo parameters.
+Double clicking on the header of sequencer will allow you to set some customs settings for one or multiple columns of patterns. This will allow you to change the number of notes and tempo parameters.
 
 ![](images/CustomPatternSettings.png#center)
 
@@ -94,6 +104,6 @@ FamiStudio Tempo | FamiTracker tempo
 ---  | ---
 ![](images/CustomPatternSettingsNoPAL.png#center) | ![](images/CustomPatternSettingsFamiTracker.png#center) 
 
-Enabling **Custom Pattern** will allow you to change the values. Once a pattern has any kind of custom setting, it will no longer take its values from the Song's properties and will be display with a **asterisk (*)** next to its index in the Sequencer.
+Enabling **Custom Pattern** will allow you to change the values. Once a pattern has any kind of custom setting, it will no longer take its values from the Song's properties and will be display with a **asterisk (\*)** next to its index in the Sequencer.
 
 The parameters here are the same as when editing the [Song properties](song.md), but are localized to a column of patterns.
