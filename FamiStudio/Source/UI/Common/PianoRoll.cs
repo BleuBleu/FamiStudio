@@ -2377,7 +2377,7 @@ namespace FamiStudio
                             var sampleScale = selected ? 1.5f : 1.0f;
 
                             g.PushTransform(points[i, 0], points[i, 1], sampleScale, sampleScale);
-                            g.FillGeometry(sampleGeometry, brush);
+                            g.FillGeometry(sampleGeometry, selected ? theme.WhiteBrush : brush);
                             g.PopTransform();
                         }
                     }
@@ -4231,13 +4231,26 @@ namespace FamiStudio
                             tooltip = "{MouseLeft} Add note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseWheel} Pan\n{MouseRight} Select";
                         }
                     }
+
+                    if (IsSelectionValid())
+                    {
+                        if (newNoteTooltip.Length > 0)
+                            newNoteTooltip += " ";
+
+                        newNoteTooltip += $"{(selectionMax - selectionMin + 1)} {(Song.Project.UsesFamiTrackerTempo ? "notes" : "frames")} selected";
+                    }
                 }
                 else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                 {
                     tooltip = "{MouseLeft} Set envelope value - {MouseWheel} Pan";
 
                     if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx, out sbyte value))
+                    {
                         newNoteTooltip = $"{idx:D3} : {value}";
+
+                        if (IsSelectionValid())
+                            newNoteTooltip += $" ({selectionMax - selectionMin + 1} frames selected)";
+                    }
                 }
                 else if (editMode == EditionMode.DPCMMapping)
                 {
