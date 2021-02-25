@@ -11,6 +11,6 @@
 
 PackFds fds.fds fdstoc.bin fdsdata.bin fds_patched.fds
 copy fds.dbg fds_patched.dbg
-..\..\..\NES\tools\bin\Mesen.exe fds_patched.fds
+rem ..\..\..\NES\tools\bin\Mesen.exe fds_patched.fds
 
-rem ..\..\..\NES\tools\bin\Mesen.exe rom_ntsc.nes
+ ..\..\..\NES\tools\bin\Mesen.exe rom_ntsc.nes
