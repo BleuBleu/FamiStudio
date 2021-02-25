@@ -28,8 +28,6 @@ Here are the operations that can be performed on the project:
 
 * **Delete unassigned samples** : Samples that are not assigned to any key of the DPCM instrument will be deleted.
 
-* **Delete DPCM samples WAV source data** : Remove all the source data of any DPCM sample that was created from a WAV file. This will essentially replace the source data of these samples with its processed DMC data and reset all the processing parameters. Only do this when you know you are completely done adjusting your samples, to reduce the file size. This will not affect the sound of the song, but will severely limit your ability to go back and adjust things like volume, etc.
-
-* **Permanently apply all DPCM sample processing** : Same as above but for all samples, not just WAV files. 
+* **Permanently apply all DPCM sample processing** : Remove all the source data of any DPCM sample and replaces it with its processed DMC data. This will also reset all the processing parameters. Only do this when you know you are completely done adjusting your samples, to reduce the file size (it you were using WAV files as source). This will not affect the sound of the song, but will severely limit your ability to go back and adjust things like volume, etc. in a lossless way.
 
 * **Delete unused arpeggios** : Arpeggios that are not used by a single note will be deleted.

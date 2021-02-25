@@ -64,9 +64,8 @@ namespace FamiStudio
                     page.AddBoolean("Delete unused instruments:", true);                      // 1
                     page.AddBoolean("Unassign unused DPCM instrument keys:", true);           // 2
                     page.AddBoolean("Delete unassigned samples:", true);                      // 3
-                    page.AddBoolean("Delete DPCM samples WAV source data:", false);           // 4
-                    page.AddBoolean("Permanently apply all DPCM samples processing:", false); // 5
-                    page.AddBoolean("Delete unused arpeggios:", true);                        // 6
+                    page.AddBoolean("Permanently apply all DPCM samples processing:", false); // 4
+                    page.AddBoolean("Delete unused arpeggios:", true);                        // 5
                     page.PropertyChanged += ProjectCleanup_PropertyChanged;
                     break;
             }
@@ -151,11 +150,10 @@ namespace FamiStudio
             var deleteUnusedInstruments   = props.GetPropertyValue<bool>(1);
             var unassignUnusedSamples     = props.GetPropertyValue<bool>(2);
             var deleteUnusedSamples       = props.GetPropertyValue<bool>(3);
-            var deleteWavSourceData       = props.GetPropertyValue<bool>(4);
-            var applyAllSamplesProcessing = props.GetPropertyValue<bool>(5);
-            var deleteUnusedArpeggios     = props.GetPropertyValue<bool>(6);
+            var applyAllSamplesProcessing = props.GetPropertyValue<bool>(4);
+            var deleteUnusedArpeggios     = props.GetPropertyValue<bool>(5);
 
-            if (mergeIdenticalInstruments || deleteUnusedInstruments || unassignUnusedSamples || deleteUnusedSamples || deleteWavSourceData || deleteUnusedArpeggios)
+            if (mergeIdenticalInstruments || deleteUnusedInstruments || unassignUnusedSamples || deleteUnusedSamples || deleteUnusedArpeggios)
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -183,11 +181,7 @@ namespace FamiStudio
                 {
                     app.Project.PermanentlyApplyAllSamplesProcessing();
                 }
-                else if (deleteWavSourceData)
-                {
-                    app.Project.DeleteSampleWavSourceData();
-                }
-
+                
                 if (deleteUnusedArpeggios)
                 {
                     app.Project.DeleteUnusedArpeggios();

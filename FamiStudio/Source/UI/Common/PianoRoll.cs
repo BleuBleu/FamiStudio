@@ -4779,6 +4779,7 @@ namespace FamiStudio
             buffer.Serialize(ref editInstrument);
             buffer.Serialize(ref editEnvelope);
             buffer.Serialize(ref editArpeggio);
+            buffer.Serialize(ref editSample);
             buffer.Serialize(ref envelopeValueZoom);
             buffer.Serialize(ref envelopeValueOffset);
             buffer.Serialize(ref scrollX);

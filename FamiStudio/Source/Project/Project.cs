@@ -1214,15 +1214,6 @@ namespace FamiStudio
             }
         }
 
-        public void DeleteSampleWavSourceData()
-        {
-            foreach (var sample in samples)
-            {
-                if (sample.SourceDataIsWav)
-                    sample.PermanentlyApplyAllProcessing();
-            }
-        }
-
         public void PermanentlyApplyAllSamplesProcessing()
         {
             foreach (var sample in samples)
