@@ -1140,7 +1140,7 @@ namespace FamiStudio
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
             dialog.Properties.Build();
 
-            if (dialog.ShowDialog() == DialogResult.OK)
+            if (dialog.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 PasteInternal(
                     dialog.Properties.GetPropertyValue<bool>(0),
