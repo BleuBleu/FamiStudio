@@ -15,7 +15,6 @@ x Re-export, recompile and change ROM version.
 - ROM: Make sure square pops, and doesnt in NSF.
 - Compare quality with MakeDPCM & RJDMC.
 - Test merging of samples from other project (with WAV, etc.)
-- Revisit all demo song to fix zero volume envelopes (Gradius II has one for sure).
 - MATTT
 
 New features:
