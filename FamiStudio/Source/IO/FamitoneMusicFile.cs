@@ -1251,7 +1251,36 @@ namespace FamiStudio
             project.DeleteUnusedInstruments(); 
         }
 
-        public bool Save(Project originalProject, int[] songIds, int format, bool separateSongs, string filename, string dmcFilename, int machine)
+        private void OutputIncludeFile(string includeFilename)
+        {
+            var includeLines = new List<string>();
+
+            for (int songIdx = 0; songIdx < project.Songs.Count; songIdx++)
+            {
+                var song = project.Songs[songIdx];
+                includeLines.Add($"song_{Utils.MakeNiceAsmName(song.Name)} = {songIdx}");
+            }
+            includeLines.Add($"song_max = {project.Songs.Count}");
+
+            // For CA65, also include song names.
+            if (assemblyFormat == AssemblyFormat.CA65)
+            {
+                includeLines.Add("");
+                includeLines.Add(".if SONG_STRINGS");
+                includeLines.Add("song_strings:");
+
+                foreach (var song in project.Songs)
+                {
+                    includeLines.Add($".asciiz \"{song.Name}\"");
+                }
+
+                includeLines.Add(".endif");
+            }
+
+            File.WriteAllLines(includeFilename, includeLines.ToArray());
+        }
+
+        public bool Save(Project originalProject, int[] songIds, int format, bool separateSongs, string filename, string dmcFilename, string includeFilename, int machine)
         {
             this.machine = machine;
             SetupProject(originalProject, songIds);
@@ -1282,6 +1311,11 @@ namespace FamiStudio
 
             File.WriteAllLines(filename, lines);
 
+            if (includeFilename != null)
+            {
+                OutputIncludeFile(includeFilename);
+            }
+
             if (log)
             {
                 Log.LogMessage(LogSeverity.Info, $"Total assembly file size: {headerSize + instSize + tempoSize + songsSize} bytes.");
@@ -1309,8 +1343,6 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Duty Cycle effect is used, you must set FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1.");
                 }
             }
-
-
 
 #if DEBUG
             Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + tempoSize + songsSize);
@@ -1458,7 +1490,7 @@ namespace FamiStudio
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, AssemblyFormat.ASM6, false, tempAsmFilename, tempDmcFilename, machine);
+            Save(project, songIds, AssemblyFormat.ASM6, false, tempAsmFilename, tempDmcFilename, null, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }

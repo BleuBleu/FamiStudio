@@ -171,7 +171,8 @@ namespace FamiStudio
                     page.AddBoolean("Separate Files :", false); // 1
                     page.AddString("Song Name Pattern :", "{project}_{song}"); // 2
                     page.AddString("DMC Name Pattern :", "{project}"); // 3
-                    page.AddStringListMulti(null, songNames, null); // 4
+                    page.AddBoolean("Generate song list include :", false); // 4
+                    page.AddStringListMulti(null, songNames, null); // 5
                     page.SetPropertyEnabled(2, false);
                     page.SetPropertyEnabled(3, false);
                     break;
@@ -179,7 +180,8 @@ namespace FamiStudio
                 case ExportFormat.FamiStudioSfx:
                     page.AddStringList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
                     page.AddStringList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 1
-                    page.AddStringListMulti(null, songNames, null); // 2
+                    page.AddBoolean("Generate SFX list include :", false); // 2
+                    page.AddStringListMulti(null, songNames, null); // 3
                     break;
             }
 
@@ -441,12 +443,13 @@ namespace FamiStudio
         {
             var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioMusic : (int)ExportFormat.FamiTone2Music);
             var separate = props.GetPropertyValue<bool>(1);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(4));
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
             var kernel = famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2;
             var exportFormat = AssemblyFormat.GetValueForName(props.GetPropertyValue<string>(0));
             var ext = exportFormat == AssemblyFormat.CA65 ? "s" : "asm";
             var songNamePattern = props.GetPropertyValue<string>(2);
             var dpcmNamePattern = props.GetPropertyValue<string>(3);
+            var generateInclude = props.GetPropertyValue<bool>(4);
 
             if (separate)
             {
@@ -461,11 +464,12 @@ namespace FamiStudio
                         var formattedDpcmName = dpcmNamePattern.Replace("{project}", project.Name).Replace("{song}", song.Name);
                         var songFilename = Path.Combine(folder, Utils.MakeNiceAsmName(formattedSongName) + "." + ext);
                         var dpcmFilename = Path.Combine(folder, Utils.MakeNiceAsmName(formattedDpcmName) + ".dmc");
+                        var includeFilename = generateInclude ? Path.ChangeExtension(songFilename, null) + "_songlist.inc" : null;
 
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        f.Save(project, new int[] { songId }, exportFormat, true, songFilename, dpcmFilename, MachineType.Dual);
+                        f.Save(project, new int[] { songId }, exportFormat, true, songFilename, dpcmFilename, includeFilename, MachineType.Dual);
                     }
 
                     lastExportFilename = folder;
@@ -477,10 +481,12 @@ namespace FamiStudio
                 var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog($"Export {engineName} Assembly Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
                 if (filename != null)
                 {
+                    var includeFilename = generateInclude ? Path.ChangeExtension(filename, null) + "_songlist.inc" : null;
+
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    f.Save(project, songIds, exportFormat, false, filename, Path.ChangeExtension(filename, ".dmc"), MachineType.Dual);
+                    f.Save(project, songIds, exportFormat, false, filename, Path.ChangeExtension(filename, ".dmc"), includeFilename, MachineType.Dual);
 
                     lastExportFilename = filename;
                 }
@@ -494,13 +500,16 @@ namespace FamiStudio
             var ext = exportFormat == AssemblyFormat.CA65 ? "s" : "asm";
             var mode = MachineType.GetValueForName(props.GetPropertyValue<string>(1));
             var engineName = famiStudio ? "FamiStudio" : "FamiTone2";
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(2));
+            var generateInclude = props.GetPropertyValue<bool>(2);
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(3));
 
             var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog($"Export {engineName} Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
             if (filename != null)
             {
+                var includeFilename = generateInclude ? Path.ChangeExtension(filename, null) + "_sfxlist.inc" : null;
+
                 FamitoneSoundEffectFile f = new FamitoneSoundEffectFile();
-                f.Save(project, songIds, exportFormat, mode, famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2, filename);
+                f.Save(project, songIds, exportFormat, mode, famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2, filename, includeFilename);
                 lastExportFilename = filename;
             }
         }

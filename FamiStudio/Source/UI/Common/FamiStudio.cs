@@ -623,7 +623,6 @@ namespace FamiStudio
             var dlg = new ConfigDialog();
             var oldNumBufferedFrames = Settings.NumBufferedAudioFrames;
 
-            // MATTT: Stop/restart audio players here (audio buffers might have changed).
             if (dlg.ShowDialog(mainForm) == DialogResult.OK)
             {
                 if (oldNumBufferedFrames != Settings.NumBufferedAudioFrames)

@@ -54,7 +54,7 @@ namespace FamiStudio
             return writes;
         }
 
-        public bool Save(Project project, int[] songIds, int format, int machine, int kernel, string filename)
+        public bool Save(Project project, int[] songIds, int format, int machine, int kernel, string filename, string includeFilename)
         {
             SetupFormat(format);
 
@@ -84,7 +84,7 @@ namespace FamiStudio
             foreach (var str in modeStrings)
             {
                 foreach (var songId in songIds)
-                {
+                { 
                     var song = project.GetSong(songId);
                     var writes = GetRegisterWrites(song, str == "pal");
 
@@ -208,6 +208,37 @@ namespace FamiStudio
             }
 
             File.WriteAllLines(filename, lines.ToArray());
+
+            if (includeFilename != null)
+            {
+                var includeLines = new List<string>();
+
+                for (int songIdx = 0; songIdx < songIds.Length; songIdx++)
+                {
+                    var songId = songIds[songIdx];
+                    var song = project.GetSong(songId);
+                    includeLines.Add($"sfx_{Utils.MakeNiceAsmName(song.Name)} = {songIdx}");
+                }
+                includeLines.Add($"sfx_max = {songIds.Length}");
+
+                // For CA65, also include song names.
+                if (format == AssemblyFormat.CA65)
+                {
+                    includeLines.Add("");
+                    includeLines.Add(".if SFX_STRINGS");
+                    includeLines.Add("sfx_strings:");
+
+                    foreach (var songId in songIds)
+                    {
+                        var song = project.GetSong(songId);
+                        includeLines.Add($".asciiz \"{song.Name}\"");
+                    }
+
+                    includeLines.Add(".endif");
+                }
+
+                File.WriteAllLines(includeFilename, includeLines.ToArray());
+            }
 
             return true;
         }
