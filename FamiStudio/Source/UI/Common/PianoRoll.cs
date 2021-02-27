@@ -4562,19 +4562,29 @@ namespace FamiStudio
                     patternIdx = Song.FindPatternInstanceIndex(dragFrameMin, out noteIdx);
 
                 var pattern = channel.PatternInstances[patternIdx];
-                if (pattern != null)
+
+                if (channel.SupportsInstrument(currentInstrument))
                 {
-                    if (channel.SupportsInstrument(currentInstrument))
+                    if (pattern == null)
                     {
-                        var note = pattern.GetOrCreateNoteAt(noteIdx);
-                        note.Value = noteValue;
-                        note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
-                        note.Arpeggio = channel.SupportsArpeggios ? currentArpeggio : null;
+                        // Check if need to promote transaction.
+                        if (App.UndoRedoManager.UndoScope == TransactionScope.Pattern)
+                        {
+                            App.UndoRedoManager.AbortTransaction();
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                        }
+
+                        pattern = channel.CreatePatternAndInstance(patternIdx);
                     }
-                    else
-                    {
-                        ShowInstrumentError();
-                    }
+
+                    var note = pattern.GetOrCreateNoteAt(noteIdx);
+                    note.Value = noteValue;
+                    note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
+                    note.Arpeggio = channel.SupportsArpeggios ? currentArpeggio : null;
+                }
+                else
+                {
+                    ShowInstrumentError();
                 }
             }
 
