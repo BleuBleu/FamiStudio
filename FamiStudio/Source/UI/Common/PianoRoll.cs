@@ -3581,7 +3581,6 @@ namespace FamiStudio
                                 pattern = channel.CreatePatternAndInstance(patternIdx);
                             }
 
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                             SnapPatternNote(patternIdx, ref noteIdx);
                             var note = pattern.GetOrCreateNoteAt(noteIdx);
                             note.Value = noteValue;
