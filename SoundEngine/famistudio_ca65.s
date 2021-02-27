@@ -1506,7 +1506,7 @@ famistudio_get_note_pitch_vrc6_saw:
     sta reg_lo
     lda @pitch+1
 
-    .if (!.blank(pulse_prev)) && ((!FAMISTUDIO_CFG_SFX_SUPPORT) || (idx > 4))
+    .if (!.blank(pulse_prev)) && ((!FAMISTUDIO_CFG_SFX_SUPPORT) || (.blank(reg_sweep)))
         .if (!.blank(reg_sweep)) && FAMISTUDIO_CFG_SMOOTH_VIBRATO
             famistudio_smooth_vibrato @pitch, pulse_prev, reg_hi, reg_lo, reg_sweep
         .else
@@ -1522,7 +1522,7 @@ famistudio_get_note_pitch_vrc6_saw:
 
 .endif ; idx = 3
 
-.if .blank(pulse_prev) || .blank(reg_sweep) || FAMISTUDIO_CFG_SFX_SUPPORT
+.if .blank(pulse_prev) || .blank(reg_sweep) || FAMISTUDIO_CFG_SFX_SUPPORT || (!FAMISTUDIO_CFG_SMOOTH_VIBRATO)
     sta reg_hi
 .endif
 

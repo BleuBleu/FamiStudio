@@ -1483,7 +1483,7 @@ nocut:
     sta reg_lo
     lda pitch+1
 
-    .if pulse_prev && (!FAMISTUDIO_CFG_SFX_SUPPORT || idx > 4)
+    .if pulse_prev && (!FAMISTUDIO_CFG_SFX_SUPPORT || !reg_sweep)
         .if reg_sweep && FAMISTUDIO_CFG_SMOOTH_VIBRATO
             famistudio_smooth_vibrato famistudio_ptr1, pulse_prev, reg_hi, reg_lo, reg_sweep
         .else
@@ -1499,7 +1499,7 @@ nocut:
 
 .endif ; idx = 3
 
-.if (!pulse_prev) || (!reg_sweep) || FAMISTUDIO_CFG_SFX_SUPPORT
+.if (!pulse_prev) || (!reg_sweep) || FAMISTUDIO_CFG_SFX_SUPPORT || (!FAMISTUDIO_CFG_SMOOTH_VIBRATO)
     sta reg_hi
 .endif
 

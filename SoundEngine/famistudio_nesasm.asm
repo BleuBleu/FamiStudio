@@ -1540,7 +1540,7 @@ reg_sweep\@ = \9
     sta reg_lo\@
     lda <.pitch\@+1
 
-    .if (pulse_prev\@ != 0) & ((FAMISTUDIO_CFG_SFX_SUPPORT = 0) | (idx\@ > 4))
+    .if (pulse_prev\@ != 0) & ((FAMISTUDIO_CFG_SFX_SUPPORT = 0) | (reg_sweep\@ = 0))
         .if (reg_sweep\@ != 0) & (FAMISTUDIO_CFG_SMOOTH_VIBRATO != 0)
             famistudio_smooth_vibrato .pitch\@, pulse_prev\@, reg_hi\@, reg_lo\@, reg_sweep\@, 1
         .else
@@ -1556,7 +1556,7 @@ reg_sweep\@ = \9
 
     .endif ; idx = 3
 
-    .if (pulse_prev\@ = 0) | (reg_sweep\@ = 0) | (FAMISTUDIO_CFG_SFX_SUPPORT != 0)
+    .if (pulse_prev\@ = 0) | (reg_sweep\@ = 0) | (FAMISTUDIO_CFG_SFX_SUPPORT != 0) | (FAMISTUDIO_CFG_SMOOTH_VIBRATO = 0)
     sta reg_hi\@
     .endif
 
