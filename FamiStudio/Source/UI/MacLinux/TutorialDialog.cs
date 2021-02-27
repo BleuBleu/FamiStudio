@@ -96,6 +96,7 @@ namespace FamiStudio
 #else
             var vbox  = new VBox();
             Add(vbox);
+            KeepAbove = true;
 #endif
 
             vbox.PackStart(label, false, false, 0);
@@ -106,7 +107,6 @@ namespace FamiStudio
             BorderWidth = 10;
             Resizable = false;
             Decorated = false;
-            KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
 
