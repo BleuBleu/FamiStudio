@@ -153,7 +153,11 @@ namespace FamiStudio
             textView.Buffer.Text = txt;
             textView.Editable = false;
             textView.CursorVisible = false;
+#if FAMISTUDIO_MACOS
+            textView.ModifyFont(FontDescription.FromString($"Quicksand 10"));
+#else
             textView.ModifyFont(FontDescription.FromString($"Quicksand 8"));
+#endif
             textView.WrapMode = Gtk.WrapMode.WordChar;
             textView.Show();
 
