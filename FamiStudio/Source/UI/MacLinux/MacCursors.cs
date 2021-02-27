@@ -38,7 +38,7 @@ namespace FamiStudio
             SizeNS     = MacUtils.GetCursorByName("resizeUpDownCursor");
             DragCursor = MacUtils.GetCursorByName("closedHandCursor");
             CopyCursor = MacUtils.GetCursorByName("dragCopyCursor");
-            Eyedrop    = CreateCursorFromResource("EyedropCursor", 7, 24);
+            Eyedrop    = Default; // CreateCursorFromResource("EyedropCursor", 7, 24); Disabling for now, cant get hotspot to work.
         }
     }
 }

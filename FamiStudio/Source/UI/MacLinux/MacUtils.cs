@@ -50,7 +50,6 @@ namespace FamiStudio
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, NSPoint point1);
-        //public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, NSPointF point1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, uint uint1, IntPtr intPtr1, IntPtr intPtr2, bool bool1);
@@ -521,16 +520,15 @@ namespace FamiStudio
                 nsImage = SendIntPtr(nsImage, selInitWithData, nsData);
 
                 var nsPoint = new NSPoint();
-                //var nsPoint = new NSPointF();
                 nsPoint.X = hotX;
                 nsPoint.Y = hotY;
-                
-                var nsCursor = SendIntPtr(clsNSCursor, selAlloc);
+
+				var nsCursor = SendIntPtr(clsNSCursor, selAlloc);
                 nsCursor = SendIntPtr(nsCursor, selInitWithImageHotSpot, nsImage, nsPoint);
 
                 SendVoid(nsData,  selRelease);
                 SendVoid(nsImage, selRelease);
-
+                
                 return nsCursor;
             }
         }
