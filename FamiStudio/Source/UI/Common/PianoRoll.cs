@@ -333,7 +333,7 @@ namespace FamiStudio
 
         public delegate void EmptyDelegate();
         public delegate void PatternDelegate(Pattern pattern);
-        public delegate void InstrumentDelegate(Instrument instrument);
+        public delegate void NoteDelegate(Note note);
         public delegate void DPCMMappingDelegate(int note);
 
         public event PatternDelegate     PatternChanged;
@@ -343,7 +343,7 @@ namespace FamiStudio
         public event EmptyDelegate       ControlActivated;
         public event EmptyDelegate       NotesPasted;
         public event EmptyDelegate       ScrollChanged;
-        public event InstrumentDelegate  InstrumentEyedropped;
+        public event NoteDelegate        NoteEyedropped;
         public event DPCMMappingDelegate DPCMSampleMapped;
         public event DPCMMappingDelegate DPCMSampleUnmapped;
 
@@ -3542,7 +3542,7 @@ namespace FamiStudio
                             channel.PatternInstances[patternIdx].Notes.TryGetValue(noteIdx, out var note) && note != null)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
-                            InstrumentEyedropped?.Invoke(note.Instrument);
+                            NoteEyedropped?.Invoke(note);
                             App.UndoRedoManager.EndTransaction();
                         }
                     }

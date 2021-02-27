@@ -392,7 +392,21 @@ namespace FamiStudio
         RenderBitmap[] bmpEnvelopes = new RenderBitmap[EnvelopeType.Count];
 
         public Song SelectedSong => selectedSong;
-        public Arpeggio SelectedArpeggio => selectedArpeggio;
+        public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null;
+
+        public Arpeggio SelectedArpeggio
+        {
+            get
+            {
+                return selectedArpeggio;
+            }
+            set
+            {
+                selectedArpeggio = value;
+                ConditionalInvalidate();
+            }
+        }
+
         public Instrument SelectedInstrument
         {
             get
@@ -405,7 +419,6 @@ namespace FamiStudio
                 ConditionalInvalidate();
             }
         }
-        public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null; 
 
         public delegate void EmptyDelegate();
         public delegate void InstrumentEnvelopeDelegate(Instrument instrument, int envelope);

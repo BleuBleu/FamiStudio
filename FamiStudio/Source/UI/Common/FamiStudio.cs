@@ -138,7 +138,7 @@ namespace FamiStudio
             PianoRoll.ControlActivated += PianoRoll_ControlActivated;
             PianoRoll.NotesPasted += PianoRoll_NotesPasted;
             PianoRoll.ScrollChanged += PianoRoll_ScrollChanged;
-            PianoRoll.InstrumentEyedropped += PianoRoll_InstrumentEyedropped;
+            PianoRoll.NoteEyedropped += PianoRoll_NoteEyedropped;
             PianoRoll.DPCMSampleMapped += PianoRoll_DPCMSampleMapped;
             PianoRoll.DPCMSampleUnmapped += PianoRoll_DPCMSampleMapped;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
@@ -210,9 +210,15 @@ namespace FamiStudio
                 PianoRoll.ConditionalInvalidate();
         }
 
-        private void PianoRoll_InstrumentEyedropped(Instrument instrument)
+        private void PianoRoll_NoteEyedropped(Note note)
         {
-            ProjectExplorer.SelectedInstrument = instrument;
+            if (note != null)
+            {
+                ProjectExplorer.SelectedInstrument = note.Instrument;
+                ProjectExplorer.SelectedArpeggio   = note.Arpeggio;
+                PianoRoll.CurrentInstrument        = note.Instrument;
+                PianoRoll.CurrentArpeggio          = note.Arpeggio;
+            }
         }
 
         private void PianoRoll_ScrollChanged()
