@@ -257,7 +257,9 @@ namespace FamiStudio
 
         public Project Load(string filename)
         {
+#if !DEBUG
             try
+#endif
             {
                 var lines = File.ReadAllLines(filename);
                 var parameters = new Dictionary<string, string>();
@@ -476,6 +478,7 @@ namespace FamiStudio
 
                 return project;
             }
+#if !DEBUG
             catch (Exception e)
             {
                 Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
@@ -483,6 +486,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return null;
             }
+#endif
         }
     }
 }
