@@ -1,30 +1,22 @@
 FamiStudio 2.4.0
 ================
 - PR famistudio text stuff
-- Double-right-click = select whole note (or whole note drag?)
-- Brad: .exportzp FAMISTUDIO_SFX_CH0 + Open issue.
-- Pattern auto-creation does work if you click on the same note (note that comes from previous pattern).
-- CRASH: Playing with slide notes, transaction not ended.
+- FREEZE : Instrument player froze.
+	=> HAPPENS WHEN AUDIO OUTPUT CHANGES!!??! CANT REPRO...
 
 Test:
 - Retest Win7 device lost.
 - Transaction (w/o DPCM), test a LOT!
+	- Dont seem to refresh when i do cleanup.
 - Test HI-DPI.
 	- Waveform
 	- Scrollbar in PE.
-- Re-export, recompile and change ROM version.
-- Test looping sample.
+x Re-export, recompile and change ROM version.
 - ROM: Make sure square pops, and doesnt in NSF.
-- Test with empty wav files, empty DMC files.
 - Compare quality with MakeDPCM & RJDMC.
 - Test merging of samples from other project (with WAV, etc.)
-- Test transactions a lot, dont seem to refresh when i do cleanup.
 - Revisit all demo song to fix zero volume envelopes (Gradius II has one for sure).
-
-Doc:
-- New screenshots dark theme.
-- Mention FamiStudio text doesnt include source sample data.
-- Smooth vibrato + SFX.
+- MATTT
 
 New features:
 - DPCM sample editor (+ sample mapping changes)
@@ -48,7 +40,11 @@ New features:
 
 FamiStudio 2.5.0
 ================
+- Double-right-click = select whole note (or whole note drag?)
 - FamiStudio Tempo 2.0? Arbitrary BPM.
+	- Figure out fundamental difference between tempo vs. groove
+	- Look at gyuss for example (7-6-6, cycle over 120 frames)
+- When using 1/2 snapping, dragging notes is awkward.
 - MIDI in/out
 - DPCM : More stuff, normalize volume? Playback speed?
 - Channel volumes settings.
