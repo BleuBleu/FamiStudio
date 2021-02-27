@@ -91,8 +91,6 @@ namespace FamiStudio
             SetPosition(WindowPosition.CenterOnParent);
 #if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
-#else
-            KeepAbove = true;
 #endif
         }
 

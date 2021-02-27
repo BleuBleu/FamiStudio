@@ -96,7 +96,6 @@ namespace FamiStudio
 #else
             var vbox  = new VBox();
             Add(vbox);
-            KeepAbove = true;
 #endif
 
             vbox.PackStart(label, false, false, 0);

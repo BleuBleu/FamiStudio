@@ -89,8 +89,6 @@ namespace FamiStudio
             SkipTaskbarHint = true;
 #if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
-#else
-            KeepAbove = true;
 #endif
         }
 
