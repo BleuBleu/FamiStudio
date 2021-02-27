@@ -24,6 +24,9 @@ namespace FamiStudio
             ""
         };
 
+        public delegate void EmptyDelegate();
+        public event EmptyDelegate CleaningUp;
+
         private PropertyPage[] pages = new PropertyPage[(int)TransformOperation.Max];
         private MultiPropertyDialog dialog;
         private FamiStudio app;
@@ -31,7 +34,7 @@ namespace FamiStudio
         public unsafe TransformDialog(FamiStudio famistudio)
         {
             app = famistudio;
-            dialog = new MultiPropertyDialog(600, 430);
+            dialog = new MultiPropertyDialog(550, 500);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
@@ -115,6 +118,8 @@ namespace FamiStudio
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
+                CleaningUp?.Invoke();
+
                 foreach (var songId in songIds)
                 {
                     app.Project.GetSong(songId).DeleteNotesPastMaxInstanceLength();
@@ -156,6 +161,8 @@ namespace FamiStudio
             if (mergeIdenticalInstruments || deleteUnusedInstruments || unassignUnusedSamples || deleteUnusedSamples || deleteUnusedArpeggios)
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                CleaningUp?.Invoke();
 
                 if (mergeIdenticalInstruments)
                 {

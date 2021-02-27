@@ -733,6 +733,7 @@ namespace FamiStudio
         public void OpenTransformDialog()
         {
             var dlg = new TransformDialog(this);
+            dlg.CleaningUp += TransformDialog_CleaningUp;
 
             if (dlg.ShowDialog(mainForm) == DialogResult.OK)
             {
@@ -741,6 +742,14 @@ namespace FamiStudio
                 ProjectExplorer.RefreshButtons();
                 InvalidateEverything(true);
             }
+        }
+
+        private void TransformDialog_CleaningUp()
+        {
+            // We might be deleting data like entire songs/envelopes/samples that
+            // are being edited right now.
+            Sequencer.Reset();
+            PianoRoll.Reset();
         }
 
         public void ShowHelp()
