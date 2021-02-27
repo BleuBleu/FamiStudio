@@ -12,13 +12,15 @@ namespace FamiStudio
     {
         enum TransformOperation
         {
-            Cleanup,
+            SongCleanup,
+            ProjectCleanup,
             Max
         };
 
         readonly string[] ConfigSectionNames =
         {
-            "Cleanup",
+            "Song Cleanup",
+            "Project Cleanup",
             ""
         };
 
@@ -29,7 +31,7 @@ namespace FamiStudio
         public unsafe TransformDialog(FamiStudio famistudio)
         {
             app = famistudio;
-            dialog = new MultiPropertyDialog(450, 430);
+            dialog = new MultiPropertyDialog(600, 430);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
@@ -52,14 +54,19 @@ namespace FamiStudio
         {
             switch (section)
             {
-                case TransformOperation.Cleanup:
-                    page.AddBoolean("Merge identical patterns:", true);    // 0
-                    page.AddBoolean("Delete empty patterns:", true);       // 1
-                    page.AddBoolean("Merge identical instruments:", true); // 2
-                    page.AddBoolean("Delete unused instruments:", true);   // 3
-                    page.AddBoolean("Delete unused samples:", true);       // 4
-                    page.AddBoolean("Delete unused arpeggios:", true);     // 5
-                    page.AddStringListMulti(null, GetSongNames(), null);   // 6
+                case TransformOperation.SongCleanup:
+                    page.AddBoolean("Merge identical patterns:", true);                       // 0
+                    page.AddBoolean("Delete empty patterns:", true);                          // 1
+                    page.AddStringListMulti(null, GetSongNames(), null);                      // 2
+                    break;
+                case TransformOperation.ProjectCleanup:
+                    page.AddBoolean("Merge identical instruments:", true);                    // 0
+                    page.AddBoolean("Delete unused instruments:", true);                      // 1
+                    page.AddBoolean("Unassign unused DPCM instrument keys:", true);           // 2
+                    page.AddBoolean("Delete unassigned samples:", true);                      // 3
+                    page.AddBoolean("Permanently apply all DPCM samples processing:", false); // 4
+                    page.AddBoolean("Delete unused arpeggios:", true);                        // 5
+                    page.PropertyChanged += ProjectCleanup_PropertyChanged;
                     break;
             }
 
@@ -67,6 +74,20 @@ namespace FamiStudio
             pages[(int)section] = page;
 
             return page;
+        }
+
+        private void ProjectCleanup_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            // Applying processing implies deleting source data.
+            if (idx == 5)
+            {
+                var applyProcessing = (bool)value;
+
+                if (applyProcessing)
+                    props.SetPropertyValue(4, true);
+
+                props.SetPropertyEnabled(4, !applyProcessing);
+            }
         }
 
         private int[] GetSongIds(bool[] selectedSongs)
@@ -82,19 +103,15 @@ namespace FamiStudio
             return songIds.ToArray();
         }
 
-        private void Cleanup()
+        private void SongCleanup()
         {
-            var props = dialog.GetPropertyPage((int)TransformOperation.Cleanup);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(6));
+            var props = dialog.GetPropertyPage((int)TransformOperation.SongCleanup);
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(2));
 
             var mergeIdenticalPatterns    = props.GetPropertyValue<bool>(0);
             var deleteEmptyPatterns       = props.GetPropertyValue<bool>(1);
-            var mergeIdenticalInstruments = props.GetPropertyValue<bool>(2);
-            var deleteUnusedInstruments   = props.GetPropertyValue<bool>(3);
-            var deleteUnusedSamples       = props.GetPropertyValue<bool>(4);
-            var deleteUnusedArpeggios     = props.GetPropertyValue<bool>(5);
 
-            if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns || mergeIdenticalInstruments || deleteUnusedInstruments || deleteUnusedSamples || deleteUnusedArpeggios))
+            if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns))
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -121,6 +138,25 @@ namespace FamiStudio
                     }
                 }
 
+                app.UndoRedoManager.EndTransaction();
+            }
+        }
+
+        private void ProjectCleanup()
+        {
+            var props = dialog.GetPropertyPage((int)TransformOperation.ProjectCleanup);
+
+            var mergeIdenticalInstruments = props.GetPropertyValue<bool>(0);
+            var deleteUnusedInstruments   = props.GetPropertyValue<bool>(1);
+            var unassignUnusedSamples     = props.GetPropertyValue<bool>(2);
+            var deleteUnusedSamples       = props.GetPropertyValue<bool>(3);
+            var applyAllSamplesProcessing = props.GetPropertyValue<bool>(4);
+            var deleteUnusedArpeggios     = props.GetPropertyValue<bool>(5);
+
+            if (mergeIdenticalInstruments || deleteUnusedInstruments || unassignUnusedSamples || deleteUnusedSamples || deleteUnusedArpeggios)
+            {
+                app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
                 if (mergeIdenticalInstruments)
                 {
                     app.Project.MergeIdenticalInstruments();
@@ -131,11 +167,21 @@ namespace FamiStudio
                     app.Project.DeleteUnusedInstruments();
                 }
 
-                if (deleteUnusedSamples)
+                if (unassignUnusedSamples)
                 {
-                    app.Project.DeleteUnusedSamples();
+                    app.Project.UnmapUnusedSamples();
                 }
 
+                if (deleteUnusedSamples)
+                {
+                    app.Project.DeleteUnmappedSamples();
+                }
+
+                if (applyAllSamplesProcessing)
+                {
+                    app.Project.PermanentlyApplyAllSamplesProcessing();
+                }
+                
                 if (deleteUnusedArpeggios)
                 {
                     app.Project.DeleteUnusedArpeggios();
@@ -155,7 +201,12 @@ namespace FamiStudio
 
                 switch (operation)
                 {
-                    case TransformOperation.Cleanup: Cleanup(); break;
+                    case TransformOperation.SongCleanup:
+                        SongCleanup();
+                        break;
+                    case TransformOperation.ProjectCleanup:
+                        ProjectCleanup();
+                        break;
                 }
             }
 

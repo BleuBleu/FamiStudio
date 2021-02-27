@@ -7,6 +7,9 @@ shatterhand_music_data:
 	.word @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4
 	.byte .lobyte(@tempo_env9), .hibyte(@tempo_env9), 0, 0
 
+.export shatterhand_music_data
+.global FAMISTUDIO_DPCM_PTR
+
 @instruments:
 	.word @env3,@env0,@env9,@env7
 	.word @env5,@env1,@env9,@env7

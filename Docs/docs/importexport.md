@@ -1,6 +1,6 @@
 # Exporting Songs
 
-The export dialog is access through the main toolbar.
+The export dialog is access through the main toolbar or with CTRL+E on the keyboard. To quickly repeat a previous export (same format and output file), you can right click on the export icon in the toolbar or press CTRL+SHIFT+E.
 
 ## Wave / MP3 File
 
@@ -25,14 +25,11 @@ Video export is a great way to add a visual element to your songs when sharing t
 
 ![](images/VideoScreenshot.jpg#center)
 
-The exported videos are always 1080p / 60FPS at the moment (or 50FPS in PAL mode). 
-
 ![](images/ExportVideo.png#center)
 
 Besides the audio/video quality settings, there are a few options to control the look and feel of the video:
 
 * **Piano roll zoom** : The higher the zoom, the faster notes will scroll by. 
-* **Thin notes** : This will make the notes narrower (in the X direction). This is useful when exporting songs that have more than 5 channels.
 * **Channels** : It is recommended to not export channels that do not have any notes, this will leave more space to the other channels.
 
 ## Nintendo Sound Format
@@ -43,7 +40,7 @@ Every feature supported by FamiStudio can be used in an NSF.
 
 Song that do not use any audio expansion can export as PAL and Dual mode, where as only NTSC is available for expansion audio.
 
-The maximum song size is approximately 28KB minus the size of the DPCM samples used. Note that this size are not printed anywhere and are not related to the size of the *.fms file. Best to simply try and see if it works.
+The maximum song size is approximately 28KB minus the size of the DPCM samples used. Note that this size are not printed anywhere and are not related to the size of the \*.fms file. Best to simply try and see if it works.
 
 ## ROM / FDS Disk
 
@@ -102,9 +99,15 @@ FamiTracker speed | FamiTracker period | FamiStudio speed | FamiStudio period
 
 ## FamiStudio Text
 
-FamiStudio text format is a textual representation of the of the binary FamiStudio format. It is designed to favor interopability with other softwares, tools and sound engines. Exporting or importing this mostly lossless. The only this not stored in this format are the custom colors assigned to instruments, patterns and songs (they will be randomized every time you re-import the file).
+FamiStudio text format is a textual representation of the of the binary FamiStudio format. It is designed to favor interopability with other softwares, tools and sound engines. 
 
 ![](images/ExportFamiStudioText.png#center)
+
+Exporting or importing using this format mostly lossless. These are the features that will not be preserved:
+
+* The custom colors assigned to songs, instruments, patterns, arpeggios and DPCM samples will not be preserved, they will be randomized every time you re-import the file.
+
+* Only the final processed data of DPCM samples will exported. The source data as well as any processing parameter will be lost. 
 
 ### Format Specification
 
@@ -164,7 +167,7 @@ Project | Version | Yes | The FamiStudio version that exported the file.
 | Author | | Author of the project
 | Copyright | | Copyright of the project
 DPCMSample | Name | Yes | The name of the sample.
-| Data | Yes | The data as a series of hexadecimal nibbles.
+| Data | Yes | The processed data as a series of hexadecimal nibbles.
 DPCMMapping | Note | Yes | Piano note to map the sample to (Between C1 and D6).
 | Sample | Yes | Name of the DPCMSample to map.
 | Pitch | | Pitch of the sample.
@@ -198,8 +201,8 @@ Song | Name | Yes | The name of the song.
 | PatternLength | Yes | The number of notes in a pattern.
 | BeatLength | Yes | The number of notes in a beat.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
-| Tempo | Yes | (FamiTracker tempo only) The FamiTracker tempo.
-| Speed | Yes | (FamiTracker tempo only) The FamiTracker speed.
+| FamiTrackerTempo | Yes | (FamiTracker tempo only) The FamiTracker tempo.
+| FamiTrackerSpeed | Yes | (FamiTracker tempo only) The FamiTracker speed.
 PatternCustomSettings | Time | Yes | Index of the column of pattern that uses these custom settings.
 | Length | Yes | The custom length (in notes or frames) of the pattern.
 | NoteLength | Yes | (FamiStudio tempo only) The number of frames in a note. 
@@ -214,6 +217,7 @@ Note | Time | Yes | The frame (or note) number inside the pattern where this not
 | Volume | | The volume of the note, 0 to 15.
 | VibratoSpeed | | The Vibrato speed, 0 to 12.
 | VibratoDepth | | The Vibrato depth, 0 to 15.
+| Speed | | (FamiTracker tempo only) Updates the FamiTracker speed to a new value.
 | FinePitch | | The fine pitch, -128 to 127.
 | SlideTarget | | The slide note target, from C0 to B7.
 | FdsModSpeed | | FDS modulation speed, 0 to 4095.
@@ -272,6 +276,7 @@ Besides effects, there are also other limitations:
 * Instruments using both pitch and arpeggio envelopes at the same time will not sound the same as in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker re-triggers the pitch envelope at each arpeggio notes (probably the more sensible way), while FamiStudio simply runs both at the same time.
 * VRC6 saw channel is not influenced by duty cycle in FamiStudio. FamiStudio always allow the full volume range for the saw. Import/export process does not try account for this. This might lead to volume inconsistencies between FamiTracker and FamiStudio where the volume needs to be doubled or halved to sound correct.
 * Vibrato effect might sound a bit different, please see table above for exact mappings.
+* The noise channel in FamiStudio is not affected by pitch envelope or any pitch effects (1xx, 2xx, 3xx, Qxx and Rxx).
 
 When importing from FamiTracker, all possible slide effects (1xx, 2xx, 3xx, Qxx and Rxx) will be converted to slide notes. Sometimes attack will be disabled as well to mimic the same behavior. This in an inherently imperfect process since they approaches are so different. For this reason, importing/exporting slide notes with FamiTracker should be considered a **lossy** process.
 
@@ -292,6 +297,7 @@ Most NSF file will not contain the names of songs so they will usually have plac
 * **Start frame** : Used to offset the entire song by a number of frames. This is useful when a song has an intro that is not the same length as the other patterns.
 * **Remove intro silence** : Some songs start with a bit of silence, this will wait until any sound is produce to start recording.
 * **Reverse DPCM bits** : This will set the "Reverse Bits" flag on all the imported samples. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should.
+* **Preserve DPCM padding bytes** : Force FamiStudio to keep the last byte of every sample, this will make all samples 16 bytes larger simply to keep an extra byte. This could be useful to keep looping samples intact. Should remain off most of the time since most games seem to ignore this byte.
 
 NSF file are essentially programs designed to run on actual hardware. They will contain no instrument, no envelopes, no repeating pattern, etc. All the volumes and pitches will be set through the effect panel. They are going to appear extremely messy and unoptimized. 
 

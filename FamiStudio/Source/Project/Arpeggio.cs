@@ -81,7 +81,7 @@ namespace FamiStudio
 
         public bool GetChordMinMaxOffset(out int minOffset, out int maxOffset)
         {
-            if (envelope.IsEmpty)
+            if (envelope.IsEmpty(EnvelopeType.Arpeggio))
             {
                 minOffset = 0;
                 maxOffset = 0;

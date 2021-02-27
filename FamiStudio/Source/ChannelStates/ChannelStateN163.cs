@@ -9,7 +9,7 @@ namespace FamiStudio
         int waveLength;
         int channelMask;
 
-        public ChannelStateN163(int apuIdx, int channelType, int numChannels, bool pal) : base(apuIdx, channelType, pal, numChannels)
+        public ChannelStateN163(IPlayerInterface player, int apuIdx, int channelType, int numChannels, bool pal) : base(player, apuIdx, channelType, pal, numChannels)
         {
             regOffset = 8 * -(channelType - ChannelType.N163Wave1);
             channelMask = (numChannels - 1) << 4;

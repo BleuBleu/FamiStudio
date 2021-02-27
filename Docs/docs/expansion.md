@@ -2,7 +2,7 @@
 
 ## Overview
 
-Expansion audio refers to extra hardware that were present on some NES cartridges (or add-on in the case of the Famicom Disk System). These chips added a few extra audio channels on top of the standard 5 channels.
+Expansion audio refers to extra hardware that were present on some Famicom cartridges (or add-on in the case of the Famicom Disk System). These chips added a few extra audio channels on top of the standard 5 channels.
 
 List of expansions supported:
 
@@ -12,7 +12,7 @@ List of expansions supported:
 
 * **Famicom Disk System**: Adds an extra channel that uses a wavetable and a modulation unit to create a wide range of sound. 
 
-* **Nintendo MMC5**: Adds 2 extra square channels. They are extremely similar to the regular square channels of the NES, and also suffer from the same phase reset issue. Unlike the stock square channels, the reset bug cannot be worked around.
+* **Nintendo MMC5**: Adds 2 extra square channels. They are extremely similar to the regular square channels of the Famicom, and also suffer from the same phase reset issue. Unlike the stock square channels, the reset bug cannot be worked around.
 
 * **Namco 163**: Adds up to 8 wavetable channels. It has 128 bytes of RAM to store all the currently used waveforms. Waveforms can be 4, 8, 16 and 32 in size. Smaller waveforms will sound worse, but you can have more of them at any given time. FamiStudio will work at its best with a sample size of 16. Also, it should be noted that for technical reasons, the more channels you add, the worse the audio quality will be. It is recommanded that you use 4 channels or less, which is what most games using the expansion did. 
 

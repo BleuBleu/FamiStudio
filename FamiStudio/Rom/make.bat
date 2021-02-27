@@ -1,5 +1,4 @@
 @echo [Compiling]
-@echo off
 @del *.o
 ..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_famitracker_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1
 ..\..\..\NES\tools\bin\ca65 rom.s -g -o rom_famitracker_pal.o -D FAMISTUDIO_CFG_PAL_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1

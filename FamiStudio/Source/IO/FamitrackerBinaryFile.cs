@@ -207,6 +207,7 @@ namespace FamiStudio
             else
             {
                 idx += OctaveRange * 12 * (blockVersion > 5 ? 3 : 2);
+                Log.LogMessage(LogSeverity.Warning, $"Multiple instruments are using DPCM samples. Samples from instrument {instIdx} will be loaded, but not assigned to the DPCM instrument.");
             }
         }
 
@@ -353,7 +354,8 @@ namespace FamiStudio
             for (int i = 0; i < count; ++i)
             {
                 var loopPoint = loops[i];
-                var releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int) * 2; // Skip settings
+                var releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var setting = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
                 var type = types[i];
 
                 var env = envelopeArray[indices[i], types[i]];
@@ -373,7 +375,10 @@ namespace FamiStudio
 
                 env.Loop = loopPoint;
                 env.Release = releasePoint;
-                env.Relative = type == 2;
+                env.Relative = type == 2 /* SEQ_PITCH */;
+
+                if (type == 1 /*SEQ_ARPEGGIO*/ && setting != 0)
+                    Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {indices[i]} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
             }
 
             return true;
@@ -408,7 +413,8 @@ namespace FamiStudio
                 var type         = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
                 var seqCount     = bytes[idx++];
                 var loopPoint    = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
-                var releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int) * 2; // Skip settings
+                var releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var setting      = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
                 indices[i] = index;
                 types[i] = type;
@@ -439,7 +445,10 @@ namespace FamiStudio
 
                 for (int j = 0; j < seqCount; ++j)
                     env.Values[j] = (sbyte)bytes[idx++];
-            }
+
+                if (type == 1 /*SEQ_ARPEGGIO*/ && setting != 0)
+                    Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {indices[i]} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
+           }
 
             return true;
         }
@@ -575,10 +584,7 @@ namespace FamiStudio
 
                 Array.Copy(bytes, idx, data, 0, size); idx += size;
 
-                samples[index] = CreateUniquelyNamedSample(name, data);
-
-                if (samples[index] == null)
-                    Log.LogMessage(LogSeverity.Warning, $"Cannot allocate DPCM sample '{name}'. Maximum total size allowed is 16KB.");
+                samples[index] = CreateUniquelyNamedSampleFromDmcData(name, data);
             }
 
             return true;

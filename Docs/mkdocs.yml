@@ -7,12 +7,13 @@ nav:
   - "Editing Patterns": sequencer.md
   - "Editing Instruments & Arpeggios": instruments.md
   - "Editing Songs & Project": song.md
+  - "Editing DPCM Samples": dpcm.md
   - "Importing & Exporting Your Songs": importexport.md
   - "Using Expansion Audio": expansion.md
   - "Cleaning-up your Project": cleanup.md
   - "Configuring FamiStudio": config.md
   - "Command-line Processing": cmdline.md
-  - "NES Sound Engine": soundengine.md
+  - "NES/Famicom Sound Engine": soundengine.md
   - "Troubleshooting": troubleshooting.md
   - "Change Log": changelog.md
 extra_css:

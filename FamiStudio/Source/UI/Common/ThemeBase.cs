@@ -7,7 +7,7 @@ using System.Drawing;
 using System.Collections.Generic;
 
 #if FAMISTUDIO_WINDOWS
-using RenderFont     = SharpDX.DirectWrite.TextFormat;
+    using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
 #else
@@ -30,6 +30,7 @@ namespace FamiStudio
             Medium,
             MediumCenter,
             MediumRight,
+            MediumUnscaled,
             MediumBold,
             MediumBoldCenter,
             MediumBoldCenterEllipsis,
@@ -62,6 +63,7 @@ namespace FamiStudio
             new RenderFontDefinition() { Name = "QuickSand", Size = 12 }, // Medium
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1 }, // MediumCenter
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 2 }, // MediumRight
+            new RenderFontDefinition() { Name = "QuickSand", Size = 12, NoScaling = true }, // MediumUnscaled
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Bold = true }, // MediumBold
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1, Bold = true }, // MediumBoldCenter
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1, Bold = true, Ellipsis = true }, // MediumBoldCenterEllipsis
@@ -83,6 +85,7 @@ namespace FamiStudio
         public static RenderFont FontMedium                   => Fonts[(int)RenderFontStyle.Medium];
         public static RenderFont FontMediumCenter             => Fonts[(int)RenderFontStyle.MediumCenter];
         public static RenderFont FontMediumRight              => Fonts[(int)RenderFontStyle.MediumRight];
+        public static RenderFont FontMediumUnscaled           => Fonts[(int)RenderFontStyle.MediumUnscaled];
         public static RenderFont FontMediumBold               => Fonts[(int)RenderFontStyle.MediumBold];
         public static RenderFont FontMediumBoldCenter         => Fonts[(int)RenderFontStyle.MediumBoldCenter];
         public static RenderFont FontMediumBoldCenterEllipsis => Fonts[(int)RenderFontStyle.MediumBoldCenterEllipsis];

@@ -9,7 +9,7 @@ namespace FamiStudio
         ushort modDepth;
         ushort modSpeed;
 
-        public ChannelStateFds(int apuIdx, int channelIdx) : base(apuIdx, channelIdx, false)
+        public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx) : base(player, apuIdx, channelIdx, false)
         {
         }
 

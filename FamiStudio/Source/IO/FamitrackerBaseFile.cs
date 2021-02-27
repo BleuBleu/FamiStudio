@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -231,7 +232,7 @@ namespace FamiStudio
             project.RenameInstrument(instrument, name);
         }
 
-        protected DPCMSample CreateUniquelyNamedSample(string baseName, byte[] data)
+        protected DPCMSample CreateUniquelyNamedSampleFromDmcData(string baseName, byte[] data)
         {
             string name = baseName;
             var j = 2;
@@ -379,7 +380,7 @@ namespace FamiStudio
 
         private string GetPatternString(Pattern pattern, int n)
         {
-            return $"(Channel={ChannelType.Names[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n})";
+            return $"(Song={pattern.Song.Name}, Channel={ChannelType.Names[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n:X2})";
         }
 
         private int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
@@ -410,7 +411,7 @@ namespace FamiStudio
             return Note.NoteInvalid;
         }
 
-        private bool FindNextNoteForSlide(Channel channel, int patternIdx, int noteIdx, out int nextPatternIdx, out int nextNoteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        private bool FindNextSlideEffect(Channel channel, int patternIdx, int noteIdx, out int nextPatternIdx, out int nextNoteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
             nextPatternIdx = -1;
             nextNoteIdx    = -1;
@@ -660,12 +661,12 @@ namespace FamiStudio
                             }
                             if (fx.fx == Effect_SlideUp && note != null && note.IsMusical)
                             {
-                                slideTarget = note.Value + (fx.param & 0xf);
+                                slideTarget = Utils.Clamp(note.Value + (fx.param & 0xf), Note.MusicalNoteMin, Note.MusicalNoteMax);
                                 slideSpeed = (-((fx.param >> 4) * 2 + 1)) << slideShift;
                             }
                             if (fx.fx == Effect_SlideDown && note != null && note.IsMusical)
                             {
-                                slideTarget = note.Value - (fx.param & 0xf);
+                                slideTarget = Utils.Clamp(note.Value - (fx.param & 0xf), Note.MusicalNoteMin, Note.MusicalNoteMax);
                                 slideSpeed = (((fx.param >> 4) * 2 + 1)) << slideShift;
                             }
                         }
@@ -716,7 +717,7 @@ namespace FamiStudio
                                     // Still to see if there is a note between the current one and the 
                                     // next note, this could append if you add a note before the slide 
                                     // is supposed to finish.
-                                    if (FindNextNoteForSlide(c, p, n, out var np2, out var nn2, patternFxData))
+                                    if (FindNextSlideEffect(c, p, n, out var np2, out var nn2, patternFxData))
                                     {
                                         if (np2 < np)
                                         {
@@ -727,6 +728,16 @@ namespace FamiStudio
                                         {
                                             nn = Math.Min(nn, nn2);
                                         }
+
+                                        // If the slide is interrupted by another slide effect, we will not reach 
+                                        // the final target, but rather some intermediate note. Let's do our best
+                                        // to interpolate and figure out the best note.
+                                        var numFramesUntilNextSlide = s.CountFramesBetween(p, n, np, nn, songSpeed, s.Project.PalMode);
+                                        var ratio = Utils.Clamp(numFramesUntilNextSlide / numFrames, 0.0f, 1.0f);
+                                        var intermediatePitch = (int)Math.Round(Utils.Lerp(noteTable[slideSource], noteTable[slideTarget], ratio));
+
+                                        slideTarget = FindBestMatchingNote(noteTable, intermediatePitch, Math.Sign(slideSpeed));
+                                        note.SlideNoteTarget = (byte)slideTarget;
                                     }
 
                                     if (np < s.Length)
@@ -741,6 +752,10 @@ namespace FamiStudio
                                             nextNote.HasAttack = false;
                                             it.Resync();
                                         }
+                                        else if (nextNote != null && nextNote.IsRelease)
+                                        {
+                                            Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nn)}");
+                                        }
                                     }
 
                                     // 3xx, Qxx and Rxx stops when its done.
@@ -748,7 +763,7 @@ namespace FamiStudio
                                 }
 
                                 // 1xx/2xy : We know the speed at which we are sliding, but need to figure out what makes it stop.
-                                else if (slideSpeed != 0 && FindNextNoteForSlide(c, p, n, out var np, out var nn, patternFxData))
+                                else if (slideSpeed != 0 && FindNextSlideEffect(c, p, n, out var np, out var nn, patternFxData))
                                 {
                                     // See how many frames until the slide stops.
                                     var numFrames = (int)Math.Round(s.CountFramesBetween(p, n, np, nn, songSpeed, s.Project.PalMode));
@@ -771,6 +786,10 @@ namespace FamiStudio
                                         nextNote.Value = (byte)newNote;
                                         nextNote.HasAttack = false;
                                         it.Resync();
+                                    }
+                                    else if (nextNote != null && nextNote.IsRelease)
+                                    {
+                                        Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nn)}");
                                     }
                                 }
                             }
@@ -851,10 +870,21 @@ namespace FamiStudio
             {
                 Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio uses the full volume range and ignores the duty cycle, they will need to the adjusted manually to sound the same. In most cases, this mean reducing the volume by half using either the volume track or volume envelopes.");
             }
+
+            var mappedSamplesSize = project.GetTotalMappedSampleSize();
+            if (mappedSamplesSize > Project.MaxMappedSampleSize)
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Project uses {mappedSamplesSize} bytes of sample data. The limit is {Project.MaxMappedSampleSize} bytes. Some samples will not play correctly or at all.");
+            }
         }
 
         protected bool FinishImport()
         {
+            foreach (var s in project.Samples)
+            {
+                s.Process();
+            }
+
             foreach (var s in project.Songs)
             {
                 foreach (var c in s.Channels)
@@ -890,6 +920,7 @@ namespace FamiStudio
             }
 
             project.UpdateAllLastValidNotesAndVolume();
+            project.SortEverything();
             project.Validate();
 
             PrintAdditionalWarnings();

@@ -320,6 +320,8 @@
     <EmbeddedResource Include="Resources\WaveEdit.png" />
     <EmbeddedResource Include="Resources\SaveSmall%402x.png" />
     <EmbeddedResource Include="Resources\SaveSmall.png" />
+    <EmbeddedResource Include="Resources\DashHorizontal%402x.png" />
+    <EmbeddedResource Include="Resources\DashHorizontal.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall%402x.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall.png" />
     <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />

@@ -295,7 +295,6 @@ screen_data_rle:
 
 default_palette:
 .incbin "rom.pal"
-.incbin "rom.pal"
 
 ;.if FAMISTUDIO_EXP_FDS
 
@@ -1017,8 +1016,9 @@ equalizer_color_lookup:
     palette_loop:
         lda default_palette, x
         sta palette, x
+        sta palette+16, x
         inx
-        cpx #32
+        cpx #16
         bcc palette_loop
     
     jsr setup_background

@@ -62,6 +62,7 @@ namespace FamiStudio
             project = new Project();
             project.TempoMode = TempoType.FamiTracker;
 
+            int dpcmInstrumentIndex = -1;
             DPCMSample currentDpcm = null;
             int dpcmWriteIdx = 0;
             Song song = null;
@@ -139,6 +140,7 @@ namespace FamiStudio
                         var idx  = int.Parse(param[1]);
                         var loop = int.Parse(param[2]);
                         var rel  = int.Parse(param[3]);
+                        var arp  = int.Parse(param[4]);
 
                         var famistudioType = EnvelopeTypeLookup[type];
 
@@ -159,6 +161,9 @@ namespace FamiStudio
                                 env.Values[j] = sbyte.Parse(curve[j]);
 
                             envelopes[expansion, famistudioType][idx] = env;
+
+                            if (famistudioType == EnvelopeType.Arpeggio && arp != 0)
+                                Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {idx} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
                         }
                         else
                         {
@@ -168,42 +173,48 @@ namespace FamiStudio
                     else if (line.StartsWith("DPCMDEF"))
                     {
                         var param = SplitStringKeepQuotes(line.Substring(7));
-                        currentDpcm = CreateUniquelyNamedSample(param[2], new byte[int.Parse(param[1])]);
+                        currentDpcm = CreateUniquelyNamedSampleFromDmcData(param[2], new byte[int.Parse(param[1])]);
                         dpcms[int.Parse(param[0])] = currentDpcm;
                         dpcmWriteIdx = 0;
-
-                        if (currentDpcm == null)
-                            Log.LogMessage(LogSeverity.Warning, $"Cannot allocate DPCM sample '{param[2]}'. Maximum total size allowed is 16KB.");
                     }
                     else if (line.StartsWith("DPCM"))
                     {
-                        if (currentDpcm != null) // Can happen if more than 16KB of samples
+                        if (currentDpcm != null)
                         {
                             var param = line.Substring(6).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                             foreach (var s in param)
                             {
-                                currentDpcm.ProcessedData[dpcmWriteIdx++] = Convert.ToByte(s, 16);
+                                currentDpcm.SourceDmcData.Data[dpcmWriteIdx++] = Convert.ToByte(s, 16);
                             }
                         }
                     }
                     else if (line.StartsWith("KEYDPCM"))
                     {
-                        var param = line.Substring(7).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (param[0] == "0")
-                        {
-                            int octave   = int.Parse(param[1]);
-                            int semitone = int.Parse(param[2]);
-                            int note = octave * 12 + semitone + 1;
+                        var param    = line.Substring(7).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        int instIdx = int.Parse(param[0]);
+                        int octave   = int.Parse(param[1]);
+                        int semitone = int.Parse(param[2]);
+                        int note     = octave * 12 + semitone + 1;
 
+                        if (dpcmInstrumentIndex < 0 || instIdx == dpcmInstrumentIndex)
+                        {
                             if (project.NoteSupportsDPCM(note))
                             {
-                                int dpcm  = int.Parse(param[3]);
+                                int dpcm = int.Parse(param[3]);
                                 int pitch = int.Parse(param[4]);
-                                int loop  = int.Parse(param[5]);
+                                int loop = int.Parse(param[5]);
 
                                 if (dpcms.TryGetValue(dpcm, out var foundSample))
+                                {
                                     project.MapDPCMSample(note, foundSample, pitch, loop != 0);
+                                }
                             }
+
+                            dpcmInstrumentIndex = instIdx;
+                        }
+                        else
+                        {
+                            Log.LogMessage(LogSeverity.Warning, $"Multiple instruments are using DPCM samples. Samples from instrument {instIdx} will be loaded, but not assigned to the DPCM instrument.");
                         }
                     }
                     else if (line.StartsWith("INST2A03") || line.StartsWith("INSTVRC6") || line.StartsWith("INSTN163"))
@@ -487,7 +498,7 @@ namespace FamiStudio
             foreach (var instrument in project.Instruments)
             {
                 var env = instrument.Envelopes[EnvelopeType.Pitch];
-                if (env != null && !env.IsEmpty && !env.Relative)
+                if (env != null && !env.IsEmpty(EnvelopeType.Pitch) && !env.Relative)
                 {
                     // Make relative.
                     for (int i = env.Length - 1; i > 0; i--)
@@ -532,7 +543,7 @@ namespace FamiStudio
                 {
                     var env = instrument.Envelopes[i];
 
-                    if (env == null || env.IsEmpty)
+                    if (env == null || env.IsEmpty(i))
                         continue;
 
                     uint crc = env.CRC;
@@ -779,7 +790,7 @@ namespace FamiStudio
                     for (int j = 0; j <= EnvelopeType.Pitch; j++)
                     {
                         var env = instrument.Envelopes[j];
-                        if (!env.IsEmpty)
+                        if (!env.IsEmpty(j))
                             lines.Add($"FDSMACRO{i,4} {j,5} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                     }
                 }
@@ -941,7 +952,7 @@ namespace FamiStudio
 
                                     // If the previous note matched too, we can use 3xx (auto-portamento).
                                     // Avoid using portamento on instrument with relative pitch envelopes, their previous pitch isnt reliable.
-                                    if (prevNoteValue == note.Value && (prevInstrument == null || prevInstrument.Envelopes[EnvelopeType.Pitch].IsEmpty || !prevInstrument.Envelopes[EnvelopeType.Pitch].Relative))
+                                    if (prevNoteValue == note.Value && (prevInstrument == null || prevInstrument.Envelopes[EnvelopeType.Pitch].IsEmpty(EnvelopeType.Pitch) || !prevInstrument.Envelopes[EnvelopeType.Pitch].Relative))
                                     {
                                         if (prevSlideEffect == Effect_PortaUp ||
                                             prevSlideEffect == Effect_PortaDown)

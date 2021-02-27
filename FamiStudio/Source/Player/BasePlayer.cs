@@ -15,7 +15,13 @@ namespace FamiStudio
         Max
     };
 
-    public class BasePlayer
+    public interface IPlayerInterface
+    {
+        void NotifyInstrumentLoaded(Instrument instrument, int channelTypeMask);
+        void NotifyRegisterWrite(int apuIndex, int reg, int data);
+    }
+
+    public class BasePlayer : IPlayerInterface
     {
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;
@@ -165,7 +171,7 @@ namespace FamiStudio
             }
         }
 
-        public bool BeginPlaySong(Song s, bool pal, int startNote, IRegisterListener listener = null)
+        public bool BeginPlaySong(Song s, bool pal, int startNote)
         {
             song = s;
             famitrackerTempo = song.UsesFamiTrackerTempo;
@@ -176,7 +182,7 @@ namespace FamiStudio
             playNote = 0;
             frameNumber = 0;
             famitrackerTempoCounter = 0;
-            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback, listener);
+            channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback);
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, GetNesApuExpansionAudio(song.Project.ExpansionAudio), song.Project.ExpansionNumChannels, dmcCallback);
 
@@ -331,30 +337,30 @@ namespace FamiStudio
             {
                 case ChannelType.Square1:
                 case ChannelType.Square2:
-                    return new ChannelStateSquare(apuIdx, channelType, pal);
+                    return new ChannelStateSquare(this, apuIdx, channelType, pal);
                 case ChannelType.Triangle:
-                    return new ChannelStateTriangle(apuIdx, channelType, pal);
+                    return new ChannelStateTriangle(this, apuIdx, channelType, pal);
                 case ChannelType.Noise:
-                    return new ChannelStateNoise(apuIdx, channelType, pal);
+                    return new ChannelStateNoise(this, apuIdx, channelType, pal);
                 case ChannelType.Dpcm:
-                    return new ChannelStateDpcm(apuIdx, channelType, pal);
+                    return new ChannelStateDpcm(this, apuIdx, channelType, pal);
                 case ChannelType.Vrc6Square1:
                 case ChannelType.Vrc6Square2:
-                    return new ChannelStateVrc6Square(apuIdx, channelType);
+                    return new ChannelStateVrc6Square(this, apuIdx, channelType);
                 case ChannelType.Vrc6Saw:
-                    return new ChannelStateVrc6Saw(apuIdx, channelType);
+                    return new ChannelStateVrc6Saw(this, apuIdx, channelType);
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:
                 case ChannelType.Vrc7Fm3:
                 case ChannelType.Vrc7Fm4:
                 case ChannelType.Vrc7Fm5:
                 case ChannelType.Vrc7Fm6:
-                    return new ChannelStateVrc7(apuIdx, channelType);
+                    return new ChannelStateVrc7(this, apuIdx, channelType);
                 case ChannelType.FdsWave:
-                    return new ChannelStateFds(apuIdx, channelType);
+                    return new ChannelStateFds(this, apuIdx, channelType);
                 case ChannelType.Mmc5Square1:
                 case ChannelType.Mmc5Square2:
-                    return new ChannelStateMmc5Square(apuIdx, channelType);
+                    return new ChannelStateMmc5Square(this, apuIdx, channelType);
                 case ChannelType.N163Wave1:
                 case ChannelType.N163Wave2:
                 case ChannelType.N163Wave3:
@@ -363,18 +369,18 @@ namespace FamiStudio
                 case ChannelType.N163Wave6:
                 case ChannelType.N163Wave7:
                 case ChannelType.N163Wave8:
-                    return new ChannelStateN163(apuIdx, channelType, expNumChannels, pal);
+                    return new ChannelStateN163(this, apuIdx, channelType, expNumChannels, pal);
                 case ChannelType.S5BSquare1:
                 case ChannelType.S5BSquare2:
                 case ChannelType.S5BSquare3:
-                    return new ChannelStateS5B(apuIdx, channelType, pal);
+                    return new ChannelStateS5B(this, apuIdx, channelType, pal);
             }
 
             Debug.Assert(false);
             return null;
         }
 
-        public ChannelState[] CreateChannelStates(Project project, int apuIdx, int expNumChannels, bool pal, IRegisterListener listener)
+        public ChannelState[] CreateChannelStates(IPlayerInterface player, Project project, int apuIdx, int expNumChannels, bool pal)
         {
             var channelCount = project.GetActiveChannelCount();
             var states = new ChannelState[channelCount];
@@ -385,10 +391,6 @@ namespace FamiStudio
                 if (project.IsChannelActive(i))
                 {
                     var state = CreateChannelState(apuIdx, i, expNumChannels, pal);
-
-                    if (listener != null)
-                        state.SetRegisterListener(listener);
-
                     states[idx++] = state;
                 }
             }
@@ -433,6 +435,21 @@ namespace FamiStudio
             }
 
             return samples;
+        }
+
+        public void NotifyInstrumentLoaded(Instrument instrument, int channelTypeMask)
+        {
+            foreach (var channelState in channelStates)
+            {
+                if (((1 << channelState.GetChannelType()) & channelTypeMask) != 0)
+                {
+                    channelState.IntrumentLoadedNotify(instrument);
+                }
+            }
+        }
+
+        public virtual void NotifyRegisterWrite(int apuIndex, int reg, int data)
+        {
         }
     };
 }

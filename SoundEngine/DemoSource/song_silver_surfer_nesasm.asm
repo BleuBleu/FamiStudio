@@ -179,7 +179,7 @@ silver_surfer_c_stephen_ruddy_music_data:
 	.db $33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89,$33,$89,$2e,$89
 .song0ch0loop:
 .ref2:
-	.db $fb,LOW(.tempo_env6),HIGH(.tempo_env6),$7f,$64,LOW(.env18),HIGH(.env18),$a4,$25,$c5,$64,LOW(.env0),HIGH(.env0),$62,$27,$b1,$f9,$91,$64,LOW(.env18),HIGH(.env18),$2a,$ad
+	.db $66,$fb,LOW(.tempo_env6),HIGH(.tempo_env6),$7f,$64,LOW(.env18),HIGH(.env18),$a4,$25,$c5,$64,LOW(.env0),HIGH(.env0),$62,$27,$b1,$f9,$91,$64,LOW(.env18),HIGH(.env18),$2a,$ad
 .ref3:
 	.db $62,$2c,$f7,$b1,$f9,$91
 .ref4:

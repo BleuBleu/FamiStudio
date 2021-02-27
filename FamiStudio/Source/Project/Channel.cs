@@ -244,6 +244,61 @@ namespace FamiStudio
             }
         }
 
+        public string GenerateUniquePatternNameSmart(string oldName)
+        {
+            int firstDigit;
+
+            for (firstDigit = oldName.Length - 1; firstDigit >= 0; firstDigit--)
+            {
+                if (!char.IsDigit(oldName[firstDigit]))
+                    break;
+            }
+
+            // Name doesnt end with a number.
+            if (firstDigit == oldName.Length - 1)
+            {
+                if (!oldName.EndsWith(" "))
+                    oldName += " ";
+                return GenerateUniquePatternName(oldName);
+            }
+            else
+            {
+                firstDigit++;
+
+                var number = int.Parse(oldName.Substring(firstDigit)) + 1;
+                var baseName = oldName.Substring(0, firstDigit);
+
+                for (; ; number++)
+                {
+                    var newName = baseName + number.ToString();
+
+                    if (IsPatternNameUnique(newName))
+                    {
+                        return newName;
+                    }
+                }
+            }
+        }
+
+        public bool UsesArpeggios
+        {
+            get
+            {
+                foreach (var pattern in patterns)
+                {
+                    foreach (var note in pattern.Notes.Values)
+                    {
+                        if (note != null && note.IsArpeggio)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+        }
+
         public void DeleteUnusedPatterns()
         {
             HashSet<Pattern> usedPatterns = new HashSet<Pattern>();
@@ -396,11 +451,11 @@ namespace FamiStudio
                 // Find the next note to calculate the slope.
                 FindNextNoteForSlide(patternIdx, noteIdx, 256, out var nextPatternIdx, out var nextNoteIdx); // 256 is kind of arbitrary. 
 
-                // Approximate how many frames seperates these 2 notes.
+                // Approximate how many frames separates these 2 notes.
                 var frameCount = 0.0f;
                 if (patternIdx != nextPatternIdx || noteIdx != nextNoteIdx)
                 {
-                    // Take delayed notes/cuts into avvound.
+                    // Take delayed notes/cuts into account.
                     var delayFrames = -(note.HasNoteDelay ? note.NoteDelay : 0);
                     if (Song.UsesFamiTrackerTempo)
                     {
@@ -480,7 +535,7 @@ namespace FamiStudio
                 if (pattern != null && pattern.FirstValidNoteTime >= 0)
                 {
                     nextPatternIdx = p;
-                    nextNoteIdx = noteCount + pattern.FirstValidNoteTime > maxNotes ? pattern.FirstValidNoteTime - (maxNotes - noteCount) : pattern.FirstValidNoteTime; // DPCMTODO : Test this!
+                    nextNoteIdx = noteCount + pattern.FirstValidNoteTime > maxNotes ? maxNotes - noteCount : pattern.FirstValidNoteTime; 
                     return true;
                 }
                 else
