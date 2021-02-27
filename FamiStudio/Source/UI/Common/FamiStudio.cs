@@ -269,18 +269,20 @@ namespace FamiStudio
 
         private void ProjectExplorer_InstrumentDroppedOutside(Instrument instrument, Point pos)
         {
-            if (PianoRoll.ClientRectangle.Contains(PianoRoll.PointToClient(pos)))
+            var pianoRollPos = PianoRoll.PointToClient(pos);
+            if (PianoRoll.ClientRectangle.Contains(pianoRollPos))
             {
-                PianoRoll.ReplaceSelectionInstrument(instrument);
+                PianoRoll.ReplaceSelectionInstrument(instrument, pianoRollPos);
                 PianoRoll.Focus();
             }
         }
 
         private void ProjectExplorer_ArpeggioDroppedOutside(Arpeggio arpeggio, Point pos)
         {
-            if (PianoRoll.ClientRectangle.Contains(PianoRoll.PointToClient(pos)))
+            var pianoRollPos = PianoRoll.PointToClient(pos);
+            if (PianoRoll.ClientRectangle.Contains(pianoRollPos))
             {
-                PianoRoll.ReplaceSelectionArpeggio(arpeggio);
+                PianoRoll.ReplaceSelectionArpeggio(arpeggio, pianoRollPos);
                 PianoRoll.Focus();
             }
         }

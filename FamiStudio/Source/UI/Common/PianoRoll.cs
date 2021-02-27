@@ -4023,18 +4023,35 @@ namespace FamiStudio
             }
         }
 
-        public void ReplaceSelectionInstrument(Instrument instrument)
+        public void ReplaceSelectionInstrument(Instrument instrument, Point pos)
         {
-            if (editMode == EditionMode.Channel && editChannel != ChannelType.Dpcm && IsSelectionValid())
+            if (editMode == EditionMode.Channel && editChannel != ChannelType.Dpcm)
             {
-                if (Song.Channels[editChannel].SupportsInstrument(instrument))
+                var channel = Song.Channels[editChannel];
+
+                if (channel.SupportsInstrument(instrument))
                 {
-                    TransformNotes(selectionMin, selectionMax, true, (note, idx) =>
+                    GetNoteForCoord(pos.X, pos.Y, out var patternIdx, out var noteIdx, out var noteValue);
+
+                    // If dragging inside the selection, replace that.
+                    if (IsSelectionValid() && IsNoteSelected(patternIdx, noteIdx))
                     {
-                        if (note != null && note.IsMusical)
+                        TransformNotes(selectionMin, selectionMax, true, (note, idx) =>
+                        {
+                            if (note != null && note.IsMusical)
+                                note.Instrument = instrument;
+                            return note;
+                        });
+                    }
+                    // Otherwise see if a note is under the cursor.
+                    else if (channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
+                    {
+                        var note = channel.PatternInstances[patternIdx].Notes[noteIdx];
+                        if (note != null)
+                        {
                             note.Instrument = instrument;
-                        return note;
-                    });
+                        }
+                    }
                 }
                 else
                 {
@@ -4043,16 +4060,36 @@ namespace FamiStudio
             }
         }
 
-        public void ReplaceSelectionArpeggio(Arpeggio arpeggio)
+        public void ReplaceSelectionArpeggio(Arpeggio arpeggio, Point pos)
         {
-            if (editMode == EditionMode.Channel && Song.Channels[editChannel].SupportsArpeggios && IsSelectionValid())
+            if (editMode == EditionMode.Channel)
             {
-                TransformNotes(selectionMin, selectionMax, true, (note, idx) =>
+                var channel = Song.Channels[editChannel];
+
+                if (channel.SupportsArpeggios)
                 {
-                    if (note != null && note.IsMusical)
-                        note.Arpeggio = arpeggio;
-                    return note;
-                });
+                    GetNoteForCoord(pos.X, pos.Y, out var patternIdx, out var noteIdx, out var noteValue);
+
+                    // If dragging inside the selection, replace that.
+                    if (IsSelectionValid() && IsNoteSelected(patternIdx, noteIdx))
+                    {
+                        TransformNotes(selectionMin, selectionMax, true, (note, idx) =>
+                        {
+                            if (note != null && note.IsMusical)
+                                note.Arpeggio = arpeggio;
+                            return note;
+                        });
+                    }
+                    // Otherwise see if a note is under the cursor.
+                    else if (channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
+                    {
+                        var note = channel.PatternInstances[patternIdx].Notes[noteIdx];
+                        if (note != null)
+                        {
+                            note.Arpeggio = arpeggio;
+                        }
+                    }
+                }
             }
         }
 
