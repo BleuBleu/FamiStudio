@@ -27,8 +27,7 @@ cd "%~dp0"
 set /p Version=<Version.txt
 
 cd Release
-tar -a -c -f ..\FamiStudio%Version%-WinInstaller.zip Setup.msi
-copy /y Setup.msi ..\FamiStudio%Version%-WinInstaller.msi
+tar -a -c -f ..\FamiStudio%Version%-WinInstaller.zip Setup.msi Setup.exe
 cd ..
 
 tar -a -c -f FamiStudio%Version%-WinPortableExe.zip "Demo Songs\*.*" -C ..\FamiStudio\bin\Release\ *.exe *.dll *.config

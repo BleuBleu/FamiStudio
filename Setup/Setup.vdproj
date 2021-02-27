@@ -885,7 +885,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
         "ProductCode" = "8:{7C9205C4-B20C-42CD-930E-9A949E6814A3}"
-        "PackageCode" = "8:{993CC414-ABDE-4FD9-BF19-46BEA5332452}"
+        "PackageCode" = "8:{EA67C64E-D691-4016-A405-FE5CBD1CC2DB}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"

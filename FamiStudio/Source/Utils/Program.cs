@@ -30,6 +30,16 @@ namespace FamiStudio
                 SetProcessDpiAwareness(1 /*Process_System_DPI_Aware*/);
             }
             catch { }
+
+            if (!XAudio2Stream.TryDetectXAudio2())
+            {
+                if (MessageBox.Show("You seem to be missing parts of DirectX, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    Utils.OpenUrl("https://famistudio.org/doc/#windows");
+                }
+
+                return;
+            }
 #endif
 
             Settings.Load();

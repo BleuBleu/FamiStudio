@@ -213,5 +213,22 @@ namespace FamiStudio
                 }
             }
         }
+
+        public static bool TryDetectXAudio2()
+        {
+            try
+            {
+                var xaudio2 = new XAudio2();
+
+                xaudio2.Dispose();
+                xaudio2 = null;
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }
