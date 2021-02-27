@@ -153,6 +153,8 @@ namespace FamiStudio
             textView.Buffer.Text = txt;
             textView.Editable = false;
             textView.CursorVisible = false;
+            textView.ModifyFont(FontDescription.FromString($"Quicksand 8"));
+            textView.WrapMode = Gtk.WrapMode.WordChar;
             textView.Show();
 
             var scroll = new ScrolledWindow(null, null);
