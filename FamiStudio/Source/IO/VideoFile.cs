@@ -546,7 +546,12 @@ namespace FamiStudio
 
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -c:v libx264 -pix_fmt yuv420p -b:v {videoBitRate}K -an \"{tempVideoFile}\"", true, false);
+                Log.LogMessage(LogSeverity.Info, "Exporting audio...");
+
+                // Save audio to temporary file.
+                WaveFile.Save(song, tempAudioFile, sampleRate, 1, -1, channelMask);
+
+                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}M -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
 
                 // Generate each of the video frames.
                 using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
@@ -730,21 +735,7 @@ namespace FamiStudio
                 process.Dispose();
                 process = null;
 
-                Log.LogMessage(LogSeverity.Info, "Exporting audio...");
-
-                // Save audio to temporary file.
-                WaveFile.Save(song, tempAudioFile, sampleRate, 1, -1, channelMask);
-
-                Log.LogMessage(LogSeverity.Info, "Mixing audio and video...");
-
-                // Run ffmpeg again to combine audio + video.
-                process = LaunchFFmpeg(ffmpegExecutable, $"-y -i \"{tempVideoFile}\" -i \"{tempAudioFile}\" -c:v copy -c:a aac -b:a {audioBitRate}k \"{filename}\"", false, false);
-                process.WaitForExit();
-                process.Dispose();
-                process = null;
-
                 File.Delete(tempAudioFile);
-                File.Delete(tempVideoFile);
             }
             catch (Exception e)
             {
