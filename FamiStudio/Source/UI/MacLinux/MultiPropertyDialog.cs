@@ -86,7 +86,6 @@ namespace FamiStudio
             BorderWidth = 5; 
             Resizable = false;
             Decorated = false;
-            KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
             SetPosition(WindowPosition.CenterOnParent);

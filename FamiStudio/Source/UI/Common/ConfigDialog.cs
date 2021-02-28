@@ -110,9 +110,10 @@ namespace FamiStudio
                 }
                 case ConfigSection.Sound:
                 {
-                    page.AddIntegerRange("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 0
-                    page.AddBoolean("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 1
-                    page.AddBoolean("Mute piano roll interactions during playback:", Settings.NoDragSoungWhenPlaying); // 2
+                    page.AddIntegerRange("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16); // 0
+                    page.AddIntegerRange("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 1
+                    page.AddBoolean("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 2
+                    page.AddBoolean("Mute piano roll interactions during playback:", Settings.NoDragSoungWhenPlaying); // 3
                         
                     break;
                 }
@@ -182,9 +183,10 @@ namespace FamiStudio
 #endif
 
                 // Sound
-                Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(0);
-                Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(1);
-                Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(2);
+                Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);
+                Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(1);
+                Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(2);
+                Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(3);
 
                 // MIDI
                 var pageMIDI = pages[(int)ConfigSection.MIDI];

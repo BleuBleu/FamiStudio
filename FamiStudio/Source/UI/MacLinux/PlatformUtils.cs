@@ -126,7 +126,6 @@ namespace FamiStudio
                     "Cancel", ResponseType.Cancel,
                     "Open", ResponseType.Accept);
 
-            filechooser.KeepAbove = true;
             filechooser.Modal = true;
             filechooser.SkipTaskbarHint = true;
             filechooser.TransientFor = parentWindow != null ? parentWindow : FamiStudioForm.Instance;
@@ -168,7 +167,6 @@ namespace FamiStudio
                     "Cancel", ResponseType.Cancel,
                     "Save", ResponseType.Accept);
 
-            filechooser.KeepAbove = true;
             filechooser.Modal = true;
             filechooser.SkipTaskbarHint = true;
             filechooser.TransientFor = FamiStudioForm.Instance;
@@ -220,7 +218,6 @@ namespace FamiStudio
                     "Cancel", ResponseType.Cancel,
                     "Save", ResponseType.Accept);
 
-            filechooser.KeepAbove = true;
             filechooser.Modal = true;
             filechooser.Action = FileChooserAction.SelectFolder;
             filechooser.SkipTaskbarHint = true;
@@ -262,7 +259,6 @@ namespace FamiStudio
                 icon == MessageBoxIcon.Error ? MessageType.Error : MessageType.Info,
                 buttons == MessageBoxButtons.YesNo ? ButtonsType.YesNo : ButtonsType.Ok, text);
 
-            md.KeepAbove = true;
             md.Modal = true;
             md.SkipTaskbarHint = true;
             md.TypeHint = Gdk.WindowTypeHint.Dialog;

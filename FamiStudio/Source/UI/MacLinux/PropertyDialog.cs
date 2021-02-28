@@ -85,7 +85,6 @@ namespace FamiStudio
             BorderWidth = 5;
             Resizable = false;
             Decorated = false;
-            KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
 #if FAMISTUDIO_LINUX

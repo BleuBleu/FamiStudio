@@ -2,22 +2,51 @@
 
 Version history / release notes for each release.
 
+## Version 2.4.0
+
+Changes :
+
+* Basic DPCM sample editor
+* Darker theme and more color choices
+* Ability to use QWERTY keyboard input without using recording mode
+* Slightly reduced audio latency and configurable number of buffered frames
+* Right-clicking anywhere in the background also starts a selection
+* Seek bar can be dragged and respects snapping precision
+* Pattern duplication preserves names when possible
+* Instrument picker tool
+* Paste special in Sequencer
+* Pattern are created automatically when adding notes.
+* Quickly repeat last export by right clicking button or CTRL+SHIFT+E
+* Edit multiple custom patterns at once
+* Video export resolution/framerate options (Contributed by Thomas McGrew)
+* Multiple VRC7 fixes
+* Multiple FamiTracker fixes
+* Multiple sound engine improvements & fixes 
+	* Blaarg smooth vibrato support for SFX
+	* Unlimited SFX size (Contributed by Brad Smith)
+	* Linker support in CA65 (Based on idea by Brad Smith)
+
+Breaking/behavior changes:
+
+* Songs will always be sorted alphabetically. This include songs loaded from any file format. This was always the intention but was poorly enforced in previous versions.
+* There was a bug in 2.3.x where instrument with volume envelope consisting exclusively of zeroes would play at full volume. This is no longer the case and the instruments will be silent.
+
 ## Version 2.3.2 (Hotfix)
 
 Changes:
 
-- Added loop count to video export.
+* Added loop count to video export.
 
 Fixes: 
 
-- Fixed scaling issues on Retina display.
-- Fixed lingering noise when dragging/adding notes in VRC7.
-- Fixed multiple FamiTracker import (Text + Binary) issues/crashes.
-- Fixed potential desync in NSF/sound engine when using delayed notes.
-- Fixed various issues with expansion instruments UI (sliders/checkboxes for VRC7/FDS/N163).
-- Fixed import of older FamiStudio text files (pre 2.3.0).
-- Fixed NSF/sound engine crash when exporting empty arpeggios.
-- Fixed issue with arpeggios sometimes persisting when a song loops. 
+* Fixed scaling issues on Retina display.
+* Fixed lingering noise when dragging/adding notes in VRC7.
+* Fixed multiple FamiTracker import (Text + Binary) issues/crashes.
+* Fixed potential desync in NSF/sound engine when using delayed notes.
+* Fixed various issues with expansion instruments UI (sliders/checkboxes for VRC7/FDS/N163).
+* Fixed import of older FamiStudio text files (pre 2.3.0).
+* Fixed NSF/sound engine crash when exporting empty arpeggios.
+* Fixed issue with arpeggios sometimes persisting when a song loops. 
 
 ## Version 2.3.1 (Linux Hotfix)
 

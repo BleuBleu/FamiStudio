@@ -8,8 +8,10 @@ namespace FamiStudio
     public enum TransactionScope
     {
         Project,
-        ProjectProperties,
-        DCPMSamples,
+        ProjectNoDPCMSamples,
+        DPCMSample,
+        DPCMSamples,
+        DPCMSamplesMapping,
         Song,
         Channel,
         Pattern,
@@ -19,26 +21,36 @@ namespace FamiStudio
         Max
     };
 
+    public enum TransactionFlags
+    {
+        None              = 0,
+        StopAudio         = 1,
+        ReinitializeAudio = 2
+    };
+
     public class Transaction
     {
         private FamiStudio app;
         private Project project;
         private TransactionScope scope;
+        private TransactionFlags flags;
         private int objectId;
         private byte[] stateBefore;
         private byte[] stateAfter;
         private int subIdx;
 
         public TransactionScope Scope { get => scope; private set => scope = value; }
+        public TransactionFlags Flags { get => flags; }
         public int ObjectId { get => objectId; private set => objectId = value; }
         public byte[] StateBefore { get => stateBefore; private set => stateBefore = value; }
         public byte[] StateAfter { get => stateAfter; private set => stateAfter = value; }
 
-        public Transaction(Project project, FamiStudio app, TransactionScope scope, int objectId, int subIdx = -1)
+        public Transaction(Project project, FamiStudio app, TransactionScope scope, TransactionFlags flags, int objectId, int subIdx = -1)
         {
             this.project = project;
             this.app = app;
             this.scope = scope;
+            this.flags = flags;
             this.objectId = objectId;
             this.subIdx = subIdx;
         }
@@ -73,11 +85,19 @@ namespace FamiStudio
             switch (scope)
             {
                 case TransactionScope.Project:
-                case TransactionScope.ProjectProperties:
                     project.SerializeState(buffer);
                     break;
-                case TransactionScope.DCPMSamples:
+                case TransactionScope.ProjectNoDPCMSamples:
+                    project.SerializeState(buffer, false);
+                    break;
+                case TransactionScope.DPCMSample:
+                    project.GetSample(objectId).SerializeState(buffer);
+                    break;
+                case TransactionScope.DPCMSamples:
                     project.SerializeDPCMState(buffer);
+                    break;
+                case TransactionScope.DPCMSamplesMapping:
+                    project.SerializeDPCMSamplesMapping(buffer);
                     break;
                 case TransactionScope.Instrument:
                     project.GetInstrument(objectId).SerializeState(buffer);
@@ -98,8 +118,10 @@ namespace FamiStudio
                     break;
             }
 
+            ThemeBase.SerializeState(buffer);
+
             if (serializeAppState)
-                app.SerializeState(buffer); 
+                app.SerializeState(buffer);
         }
 
         private byte[] CaptureState()
@@ -118,11 +140,13 @@ namespace FamiStudio
 
     public class UndoRedoManager
     {
-        public delegate void UndoRedoDelegate(TransactionScope scope);
+        public delegate void UndoRedoDelegate(TransactionScope scope, TransactionFlags flags);
         public delegate void UpdatedDelegate();
 
         public event UndoRedoDelegate PreUndoRedo;
         public event UndoRedoDelegate PostUndoRedo;
+        public event UndoRedoDelegate TransactionBegan;
+        public event UndoRedoDelegate TransactionEnded;
         public event UpdatedDelegate  Updated;
 
         private FamiStudio app;
@@ -136,7 +160,12 @@ namespace FamiStudio
             this.app = app;
         }
 
-        public void BeginTransaction(TransactionScope scope, int objectId = -1, int subIdx = -1)
+        public void BeginTransaction(TransactionScope scope, TransactionFlags flags)
+        {
+            BeginTransaction(scope, -1, -1, flags);
+        }
+
+        public void BeginTransaction(TransactionScope scope, int objectId = -1, int subIdx = -1, TransactionFlags flags = TransactionFlags.None)
         {
             Debug.Assert(transactions.Count == 0 || transactions.Last().IsEnded);
 
@@ -145,10 +174,11 @@ namespace FamiStudio
                 transactions.RemoveRange(index, transactions.Count - index);
             }
 
-            var trans = new Transaction(project, app, scope, objectId, subIdx);
+            var trans = new Transaction(project, app, scope, flags, objectId, subIdx);
             transactions.Add(trans);
             trans.Begin();
             index++;
+            TransactionBegan?.Invoke(scope, flags);
             project.Validate();
         }
 
@@ -159,6 +189,7 @@ namespace FamiStudio
             var trans = transactions[transactions.Count - 1];
             Debug.Assert(trans.StateAfter == null);
             trans.End();
+            TransactionEnded?.Invoke(trans.Scope, trans.Flags);
             Updated?.Invoke();
             project.Validate();
         }
@@ -167,8 +198,10 @@ namespace FamiStudio
         {
             Debug.Assert(!transactions.Last().IsEnded);
             Debug.Assert(index == transactions.Count);
+            var trans = transactions[transactions.Count - 1];
             transactions.RemoveAt(transactions.Count - 1);
             index--;
+            TransactionEnded?.Invoke(trans.Scope, trans.Flags);
             Updated?.Invoke();
             project.Validate();
         }
@@ -204,10 +237,10 @@ namespace FamiStudio
             if (index > 0)
             {
                 var trans = transactions[index - 1];
-                PreUndoRedo?.Invoke(trans.Scope);
+                PreUndoRedo?.Invoke(trans.Scope, trans.Flags);
                 trans.Undo();
                 index--;
-                PostUndoRedo?.Invoke(trans.Scope);
+                PostUndoRedo?.Invoke(trans.Scope, trans.Flags);
                 Updated?.Invoke();
             }
         }
@@ -218,9 +251,9 @@ namespace FamiStudio
             {
                 index++;
                 var trans = transactions[index - 1];
-                PreUndoRedo?.Invoke(trans.Scope);
+                PreUndoRedo?.Invoke(trans.Scope, trans.Flags);
                 trans.Redo();
-                PostUndoRedo?.Invoke(trans.Scope);
+                PostUndoRedo?.Invoke(trans.Scope, trans.Flags);
                 Updated?.Invoke();
             }
         }

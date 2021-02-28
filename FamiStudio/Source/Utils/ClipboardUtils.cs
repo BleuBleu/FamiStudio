@@ -216,44 +216,98 @@ namespace FamiStudio
 
         private static void SaveSampleList(ProjectSaveBuffer serializer, IDictionary<int, DPCMSampleMapping> mappings)
         {
+            var samples = new HashSet<DPCMSample>();
+
+            foreach (var kv in mappings)
+            {
+                if (kv.Value.Sample != null)
+                    samples.Add(kv.Value.Sample);
+            }
+
+            int numSamples = samples.Count;
+            serializer.Serialize(ref numSamples);
+
+            foreach (var sample in samples)
+            {
+                var sampleId = sample.Id;
+                var sampleName = sample.Name;
+
+                serializer.Serialize(ref sampleId);
+                serializer.Serialize(ref sampleName);
+
+                sample.SerializeState(serializer);
+            }
+
             int numMappings = mappings.Count;
             serializer.Serialize(ref numMappings);
 
             foreach (var kv in mappings)
             {
-                var note    = kv.Key;
-                var mapping = kv.Value;
+                var note       = kv.Key;
+                var mapping    = kv.Value;
+                var sampleName = mapping.Sample.Name;
 
                 serializer.Serialize(ref note);
-                mapping.SerializeState(serializer);
-
-                var sampleName = mapping.Sample.Name;
-                var sampleData = mapping.Sample.Data;
-
                 serializer.Serialize(ref sampleName);
-                serializer.Serialize(ref sampleData);
+
+                mapping.SerializeState(serializer);
             }
         }
 
         private static bool LoadAndMergeSampleList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
         {
+            int numSamples = 0;
+            serializer.Serialize(ref numSamples);
+
+            bool needMerge = false;
+            var dummySample = new DPCMSample();
+
+            for (int i = 0; i < numSamples; i++)
+            {
+                int sampleId = 0;
+                string sampleName = "";
+
+                serializer.Serialize(ref sampleId);
+                serializer.Serialize(ref sampleName);
+
+                var existingSample = serializer.Project.GetSample(sampleName);
+
+                if (existingSample != null)
+                {
+                    serializer.RemapId(sampleId, existingSample.Id);
+                    dummySample.SerializeState(serializer); // Skip
+                }
+                else
+                {
+                    needMerge = true;
+
+                    if (!checkOnly && createMissing)
+                    {
+                        var sample = serializer.Project.CreateDPCMSample(sampleName);
+                        serializer.RemapId(sampleId, sample.Id);
+                        sample.SerializeState(serializer);
+                    }
+                    else
+                    {
+                        serializer.RemapId(sampleId, -1);
+                        dummySample.SerializeState(serializer); // Skip
+                    }
+                }
+            }
+
             int numMappings = 0;
             serializer.Serialize(ref numMappings);
 
-            bool needMerge = false;
             for (int i = 0; i < numMappings; i++)
             {
                 int note = 0;
+                string sampleName = "";
+
                 serializer.Serialize(ref note);
+                serializer.Serialize(ref sampleName);
 
                 var mapping = new DPCMSampleMapping();
                 mapping.SerializeState(serializer);
-
-                string sampleName = null;
-                byte[] sampleData = null;
-
-                serializer.Serialize(ref sampleName);
-                serializer.Serialize(ref sampleData);
 
                 if (serializer.Project.GetDPCMMapping(note) == null)
                 {
@@ -261,15 +315,17 @@ namespace FamiStudio
 
                     if (!checkOnly && createMissing)
                     {
-                        var sample = serializer.Project.FindMatchingSample(sampleData);
+                        var sample = serializer.Project.GetSample(sampleName);
 
-                        if (sample == null)
-                            sample = serializer.Project.CreateDPCMSample(sampleName, sampleData);
-
-                        serializer.Project.MapDPCMSample(note, sample, mapping.Pitch, mapping.Loop);
+                        if (sample != null)
+                        {
+                            serializer.Project.MapDPCMSample(note, sample, mapping.Pitch, mapping.Loop);
+                        }
                     }
                 }
             }
+
+            serializer.Project.SortSamples();
 
             return needMerge;
         }
@@ -316,7 +372,7 @@ namespace FamiStudio
                 {
                     needMerge = true;
 
-                    if (!checkOnly && createMissing && (instType == Project.ExpansionNone || instType == serializer.Project.ExpansionAudio))
+                    if (!checkOnly && createMissing && (instType == ExpansionType.None || instType == serializer.Project.ExpansionAudio))
                     {
                         var instrument = serializer.Project.CreateInstrument(instType, instName);
                         serializer.RemapId(instId, instrument.Id);
@@ -329,6 +385,8 @@ namespace FamiStudio
                     }
                 }
             }
+
+            serializer.Project.SortInstruments();
 
             return needMerge;
         }
@@ -381,6 +439,8 @@ namespace FamiStudio
                     }
                 }
             }
+
+            serializer.Project.SortArpeggios();
 
             return needMerge;
         }
@@ -492,8 +552,6 @@ namespace FamiStudio
                     notes[i] = note;
             }
 
-            project.SortInstruments();
-
             return notes;
         }
 
@@ -554,7 +612,7 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         uniquePatterns.Add(pattern);
-                        if (pattern.ChannelType == Channel.Dpcm)
+                        if (pattern.ChannelType == ChannelType.Dpcm)
                         {
                             foreach (var n in pattern.Notes.Values)
                             {
@@ -663,7 +721,7 @@ namespace FamiStudio
                 }
             }
 
-            var tempoMode = 0;
+            var tempoMode = TempoType.FamiStudio;
             var hasCustomSettings = false;
             serializer.Serialize(ref hasCustomSettings);
             serializer.Serialize(ref tempoMode);

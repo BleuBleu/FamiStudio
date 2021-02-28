@@ -12,7 +12,7 @@ namespace FamiStudio
     {
         private int id;
         private string name;
-        private Envelope envelope = new Envelope(Envelope.Arpeggio);
+        private Envelope envelope = new Envelope(EnvelopeType.Arpeggio);
         private Color color;
 
         public int Id => id;
@@ -81,7 +81,7 @@ namespace FamiStudio
 
         public bool GetChordMinMaxOffset(out int minOffset, out int maxOffset)
         {
-            if (envelope.IsEmpty)
+            if (envelope.IsEmpty(EnvelopeType.Arpeggio))
             {
                 minOffset = 0;
                 maxOffset = 0;

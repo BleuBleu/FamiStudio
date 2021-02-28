@@ -38,10 +38,11 @@ namespace FamiStudio
         const int ButtonRec       = 12;
         const int ButtonRewind    = 13;
         const int ButtonLoop      = 14;
-        const int ButtonMachine   = 15;
-        const int ButtonFollow    = 16;
-        const int ButtonHelp      = 17;
-        const int ButtonCount     = 18;
+        const int ButtonQwerty    = 15;
+        const int ButtonMachine   = 16;
+        const int ButtonFollow    = 17;
+        const int ButtonHelp      = 18;
+        const int ButtonCount     = 19;
 
         const int DefaultTimecodeOffsetX         = 40; // Offset from config button.
         const int DefaultTimecodePosY            = 4;
@@ -108,7 +109,7 @@ namespace FamiStudio
         DateTime warningTime;
         string warning = "";
 
-
+        bool redTooltip = false;
         string tooltip = "";
         RenderTheme theme;
         RenderBrush toolbarBrush;
@@ -131,8 +132,8 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
-            toolbarBrush = g.CreateHorizontalGradientBrush(0, 81, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
-            warningBrush = g.CreateSolidBrush(ThemeBase.Darken(ThemeBase.CustomColors[0, 0]));
+            toolbarBrush = g.CreateVerticalGradientBrush(0, Height, ThemeBase.DarkGreyFillColor2, ThemeBase.DarkGreyFillColor1);
+            warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
 
             bmpLoopNone    = g.CreateBitmapFromResource("LoopNone");
             bmpLoopSong    = g.CreateBitmapFromResource("Loop");
@@ -149,7 +150,7 @@ namespace FamiStudio
             buttons[ButtonNew]       = new Button { Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
             buttons[ButtonSave]      = new Button { Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
-            buttons[ButtonExport]    = new Button { Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport };
+            buttons[ButtonExport]    = new Button { Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport, RightClick = OnRepeatLastExport };
             buttons[ButtonCopy]      = new Button { Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
             buttons[ButtonCut]       = new Button { Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
             buttons[ButtonPaste]     = new Button { Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
@@ -161,6 +162,7 @@ namespace FamiStudio
             buttons[ButtonRec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[ButtonRewind]    = new Button { Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[ButtonQwerty]    = new Button { Bmp = g.CreateBitmapFromResource("QwertyPiano"), Click = OnQwerty, Enabled = OnQwertyEnabled };
             buttons[ButtonMachine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
             buttons[ButtonFollow]    = new Button { Bmp = g.CreateBitmapFromResource("Follow"), Click = OnFollow, Enabled = OnFollowEnabled };
             buttons[ButtonHelp]      = new Button { Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
@@ -168,7 +170,7 @@ namespace FamiStudio
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
             buttons[ButtonOpen].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
             buttons[ButtonSave].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S} - {MouseRight} Save As...";
-            buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}";
+            buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} Repeat last export {Ctrl} {Shift} {E}";
             buttons[ButtonCopy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
             buttons[ButtonCut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
             buttons[ButtonPaste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
@@ -180,6 +182,7 @@ namespace FamiStudio
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
+            buttons[ButtonQwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
             buttons[ButtonFollow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
@@ -203,6 +206,7 @@ namespace FamiStudio
             specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
             specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
             specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
+            specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
             specialCharacters["Drag"]       = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("Drag"),       OffsetY = 2 * scaling };
             specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseLeft"),  OffsetY = 2 * scaling };
             specialCharacters["MouseRight"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseRight"), OffsetY = 2 * scaling };
@@ -289,16 +293,13 @@ namespace FamiStudio
             timecodePosX = (int)(buttons[ButtonConfig].X + DefaultTimecodeOffsetX * scaling);
         }
 
-        public string ToolTip
+        public void SetToolTip(string msg, bool red = false)
         {
-            get { return tooltip; }
-            set
+            if (tooltip != msg || red != redTooltip)
             {
-                if (tooltip != value)
-                {
-                    tooltip = value;
-                    ConditionalInvalidate();
-                }
+                tooltip = msg;
+                redTooltip = red;
+                ConditionalInvalidate();
             }
         }
 
@@ -319,6 +320,7 @@ namespace FamiStudio
         public void Reset()
         {
             tooltip = "";
+            redTooltip = false;
         }
 
         private void ConditionalInvalidate()
@@ -350,6 +352,11 @@ namespace FamiStudio
         private void OnExport()
         {
             App.Export();
+        }
+
+        private void OnRepeatLastExport()
+        {
+            App.RepeatLastExport();
         }
 
         private void OnCut()
@@ -420,9 +427,9 @@ namespace FamiStudio
         private void OnPlay()
         {
             if (App.IsPlaying)
-                App.Stop();
+                App.StopSong();
             else
-                App.Play();
+                App.PlaySong();
         }
 
         private RenderBitmap OnPlayGetBitmap()
@@ -432,8 +439,8 @@ namespace FamiStudio
 
         private void OnRewind()
         {
-            App.Stop();
-            App.Seek(0);
+            App.StopSong();
+            App.SeekSong(0);
         }
 
         private RenderBitmap OnRecordGetBitmap()
@@ -449,6 +456,16 @@ namespace FamiStudio
         private void OnLoop()
         {
             App.LoopMode = App.LoopMode == LoopMode.LoopPoint ? LoopMode.Pattern : LoopMode.LoopPoint;
+        }
+
+        private void OnQwerty()
+        {
+            App.ToggleQwertyPiano();
+        }
+
+        private ButtonStatus OnQwertyEnabled()
+        {
+            return App.IsQwertyPianoEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
         private RenderBitmap OnLoopGetBitmap()
@@ -479,7 +496,7 @@ namespace FamiStudio
 
         private ButtonStatus OnMachineEnabled()
         {
-            return App.Project != null && App.Project.ExpansionAudio == Project.ExpansionNone ? ButtonStatus.Enabled : ButtonStatus.Disabled;
+            return App.Project != null && App.Project.ExpansionAudio == ExpansionType.None ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
         private RenderBitmap OnMachineGetBitmap()
@@ -542,10 +559,10 @@ namespace FamiStudio
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            var timeCodeColor = App.IsRecording ? theme.DarkRedFillBrush2 : theme.DarkGreyFillBrush1;
-            var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush1;
+            var timeCodeColor = App.IsRecording ? theme.LightRedFillBrush : theme.BlackBrush;
+            var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush2;
 
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.BlackBrush);
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.LightGreyFillBrush2);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -598,7 +615,7 @@ namespace FamiStudio
         {
             var scaling = RenderTheme.MainWindowScaling;
             var message = tooltip;
-            var messageBrush = theme.BlackBrush;
+            var messageBrush = redTooltip ? warningBrush : theme.LightGreyFillBrush2;
             var messageFont = ThemeBase.FontMedium;
             var messageFontCenter = ThemeBase.FontMediumCenter;
 
@@ -694,12 +711,12 @@ namespace FamiStudio
             {
                 if (btn.Visible && btn.IsPointIn(e.X, e.Y, Width))
                 {
-                    ToolTip = btn.ToolTip;
+                    SetToolTip(btn.ToolTip);
                     return;
                 }
             }
 
-            ToolTip = "";
+            SetToolTip("");
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

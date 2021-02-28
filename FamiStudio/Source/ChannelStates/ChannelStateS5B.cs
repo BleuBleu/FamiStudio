@@ -6,9 +6,9 @@ namespace FamiStudio
     {
         int channelIdx = 0;
 
-        public ChannelStateS5B(int apuIdx, int channelType, bool pal) : base(apuIdx, channelType, pal)
+        public ChannelStateS5B(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
-            channelIdx = channelType - Channel.S5BSquare1;
+            channelIdx = channelType - ChannelType.S5BSquare1;
         }
 
         public override void UpdateAPU()

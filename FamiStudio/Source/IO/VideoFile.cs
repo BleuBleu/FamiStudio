@@ -8,16 +8,16 @@ using System.Drawing;
 using System.IO;
 
 #if FAMISTUDIO_WINDOWS
+    using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderPath     = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DOffscreenGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
+    using RenderFont     = FamiStudio.GLFont;
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
-    using RenderPath     = FamiStudio.GLConvexPath;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLOffscreenGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
@@ -27,15 +27,16 @@ namespace FamiStudio
 {
     class VideoFile
     {
-        const int channelIconTextSpacing = 8;
-        const int channelIconPosY = 26;
-        const int channelTextPosY = 30;
-        const int segmentTransitionNumFrames = 16;
+        const int   ChannelIconTextSpacing = 8;
+        const int   ChannelIconPosY = 26;
+        const int   SegmentTransitionNumFrames = 16;
+        const int   SampleRate = 44100;
+        const int   ThinNoteThreshold     = 288;
+        const int   VeryThinNoteThreshold = 192;
+        const float OscilloscopeWindowSize = 0.075f; // in sec.
 
-        const int sampleRate = 44100;
-        const int videoResX = 1920;
-        const int videoResY = 1080;
-        const float oscilloscopeWindowSize = 0.075f; // in sec.
+        int videoResX = 1920;
+        int videoResY = 1080;
 
         // Mostly from : https://github.com/kometbomb/oscilloscoper/blob/master/src/Oscilloscope.cpp
         private void GenerateOscilloscope(short[] wav, int position, int windowSize, int maxLookback, float scaleY, float minX, float minY, float maxX, float maxY, float[,] oscilloscope)
@@ -166,7 +167,7 @@ namespace FamiStudio
                 currentSegment.endFrame = numFrames;
 
                 // Remove very small segments, these make the camera move too fast, looks bad.
-                var shortestAllowedSegment = segmentTransitionNumFrames * 2;
+                var shortestAllowedSegment = SegmentTransitionNumFrames * 2;
 
                 bool removed = false;
                 do
@@ -230,7 +231,7 @@ namespace FamiStudio
                     var segment0 = segments[s + 0];
                     var segment1 = s == segments.Count - 1 ? null : segments[s + 1];
 
-                    for (int f = segment0.startFrame; f < segment0.endFrame - (segment1 == null ? 0 : segmentTransitionNumFrames); f++)
+                    for (int f = segment0.startFrame; f < segment0.endFrame - (segment1 == null ? 0 : SegmentTransitionNumFrames); f++)
                     {
                         frames[f].scroll[c] = segment0.scroll;
                     }
@@ -238,10 +239,10 @@ namespace FamiStudio
                     if (segment1 != null)
                     {
                         // Smooth transition to next segment.
-                        for (int f = segment0.endFrame - segmentTransitionNumFrames, a = 0; f < segment0.endFrame; f++, a++)
+                        for (int f = segment0.endFrame - SegmentTransitionNumFrames, a = 0; f < segment0.endFrame; f++, a++)
                         {
-                            var lerp = a / (float)segmentTransitionNumFrames;
-                            frames[f].scroll[c] = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmoothStep(lerp));
+                            var lerp = a / (float)SegmentTransitionNumFrames;
+                            frames[f].scroll[c] = Utils.Lerp(segment0.scroll, segment1.scroll, Utils.SmootherStep(lerp));
                         }
                     }
                 }
@@ -415,7 +416,7 @@ namespace FamiStudio
             public short[] wav;
         };
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom, bool thinNotes)
+        public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
@@ -424,6 +425,9 @@ namespace FamiStudio
 
             if (!DetectFFmpeg(ffmpegExecutable))
                 return false;
+            
+            videoResX = resX;
+            videoResY = resY;
 
             var project = originalProject.DeepClone();
             var song = project.GetSong(songId);
@@ -432,11 +436,16 @@ namespace FamiStudio
 
             Log.LogMessage(LogSeverity.Info, "Initializing channels...");
 
-            var frameRate = song.Project.PalMode ? "5000773/100000" : "6009883/100000";
+            var frameRateNumerator = song.Project.PalMode ? 5000773 : 6009883;
+            if (halfFrameRate)
+                frameRateNumerator /= 2;
+            var frameRate = frameRateNumerator.ToString() + "/100000";
+
             var numChannels = Utils.NumberOfSetBits(channelMask);
             var channelResXFloat = videoResX / (float)numChannels;
             var channelResX = videoResY;
             var channelResY = (int)channelResXFloat;
+            var longestChannelName = 0.0f;
 
             var channelGraphics = new RenderGraphics(channelResX, channelResY);
             var videoGraphics   = new RenderGraphics(videoResX, videoResY);
@@ -463,8 +472,7 @@ namespace FamiStudio
                 state.channel = song.Channels[i];
                 state.patternIndex = 0;
                 state.channelText = state.channel.Name + (state.channel.IsExpansionChannel ? $" ({song.Project.ExpansionAudioShortName})" : "");
-                state.bmp = videoGraphics.CreateBitmapFromResource(Channel.ChannelIcons[song.Channels[i].Type] + "@2x"); // HACK: Grab the 200% scaled version directly.
-                state.wav = new WavPlayer(sampleRate, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1); 
+                state.wav = new WavPlayer(SampleRate, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1); 
 
                 channelStates.Add(state);
                 channelIndex++;
@@ -472,10 +480,25 @@ namespace FamiStudio
                 // Find maximum absolute value to rescale the waveform.
                 foreach (short s in state.wav)
                     maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
+
+                // Measure the longest text.
+                longestChannelName = Math.Max(longestChannelName, channelGraphics.MeasureString(state.channelText, ThemeBase.FontBigUnscaled));
             }
 
+            // Tweak some cosmetic stuff that depends on resolution.
+            var smallChannelText = longestChannelName + 32 + ChannelIconTextSpacing > channelResY * 0.8f;
+            var bmpSuffix = smallChannelText ? "" : "@2x";
+            var font = smallChannelText ? ThemeBase.FontMediumUnscaled : ThemeBase.FontBigUnscaled;
+            var textOffsetY = smallChannelText ? 1 : 4;
+            var pianoRollScaleX = Math.Max(0.6f, resY / 1080.0f);
+            var pianoRollScaleY = channelResY < VeryThinNoteThreshold ? 0.5f : (channelResY < ThinNoteThreshold ? 0.667f : 1.0f);
+            var channelLineWidth = channelResY < ThinNoteThreshold ? 3 : 5;
+
+            foreach (var s in channelStates)
+                s.bmp = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[s.channel.Type] + bmpSuffix);
+
             // Generate the metadata for the video so we know what's happening at every frame
-            var metadata = new VideoMetadataPlayer(sampleRate, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
+            var metadata = new VideoMetadataPlayer(SampleRate, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
 
             var oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
@@ -493,7 +516,8 @@ namespace FamiStudio
             pianoRoll.Width  = channelResX;
             pianoRoll.Height = channelResY;
 #endif
-            pianoRoll.StartVideoRecording(channelGraphics, song, pianoRollZoom, thinNotes, out var noteSizeY);
+
+            pianoRoll.StartVideoRecording(channelGraphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
 
             // Build the scrolling data.
             var numVisibleNotes = (int)Math.Floor(channelResY / (float)noteSizeY);
@@ -517,7 +541,12 @@ namespace FamiStudio
 
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -c:v libx264 -pix_fmt yuv420p -b:v {videoBitRate}M -an \"{tempVideoFile}\"", true, false);
+                Log.LogMessage(LogSeverity.Info, "Exporting audio...");
+
+                // Save audio to temporary file.
+                WaveFile.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask);
+
+                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
 
                 // Generate each of the video frames.
                 using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
@@ -531,6 +560,9 @@ namespace FamiStudio
                             Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
 
                         Log.ReportProgress(f / (float)(metadata.Length - 1));
+
+                        if (halfFrameRate && (f & 1) != 0)
+                            continue;
 
                         var frame = metadata[f];
 
@@ -547,17 +579,20 @@ namespace FamiStudio
                             int channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
                             int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
 
-                            var channelNameSizeX = videoGraphics.MeasureString(s.channelText, ThemeBase.FontBigUnscaled);
-                            var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmp.Size.Width + channelIconTextSpacing) / 2;
+                            var channelNameSizeX = videoGraphics.MeasureString(s.channelText, font);
+                            var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmp.Size.Width + ChannelIconTextSpacing) / 2;
 
-                            videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmp.Size.Width, channelIconPosY + s.bmp.Size.Height, theme.LightGreyFillBrush1);
-                            videoGraphics.DrawBitmap(s.bmp, channelIconPosX, channelIconPosY);
-                            videoGraphics.DrawText(s.channelText, ThemeBase.FontBigUnscaled, channelIconPosX + s.bmp.Size.Width + channelIconTextSpacing, channelTextPosY, theme.LightGreyFillBrush1);
+                            videoGraphics.FillRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmp.Size.Width, ChannelIconPosY + s.bmp.Size.Height, theme.DarkGreyLineBrush2);
+                            videoGraphics.DrawBitmap(s.bmp, channelIconPosX, ChannelIconPosY);
+                            videoGraphics.DrawText(s.channelText, font, channelIconPosX + s.bmp.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, theme.LightGreyFillBrush1);
 
                             if (s.videoChannelIndex > 0)
-                                videoGraphics.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, 5);
+                                videoGraphics.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, channelLineWidth);
 
-                            GenerateOscilloscope(s.wav, frame.wavOffset, (int)Math.Round(sampleRate * oscilloscopeWindowSize), oscLookback, oscScale, channelPosX0 + 10, 60, channelPosX1 - 10, 160, oscilloscope);
+                            var oscMinY = (int)(ChannelIconPosY + s.bmp.Size.Height + 10);
+                            var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
+
+                            GenerateOscilloscope(s.wav, frame.wavOffset, (int)Math.Round(SampleRate * OscilloscopeWindowSize), oscLookback, oscScale, channelPosX0 + 10, oscMinY, channelPosX1 - 10, oscMaxY, oscilloscope);
 
                             videoGraphics.AntiAliasing = true;
                             videoGraphics.DrawLine(oscilloscope, theme.LightGreyFillBrush1);
@@ -578,10 +613,16 @@ namespace FamiStudio
 
                             if (s.note.IsMusical)
                             {
-                                if (s.channel.Type == Channel.Dpcm)
-                                    color = Color.FromArgb(210, ThemeBase.MediumGreyFillColor1);
+                                if (s.channel.Type == ChannelType.Dpcm)
+                                {
+                                    var mapping = project.GetDPCMMapping(s.note.Value);
+                                    if (mapping != null && mapping.Sample != null)
+                                        color = mapping.Sample.Color;
+                                }
                                 else
+                                {
                                     color = Color.FromArgb(128 + s.volume * 127 / 15, s.note.Instrument != null ? s.note.Instrument.Color : ThemeBase.DarkGreyFillColor2);
+                                }
                             }
 
 #if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
@@ -689,21 +730,7 @@ namespace FamiStudio
                 process.Dispose();
                 process = null;
 
-                Log.LogMessage(LogSeverity.Info, "Exporting audio...");
-
-                // Save audio to temporary file.
-                WaveFile.Save(song, tempAudioFile, sampleRate, 1, -1, channelMask);
-
-                Log.LogMessage(LogSeverity.Info, "Mixing audio and video...");
-
-                // Run ffmpeg again to combine audio + video.
-                process = LaunchFFmpeg(ffmpegExecutable, $"-y -i \"{tempVideoFile}\" -i \"{tempAudioFile}\" -c:v copy -c:a aac -b:a {audioBitRate}k \"{filename}\"", false, false);
-                process.WaitForExit();
-                process.Dispose();
-                process = null;
-
                 File.Delete(tempAudioFile);
-                File.Delete(tempVideoFile);
             }
             catch (Exception e)
             {
@@ -802,6 +829,38 @@ namespace FamiStudio
         {
             numSamples += base.EndFrame().Length;
             return null;
+        }
+    }
+
+    static class VideoResolution
+    {
+        public static readonly string[] Names =
+        {
+            "1080p",
+            "720p",
+            "576p",
+            "480p"
+        };
+
+        public static readonly int[] ResolutionY =
+        {
+            1080,
+            720,
+            576,
+            480
+        };
+
+        public static readonly int[] ResolutionX =
+        {
+            1920,
+            1280,
+            1024,
+            854
+        };
+
+        public static int GetIndexForName(string str)
+        {
+            return Array.IndexOf(Names, str);
         }
     }
 

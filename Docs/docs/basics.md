@@ -125,6 +125,7 @@ Here is a list of useful keyboard shortcuts:
 * **Ctrl+N**: New project
 * **Ctrl+S**: Save
 * **Ctrl+E**: Export
+* **Ctrl+Shift+E**: Repeat last export
 * **Ctrl+O**: Open
 * **Delete**: Delete selected patterns or notes.
 * **Escape**: Deselects patterns or notes, stops any sound that is stuck playing.
@@ -141,9 +142,10 @@ Some keyboard shortcuts specific to the piano roll:
 * **Shift+Click**: Adds a release note.
 * **S+Click** (and drag): Creates or edit a slide note.
 * **A+Click**: Toggles the attack of a note.
+* **I+Click** : Instrument picker
 * **~ (Tilde)**: Expand/collapse the effect panel.
 * **Shift+S**: Toggles snapping.
 
-When recording mode is active, some of the keys will be overriden to support piano input.
+When QWERTY keyboard input is active, some of the keys will be overriden to support piano input.
 
 ![](images/QWERTY.png#center)

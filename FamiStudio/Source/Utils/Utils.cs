@@ -37,6 +37,44 @@ namespace FamiStudio
             return (x < 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
         }
 
+        public static float Frac(float x)
+        {
+            return x - (int)x;
+        }
+
+        public static int IntegerPow(int x, int y)
+        {
+            int result = 1;
+            for (long i = 0; i < y; i++)
+                result *= x;
+            return result;
+        }
+
+        public static int RoundDownAndClamp(int x, int factor, int min)
+        {
+            return Math.Max((x & ~(factor- 1)), min);
+        }
+
+        public static int RoundUpAndClamp(int x, int factor, int max)
+        {
+            return Math.Min((x + factor - 1) & ~(factor - 1), max);
+        }
+
+        public static int RoundDown(int x, int factor)
+        {
+            return (x & ~(factor - 1));
+        }
+
+        public static int RoundUp(int x, int factor)
+        {
+            return (x + factor - 1) & ~(factor - 1);
+        }
+
+        public static int DivideAndRoundUp(int x, int y)
+        {
+            return (x + y - 1) / y;
+        }
+
         public static int NumDecimalDigits(int n)
         {
             int digits = 1;
@@ -142,9 +180,14 @@ namespace FamiStudio
             return filenameNoExtension + suffix + extension;
         }
 
-        public static float SmoothStep(float t)
+        public static float SmoothStep(float x)
         {
-            return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+            return x * x * (3 - 2 * x);
+        }
+
+        public static float SmootherStep(float x)
+        {
+            return x * x * x * (x * (x * 6.0f - 15.0f) + 10.0f);
         }
 
         public static string GetTemporaryDiretory()

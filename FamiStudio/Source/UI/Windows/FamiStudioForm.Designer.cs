@@ -88,7 +88,6 @@
             this.toolbar.Name = "toolbar";
             this.toolbar.Size = new System.Drawing.Size(1264, 40);
             this.toolbar.TabIndex = 6;
-            this.toolbar.ToolTip = "";
             // 
             // FamiStudioForm
             // 

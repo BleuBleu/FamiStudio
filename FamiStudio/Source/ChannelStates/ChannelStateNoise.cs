@@ -2,7 +2,7 @@
 {
     public class ChannelStateNoise : ChannelState
     {
-        public ChannelStateNoise(int apuIdx, int channelIdx, bool pal) : base(apuIdx, channelIdx, pal)
+        public ChannelStateNoise(IPlayerInterface player, int apuIdx, int channelIdx, bool pal) : base(player, apuIdx, channelIdx, pal)
         {
         }
 
@@ -16,7 +16,7 @@
             {
                 var volume = GetVolume();
                 var duty   = GetDuty();
-                var period = (int)(((note.Value + envelopeValues[Envelope.Arpeggio]) & 0x0f) ^ 0x0f) | ((duty << 7) & 0x80);
+                var period = (int)(((note.Value + envelopeValues[EnvelopeType.Arpeggio]) & 0x0f) ^ 0x0f) | ((duty << 7) & 0x80);
 
                 WriteRegister(NesApu.APU_NOISE_LO, period);
                 WriteRegister(NesApu.APU_NOISE_VOL, 0x30 | volume);

@@ -183,7 +183,7 @@ namespace FamiStudio
         {
             var textBox = new TextBox();
 
-            textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
+            textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 8.0f, FontStyle.Regular);
             textBox.Text = txt;
             textBox.BackColor = ThemeBase.DarkGreyFillColor1;
             textBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;

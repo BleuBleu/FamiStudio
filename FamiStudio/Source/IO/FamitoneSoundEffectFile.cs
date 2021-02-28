@@ -16,7 +16,7 @@ namespace FamiStudio
         private string dw = ".word";
         private string ll = "@";
 
-        private void SetupFormat(AssemblyFormat format)
+        private void SetupFormat(int format)
         {
             switch (format)
             {
@@ -54,13 +54,13 @@ namespace FamiStudio
             return writes;
         }
 
-        public bool Save(Project project, int[] songIds, AssemblyFormat format, MachineType mode, string filename)
+        public bool Save(Project project, int[] songIds, int format, int machine, int kernel, string filename, string includeFilename)
         {
             SetupFormat(format);
 
             var modeStrings = new List<string>();
-            if (mode == MachineType.NTSC || mode == MachineType.Dual) modeStrings.Add("ntsc");
-            if (mode == MachineType.PAL  || mode == MachineType.Dual) modeStrings.Add("pal");
+            if (machine == MachineType.NTSC || machine == MachineType.Dual) modeStrings.Add("ntsc");
+            if (machine == MachineType.PAL  || machine == MachineType.Dual) modeStrings.Add("pal");
 
             var lines = new List<string>();
 
@@ -84,7 +84,7 @@ namespace FamiStudio
             foreach (var str in modeStrings)
             {
                 foreach (var songId in songIds)
-                {
+                { 
                     var song = project.GetSong(songId);
                     var writes = GetRegisterWrites(song, str == "pal");
 
@@ -94,6 +94,7 @@ namespace FamiStudio
                     var volume = new int[4];
                     var regs = new int[32];
                     var effect = new List<byte>();
+                    var lastByteIsOperand = false;
 
                     for (int i = 0; i < regs.Length; i++)
                         regs[i] = -1;
@@ -157,6 +158,9 @@ namespace FamiStudio
                                 effect.Add(RegisterMap[reg.Register - 0x4000]);
                                 effect.Add((byte)reg.Value);
 
+                                if (effect.Count == 255)
+                                    lastByteIsOperand = true;
+
                                 regs[reg.Register - 0x4000] = reg.Value;
 
                                 lastChangeFrame = reg.FrameNumber;
@@ -179,10 +183,11 @@ namespace FamiStudio
                         effect.RemoveRange(lastZeroVolumeIdx, effect.Count - lastZeroVolumeIdx);
                     }
 
-                    if (effect.Count > 255)
+                    if (kernel == FamiToneKernel.FamiTone2 && effect.Count > 255)
                     {
-                        Log.LogMessage(LogSeverity.Warning, $"Effect was longer than 256 bytes ({effect.Count}) and was truncated.");
-                        effect.RemoveRange(255, effect.Count - 255);
+                        Log.LogMessage(LogSeverity.Warning, $"Effect ({song.Name}) was longer than 256 bytes ({effect.Count}) and was truncated.");
+                        var removeStart = lastByteIsOperand ? 254 : 255;
+                        effect.RemoveRange(removeStart, effect.Count - removeStart);
                     }
 
                     effect.Add(0);
@@ -191,10 +196,49 @@ namespace FamiStudio
 
                     for (int i = 0; i < (effect.Count + 15) / 16; i++)
                         lines.Add($"\t{db} {string.Join(",", effect.Skip(i * 16).Take(Math.Min(16, effect.Count - i * 16)).Select(x => $"${x:x2}"))}");
+
+                    Log.LogMessage(LogSeverity.Info, $"Effect ({song.Name}): {effect.Count} bytes.");
                 }
             }
 
+            if (format == AssemblyFormat.CA65)
+            {
+                lines.Add("");
+                lines.Add(".export sounds");
+            }
+
             File.WriteAllLines(filename, lines.ToArray());
+
+            if (includeFilename != null)
+            {
+                var includeLines = new List<string>();
+
+                for (int songIdx = 0; songIdx < songIds.Length; songIdx++)
+                {
+                    var songId = songIds[songIdx];
+                    var song = project.GetSong(songId);
+                    includeLines.Add($"sfx_{Utils.MakeNiceAsmName(song.Name)} = {songIdx}");
+                }
+                includeLines.Add($"sfx_max = {songIds.Length}");
+
+                // For CA65, also include song names.
+                if (format == AssemblyFormat.CA65)
+                {
+                    includeLines.Add("");
+                    includeLines.Add(".if SFX_STRINGS");
+                    includeLines.Add("sfx_strings:");
+
+                    foreach (var songId in songIds)
+                    {
+                        var song = project.GetSong(songId);
+                        includeLines.Add($".asciiz \"{song.Name}\"");
+                    }
+
+                    includeLines.Add(".endif");
+                }
+
+                File.WriteAllLines(includeFilename, includeLines.ToArray());
+            }
 
             return true;
         }

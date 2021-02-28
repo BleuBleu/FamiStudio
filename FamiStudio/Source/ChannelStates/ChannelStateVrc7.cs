@@ -5,13 +5,13 @@ namespace FamiStudio
 {
     public class ChannelStateVrc7 : ChannelState
     {
-        int channelIdx = 0;
-        byte vrc7Instrument = 0;
-        byte prevPeriodHi;
+        protected int  channelIdx = 0;
+        protected byte vrc7Instrument = 0;
+        protected byte prevPeriodHi;
 
-        public ChannelStateVrc7(int apuIdx, int channelType) : base(apuIdx, channelType, false)
+        public ChannelStateVrc7(IPlayerInterface player, int apuIdx, int channelType) : base(player, apuIdx, channelType, false)
         {
-            channelIdx = channelType - Channel.Vrc7Fm1;
+            channelIdx = channelType - ChannelType.Vrc7Fm1;
             customRelease = true;
         }
 
@@ -25,18 +25,42 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.ExpansionType == Project.ExpansionVrc7);
+                Debug.Assert(instrument.ExpansionType == ExpansionType.Vrc7);
 
-                if (instrument.ExpansionType == Project.ExpansionVrc7)
+                if (instrument.ExpansionType == ExpansionType.Vrc7)
                 {
                     if (instrument.Vrc7Patch == 0)
                     {
+                        // Tell other channels using custom patches that they will need 
+                        // to reload their instruments.
+                        player.NotifyInstrumentLoaded(
+                            instrument,
+                            (1 << ChannelType.Vrc7Fm1) |
+                            (1 << ChannelType.Vrc7Fm2) |
+                            (1 << ChannelType.Vrc7Fm3) |
+                            (1 << ChannelType.Vrc7Fm4) |
+                            (1 << ChannelType.Vrc7Fm5) |
+                            (1 << ChannelType.Vrc7Fm6));
+
                         for (byte i = 0; i < 8; i++)
                             WriteVrc7Register(i, instrument.Vrc7PatchRegs[i]);
                     }
 
                     vrc7Instrument = (byte)(instrument.Vrc7Patch << 4);
                 }
+            }
+        }
+
+        public override void IntrumentLoadedNotify(Instrument instrument)
+        {
+            Debug.Assert(instrument.IsExpansionInstrument && instrument.Vrc7Patch == 0);
+
+            // This will be called when another channel loads a custom patch.
+            if (note.Instrument != null && 
+                note.Instrument != instrument &&
+                note.Instrument.Vrc7Patch == 0)
+            {
+                forceInstrumentReload = true;
             }
         }
 

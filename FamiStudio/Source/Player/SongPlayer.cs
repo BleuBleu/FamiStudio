@@ -13,7 +13,7 @@ namespace FamiStudio
             public bool pal;
         };
 
-        public SongPlayer() : base(NesApu.APU_SONG)
+        public SongPlayer(bool pal) : base(NesApu.APU_SONG, pal, DefaultSampleRate, Settings.NumBufferedAudioFrames)
         {
             loopMode = LoopMode.LoopPoint;
         }
@@ -29,8 +29,8 @@ namespace FamiStudio
             Debug.Assert(playerThread == null);
             Debug.Assert(sampleQueue.Count == 0);
 
-            stopEvent.Reset();
-            frameEvent.Set();
+            ResetThreadingObjects();
+
             playerThread = new Thread(PlayerThread);
             playerThread.Start(new SongPlayerStartInfo() { song = song, startNote = frame, pal = pal });
         }
@@ -54,9 +54,14 @@ namespace FamiStudio
         {
             var startInfo = (SongPlayerStartInfo)o;
 
+            // Since BeginPlaySong is not inside the main loop and will
+            // call EndFrame, we need to subtract one immediately so that
+            // the semaphore count is not off by one.
+            bufferSemaphore.WaitOne();
+
             if (BeginPlaySong(startInfo.song, startInfo.pal, startInfo.startNote))
             {
-                var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
+                var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
 
                 while (true)
                 {

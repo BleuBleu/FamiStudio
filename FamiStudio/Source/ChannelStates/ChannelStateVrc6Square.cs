@@ -6,9 +6,9 @@ namespace FamiStudio
     {
         int regOffset = 0;
 
-        public ChannelStateVrc6Square(int apuIdx, int channelType) : base(apuIdx, channelType, false)
+        public ChannelStateVrc6Square(IPlayerInterface player, int apuIdx, int channelType) : base(player, apuIdx, channelType, false)
         {
-            regOffset = (channelType - Channel.Vrc6Square1) * 0x1000;
+            regOffset = (channelType - ChannelType.Vrc6Square1) * 0x1000;
         }
 
         public override void UpdateAPU()

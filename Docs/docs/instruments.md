@@ -67,44 +67,9 @@ Clicking on an envelope button and dragging it on another instrument will copy t
 
 Right-clicking on the icon of an envelope deletes it.
 
-# Editing DPCM samples
+# DPCM Instrument
 
-Clicking on the little icon next to the DPCM samples in the project explorer will open the piano roll in DPCM edition mode.
-
-DPCM (Delta Pulse Coded Modulation)samples are very low quality 1-bit digital samples that the NES supported. They are of very low quality but have been used quite successfully for drums and basses. 
-
-![](images/EditDPCM.png#center)
-
-## Assigning a DPCM sample to a key
-
-You can assign a sample to a key of the piano. Clicking anywhere on a note that does not have a DPCM sample associated will prompt you to open a .DMC file. 
-
-No DMC edition tool is provided, you can use [FamiTracker](http://famitracker.com/), [RJDMC](http://forums.famitracker.com/viewtopic.php?t=95), [MakeDPCM](https://www.romhacking.net/utilities/1451/) or any other tool. DPCM samples are assumed to have unique names and 2 samples with the same name will be assume to be the same. Note that only notes between C1 and D6 are allowed to have DPCM samples.
-
-## Unassigning a DPCM sample
-
-Right clicking on a sample that has been mapped to a key will remove it from that key. The memory for a sample will not be freed if it is still being used by another key. 
-
-## Moving DPCM samples to another key
-
-DPCM samples can be dragged to another key. When the drag is completed, FamiStudio will offer you to transpose all notes using the old key to the new key.
-
-## Editing DPCM samples properties
-
-Double-clicking on an existing sample will show its properties. 
-
-* **Name** : Name of the sample. Needs to be unique. The name is shared accross all instances of the same sample, renaming one will rename all the others.
-* **Pitch** : Allows pitching the sample down.
-* **Loop** : Makes the sample loop.
-* **Reverse Bits** : Will reverse the bits of the sample. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should. Much like the name, this is shared accross all instances of the sample (all samples will the same name). 
-
-![](images/DPCMProperties.png#center)
-
-## Exporting DPCM samples
-
-Holding **S** and clicking on a sample will allow you to save it to a file. Only the RAW sample data will be save. Any properties set, such as pitch, loop and bit reverse will be ignored.
-
-DPCMProperties.png
+The DPCM Instrument is a special instrument able to play DPCM samples. It is always present and cannot be deleted. For more information, please refer to the [DPCM Samples](dpcm.md) section. 
 
 # Editing Arpeggios
 

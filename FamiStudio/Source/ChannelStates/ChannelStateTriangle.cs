@@ -4,7 +4,7 @@ namespace FamiStudio
 {
     public class ChannelStateTriangle : ChannelState
     {
-        public ChannelStateTriangle(int apuIdx, int channelType, bool pal) : base(apuIdx, channelType, pal)
+        public ChannelStateTriangle(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
         }
 
@@ -20,7 +20,7 @@ namespace FamiStudio
 
                 WriteRegister(NesApu.APU_TRI_LO, (period >> 0) & 0xff);
                 WriteRegister(NesApu.APU_TRI_HI, (period >> 8) & 0x07);
-                WriteRegister(NesApu.APU_TRI_LINEAR, 0x80 | envelopeValues[Envelope.Volume]);
+                WriteRegister(NesApu.APU_TRI_LINEAR, 0x80 | envelopeValues[EnvelopeType.Volume]);
             }
 
             base.UpdateAPU();

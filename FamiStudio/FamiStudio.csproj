@@ -113,6 +113,7 @@
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
+    <Compile Include="Source\UI\Common\ParamProviders.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
+    <Compile Include="Source\Utils\WaveUtils.cs" />
     <Compile Include="Source\Utils\WinUtils.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
@@ -333,6 +335,19 @@
     <EmbeddedResource Include="Resources\FM.png" />
     <EmbeddedResource Include="Resources\WaveTable%402x.png" />
     <EmbeddedResource Include="Resources\WaveTable.png" />
+    <EmbeddedResource Include="Resources\QwertyPiano%402x.png" />
+    <EmbeddedResource Include="Resources\QwertyPiano.png" />
+    <EmbeddedResource Include="Resources\DPCMBlack%402x.png" />
+    <EmbeddedResource Include="Resources\DPCMBlack.png" />
+    <EmbeddedResource Include="Resources\PlaySource%402x.png" />
+    <EmbeddedResource Include="Resources\PlaySource.png" />
+    <EmbeddedResource Include="Resources\WaveEdit%402x.png" />
+    <EmbeddedResource Include="Resources\WaveEdit.png" />
+    <EmbeddedResource Include="Resources\SaveSmall%402x.png" />
+    <EmbeddedResource Include="Resources\SaveSmall.png" />
+    <EmbeddedResource Include="Resources\Eyedrop.cur" />
+    <EmbeddedResource Include="Resources\DashHorizontal%402x.png" />
+    <EmbeddedResource Include="Resources\DashHorizontal.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -412,8 +427,6 @@
     <EmbeddedResource Include="Resources\Transform.png" />
     <EmbeddedResource Include="Resources\Duty%402x.png" />
     <EmbeddedResource Include="Resources\Duty.png" />
-    <EmbeddedResource Include="Resources\LengthSmallFill%402x.png" />
-    <EmbeddedResource Include="Resources\LengthSmallFill.png" />
     <EmbeddedResource Include="Resources\NTSC%402x.png" />
     <EmbeddedResource Include="Resources\NTSC.png" />
     <EmbeddedResource Include="Resources\PAL%402x.png" />

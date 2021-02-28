@@ -21,13 +21,19 @@ In FamiTracker tempo mode, you do not have access to the individual frames, so t
 
 ## Seeking
 
-Clicking in the timeline (header) of the piano roll will move the play position.
+Clicking in the timeline (header) of the piano roll will move the play position. You can also drag the seek back to more it more accurately.
 
 ## Adding and deleting notes
 
 Clicking a pattern in the sequencer will scroll the piano roll to its location. Left-clicking in the piano roll will add a note of the currently selected instrument. Holding the mouse when clicking will allow you to drag the note and will give audio feedback. You cannot add a note where the is not a pattern created.
 
 Right-clicking deletes a note.
+
+## Instrument Picker
+
+Holding **I** and clicking on a note will make the instrument of that note the current instrument. This is often known as the eye dropper or pipette tool in drawing software.
+
+![](images/InstrumentPicker.png#center)
 
 ## Recoding mode
 
@@ -102,7 +108,7 @@ If an instrument uses an arpeggio envelope and also uses an arpeggio chord, the 
 
 ## Selecting and editing notes
 
-You can select notes by right-clicking and dragging in the header of the piano roll. Selected notes will appear with a thick silver border. Once notes are selected, then can be moved using the arrows keys (up, down, left and right). Holding CTRL while doing so will make the notes move by larger increments.
+You can select notes by right-clicking and dragging in the header of the piano roll or anywhere in the background of the piano roll (where there is no note). Selected notes will appear with a thick silver border. Once notes are selected, then can be moved using the arrows keys (up, down, left and right). Holding CTRL while doing so will make the notes move by larger increments.
 
 ![](images/SelectNotes.png#center)
 

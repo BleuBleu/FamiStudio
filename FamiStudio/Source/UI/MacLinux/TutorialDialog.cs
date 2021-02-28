@@ -106,7 +106,6 @@ namespace FamiStudio
             BorderWidth = 10;
             Resizable = false;
             Decorated = false;
-            KeepAbove = true;
             Modal = true;
             SkipTaskbarHint = true;
 

@@ -1,10 +1,10 @@
-# FamiStudio NES Sound Engine
+# FamiStudio NES/Famicom Sound Engine
 
 This section will cover the NES sound engine that comes with FamiStudio that you can use to play music/sound effects made with FamiStudio in your homebrew NES games.
 
 ## Overview
 
-The FamiStudio sound engine is used by the NSF and ROM exporter of FamiStudio and can be used to make homebrew NES games. It supports every feature from FamiStudio, including audio expansions, and will continue to do so in the future. Some of these features are toggeable to save CPU/memory.
+The FamiStudio sound engine is used by the NSF and ROM exporter of FamiStudio and can be used to make homebrew NES/Famicom games. It supports every feature from FamiStudio, including audio expansions, and will continue to do so in the future. Some of these features are toggeable to save CPU/memory.
 
 The engine is essentially a heavily modified version of [FamiTone2 by Shiru](https://shiru.untergrund.net/code.shtml). A lot of his code and comments are still present, so massive thanks to him!! I am not trying to steal his work or anything, i renamed a lot of functions and variables because at some point it was becoming a mess of coding standards and getting hard to maintain.
 
@@ -36,7 +36,7 @@ Features that can be toggled on/off depending on the needs of your projects:
 * PAL/NTSC playback support. 
 * DPCM sample support
 * Sound effect support (with configurable number of streams)
-* Blaarg Smooth Vibrato technique to eliminate "pops" on square channels (incompatible with SFX at the moment)
+* Blaarg Smooth Vibrato technique to eliminate "pops" on square channels
 * FamiTracker/FamiStudio tempo mode.
 * Volume track support.
 * Fine pitch track support.
@@ -205,8 +205,7 @@ These are parameters that configures the engine, but are independent of the data
     FAMISTUDIO_CFG_SFX_STREAMS   = 2
 
     ; Blaarg's smooth vibrato technique. Eliminates phase resets ("pops") on
-    ; square channels. Will be ignored if SFX are enabled since they are 
-    ; currently incompatible with each other. This might change in the future.
+    ; square channels. 
     FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1 
 
     ; Enables DPCM playback support.
@@ -259,6 +258,3 @@ Every feature supported in FamiStudio is supported by this sound engine. If you 
 ## Exporting Music/SFX to the engine
 
 You can export music or sound effect data to the engine by using either the [Export Dialog](importexport.md) or from the [command line](cmdline.md).
-
-
-

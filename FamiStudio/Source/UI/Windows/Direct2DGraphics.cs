@@ -21,13 +21,14 @@ namespace FamiStudio
 {
     public class Direct2DGraphics : IDisposable
     {
-        protected Factory factory;
+        protected SharpDX.Direct2D1.Factory1 factory;
         protected DirectWriteFactory directWriteFactory;
         protected RenderTarget renderTarget;
         protected Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
         protected Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
         protected Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
         protected StrokeStyle strokeStyleMiter;
+        protected StrokeStyle strokeStyleNoScaling;
         protected float windowScaling = 1.0f;
 
         public Factory Factory => factory;
@@ -35,7 +36,7 @@ namespace FamiStudio
 
         public Direct2DGraphics(UserControl control)
         {
-            factory = new SharpDX.Direct2D1.Factory();
+            factory = new SharpDX.Direct2D1.Factory1();
             windowScaling = Direct2DTheme.MainWindowScaling;
 
             HwndRenderTargetProperties properties = new HwndRenderTargetProperties();
@@ -59,6 +60,7 @@ namespace FamiStudio
             renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
             renderTarget.AntialiasMode = AntialiasMode.Aliased;
             strokeStyleMiter = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
+            strokeStyleNoScaling = new StrokeStyle1(factory, new StrokeStyleProperties1() { TransformType = StrokeTransformType.Fixed });
         }
 
         public virtual void Dispose()
@@ -118,7 +120,7 @@ namespace FamiStudio
             renderTarget.Transform = mat;
         }
 
-        public void PushTransform(int tx, int ty, int sx, int sy)
+        public void PushTransform(float tx, float ty, float sx, float sy)
         {
             var mat = renderTarget.Transform;
             matrixStack.Push(mat);
@@ -183,7 +185,7 @@ namespace FamiStudio
             {
                 renderTarget.DrawLine(
                     new RawVector2(points[i + 0, 0] + 0.5f, points[i + 0, 1] + 0.5f),
-                    new RawVector2(points[i + 1, 0] + 0.5f, points[i + 1, 1] + 0.5f), brush);
+                    new RawVector2(points[i + 1, 0] + 0.5f, points[i + 1, 1] + 0.5f), brush, 1.0f, strokeStyleNoScaling);
             }
         }
 
@@ -206,17 +208,17 @@ namespace FamiStudio
             DrawRectangle(new RawRectangleF(x0, y0, x1, y1), brush, width);
         }
 
-        public PathGeometry CreateConvexPath(System.Drawing.Point[] points, bool closed = true)
+        public PathGeometry CreateGeometry(float[,] points, bool closed = true)
         {
             var geo = new PathGeometry(factory);
             var sink = geo.Open();
             sink.SetFillMode(FillMode.Winding);
 
-            sink.BeginFigure(new RawVector2(points[0].X, points[0].Y), FigureBegin.Filled);
-            for (int i = 1; i < points.Length; i++)
-                sink.AddLine(new RawVector2(points[i].X, points[i].Y));
+            sink.BeginFigure(new RawVector2(points[0, 0], points[0, 1]), FigureBegin.Filled);
+            for (int i = 1; i < points.GetLength(0); i++)
+                sink.AddLine(new RawVector2(points[i, 0], points[i, 1]));
             if (closed)
-                sink.AddLine(new RawVector2(points[0].X, points[0].Y));
+                sink.AddLine(new RawVector2(points[0, 0], points[0, 1]));
 
             sink.EndFigure(closed ? FigureEnd.Closed : FigureEnd.Open);
             sink.Close();
@@ -242,23 +244,23 @@ namespace FamiStudio
             DrawRectangle(rect, lineBrush, width);
         }
 
-        public void FillConvexPath(Geometry geo, Brush brush, bool smooth = false)
+        public void FillGeometry(Geometry geo, Brush brush, bool smooth = false)
         {
             AntiAliasing = true;
             renderTarget.FillGeometry(geo, brush);
             AntiAliasing = false;
         }
 
-        public void DrawConvexPath(Geometry geo, Brush brush)
+        public void DrawGeometry(Geometry geo, Brush brush)
         {
             AntiAliasing = true;
             PushTranslation(0.5f, 0.5f);
-            renderTarget.DrawGeometry(geo, brush);
+            renderTarget.DrawGeometry(geo, brush, 1.0f, strokeStyleNoScaling);
             PopTransform();
             AntiAliasing = false;
         }
 
-        public void FillAndDrawConvexPath(Geometry geo, Brush fillBrush, Brush lineBrush, float lineWidth = 1.0f)
+        public void FillAndDrawGeometry(Geometry geo, Brush fillBrush, Brush lineBrush, float lineWidth = 1.0f)
         {
             AntiAliasing = true;
             renderTarget.FillGeometry(geo, fillBrush);
@@ -399,11 +401,9 @@ namespace FamiStudio
             return bmp.Size.Width;
         }
 
-        public Brush GetSolidBrush(Color color, float dimming, float alphaDimming)
+        public Brush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
         {
             Brush brush;
-            if (solidGradientCache.TryGetValue(color, out brush))
-                return brush;
 
             Color color2 = Color.FromArgb(
                 Utils.Clamp((int)(color.A * alphaDimming), 0, 255),
@@ -411,8 +411,11 @@ namespace FamiStudio
                 Utils.Clamp((int)(color.G * dimming), 0, 255),
                 Utils.Clamp((int)(color.B * dimming), 0, 255));
 
+            if (solidGradientCache.TryGetValue(color2, out brush))
+                return brush;
+
             brush = CreateSolidBrush(color2);
-            solidGradientCache[color] = brush;
+            solidGradientCache[color2] = brush;
 
             return brush;
         }
@@ -479,7 +482,7 @@ namespace FamiStudio
             });
 
             windowScaling = 1.0f; // No scaling for now in videos.
-            factory = new SharpDX.Direct2D1.Factory();
+            factory = new SharpDX.Direct2D1.Factory1();
             renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
 
             Initialize();

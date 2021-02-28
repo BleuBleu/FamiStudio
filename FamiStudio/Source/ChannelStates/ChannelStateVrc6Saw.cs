@@ -4,7 +4,7 @@ namespace FamiStudio
 {
     public class ChannelStateVrc6Saw : ChannelState
     {
-        public ChannelStateVrc6Saw(int apuIdx, int channelType) : base(apuIdx, channelType, false)
+        public ChannelStateVrc6Saw(IPlayerInterface player, int apuIdx, int channelType) : base(player, apuIdx, channelType, false)
         {
         }
 

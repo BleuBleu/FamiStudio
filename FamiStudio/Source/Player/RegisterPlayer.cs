@@ -10,7 +10,7 @@ namespace FamiStudio
         public int Value;
     };
 
-    class RegisterPlayer : BasePlayer, IRegisterListener
+    class RegisterPlayer : BasePlayer
     {
         List<RegisterWrite> registerWrites;
 
@@ -23,7 +23,7 @@ namespace FamiStudio
         {
             registerWrites = new List<RegisterWrite>();
 
-            if (BeginPlaySong(song, pal, 0, this))
+            if (BeginPlaySong(song, pal, 0))
             {
                 while (PlaySongFrame());
             }
@@ -31,7 +31,7 @@ namespace FamiStudio
             return registerWrites.ToArray();
         }
 
-        public void WriteRegister(int apuIndex, int reg, int data)
+        public override void NotifyRegisterWrite(int apuIndex, int reg, int data)
         {
             if (apuIndex == NesApu.APU_WAV_EXPORT)
             {

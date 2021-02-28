@@ -98,17 +98,22 @@ namespace FamiStudio
         private static int refCount = 0;
         private PaStreamCallback streamCallback;
 
-        public PortAudioStream(int rate, int channels, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        private IntPtr  immediateStream = new IntPtr();
+        private short[] immediateStreamData = null;
+        private int     immediateStreamPosition = -1;
+        private PaStreamCallback immediateStreamCallback;
+
+        public PortAudioStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             if (refCount == 0)
-            {
                 Pa_Initialize();
-                refCount++;
-            }
+
+            refCount++;
 
             streamCallback = new PaStreamCallback(StreamCallback);
+            immediateStreamCallback = new PaStreamCallback(ImmediateStreamCallback);
 
-            Pa_OpenDefaultStream(out stream, 0, 1, PaSampleFormat.Int16, 44100, 0, streamCallback, IntPtr.Zero);
+            Pa_OpenDefaultStream(out stream, 0, 1, PaSampleFormat.Int16, rate, 0, streamCallback, IntPtr.Zero);
             bufferFill = bufferFillCallback;
         }
 
@@ -138,6 +143,8 @@ namespace FamiStudio
                 var err = Pa_CloseStream(stream);
                 stream = IntPtr.Zero;
             }
+
+            StopImmediate();
 
             refCount--;
             if (refCount == 0)
@@ -179,6 +186,70 @@ namespace FamiStudio
             while (frameCount != 0);
 
             return PaStreamCallbackResult.Continue;
+        }
+
+        PaStreamCallbackResult ImmediateStreamCallback(IntPtr input, IntPtr output, uint frameCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData)
+        {
+            int numSamplesToCopy = (int)Math.Min(frameCount, immediateStreamData.Length - immediateStreamPosition);
+
+            if (numSamplesToCopy <= 0)
+                return PaStreamCallbackResult.Abort;
+
+            Marshal.Copy(immediateStreamData, immediateStreamPosition, output, numSamplesToCopy);
+            immediateStreamPosition += (int)frameCount;
+
+            if (immediateStreamPosition >= immediateStreamData.Length)
+            {
+                immediateStreamData = null;
+                immediateStreamPosition = -1;
+
+                return PaStreamCallbackResult.Complete;
+            }
+            else
+            {
+                return PaStreamCallbackResult.Continue;
+            }
+        }
+
+        public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
+        {
+            StopImmediate();
+
+            Pa_OpenDefaultStream(out immediateStream, 0, 1, PaSampleFormat.Int16, sampleRate, 0, immediateStreamCallback, IntPtr.Zero);
+
+            if (immediateStream != IntPtr.Zero)
+            {
+                // Cant find volume adjustment in port audio.
+                short vol = (short)(volume * 32768);
+
+                immediateStreamData = new short[data.Length];
+                for (int i = 0; i < data.Length; i++)
+                    immediateStreamData[i] = (short)((data[i] * vol) >> 15);
+
+                immediateStreamPosition = 0;
+                Pa_StartStream(immediateStream);
+            }
+        }
+
+        public void StopImmediate()
+        {
+            if (immediateStream != IntPtr.Zero)
+            {
+                Pa_AbortStream(immediateStream);
+                //Pa_StopStream(immediateStream);
+                Pa_CloseStream(immediateStream);
+                immediateStream = IntPtr.Zero;
+                immediateStreamData = null;
+                immediateStreamPosition = -1;
+            }
+        }
+
+        public int ImmediatePlayPosition
+        {
+            get
+            {
+                return immediateStreamPosition;
+            }
         }
     }
 }
