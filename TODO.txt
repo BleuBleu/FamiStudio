@@ -1,8 +1,6 @@
 FamiStudio 2.4.0
 ================
 - PR famistudio text stuff
-- MacOS instrument player stall when opening FTM.
-	
 
 New features:
 - DPCM sample editor (+ sample mapping changes)

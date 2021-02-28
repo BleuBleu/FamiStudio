@@ -10,20 +10,21 @@ Changes :
 - Darker theme and more color choices
 - Ability to use QWERTY keyboard input without using recording mode
 - Slightly reduced audio latency and configurable number of buffered frames
-- Right-clicking in the background also starts a selection
+- Right-clicking anywhere in the background also starts a selection
 - Seek bar can be dragged and respects snapping precision
-- Pattern duplication preserves color and names (when possible)
+- Pattern duplication preserves names when possible
 - Instrument picker tool
 - Paste special in Sequencer
 - Pattern are created automatically when adding notes.
-- Repeat last export
+- Quickly repeat last export by right clicking button or CTRL+SHIFT+E
 - Edit multiple custom patterns at once
+- Video export resolution/framerate options (Contributed by Thomas McGrew)
 - Multiple VRC7 fixes
 - Multiple FamiTracker fixes
 - Multiple sound engine improvements & fixes 
 	- Blaarg smooth vibrato support for SFX
-	- Unlimited SFX size (Brad)
-	- Linker support in CA65 
+	- Unlimited SFX size (Contributed by Brad Smith)
+	- Linker support in CA65 (Based on idea by Brad Smith)
 
 ## Version 2.3.2 (Hotfix)
 
