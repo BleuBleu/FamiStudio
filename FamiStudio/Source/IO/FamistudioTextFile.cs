@@ -285,7 +285,10 @@ namespace FamiStudio
                 var song = (Song)null;
                 var channel = (Channel)null;
                 var pattern = (Pattern)null;
-                var version = "9.9.9";
+                var version = "0.0.0";
+                var isVersion230OrNewer = false;
+                var isVersion240OrNewer = false;
+                var beatLengthAttributeName = "BeatLength";
 
                 foreach (var line in lines)
                 {
@@ -303,6 +306,10 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudio(ExpansionType.GetValueForShortName(expansion));
                             if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = TempoType.GetValueForName(tempoMode);
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
+                            isVersion230OrNewer = string.CompareOrdinal(version, "2.3.0") >= 0;
+                            isVersion240OrNewer = string.CompareOrdinal(version, "2.4.0") >= 0;
+                            if (!isVersion230OrNewer)
+                                beatLengthAttributeName = "BarLength";
                             break;
                         }
                         case "DPCMSample":
@@ -312,6 +319,12 @@ namespace FamiStudio
                             for (int i = 0; i < data.Length; i++)
                                 data[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
                             var sample = project.CreateDPCMSampleFromDmcData(parameters["Name"], data);
+                            // Any DPCM processing options are no longer supported in 2.4.0 and newer. We just import/export the processed DMC data.
+                            if (!isVersion240OrNewer && parameters.TryGetValue("ReverseBits", out var reverseBitStr))
+                            {
+                                sample.ReverseBits = bool.Parse(reverseBitStr);
+                                sample.Process();
+                            }
                             break;
                         }
                         case "DPCMMapping":
@@ -394,7 +407,7 @@ namespace FamiStudio
                         {
                             song = project.CreateSong(parameters["Name"]);
                             song.SetLength(int.Parse(parameters["Length"]));
-                            song.SetBeatLength(int.Parse(parameters[string.CompareOrdinal(version, "2.3.0") >= 0 ? "BeatLength" : "BarLength"]));
+                            song.SetBeatLength(int.Parse(parameters[beatLengthAttributeName]));
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
 
                             if (song.UsesFamiTrackerTempo)
@@ -417,7 +430,7 @@ namespace FamiStudio
                             if (project.UsesFamiTrackerTempo)
                             {
                                 var beatLength = song.BeatLength;
-                                if (parameters.TryGetValue(string.CompareOrdinal(version, "2.3.0") >= 0 ? "BeatLength" : "BarLength", out var beatLengthStr))
+                                if (parameters.TryGetValue(beatLengthAttributeName, out var beatLengthStr))
                                     beatLength = int.Parse(beatLengthStr);
 
                                 song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]), beatLength);
@@ -426,7 +439,7 @@ namespace FamiStudio
                             {
                                 var patternLength = int.Parse(parameters["Length"]);
                                 var noteLength = int.Parse(parameters["NoteLength"]);
-                                var beatLength = int.Parse(parameters[string.CompareOrdinal(version, "2.3.0") >= 0 ? "BeatLength" : "BarLength"]);
+                                var beatLength = int.Parse(parameters[beatLengthAttributeName]);
 
                                 song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, beatLength * noteLength, noteLength);
                             }
