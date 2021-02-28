@@ -29,8 +29,8 @@ namespace FamiStudio
             Debug.Assert(playerThread == null);
             Debug.Assert(sampleQueue.Count == 0);
 
-            stopEvent.Reset();
-            frameEvent.Set();
+            ResetThreadingObjects();
+
             playerThread = new Thread(PlayerThread);
             playerThread.Start(new SongPlayerStartInfo() { song = song, startNote = frame, pal = pal });
         }
@@ -56,7 +56,7 @@ namespace FamiStudio
 
             if (BeginPlaySong(startInfo.song, startInfo.pal, startInfo.startNote))
             {
-                var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
+                var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
 
                 while (true)
                 {

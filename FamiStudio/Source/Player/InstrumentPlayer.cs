@@ -62,9 +62,9 @@ namespace FamiStudio
             numExpansionChannels = project.ExpansionNumChannels;
             palPlayback = pal;
             channelStates = CreateChannelStates(this, project, apuIndex, numExpansionChannels, palPlayback);
+            
+            ResetThreadingObjects();
 
-            stopEvent.Reset();
-            frameEvent.Set();
             playerThread = new Thread(PlayerThread);
             playerThread.Start();
         }
@@ -94,7 +94,7 @@ namespace FamiStudio
             var lastReleaseTime = DateTime.Now;
 
             var activeChannel = -1;
-            var waitEvents = new WaitHandle[] { stopEvent, frameEvent };
+            var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, GetNesApuExpansionAudio(expansionAudio), numExpansionChannels, dmcCallback);
             for (int i = 0; i < channelStates.Length; i++)

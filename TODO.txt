@@ -1,20 +1,8 @@
 FamiStudio 2.4.0
 ================
 - PR famistudio text stuff
-- FREEZE : Instrument player froze.
-	=> HAPPENS WHEN AUDIO OUTPUT CHANGES!!??! CANT REPRO...
-
-Test:
-- Retest Win7 device lost.
-- Transaction (w/o DPCM), test a LOT!
-	- Dont seem to refresh when i do cleanup.
-- Test HI-DPI.
-	- Waveform
-	- Scrollbar in PE.
-x Re-export, recompile and change ROM version.
-- ROM: Make sure square pops, and doesnt in NSF.
-- Compare quality with MakeDPCM & RJDMC.
-- Test merging of samples from other project (with WAV, etc.)
+- MacOS instrument player stall when opening FTM.
+	
 
 New features:
 - DPCM sample editor (+ sample mapping changes)

@@ -20,7 +20,7 @@ namespace FamiStudio
 
         protected AudioStream audioStream;
         protected Thread playerThread;
-        protected AutoResetEvent frameEvent = new AutoResetEvent(true);
+        protected Semaphore bufferSemaphore;
         protected ManualResetEvent stopEvent = new ManualResetEvent(false);
         protected ConcurrentQueue<short[]> sampleQueue = new ConcurrentQueue<short[]>();
         protected int numBufferedFrames = 3;
@@ -29,6 +29,7 @@ namespace FamiStudio
         {
             int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short);
             numBufferedFrames = numBuffers;
+            bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
             audioStream = new AudioStream(sampleRate, bufferSize, numBufferedFrames, AudioBufferFillCallback);
         }
 
@@ -37,7 +38,8 @@ namespace FamiStudio
             short[] samples = null;
             if (sampleQueue.TryDequeue(out samples))
             {
-                frameEvent.Set(); // Wake up player thread.
+                // Tell player thread it needs to generate one more frame.
+                bufferSemaphore.Release(); 
             }
             //else
             //{
@@ -45,6 +47,12 @@ namespace FamiStudio
             //}
 
             return samples;
+        }
+
+        protected void ResetThreadingObjects()
+        {
+            stopEvent.Reset();
+            bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
         }
 
         public override void Shutdown()
@@ -60,18 +68,13 @@ namespace FamiStudio
         {
             sampleQueue.Enqueue(base.EndFrame());
 
-            // Wait until we have queued as many frames as XAudio buffers to start
+            // Wait until we have queued the maximum number of buffered frames to start
             // the audio thread, otherwise, we risk starving on the first frame.
-            if (!audioStream.IsStarted)
+            if (!audioStream.IsStarted && sampleQueue.Count == numBufferedFrames)
             {
-                if (sampleQueue.Count == numBufferedFrames)
-                {
-                    audioStream.Start();
-                }
-                else
-                {
-                    frameEvent.Set();
-                }
+                // Semaphore should be zero by now.
+                Debug.Assert(bufferSemaphore.WaitOne(0) == false);
+                audioStream.Start();
             }
 
             return null;
