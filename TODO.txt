@@ -27,12 +27,13 @@ FamiStudio 2.5.0
 - FamiStudio Tempo 2.0 => Arbitrary BPM.
 	- Figure out fundamental difference between tempo vs. groove
 	- Look at gyuss for example (7-6-6, cycle over 120 frames)
+- MIDI in/out
+- Oscilloscope + volume tracks display.
 - Double-right-click = select whole note (or whole note drag?)
 - When using 1/2 snapping, dragging notes is awkward.
-- MIDI in/out
 - Sort song other than alphabetically.
-- DPCM : More stuff, normalize volume? Playback speed?
-- Channel volumes settings.
+- DPCM : More stuff, normalize volume? Playback speed? See people's request.
+- Channel volumes settings in config.
 
 Tips & Tricks (Review this list)
 ================================

@@ -270,7 +270,8 @@ Note that only a small subset of features is supported. Only the following effec
 
 Besides effects, there are also other limitations:
 
-* When the limit of 16KB is reached, all subsequent DPCM samples will stop loading.
+* Only DPCM samples from the first instrument that has any will be mapped in the DPCM instrument. Samples from other instruments will be loaded, but unassigned to any keys.
+* All DPCM samples will be loaded (and potentially assigned to a key of the DPCM instrument) but any sample over the 16KB FamiStudio limit will not play correctly or at all.
 * Namco 163 instrument can only have a single waveform. Any other waveform than zero will be ignored.
 * VRC7 1xx/2xx/3xx/Qxx/Rxx effects will likely not sound like FamiTracker and will need manual corrections.
 * Instruments using both pitch and arpeggio envelopes at the same time will not sound the same as in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker re-triggers the pitch envelope at each arpeggio notes (probably the more sensible way), while FamiStudio simply runs both at the same time.
