@@ -54,6 +54,11 @@ namespace FamiStudio
         {
             var startInfo = (SongPlayerStartInfo)o;
 
+            // Since BeginPlaySong is not inside the main loop and will
+            // call EndFrame, we need to subtract one immediately so that
+            // the semaphore count is not off by one.
+            bufferSemaphore.WaitOne();
+
             if (BeginPlaySong(startInfo.song, startInfo.pal, startInfo.startNote))
             {
                 var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
