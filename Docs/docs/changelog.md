@@ -13,7 +13,7 @@ Changes :
 * Right-clicking anywhere in the background also starts a selection
 * Seek bar can be dragged and respects snapping precision
 * Pattern duplication preserves names when possible
-* Instrument picker tool
+* Instrument picker tool (hold "I" + click on a note)
 * Paste special in Sequencer
 * Pattern are created automatically when adding notes.
 * Quickly repeat last export by right clicking button or CTRL+SHIFT+E
