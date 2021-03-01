@@ -5,6 +5,9 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.IO;
+using Microsoft.Win32;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace FamiStudio
 {
@@ -111,6 +114,21 @@ namespace FamiStudio
             var clientPos = ctrl.PointToClient(new Point(x, y));
 
             return new MouseEventArgs(MouseButtons.None, 1, clientPos.X, clientPos.Y, delta);
+        }
+
+        public static bool IsVS2015RuntimeInstalled()
+        {
+            try
+            {
+                // Super ghetto way of detecting if the runtime is installed is simply by calling
+                // any function that will cause a C++ DLL to be loaded.
+                NesApu.GetAudioExpansion(0);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

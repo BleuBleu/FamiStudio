@@ -31,6 +31,16 @@ namespace FamiStudio
             }
             catch { }
 
+            if (!PlatformUtils.IsVS2015RuntimeInstalled())
+            {
+                if (MessageBox.Show("You seem to be missing the VS 2015 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    Utils.OpenUrl("https://famistudio.org/doc/#windows");
+                }
+
+                return;
+            }
+
             if (!XAudio2Stream.TryDetectXAudio2())
             {
                 if (MessageBox.Show("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)

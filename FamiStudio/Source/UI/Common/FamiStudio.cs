@@ -769,7 +769,7 @@ namespace FamiStudio
             string title = $"FamiStudio {version} - {projectFile}";
 
 #if DEVELOPMENT_VERSION
-            title += " - DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
+            title += " - BETA 1 - DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
 #endif
 
             mainForm.Text = title;
