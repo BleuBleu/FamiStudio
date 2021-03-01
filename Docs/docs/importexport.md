@@ -189,8 +189,8 @@ Instrument | Name | Yes | Name of the instrument.
 | FdsModDepth | | (FDS instrument only) 0 to 63.
 | FdsModDelay | | (FDS instrument only) 0 to 255.
 | N163WavePreset | | (N163 instrument only) Sine, Triangle, Sawtooth, Square 50%, Square 25%, Flat or Custom.
-| N163WaveSize | | (N163 instrument only) 4, 8, 16 or 32.
-| N163WavePos | | (N163 instrument only) 0 to 124.
+| N163WaveSize | | (N163 instrument only) 4 to 248, multiple of 4 (4, 8, 12, etc.).
+| N163WavePos | | (N163 instrument only) 0 to 244, multiple of 4 (4, 8, 12, etc.).
 | Vrc7Patch | | (VRC7 instrument only) 0 to 15.
 | Vrc7Reg{1 to 8} | | (VRC7 instrument only, if Vrc7Patch is 0) Values of the 8 custom patch registers.
 Envelope | Type | Yes | Volume, Arpeggio, Pitch, DutyCycle, FDSWave, FDSMod or N163Wave.
