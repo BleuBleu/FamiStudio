@@ -1,26 +1,9 @@
 FamiStudio 2.4.0
 ================
-- PR famistudio text stuff
-
-New features:
-- DPCM sample editor (+ sample mapping changes)
-- Darker theme
-- More color choices
-- Toggle for QWERTY input
-- Reduced audio latency
-- Select from anyway by clicking in BG
-- Dragging seek bar + snap
-- Improved pattern duplication
-- Instrument eyedrop
-- Sequencer paste special
-- Multiple sound engine improvements & bug fixes 
-	- Blaarg smooth vibrato support for SFX
-	- Unlimited SFX size (Brad)
-- Create pattern automatically
-- Repeat last export
-- Multiple custom pattern editing
-- VRC7 fixes.
-- Stuff from 2.3.3
+- Beta
+- New song
+- Trailer
+- DPCM tutorial
 
 FamiStudio 2.5.0
 ================
@@ -69,13 +52,6 @@ Is #00 necessary???
 #xx - Cleaning up your project.
 #xx - Using the sound engine in your Homebrew game.
 #xx - Command line processing (ex: export a FamiTracker file to mp3).
-
-Setup project notes
-===================
-- This file has bad URL for VS 2015 redist:
-	C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\SDK\Bootstrapper\Packages\vcredist_x86\product.xml
-- Must change to public key to 
-	3082010a0282010100955ac68669471d341ef155c36675f662541858146727f0a32ac60348bce656347f496102ee847866279456212cb5a1ecb7cd3bb1a8b6e41c07666de53c345328e3d3efef5320212f481bf12dab0387eeea5a9fe948aba34e730e5f3ba3acfb5d91d10dbc3331a7fb7cbb17698a0e7a2956ed2c12e7f2e39de0c73d7a33c6c0c38f905eebfbf9f47d5b3449d82a54eb6c1029888540c7dec3a561e5fb8fa1796837793af90973ef381c4f86119b1cf1ee3315a4ffeebcaeac65c0714375a007f5a4c971e0c5a635f480332ead9088f897d98af2891e44b1806adf904fed4d790e566da52b36c086139240c1c613c9203260a3066ee46ca11ddaabb2ddce8e44910203010001
 
 Linux notes
 ===========
