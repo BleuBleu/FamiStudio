@@ -48,7 +48,7 @@ namespace FamiStudio
 
         public float ProcessedStartTime  => processedDataStartTime;
         public float ProcessedEndTime    => processedDataStartTime + ProcessedDuration;
-        public float ProcessedSampleRate => DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
+        public float ProcessedSampleRate => DPCMSampleRate.Frequencies[palProcessing ? 1 : 0, sampleRate];
         public float ProcessedDuration   => processedData.Length * 8 / ProcessedSampleRate;
 
         public byte[]   ProcessedData  { get => processedData;  set => processedData  = value; }
@@ -85,7 +85,7 @@ namespace FamiStudio
 
         public float GetPlaybackSampleRate(bool palPlayback)
         {
-            return DpcmSampleRates[palPlayback ? 1 : 0, previewRate];
+            return DPCMSampleRate.Frequencies[palPlayback ? 1 : 0, previewRate];
         }
 
         public float GetPlaybackDuration(bool palPlayback)
@@ -147,7 +147,7 @@ namespace FamiStudio
             {
                 processedDataStartTime = 0;
 
-                var targetSampleRate = DpcmSampleRates[palProcessing ? 1 : 0, sampleRate];
+                var targetSampleRate = DPCMSampleRate.Frequencies[palProcessing ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.
                 if (!SourceDataIsWav && volumeAdjust == 100 && !UsesVolumeEnvelope && sampleRate == 15 && !trimZeroVolume)
@@ -411,51 +411,6 @@ namespace FamiStudio
             33143.9f,
             33252.1f
         };
-
-        // From NESDEV wiki.
-        // [0,x] = NTSC
-        // [1,x] = PAL
-        public static float[,] DpcmSampleRates =
-        {
-            // NTSC
-            {
-                4181.71f,
-                4709.93f,
-                5264.04f,
-                5593.04f,
-                6257.95f,
-                7046.35f,
-                7919.35f,
-                8363.42f,
-                9419.86f,
-                11186.1f,
-                12604.0f,
-                13982.6f,
-                16884.6f,
-                21306.8f,
-                24858.0f,
-                33143.9f
-            },
-            // PAL
-            {
-                4177.40f,
-                4696.63f,
-                5261.41f,
-                5579.22f,
-                6023.94f,
-                7044.94f,
-                7917.18f,
-                8397.01f,
-                9446.63f,
-                11233.8f,
-                12595.5f,
-                14089.9f,
-                16965.4f,
-                21315.5f,
-                25191.0f,
-                33252.1f
-            }
-        };
     }
 
     public class DPCMSampleMapping
@@ -598,5 +553,102 @@ namespace FamiStudio
             return Array.IndexOf(Names, str);
         }
     };
+    
+    public static class DPCMSampleRate
+    {
+        // From NESDEV wiki.
+        // [0,x] = NTSC
+        // [1,x] = PAL
+        public static readonly float[,] Frequencies =
+        {
+            // NTSC
+            {
+                4181.71f,
+                4709.93f,
+                5264.04f,
+                5593.04f,
+                6257.95f,
+                7046.35f,
+                7919.35f,
+                8363.42f,
+                9419.86f,
+                11186.1f,
+                12604.0f,
+                13982.6f,
+                16884.6f,
+                21306.8f,
+                24858.0f,
+                33143.9f
+            },
+            // PAL
+            {
+                4177.40f,
+                4696.63f,
+                5261.41f,
+                5579.22f,
+                6023.94f,
+                7044.94f,
+                7917.18f,
+                8397.01f,
+                9446.63f,
+                11233.8f,
+                12595.5f,
+                14089.9f,
+                16965.4f,
+                21315.5f,
+                25191.0f,
+                33252.1f
+            }
+        };
 
+        // From NESDEV wiki.
+        // [0,x] = NTSC
+        // [1,x] = PAL
+        public static readonly string[][] Strings =
+        {
+            // NTSC
+            new [] {
+                "0 (4.2 KHz)",
+                "1 (4.7 KHz)",
+                "2 (5.3 KHz)",
+                "3 (5.6 KHz)",
+                "4 (6.3 KHz)",
+                "5 (7.0 KHz)",
+                "6 (7.9 KHz)",
+                "7 (8.3 KHz)",
+                "8 (9.4 KHz)",
+                "9 (11.1 KHz)",
+                "10 (12.6 KHz)",
+                "11 (13.9 KHz)",
+                "12 (16.9 KHz)",
+                "13 (21.3 KHz)",
+                "14 (24.9 KHz)",
+                "15 (33.1 KHz)"
+            },
+            // PAL
+            new [] {
+                "0 (4.2 KHz)",
+                "1 (4.7 KHz)",
+                "2 (5.3 KHz)",
+                "3 (5.6 KHz)",
+                "4 (6.0 KHz)",
+                "5 (7.0 KHz)",
+                "6 (7.9 KHz)",
+                "7 (8.4 KHz)",
+                "8 (9.4 KHz)",
+                "9 (11.2 KHz)",
+                "10 (12.6 KHz)",
+                "11 (14.1 KHz)",
+                "12 (17.0 KHz)",
+                "13 (21.3 KHz)",
+                "14 (25.2 KHz)",
+                "15 (33.3 KHz)"
+            }
+        };
+
+        public static int GetIndexForName(bool pal, string str)
+        {
+            return Array.IndexOf(Strings[pal ? 1 : 0], str);
+        }
+    };
 }

@@ -907,7 +907,7 @@ namespace FamiStudio
                 dmcRateIndex = sample.PreviewRate;
             }
 
-            var playRate = (int)Math.Round(DPCMSample.DpcmSampleRates[palPlayback ? 1 : 0, dmcRateIndex]);
+            var playRate = (int)Math.Round(DPCMSampleRate.Frequencies[palPlayback ? 1 : 0, dmcRateIndex]);
             WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out short[] wave);
 
             if (wave.Length > 0)

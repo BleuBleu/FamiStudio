@@ -2019,18 +2019,6 @@ namespace FamiStudio
                     g.FillRectangle(0, 0, Width, virtualSizeY - Note.DPCMNoteMax * noteSizeY, invalidDpcmMappingBrush);
                     g.PopTransform();
 
-                    //int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
-
-                    //for (int j = 0; j < 12; j++)
-                    //{
-                    //    int y = octaveBaseY - j * noteSizeY;
-                    //    if (!IsBlackKey(j))
-                    //        g.FillRectangle(0, y - noteSizeY, maxX, y, theme.DarkGreyFillBrush1);
-                    //    if (i * 12 + j != numNotes)
-                    //        g.DrawLine(0, y, maxX, y, theme.BlackBrush);
-                    //}
-
-
                     for (int i = 0; i < Note.MusicalNoteMax; i++)
                     {
                         var mapping = App.Project.GetDPCMMapping(i);
@@ -2042,9 +2030,8 @@ namespace FamiStudio
                             g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(mapping.Sample.Color, noteSizeY, 0.8f), theme.BlackBrush);
                             if (mapping.Sample != null)
                             {
-                                string text = $"{mapping.Sample.Name} (Pitch: {mapping.Pitch}";
+                                string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.Strings[App.PalPlayback ? 1 : 0][mapping.Pitch]}";
                                 if (mapping.Loop) text += ", Looping";
-                                text += ")";
                                 g.DrawText(text, ThemeBase.FontSmall, dpcmTextPosX, dpcmTextPosY, theme.BlackBrush);
                             }
                             g.PopTransform();
@@ -2709,15 +2696,16 @@ namespace FamiStudio
                 var mapping = App.Project.GetDPCMMapping(noteValue);
                 if (left && mapping != null)
                 {
+                    var freqIdx = App.PalPlayback ? 1 : 0;
                     var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, false, e.Y > Height / 2);
-                    dlg.Properties.AddIntegerRange("Pitch :", mapping.Pitch, 0, 15); // 0
+                    dlg.Properties.AddStringList("Pitch :", DPCMSampleRate.Strings[freqIdx], DPCMSampleRate.Strings[freqIdx][mapping.Pitch]); // 0
                     dlg.Properties.AddBoolean("Loop :", mapping.Loop); // 1
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
-                        mapping.Pitch = dlg.Properties.GetPropertyValue<int>(0);
+                        mapping.Pitch = DPCMSampleRate.GetIndexForName(App.PalPlayback, dlg.Properties.GetPropertyValue<string>(0));
                         mapping.Loop  = dlg.Properties.GetPropertyValue<bool>(1);
                         App.UndoRedoManager.EndTransaction();
                         ConditionalInvalidate();
