@@ -178,36 +178,38 @@ namespace FamiStudio
         {
             ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopes);
 
-            // We only consider the first 2A03 instrument with samples. Rest is ignored.
-            if (!samplesLoaded)
+            var foundAnySamples = false;
+
+            for (int i = 0; i < OctaveRange; ++i)
             {
-                for (int i = 0; i < OctaveRange; ++i)
+                for (int j = 0; j < 12; ++j)
                 {
-                    for (int j = 0; j < 12; ++j)
+                    var index = bytes[idx++];
+                    var pitch = bytes[idx++];
+
+                    if (blockVersion > 5)
+                        idx++; // sample delta
+
+                    if (index > 0 && pitch != 0)
                     {
-                        var index = bytes[idx++];
-                        var pitch = bytes[idx++];
-
-                        if (blockVersion > 5)
-                            idx++; // sample delta
-
-                        if (index > 0 && pitch != 0)
+                        var sample = samples[index - 1];
+                        if (sample != null && sample.ProcessedData != null)
                         {
-                            var sample = samples[index - 1];
-                            if (sample != null && sample.ProcessedData != null)
-                            {
-                                samplesLoaded = true;
+                            if (!samplesLoaded)
                                 project.MapDPCMSample(i * 12 + j + 1, sample, pitch & 0x0f, (pitch & 0x80) != 0);
-                            }
-                        }
 
+                            foundAnySamples = true;
+                        }
                     }
                 }
             }
-            else
+
+            if (foundAnySamples)
             {
-                idx += OctaveRange * 12 * (blockVersion > 5 ? 3 : 2);
-                Log.LogMessage(LogSeverity.Warning, $"Multiple instruments are using DPCM samples. Samples from instrument {instIdx} will be loaded, but not assigned to the DPCM instrument.");
+                if (samplesLoaded)
+                    Log.LogMessage(LogSeverity.Warning, $"Multiple instruments are using DPCM samples. Samples from instrument {instIdx} will be loaded, but not assigned to the DPCM instrument.");
+
+                samplesLoaded = true;
             }
         }
 
