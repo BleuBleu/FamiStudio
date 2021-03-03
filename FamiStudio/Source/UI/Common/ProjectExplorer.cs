@@ -1441,7 +1441,8 @@ namespace FamiStudio
                     if (subButtonType == SubButtonType.Add)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                        App.Project.CreateSong();
+                        selectedSong = App.Project.CreateSong();
+                        SongSelected?.Invoke(selectedSong);
                         App.UndoRedoManager.EndTransaction();
                         RefreshButtons();
                     }
@@ -1479,7 +1480,8 @@ namespace FamiStudio
                         }
 
                         App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                        App.Project.CreateInstrument(instrumentType);
+                        selectedInstrument = App.Project.CreateInstrument(instrumentType);
+                        InstrumentSelected?.Invoke(selectedInstrument);
                         App.UndoRedoManager.EndTransaction();
                         RefreshButtons();
                     }
@@ -1600,7 +1602,8 @@ namespace FamiStudio
                     if (subButtonType == SubButtonType.Add)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                        App.Project.CreateArpeggio();
+                        selectedArpeggio = App.Project.CreateArpeggio();
+                        ArpeggioSelected?.Invoke(selectedArpeggio);
                         App.UndoRedoManager.EndTransaction();
                         RefreshButtons();
                     }
@@ -2116,6 +2119,7 @@ namespace FamiStudio
         {
             buffer.Serialize(ref selectedSong);
             buffer.Serialize(ref selectedInstrument);
+            buffer.Serialize(ref selectedArpeggio);
             buffer.Serialize(ref expandedInstrument);
             buffer.Serialize(ref expandedSample);
             buffer.Serialize(ref scrollY);
