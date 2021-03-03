@@ -63,8 +63,8 @@ namespace FamiStudio
                     page.AddStringListMulti(null, GetSongNames(), null);                      // 2
                     break;
                 case TransformOperation.ProjectCleanup:
-                    page.AddBoolean("Merge identical instruments:", true);                    // 0
-                    page.AddBoolean("Delete unused instruments:", true);                      // 1
+                    page.AddBoolean("Delete unused instruments:", true);                      // 0
+                    page.AddBoolean("Merge identical instruments:", true);                    // 1
                     page.AddBoolean("Unassign unused DPCM instrument keys:", true);           // 2
                     page.AddBoolean("Delete unassigned samples:", true);                      // 3
                     page.AddBoolean("Permanently apply all DPCM samples processing:", false); // 4
@@ -151,8 +151,8 @@ namespace FamiStudio
         {
             var props = dialog.GetPropertyPage((int)TransformOperation.ProjectCleanup);
 
-            var mergeIdenticalInstruments = props.GetPropertyValue<bool>(0);
-            var deleteUnusedInstruments   = props.GetPropertyValue<bool>(1);
+            var deleteUnusedInstruments   = props.GetPropertyValue<bool>(0);
+            var mergeIdenticalInstruments = props.GetPropertyValue<bool>(1);
             var unassignUnusedSamples     = props.GetPropertyValue<bool>(2);
             var deleteUnusedSamples       = props.GetPropertyValue<bool>(3);
             var applyAllSamplesProcessing = props.GetPropertyValue<bool>(4);
@@ -164,14 +164,14 @@ namespace FamiStudio
 
                 CleaningUp?.Invoke();
 
-                if (mergeIdenticalInstruments)
-                {
-                    app.Project.MergeIdenticalInstruments();
-                }
-
                 if (deleteUnusedInstruments)
                 {
                     app.Project.DeleteUnusedInstruments();
+                }
+
+                if (mergeIdenticalInstruments)
+                {
+                    app.Project.MergeIdenticalInstruments();
                 }
 
                 if (unassignUnusedSamples)
