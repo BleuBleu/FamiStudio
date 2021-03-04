@@ -243,7 +243,6 @@ namespace FamiStudio
                                 for (int i = 0, notesLeft = patternLen; i < chunkCount; i++, notesLeft -= patternNewLen)
                                 {
                                     splitPatterns[i] = new Pattern(Project.GenerateUniqueId(), this, channel.Type, channel.GenerateUniquePatternName(pattern.Name));
-                                    splitPatterns[i].Color = pattern.Color;
 
                                     var noteIdx0 = (i + 0) * patternNewLen;
                                     var noteIdx1 = noteIdx0 + Math.Min(patternNewLen, notesLeft);
@@ -255,10 +254,10 @@ namespace FamiStudio
                                     }
 
                                     splitPatterns[i].ClearLastValidNoteCache();
+                                    channel.Patterns.Add(splitPatterns[i]);
                                 }
 
                                 newPatternMap[pattern] = splitPatterns;
-                                channel.Patterns.AddRange(splitPatterns);
                             }
 
                             Debug.Assert(splitPatterns.Length == chunkCount);
