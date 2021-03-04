@@ -1,15 +1,22 @@
 FamiStudio 2.4.0
 ================
-- Beta
-- New song
+- Package PDB in build or something.
+/ Beta
 - Trailer
 - DPCM tutorial
 
 FamiStudio 2.5.0
 ================
+- Get rid of OpenTK window on MacOS
+	- Fix OpenGL issues
+	- Bring back pinch to zoom, scaling, etc.
+- QWERTZ?
+	- Windows + GTK are well behaved
+	- OpenTK verson is too old to work.
 - FamiStudio Tempo 2.0 => Arbitrary BPM.
 	- Figure out fundamental difference between tempo vs. groove
 	- Look at gyuss for example (7-6-6, cycle over 120 frames)
+- Add "saw master volume" to VRC6 instruments?
 - MIDI in/out
 - Oscilloscope + volume tracks display.
 - Double-right-click = select whole note (or whole note drag?)
