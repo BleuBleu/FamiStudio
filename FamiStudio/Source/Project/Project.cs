@@ -1539,6 +1539,12 @@ namespace FamiStudio
             "Dual"
         };
 
+        public static readonly string[] NamesNoDual =
+        {
+            "NTSC",
+            "PAL"
+        };
+
         public static int GetValueForName(string str)
         {
             return Array.IndexOf(Names, str);
