@@ -62,7 +62,6 @@ namespace FamiStudio
             project = new Project();
             project.TempoMode = TempoType.FamiTracker;
 
-            int dpcmInstrumentIndex = -1;
             DPCMSample currentDpcm = null;
             int dpcmWriteIdx = 0;
             Song song = null;
@@ -196,9 +195,9 @@ namespace FamiStudio
                         int semitone = int.Parse(param[2]);
                         int note     = octave * 12 + semitone + 1;
 
-                        if (dpcmInstrumentIndex < 0 || instIdx == dpcmInstrumentIndex)
+                        if (project.NoteSupportsDPCM(note))
                         {
-                            if (project.NoteSupportsDPCM(note))
+                            if (project.GetDPCMMapping(note) == null)
                             {
                                 int dpcm = int.Parse(param[3]);
                                 int pitch = int.Parse(param[4]);
@@ -209,12 +208,14 @@ namespace FamiStudio
                                     project.MapDPCMSample(note, foundSample, pitch, loop != 0);
                                 }
                             }
-
-                            dpcmInstrumentIndex = instIdx;
+                            else
+                            {
+                                Log.LogMessage(LogSeverity.Warning, $"Multiple instruments assigning DPCM samples to key {Note.GetFriendlyName(note)}. Only the first one will be assigned, others will be loaded, but unassigned.");
+                            }
                         }
                         else
                         {
-                            Log.LogMessage(LogSeverity.Warning, $"Multiple instruments are using DPCM samples. Samples from instrument {instIdx} will be loaded, but not assigned to the DPCM instrument.");
+                            Log.LogMessage(LogSeverity.Warning, $"DPCM sample assigned to key {Note.GetFriendlyName(note)}. FamiStudio only supports DPCM samples on keys {Note.GetFriendlyName(Note.DPCMNoteMin + 1)} to {Note.GetFriendlyName(Note.DPCMNoteMax)}.");
                         }
                     }
                     else if (line.StartsWith("INST2A03") || line.StartsWith("INSTVRC6") || line.StartsWith("INSTN163"))

@@ -31,7 +31,6 @@ namespace FamiStudio
 
         private delegate bool ReadBlockDelegate(int idx);
 
-        private bool samplesLoaded;
         private int blockVersion;
         private int blockSize;
         private byte[] bytes;
@@ -178,8 +177,6 @@ namespace FamiStudio
         {
             ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopes);
 
-            var foundAnySamples = false;
-
             for (int i = 0; i < OctaveRange; ++i)
             {
                 for (int j = 0; j < 12; ++j)
@@ -193,23 +190,27 @@ namespace FamiStudio
                     if (index > 0 && pitch != 0)
                     {
                         var sample = samples[index - 1];
+                        var note = i * 12 + j + 1;
                         if (sample != null && sample.ProcessedData != null)
                         {
-                            if (!samplesLoaded)
-                                project.MapDPCMSample(i * 12 + j + 1, sample, pitch & 0x0f, (pitch & 0x80) != 0);
-
-                            foundAnySamples = true;
+                            if (project.NoteSupportsDPCM(note))
+                            {
+                                if (project.GetDPCMMapping(note) == null)
+                                {
+                                    project.MapDPCMSample(note, sample, pitch & 0x0f, (pitch & 0x80) != 0);
+                                }
+                                else
+                                {
+                                    Log.LogMessage(LogSeverity.Warning, $"Multiple instruments assigning DPCM samples to key {Note.GetFriendlyName(note)}. Only the first one will be assigned, others will be loaded, but unassigned.");
+                                }
+                            }
+                            else
+                            {
+                                Log.LogMessage(LogSeverity.Warning, $"DPCM sample assigned to key {Note.GetFriendlyName(note)}. FamiStudio only supports DPCM samples on keys {Note.GetFriendlyName(Note.DPCMNoteMin + 1)} to {Note.GetFriendlyName(Note.DPCMNoteMax)}.");
+                            }
                         }
                     }
                 }
-            }
-
-            if (foundAnySamples)
-            {
-                if (samplesLoaded)
-                    Log.LogMessage(LogSeverity.Warning, $"Multiple instruments are using DPCM samples. Samples from instrument {instIdx} will be loaded, but not assigned to the DPCM instrument.");
-
-                samplesLoaded = true;
             }
         }
 
