@@ -567,10 +567,10 @@ namespace FamiStudio
             var pattern = patternInstances[p];
             if (pattern != null)
             {
-                // Check current note immediately.
-                if (pattern.Notes.TryGetValue(noteIdx, out var currentNote) && currentNote != null && currentNote.IsMusical && (noteValue < 0 || currentNote.Value == noteValue))
+                // Check current note immediately, if its musical, not need to do anything.
+                if (pattern.Notes.TryGetValue(noteIdx, out var currentNote) && currentNote != null && currentNote.IsMusical)
                 {
-                    return true;
+                    return noteValue < 0 || currentNote.Value == noteValue;
                 }
 
                 int prevTime = -1;
