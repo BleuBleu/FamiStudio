@@ -265,7 +265,7 @@ namespace FamiStudio
 
             for (int i = 0; i < wave.Length; i++)
             {
-                if (Math.Abs(wave[i]) > threshold)
+                if (Math.Abs((int)wave[i]) > threshold)
                 {
                     nonZeroMin = i;
                     break;
@@ -274,7 +274,7 @@ namespace FamiStudio
 
             for (int i = wave.Length - 1; i >= 0; i--)
             {
-                if (Math.Abs(wave[i]) > threshold)
+                if (Math.Abs((int)wave[i]) > threshold)
                 {
                     nonZeroMax = i + 1;
                     break;
@@ -291,7 +291,7 @@ namespace FamiStudio
 
             for (int i = 0; i < wave.Length; i++)
             {
-                if (Math.Abs(wave[i]) > threshold)
+                if (Math.Abs((int)wave[i]) > threshold)
                 {
                     nonZeroMin = i;
                     break;
@@ -300,7 +300,7 @@ namespace FamiStudio
 
             for (int i = wave.Length - 1; i >= 0; i--)
             {
-                if (Math.Abs(wave[i]) > threshold)
+                if (Math.Abs((int)wave[i]) > threshold)
                 {
                     nonZeroMax = i;
                     break;
