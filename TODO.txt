@@ -1,7 +1,5 @@
 FamiStudio 2.4.0
 ================
-- Package PDB in build or something.
-/ Beta
 - Trailer
 - DPCM tutorial
 
@@ -17,6 +15,7 @@ FamiStudio 2.5.0
 	- Figure out fundamental difference between tempo vs. groove
 	- Look at gyuss for example (7-6-6, cycle over 120 frames)
 - Add "saw master volume" to VRC6 instruments?
+- More compact sequencer. (move force display to right, smaller pattern headers).
 - MIDI in/out
 - Oscilloscope + volume tracks display.
 - Double-right-click = select whole note (or whole note drag?)

@@ -30,4 +30,4 @@ cd Release
 tar -a -c -f ..\FamiStudio%Version%-WinInstaller.zip Setup.msi Setup.exe
 cd ..
 
-tar -a -c -f FamiStudio%Version%-WinPortableExe.zip "Demo Songs\*.*" -C ..\FamiStudio\bin\Release\ *.exe *.dll *.config
+tar -a -c -f FamiStudio%Version%-WinPortableExe.zip "Demo Songs\*.*" -C ..\FamiStudio\bin\Release\ *.exe *.dll *.config FamiStudio.pdb
