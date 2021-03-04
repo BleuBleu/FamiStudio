@@ -1841,7 +1841,7 @@ namespace FamiStudio
                 }
 
                 App.UndoRedoManager.EndTransaction();
-                ConditionalInvalidate();
+                RefreshButtons();
             }
         }
 
