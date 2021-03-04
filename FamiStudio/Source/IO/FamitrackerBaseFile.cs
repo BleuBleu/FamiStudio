@@ -284,11 +284,17 @@ namespace FamiStudio
                 case Effect_None:
                     return;
                 case Effect_Jump:
-                    if (allowSongEffects)
+                    // Ignore if there was a Dxx or Bxx before.
+                    if (allowSongEffects && !patternLengths.ContainsKey(pattern))
+                    {
                         pattern.Song.SetLoopPoint(fx.param);
+                        patternLengths[pattern] = (byte)(n + 1);
+                    }
                     return;
                 case Effect_Skip:
-                    patternLengths[pattern] = (byte)(n + 1);
+                    // Ignore if there was a Dxx or Bxx before.
+                    if (!patternLengths.ContainsKey(pattern))
+                        patternLengths[pattern] = (byte)(n + 1);
                     return;
                 case Effect_Speed:
                     if (pattern.Channel.SupportsEffect(Note.EffectSpeed))
