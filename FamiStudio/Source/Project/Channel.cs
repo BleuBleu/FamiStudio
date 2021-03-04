@@ -583,21 +583,16 @@ namespace FamiStudio
                         break;
 
                     var note = kv.Value;
-                    if (note.IsMusical)
+                    if (note.IsMusical || note.IsStop)
                     {
                         prevTime = time;
                         prevNote = note;
-                    }
-                    else if (note.IsStop)
-                    {
-                        prevTime = -1;
-                        prevNote = null;
                     }
                 }
 
                 if (prevNote != null)
                 {
-                    if (prevNote.Value == noteValue || noteValue < 0)
+                    if (prevNote.IsMusical && (prevNote.Value == noteValue || noteValue < 0))
                     {
                         patternIdx = p;
                         noteIdx = prevTime;
