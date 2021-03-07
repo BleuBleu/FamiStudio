@@ -528,6 +528,8 @@ namespace FamiStudio
             return crc;
         }
 
+        public bool HasAnyPreviousExport => lastExportCrc != 0;
+
         public bool CanRepeatLastExport(Project project)
         {
             if (project != this.project)

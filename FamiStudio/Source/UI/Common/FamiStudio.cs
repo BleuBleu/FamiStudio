@@ -603,7 +603,7 @@ namespace FamiStudio
 
         public void RepeatLastExport()
         {
-            if (exportDialog == null)
+            if (exportDialog == null || !exportDialog.HasAnyPreviousExport)
             {
                 DisplayWarning("No last export to repeat");
             }
