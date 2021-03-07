@@ -158,7 +158,7 @@ namespace FamiStudio
             var applyAllSamplesProcessing = props.GetPropertyValue<bool>(4);
             var deleteUnusedArpeggios     = props.GetPropertyValue<bool>(5);
 
-            if (mergeIdenticalInstruments || deleteUnusedInstruments || unassignUnusedSamples || deleteUnusedSamples || deleteUnusedArpeggios)
+            if (mergeIdenticalInstruments || deleteUnusedInstruments || unassignUnusedSamples || deleteUnusedSamples || applyAllSamplesProcessing || deleteUnusedArpeggios)
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
