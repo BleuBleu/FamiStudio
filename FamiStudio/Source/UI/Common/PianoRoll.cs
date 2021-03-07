@@ -4037,10 +4037,14 @@ namespace FamiStudio
                     // Otherwise see if a note is under the cursor.
                     else if (channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
                     {
-                        var note = channel.PatternInstances[patternIdx].Notes[noteIdx];
+                        var pattern = channel.PatternInstances[patternIdx];
+                        var note = pattern.Notes[noteIdx];
+
                         if (note != null)
                         {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                             note.Instrument = instrument;
+                            App.UndoRedoManager.EndTransaction();
                         }
                     }
                 }
@@ -4074,10 +4078,14 @@ namespace FamiStudio
                     // Otherwise see if a note is under the cursor.
                     else if (channel.FindPreviousMatchingNote(noteValue, ref patternIdx, ref noteIdx))
                     {
-                        var note = channel.PatternInstances[patternIdx].Notes[noteIdx];
+                        var pattern = channel.PatternInstances[patternIdx];
+                        var note = pattern.Notes[noteIdx];
+
                         if (note != null)
                         {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                             note.Arpeggio = arpeggio;
+                            App.UndoRedoManager.EndTransaction();
                         }
                     }
                 }
