@@ -907,6 +907,13 @@ namespace FamiStudio
                         tooltip = "{MouseLeft} Import/merge instrument from another project";
                     }
                 }
+                else if (buttonType == ButtonType.ArpeggioHeader)
+                {
+                    if (subButtonType == SubButtonType.Add)
+                    {
+                        tooltip = "{MouseLeft} Add new arpeggio";
+                    }
+                }
                 else if (buttonType == ButtonType.ProjectSettings)
                 {
                     tooltip = "{MouseLeft}{MouseLeft} Project properties";
@@ -983,6 +990,17 @@ namespace FamiStudio
                     else if (subButtonType == SubButtonType.Save)
                     {
                         tooltip = "{MouseLeft} Export processed DMC file\n{MouseRight} Export source data (DMC or WAV)";
+                    }
+                    else if (subButtonType == SubButtonType.Max)
+                    {
+                        tooltip = "{MouseLeft}{MouseLeft} Edit properties\n{MouseRight} Delete sample";
+                    }
+                }
+                else if (buttonType == ButtonType.DpcmHeader)
+                {
+                    if (subButtonType == SubButtonType.Load)
+                    {
+                        tooltip = "{MouseLeft} Load DPCM sample from WAV or DMC file";
                     }
                 }
             }
