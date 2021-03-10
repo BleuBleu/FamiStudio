@@ -7,10 +7,14 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Resources;
+using System.Runtime.InteropServices;
+using System.Threading;
+
+using Settings = FamiStudio.Settings;
 
 namespace FamiStudio
 {
-    public class FamiStudioForm : Window
+    public class FamiStudioForm : GLWindow
     {
         private static FamiStudioForm instance;
         private FamiStudio famistudio;
@@ -25,21 +29,22 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public static FamiStudioForm Instance => instance;
 
-        bool glInit = false;
-        GLWidget glWidget;
+        bool exposed = false;
+        bool glInit  = false;
 
         private int  doubleClickTime = 250;
         private uint lastMouseButton = 999;
         private uint lastClickTime = 0;
         private Point lastClickPos = Point.Empty;
         private Point lastMousePos = Point.Empty;
+        private bool forceCtrlDown = false;
         private GLControl captureControl = null;
         private System.Windows.Forms.MouseButtons captureButton   = System.Windows.Forms.MouseButtons.None;
         private System.Windows.Forms.MouseButtons lastButtonPress = System.Windows.Forms.MouseButtons.None;
         private bool[] keys = new bool[256];
         private System.Windows.Forms.Keys modifiers = System.Windows.Forms.Keys.None;
 
-        public FamiStudioForm(FamiStudio famistudio) : base(WindowType.Toplevel)
+        public FamiStudioForm(FamiStudio famistudio) : base(new GraphicsMode(new ColorFormat(8, 8, 8, 0), 0, 0), 1, 0, GraphicsContextFlags.Default)
         {
             this.famistudio = famistudio;
             this.Name = "FamiStudioForm";
@@ -48,32 +53,188 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
-            glWidget = new GLWidget(new GraphicsMode(new ColorFormat(8, 8, 8, 0), 0, 0), 1, 0, GraphicsContextFlags.Default);
-            glWidget.WidthRequest = 1280;
-            glWidget.HeightRequest = 720;
-            glWidget.Initialized += GLWidgetInitialize;
-            glWidget.Events |= 
+            WidthRequest  = 1280;
+            HeightRequest = 720;
+            controls.Resize(ScaleCoord(WidthRequest), ScaleCoord(HeightRequest));
+
+            Events |= 
                 Gdk.EventMask.ButtonPressMask   |
                 Gdk.EventMask.ButtonReleaseMask |
                 Gdk.EventMask.KeyPressMask      |
                 Gdk.EventMask.KeyReleaseMask    |
                 Gdk.EventMask.ScrollMask        |
-                Gdk.EventMask.PointerMotionMask | 
+                Gdk.EventMask.PointerMotionMask |
                 Gdk.EventMask.PointerMotionHintMask;
-            glWidget.Show();
 
-            glWidget.ButtonPressEvent   += GlWidget_ButtonPressEvent;
-            glWidget.ButtonReleaseEvent += GlWidget_ButtonReleaseEvent;
-            glWidget.ScrollEvent        += GlWidget_ScrollEvent;
-            glWidget.MotionNotifyEvent  += GlWidget_MotionNotifyEvent;
-            glWidget.Resized            += GlWidget_Resized;
-
-            FocusOutEvent += Handle_FocusOutEvent;
+            ButtonPressEvent   += GlWindow_ButtonPressEvent;
+            ButtonReleaseEvent += GlWindow_ButtonReleaseEvent;
+            MotionNotifyEvent  += GlWindow_MotionNotifyEvent;
+            FocusOutEvent      += Handle_FocusOutEvent;
+#if FAMISTUDIO_LINUX
+            ScrollEvent        += GlWindow_ScrollEvent;
+#endif
 
             doubleClickTime = Gtk.Settings.GetForScreen(Gdk.Screen.Default).DoubleClickTime;
-
-            Add(glWidget);
         }
+        
+        protected override bool OnExposeEvent(Gdk.EventExpose evnt)
+        {
+            if (!exposed)
+            {
+#if FAMISTUDIO_MACOS
+                MacOSInit();
+#endif
+                Cursors.Initialize();
+                RefreshSequencerLayout();
+                exposed = true;
+            }
+            return base.OnExposeEvent(evnt);
+        }
+
+#if FAMISTUDIO_MACOS
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int GLibPollFunctionDelegate(IntPtr ufds, uint nfsd, int timeout);
+
+        private GLibPollFunctionDelegate   OldPollFunctionPtr;
+        private GLibPollFunctionDelegate   NewPollFunctionPtr;
+
+        private IntPtr selType         = MacUtils.SelRegisterName("type");
+        private IntPtr selCurrentEvent = MacUtils.SelRegisterName("currentEvent");
+        private IntPtr selHasPreciseScrollingDeltas = MacUtils.SelRegisterName("hasPreciseScrollingDeltas");
+        private IntPtr selscrollingDeltaX = MacUtils.SelRegisterName("scrollingDeltaX");
+        private IntPtr selscrollingDeltaY = MacUtils.SelRegisterName("scrollingDeltaY");
+        private IntPtr selDeltaX = MacUtils.SelRegisterName("deltaX");
+        private IntPtr selDeltaY = MacUtils.SelRegisterName("deltaY");
+        private IntPtr selLocationInWindow = MacUtils.SelRegisterName("locationInWindow");
+        private IntPtr selMagnification = MacUtils.SelRegisterName("magnification");
+
+        private IntPtr lastEvent;
+        private float  magnificationAccum = 0;
+
+        private const int NSEventTypeScrollWheel = 22;
+        private const int NSEventTypeMagnify     = 30;
+
+        [DllImport("libglib-2.0.0.dylib")]
+        private extern static IntPtr g_main_context_get_poll_func(IntPtr context);
+
+        [DllImport("libglib-2.0.0.dylib")]
+        private extern static void g_main_context_set_poll_func(IntPtr context, IntPtr func);
+
+        private void MacOSInit()
+        {
+            IntPtr windowHandle = MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle);
+            MacUtils.Initialize(windowHandle);
+
+            // Hijack GDK main event loop so we can handle some more events.
+            var pollFunc = g_main_context_get_poll_func(IntPtr.Zero);
+            OldPollFunctionPtr = Marshal.GetDelegateForFunctionPointer<GLibPollFunctionDelegate>(pollFunc);
+            NewPollFunctionPtr = GLibPollFunction;
+            g_main_context_set_poll_func(IntPtr.Zero, Marshal.GetFunctionPointerForDelegate(NewPollFunctionPtr));
+        }
+
+        private void HandleScrollWheelEvent(IntPtr e)
+        {
+            float scrollX, scrollY;
+            if (MacUtils.SendBool(e, selHasPreciseScrollingDeltas))
+            {
+                scrollX = (float)MacUtils.SendFloat(e, selscrollingDeltaX);
+                scrollY = (float)MacUtils.SendFloat(e, selscrollingDeltaY);
+            }
+            else
+            {
+                scrollX = (float)MacUtils.SendFloat(e, selDeltaX);
+                scrollY = (float)MacUtils.SendFloat(e, selDeltaY);
+            }
+
+            var pt = MacUtils.SendPoint(e, selLocationInWindow);
+            var px = ScaleCoord((float)(pt.X));
+            var py = ScaleCoord((int)(float)(Allocation.Height - pt.Y));
+
+            var ctrl = controls.GetControlAtCoord(px, py, out int x, out int y);
+
+            if (ctrl != null)
+            {
+                var trackpadControls = global::FamiStudio.Settings.TrackPadControls;
+                var trackpadReverse  = global::FamiStudio.Settings.ReverseTrackPad;
+
+                if (trackpadControls)
+                    scrollY = -scrollY;
+
+                var scale = trackpadControls ? (float)Utils.Clamp(global::FamiStudio.Settings.TrackPadMoveSensitity, 1, 16) : 1.0f;
+                scale *= trackpadControls && trackpadReverse ? -1.0f : 1.0f;
+                var dx = Utils.SignedCeil(scrollX * scale);
+                var dy = Utils.SignedCeil(scrollY * scale);
+                
+                //Debug.WriteLine($"Mouse wheel {precise} {scrollX} {scrollY}");
+
+                if (dy != 0)
+                    ctrl.MouseWheel(new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, dy));
+                if (dx != 0)
+                    ctrl.MouseHorizontalWheel(new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, dx));
+            }
+        }
+
+        private void HandleMagnifyEvent(IntPtr e)
+        {
+            var magnification = (float)MacUtils.SendFloat(e, selMagnification);
+
+            if (Math.Sign(magnification) != Math.Sign(magnificationAccum))
+                magnificationAccum = 0;
+
+            magnificationAccum += magnification;
+
+            //Debug.WriteLine($"Magnify {magnification}");
+
+            var threshold = 2.0f / (float)Utils.Clamp(global::FamiStudio.Settings.TrackPadZoomSensitity, 1, 32);
+
+            if (Math.Abs(magnificationAccum) > threshold)
+            {
+                var pt = MacUtils.SendPoint(e, selLocationInWindow);
+                var px = ScaleCoord((float)(pt.X));
+                var py = ScaleCoord((int)(float)(Allocation.Height - pt.Y));
+
+                Debug.WriteLine($"{px} {py}");
+
+                var ctrl = controls.GetControlAtCoord(px, py, out int x, out int y);
+
+                if (ctrl != null)
+                {
+                    var args = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, Math.Sign(magnificationAccum) * 120);
+                    forceCtrlDown = true;
+                    ctrl.MouseWheel(args);
+                    forceCtrlDown = false;
+                }
+
+                magnificationAccum = 0;
+            }
+        }
+
+        private int GLibPollFunction(IntPtr ufds, uint nfsd, int timeout)
+        {
+            var r = OldPollFunctionPtr(ufds, nfsd, timeout);
+
+            var currentEvent = MacUtils.SendIntPtr(MacUtils.NSApplication, selCurrentEvent);
+
+            if (currentEvent != IntPtr.Zero && currentEvent != lastEvent)
+            {
+                var eventType = MacUtils.SendInt(currentEvent, selType);
+
+                switch (eventType)
+                {
+                    case NSEventTypeScrollWheel:
+                        HandleScrollWheelEvent(currentEvent);
+                        break;
+                    case NSEventTypeMagnify:
+                        HandleMagnifyEvent(currentEvent);
+                        break;
+                }
+
+                lastEvent = currentEvent;
+            }
+
+            return r;
+        }
+#endif
 
         void Handle_FocusOutEvent(object o, FocusOutEventArgs args)
         {
@@ -81,9 +242,9 @@ namespace FamiStudio
             modifiers = System.Windows.Forms.Keys.None;
         }
 
-        void GlWidget_Resized(object sender, EventArgs e)
+        protected override void Resized(int width, int height)
         {
-            controls.Resize(glWidget.Allocation.Width, glWidget.Allocation.Height);
+            controls.Resize(ScaleCoord(width), ScaleCoord(height));
             Invalidate();
             RenderFrame();
         }
@@ -102,12 +263,15 @@ namespace FamiStudio
             }
         }
 
-        void GlWidget_ButtonPressEvent(object o, ButtonPressEventArgs args)
+        void GlWindow_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
-            var ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out int x, out int y);
+            var scaledX = ScaleCoord(args.Event.X);
+            var scaledY = ScaleCoord(args.Event.Y);
 
-            lastMousePos.X = (int)args.Event.X;
-            lastMousePos.Y = (int)args.Event.Y;
+            var ctrl = controls.GetControlAtCoord(scaledX, scaledY, out int x, out int y);
+
+            lastMousePos.X = scaledX;
+            lastMousePos.Y = scaledY;
 
             if (args.Event.Type == Gdk.EventType.ButtonPress)
             {
@@ -122,31 +286,37 @@ namespace FamiStudio
                 //  t=4 RELEASE
                 //  t=4 DBL CLICK
                 if (args.Event.Button == lastMouseButton &&
-                    (args.Event.Time - lastClickTime) < doubleClickTime &&
-                    Math.Abs(lastClickPos.X - args.Event.X) < 4 &&
-                    Math.Abs(lastClickPos.Y - args.Event.Y) < 4)
+                   (args.Event.Time - lastClickTime) < doubleClickTime &&
+                    Math.Abs(lastClickPos.X - scaledX) < 4 &&
+                    Math.Abs(lastClickPos.Y - scaledY) < 4)
                 {
                     lastMouseButton = 999;
                     lastClickTime   = 0;
                     lastClickPos    = Point.Empty;
 
-                    ctrl.MouseDoubleClick(GtkUtils.ToWinFormArgs(args.Event, x, y));
+                    if (ctrl != null)
+                        ctrl.MouseDoubleClick(GtkUtils.ToWinFormArgs(args.Event, x, y));
                 }
                 else
                 {
                     lastMouseButton = args.Event.Button;
                     lastClickTime   = args.Event.Time;
-                    lastClickPos    = new Point((int)args.Event.X, (int)args.Event.Y);
+                    lastClickPos    = new Point(scaledX, scaledY);
 
                     var e = GtkUtils.ToWinFormArgs(args.Event, x, y);
                     lastButtonPress = e.Button;
-                    ctrl.MouseDown(e);
+
+                    if (ctrl != null)
+                        ctrl.MouseDown(e);
                 }
             }
         }
 
-        void GlWidget_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
+        void GlWindow_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
         {
+            var scaledX = ScaleCoord(args.Event.X);
+            var scaledY = ScaleCoord(args.Event.Y);
+
             int x;
             int y;
             GLControl ctrl = null;
@@ -154,16 +324,16 @@ namespace FamiStudio
             if (captureControl != null)
             {
                 ctrl = captureControl;
-                x = (int)args.Event.X - ctrl.Left;
-                y = (int)args.Event.Y - ctrl.Top;
+                x = scaledX - ctrl.Left;
+                y = scaledY - ctrl.Top;
             }
             else
             {
-                ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out x, out y);
+                ctrl = controls.GetControlAtCoord(scaledX, scaledY, out x, out y);
             }
 
-            lastMousePos.X = (int)args.Event.X;
-            lastMousePos.Y = (int)args.Event.Y;
+            lastMousePos.X = scaledX;
+            lastMousePos.Y = scaledY;
 
             var e = GtkUtils.ToWinFormArgs(args.Event, x, y);
             if (e.Button == captureButton)
@@ -173,9 +343,12 @@ namespace FamiStudio
                 ctrl.MouseUp(e);
         }
 
-        void GlWidget_ScrollEvent(object o, ScrollEventArgs args)
+        void GlWindow_ScrollEvent(object o, ScrollEventArgs args)
         {
-            var ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out int x, out int y);
+            var scaledX = ScaleCoord(args.Event.X);
+            var scaledY = ScaleCoord(args.Event.Y);
+
+            var ctrl = controls.GetControlAtCoord(scaledX, scaledY, out int x, out int y);
 
             if (args.Event.Direction == Gdk.ScrollDirection.Up ||
                 args.Event.Direction == Gdk.ScrollDirection.Down)
@@ -189,9 +362,10 @@ namespace FamiStudio
             }
         }
 
-        void GlWidget_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
+        void GlWindow_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
         {
-            //Debug.WriteLine($"MOVE! {args.Event.X} {args.Event.Y}");
+            var scaledX = ScaleCoord(args.Event.X);
+            var scaledY = ScaleCoord(args.Event.Y);
 
             int x;
             int y;
@@ -200,16 +374,16 @@ namespace FamiStudio
             if (captureControl != null)
             {
                 ctrl = captureControl;
-                x = (int)args.Event.X - ctrl.Left;
-                y = (int)args.Event.Y - ctrl.Top;
+                x = scaledX - ctrl.Left;
+                y = scaledY - ctrl.Top;
             }
             else
             {
-                ctrl = controls.GetControlAtCoord((int)args.Event.X, (int)args.Event.Y, out x, out y);
+                ctrl = controls.GetControlAtCoord(scaledX, scaledY, out x, out y);
             }
 
-            lastMousePos.X = (int)args.Event.X;
-            lastMousePos.Y = (int)args.Event.Y;
+            lastMousePos.X = scaledX;
+            lastMousePos.Y = scaledY;
 
             if (ctrl != null)
             {
@@ -243,6 +417,8 @@ namespace FamiStudio
             var winKey = GtkUtils.ToWinFormKey(evnt.Key);
             var winMod = GtkUtils.ToWinFormKey(evnt.State);
 
+            //Debug.WriteLine($"{evnt.Key} {evnt.KeyValue} = {winKey}");
+
             SetKeyMap(winKey, true);
 
             var args = new System.Windows.Forms.KeyEventArgs(winKey | winMod);
@@ -271,7 +447,7 @@ namespace FamiStudio
 
         public void RefreshSequencerLayout()
         { 
-            controls.Resize(glWidget.Allocation.Width, glWidget.Allocation.Height);
+            controls.Resize(ScaleCoord(Allocation.Width), ScaleCoord(Allocation.Height));
             controls.Invalidate();
         }
 
@@ -280,35 +456,42 @@ namespace FamiStudio
             controls.Invalidate();
         }
 
+        private void GetScaledWindowOrigin(out int ox, out int oy)
+        {
+            GdkWindow.GetOrigin(out ox, out oy);
+            ox = ScaleCoord(ox);
+            oy = ScaleCoord(oy);
+        }
+
         public Point PointToClient(Point p)
         {
-            glWidget.GdkWindow.GetOrigin(out var ox, out var oy);
+            GetScaledWindowOrigin(out var ox, out var oy);
             return new Point(p.X - ox, p.Y - oy);
         }
 
         public Point PointToScreen(Point p)
         {
-            glWidget.GdkWindow.GetOrigin(out var ox, out var oy);
+            GetScaledWindowOrigin(out var ox, out var oy);
             return new Point(ox + p.X, oy + p.Y);
         }
 
         public Point PointToClient(GLControl ctrl, Point p)
         {
-            glWidget.GdkWindow.GetOrigin(out var ox, out var oy);
+            GetScaledWindowOrigin(out var ox, out var oy);
             return new Point(p.X - ctrl.Left - ox, p.Y - ctrl.Top - oy);
         }
 
         public Point PointToScreen(GLControl ctrl, Point p)
         {
-            glWidget.GdkWindow.GetOrigin(out var ox, out var oy);
+            GetScaledWindowOrigin(out var ox, out var oy);
             return new Point(ox + ctrl.Left + p.X, oy + ctrl.Top + p.Y);
         }
 
-        protected virtual void GLWidgetInitialize(object sender, EventArgs e)
+        protected override void GLInitialized()
         {
             GL.Disable(EnableCap.DepthTest);
 
-            GL.Viewport(0, 0, glWidget.Allocation.Width, glWidget.Allocation.Height);
+            GL.Viewport(0, 0, Allocation.Width, Allocation.Height);
             GL.ClearColor(
                 ThemeBase.DarkGreyFillColor2.R / 255.0f,
                 ThemeBase.DarkGreyFillColor2.G / 255.0f,
@@ -338,9 +521,29 @@ namespace FamiStudio
             RenderFrame();
         }
 
-        protected void RenderFrame()
+        int ScaleCoord(int pos)
         {
-            if (glInit && controls.Redraw(glWidget.Allocation.Width, glWidget.Allocation.Height))
+            return (int)(pos * GLTheme.MainWindowScaling);
+        }
+
+        int ScaleCoord(double pos)
+        {
+            return (int)(pos * GLTheme.MainWindowScaling);
+        }
+
+        int UnscaleCoord(int pos)
+        {
+            return (int)(pos / GLTheme.MainWindowScaling);
+        }
+
+        double CoordToGtk(double pos)
+        {
+            return pos / GLTheme.MainWindowScaling;
+        }
+
+        protected override void RenderFrame()
+        {
+            if (glInit && controls.Redraw())
             {
                 GraphicsContext.CurrentContext.SwapBuffers();
             }
@@ -354,7 +557,7 @@ namespace FamiStudio
 
                 captureButton  = lastButtonPress;
                 captureControl = ctrl;
-                Gdk.Pointer.Grab(glWidget.GdkWindow, true, Gdk.EventMask.PointerMotionMask | Gdk.EventMask.ButtonReleaseMask, null, null, 0);
+                Gdk.Pointer.Grab(GdkWindow, true, Gdk.EventMask.PointerMotionMask | Gdk.EventMask.ButtonReleaseMask, null, null, 0);
             }
         }
 
@@ -383,12 +586,12 @@ namespace FamiStudio
                 return;
 
             if (ctrl != null)
-                glWidget.GdkWindow.Cursor = ctrl.Cursor.Current;
+                GdkWindow.Cursor = ctrl.Cursor.Current;
         }
 
         public System.Windows.Forms.Keys GetModifierKeys()
         {
-            return modifiers;
+            return modifiers | (forceCtrlDown ? System.Windows.Forms.Keys.Control : System.Windows.Forms.Keys.None);
         }
 
         public static bool IsKeyDown(System.Windows.Forms.Keys k)
@@ -400,8 +603,8 @@ namespace FamiStudio
         {
             get
             {
-                glWidget.GdkWindow.GetOrigin(out var ox, out var oy);
-                return new Rectangle(ox, oy, ox + Allocation.Width, oy + Allocation.Height);
+                GetScaledWindowOrigin(out var ox, out var oy);
+                return new Rectangle(ox, oy, ox + ScaleCoord(Allocation.Width), oy + ScaleCoord(Allocation.Height));
             }
         }
 

@@ -69,6 +69,8 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.Oem3;
             else if (k == Gdk.Key.Tab)
                 return System.Windows.Forms.Keys.Tab;
+            else if (k == Gdk.Key.minus)
+                return System.Windows.Forms.Keys.OemMinus;
             else if (k == Gdk.Key.equal)
                 return System.Windows.Forms.Keys.Oemplus;
             else if (k == Gdk.Key.bracketleft)
@@ -89,6 +91,10 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.PageUp;
             else if (k == Gdk.Key.Next)
                 return System.Windows.Forms.Keys.PageDown;
+            else if (k == Gdk.Key.apostrophe)
+                return System.Windows.Forms.Keys.OemQuotes;
+            else if (k == Gdk.Key.backslash)
+                return System.Windows.Forms.Keys.OemBackslash;
 
             Trace.WriteLine($"Unknown key pressed {k}");
 

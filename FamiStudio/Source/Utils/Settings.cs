@@ -31,6 +31,8 @@ namespace FamiStudio
         public static bool ShowPianoRollViewRange = true;
         public static bool TrackPadControls = false;
         public static bool ReverseTrackPad = false;
+        public static int TrackPadMoveSensitity = 1;
+        public static int TrackPadZoomSensitity = 8;
         public static int FollowMode = 0;
         public static int FollowSync = 0;
         public static bool ShowTutorial = true;
@@ -75,6 +77,8 @@ namespace FamiStudio
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
+            TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
+            TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
@@ -142,6 +146,8 @@ namespace FamiStudio
             ini.SetBool("UI", "ShowNoteLabels", ShowNoteLabels);
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetBool("UI", "TrackPadControls", TrackPadControls);
+            ini.SetInt("UI", "TrackPadMoveSensitity", TrackPadMoveSensitity);
+            ini.SetInt("UI", "TrackPadZoomSensitity", TrackPadZoomSensitity);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);

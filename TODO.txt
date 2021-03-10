@@ -7,7 +7,7 @@ FamiStudio 2.5.0
 ================
 - Get rid of OpenTK window on MacOS
 	- Move options to MacOS specific tab
-	- Trackpad speed setting.
+	- Trackpad speed setting. 
 - QWERTZ?
 	- Windows + GTK are well behaved
 	- Let people configure the keys.

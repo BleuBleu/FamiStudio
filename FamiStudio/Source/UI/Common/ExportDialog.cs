@@ -222,11 +222,11 @@ namespace FamiStudio
 #endif
 
 #if FAMISTUDIO_MACOS
-            dialog.TemporarelyHide();
+            // dialog.TemporarelyHide(); MATTT
 #endif
             string filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
 #if FAMISTUDIO_MACOS
-            dialog.TemporarelyShow();
+            // dialog.TemporarelyShow(); MATTT
 #endif
 
             if (filename != null)

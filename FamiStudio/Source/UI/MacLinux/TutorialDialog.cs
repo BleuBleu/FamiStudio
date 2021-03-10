@@ -3,15 +3,9 @@ using System;
 using System.Reflection;
 using System.Resources;
 
-#if FAMISTUDIO_LINUX
-    using BaseWindow = Gtk.Dialog;
-#else
-    using BaseWindow = Gtk.Window;
-#endif
-
 namespace FamiStudio
 {
-    public class TutorialDialog : BaseWindow
+    public class TutorialDialog : Gtk.Dialog
     {
         private Label label;
         private Image image;
@@ -23,17 +17,11 @@ namespace FamiStudio
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
         public TutorialDialog()
-#if FAMISTUDIO_MACOS
-             : base(WindowType.Toplevel)
-#endif
         {
             Init();
             WidthRequest = 756;
-
-#if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
             SetPosition(WindowPosition.CenterOnParent);
-#endif
         }
 
         private void Init()
@@ -91,12 +79,7 @@ namespace FamiStudio
             image.HeightRequest = 414;
             image.Show();
 
-#if FAMISTUDIO_LINUX
             var vbox = VBox;
-#else
-            var vbox  = new VBox();
-            Add(vbox);
-#endif
 
             vbox.PackStart(label, false, false, 0);
             vbox.PackStart(image, false, false, 0);
@@ -128,9 +111,7 @@ namespace FamiStudio
         private void EndDialog(System.Windows.Forms.DialogResult res)
         {
             result = res;
-#if FAMISTUDIO_LINUX
             Respond(0);
-#endif
         }
 
         void ButtonRight_ButtonPressEvent(object o, ButtonPressEventArgs args)
@@ -168,25 +149,8 @@ namespace FamiStudio
 
         public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent = null)
         {
-#if FAMISTUDIO_MACOS
-            Show();
-
-            int x = parent.Bounds.Left + (parent.Bounds.Width  - Allocation.Width)  / 2;
-            int y = parent.Bounds.Top  + (parent.Bounds.Height - Allocation.Height) / 2;
-            Move(x, y);
-            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-
-            while (result == System.Windows.Forms.DialogResult.None)
-                Application.RunIteration();
-
-            Hide();
-
-            MacUtils.RestoreMainNSWindowFocus();
-#else
             Run();
             Hide();
-#endif
-
             return result;
         }
     }

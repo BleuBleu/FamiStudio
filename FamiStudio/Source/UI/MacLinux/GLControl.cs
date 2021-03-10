@@ -4,11 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if FAMISTUDIO_LINUX
 using CursorType = Gdk.Cursor;
-#else
-using CursorType = System.IntPtr;
-#endif
 
 namespace FamiStudio
 {

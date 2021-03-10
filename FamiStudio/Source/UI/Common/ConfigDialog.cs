@@ -12,6 +12,9 @@ namespace FamiStudio
             UserInterface,
             Sound,
             MIDI,
+#if FAMISTUDIO_MACOS
+            MacOS,
+#endif
             Max
         };
 
@@ -20,6 +23,9 @@ namespace FamiStudio
             "Interface",
             "Sound",
             "MIDI",
+#if FAMISTUDIO_MACOS
+            "MacOS",
+#endif
             ""
         };
 
@@ -97,13 +103,11 @@ namespace FamiStudio
                     page.AddBoolean("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
                     page.AddBoolean("Show Note Labels:", Settings.ShowNoteLabels); // 6
                     page.AddBoolean("Trackpad controls:", Settings.TrackPadControls); // 7
-#if FAMISTUDIO_MACOS
-                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 8
-                    page.SetPropertyEnabled(8, Settings.TrackPadControls);
-                    page.PropertyChanged += Page_PropertyChanged;
-#endif
+
 #if FAMISTUDIO_LINUX
                     page.SetPropertyEnabled(0, false);
+#elif FAMISTUDIO_MACOS
+                    page.PropertyChanged += Page_PropertyChanged;
 #endif
 
                     break;
@@ -138,6 +142,16 @@ namespace FamiStudio
                     page.AddStringList("Device :", midiDevices.ToArray(), midiDevice); // 0
                     break;
                 }
+                case ConfigSection.MacOS:
+                { 
+                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 0
+                    page.AddIntegerRange("Trackpad movement sensitivity:", Settings.TrackPadMoveSensitity, 1, 16); // 1
+                    page.AddIntegerRange("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1, 16); // 2
+                    page.SetPropertyEnabled(0, Settings.TrackPadControls);
+                    page.SetPropertyEnabled(1, Settings.TrackPadControls);
+                    page.SetPropertyEnabled(2, Settings.TrackPadControls);
+                    break;
+                }
             }
 
             page.Build();
@@ -149,9 +163,12 @@ namespace FamiStudio
 #if FAMISTUDIO_MACOS
         private void Page_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            if (props == pages[(int)ConfigSection.UserInterface] && idx == 4)
+            if (props == pages[(int)ConfigSection.UserInterface] && idx == 7)
             {
-                props.SetPropertyEnabled(5, (bool)value);
+                var macOsPage = pages[(int)ConfigSection.MacOS];
+                macOsPage.SetPropertyEnabled(0, (bool)value);
+                macOsPage.SetPropertyEnabled(1, (bool)value);
+                macOsPage.SetPropertyEnabled(2, (bool)value);
             }
         }
 #endif
@@ -178,8 +195,12 @@ namespace FamiStudio
                 Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(5);
                 Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
                 Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(7);
+
 #if FAMISTUDIO_MACOS
-                Settings.ReverseTrackPad = pageUI.GetPropertyValue<bool>(8);
+                var pageMacOS = pages[(int)ConfigSection.MacOS];
+                Settings.ReverseTrackPad   = pageMacOS.GetPropertyValue<bool>(0);
+                Settings.TrackPadMoveSensitity = pageMacOS.GetPropertyValue<int>(1);
+                Settings.TrackPadZoomSensitity = pageMacOS.GetPropertyValue<int>(2);
 #endif
 
                 // Sound

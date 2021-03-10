@@ -31,9 +31,7 @@ namespace FamiStudio
             if (!canAccept)
                 buttonYes.Hide();
 
-#if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
-#endif
             SetPosition(WindowPosition.CenterOnParent);
         }
 
@@ -87,9 +85,7 @@ namespace FamiStudio
             Decorated = false;
             Modal = true;
             SkipTaskbarHint = true;
-#if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
-#endif
         }
 
         private bool RunValidation()
@@ -97,22 +93,8 @@ namespace FamiStudio
             if (ValidateProperties == null)
                 return true;
 
-#if FAMISTUDIO_MACOS
-            MacUtils.RemoveNSWindowAlwaysOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
             // Validation might display messages boxes, need to work around z-ordering issues.
             bool valid = ValidateProperties.Invoke(propertyPage);
-
-#if FAMISTUDIO_MACOS
-            // This fixes some super weird focus issues.
-            if (!valid)
-            {
-                Hide();
-                Show();
-            }
-
-            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
 
             return valid;
         }
@@ -165,26 +147,10 @@ namespace FamiStudio
                 Move(pt.X, pt.Y);
             }
 
-#if FAMISTUDIO_MACOS
-            if (WindowPosition == WindowPosition.CenterOnParent)
-            {
-                var mainWinRect = parent.Bounds;
-                int x = mainWinRect.Left + (mainWinRect.Width  - Allocation.Width)  / 2;
-                int y = mainWinRect.Top  + (mainWinRect.Height - Allocation.Height) / 2;
-                Move(x, y);
-            }
-
-            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
-
             while (result == System.Windows.Forms.DialogResult.None)
                 Application.RunIteration();
 
             Hide();
-
-#if FAMISTUDIO_MACOS
-            MacUtils.RestoreMainNSWindowFocus();
-#endif
 
             return result;
         }
@@ -192,18 +158,6 @@ namespace FamiStudio
         public void ShowModal(FamiStudioForm parent = null)
         {
             Show();
-
-#if FAMISTUDIO_MACOS
-            if (WindowPosition == WindowPosition.CenterOnParent)
-            {
-                var mainWinRect = parent.Bounds;
-                int x = mainWinRect.Left + (mainWinRect.Width - Allocation.Width) / 2;
-                int y = mainWinRect.Top + (mainWinRect.Height - Allocation.Height) / 2;
-                Move(x, y);
-            }
-
-            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
         }
 
         public void UpdateModalEvents()
@@ -211,10 +165,6 @@ namespace FamiStudio
             if (result != System.Windows.Forms.DialogResult.None)
             {
                 Hide();
-
-#if FAMISTUDIO_MACOS
-                MacUtils.RestoreMainNSWindowFocus();
-#endif
             }
 
             Application.RunIteration(false);
