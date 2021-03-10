@@ -1,63 +1,32 @@
-FamiStudio 2.4.0
-================
-- Trailer
-- DPCM tutorial
+2.4.1
+- Crash loop FTI
+- MP3 320?
+- Pressing tilde in a mode where you cant have effect panel asserts.
 
 FamiStudio 2.5.0
 ================
 - Get rid of OpenTK window on MacOS
-	- Fix OpenGL issues
-	- Bring back pinch to zoom, scaling, etc.
+	- Move options to MacOS specific tab
+	- Trackpad speed setting.
 - QWERTZ?
 	- Windows + GTK are well behaved
-	- OpenTK verson is too old to work.
+	- Let people configure the keys.
+	- If a key is a music key, should we not process it (1-5 changes channel, so playing a note changes the channel...).
 - FamiStudio Tempo 2.0 => Arbitrary BPM.
 	- Figure out fundamental difference between tempo vs. groove
 	- Look at gyuss for example (7-6-6, cycle over 120 frames)
-- Add "saw master volume" to VRC6 instruments?
+	- Need to be perfect hybrid of trackers/DAWs.
+- Add "saw master volume" to VRC6 instruments.
 - More compact sequencer. (move force display to right, smaller pattern headers).
-- MIDI in/out
 - Oscilloscope + volume tracks display.
-- Double-right-click = select whole note (or whole note drag?)
+- Whole note drag.
 - When using 1/2 snapping, dragging notes is awkward.
 - Sort song other than alphabetically.
-- DPCM : More stuff, normalize volume? Playback speed? See people's request.
+- Loop prevention for envelope (brad issue).
 - Channel volumes settings in config.
 
-Tips & Tricks (Review this list)
-================================
-Is #00 necessary???
-
-#00 - Basic controls & onboarding (tutorial, pan, zoom, trackpad, tooltips, piano roll view rect, demo songs, documentation)
-	Sequencer basics (pattern add, delete, edit, undo/redo, instance & copy).
-	Piano roll basics (add note, delete note, snapping, dragging, select, transpose with KB).
-	Channels in piano roll (force display, muting & soloing, etc.)
-	
-#01 - Volume envelopes & release notes (first envelope tutotrial, delete/copy, resize, loop/release, drag, keyboard, etc.)
-#02 - Toggling note attacks (combination with release)
-#03 - Slide notes (combination with release notes)
-#04 - Pitch envelopes (absolute & relative, paste text values)
-#05 - Effect panel (speed, different channe have different fx, FamiTracker tempo, etc.)
-#06 - Copying & Pasting (special paste, special delete, mix paste, drag & copy, between projects, etc. Review all ways to duplicate note fast)
-#xx - Custom pattern settings & loop points.
-#xx - Recording with Keyboard or MIDI controller (page up/down, keys, etc.)
-#xx - Importing instruments & songs
-#xx - Importing from FamiTracker
-#xx - Importing NSFs (bit reverse, tempo, reverse engineer instruments, etc.)
-#xx - Tempo modes (FamiStudio / FamiTracker, PAL, toolbar icon, etc.)
-#xx - DPCM samples (import, save, transpose, pitch, bit reverse, etc)
-#-- - Replacing an instrument by another (copy envelopes, etc.)
-#xx - Arpeggios (comparison with arpeggio envelopes, replacing, difference with FamiTracker (no-attack), etc.)
-#xx - Importing/Exporting from/to FamiTracker (fti, etc)
-#xx - Exporting to a NSF / ROM / FDS Disk
-#xx - Exporting to Video.
-#xx - VRC6 / MMC5 / S5B audio expansions
-#xx - FDS audio expansion (waveform, modulation, master volume, FDS disk export, etc.)
-#xx - VRC7 audio expansion (release envelope, only 1 custom patch at a time, etc.)
-#xx - N163 audio expansion (wavetable, number of channels => quality, etc.)
-#xx - Cleaning up your project.
-#xx - Using the sound engine in your Homebrew game.
-#xx - Command line processing (ex: export a FamiTracker file to mp3).
+- MAYBE: MIDI in/out (not sure... non-technical people will be disapointed)
+- MAYBE: DPCM : More stuff, normalize volume? Playback speed? See people's request.
 
 Linux notes
 ===========
