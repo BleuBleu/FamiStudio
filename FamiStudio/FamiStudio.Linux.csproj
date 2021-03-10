@@ -261,7 +261,6 @@
     <Compile Include="Source\Utils\LinuxUtils.cs" />
     <Compile Include="Source\UI\MacLinux\FamiStudioFormGtk.cs" />
     <Compile Include="Source\UI\MacLinux\FamiStudioControls.cs" />
-    <Compile Include="Source\UI\MacLinux\GLWidget.cs" />
     <Compile Include="Source\UI\MacLinux\GtkUtils.cs" />
     <None Include="Resources\FamiStudio_128.png" />
     <EmbeddedResource Include="Resources\FamiStudio_16.png" />
@@ -291,7 +290,8 @@
     </Content>
     <EmbeddedResource Include="Resources\EyedropCursor.png" />
     <EmbeddedResource Include="Resources\EyedropCursor%402x.png" />
-    <Compile Include="Source\UI\MacLinux\LinuxCursors.cs" />
+    <Compile Include="Source\UI\MacLinux\GLWindow.cs" />
+    <Compile Include="Source\UI\MacLinux\Cursors.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
