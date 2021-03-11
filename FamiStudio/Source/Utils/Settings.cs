@@ -38,6 +38,62 @@ namespace FamiStudio
         public static bool ShowTutorial = true;
         public static bool ShowNoteLabels = true;
 
+        // QWERTY section, 3 octaves, 12 notes, up to 2 assignments per key.
+        //  - On Windows, these are the numerical values of System.Windows.Forms.Keys enum for a regular US keyboard.
+        //  - On GTK, these are the raw keycodes (MATTT : Verify what its gonna be for real).
+        // MATTT : Make sure the stop note key is configurable too.
+        public static readonly int[,,] DefaultQwertyKeys = new int[3, 12, 2]
+        {
+            // Octave 1
+            {
+                { 90, -1 },
+                { 83, -1 },
+                { 88, -1 },
+                { 68, -1 },
+                { 67, -1 },
+                { 86, -1 },
+                { 71, -1 },
+                { 66, -1 },
+                { 72, -1 },
+                { 78, -1 },
+                { 74, -1 },
+                { 77, -1 }
+            },
+            // Octave 2
+            {
+                { 81, 188 },
+                { 50, 76  },
+                { 87, 190 },
+                { 51, 186 },
+                { 69, 191 },
+                { 82, -1 },
+                { 53, -1 },
+                { 84, -1 },
+                { 54, -1 },
+                { 89, -1 },
+                { 55, -1 },
+                { 85, -1 }
+            },
+            // Octave 3
+            {
+                { 73, -1 },
+                { 57, -1 },
+                { 79, -1 },
+                { 48, -1 },
+                { 80, -1 },
+                { 219, -1 },
+                { 187, -1 },
+                { 221, -1 },
+                { -1, -1 },
+                { -1, -1 },
+                { -1, -1 },
+                { -1, -1 }
+            }
+        };
+
+        public static int[,,] QwertyKeys = new int[3, 12, 2];
+        public static Dictionary<int, int> KeyCodeToNoteMap = new Dictionary<int, int>();
+
         // Audio section
 #if FAMISTUDIO_LINUX
         const int DefaultNumBufferedAudioFrames = 4; // ALSA seems to like to have one extra buffer.
@@ -89,6 +145,24 @@ namespace FamiStudio
             LastSampleFolder = ini.GetString("Folders", "LastSampleFolder", "");
             LastExportFolder = ini.GetString("Folders", "LastExportFolder", "");
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
+
+            Array.Copy(DefaultQwertyKeys, QwertyKeys, DefaultQwertyKeys.Length);
+
+            for (int octave = 0; octave < QwertyKeys.GetLength(0); octave++)
+            {
+                for (int note = 0; note < 12; note++)
+                {
+                    var keyName0 = $"Octave{octave}Note{note}";
+                    var keyName1 = $"Octave{octave}Note{note}Alt";
+
+                    if (ini.HasKey("QWERTY", keyName0))
+                        QwertyKeys[octave, note, 0] = ini.GetInt("QWERTY", keyName0, QwertyKeys[octave, note, 0]);
+                    if (ini.HasKey("QWERTY", keyName1))
+                        QwertyKeys[octave, note, 1] = ini.GetInt("QWERTY", keyName1, QwertyKeys[octave, note, 1]);
+                }
+            }
+
+            UpdateKeyCodeMaps();
 
             if (DpiScaling != 100 && DpiScaling != 150 && DpiScaling != 200)
                 DpiScaling = 0;
@@ -160,9 +234,43 @@ namespace FamiStudio
             ini.SetString("Folders", "LastExportFolder", LastExportFolder);
             ini.SetString("FFmpeg", "ExecutablePath", FFmpegExecutablePath);
 
+            for (int octave = 0; octave < QwertyKeys.GetLength(0); octave++)
+            {
+                for (int note = 0; note < 12; note++)
+                {
+                    var keyName0 = $"Octave{octave}Note{note}";
+                    var keyName1 = $"Octave{octave}Note{note}Alt";
+
+                    if (QwertyKeys[octave, note, 0] >= 0)
+                        ini.SetInt("QWERTY", keyName0, QwertyKeys[octave, note, 0]);
+                    if (QwertyKeys[octave, note, 1] >= 0)
+                        ini.SetInt("QWERTY", keyName1, QwertyKeys[octave, note, 1]);
+                }
+            }
+
             Directory.CreateDirectory(GetConfigFilePath());
 
             ini.Save(GetConfigFileName());
+        }
+
+        public static void UpdateKeyCodeMaps()
+        {
+            KeyCodeToNoteMap.Clear();
+
+            for (int octave = 0; octave < QwertyKeys.GetLength(0); octave++)
+            {
+                for (int note = 0; note < 12; note++)
+                {
+                    var k0 = QwertyKeys[octave, note, 0];
+                    var k1 = QwertyKeys[octave, note, 0];
+                    var absoluteNote = octave * 12 + note;
+
+                    if (k0 >= 0)
+                        KeyCodeToNoteMap[k0] = absoluteNote;
+                    if (k1 >= 0)
+                        KeyCodeToNoteMap[k1] = absoluteNote;
+                }
+            }
         }
 
         private static string GetConfigFilePath()

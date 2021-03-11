@@ -348,6 +348,8 @@
     <EmbeddedResource Include="Resources\Eyedrop.cur" />
     <EmbeddedResource Include="Resources\DashHorizontal%402x.png" />
     <EmbeddedResource Include="Resources\DashHorizontal.png" />
+    <EmbeddedResource Include="Resources\ConfigQWERTY%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigQWERTY.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

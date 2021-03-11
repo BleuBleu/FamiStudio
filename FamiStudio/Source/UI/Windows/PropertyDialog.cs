@@ -39,15 +39,6 @@ namespace FamiStudio
             Width = width;
         }
 
-        public PropertyDialog(int x, int y, int width, int height)
-        {
-            width = (int)(width * Direct2DTheme.DialogScaling);
-            Init();
-            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            Width = width;
-            FormClosed += PropertyDialog_FormClosed;
-        }
-
         private void PropertyDialog_FormClosed(object sender, FormClosedEventArgs e)
         {
             if (Owner != null)

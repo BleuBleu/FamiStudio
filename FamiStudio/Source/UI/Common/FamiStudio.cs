@@ -75,51 +75,6 @@ namespace FamiStudio
         public static Project    StaticProject  { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
 
-        static readonly Dictionary<Keys, int> RecordingKeyToNoteMap = new Dictionary<Keys, int>
-        {
-            { Keys.D1,        -1 }, // Special: Stop note.
-            { Keys.Z,          0 },
-            { Keys.S,          1 },
-            { Keys.X,          2 },
-            { Keys.D,          3 },
-            { Keys.C,          4 },
-            { Keys.V,          5 },
-            { Keys.G,          6 },
-            { Keys.B,          7 },
-            { Keys.H,          8 },
-            { Keys.N,          9 },
-            { Keys.J,         10 },
-            { Keys.M,         11 },
-
-            { Keys.Oemcomma,  12 },
-            { Keys.L,         13 },
-            { Keys.OemPeriod, 14 },
-            { Keys.Oem1,      15 }, // ;
-            { Keys.Oem2,      16 }, // /
-
-            { Keys.Q,         12 },
-            { Keys.D2,        13 },
-            { Keys.W,         14 },
-            { Keys.D3,        15 },
-            { Keys.E,         16 },
-            { Keys.R,         17 },
-            { Keys.D5,        18 },
-            { Keys.T,         19 },
-            { Keys.D6,        20 },
-            { Keys.Y,         21 },
-            { Keys.D7,        22 },
-            { Keys.U,         23 },
-
-            { Keys.I,         24 },
-            { Keys.D9,        25 },
-            { Keys.O,         26 },
-            { Keys.D0,        27 },
-            { Keys.P,         28 },
-            { Keys.Oem4,      29 }, // [
-            { Keys.Oemplus,   30 }, // +/=
-            { Keys.Oem6,      31 }, // ]
-        };
-
         public FamiStudio(string filename)
         {
             StaticInstance = this;
@@ -961,13 +916,14 @@ namespace FamiStudio
 
         protected bool HandleRecordingKey(KeyEventArgs e, bool keyDown)
         {
-            if (RecordingKeyToNoteMap.TryGetValue(e.KeyCode, out var noteValue))
+            if (Settings.KeyCodeToNoteMap.TryGetValue((int)e.KeyCode, out var noteValue))
             {
                 if (!PreventKeyRepeat(e, keyDown))
                     return true;
 
                 if (keyDown)
                 {
+                    // MATTT : TODO stop note.
                     if (noteValue < 0)
                     {
                         lastRecordingKeyDown = Keys.None;
@@ -1010,10 +966,15 @@ namespace FamiStudio
                 StopRecording();
             }
 
+            if (e.KeyCode == Keys.Q && shift)
+            {
+                ToggleQwertyPiano();
+                return;
+            }
+
             if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e, true))
             {
-                if (recordingMode)
-                    return;
+                return;
             }
 
             if (recordingMode && e.KeyCode == Keys.Tab)

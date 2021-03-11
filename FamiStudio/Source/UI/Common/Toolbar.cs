@@ -182,7 +182,7 @@ namespace FamiStudio
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
-            buttons[ButtonQwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input";
+            buttons[ButtonQwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift} {Q}";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
             buttons[ButtonFollow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";

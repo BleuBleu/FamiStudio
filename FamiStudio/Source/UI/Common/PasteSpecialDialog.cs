@@ -19,16 +19,16 @@ namespace FamiStudio
         public unsafe PasteSpecialDialog(Channel channel, bool mix = false, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
             dialog = new PropertyDialog(200);
-            dialog.Properties.AddLabelBoolean("Mix With Existing Notes", mix);
-            dialog.Properties.AddLabelBoolean("Paste Notes", notes);
-            dialog.Properties.AddLabelBoolean("Paste Effects", effectsMask == Note.EffectAllMask);
+            dialog.Properties.AddLabelCheckBox("Mix With Existing Notes", mix);
+            dialog.Properties.AddLabelCheckBox("Paste Notes", notes);
+            dialog.Properties.AddLabelCheckBox("Paste Effects", effectsMask == Note.EffectAllMask);
 
             for (int i = 0; i < Note.EffectCount; i++)
             {
                 if (channel.SupportsEffect(i))
                 {
                     propToEffect[dialog.Properties.PropertyCount] = i;
-                    dialog.Properties.AddLabelBoolean(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));
+                    dialog.Properties.AddLabelCheckBox(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));
                 }
             }
 

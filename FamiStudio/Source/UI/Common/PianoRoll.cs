@@ -167,12 +167,6 @@ namespace FamiStudio
             4.0
         };
 
-        static readonly List<char> RecordingNoteToKeyMap = new List<char>
-        {
-            'Z', 'S', 'X', 'D', 'C', 'V', 'G', 'B', 'H', 'N', 'J', 'M',
-            'Q', '2', 'W', '3', 'E', 'R', '5', 'T', '6', 'Y', '7', 'U', 'I', '9', 'O', '0', 'P', '[', '=', ']'
-        };
-
         RenderTheme theme;
         RenderBrush whiteKeyBrush;
         RenderBrush blackKeyBrush;
@@ -1197,8 +1191,11 @@ namespace FamiStudio
             {
                 var showQwerty = App.IsRecording || App.IsQwertyPianoEnabled;
 
-                for (int i = 0; i < RecordingNoteToKeyMap.Count; i++)
+                foreach (var kv in Settings.KeyCodeToNoteMap)
                 {
+                    var i = kv.Value;
+                    var k = kv.Key;
+
                     int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + App.BaseRecordingOctave)) - scrollY;
                     int y = octaveBaseY - (i % 12) * noteSizeY;
 
@@ -1208,7 +1205,7 @@ namespace FamiStudio
                     else
                         brush = IsBlackKey(i % 12) ? theme.LightGreyFillBrush2 : theme.BlackBrush;
 
-                    g.DrawText(RecordingNoteToKeyMap[i].ToString(), ThemeBase.FontVerySmallCenter, 0, y - recordingKeyOffsetY + g.WindowScaling * 2, brush, blackKeySizeX);
+                    g.DrawText(PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)k), ThemeBase.FontVerySmallCenter, 0, y - recordingKeyOffsetY + g.WindowScaling * 2, brush, blackKeySizeX);
                 }
             }
 
@@ -2702,8 +2699,8 @@ namespace FamiStudio
                 {
                     var freqIdx = App.PalPlayback ? 1 : 0;
                     var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, false, e.Y > Height / 2);
-                    dlg.Properties.AddStringList("Pitch :", DPCMSampleRate.Strings[freqIdx], DPCMSampleRate.Strings[freqIdx][mapping.Pitch]); // 0
-                    dlg.Properties.AddBoolean("Loop :", mapping.Loop); // 1
+                    dlg.Properties.AddDropDownList("Pitch :", DPCMSampleRate.Strings[freqIdx], DPCMSampleRate.Strings[freqIdx][mapping.Pitch]); // 0
+                    dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -3786,7 +3783,7 @@ namespace FamiStudio
 
                             var dlg = new PropertyDialog(300);
                             dlg.Properties.AddLabel(null, "Select sample to assign:"); // 0
-                            dlg.Properties.AddStringList(null, sampleNames.ToArray(), sampleNames[0]); // 1
+                            dlg.Properties.AddDropDownList(null, sampleNames.ToArray(), sampleNames[0]); // 1
                             dlg.Properties.Build();
 
                             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)

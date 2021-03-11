@@ -83,6 +83,16 @@ namespace FamiStudio
             }
         }
 
+        public bool HasKey(string section, string key)
+        {
+            if (iniContent.TryGetValue(section, out var sectionValues))
+            {
+                return sectionValues.ContainsKey(key);
+            }
+
+            return false;
+        }
+
         public void SetInt(string section, string key, int value)
         {
             if (!iniContent.ContainsKey(section))

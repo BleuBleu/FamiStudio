@@ -8,6 +8,7 @@ using System.IO;
 using Microsoft.Win32;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace FamiStudio
 {
@@ -129,6 +130,39 @@ namespace FamiStudio
             {
                 return false;
             }
+        }
+
+        // From : https://stackoverflow.com/questions/318777/c-sharp-how-to-translate-virtual-keycode-to-char
+        [DllImport("user32.dll")]
+        static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetKeyboardLayout(uint idThread);
+
+        [DllImport("user32.dll")]
+        static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
+
+        public static string KeyCodeToString(Keys key)
+        {
+            byte[] keyboardState = new byte[255];
+            bool keyboardStateStatus = GetKeyboardState(keyboardState);
+
+            if (!keyboardStateStatus)
+            {
+                return "";
+            }
+
+            uint virtualKeyCode = (uint)key;
+            uint scanCode = MapVirtualKey(virtualKeyCode, 0);
+            IntPtr inputLocaleIdentifier = GetKeyboardLayout(0);
+
+            StringBuilder result = new StringBuilder();
+            ToUnicodeEx(virtualKeyCode, scanCode, keyboardState, result, (int)5, (uint)0, inputLocaleIdentifier);
+
+            return result.ToString().ToUpper();
         }
     }
 }

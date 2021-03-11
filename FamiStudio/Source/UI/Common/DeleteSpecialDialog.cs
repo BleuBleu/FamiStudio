@@ -19,15 +19,15 @@ namespace FamiStudio
         public unsafe DeleteSpecialDialog(Channel channel, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
             dialog = new PropertyDialog(200);
-            dialog.Properties.AddLabelBoolean("Delete Notes", notes);
-            dialog.Properties.AddLabelBoolean("Delete Effects", effectsMask == Note.EffectAllMask);
+            dialog.Properties.AddLabelCheckBox("Delete Notes", notes);
+            dialog.Properties.AddLabelCheckBox("Delete Effects", effectsMask == Note.EffectAllMask);
 
             for (int i = 0; i < Note.EffectCount; i++)
             {
                 if (channel.SupportsEffect(i))
                 {
                     propToEffect[dialog.Properties.PropertyCount] = i;
-                    dialog.Properties.AddLabelBoolean(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));
+                    dialog.Properties.AddLabelCheckBox(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));
                 }
             }
 

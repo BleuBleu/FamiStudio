@@ -12,6 +12,7 @@ namespace FamiStudio
             UserInterface,
             Sound,
             MIDI,
+            QWERTY,
 #if FAMISTUDIO_MACOS
             MacOS,
 #endif
@@ -23,6 +24,7 @@ namespace FamiStudio
             "Interface",
             "Sound",
             "MIDI",
+            "QWERTY",
 #if FAMISTUDIO_MACOS
             "MacOS",
 #endif
@@ -57,6 +59,7 @@ namespace FamiStudio
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
+        private int[,,] qwertyKeys; // We keep a copy here in case the user cancels.
 
         public unsafe ConfigDialog()
         {
@@ -68,6 +71,10 @@ namespace FamiStudio
             int height = 350;
 
             this.dialog = new MultiPropertyDialog(width, height);
+
+            // Keep a copy.
+            qwertyKeys = new int[3, 12, 2];
+            Array.Copy(Settings.QwertyKeys, qwertyKeys, Settings.QwertyKeys.Length);
 
             for (int i = 0; i < (int)ConfigSection.Max; i++)
             {
@@ -95,14 +102,14 @@ namespace FamiStudio
                     var followModeIndex = Settings.FollowMode <= 0 ? 0 : Settings.FollowMode % FollowModeStrings.Length;
                     var followSyncIndex = Settings.FollowSync <= 0 ? 0 : Settings.FollowSync % FollowSyncStrings.Length;
 
-                    page.AddStringList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex]); // 0
-                    page.AddStringList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]); // 1
-                    page.AddStringList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex]);  // 2
-                    page.AddStringList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex]); // 3
-                    page.AddBoolean("Check for updates:", Settings.CheckUpdates); // 4
-                    page.AddBoolean("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
-                    page.AddBoolean("Show Note Labels:", Settings.ShowNoteLabels); // 6
-                    page.AddBoolean("Trackpad controls:", Settings.TrackPadControls); // 7
+                    page.AddDropDownList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex]); // 0
+                    page.AddDropDownList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]); // 1
+                    page.AddDropDownList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex]);  // 2
+                    page.AddDropDownList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex]); // 3
+                    page.AddCheckBox("Check for updates:", Settings.CheckUpdates); // 4
+                    page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
+                    page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 6
+                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 7
 
 #if FAMISTUDIO_LINUX
                     page.SetPropertyEnabled(0, false);
@@ -116,8 +123,8 @@ namespace FamiStudio
                 {
                     page.AddIntegerRange("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16); // 0
                     page.AddIntegerRange("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 1
-                    page.AddBoolean("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 2
-                    page.AddBoolean("Mute piano roll interactions during playback:", Settings.NoDragSoungWhenPlaying); // 3
+                    page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 2
+                    page.AddCheckBox("Mute piano roll interactions during playback:", Settings.NoDragSoungWhenPlaying); // 3
                         
                     break;
                 }
@@ -139,9 +146,19 @@ namespace FamiStudio
                     else if (midiDevices.Count > 0)
                         midiDevice = midiDevices[0];
 
-                    page.AddStringList("Device :", midiDevices.ToArray(), midiDevice); // 0
+                    page.AddDropDownList("Device :", midiDevices.ToArray(), midiDevice); // 0
                     break;
                 }
+                case ConfigSection.QWERTY:
+                {
+                    // MATTT : Handle right click
+                    // MATTT : Handle stop note.
+                    page.AddLabel(null, "Double click on a row to assign a key.\nRight click to clear a key."); // 0
+                    page.AddMultiColumnList(new[] { "Octave", "Note", "Key", "Key (alt)" }, GetQwertyMappingStrings(), QwertyListDoubleClicked); // 1
+                    page.AddButton(null, "Reset to default", ResetQwertyClicked); 
+                    break;
+                }
+#if FAMISTUDIO_MACOS
                 case ConfigSection.MacOS:
                 { 
                     page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 0
@@ -152,12 +169,74 @@ namespace FamiStudio
                     page.SetPropertyEnabled(2, Settings.TrackPadControls);
                     break;
                 }
+#endif
             }
 
             page.Build();
             pages[(int)section] = page;
 
             return page;
+        }
+
+        private void ResetQwertyClicked(PropertyPage props, int propertyIndex)
+        {
+            Array.Copy(Settings.DefaultQwertyKeys, qwertyKeys, Settings.DefaultQwertyKeys.Length);
+            pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+        }
+
+        private string[,] GetQwertyMappingStrings()
+        {
+            var data = new string[36, 4];
+
+            for (int octave = 0; octave < 3; octave++)
+            {
+                for (int i = 0; i < 12; i++)
+                {
+                    var k0 = qwertyKeys[octave, i, 0];
+                    var k1 = qwertyKeys[octave, i, 1];
+
+                    data[octave * 12 + i, 0] = octave.ToString();
+                    data[octave * 12 + i, 1] = Note.NoteNames[i];
+                    data[octave * 12 + i, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[octave, i, 0]);
+                    data[octave * 12 + i, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[octave, i, 1]);
+                }
+            }
+
+            return data;
+        }
+
+        void AssignQwertyKey(int octave, int key, int keyIndex, int keyCode)
+        {
+            // Unbind this key from anything.
+            for (int i = 0; i < qwertyKeys.GetLength(0); i++)
+            {
+                for (int j = 0; j < qwertyKeys.GetLength(1); j++)
+                {
+                    for (int k = 0; k < qwertyKeys.GetLength(2); k++)
+                    {
+                        if (qwertyKeys[i, j, k] == keyCode)
+                            qwertyKeys[i, j, k] = -1;
+                    }
+                }
+            }
+
+            qwertyKeys[octave, key, keyIndex] = keyCode;
+        }
+
+        void QwertyListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)
+        {
+            var dlg = new PropertyDialog(300, false);
+            dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
+            dlg.Properties.Build();
+            dlg.KeyDown += (sender, e) => 
+            {
+                if (e.KeyCode != Keys.Escape)
+                    AssignQwertyKey(itemIndex / 12, itemIndex % 12, columnIndex - 2, (int)e.KeyCode);
+                dlg.Close();
+            };
+            dlg.ShowDialog();
+
+            pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
         }
 
 #if FAMISTUDIO_MACOS
@@ -196,13 +275,6 @@ namespace FamiStudio
                 Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
                 Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(7);
 
-#if FAMISTUDIO_MACOS
-                var pageMacOS = pages[(int)ConfigSection.MacOS];
-                Settings.ReverseTrackPad   = pageMacOS.GetPropertyValue<bool>(0);
-                Settings.TrackPadMoveSensitity = pageMacOS.GetPropertyValue<int>(1);
-                Settings.TrackPadZoomSensitity = pageMacOS.GetPropertyValue<int>(2);
-#endif
-
                 // Sound
                 Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(1);
@@ -213,6 +285,18 @@ namespace FamiStudio
                 var pageMIDI = pages[(int)ConfigSection.MIDI];
 
                 Settings.MidiDevice = pageMIDI.GetPropertyValue<string>(0);
+
+                // QWERTY
+                Array.Copy(qwertyKeys, Settings.QwertyKeys, Settings.QwertyKeys.Length);
+                Settings.UpdateKeyCodeMaps();
+
+#if FAMISTUDIO_MACOS
+                // Mac OS
+                var pageMacOS = pages[(int)ConfigSection.MacOS];
+                Settings.ReverseTrackPad   = pageMacOS.GetPropertyValue<bool>(0);
+                Settings.TrackPadMoveSensitity = pageMacOS.GetPropertyValue<int>(1);
+                Settings.TrackPadZoomSensitity = pageMacOS.GetPropertyValue<int>(2);
+#endif
 
                 Settings.Save();
             }

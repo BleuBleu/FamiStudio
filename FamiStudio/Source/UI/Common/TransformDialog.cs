@@ -58,17 +58,17 @@ namespace FamiStudio
             switch (section)
             {
                 case TransformOperation.SongCleanup:
-                    page.AddBoolean("Merge identical patterns:", true);                       // 0
-                    page.AddBoolean("Delete empty patterns:", true);                          // 1
-                    page.AddStringListMulti(null, GetSongNames(), null);                      // 2
+                    page.AddCheckBox("Merge identical patterns:", true);                       // 0
+                    page.AddCheckBox("Delete empty patterns:", true);                          // 1
+                    page.AddCheckBoxList(null, GetSongNames(), null);                      // 2
                     break;
                 case TransformOperation.ProjectCleanup:
-                    page.AddBoolean("Delete unused instruments:", true);                      // 0
-                    page.AddBoolean("Merge identical instruments:", true);                    // 1
-                    page.AddBoolean("Unassign unused DPCM instrument keys:", true);           // 2
-                    page.AddBoolean("Delete unassigned samples:", true);                      // 3
-                    page.AddBoolean("Permanently apply all DPCM samples processing:", false); // 4
-                    page.AddBoolean("Delete unused arpeggios:", true);                        // 5
+                    page.AddCheckBox("Delete unused instruments:", true);                      // 0
+                    page.AddCheckBox("Merge identical instruments:", true);                    // 1
+                    page.AddCheckBox("Unassign unused DPCM instrument keys:", true);           // 2
+                    page.AddCheckBox("Delete unassigned samples:", true);                      // 3
+                    page.AddCheckBox("Permanently apply all DPCM samples processing:", false); // 4
+                    page.AddCheckBox("Delete unused arpeggios:", true);                        // 5
                     page.PropertyChanged += ProjectCleanup_PropertyChanged;
                     break;
             }

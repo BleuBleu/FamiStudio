@@ -1133,8 +1133,8 @@ namespace FamiStudio
                 return;
 
             var dialog = new PropertyDialog(200);
-            dialog.Properties.AddLabelBoolean("Insert", false); // 0
-            dialog.Properties.AddLabelBoolean("Extend song", false); // 1
+            dialog.Properties.AddLabelCheckBox("Insert", false); // 0
+            dialog.Properties.AddLabelCheckBox("Extend song", false); // 1
             dialog.Properties.AddIntegerRange("Repeat :", 1, 1, 32); // 2
             dialog.Properties.SetPropertyEnabled(1, false);
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
@@ -1613,7 +1613,7 @@ namespace FamiStudio
             var enabled = song.PatternHasCustomSettings(patternIdx);
 
             dlg.Properties.UserData = song;
-            dlg.Properties.AddBoolean("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
+            dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
             
             if (song.UsesFamiTrackerTempo)
             {

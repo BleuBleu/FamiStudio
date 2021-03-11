@@ -33,6 +33,7 @@ namespace FamiStudio
     public partial class PropertyPage : UserControl
     {
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
+        public delegate void ListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
 
         class Property
         {
@@ -41,6 +42,7 @@ namespace FamiStudio
             public Control control;
             public int leftMarging;
             public ButtonPropertyClicked click;
+            public ListDoubleClicked listDoubleClick;
         };
 
         private int layoutHeight;
@@ -381,7 +383,7 @@ namespace FamiStudio
             }
         }
 
-        public void UpdateMultiStringList(int idx, string[] values, bool[] selected)
+        public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
         {
             var listBox = (properties[idx].control as PaddedCheckedListBox);
 
@@ -536,7 +538,7 @@ namespace FamiStudio
             (properties[idx].control as ComboBox).SelectedIndex = selIdx;
         }
 
-        public void AddBoolean(string label, bool value, string tooltip = null)
+        public void AddCheckBox(string label, bool value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -547,7 +549,7 @@ namespace FamiStudio
                 });
         }
 
-        public void AddLabelBoolean(string label, bool value, int margin = 0)
+        public void AddLabelCheckBox(string label, bool value, int margin = 0)
         {
             properties.Add(
                 new Property()
@@ -558,7 +560,7 @@ namespace FamiStudio
                 });
         }
 
-        public void AddStringList(string label, string[] values, string value, string tooltip = null)
+        public void AddDropDownList(string label, string[] values, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -569,7 +571,7 @@ namespace FamiStudio
                 });
         }
 
-        public void AddStringListMulti(string label, string[] values, bool[] selected)
+        public void AddCheckBoxList(string label, string[] values, bool[] selected)
         {
             properties.Add(
                 new Property()
@@ -578,6 +580,75 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateCheckedListBox(values, selected)
                 });
+        }
+
+        private ListView CreateListView(string[] columnNames, string[,] data)
+        {
+            var list = new ListView();
+
+            foreach (var col in columnNames)
+            {
+                var header = list.Columns.Add(col);
+                header.Width = -2; // Auto size.
+            }
+
+            for (int i = 0; i < data.GetLength(0); i++)
+            {
+                var item = list.Items.Add(data[i, 0]);
+                for (int j = 1; j < data.GetLength(1); j++)
+                    item.SubItems.Add(data[i, j]);
+            }
+
+            list.Font = font;
+            list.Height = (int)(300 * RenderTheme.DialogScaling);
+            list.MultiSelect = false;
+            list.View = View.Details;
+            list.GridLines = true;
+            list.FullRowSelect = true;
+            list.MouseDoubleClick += ListView_MouseDoubleClick;
+            list.BackColor = ThemeBase.LightGreyFillColor2;
+
+            return list;
+        }
+
+        private void ListView_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            var listView = sender as ListView;
+            var hitTest = listView.HitTest(e.Location);
+
+            if (hitTest.Item != null)
+            {
+                for (int i = 0; i < properties.Count; i++)
+                {
+                    if (properties[i].control == sender && properties[i].listDoubleClick != null)
+                    {
+                        properties[i].listDoubleClick(this, i, hitTest.Item.Index, hitTest.Item.SubItems.IndexOf(hitTest.SubItem));
+                    }
+                }
+            }
+        }
+        
+        public void AddMultiColumnList(string[] columnNames, string[,] data, ListDoubleClicked doubleClick)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.StringListMulti,
+                    control = CreateListView(columnNames, data),
+                    listDoubleClick = doubleClick
+                });
+        }
+
+        public void UpdateMultiColumnList(int idx, string[,] data)
+        {
+            var list = properties[idx].control as ListView;
+
+            for (int i = 0; i < data.GetLength(0); i++)
+            {
+                var item = list.Items[i];
+                for (int j = 0; j < data.GetLength(1); j++)
+                    item.SubItems[j].Text = data[i, j];
+            }
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)

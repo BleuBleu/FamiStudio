@@ -109,15 +109,15 @@ namespace FamiStudio
             switch (format)
             {
                 case ExportFormat.WavMp3:
-                    page.AddStringList("Song :", songNames, songNames[0]); // 0
-                    page.AddStringList("Format :", new[] { "WAV", "MP3" }, "WAV"); // 1
-                    page.AddStringList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
-                    page.AddStringList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
-                    page.AddStringList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
+                    page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                    page.AddDropDownList("Format :", new[] { "WAV", "MP3" }, "WAV"); // 1
+                    page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
+                    page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
+                    page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
                     page.AddIntegerRange("Loop count:", 1, 1, 10); // 5
                     page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
-                    page.AddBoolean("Separate channel files", false); // 7
-                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 8
+                    page.AddCheckBox("Separate channel files", false); // 7
+                    page.AddCheckBoxList("Channels :", GetChannelNames(), null); // 8
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
                     break;
@@ -129,59 +129,59 @@ namespace FamiStudio
 #else
                     page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
 #endif
-                    page.AddStringList("Song :", songNames, songNames[0]); // 2
-                    page.AddStringList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
-                    page.AddStringList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
-                    page.AddStringList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 5
-                    page.AddStringList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
-                    page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
+                    page.AddDropDownList("Song :", songNames, songNames[0]); // 2
+                    page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
+                    page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
+                    page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 5
+                    page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
+                    page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
                     page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
-                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 9
+                    page.AddCheckBoxList("Channels :", GetChannelNames(), null); // 9
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
                     page.AddString("Artist :", project.Author, 31); // 1
                     page.AddString("Copyright :", project.Copyright, 31); // 2
-                    page.AddStringList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 3
-                    page.AddStringListMulti(null, songNames, null); // 4
+                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 3
+                    page.AddCheckBoxList(null, songNames, null); // 4
 #if DEBUG
-                    page.AddStringList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 5
+                    page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 5
 #endif
                     page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
                     break;
                 case ExportFormat.Rom:
-                    page.AddStringList("Type :", new[] { "NES ROM", "FDS Disk" }, project.ExpansionAudio == ExpansionType.Fds ? "FDS Disk" : "NES ROM"); // 0
+                    page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.ExpansionAudio == ExpansionType.Fds ? "FDS Disk" : "NES ROM"); // 0
                     page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
                     page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
-                    page.AddStringList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
-                    page.AddStringListMulti(null, songNames, null); // 2
+                    page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
+                    page.AddCheckBoxList(null, songNames, null); // 2
                     page.SetPropertyEnabled(0,  project.ExpansionAudio == ExpansionType.Fds);
                     page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
                     break;
                 case ExportFormat.Text:
-                    page.AddStringListMulti(null, songNames, null); // 0
-                    page.AddBoolean("Delete unused data :", false); // 1
+                    page.AddCheckBoxList(null, songNames, null); // 0
+                    page.AddCheckBox("Delete unused data :", false); // 1
                     break;
                 case ExportFormat.FamiTracker:
-                    page.AddStringListMulti(null, songNames, null); // 0
+                    page.AddCheckBoxList(null, songNames, null); // 0
                     break;
                 case ExportFormat.FamiTone2Music:
                 case ExportFormat.FamiStudioMusic:
-                    page.AddStringList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
-                    page.AddBoolean("Separate Files :", false); // 1
+                    page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
+                    page.AddCheckBox("Separate Files :", false); // 1
                     page.AddString("Song Name Pattern :", "{project}_{song}"); // 2
                     page.AddString("DMC Name Pattern :", "{project}"); // 3
-                    page.AddBoolean("Generate song list include :", false); // 4
-                    page.AddStringListMulti(null, songNames, null); // 5
+                    page.AddCheckBox("Generate song list include :", false); // 4
+                    page.AddCheckBoxList(null, songNames, null); // 5
                     page.SetPropertyEnabled(2, false);
                     page.SetPropertyEnabled(3, false);
                     break;
                 case ExportFormat.FamiTone2Sfx:
                 case ExportFormat.FamiStudioSfx:
-                    page.AddStringList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
-                    page.AddStringList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 1
-                    page.AddBoolean("Generate SFX list include :", false); // 2
-                    page.AddStringListMulti(null, songNames, null); // 3
+                    page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
+                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 1
+                    page.AddCheckBox("Generate SFX list include :", false); // 2
+                    page.AddCheckBoxList(null, songNames, null); // 3
                     break;
             }
 

@@ -1276,7 +1276,7 @@ namespace FamiStudio
 
                     var dlg = new PropertyDialog(300);
                     dlg.Properties.AddLabel(null, "Select songs to import:");
-                    dlg.Properties.AddStringListMulti(null, songNames.ToArray(), null);
+                    dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null);
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -1349,7 +1349,7 @@ namespace FamiStudio
 
                             var dlg = new PropertyDialog(300);
                             dlg.Properties.AddLabel(null, "Select instruments to import:");
-                            dlg.Properties.AddStringListMulti(null, instrumentNames.ToArray(), null);
+                            dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null);
                             dlg.Properties.Build();
 
                             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -1488,7 +1488,7 @@ namespace FamiStudio
                         {
                             var expNames = new[] { ExpansionType.Names[ExpansionType.None], App.Project.ExpansionAudioName };
                             var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 260, true);
-                            dlg.Properties.AddStringList("Expansion:", expNames, ExpansionType.Names[ExpansionType.None] ); // 0
+                            dlg.Properties.AddDropDownList("Expansion:", expNames, ExpansionType.Names[ExpansionType.None] ); // 0
                             dlg.Properties.Build();
 
                             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -1786,10 +1786,10 @@ namespace FamiStudio
             dlg.Properties.AddString("Title :", project.Name, 31); // 0
             dlg.Properties.AddString("Author :", project.Author, 31); // 1
             dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
-            dlg.Properties.AddStringList("Expansion Audio :", ExpansionType.Names, project.ExpansionAudioName, CommonTooltips.ExpansionAudio); // 3
+            dlg.Properties.AddDropDownList("Expansion Audio :", ExpansionType.Names, project.ExpansionAudioName, CommonTooltips.ExpansionAudio); // 3
             dlg.Properties.AddIntegerRange("N163 Channels :", project.ExpansionNumChannels, 1, 8, CommonTooltips.ExpansionNumChannels); // 4 (Namco)
-            dlg.Properties.AddStringList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 5
-            dlg.Properties.AddStringList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 6
+            dlg.Properties.AddDropDownList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 5
+            dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 6
             dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == ExpansionType.N163);
             dlg.Properties.SetPropertyEnabled(6, project.UsesFamiStudioTempo && !project.UsesExpansionAudio);
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
@@ -1986,7 +1986,7 @@ namespace FamiStudio
             dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColor(instrument.Color); // 1
             if (instrument.IsEnvelopeActive(EnvelopeType.Pitch))
-                dlg.Properties.AddBoolean("Relative pitch:", instrument.Envelopes[EnvelopeType.Pitch].Relative); // 2
+                dlg.Properties.AddCheckBox("Relative pitch:", instrument.Envelopes[EnvelopeType.Pitch].Relative); // 2
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
