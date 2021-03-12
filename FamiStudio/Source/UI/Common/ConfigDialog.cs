@@ -242,7 +242,7 @@ namespace FamiStudio
             // MATTT : Make this cross-platform.
             dlg.KeyDown += (sender, e) => 
             {
-                if (PlatformUtils.KeyCodeToString(e.KeyCode) != null) // These 2 keys are used by the QWERTY input.
+                if (PlatformUtils.KeyCodeToString((int)e.KeyCode) != null) // These 2 keys are used by the QWERTY input.
                 {
                     if (e.KeyCode != Keys.Escape)
                         AssignQwertyKey(itemIndex, columnIndex - 2, (int)e.KeyCode);

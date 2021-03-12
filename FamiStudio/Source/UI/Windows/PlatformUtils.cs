@@ -145,7 +145,7 @@ namespace FamiStudio
         [DllImport("user32.dll")]
         static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
 
-        public static string KeyCodeToString(Keys key)
+        public static string KeyCodeToString(int key)
         {
             byte[] keyboardState = new byte[255];
             bool keyboardStateStatus = GetKeyboardState(keyboardState);
@@ -162,15 +162,16 @@ namespace FamiStudio
             StringBuilder result = new StringBuilder();
             ToUnicodeEx(virtualKeyCode, scanCode, keyboardState, result, (int)5, (uint)0, inputLocaleIdentifier);
 
+            // Fall back to Key enum for special keys.
             if (result.Length == 0)
             {
-                return key.ToString();
+                return ((System.Windows.Forms.Keys)key).ToString();
             }
 
             var str = result.ToString().ToUpper();
 
             // Ignore invisible characters.
-            if (str.Length == 0 || (str.Length == 1 && str[0] <= 32))
+            if (str.Length == 1 && str[0] <= 32)
             {
                 return null;
             }

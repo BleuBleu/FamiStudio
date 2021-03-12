@@ -39,56 +39,106 @@ namespace FamiStudio
         public static bool ShowNoteLabels = true;
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
-        //  - On Windows, these are the numerical values of System.Windows.Forms.Keys enum for a regular US keyboard.
-        //  - On GTK, these are the raw keycodes (MATTT : Verify what its gonna be for real).
-        // MATTT : Make sure the stop note key is configurable too.
+#if FAMISTUDIO_WINDOWS
         public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
         {
             // Stop note
-            { 49, -1 },
+            { (int)System.Windows.Forms.Keys.D1, -1 },
 
             // Octave 1
-            { 90, -1 },
-            { 83, -1 },
-            { 88, -1 },
-            { 68, -1 },
-            { 67, -1 },
-            { 86, -1 },
-            { 71, -1 },
-            { 66, -1 },
-            { 72, -1 },
-            { 78, -1 },
-            { 74, -1 },
-            { 77, -1 },
+            { (int)System.Windows.Forms.Keys.Z, -1 },
+            { (int)System.Windows.Forms.Keys.S, -1 },
+            { (int)System.Windows.Forms.Keys.X, -1 },
+            { (int)System.Windows.Forms.Keys.D, -1 },
+            { (int)System.Windows.Forms.Keys.C, -1 },
+            { (int)System.Windows.Forms.Keys.V, -1 },
+            { (int)System.Windows.Forms.Keys.G, -1 },
+            { (int)System.Windows.Forms.Keys.B, -1 },
+            { (int)System.Windows.Forms.Keys.H, -1 },
+            { (int)System.Windows.Forms.Keys.N, -1 },
+            { (int)System.Windows.Forms.Keys.J, -1 },
+            { (int)System.Windows.Forms.Keys.M, -1 },
 
             // Octave 2
-            { 81, 188 },
-            { 50, 76  },
-            { 87, 190 },
-            { 51, 186 },
-            { 69, 191 },
-            { 82, -1 },
-            { 53, -1 },
-            { 84, -1 },
-            { 54, -1 },
-            { 89, -1 },
-            { 55, -1 },
-            { 85, -1 },
+            { (int)System.Windows.Forms.Keys.Q,  (int)System.Windows.Forms.Keys.Oemcomma,  },
+            { (int)System.Windows.Forms.Keys.D2, (int)System.Windows.Forms.Keys.L,         },
+            { (int)System.Windows.Forms.Keys.W,  (int)System.Windows.Forms.Keys.OemPeriod, },
+            { (int)System.Windows.Forms.Keys.D3, (int)System.Windows.Forms.Keys.Oem1,      },
+            { (int)System.Windows.Forms.Keys.E,  (int)System.Windows.Forms.Keys.Oem2,      },
+            { (int)System.Windows.Forms.Keys.R,  -1 },
+            { (int)System.Windows.Forms.Keys.D5, -1 },
+            { (int)System.Windows.Forms.Keys.T,  -1 },
+            { (int)System.Windows.Forms.Keys.D6, -1 },
+            { (int)System.Windows.Forms.Keys.Y,  -1 },
+            { (int)System.Windows.Forms.Keys.D7, -1 },
+            { (int)System.Windows.Forms.Keys.U,  -1 },
 
             // Octave 3
-            { 73, -1 },
-            { 57, -1 },
-            { 79, -1 },
-            { 48, -1 },
-            { 80, -1 },
-            { 219, -1 },
-            { 187, -1 },
-            { 221, -1 },
+            { (int)System.Windows.Forms.Keys.I,       -1 },
+            { (int)System.Windows.Forms.Keys.D9,      -1 },
+            { (int)System.Windows.Forms.Keys.O,       -1 },
+            { (int)System.Windows.Forms.Keys.D0,      -1 },
+            { (int)System.Windows.Forms.Keys.P,       -1 },
+            { (int)System.Windows.Forms.Keys.Oem4,    -1 },
+            { (int)System.Windows.Forms.Keys.Oemplus, -1 },
+            { (int)System.Windows.Forms.Keys.Oem6,    -1 },
             { -1, -1 },
             { -1, -1 },
             { -1, -1 },
             { -1, -1 }
         };
+#else
+        public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
+        {
+            // Stop note
+            { (int)Gdk.Key.Key_1, -1 },
+
+            // Octave 1
+            { (int)Gdk.Key.z,            -1 },
+            { (int)Gdk.Key.s,            -1 },
+            { (int)Gdk.Key.x,            -1 },
+            { (int)Gdk.Key.d,            -1 },
+            { (int)Gdk.Key.c,            -1 },
+            { (int)Gdk.Key.v,            -1 },
+            { (int)Gdk.Key.g,            -1 },
+            { (int)Gdk.Key.b,            -1 },
+            { (int)Gdk.Key.h,            -1 },
+            { (int)Gdk.Key.n,            -1 },
+            { (int)Gdk.Key.j,            -1 },
+            { (int)Gdk.Key.m,            -1 },
+
+            // Octave 2
+            { (int)Gdk.Key.q,            -1 },
+            { (int)Gdk.Key.Key_2,        -1 },
+            { (int)Gdk.Key.w,            -1 },
+            { (int)Gdk.Key.Key_3,        -1 },
+            { (int)Gdk.Key.e,            -1 },
+            { (int)Gdk.Key.r,            -1 },
+            { (int)Gdk.Key.Key_5,        -1 },
+            { (int)Gdk.Key.t,            -1 },
+            { (int)Gdk.Key.Key_6,        -1 },
+            { (int)Gdk.Key.y,            -1 },
+            { (int)Gdk.Key.Key_7,        -1 },
+            { (int)Gdk.Key.u,            -1 },
+
+            // Octave 2 (alt)
+            { (int)Gdk.Key.comma,        -1 },
+            { (int)Gdk.Key.l,            -1 },
+            { (int)Gdk.Key.period,       -1 },
+            { (int)Gdk.Key.semicolon,    -1 },
+            { (int)Gdk.Key.slash,        -1 },
+
+            // Octave 3
+            { (int)Gdk.Key.i,            -1 },
+            { (int)Gdk.Key.Key_9,        -1 },
+            { (int)Gdk.Key.o,            -1 },
+            { (int)Gdk.Key.Key_0,        -1 },
+            { (int)Gdk.Key.p,            -1 },
+            { (int)Gdk.Key.bracketleft,  -1 },
+            { (int)Gdk.Key.equal,        -1 },
+            { (int)Gdk.Key.bracketright, -1 },
+        };
+#endif
 
         public static int[,] QwertyKeys = new int[37, 2];
         public static Dictionary<int, int> KeyCodeToNoteMap = new Dictionary<int, int>();
