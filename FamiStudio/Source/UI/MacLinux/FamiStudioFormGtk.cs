@@ -419,6 +419,8 @@ namespace FamiStudio
 
             //Debug.WriteLine($"{evnt.Key} {evnt.KeyValue} = {winKey}");
 
+            Debug.WriteLine(PlatformUtils.KeyCodeToString(evnt.HardwareKeycode));
+
             SetKeyMap(winKey, true);
 
             var args = new System.Windows.Forms.KeyEventArgs(winKey | winMod);

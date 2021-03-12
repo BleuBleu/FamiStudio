@@ -276,9 +276,16 @@ namespace FamiStudio
 #endif
         }
 
-        public static string KeyCodeToString(System.Windows.Forms.Keys keyCode)
+        public static string KeyCodeToString(int keyCode)
         {
-            return "TODO!";
+            if (Gdk.Keymap.Default.TranslateKeyboardState((uint)keyCode, Gdk.ModifierType.None, 0, out var keyval, out _, out _, out _))
+            {
+                return char.ConvertFromUtf32((int)Gdk.Keyval.ToUnicode(keyval));
+            }
+            else 
+            {
+                return "???";
+            }
         }
     }
 }

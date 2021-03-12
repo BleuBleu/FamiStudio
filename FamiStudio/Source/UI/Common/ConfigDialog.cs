@@ -196,8 +196,8 @@ namespace FamiStudio
 
                 data[0, 0] = "N/A";
                 data[0, 1] = "Stop Note";
-                data[0, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[0, 0]);
-                data[0, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[0, 1]);
+                data[0, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 0]);
+                data[0, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 1]);
             }
 
             // Regular notes.
@@ -211,8 +211,8 @@ namespace FamiStudio
 
                 data[idx, 0] = octave.ToString();
                 data[idx, 1] = Note.NoteNames[note];
-                data[idx, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[idx, 0]);
-                data[idx, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[idx, 1]);
+                data[idx, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 0]);
+                data[idx, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 1]);
             }
 
             return data;
