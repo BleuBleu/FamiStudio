@@ -419,7 +419,8 @@ namespace FamiStudio
 
             //Debug.WriteLine($"{evnt.Key} {evnt.KeyValue} = {winKey}");
 
-            Debug.WriteLine(PlatformUtils.KeyCodeToString(evnt.HardwareKeycode));
+            //Debug.WriteLine(evnt.Key);
+            Debug.WriteLine(PlatformUtils.KeyCodeToString((int)evnt.Key));
 
             SetKeyMap(winKey, true);
 

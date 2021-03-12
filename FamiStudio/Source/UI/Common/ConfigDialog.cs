@@ -152,10 +152,8 @@ namespace FamiStudio
                 }
                 case ConfigSection.QWERTY:
                 {
-                    // MATTT : Handle right click
-                    // MATTT : Handle stop note.
                     page.AddLabel(null, "Double click on a row to assign a key.\nRight click to clear a key."); // 0
-                    page.AddMultiColumnList(new[] { "Octave", "Note", "Key", "Key (alt)" }, GetQwertyMappingStrings(), QwertyListDoubleClicked); // 1
+                    page.AddMultiColumnList(new[] { "Octave", "Note", "Key", "Key (alt)" }, GetQwertyMappingStrings(), QwertyListDoubleClicked, QwertyListRightClicked); // 1
                     page.AddButton(null, "Reset to default", ResetQwertyClicked); 
                     break;
                 }
@@ -235,24 +233,50 @@ namespace FamiStudio
 
         void QwertyListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)
         {
-            var dlg = new PropertyDialog(300, false);
+            if (columnIndex < 2)
+                return;
+
+            var dlg = new PropertyDialog(300, false, dialog);
             dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
             dlg.Properties.Build();
+
+            // TODO : Make this cross-platform.
 #if FAMISTUDIO_WINDOWS
-            // MATTT : Make this cross-platform.
             dlg.KeyDown += (sender, e) => 
             {
-                if (PlatformUtils.KeyCodeToString((int)e.KeyCode) != null) // These 2 keys are used by the QWERTY input.
+                if (PlatformUtils.KeyCodeToString((int)e.KeyCode) != null) 
                 {
                     if (e.KeyCode != Keys.Escape)
                         AssignQwertyKey(itemIndex, columnIndex - 2, (int)e.KeyCode);
                     dlg.Close();
                 }
             };
+#else
+            dlg.KeyPressEvent += (o, args) =>
+            {
+                // These 2 keys are used by the QWERTY input.
+                if (args.Event.Key != Gdk.Key.Tab &&
+                    args.Event.Key != Gdk.Key.BackSpace && 
+                    PlatformUtils.KeyCodeToString((int)args.Event.Key) != null)
+                {
+                    if (args.Event.Key != Gdk.Key.Escape)
+                        AssignQwertyKey(itemIndex, columnIndex - 2, (int)args.Event.Key);
+                    dlg.Accept();
+                }
+            };
 #endif
             dlg.ShowDialog(null);
 
             pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+        }
+
+        void QwertyListRightClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)
+        {
+            if (columnIndex >= 2)
+            {
+                qwertyKeys[itemIndex, columnIndex - 2] = -1;
+                pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+            }
         }
 
 #if FAMISTUDIO_MACOS
@@ -268,7 +292,7 @@ namespace FamiStudio
         }
 #endif
 
-        public DialogResult ShowDialog(FamiStudioForm parent)
+            public DialogResult ShowDialog(FamiStudioForm parent)
         {
             var dialogResult = dialog.ShowDialog(parent);
 

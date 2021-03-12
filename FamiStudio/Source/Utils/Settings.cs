@@ -91,7 +91,7 @@ namespace FamiStudio
         public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
         {
             // Stop note
-            { (int)Gdk.Key.Key_1, -1 },
+            { (int)Gdk.Key.Key_1,        -1 },
 
             // Octave 1
             { (int)Gdk.Key.z,            -1 },
@@ -108,11 +108,11 @@ namespace FamiStudio
             { (int)Gdk.Key.m,            -1 },
 
             // Octave 2
-            { (int)Gdk.Key.q,            -1 },
-            { (int)Gdk.Key.Key_2,        -1 },
-            { (int)Gdk.Key.w,            -1 },
-            { (int)Gdk.Key.Key_3,        -1 },
-            { (int)Gdk.Key.e,            -1 },
+            { (int)Gdk.Key.q,            (int)Gdk.Key.comma     },
+            { (int)Gdk.Key.Key_2,        (int)Gdk.Key.l         },
+            { (int)Gdk.Key.w,            (int)Gdk.Key.period    },
+            { (int)Gdk.Key.Key_3,        (int)Gdk.Key.semicolon },
+            { (int)Gdk.Key.e,            (int)Gdk.Key.slash     },
             { (int)Gdk.Key.r,            -1 },
             { (int)Gdk.Key.Key_5,        -1 },
             { (int)Gdk.Key.t,            -1 },
@@ -120,13 +120,6 @@ namespace FamiStudio
             { (int)Gdk.Key.y,            -1 },
             { (int)Gdk.Key.Key_7,        -1 },
             { (int)Gdk.Key.u,            -1 },
-
-            // Octave 2 (alt)
-            { (int)Gdk.Key.comma,        -1 },
-            { (int)Gdk.Key.l,            -1 },
-            { (int)Gdk.Key.period,       -1 },
-            { (int)Gdk.Key.semicolon,    -1 },
-            { (int)Gdk.Key.slash,        -1 },
 
             // Octave 3
             { (int)Gdk.Key.i,            -1 },
@@ -137,6 +130,10 @@ namespace FamiStudio
             { (int)Gdk.Key.bracketleft,  -1 },
             { (int)Gdk.Key.equal,        -1 },
             { (int)Gdk.Key.bracketright, -1 },
+            { -1, -1 },
+            { -1, -1 },
+            { -1, -1 },
+            { -1, -1 }
         };
 #endif
 

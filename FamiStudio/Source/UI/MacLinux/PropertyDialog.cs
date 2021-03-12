@@ -23,7 +23,7 @@ namespace FamiStudio
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, bool canAccept = true) : base(WindowType.Toplevel)
+        public PropertyDialog(int width, bool canAccept = true, Window parent = null) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = width;
@@ -31,7 +31,7 @@ namespace FamiStudio
             if (!canAccept)
                 buttonYes.Hide();
 
-            TransientFor = FamiStudioForm.Instance;
+            TransientFor = parent != null ? parent : FamiStudioForm.Instance;
             SetPosition(WindowPosition.CenterOnParent);
         }
 
@@ -179,6 +179,11 @@ namespace FamiStudio
 
                 Hide();
             }
+        }
+
+        public void Accept()
+        {
+            result = System.Windows.Forms.DialogResult.OK;
         }
 
         public System.Windows.Forms.DialogResult DialogResult => result;

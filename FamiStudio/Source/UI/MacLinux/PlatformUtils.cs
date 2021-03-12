@@ -276,30 +276,17 @@ namespace FamiStudio
 #endif
         }
 
-        public static string KeyCodeToString(int keyCode)
+        public static string KeyCodeToString(int keyval)
         {
-            if (Gdk.Keymap.Default.TranslateKeyboardState((uint)keyCode, Gdk.ModifierType.None, 0, out var keyval, out _, out _, out _))
+            var str = char.ConvertFromUtf32((int)Gdk.Keyval.ToUnicode((uint)keyval));
+
+            // Fallback to key enum for special keys.
+            if (str.Length == 0 || (str.Length == 1 && str[0] <= 32))
             {
-                var str = char.ConvertFromUtf32((int)Gdk.Keyval.ToUnicode(keyval));
-
-                // Fallback to key enum for special keys.
-                if (str.Length == 0)
-                {
-                    return ((Gdk.Key)keyCode).ToString();
-                }
-
-                // Skip invisible characters.
-                if (str.Length == 1 && str[0] <= 32)
-                {
-                    return null;
-                }
-
-                return str;
+                return ((Gdk.Key)keyval).ToString();
             }
-            else
-            {
-                return ((Gdk.Key)keyCode).ToString();
-            }
+
+            return str.ToUpper();
         }
     }
 }

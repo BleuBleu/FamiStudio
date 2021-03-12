@@ -26,7 +26,7 @@ namespace FamiStudio
     public class PropertyPage : Gtk.Table
     {
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
-        public delegate void ListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
+        public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
 
         class Property
         {
@@ -35,7 +35,8 @@ namespace FamiStudio
             public Widget control;
             public int leftMargin;
             public ButtonPropertyClicked click;
-            public ListDoubleClicked listDoubleClick;
+            public ListClicked listDoubleClick;
+            public ListClicked listRightClick;
         };
 
         private object userData;
@@ -578,7 +579,7 @@ namespace FamiStudio
                             }
                             else if (args.Event.Button == 3)
                             {
-                                //properties[i].listRightClick(this, i, path.Indices[0], columnIndex);
+                                properties[i].listRightClick(this, i, path.Indices[0], columnIndex);
                             }
                         }
                     }
@@ -586,20 +587,39 @@ namespace FamiStudio
             }
         }
 
-        public void AddMultiColumnList(string[] columnNames, string[,] data, ListDoubleClicked doubleClick)
+        public void AddMultiColumnList(string[] columnNames, string[,] data, ListClicked doubleClick, ListClicked rightClick)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.StringListMulti,
                     control = CreateTreeView(columnNames, data),
-                    listDoubleClick = doubleClick
+                    listDoubleClick = doubleClick,
+                    listRightClick = rightClick
                 });    
         }
 
         public void UpdateMultiColumnList(int idx, string[,] data)
         {
+            var scroll = properties[idx].control as ScrolledWindow;
+            var treeView = scroll.Child as TreeView;
 
+            var ls = treeView.Model as ListStore;
+            ls.GetIterFirst(out var it);
+
+            var j = 0;
+
+            do
+            {
+                var values = new string[data.GetLength(1)];
+
+                for (int i = 0; i < data.GetLength(1); i++)
+                    values[i] = data[j, i];
+
+                ls.SetValues(it, values);
+                j++;
+            }
+            while (ls.IterNext(ref it));
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)
