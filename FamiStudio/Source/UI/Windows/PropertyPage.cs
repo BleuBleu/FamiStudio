@@ -33,7 +33,7 @@ namespace FamiStudio
     public partial class PropertyPage : UserControl
     {
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
-        public delegate void ListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
+        public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
 
         class Property
         {
@@ -42,7 +42,8 @@ namespace FamiStudio
             public Control control;
             public int leftMarging;
             public ButtonPropertyClicked click;
-            public ListDoubleClicked listDoubleClick;
+            public ListClicked listDoubleClick;
+            public ListClicked listRightClick;
         };
 
         private int layoutHeight;
@@ -606,9 +607,30 @@ namespace FamiStudio
             list.GridLines = true;
             list.FullRowSelect = true;
             list.MouseDoubleClick += ListView_MouseDoubleClick;
+            list.MouseDown += ListView_MouseDown;
             list.BackColor = ThemeBase.LightGreyFillColor2;
 
             return list;
+        }
+
+        private void ListView_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                var listView = sender as ListView;
+                var hitTest = listView.HitTest(e.Location);
+
+                if (hitTest.Item != null)
+                {
+                    for (int i = 0; i < properties.Count; i++)
+                    {
+                        if (properties[i].control == sender && properties[i].listDoubleClick != null)
+                        {
+                            properties[i].listRightClick(this, i, hitTest.Item.Index, hitTest.Item.SubItems.IndexOf(hitTest.SubItem));
+                        }
+                    }
+                }
+            }
         }
 
         private void ListView_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -628,14 +650,15 @@ namespace FamiStudio
             }
         }
         
-        public void AddMultiColumnList(string[] columnNames, string[,] data, ListDoubleClicked doubleClick)
+        public void AddMultiColumnList(string[] columnNames, string[,] data, ListClicked doubleClick, ListClicked rightClick)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.StringListMulti,
                     control = CreateListView(columnNames, data),
-                    listDoubleClick = doubleClick
+                    listDoubleClick = doubleClick,
+                    listRightClick = rightClick
                 });
         }
 

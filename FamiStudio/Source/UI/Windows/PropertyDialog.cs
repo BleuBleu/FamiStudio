@@ -13,7 +13,7 @@ namespace FamiStudio
         public PropertyPage Properties => propertyPage;
         private bool top = false;
 
-        public PropertyDialog(int width, bool canAccept = true)
+        public PropertyDialog(int width, bool canAccept = true, Form parent = null)
         {
             StartPosition = FormStartPosition.CenterParent;
             Init();
