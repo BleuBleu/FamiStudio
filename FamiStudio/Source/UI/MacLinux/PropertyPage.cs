@@ -540,13 +540,13 @@ namespace FamiStudio
             for (int i = 0; i < columnNames.Length; i++)
             {
                 var column = new TreeViewColumn(columnNames[i], rendererText, "text", i);
-                column.SortColumnId = i;
+                column.SortColumnId = -1; // Disable sorting
                 treeView.AppendColumn(column);
             }
 
-            treeView.RulesHint = true;
             treeView.Model = CreateListStoreFromData(data);
             treeView.EnableGridLines = TreeViewGridLines.Both;
+            treeView.ButtonPressEvent += TreeView_ButtonPressEvent;
             treeView.Show();
 
             var scroll = new ScrolledWindow(null, null);
@@ -557,6 +557,33 @@ namespace FamiStudio
             scroll.Add(treeView);
 
             return scroll;
+        }
+
+        [GLib.ConnectBefore]
+        void TreeView_ButtonPressEvent(object o, ButtonPressEventArgs args)
+        {
+            for (int i = 0; i < properties.Count; i++)
+            {
+                if (properties[i].control is ScrolledWindow scroll)
+                {
+                    if (scroll.Child is TreeView treeView)
+                    {
+                        if (treeView.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out var path, out var col, out var ix, out var iy))
+                        {
+                            var columnIndex = Array.IndexOf(treeView.Columns, col);
+
+                            if (args.Event.Type == EventType.TwoButtonPress && args.Event.Button == 1)
+                            {
+                                properties[i].listDoubleClick(this, i, path.Indices[0], columnIndex);
+                            }
+                            else if (args.Event.Button == 3)
+                            {
+                                //properties[i].listRightClick(this, i, path.Indices[0], columnIndex);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public void AddMultiColumnList(string[] columnNames, string[,] data, ListDoubleClicked doubleClick)
