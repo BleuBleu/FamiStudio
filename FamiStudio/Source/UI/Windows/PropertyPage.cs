@@ -533,7 +533,7 @@ namespace FamiStudio
             (properties[idx].control as Label).Text = text;
         }
 
-        public void SetStringListIndex(int idx, int selIdx)
+        public void SetDropDownListIndex(int idx, int selIdx)
         {
             (properties[idx].control as ComboBox).SelectedIndex = selIdx;
         }
