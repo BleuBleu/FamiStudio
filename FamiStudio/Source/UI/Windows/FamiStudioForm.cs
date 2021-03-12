@@ -58,6 +58,7 @@ namespace FamiStudio
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
+            Debug.WriteLine(PlatformUtils.KeyCodeToString(e.KeyCode));
             famistudio.KeyDown(e);
         }
 

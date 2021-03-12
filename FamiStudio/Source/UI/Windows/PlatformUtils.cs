@@ -162,7 +162,20 @@ namespace FamiStudio
             StringBuilder result = new StringBuilder();
             ToUnicodeEx(virtualKeyCode, scanCode, keyboardState, result, (int)5, (uint)0, inputLocaleIdentifier);
 
-            return result.ToString().ToUpper();
+            if (result.Length == 0)
+            {
+                return key.ToString();
+            }
+
+            var str = result.ToString().ToUpper();
+
+            // Ignore invisible characters.
+            if (str.Length == 0 || (str.Length == 1 && str[0] <= 32))
+            {
+                return null;
+            }
+
+            return str;
         }
     }
 }
