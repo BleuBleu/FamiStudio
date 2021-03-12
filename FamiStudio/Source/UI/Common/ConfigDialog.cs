@@ -65,10 +65,11 @@ namespace FamiStudio
         {
 #if FAMISTUDIO_LINUX
             int width  = 570;
+            int height = 450;
 #else
             int width  = 550;
-#endif
             int height = 350;
+#endif
 
             this.dialog = new MultiPropertyDialog(width, height);
 
