@@ -923,15 +923,14 @@ namespace FamiStudio
 
                 if (keyDown)
                 {
-                    // MATTT : TODO stop note.
-                    if (noteValue < 0)
+                    if (noteValue == 0)
                     {
                         lastRecordingKeyDown = Keys.None;
                         StopOrReleaseIntrumentNote(true);
                     }
                     else
                     {
-                        noteValue += Note.FromFriendlyName("C0") + (baseRecordingOctave * 12);
+                        noteValue = noteValue - 1 + Note.FromFriendlyName("C0") + (baseRecordingOctave * 12);
                         noteValue = Utils.Clamp(noteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
 
                         lastRecordingKeyDown = e.KeyCode;

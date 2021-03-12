@@ -546,6 +546,7 @@ namespace FamiStudio
 
             treeView.RulesHint = true;
             treeView.Model = CreateListStoreFromData(data);
+            treeView.EnableGridLines = TreeViewGridLines.Both;
             treeView.Show();
 
             var scroll = new ScrolledWindow(null, null);

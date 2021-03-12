@@ -59,7 +59,7 @@ namespace FamiStudio
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
-        private int[,,] qwertyKeys; // We keep a copy here in case the user cancels.
+        private int[,] qwertyKeys; // We keep a copy here in case the user cancels.
 
         public unsafe ConfigDialog()
         {
@@ -74,7 +74,7 @@ namespace FamiStudio
             this.dialog = new MultiPropertyDialog(width, height);
 
             // Keep a copy.
-            qwertyKeys = new int[3, 12, 2];
+            qwertyKeys = new int[37, 2];
             Array.Copy(Settings.QwertyKeys, qwertyKeys, Settings.QwertyKeys.Length);
 
             for (int i = 0; i < (int)ConfigSection.Max; i++)
@@ -187,41 +187,50 @@ namespace FamiStudio
 
         private string[,] GetQwertyMappingStrings()
         {
-            var data = new string[36, 4];
+            var data = new string[37, 4];
 
-            for (int octave = 0; octave < 3; octave++)
+            // Stop note.
             {
-                for (int i = 0; i < 12; i++)
-                {
-                    var k0 = qwertyKeys[octave, i, 0];
-                    var k1 = qwertyKeys[octave, i, 1];
+                var k0 = qwertyKeys[0, 0];
+                var k1 = qwertyKeys[0, 1];
 
-                    data[octave * 12 + i, 0] = octave.ToString();
-                    data[octave * 12 + i, 1] = Note.NoteNames[i];
-                    data[octave * 12 + i, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[octave, i, 0]);
-                    data[octave * 12 + i, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[octave, i, 1]);
-                }
+                data[0, 0] = "N/A";
+                data[0, 1] = "Stop Note";
+                data[0, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[0, 0]);
+                data[0, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[0, 1]);
+            }
+
+            // Regular notes.
+            for (int idx = 1; idx < data.GetLength(0); idx++)
+            {
+                var octave = (idx - 1) / 12;
+                var note   = (idx - 1) % 12;
+
+                var k0 = qwertyKeys[idx, 0];
+                var k1 = qwertyKeys[idx, 1];
+
+                data[idx, 0] = octave.ToString();
+                data[idx, 1] = Note.NoteNames[note];
+                data[idx, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[idx, 0]);
+                data[idx, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString((System.Windows.Forms.Keys)qwertyKeys[idx, 1]);
             }
 
             return data;
         }
 
-        void AssignQwertyKey(int octave, int key, int keyIndex, int keyCode)
+        void AssignQwertyKey(int idx, int keyIndex, int keyCode)
         {
             // Unbind this key from anything.
             for (int i = 0; i < qwertyKeys.GetLength(0); i++)
             {
                 for (int j = 0; j < qwertyKeys.GetLength(1); j++)
                 {
-                    for (int k = 0; k < qwertyKeys.GetLength(2); k++)
-                    {
-                        if (qwertyKeys[i, j, k] == keyCode)
-                            qwertyKeys[i, j, k] = -1;
-                    }
+                    if (qwertyKeys[i, j] == keyCode)
+                        qwertyKeys[i, j] = -1;
                 }
             }
 
-            qwertyKeys[octave, key, keyIndex] = keyCode;
+            qwertyKeys[idx, keyIndex] = keyCode;
         }
 
         void QwertyListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)

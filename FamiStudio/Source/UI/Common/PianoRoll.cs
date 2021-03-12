@@ -1193,8 +1193,11 @@ namespace FamiStudio
 
                 foreach (var kv in Settings.KeyCodeToNoteMap)
                 {
-                    var i = kv.Value;
+                    var i = kv.Value - 1;
                     var k = kv.Key;
+
+                    if (i < 0)
+                        continue;
 
                     int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + App.BaseRecordingOctave)) - scrollY;
                     int y = octaveBaseY - (i % 12) * noteSizeY;
