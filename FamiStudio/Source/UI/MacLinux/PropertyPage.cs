@@ -26,6 +26,7 @@ namespace FamiStudio
     public class PropertyPage : Gtk.Table
     {
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
+        public delegate void ListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
 
         class Property
         {
@@ -34,6 +35,7 @@ namespace FamiStudio
             public Widget control;
             public int leftMargin;
             public ButtonPropertyClicked click;
+            public ListDoubleClicked listDoubleClick;
         };
 
         private object userData;
@@ -395,7 +397,7 @@ namespace FamiStudio
                 });
         }
 
-        public void AddBoolean(string label, bool value, string tooltip = null)
+        public void AddCheckBox(string label, bool value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -406,7 +408,7 @@ namespace FamiStudio
                 });
         }
 
-        public void AddLabelBoolean(string label, bool value, int margin = 0)
+        public void AddLabelCheckBox(string label, bool value, int margin = 0)
         {
             properties.Add(
                 new Property()
@@ -480,7 +482,7 @@ namespace FamiStudio
             spin.UpdateValues(values, value);
         }
 
-        public void AddStringList(string label, string[] values, string value, string tooltip = null)
+        public void AddDropDownList(string label, string[] values, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -491,13 +493,13 @@ namespace FamiStudio
                 });
         }
 
-        public void SetStringListIndex(int idx, int selectedIndex)
+        public void SetDropDownListIndex(int idx, int selectedIndex)
         {
             var combo = (properties[idx].control as ComboBox);
             combo.Active = selectedIndex;
         }
 
-        public void AddStringListMulti(string label, string[] values, bool[] selected)
+        public void AddCheckBoxList(string label, string[] values, bool[] selected)
         {
             properties.Add(
                 new Property()
@@ -506,6 +508,15 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateCheckedListBox(values, selected)
                 });     
+        }
+
+        public void AddMultiColumnList(string[] columnNames, string[,] data, ListDoubleClicked doubleClick)
+        {
+        }
+
+        public void UpdateMultiColumnList(int idx, string[,] data)
+        {
+
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)
