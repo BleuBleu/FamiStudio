@@ -1873,9 +1873,9 @@ namespace FamiStudio
                 props.SetPropertyEnabled(6, props.GetPropertyValue<string>(5) == "FamiStudio" && noExpansion);
 
                 if (noExpansion)
-                    props.SetStringListIndex(6, App.Project.PalMode ? 1 : 0);
+                    props.SetDropDownListIndex(6, App.Project.PalMode ? 1 : 0);
                 else
-                    props.SetStringListIndex(6, 0);
+                    props.SetDropDownListIndex(6, 0);
             }
             else if (idx == 5) // Tempo Mode
             {

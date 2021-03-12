@@ -228,13 +228,16 @@ namespace FamiStudio
             var dlg = new PropertyDialog(300, false);
             dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
             dlg.Properties.Build();
+#if FAMISTUDIO_WINDOWS
+            // MATTT : Make this cross-platform.
             dlg.KeyDown += (sender, e) => 
             {
                 if (e.KeyCode != Keys.Escape)
                     AssignQwertyKey(itemIndex / 12, itemIndex % 12, columnIndex - 2, (int)e.KeyCode);
                 dlg.Close();
             };
-            dlg.ShowDialog();
+#endif
+            dlg.ShowDialog(null);
 
             pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
         }

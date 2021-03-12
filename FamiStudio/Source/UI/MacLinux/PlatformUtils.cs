@@ -275,6 +275,11 @@ namespace FamiStudio
                 return DialogResult.OK;
 #endif
         }
+
+        public static string KeyCodeToString(System.Windows.Forms.Keys keyCode)
+        {
+            return "TODO!";
+        }
     }
 }
 
