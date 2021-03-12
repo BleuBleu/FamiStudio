@@ -510,8 +510,64 @@ namespace FamiStudio
                 });     
         }
 
+        private ListStore CreateListStoreFromData(string[,] data)
+        {
+            var types = new Type[data.GetLength(1)];
+
+            for (int i = 0; i < types.Length; i++)
+                types[i] = typeof(string);
+
+            var listStore = new ListStore(types);
+
+            for (int j = 0; j < data.GetLength(0); j++)
+            {
+                var values = new string[data.GetLength(1)];
+
+                for (int i = 0; i < data.GetLength(1); i++)
+                    values[i] = data[j, i];
+
+                listStore.AppendValues(values);
+            }
+
+            return listStore;
+        }
+
+        private ScrolledWindow CreateTreeView(string[] columnNames, string[,] data)
+        {
+            var treeView = new TreeView();
+            var rendererText = new CellRendererText();
+
+            for (int i = 0; i < columnNames.Length; i++)
+            {
+                var column = new TreeViewColumn(columnNames[i], rendererText, "text", i);
+                column.SortColumnId = i;
+                treeView.AppendColumn(column);
+            }
+
+            treeView.RulesHint = true;
+            treeView.Model = CreateListStoreFromData(data);
+            treeView.EnableGridLines = TreeViewGridLines.Both;
+            treeView.Show();
+
+            var scroll = new ScrolledWindow(null, null);
+            scroll.HscrollbarPolicy = PolicyType.Never;
+            scroll.VscrollbarPolicy = PolicyType.Automatic;
+            scroll.HeightRequest = 300;
+            scroll.ShadowType = ShadowType.EtchedIn;
+            scroll.Add(treeView);
+
+            return scroll;
+        }
+
         public void AddMultiColumnList(string[] columnNames, string[,] data, ListDoubleClicked doubleClick)
         {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.StringListMulti,
+                    control = CreateTreeView(columnNames, data),
+                    listDoubleClick = doubleClick
+                });    
         }
 
         public void UpdateMultiColumnList(int idx, string[,] data)

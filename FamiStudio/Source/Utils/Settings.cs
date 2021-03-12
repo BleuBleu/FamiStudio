@@ -38,60 +38,59 @@ namespace FamiStudio
         public static bool ShowTutorial = true;
         public static bool ShowNoteLabels = true;
 
-        // QWERTY section, 3 octaves, 12 notes, up to 2 assignments per key.
+        // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
         //  - On Windows, these are the numerical values of System.Windows.Forms.Keys enum for a regular US keyboard.
         //  - On GTK, these are the raw keycodes (MATTT : Verify what its gonna be for real).
         // MATTT : Make sure the stop note key is configurable too.
-        public static readonly int[,,] DefaultQwertyKeys = new int[3, 12, 2]
+        public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
         {
+            // Stop note
+            { 49, -1 },
+
             // Octave 1
-            {
-                { 90, -1 },
-                { 83, -1 },
-                { 88, -1 },
-                { 68, -1 },
-                { 67, -1 },
-                { 86, -1 },
-                { 71, -1 },
-                { 66, -1 },
-                { 72, -1 },
-                { 78, -1 },
-                { 74, -1 },
-                { 77, -1 }
-            },
+            { 90, -1 },
+            { 83, -1 },
+            { 88, -1 },
+            { 68, -1 },
+            { 67, -1 },
+            { 86, -1 },
+            { 71, -1 },
+            { 66, -1 },
+            { 72, -1 },
+            { 78, -1 },
+            { 74, -1 },
+            { 77, -1 },
+
             // Octave 2
-            {
-                { 81, 188 },
-                { 50, 76  },
-                { 87, 190 },
-                { 51, 186 },
-                { 69, 191 },
-                { 82, -1 },
-                { 53, -1 },
-                { 84, -1 },
-                { 54, -1 },
-                { 89, -1 },
-                { 55, -1 },
-                { 85, -1 }
-            },
+            { 81, 188 },
+            { 50, 76  },
+            { 87, 190 },
+            { 51, 186 },
+            { 69, 191 },
+            { 82, -1 },
+            { 53, -1 },
+            { 84, -1 },
+            { 54, -1 },
+            { 89, -1 },
+            { 55, -1 },
+            { 85, -1 },
+
             // Octave 3
-            {
-                { 73, -1 },
-                { 57, -1 },
-                { 79, -1 },
-                { 48, -1 },
-                { 80, -1 },
-                { 219, -1 },
-                { 187, -1 },
-                { 221, -1 },
-                { -1, -1 },
-                { -1, -1 },
-                { -1, -1 },
-                { -1, -1 }
-            }
+            { 73, -1 },
+            { 57, -1 },
+            { 79, -1 },
+            { 48, -1 },
+            { 80, -1 },
+            { 219, -1 },
+            { 187, -1 },
+            { 221, -1 },
+            { -1, -1 },
+            { -1, -1 },
+            { -1, -1 },
+            { -1, -1 }
         };
 
-        public static int[,,] QwertyKeys = new int[3, 12, 2];
+        public static int[,] QwertyKeys = new int[37, 2];
         public static Dictionary<int, int> KeyCodeToNoteMap = new Dictionary<int, int>();
 
         // Audio section
@@ -148,18 +147,27 @@ namespace FamiStudio
 
             Array.Copy(DefaultQwertyKeys, QwertyKeys, DefaultQwertyKeys.Length);
 
-            for (int octave = 0; octave < QwertyKeys.GetLength(0); octave++)
+            // Stop note.
             {
-                for (int note = 0; note < 12; note++)
-                {
-                    var keyName0 = $"Octave{octave}Note{note}";
-                    var keyName1 = $"Octave{octave}Note{note}Alt";
+                if (ini.HasKey("QWERTY", "StopNote"))
+                    QwertyKeys[0, 0] = ini.GetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
+                if (ini.HasKey("QWERTY", "StopNoteAlt"))
+                    QwertyKeys[0, 1] = ini.GetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
+            }
 
-                    if (ini.HasKey("QWERTY", keyName0))
-                        QwertyKeys[octave, note, 0] = ini.GetInt("QWERTY", keyName0, QwertyKeys[octave, note, 0]);
-                    if (ini.HasKey("QWERTY", keyName1))
-                        QwertyKeys[octave, note, 1] = ini.GetInt("QWERTY", keyName1, QwertyKeys[octave, note, 1]);
-                }
+            // Regular notes.
+            for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
+            {
+                var octave = (idx - 1) / 12;
+                var note   = (idx - 1) % 12;
+
+                var keyName0 = $"Octave{octave}Note{note}";
+                var keyName1 = $"Octave{octave}Note{note}Alt";
+
+                if (ini.HasKey("QWERTY", keyName0))
+                    QwertyKeys[idx, 0] = ini.GetInt("QWERTY", keyName0, QwertyKeys[idx, 0]);
+                if (ini.HasKey("QWERTY", keyName1))
+                    QwertyKeys[idx, 1] = ini.GetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
             }
 
             UpdateKeyCodeMaps();
@@ -234,18 +242,27 @@ namespace FamiStudio
             ini.SetString("Folders", "LastExportFolder", LastExportFolder);
             ini.SetString("FFmpeg", "ExecutablePath", FFmpegExecutablePath);
 
-            for (int octave = 0; octave < QwertyKeys.GetLength(0); octave++)
+            // Stop note.
             {
-                for (int note = 0; note < 12; note++)
-                {
-                    var keyName0 = $"Octave{octave}Note{note}";
-                    var keyName1 = $"Octave{octave}Note{note}Alt";
+                if (QwertyKeys[0, 0] >= 0)
+                    ini.SetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
+                if (QwertyKeys[0, 1] >= 0)
+                    ini.SetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
+            }
 
-                    if (QwertyKeys[octave, note, 0] >= 0)
-                        ini.SetInt("QWERTY", keyName0, QwertyKeys[octave, note, 0]);
-                    if (QwertyKeys[octave, note, 1] >= 0)
-                        ini.SetInt("QWERTY", keyName1, QwertyKeys[octave, note, 1]);
-                }
+            // Regular notes.
+            for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
+            {
+                var octave = (idx - 1) / 12;
+                var note   = (idx - 1) % 12;
+
+                var keyName0 = $"Octave{octave}Note{note}";
+                var keyName1 = $"Octave{octave}Note{note}Alt";
+
+                if (QwertyKeys[idx, 0] >= 0)
+                    ini.SetInt("QWERTY", keyName0, QwertyKeys[idx, 0]);
+                if (QwertyKeys[idx, 1] >= 0)
+                    ini.SetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
             }
 
             Directory.CreateDirectory(GetConfigFilePath());
@@ -257,19 +274,15 @@ namespace FamiStudio
         {
             KeyCodeToNoteMap.Clear();
 
-            for (int octave = 0; octave < QwertyKeys.GetLength(0); octave++)
+            for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
             {
-                for (int note = 0; note < 12; note++)
-                {
-                    var k0 = QwertyKeys[octave, note, 0];
-                    var k1 = QwertyKeys[octave, note, 0];
-                    var absoluteNote = octave * 12 + note;
+                var k0 = QwertyKeys[idx, 0];
+                var k1 = QwertyKeys[idx, 0];
 
-                    if (k0 >= 0)
-                        KeyCodeToNoteMap[k0] = absoluteNote;
-                    if (k1 >= 0)
-                        KeyCodeToNoteMap[k1] = absoluteNote;
-                }
+                if (k0 >= 0)
+                    KeyCodeToNoteMap[k0] = idx;
+                if (k1 >= 0)
+                    KeyCodeToNoteMap[k1] = idx;
             }
         }
 
