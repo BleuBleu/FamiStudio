@@ -63,12 +63,12 @@ namespace FamiStudio
 
         public unsafe ConfigDialog()
         {
-#if FAMISTUDIO_LINUX
-            int width  = 570;
-            int height = 450;
-#else
+#if FAMISTUDIO_WINDOWS
             int width  = 550;
             int height = 350;
+#else
+            int width  = 570;
+            int height = 450;
 #endif
 
             this.dialog = new MultiPropertyDialog(width, height);
