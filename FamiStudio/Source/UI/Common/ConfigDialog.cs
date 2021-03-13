@@ -160,9 +160,9 @@ namespace FamiStudio
 #if FAMISTUDIO_MACOS
                 case ConfigSection.MacOS:
                 { 
-                    page.AddBoolean("Reverse trackpad direction:", Settings.ReverseTrackPad); // 0
+                    page.AddCheckBox("Reverse trackpad direction:", Settings.ReverseTrackPad); // 0
                     page.AddIntegerRange("Trackpad movement sensitivity:", Settings.TrackPadMoveSensitity, 1, 16); // 1
-                    page.AddIntegerRange("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1, 16); // 2
+                    page.AddIntegerRange("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1, 32); // 2
                     page.SetPropertyEnabled(0, Settings.TrackPadControls);
                     page.SetPropertyEnabled(1, Settings.TrackPadControls);
                     page.SetPropertyEnabled(2, Settings.TrackPadControls);

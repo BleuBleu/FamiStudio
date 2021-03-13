@@ -100,6 +100,7 @@ namespace FamiStudio
 
         private IntPtr selType         = MacUtils.SelRegisterName("type");
         private IntPtr selCurrentEvent = MacUtils.SelRegisterName("currentEvent");
+        private IntPtr selWindow       = MacUtils.SelRegisterName("window");
         private IntPtr selHasPreciseScrollingDeltas = MacUtils.SelRegisterName("hasPreciseScrollingDeltas");
         private IntPtr selscrollingDeltaX = MacUtils.SelRegisterName("scrollingDeltaX");
         private IntPtr selscrollingDeltaY = MacUtils.SelRegisterName("scrollingDeltaY");
@@ -212,21 +213,25 @@ namespace FamiStudio
         private int GLibPollFunction(IntPtr ufds, uint nfsd, int timeout)
         {
             var r = OldPollFunctionPtr(ufds, nfsd, timeout);
-
             var currentEvent = MacUtils.SendIntPtr(MacUtils.NSApplication, selCurrentEvent);
 
             if (currentEvent != IntPtr.Zero && currentEvent != lastEvent)
             {
-                var eventType = MacUtils.SendInt(currentEvent, selType);
+                var window = MacUtils.SendIntPtr(currentEvent, selWindow);
 
-                switch (eventType)
+                if (window == MacUtils.NSWindow)
                 {
-                    case NSEventTypeScrollWheel:
-                        HandleScrollWheelEvent(currentEvent);
-                        break;
-                    case NSEventTypeMagnify:
-                        HandleMagnifyEvent(currentEvent);
-                        break;
+                    var eventType = MacUtils.SendInt(currentEvent, selType);
+
+                    switch (eventType)
+                    {
+                        case NSEventTypeScrollWheel:
+                            HandleScrollWheelEvent(currentEvent);
+                            break;
+                        case NSEventTypeMagnify:
+                            HandleMagnifyEvent(currentEvent);
+                            break;
+                    }
                 }
 
                 lastEvent = currentEvent;
