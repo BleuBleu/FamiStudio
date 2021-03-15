@@ -83,6 +83,10 @@ namespace FamiStudio
                         instrumentLine += GenerateAttribute("N163WaveSize", instrument.N163WaveSize);
                         instrumentLine += GenerateAttribute("N163WavePos", instrument.N163WavePos);
                     }
+                    else if (instrument.ExpansionType == ExpansionType.Vrc6)
+                    {
+                        instrumentLine += GenerateAttribute("Vrc6SawMasterVolume", Vrc6SawMasterVolumeType.Names[instrument.Vrc6SawMasterVolume]);
+                    }
                     else if (instrument.ExpansionType == ExpansionType.Vrc7)
                     {
                         instrumentLine += GenerateAttribute("Vrc7Patch", instrument.Vrc7Patch);

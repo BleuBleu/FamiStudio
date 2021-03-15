@@ -874,7 +874,7 @@ namespace FamiStudio
 
             if (project.ExpansionAudio == ExpansionType.Vrc6)
             {
-                Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio uses the full volume range and ignores the duty cycle, they will need to the adjusted manually to sound the same. In most cases, this mean reducing the volume by half using either the volume track or volume envelopes.");
+                Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio is not affected by the duty cycle and is instead controlled by a 'Saw Master Volume' on this instrument. You will likely have to adjust this to get the correct volume.");
             }
 
             var mappedSamplesSize = project.GetTotalMappedSampleSize();

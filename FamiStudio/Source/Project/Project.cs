@@ -7,16 +7,17 @@ namespace FamiStudio
 {
     public class Project
     {
-        // Version 1 = FamiStudio 1.0.0
-        // Version 2 = FamiStudio 1.1.0 (Project properties)
-        // Version 3 = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
-        // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
-        // Version 5 = FamiStudio 2.0.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
-        // Version 6 = FamiStudio 2.1.0 (PAL authoring machine)
-        // Version 7 = FamiStudio 2.2.0 (Arpeggios)
-        // Version 8 = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
-        // Version 9 = FamiStudio 2.4.0 (DPCM sample editor)
-        public static int Version = 9;
+        // Version 1  = FamiStudio 1.0.0
+        // Version 2  = FamiStudio 1.1.0 (Project properties)
+        // Version 3  = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
+        // Version 4  = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
+        // Version 5  = FamiStudio 2.0.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
+        // Version 6  = FamiStudio 2.1.0 (PAL authoring machine)
+        // Version 7  = FamiStudio 2.2.0 (Arpeggios)
+        // Version 8  = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
+        // Version 9  = FamiStudio 2.4.0 (DPCM sample editor)
+        // Version 10 = FamiStudio 2.5.0 (VRC6 saw master volume)
+        public static int Version = 10;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
 

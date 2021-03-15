@@ -528,6 +528,9 @@ famistudio_chn_inst_changed:      .rs FAMISTUDIO_NUM_CHANNELS-5
     .if FAMISTUDIO_CFG_EQUALIZER
 famistudio_chn_note_counter:      .rs FAMISTUDIO_NUM_CHANNELS
     .endif
+    .if FAMISTUDIO_EXP_VRC6
+famistudio_vrc6_saw_volume:       .rs 1 ; -1 = 1/4, 0 = 1/2, 1 = Full
+    .endif
     .if FAMISTUDIO_EXP_VRC7
 famistudio_chn_vrc7_prev_hi:      .rs 6
 famistudio_chn_vrc7_patch:        .rs 6
@@ -1212,6 +1215,11 @@ famistudio_music_play:
         bpl .clear_vrc7_loop 
     .endif
 
+    .if FAMISTUDIO_EXP_VRC6
+    lda #0
+    sta famistudio_vrc6_saw_volume
+    .endif
+
     .if FAMISTUDIO_EXP_FDS
     lda #0
     sta famistudio_fds_mod_speed+0
@@ -1221,7 +1229,7 @@ famistudio_music_play:
     sta famistudio_fds_override_flags
     .endif
 
-    .ifdef famistudio_chn_inst_changed
+    .if (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_FDS != 0)
     lda #0
     ldx #(FAMISTUDIO_NUM_CHANNELS-5)
     .clear_inst_changed_loop:
@@ -1571,7 +1579,11 @@ reg_sweep\@ = \9
 
     .if (FAMISTUDIO_EXP_VRC6 != 0) & (idx\@ = 7)
     ; VRC6 saw has 6-bits
+    ldx famistudio_vrc6_saw_volume
+    bmi .set_volume\@ 
     asl a
+    ldx famistudio_vrc6_saw_volume
+    beq .set_volume\@
     asl a
     .endif
 
@@ -3206,7 +3218,6 @@ famistudio_channel_update:
     jmp [.special_code_jmp_ptr]
 
     .if FAMISTUDIO_EXP_FDS
-
 .special_code_fds_mod_depth:    
     lda [.channel_data_ptr],y
     famistudio_inc_16 .channel_data_ptr
@@ -3228,7 +3239,14 @@ famistudio_channel_update:
     sta famistudio_fds_override_flags
     dey
     jmp .read_byte
+    .endif
 
+    .if FAMISTUDIO_EXP_VRC6
+.special_code_vrc6_saw_volume:
+    lda [.channel_data_ptr],y
+    famistudio_inc_16 .channel_data_ptr
+    sta famistudio_vrc6_saw_volume
+    jmp .read_byte
     .endif
 
     .if FAMISTUDIO_USE_PITCH_TRACK
@@ -3651,7 +3669,8 @@ famistudio_channel_update:
     ; - have vibrato effect in your songs, but didnt enable "FAMISTUDIO_USE_VIBRATO"
     ; - have arpeggiated chords in your songs, but didnt enable "FAMISTUDIO_USE_ARPEGGIO"
     ; - have slide notes in your songs, but didnt enable "FAMISTUDIO_USE_SLIDE_NOTES"
-    ; - have a duty cycle effect in your songs, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+    ; - have a duty cycle effect in your songs, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT"
+    ; - have delayed notes/cuts in your songs, but didnt enable "FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS"
     brk 
 
 .famistudio_special_code_jmp_lo:
@@ -3669,6 +3688,9 @@ famistudio_channel_update:
     .if FAMISTUDIO_EXP_FDS        
     .byte LOW(.special_code_fds_mod_speed)                ; $6c
     .byte LOW(.special_code_fds_mod_depth)                ; $6d
+    .endif
+    .if FAMISTUDIO_EXP_VRC6
+    .byte LOW(.special_code_vrc6_saw_volume)              ; $6c
     .endif        
 .famistudio_special_code_jmp_hi:
     .byte HIGH(.special_code_slide)                        ; $61
@@ -3685,6 +3707,9 @@ famistudio_channel_update:
     .if FAMISTUDIO_EXP_FDS        
     .byte HIGH(.special_code_fds_mod_speed)                ; $6c
     .byte HIGH(.special_code_fds_mod_depth)                ; $6d
+    .endif
+    .if FAMISTUDIO_EXP_VRC6
+    .byte HIGH(.special_code_vrc6_saw_volume)              ; $6c
     .endif
 
 ;======================================================================================================================

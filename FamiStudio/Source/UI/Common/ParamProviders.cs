@@ -59,16 +59,12 @@ namespace FamiStudio
 
     public static class InstrumentParamProvider
     {
-        static readonly string[] FdsVolumeStrings =
-        {
-            "100%", "66%", "50%", "40%"
-        };
-
         static public bool HasParams(Instrument instrument)
         {
             return
                 instrument.ExpansionType == ExpansionType.Fds  ||
                 instrument.ExpansionType == ExpansionType.N163 ||
+                instrument.ExpansionType == ExpansionType.Vrc6 ||
                 instrument.ExpansionType == ExpansionType.Vrc7;
         }
 
@@ -80,7 +76,7 @@ namespace FamiStudio
                     return new[]
                     {
                         new InstrumentParamInfo(instrument, "Master Volume", 0, 3, 0, null, true)
-                            { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsVolumeStrings[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } },
+                            { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } },
                         new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                             { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; instrument.UpdateFdsWaveEnvelope(); } },
                         new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.Count - 1, WavePresetType.Flat, null, true )
@@ -102,6 +98,13 @@ namespace FamiStudio
                             { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;} },
                         new InstrumentParamInfo(instrument, "Wave Position", 0, 244, 0, null, false, 4)
                             { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;} },
+                    };
+
+                case ExpansionType.Vrc6:
+                    return new[]
+                    {
+                        new InstrumentParamInfo(instrument, "Saw Master Volume", 0, 2, 0, null, true)
+                            { GetValue = ()  => { return instrument.Vrc6SawMasterVolume; }, GetValueString = () => { return Vrc6SawMasterVolumeType.Names[instrument.Vrc6SawMasterVolume]; }, SetValue = (v) => { instrument.Vrc6SawMasterVolume = (byte)v; } },
                     };
 
                 case ExpansionType.Vrc7:

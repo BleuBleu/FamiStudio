@@ -15,7 +15,7 @@ namespace FamiStudio
         private Color color;
 
         // FDS
-        private byte fdsMasterVolume = 0;
+        private byte fdsMasterVolume = FdsMasterVolumeType.Volume100;
         private byte fdsWavPreset = WavePresetType.Sine;
         private byte fdsModPreset = WavePresetType.Flat;
         private ushort fdsModSpeed;
@@ -26,6 +26,9 @@ namespace FamiStudio
         private byte n163WavePreset = WavePresetType.Sine;
         private byte n163WaveSize = 16;
         private byte n163WavePos = 0;
+
+        // VRC6
+        private byte vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Half; 
 
         // VRC7
         private byte vrc7Patch = Vrc7InstrumentPatch.Bell;
@@ -153,6 +156,12 @@ namespace FamiStudio
             }
         }
         
+        public byte Vrc6SawMasterVolume
+        {
+            get { return vrc6SawMasterVolume; }
+            set { vrc6SawMasterVolume = (byte)Utils.Clamp(value, 0, 2); }
+        }
+
         public byte Vrc7Patch
         {
             get { return vrc7Patch; }
@@ -239,7 +248,7 @@ namespace FamiStudio
             {
                 buffer.Serialize(ref expansion);
 
-                // At version 5 (FamiStudio 2.0.0) we added duty cycle envelopes.
+                // At version 5 (FamiStudio 2.0.0) we added a ton of expansions.
                 if (buffer.Version >= 5)
                 {
                     switch (expansion)
@@ -268,6 +277,13 @@ namespace FamiStudio
                             buffer.Serialize(ref vrc7PatchRegs[5]);
                             buffer.Serialize(ref vrc7PatchRegs[6]);
                             buffer.Serialize(ref vrc7PatchRegs[7]);
+                            break;
+                        case global::FamiStudio.ExpansionType.Vrc6:
+                            // At version 10 (FamiStudio 2.5.0) we added a master volume to the VRC6 saw.
+                            if (buffer.Version >= 10)
+                                buffer.Serialize(ref vrc6SawMasterVolume);
+                            else
+                                vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Full;
                             break;
                     }
                 }
@@ -354,6 +370,45 @@ namespace FamiStudio
             new Vrc7PatchInfo() { name = "Synthesizer",  data = new byte[] { 0x61, 0x63, 0x0c, 0x00, 0x94, 0xC0, 0x33, 0xf6 } }, // Synthesizer 
             new Vrc7PatchInfo() { name = "Chorus",       data = new byte[] { 0x21, 0x72, 0x0d, 0x00, 0xc1, 0xd5, 0x56, 0x06 } }  // Chorus      
         };
+    }
 
+    public static class FdsMasterVolumeType
+    {
+        public const int Volume100 = 0;
+        public const int Volume66  = 1;
+        public const int Volume50  = 2;
+        public const int Volume40  = 3;
+
+        public static readonly string[] Names =
+        {
+            "100%",
+            "66%",
+            "50%",
+            "40%",
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
+    }
+
+    public static class Vrc6SawMasterVolumeType
+    {
+        public const int Full = 0;
+        public const int Half = 1;
+        public const int Quarter = 2;
+
+        public static readonly string[] Names =
+        {
+            "Full",
+            "Half",
+            "Quarter"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
     }
 }

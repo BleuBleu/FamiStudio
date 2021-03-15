@@ -698,6 +698,8 @@ namespace FamiStudio
                 var instrument = (Instrument)null;
                 var previousNoteLength = song.NoteLength;
                 var arpeggio = (Arpeggio)null;
+                var sawVolume = Vrc6SawMasterVolumeType.Half;
+                var sawVolumeChanged = false;
 
                 if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
@@ -721,6 +723,9 @@ namespace FamiStudio
                         // to a section where the instrument was set from a previous pattern.
                         instrument = null;
                         arpeggio = null;
+
+                        if (sawVolumeChanged)
+                            sawVolume = -1;
 
                         // If this channel potentially uses any arpeggios, clear the override since the last
                         // note may have overridden it. TODO: Actually check if thats the case!
@@ -881,6 +886,16 @@ namespace FamiStudio
                             {
                                 if (note.Instrument != instrument)
                                 {
+                                    // Change saw volume if needed.
+                                    if (channel.Type == ChannelType.Vrc6Saw && sawVolume != note.Instrument.Vrc6SawMasterVolume)
+                                    {
+                                        sawVolume = note.Instrument.Vrc6SawMasterVolume;
+                                        sawVolumeChanged = true;
+
+                                        patternBuffer.Add($"${0x6c:x2}");
+                                        patternBuffer.Add($"${1 - sawVolume:x2}");
+                                    }
+
                                     int idx = instrumentIndices[note.Instrument];
                                     patternBuffer.Add($"${(byte)(0x80 | (idx << 1)):x2}");
                                     instrument = note.Instrument;

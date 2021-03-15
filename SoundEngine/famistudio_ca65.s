@@ -518,6 +518,9 @@ famistudio_chn_inst_changed:      .res FAMISTUDIO_NUM_CHANNELS-5
 .if FAMISTUDIO_CFG_EQUALIZER
 famistudio_chn_note_counter:      .res FAMISTUDIO_NUM_CHANNELS
 .endif
+.if FAMISTUDIO_EXP_VRC6
+famistudio_vrc6_saw_volume:       .res 1 ; -1 = 1/4, 0 = 1/2, 1 = Full
+.endif
 .if FAMISTUDIO_EXP_VRC7
 famistudio_chn_vrc7_prev_hi:      .res 6
 famistudio_chn_vrc7_patch:        .res 6
@@ -1189,6 +1192,11 @@ famistudio_music_play:
         bpl @clear_vrc7_loop 
 .endif
 
+.if FAMISTUDIO_EXP_VRC6
+    lda #0
+    sta famistudio_vrc6_saw_volume
+.endif
+
 .if FAMISTUDIO_EXP_FDS
     lda #0
     sta famistudio_fds_mod_speed+0
@@ -1198,7 +1206,7 @@ famistudio_music_play:
     sta famistudio_fds_override_flags
 .endif
 
-.ifdef famistudio_chn_inst_changed
+.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
     lda #0
     ldx #(FAMISTUDIO_NUM_CHANNELS-5)
     @clear_inst_changed_loop:
@@ -1537,7 +1545,11 @@ famistudio_get_note_pitch_vrc6_saw:
 
 .if FAMISTUDIO_EXP_VRC6 && idx = 7 
     ; VRC6 saw has 6-bits
+    ldx famistudio_vrc6_saw_volume
+    bmi @set_volume 
     asl
+    ldx famistudio_vrc6_saw_volume
+    beq @set_volume
     asl
 .endif
 
@@ -3200,6 +3212,14 @@ famistudio_channel_update:
     dey
     jmp @read_byte
 
+.elseif FAMISTUDIO_EXP_VRC6
+
+@special_code_vrc6_saw_volume:
+    lda (@channel_data_ptr),y
+    famistudio_inc_16 @channel_data_ptr
+    sta famistudio_vrc6_saw_volume
+    jmp @read_byte
+
 .endif
 
 .if FAMISTUDIO_USE_PITCH_TRACK
@@ -3622,7 +3642,8 @@ famistudio_channel_update:
     ; - have vibrato effect in your songs, but didnt enable "FAMISTUDIO_USE_VIBRATO"
     ; - have arpeggiated chords in your songs, but didnt enable "FAMISTUDIO_USE_ARPEGGIO"
     ; - have slide notes in your songs, but didnt enable "FAMISTUDIO_USE_SLIDE_NOTES"
-    ; - have a duty cycle effect in your songs, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+    ; - have a duty cycle effect in your songs, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT"
+    ; - have delayed notes/cuts in your songs, but didnt enable "FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS"
     brk 
 
 @famistudio_special_code_jmp_lo:
@@ -3637,9 +3658,11 @@ famistudio_channel_update:
     .byte <@special_code_duty_cycle_effect            ; $69
     .byte <@special_code_note_delay                   ; $6a
     .byte <@special_code_cut_delay                    ; $6b
-.if FAMISTUDIO_EXP_FDS        
+.if FAMISTUDIO_EXP_FDS
     .byte <@special_code_fds_mod_speed                ; $6c
     .byte <@special_code_fds_mod_depth                ; $6d
+.elseif FAMISTUDIO_EXP_VRC6
+    .byte <@special_code_vrc6_saw_volume              ; $6c
 .endif        
 @famistudio_special_code_jmp_hi:
     .byte >@special_code_slide                        ; $61
@@ -3656,6 +3679,8 @@ famistudio_channel_update:
 .if FAMISTUDIO_EXP_FDS        
     .byte >@special_code_fds_mod_speed                ; $6c
     .byte >@special_code_fds_mod_depth                ; $6d
+.elseif FAMISTUDIO_EXP_VRC6
+    .byte >@special_code_vrc6_saw_volume              ; $6c
 .endif
 
 ;======================================================================================================================
