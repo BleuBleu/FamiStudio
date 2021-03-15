@@ -36,7 +36,10 @@ style "dialog"
 
 style "buttonlabel"
 {
-    fg[NORMAL] = "#000000"
+    fg[NORMAL]      = "#C6CDDA" # LightGreyFillColor2
+    fg[PRELIGHT]    = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE]      = "#C6CDDA" # LightGreyFillColor2
+    fg[INSENSITIVE] = "#C6CDDA" # LightGreyFillColor2    
 }
 
 style "text_view"
