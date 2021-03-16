@@ -1,32 +1,34 @@
 FamiStudio 2.5.0
 ================
-- MacOS : Filter NSWindow to only main window!
-- QWERTZ?
-	- Windows + GTK are well behaved
-	- Let people configure the keys.
-	- If a key is a music key, should we not process it (1-5 changes channel, so playing a note changes the channel...).
-	- Shift-Q to toggle.
-- Desktop scaling on Linux.
 - Scroll bars?	
+- More compact sequencer. (move force display to right, smaller pattern headers).
+- Oscilloscope + volume tracks display.
+- Sort song other than alphabetically.
+- Loop prevention for envelope (brad issue).
+- VRC7/Namco low pass filter.
+- Note counter decrement every frame for famitracker tempo??
 - FamiStudio Tempo 2.0 => Arbitrary BPM.
 	- Figure out fundamental difference between tempo vs. groove
 	- Look at gyuss for example (7-6-6, cycle over 120 frames)
 	- Need to be perfect hybrid of trackers/DAWs.
-- Add "saw master volume" to VRC6 instruments.
-- More compact sequencer. (move force display to right, smaller pattern headers).
-- Oscilloscope + volume tracks display.
-- Whole note drag.
-- When using 1/2 snapping, dragging notes is awkward. (will depend on tempo solution).
-- Sort song other than alphabetically.
-- Loop prevention for envelope (brad issue).
-- Channel volumes settings in config.
+- Note refactor: (2.6.0?)
+	- Whole note drag, or FULL NOT REFACTOR.
+	- When using 1/2 snapping, dragging notes is awkward. (will depend on tempo solution).
+- "Whenever I minimize it tho, you can't open it back up by clicking on the icon. You have to right click it and click 'Show All Windows', then click the window there.". how2bboss.
+- Wav/mp3 : export intro/loop seperately.
 
 - MAYBE: MIDI in/out (not sure... non-technical people will be disapointed)
 - MAYBE: DPCM : More stuff, normalize volume? Playback speed? See people's request.
 
+- QWERTZ?
+	- GTK colors. => Doesnt work on mac...
+	- Test mac with weird keyboards.
+	- If a key is a music key, should we not process it (1-5 changes channel, so playing a note changes the channel...).
+
 Testing
 =======
 - MacOS : Scaling, etc. Find someone with a mac to test.
+- Linux : Test scaling more.
 
 Linux notes
 ===========
