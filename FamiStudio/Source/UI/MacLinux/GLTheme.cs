@@ -13,13 +13,6 @@ namespace FamiStudio
             InitializeBase();
 
 #if FAMISTUDIO_LINUX
-
-            PlatformUtils.MessageBox(
-            	$"Resolution = {Gdk.Display.Default.DefaultScreen.Width}x{Gdk.Display.Default.DefaultScreen.Height}, " +
-            	$"Size = {Gdk.Display.Default.DefaultScreen.WidthMm}x{Gdk.Display.Default.DefaultScreen.HeightMm} mm, " +
-                $"NumMonitors = {Gdk.Display.Default.DefaultScreen.NMonitors}," +
-            	$"DPI = {Gdk.Display.Default.DefaultScreen.Resolution}", "", System.Windows.Forms.MessageBoxButtons.OK);
-
             dialogScaling = (float)Gdk.Display.Default.DefaultScreen.Resolution / 96.0f;
 
             if (Settings.DpiScaling != 0)
