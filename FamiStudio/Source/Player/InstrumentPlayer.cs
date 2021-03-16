@@ -96,7 +96,7 @@ namespace FamiStudio
             var activeChannel = -1;
             var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
 
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, GetNesApuExpansionAudio(expansionAudio), numExpansionChannels, dmcCallback);
+            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, expansionAudio, numExpansionChannels, dmcCallback);
             for (int i = 0; i < channelStates.Length; i++)
                 NesApu.EnableChannel(apuIndex, i, 0);
 

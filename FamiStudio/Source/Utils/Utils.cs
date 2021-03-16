@@ -22,9 +22,21 @@ namespace FamiStudio
             return val;
         }
 
+        public static double Clamp(double val, double min, double max)
+        {
+            if (val < min) return min;
+            if (val > max) return max;
+            return val;
+        }
+
         public static float Lerp(float v0, float v1, float alpha)
         {
             return v0 * (1.0f - alpha) + v1 * alpha;
+        }
+
+        public static double Lerp(double v0, double v1, double alpha)
+        {
+            return v0 * (1.0 - alpha) + v1 * alpha;
         }
 
         public static int SignedCeil(float x)
@@ -202,6 +214,11 @@ namespace FamiStudio
 
             Directory.CreateDirectory(tempFolder);
             return tempFolder;
+        }
+
+        public static float DbToAmplitude(float db)
+        {
+            return (float)Math.Pow(10.0f, db / 20.0f);
         }
 
         public static void OpenUrl(string url)

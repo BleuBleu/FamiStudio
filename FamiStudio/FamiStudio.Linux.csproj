@@ -346,6 +346,8 @@
     <EmbeddedResource Include="Resources\DashHorizontal.png" />
     <EmbeddedResource Include="Resources\ConfigQWERTY%402x.png" />
     <EmbeddedResource Include="Resources\ConfigQWERTY.png" />
+    <EmbeddedResource Include="Resources\ConfigMixer%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigMixer.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall%402x.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall.png" />
     <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />

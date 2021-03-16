@@ -21,32 +21,32 @@ extern "C" int __stdcall NesApuInit(int apuIdx, int sampleRate, int pal, int exp
 	return 0;
 }
 
-extern "C" void __stdcall  NesApuWriteRegister(int apuIdx, unsigned int addr, int data)
+extern "C" void __stdcall NesApuWriteRegister(int apuIdx, unsigned int addr, int data)
 {
 	apu[apuIdx].write_register(addr, data);
 }
 
-extern "C" int __stdcall  NesApuSamplesAvailable(int apuIdx)
+extern "C" int __stdcall NesApuSamplesAvailable(int apuIdx)
 {
 	return apu[apuIdx].samples_avail();
 }
 
-extern "C" int __stdcall  NesApuReadSamples(int apuIdx, blip_sample_t* buffer, int bufferSize)
+extern "C" int __stdcall NesApuReadSamples(int apuIdx, blip_sample_t* buffer, int bufferSize)
 {
 	return apu[apuIdx].read_samples(buffer, bufferSize);
 }
 
-extern "C" void __stdcall  NesApuRemoveSamples(int apuIdx, int count)
+extern "C" void __stdcall NesApuRemoveSamples(int apuIdx, int count)
 {
 	return apu[apuIdx].remove_samples(count);
 }
 
-extern "C" int __stdcall  NesApuReadStatus(int apuIdx)
+extern "C" int __stdcall NesApuReadStatus(int apuIdx)
 {
 	return apu[apuIdx].read_status();
 }
 
-extern "C" void __stdcall  NesApuEndFrame(int apuIdx)
+extern "C" void __stdcall NesApuEndFrame(int apuIdx)
 {
 	apu[apuIdx].end_frame();
 }
@@ -56,32 +56,37 @@ extern "C" void __stdcall NesApuReset(int apuIdx)
 	apu[apuIdx].reset();
 }
 
-extern "C" void __stdcall  NesApuEnableChannel(int apuIdx, int idx, int enable)
+extern "C" void __stdcall NesApuEnableChannel(int apuIdx, int idx, int enable)
 {
 	apu[apuIdx].enable_channel(idx, enable != 0);
 }
 
-extern "C" void __stdcall  NesApuStartSeeking(int apuIdx)
+extern "C" void __stdcall NesApuStartSeeking(int apuIdx)
 {
 	apu[apuIdx].start_seeking();
 }
 
-extern "C" void __stdcall  NesApuStopSeeking(int apuIdx)
+extern "C" void __stdcall NesApuStopSeeking(int apuIdx)
 {
 	apu[apuIdx].stop_seeking();
 }
 
-extern "C" int __stdcall  NesApuIsSeeking(int apuIdx)
+extern "C" int __stdcall NesApuIsSeeking(int apuIdx)
 {
 	return apu[apuIdx].is_seeking();
 }
 
-extern "C" void __stdcall  NesApuTrebleEq(int apuIdx, int expansion, double treble, int cutoff, int sample_rate)
+extern "C" void __stdcall NesApuTrebleEq(int apuIdx, int expansion, double treble, int cutoff, int sample_rate)
 {
 	apu[apuIdx].treble_eq(expansion, treble, cutoff, sample_rate);
 }
 
-extern "C" int __stdcall  NesApuGetAudioExpansion(int apuIdx)
+extern "C" int __stdcall NesApuGetAudioExpansion(int apuIdx)
 {
 	return apu[apuIdx].get_audio_expansion();
+}
+
+extern "C" void __stdcall NesApuSetExpansionVolume(int apuIdx, int expansion, double volume)
+{
+	apu[apuIdx].set_expansion_volume(expansion, volume);
 }

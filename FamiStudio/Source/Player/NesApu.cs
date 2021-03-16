@@ -43,6 +43,8 @@ namespace FamiStudio
         public extern static void TrebleEq(int apuIdx, int expansion, double treble, int cutoff, int sample_rate);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetAudioExpansion")]
         public extern static int GetAudioExpansion(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSetExpansionVolume")]
+        public extern static int SetExpansionVolume(int apuIdx, int expansion, double volume);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
@@ -343,6 +345,10 @@ namespace FamiStudio
             const int    cutoff =  8800;
 
             TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, treble, cutoff, sampleRate);
+            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(Settings.ExpansionVolumes[ExpansionType.None]));
+
+            if (expansion != APU_EXPANSION_NONE)
+                SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(Settings.ExpansionVolumes[expansion]));
 
             switch (expansion)
             {

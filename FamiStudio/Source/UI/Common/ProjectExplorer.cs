@@ -1889,7 +1889,7 @@ namespace FamiStudio
 
             dlg.Properties.UserData = song;
             dlg.Properties.AddColoredString(song.Name, song.Color); // 0
-            dlg.Properties.AddColor(song.Color); // 1
+            dlg.Properties.AddColorPicker(song.Color); // 1
             dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, Song.MaxLength, CommonTooltips.SongLength); // 2
 
             if (song.UsesFamiTrackerTempo)
@@ -1984,7 +1984,7 @@ namespace FamiStudio
         {
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
-            dlg.Properties.AddColor(instrument.Color); // 1
+            dlg.Properties.AddColorPicker(instrument.Color); // 1
             if (instrument.IsEnvelopeActive(EnvelopeType.Pitch))
                 dlg.Properties.AddCheckBox("Relative pitch:", instrument.Envelopes[EnvelopeType.Pitch].Relative); // 2
             dlg.Properties.Build();
@@ -2036,7 +2036,7 @@ namespace FamiStudio
         {
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(arpeggio.Name, arpeggio.Color); // 0
-            dlg.Properties.AddColor(arpeggio.Color); // 1
+            dlg.Properties.AddColorPicker(arpeggio.Color); // 1
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -2064,7 +2064,7 @@ namespace FamiStudio
         {
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(sample.Name, sample.Color); // 0
-            dlg.Properties.AddColor(sample.Color); // 1
+            dlg.Properties.AddColorPicker(sample.Color); // 1
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)

@@ -151,6 +151,18 @@ namespace FamiStudio
         public static bool SquareSmoothVibrato = true;
         public static bool NoDragSoungWhenPlaying = false;
 
+        // Mixer section (in dB).
+        public static float[] ExpansionVolumes = new float[ExpansionType.Count] 
+        {
+            0.0f, // None
+            0.0f, // Vrc6
+            0.0f, // Vrc7
+            0.0f, // Fds
+            0.0f, // Mmc5
+            0.0f, // N163
+            0.0f  // S5B
+        };
+
         // MIDI section
         public static string MidiDevice = "";
 
@@ -169,6 +181,8 @@ namespace FamiStudio
             ini.Load(GetConfigFileName());
 
             Version = ini.GetInt("General", "Version", 0);
+
+            // UI
             ShowTutorial = ini.GetBool("UI", "ShowTutorial", true);
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
             TimeFormat = ini.GetInt("UI", "TimeFormat", 0);
@@ -181,17 +195,35 @@ namespace FamiStudio
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
             TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
             TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
+
+            // Audio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
+
+            // MIDI
             MidiDevice = ini.GetString("MIDI", "Device", "");
+
+            // Folders
             LastFileFolder = ini.GetString("Folders", "LastFileFolder", "");
             LastInstrumentFolder = ini.GetString("Folders", "LastInstrumentFolder", "");
             LastSampleFolder = ini.GetString("Folders", "LastSampleFolder", "");
             LastExportFolder = ini.GetString("Folders", "LastExportFolder", "");
+
+            // FFmpeg
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
+            // Mixer.
+            ExpansionVolumes[ExpansionType.None] = ini.GetFloat("Mixer", "APU",  0.0f);
+            ExpansionVolumes[ExpansionType.Vrc6] = ini.GetFloat("Mixer", "VRC6", 0.0f);
+            ExpansionVolumes[ExpansionType.Vrc7] = ini.GetFloat("Mixer", "VRC7", 0.0f);
+            ExpansionVolumes[ExpansionType.Fds]  = ini.GetFloat("Mixer", "FDS",  0.0f);
+            ExpansionVolumes[ExpansionType.Mmc5] = ini.GetFloat("Mixer", "MMC5", 0.0f);
+            ExpansionVolumes[ExpansionType.N163] = ini.GetFloat("Mixer", "N163", 0.0f);
+            ExpansionVolumes[ExpansionType.S5B]  = ini.GetFloat("Mixer", "S5B",  0.0f);
+
+            // QWERTY
             Array.Copy(DefaultQwertyKeys, QwertyKeys, DefaultQwertyKeys.Length);
 
             // Stop note.
@@ -266,6 +298,8 @@ namespace FamiStudio
             var ini = new IniFile();
 
             ini.SetInt("General", "Version", SettingsVersion);
+
+            // UI
             ini.SetBool("UI", "ShowTutorial", ShowTutorial);
             ini.SetInt("UI", "DpiScaling", DpiScaling);
             ini.SetInt("UI", "TimeFormat", TimeFormat);
@@ -278,17 +312,35 @@ namespace FamiStudio
             ini.SetInt("UI", "TrackPadMoveSensitity", TrackPadMoveSensitity);
             ini.SetInt("UI", "TrackPadZoomSensitity", TrackPadZoomSensitity);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
+
+            // Audio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
+
+            // Mixer
+            ini.SetFloat("Mixer", "APU",  ExpansionVolumes[ExpansionType.None]);
+            ini.SetFloat("Mixer", "VRC6", ExpansionVolumes[ExpansionType.Vrc6]);
+            ini.SetFloat("Mixer", "VRC7", ExpansionVolumes[ExpansionType.Vrc7]);
+            ini.SetFloat("Mixer", "FDS",  ExpansionVolumes[ExpansionType.Fds] );
+            ini.SetFloat("Mixer", "MMC5", ExpansionVolumes[ExpansionType.Mmc5]);
+            ini.SetFloat("Mixer", "N163", ExpansionVolumes[ExpansionType.N163]);
+            ini.SetFloat("Mixer", "S5B",  ExpansionVolumes[ExpansionType.S5B]);
+
+            // MIDI
             ini.SetString("MIDI", "Device", MidiDevice);
+
+            // Folders
             ini.SetString("Folders", "LastFileFolder", LastFileFolder);
             ini.SetString("Folders", "LastInstrumentFolder", LastInstrumentFolder);
             ini.SetString("Folders", "LastSampleFolder", LastSampleFolder);
             ini.SetString("Folders", "LastExportFolder", LastExportFolder);
+
+            // FFmpeg
             ini.SetString("FFmpeg", "ExecutablePath", FFmpegExecutablePath);
 
+            // QWERTY
             // Stop note.
             {
                 if (QwertyKeys[0, 0] >= 0)

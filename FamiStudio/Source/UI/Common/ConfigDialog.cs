@@ -11,6 +11,7 @@ namespace FamiStudio
         {
             UserInterface,
             Sound,
+            Mixer,
             MIDI,
             QWERTY,
 #if FAMISTUDIO_MACOS
@@ -23,6 +24,7 @@ namespace FamiStudio
         {
             "Interface",
             "Sound",
+            "Mixer",
             "MIDI",
             "QWERTY",
 #if FAMISTUDIO_MACOS
@@ -114,7 +116,7 @@ namespace FamiStudio
                     page.PropertyChanged += Page_PropertyChanged;
 #endif
 
-                    break;
+                        break;
                 }
                 case ConfigSection.Sound:
                 {
@@ -122,7 +124,18 @@ namespace FamiStudio
                     page.AddIntegerRange("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 1
                     page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 2
                     page.AddCheckBox("Mute piano roll interactions during playback:", Settings.NoDragSoungWhenPlaying); // 3
-                        
+                    break;
+                }
+                case ConfigSection.Mixer:
+                {
+                    page.AddSlider("APU",  Settings.ExpansionVolumes[ExpansionType.None], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 0
+                    page.AddSlider("VRC6", Settings.ExpansionVolumes[ExpansionType.Vrc6], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 1
+                    page.AddSlider("VRC7", Settings.ExpansionVolumes[ExpansionType.Vrc7], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 2
+                    page.AddSlider("FDS",  Settings.ExpansionVolumes[ExpansionType.Fds] , -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 3
+                    page.AddSlider("MMC5", Settings.ExpansionVolumes[ExpansionType.Mmc5], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 4
+                    page.AddSlider("N163", Settings.ExpansionVolumes[ExpansionType.N163], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 5
+                    page.AddSlider("S5B",  Settings.ExpansionVolumes[ExpansionType.S5B],  -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 6
+                    page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and\nsound engine exports."); // MATTT : Test this in HIDPI.
                     break;
                 }
                 case ConfigSection.MIDI:
@@ -171,6 +184,11 @@ namespace FamiStudio
             pages[(int)section] = page;
 
             return page;
+        }
+
+        private string FormatDecibels(double value)
+        {
+            return $"{(value >= 0 ? "+" : "")}{value:N1} dB";
         }
 
         private void ResetQwertyClicked(PropertyPage props, int propertyIndex)
@@ -297,6 +315,8 @@ namespace FamiStudio
                 // UI
                 var pageUI = pages[(int)ConfigSection.UserInterface];
                 var pageSound = pages[(int)ConfigSection.Sound];
+                var pageMixer = pages[(int)ConfigSection.Mixer];
+
                 var scalingString = pageUI.GetPropertyValue<string>(0);
                 var timeFormatString = pageUI.GetPropertyValue<string>(1);
                 var followModeString = pageUI.GetPropertyValue<string>(2);
@@ -316,6 +336,15 @@ namespace FamiStudio
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(1);
                 Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(2);
                 Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(3);
+
+                // Mixer.
+                Settings.ExpansionVolumes[ExpansionType.None] = (float)pageMixer.GetPropertyValue<double>(0);
+                Settings.ExpansionVolumes[ExpansionType.Vrc6] = (float)pageMixer.GetPropertyValue<double>(1);
+                Settings.ExpansionVolumes[ExpansionType.Vrc7] = (float)pageMixer.GetPropertyValue<double>(2);
+                Settings.ExpansionVolumes[ExpansionType.Fds]  = (float)pageMixer.GetPropertyValue<double>(3);
+                Settings.ExpansionVolumes[ExpansionType.Mmc5] = (float)pageMixer.GetPropertyValue<double>(4);
+                Settings.ExpansionVolumes[ExpansionType.N163] = (float)pageMixer.GetPropertyValue<double>(5);
+                Settings.ExpansionVolumes[ExpansionType.S5B]  = (float)pageMixer.GetPropertyValue<double>(6);
 
                 // MIDI
                 var pageMIDI = pages[(int)ConfigSection.MIDI];

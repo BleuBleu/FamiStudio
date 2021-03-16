@@ -68,11 +68,13 @@
     <PackageReference Include="SharpDX.XAudio2" Version="4.2.0" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\Resources.Designer.cs">
@@ -114,6 +116,18 @@
     <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
+    <Compile Include="Source\UI\Windows\LabelTrackBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\LabelTrackBar.Designer.cs">
+      <DependentUpon>LabelTrackBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Source\UI\Windows\Slider.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\Slider.Designer.cs">
+      <DependentUpon>Slider.cs</DependentUpon>
+    </Compile>
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
@@ -193,6 +207,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="Source\UI\Windows\LabelTrackBar.resx">
+      <DependentUpon>LabelTrackBar.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Source\UI\Windows\MultiPropertyDialog.resx">
       <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -204,6 +221,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Source\UI\Windows\PropertyDialog.resx">
       <DependentUpon>PropertyDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Source\UI\Windows\Slider.resx">
+      <DependentUpon>Slider.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Source\UI\Windows\TutorialDialog.resx">
       <DependentUpon>TutorialDialog.cs</DependentUpon>
@@ -350,6 +370,8 @@
     <EmbeddedResource Include="Resources\DashHorizontal.png" />
     <EmbeddedResource Include="Resources\ConfigQWERTY%402x.png" />
     <EmbeddedResource Include="Resources\ConfigQWERTY.png" />
+    <EmbeddedResource Include="Resources\ConfigMixer%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigMixer.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

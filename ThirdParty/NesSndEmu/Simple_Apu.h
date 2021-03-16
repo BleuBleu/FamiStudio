@@ -18,13 +18,43 @@
 class Simple_Apu {
 public:
 
-	enum { expansion_none    = 0 };
-	enum { expansion_vrc6    = 1 };
-	enum { expansion_vrc7    = 2 };
-	enum { expansion_fds     = 3 };
-	enum { expansion_mmc5    = 4 };
-	enum { expansion_namco   = 5 };
-	enum { expansion_sunsoft = 6 };
+	enum { expansion_none       = 0 };
+	enum { expansion_vrc6       = 1 };
+	enum { expansion_vrc7       = 2 };
+	enum { expansion_fds        = 3 };
+	enum { expansion_mmc5       = 4 };
+	enum { expansion_namco      = 5 };
+	enum { expansion_sunsoft    = 6 };
+
+	enum { channel_square1      = 0 };
+	enum { channel_square2      = 1 };
+	enum { channel_triangle     = 2 };
+	enum { channel_noise        = 3 };
+	enum { channel_dpcm         = 4 };
+	enum { channel_vrc6_square1 = 5 };
+	enum { channel_vrc6_square2 = 6 };
+	enum { channel_vrc6_saw     = 7 };
+	enum { channel_vrc7_fm1     = 8 };
+	enum { channel_vrc7_fm2     = 9 };
+	enum { channel_vrc7_fm3     = 10 };
+	enum { channel_vrc7_fm4     = 11 };
+	enum { channel_vrc7_fm5     = 12 };
+	enum { channel_vrc7_fm6     = 13 };
+	enum { channel_fds          = 14 };
+	enum { channel_mmc5_square1 = 15 };
+	enum { channel_mmc5_square2 = 16 };
+	enum { channel_mmc5_dpcm    = 17 };
+	enum { channel_n163_wave1   = 18 };
+	enum { channel_n163_wave2   = 19 };
+	enum { channel_n163_wave3   = 20 };
+	enum { channel_n163_wave4   = 21 };
+	enum { channel_n163_wave5   = 22 };
+	enum { channel_n163_wave6   = 23 };
+	enum { channel_n163_wave7   = 24 };
+	enum { channel_n163_wave8   = 25 };
+	enum { channel_s5b_square1  = 26 };
+	enum { channel_s5b_square2  = 27 };
+	enum { channel_s5b_square3  = 28 };
 
 	Simple_Apu();
 	~Simple_Apu();
@@ -60,6 +90,7 @@ public:
 	void enable_channel(int, bool);
 	
 	void treble_eq(int exp, double treble, int cutoff, int sample_rate);
+	void set_expansion_volume(int expansion, double evolume);
 
 	// Read at most 'count' samples and return number of samples actually read
 	typedef blip_sample_t sample_t;

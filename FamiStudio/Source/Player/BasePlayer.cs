@@ -184,7 +184,7 @@ namespace FamiStudio
             famitrackerTempoCounter = 0;
             channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback);
 
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, GetNesApuExpansionAudio(song.Project.ExpansionAudio), song.Project.ExpansionNumChannels, dmcCallback);
+            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, song.Project.ExpansionAudio, song.Project.ExpansionNumChannels, dmcCallback);
 
             ResetFamiStudioTempo(true);
             UpdateChannelsMuting();
@@ -398,30 +398,6 @@ namespace FamiStudio
             return states;
         }
         
-        public static int GetNesApuExpansionAudio(int expansion)
-        {
-            switch (expansion)
-            {
-                case ExpansionType.None:
-                    return NesApu.APU_EXPANSION_NONE;
-                case ExpansionType.Vrc6:
-                    return NesApu.APU_EXPANSION_VRC6;
-                case ExpansionType.Vrc7:
-                    return NesApu.APU_EXPANSION_VRC7;
-                case ExpansionType.Fds:
-                    return NesApu.APU_EXPANSION_FDS;
-                case ExpansionType.Mmc5:
-                    return NesApu.APU_EXPANSION_MMC5;
-                case ExpansionType.N163:
-                    return NesApu.APU_EXPANSION_NAMCO;
-                case ExpansionType.S5B:
-                    return NesApu.APU_EXPANSION_SUNSOFT;
-            }
-
-            Debug.Assert(false);
-            return 0;
-        }
-
         protected virtual unsafe short[] EndFrame()
         {
             NesApu.EndFrame(apuIndex);

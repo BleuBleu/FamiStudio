@@ -91,6 +91,20 @@ void Simple_Apu::treble_eq(int exp, double treble, int cutoff, int sample_rate)
 	}
 }
 
+void Simple_Apu::set_expansion_volume(int exp, double volume)
+{
+	switch (exp)
+	{
+		case expansion_none: apu.volume(volume); break;
+		case expansion_vrc6: vrc6.volume(volume); break;
+		case expansion_vrc7: vrc6.volume(volume); break;
+		case expansion_fds: fds.volume(volume); break;
+		case expansion_mmc5: mmc5.volume(volume); break;
+		case expansion_namco: namco.volume(volume); break;
+		case expansion_sunsoft: sunsoft.volume(volume); break;
+	}
+}
+
 void Simple_Apu::write_register(cpu_addr_t addr, int data)
 {
 	if (seeking)

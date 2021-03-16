@@ -1737,7 +1737,7 @@ namespace FamiStudio
             var dlg = new PropertyDialog(PointToScreen(pt), 240);
             dlg.Properties.AddColoredString(pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
-            dlg.Properties.AddColor(pattern.Color);
+            dlg.Properties.AddColorPicker(pattern.Color);
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)

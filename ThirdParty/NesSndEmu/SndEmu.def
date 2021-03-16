@@ -1,16 +1,17 @@
 LIBRARY   SNDEMU
 EXPORTS
-	NesApuInit              @1
-	NesApuWriteRegister     @2
-	NesApuSamplesAvailable  @3
-	NesApuReadSamples       @4
-	NesApuRemoveSamples     @5
-	NesApuReadStatus        @6
-	NesApuEndFrame          @7
-	NesApuReset             @8
-	NesApuEnableChannel     @9
-	NesApuStartSeeking      @10
-	NesApuStopSeeking       @11
-	NesApuIsSeeking         @12
-	NesApuTrebleEq          @13
-	NesApuGetAudioExpansion @14
+	NesApuInit               @1
+	NesApuWriteRegister      @2
+	NesApuSamplesAvailable   @3
+	NesApuReadSamples        @4
+	NesApuRemoveSamples      @5
+	NesApuReadStatus         @6
+	NesApuEndFrame           @7
+	NesApuReset              @8
+	NesApuEnableChannel      @9
+	NesApuStartSeeking       @10
+	NesApuStopSeeking        @11
+	NesApuIsSeeking          @12
+	NesApuTrebleEq           @13
+	NesApuGetAudioExpansion  @14
+	NesApuSetExpansionVolume @15
