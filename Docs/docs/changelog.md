@@ -2,6 +2,14 @@
 
 Version history / release notes for each release.
 
+## Version 2.4.1 (Hotfix)
+
+Fixes:
+
+* Fixed corruption when importing looping samples from .FTI files.
+* Fixed minor graphical issue in piano roll.
+* Removed 320 kbps MP3 export option since it creates choppy audio.
+
 ## Version 2.4.0
 
 Changes :
