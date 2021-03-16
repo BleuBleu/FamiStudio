@@ -26,7 +26,7 @@ namespace FamiStudio
         public PropertyDialog(int width, bool canAccept = true, Window parent = null) : base(WindowType.Toplevel)
         {
             Init();
-            WidthRequest = width;
+            WidthRequest = GtkUtils.ScaleGtkWidget(width);
             
             if (!canAccept)
                 buttonYes.Hide();
@@ -38,7 +38,7 @@ namespace FamiStudio
         public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false) : base(WindowType.Toplevel)
         {
             Init();
-            WidthRequest = width;
+            WidthRequest = GtkUtils.ScaleGtkWidget(width);
             initialLocation = pt;
 
             this.leftAlign = leftAlign;
@@ -80,7 +80,7 @@ namespace FamiStudio
             propertyPage.PropertyWantsClose += propertyPage_PropertyWantsClose;
             propertyPage.Show();
 
-            BorderWidth = 5;
+            BorderWidth = (uint)GtkUtils.ScaleGtkWidget(5);
             Resizable = false;
             Decorated = false;
             Modal = true;

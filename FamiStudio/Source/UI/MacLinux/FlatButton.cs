@@ -26,8 +26,8 @@ namespace FamiStudio
 
             if (text == null)
             {
-                WidthRequest  = 40;
-                HeightRequest = 40;
+                WidthRequest  = GtkUtils.ScaleGtkWidget(40);
+                HeightRequest = GtkUtils.ScaleGtkWidget(40);
             }
 
 #if FAMISTUDIO_LINUX

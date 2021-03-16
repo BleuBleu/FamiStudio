@@ -76,6 +76,16 @@ namespace FamiStudio
             InitializeGtk();
         }
 
+        private static void ParseRcFileFromResource(string rcFile)
+        {
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(rcFile))
+            using (var reader = new StreamReader(stream))
+            {
+                string gtkrc = reader.ReadToEnd();
+                Gtk.Rc.ParseString(gtkrc);
+            }
+        }
+
         public static void InitializeGtk()
         {
             Gtk.Application.Init();
@@ -86,12 +96,20 @@ namespace FamiStudio
             var rcFile = "FamiStudio.Resources.gtk_linux.rc";
 #endif
 
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(rcFile))
-            using (var reader = new StreamReader(stream))
+            ParseRcFileFromResource(rcFile);
+
+#if FAMISTUDIO_LINUX
+            var dpi = Gdk.Display.Default.DefaultScreen.Resolution;
+
+            if (dpi < 0)
             {
-                string gtkrc = reader.ReadToEnd();
-                Gtk.Rc.ParseString(gtkrc);
+                dpi = Utils.Clamp(Gdk.Display.Default.DefaultScreen.Width / (Gdk.Display.Default.DefaultScreen.WidthMm / 25.4f), 96, 384);
+                Gdk.Display.Default.DefaultScreen.Resolution = dpi;
             }
+
+            if (dpi >= 192.0)
+                ParseRcFileFromResource("FamiStudio.Resources.gtk_linux_hidpi.rc");
+#endif
         }
 
         private static string[] GetExtensionList(string str)

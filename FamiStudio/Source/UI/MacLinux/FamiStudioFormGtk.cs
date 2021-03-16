@@ -53,8 +53,8 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
-            WidthRequest  = 1280;
-            HeightRequest = 720;
+            WidthRequest  = GtkUtils.ScaleGtkWidget(1280);
+            HeightRequest = GtkUtils.ScaleGtkWidget(720);
             controls.Resize(ScaleCoord(WidthRequest), ScaleCoord(HeightRequest));
 
             Events |= 
@@ -531,17 +531,29 @@ namespace FamiStudio
 
         int ScaleCoord(int pos)
         {
+#if FAMISTUDIO_MACOS
             return (int)(pos * GLTheme.MainWindowScaling);
+#else
+            return pos;
+#endif
         }
 
         int ScaleCoord(double pos)
         {
+#if FAMISTUDIO_MACOS
             return (int)(pos * GLTheme.MainWindowScaling);
+#else
+            return (int)pos;
+#endif
         }
 
         int UnscaleCoord(int pos)
         {
+#if FAMISTUDIO_MACOS
             return (int)(pos / GLTheme.MainWindowScaling);
+#else
+            return pos;
+#endif
         }
 
         double CoordToGtk(double pos)

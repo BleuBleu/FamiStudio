@@ -19,6 +19,7 @@ namespace FamiStudio
                 var chk = new CheckButton(values[i]);
                 chk.Active = selected == null ? true : selected[i];
                 chk.Name = "CheckBoxList";
+                chk.CanFocus = false;
                 chk.Show();
                 vbox.PackStart(chk, false, false, 0);
                 checkButtons.Add(chk);
@@ -28,7 +29,7 @@ namespace FamiStudio
             scroll.SetPolicy(PolicyType.Never, PolicyType.Automatic);
             scroll.AddWithViewport(vbox);
             scroll.Show();
-            scroll.Child.HeightRequest = 200;
+            scroll.Child.HeightRequest = GtkUtils.ScaleGtkWidget(200);
 
             Add(scroll);
         }

@@ -5,6 +5,15 @@ namespace FamiStudio
 {
     public static class GtkUtils
     {
+        public static int ScaleGtkWidget(int x)
+        {
+#if FAMISTUDIO_LINUX
+            return (int)(x * GLTheme.DialogScaling);
+#else
+            return x;
+#endif
+        }
+
         public static System.Windows.Forms.MouseEventArgs ToWinFormArgs(Gdk.EventButton e, int x, int y)
         {
             System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;

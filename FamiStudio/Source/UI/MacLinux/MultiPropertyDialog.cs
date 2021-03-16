@@ -34,26 +34,26 @@ namespace FamiStudio
 
             buttonsHBox.PackStart(buttonYes, false, false, 0);
             buttonsHBox.PackStart(buttonNo, false, false, 0);
-            buttonsHBox.HeightRequest = 40;
+            buttonsHBox.HeightRequest = GtkUtils.ScaleGtkWidget(40);
             buttonsHBox.Show();
 
             var buttonsAlign = new Alignment(1.0f, 0.5f, 0.0f, 0.0f);
-            buttonsAlign.TopPadding = 5;
+            buttonsAlign.TopPadding = (uint)GtkUtils.ScaleGtkWidget(5);
             buttonsAlign.Show();
             buttonsAlign.Add(buttonsHBox);
 
             buttonsVBox = new VBox();
             buttonsVBox.Show();
-            buttonsVBox.WidthRequest = tabWidth;
+            buttonsVBox.WidthRequest = GtkUtils.ScaleGtkWidget(tabWidth);
 
             var buttonsVBoxPadding = new Alignment(0.0f, 0.0f, 0.0f, 0.0f);
-            buttonsVBoxPadding.RightPadding = 5;
+            buttonsVBoxPadding.RightPadding = (uint)GtkUtils.ScaleGtkWidget(5);
             buttonsVBoxPadding.Show();
             buttonsVBoxPadding.Add(buttonsVBox);
 
             propsVBox = new VBox();
             propsVBox.Show();
-            propsVBox.HeightRequest = 210;
+            propsVBox.HeightRequest = GtkUtils.ScaleGtkWidget(210);
 
             mainHbox = new HBox();
             mainHbox.Show();
@@ -66,10 +66,10 @@ namespace FamiStudio
             vbox.PackStart(mainHbox);
             vbox.PackStart(buttonsAlign, false, false, 0);
 
-            WidthRequest  = width;
-            HeightRequest = height;
+            WidthRequest  = GtkUtils.ScaleGtkWidget(width);
+            HeightRequest = GtkUtils.ScaleGtkWidget(height);
 
-            BorderWidth = 5; 
+            BorderWidth = (uint)GtkUtils.ScaleGtkWidget(5); 
             Resizable = false;
             Decorated = false;
             Modal = true;
@@ -104,7 +104,7 @@ namespace FamiStudio
             var btn = new FlatButton(image, text);
 
             btn.Show();
-            btn.HeightRequest = 32;
+            btn.HeightRequest = GtkUtils.ScaleGtkWidget(32);
             btn.Bold = tabs.Count == 0;
             btn.ButtonPressEvent += Btn_ButtonPressEvent;
             buttonsVBox.PackStart(btn, false, false, 0);

@@ -133,7 +133,7 @@ namespace FamiStudio
 
             textBox.Text = txt;
             textBox.ModifyBase(StateType.Normal, ToGdkColor(backColor));
-            textBox.WidthRequest = 50;
+            textBox.WidthRequest = GtkUtils.ScaleGtkWidget(50);
 
             return textBox;
         }
@@ -144,7 +144,7 @@ namespace FamiStudio
 
             textBox.Text = txt;
             textBox.MaxLength = maxLength;
-            textBox.WidthRequest = 50;
+            textBox.WidthRequest = GtkUtils.ScaleGtkWidget(50);
             textBox.TooltipText = tooltip;
 
             return textBox;
@@ -167,7 +167,7 @@ namespace FamiStudio
             var scroll = new ScrolledWindow(null, null);
             scroll.HscrollbarPolicy = PolicyType.Never;
             scroll.VscrollbarPolicy = PolicyType.Automatic;
-            scroll.HeightRequest = 400;
+            scroll.HeightRequest = GtkUtils.ScaleGtkWidget(400);
             scroll.ShadowType = ShadowType.EtchedIn;
             scroll.Show();
             scroll.Add(textView);
@@ -178,6 +178,7 @@ namespace FamiStudio
         private CheckButton CreateCheckBox(bool value, string text = null, string tooltip = null)
         {
             var cb = new CheckButton();
+            cb.CanFocus = false;
             cb.Active = value;
             cb.Label = text;
             cb.TooltipText = tooltip;
@@ -295,7 +296,7 @@ namespace FamiStudio
 
             cb.Sensitive = values.Length > 0;
             cb.TooltipText = tooltip;
-            cb.WidthRequest = 125;
+            cb.WidthRequest = GtkUtils.ScaleGtkWidget(125);
             cb.Changed += Cb_Changed;
 
             return cb;
@@ -553,7 +554,7 @@ namespace FamiStudio
             var scroll = new ScrolledWindow(null, null);
             scroll.HscrollbarPolicy = PolicyType.Never;
             scroll.VscrollbarPolicy = PolicyType.Automatic;
-            scroll.HeightRequest = 300;
+            scroll.HeightRequest = GtkUtils.ScaleGtkWidget(300);
             scroll.ShadowType = ShadowType.EtchedIn;
             scroll.Add(treeView);
 
@@ -705,8 +706,8 @@ namespace FamiStudio
         {
             Resize((uint)properties.Count, 2);
 
-            ColumnSpacing = 5;
-            RowSpacing    = 5;
+            ColumnSpacing = (uint)GtkUtils.ScaleGtkWidget(5);
+            RowSpacing    = (uint)GtkUtils.ScaleGtkWidget(5);
             
             for (int i = 0; i < properties.Count; i++)
             {
@@ -724,7 +725,7 @@ namespace FamiStudio
                 {
                     // HACK: Cant be bothered to deal with GTK+2 aspect ratios.
                     if (prop.control is ColorSelector img)
-                        img.DesiredWidth = Toplevel.WidthRequest - 10; // (10 = Border * 2)
+                        img.DesiredWidth = Toplevel.WidthRequest - GtkUtils.ScaleGtkWidget(10); // (10 = Border * 2)
 
                     Attach(prop.control, 0, 2, (uint)i, (uint)(i + 1), AttachOptions.Expand | AttachOptions.Fill, AttachOptions.Expand | AttachOptions.Fill, (uint)prop.leftMargin, 0);
                     prop.control.Show();

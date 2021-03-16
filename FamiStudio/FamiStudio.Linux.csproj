@@ -292,6 +292,7 @@
     <EmbeddedResource Include="Resources\EyedropCursor%402x.png" />
     <Compile Include="Source\UI\MacLinux\GLWindow.cs" />
     <Compile Include="Source\UI\MacLinux\Cursors.cs" />
+    <EmbeddedResource Include="Resources\gtk_linux_hidpi.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

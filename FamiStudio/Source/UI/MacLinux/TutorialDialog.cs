@@ -19,7 +19,7 @@ namespace FamiStudio
         public TutorialDialog()
         {
             Init();
-            WidthRequest = 756;
+            WidthRequest = GtkUtils.ScaleGtkWidget(756);
             TransientFor = FamiStudioForm.Instance;
             SetPosition(WindowPosition.CenterOnParent);
         }
@@ -31,6 +31,7 @@ namespace FamiStudio
             buttonRight = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.ArrowRight{suffix}.png"));
 
             checkBoxDontShow = new CheckButton();
+            checkBoxDontShow.CanFocus = false;
             checkBoxDontShow.Show();
 
             var checkLabel = new Label();
@@ -48,7 +49,7 @@ namespace FamiStudio
             buttonsHbox.Show();
 
             var buttonsAlign = new Alignment(1.0f, 0.5f, 0.0f, 0.0f);
-            buttonsAlign.TopPadding = 5;
+            buttonsAlign.TopPadding = (uint)GtkUtils.ScaleGtkWidget(5);
             buttonsAlign.Show();
             buttonsAlign.Add(buttonsHbox);
 
@@ -58,7 +59,7 @@ namespace FamiStudio
             checkBoxHBox.Show();
 
             var checkBoxAlign = new Alignment(0.0f, 0.5f, 0.0f, 0.0f);
-            checkBoxAlign.TopPadding = 5;
+            checkBoxAlign.TopPadding = (uint)GtkUtils.ScaleGtkWidget(5);
             checkBoxAlign.Show();
             checkBoxAlign.Add(checkBoxHBox);
 
@@ -68,15 +69,15 @@ namespace FamiStudio
             hbox.Show();
 
             label = new Label();
-            label.WidthRequest = 736;
-            label.HeightRequest = 64;
+            label.WidthRequest = GtkUtils.ScaleGtkWidget(736);
+            label.HeightRequest = GtkUtils.ScaleGtkWidget(64);
             label.SetAlignment(0.0f, 0.0f);
             label.Wrap = true;
             label.Show();
 
             image = new Image();
-            image.WidthRequest  = 736;
-            image.HeightRequest = 414;
+            image.WidthRequest  = GtkUtils.ScaleGtkWidget(736);
+            image.HeightRequest = GtkUtils.ScaleGtkWidget(414);
             image.Show();
 
             var vbox = VBox;
@@ -86,7 +87,7 @@ namespace FamiStudio
             vbox.PackStart(hbox, false, false, 0);
             vbox.Show();
 
-            BorderWidth = 10;
+            BorderWidth = (uint)GtkUtils.ScaleGtkWidget(10);
             Resizable = false;
             Decorated = false;
             Modal = true;
@@ -98,7 +99,7 @@ namespace FamiStudio
         private void SetPage(int idx)
         {
             pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Messages.Length - 1);
-            image.Pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{TutorialMessages.Images[pageIndex]}").ScaleSimple(736, 414, Gdk.InterpType.Bilinear);
+            image.Pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{TutorialMessages.Images[pageIndex]}").ScaleSimple(GtkUtils.ScaleGtkWidget(736), GtkUtils.ScaleGtkWidget(414), Gdk.InterpType.Bilinear);
             label.Text = TutorialMessages.Messages[pageIndex];
             buttonLeft.Visible = pageIndex != 0;
 

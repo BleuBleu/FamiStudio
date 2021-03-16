@@ -91,12 +91,10 @@ namespace FamiStudio
             {
                 case ConfigSection.UserInterface:
                 {
-#if FAMISTUDIO_WINDOWS
+#if FAMISTUDIO_WINDOWS || FAMISTUDIO_LINUX
                     var scalingValues = new[] { "System", "100%", "150%", "200%" };
 #elif FAMISTUDIO_MACOS
                     var scalingValues = new[] { "System", "100%", "200%" };
-#else
-                    var scalingValues = new[] { "System" };
 #endif
                     var scalingIndex = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
                     var timeFormatIndex = Settings.TimeFormat < (int)TimeFormat.Max ? Settings.TimeFormat : 0;
@@ -112,9 +110,7 @@ namespace FamiStudio
                     page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 6
                     page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 7
 
-#if FAMISTUDIO_LINUX
-                    page.SetPropertyEnabled(0, false);
-#elif FAMISTUDIO_MACOS
+#if FAMISTUDIO_MACOS
                     page.PropertyChanged += Page_PropertyChanged;
 #endif
 
