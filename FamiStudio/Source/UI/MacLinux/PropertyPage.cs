@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Gdk;
 using Gtk;
 using Pango;
@@ -11,12 +12,13 @@ namespace FamiStudio
     {
         String,
         ColoredString,
-        IntegerRange,
-        DomainRange,
-        Boolean,
-        StringList,
-        StringListMulti,
-        Color,
+        NumericUpDown,
+        DomainUpDown,
+        Slider,
+        CheckBox,
+        DropDownList,
+        CheckBoxList,
+        ColorPicker,
         Label,
         Button,
         MultilineString,
@@ -27,6 +29,7 @@ namespace FamiStudio
     {
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
         public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
+        public delegate string SliderFormatText(double value);
 
         class Property
         {
@@ -37,6 +40,7 @@ namespace FamiStudio
             public ButtonPropertyClicked click;
             public ListClicked listDoubleClick;
             public ListClicked listRightClick;
+            public SliderFormatText sliderFormat;
         };
 
         private object userData;
@@ -404,7 +408,7 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.Boolean,
+                    type = PropertyType.CheckBox,
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateCheckBox(value)
                 });
@@ -415,18 +419,18 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.Boolean,
+                    type = PropertyType.CheckBox,
                     control = CreateCheckBox(value, label),
                     leftMargin = margin
                 });
         }
 
-        public void AddColor(System.Drawing.Color color)
+        public void AddColorPicker(System.Drawing.Color color)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.Color,
+                    type = PropertyType.ColorPicker,
                     control = CreatePictureBox(color)
                 });
         }
@@ -436,7 +440,7 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.IntegerRange,
+                    type = PropertyType.NumericUpDown,
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateNumericUpDown(value, min, max, tooltip)
                 });
@@ -471,7 +475,7 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.DomainRange,
+                    type = PropertyType.DomainUpDown,
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateDomainUpDown(values, value)
                 });
@@ -489,7 +493,7 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.StringList,
+                    type = PropertyType.DropDownList,
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateDropDownList(values, value, tooltip)
                 });
@@ -506,7 +510,7 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.StringListMulti,
+                    type = PropertyType.CheckBoxList,
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateCheckedListBox(values, selected)
                 });     
@@ -593,7 +597,7 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.StringListMulti,
+                    type = PropertyType.CheckBoxList,
                     control = CreateTreeView(columnNames, data),
                     listDoubleClick = doubleClick,
                     listRightClick = rightClick
@@ -621,6 +625,36 @@ namespace FamiStudio
                 j++;
             }
             while (ls.IterNext(ref it));
+        }
+
+        private HScale CreateSlider(double value, double min, double max, double increment, int numDecimals, string tooltip = null)
+        {
+            var scale = new HScale(min, max, increment);
+            scale.DrawValue = true;
+            scale.ValuePos = PositionType.Right;
+            scale.Value = value;
+            scale.FormatValue += Scale_FormatValue;
+            return scale;
+        }
+
+        void Scale_FormatValue(object o, FormatValueArgs args)
+        {
+            var idx = GetPropertyIndex(o as Widget);
+
+            if (idx >= 0 && properties[idx].sliderFormat != null)
+                args.RetVal = properties[idx].sliderFormat(args.Value);
+        }
+
+        public void AddSlider(string label, double value, double min, double max, double increment, int numDecimals, SliderFormatText format = null, string tooltip = null)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Slider,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateSlider(value, min, max, increment, numDecimals, tooltip),
+                    sliderFormat = format
+                });
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)
@@ -660,17 +694,17 @@ namespace FamiStudio
                 case PropertyType.String:
                 case PropertyType.ColoredString:
                     return (prop.control as Entry).Text;
-                case PropertyType.IntegerRange:
+                case PropertyType.NumericUpDown:
                     return (int)(prop.control as SpinButton).Value;
-                case PropertyType.DomainRange:
+                case PropertyType.DomainUpDown:
                     return int.Parse((prop.control as DomainSpinButton).Text);
-                case PropertyType.Boolean:
+                case PropertyType.CheckBox:
                     return (prop.control as CheckButton).Active;
-                case PropertyType.Color:
+                case PropertyType.ColorPicker:
                     return color;
-                case PropertyType.StringList:
+                case PropertyType.DropDownList:
                     return (prop.control as ComboBox).ActiveText;
-                case PropertyType.StringListMulti:
+                case PropertyType.CheckBoxList:
                     return (prop.control as CheckBoxList).GetSelected();
                 case PropertyType.Button:
                     return (prop.control as Button).Label;
@@ -690,7 +724,7 @@ namespace FamiStudio
 
             switch (prop.type)
             {
-                case PropertyType.Boolean:
+                case PropertyType.CheckBox:
                     (prop.control as CheckButton).Active = (bool)value;
                     break;
                 case PropertyType.Button:
@@ -715,7 +749,7 @@ namespace FamiStudio
 
                 if (prop.label != null)
                 {
-                    Attach(prop.label,   0, 1, (uint)i, (uint)(i + 1));
+                    Attach(prop.label,   0, 1, (uint)i, (uint)(i + 1), AttachOptions.Fill, AttachOptions.Fill, 0, 0);
                     Attach(prop.control, 1, 2, (uint)i, (uint)(i + 1));
 
                     prop.label.Show();
