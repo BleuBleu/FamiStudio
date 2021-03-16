@@ -3116,7 +3116,7 @@ namespace FamiStudio
                 ClearSelection();
                 ConditionalInvalidate();
             }
-            else if (e.KeyCode == Keys.Oem3)
+            else if (e.KeyCode == Keys.Oem3 && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM))
             {
                 ToggleEffectPannel();
             }

@@ -171,7 +171,7 @@ namespace FamiStudio
             Console.WriteLine($"");
             Console.WriteLine($"WAV export specific options");
             Console.WriteLine($"  -mp3-export-rate:<rate> : Sample rate of the exported mp3 : 44100 or 48000 (default:44100).");
-            Console.WriteLine($"  -mp3-export-bitrate:<rate> : Bitrate of the exported mp3 : 96, 112, 128, 160, 192, 224, 256 or 320 (default:192).");
+            Console.WriteLine($"  -mp3-export-bitrate:<rate> : Bitrate of the exported mp3 : 96, 112, 128, 160, 192, 224 or 256 (default:192).");
             Console.WriteLine($"  -mp3-export-duration:<duration> : Duration in second, 0 plays song once and stop (default:0).");
             Console.WriteLine($"  -mp3-export-loop:<count> : Number of times to play the song (default:1).");
             Console.WriteLine($"  -mp3-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");

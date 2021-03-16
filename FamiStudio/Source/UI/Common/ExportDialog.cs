@@ -112,7 +112,7 @@ namespace FamiStudio
                     page.AddStringList("Song :", songNames, songNames[0]); // 0
                     page.AddStringList("Format :", new[] { "WAV", "MP3" }, "WAV"); // 1
                     page.AddStringList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
-                    page.AddStringList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 3
+                    page.AddStringList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
                     page.AddStringList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
                     page.AddIntegerRange("Loop count:", 1, 1, 10); // 5
                     page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
@@ -132,7 +132,7 @@ namespace FamiStudio
                     page.AddStringList("Song :", songNames, songNames[0]); // 2
                     page.AddStringList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
                     page.AddStringList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
-                    page.AddStringList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "128"); // 5
+                    page.AddStringList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "192"); // 5
                     page.AddStringList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
                     page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
                     page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
