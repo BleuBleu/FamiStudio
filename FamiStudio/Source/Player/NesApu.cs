@@ -239,7 +239,7 @@ namespace FamiStudio
                 NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
                 NoteTableVrc6Saw[i] = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
                 NoteTableFds[i]     = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
-                NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49716.0 + 0.5) : (ushort)(NoteTableVrc7[(i - 1) % 12 + 1] << octave);
+                NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(NoteTableVrc7[(i - 1) % 12 + 1] << octave);
 
                 for (int j = 0; j < 8; j++)
                     NoteTableN163[j][i] = (ushort)Math.Min(0xffff, ((freq * (j + 1) * 983040.0) / clockNtsc) / 4);
@@ -368,6 +368,7 @@ namespace FamiStudio
                     break;
                 case APU_EXPANSION_VRC7:
                     WriteRegister(apuIdx, VRC7_SILENCE, 0x00); // Enable VRC7 audio.
+                    TrebleEq(apuIdx, expansion, -15, 4000, sampleRate);
                     break;
                 case APU_EXPANSION_NAMCO:
                     // This is mainly because the instrument player might not update all the channels all the time.
@@ -378,6 +379,7 @@ namespace FamiStudio
                 case APU_EXPANSION_SUNSOFT:
                     WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
                     WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
+                    TrebleEq(apuIdx, expansion, treble, cutoff, sampleRate);
                     break;
             }
         }

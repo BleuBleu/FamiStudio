@@ -22,13 +22,15 @@ Nes_Vrc7::~Nes_Vrc7()
 void Nes_Vrc7::reset()
 {
 	reg = 0;
+	last_amp = 0;
+	last_time = 0;
 	silence = false;
 	reset_opll();
 }
 
 void Nes_Vrc7::volume(double v)
 {
-	vol = v * 8.76; 
+	synth.volume(v);
 }
 
 void Nes_Vrc7::reset_opll()
@@ -36,7 +38,7 @@ void Nes_Vrc7::reset_opll()
 	if (opll)
 		OPLL_delete(opll);
 
-	opll = OPLL_new(vrc7_clock, output_buffer ? output_buffer->sample_rate() : 44100);
+	opll = OPLL_new(vrc7_clock, 3579545 / 72); // No rate conversion.
 	OPLL_reset(opll);
 	OPLL_setChipMode(opll, 1); // VRC7 mode.
 	OPLL_resetPatch(opll, OPLL_VRC7_TONE); // Use VRC7 default instruments.
@@ -49,6 +51,11 @@ void Nes_Vrc7::output(Blip_Buffer* buf)
 
 	if (output_buffer && (!opll || output_buffer->sample_rate() != opll->rate))
 		reset_opll();
+}
+
+void Nes_Vrc7::treble_eq(blip_eq_t const& eq)
+{
+	synth.treble_eq(eq);
 }
 
 void Nes_Vrc7::enable_channel(int idx, bool enabled)
@@ -88,19 +95,33 @@ void Nes_Vrc7::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 
 void Nes_Vrc7::end_frame(cpu_time_t time)
 {
-}
-
-void Nes_Vrc7::mix_samples(blip_sample_t* sample_buffer, long sample_cnt)
-{
-	if (!output_buffer || silence)
+	if (!output_buffer)
 		return;
 
-	for (int i = 0; i < sample_cnt; i++)
+	time <<= 8; // Keep 8 bit of fraction.
+
+	cpu_time_t t = last_time;
+	cpu_time_t increment = (output_buffer->clock_rate() << 8) / opll->rate;
+
+	while (t < time)
 	{
 		int sample = OPLL_calc(opll);
 		sample = clamp(sample, -3200, 3600);
-		sample_buffer[i] = (int16_t)clamp(sample_buffer[i] + (int)(sample * vol), -32768, 32767);
+
+		if (silence)
+			sample = 0;
+
+		int delta = sample - last_amp;
+		if (delta)
+		{
+			synth.offset(t >> 8, delta, output_buffer);
+			last_amp = sample;
+		}
+
+		t += increment;
 	}
+
+	last_time = t - time;
 }
 
 void Nes_Vrc7::start_seeking()

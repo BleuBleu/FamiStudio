@@ -85,9 +85,11 @@ void Simple_Apu::treble_eq(int exp, double treble, int cutoff, int sample_rate)
 	{
 		case expansion_none: apu.treble_eq(eq); break;
 		case expansion_vrc6: vrc6.treble_eq(eq); break;
+		case expansion_vrc7: vrc7.treble_eq(eq); break;
 		case expansion_fds: fds.treble_eq(eq); break;
 		case expansion_mmc5: mmc5.treble_eq(eq); break;
 		case expansion_namco: namco.treble_eq(eq); break;
+		case expansion_sunsoft: sunsoft.treble_eq(eq); break;
 	}
 }
 
@@ -229,14 +231,7 @@ long Simple_Apu::samples_avail() const
 
 long Simple_Apu::read_samples( sample_t* p, long s )
 {
-	long count = buf.read_samples( p, s );
-
-	if (expansion == expansion_vrc7)
-		vrc7.mix_samples(p, s);
-	else if (expansion == expansion_sunsoft)
-		sunsoft.mix_samples(p, s);
-
-	return count;
+	return buf.read_samples( p, s );
 }
 
 void Simple_Apu::remove_samples(long s)

@@ -8,8 +8,8 @@
 
 Nes_Sunsoft::Nes_Sunsoft() : psg(NULL), output_buffer(NULL)
 {
-	output( NULL );
-	volume( 1.0 );
+	output(NULL);
+	volume(1.0);
 	reset();
 }
 
@@ -22,11 +22,13 @@ Nes_Sunsoft::~Nes_Sunsoft()
 void Nes_Sunsoft::reset()
 {
 	reset_psg();
+	last_time = 0;
+	last_amp = 0;
 }
 
-void Nes_Sunsoft::volume( double v )
+void Nes_Sunsoft::volume(double v)
 {
-	vol = v * 4.25f;
+	synth.volume(v);
 }
 
 void Nes_Sunsoft::reset_psg()
@@ -34,17 +36,21 @@ void Nes_Sunsoft::reset_psg()
 	if (psg)
 		PSG_delete(psg);
 
-	psg = PSG_new(psg_clock, output_buffer ? output_buffer->sample_rate() : 44100);
+	psg = PSG_new(psg_clock, psg_clock / 16);
 	PSG_reset(psg);
-	PSG_set_quality(psg, 1);
 }
 
-void Nes_Sunsoft::output( Blip_Buffer* buf )
+void Nes_Sunsoft::output(Blip_Buffer* buf)
 {
 	output_buffer = buf;
 
 	if (output_buffer && (!psg || output_buffer->sample_rate() != psg->rate))
 		reset_psg();
+}
+
+void Nes_Sunsoft::treble_eq(blip_eq_t const& eq)
+{
+	synth.treble_eq(eq);
 }
 
 void Nes_Sunsoft::enable_channel(int idx, bool enabled)
@@ -54,7 +60,7 @@ void Nes_Sunsoft::enable_channel(int idx, bool enabled)
 		if (enabled)
 			PSG_setMask(psg, psg->mask & ~(1 << idx));
 		else
-			PSG_setMask(psg, psg->mask |  (1 << idx));
+			PSG_setMask(psg, psg->mask | (1 << idx));
 	}
 }
 
@@ -68,18 +74,27 @@ void Nes_Sunsoft::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 
 void Nes_Sunsoft::end_frame(cpu_time_t time)
 {
-}
-
-void Nes_Sunsoft::mix_samples(blip_sample_t* sample_buffer, long sample_cnt)
-{
 	if (!output_buffer)
 		return;
 
-	for (int i = 0; i < sample_cnt; i++)
+	cpu_time_t t = last_time;
+
+	while (t < time)
 	{
 		int sample = PSG_calc(psg);
-		sample_buffer[i] = (int16_t)clamp(sample_buffer[i] + (int)(sample * vol), -32768, 32767);
+		sample = clamp(sample, -7710, 7710);
+
+		int delta = sample - last_amp;
+		if (delta)
+		{
+			synth.offset(t, delta, output_buffer);
+			last_amp = sample;
+		}
+
+		t += 16;
 	}
+
+	last_time = t - time;
 }
 
 void Nes_Sunsoft::start_seeking()
