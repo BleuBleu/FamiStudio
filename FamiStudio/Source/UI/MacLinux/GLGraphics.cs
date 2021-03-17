@@ -865,7 +865,7 @@ namespace FamiStudio
         protected int resX;
         protected int resY;
 
-        public GLOffscreenGraphics(int imageSizeX, int imageSizeY)
+        private GLOffscreenGraphics(int imageSizeX, int imageSizeY)
         {
             resX = imageSizeX;
             resY = imageSizeY;
@@ -882,6 +882,11 @@ namespace FamiStudio
             GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
             GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, texture, 0);
             GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, 0);
+        }
+
+        public static GLOffscreenGraphics Create(int imageSizeX, int imageSizeY)
+        {
+            return new GLOffscreenGraphics(imageSizeX, imageSizeY);
         }
 
         public override void BeginDraw(GLControl control, int windowSizeY)

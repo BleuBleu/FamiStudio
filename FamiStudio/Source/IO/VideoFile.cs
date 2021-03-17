@@ -447,8 +447,14 @@ namespace FamiStudio
             var channelResY = (int)channelResXFloat;
             var longestChannelName = 0.0f;
 
-            var channelGraphics = new RenderGraphics(channelResX, channelResY);
-            var videoGraphics   = new RenderGraphics(videoResX, videoResY);
+            var channelGraphics = RenderGraphics.Create(channelResX, channelResY);
+            var videoGraphics   = RenderGraphics.Create(videoResX, videoResY);
+
+            if (channelGraphics == null || videoGraphics == null)
+            {
+                Log.LogMessage(LogSeverity.Error, "Error initializing off-screen graphics, aborting.");
+                return false;
+            }
 
             var theme = RenderTheme.CreateResourcesForGraphics(videoGraphics);
             var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");

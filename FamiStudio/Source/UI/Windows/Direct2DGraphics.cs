@@ -21,7 +21,7 @@ namespace FamiStudio
 {
     public class Direct2DGraphics : IDisposable
     {
-        protected SharpDX.Direct2D1.Factory1 factory;
+        protected SharpDX.Direct2D1.Factory factory;
         protected DirectWriteFactory directWriteFactory;
         protected RenderTarget renderTarget;
         protected Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
@@ -36,7 +36,8 @@ namespace FamiStudio
 
         public Direct2DGraphics(UserControl control)
         {
-            factory = new SharpDX.Direct2D1.Factory1();
+            CreateFactory();
+
             windowScaling = Direct2DTheme.MainWindowScaling;
 
             HwndRenderTargetProperties properties = new HwndRenderTargetProperties();
@@ -47,6 +48,19 @@ namespace FamiStudio
             renderTarget = new WindowRenderTarget(factory, new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied)), properties);
 
             Initialize();
+        }
+
+        protected void CreateFactory()
+        {
+            try
+            {
+                // Some Windows 7 versions dont have version 1 of the factory.
+                factory = new SharpDX.Direct2D1.Factory1();
+            }
+            catch
+            {
+                factory = new SharpDX.Direct2D1.Factory();
+            }
         }
 
         protected Direct2DGraphics()
@@ -60,7 +74,11 @@ namespace FamiStudio
             renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
             renderTarget.AntialiasMode = AntialiasMode.Aliased;
             strokeStyleMiter = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
-            strokeStyleNoScaling = new StrokeStyle1(factory, new StrokeStyleProperties1() { TransformType = StrokeTransformType.Fixed });
+
+            if (factory is SharpDX.Direct2D1.Factory1)
+                strokeStyleNoScaling = new StrokeStyle1(factory as SharpDX.Direct2D1.Factory1, new StrokeStyleProperties1() { TransformType = StrokeTransformType.Fixed });
+            else
+                strokeStyleNoScaling = new StrokeStyle(factory, new StrokeStyleProperties());
         }
 
         public virtual void Dispose()
@@ -449,44 +467,69 @@ namespace FamiStudio
         protected SharpDX.Direct3D11.Texture2D offscreenTexture;
         protected SharpDX.Direct3D11.Texture2D stagingTexture;
 
-        public Direct2DOffscreenGraphics(int imageSizeX, int imageSizeY)
+        private Direct2DOffscreenGraphics(int imageSizeX, int imageSizeY)
         {
-            d3dDevice = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, SharpDX.Direct3D11.DeviceCreationFlags.BgraSupport);
-
-            offscreenTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+            try
             {
-                BindFlags = SharpDX.Direct3D11.BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
-                CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.None,
-                Format = Format.B8G8R8A8_UNorm,
-                Width = imageSizeX,
-                Height = imageSizeY,
-                MipLevels = 1,
-                ArraySize = 1,
-                OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
-                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-                Usage = SharpDX.Direct3D11.ResourceUsage.Default
-            });
 
-            stagingTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+                d3dDevice = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, SharpDX.Direct3D11.DeviceCreationFlags.BgraSupport);
+
+                offscreenTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+                {
+                    BindFlags = SharpDX.Direct3D11.BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
+                    CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.None,
+                    Format = Format.B8G8R8A8_UNorm,
+                    Width = imageSizeX,
+                    Height = imageSizeY,
+                    MipLevels = 1,
+                    ArraySize = 1,
+                    OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
+                    SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                    Usage = SharpDX.Direct3D11.ResourceUsage.Default
+                });
+
+                stagingTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+                {
+                    BindFlags = SharpDX.Direct3D11.BindFlags.None,
+                    CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.Read,
+                    Format = Format.B8G8R8A8_UNorm,
+                    Width = imageSizeX,
+                    Height = imageSizeY,
+                    MipLevels = 1,
+                    ArraySize = 1,
+                    OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
+                    SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                    Usage = SharpDX.Direct3D11.ResourceUsage.Staging
+                });
+
+                windowScaling = 1.0f; // No scaling for now in videos.
+
+                CreateFactory();
+                renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
+            }
+            catch
             {
-                BindFlags = SharpDX.Direct3D11.BindFlags.None,
-                CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.Read,
-                Format = Format.B8G8R8A8_UNorm,
-                Width = imageSizeX,
-                Height = imageSizeY,
-                MipLevels = 1,
-                ArraySize = 1,
-                OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
-                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-                Usage = SharpDX.Direct3D11.ResourceUsage.Staging
-            });
-
-            windowScaling = 1.0f; // No scaling for now in videos.
-            factory = new SharpDX.Direct2D1.Factory1();
-            renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
+                Log.LogMessage(LogSeverity.Error, "Error initializing D3D11. This can happen on Windows 7 system that are missing some D3D11 components such as the KB2670838 update.");
+                return;
+            }
 
             Initialize();
         }
+
+        public static Direct2DOffscreenGraphics Create(int imageSizeX, int imageSizeY)
+        {
+            var gfx = new Direct2DOffscreenGraphics(imageSizeX, imageSizeY);
+
+            if (gfx.renderTarget == null)
+            {
+                gfx.Dispose();
+                return null;
+            }
+
+            return gfx;
+        }
+
+        public bool InitializedSuccessfully => renderTarget != null;
 
         public override void Dispose()
         {
