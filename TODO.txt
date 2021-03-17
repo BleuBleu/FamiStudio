@@ -1,9 +1,3 @@
-2.4.1
-=====
-- Crash loop FTI
-- MP3 320?
-- Pressing tilde in a mode where you cant have effect panel asserts.
-
 Linux notes
 ===========
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe
