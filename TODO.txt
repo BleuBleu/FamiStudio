@@ -1,6 +1,7 @@
 FamiStudio 2.5.0
 ================
 - Scroll bars?	
+- Low-pass filter in DPCM sample editor.
 - More compact sequencer. (move force display to right, smaller pattern headers).
 - Oscilloscope + volume tracks display.
 - Sort song other than alphabetically.
@@ -24,6 +25,11 @@ FamiStudio 2.5.0
 	- GTK colors. => Doesnt work on mac...
 	- Test mac with weird keyboards.
 	- If a key is a music key, should we not process it (1-5 changes channel, so playing a note changes the channel...).
+
+Doc
+===
+- Hayabusa DPCM doc.
+- 
 
 Testing
 =======
