@@ -8,6 +8,7 @@ Fixes:
 
 * Fixed corruption when importing looping samples from .FTI files.
 * Fixed minor graphical issue in piano roll.
+* Fixed issues on Windows 7 installations that are missing some D3D11 components such as KB2670838.
 * Removed 320 kbps MP3 export option since it creates choppy audio.
 
 ## Version 2.4.0

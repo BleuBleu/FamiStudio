@@ -507,8 +507,9 @@ namespace FamiStudio
                 CreateFactory();
                 renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
             }
-            catch
+            catch (Exception e)
             {
+                Log.LogMessage(LogSeverity.Error, e.Message);
                 Log.LogMessage(LogSeverity.Error, "Error initializing D3D11. This can happen on Windows 7 system that are missing some D3D11 components such as the KB2670838 update.");
                 return;
             }
