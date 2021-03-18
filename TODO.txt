@@ -1,12 +1,12 @@
 FamiStudio 2.5.0
 ================
+- Right-click to create expansion instrument.
+- Oscilloscope + volume tracks display.
 - Scroll bars?	
 - Low-pass filter in DPCM sample editor.
 - More compact sequencer. (move force display to right, smaller pattern headers).
-- Oscilloscope + volume tracks display.
 - Sort song other than alphabetically.
 - Loop prevention for envelope (brad issue).
-- VRC7/Namco low pass filter.
 - Note counter decrement every frame for famitracker tempo??
 - FamiStudio Tempo 2.0 => Arbitrary BPM.
 	- Figure out fundamental difference between tempo vs. groove
