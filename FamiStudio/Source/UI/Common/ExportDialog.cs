@@ -117,7 +117,8 @@ namespace FamiStudio
                     page.AddIntegerRange("Loop count:", 1, 1, 10); // 5
                     page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
                     page.AddCheckBox("Separate channel files", false); // 7
-                    page.AddCheckBoxList("Channels :", GetChannelNames(), null); // 8
+                    page.AddCheckBox("Separate intro file", false); // 8
+                    page.AddCheckBoxList("Channels :", GetChannelNames(), null); // 9
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
                     break;
@@ -277,38 +278,25 @@ namespace FamiStudio
                 var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
                 var duration  = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
                 var separateFiles = props.GetPropertyValue<bool>(7);
-                var selectedChannels = props.GetPropertyValue<bool[]>(8);
+                var separateIntro = props.GetPropertyValue<bool>(8);
+                var selectedChannels = props.GetPropertyValue<bool[]>(9);
                 var song = project.GetSong(songName);
 
-                if (separateFiles)
+                var channelMask = 0;
+                for (int i = 0; i < selectedChannels.Length; i++)
                 {
-                    for (int i = 0; i < selectedChannels.Length; i++)
-                    {
-                        if (selectedChannels[i])
-                        {
-                            var channelFilename = Utils.AddFileSuffix(filename, "_" + song.Channels[i].ShortName);
-
-                            if (format == "MP3")
-                                Mp3File.Save(song, channelFilename, sampleRate, bitRate, loopCount, duration, 1 << i);
-                            else
-                                WaveFile.Save(song, channelFilename, sampleRate, loopCount, duration, 1 << i);
-                        }
-                    }
+                    if (selectedChannels[i])
+                        channelMask |= (1 << i);
                 }
-                else
-                {
-                    var channelMask = 0;
-                    for (int i = 0; i < selectedChannels.Length; i++)
-                    {
-                        if (selectedChannels[i])
-                            channelMask |= (1 << i);
-                    }
 
-                    if (format == "MP3")
-                        Mp3File.Save(song, filename, sampleRate, bitRate, loopCount, duration, channelMask);
-                    else
-                        WaveFile.Save(song, filename, sampleRate, loopCount, duration, channelMask);
-                }
+                WavMp3ExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro,
+                     (samples, fn) => 
+                     {
+                         if (format == "MP3")
+                             Mp3File.Save(samples, fn, sampleRate, bitRate);
+                         else
+                             WaveFile.Save(samples, fn, sampleRate);
+                     });
 
                 lastExportFilename = filename;
             }

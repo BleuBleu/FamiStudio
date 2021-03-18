@@ -3,7 +3,6 @@ FamiStudio 2.5.0
 - Oscilloscope + volume tracks display.
 - Scroll bars?	
 - Low-pass filter in DPCM sample editor.
-- Sort song other than alphabetically.
 - Loop prevention for envelope (brad issue).
 - Note counter decrement every frame for famitracker tempo??
 - FamiStudio Tempo 2.0 => Arbitrary BPM.
@@ -14,7 +13,6 @@ FamiStudio 2.5.0
 	- Whole note drag, or FULL NOT REFACTOR.
 	- When using 1/2 snapping, dragging notes is awkward. (will depend on tempo solution).
 - "Whenever I minimize it tho, you can't open it back up by clicking on the icon. You have to right click it and click 'Show All Windows', then click the window there.". how2bboss.
-- Wav/mp3 : export intro/loop seperately.
 
 - MAYBE: MIDI in/out (not sure... non-technical people will be disapointed)
 - MAYBE: DPCM : More stuff, normalize volume? Playback speed? See people's request.

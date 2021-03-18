@@ -168,6 +168,7 @@ namespace FamiStudio
             Console.WriteLine($"  -wav-export-loop:<count> : Number of times to play the song (default:1).");
             Console.WriteLine($"  -wav-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");
             Console.WriteLine($"  -wav-export-separate-channels : Export each channels to separate file (default:off).");
+            Console.WriteLine($"  -wav-export-separate-intro : Export the intro of the song seperately from the looping section (default:off).");
             Console.WriteLine($"");
             Console.WriteLine($"WAV export specific options");
             Console.WriteLine($"  -mp3-export-rate:<rate> : Sample rate of the exported mp3 : 44100 or 48000 (default:44100).");
@@ -176,6 +177,7 @@ namespace FamiStudio
             Console.WriteLine($"  -mp3-export-loop:<count> : Number of times to play the song (default:1).");
             Console.WriteLine($"  -mp3-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");
             Console.WriteLine($"  -mp3-export-separate-channels : Export each channels to separate file (default:off).");
+            Console.WriteLine($"  -mp3-export-separate-intro : Export the intro of the song seperately from the looping section (default:off).");
             Console.WriteLine($"");
             Console.WriteLine($"NSF export specific options");
             Console.WriteLine($"  -nsf-export-mode:<mode> : Target machine: ntsc or pal (default:project mode).");
@@ -314,6 +316,7 @@ namespace FamiStudio
             var duration   = ParseOption($"{extension}-export-duration", 0);
             var mask       = ParseOption($"{extension}-export-channels", 0xff, true);
             var separate   = HasOption($"{extension}-export-separate-channels");
+            var intro      = HasOption($"{extension}-export-separate-intro");
             var bitrate    = ParseOption($"{extension}-export-bitrate", 192);
             var song       = GetProjectSong(songIndex);
 
@@ -324,28 +327,14 @@ namespace FamiStudio
 
             if (song != null)
             {
-                if (separate)
-                {
-                    for (int i = 0; i < song.Channels.Length; i++)
-                    {
-                        if ((mask & (1 << i)) != 0)
-                        {
-                            var channelFilename = Utils.AddFileSuffix(filename, "_" + song.Channels[i].ShortName);
-
-                            if (mp3)
-                                Mp3File.Save(song, channelFilename, sampleRate, bitrate, loopCount, duration, 1 << i);
-                            else
-                                WaveFile.Save(song, channelFilename, sampleRate, loopCount, duration, 1 << i);
-                        }
-                    }
-                }
-                else
-                {
-                    if (mp3)
-                        Mp3File.Save(song, filename, sampleRate, bitrate, loopCount, duration, mask);
-                    else
-                        WaveFile.Save(song, filename, sampleRate, loopCount, duration, mask);
-                }
+                WavMp3ExportUtils.Save(song, filename, sampleRate, loopCount, duration, mask, separate, intro,
+                     (samples, fn) =>
+                     {
+                         if (mp3)
+                             Mp3File.Save(samples, fn, sampleRate, bitrate);
+                         else
+                             WaveFile.Save(samples, fn, sampleRate);
+                     });
             }
         }
 

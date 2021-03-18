@@ -544,7 +544,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, "Exporting audio...");
 
                 // Save audio to temporary file.
-                WaveFile.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask);
+                WavMp3ExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, (samples, fn) => { WaveFile.Save(samples, fn, SampleRate); });
 
                 var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
 

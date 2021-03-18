@@ -105,6 +105,7 @@
     <Compile Include="Source\ChannelStates\ChannelStateN163.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateS5B.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
+    <Compile Include="Source\IO\WavMp3ExportUtils.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\MultiMediaNotifications.cs" />
