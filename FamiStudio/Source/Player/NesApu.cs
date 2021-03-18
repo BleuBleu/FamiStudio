@@ -365,6 +365,7 @@ namespace FamiStudio
                     WriteRegister(apuIdx, MMC5_PL1_VOL, 0x10);
                     WriteRegister(apuIdx, MMC5_PL2_VOL, 0x10);
                     WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
+                    TrebleEq(apuIdx, expansion, treble, cutoff, sampleRate);
                     break;
                 case APU_EXPANSION_VRC7:
                     WriteRegister(apuIdx, VRC7_SILENCE, 0x00); // Enable VRC7 audio.
