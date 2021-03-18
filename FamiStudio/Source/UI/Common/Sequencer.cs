@@ -28,9 +28,9 @@ namespace FamiStudio
 {
     public class Sequencer : RenderControl
     {
-        const int DefaultTrackNameSizeX      = 85;
+        const int DefaultTrackNameSizeX      = 94;
         const int DefaultHeaderSizeY         = 17;
-        const int DefaultPatternHeaderSizeY  = 16;
+        const int DefaultPatternHeaderSizeY  = 13;
         const int DefaultNoteSizeY           = 4;
         const int DefaultScrollMargin        = 128;
         const int DefaultBarTextPosY         = 2;
@@ -41,7 +41,7 @@ namespace FamiStudio
         const int DefaultGhostNoteOffsetX    = 16;
         const int DefaultGhostNoteOffsetY    = 14;
         const int DefaultPatternNamePosX     = 2;
-        const int DefaultPatternNamePosY     = 3;
+        const int DefaultPatternNamePosY     = 1;
         const int DefaultHeaderIconPosX      = 3;
         const int DefaultHeaderIconPosY      = 3;
         const int DefaultHeaderIconSizeX     = 12;
@@ -216,7 +216,7 @@ namespace FamiStudio
 
         private int ComputeDesiredTrackSizeY()
         {
-            return Math.Max(280 / GetChannelCount(), 40);
+            return Math.Max(280 / GetChannelCount(), 32);
         }
 
         public int ComputeDesiredSizeY()

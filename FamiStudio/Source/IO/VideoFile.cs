@@ -490,7 +490,7 @@ namespace FamiStudio
             var bmpSuffix = smallChannelText ? "" : "@2x";
             var font = smallChannelText ? ThemeBase.FontMediumUnscaled : ThemeBase.FontBigUnscaled;
             var textOffsetY = smallChannelText ? 1 : 4;
-            var pianoRollScaleX = Math.Max(0.6f, resY / 1080.0f);
+            var pianoRollScaleX = Utils.Clamp(resY / 1080.0f, 0.6f, 0.9f);
             var pianoRollScaleY = channelResY < VeryThinNoteThreshold ? 0.5f : (channelResY < ThinNoteThreshold ? 0.667f : 1.0f);
             var channelLineWidth = channelResY < ThinNoteThreshold ? 3 : 5;
 
