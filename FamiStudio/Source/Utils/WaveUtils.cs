@@ -356,5 +356,64 @@ namespace FamiStudio
                 }
             }
         }
+
+        static private float Sinc(float x)
+        {
+            if (x == 0)
+            {
+                return 1.0f;
+            }
+            else
+            {
+                return (float)(Math.Sin(Math.PI * x) / (Math.PI * x));
+            }
+        }
+
+        // Based off this great article : https://tomroelandts.com/articles/how-to-create-a-simple-low-pass-filter
+        // cutoff and transition are expressed as fractions of the sample rate (ex: 1000 / 44100 = 0.22)
+        static public void LowPassFilter(ref short[] wave, float cutoff, float transition)
+        {
+            var n = (int)Math.Ceiling(4.6f / transition);
+            if ((n & 1) == 0) n++;
+            var filter = new float[n];
+            var sum = 0.0f;
+
+            // Build filter (sinc + blackman window)
+            for (int i = 0; i < n; i++)
+            {
+                float sinc = Sinc(2.0f * cutoff * (i - (n - 1) / 2));
+                float window = (0.42f - 0.5f * (float)Math.Cos((2.0f * Math.PI * i) / (n - 1)) + 0.08f * (float)Math.Cos(4.0f * Math.PI * i / (n - 1)));
+                float h = sinc * window;
+
+                filter[i] = h;
+                sum += h;
+            }
+
+            // Normalize.
+            for (int i = 0; i < n; i++)
+            {
+                filter[i] /= sum;
+            }
+
+            // Convolution.
+            short[] filteredWave = new short[wave.Length];
+
+            int n2 = n / 2;
+            for (int i = 0; i < wave.Length; i++)
+            {
+                var v = 0.0f;
+
+                for (int j = 0; j < n; j++)
+                {
+                    var index = i + (j - n2);
+                    if (index >= 0 && index < wave.Length)
+                        v += wave[i + (j - n2)] * filter[j];
+                }
+
+                filteredWave[i] = (short)Math.Round(Utils.Clamp(v, short.MinValue, short.MaxValue));
+            }
+
+            wave = filteredWave;
+        }
     }
 }
