@@ -30,25 +30,25 @@ namespace FamiStudio
     public class ProjectExplorer : RenderControl
     {
         const int DefaultExpandButtonSizeX    = 8;
-        const int DefaultButtonIconPosX       = 4;
         const int DefaultExpandButtonPosX     = 3;
         const int DefaultExpandButtonPosY     = 8;
-        const int DefaultButtonIconPosY       = 4;
-        const int DefaultButtonTextPosX       = 24;
-        const int DefaultButtonTextPosY       = 5;
-        const int DefaultButtonTextNoIconPosX = 5;
-        const int DefaultSubButtonSpacingX    = 20;
-        const int DefaultSubButtonPosY        = 4;
+        const int DefaultButtonIconPosX       = 3;
+        const int DefaultButtonIconPosY       = 3;
+        const int DefaultButtonTextPosX       = 21;
+        const int DefaultButtonTextPosY       = 3;
+        const int DefaultButtonTextNoIconPosX = 4;
+        const int DefaultSubButtonSpacingX    = 18;
+        const int DefaultSubButtonPosY        = 3;
         const int DefaultScrollBarSizeX       = 8;
-        const int DefaultButtonSizeY          = 23;
+        const int DefaultButtonSizeY          = 21;
         const int DefaultSliderPosX           = 100;
-        const int DefaultSliderPosY           = 4;
+        const int DefaultSliderPosY           = 3;
         const int DefaultSliderSizeX          = 96;
-        const int DefaultSliderSizeY          = 16;
-        const int DefaultSliderThumbSizeX     = 4;
+        const int DefaultSliderSizeY          = 15;
+        const int DefaultSliderThumbSizeX     = 3;
         const int DefaultSliderTextPosX       = 110;
         const int DefaultCheckBoxPosX         = 20;
-        const int DefaultCheckBoxPosY         = 4;
+        const int DefaultCheckBoxPosY         = 3;
 
         int expandButtonSizeX;
         int buttonIconPosX;
