@@ -918,7 +918,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.Song)
                 {
-                    tooltip = "{MouseLeft} Make song current - {MouseLeft}{MouseLeft} Song properties - {MouseRight} Delete song";
+                    tooltip = "{MouseLeft} Make song current - {MouseLeft}{MouseLeft} Song properties - {MouseRight} Delete song\n{MouseLeft} {Drag} Re-order song";
                 }
                 else if (buttonType == ButtonType.InstrumentHeader)
                 {
