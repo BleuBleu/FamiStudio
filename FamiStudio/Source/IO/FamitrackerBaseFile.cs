@@ -926,7 +926,7 @@ namespace FamiStudio
             }
 
             project.UpdateAllLastValidNotesAndVolume();
-            project.SortEverything();
+            project.SortEverything(false);
             project.Validate();
 
             PrintAdditionalWarnings();

@@ -49,6 +49,7 @@ namespace FamiStudio
         const int DefaultSliderTextPosX       = 110;
         const int DefaultCheckBoxPosX         = 20;
         const int DefaultCheckBoxPosY         = 3;
+        const int DefaultDraggedLineSizeY     = 5;
 
         int expandButtonSizeX;
         int buttonIconPosX;
@@ -71,6 +72,7 @@ namespace FamiStudio
         int checkBoxPosY;
         int virtualSizeY;
         int scrollBarSizeX;
+        int draggedLineSizeY;
         bool needsScrollBar;
 
         enum ButtonType
@@ -336,6 +338,7 @@ namespace FamiStudio
             DragInstrument,
             DragArpeggio,
             DragSample,
+            DragSong,
             MoveSlider,
             ScrollBar
         };
@@ -346,6 +349,7 @@ namespace FamiStudio
             true,
             true,
             false,
+            true,
             false,
             false
         };
@@ -368,6 +372,7 @@ namespace FamiStudio
         Arpeggio draggedArpeggio = null;
         Arpeggio selectedArpeggio = null;
         DPCMSample draggedSample = null;
+        Song draggedSong = null;
         List<Button> buttons = new List<Button>();
 
         RenderTheme theme;
@@ -478,6 +483,7 @@ namespace FamiStudio
             sliderTextPosX       = (int)(DefaultSliderTextPosX * scaling);
             checkBoxPosX         = (int)(DefaultCheckBoxPosX * scaling);
             checkBoxPosY         = (int)(DefaultCheckBoxPosY * scaling);
+            draggedLineSizeY     = (int)(DefaultDraggedLineSizeY * scaling);
             virtualSizeY         = App?.Project == null ? Height : buttons.Count * buttonSizeY;
             needsScrollBar       = virtualSizeY > Height; 
             scrollBarSizeX       = needsScrollBar ? (int)(DefaultScrollBarSizeX * scaling) : 0;      
@@ -777,6 +783,24 @@ namespace FamiStudio
                 y += buttonSizeY;
             }
 
+            if (captureOperation == CaptureOperation.DragSong && captureThresholdMet)
+            {
+                var pt = this.PointToClient(Cursor.Position);
+                var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
+
+                if (buttonIdx >= 0)
+                {
+                    var button = buttons[buttonIdx];
+
+                    if (button.type == ButtonType.Song ||
+                        button.type == ButtonType.SongHeader)
+                    {
+                        var lineY = (buttonIdx + 1)  * buttonSizeY;
+                        g.DrawLine(0, lineY, Width - scrollBarSizeX, lineY, g.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
+                    }
+                }
+            }
+
             if (needsScrollBar)
             {
                 int virtualSizeY   = this.virtualSizeY;
@@ -1050,6 +1074,10 @@ namespace FamiStudio
                         DPCMSampleDraggedOutside?.Invoke(draggedSample, PointToScreen(new Point(e.X, e.Y)));
                     }
                 }
+                else if (captureOperation == CaptureOperation.DragSong)
+                {
+                    ConditionalInvalidate();
+                }
             }
 
             if (middle)
@@ -1174,10 +1202,34 @@ namespace FamiStudio
             {
                 App.UndoRedoManager.EndTransaction();
             }
+            else if (captureOperation == CaptureOperation.DragSong && captureThresholdMet)
+            {
+                var buttonIdx = GetButtonAtCoord(e.X, e.Y - buttonSizeY / 2, out _);
+
+                if (buttonIdx >= 0)
+                {
+                    var button = buttons[buttonIdx];
+
+                    if (button.type == ButtonType.Song ||
+                        button.type == ButtonType.SongHeader)
+                    {
+                        var songBefore = buttons[buttonIdx].song;
+                        if (songBefore != draggedSong)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                            App.Project.MoveSong(draggedSong, songBefore);
+                            App.UndoRedoManager.EndTransaction();
+
+                            RefreshButtons();
+                        }
+                    }
+                }
+            }
 
             draggedArpeggio = null;
             draggedInstrument = null;
             draggedSample = null;
+            draggedSong = null;
             sliderDragButton = null;
             captureOperation = CaptureOperation.None;
             Capture = false;
@@ -1477,6 +1529,9 @@ namespace FamiStudio
                         SongSelected?.Invoke(selectedSong);
                         ConditionalInvalidate();
                     }
+
+                    StartCaptureOperation(e, CaptureOperation.DragSong);
+                    draggedSong = button.song;
                 }
                 else if (left && button.type == ButtonType.InstrumentHeader)
                 {

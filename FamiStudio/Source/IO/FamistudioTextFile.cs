@@ -292,6 +292,7 @@ namespace FamiStudio
                 var version = "0.0.0";
                 var isVersion230OrNewer = false;
                 var isVersion240OrNewer = false;
+                var isVersion250OrNewer = false;
                 var beatLengthAttributeName = "BeatLength";
 
                 foreach (var line in lines)
@@ -312,6 +313,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
                             isVersion230OrNewer = string.CompareOrdinal(version, "2.3.0") >= 0;
                             isVersion240OrNewer = string.CompareOrdinal(version, "2.4.0") >= 0;
+                            isVersion250OrNewer = string.CompareOrdinal(version, "2.5.0") >= 0;
                             if (!isVersion230OrNewer)
                                 beatLengthAttributeName = "BarLength";
                             break;
@@ -358,6 +360,10 @@ namespace FamiStudio
                                  if (parameters.TryGetValue("N163WavePreset", out var wavPresetStr))    instrument.N163WavePreset = (byte)WavePresetType.GetValueForName(wavPresetStr);
                                  if (parameters.TryGetValue("N163WaveSize",   out var n163WavSizeStr))  instrument.N163WaveSize   = byte.Parse(n163WavSizeStr);
                                  if (parameters.TryGetValue("N163WavePos",    out var n163WavPosStr))   instrument.N163WavePos    = byte.Parse(n163WavPosStr);
+                            }
+                            else if (instrument.ExpansionType == ExpansionType.Vrc6)
+                            {
+                                 if (parameters.TryGetValue("Vrc6SawMasterVolume", out var vrc6SawVolumeStr)) instrument.Vrc6SawMasterVolume = byte.Parse(vrc6SawVolumeStr);
                             }
                             else if (instrument.ExpansionType == ExpansionType.Vrc7)
                             {
@@ -507,7 +513,7 @@ namespace FamiStudio
                     }
                 }
 
-                project.SortEverything();
+                project.SortEverything(!isVersion250OrNewer);
 
                 return project;
             }

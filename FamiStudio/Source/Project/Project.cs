@@ -295,7 +295,6 @@ namespace FamiStudio
 
             var song = new Song(this, GenerateUniqueId(), name);
             songs.Add(song);
-            SortSongs();
             return song;
         }
 
@@ -584,7 +583,6 @@ namespace FamiStudio
             if (songs.Find(s => s.Name == name) == null)
             {
                 song.Name = name;
-                SortSongs();
                 return true;
             }
 
@@ -594,6 +592,17 @@ namespace FamiStudio
         public void SortSongs()
         {
             songs.Sort((s1, s2) => s1.Name.CompareTo(s2.Name));
+        }
+
+        public void MoveSong(Song song, Song songBefore)
+        {
+            Debug.Assert(songs.Contains(song));
+            songs.Remove(song);
+
+            if (songBefore != null)
+                songs.Insert(songs.IndexOf(songBefore) + 1, song);
+            else
+                songs.Insert(0, song);
         }
 
         public void SetExpansionAudio(int expansion, int numChannels = 1)
@@ -1049,18 +1058,19 @@ namespace FamiStudio
                 songs.Add(song);
             }
 
-            SortEverything();
+            SortEverything(false);
             Validate();
 
             return true;
         }
 
-        public void SortEverything()
+        public void SortEverything(bool songs)
         {
             SortInstruments();
             SortArpeggios();
             SortSamples();
-            SortSongs();
+            if (songs)
+                SortSongs();
         }
 
         public bool MergeOtherProjectInstruments(List<Instrument> otherInstruments)
@@ -1467,7 +1477,7 @@ namespace FamiStudio
             if (buffer.IsReading && !buffer.IsForUndoRedo)
             {
                 EnsureNextIdIsLargeEnough();
-                SortEverything();
+                SortEverything(buffer.Version < 10);
             }
         }
 
