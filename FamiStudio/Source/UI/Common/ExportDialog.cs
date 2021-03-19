@@ -102,6 +102,34 @@ namespace FamiStudio
             return channelNames;
         }
 
+        private bool[] GetDefaultSelectedChannels()
+        {
+            // Find all channels used by the project.
+            var anyChannelActive = false;
+            var channelActives = new bool[project.GetActiveChannelCount()];
+            foreach (var song in project.Songs)
+            {
+                for (int i = 0; i < song.Channels.Length; i++)
+                {
+                    var channel = song.Channels[i];
+                    if (channel.Patterns.Count > 0)
+                    {
+                        anyChannelActive = true;
+                        channelActives[i] = true;
+                    }
+                }
+            }
+
+            // All true if its an empty project.
+            if (!anyChannelActive)
+            {
+                for (int i = 0; i < channelActives.Length; i++)
+                    channelActives[i] = true;
+            }
+
+            return channelActives;
+        }
+
         private PropertyPage CreatePropertyPage(PropertyPage page, ExportFormat format)
         {
             var songNames = GetSongNames();
@@ -118,7 +146,7 @@ namespace FamiStudio
                     page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
                     page.AddCheckBox("Separate channel files", false); // 7
                     page.AddCheckBox("Separate intro file", false); // 8
-                    page.AddCheckBoxList("Channels :", GetChannelNames(), null); // 9
+                    page.AddCheckBoxList("Channels :", GetChannelNames(), GetDefaultSelectedChannels()); // 9
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
                     break;
@@ -137,7 +165,7 @@ namespace FamiStudio
                     page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
                     page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
                     page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
-                    page.AddCheckBoxList("Channels :", GetChannelNames(), null); // 9
+                    page.AddCheckBoxList("Channels :", GetChannelNames(), GetDefaultSelectedChannels()); // 9
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
