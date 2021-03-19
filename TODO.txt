@@ -2,9 +2,8 @@ FamiStudio 2.5.0
 ================
 - Oscilloscope + volume tracks display.
 - Scroll bars?	
-- Low-pass filter in DPCM sample editor.
+/ Low-pass filter in DPCM sample editor. (not sure.) Hot reload instead?
 - Loop prevention for envelope (brad issue).
-- Note counter decrement every frame for famitracker tempo??
 - FamiStudio Tempo 2.0 => Arbitrary BPM.
 	- Figure out fundamental difference between tempo vs. groove
 	- Look at gyuss for example (7-6-6, cycle over 120 frames)
@@ -31,6 +30,7 @@ Testing
 =======
 - MacOS : Scaling, etc. Find someone with a mac to test.
 - Linux : Test scaling more.
+- OGL : Grey screen happens sometimes.
 
 Linux notes
 ===========

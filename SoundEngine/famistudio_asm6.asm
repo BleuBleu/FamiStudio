@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (2.4.0)
+; FAMISTUDIO SOUND ENGINE (2.5.0)
 ; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
@@ -2051,20 +2051,12 @@ famistudio_update_row:
     @base_instrument:
         jsr famistudio_set_instrument
 
+    @new_note:
 .if FAMISTUDIO_CFG_EQUALIZER 
-    @new_note:
-        lda #8
+        lda #9
         sta famistudio_chn_note_counter, x
-        jmp @done
-    @no_new_note:
-        lda famistudio_chn_note_counter, x
-        beq @done
-        dec famistudio_chn_note_counter, x
-    @done:    
-.else
-    @new_note:
-    @no_new_note:
 .endif
+    @no_new_note:
 
     rts
 
@@ -2425,6 +2417,19 @@ famistudio_update:
     inx 
     cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
     bne @slide_process
+.endif
+
+.if FAMISTUDIO_CFG_EQUALIZER
+@update_equalizer:
+    ldx #0
+    @eq_channel_loop:
+        lda famistudio_chn_note_counter, x
+        beq @no_note
+            dec famistudio_chn_note_counter, x
+        @no_note:
+        inx
+        cpx #FAMISTUDIO_NUM_CHANNELS
+        bne @eq_channel_loop
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
