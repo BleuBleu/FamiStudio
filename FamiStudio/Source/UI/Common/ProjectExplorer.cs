@@ -578,6 +578,7 @@ namespace FamiStudio
             }
 
             UpdateRenderCoords();
+            ClampScroll();
 
             if (invalidate)
                 ConditionalInvalidate();

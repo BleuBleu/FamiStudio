@@ -2199,7 +2199,7 @@ namespace FamiStudio
             g.PopClip();
             g.PopTransform();
 
-            if (!string.IsNullOrEmpty(noteTooltip))
+            if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
                 g.DrawText(noteTooltip, ThemeBase.FontMediumBigRight, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, Width - tooltipTextPosX);
             }

@@ -126,7 +126,6 @@ namespace FamiStudio
         RenderTheme theme;
         RenderBrush seekBarBrush;
         RenderBrush seekBarRecBrush;
-        RenderBrush pianoRollViewRectBrush;
         RenderBrush whiteKeyBrush;
         RenderBrush patternHeaderBrush;
         RenderBrush selectedPatternVisibleBrush;
@@ -282,10 +281,9 @@ namespace FamiStudio
 
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
             seekBarRecBrush = g.CreateSolidBrush(ThemeBase.DarkRedFillColor);
-            pianoRollViewRectBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("YellowChecker"), true, true);
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, trackNameSizeX, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             patternHeaderBrush = g.CreateVerticalGradientBrush(0, patternHeaderSizeY, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
-            selectedPatternVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
+            selectedPatternVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.LightGreyFillColor1));
             selectedPatternInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(32, ThemeBase.LightGreyFillColor1));
             dashedLineVerticalBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
 
@@ -317,7 +315,6 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref selectedPatternInvisibleBrush);
             Utils.DisposeAndNullify(ref dashedLineVerticalBrush);
             Utils.DisposeAndNullify(ref seekGeometry);
-            Utils.DisposeAndNullify(ref pianoRollViewRectBrush);
 
             InvalidatePatternCache();
         }
@@ -520,7 +517,7 @@ namespace FamiStudio
                 App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex);
 
                 g.PushTranslation(pianoRollMinNoteIdx * noteSizeX - scrollX + trackNameSizeX, pianoRollChannelIndex * trackSizeY);
-                g.DrawRectangle(0, 0, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX, trackSizeY, pianoRollViewRectBrush);
+                g.DrawRectangle(1, patternHeaderSizeY + 2, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX - 1, trackSizeY - 2, theme.LightGreyFillBrush2, 3);
                 g.PopTransform();
             }
 
