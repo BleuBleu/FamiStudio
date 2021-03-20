@@ -190,7 +190,7 @@ namespace FamiStudio
 
         private void ProjectExplorer_ProjectModified()
         {
-            RefreshSequencerLayout();
+            RefreshLayout();
             Sequencer.Reset();
             PianoRoll.Reset();
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
@@ -443,7 +443,7 @@ namespace FamiStudio
 
             InvalidateEverything();
             UpdateTitle();
-            RefreshSequencerLayout();
+            RefreshLayout();
         }
 
         public void OpenProject(string filename)
@@ -583,6 +583,7 @@ namespace FamiStudio
                 if (oldNumBufferedFrames != Settings.NumBufferedAudioFrames)
                     RecreateAudioPlayers();
 
+                RefreshLayout();
                 InitializeMidi();
                 InvalidateEverything(true);
             }
@@ -606,10 +607,11 @@ namespace FamiStudio
             return true;
         }
 
-        private void RefreshSequencerLayout()
+        private void RefreshLayout()
         {
-            mainForm.RefreshSequencerLayout();
-            Sequencer.SequencerLayoutChanged();
+            mainForm.RefreshLayout();
+            Sequencer.LayoutChanged();
+            PianoRoll.LayoutChanged();
         }
 
         private void CheckForNewRelease()
@@ -1396,7 +1398,7 @@ namespace FamiStudio
                 if (recordingMode)
                     SeekSong(currentFrame);
 
-                RefreshSequencerLayout();
+                RefreshLayout();
                 mainForm.Invalidate();
             }
         }

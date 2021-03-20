@@ -37,6 +37,8 @@ namespace FamiStudio
         public static int FollowSync = 0;
         public static bool ShowTutorial = true;
         public static bool ShowNoteLabels = true;
+        public static bool ShowScrollBars = false;
+        public static bool ForceCompactSequencer = false;
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
 #if FAMISTUDIO_WINDOWS
@@ -190,6 +192,8 @@ namespace FamiStudio
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
             CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
             ShowNoteLabels = ini.GetBool("UI", "ShowNoteLabels", true);
+            ShowScrollBars = ini.GetBool("UI", "ShowScrollBars", false);
+            ForceCompactSequencer = ini.GetBool("UI", "ForceCompactSequencer", false);
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
@@ -307,6 +311,8 @@ namespace FamiStudio
             ini.SetInt("UI", "FollowSync", FollowSync);
             ini.SetBool("UI", "CheckUpdates", CheckUpdates);
             ini.SetBool("UI", "ShowNoteLabels", ShowNoteLabels);
+            ini.SetBool("UI", "ShowScrollBars", ShowScrollBars);
+            ini.SetBool("UI", "ForceCompactSequencer", ForceCompactSequencer);
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetBool("UI", "TrackPadControls", TrackPadControls);
             ini.SetInt("UI", "TrackPadMoveSensitity", TrackPadMoveSensitity);

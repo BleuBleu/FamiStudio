@@ -110,7 +110,9 @@ namespace FamiStudio
                     page.AddCheckBox("Check for updates:", Settings.CheckUpdates); // 4
                     page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
                     page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 6
-                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 7
+                    page.AddCheckBox("Show Scroll Bars:", Settings.ShowScrollBars); // 7
+                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer); // 8
+                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 9
 
 #if FAMISTUDIO_MACOS
                     page.PropertyChanged += Page_PropertyChanged;
@@ -329,7 +331,9 @@ namespace FamiStudio
                 Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(4);
                 Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(5);
                 Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
-                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(7);
+                Settings.ShowScrollBars = pageUI.GetPropertyValue<bool>(7);
+                Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(8);
+                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(9);
 
                 // Sound
                 Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);

@@ -39,7 +39,7 @@ namespace FamiStudio
         const int DefaultButtonTextNoIconPosX = 4;
         const int DefaultSubButtonSpacingX    = 18;
         const int DefaultSubButtonPosY        = 3;
-        const int DefaultScrollBarSizeX       = 8;
+        const int DefaultScrollBarThickness   = 8;
         const int DefaultButtonSizeY          = 21;
         const int DefaultSliderPosX           = 100;
         const int DefaultSliderPosY           = 3;
@@ -71,7 +71,7 @@ namespace FamiStudio
         int checkBoxPosX;
         int checkBoxPosY;
         int virtualSizeY;
-        int scrollBarSizeX;
+        int scrollBarThickness;
         int draggedLineSizeY;
         bool needsScrollBar;
 
@@ -486,7 +486,7 @@ namespace FamiStudio
             draggedLineSizeY     = (int)(DefaultDraggedLineSizeY * scaling);
             virtualSizeY         = App?.Project == null ? Height : buttons.Count * buttonSizeY;
             needsScrollBar       = virtualSizeY > Height; 
-            scrollBarSizeX       = needsScrollBar ? (int)(DefaultScrollBarSizeX * scaling) : 0;      
+            scrollBarThickness   = needsScrollBar ? (int)(DefaultScrollBarThickness * scaling) : 0;      
         }
 
         public void Reset()
@@ -676,7 +676,7 @@ namespace FamiStudio
             g.DrawLine(0, 0, 0, Height, theme.BlackBrush);
 
             var showExpandButton = ShowExpandButtons();
-            var actualWidth = Width - scrollBarSizeX;
+            var actualWidth = Width - scrollBarThickness;
             var firstParam = true;
             var y = -scrollY;
 
@@ -796,19 +796,34 @@ namespace FamiStudio
                         button.type == ButtonType.SongHeader)
                     {
                         var lineY = (buttonIdx + 1)  * buttonSizeY;
-                        g.DrawLine(0, lineY, Width - scrollBarSizeX, lineY, g.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
+                        g.DrawLine(0, lineY, Width - scrollBarThickness, lineY, g.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
                     }
                 }
             }
 
             if (needsScrollBar)
             {
-                int virtualSizeY   = this.virtualSizeY;
                 int scrollBarSizeY = (int)Math.Round(Height * (Height  / (float)virtualSizeY));
                 int scrollBarPosY  = (int)Math.Round(Height * (scrollY / (float)virtualSizeY));
 
                 g.FillAndDrawRectangle(actualWidth, 0, Width - 1, Height, theme.DarkGreyFillBrush1, theme.BlackBrush);
-                g.FillAndDrawRectangle(actualWidth, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, theme.LightGreyFillBrush1, theme.BlackBrush);
+                g.FillAndDrawRectangle(actualWidth, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, theme.MediumGreyFillBrush1, theme.BlackBrush);
+            }
+        }
+
+        private bool GetScrollBarParams(out int posY, out int sizeY)
+        {
+            if (scrollBarThickness > 0)
+            {
+                sizeY = (int)Math.Round(Height * (Height  / (float)virtualSizeY));
+                posY  = (int)Math.Round(Height * (scrollY / (float)virtualSizeY));
+                return true;
+            }
+            else
+            {
+                posY = 0;
+                sizeY = 0;
+                return false;
             }
         }
 
@@ -848,7 +863,7 @@ namespace FamiStudio
         {
             sub = SubButtonType.Max;
 
-            if (needsScrollBar && x >= Width - scrollBarSizeX)
+            if (needsScrollBar && x >= Width - scrollBarThickness)
                 return -1;
 
             var buttonIndex = (y + scrollY) / buttonSizeY;
@@ -870,7 +885,7 @@ namespace FamiStudio
 
                     for (int i = 0; i < subButtons.Length; i++)
                     {
-                        int sx = Width - scrollBarSizeX - subButtonSpacingX * (i + 1);
+                        int sx = Width - scrollBarThickness - subButtonSpacingX * (i + 1);
                         int sy = subButtonPosY;
                         int dx = x - sx;
                         int dy = y - sy;
@@ -944,7 +959,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamCheckbox)
                 {
-                    if (e.X >= Width - scrollBarSizeX - checkBoxPosX)
+                    if (e.X >= Width - scrollBarThickness - checkBoxPosX)
                     {
                         tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
                     }
@@ -955,7 +970,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamSlider)
                 {
-                    if (e.X >= Width - scrollBarSizeX - sliderPosX)
+                    if (e.X >= Width - scrollBarThickness - sliderPosX)
                     {
                         tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
                     }
@@ -966,7 +981,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamList)
                 {
-                    if (e.X >= Width - scrollBarSizeX - sliderPosX)
+                    if (e.X >= Width - scrollBarThickness - sliderPosX)
                     {
                         tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
                     }
@@ -1028,7 +1043,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (needsScrollBar && e.X > Width - scrollBarSizeX)
+            else if (needsScrollBar && e.X > Width - scrollBarThickness)
             {
                 tooltip = "{MouseLeft} {Drag} Scroll";
             }
@@ -1275,7 +1290,7 @@ namespace FamiStudio
 
             bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
-            var actualWidth = Width - scrollBarSizeX;
+            var actualWidth = Width - scrollBarThickness;
             var buttonX = e.X;
             var buttonY = e.Y + scrollY - buttonIdx * buttonSizeY;
 
@@ -1619,7 +1634,7 @@ namespace FamiStudio
                 }
                 else if ((left || right) && button.type == ButtonType.ParamCheckbox)
                 {
-                    var actualWidth = Width - scrollBarSizeX;
+                    var actualWidth = Width - scrollBarThickness;
 
                     if (e.X >= actualWidth - checkBoxPosX)
                     {
@@ -1640,7 +1655,7 @@ namespace FamiStudio
                 }
                 else if ((left || right) && button.type == ButtonType.ParamList)
                 {
-                    var actualWidth = Width - scrollBarSizeX;
+                    var actualWidth = Width - scrollBarThickness;
                     var buttonX = e.X;
                     var leftButton  = buttonX > (actualWidth - sliderPosX) && buttonX < (actualWidth - sliderPosX + bmpButtonLeft.Size.Width);
                     var rightButton = buttonX > (actualWidth - sliderPosX + sliderSizeX - bmpButtonRight.Size.Width) && buttonX < (actualWidth - sliderPosX + sliderSizeX);
@@ -1827,9 +1842,24 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (left && needsScrollBar && e.X > Width - scrollBarSizeX)
+            else if (left && needsScrollBar && e.X > Width - scrollBarThickness && GetScrollBarParams(out var scrollBarPosY, out var scrollBarSizeY))
             {
-                StartCaptureOperation(e, CaptureOperation.ScrollBar);
+                if (e.Y < scrollBarPosY)
+                {
+                    scrollY -= Height;
+                    ClampScroll();
+                    ConditionalInvalidate();
+                }
+                else if (e.Y > (scrollBarPosY + scrollBarSizeY))
+                {
+                    scrollY += Height;
+                    ClampScroll();
+                    ConditionalInvalidate();
+                }
+                else
+                {
+                    StartCaptureOperation(e, CaptureOperation.ScrollBar);
+                }
             }
         }
 
