@@ -148,7 +148,7 @@ namespace Gtk
         {
         }
 
-        protected virtual void RenderFrame()
+        protected virtual void RenderFrame(bool force = false)
         {
         }
 
@@ -252,7 +252,7 @@ namespace Gtk
             }
 
             bool result = base.OnExposeEvent(evnt);
-            RenderFrame();
+            RenderFrame(true);
             return result;
         }
 
