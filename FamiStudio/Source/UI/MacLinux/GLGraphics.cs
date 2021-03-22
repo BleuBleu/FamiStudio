@@ -236,6 +236,14 @@ namespace FamiStudio
                 rc.Height);
         }
 
+        protected void AddHalfPixelOffset()
+        {
+            GL.GetFloat(GetPName.ModelviewMatrix, out Matrix4 matrix);
+            matrix.Row3.X += 0.5f;
+            matrix.Row3.Y += 0.5f;
+            GL.LoadMatrix(ref matrix);
+        }
+
         public bool AntiAliasing
         {
             get { return antialiasing; }
@@ -391,7 +399,7 @@ namespace FamiStudio
         public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
         {
             GL.PushMatrix();
-            GL.Translate(0.5f, 0.5f, 0);
+            AddHalfPixelOffset();
             GL.Color4(brush.Color0);
             if (antialiasing)
                 GL.Enable(EnableCap.LineSmooth);
@@ -451,7 +459,7 @@ namespace FamiStudio
         public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
         {
             GL.PushMatrix();
-            GL.Translate(0.5f, 0.5f, 0);
+            AddHalfPixelOffset();
             GL.Color4(brush.Color0);
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && width > 1)
@@ -615,7 +623,7 @@ namespace FamiStudio
         public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f)
         {
             GL.PushMatrix();
-            GL.Translate(0.5f, 0.5f, 0);
+            AddHalfPixelOffset();
             GL.Enable(EnableCap.LineSmooth);
             GL.Color4(brush.Color0);
 #if FAMISTUDIO_LINUX
