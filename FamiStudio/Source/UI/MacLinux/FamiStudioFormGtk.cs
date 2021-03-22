@@ -85,7 +85,7 @@ namespace FamiStudio
                 MacOSInit();
 #endif
                 Cursors.Initialize();
-                RefreshSequencerLayout();
+                RefreshLayout();
                 exposed = true;
             }
             return base.OnExposeEvent(evnt);
@@ -453,7 +453,7 @@ namespace FamiStudio
             return base.OnKeyReleaseEvent(evnt);
         }
 
-        public void RefreshSequencerLayout()
+        public void RefreshLayout()
         { 
             controls.Resize(ScaleCoord(Allocation.Width), ScaleCoord(Allocation.Height));
             controls.Invalidate();
