@@ -561,8 +561,11 @@ namespace FamiStudio
             return pos / GLTheme.MainWindowScaling;
         }
 
-        protected override void RenderFrame()
+        protected override void RenderFrame(bool force = false)
         {
+            if (force)
+                Invalidate();
+
             if (glInit && controls.Redraw())
             {
                 GraphicsContext.CurrentContext.SwapBuffers();

@@ -698,6 +698,8 @@ namespace FamiStudio
                     return (int)(prop.control as SpinButton).Value;
                 case PropertyType.DomainUpDown:
                     return int.Parse((prop.control as DomainSpinButton).Text);
+                case PropertyType.Slider:
+                    return (prop.control as HScale).Value;
                 case PropertyType.CheckBox:
                     return (prop.control as CheckButton).Active;
                 case PropertyType.ColorPicker:
