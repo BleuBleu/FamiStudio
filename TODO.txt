@@ -1,7 +1,9 @@
 FamiStudio 2.5.0
 ================
-- Oscilloscope + volume tracks display.
 / Low-pass filter in DPCM sample editor. (not sure.) Hot reload instead?
+	- Caps in name "Low pass filter"
+	- Or save source data location + hot reload?
+	- Cap filter length for perf.
 - Loop prevention for envelope (brad issue).
 - FamiStudio Tempo 2.0 => Arbitrary BPM.
 	- Figure out fundamental difference between tempo vs. groove
@@ -10,6 +12,9 @@ FamiStudio 2.5.0
 - Note refactor: (2.6.0?)
 	- Whole note drag, or FULL NOT REFACTOR.
 	- When using 1/2 snapping, dragging notes is awkward. (will depend on tempo solution).
+
+=============
+
 - MAYBE: MIDI in/out (not sure... non-technical people will be disapointed)
 - QWERTZ?
 	- GTK colors. => Doesnt work on mac...

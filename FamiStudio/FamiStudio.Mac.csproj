@@ -96,6 +96,7 @@
     <Compile Include="Source\IO\WavMp3ExportUtils.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
+    <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
@@ -103,6 +104,7 @@
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
+    <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />

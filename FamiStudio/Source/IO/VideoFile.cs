@@ -45,35 +45,58 @@ namespace FamiStudio
             int lookback = 0;
             int orig = wav[position];
 
-            while (lookback < maxLookback)
+            // If sample is negative, go back until positive.
+            if (orig < 0)
             {
-                if (orig > 0)
+                while (lookback < maxLookback)
                 {
-                    if (position == 0 || wav[--position] < 0)
+                    if (position == 0 || wav[--position] > 0)
                         break;
-                }
-                else
-                {
-                    if (position == wav.Length -1 || wav[++position] > 0)
-                        break;
+
+                    lookback++;
                 }
 
-                lookback++;
+                orig = wav[position];
             }
 
+
+            // Then look for a zero crossing.
+            if (orig > 0)
+            {
+                while (lookback < maxLookback)
+                {
+                    if (position == wav.Length -1 || wav[++position] < 0)
+                        break;
+
+                    lookback++;
+                }
+            }
+
+            int lastIdx = -1;
             int oscLen = oscilloscope.GetLength(0);
 
             for (int i = 0; i < oscLen; ++i)
             {
-                int idx = Utils.Clamp(position - windowSize / 2 + i * windowSize / oscLen, 0, wav.Length - 1);
-                //int idx = Utils.Clamp(position + i * windowSize / oscLen, 0, wav.Length - 1);
-                int sample = Utils.Clamp((int)(wav[idx] * scaleY), short.MinValue, short.MaxValue);
+                var idx = Utils.Clamp(position - windowSize / 2 + i * windowSize / oscLen, 0, wav.Length - 1);
+                var avg = (float)wav[idx];
+                var cnt = 1;
 
-                float x = Utils.Lerp(minX, maxX, i / (float)(oscLen - 1));
-                float y = Utils.Lerp(minY, maxY, (sample - short.MinValue) / (float)(ushort.MaxValue));
+                if (lastIdx >= 0)
+                {
+                    for (int j = lastIdx + 1; j < idx; j++, cnt++)
+                        avg += wav[j];
+                    avg /= cnt;
+                }
+
+                var sample = Utils.Clamp((int)(avg * scaleY), short.MinValue, short.MaxValue);
+
+                var x = Utils.Lerp(minX, maxX, i / (float)(oscLen - 1));
+                var y = Utils.Lerp(minY, maxY, (sample - short.MinValue) / (float)(ushort.MaxValue));
 
                 oscilloscope[i, 0] = x;
                 oscilloscope[i, 1] = y;
+
+                lastIdx = idx;
             }
         }
 

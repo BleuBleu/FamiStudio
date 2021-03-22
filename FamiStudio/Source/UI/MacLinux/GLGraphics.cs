@@ -327,6 +327,9 @@ namespace FamiStudio
 
         public void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
         {
+            if (string.IsNullOrEmpty(text))
+                return;
+
             GL.Enable(EnableCap.Texture2D);
             GL.BindTexture(TextureTarget.Texture2D, font.Texture);
             GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);

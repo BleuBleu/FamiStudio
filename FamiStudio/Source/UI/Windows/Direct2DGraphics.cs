@@ -165,7 +165,8 @@ namespace FamiStudio
 
         public void DrawText(string text, TextFormat font, float x, float y, Brush brush, float width = 1000)
         {
-            renderTarget.DrawText(text, font, new RawRectangleF(x, y, x + width, y + 1000), brush);
+            if (!string.IsNullOrEmpty(text))
+                renderTarget.DrawText(text, font, new RawRectangleF(x, y, x + width, y + 1000), brush);
         }
 
         public float MeasureString(string text, TextFormat font)
@@ -176,31 +177,35 @@ namespace FamiStudio
 
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush)
         {
-            renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush);
+            PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawLine(new RawVector2(x0, y0), new RawVector2(x1, y1), brush);
+            PopTransform();
         }
 
         public void DrawLine(float[,] points, Brush brush)
         {
+            PushTranslation(0.5f, 0.5f);
             for (int i = 0; i < points.GetLength(0) - 1; i++)
             {
                 renderTarget.DrawLine(
-                    new RawVector2(points[i + 0, 0] + 0.5f, points[i + 0, 1] + 0.5f),
-                    new RawVector2(points[i + 1, 0] + 0.5f, points[i + 1, 1] + 0.5f), brush, 1.0f, strokeStyleNoScaling);
+                    new RawVector2(points[i + 0, 0], points[i + 0, 1]),
+                    new RawVector2(points[i + 1, 0], points[i + 1, 1]), brush, 1.0f, strokeStyleNoScaling);
             }
+            PopTransform();
         }
 
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush, float width = 1.0f)
         {
-            renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush, width);
+            PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawLine(new RawVector2(x0, y0), new RawVector2(x1, y1), brush, width);
+            PopTransform();
         }
 
         public void DrawRectangle(RawRectangleF rect, Brush brush, float width = 1.0f)
         {
-            rect.Left += 0.5f;
-            rect.Top += 0.5f;
-            rect.Right += 0.5f;
-            rect.Bottom += 0.5f;
+            PushTranslation(0.5f, 0.5f);
             renderTarget.DrawRectangle(rect, brush, width);
+            PopTransform();
         }
 
         public void DrawRectangle(float x0, float y0, float x1, float y1, Brush brush, float width = 1.0f)

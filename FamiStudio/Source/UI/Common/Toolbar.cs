@@ -8,12 +8,14 @@ using FamiStudio.Properties;
 #if FAMISTUDIO_WINDOWS
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
+    using RenderGeometry = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
+    using RenderGeometry = FamiStudio.GLGeometry;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
@@ -44,9 +46,9 @@ namespace FamiStudio
         const int ButtonHelp      = 18;
         const int ButtonCount     = 19;
 
-        const int DefaultTimecodeOffsetX         = 40; // Offset from config button.
+        const int DefaultTimecodeOffsetX         = 38; // Offset from config button.
         const int DefaultTimecodePosY            = 4;
-        const int DefaultTimecodeSizeX           = 160;
+        const int DefaultTimecodeSizeX           = 140;
         const int DefaultTooltipSingleLinePosY   = 12;
         const int DefaultTooltipMultiLinePosY    = 4;
         const int DefaultTooltipLineSizeY        = 17;
@@ -55,12 +57,13 @@ namespace FamiStudio
         const int DefaultButtonPosX              = 4;
         const int DefaultButtonPosY              = 4;
         const int DefaultButtonSizeX             = 32;
-        const int DefaultButtonSpacingX          = 36;
-        const int DefaultButtonTimecodeSpacingX  = 208;
+        const int DefaultButtonSpacingX          = 34;
+        const int DefaultButtonTimecodeSpacingX  = 4; // Spacing before/after timecode.
 
         int timecodePosX;
         int timecodePosY;
         int timecodeSizeX;
+        int oscilloscopePosX;
         int tooltipSingleLinePosY;
         int tooltipMultiLinePosY;
         int tooltipLineSizeY;
@@ -109,11 +112,14 @@ namespace FamiStudio
         DateTime warningTime;
         string warning = "";
 
+        bool oscilloscopeVisible = false;
+        bool lastOscilloscopeHadNonZeroSample = false;
         bool redTooltip = false;
         string tooltip = "";
         RenderTheme theme;
         RenderBrush toolbarBrush;
         RenderBrush warningBrush;
+        RenderBrush seekBarBrush;
         RenderBitmap bmpLoopNone;
         RenderBitmap bmpLoopSong;
         RenderBitmap bmpLoopPattern;
@@ -134,8 +140,9 @@ namespace FamiStudio
 
             toolbarBrush = g.CreateVerticalGradientBrush(0, Height, ThemeBase.DarkGreyFillColor2, ThemeBase.DarkGreyFillColor1);
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
+            seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
 
-            bmpLoopNone    = g.CreateBitmapFromResource("LoopNone");
+            bmpLoopNone = g.CreateBitmapFromResource("LoopNone");
             bmpLoopSong    = g.CreateBitmapFromResource("Loop");
             bmpLoopPattern = g.CreateBitmapFromResource("LoopPattern");
             bmpPlay        = g.CreateBitmapFromResource("Play");
@@ -234,6 +241,7 @@ namespace FamiStudio
 
             Utils.DisposeAndNullify(ref toolbarBrush);
             Utils.DisposeAndNullify(ref warningBrush);
+            Utils.DisposeAndNullify(ref seekBarBrush);
             Utils.DisposeAndNullify(ref bmpLoopNone);
             Utils.DisposeAndNullify(ref bmpLoopSong);
             Utils.DisposeAndNullify(ref bmpLoopPattern);
@@ -260,13 +268,20 @@ namespace FamiStudio
             base.OnResize(e);
         }
 
+        public void LayoutChanged()
+        {
+            UpdateButtonLayout();
+            ConditionalInvalidate();
+        }
+
         private void UpdateButtonLayout()
         {
             if (theme == null)
                 return;
 
             // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
-            bool hideCopyPasteUndoRedoButtons = Width < 1280 * RenderTheme.MainWindowScaling;
+            bool hideLessImportantButtons = Width < 1360 * RenderTheme.MainWindowScaling;
+            bool hideOscilloscope = Width < 1190 * RenderTheme.MainWindowScaling;
 
             var scaling = RenderTheme.MainWindowScaling;
             var posX = DefaultButtonPosX;
@@ -282,15 +297,24 @@ namespace FamiStudio
 
                 btn.Y = (int)((DefaultButtonPosY) * scaling);
                 btn.Size = (int)(DefaultButtonSizeX * scaling);
-                btn.Visible = !hideCopyPasteUndoRedoButtons || i < ButtonCopy || i > ButtonRedo;
+                btn.Visible = !hideLessImportantButtons || i < ButtonCopy || i > ButtonRedo;
 
                 if (i == ButtonConfig)
-                    posX += DefaultButtonTimecodeSpacingX;
+                {
+                    posX += DefaultButtonSpacingX + DefaultTimecodeSizeX + DefaultButtonTimecodeSpacingX * 2;
+
+                    oscilloscopeVisible = Settings.ShowOscilloscope && !hideOscilloscope;
+                    if (oscilloscopeVisible)
+                        posX += DefaultTimecodeSizeX + DefaultButtonTimecodeSpacingX * 2;
+                }
                 else if (btn.Visible)
+                {
                     posX += DefaultButtonSpacingX;
+                }
             }
 
             timecodePosX = (int)(buttons[ButtonConfig].X + DefaultTimecodeOffsetX * scaling);
+            oscilloscopePosX = timecodePosX + DefaultTimecodeSizeX + DefaultButtonTimecodeSpacingX * 2;
         }
 
         public void SetToolTip(string msg, bool red = false)
@@ -559,10 +583,10 @@ namespace FamiStudio
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            var timeCodeColor = App.IsRecording ? theme.LightRedFillBrush : theme.BlackBrush;
-            var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush2;
+            var timeCodeSizeY = Height - timecodePosY * 2;
+            var textColor = App.IsRecording ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
 
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.LightGreyFillBrush2);
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.BlackBrush, theme.LightGreyFillBrush2);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -609,6 +633,48 @@ namespace FamiStudio
                 for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
                     g.DrawText(millisecondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
             }
+        }
+
+        public bool ShouldRefreshOscilloscope(bool hasNonZeroSample)
+        {
+            return oscilloscopeVisible && lastOscilloscopeHadNonZeroSample != hasNonZeroSample;
+        }
+
+        private void RenderOscilloscope(RenderGraphics g)
+        {
+            if (!oscilloscopeVisible)
+                return;
+
+            var oscilloscopeSizeX = timecodeSizeX;
+            var oscilloscopeSizeY = Height - timecodePosY * 2;
+
+            g.FillRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.BlackBrush);
+
+            var oscilloscopeGeometry = App.GetOscilloscopeGeometry(out lastOscilloscopeHadNonZeroSample);
+
+            if (oscilloscopeGeometry != null && lastOscilloscopeHadNonZeroSample)
+            {
+                float scaleX = oscilloscopeSizeX;
+                float scaleY = oscilloscopeSizeY / 2;
+
+                RenderGeometry geo = g.CreateGeometry(oscilloscopeGeometry, false);
+                g.PushTransform(oscilloscopePosX, timecodePosY + oscilloscopeSizeY / 2, scaleX, scaleY);
+                g.AntiAliasing = true;
+                g.DrawGeometry(geo, theme.LightGreyFillBrush2);
+                g.AntiAliasing = false;
+                g.PopTransform();
+                geo.Dispose();
+            }
+            else
+            {
+                g.PushTranslation(oscilloscopePosX, timecodePosY + oscilloscopeSizeY / 2);
+                g.AntiAliasing = true;
+                g.DrawLine(0, 0, oscilloscopeSizeX, 0, theme.LightGreyFillBrush2);
+                g.AntiAliasing = false;
+                g.PopTransform();
+            }
+
+            g.DrawRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.LightGreyFillBrush2);
         }
 
         private void RenderWarningAndTooltip(RenderGraphics g)
@@ -695,6 +761,7 @@ namespace FamiStudio
         {
             RenderButtons(g);
             RenderTimecode(g);
+            RenderOscilloscope(g);
             RenderWarningAndTooltip(g);
         }
 

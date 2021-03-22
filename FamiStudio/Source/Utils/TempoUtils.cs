@@ -144,7 +144,9 @@ namespace FamiStudio
                 else
                     NtscToPalTempoEnvelopes[i] = envelope.ToArray();
 
+#if FALSE
                 Debug.WriteLine($"{(pal ? "PAL" : "NTSC")} note length {noteLength} has {numBitSets} bit sets over {frames.Length} notes.");
+#endif
             }
         }
 
@@ -157,7 +159,7 @@ namespace FamiStudio
 
         public static void Initialize()
         {
-#if DEBUG
+#if FALSE // DEBUG
             DumpFrameSkipInfo(false);
             DumpFrameSkipInfo(true);
 #endif

@@ -111,8 +111,9 @@ namespace FamiStudio
                     page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
                     page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 6
                     page.AddCheckBox("Show Scroll Bars:", Settings.ShowScrollBars); // 7
-                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer); // 8
-                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 9
+                    page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope); // 8
+                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer); // 9
+                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 10
 
 #if FAMISTUDIO_MACOS
                     page.PropertyChanged += Page_PropertyChanged;
@@ -332,8 +333,9 @@ namespace FamiStudio
                 Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(5);
                 Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
                 Settings.ShowScrollBars = pageUI.GetPropertyValue<bool>(7);
-                Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(8);
-                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(9);
+                Settings.ShowOscilloscope = pageUI.GetPropertyValue<bool>(8);
+                Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(9);
+                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(10);
 
                 // Sound
                 Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);

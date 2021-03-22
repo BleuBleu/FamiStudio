@@ -38,6 +38,7 @@ namespace FamiStudio
         public static bool ShowTutorial = true;
         public static bool ShowNoteLabels = true;
         public static bool ShowScrollBars = false;
+        public static bool ShowOscilloscope = false;
         public static bool ForceCompactSequencer = false;
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
@@ -193,6 +194,7 @@ namespace FamiStudio
             CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
             ShowNoteLabels = ini.GetBool("UI", "ShowNoteLabels", true);
             ShowScrollBars = ini.GetBool("UI", "ShowScrollBars", false);
+            ShowOscilloscope = ini.GetBool("UI", "ShowOscilloscope", false);
             ForceCompactSequencer = ini.GetBool("UI", "ForceCompactSequencer", false);
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
@@ -312,6 +314,7 @@ namespace FamiStudio
             ini.SetBool("UI", "CheckUpdates", CheckUpdates);
             ini.SetBool("UI", "ShowNoteLabels", ShowNoteLabels);
             ini.SetBool("UI", "ShowScrollBars", ShowScrollBars);
+            ini.SetBool("UI", "ShowOscilloscope", ShowOscilloscope);
             ini.SetBool("UI", "ForceCompactSequencer", ForceCompactSequencer);
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetBool("UI", "TrackPadControls", TrackPadControls);

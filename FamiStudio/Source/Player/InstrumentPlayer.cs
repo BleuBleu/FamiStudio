@@ -12,6 +12,7 @@ namespace FamiStudio
             public Note note;
         };
 
+        int activeChannel = -1;
         int expansionAudio = ExpansionType.None;
         int numExpansionChannels = 0;
         int[] envelopeFrames = new int[EnvelopeType.Count];
@@ -90,10 +91,11 @@ namespace FamiStudio
 
         unsafe void PlayerThread(object o)
         {
+            activeChannel = -1;
+
             var lastNoteWasRelease = false;
             var lastReleaseTime = DateTime.Now;
 
-            var activeChannel = -1;
             var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, expansionAudio, numExpansionChannels, dmcCallback);
@@ -170,6 +172,8 @@ namespace FamiStudio
             audioStream.Stop();
             while (sampleQueue.TryDequeue(out _)) ;
         }
+
+        public bool IsPlaying => activeChannel >= 0;
 
         public void PlayRawPcmSample(short[] data, int sampleRate, float volume)
         {
