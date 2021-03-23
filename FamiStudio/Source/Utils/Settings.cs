@@ -194,7 +194,7 @@ namespace FamiStudio
             CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
             ShowNoteLabels = ini.GetBool("UI", "ShowNoteLabels", true);
             ShowScrollBars = ini.GetBool("UI", "ShowScrollBars", false);
-            ShowOscilloscope = ini.GetBool("UI", "ShowOscilloscope", false);
+            ShowOscilloscope = ini.GetBool("UI", "ShowOscilloscope", true);
             ForceCompactSequencer = ini.GetBool("UI", "ForceCompactSequencer", false);
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
