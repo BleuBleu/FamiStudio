@@ -9,6 +9,11 @@ FamiStudio 2.5.0
 	- Figure out fundamental difference between tempo vs. groove
 	- Look at gyuss for example (7-6-6, cycle over 120 frames)
 	- Need to be perfect hybrid of trackers/DAWs.
+	- ex: 3-4-3-3
+		- If doing a slide note on each, the 4 will go lower, unintuitive. Would it be noticeable? Not really...
+		- 
+	
+	x Look how ableton/flstudio specify tempo, make a NES version of that.
 - Note refactor: (2.6.0?)
 	- Whole note drag, or FULL NOT REFACTOR.
 	- When using 1/2 snapping, dragging notes is awkward. (will depend on tempo solution).
@@ -31,7 +36,7 @@ Doc
 
 Testing
 =======
-- MacOS : Scaling, etc. Find someone with a mac to test.
+- MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage.
 - MacOS : "Whenever I minimize it tho, you can't open it back up by clicking on the icon. You have to right click it and click 'Show All Windows', then click the window there.". how2bboss.
 - Linux : Test scaling more.
 - OGL : Grey screen happens sometimes.
