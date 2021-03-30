@@ -1,3 +1,14 @@
+FamiStudio Tempo 2.0
+====================
+- Derisk slide with 3-4-3-3 for example
+- Song settings, BPM + groove calculation
+- Render min(groove)
+- Prototype playback
+- PAL playback.
+- Function for insert blank notes for export.
+- Improve resize, make it clearer what it will do (move grid, resize notes, etc.)
+- How do we specify time signature? (pre-fl studio 20 like?)
+
 FamiStudio 2.5.0
 ================
 / Low-pass filter in DPCM sample editor. (not sure.) Hot reload instead?
@@ -5,15 +16,6 @@ FamiStudio 2.5.0
 	- Or save source data location + hot reload?
 	- Cap filter length for perf.
 - Loop prevention for envelope (brad issue).
-- FamiStudio Tempo 2.0 => Arbitrary BPM.
-	- Figure out fundamental difference between tempo vs. groove
-	- Look at gyuss for example (7-6-6, cycle over 120 frames)
-	- Need to be perfect hybrid of trackers/DAWs.
-	- ex: 3-4-3-3
-		- If doing a slide note on each, the 4 will go lower, unintuitive. Would it be noticeable? Not really...
-		- 
-	
-	x Look how ableton/flstudio specify tempo, make a NES version of that.
 - Note refactor: (2.6.0?)
 	- Whole note drag, or FULL NOT REFACTOR.
 	- When using 1/2 snapping, dragging notes is awkward. (will depend on tempo solution).
