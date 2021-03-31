@@ -17,6 +17,10 @@ FamiStudio Tempo 2.0
 - How do we specify time signature? (pre-fl studio 20 like?)
 - Better resize support when changing time signature??? Needed or not?
 
+Questions:
+- Are tempo envelope always aligned (2,3,4,8) ? => They reset every pattern. *** TEST THAT.
+- Configurable groove? 3-4-3-3, 3-3-4-3, etc. => YES, not too many.
+
 FamiStudio 2.5.0
 ================
 - Remove low pass, add reload.
