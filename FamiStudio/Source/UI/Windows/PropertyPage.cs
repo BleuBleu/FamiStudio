@@ -819,7 +819,7 @@ namespace FamiStudio
                 Controls.Remove(testLabel);
             }
 
-            var propertyCount = advanced && advancedPropertyStart > 0 ? properties.Count : advancedPropertyStart;
+            var propertyCount = advanced || advancedPropertyStart < 0 ? properties.Count : advancedPropertyStart;
 
             for (int i = 0; i < propertyCount; i++)
             {

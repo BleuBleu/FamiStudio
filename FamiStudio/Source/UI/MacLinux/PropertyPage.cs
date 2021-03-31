@@ -47,6 +47,7 @@ namespace FamiStudio
         private System.Drawing.Color color;
         private Pixbuf colorBitmap;
         private List<Property> properties = new List<Property>();
+        private int advancedPropertyStart = -1;
 
         public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
         public event PropertyChangedDelegate PropertyChanged;
@@ -54,6 +55,7 @@ namespace FamiStudio
         public event PropertyWantsCloseDelegate PropertyWantsClose;
         public new object UserData { get => userData; set => userData = value; }
         public int PropertyCount => properties.Count;
+        public bool HasAdvancedProperties { get => advancedPropertyStart > 0; }
 
         public PropertyPage() : base(1, 1, false)
         {
@@ -685,6 +687,11 @@ namespace FamiStudio
             txt.Buffer.Insert(txt.Buffer.EndIter, line + "\n");
         }
 
+        public void BeginAdvancedProperties()
+        {
+            advancedPropertyStart = properties.Count;
+        }
+
         public object GetPropertyValue(int idx)
         {
             var prop = properties[idx];
@@ -738,14 +745,16 @@ namespace FamiStudio
             }
         }
 
-        public void Build()
+        public void Build(bool advanced = false)
         {
-            Resize((uint)properties.Count, 2);
+            var propertyCount = advanced || advancedPropertyStart < 0 ? properties.Count : advancedPropertyStart;
+
+            Resize((uint)propertyCount, 2);
 
             ColumnSpacing = (uint)GtkUtils.ScaleGtkWidget(5);
             RowSpacing    = (uint)GtkUtils.ScaleGtkWidget(5);
             
-            for (int i = 0; i < properties.Count; i++)
+            for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
 
@@ -766,6 +775,15 @@ namespace FamiStudio
                     Attach(prop.control, 0, 2, (uint)i, (uint)(i + 1), AttachOptions.Expand | AttachOptions.Fill, AttachOptions.Expand | AttachOptions.Fill, (uint)prop.leftMargin, 0);
                     prop.control.Show();
                 }
+            }
+
+            for (int i = propertyCount; i < properties.Count; i++)
+            {
+                var prop = properties[i];
+
+                if (prop.label != null)
+                    Remove(prop.label);
+                Remove(prop.control);
             }
         }
     }
