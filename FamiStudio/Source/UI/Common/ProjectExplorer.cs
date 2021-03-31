@@ -1992,6 +1992,11 @@ namespace FamiStudio
                 dlg.Properties.AddIntegerRange("Notes per Beat : ", song.BeatLength / song.NoteLength, 1, 256, CommonTooltips.NotesPerBar); // 4
                 dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 1, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 5
                 dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 6
+
+                // MATTT
+                dlg.Properties.BeginAdvancedProperties();
+                dlg.Properties.AddIntegerRange("Test1 : ", 5, 0, 10); // 7
+                dlg.Properties.AddString("Test2 : ", "Hello"); // 8
             }
 
             dlg.Properties.Build();

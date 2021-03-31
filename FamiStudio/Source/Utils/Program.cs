@@ -56,6 +56,13 @@ namespace FamiStudio
             PlatformUtils.Initialize();
             RenderTheme.Initialize();
             FamiStudioTempoUtils.Initialize();
+
+            //var ntscTempos = FamiStudioTempoUtils.GetAvailableTempoList(false); // MATTT
+            //var palTempos  = FamiStudioTempoUtils.GetAvailableTempoList(true); // MATTT
+
+            //for (int i = 0; i < ntscTempos.Length; i++)
+            //    Debug.WriteLine($"{ntscTempos[i].groove.Length} : {ntscTempos[i].bpm} = {palTempos[i].bpm}");
+
             NesApu.InitializeNoteTables();
 
 #if FAMISTUDIO_WINDOWS

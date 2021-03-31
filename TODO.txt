@@ -1,20 +1,25 @@
 FamiStudio Tempo 2.0
 ====================
-- Derisk slide with 3-4-3-3 for example
-- Song settings, BPM + groove calculation
+1) Build utils for tempo list
+2) Basic UI.
+	/ Advanced secton support
+	- Add tooltip to other dialogs
+	- List BPM, note frame length automatically.
+	- Move tempo dialog code to its own class, avoid duplicated code.
+	- 
+3) Envelope calculation (native + adapted).
+4) Native playback.
+5) Adapted playback.
+
 - Render min(groove)
-- Prototype playback
-- PAL playback.
 - Function for insert blank notes for export.
 - Improve resize, make it clearer what it will do (move grid, resize notes, etc.)
 - How do we specify time signature? (pre-fl studio 20 like?)
+- Better resize support when changing time signature??? Needed or not?
 
 FamiStudio 2.5.0
 ================
-/ Low-pass filter in DPCM sample editor. (not sure.) Hot reload instead?
-	- Caps in name "Low pass filter"
-	- Or save source data location + hot reload?
-	- Cap filter length for perf.
+- Remove low pass, add reload.
 - Loop prevention for envelope (brad issue).
 - Note refactor: (2.6.0?)
 	- Whole note drag, or FULL NOT REFACTOR.

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
@@ -12,6 +13,7 @@ namespace FamiStudio
 
         public PropertyPage Properties => propertyPage;
         private bool top = false;
+        private bool advancedPropertiesVisible = false;
 
         public PropertyDialog(int width, bool canAccept = true, Form parent = null)
         {
@@ -52,8 +54,13 @@ namespace FamiStudio
             InitializeComponent();
 
             string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
-            buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
-            buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
+            buttonYes.Image      = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
+            buttonNo.Image       = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
+            buttonAdvanced.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.PlusSmall{suffix}.png"));
+
+            toolTip.SetToolTip(buttonYes, "Apply");
+            toolTip.SetToolTip(buttonNo, "Cancel");
+            toolTip.SetToolTip(buttonAdvanced, "Toggle Advanced Options");
         }
 
         protected override CreateParams CreateParams
@@ -68,6 +75,17 @@ namespace FamiStudio
 
         private void PropertyDialog_Shown(object sender, EventArgs e)
         {
+            UpdateLayout();
+
+            if (top)
+                Location = new Point(Location.X, Location.Y - Height);
+
+            if (StartPosition == FormStartPosition.CenterParent)
+                CenterToParent();
+        }
+
+        private void UpdateLayout()
+        {
             buttonYes.Width  = (int)(buttonYes.Width  * Direct2DTheme.DialogScaling);
             buttonYes.Height = (int)(buttonYes.Height * Direct2DTheme.DialogScaling);
             buttonNo.Width   = (int)(buttonNo.Width   * Direct2DTheme.DialogScaling);
@@ -80,11 +98,14 @@ namespace FamiStudio
             buttonNo.Left  = propertyPage.Right - buttonNo.Width - 5;
             buttonNo.Top   = propertyPage.Bottom + 0;
 
-            if (top)
-                Location = new Point(Location.X, Location.Y - Height);
-
-            if (StartPosition == FormStartPosition.CenterParent)
-                CenterToParent();
+            if (propertyPage.HasAdvancedProperties)
+            {
+                buttonAdvanced.Visible = true;
+                buttonAdvanced.Width   = (int)(buttonAdvanced.Width  * Direct2DTheme.DialogScaling);
+                buttonAdvanced.Height  = (int)(buttonAdvanced.Height * Direct2DTheme.DialogScaling);
+                buttonAdvanced.Left    = 5;
+                buttonAdvanced.Top     = propertyPage.Bottom + 0;
+            }
         }
 
         private void propertyPage_PropertyWantsClose(int idx)
@@ -120,6 +141,19 @@ namespace FamiStudio
         {
             DialogResult = DialogResult.Cancel;
             Close();
+        }
+
+        private void buttonAdvanced_Click(object sender, EventArgs e)
+        {
+            Debug.Assert(propertyPage.HasAdvancedProperties);
+
+            advancedPropertiesVisible = !advancedPropertiesVisible;
+            propertyPage.Build(advancedPropertiesVisible);
+            UpdateLayout();
+
+            var iconName = advancedPropertiesVisible ? "Minus" : "Plus";
+            var suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            buttonAdvanced.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{iconName}Small{suffix}.png"));
         }
 
         public void UpdateModalEvents()

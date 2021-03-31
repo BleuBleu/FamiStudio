@@ -27,7 +27,7 @@ namespace FamiStudio
 
         // The note where the bit is set will be inaudible.
         // Frames were hand-placed to avoid the first/last note (attack/stop) and the 2 middle spots (for half notes)
-        private static readonly int[][] NtscSourcePalTargetLookup = 
+        private static readonly int[][] NtscSourcePalTargetLookup =
         {
             /*  1 ( 1 over 6) */ new [] { 0b0,0b0,0b0,0b0,0b0,0b1 },
             /*  2 ( 1 over 3) */ new [] { 0b00,0b00,0b01 },
@@ -152,7 +152,7 @@ namespace FamiStudio
 
         public static byte[] GetTempoEnvelope(int noteLength, bool palSource)
         {
-            return palSource ? 
+            return palSource ?
                 PalToNtscTempoEnvelopes[noteLength - 1] :
                 NtscToPalTempoEnvelopes[noteLength - 1];
         }
@@ -170,7 +170,7 @@ namespace FamiStudio
 #if DEBUG
         public static void DumpFrameSkipInfo(bool pal)
         {
-            const float frameTimeMsPAL  = 1000.0f / NesApu.FpsPAL;
+            const float frameTimeMsPAL = 1000.0f / NesApu.FpsPAL;
             const float frameTimeMsNTSC = 1000.0f / NesApu.FpsNTSC;
 
 
@@ -179,7 +179,7 @@ namespace FamiStudio
             // until you find a number of frame that is divisible by 5 (pal) or 6 (ntsc).
 
             var divider = pal ? 5 : 6;
-            var frameTimeSource = pal ? frameTimeMsPAL  : frameTimeMsNTSC;
+            var frameTimeSource = pal ? frameTimeMsPAL : frameTimeMsNTSC;
             var frameTimeTarget = pal ? frameTimeMsNTSC : frameTimeMsPAL;
 
             for (var n = 1; n <= Song.MaxNoteLength; n++)
@@ -191,8 +191,8 @@ namespace FamiStudio
                     if ((numFrames % divider) == 0)
                     {
                         var numFrameSkipped = numFrames / divider;
-                        var durationSource  = numFrames * frameTimeSource;
-                        var durationTarget  = (numFrames + (pal ? numFrameSkipped : -numFrameSkipped)) * frameTimeTarget;
+                        var durationSource = numFrames * frameTimeSource;
+                        var durationTarget = (numFrames + (pal ? numFrameSkipped : -numFrameSkipped)) * frameTimeTarget;
                         var error = Math.Abs(durationTarget - durationSource);
 
                         if (pal)
@@ -207,6 +207,94 @@ namespace FamiStudio
             }
         }
 #endif
+
+        public class TempoInfo
+        {
+            public TempoInfo(int[] groove, bool pal)
+            {
+                var numFrames = 0;
+                foreach (var g in groove)
+                    numFrames += g;
+
+                var numer = pal ? 750.0f : 900.0f;
+                var denom = numFrames / (float)groove.Length;
+
+                this.bpm = numer / denom;
+                this.groove = groove;
+            }
+
+            public float bpm;
+            public int[] groove;
+        }
+
+        private const int MinNoteLength = 3;
+        private const int MaxNoteLength = 18;
+        private const float BpmThreshold = 2.0f;
+        private static readonly int[] GrooveLengths = new int[] { 2, 3, 4, 8 };
+
+        // Here we only compare NTSC tempos, but that's ok, its just to get 
+        // a list with a decent variety tempos.
+        public static int[] GetGrooveLengthsForNoteLength(int noteLength)
+        {
+            var lengths = new List<int>();
+            var bpm1 = 900.0f / noteLength;
+
+            foreach (int grooveLen in GrooveLengths)
+            {
+                var bpm2 = (900.0f * grooveLen) / (grooveLen * noteLength - 1);
+
+                if (Math.Abs(bpm2 - bpm1) < BpmThreshold)
+                    break;
+
+                lengths.Add(grooveLen);
+            }
+
+            return lengths.ToArray();
+        }
+
+        // This essentially build a table very similar to this:
+        // http://famitracker.com/wiki/index.php?title=Common_tempo_values
+        public static TempoInfo[] GetAvailableTempoList(bool pal)
+        {
+            float numerator = pal ? 750.0f : 900.0f;
+
+            List<TempoInfo> tempos = new List<TempoInfo>();
+
+            // Add last one.
+            tempos.Add(new TempoInfo(new int[] { MaxNoteLength }, pal));
+
+            for (int noteLen = MaxNoteLength - 1; noteLen >= MinNoteLength; noteLen--)
+            {
+                tempos.Add(new TempoInfo(new int[] { noteLen }, pal));
+
+                var grooveLengths = GetGrooveLengthsForNoteLength(noteLen);
+
+                foreach (int grooveLen in grooveLengths)
+                {
+                    var groove = new int[grooveLen];
+
+                    for (int j = 0; j < grooveLen - 1; j++)
+                        groove[j] = noteLen + 1;
+                    groove[grooveLen - 1] = noteLen;
+
+                    tempos.Add(new TempoInfo(groove, pal));
+
+                    if (grooveLen > 2)
+                    {
+                        groove[0] = noteLen + 1;
+                        for (int j = 1; j < grooveLen; j++)
+                            groove[j] = noteLen;
+
+                        tempos.Add(new TempoInfo(groove, pal));
+                    }
+                }
+            }
+
+            // Sort.
+            tempos.Sort((t1, t2) => t1.bpm.CompareTo(t2.bpm));
+
+            return tempos.ToArray();
+        }
     }
 }
 

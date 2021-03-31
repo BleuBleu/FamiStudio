@@ -54,6 +54,7 @@ namespace FamiStudio
         private Bitmap colorBitmap;
         private List<Property> properties = new List<Property>();
         private object userData;
+        private int advancedPropertyStart = -1;
 
         public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
         public event PropertyChangedDelegate PropertyChanged;
@@ -63,6 +64,7 @@ namespace FamiStudio
         public int LayoutHeight => layoutHeight;
         public int PropertyCount => properties.Count;
         public object UserData { get => userData; set => userData = value; }
+        public bool HasAdvancedProperties { get => advancedPropertyStart > 0; }
 
         [DllImport("user32.dll")]
         static extern bool HideCaret(IntPtr hWnd);
@@ -731,6 +733,11 @@ namespace FamiStudio
             textBox.Focus();
         }
 
+        public void BeginAdvancedProperties()
+        {
+            advancedPropertyStart = properties.Count;
+        }
+
         public object GetPropertyValue(int idx)
         {
             var prop = properties[idx];
@@ -794,7 +801,7 @@ namespace FamiStudio
             }
         }
         
-        public void Build()
+        public void Build(bool advanced = false)
         {
             SuspendLayout();
 
@@ -812,7 +819,9 @@ namespace FamiStudio
                 Controls.Remove(testLabel);
             }
 
-            for (int i = 0; i < properties.Count; i++)
+            var propertyCount = advanced && advancedPropertyStart > 0 ? properties.Count : advancedPropertyStart;
+
+            for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
 
@@ -828,7 +837,7 @@ namespace FamiStudio
             int widthNoMargin = Width - (margin * 2);
             int totalHeight = margin;
 
-            for (int i = 0; i < properties.Count; i++)
+            for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
                 var height = 0;
