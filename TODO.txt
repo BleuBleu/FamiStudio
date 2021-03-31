@@ -9,6 +9,10 @@ FamiStudio Tempo 2.0
 - Improve resize, make it clearer what it will do (move grid, resize notes, etc.)
 - How do we specify time signature? (pre-fl studio 20 like?)
 
+Questions:
+- Are tempo envelope always aligned (2,3,4,8) ? => They reset every pattern. *** TEST THAT.
+- Configurable groove? 3-4-3-3, 3-3-4-3, etc. => YES, not too many.
+
 FamiStudio 2.5.0
 ================
 / Low-pass filter in DPCM sample editor. (not sure.) Hot reload instead?
