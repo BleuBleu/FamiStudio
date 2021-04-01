@@ -66,6 +66,10 @@ namespace FamiStudio
             buttonNo.ButtonPressEvent += ButtonNo_ButtonPressEvent;
             buttonAdvanced.ButtonPressEvent += ButtonAdvanced_ButtonPressEvent;
 
+            buttonYes.TooltipText = "Accept";
+            buttonNo.TooltipText = "Cancel";
+            buttonAdvanced.TooltipText = "Toggle Advanced Options";
+
             hboxYesNo.PackStart(buttonYes, false, false, 0);
             hboxYesNo.PackStart(buttonNo, false, false, 0);
             hboxYesNo.Show();
