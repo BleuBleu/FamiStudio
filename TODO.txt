@@ -3,10 +3,9 @@ FamiStudio Tempo 2.0
 1) Build utils for tempo list
 2) Basic UI.
 	x Advanced section support
-	- Add tooltip to other dialogs + Linux.
+	x Add tooltip to other dialogs + Linux.
 	- List BPM, note frame length automatically.
-	- Move tempo dialog code to its own class, avoid duplicated code.
-	- 
+	x Move tempo dialog code to its own class, avoid duplicated code.
 3) Envelope calculation (native + adapted).
 4) Native playback.
 5) Adapted playback.
@@ -27,7 +26,7 @@ FamiStudio Tempo 2.0
 	- 
 
 Questions:
-- Are tempo envelope always aligned (2,3,4,8) ? => They reset every pattern. *** TEST THAT.
+- Are tempo envelope always aligned (2,3,4,8) ? => They reset every pattern?
 - Configurable groove? 3-4-3-3, 3-3-4-3, etc. => YES, not too many.
 
 FamiStudio 2.5.0

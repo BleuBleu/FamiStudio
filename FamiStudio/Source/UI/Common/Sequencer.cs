@@ -1695,25 +1695,18 @@ namespace FamiStudio
 
             dlg.Properties.UserData = song;
             dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
-            
-            if (song.UsesFamiTrackerTempo)
-            {
-                dlg.Properties.AddIntegerRange("Notes Per Beat :", song.GetPatternBeatLength(patternIdx), 1, Pattern.MaxLength, CommonTooltips.NotesPerBar); // 1
-                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx), 1, Pattern.MaxLength, CommonTooltips.NotesPerPattern); // 2
-                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiTrackerBPM(song.Project.PalMode, song.FamitrackerSpeed, song.FamitrackerTempo, song.GetPatternBeatLength(patternIdx)).ToString("n1"), CommonTooltips.BPM); // 3
-            }
-            else
-            {
-                var noteLength = song.GetPatternNoteLength(patternIdx);
 
-                dlg.Properties.AddIntegerRange("Frames Per Notes:", noteLength, Song.MinNoteLength, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 1
-                dlg.Properties.AddIntegerRange("Notes Per Beat :", song.GetPatternBeatLength(patternIdx) / noteLength, 1, Pattern.MaxLength, CommonTooltips.NotesPerBar); // 2
-                dlg.Properties.AddIntegerRange("Notes Per Pattern :", song.GetPatternLength(patternIdx) / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 3
-                dlg.Properties.AddLabel("BPM :", Song.ComputeFamiStudioBPM(song.Project.PalMode, noteLength, song.GetPatternBeatLength(patternIdx)).ToString("n1"), CommonTooltips.BPM); // 4
+            var minPattern = patternIdx;
+            var maxPattern = patternIdx;
+
+            if (IsSelectionValid(true))
+            {
+                minPattern = minSelectedPatternIdx;
+                maxPattern = maxSelectedPatternIdx;
             }
 
-            for (var i = 1; i < dlg.Properties.PropertyCount && i < 6; i++)
-                dlg.Properties.SetPropertyEnabled(i, enabled);
+            var tempoProperties = new TempoProperties(dlg.Properties, song, patternIdx, minPattern, maxPattern);
+            tempoProperties.EnableProperties(enabled);
 
             dlg.Properties.PropertyChanged += PatternCustomSettings_PropertyChanged;
             dlg.Properties.Build();
@@ -1722,63 +1715,9 @@ namespace FamiStudio
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
 
-                var minPattern = patternIdx;
-                var maxPattern = patternIdx;
+                var custom = dlg.Properties.GetPropertyValue<bool>(0);
 
-                if (IsSelectionValid(true))
-                {
-                    minPattern = minSelectedPatternIdx;
-                    maxPattern = maxSelectedPatternIdx;
-                }
-
-                var askedToConvertTempo = false;
-                var convertTempo = false;
-
-                for (int i = minPattern; i <= maxPattern; i++)
-                {
-                    var custom = dlg.Properties.GetPropertyValue<bool>(0);
-
-                    if (song.UsesFamiTrackerTempo)
-                    {
-                        var beatLength    = dlg.Properties.GetPropertyValue<int>(1);
-                        var patternLength = dlg.Properties.GetPropertyValue<int>(2);
-
-                        if (custom)
-                            song.SetPatternCustomSettings(i, patternLength, beatLength);
-                        else
-                            song.ClearPatternCustomSettings(i);
-                    }
-                    else
-                    {
-                        var noteLength = song.NoteLength;
-                        var patternLength = song.PatternLength;
-                        var beatLength = song.BeatLength;
-
-                        if (custom)
-                        {
-                            noteLength = dlg.Properties.GetPropertyValue<int>(1);
-                            beatLength = dlg.Properties.GetPropertyValue<int>(2) * noteLength;
-                            patternLength = dlg.Properties.GetPropertyValue<int>(3) * noteLength;
-                        }
-
-                        if (noteLength != song.GetPatternNoteLength(patternIdx))
-                        {
-                            if (!askedToConvertTempo)
-                            {
-                                convertTempo = PlatformUtils.MessageBox($"You changed the note length for this pattern, do you want FamiStudio to attempt convert the tempo by resizing notes?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
-                                askedToConvertTempo = true;
-                            }
-
-                            if (convertTempo)
-                                song.ResizePatternNotes(i, noteLength);
-                        }
-
-                        if (custom)
-                            song.SetPatternCustomSettings(i, patternLength, beatLength, noteLength);
-                        else
-                            song.ClearPatternCustomSettings(i);
-                    }
-                }
+                tempoProperties.Apply(custom);
 
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();

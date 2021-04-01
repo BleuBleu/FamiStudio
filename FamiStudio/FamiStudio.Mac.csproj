@@ -106,6 +106,7 @@
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
+    <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />

@@ -1978,30 +1978,7 @@ namespace FamiStudio
             dlg.Properties.AddColorPicker(song.Color); // 1
             dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, Song.MaxLength, CommonTooltips.SongLength); // 2
 
-            if (song.UsesFamiTrackerTempo)
-            {
-                dlg.Properties.AddIntegerRange("Tempo :", song.FamitrackerTempo, 32, 255, CommonTooltips.Tempo); // 3
-                dlg.Properties.AddIntegerRange("Speed :", song.FamitrackerSpeed, 1, 31, CommonTooltips.Speed); // 4
-                dlg.Properties.AddIntegerRange("Notes per Beat :", song.BeatLength, 1, 256, CommonTooltips.NotesPerBar); // 5
-                dlg.Properties.AddIntegerRange("Notes per Pattern :", song.PatternLength, 1, 256, CommonTooltips.NotesPerPattern); // 6
-                dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 7
-            }
-            else
-            {
-                dlg.Properties.AddIntegerRange("Frames per Note : ", song.NoteLength, Song.MinNoteLength, Song.MaxNoteLength, CommonTooltips.FramesPerNote); // 3
-                dlg.Properties.AddIntegerRange("Notes per Beat : ", song.BeatLength / song.NoteLength, 1, 256, CommonTooltips.NotesPerBar); // 4
-                dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 1, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 5
-                dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 6
-
-                var tempos = FamiStudioTempoUtils.GetAvailableTempoList(song.Project.PalMode);
-                var tempoStrings = tempos.Select(t => t.bpm.ToString("n1")).ToArray();
-
-                // MATTT
-                dlg.Properties.BeginAdvancedProperties();
-                dlg.Properties.AddIntegerRange("Test1 : ", 5, 0, 10); // 7
-                dlg.Properties.AddString("Test2 : ", "Hello"); // 8
-                dlg.Properties.AddDropDownList("BPM : ", tempoStrings, tempoStrings[0]);
-            }
+            var tempoProperties = new TempoProperties(dlg.Properties, song);
 
             dlg.Properties.Build();
             dlg.Properties.PropertyChanged += SongProperties_PropertyChanged;
@@ -2016,29 +1993,10 @@ namespace FamiStudio
                 if (App.Project.RenameSong(song, newName))
                 {
                     song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
-
-                    if (song.UsesFamiTrackerTempo)
-                    {
-                        song.FamitrackerTempo = dlg.Properties.GetPropertyValue<int>(3);
-                        song.FamitrackerSpeed = dlg.Properties.GetPropertyValue<int>(4);
-                        song.SetBeatLength(dlg.Properties.GetPropertyValue<int>(5));
-                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(6));
-                    }
-                    else
-                    {
-                        var newNoteLength = dlg.Properties.GetPropertyValue<int>(3);
-
-                        if (newNoteLength != song.NoteLength)
-                        {
-                            var convertTempo = PlatformUtils.MessageBox($"You changed the note length, do you want FamiStudio to attempt convert the tempo by resizing notes?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
-                            song.ResizeNotes(newNoteLength, convertTempo);
-                        }
-
-                        song.SetBeatLength(dlg.Properties.GetPropertyValue<int>(4) * song.NoteLength);
-                        song.SetDefaultPatternLength(dlg.Properties.GetPropertyValue<int>(5) * song.NoteLength);
-                    }
-
                     song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
+
+                    tempoProperties.Apply();
+
                     SongModified?.Invoke(song);
                     App.UndoRedoManager.EndTransaction();
                     RefreshButtons(false);
