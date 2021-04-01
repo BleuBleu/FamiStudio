@@ -33,6 +33,9 @@ namespace FamiStudio
             this.font     = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             this.fontBold = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
 
+            toolTip.SetToolTip(buttonYes, "Accept");
+            toolTip.SetToolTip(buttonNo, "Cancel");
+
             tableLayout.ColumnStyles[0].Width = tabsWidth * Direct2DTheme.DialogScaling;
         }
 

@@ -1993,10 +1993,14 @@ namespace FamiStudio
                 dlg.Properties.AddIntegerRange("Notes per Pattern : ", song.PatternLength / song.NoteLength, 1, Pattern.MaxLength / song.NoteLength, CommonTooltips.NotesPerPattern); // 5
                 dlg.Properties.AddLabel("BPM :", song.BPM.ToString("n1"), CommonTooltips.BPM); // 6
 
+                var tempos = FamiStudioTempoUtils.GetAvailableTempoList(song.Project.PalMode);
+                var tempoStrings = tempos.Select(t => t.bpm.ToString("n1")).ToArray();
+
                 // MATTT
                 dlg.Properties.BeginAdvancedProperties();
                 dlg.Properties.AddIntegerRange("Test1 : ", 5, 0, 10); // 7
                 dlg.Properties.AddString("Test2 : ", "Hello"); // 8
+                dlg.Properties.AddDropDownList("BPM : ", tempoStrings, tempoStrings[0]);
             }
 
             dlg.Properties.Build();

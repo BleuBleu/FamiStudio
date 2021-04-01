@@ -42,6 +42,9 @@ namespace FamiStudio
             buttonLeft.Left   = buttonRight.Left - buttonLeft.Width - 10;
             buttonLeft.Top    = buttonRight.Top;
 
+            toolTip.SetToolTip(buttonRight, "Next");
+            toolTip.SetToolTip(buttonLeft, "Previous");
+
             try
             {
                 label1.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);

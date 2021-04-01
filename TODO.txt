@@ -2,8 +2,8 @@ FamiStudio Tempo 2.0
 ====================
 1) Build utils for tempo list
 2) Basic UI.
-	/ Advanced secton support
-	- Add tooltip to other dialogs
+	x Advanced section support
+	- Add tooltip to other dialogs + Linux.
 	- List BPM, note frame length automatically.
 	- Move tempo dialog code to its own class, avoid duplicated code.
 	- 
@@ -16,6 +16,15 @@ FamiStudio Tempo 2.0
 - Improve resize, make it clearer what it will do (move grid, resize notes, etc.)
 - How do we specify time signature? (pre-fl studio 20 like?)
 - Better resize support when changing time signature??? Needed or not?
+
+- Convert demo songs to new tempo
+	- Gimmick
+	- Tower
+	- Any others?
+
+- Format fixes:
+	- Video speed.
+	- 
 
 Questions:
 - Are tempo envelope always aligned (2,3,4,8) ? => They reset every pattern. *** TEST THAT.

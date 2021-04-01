@@ -58,7 +58,7 @@ namespace FamiStudio
             buttonNo.Image       = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
             buttonAdvanced.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.PlusSmall{suffix}.png"));
 
-            toolTip.SetToolTip(buttonYes, "Apply");
+            toolTip.SetToolTip(buttonYes, "Accept");
             toolTip.SetToolTip(buttonNo, "Cancel");
             toolTip.SetToolTip(buttonAdvanced, "Toggle Advanced Options");
         }
