@@ -43,13 +43,14 @@ namespace FamiStudio
             this.patternIdx = patternIdx;
             this.minPatternIdx = minPatternIdx;
             this.maxPatternIdx = maxPatternIdx;
-            this.firstPropIdx = props.PropertyCount;
 
             props.PropertyChanged += Props_PropertyChanged;
         }
 
         public void AddProperties()
         {
+            firstPropIdx = props.PropertyCount;
+
             if (song.UsesFamiTrackerTempo)
             {
                 if (patternIdx < 0)

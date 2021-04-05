@@ -132,7 +132,7 @@ namespace FamiStudio
                     groove = newGroove;
                     grooveArrayIndex = 0;
                     grooveFrameIndex = 0;
-                    groovePaddingMode = song.GetPatternExtraFramePlacement(playPattern);
+                    groovePaddingMode = song.GetPatternGroovePaddingMode(playPattern);
 
                     tempoEnvelope = FamiStudioTempoUtils.BuildTempoEnvelope(groove, groovePaddingMode, song.Project.PalMode);
                     tempoEnvelopeCounter = tempoEnvelope[0];

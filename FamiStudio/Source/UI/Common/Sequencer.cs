@@ -1122,7 +1122,7 @@ namespace FamiStudio
                     if (song.PatternHasCustomSettings(srcIndex))
                     {
                         var srcCustomSettings = song.GetPatternCustomSettings(srcIndex);
-                        song.SetPatternCustomSettings(i, srcCustomSettings.patternLength, srcCustomSettings.beatLength, srcCustomSettings.groove);
+                        song.SetPatternCustomSettings(i, srcCustomSettings.patternLength, srcCustomSettings.beatLength, srcCustomSettings.groove, srcCustomSettings.groovePaddingMode);
                     }
                 }
 
@@ -1167,7 +1167,8 @@ namespace FamiStudio
                                 i + startPatternIndex,
                                 customSettings[i].patternLength,
                                 customSettings[i].beatLength,
-                                customSettings[i].groove);
+                                customSettings[i].groove,
+                                customSettings[i].groovePaddingMode);
                         }
                         else
                         {
@@ -1341,7 +1342,8 @@ namespace FamiStudio
                                             nj,
                                             customSettings[j - minSelectedPatternIdx].patternLength,
                                             customSettings[j - minSelectedPatternIdx].beatLength, 
-                                            customSettings[j - minSelectedPatternIdx].groove);
+                                            customSettings[j - minSelectedPatternIdx].groove,
+                                            customSettings[j - minSelectedPatternIdx].groovePaddingMode);
                                     }
                                     else
                                     {
@@ -1703,11 +1705,11 @@ namespace FamiStudio
             }
 
             var tempoProperties = new TempoProperties(dlg.Properties, song, patternIdx, minPattern, maxPattern);
-            tempoProperties.EnableProperties(enabled);
 
             dlg.Properties.UserData = song;
             dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
             tempoProperties.AddProperties();
+            tempoProperties.EnableProperties(enabled);
             dlg.Properties.PropertyChanged += PatternCustomSettings_PropertyChanged;
             dlg.Properties.UserData = tempoProperties;
             dlg.Properties.Build();

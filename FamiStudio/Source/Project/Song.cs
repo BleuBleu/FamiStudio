@@ -376,7 +376,7 @@ namespace FamiStudio
             UpdatePatternStartNotes();
         }
 
-        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customBeatLength, int[] groove = null)
+        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customBeatLength, int[] groove = null, int groovePaddingMode = GroovePaddingType.Middle)
         {
             Debug.Assert(customPatternLength > 0 && customPatternLength < Pattern.MaxLength);
 
@@ -403,6 +403,7 @@ namespace FamiStudio
                 patternCustomSettings[patternIdx].beatLength = customBeatLength;
                 patternCustomSettings[patternIdx].noteLength = customNoteLength;
                 patternCustomSettings[patternIdx].groove = groove;
+                patternCustomSettings[patternIdx].groovePaddingMode = groovePaddingMode;
             }
 
             UpdatePatternStartNotes();
@@ -442,9 +443,10 @@ namespace FamiStudio
             return settings.useCustomSettings ? settings.groove : groove;
         }
 
-        public int GetPatternExtraFramePlacement(int patternIdx)
+        public int GetPatternGroovePaddingMode(int patternIdx)
         {
-            return groovePaddingMode; // TEMPOTODO : Per pattern!!!
+            var settings = patternCustomSettings[patternIdx];
+            return settings.useCustomSettings ? settings.groovePaddingMode : groovePaddingMode;
         }
 
         public int GetPatternStartNote(int patternIdx, int note = 0)
@@ -1063,9 +1065,14 @@ namespace FamiStudio
 
                     // At version 10 (FamiStudio 3.0.0) we improved tempo.
                     if (buffer.Version >= 10)
+                    {
                         buffer.Serialize(ref customSettings.groove);
+                        buffer.Serialize(ref customSettings.groovePaddingMode);
+                    }
                     else
+                    {
                         customSettings.groove = customSettings.useCustomSettings ? new[] { customSettings.noteLength } : null;
+                    }
 
                     // At version 8 (FamiStudio 2.3.0), we added custom beat length for FamiTracker tempo, so we need to initialize the value here.
                     if (buffer.Version < 8 && project.UsesFamiTrackerTempo && patternCustomSettings[i].useCustomSettings && patternCustomSettings[i].beatLength == 0)
@@ -1102,6 +1109,7 @@ namespace FamiStudio
             public int noteLength;
             public int beatLength;
             public int[] groove;
+            public int groovePaddingMode;
 
             public void Clear()
             {
@@ -1109,6 +1117,7 @@ namespace FamiStudio
                 patternLength = 0;
                 noteLength = 0;
                 beatLength = 0;
+                groovePaddingMode = GroovePaddingType.Middle;
                 groove = null;
             }
 
@@ -1119,6 +1128,7 @@ namespace FamiStudio
                 clone.patternLength = patternLength;
                 clone.noteLength = noteLength;
                 clone.beatLength = beatLength;
+                clone.groovePaddingMode = groovePaddingMode;
                 if (groove != null)
                     clone.groove = groove.Clone() as int[];
                 return clone;
