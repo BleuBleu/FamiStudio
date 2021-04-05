@@ -24,7 +24,7 @@ namespace FamiStudio
         public readonly static string BPM = "Beats per minute.";
         public readonly static string FramesPerNote = "Number of NTSC frames (1/60th of a second) in a notes. Longer notes lead to slower tempo.";
         public readonly static string NotesPerPattern = "Number of notes in a pattern. A pattern is the smallest unit of your song that you may want to repeat multiple times.";
-        public readonly static string NotesPerBar = "Number of notes in a bar. This is purely cosmetic. A darker line will be drawn between bars in the piano roll.";
+        public readonly static string NotesPerBar = "Number of notes in a bar. A darker line will be drawn between bars in the piano roll. Affects BPM calculation.";
     }
 
     public static class TutorialMessages

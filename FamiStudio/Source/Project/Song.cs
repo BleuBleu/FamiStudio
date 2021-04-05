@@ -7,38 +7,12 @@ namespace FamiStudio
 {
     public class Song
     {
-        public const int MaxLength = 256;
-        public const int MinNoteLength = 1;
+        public const int MaxLength     = 256;
+        public const int MinNoteLength = 1; // TEMPOTODO : Remove. Duplicated from FamiStudioTempoUtils. 
         public const int MaxNoteLength = 18;
 
         public const int NativeTempoNTSC = 150;
         public const int NativeTempoPAL  = 125;
-
-        public class PatternCustomSetting
-        {
-            public bool useCustomSettings;
-            public int  patternLength;
-            public int  noteLength;
-            public int  beatLength;
-
-            public void Clear()
-            {
-                useCustomSettings = false;
-                patternLength = 0;
-                noteLength = 0;
-                beatLength = 0;
-            }
-
-            public PatternCustomSetting Clone()
-            {
-                var clone = new PatternCustomSetting();
-                clone.useCustomSettings = useCustomSettings;
-                clone.patternLength = patternLength;
-                clone.noteLength = noteLength;
-                clone.beatLength = beatLength;
-                return clone;
-            }
-        };
 
         private int id;
         private Project project;
@@ -57,7 +31,9 @@ namespace FamiStudio
         private int famitrackerSpeed = 6;
 
         // These are for FamiStudio tempo mode
-        private int noteLength = 10;
+        private int   noteLength = 10;
+        private int[] groove = new[] { 10 };
+        private int   groovePaddingMode = GroovePaddingType.Middle;
 
         public int Id => id;
         public Project Project => project;
@@ -67,6 +43,8 @@ namespace FamiStudio
         public int Length { get => songLength; }
         public int PatternLength { get => patternLength; }
         public int BeatLength { get => beatLength; }
+        public int[] Groove { get => groove; }
+        public int GroovePaddingMode { get => groovePaddingMode; }
         public int LoopPoint { get => loopPoint; }
         public bool UsesFamiStudioTempo => project.UsesFamiStudioTempo;
         public bool UsesFamiTrackerTempo => project.UsesFamiTrackerTempo;
@@ -97,6 +75,7 @@ namespace FamiStudio
             if (tempoMode == TempoType.FamiStudio)
             {
                 noteLength = 10;
+                groove = new[] { 10 };
                 beatLength = noteLength * 4;
             }
             else
@@ -138,17 +117,26 @@ namespace FamiStudio
             }
         }
 
-        public void DuplicateInstancesWithDifferentLengths()
+        public void MakePatternInstanceWithDifferentLengthsUnique()
         {
             foreach (var channel in channels)
             {
-                channel.DuplicateInstancesWithDifferentLengths();
+                channel.MakePatternInstanceWithDifferentLengthsUnique();
             }
         }
 
+        public void MakePatternInstancesUnique()
+        {
+            foreach (var channel in channels)
+            {
+                channel.MakePatternInstanceWithDifferentLengthsUnique();
+            }
+        }
+
+        // TEMPOTODO : Groove in custom settings here.
         public bool Split(int factor)
         {
-            DuplicateInstancesWithDifferentLengths();
+            MakePatternInstanceWithDifferentLengthsUnique();
 
             if (factor == 1)
                 return true;
@@ -319,6 +307,11 @@ namespace FamiStudio
                 beatLength = newBeatLength;
         }
 
+        public void SetGroovePaddingMode(int mode)
+        {
+            groovePaddingMode = mode;
+        }
+
         public void SetLoopPoint(int loop)
         {
             loopPoint = Math.Min(loop, songLength - 1);
@@ -341,6 +334,7 @@ namespace FamiStudio
             }
         }
 
+        // TEMPOTODO : Revisit this.
         public void SetSensibleBeatLength()
         {
             if (UsesFamiTrackerTempo)
@@ -382,7 +376,7 @@ namespace FamiStudio
             UpdatePatternStartNotes();
         }
 
-        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customBeatLength, int customNoteLength = 0)
+        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customBeatLength, int[] groove = null)
         {
             Debug.Assert(customPatternLength > 0 && customPatternLength < Pattern.MaxLength);
 
@@ -391,20 +385,24 @@ namespace FamiStudio
 
             if (project.UsesFamiTrackerTempo)
             {
-                Debug.Assert(customNoteLength == 0);
+                Debug.Assert(groove == null);
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
                 patternCustomSettings[patternIdx].beatLength = customBeatLength;
             }
             else
             {
+                FamiStudioTempoUtils.ValidateGroove(groove);
+
+                var customNoteLength = Utils.Min(groove);
+
                 Debug.Assert(customPatternLength % customNoteLength == 0);
-                Debug.Assert(customNoteLength != 0);
                 Debug.Assert(customBeatLength != 0);
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
                 patternCustomSettings[patternIdx].beatLength = customBeatLength;
                 patternCustomSettings[patternIdx].noteLength = customNoteLength;
+                patternCustomSettings[patternIdx].groove = groove;
             }
 
             UpdatePatternStartNotes();
@@ -436,6 +434,17 @@ namespace FamiStudio
         {
             var settings = patternCustomSettings[patternIdx];
             return settings.useCustomSettings ? settings.patternLength : patternLength;
+        }
+
+        public int[] GetPatternGroove(int patternIdx)
+        {
+            var settings = patternCustomSettings[patternIdx];
+            return settings.useCustomSettings ? settings.groove : groove;
+        }
+
+        public int GetPatternExtraFramePlacement(int patternIdx)
+        {
+            return groovePaddingMode; // TEMPOTODO : Per pattern!!!
         }
 
         public int GetPatternStartNote(int patternIdx, int note = 0)
@@ -571,8 +580,10 @@ namespace FamiStudio
             }
         }
 
-        public void ResizeNotes(int newNoteLength, bool convert)
+        public void ChangeFamiStudioTempoGroove(int[] newGroove, bool convert)
         {
+            var newNoteLength = Utils.Min(newGroove);
+
             Debug.Assert(UsesFamiStudioTempo);
             Debug.Assert(newNoteLength >= MinNoteLength && newNoteLength <= MaxNoteLength);
 
@@ -590,6 +601,7 @@ namespace FamiStudio
             }
 
             noteLength = newNoteLength;
+            groove     = newGroove;
         }
 
         public static float ComputeFamiTrackerBPM(bool palPlayback, int speed, int tempo, int beatLength)
@@ -597,9 +609,9 @@ namespace FamiStudio
             return tempo * (palPlayback ? 20 : 24) / (float)(speed * beatLength);
         }
 
-        public static float ComputeFamiStudioBPM(bool palSource, int noteLength, int beatLength)
+        public static float ComputeFamiStudioBPM(bool palSource, int[] groove, int beatLength)
         {
-            return (palSource? 3000 : 3600) / (float)(beatLength);
+            return FamiStudioTempoUtils.ComputeBpmForGroove(palSource, groove, beatLength);
         }
 
         public float BPM
@@ -607,7 +619,7 @@ namespace FamiStudio
             get
             {
                 if (UsesFamiStudioTempo)
-                    return ComputeFamiStudioBPM(project.PalMode, noteLength, beatLength);
+                    return ComputeFamiStudioBPM(project.PalMode, groove, beatLength / noteLength);
                 else
                     return ComputeFamiTrackerBPM(project.PalMode, famitrackerSpeed, famitrackerTempo, beatLength);
             }
@@ -682,6 +694,34 @@ namespace FamiStudio
             UpdatePatternStartNotes();
             for (int i = 0; i < patternStartNote.Length; i++)
                 Debug.Assert(oldPatternInstancesStartNote[i] == patternStartNote[i]);
+
+            if (UsesFamiStudioTempo)
+            {
+                FamiStudioTempoUtils.ValidateGroove(groove);
+                Debug.Assert(noteLength == Utils.Min(groove));
+
+                for (int i = 0; i < songLength; i++)
+                {
+                    var custom = patternCustomSettings[i];
+                    if (custom.useCustomSettings)
+                    {
+                        Debug.Assert(custom.groove != null);
+                        Debug.Assert(custom.noteLength == Utils.Min(custom.groove));
+                    }
+                    else
+                    {
+                        Debug.Assert(custom.groove == null);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < songLength; i++)
+                {
+                    var custom = patternCustomSettings[i];
+                    Debug.Assert(custom.groove == null);
+                }
+            }
         }
 #endif
 
@@ -781,7 +821,7 @@ namespace FamiStudio
             }
 
             noteLength    = newNoteLength;
-            beatLength     = newBeatLength;
+            beatLength    = newBeatLength;
             patternLength = newPatternLength;
 
             RemoveUnsupportedEffects();
@@ -832,6 +872,21 @@ namespace FamiStudio
             }
         }
 
+        public void PermanentlyApplyGrooves()
+        {
+            if (UsesFamiStudioTempo)
+            {
+                // TEMPOTODO : We need this function to be smarter. Only
+                // de-instanciate patterns when needed.
+
+                // Since grooves might not be aligned to pattern sizes, 
+                // we need every pattern to be unique.
+                // MakePatternInstancesUnique();
+                
+
+            }
+        }
+
         public bool ApplySpeedEffectAt(int patternIdx, int noteIdx, ref int speed)
         {
             if (UsesFamiStudioTempo)
@@ -867,6 +922,12 @@ namespace FamiStudio
             noteCount += (n1 - n0);
 
             return noteCount;
+        }
+
+        public void ApplyGrooveToNoteIndex(int patternIdx, ref int noteIdx)
+        {
+            // Given a visual note index, converts it to a real frame index, 
+            // as it will be played by the player.
         }
 
         public float CountFramesBetween(int p0, int n0, int p1, int n1, int currentSpeed, bool pal)
@@ -985,12 +1046,26 @@ namespace FamiStudio
                 buffer.Serialize(ref loopPoint);
                 buffer.Serialize(ref noteLength);
 
+                // At version 10 (FamiStudio 3.0.0) we improved tempo.
+                if (buffer.Version >= 10)
+                    buffer.Serialize(ref groove);
+                else
+                    groove = new[] { noteLength };
+
                 for (int i = 0; i < songLength; i++)
                 {
-                    buffer.Serialize(ref patternCustomSettings[i].useCustomSettings);
-                    buffer.Serialize(ref patternCustomSettings[i].patternLength);
-                    buffer.Serialize(ref patternCustomSettings[i].noteLength);
-                    buffer.Serialize(ref patternCustomSettings[i].beatLength);
+                    var customSettings = patternCustomSettings[i];
+
+                    buffer.Serialize(ref customSettings.useCustomSettings);
+                    buffer.Serialize(ref customSettings.patternLength);
+                    buffer.Serialize(ref customSettings.noteLength);
+                    buffer.Serialize(ref customSettings.beatLength);
+
+                    // At version 10 (FamiStudio 3.0.0) we improved tempo.
+                    if (buffer.Version >= 10)
+                        buffer.Serialize(ref customSettings.groove);
+                    else
+                        customSettings.groove = customSettings.useCustomSettings ? new[] { customSettings.noteLength } : null;
 
                     // At version 8 (FamiStudio 2.3.0), we added custom beat length for FamiTracker tempo, so we need to initialize the value here.
                     if (buffer.Version < 8 && project.UsesFamiTrackerTempo && patternCustomSettings[i].useCustomSettings && patternCustomSettings[i].beatLength == 0)
@@ -1018,6 +1093,56 @@ namespace FamiStudio
             // Before 2.3.0, songs had an invalid color by default.
             if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
                 color = ThemeBase.RandomCustomColor();
+        }
+
+        public class PatternCustomSetting
+        {
+            public bool useCustomSettings;
+            public int patternLength;
+            public int noteLength;
+            public int beatLength;
+            public int[] groove;
+
+            public void Clear()
+            {
+                useCustomSettings = false;
+                patternLength = 0;
+                noteLength = 0;
+                beatLength = 0;
+                groove = null;
+            }
+
+            public PatternCustomSetting Clone()
+            {
+                var clone = new PatternCustomSetting();
+                clone.useCustomSettings = useCustomSettings;
+                clone.patternLength = patternLength;
+                clone.noteLength = noteLength;
+                clone.beatLength = beatLength;
+                if (groove != null)
+                    clone.groove = groove.Clone() as int[];
+                return clone;
+            }
+        };
+
+    }
+
+    public static class GroovePaddingType
+    {
+        public const int Beginning = 0;
+        public const int Middle    = 1;
+        public const int End       = 2;
+
+        public static readonly string[] Names =
+        {
+            "Beginning",
+            "Middle",
+            "End"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
         }
     }
 }

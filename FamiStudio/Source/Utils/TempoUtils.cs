@@ -6,235 +6,14 @@ namespace FamiStudio
 {
     static class FamiStudioTempoUtils
     {
-        //NTSC Note Length  1 Error = 0.15 ms (0.15 %). Must run  1 double frames over 6 notes in PAL mode.
-        //NTSC Note Length  2 Error = 0.15 ms (0.15 %). Must run  1 double frames over 3 notes in PAL mode.
-        //NTSC Note Length  3 Error = 0.15 ms (0.15 %). Must run  1 double frames over 2 notes in PAL mode.
-        //NTSC Note Length  4 Error = 0.30 ms (0.15 %). Must run  2 double frames over 3 notes in PAL mode.
-        //NTSC Note Length  5 Error = 0.75 ms (0.15 %). Must run  5 double frames over 6 notes in PAL mode.
-        //NTSC Note Length  6 Error = 0.15 ms (0.15 %). Must run  1 double frames over 1 notes in PAL mode.
-        //NTSC Note Length  7 Error = 1.05 ms (0.15 %). Must run  7 double frames over 6 notes in PAL mode.
-        //NTSC Note Length  8 Error = 0.60 ms (0.15 %). Must run  4 double frames over 3 notes in PAL mode.
-        //NTSC Note Length  9 Error = 0.45 ms (0.15 %). Must run  3 double frames over 2 notes in PAL mode.
-        //NTSC Note Length 10 Error = 0.75 ms (0.15 %). Must run  5 double frames over 3 notes in PAL mode.
-        //NTSC Note Length 11 Error = 1.65 ms (0.15 %). Must run 11 double frames over 6 notes in PAL mode.
-        //NTSC Note Length 12 Error = 0.30 ms (0.15 %). Must run  2 double frames over 1 notes in PAL mode.
-        //NTSC Note Length 13 Error = 1.96 ms (0.15 %). Must run 13 double frames over 6 notes in PAL mode.
-        //NTSC Note Length 14 Error = 1.05 ms (0.15 %). Must run  7 double frames over 3 notes in PAL mode.
-        //NTSC Note Length 15 Error = 0.75 ms (0.15 %). Must run  5 double frames over 2 notes in PAL mode.
-        //NTSC Note Length 16 Error = 1.20 ms (0.15 %). Must run  8 double frames over 3 notes in PAL mode.
-        //NTSC Note Length 17 Error = 2.56 ms (0.15 %). Must run 17 double frames over 6 notes in PAL mode.
-        //NTSC Note Length 18 Error = 0.45 ms (0.15 %). Must run  3 double frames over 1 notes in PAL mode.
-
-        // The note where the bit is set will be inaudible.
-        // Frames were hand-placed to avoid the first/last note (attack/stop) and the 2 middle spots (for half notes)
-        private static readonly int[][] NtscSourcePalTargetLookup =
-        {
-            /*  1 ( 1 over 6) */ new [] { 0b0,0b0,0b0,0b0,0b0,0b1 },
-            /*  2 ( 1 over 3) */ new [] { 0b00,0b00,0b01 },
-            /*  3 ( 1 over 2) */ new [] { 0b000,0b010 },
-            /*  4 ( 2 over 3) */ new [] { 0b0000,0b0100,0b0100 },
-            /*  5 ( 5 over 6) */ new [] { 0b00000,0b01000,0b01000,0b01000,0b01000,0b01000 },
-            /*  6 ( 1 over 1) */ new [] { 0b010000 },
-            /*  7 ( 7 over 6) */ new [] { 0b0100000,0b0100000,0b0100000,0b0100000,0b0100000,0b0100010 },
-            /*  8 ( 4 over 3) */ new [] { 0b01000000,0b01000000,0b01000100 },
-            /*  9 ( 3 over 2) */ new [] { 0b010000000,0b010001000 },
-            /* 10 ( 5 over 3) */ new [] { 0b0100000000,0b0100001000,0b0100001000 },
-            /* 11 (11 over 6) */ new [] { 0b01000000000,0b01000001000,0b01000001000,0b01000001000,0b01000001000,0b01000001000 },
-            /* 12 ( 2 over 1) */ new [] { 0b010000010000 },
-            /* 13 (13 over 6) */ new [] { 0b0100000001000,0b0100000001000,0b0100000001000,0b0100000001000,0b0100000001000,0b0100010001000 },
-            /* 14 ( 7 over 3) */ new [] { 0b01000000001000,0b01000000001000,0b01000100001000 },
-            /* 15 ( 5 over 2) */ new [] { 0b010000000001000,0b010000100001000 },
-            /* 16 ( 8 over 3) */ new [] { 0b0100000000010000,0b0100001000010000,0b0100001000010000 },
-            /* 17 (17 over 6) */ new [] { 0b01000000000001000,0b01000001000001000,0b01000001000001000,0b01000001000001000,0b01000001000001000,0b01000001000001000 },
-            /* 18 ( 3 over 1) */ new [] { 0b010000010000010000 },
-        };
-
-        // PAL Note Length  1 Error = 0.15 ms (0.15 %). Must skip  1 frames over 5 notes in NTSC mode.
-        // PAL Note Length  2 Error = 0.30 ms (0.15 %). Must skip  2 frames over 5 notes in NTSC mode.
-        // PAL Note Length  3 Error = 0.45 ms (0.15 %). Must skip  3 frames over 5 notes in NTSC mode.
-        // PAL Note Length  4 Error = 0.60 ms (0.15 %). Must skip  4 frames over 5 notes in NTSC mode.
-        // PAL Note Length  5 Error = 0.15 ms (0.15 %). Must skip  1 frames over 1 notes in NTSC mode.
-        // PAL Note Length  6 Error = 0.90 ms (0.15 %). Must skip  6 frames over 5 notes in NTSC mode.
-        // PAL Note Length  7 Error = 1.05 ms (0.15 %). Must skip  7 frames over 5 notes in NTSC mode.
-        // PAL Note Length  8 Error = 1.20 ms (0.15 %). Must skip  8 frames over 5 notes in NTSC mode.
-        // PAL Note Length  9 Error = 1.35 ms (0.15 %). Must skip  9 frames over 5 notes in NTSC mode.
-        // PAL Note Length 10 Error = 0.30 ms (0.15 %). Must skip  2 frames over 1 notes in NTSC mode.
-        // PAL Note Length 11 Error = 1.65 ms (0.15 %). Must skip 11 frames over 5 notes in NTSC mode.
-        // PAL Note Length 12 Error = 1.80 ms (0.15 %). Must skip 12 frames over 5 notes in NTSC mode.
-        // PAL Note Length 13 Error = 1.96 ms (0.15 %). Must skip 13 frames over 5 notes in NTSC mode.
-        // PAL Note Length 14 Error = 2.11 ms (0.15 %). Must skip 14 frames over 5 notes in NTSC mode.
-        // PAL Note Length 15 Error = 0.45 ms (0.15 %). Must skip  3 frames over 1 notes in NTSC mode.
-        // PAL Note Length 16 Error = 2.41 ms (0.15 %). Must skip 16 frames over 5 notes in NTSC mode.
-        // PAL Note Length 17 Error = 2.56 ms (0.15 %). Must skip 17 frames over 5 notes in NTSC mode.
-        // PAL Note Length 18 Error = 2.71 ms (0.15 %). Must skip 18 frames over 5 notes in NTSC mode.
-
-        // The note where the bit is set, the engine will take a 1 frame pause.
-        // Frames were hand-placed to avoid the first/last note (attack/stop) and the 2 middle spots (for half notes)
-        private static readonly int[][] PalSourceNtscTargetLookup =
-        {
-            /*  1 ( 1 over 5) */ new [] { 0b0,0b0,0b0,0b0,0b1 },
-            /*  2 ( 2 over 5) */ new [] { 0b00,0b01,0b00,0b01,0b00 },
-            /*  3 ( 3 over 5) */ new [] { 0b010,0b000,0b010,0b000,0b010 },
-            /*  4 ( 4 over 5) */ new [] { 0b0000,0b0100,0b0100,0b0100,0b0100 },
-            /*  5 ( 1 over 1) */ new [] { 0b01000 },
-            /*  6 ( 6 over 5) */ new [] { 0b010000,0b010000,0b010000,0b010000,0b010010 },
-            /*  7 ( 7 over 5) */ new [] { 0b0100000,0b0100010,0b0100000,0b0100010,0b0100000 },
-            /*  8 ( 8 over 5) */ new [] { 0b01000100,0b01000000,0b01000100,0b01000000,0b01000100 },
-            /*  9 ( 9 over 5) */ new [] { 0b010000000,0b010000100,0b010000100,0b010000100,0b010000100 },
-            /* 10 ( 2 over 1) */ new [] { 0b0100001000 },
-            /* 11 (11 over 5) */ new [] { 0b01000001000,0b01000001000,0b01000001000,0b01000001000,0b01001001000 },
-            /* 12 (12 over 5) */ new [] { 0b010000000100,0b010010000100,0b010000000100,0b010010000100,0b010000000100 },
-            /* 13 (13 over 5) */ new [] { 0b0100010001000,0b0100000001000,0b0100010001000,0b0100000001000,0b0100010001000 },
-            /* 14 (14 over 5) */ new [] { 0b01000000001000,0b01000100001000,0b01000100001000,0b01000100001000,0b01000100001000 },
-            /* 15 ( 3 over 1) */ new [] { 0b010000100001000 },
-            /* 16 (16 over 5) */ new [] { 0b0010000000100010,0b0010000000100010,0b0010000000100010,0b0010000000100010,0b0010001000100010 },
-            /* 17 (17 over 5) */ new [] { 0b00100000001000100,0b00100010001000100,0b00100000001000100,0b00100010001000100,0b00100000001000100},
-            /* 18 (18 over 5) */ new [] { 0b001000100010000100,0b001000000010000100,0b001000100010000100,0b001000000010000100,0b001000100010000100 }
-        };
-
-        private static byte[][] NtscToPalTempoEnvelopes = new byte[Song.MaxNoteLength][];
-        private static byte[][] PalToNtscTempoEnvelopes = new byte[Song.MaxNoteLength][];
-
-        private static void BuildTempoEnvelopes(bool pal)
-        {
-            var lookup = pal ? PalSourceNtscTargetLookup : NtscSourcePalTargetLookup;
-
-            for (int i = 0; i < lookup.Length; i++)
-            {
-                var noteLength = i + 1;
-                var frames = lookup[i];
-                var totalFrames = noteLength * frames.Length;
-                var numBitSets = 0;
-                var lastFrameIndex = -1;
-                var firstFrameIndex = -1;
-                var envelope = new List<byte>();
-                var sum = 0;
-
-                for (int n = 0; n < frames.Length; n++)
-                {
-                    var bitPattern = frames[n];
-
-                    for (int f = 0, b = 1 << i; f < noteLength; f++, b >>= 1)
-                    {
-                        if ((bitPattern & b) != 0)
-                        {
-                            var frameIndex = n * noteLength + f;
-                            var frameDelta = frameIndex - lastFrameIndex;
-                            envelope.Add((byte)(frameDelta + (pal ? 1 : -1)));
-                            sum += frameDelta;
-                            lastFrameIndex = frameIndex;
-                            if (firstFrameIndex < 0) firstFrameIndex = frameIndex;
-                        }
-                    }
-
-                    numBitSets += Utils.NumberOfSetBits(bitPattern);
-                }
-
-                if (pal)
-                    envelope[0]--;
-
-                var remainingFrames = totalFrames - sum;
-
-                if (remainingFrames != 0)
-                    envelope.Add((byte)(remainingFrames + firstFrameIndex + 1 + (pal ? 1 : -1)));
-                envelope.Add(0x80);
-
-                if (pal)
-                    PalToNtscTempoEnvelopes[i] = envelope.ToArray();
-                else
-                    NtscToPalTempoEnvelopes[i] = envelope.ToArray();
-
-#if FALSE
-                Debug.WriteLine($"{(pal ? "PAL" : "NTSC")} note length {noteLength} has {numBitSets} bit sets over {frames.Length} notes.");
-#endif
-            }
-        }
-
-        public static byte[] GetTempoEnvelope(int noteLength, bool palSource)
-        {
-            return palSource ?
-                PalToNtscTempoEnvelopes[noteLength - 1] :
-                NtscToPalTempoEnvelopes[noteLength - 1];
-        }
-
-        public static void Initialize()
-        {
-#if FALSE // DEBUG
-            DumpFrameSkipInfo(false);
-            DumpFrameSkipInfo(true);
-#endif
-            BuildTempoEnvelopes(false);
-            BuildTempoEnvelopes(true);
-        }
-
-#if DEBUG
-        public static void DumpFrameSkipInfo(bool pal)
-        {
-            const float frameTimeMsPAL = 1000.0f / NesApu.FpsPAL;
-            const float frameTimeMsNTSC = 1000.0f / NesApu.FpsNTSC;
-
-
-            // 5/6th is pretty much the perfect ratio between PAL/NTSC. 
-            // Look for how many notes of one machine you need to run on the other
-            // until you find a number of frame that is divisible by 5 (pal) or 6 (ntsc).
-
-            var divider = pal ? 5 : 6;
-            var frameTimeSource = pal ? frameTimeMsPAL : frameTimeMsNTSC;
-            var frameTimeTarget = pal ? frameTimeMsNTSC : frameTimeMsPAL;
-
-            for (var n = 1; n <= Song.MaxNoteLength; n++)
-            {
-                for (int i = 1; i < 10; i++)
-                {
-                    int numFrames = n * i;
-
-                    if ((numFrames % divider) == 0)
-                    {
-                        var numFrameSkipped = numFrames / divider;
-                        var durationSource = numFrames * frameTimeSource;
-                        var durationTarget = (numFrames + (pal ? numFrameSkipped : -numFrameSkipped)) * frameTimeTarget;
-                        var error = Math.Abs(durationTarget - durationSource);
-
-                        if (pal)
-                            Debug.WriteLine($"PAL Note Length  {n} Error = {error:0.00} ms ({error * 100 / durationSource:0.00} %). Must skip {numFrameSkipped} frames over {i} notes in NTSC mode.");
-                        else
-                            Debug.WriteLine($"NTSC Note Length {n} Error = {error:0.00} ms ({error * 100 / durationSource:0.00} %). Must run {numFrameSkipped} double frames over {i} notes in PAL mode.");
-
-                        break;
-                    }
-                }
-
-            }
-        }
-#endif
-
-        public class TempoInfo
-        {
-            public TempoInfo(int[] groove, bool pal)
-            {
-                var numFrames = 0;
-                foreach (var g in groove)
-                    numFrames += g;
-
-                var numer = pal ? 750.0f : 900.0f;
-                var denom = numFrames / (float)groove.Length;
-
-                this.bpm = numer / denom;
-                this.groove = groove;
-            }
-
-            public float bpm;
-            public int[] groove;
-        }
-
-        private const int MinNoteLength = 3;
+        private const int MinNoteLength = 1;
         private const int MaxNoteLength = 18;
         private const float BpmThreshold = 2.0f;
         private static readonly int[] GrooveLengths = new int[] { 2, 3, 4, 8 };
 
         // Here we only compare NTSC tempos, but that's ok, its just to get 
         // a list with a decent variety tempos.
-        public static int[] GetGrooveLengthsForNoteLength(int noteLength)
+        private static int[] GetGrooveLengthsForNoteLength(int noteLength)
         {
             var lengths = new List<int>();
             var bpm1 = 900.0f / noteLength;
@@ -243,6 +22,7 @@ namespace FamiStudio
             {
                 var bpm2 = (900.0f * grooveLen) / (grooveLen * noteLength - 1);
 
+                // Avoid having tempos that are too similar. 
                 if (Math.Abs(bpm2 - bpm1) < BpmThreshold)
                     break;
 
@@ -254,18 +34,16 @@ namespace FamiStudio
 
         // This essentially build a table very similar to this:
         // http://famitracker.com/wiki/index.php?title=Common_tempo_values
-        public static TempoInfo[] GetAvailableTempoList(bool pal)
+        public static TempoInfo[] GetAvailableTempos(bool pal, int notesPerBeat = 4)
         {
-            float numerator = pal ? 750.0f : 900.0f;
-
             List<TempoInfo> tempos = new List<TempoInfo>();
 
             // Add last one.
-            tempos.Add(new TempoInfo(new int[] { MaxNoteLength }, pal));
+            tempos.Add(new TempoInfo(new int[] { MaxNoteLength }, pal, notesPerBeat));
 
             for (int noteLen = MaxNoteLength - 1; noteLen >= MinNoteLength; noteLen--)
             {
-                tempos.Add(new TempoInfo(new int[] { noteLen }, pal));
+                tempos.Add(new TempoInfo(new int[] { noteLen }, pal, notesPerBeat));
 
                 var grooveLengths = GetGrooveLengthsForNoteLength(noteLen);
 
@@ -277,15 +55,16 @@ namespace FamiStudio
                         groove[j] = noteLen + 1;
                     groove[grooveLen - 1] = noteLen;
 
-                    tempos.Add(new TempoInfo(groove, pal));
+                    tempos.Add(new TempoInfo(groove, pal, notesPerBeat));
 
                     if (grooveLen > 2)
                     {
+                        groove = new int[grooveLen];
                         groove[0] = noteLen + 1;
                         for (int j = 1; j < grooveLen; j++)
                             groove[j] = noteLen;
 
-                        tempos.Add(new TempoInfo(groove, pal));
+                        tempos.Add(new TempoInfo(groove, pal, notesPerBeat));
                     }
                 }
             }
@@ -293,8 +72,322 @@ namespace FamiStudio
             // Sort.
             tempos.Sort((t1, t2) => t1.bpm.CompareTo(t2.bpm));
 
+            //Debug.WriteLine($"NOTES PER BEAT {notesPerBeat}");
+            //foreach (var tempo in tempos)
+            //    Debug.WriteLine(tempo.bpm.ToString("n1"));
+
+            //BuildTempoEnvelope(new[] { 7, 6, 6 }, 1, false);
+
             return tempos.ToArray();
         }
+
+        public static float ComputeBpmForGroove(bool pal, int[] groove, int notesPerBeat)
+        {
+            var grooveNumFrames = 0;
+            var grooveLength = 0;
+
+            do
+            {
+                grooveNumFrames += Utils.Sum(groove);
+                grooveLength += groove.Length;
+            }
+            while ((grooveLength % notesPerBeat) != 0);
+
+            float numer = pal ? 3000.0f : 3600.0f;
+            float denom = grooveNumFrames / (float)grooveLength * notesPerBeat;
+
+            return numer / denom;
+        }
+
+        public static TempoInfo[] GetAvailableTemposForBeatLength(bool pal, int notesPerBeat)
+        {
+            var tempos = GetAvailableTempos(pal);
+
+            foreach (var tempo in tempos)
+                tempo.bpm = ComputeBpmForGroove(pal, tempo.groove, notesPerBeat);
+
+            return tempos;
+        }
+
+        // Give a groove, like 7-6-6-6, returns all possible permutations.
+        //  - 7-6-6-6
+        //  - 6-7-6-6
+        //  - 6-6-7-6
+        //  - 6-6-6-7
+        public static int[][] GetAvailableGrooves(int[] groove)
+        {
+            ValidateGroove(groove);
+
+            // Get all permutations
+            var permutations = new List<int[]>();
+            Utils.Permutations(groove, permutations);
+
+            return permutations.ToArray();
+        }
+        
+        // Make sure the groove has been generated by us.
+        public static bool ValidateGroove(int[] groove)
+        {
+            var min = Utils.Min(groove);
+            var max = Utils.Max(groove);
+
+            bool valid = false;
+            if (min == max)
+            {
+                valid = 
+                    groove.Length == 1   &&
+                    min >= MinNoteLength &&
+                    min <= MaxNoteLength;
+            }
+            else
+            {
+                int numMin = 0;
+                int numMax = 0;
+
+                for (int i = 0; i < groove.Length; i++)
+                {
+                    if (groove[i] == min)
+                        numMin++;
+                    else if (groove[i] == max)
+                        numMax++;
+                    else
+                        return false;
+                }
+
+                valid = 
+                    (max - min) <= 1 &&
+                    (numMin == 1 || numMax == 1) && 
+                    min >= MinNoteLength &&
+                    min <= MaxNoteLength &&
+                    max >= MinNoteLength &&
+                    min <= MaxNoteLength &&
+                    Array.IndexOf(GrooveLengths, groove.Length) >= 0;
+            }
+
+            Debug.Assert(valid);
+
+            return valid;
+        }
+
+        public static byte[] BuildTempoEnvelope(int[] groove, int groovePaddingMode, bool palSource)
+        {
+            var dstFactor = palSource ? 6 : 5;
+            var srcFactor = palSource ? 5 : 6;
+            var noteLength = Utils.Min(groove);
+            var grooveNumFrames = Utils.Sum(groove);
+            var grooveRepeatCount = 1;
+
+            // Repeat the groove until we have something perfectly divisible by 6 (5 on PAL).
+            while ((grooveNumFrames % srcFactor) != 0)
+            {
+                grooveNumFrames += Utils.Sum(groove);
+                grooveRepeatCount++;
+            }
+
+            // Figure out how many frames that it on the playback machine.
+            var adaptedNumFrames = grooveNumFrames / srcFactor * dstFactor;
+
+            // Mark some frames as "important", this will typically be the first 
+            // and last frame of the note. This will preserve the attack and 
+            // 1-frame silence between notes.
+            var importantFrames = new bool[grooveNumFrames];
+            var frameIndex = 0;
+
+            for (int i = 0; i < grooveRepeatCount; i++)
+            {
+                for (int j = 0; j < groove.Length; j++)
+                {
+                    if (groove[j] == noteLength)
+                    {
+                        importantFrames[frameIndex] = true;
+                        importantFrames[frameIndex + noteLength - 1] = true;
+                    }
+                    else
+                    {
+                        if (groovePaddingMode != GroovePaddingType.Beginning || noteLength == 1)
+                            importantFrames[frameIndex] = true;
+                        else
+                            importantFrames[frameIndex + 1] = true;
+
+                        if (groovePaddingMode != GroovePaddingType.End || noteLength == 1)
+                            importantFrames[frameIndex + noteLength] = true;
+                        else
+                            importantFrames[frameIndex + noteLength - 1] = true;
+                    }
+
+                    frameIndex += groove[j];
+                }
+            }
+
+#if FALSE
+            var numSkipFrames = palSource ? adaptedNumFrames - grooveNumFrames : grooveNumFrames - adaptedNumFrames;
+            var bestScore  = int.MaxValue;
+            var bestOffset = -1;
+
+            for (int i = 0; i < srcFactor; i++)
+            {
+                var score = 0;
+
+                frameIndex = i;
+                for (int j = 0; j < numSkipFrames; j++)
+                {
+                    if (importantFrames[frameIndex])
+                        score++;
+                    frameIndex += srcFactor;
+                }
+
+                if (score < bestScore)
+                {
+                    bestScore  = score;
+                    bestOffset = i;
+                }
+            }
+#else
+            // Start by distributing the skip (or double) frames evenly.
+            var numSkipFrames = palSource ? adaptedNumFrames - grooveNumFrames : grooveNumFrames - adaptedNumFrames;
+            var skipFrames = new bool[grooveNumFrames];
+
+            frameIndex = srcFactor / 2;
+            for (int i = 0; i < numSkipFrames; i++)
+            {
+                skipFrames[frameIndex] = true;
+                frameIndex += srcFactor;
+            }
+
+            int GetFrameCost(int idx)
+            {
+                if (!skipFrames[idx])
+                    return 0;
+
+                var cost = 0;
+
+                // Penalize important frames
+                if (importantFrames[idx])
+                    cost += srcFactor;
+
+                // Look right for another skipped frame.
+                for (int i = 1; i < srcFactor; i++)
+                {
+                    var nextIdx = idx + i;
+                    if (nextIdx >= skipFrames.Length)
+                        nextIdx -= skipFrames.Length;
+                    if (skipFrames[nextIdx])
+                    {
+                        // The closer we are, the higher the cost.
+                        cost += (srcFactor - i);
+                        break;
+                    }
+                }
+
+                // Look left for another skipped frame.
+                for (int i = 1; i < srcFactor; i++)
+                {
+                    var prevIdx = idx - i;
+                    if (prevIdx < 0)
+                        prevIdx += skipFrames.Length;
+                    // The closer we are, the higher the cost.
+                    if (skipFrames[prevIdx])
+                    {
+                        cost += (srcFactor - i);
+                        break;
+                    }
+                }
+
+                return cost;
+            }
+
+            var frameCosts = new int[grooveNumFrames];
+
+            // Optimize.
+            for (int i = 0; i < 100; i++)
+            {
+                // Update costs.
+                var maxCost = -10;
+                var maxCostIndex = -1;
+                var totalCost = 0;
+
+                for (int j = 0; j < frameCosts.Length; j++)
+                {
+                    var cost = GetFrameCost(j);
+
+                    frameCosts[j] = cost;
+                    totalCost += cost;
+
+                    if (cost > maxCost)
+                    {
+                        maxCost = cost;
+                        maxCostIndex = j;
+                    }
+                }
+
+                if (maxCost == 0)
+                    break;
+
+                var currentFrameCost = GetFrameCost(maxCostIndex);
+
+                // Try to optimize the most expensive frame by moving it to the left.
+                if (maxCostIndex > 0 && !skipFrames[maxCostIndex - 1] && !importantFrames[maxCostIndex - 1])
+                {
+                    Utils.Swap(ref skipFrames[maxCostIndex], ref skipFrames[maxCostIndex - 1]);
+                    if (GetFrameCost(maxCostIndex - 1) < currentFrameCost)
+                        continue;
+                    Utils.Swap(ref skipFrames[maxCostIndex], ref skipFrames[maxCostIndex - 1]);
+                }
+
+                // Try to optimize the most expensive frame by moving it to the right.
+                if (maxCostIndex < skipFrames.Length - 1 && !skipFrames[maxCostIndex + 1] && !importantFrames[maxCostIndex + 1])
+                {
+                    Utils.Swap(ref skipFrames[maxCostIndex], ref skipFrames[maxCostIndex + 1]);
+                    if (GetFrameCost(maxCostIndex + 1) < currentFrameCost)
+                        continue;
+                    Utils.Swap(ref skipFrames[maxCostIndex], ref skipFrames[maxCostIndex + 1]);
+                }
+
+                break;
+            }
+#endif
+
+            // Build the actual envelope.
+            var lastFrameIndex = -1;
+            var firstFrameIndex = -1;
+            var envelope = new List<byte>();
+            var sum = 0;
+
+            for (int i = 0; i < skipFrames.Length; i++)
+            {
+                if (skipFrames[i])
+                {
+                    var frameDelta = i - lastFrameIndex;
+                    envelope.Add((byte)(frameDelta + (palSource ? 1 : -1)));
+                    sum += frameDelta;
+                    lastFrameIndex = i;
+                    if (firstFrameIndex < 0)
+                        firstFrameIndex = i;
+                }
+            }
+
+            if (palSource)
+                envelope[0]--;
+
+            var remainingFrames = skipFrames.Length - sum;
+            if (remainingFrames != 0)
+                envelope.Add((byte)(remainingFrames + firstFrameIndex + 1 + (palSource ? 1 : -1)));
+            envelope.Add(0x80);
+
+            return envelope.ToArray();
+        }
+    }
+
+    public class TempoInfo
+    {
+        public TempoInfo(int[] groove, bool pal, int notesPerBeat)
+        {
+            this.bpm = FamiStudioTempoUtils.ComputeBpmForGroove(pal, groove, notesPerBeat);
+            this.groove = groove;
+        }
+
+        public float bpm;
+        public int[] groove;
     }
 }
 

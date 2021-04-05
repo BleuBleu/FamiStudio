@@ -95,7 +95,7 @@ namespace FamiStudio
             return true;
         }
 
-        public void DuplicateInstancesWithDifferentLengths()
+        public void MakePatternInstanceWithDifferentLengthsUnique()
         {
             var instanceLengthMap = new Dictionary<Pattern, int>();
 
@@ -116,6 +116,25 @@ namespace FamiStudio
                     }
 
                     instanceLengthMap[pattern] = patternLen;
+                }
+            }
+        }
+
+        public void MakePatternInstancesUnique()
+        {
+            var visitedPatterns = new HashSet<Pattern>();
+
+            for (int p = 0; p < song.Length; p++)
+            {
+                var pattern = patternInstances[p];
+
+                if (visitedPatterns.Contains(pattern))
+                {
+                    patternInstances[p] = pattern.ShallowClone();
+                }
+                else
+                {
+                    visitedPatterns.Add(pattern);
                 }
             }
         }

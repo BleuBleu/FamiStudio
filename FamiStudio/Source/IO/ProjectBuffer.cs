@@ -21,6 +21,7 @@ namespace FamiStudio
         void Serialize(ref byte[] values);
         void Serialize(ref sbyte[] values);
         void Serialize(ref short[] values);
+        void Serialize(ref int[] values);
         void Serialize(ref Song song);
         void Serialize(ref Instrument instrument);
         void Serialize(ref Arpeggio arpeggio);
@@ -144,6 +145,23 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 buffer.AddRange(BitConverter.GetBytes(values[i]));
             idx += values.Length * sizeof(short);
+        }
+
+        public void Serialize(ref int[] values)
+        {
+            if (values == null)
+            {
+                buffer.AddRange(BitConverter.GetBytes(-1));
+                idx += sizeof(int);
+            }
+            else
+            {
+                buffer.AddRange(BitConverter.GetBytes(values.Length));
+                idx += sizeof(int);
+                for (int i = 0; i < values.Length; i++)
+                    buffer.AddRange(BitConverter.GetBytes(values[i]));
+                idx += values.Length * sizeof(int);
+            }
         }
 
         public void Serialize(ref Song song)
@@ -322,6 +340,25 @@ namespace FamiStudio
             }
         }
 
+        public void Serialize(ref int[] dest)
+        {
+            int len = BitConverter.ToInt32(buffer, idx);
+            idx += sizeof(int);
+            if (len < 0)
+            {
+                dest = null;
+            }
+            else
+            {
+                dest = new int[len];
+                for (int i = 0; i < dest.Length; i++)
+                {
+                    dest[i] = BitConverter.ToInt16(buffer, idx);
+                    idx += sizeof(int);
+                }
+            }
+        }
+
         public void Serialize(ref Song song)
         {
             int songId = -1;
@@ -457,7 +494,21 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 crc = CRC32.Compute(BitConverter.GetBytes(values[i]), crc);
         }
-        
+
+        public void Serialize(ref int[] values)
+        {
+            if (values == null)
+            {
+                crc = CRC32.Compute(BitConverter.GetBytes(-1), crc);
+            }
+            else
+            {
+                crc = CRC32.Compute(BitConverter.GetBytes(values.Length), crc);
+                for (int i = 0; i < values.Length; i++)
+                    crc = CRC32.Compute(BitConverter.GetBytes(values[i]), crc);
+            }
+        }
+
         public void Serialize(ref Song song)
         {
             int songId = song == null ? -1 : song.Id;

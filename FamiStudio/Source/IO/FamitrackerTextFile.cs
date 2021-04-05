@@ -827,7 +827,7 @@ namespace FamiStudio
                 TruncateLongPatterns(song);
                 CreateMissingPatterns(song);
                 song.CleanupUnusedPatterns();
-                song.DuplicateInstancesWithDifferentLengths();
+                song.MakePatternInstanceWithDifferentLengthsUnique();
 
                 lines.Add($"TRACK{song.PatternLength,4}{song.FamitrackerSpeed,4}{song.FamitrackerTempo,4} \"{song.Name}\"");
                 lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(3, song.Channels.Length))}");

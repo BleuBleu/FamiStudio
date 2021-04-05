@@ -1,20 +1,32 @@
 FamiStudio Tempo 2.0
 ====================
-1) Build utils for tempo list
-2) Basic UI.
+/ Build utils for tempo list
+/ Basic UI.
 	x Advanced section support
 	x Add tooltip to other dialogs + Linux.
-	- List BPM, note frame length automatically.
+	- BPM selection:
+		- Based on the tempo list + note length, find the tempo that matches the closest.
+		x BPM computation will repeat the groove until its divisble by note length.
+		/ We should display 3 comments like : "Integral", "Uneven", "Unaligned" ? (good, medium, bad).
+		/ Advanced settings, groove list,
+		/ Padding location
 	x Move tempo dialog code to its own class, avoid duplicated code.
-3) Envelope calculation (native + adapted).
-4) Native playback.
-5) Adapted playback.
-
-- Render min(groove)
-- Function for insert blank notes for export.
-- Improve resize, make it clearer what it will do (move grid, resize notes, etc.)
-- How do we specify time signature? (pre-fl studio 20 like?)
-- Better resize support when changing time signature??? Needed or not?
+/ Native playback.
+	/ Figure out which part need to handle visual notes and groove notes.
+		/ BasePlayer 
+		- Song.CountNumFrames. 
+/ Adapted playback.
+	x Compute envelope.
+- Function to "bake" groove for export.
+	- Let's reset the groove every pattern.
+	- This will make things WAY easier.
+	- Change FamiTone2 export to use the 2 free special code (delay cuts/notes) 
+		- tempo envelope change
+		- tempo envelope reset (jump to zero).
+- Conversion to milliseconds.
+- Improve resize, make it clearer what it will do (move grid, resize notes, etc.)/
+	-> Does it work well with time signature changes, etc.
+- Groove option for FamiTracker too? Look at 0cc, see how they present this to the user.
 
 - Convert demo songs to new tempo
 	- Gimmick
@@ -22,12 +34,8 @@ FamiStudio Tempo 2.0
 	- Any others?
 
 - Format fixes:
-	- Video speed.
-	- 
-
-Questions:
-- Are tempo envelope always aligned (2,3,4,8) ? => They reset every pattern?
-- Configurable groove? 3-4-3-3, 3-3-4-3, etc. => YES, not too many.
+	- Video speed, need smoothing?
+	- Migrate strange values to 4 notes per beat.
 
 FamiStudio 2.5.0
 ================
@@ -58,6 +66,7 @@ Testing
 - MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage.
 - MacOS : "Whenever I minimize it tho, you can't open it back up by clicking on the icon. You have to right click it and click 'Show All Windows', then click the window there.". how2bboss.
 - Linux : Test scaling more.
+- Windows : Scaling, 150% and stuff for the warning in dialogs.
 - OGL : Grey screen happens sometimes.
 
 Linux notes

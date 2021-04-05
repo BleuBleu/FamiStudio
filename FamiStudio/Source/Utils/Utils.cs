@@ -221,6 +221,67 @@ namespace FamiStudio
             return (float)Math.Pow(10.0f, db / 20.0f);
         }
 
+        public static int Min(int[] array)
+        {
+            var min = array[0];
+            for (int i = 1; i < array.Length; i++)
+                min = Math.Min(min, array[i]);
+            return min;
+        }
+
+        public static int Max(int[] array)
+        {
+            var max = array[0];
+            for (int i = 1; i < array.Length; i++)
+                max = Math.Max(max, array[i]);
+            return max;
+        }
+
+        public static int Sum(int[] array)
+        {
+            var sum = array[0];
+            for (int i = 1; i < array.Length; i++)
+                sum += array[i];
+            return sum;
+        }
+
+        public static void Permutations(int[] array, List<int[]> permutations, int idx = 0)
+        {
+            if (idx == array.Length)
+            {
+                // Avoid duplicates.
+                if (permutations.FindIndex(a => CompareArrays(a, array) == 0) < 0)
+                    permutations.Add(array.Clone() as int[]);
+            }
+
+            for (int i = idx; i < array.Length; i++)
+            {
+                Swap(ref array[idx], ref array[i]);
+                Permutations(array, permutations, idx + 1);
+                Swap(ref array[idx], ref array[i]);
+            }
+        }
+
+        public static bool CompareFloats(float f1, float f2, float tolerance = 0.001f)
+        {
+            return Math.Abs(f1 - f2) < tolerance;
+        }
+
+        public static int CompareArrays(int[] a1, int[] a2)
+        {
+            if (a1.Length != a2.Length)
+                return int.MaxValue;
+
+            for (int i = 0; i < a1.Length; i++)
+            {
+                var comp = a1[i].CompareTo(a2[i]);
+                if (comp != 0)
+                    return comp;
+            }
+
+            return 0;
+        }
+
         public static void OpenUrl(string url)
         {
             try

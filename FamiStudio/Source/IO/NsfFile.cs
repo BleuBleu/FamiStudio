@@ -864,7 +864,7 @@ namespace FamiStudio
 
             NsfSetTrack(nsf, songIndex);
 
-            song.ResizeNotes(1, false);
+            song.ChangeFamiStudioTempoGroove(new[] { 1 }, false); // TEMPOTODO : This doesnt feel right?
             song.SetDefaultPatternLength(patternLength);
 
             for (int i = 0; i < song.Channels.Length; i++)
@@ -928,10 +928,10 @@ namespace FamiStudio
                     }
                 }
                                 
-                song.ResizeNotes(noteLen, false);
+                song.ChangeFamiStudioTempoGroove(new[] { noteLen }, false);
             }
             else
-                song.ResizeNotes(1, false);
+                song.ChangeFamiStudioTempoGroove(new[] { 1 }, false); // TEMPOTODO : Doesnt sound right.
 
             song.SetSensibleBeatLength();
             song.DeleteEmptyPatterns();

@@ -279,7 +279,7 @@ namespace FamiStudio
                             buffer.Serialize(ref vrc7PatchRegs[7]);
                             break;
                         case global::FamiStudio.ExpansionType.Vrc6:
-                            // At version 10 (FamiStudio 2.5.0) we added a master volume to the VRC6 saw.
+                            // At version 10 (FamiStudio 3.0.0) we added a master volume to the VRC6 saw.
                             if (buffer.Version >= 10)
                                 buffer.Serialize(ref vrc6SawMasterVolume);
                             else

@@ -121,7 +121,7 @@ namespace FamiStudio
                 else
                 {
                     lines.Add(line);
-                    lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), {(project.PalMode ? 2 : 0)}, 0");
+                    lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), {(project.PalMode ? 2 : 0)}, 0"); // TEMPOTODO : Groove here
                 }
 
                 size += song.Channels.Length * 2 + 4;
@@ -519,6 +519,7 @@ namespace FamiStudio
             return size;
         }
 
+        // TEMPOTODO : Grooves
         private int OutputTempoEnvelopes()
         {
             var size = 0;
@@ -540,7 +541,7 @@ namespace FamiStudio
 
                 foreach (var noteLength in uniqueNoteLengths)
                 {
-                    var env = FamiStudioTempoUtils.GetTempoEnvelope(noteLength, project.PalMode);
+                    var env = (byte[])null; // TEMPOTODO : FamiStudioTempoUtils.GetTempoEnvelope(noteLength, project.PalMode);
 
                     lines.Add($"{ll}tempo_env{noteLength}:");
                     lines.Add($"\t{db} {String.Join(",", env.Select(i => $"${i:x2}"))}");
@@ -737,6 +738,7 @@ namespace FamiStudio
                     {
                         var noteLength = song.GetPatternNoteLength(p);
 
+                        // TEMPOTODO : Compare grooves here
                         if (noteLength != previousNoteLength || (p == song.LoopPoint && p != 0))
                         { 
                             if (!test)

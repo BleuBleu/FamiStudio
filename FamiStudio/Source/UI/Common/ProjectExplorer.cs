@@ -1971,17 +1971,16 @@ namespace FamiStudio
 
         private void EditSongProperties(Point pt, Song song)
         {
-            var dlg = new PropertyDialog(PointToScreen(pt), 240, true);
+            var dlg = new PropertyDialog(PointToScreen(pt), 300, true);
+
+            var tempoProperties = new TempoProperties(dlg.Properties, song);
 
             dlg.Properties.UserData = song;
             dlg.Properties.AddColoredString(song.Name, song.Color); // 0
             dlg.Properties.AddColorPicker(song.Color); // 1
             dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, Song.MaxLength, CommonTooltips.SongLength); // 2
-
-            var tempoProperties = new TempoProperties(dlg.Properties, song);
-
+            tempoProperties.AddProperties();
             dlg.Properties.Build();
-            dlg.Properties.PropertyChanged += SongProperties_PropertyChanged;
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
@@ -2008,28 +2007,6 @@ namespace FamiStudio
                 }
 
                 ConditionalInvalidate();
-            }
-        }
-
-        private void SongProperties_PropertyChanged(PropertyPage props, int idx, object value)
-        {
-            var song = props.UserData as Song;
-
-            if (selectedSong.UsesFamiTrackerTempo && (idx == 3 || idx == 4 || idx == 5)) // 3/4 = Tempo/Speed, 5 = beat length
-            {
-                var tempo = props.GetPropertyValue<int>(3);
-                var speed = props.GetPropertyValue<int>(4);
-                var beatLength = props.GetPropertyValue<int>(5);
-
-                props.SetLabelText(7, Song.ComputeFamiTrackerBPM(selectedSong.Project.PalMode, speed, tempo, beatLength).ToString("n1"));
-            }
-            else if (idx == 3 || idx == 4) // 3 = note length, 4 = beat length.
-            {
-                var noteLength = props.GetPropertyValue<int>(3);
-                var beatLength = props.GetPropertyValue<int>(4);
-
-                props.UpdateIntegerRange(5, 1, Pattern.MaxLength / noteLength);
-                props.SetLabelText(6, Song.ComputeFamiStudioBPM(selectedSong.Project.PalMode, noteLength, beatLength * noteLength).ToString("n1"));
             }
         }
 

@@ -1122,7 +1122,7 @@ namespace FamiStudio
                     if (song.PatternHasCustomSettings(srcIndex))
                     {
                         var srcCustomSettings = song.GetPatternCustomSettings(srcIndex);
-                        song.SetPatternCustomSettings(i, srcCustomSettings.patternLength, srcCustomSettings.beatLength, srcCustomSettings.noteLength);
+                        song.SetPatternCustomSettings(i, srcCustomSettings.patternLength, srcCustomSettings.beatLength, srcCustomSettings.groove);
                     }
                 }
 
@@ -1167,7 +1167,7 @@ namespace FamiStudio
                                 i + startPatternIndex,
                                 customSettings[i].patternLength,
                                 customSettings[i].beatLength,
-                                customSettings[i].noteLength);
+                                customSettings[i].groove);
                         }
                         else
                         {
@@ -1341,7 +1341,7 @@ namespace FamiStudio
                                             nj,
                                             customSettings[j - minSelectedPatternIdx].patternLength,
                                             customSettings[j - minSelectedPatternIdx].beatLength, 
-                                            customSettings[j - minSelectedPatternIdx].noteLength);
+                                            customSettings[j - minSelectedPatternIdx].groove);
                                     }
                                     else
                                     {
@@ -1693,9 +1693,6 @@ namespace FamiStudio
             var song = Song;
             var enabled = song.PatternHasCustomSettings(patternIdx);
 
-            dlg.Properties.UserData = song;
-            dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
-
             var minPattern = patternIdx;
             var maxPattern = patternIdx;
 
@@ -1708,17 +1705,17 @@ namespace FamiStudio
             var tempoProperties = new TempoProperties(dlg.Properties, song, patternIdx, minPattern, maxPattern);
             tempoProperties.EnableProperties(enabled);
 
+            dlg.Properties.UserData = song;
+            dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
+            tempoProperties.AddProperties();
             dlg.Properties.PropertyChanged += PatternCustomSettings_PropertyChanged;
+            dlg.Properties.UserData = tempoProperties;
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
-
-                var custom = dlg.Properties.GetPropertyValue<bool>(0);
-
-                tempoProperties.Apply(custom);
-
+                tempoProperties.Apply(dlg.Properties.GetPropertyValue<bool>(0));
                 App.UndoRedoManager.EndTransaction();
                 ConditionalInvalidate();
                 PatternModified?.Invoke();
@@ -1727,26 +1724,10 @@ namespace FamiStudio
 
         private void PatternCustomSettings_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            var song = props.UserData as Song;
-
             if (idx == 0)
             {
-                for (var i = 1; i < props.PropertyCount && i < 6; i++)
-                    props.SetPropertyEnabled(i, (bool)value);
-            }
-            else if (Song.UsesFamiStudioTempo && (idx == 1 || idx == 2))
-            {
-                var noteLength = props.GetPropertyValue<int>(1);
-                var beatLength = props.GetPropertyValue<int>(2);
-
-                props.UpdateIntegerRange(2, 1, Pattern.MaxLength / noteLength);
-                props.SetLabelText(4, Song.ComputeFamiStudioBPM(song.Project.PalMode, noteLength, beatLength * noteLength).ToString("n1"));
-            }
-            else if (Song.UsesFamiTrackerTempo && idx == 1)
-            {
-                var beatLength = (int)value;
-
-                props.SetLabelText(3, Song.ComputeFamiTrackerBPM(song.Project.PalMode, song.FamitrackerSpeed, song.FamitrackerTempo, beatLength).ToString("n1"));
+                var tempoProperties = props.UserData as TempoProperties;
+                tempoProperties.EnableProperties((bool)value);
             }
         }
 

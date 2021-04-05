@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Reflection;
 
 #if FAMISTUDIO_WINDOWS
 using RenderTheme = FamiStudio.Direct2DTheme;
@@ -31,11 +32,20 @@ namespace FamiStudio
         ProgressBar
     };
 
+    public enum CommentType
+    {
+        Good,
+        Warning,
+        Error
+    };
+
     public partial class PropertyPage : UserControl
     {
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
         public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
         public delegate string SliderFormatText(double value);
+
+        private static Bitmap[] commentIcons;
 
         class Property
         {
@@ -47,6 +57,7 @@ namespace FamiStudio
             public ListClicked listDoubleClick;
             public ListClicked listRightClick;
             public SliderFormatText sliderFormat;
+            public PictureBox warningIcon;
         };
 
         private int layoutHeight;
@@ -55,6 +66,7 @@ namespace FamiStudio
         private List<Property> properties = new List<Property>();
         private object userData;
         private int advancedPropertyStart = -1;
+        private bool showWarnings = false;
 
         public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
         public event PropertyChangedDelegate PropertyChanged;
@@ -65,6 +77,7 @@ namespace FamiStudio
         public int PropertyCount => properties.Count;
         public object UserData { get => userData; set => userData = value; }
         public bool HasAdvancedProperties { get => advancedPropertyStart > 0; }
+        public bool ShowWarnings { get => showWarnings; set => showWarnings = value; }
 
         [DllImport("user32.dll")]
         static extern bool HideCaret(IntPtr hWnd);
@@ -80,6 +93,16 @@ namespace FamiStudio
             }
             catch
             {
+            }
+
+            if (commentIcons ==  null)
+            {
+                string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
+                
+                commentIcons = new Bitmap[3];
+                commentIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;
+                commentIcons[1] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningYellow{suffix}.png")) as Bitmap;
+                commentIcons[2] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Warning{suffix}.png"))       as Bitmap;
             }
         }
 
@@ -212,7 +235,7 @@ namespace FamiStudio
             HideCaret((sender as TextBox).Handle);
         }
 
-        private PictureBox CreatePictureBox(Color color)
+        private PictureBox CreateColorPickerPictureBox(Color color)
         {
             var pictureBox = new NoInterpolationPictureBox();
             var bmp = GetColorBitmap();
@@ -225,6 +248,19 @@ namespace FamiStudio
             pictureBox.MouseDown += PictureBox_MouseDown;
             pictureBox.MouseMove += PictureBox_MouseMove;
             pictureBox.MouseDoubleClick += PictureBox_MouseDoubleClick;
+
+            return pictureBox;
+        }
+
+        private PictureBox CreatePictureBox(Bitmap bmp)
+        {
+            var pictureBox = new PictureBox();
+
+            pictureBox.Image = bmp;
+            pictureBox.Width  = (int)(bmp.Width  * RenderTheme.DialogScaling);
+            pictureBox.Height = (int)(bmp.Height * RenderTheme.DialogScaling);
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox.BorderStyle = BorderStyle.None;
 
             return pictureBox;
         }
@@ -398,7 +434,7 @@ namespace FamiStudio
                 listBox.Items.Add(values[i], selected != null ? selected[i] : true);
         }
 
-        public void AddColoredString(string value, Color color)
+        public int AddColoredString(string value, Color color)
         {
             properties.Add(
                 new Property()
@@ -406,9 +442,10 @@ namespace FamiStudio
                     type = PropertyType.ColoredString,
                     control = CreateColoredTextBox(value, color)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddString(string label, string value, int maxLength = 0, string tooltip = null)
+        public int AddString(string label, string value, int maxLength = 0, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -417,9 +454,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateTextBox(value, maxLength, tooltip)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddMultilineString(string label, string value)
+        public int AddMultilineString(string label, string value)
         {
             properties.Add(
                 new Property()
@@ -428,9 +466,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateMultilineTextBox(value)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
+        public int AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -440,9 +479,10 @@ namespace FamiStudio
                     control = CreateButton(value, tooltip),
                     click = clickDelegate
                 });
+            return properties.Count - 1;
         }
 
-        public void AddLabel(string label, string value, string tooltip = null)
+        public int AddLabel(string label, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -451,9 +491,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateLabel(value, tooltip)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddLinkLabel(string label, string value, string url, string tooltip = null)
+        public int AddLinkLabel(string label, string value, string url, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -462,19 +503,21 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateLinkLabel(value, url, tooltip)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddColorPicker(Color color)
+        public int AddColorPicker(Color color)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.ColorPicker,
-                    control = CreatePictureBox(color)
+                    control = CreateColorPickerPictureBox(color)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
+        public int AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -483,9 +526,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateNumericUpDown(value, min, max, tooltip)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddProgressBar(string label, float value)
+        public int AddProgressBar(string label, float value)
         {
             properties.Add(
                 new Property()
@@ -494,6 +538,7 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateProgressBar(value)
                 });
+            return properties.Count - 1;
         }
 
         public void UpdateIntegerRange(int idx, int min, int max)
@@ -544,6 +589,20 @@ namespace FamiStudio
             (properties[idx].control as ComboBox).SelectedIndex = selIdx;
         }
 
+        public void UpdateDropDownListItems(int idx, string[] values)
+        {
+            var cb = (properties[idx].control as ComboBox);
+            var selectedIdx = cb.SelectedIndex;
+
+            cb.Items.Clear();
+            cb.Items.AddRange(values);
+
+            if (selectedIdx < values.Length)
+                cb.SelectedIndex = selectedIdx;
+            else
+                cb.SelectedIndex = 0;
+        }
+
         public void AddCheckBox(string label, bool value, string tooltip = null)
         {
             properties.Add(
@@ -555,7 +614,7 @@ namespace FamiStudio
                 });
         }
 
-        public void AddLabelCheckBox(string label, bool value, int margin = 0)
+        public int AddLabelCheckBox(string label, bool value, int margin = 0)
         {
             properties.Add(
                 new Property()
@@ -564,9 +623,10 @@ namespace FamiStudio
                     control = CreateCheckBox(value, label),
                     leftMarging = margin
                 });
+            return properties.Count - 1;
         }
 
-        public void AddDropDownList(string label, string[] values, string value, string tooltip = null)
+        public int AddDropDownList(string label, string[] values, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -575,9 +635,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateDropDownList(values, value, tooltip)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddCheckBoxList(string label, string[] values, bool[] selected)
+        public int AddCheckBoxList(string label, string[] values, bool[] selected)
         {
             properties.Add(
                 new Property()
@@ -586,6 +647,7 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateCheckedListBox(values, selected)
                 });
+            return properties.Count - 1;
         }
 
         private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, string tooltip = null)
@@ -606,7 +668,7 @@ namespace FamiStudio
             return null;
         }
 
-        public void AddSlider(string label, double value, double min, double max, double increment, int numDecimals, SliderFormatText format = null, string tooltip = null)
+        public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, SliderFormatText format = null, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -616,6 +678,7 @@ namespace FamiStudio
                     control = CreateSlider(value, min, max, increment, numDecimals, tooltip),
                     sliderFormat = format
                 });
+            return properties.Count - 1;
         }
 
         private ListView CreateListView(string[] columnNames, string[,] data)
@@ -738,6 +801,19 @@ namespace FamiStudio
             advancedPropertyStart = properties.Count;
         }
 
+        public void SetPropertyWarning(int idx, CommentType type, string comment)
+        {
+            var prop = properties[idx];
+
+            if (prop.warningIcon == null)
+                prop.warningIcon = CreatePictureBox(commentIcons[(int)type]);
+            else
+                prop.warningIcon.Image = commentIcons[(int)type];
+
+            prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
+            toolTip.SetToolTip(prop.warningIcon, comment);
+        }
+
         public object GetPropertyValue(int idx)
         {
             var prop = properties[idx];
@@ -836,6 +912,7 @@ namespace FamiStudio
 
             int widthNoMargin = Width - (margin * 2);
             int totalHeight = margin;
+            int warningWidth = showWarnings ? 16 + margin : 0; // TEMPOTODO : Scaling!
 
             for (int i = 0; i < propertyCount; i++)
             {
@@ -858,7 +935,7 @@ namespace FamiStudio
 
                     prop.control.Left  = maxLabelWidth + margin;
                     prop.control.Top   = totalHeight;
-                    prop.control.Width = widthNoMargin - maxLabelWidth;
+                    prop.control.Width = widthNoMargin - maxLabelWidth - warningWidth;
 
                     Controls.Add(prop.label);
                     Controls.Add(prop.control);
@@ -875,6 +952,14 @@ namespace FamiStudio
                 }
 
                 height = Math.Max(prop.control.Height, height);
+
+                if (prop.warningIcon != null)
+                {
+                    prop.warningIcon.Top  = totalHeight + (height - prop.warningIcon.Height) / 2;
+                    prop.warningIcon.Left = widthNoMargin + margin + margin - warningWidth;
+                    Controls.Add(prop.warningIcon);
+                }
+
                 totalHeight += height + margin;
             }
 
