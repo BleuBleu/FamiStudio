@@ -35,7 +35,6 @@ FamiStudio Tempo 2.0
 
 - Format fixes:
 	- Video speed, need smoothing?
-	- Migrate strange values to 4 notes per beat.
 
 FamiStudio 2.5.0
 ================

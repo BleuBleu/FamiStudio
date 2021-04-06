@@ -534,7 +534,6 @@ namespace FamiStudio
             return name;
         }
 
-        // TEMPOTODO : Grooves
         private int OutputTempoEnvelopes()
         {
             var size = 0;
@@ -702,9 +701,6 @@ namespace FamiStudio
             }
         }
 
-
-
-
         private List<string> GetSongData(Song song, int songIdx, int speedChannel)
         {
             var songData = new List<string>();
@@ -759,7 +755,6 @@ namespace FamiStudio
                         var groove = song.GetPatternGroove(p);
                         var groovePadMode = song.GetPatternGroovePaddingMode(p);
 
-                        // TEMPOTODO : Compare grooves here
                         if (Utils.CompareArrays(groove, previousGroove) != 0 || 
                             groovePadMode != previousGroovePadMode ||
                             (p == song.LoopPoint && p != 0))
@@ -1241,12 +1236,13 @@ namespace FamiStudio
                 }
             }
 
+            // Get raw uncompressed song data.
             var songData = GetSongData(song, songIdx, speedChannel);
 
+            // Try compression with various threshold for jump to ref.
             var bestSize = int.MaxValue;
             var bestMinNotesForJump = 0;
 
-            // Try compression with various threshold for jump to ref.
             for (int i = 8; i < 32; i += 4)
             {
                 var size = CompressAndOutputSongData(songData, i, false);
