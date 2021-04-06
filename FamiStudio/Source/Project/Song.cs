@@ -125,153 +125,13 @@ namespace FamiStudio
             }
         }
 
-        public void MakePatternInstancesUnique()
-        {
-            foreach (var channel in channels)
-            {
-                channel.MakePatternInstanceWithDifferentLengthsUnique();
-            }
-        }
-
-        // TEMPOTODO : Groove in custom settings here.
-        public bool Split(int factor)
-        {
-            MakePatternInstanceWithDifferentLengthsUnique();
-
-            if (factor == 1)
-                return true;
-
-            var numNotes = patternLength / (UsesFamiStudioTempo ? noteLength : 1);
-
-            if ((numNotes % factor) == 0)
-            {
-                var newSongLength = 0;
-                var newLoopPoint = 0;
-                var newPatternCustomSettings = new List<PatternCustomSetting>();
-                var newPatternMap = new Dictionary<Pattern, Pattern[]>();
-                var newNumNotes = numNotes / factor;
-                
-                // First check if we wont end up with more than 256 patterns.
-                for (int p = 0; p < songLength; p++)
-                {
-                    var patternLen = GetPatternLength(p);
-                    var patternNoteLength = UsesFamiStudioTempo ? GetPatternNoteLength(p) : 1;
-                    var patternNewLen = newNumNotes * patternNoteLength;
-                    var chunkCount = (int)Math.Ceiling(patternLen / (float)patternNewLen);
-
-                    newSongLength += chunkCount;
-                }
-
-                if (newSongLength > MaxLength)
-                    return false;
-
-                newSongLength = 0;
-
-                var oldChannelPatterns  = new Pattern[channels.Length][];
-                var oldChannelInstances = new Pattern[channels.Length][];
-
-                for (int c = 0; c < channels.Length; c++)
-                {
-                    var channel = channels[c];
-
-                    oldChannelPatterns[c]  = channel.Patterns.ToArray();
-                    oldChannelInstances[c] = channel.PatternInstances.Clone() as Pattern[];
-
-                    Array.Clear(channel.PatternInstances, 0, channel.PatternInstances.Length);
-
-                    channel.Patterns.Clear();
-                }
-
-                for (int p = 0; p < songLength; p++)
-                {
-                    var patternLen        = GetPatternLength(p);
-                    var patternBeatLength = UsesFamiStudioTempo ? GetPatternBeatLength(p)  : beatLength;
-                    var patternNoteLength = UsesFamiStudioTempo ? GetPatternNoteLength(p) : 1;
-                    var patternNumNotes   = patternLen / patternNoteLength;
-                    var patternNewLen     = newNumNotes * patternNoteLength;
-
-                    var chunkCount = (int)Math.Ceiling(patternLen / (float)patternNewLen);
-
-                    if (p == loopPoint)
-                        newLoopPoint = newSongLength;
-
-                    if (patternCustomSettings[p].patternLength == 0)
-                    {
-                        for (int i = 0; i < chunkCount; i++)
-                            newPatternCustomSettings.Add(new PatternCustomSetting());
-                    }
-                    else
-                    {
-                        for (int i = 0, notesLeft = patternLen; i < chunkCount; i++, notesLeft -= patternNewLen)
-                        {
-                            var customSettings = new PatternCustomSetting();
-                            customSettings.useCustomSettings = true;
-                            customSettings.patternLength = Math.Min(patternNewLen, notesLeft);
-                            customSettings.beatLength = patternBeatLength;
-                            customSettings.noteLength = patternNoteLength;
-                            newPatternCustomSettings.Add(customSettings);
-                        }
-                    }
-
-                    newSongLength += chunkCount;
-
-                    for (int c = 0; c < channels.Length; c++)
-                    {
-                        var channel = channels[c];
-                        var pattern = oldChannelInstances[c][p];
-
-                        if (pattern != null)
-                        {
-                            Pattern[] splitPatterns = null;
-
-                            if (!newPatternMap.TryGetValue(pattern, out splitPatterns))
-                            {
-                                splitPatterns = new Pattern[chunkCount];
-
-                                for (int i = 0, notesLeft = patternLen; i < chunkCount; i++, notesLeft -= patternNewLen)
-                                {
-                                    splitPatterns[i] = new Pattern(Project.GenerateUniqueId(), this, channel.Type, channel.GenerateUniquePatternName(pattern.Name));
-
-                                    var noteIdx0 = (i + 0) * patternNewLen;
-                                    var noteIdx1 = noteIdx0 + Math.Min(patternNewLen, notesLeft);
-
-                                    foreach (var kv in pattern.Notes)
-                                    {
-                                        if (kv.Key >= noteIdx0 && kv.Key < noteIdx1)
-                                            splitPatterns[i].SetNoteAt(kv.Key - noteIdx0, kv.Value.Clone());
-                                    }
-
-                                    splitPatterns[i].ClearLastValidNoteCache();
-                                    channel.Patterns.Add(splitPatterns[i]);
-                                }
-
-                                newPatternMap[pattern] = splitPatterns;
-                            }
-
-                            Debug.Assert(splitPatterns.Length == chunkCount);
-
-                            for (int i = 0; i < splitPatterns.Length; i++)
-                                channel.PatternInstances[newPatternCustomSettings.Count - chunkCount + i] = splitPatterns[i];
-                        }
-                    }
-                }
-
-                while (newPatternCustomSettings.Count != MaxLength)
-                    newPatternCustomSettings.Add(new PatternCustomSetting());
-
-                patternCustomSettings = newPatternCustomSettings.ToArray();
-
-                patternLength = (patternLength / (UsesFamiStudioTempo ? noteLength : 1)) / factor * (UsesFamiStudioTempo ? noteLength : 1);
-                songLength = newSongLength;
-                loopPoint = newLoopPoint;
-
-                UpdatePatternStartNotes();
-
-                return true;
-            }
-
-            return false;
-        }
+        //public void MakePatternInstancesUnique()
+        //{
+        //    foreach (var channel in channels)
+        //    {
+        //        channel.MakePatternInstanceWithDifferentLengthsUnique();
+        //    }
+        //}
 
         public void SetProject(Project newProject)
         {
@@ -1072,6 +932,7 @@ namespace FamiStudio
                     else
                     {
                         customSettings.groove = customSettings.useCustomSettings ? new[] { customSettings.noteLength } : null;
+                        customSettings.groovePaddingMode = GroovePaddingType.Middle;
                     }
 
                     // At version 8 (FamiStudio 2.3.0), we added custom beat length for FamiTracker tempo, so we need to initialize the value here.

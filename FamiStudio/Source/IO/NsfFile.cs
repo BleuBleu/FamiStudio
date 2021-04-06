@@ -56,8 +56,10 @@ namespace FamiStudio
 
         public unsafe bool Save(Project originalProject, int kernel, string filename, int[] songIds, string name, string author, string copyright, int machine)
         {
+#if !DEBUG
             try
             {
+#endif
                 if (songIds.Length == 0)
                     return false;
 
@@ -230,6 +232,7 @@ namespace FamiStudio
                 File.WriteAllBytes(filename, nsfBytes.ToArray());
 
                 Log.LogMessage(LogSeverity.Info, $"NSF export successful, final file size {nsfBytes.Count} bytes.");
+#if !DEBUG
             }
             catch (Exception e)
             {
@@ -238,6 +241,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return false;
             }
+#endif
 
             return true;
         }

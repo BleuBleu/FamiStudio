@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace FamiStudio
 {
@@ -20,7 +21,6 @@ namespace FamiStudio
 
         private int machine = MachineType.NTSC;
         private int assemblyFormat = AssemblyFormat.NESASM;
-        private List<List<string>> globalPacketPatternBuffers = new List<List<string>>();
         private Dictionary<byte, string> vibratoEnvelopeNames = new Dictionary<byte, string>();
         private Dictionary<Arpeggio, string> arpeggioEnvelopeNames = new Dictionary<Arpeggio, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
@@ -120,8 +120,9 @@ namespace FamiStudio
                 }
                 else
                 {
+                    var grooveName = GetGrooveAsmName(song.Groove, song.GroovePaddingMode);
                     lines.Add(line);
-                    lines.Add($"\t{db} {lo}({ll}tempo_env{song.NoteLength}), {hi}({ll}tempo_env{song.NoteLength}), {(project.PalMode ? 2 : 0)}, 0"); // TEMPOTODO : Groove here
+                    lines.Add($"\t{db} {lo}({ll}tempo_env_{grooveName}), {hi}({ll}tempo_env_{grooveName}), {(project.PalMode ? 2 : 0)}, 0"); 
                 }
 
                 size += song.Channels.Length * 2 + 4;
@@ -519,6 +520,20 @@ namespace FamiStudio
             return size;
         }
 
+        private string GetGrooveAsmName(int[] groove, int paddingMode)
+        {
+            var name = string.Join("_", groove);
+
+            switch (paddingMode)
+            {
+                case GroovePaddingType.Beginning: name += "_beg"; break;
+                case GroovePaddingType.Middle:    name += "_mid"; break;
+                case GroovePaddingType.End:       name += "_end"; break;
+            }
+
+            return name;
+        }
+
         // TEMPOTODO : Grooves
         private int OutputTempoEnvelopes()
         {
@@ -526,24 +541,30 @@ namespace FamiStudio
 
             if (project.UsesFamiStudioTempo)
             {
-                var uniqueNoteLengths = new HashSet<int>();
+                var uniqueGrooves = new List<Tuple<int[],int>>();
 
                 foreach (var song in project.Songs)
                 {
-                    uniqueNoteLengths.Add(song.NoteLength);
+                    var existintIndex = uniqueGrooves.FindIndex(g => Utils.CompareArrays(g.Item1, song.Groove) == 0 && g.Item2 == song.GroovePaddingMode);
+                    if (existintIndex < 0)
+                        uniqueGrooves.Add(new Tuple<int[], int>(song.Groove, song.GroovePaddingMode));
 
                     for (int p = 0; p < song.Length; p++)
                     {
                         if (song.PatternHasCustomSettings(p))
-                            uniqueNoteLengths.Add(song.GetPatternNoteLength(p));
+                        {
+                            existintIndex = uniqueGrooves.FindIndex(g => Utils.CompareArrays(g.Item1, song.GetPatternGroove(p)) == 0 && g.Item2 == song.GetPatternGroovePaddingMode(p));
+                            if (existintIndex < 0)
+                                uniqueGrooves.Add(new Tuple<int[], int>(song.GetPatternGroove(p), song.GetPatternGroovePaddingMode(p)));
+                        }
                     }
                 }
 
-                foreach (var noteLength in uniqueNoteLengths)
+                foreach (var groove in uniqueGrooves)
                 {
-                    var env = (byte[])null; // TEMPOTODO : FamiStudioTempoUtils.GetTempoEnvelope(noteLength, project.PalMode);
+                    var env = (byte[])FamiStudioTempoUtils.GetTempoEnvelope(groove.Item1, groove.Item2, project.PalMode);
 
-                    lines.Add($"{ll}tempo_env{noteLength}:");
+                    lines.Add($"{ll}tempo_env_{GetGrooveAsmName(groove.Item1, groove.Item2)}:");
                     lines.Add($"\t{db} {String.Join(",", env.Select(i => $"${i:x2}"))}");
 
                     size += env.Length;
@@ -681,44 +702,43 @@ namespace FamiStudio
             }
         }
 
-        private int OutputSong(Song song, int songIdx, int speedChannel, int factor, bool test)
+
+
+
+        private List<string> GetSongData(Song song, int songIdx, int speedChannel)
         {
-            var packedPatternBuffers = new List<List<string>>(globalPacketPatternBuffers);
-            var size = 0;
+            var songData = new List<string>();
             var emptyPattern = new Pattern(-1, song, 0, "");
             var emptyNote = new Note(Note.NoteInvalid);
+            var sb = new StringBuilder();
 
             for (int c = 0; c < song.Channels.Length; c++)
             {
-                if (!test)
-                    lines.Add($"\n{ll}song{songIdx}ch{c}:");
-
                 var channel = song.Channels[c];
                 var currentSpeed = song.FamitrackerSpeed;
                 var isSpeedChannel = c == speedChannel;
                 var instrument = (Instrument)null;
-                var previousNoteLength = song.NoteLength;
+                var previousGroove = song.Groove;
+                var previousGroovePadMode = song.GroovePaddingMode;
                 var arpeggio = (Arpeggio)null;
                 var sawVolume = Vrc6SawMasterVolumeType.Half;
                 var sawVolumeChanged = false;
 
+	            songData.Add($"{ll}song{songIdx}ch{c}:");
+
                 if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
-                    if (!test)
-                        lines.Add($"\t{db} $fb, ${song.FamitrackerSpeed:x2}");
-                    size += 2;
+                    songData.Add("$fb");
+                    songData.Add($"{song.FamitrackerSpeed:x2}");
                 }
 
                 for (int p = 0; p < song.Length; p++)
                 {
-                    var prevNoteValue = Note.NoteInvalid;
                     var pattern = channel.PatternInstances[p] == null ? emptyPattern : channel.PatternInstances[p];
-                    var patternBuffer = new List<string>();
 
                     if (p == song.LoopPoint)
                     {
-                        if (!test)
-                            lines.Add($"{ll}song{songIdx}ch{c}loop:");
+                        songData.Add($"{ll}song{songIdx}ch{c}loop:");
 
                         // Clear stored instrument to force a reset. We might be looping
                         // to a section where the instrument was set from a previous pattern.
@@ -731,29 +751,31 @@ namespace FamiStudio
                         // If this channel potentially uses any arpeggios, clear the override since the last
                         // note may have overridden it. TODO: Actually check if thats the case!
                         if (channel.UsesArpeggios)
-                            patternBuffer.Add($"${0x66:x2}");
+                            songData.Add($"${0x66:x2}");
                     }
 
                     if (isSpeedChannel && project.UsesFamiStudioTempo)
                     {
-                        var noteLength = song.GetPatternNoteLength(p);
+                        var groove = song.GetPatternGroove(p);
+                        var groovePadMode = song.GetPatternGroovePaddingMode(p);
 
                         // TEMPOTODO : Compare grooves here
-                        if (noteLength != previousNoteLength || (p == song.LoopPoint && p != 0))
-                        { 
-                            if (!test)
-                            {
-                                patternBuffer.Add($"$fb");
-                                patternBuffer.Add($"{lo}({ll}tempo_env{noteLength})");
-                                patternBuffer.Add($"{hi}({ll}tempo_env{noteLength})");
-                                previousNoteLength = noteLength;
-                            }
+                        if (Utils.CompareArrays(groove, previousGroove) != 0 || 
+                            groovePadMode != previousGroovePadMode ||
+                            (p == song.LoopPoint && p != 0))
+                        {
+                            var grooveName = GetGrooveAsmName(groove, groovePadMode);
+
+                            songData.Add("$fb");
+                            songData.Add($"{lo}({ll}tempo_env_{grooveName})");
+                            songData.Add($"{hi}({ll}tempo_env_{grooveName})");
+                            previousGroove = groove;
+                            previousGroovePadMode = groovePadMode;
                         }
                     }
 
                     var patternLength = song.GetPatternLength(p); 
-                    var numValidNotes = patternLength;
-                    
+
                     for (var it = pattern.GetNoteIterator(0, patternLength); !it.Done; )
                     {
                         var time = it.CurrentTime;
@@ -769,8 +791,8 @@ namespace FamiStudio
                             if (speed >= 0)
                             {
                                 currentSpeed = speed;
-                                patternBuffer.Add($"${0xfb:x2}");
-                                patternBuffer.Add($"${(byte)speed:x2}");
+                                songData.Add($"${0xfb:x2}");
+                                songData.Add($"${(byte)speed:x2}");
                             }
                         }
 
@@ -783,39 +805,39 @@ namespace FamiStudio
 
                         if (note.HasNoteDelay)
                         {
-                            patternBuffer.Add($"${0x6a:x2}");
-                            patternBuffer.Add($"${note.NoteDelay - 1:x2}");
+                            songData.Add($"${0x6a:x2}");
+                            songData.Add($"${note.NoteDelay - 1:x2}");
                             usesDelayedNotesOrCuts = true;
 
                             // HACK : A note delay will cause the famistudio_channel_update function to 
                             // decrease the reference note counter, so we need to bump it. This should have 
                             // been fixed in the SoundEngine by jumping to @no_ref, but this is a hot-fix 
                             // version and I dont want to change the assembly.
-                            numValidNotes++;
+                            //numValidNotes++; MATTT : Fix it in engine and remove the hack.
                         }
 
                         if (note.HasVolume)
                         {
-                            patternBuffer.Add($"${(byte)(0x70 | note.Volume):x2}");
+                            songData.Add($"${(byte)(0x70 | note.Volume):x2}");
                             usesVolumeTrack = true;
                         }
 
                         if (note.HasFinePitch)
                         {
-                            patternBuffer.Add($"${0x68:x2}");
-                            patternBuffer.Add($"${note.FinePitch:x2}");
+                            songData.Add($"${0x68:x2}");
+                            songData.Add($"${note.FinePitch:x2}");
                             usesPitchTrack = true;
                         }
 
                         if (note.HasVibrato)
                         {
                             // TODO: If note has attack, no point in setting the default vibrato envelope, instrument will do it anyway.
-                            patternBuffer.Add($"${0x63:x2}");
-                            patternBuffer.Add($"{lo}({vibratoEnvelopeNames[note.RawVibrato]})");
-                            patternBuffer.Add($"{hi}({vibratoEnvelopeNames[note.RawVibrato]})");
+                            songData.Add($"${0x63:x2}");
+                            songData.Add($"{lo}({vibratoEnvelopeNames[note.RawVibrato]})");
+                            songData.Add($"{hi}({vibratoEnvelopeNames[note.RawVibrato]})");
 
                             if (note.RawVibrato == 0)
-                                patternBuffer.Add($"${0x65:x2}");
+                                songData.Add($"${0x65:x2}");
 
                             usesVibrato = true;
                         }
@@ -827,22 +849,22 @@ namespace FamiStudio
                             {
                                 if (note != null || !note.HasAttack)
                                 {
-                                    patternBuffer.Add($"${0x64:x2}");
+                                    songData.Add($"${0x64:x2}");
 
                                     if (note.Arpeggio == null)
                                     {
-                                        patternBuffer.Add($"{lo}({noArpeggioEnvelopeName})");
-                                        patternBuffer.Add($"{hi}({noArpeggioEnvelopeName})");
+                                        songData.Add($"{lo}({noArpeggioEnvelopeName})");
+                                        songData.Add($"{hi}({noArpeggioEnvelopeName})");
                                     }
                                     else
                                     {
-                                        patternBuffer.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
-                                        patternBuffer.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                                        songData.Add($"{lo}({arpeggioEnvelopeNames[note.Arpeggio]})");
+                                        songData.Add($"{hi}({arpeggioEnvelopeNames[note.Arpeggio]})");
                                     }
                                 }
 
                                 if (note.Arpeggio == null)
-                                    patternBuffer.Add($"${0x66:x2}");
+                                    songData.Add($"${0x66:x2}");
 
                                 arpeggio = note.Arpeggio;
                                 usesArpeggio = true;
@@ -850,34 +872,34 @@ namespace FamiStudio
                             // If same arpeggio, but note has an attack, reset it.
                             else if (note.HasAttack && arpeggio != null)
                             {
-                                patternBuffer.Add($"${0x67:x2}");
+                                songData.Add($"${0x67:x2}");
                             }
                         }
 
                         if (note.HasDutyCycle)
                         {
-                            patternBuffer.Add($"${0x69:x2}");
-                            patternBuffer.Add($"${note.DutyCycle:x2}");
+                            songData.Add($"${0x69:x2}");
+                            songData.Add($"${note.DutyCycle:x2}");
                             usesDutyCycleEffect = true;
                         }
 
                         if (note.HasFdsModSpeed)
                         {
-                            patternBuffer.Add($"${0x6c:x2}");
-                            patternBuffer.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
-                            patternBuffer.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
+                            songData.Add($"${0x6c:x2}");
+                            songData.Add($"${(note.FdsModSpeed >> 0) & 0xff:x2}");
+                            songData.Add($"${(note.FdsModSpeed >> 8) & 0xff:x2}");
                         }
 
                         if (note.HasFdsModDepth)
                         {
-                            patternBuffer.Add($"${0x6d:x2}");
-                            patternBuffer.Add($"${note.FdsModDepth:x2}");
+                            songData.Add($"${0x6d:x2}");
+                            songData.Add($"${note.FdsModDepth:x2}");
                         }
 
                         if (note.HasCutDelay)
                         {
-                            patternBuffer.Add($"${0x6b:x2}");
-                            patternBuffer.Add($"${note.CutDelay:x2}");
+                            songData.Add($"${0x6b:x2}");
+                            songData.Add($"${note.CutDelay:x2}");
                             usesDelayedNotesOrCuts = true;
                         }
 
@@ -894,18 +916,18 @@ namespace FamiStudio
                                         sawVolume = note.Instrument.Vrc6SawMasterVolume;
                                         sawVolumeChanged = true;
 
-                                        patternBuffer.Add($"${0x6c:x2}");
-                                        patternBuffer.Add($"${1 - sawVolume:x2}");
+                                        songData.Add($"${0x6c:x2}");
+                                        songData.Add($"${1 - sawVolume:x2}");
                                     }
 
                                     int idx = instrumentIndices[note.Instrument];
-                                    patternBuffer.Add($"${(byte)(0x80 | (idx << 1)):x2}");
+                                    songData.Add($"${(byte)(0x80 | (idx << 1)):x2}");
                                     instrument = note.Instrument;
                                 }
                                 else if(!note.HasAttack)
                                 {
                                     // TODO: Remove note entirely after a slide that matches the next note with no attack.
-                                    patternBuffer.Add($"${0x62:x2}");
+                                    songData.Add($"${0x62:x2}");
                                 }
                             }
 
@@ -925,11 +947,12 @@ namespace FamiStudio
                                     if (!valid1 && valid2)
                                     {
                                         it.Next();
-                                        numValidNotes--;
                                         numNotes = 1;
                                     }
                                 }
                             }
+
+                            var emittedSlideNote = false;
 
                             if (note.IsSlideNote)
                             {
@@ -949,17 +972,17 @@ namespace FamiStudio
                                 {
                                     // Take the (signed) maximum of both notes so that we are garantee to reach our note.
                                     var stepSize = Math.Max(Math.Abs(stepSizeNtsc), Math.Abs(stepSizePal)) * Math.Sign(stepSizeNtsc);
-                                    patternBuffer.Add($"${0x61:x2}");
-                                    patternBuffer.Add($"${(byte)stepSize:x2}");
-                                    patternBuffer.Add($"${EncodeNoteValue(c, note.Value):x2}");
-                                    patternBuffer.Add($"${EncodeNoteValue(c, note.SlideNoteTarget):x2}");
+                                    songData.Add($"${0x61:x2}");
+                                    songData.Add($"${(byte)stepSize:x2}");
+                                    songData.Add($"${EncodeNoteValue(c, note.Value):x2}");
+                                    songData.Add($"${EncodeNoteValue(c, note.SlideNoteTarget):x2}*");
                                     usesSlideNotes = true;
-                                    continue;
+                                    emittedSlideNote = true;
                                 }
                             }
 
-                            patternBuffer.Add($"${EncodeNoteValue(c, note.Value, numNotes):x2}");
-                            prevNoteValue = note.Value;
+                            if (!emittedSlideNote)
+                                songData.Add($"${EncodeNoteValue(c, note.Value, numNotes):x2}*");
                         }
                         else
                         {
@@ -998,77 +1021,191 @@ namespace FamiStudio
                                 it.Next();
                             }
 
-                            numValidNotes -= numEmptyNotes;
-                            patternBuffer.Add($"${(byte)(0x81 | (numEmptyNotes << 1)):x2}");
+                            songData.Add($"${(byte)(0x81 | (numEmptyNotes << 1)):x2}*");
                         }
                     }
+                }
 
-                    int matchingPatternIdx = -1;
+                if (song.LoopPoint < 0)
+                {
+                    songData.Add($"{ll}song{songIdx}ch{c}loop:");
+                    songData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}");
+                }
 
-                    if (patternBuffer.Count > 0)
+                songData.Add("$fd");
+                songData.Add($"{ll}song{songIdx}ch{c}loop");
+            }
+
+            return songData;
+        }
+
+        // minNotesForJump is the minimum of notes to even consider doing a jump back to a reference. 
+        int CompressAndOutputSongData(List<string> data, int minNotesForJump, bool writeLines)
+        {
+            bool IsLabelOrRef(string str) => str[0] == ll[0];
+            bool IsLabel(string str) => str[str.Length - 1] == ':';
+            bool IsRef(string str) => str[0] == ll[0] && str[str.Length - 1] != ':';
+            bool IsNote(string str) => str[str.Length - 1] == '*';
+            string CleanNote(string str) => str.TrimEnd('*');
+
+            // Number of bytes to hash to start searching.
+            const int HashNumBytes = 4;
+
+            var refs = new HashSet<int>();
+            var jumpToRefs = new HashSet<int>();
+            var patterns = new Dictionary<uint, List<int>>();
+            var compressedData = new List<string>();
+
+            for (int i = 0; i < data.Count;)
+            {
+                var crc = 0u;
+                var foundLabelOrRef = false;
+
+                // Look ahead 4 bytes and compute hash.
+                for (int k = i; k < data.Count && k < i + HashNumBytes; k++)
+                {
+                    var b = data[k];
+
+                    if (IsLabelOrRef(b))
                     {
-                        if (patternBuffer.Count > 4)
+                        foundLabelOrRef = true;
+                        break;
+                    }
+
+                    crc = CRC32.Compute(b, crc);
+                }
+
+                if (!foundLabelOrRef)
+                { 
+                    // Look at all the patterns matching the hash, take the longest.
+                    if (patterns.TryGetValue(crc, out var matchingPatterns))
+                    {
+                        var bestPatternIdx = -1;
+                        var bestPatternLen = -1;
+                        var bestPatternNumNotes = -1;
+
+                        foreach (var idx in matchingPatterns)
                         {
-                            for (int j = 0; j < packedPatternBuffers.Count; j++)
+                            var lastNoteIdx = -1;
+                            var numNotes = 0;
+
+                            for (int j = idx, k = i; j < compressedData.Count && k < data.Count && numNotes < 250; j++, k++)
                             {
-                                if (packedPatternBuffers[j].SequenceEqual(patternBuffer))
-                                {
-                                    matchingPatternIdx = j;
+                                if (compressedData[j] != data[k] || IsLabelOrRef(compressedData[j]))
                                     break;
+
+                                if (IsNote(compressedData[j]))
+                                {
+                                    numNotes++;
+                                    lastNoteIdx = j;
+                                }
+                            }
+
+                            if (numNotes >= minNotesForJump)
+                            {
+                                var matchLen = lastNoteIdx - idx + 1;
+                                if (matchLen > bestPatternLen)
+                                {
+                                    bestPatternIdx = idx;
+                                    bestPatternLen = matchLen;
+                                    bestPatternNumNotes = numNotes;
                                 }
                             }
                         }
 
-                        if (matchingPatternIdx < 0)
+                        // Output a jump to a ref if we found a good match.
+                        if (bestPatternIdx > 0)
                         {
-                            if (packedPatternBuffers.Count > MaxPackedPatterns)
-                            {
-                                Log.LogMessage(LogSeverity.Error, $"Too many patterns ({packedPatternBuffers.Count}).");
-                                return -1; 
-                            }
+                            refs.Add(bestPatternIdx);
+                            jumpToRefs.Add(compressedData.Count);
 
-                            packedPatternBuffers.Add(patternBuffer);
+                            compressedData.Add("$ff");
+                            compressedData.Add($"${bestPatternNumNotes:x2}");
+                            compressedData.Add($"{ll}ref{bestPatternIdx}");
 
-                            if (!test)
-                            {
-                                lines.Add($"{ll}ref{packedPatternBuffers.Count - 1}:");
-                                lines.Add($"\t{db} {String.Join(",", patternBuffer)}");
-                            }
-
-                            size += patternBuffer.Count;
+                            i += bestPatternLen;
                         }
                         else
                         {
-                            if (!test)
-                            {
-                                lines.Add($"\t{db} $ff,${numValidNotes:x2}");
-                                lines.Add($"\t{dw} {ll}ref{matchingPatternIdx}");
-                            }
-
-                            size += 4;
+                            compressedData.Add(data[i]);
+                            i++;
                         }
                     }
+                    else
+                    {
+                        compressedData.Add(data[i]);
+                        i++;
+                    }
+                }
+                else
+                {
+                    compressedData.Add(data[i]);
+                    i++;
                 }
 
-                if (!test)
+                // Keep hash of compressed data.
+                if (compressedData.Count >= HashNumBytes)
                 {
-                    if (song.LoopPoint < 0)
+                    crc = 0u;
+
+                    var startHashIdx = compressedData.Count - HashNumBytes;
+                    for (int j = startHashIdx; j < compressedData.Count; j++)
+                        crc = CRC32.Compute(compressedData[j], crc);
+
+                    if (!patterns.TryGetValue(crc, out var list))
                     {
-                        lines.Add($"{ll}song{songIdx}ch{c}loop:");
-                        lines.Add($"\t{db} ${EncodeNoteValue(c, Note.NoteStop):x2}");
-                        size++;
+                        list = new List<int>();
+                        patterns.Add(crc, list);
                     }
 
-                    lines.Add($"\t{db} $fd");
-                    lines.Add($"\t{dw} {ll}song{songIdx}ch{c}loop");
+                    list.Add(startHashIdx);
                 }
-
-                size += 3;
             }
 
-            if (!test)
+            // Output the assembly code.
+            var size = 0;
+            string byteString = null;
+
+            for (int i = 0; i < compressedData.Count; i++)
             {
-                globalPacketPatternBuffers = packedPatternBuffers;
+                var b = CleanNote(compressedData[i]);
+
+                var isRef = refs.Contains(i);
+                var isLabel = IsLabel(b);
+                var isJumpToRef = IsRef(b);
+
+                if (byteString != null && (isJumpToRef || isLabel || isRef))
+                {
+                    if (writeLines)
+                        lines.Add(byteString);
+                    byteString = null;
+                }
+
+                if (isRef)
+                {
+                    if (writeLines)
+                        lines.Add($"{ll}ref{i}:");
+                }
+
+                if (isLabel)
+                {
+                    if (writeLines)
+                        lines.Add(b);
+                }
+                else if (isJumpToRef)
+                {
+                    if (writeLines)
+                        lines.Add($"\t{dw} {b}");
+                    size += 2;
+                }
+                else
+                {
+                    if (byteString == null)
+                        byteString = $"\t{db} {b}";
+                    else
+                        byteString += $", {b}";
+                    size++;
+                }
             }
 
             return size;
@@ -1077,10 +1214,6 @@ namespace FamiStudio
         private int ProcessAndOutputSong(int songIdx)
         {
             var song = project.Songs[songIdx];
-
-            int minSize = 65536;
-            int bestChannel = 0;
-            int bestFactor = 1;
 
             // Take the channel with the most speed effect as the speed channel.
             // This was a really dumb optimization in FT2...
@@ -1108,35 +1241,27 @@ namespace FamiStudio
                 }
             }
 
-            for (int factor = 1; factor <= Math.Min(16, song.PatternLength); factor++)
-            {
-                if ((song.PatternLength % factor) == 0 &&
-                    (song.PatternLength / factor) >= MinPatternLength)
-                {
-                    var splitSong = project.DuplicateSong(song);
-                    if (splitSong.Split(factor))
-                    {
-                        int size = OutputSong(splitSong, songIdx, speedChannel, factor, true);
+            var songData = GetSongData(song, songIdx, speedChannel);
 
-                        if (size >= 0 && size < minSize)
-                        {
-                            minSize = size;
-                            bestChannel = speedChannel;
-                            bestFactor = factor;
-                        }
-                    }
-                    project.DeleteSong(splitSong);
+            var bestSize = int.MaxValue;
+            var bestMinNotesForJump = 0;
+
+            // Try compression with various threshold for jump to ref.
+            for (int i = 8; i < 32; i += 4)
+            {
+                var size = CompressAndOutputSongData(songData, i, false);
+#if DEBUG
+                Log.LogMessage(LogSeverity.Info, $"Compression with a match of {i} notes = {size} bytes.");
+#endif
+
+                if (size < bestSize)
+                {
+                    bestSize = size;
+                    bestMinNotesForJump = i;
                 }
             }
 
-            var bestSplitSong = project.DuplicateSong(song);
-            bestSplitSong.Split(bestFactor);
-
-            var songSize = OutputSong(bestSplitSong, songIdx, bestChannel, bestFactor, false);
-
-            project.DeleteSong(bestSplitSong);
-
-            return songSize;
+            return CompressAndOutputSongData(songData, bestMinNotesForJump, true);
         }
         
         private void SetupFormat(int format)
@@ -1316,11 +1441,11 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, $"Tempo envelopes size : {tempoSize} bytes.");
             }
 
-            var songsSize = 0;
+            var totalSongsSize = 0;
             for (int i = 0; i < project.Songs.Count; i++)
             {
                 var songSize = ProcessAndOutputSong(i);
-                songsSize += songSize;
+                totalSongsSize += songSize;
 
                 if (log)
                     Log.LogMessage(LogSeverity.Info, $"Song '{project.Songs[i].Name}' size: {songSize} bytes.");
@@ -1335,7 +1460,7 @@ namespace FamiStudio
 
             if (log)
             {
-                Log.LogMessage(LogSeverity.Info, $"Total assembly file size: {headerSize + instSize + tempoSize + songsSize} bytes.");
+                Log.LogMessage(LogSeverity.Info, $"Total assembly file size: {headerSize + instSize + tempoSize + totalSongsSize} bytes.");
 
                 if (project.UsesSamples)
                     Log.LogMessage(LogSeverity.Info, $"Total dmc file size: {dmcSize} bytes.");
@@ -1362,7 +1487,7 @@ namespace FamiStudio
             }
 
 #if DEBUG
-            Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + tempoSize + songsSize);
+            Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + tempoSize + totalSongsSize);
 #endif
 
             return true;
@@ -1395,7 +1520,7 @@ namespace FamiStudio
         }
 #endif
 
-        private byte[] ParseAsmFile(string filename, int songOffset, int dpcmOffset)
+        public static byte[] ParseAsmFile(string filename, int songOffset, int dpcmOffset)
         {
             var labels = new Dictionary<string, int>();
             var labelsToPatch = new List<Tuple<string, int>>();
