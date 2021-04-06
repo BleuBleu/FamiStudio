@@ -109,7 +109,7 @@ namespace FamiStudio
 #endif
 
                     // A NTSC song playing on PAL will sometimes need to run 2 frames to keep up.
-                    // A PAL song playing on NTSC will sometimes need to do nothing for 1 frame to keep up.
+                    // A PAL song playing on NTSC will sometimes need to do nothing for 1 frame to avoid going too fast.
                     return palPlayback ? 2 : 0;
                 }
                 else
@@ -119,25 +119,22 @@ namespace FamiStudio
             }
         }
 
-        private void ResetFamiStudioTempo(bool force)
+        private void ResetFamiStudioTempo()
         {
             if (!famitrackerTempo)
             {
                 var newGroove = song.GetPatternGroove(playPattern);
 
-                //if (force || Utils.CompareArrays(newGroove, groove) != 0) TEMPOTODO : Decide if we reset the groove every pattern.
-                {
-                    FamiStudioTempoUtils.ValidateGroove(newGroove);
+                FamiStudioTempoUtils.ValidateGroove(newGroove);
 
-                    groove = newGroove;
-                    grooveArrayIndex = 0;
-                    grooveFrameIndex = 0;
-                    groovePaddingMode = song.GetPatternGroovePaddingMode(playPattern);
+                groove = newGroove;
+                grooveArrayIndex = 0;
+                grooveFrameIndex = 0;
+                groovePaddingMode = song.GetPatternGroovePaddingMode(playPattern);
 
-                    tempoEnvelope = FamiStudioTempoUtils.BuildTempoEnvelope(groove, groovePaddingMode, song.Project.PalMode);
-                    tempoEnvelopeCounter = tempoEnvelope[0];
-                    tempoEnvelopeIndex = 0;
-                }
+                tempoEnvelope = FamiStudioTempoUtils.GetTempoEnvelope(groove, groovePaddingMode, song.Project.PalMode);
+                tempoEnvelopeCounter = tempoEnvelope[0];
+                tempoEnvelopeIndex = 0;
             }
         }
 
@@ -234,7 +231,7 @@ namespace FamiStudio
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, song.Project.ExpansionAudio, song.Project.ExpansionNumChannels, dmcCallback);
 
-            ResetFamiStudioTempo(true);
+            ResetFamiStudioTempo();
             UpdateChannelsMuting();
 
             //Debug.WriteLine($"START SEEKING!!"); 
@@ -374,7 +371,7 @@ namespace FamiStudio
             }
 
             if (advancedPattern)
-                ResetFamiStudioTempo(forceResetTempo);
+                ResetFamiStudioTempo();
 
             return true;
         }

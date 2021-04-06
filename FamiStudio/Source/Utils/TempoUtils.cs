@@ -169,8 +169,30 @@ namespace FamiStudio
             return valid;
         }
 
-        public static byte[] BuildTempoEnvelope(int[] groove, int groovePaddingMode, bool palSource)
+        private class CachedTempoEnvelope
         {
+            public int[] groove;
+            public int   groovePaddingMode;
+            public bool  palSource;
+            public byte[] tempoEnvelope;
+        };
+
+        private static List<CachedTempoEnvelope> cachedTempoEnvelopes = new List<CachedTempoEnvelope>();
+
+        public static byte[] GetTempoEnvelope(int[] groove, int groovePaddingMode, bool palSource)
+        {
+            // Look in cache first.
+            foreach (var cachedEnvelope in cachedTempoEnvelopes)
+            {
+                if (Utils.CompareArrays(cachedEnvelope.groove, groove) == 0 &&
+                    cachedEnvelope.groovePaddingMode == groovePaddingMode &&
+                    cachedEnvelope.palSource         == palSource)
+                {
+                    return cachedEnvelope.tempoEnvelope;
+                }
+            }
+
+            // Otherwise build.
             var dstFactor = palSource ? 6 : 5;
             var srcFactor = palSource ? 5 : 6;
             var noteLength = Utils.Min(groove);
@@ -184,7 +206,7 @@ namespace FamiStudio
                 grooveRepeatCount++;
             }
 
-            // Figure out how many frames that it on the playback machine.
+            // Figure out how many frames that is on the playback machine.
             var adaptedNumFrames = grooveNumFrames / srcFactor * dstFactor;
 
             // Mark some frames as "important", this will typically be the first 
@@ -374,7 +396,14 @@ namespace FamiStudio
                 envelope.Add((byte)(remainingFrames + firstFrameIndex + 1 + (palSource ? 1 : -1)));
             envelope.Add(0x80);
 
-            return envelope.ToArray();
+            var cacheEntry = new CachedTempoEnvelope();
+            cacheEntry.groove = groove;
+            cacheEntry.groovePaddingMode = groovePaddingMode;
+            cacheEntry.palSource = palSource;
+            cacheEntry.tempoEnvelope = envelope.ToArray();
+            cachedTempoEnvelopes.Add(cacheEntry);
+
+            return cacheEntry.tempoEnvelope;
         }
     }
 
