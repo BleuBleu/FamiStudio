@@ -1251,7 +1251,9 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, $"Compression with a match of {i} notes = {size} bytes.");
 #endif
 
-                if (size < bestSize)
+                // Equal is intentional here, if we find same size, but with larger matches, 
+                // it will likely waste less CPU doing a bunch of jumps.
+                if (size <= bestSize)
                 {
                     bestSize = size;
                     bestMinNotesForJump = i;
