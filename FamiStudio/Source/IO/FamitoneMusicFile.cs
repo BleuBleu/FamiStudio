@@ -1167,9 +1167,10 @@ namespace FamiStudio
 
                 var isRef = refs.Contains(i);
                 var isLabel = IsLabel(b);
-                var isJumpToRef = IsRef(b);
+                var isJumpCode = jumpToRefs.Contains(i);
+                var isJumpLabel = IsRef(b);
 
-                if (byteString != null && (isJumpToRef || isLabel || isRef))
+                if (byteString != null && (isJumpLabel || isLabel || isRef || isJumpCode))
                 {
                     if (writeLines)
                         lines.Add(byteString);
@@ -1187,7 +1188,7 @@ namespace FamiStudio
                     if (writeLines)
                         lines.Add(b);
                 }
-                else if (isJumpToRef)
+                else if (isJumpLabel)
                 {
                     if (writeLines)
                         lines.Add($"\t{dw} {b}");
@@ -1243,7 +1244,7 @@ namespace FamiStudio
             var bestSize = int.MaxValue;
             var bestMinNotesForJump = 0;
 
-            for (int i = 8; i < 32; i += 4)
+            for (int i = 8; i < 32; i++)
             {
                 var size = CompressAndOutputSongData(songData, i, false);
 #if DEBUG
