@@ -662,7 +662,7 @@ namespace FamiStudio
 
             if (project.UsesFamiStudioTempo)
             {
-                Log.LogMessage(LogSeverity.Warning, $"Song uses FamiStudio tempo. Will be exported with speed of 1, tempo 150.");
+                Log.LogMessage(LogSeverity.Warning, $"Song uses FamiStudio tempo. Tempo will be converted with speed of 1 and tempo 150. If you need FamiTracker compatibility, it is recommended that you use FamiTracker tempo in the future.");
                 project.ConvertToFamiTrackerTempo(false);
             }
 
@@ -827,7 +827,7 @@ namespace FamiStudio
                 TruncateLongPatterns(song);
                 CreateMissingPatterns(song);
                 song.CleanupUnusedPatterns();
-                song.MakePatternInstanceWithDifferentLengthsUnique();
+                song.MakePatternsWithDifferentLengthsUnique();
 
                 lines.Add($"TRACK{song.PatternLength,4}{song.FamitrackerSpeed,4}{song.FamitrackerTempo,4} \"{song.Name}\"");
                 lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(3, song.Channels.Length))}");

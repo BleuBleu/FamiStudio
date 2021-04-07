@@ -149,6 +149,24 @@ namespace FamiStudio
             ToolBar.SetToolTip(msg, red);
         }
 
+        public TimeSpan CurrentTime
+        {
+            get
+            {
+                if (song != null && song.UsesFamiStudioTempo)
+                {
+                    var patternIdx = song.FindPatternInstanceIndex(CurrentFrame, out var noteIdx);
+                    var numFrames  = song.CountFramesBetween(0, 0, patternIdx, noteIdx, 0, false);
+
+                    return TimeSpan.FromMilliseconds(numFrames * 1000.0 / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
+                }
+                else
+                {
+                    return TimeSpan.Zero;
+                }
+            }
+        }
+
         private void PianoRoll_DPCMSampleMapped(int note)
         {
             Sequencer.InvalidatePatternCache();

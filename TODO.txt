@@ -12,18 +12,15 @@ FamiStudio Tempo 2.0
 		/ Padding location
 	x Move tempo dialog code to its own class, avoid duplicated code.
 / Native playback.
-	/ Figure out which part need to handle visual notes and groove notes.
-		/ BasePlayer 
-		- Song.CountNumFrames. 
 / Adapted playback.
 	x Compute envelope.
-- Function to "bake" groove for export.
-	- Let's reset the groove every pattern.
-	- This will make things WAY easier.
+/ Function to "bake" groove for export.
+	x Let's reset the groove every pattern.
+	x This will make things WAY easier.
 	- Change FamiTone2 export to use the 2 free special code (delay cuts/notes) 
 		- tempo envelope change
 		- tempo envelope reset (jump to zero).
-- Conversion to milliseconds.
+x Conversion to milliseconds.
 - Improve resize, make it clearer what it will do (move grid, resize notes, etc.)/
 	-> Does it work well with time signature changes, etc.
 - Groove option for FamiTracker too? Look at 0cc, see how they present this to the user.

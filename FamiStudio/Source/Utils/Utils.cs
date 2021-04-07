@@ -245,6 +245,11 @@ namespace FamiStudio
             return sum;
         }
 
+        public static int HashCombine(int a, int b)
+        {
+            return a ^ (b + unchecked((int)0x9e3779b9) + (a << 6) + (a >> 2));
+        }
+
         public static void Permutations(int[] array, List<int[]> permutations, int idx = 0)
         {
             if (idx == array.Length)

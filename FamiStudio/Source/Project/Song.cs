@@ -117,21 +117,21 @@ namespace FamiStudio
             }
         }
 
-        public void MakePatternInstanceWithDifferentLengthsUnique()
+        public void MakePatternsWithDifferentLengthsUnique()
         {
             foreach (var channel in channels)
             {
-                channel.MakePatternInstanceWithDifferentLengthsUnique();
+                channel.MakePatternsWithDifferentLengthsUnique();
             }
         }
 
-        //public void MakePatternInstancesUnique()
-        //{
-        //    foreach (var channel in channels)
-        //    {
-        //        channel.MakePatternInstanceWithDifferentLengthsUnique();
-        //    }
-        //}
+        public void MakePatternsWithDifferentGroovesUnique()
+        {
+            foreach (var channel in channels)
+            {
+                channel.MakePatternsWithDifferentGroovesUnique();
+            }
+        }
 
         public void SetProject(Project newProject)
         {
@@ -738,14 +738,64 @@ namespace FamiStudio
         {
             if (UsesFamiStudioTempo)
             {
-                // TEMPOTODO : We need this function to be smarter. Only
-                // de-instanciate patterns when needed.
+                MakePatternsWithDifferentGroovesUnique();
 
-                // Since grooves might not be aligned to pattern sizes, 
-                // we need every pattern to be unique.
-                // MakePatternInstancesUnique();
-                
+                var processedPatterns = new HashSet<Pattern>();
 
+                foreach (var c in channels)
+                {
+                    for (int p = 0; p < songLength; p++)
+                    {
+                        var pattern = c.PatternInstances[p];
+
+                        if (pattern == null || processedPatterns.Contains(pattern))
+                            continue;
+
+                        var groove = GetPatternGroove(p);
+                        var newPatternLength = GetPatternLength(p);
+                        
+                        // Nothing to do for integral tempos.
+                        if (groove.Length > 1)
+                        {
+                            var groovePadMode  = GetPatternGroovePaddingMode(p);
+                            var maxPatternLen = pattern.GetMaxInstanceLength();
+                            var originalNotes = new SortedList<int, Note>(pattern.Notes);
+
+                            pattern.Notes.Clear();
+
+                            var grooveIterator = new GrooveIterator(groove, groovePadMode);
+
+                            // TEMPOTODO : Compare that it gives the same result as the playback.
+                            for (int i = 0; i < maxPatternLen; i++)
+                            {
+                                if (grooveIterator.IsPadFrame)
+                                    grooveIterator.Advance();
+
+                                if (originalNotes.TryGetValue(i, out var note) && note != null)
+                                    pattern.Notes.Add(grooveIterator.FrameIndex, note);
+
+                                // Advance groove.
+                                grooveIterator.Advance();
+                            }
+
+                            newPatternLength = grooveIterator.FrameIndex;
+                        }
+
+                        if (PatternHasCustomSettings(p))
+                        {
+                            GetPatternCustomSettings(p).patternLength = newPatternLength;
+                        }
+
+                        processedPatterns.Add(pattern);
+                    }
+                }
+
+                patternLength = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(patternLength, groove, groovePaddingMode);
+
+                // TEMPOTODO : HOW DO WE MARK PATTERNS AS PROCESSED? 
+                // FT2 export still compares grooves and stuff.
+
+                UpdatePatternStartNotes();
             }
         }
 
@@ -786,12 +836,6 @@ namespace FamiStudio
             return noteCount;
         }
 
-        public void ApplyGrooveToNoteIndex(int patternIdx, ref int noteIdx)
-        {
-            // Given a visual note index, converts it to a real frame index, 
-            // as it will be played by the player.
-        }
-
         public float CountFramesBetween(int p0, int n0, int p1, int n1, int currentSpeed, bool pal)
         {
             // This is simply an approximation that is used to compute slide notes.
@@ -817,7 +861,43 @@ namespace FamiStudio
             }
             else
             {
-                return CountNotesBetween(p0, n0, p1, n1);
+                // TEMPOTODO : What about PAL here?
+                // TEMPOTODO : Also, the param shouldnt be PAL, it should be NTSC -> PAL, or PAL -> NTSC.
+
+                var frameCount = 0;
+
+                if (p0 == p1)
+                {
+                    frameCount =
+                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n1, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0)) -
+                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n0, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                }
+                else
+                {
+                    // End of first pattern.
+                    if (n0 != 0)
+                    {
+                        frameCount =
+                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(p0), GetPatternGroove(p0), GetPatternGroovePaddingMode(p0)) -
+                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n0, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                        p0++;
+                    }
+
+                    // Complete patterns in between.
+                    while (p0 != p1)
+                    {
+                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(p0), GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                        p0++;
+                    }
+
+                    // First bit of last pattern.
+                    if (n1 != 0)
+                    {
+                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n1, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                    }
+                }
+
+                return frameCount;
             }
         }
 
@@ -860,6 +940,8 @@ namespace FamiStudio
 
         public void AdvanceNumberOfFrames(int frameCount, int initialCount, int currentSpeed, bool pal, ref int p, ref int n)
         {
+            Debug.Assert(UsesFamiTrackerTempo);
+
             float count = initialCount;
 
             while (count < frameCount && p < songLength)

@@ -95,7 +95,7 @@ namespace FamiStudio
             return true;
         }
 
-        public void MakePatternInstanceWithDifferentLengthsUnique()
+        public void MakePatternsWithDifferentLengthsUnique()
         {
             var instanceLengthMap = new Dictionary<Pattern, int>();
 
@@ -120,25 +120,33 @@ namespace FamiStudio
             }
         }
 
-        public void MakePatternInstancesUnique()
+        public void MakePatternsWithDifferentGroovesUnique()
         {
-            var visitedPatterns = new HashSet<Pattern>();
+            var instanceLengthMap = new Dictionary<Pattern, Tuple<int[], int>>();
 
             for (int p = 0; p < song.Length; p++)
             {
                 var pattern = patternInstances[p];
+                var groove = song.GetPatternGroove(p);
+                var groovePadMode = song.GetPatternGroovePaddingMode(p);
 
-                if (visitedPatterns.Contains(pattern))
+                if (pattern != null)
                 {
-                    patternInstances[p] = pattern.ShallowClone();
-                }
-                else
-                {
-                    visitedPatterns.Add(pattern);
+                    if (instanceLengthMap.TryGetValue(pattern, out var grooveAndPadMode))
+                    {
+                        if (groove        != grooveAndPadMode.Item1 ||
+                            groovePadMode != grooveAndPadMode.Item2)
+                        {
+                            pattern = pattern.ShallowClone();
+                            patternInstances[p] = pattern;
+                        }
+                    }
+
+                    instanceLengthMap[pattern] = Tuple.Create(groove, groovePadMode);
                 }
             }
         }
-
+       
         // Inputs are absolute note indices from beginning of song.
         public void DeleteNotesBetween(int minFrame, int maxFrame, bool preserveFx = false)
         {

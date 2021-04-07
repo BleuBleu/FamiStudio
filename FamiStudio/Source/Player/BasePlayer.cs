@@ -44,10 +44,7 @@ namespace FamiStudio
         protected int famitrackerSpeed = 6;
 
         // Only used by FamiStudio tempo.
-        protected int grooveArrayIndex;
-        protected int grooveFrameIndex;
-        protected int groovePaddingMode;
-        protected int[] groove;
+        protected GrooveIterator grooveIterator;
 
         // Only used by FamiStudio tempo when doing adapted playback (NTSC -> PAL or vice-versa).
         protected byte[] tempoEnvelope;
@@ -124,15 +121,13 @@ namespace FamiStudio
             if (!famitrackerTempo)
             {
                 var newGroove = song.GetPatternGroove(playPattern);
+                var newGroovePadMode = song.GetPatternGroovePaddingMode(playPattern);
 
                 FamiStudioTempoUtils.ValidateGroove(newGroove);
 
-                groove = newGroove;
-                grooveArrayIndex = 0;
-                grooveFrameIndex = 0;
-                groovePaddingMode = song.GetPatternGroovePaddingMode(playPattern);
+                grooveIterator = new GrooveIterator(newGroove, newGroovePadMode);
 
-                tempoEnvelope = FamiStudioTempoUtils.GetTempoEnvelope(groove, groovePaddingMode, song.Project.PalMode);
+                tempoEnvelope = FamiStudioTempoUtils.GetTempoEnvelope(newGroove, newGroovePadMode, song.Project.PalMode);
                 tempoEnvelopeCounter = tempoEnvelope[0];
                 tempoEnvelopeIndex = 0;
             }
@@ -146,23 +141,7 @@ namespace FamiStudio
             }
             else
             {
-                var noteLength = Utils.Min(groove);
-
-                // No need to add extra idle frames here.
-                if (groove[grooveArrayIndex] == noteLength)
-                {
-                    return true;
-                }
-
-                // Depending on the extra frame placement policy, we will insert an extra frame at a specific location.
-                if ((groovePaddingMode == GroovePaddingType.Beginning && grooveFrameIndex == 0)              ||
-                    (groovePaddingMode == GroovePaddingType.Middle    && grooveFrameIndex == noteLength / 2) ||
-                    (groovePaddingMode == GroovePaddingType.End       && grooveFrameIndex == noteLength))
-                {
-                    return false;
-                }
-
-                return true;
+                return !grooveIterator.IsPadFrame;
             }
         }
 
@@ -179,16 +158,12 @@ namespace FamiStudio
                     int ticksPerSec = palPlayback ? 50 : 60;
                     famitrackerTempoCounter += (60 * ticksPerSec) - tempoRemainder;
                 }
+
                 famitrackerTempoCounter -= tempoDecrement;
             }
             else
             {
-                if (++grooveFrameIndex == groove[grooveArrayIndex])
-                {
-                    grooveFrameIndex = 0;
-                    if (++grooveArrayIndex == groove.Length)
-                        grooveArrayIndex = 0;
-                }
+                grooveIterator.Advance();
             }
         }
 

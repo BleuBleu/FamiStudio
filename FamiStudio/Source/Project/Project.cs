@@ -1153,6 +1153,8 @@ namespace FamiStudio
             {
                 foreach (var song in songs)
                 {
+                    // TEMPOTODO : which beat length do we set here?
+                    song.PermanentlyApplyGrooves();
                     song.FamitrackerTempo = Song.NativeTempoNTSC;
                     song.FamitrackerSpeed = 1;
                 }
