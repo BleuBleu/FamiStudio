@@ -1071,73 +1071,60 @@ namespace FamiStudio
                     crc = CRC32.Compute(b, crc);
                 }
 
-                if (!foundLabelOrRef)
-                { 
-                    // Look at all the patterns matching the hash, take the longest.
-                    if (patterns.TryGetValue(crc, out var matchingPatterns))
-                    {
-                        var bestPatternIdx = -1;
-                        var bestPatternLen = -1;
-                        var bestPatternNumNotes = -1;
-
-                        foreach (var idx in matchingPatterns)
-                        {
-                            var lastNoteIdx = -1;
-                            var numNotes = 0;
-
-                            for (int j = idx, k = i; j < compressedData.Count && k < data.Count && numNotes < 250; j++, k++)
-                            {
-                                if (compressedData[j] != data[k] || IsLabelOrRef(compressedData[j]))
-                                    break;
-
-                                if (IsNote(compressedData[j]))
-                                {
-                                    numNotes++;
-                                    lastNoteIdx = j;
-                                }
-                            }
-
-                            if (numNotes >= minNotesForJump)
-                            {
-                                var matchLen = lastNoteIdx - idx + 1;
-                                if (matchLen > bestPatternLen)
-                                {
-                                    bestPatternIdx = idx;
-                                    bestPatternLen = matchLen;
-                                    bestPatternNumNotes = numNotes;
-                                }
-                            }
-                        }
-
-                        // Output a jump to a ref if we found a good match.
-                        if (bestPatternIdx > 0)
-                        {
-                            refs.Add(bestPatternIdx);
-                            jumpToRefs.Add(compressedData.Count);
-
-                            compressedData.Add("$ff");
-                            compressedData.Add($"${bestPatternNumNotes:x2}");
-                            compressedData.Add($"{ll}ref{bestPatternIdx}");
-
-                            i += bestPatternLen;
-                        }
-                        else
-                        {
-                            compressedData.Add(data[i]);
-                            i++;
-                        }
-                    }
-                    else
-                    {
-                        compressedData.Add(data[i]);
-                        i++;
-                    }
-                }
-                else
+                // Look at all the patterns matching the hash, take the longest.
+                if (!foundLabelOrRef && patterns.TryGetValue(crc, out var matchingPatterns))
                 {
-                    compressedData.Add(data[i]);
-                    i++;
+                    var bestPatternIdx = -1;
+                    var bestPatternLen = -1;
+                    var bestPatternNumNotes = -1;
+
+                    foreach (var idx in matchingPatterns)
+                    {
+                        var lastNoteIdx = -1;
+                        var numNotes = 0;
+
+                        for (int j = idx, k = i; j < compressedData.Count && k < data.Count && numNotes < 250; j++, k++)
+                        {
+                            if (compressedData[j] != data[k] || IsLabelOrRef(compressedData[j]))
+                                break;
+
+                            if (IsNote(compressedData[j]))
+                            {
+                                numNotes++;
+                                lastNoteIdx = j;
+                            }
+                        }
+
+                        if (numNotes >= minNotesForJump)
+                        {
+                            var matchLen = lastNoteIdx - idx + 1;
+                            if (matchLen > bestPatternLen)
+                            {
+                                bestPatternIdx = idx;
+                                bestPatternLen = matchLen;
+                                bestPatternNumNotes = numNotes;
+                            }
+                        }
+                    }
+
+                    // Output a jump to a ref if we found a good match.
+                    if (bestPatternIdx > 0)
+                    {
+                        refs.Add(bestPatternIdx);
+                        jumpToRefs.Add(compressedData.Count);
+
+                        compressedData.Add("$ff");
+                        compressedData.Add($"${bestPatternNumNotes:x2}");
+                        compressedData.Add($"{ll}ref{bestPatternIdx}");
+
+                        i += bestPatternLen;
+
+                        // No point of hashing jumps, we will never want to reuse those.
+                        continue; 
+                    }
                 }
+
+                compressedData.Add(data[i++]);
 
                 // Keep hash of compressed data.
                 if (compressedData.Count >= HashNumBytes)
