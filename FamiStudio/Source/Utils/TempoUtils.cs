@@ -9,29 +9,21 @@ namespace FamiStudio
         public const int MinNoteLength = 1;
         public const int MaxNoteLength = 18;
 
-        private const float BpmThreshold = 2.0f;
-        private static readonly int[] GrooveLengths = new int[] { 2, 3, 4, 8 };
+        private const float BpmThreshold = 0.5f;
 
-        // Here we only compare NTSC tempos, but that's ok, its just to get 
-        // a list with a decent variety tempos.
-        private static int[] GetGrooveLengthsForNoteLength(int noteLength)
+        // We limit ourselves to grooves composed of just 2 note sizes.
+        private static readonly int[][] GroovePatterns = new[]
         {
-            var lengths = new List<int>();
-            var bpm1 = 900.0f / noteLength;
-
-            foreach (int grooveLen in GrooveLengths)
-            {
-                var bpm2 = (900.0f * grooveLen) / (grooveLen * noteLength - 1);
-
-                // Avoid having tempos that are too similar. 
-                if (Math.Abs(bpm2 - bpm1) < BpmThreshold)
-                    break;
-
-                lengths.Add(grooveLen);
-            }
-
-            return lengths.ToArray();
-        }
+            new[] { 0 },
+            new[] { 1, 0 },
+            new[] { 1, 0, 0, 0 },
+            new[] { 1, 1, 1, 0 },
+            new[] { 1, 0, 0 },
+            new[] { 1, 1, 0 },
+            new[] { 1, 0, 0, 0, 0, 0, 0, 0 },
+            new[] { 1, 1, 1, 1, 1, 1, 1, 0 },
+            new[] { 1, 0, 1, 0, 1, 0, 0, 0 }
+        };
 
         // This essentially build a table very similar to this:
         // http://famitracker.com/wiki/index.php?title=Common_tempo_values
@@ -42,36 +34,48 @@ namespace FamiStudio
             // Add last one.
             tempos.Add(new TempoInfo(new int[] { MaxNoteLength }, pal, notesPerBeat));
 
-            for (int noteLen = MaxNoteLength - 1; noteLen >= MinNoteLength; noteLen--)
+            foreach (var pattern in GroovePatterns)
             {
-                tempos.Add(new TempoInfo(new int[] { noteLen }, pal, notesPerBeat));
-
-                var grooveLengths = GetGrooveLengthsForNoteLength(noteLen);
-
-                foreach (int grooveLen in grooveLengths)
+                for (int noteLen = MaxNoteLength - 1; noteLen >= MinNoteLength; noteLen--)
                 {
-                    var groove = new int[grooveLen];
+                    var groove = pattern.Clone() as int[];
 
-                    for (int j = 0; j < grooveLen - 1; j++)
-                        groove[j] = noteLen + 1;
-                    groove[grooveLen - 1] = noteLen;
+                    for (int i = 0; i < groove.Length; i++)
+                        groove[i] += noteLen;
 
-                    tempos.Add(new TempoInfo(groove, pal, notesPerBeat));
+                    // Compute BPM with 4 notes per beat so we get the same grooves for all note lengths.
+                    float bpm = ComputeBpmForGroove(pal, groove, 4);
 
-                    if (grooveLen > 2)
+                    // See if this new groove is different enough from the other we added so far.
+                    var foundSimilar = false;
+                    foreach (var tempo in tempos)
                     {
-                        groove = new int[grooveLen];
-                        groove[0] = noteLen + 1;
-                        for (int j = 1; j < grooveLen; j++)
-                            groove[j] = noteLen;
+                        var delta = Math.Abs(tempo.bpm - bpm);
+                        if (delta < BpmThreshold)
+                        {
+                            foundSimilar = true;
+                            break;
+                        }
+                    }
 
-                        tempos.Add(new TempoInfo(groove, pal, notesPerBeat));
+                    if (!foundSimilar)
+                    {
+                        tempos.Add(new TempoInfo(groove, pal, 4));
                     }
                 }
             }
 
+            // Recompute correct BPM.
+            foreach (var tempo in tempos)
+                tempo.bpm = ComputeBpmForGroove(pal, tempo.groove, notesPerBeat);
+
             // Sort.
             tempos.Sort((t1, t2) => t1.bpm.CompareTo(t2.bpm));
+
+            foreach (var tempo in tempos)
+            {
+                Debug.WriteLine($"{tempo.bpm.ToString("n1")} = {string.Join("-", tempo.groove)}");
+            }
 
             return tempos.ToArray();
         }
@@ -126,27 +130,13 @@ namespace FamiStudio
             }
             else
             {
-                int numMin = 0;
-                int numMax = 0;
-
-                for (int i = 0; i < groove.Length; i++)
-                {
-                    if (groove[i] == min)
-                        numMin++;
-                    else if (groove[i] == max)
-                        numMax++;
-                    else
-                        return false;
-                }
-
                 valid =
+                    groove.Length <= 8 &&
                     (max - min) <= 1 &&
-                    (numMin == 1 || numMax == 1) &&
                     min >= MinNoteLength &&
                     min <= MaxNoteLength &&
                     max >= MinNoteLength &&
-                    min <= MaxNoteLength &&
-                    Array.IndexOf(GrooveLengths, groove.Length) >= 0;
+                    min <= MaxNoteLength;
             }
 
             Debug.Assert(valid);
@@ -158,7 +148,6 @@ namespace FamiStudio
         {
             public int[] groove;
             public int   groovePadMode;
-            public int   length;
 
             public override int GetHashCode()
             {
@@ -166,10 +155,7 @@ namespace FamiStudio
                 if (groove.Length > 1) hash |= groove[1] << 8;
                 if (groove.Length > 2) hash |= groove[2] << 16;
                 if (groove.Length > 3) hash |= groove[3] << 24;
-
                 hash = Utils.HashCombine(hash, groovePadMode);
-                hash = Utils.HashCombine(hash, length);
-
                 return hash;
             }
 
@@ -181,33 +167,38 @@ namespace FamiStudio
                     return false;
 
                 return Utils.CompareArrays(groove, other.groove) == 0 &&
-                    groovePadMode == other.groovePadMode &&
-                    length == other.length;
+                    groovePadMode == other.groovePadMode;
             }
         }
 
-        static Dictionary<CacheGrooveLengthKey, int> cachedGrooveLengths = new Dictionary<CacheGrooveLengthKey, int>();
+        static Dictionary<CacheGrooveLengthKey, int[]> cachedGrooveLengths = new Dictionary<CacheGrooveLengthKey, int[]>();
 
         public static int ComputeNumberOfFrameForGroove(int length, int[] groove, int groovePadMode)
         {
             // Look in the cache first.
-            var key = new CacheGrooveLengthKey() { groove = groove, groovePadMode = groovePadMode, length = length };
+            var key = new CacheGrooveLengthKey() { groove = groove, groovePadMode = groovePadMode};
 
-            if (cachedGrooveLengths.TryGetValue(key, out var grooveLength))
-                return grooveLength;
+            if (cachedGrooveLengths.TryGetValue(key, out var grooveLengthArray))
+                return grooveLengthArray[length];
+
+            grooveLengthArray = new int[Pattern.MaxLength];
 
             // Add to cache if not found.
+            var idx = 0;
             var grooveIterator = new GrooveIterator(groove, groovePadMode);
 
             // This is really not optimal, not need to run the full iterator until the very end.
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < grooveLengthArray.Length; i++)
             {
                 if (grooveIterator.IsPadFrame)
                     grooveIterator.Advance();
+
+                grooveLengthArray[idx++] = grooveIterator.FrameIndex;
+
                 grooveIterator.Advance();
             }
 
-            cachedGrooveLengths.Add(key, grooveIterator.FrameIndex);
+            cachedGrooveLengths.Add(key, grooveLengthArray);
 
             return grooveIterator.FrameIndex;
         }
