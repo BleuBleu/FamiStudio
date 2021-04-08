@@ -10,25 +10,20 @@ FamiStudio Tempo 2.0
 		/ Advanced settings, groove list,
 		/ Padding location
 	x Move tempo dialog code to its own class, avoid duplicated code.
-/ Native playback.
-/ Adapted playback.
-	x Compute envelope.
-/ Function to "bake" groove for export.
-	x Let's reset the groove every pattern.
-	x This will make things WAY easier.
-	- Change FamiTone2 export to use the 2 free special code (delay cuts/notes) 
-		- tempo envelope change
-		- tempo envelope reset (jump to zero).
+- Groove option for FamiTracker too?
+	/ Add option to project (Speed effect, BPM).
+	- Show speed/BPM depending 
+	- Add to player.
+	- When exporting to Famitracker, FT2, bake in DPCM channel
+	- Support milliseconds when using BPM.
 x Conversion to milliseconds.
 - Improve resize, make it clearer what it will do (move grid, resize notes, etc.)/
 	-> Does it work well with time signature changes, etc.
-- Groove option for FamiTracker too?
-- What about grooves like : 4-3-4-3-4-3-3-3 ?
 - Format fixes:
-	- Video speed, need smoothing?
+	- Anything else? Look at all formats
 - Documentation.
 
-- Convert demo songs to new tempo
+- Convert demo songs to new tempo (when file format is frozen).
 	- Gimmick
 	- Tower
 	- Any others?
@@ -40,6 +35,7 @@ FamiStudio 2.5.0
 - Note refactor: (2.6.0?)
 	- Whole note drag, or FULL NOT REFACTOR.
 	- When using 1/2 snapping, dragging notes is awkward. (will depend on tempo solution).
+- BUG : Assert in video file when exporting a single channel (major chord in sq1).
 
 =============
 
