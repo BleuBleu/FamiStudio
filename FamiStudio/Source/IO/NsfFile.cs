@@ -868,7 +868,7 @@ namespace FamiStudio
 
             NsfSetTrack(nsf, songIndex);
 
-            song.ChangeFamiStudioTempoGroove(new[] { 1 }, false); // TEMPOTODO : This doesnt feel right?
+            song.ChangeFamiStudioTempoGroove(new[] { 1 }, false);
             song.SetDefaultPatternLength(patternLength);
 
             for (int i = 0; i < song.Channels.Length; i++)
@@ -916,7 +916,7 @@ namespace FamiStudio
 
             NsfClose(nsf);
 
-            var factors = Utils.GetFactors(song.PatternLength, Song.MaxNoteLength);
+            var factors = Utils.GetFactors(song.PatternLength, FamiStudioTempoUtils.MaxNoteLength);
             if (factors.Length > 0)
             {
                 var noteLen = factors[0];
@@ -935,7 +935,7 @@ namespace FamiStudio
                 song.ChangeFamiStudioTempoGroove(new[] { noteLen }, false);
             }
             else
-                song.ChangeFamiStudioTempoGroove(new[] { 1 }, false); // TEMPOTODO : Doesnt sound right.
+                song.ChangeFamiStudioTempoGroove(new[] { 1 }, false);
 
             song.SetSensibleBeatLength();
             song.DeleteEmptyPatterns();

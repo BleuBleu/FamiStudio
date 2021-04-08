@@ -1,6 +1,5 @@
 FamiStudio Tempo 2.0
 ====================
-/ Build utils for tempo list
 / Basic UI.
 	x Advanced section support
 	x Add tooltip to other dialogs + Linux.
@@ -23,15 +22,16 @@ FamiStudio Tempo 2.0
 x Conversion to milliseconds.
 - Improve resize, make it clearer what it will do (move grid, resize notes, etc.)/
 	-> Does it work well with time signature changes, etc.
-- Groove option for FamiTracker too? Look at 0cc, see how they present this to the user.
+- Groove option for FamiTracker too?
+- What about grooves like : 4-3-4-3-4-3-3-3 ?
+- Format fixes:
+	- Video speed, need smoothing?
+- Documentation.
 
 - Convert demo songs to new tempo
 	- Gimmick
 	- Tower
 	- Any others?
-
-- Format fixes:
-	- Video speed, need smoothing?
 
 FamiStudio 2.5.0
 ================
@@ -64,7 +64,10 @@ Testing
 - Linux : Test scaling more.
 - Windows : Scaling, 150% and stuff for the warning in dialogs.
 - OGL : Grey screen happens sometimes.
-
+- Engine : 
+	- Re-test delayed note, @no_ref delayed note fix.
+	- Re-test FT2 stock with compression thing vs. 2 notes.
+	
 Linux notes
 ===========
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe

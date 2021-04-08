@@ -7,10 +7,7 @@ namespace FamiStudio
 {
     public class Song
     {
-        public const int MaxLength     = 256;
-        public const int MinNoteLength = 1; // TEMPOTODO : Remove. Duplicated from FamiStudioTempoUtils. 
-        public const int MaxNoteLength = 18;
-
+        public const int MaxLength       = 256;
         public const int NativeTempoNTSC = 150;
         public const int NativeTempoPAL  = 125;
 
@@ -194,7 +191,6 @@ namespace FamiStudio
             }
         }
 
-        // TEMPOTODO : Revisit this.
         public void SetSensibleBeatLength()
         {
             if (UsesFamiTrackerTempo)
@@ -447,7 +443,7 @@ namespace FamiStudio
             var newNoteLength = Utils.Min(newGroove);
 
             Debug.Assert(UsesFamiStudioTempo);
-            Debug.Assert(newNoteLength >= MinNoteLength && newNoteLength <= MaxNoteLength);
+            Debug.Assert(newNoteLength >= FamiStudioTempoUtils.MinNoteLength && newNoteLength <= FamiStudioTempoUtils.MaxNoteLength);
 
             if (convert)
             {

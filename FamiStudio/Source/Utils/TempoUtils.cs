@@ -6,8 +6,9 @@ namespace FamiStudio
 {
     static class FamiStudioTempoUtils
     {
-        private const int MinNoteLength = 1;
-        private const int MaxNoteLength = 18;
+        public const int MinNoteLength = 1;
+        public const int MaxNoteLength = 18;
+
         private const float BpmThreshold = 2.0f;
         private static readonly int[] GrooveLengths = new int[] { 2, 3, 4, 8 };
 
