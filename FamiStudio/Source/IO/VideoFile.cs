@@ -272,7 +272,7 @@ namespace FamiStudio
             }
         }
 
-        void SmoothFamiTrackerTempo(VideoFrameMetadata[] frames)
+        void SmoothFamitrackerScrolling(VideoFrameMetadata[] frames)
         {
             var numFrames = frames.Length;
 
@@ -304,6 +304,43 @@ namespace FamiStudio
                 }
 
                 f = nf;
+            }
+        }
+
+        void SmoothFamiStudioScrolling(VideoFrameMetadata[] frames, Song song)
+        {
+            var patternIndices = new int[frames.Length];
+            var absoluteNoteIndices = new float[frames.Length];
+
+            // Keep copy of original pattern/notes.
+            for (int i = 0; i < frames.Length; i++)
+            {
+                patternIndices[i] = frames[i].playPattern;
+                absoluteNoteIndices[i] = song.GetPatternStartNote(frames[i].playPattern, (int)frames[i].playNote);
+            }
+
+            // Do moving average to smooth the movement.
+            for (int i = 0; i < frames.Length; i++)
+            {
+                var averageSize = (Utils.Max(song.GetPatternGroove(patternIndices[i])) + 1) / 2;
+
+                averageSize = Math.Min(averageSize, i);
+                averageSize = Math.Min(averageSize, absoluteNoteIndices.Length - i - 1);
+
+                var sum = 0.0f;
+                var cnt = 0;
+                for (int j = i - averageSize; j <= i + averageSize; j++)
+                {
+                    if (j >= 0 && j < absoluteNoteIndices.Length)
+                    {
+                        sum += absoluteNoteIndices[j];
+                        cnt++;
+                    }
+                }
+                sum /= cnt;
+
+                frames[i].playPattern = song.FindPatternInstanceIndex((int)sum, out _);
+                frames[i].playNote = sum - song.GetPatternStartNote(frames[i].playPattern);
             }
         }
 
@@ -547,7 +584,9 @@ namespace FamiStudio
             ComputeChannelsScroll(metadata, channelMask, numVisibleNotes);
 
             if (song.UsesFamiTrackerTempo)
-                SmoothFamiTrackerTempo(metadata);
+                SmoothFamitrackerScrolling(metadata);
+            else
+                SmoothFamiStudioScrolling(metadata, song);
 
             var videoImage   = new byte[videoResY * videoResX * 4];
             var channelImage = new byte[channelResY * channelResX * 4];
