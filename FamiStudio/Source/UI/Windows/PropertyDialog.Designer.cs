@@ -100,7 +100,6 @@
             this.Name = "PropertyDialog";
             this.ShowInTaskbar = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.Shown += new System.EventHandler(this.PropertyDialog_Shown);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PropertyDialog_KeyDown);
             this.ResumeLayout(false);
 

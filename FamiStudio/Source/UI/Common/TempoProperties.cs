@@ -30,7 +30,6 @@ namespace FamiStudio
 
         int originalNoteLength;
         int originalNotesPerBeat;
-        int originalNotesPerPattern;
 
         TempoInfo[] tempoList;
         string[]    tempoStrings;
@@ -65,7 +64,7 @@ namespace FamiStudio
 
                 notesPerBeatPropIdx    = props.AddIntegerRange("Notes per Beat :", notesPerBeat, 1, 256, CommonTooltips.NotesPerBar); // 2
                 notesPerPatternPropIdx = props.AddIntegerRange("Notes per Pattern :", notesPerPattern, 1, 256, CommonTooltips.NotesPerPattern); // 3
-                bpmLabelPropIdx        = props.AddLabel("BPM :", bpm.ToString("n1"), CommonTooltips.BPM); // 4
+                bpmLabelPropIdx        = props.AddLabel("BPM :", bpm.ToString("n1"), false, CommonTooltips.BPM); // 4
 
                 //  // TEMPOTODO : Add a warning to recommend 4 notes per beats too here.
             }
@@ -98,7 +97,6 @@ namespace FamiStudio
 
                 originalNoteLength      = noteLength;
                 originalNotesPerBeat    = notesPerBeat;
-                originalNotesPerPattern = notesPerPattern;
 
                 UpdateWarnings();
             }
@@ -204,10 +202,12 @@ namespace FamiStudio
                 props.SetPropertyWarning(notesPerBeatPropIdx, CommentType.Good, "4 is the recommended value.");
             }
 
-            if (originalNotesPerPattern != notesPerPattern)
+            var groovePadMode = GroovePaddingType.GetValueForName(props.GetPropertyValue<string>(groovePadPropIdx));
+            var numFrames = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(notesPerPattern * Utils.Min(tempoInfo.groove), tempoInfo.groove, groovePadMode);
+
+            if (numFrames >= 256)
             {
-                // TEMPOTODO : This is super wrong.
-                props.SetPropertyWarning(notesPerPatternPropIdx, CommentType.Warning, $"{Math.Abs(originalNotesPerPattern - notesPerPattern)} notes will be {(originalNotesPerPattern > notesPerPattern ? "truncated" : "added")} in every pattern.");
+                props.SetPropertyWarning(notesPerPatternPropIdx, CommentType.Warning, $"Pattern is longer than what FamiTracker supports. Ignore this if you are not planning to export to FamiTracker.");
             }
             else
             {
@@ -270,10 +270,16 @@ namespace FamiStudio
                 {
                     var convertTempo = false;
 
-                    if (framesPerNote != originalNoteLength) // MATTT : Standardize these terms!
+                    if (framesPerNote != originalNoteLength) // TEMPOTODO : Standardize these terms!
                     {
-                        // TEMPOTODO : Better message + conversion here!
-                        convertTempo = PlatformUtils.MessageBox($"You changed the note length, do you want FamiStudio to attempt convert the tempo by resizing notes?", "Tempo Change", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                        var messageDlg = new PropertyDialog(400, true, false); 
+                        messageDlg.Properties.AddLabel(null, "You changed the BPM enough so that the number of frames in a note has changed.", true); // 0
+                        messageDlg.Properties.AddRadioButton(null, "Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.", true); // 1
+                        messageDlg.Properties.AddRadioButton(null, "Leave the notes exactly where they are, just move the grid lines around the notes. This option is useful if you want to change how the notes are grouped.", false); // 2
+                        messageDlg.Properties.Build();
+                        messageDlg.ShowDialog();
+
+                        convertTempo = messageDlg.Properties.GetPropertyValue<bool>(1);
                     }
 
                     song.ChangeFamiStudioTempoGroove(tempoInfo.groove, convertTempo); // TEMPOTODO : Use the selected groove from the list!

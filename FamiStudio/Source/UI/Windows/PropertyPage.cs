@@ -29,7 +29,8 @@ namespace FamiStudio
         Label,
         Button,
         MultilineString,
-        ProgressBar
+        ProgressBar,
+        Radio
     };
 
     public enum CommentType
@@ -148,7 +149,7 @@ namespace FamiStudio
             return colorBitmap;
         }
 
-        private Label CreateLabel(string str, string tooltip = null)
+        private Label CreateLabel(string str, string tooltip = null, bool multiline = false)
         {
             Debug.Assert(!string.IsNullOrEmpty(str));
 
@@ -159,6 +160,8 @@ namespace FamiStudio
             label.AutoSize = true;
             label.ForeColor = ThemeBase.LightGreyFillColor2;
             label.BackColor = BackColor;
+            if (multiline)
+                label.MaximumSize = new Size(1000, 0);
             toolTip.SetToolTip(label, tooltip);
 
             return label;
@@ -327,6 +330,19 @@ namespace FamiStudio
             return progress;
         }
 
+        private RadioButton CreateRadioButton(string text, bool check)
+        {
+            var radio = new RadioButton();
+
+            radio.Font = font;
+            radio.ForeColor = ThemeBase.LightGreyFillColor2;
+            radio.Text = text;
+            radio.AutoSize = false;
+            radio.Checked = check;
+
+            return radio;
+        }
+
         private void UpDown_ValueChanged(object sender, EventArgs e)
         {
             int idx = GetPropertyIndex(sender as Control);
@@ -482,14 +498,14 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddLabel(string label, string value, string tooltip = null)
+        public int AddLabel(string label, string value, bool multiline = false, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Label,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateLabel(value, tooltip)
+                    control = CreateLabel(value, tooltip, multiline)
                 });
             return properties.Count - 1;
         }
@@ -537,6 +553,18 @@ namespace FamiStudio
                     type = PropertyType.ProgressBar,
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateProgressBar(value)
+                });
+            return properties.Count - 1;
+        }
+
+        public int AddRadioButton(string label, string text, bool check)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Radio,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateRadioButton(text, check)
                 });
             return properties.Count - 1;
         }
@@ -830,6 +858,8 @@ namespace FamiStudio
                     return int.TryParse(prop.control.Text, out var val) ? val : 0;
                 case PropertyType.Slider:
                     return (prop.control as Slider).Value;
+                case PropertyType.Radio:
+                    return (prop.control as RadioButton).Checked;
                 case PropertyType.CheckBox:
                     return (prop.control as CheckBox).Checked;
                 case PropertyType.ColorPicker:
@@ -877,6 +907,18 @@ namespace FamiStudio
             }
         }
         
+        private int GetRadioButtonHeight(string text, int width)
+        {
+            var testLabel = CreateLabel(text, null, true);
+
+            testLabel.MaximumSize = new Size(width - (int)(16 * RenderTheme.DialogScaling), 0);
+            Controls.Add(testLabel);
+            var height = testLabel.Height + 8; // TEMPOTODO : Test this with hi-dpi.
+            Controls.Remove(testLabel);
+
+            return height;
+        }
+
         public void Build(bool advanced = false)
         {
             SuspendLayout();
@@ -947,6 +989,12 @@ namespace FamiStudio
                     prop.control.Left  = margin + prop.leftMarging;
                     prop.control.Top   = totalHeight;
                     prop.control.Width = widthNoMargin;
+
+                    // HACK : For some multiline controls.
+                    if (prop.control is Label && prop.control.MaximumSize.Width != 0)
+                        prop.control.MaximumSize = new Size(prop.control.Width, 0);
+                    else if (prop.control is RadioButton)
+                        prop.control.Height = GetRadioButtonHeight(prop.control.Text, prop.control.Width);
 
                     Controls.Add(prop.control);
                 }

@@ -15,12 +15,13 @@ namespace FamiStudio
         private bool top = false;
         private bool advancedPropertiesVisible = false;
 
-        public PropertyDialog(int width, bool canAccept = true, Form parent = null)
+        public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, Form parent = null)
         {
             StartPosition = FormStartPosition.CenterParent;
             Init();
             Width = (int)(width * Direct2DTheme.DialogScaling);
             buttonYes.Visible = canAccept;
+            buttonNo.Visible = canCancel;
             FormClosed += PropertyDialog_FormClosed;
         }
 
@@ -73,7 +74,7 @@ namespace FamiStudio
             }
         }
 
-        private void PropertyDialog_Shown(object sender, EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
             UpdateLayout();
 
@@ -93,10 +94,18 @@ namespace FamiStudio
 
             Height = propertyPage.Height + buttonNo.Height + 7;
 
-            buttonYes.Left = propertyPage.Right - buttonYes.Width * 2 - 10;
-            buttonYes.Top  = propertyPage.Bottom + 0;
-            buttonNo.Left  = propertyPage.Right - buttonNo.Width - 5;
-            buttonNo.Top   = propertyPage.Bottom + 0;
+            buttonYes.Top = propertyPage.Bottom;
+            buttonNo.Top  = propertyPage.Bottom;
+
+            if (buttonNo.Visible)
+            {
+                buttonYes.Left = propertyPage.Right - buttonYes.Width * 2 - 10;
+                buttonNo.Left  = propertyPage.Right - buttonNo.Width - 5;
+            }
+            else
+            {
+                buttonYes.Left = propertyPage.Right - buttonNo.Width - 5;
+            }
 
             if (propertyPage.HasAdvancedProperties)
             {
