@@ -1,42 +1,26 @@
 FamiStudio Tempo 2.0
 ====================
-/ Basic UI.
-	x Advanced section support
-	x Add tooltip to other dialogs + Linux.
-	- BPM selection:
-		- Based on the tempo list + note length, find the tempo that matches the closest.
-		x BPM computation will repeat the groove until its divisble by note length.
-		/ We should display 3 comments like : "Integral", "Uneven", "Unaligned" ? (good, medium, bad).
-		/ Advanced settings, groove list,
-		/ Padding location
-	x Move tempo dialog code to its own class, avoid duplicated code.
-x Conversion to milliseconds.
-- Improve resize, make it clearer what it will do (move grid, resize notes, etc.) 
-	- Make a nice dialog with images.
-	- 
-- Format fixes:
-	- Anything else? Look at all formats
+- Finish UI, test a lot!
+	- Linux/Mac UI too!
+- Any other formats needs fixing?
 - Documentation.
-
 - Convert demo songs to new tempo (when file format is frozen).
 	- Gimmick
 	- Tower
 	- Any others?
-
-
-- CUT : Groove option for FamiTracker too?
+- CUT! : Groove option for FamiTracker too?
 	/ Add option to project (Speed effect, BPM).
 	- Show speed/BPM depending 
 	- Add to player.
 	- When exporting to Famitracker, FT2, bake in DPCM channel
 	- Support milliseconds when using BPM.
 
-FamiStudio 2.5.0
+FamiStudio 3.0.0
 ================
 - Remove low pass, add reload.
 - Loop prevention for envelope (brad issue).
+- Low-pass config in settings (change layout of equalizer)
 - Note refactor: 
-	- 
 	- Remove fractional snapping. Too awkward.
 	- When deleting a note, dont delete certain effects.
 - BUG : Assert in video file when exporting a single channel (major chord in sq1).

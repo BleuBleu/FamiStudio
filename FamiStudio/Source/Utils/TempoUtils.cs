@@ -72,12 +72,29 @@ namespace FamiStudio
             // Sort.
             tempos.Sort((t1, t2) => t1.bpm.CompareTo(t2.bpm));
 
-            foreach (var tempo in tempos)
-            {
-                Debug.WriteLine($"{tempo.bpm.ToString("n1")} = {string.Join("-", tempo.groove)}");
-            }
+            //foreach (var tempo in tempos)
+            //{
+            //    Debug.WriteLine($"{tempo.bpm.ToString("n1")} = {string.Join("-", tempo.groove)}");
+            //}
 
             return tempos.ToArray();
+        }
+
+        public static int FindTempoFromGroove(TempoInfo[] tempoList, int[] groove)
+        {
+            var sortedGroove = groove.Clone() as int[];
+            Array.Sort(sortedGroove);
+
+            for (int i = 0; i < tempoList.Length; i++)
+            {
+                var sortedTempoGroove = tempoList[i].groove.Clone() as int[];
+                Array.Sort(sortedTempoGroove);
+
+                if (Utils.CompareArrays(sortedGroove, sortedTempoGroove) == 0)
+                    return i;
+            }
+
+            return -1;
         }
 
         public static float ComputeBpmForGroove(bool pal, int[] groove, int notesPerBeat)

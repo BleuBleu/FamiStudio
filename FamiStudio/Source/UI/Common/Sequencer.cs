@@ -456,6 +456,15 @@ namespace FamiStudio
                     g.FillRectangle(px, 0, px + sx, Height, theme.DarkGreyFillBrush1);
                 }
             }
+
+            if (IsSelectionValid())
+            {
+                g.FillRectangle(
+                    (int)(Song.GetPatternStartNote(minSelectedPatternIdx + 0) * noteSizeX) - scrollX, trackSizeY * (minSelectedChannelIdx + 0),
+                    (int)(Song.GetPatternStartNote(maxSelectedPatternIdx + 1) * noteSizeX) - scrollX, trackSizeY * (maxSelectedChannelIdx + 1),
+                    showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
+            }
+
             for (int i = minVisiblePattern; i <= maxVisiblePattern; i++)
             {
                 if (i != 0)
@@ -463,14 +472,6 @@ namespace FamiStudio
                     var px = (int)(Song.GetPatternStartNote(i) * noteSizeX) - scrollX;
                     g.DrawLine(px, 0, px, Height, theme.BlackBrush);
                 }
-            }
-
-            if (IsSelectionValid())
-            {
-                g.FillRectangle(
-                    (int)(Song.GetPatternStartNote(minSelectedPatternIdx + 0) * noteSizeX) - scrollX, trackSizeY * (minSelectedChannelIdx + 0),
-                    (int)(Song.GetPatternStartNote(maxSelectedPatternIdx + 1) * noteSizeX) - scrollX, trackSizeY * (maxSelectedChannelIdx + 1), 
-                    showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
             }
 
             g.PopTransform();
