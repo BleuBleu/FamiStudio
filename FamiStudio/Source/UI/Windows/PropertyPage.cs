@@ -46,7 +46,7 @@ namespace FamiStudio
         public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
         public delegate string SliderFormatText(double value);
 
-        private static Bitmap[] commentIcons;
+        private static Bitmap[] warningIcons;
 
         class Property
         {
@@ -96,14 +96,14 @@ namespace FamiStudio
             {
             }
 
-            if (commentIcons ==  null)
+            if (warningIcons ==  null)
             {
                 string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
                 
-                commentIcons = new Bitmap[3];
-                commentIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;
-                commentIcons[1] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningYellow{suffix}.png")) as Bitmap;
-                commentIcons[2] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Warning{suffix}.png"))       as Bitmap;
+                warningIcons = new Bitmap[3];
+                warningIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;
+                warningIcons[1] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningYellow{suffix}.png")) as Bitmap;
+                warningIcons[2] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Warning{suffix}.png"))       as Bitmap;
             }
         }
 
@@ -834,9 +834,9 @@ namespace FamiStudio
             var prop = properties[idx];
 
             if (prop.warningIcon == null)
-                prop.warningIcon = CreatePictureBox(commentIcons[(int)type]);
+                prop.warningIcon = CreatePictureBox(warningIcons[(int)type]);
             else
-                prop.warningIcon.Image = commentIcons[(int)type];
+                prop.warningIcon.Image = warningIcons[(int)type];
 
             prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
             toolTip.SetToolTip(prop.warningIcon, comment);

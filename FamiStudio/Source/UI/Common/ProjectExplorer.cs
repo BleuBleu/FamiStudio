@@ -1971,7 +1971,7 @@ namespace FamiStudio
 
         private void EditSongProperties(Point pt, Song song)
         {
-            var dlg = new PropertyDialog(PointToScreen(pt), 300, true);
+            var dlg = new PropertyDialog(PointToScreen(pt), 320, true); 
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Gdk;
 using Gtk;
@@ -37,6 +38,8 @@ namespace FamiStudio
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
         public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
         public delegate string SliderFormatText(double value);
+
+        private static Pixbuf[] warningIcons;
 
         class Property
         {
@@ -79,6 +82,16 @@ namespace FamiStudio
             //AddStringList("Combo", new[] { "Qal1", "Qal2", "Qal3" }, "Qal2");
             //AddColor(System.Drawing.Color.FromArgb(220, 100, 170));
             //Build();
+
+            if (warningIcons == null)
+            {
+                var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+
+                warningIcons = new Pixbuf[3];
+                warningIcons[0] = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.WarningGood{suffix}.png");
+                warningIcons[1] = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.WarningYellow{suffix}.png");
+                warningIcons[2] = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Warning{suffix}.png");
+            }
         }
 
         private int GetPropertyIndex(Widget ctrl)
@@ -749,18 +762,30 @@ namespace FamiStudio
             advancedPropertyStart = properties.Count;
         }
 
+        private Gtk.Image CreateImage(Pixbuf pixbuf)
+        {
+            var img = new Gtk.Image();
+
+            img.Pixbuf = pixbuf;
+            //img.Width = (int)(bmp.Width * RenderTheme.DialogScaling);
+            //img.Height = (int)(bmp.Height * RenderTheme.DialogScaling);
+            //img.SizeMode = PictureBoxSizeMode.Zoom;
+            //img.BorderStyle = BorderStyle.None;
+
+            return img;
+        }
+
         public void SetPropertyWarning(int idx, CommentType type, string comment)
         {
-            // TEMPOTODO : Make this work on Linux/Mac.
-            //var prop = properties[idx];
+            var prop = properties[idx];
 
-            //if (prop.warningIcon == null)
-            //    prop.warningIcon = CreatePictureBox(commentIcons[(int)type]);
-            //else
-            //    prop.warningIcon.Image = commentIcons[(int)type];
+            if (prop.warningIcon == null)
+                prop.warningIcon = CreateImage(warningIcons[(int)type]);
+            else
+                prop.warningIcon.Pixbuf = warningIcons[(int)type];
 
-            //prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
-            //toolTip.SetToolTip(prop.warningIcon, comment);
+            prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
+            prop.warningIcon.TooltipText = comment;
         }
 
         public object GetPropertyValue(int idx)
@@ -824,14 +849,14 @@ namespace FamiStudio
 
             ColumnSpacing = (uint)GtkUtils.ScaleGtkWidget(5);
             RowSpacing    = (uint)GtkUtils.ScaleGtkWidget(5);
-            
+
             for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
 
                 if (prop.label != null)
                 {
-                    Attach(prop.label,   0, 1, (uint)i, (uint)(i + 1), AttachOptions.Fill, AttachOptions.Fill, 0, 0);
+                    Attach(prop.label,   0, 1, (uint)i, (uint)(i + 1), AttachOptions.Fill, AttachOptions.Expand | AttachOptions.Fill, 0, 0);
                     Attach(prop.control, 1, 2, (uint)i, (uint)(i + 1));
 
                     prop.label.Show();
@@ -843,8 +868,13 @@ namespace FamiStudio
                     if (prop.control is ColorSelector img)
                         img.DesiredWidth = Toplevel.WidthRequest - GtkUtils.ScaleGtkWidget(10); // (10 = Border * 2)
 
-                    Attach(prop.control, 0, 2, (uint)i, (uint)(i + 1), AttachOptions.Expand | AttachOptions.Fill, AttachOptions.Expand | AttachOptions.Fill, (uint)prop.leftMargin, 0);
+                    Attach(prop.control, 0, NColumns, (uint)i, (uint)(i + 1), AttachOptions.Expand | AttachOptions.Fill, AttachOptions.Expand | AttachOptions.Fill, (uint)prop.leftMargin, 0);
                     prop.control.Show();
+                }
+
+                if (prop.warningIcon != null)
+                {
+                    Attach(prop.warningIcon, 2, 3, (uint)i, (uint)(i + 1), AttachOptions.Shrink, AttachOptions.Expand | AttachOptions.Fill, 0, 0);
                 }
             }
 
@@ -855,6 +885,8 @@ namespace FamiStudio
                 if (prop.label != null)
                     Remove(prop.label);
                 Remove(prop.control);
+                if (prop.warningIcon != null)
+                    Remove(prop.warningIcon);
             }
         }
     }
