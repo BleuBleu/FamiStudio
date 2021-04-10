@@ -243,7 +243,7 @@ namespace FamiStudio
             messageDlg.Properties.AddRadioButton(null, "Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.", true); // 1
             messageDlg.Properties.AddRadioButton(null, "Leave the notes exactly where they are, just move the grid lines around the notes. This option is useful if you want to change how the notes are grouped.", false); // 2
             messageDlg.Properties.Build();
-            messageDlg.ShowDialog();
+            messageDlg.ShowDialog(null);
 
             return messageDlg.Properties.GetPropertyValue<bool>(1);
         }

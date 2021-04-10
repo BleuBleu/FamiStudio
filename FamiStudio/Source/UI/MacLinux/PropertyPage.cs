@@ -25,6 +25,13 @@ namespace FamiStudio
         ProgressBar
     };
 
+    public enum CommentType
+    {
+        Good,
+        Warning,
+        Error
+    };
+
     public class PropertyPage : Gtk.Table
     {
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
@@ -41,6 +48,7 @@ namespace FamiStudio
             public ListClicked listDoubleClick;
             public ListClicked listRightClick;
             public SliderFormatText sliderFormat;
+            public Gtk.Image warningIcon; // TEMPOTODO : Will this look ok on Mac?
         };
 
         private object userData;
@@ -48,6 +56,7 @@ namespace FamiStudio
         private Pixbuf colorBitmap;
         private List<Property> properties = new List<Property>();
         private int advancedPropertyStart = -1;
+        private bool showWarnings = false;
 
         public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
         public event PropertyChangedDelegate PropertyChanged;
@@ -56,6 +65,7 @@ namespace FamiStudio
         public new object UserData { get => userData; set => userData = value; }
         public int PropertyCount => properties.Count;
         public bool HasAdvancedProperties { get => advancedPropertyStart > 0; }
+        public bool ShowWarnings { get => showWarnings; set => showWarnings = value; }
 
         public PropertyPage() : base(1, 1, false)
         {
@@ -328,7 +338,7 @@ namespace FamiStudio
             return button;
         }
 
-        public void AddColoredString(string value, System.Drawing.Color color)
+        public int AddColoredString(string value, System.Drawing.Color color)
         {
             properties.Add(
                 new Property()
@@ -336,9 +346,10 @@ namespace FamiStudio
                     type = PropertyType.ColoredString,
                     control = CreateColoredTextBox(value, color)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddString(string label, string value, int maxLength = 0)
+        public int AddString(string label, string value, int maxLength = 0)
         {
             properties.Add(
                 new Property()
@@ -347,9 +358,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateTextBox(value, maxLength)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddMultilineString(string label, string value)
+        public int AddMultilineString(string label, string value)
         {
             properties.Add(
                 new Property()
@@ -358,9 +370,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateMultilineTextBox(value)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
+        public int AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -370,6 +383,7 @@ namespace FamiStudio
                     control = CreateButton(value, tooltip),
                     click = clickDelegate
                 });
+            return properties.Count - 1;
         }
 
         void Button_Clicked(object sender, EventArgs e)
@@ -383,7 +397,8 @@ namespace FamiStudio
             }
         }
 
-        public void AddLabel(string label, string value, string tooltip = null)
+        // TEMPOTODO: Test multiline on Linux.
+        public int AddLabel(string label, string value, bool multiline = false, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -392,9 +407,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateLabel(value, tooltip)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddLinkLabel(string label, string value, string url, string tooltip = null)
+        public int AddLinkLabel(string label, string value, string url, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -403,9 +419,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateLinkLabel(value, url, tooltip)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddCheckBox(string label, bool value, string tooltip = null)
+        public int AddCheckBox(string label, bool value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -414,9 +431,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateCheckBox(value)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddLabelCheckBox(string label, bool value, int margin = 0)
+        public int AddLabelCheckBox(string label, bool value, int margin = 0)
         {
             properties.Add(
                 new Property()
@@ -425,9 +443,10 @@ namespace FamiStudio
                     control = CreateCheckBox(value, label),
                     leftMargin = margin
                 });
+            return properties.Count - 1;
         }
 
-        public void AddColorPicker(System.Drawing.Color color)
+        public int AddColorPicker(System.Drawing.Color color)
         {
             properties.Add(
                 new Property()
@@ -435,9 +454,10 @@ namespace FamiStudio
                     type = PropertyType.ColorPicker,
                     control = CreatePictureBox(color)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
+        public int AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -446,9 +466,10 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateNumericUpDown(value, min, max, tooltip)
                 });
+            return properties.Count - 1;
         }
 
-        public void AddProgressBar(string label, float value)
+        public int AddProgressBar(string label, float value)
         {
             properties.Add(
                 new Property()
@@ -457,6 +478,22 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateProgressBar(value)
                 });
+            return properties.Count - 1;
+        }
+
+        public int AddRadioButton(string label, string text, bool check)
+        {
+            // TEMPOTODO : Make this work on Linux/Mac.
+
+            //properties.Add(
+            //    new Property()
+            //    {
+            //        type = PropertyType.Radio,
+            //        label = label != null ? CreateLabel(label) : null,
+            //        control = CreateRadioButton(text, check)
+            //    });
+            //return properties.Count - 1;
+            return -1;
         }
 
         public void UpdateIntegerRange(int idx, int min, int max)
@@ -472,7 +509,7 @@ namespace FamiStudio
             spin.Value = value;
         }
 
-        public void AddDomainRange(string label, int[] values, int value)
+        public int AddDomainRange(string label, int[] values, int value)
         {
             properties.Add(
                 new Property()
@@ -481,6 +518,7 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateDomainUpDown(values, value)
                 });
+            return properties.Count - 1;
         }
 
         public void UpdateDomainRange(int idx, int[] values, int value)
@@ -490,7 +528,7 @@ namespace FamiStudio
             spin.UpdateValues(values, value);
         }
 
-        public void AddDropDownList(string label, string[] values, string value, string tooltip = null)
+        public int AddDropDownList(string label, string[] values, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -499,6 +537,7 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateDropDownList(values, value, tooltip)
                 });
+            return properties.Count - 1;
         }
 
         public void SetDropDownListIndex(int idx, int selectedIndex)
@@ -507,7 +546,22 @@ namespace FamiStudio
             combo.Active = selectedIndex;
         }
 
-        public void AddCheckBoxList(string label, string[] values, bool[] selected)
+        public void UpdateDropDownListItems(int idx, string[] values)
+        {
+            var combo = (properties[idx].control as ComboBox);
+            var selectedIdx = combo.Active;
+
+            combo.Model = new ListStore(typeof(string));
+            for (int i = 0; i < values.Length; i++)
+                combo.AppendText(values[i]);
+
+            if (selectedIdx < values.Length)
+                combo.Active = selectedIdx;
+            else
+                combo.Active = 0;
+        }
+
+        public int AddCheckBoxList(string label, string[] values, bool[] selected)
         {
             properties.Add(
                 new Property()
@@ -515,7 +569,8 @@ namespace FamiStudio
                     type = PropertyType.CheckBoxList,
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateCheckedListBox(values, selected)
-                });     
+                });
+            return properties.Count - 1;
         }
 
         private ListStore CreateListStoreFromData(string[,] data)
@@ -594,7 +649,7 @@ namespace FamiStudio
             }
         }
 
-        public void AddMultiColumnList(string[] columnNames, string[,] data, ListClicked doubleClick, ListClicked rightClick)
+        public int AddMultiColumnList(string[] columnNames, string[,] data, ListClicked doubleClick, ListClicked rightClick)
         {
             properties.Add(
                 new Property()
@@ -603,7 +658,8 @@ namespace FamiStudio
                     control = CreateTreeView(columnNames, data),
                     listDoubleClick = doubleClick,
                     listRightClick = rightClick
-                });    
+                });
+            return properties.Count - 1;
         }
 
         public void UpdateMultiColumnList(int idx, string[,] data)
@@ -647,7 +703,7 @@ namespace FamiStudio
                 args.RetVal = properties[idx].sliderFormat(args.Value);
         }
 
-        public void AddSlider(string label, double value, double min, double max, double increment, int numDecimals, SliderFormatText format = null, string tooltip = null)
+        public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, SliderFormatText format = null, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -657,6 +713,7 @@ namespace FamiStudio
                     control = CreateSlider(value, min, max, increment, numDecimals, tooltip),
                     sliderFormat = format
                 });
+            return properties.Count - 1;
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)
@@ -690,6 +747,20 @@ namespace FamiStudio
         public void BeginAdvancedProperties()
         {
             advancedPropertyStart = properties.Count;
+        }
+
+        public void SetPropertyWarning(int idx, CommentType type, string comment)
+        {
+            // TEMPOTODO : Make this work on Linux/Mac.
+            //var prop = properties[idx];
+
+            //if (prop.warningIcon == null)
+            //    prop.warningIcon = CreatePictureBox(commentIcons[(int)type]);
+            //else
+            //    prop.warningIcon.Image = commentIcons[(int)type];
+
+            //prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
+            //toolTip.SetToolTip(prop.warningIcon, comment);
         }
 
         public object GetPropertyValue(int idx)
@@ -749,7 +820,7 @@ namespace FamiStudio
         {
             var propertyCount = advanced || advancedPropertyStart < 0 ? properties.Count : advancedPropertyStart;
 
-            Resize((uint)propertyCount, 2);
+            Resize((uint)propertyCount, showWarnings ? 3u : 2u);
 
             ColumnSpacing = (uint)GtkUtils.ScaleGtkWidget(5);
             RowSpacing    = (uint)GtkUtils.ScaleGtkWidget(5);
