@@ -2016,7 +2016,7 @@ namespace FamiStudio
             dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             if (instrument.IsEnvelopeActive(EnvelopeType.Pitch))
-                dlg.Properties.AddCheckBox("Relative pitch:", instrument.Envelopes[EnvelopeType.Pitch].Relative); // 2
+                dlg.Properties.AddCheckBox("Relative pitch envelope:", instrument.Envelopes[EnvelopeType.Pitch].Relative); // 2
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
