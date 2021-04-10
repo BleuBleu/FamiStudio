@@ -25,13 +25,15 @@ namespace FamiStudio
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, bool canAccept = true, Window parent = null) : base(WindowType.Toplevel)
+        public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, Window parent = null) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = GtkUtils.ScaleGtkWidget(width);
             
             if (!canAccept)
                 buttonYes.Hide();
+            if (!canCancel)
+                buttonNo.Hide();
 
             TransientFor = parent != null ? parent : FamiStudioForm.Instance;
             SetPosition(WindowPosition.CenterOnParent);
