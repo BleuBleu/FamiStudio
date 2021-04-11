@@ -672,12 +672,15 @@ namespace FamiStudio
             {
                 if (PatternHasCustomSettings(p))
                 {
-                    patternCustomSettings[p].noteLength    = famitrackerSpeed;
-                    patternCustomSettings[p].patternLength = patternCustomSettings[p].patternLength / famitrackerSpeed * famitrackerSpeed;
-                    patternCustomSettings[p].beatLength     = Math.Max(patternCustomSettings[p].beatLength / famitrackerSpeed, 1);
+                    patternCustomSettings[p].noteLength        = famitrackerSpeed;
+                    patternCustomSettings[p].patternLength     = patternCustomSettings[p].patternLength / famitrackerSpeed * famitrackerSpeed;
+                    patternCustomSettings[p].beatLength        = Math.Max(patternCustomSettings[p].beatLength / famitrackerSpeed, 1);
+                    patternCustomSettings[p].groove            = new int[] { famitrackerSpeed };
+                    patternCustomSettings[p].groovePaddingMode = GroovePaddingType.Middle;
                 }
             }
 
+            groove        = new int[] { newNoteLength };
             noteLength    = newNoteLength;
             beatLength    = newBeatLength;
             patternLength = newPatternLength;
@@ -761,7 +764,6 @@ namespace FamiStudio
 
                             var grooveIterator = new GrooveIterator(groove, groovePadMode);
 
-                            // TEMPOTODO : Compare that it gives the same result as the playback.
                             for (int i = 0; i < maxPatternLen; i++)
                             {
                                 if (grooveIterator.IsPadFrame)
@@ -787,9 +789,6 @@ namespace FamiStudio
                 }
 
                 patternLength = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(patternLength, groove, groovePaddingMode);
-
-                // TEMPOTODO : HOW DO WE MARK PATTERNS AS PROCESSED? 
-                // FT2 export still compares grooves and stuff.
 
                 UpdatePatternStartNotes();
             }

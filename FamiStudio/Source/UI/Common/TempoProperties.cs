@@ -192,7 +192,7 @@ namespace FamiStudio
                 var groovePadMode = GroovePaddingType.GetValueForName(props.GetPropertyValue<string>(groovePadPropIdx));
                 numFramesPerPattern  = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(notesPerPattern * Utils.Min(tempoInfo.groove), tempoInfo.groove, groovePadMode);
             }
-            else
+            else if (famitrackerSpeedPropIdx >= 0)
             {
                 var speed = props.GetPropertyValue<int>(famitrackerSpeedPropIdx);
                 var tempo = props.GetPropertyValue<int>(famitrackerTempoPropIdx);

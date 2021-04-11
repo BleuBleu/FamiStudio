@@ -913,7 +913,7 @@ namespace FamiStudio
 
             testLabel.MaximumSize = new Size(width - (int)(16 * RenderTheme.DialogScaling), 0);
             Controls.Add(testLabel);
-            var height = testLabel.Height + 8; // TEMPOTODO : Test this with hi-dpi.
+            var height = testLabel.Height + (int)(8 * RenderTheme.DialogScaling);
             Controls.Remove(testLabel);
 
             return height;
@@ -954,7 +954,7 @@ namespace FamiStudio
 
             int widthNoMargin = Width - (margin * 2);
             int totalHeight = margin;
-            int warningWidth = showWarnings ? 16 + margin : 0; // TEMPOTODO : Scaling!
+            int warningWidth = showWarnings ? (int)(16 * RenderTheme.DialogScaling) + margin : 0;
 
             for (int i = 0; i < propertyCount; i++)
             {

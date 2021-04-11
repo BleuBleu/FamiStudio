@@ -2,6 +2,7 @@ FamiStudio Tempo 2.0
 ====================
 - Finish UI, test a lot!
 	- Linux/Mac UI too!
+	- Add missing tooltips (BPM, note length, etc).
 - Any other formats needs fixing?
 - Documentation.
 - Convert demo songs to new tempo (when file format is frozen).
