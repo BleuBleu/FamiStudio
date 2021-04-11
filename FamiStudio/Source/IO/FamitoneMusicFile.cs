@@ -952,7 +952,6 @@ namespace FamiStudio
                                 var noteTableNtsc = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumChannels);
                                 var noteTablePal  = NesApu.GetNoteTableForChannelType(channel.Type, true,  song.Project.ExpansionNumChannels);
 
-                                // TEMPOTODO : This doesn't seem right, does this account for NTSC -> PAL, PAL -> NTSC? Or maybe it is???
                                 var found = true;
                                 found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
                                 found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, noteTablePal,  true,  true, out _, out int stepSizePal,  out _);

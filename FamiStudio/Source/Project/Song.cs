@@ -556,7 +556,7 @@ namespace FamiStudio
             if (UsesFamiStudioTempo)
             {
                 FamiStudioTempoUtils.ValidateGroove(groove);
-                Debug.Assert(noteLength == Utils.Min(groove)); // TEMPOTODO: Assert here when switching tempo mode.
+                Debug.Assert(noteLength == Utils.Min(groove));
 
                 for (int i = 0; i < songLength; i++)
                 {
