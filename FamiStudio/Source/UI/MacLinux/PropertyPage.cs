@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -52,6 +52,7 @@ namespace FamiStudio
             public ListClicked listRightClick;
             public SliderFormatText sliderFormat;
             public Gtk.Image warningIcon; // TEMPOTODO : Will this look ok on Mac?
+            public string multilineLabelText; // HACK for multiline labels.
         };
 
         private object userData;
@@ -133,7 +134,7 @@ namespace FamiStudio
             return colorBitmap;
         }
 
-        private Label CreateLabel(string str, string tooltip = null)
+        private Label CreateLabel(string str, string tooltip = null, bool multiline = false)
         {
             Debug.Assert(!string.IsNullOrEmpty(str));
 
@@ -143,7 +144,28 @@ namespace FamiStudio
             label.SetAlignment(0.0f, 0.5f);
             label.TooltipText = tooltip;
 
+            if (multiline)
+            {
+                label.Wrap = true;
+                label.SizeAllocated += Label_SizeAllocated;
+                label.Text = "a";
+            }
+
             return label;
+        }
+
+        void Label_SizeAllocated(object o, SizeAllocatedArgs args)
+        {
+            var idx = GetPropertyIndex(o as Widget);
+            var prop = properties[idx];
+
+            if (prop.multilineLabelText != null)
+            {
+                var lbl = o as Label;
+                lbl.WidthRequest = args.Allocation.Width - 1;
+                lbl.Text = prop.multilineLabelText;
+                prop.multilineLabelText = null;
+            }
         }
 
         private LinkButton CreateLinkLabel(string str, string url, string tooltip = null)
@@ -347,7 +369,7 @@ namespace FamiStudio
             var button = new Button();
             button.Label = text;
             button.TooltipText = tooltip;
-            button.Clicked += Button_Clicked; 		
+            button.Clicked += Button_Clicked;         
             return button;
         }
 
@@ -410,7 +432,6 @@ namespace FamiStudio
             }
         }
 
-        // TEMPOTODO: Test multiline on Linux.
         public int AddLabel(string label, string value, bool multiline = false, string tooltip = null)
         {
             properties.Add(
@@ -418,7 +439,8 @@ namespace FamiStudio
                 {
                     type = PropertyType.Label,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateLabel(value, tooltip)
+                    control = CreateLabel(value, tooltip, multiline),
+                    multilineLabelText = multiline ? value : null
                 });
             return properties.Count - 1;
         }
@@ -864,11 +886,15 @@ namespace FamiStudio
                 }
                 else
                 {
+                    var attachOption = AttachOptions.Expand | AttachOptions.Fill;
+
                     // HACK: Cant be bothered to deal with GTK+2 aspect ratios.
                     if (prop.control is ColorSelector img)
                         img.DesiredWidth = Toplevel.WidthRequest - GtkUtils.ScaleGtkWidget(10); // (10 = Border * 2)
+                    else if (prop.control is Label lbl && lbl.Wrap)
+                        attachOption = AttachOptions.Shrink | AttachOptions.Fill;
 
-                    Attach(prop.control, 0, NColumns, (uint)i, (uint)(i + 1), AttachOptions.Expand | AttachOptions.Fill, AttachOptions.Expand | AttachOptions.Fill, (uint)prop.leftMargin, 0);
+                    Attach(prop.control, 0, NColumns, (uint)i, (uint)(i + 1), attachOption, AttachOptions.Expand | AttachOptions.Fill, (uint)prop.leftMargin, 0);
                     prop.control.Show();
                 }
 
