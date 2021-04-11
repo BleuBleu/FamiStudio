@@ -23,7 +23,8 @@ namespace FamiStudio
         Label,
         Button,
         MultilineString,
-        ProgressBar
+        ProgressBar,
+        Radio
     };
 
     public enum CommentType
@@ -323,6 +324,44 @@ namespace FamiStudio
             return progress;
         }
 
+        private RadioButton CreateRadioButton(string text, bool check)
+        {
+            RadioButton group = null;
+            foreach (var p in properties)
+            {
+                if (p.type == PropertyType.Radio)
+                {
+                    group = p.control as RadioButton;
+                    break;
+                }
+            }
+
+            var radio = new RadioButton(group, "a");
+
+            // HACK : The only radio button we create are multiline.
+            var label = radio.Child as Label;
+            label.Wrap = true;
+            radio.SizeAllocated += RadioLabel_SizeAllocated;
+            radio.Active = check;
+
+            return radio;
+        }
+
+        void RadioLabel_SizeAllocated(object o, SizeAllocatedArgs args)
+        {
+            var radio = o as RadioButton;
+            var idx = GetPropertyIndex(radio);
+            var prop = properties[idx];
+
+            if (prop.multilineLabelText != null)
+            {
+                var lbl = radio.Child as Label;
+                lbl.Text = prop.multilineLabelText;
+                lbl.WidthRequest = args.Allocation.Width - GtkUtils.ScaleGtkWidget(32);
+                prop.multilineLabelText = null;
+            }
+        }
+
         private void UpDown_ValueChanged1(object sender, EventArgs e)
         {
             int idx = GetPropertyIndex(sender as Widget);
@@ -518,17 +557,15 @@ namespace FamiStudio
 
         public int AddRadioButton(string label, string text, bool check)
         {
-            // TEMPOTODO : Make this work on Linux/Mac.
-
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.Radio,
-            //        label = label != null ? CreateLabel(label) : null,
-            //        control = CreateRadioButton(text, check)
-            //    });
-            //return properties.Count - 1;
-            return -1;
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Radio,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateRadioButton(text, check),
+                    multilineLabelText = text
+                });
+            return properties.Count - 1;
         }
 
         public void UpdateIntegerRange(int idx, int min, int max)
@@ -825,6 +862,8 @@ namespace FamiStudio
                     return int.Parse((prop.control as DomainSpinButton).Text);
                 case PropertyType.Slider:
                     return (prop.control as HScale).Value;
+                case PropertyType.Radio:
+                    return (prop.control as RadioButton).Active;
                 case PropertyType.CheckBox:
                     return (prop.control as CheckButton).Active;
                 case PropertyType.ColorPicker:
