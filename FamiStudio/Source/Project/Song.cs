@@ -7,38 +7,9 @@ namespace FamiStudio
 {
     public class Song
     {
-        public const int MaxLength = 256;
-        public const int MinNoteLength = 1;
-        public const int MaxNoteLength = 18;
-
+        public const int MaxLength       = 256;
         public const int NativeTempoNTSC = 150;
         public const int NativeTempoPAL  = 125;
-
-        public class PatternCustomSetting
-        {
-            public bool useCustomSettings;
-            public int  patternLength;
-            public int  noteLength;
-            public int  beatLength;
-
-            public void Clear()
-            {
-                useCustomSettings = false;
-                patternLength = 0;
-                noteLength = 0;
-                beatLength = 0;
-            }
-
-            public PatternCustomSetting Clone()
-            {
-                var clone = new PatternCustomSetting();
-                clone.useCustomSettings = useCustomSettings;
-                clone.patternLength = patternLength;
-                clone.noteLength = noteLength;
-                clone.beatLength = beatLength;
-                return clone;
-            }
-        };
 
         private int id;
         private Project project;
@@ -57,7 +28,9 @@ namespace FamiStudio
         private int famitrackerSpeed = 6;
 
         // These are for FamiStudio tempo mode
-        private int noteLength = 10;
+        private int   noteLength = 10;
+        private int[] groove = new[] { 10 };
+        private int   groovePaddingMode = GroovePaddingType.Middle;
 
         public int Id => id;
         public Project Project => project;
@@ -67,6 +40,8 @@ namespace FamiStudio
         public int Length { get => songLength; }
         public int PatternLength { get => patternLength; }
         public int BeatLength { get => beatLength; }
+        public int[] Groove { get => groove; }
+        public int GroovePaddingMode { get => groovePaddingMode; }
         public int LoopPoint { get => loopPoint; }
         public bool UsesFamiStudioTempo => project.UsesFamiStudioTempo;
         public bool UsesFamiTrackerTempo => project.UsesFamiTrackerTempo;
@@ -97,6 +72,7 @@ namespace FamiStudio
             if (tempoMode == TempoType.FamiStudio)
             {
                 noteLength = 10;
+                groove = new[] { 10 };
                 beatLength = noteLength * 4;
             }
             else
@@ -138,151 +114,20 @@ namespace FamiStudio
             }
         }
 
-        public void DuplicateInstancesWithDifferentLengths()
+        public void MakePatternsWithDifferentLengthsUnique()
         {
             foreach (var channel in channels)
             {
-                channel.DuplicateInstancesWithDifferentLengths();
+                channel.MakePatternsWithDifferentLengthsUnique();
             }
         }
 
-        public bool Split(int factor)
+        public void MakePatternsWithDifferentGroovesUnique()
         {
-            DuplicateInstancesWithDifferentLengths();
-
-            if (factor == 1)
-                return true;
-
-            var numNotes = patternLength / (UsesFamiStudioTempo ? noteLength : 1);
-
-            if ((numNotes % factor) == 0)
+            foreach (var channel in channels)
             {
-                var newSongLength = 0;
-                var newLoopPoint = 0;
-                var newPatternCustomSettings = new List<PatternCustomSetting>();
-                var newPatternMap = new Dictionary<Pattern, Pattern[]>();
-                var newNumNotes = numNotes / factor;
-                
-                // First check if we wont end up with more than 256 patterns.
-                for (int p = 0; p < songLength; p++)
-                {
-                    var patternLen = GetPatternLength(p);
-                    var patternNoteLength = UsesFamiStudioTempo ? GetPatternNoteLength(p) : 1;
-                    var patternNewLen = newNumNotes * patternNoteLength;
-                    var chunkCount = (int)Math.Ceiling(patternLen / (float)patternNewLen);
-
-                    newSongLength += chunkCount;
-                }
-
-                if (newSongLength > MaxLength)
-                    return false;
-
-                newSongLength = 0;
-
-                var oldChannelPatterns  = new Pattern[channels.Length][];
-                var oldChannelInstances = new Pattern[channels.Length][];
-
-                for (int c = 0; c < channels.Length; c++)
-                {
-                    var channel = channels[c];
-
-                    oldChannelPatterns[c]  = channel.Patterns.ToArray();
-                    oldChannelInstances[c] = channel.PatternInstances.Clone() as Pattern[];
-
-                    Array.Clear(channel.PatternInstances, 0, channel.PatternInstances.Length);
-
-                    channel.Patterns.Clear();
-                }
-
-                for (int p = 0; p < songLength; p++)
-                {
-                    var patternLen        = GetPatternLength(p);
-                    var patternBeatLength = UsesFamiStudioTempo ? GetPatternBeatLength(p)  : beatLength;
-                    var patternNoteLength = UsesFamiStudioTempo ? GetPatternNoteLength(p) : 1;
-                    var patternNumNotes   = patternLen / patternNoteLength;
-                    var patternNewLen     = newNumNotes * patternNoteLength;
-
-                    var chunkCount = (int)Math.Ceiling(patternLen / (float)patternNewLen);
-
-                    if (p == loopPoint)
-                        newLoopPoint = newSongLength;
-
-                    if (patternCustomSettings[p].patternLength == 0)
-                    {
-                        for (int i = 0; i < chunkCount; i++)
-                            newPatternCustomSettings.Add(new PatternCustomSetting());
-                    }
-                    else
-                    {
-                        for (int i = 0, notesLeft = patternLen; i < chunkCount; i++, notesLeft -= patternNewLen)
-                        {
-                            var customSettings = new PatternCustomSetting();
-                            customSettings.useCustomSettings = true;
-                            customSettings.patternLength = Math.Min(patternNewLen, notesLeft);
-                            customSettings.beatLength = patternBeatLength;
-                            customSettings.noteLength = patternNoteLength;
-                            newPatternCustomSettings.Add(customSettings);
-                        }
-                    }
-
-                    newSongLength += chunkCount;
-
-                    for (int c = 0; c < channels.Length; c++)
-                    {
-                        var channel = channels[c];
-                        var pattern = oldChannelInstances[c][p];
-
-                        if (pattern != null)
-                        {
-                            Pattern[] splitPatterns = null;
-
-                            if (!newPatternMap.TryGetValue(pattern, out splitPatterns))
-                            {
-                                splitPatterns = new Pattern[chunkCount];
-
-                                for (int i = 0, notesLeft = patternLen; i < chunkCount; i++, notesLeft -= patternNewLen)
-                                {
-                                    splitPatterns[i] = new Pattern(Project.GenerateUniqueId(), this, channel.Type, channel.GenerateUniquePatternName(pattern.Name));
-
-                                    var noteIdx0 = (i + 0) * patternNewLen;
-                                    var noteIdx1 = noteIdx0 + Math.Min(patternNewLen, notesLeft);
-
-                                    foreach (var kv in pattern.Notes)
-                                    {
-                                        if (kv.Key >= noteIdx0 && kv.Key < noteIdx1)
-                                            splitPatterns[i].SetNoteAt(kv.Key - noteIdx0, kv.Value.Clone());
-                                    }
-
-                                    splitPatterns[i].ClearLastValidNoteCache();
-                                    channel.Patterns.Add(splitPatterns[i]);
-                                }
-
-                                newPatternMap[pattern] = splitPatterns;
-                            }
-
-                            Debug.Assert(splitPatterns.Length == chunkCount);
-
-                            for (int i = 0; i < splitPatterns.Length; i++)
-                                channel.PatternInstances[newPatternCustomSettings.Count - chunkCount + i] = splitPatterns[i];
-                        }
-                    }
-                }
-
-                while (newPatternCustomSettings.Count != MaxLength)
-                    newPatternCustomSettings.Add(new PatternCustomSetting());
-
-                patternCustomSettings = newPatternCustomSettings.ToArray();
-
-                patternLength = (patternLength / (UsesFamiStudioTempo ? noteLength : 1)) / factor * (UsesFamiStudioTempo ? noteLength : 1);
-                songLength = newSongLength;
-                loopPoint = newLoopPoint;
-
-                UpdatePatternStartNotes();
-
-                return true;
+                channel.MakePatternsWithDifferentGroovesUnique();
             }
-
-            return false;
         }
 
         public void SetProject(Project newProject)
@@ -317,6 +162,11 @@ namespace FamiStudio
         {
             if (beatLength < patternLength)
                 beatLength = newBeatLength;
+        }
+
+        public void SetGroovePaddingMode(int mode)
+        {
+            groovePaddingMode = mode;
         }
 
         public void SetLoopPoint(int loop)
@@ -382,7 +232,7 @@ namespace FamiStudio
             UpdatePatternStartNotes();
         }
 
-        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customBeatLength, int customNoteLength = 0)
+        public void SetPatternCustomSettings(int patternIdx, int customPatternLength, int customBeatLength, int[] groove = null, int groovePaddingMode = GroovePaddingType.Middle)
         {
             Debug.Assert(customPatternLength > 0 && customPatternLength < Pattern.MaxLength);
 
@@ -391,20 +241,25 @@ namespace FamiStudio
 
             if (project.UsesFamiTrackerTempo)
             {
-                Debug.Assert(customNoteLength == 0);
+                Debug.Assert(groove == null);
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
                 patternCustomSettings[patternIdx].beatLength = customBeatLength;
             }
             else
             {
+                FamiStudioTempoUtils.ValidateGroove(groove);
+
+                var customNoteLength = Utils.Min(groove);
+
                 Debug.Assert(customPatternLength % customNoteLength == 0);
-                Debug.Assert(customNoteLength != 0);
                 Debug.Assert(customBeatLength != 0);
 
                 patternCustomSettings[patternIdx].patternLength = customPatternLength;
                 patternCustomSettings[patternIdx].beatLength = customBeatLength;
                 patternCustomSettings[patternIdx].noteLength = customNoteLength;
+                patternCustomSettings[patternIdx].groove = groove;
+                patternCustomSettings[patternIdx].groovePaddingMode = groovePaddingMode;
             }
 
             UpdatePatternStartNotes();
@@ -436,6 +291,18 @@ namespace FamiStudio
         {
             var settings = patternCustomSettings[patternIdx];
             return settings.useCustomSettings ? settings.patternLength : patternLength;
+        }
+
+        public int[] GetPatternGroove(int patternIdx)
+        {
+            var settings = patternCustomSettings[patternIdx];
+            return settings.useCustomSettings ? settings.groove : groove;
+        }
+
+        public int GetPatternGroovePaddingMode(int patternIdx)
+        {
+            var settings = patternCustomSettings[patternIdx];
+            return settings.useCustomSettings ? settings.groovePaddingMode : groovePaddingMode;
         }
 
         public int GetPatternStartNote(int patternIdx, int note = 0)
@@ -571,10 +438,12 @@ namespace FamiStudio
             }
         }
 
-        public void ResizeNotes(int newNoteLength, bool convert)
+        public void ChangeFamiStudioTempoGroove(int[] newGroove, bool convert)
         {
+            var newNoteLength = Utils.Min(newGroove);
+
             Debug.Assert(UsesFamiStudioTempo);
-            Debug.Assert(newNoteLength >= MinNoteLength && newNoteLength <= MaxNoteLength);
+            Debug.Assert(newNoteLength >= FamiStudioTempoUtils.MinNoteLength && newNoteLength <= FamiStudioTempoUtils.MaxNoteLength);
 
             if (convert)
             {
@@ -590,6 +459,7 @@ namespace FamiStudio
             }
 
             noteLength = newNoteLength;
+            groove     = newGroove;
         }
 
         public static float ComputeFamiTrackerBPM(bool palPlayback, int speed, int tempo, int beatLength)
@@ -597,9 +467,9 @@ namespace FamiStudio
             return tempo * (palPlayback ? 20 : 24) / (float)(speed * beatLength);
         }
 
-        public static float ComputeFamiStudioBPM(bool palSource, int noteLength, int beatLength)
+        public static float ComputeFamiStudioBPM(bool palSource, int[] groove, int beatLength)
         {
-            return (palSource? 3000 : 3600) / (float)(beatLength);
+            return FamiStudioTempoUtils.ComputeBpmForGroove(palSource, groove, beatLength);
         }
 
         public float BPM
@@ -607,7 +477,7 @@ namespace FamiStudio
             get
             {
                 if (UsesFamiStudioTempo)
-                    return ComputeFamiStudioBPM(project.PalMode, noteLength, beatLength);
+                    return ComputeFamiStudioBPM(project.PalMode, groove, beatLength / noteLength);
                 else
                     return ComputeFamiTrackerBPM(project.PalMode, famitrackerSpeed, famitrackerTempo, beatLength);
             }
@@ -682,6 +552,34 @@ namespace FamiStudio
             UpdatePatternStartNotes();
             for (int i = 0; i < patternStartNote.Length; i++)
                 Debug.Assert(oldPatternInstancesStartNote[i] == patternStartNote[i]);
+
+            if (UsesFamiStudioTempo)
+            {
+                FamiStudioTempoUtils.ValidateGroove(groove);
+                Debug.Assert(noteLength == Utils.Min(groove));
+
+                for (int i = 0; i < songLength; i++)
+                {
+                    var custom = patternCustomSettings[i];
+                    if (custom.useCustomSettings)
+                    {
+                        Debug.Assert(custom.groove != null);
+                        Debug.Assert(custom.noteLength == Utils.Min(custom.groove));
+                    }
+                    else
+                    {
+                        Debug.Assert(custom.groove == null);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < songLength; i++)
+                {
+                    var custom = patternCustomSettings[i];
+                    Debug.Assert(custom.groove == null);
+                }
+            }
         }
 #endif
 
@@ -774,14 +672,17 @@ namespace FamiStudio
             {
                 if (PatternHasCustomSettings(p))
                 {
-                    patternCustomSettings[p].noteLength    = famitrackerSpeed;
-                    patternCustomSettings[p].patternLength = patternCustomSettings[p].patternLength / famitrackerSpeed * famitrackerSpeed;
-                    patternCustomSettings[p].beatLength     = Math.Max(patternCustomSettings[p].beatLength / famitrackerSpeed, 1);
+                    patternCustomSettings[p].noteLength        = famitrackerSpeed;
+                    patternCustomSettings[p].patternLength     = patternCustomSettings[p].patternLength * famitrackerSpeed;
+                    patternCustomSettings[p].beatLength        = Math.Max(patternCustomSettings[p].beatLength * famitrackerSpeed, 1);
+                    patternCustomSettings[p].groove            = new int[] { famitrackerSpeed };
+                    patternCustomSettings[p].groovePaddingMode = GroovePaddingType.Middle;
                 }
             }
 
+            groove        = new int[] { newNoteLength };
             noteLength    = newNoteLength;
-            beatLength     = newBeatLength;
+            beatLength    = newBeatLength;
             patternLength = newPatternLength;
 
             RemoveUnsupportedEffects();
@@ -829,6 +730,71 @@ namespace FamiStudio
                         }
                     }
                 }
+            }
+        }
+
+        public void PermanentlyApplyGrooves()
+        {
+            if (UsesFamiStudioTempo)
+            {
+                MakePatternsWithDifferentGroovesUnique();
+
+                var processedPatterns = new HashSet<Pattern>();
+
+                foreach (var c in channels)
+                {
+                    for (int p = 0; p < songLength; p++)
+                    {
+                        var pattern = c.PatternInstances[p];
+
+                        if (pattern == null || processedPatterns.Contains(pattern))
+                            continue;
+
+                        var groove = GetPatternGroove(p);
+                        var newPatternLength = GetPatternLength(p);
+                        var newBeatLength    = GetPatternBeatLength(p);
+                        
+                        // Nothing to do for integral tempos.
+                        if (groove.Length > 1)
+                        {
+                            var groovePadMode  = GetPatternGroovePaddingMode(p);
+                            var maxPatternLen = pattern.GetMaxInstanceLength();
+                            var originalNotes = new SortedList<int, Note>(pattern.Notes);
+
+                            pattern.Notes.Clear();
+
+                            var grooveIterator = new GrooveIterator(groove, groovePadMode);
+
+                            for (int i = 0; i < maxPatternLen; i++)
+                            {
+                                if (grooveIterator.IsPadFrame)
+                                    grooveIterator.Advance();
+
+                                if (originalNotes.TryGetValue(i, out var note) && note != null)
+                                    pattern.Notes.Add(grooveIterator.FrameIndex, note);
+
+                                // Advance groove.
+                                grooveIterator.Advance();
+                            }
+
+                            newPatternLength = grooveIterator.FrameIndex;
+                            newBeatLength    = Utils.Sum(groove);
+                        }
+
+                        if (PatternHasCustomSettings(p))
+                        {
+                            GetPatternCustomSettings(p).patternLength = newPatternLength;
+                            GetPatternCustomSettings(p).beatLength    = newBeatLength;
+                        }
+
+                        processedPatterns.Add(pattern);
+                    }
+                }
+
+                patternLength = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(patternLength, groove, groovePaddingMode);
+                beatLength    = Utils.Sum(groove);
+
+                UpdatePatternStartNotes();
             }
         }
 
@@ -894,7 +860,40 @@ namespace FamiStudio
             }
             else
             {
-                return CountNotesBetween(p0, n0, p1, n1);
+                var frameCount = 0;
+
+                if (p0 == p1)
+                {
+                    frameCount =
+                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n1, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0)) -
+                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n0, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                }
+                else
+                {
+                    // End of first pattern.
+                    if (n0 != 0)
+                    {
+                        frameCount =
+                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(p0), GetPatternGroove(p0), GetPatternGroovePaddingMode(p0)) -
+                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n0, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                        p0++;
+                    }
+
+                    // Complete patterns in between.
+                    while (p0 != p1)
+                    {
+                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(p0), GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                        p0++;
+                    }
+
+                    // First bit of last pattern.
+                    if (n1 != 0)
+                    {
+                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n1, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                    }
+                }
+
+                return frameCount;
             }
         }
 
@@ -937,6 +936,8 @@ namespace FamiStudio
 
         public void AdvanceNumberOfFrames(int frameCount, int initialCount, int currentSpeed, bool pal, ref int p, ref int n)
         {
+            Debug.Assert(UsesFamiTrackerTempo);
+
             float count = initialCount;
 
             while (count < frameCount && p < songLength)
@@ -985,12 +986,32 @@ namespace FamiStudio
                 buffer.Serialize(ref loopPoint);
                 buffer.Serialize(ref noteLength);
 
+                // At version 10 (FamiStudio 3.0.0) we improved tempo.
+                if (buffer.Version >= 10)
+                    buffer.Serialize(ref groove);
+                else
+                    groove = new[] { noteLength };
+
                 for (int i = 0; i < songLength; i++)
                 {
-                    buffer.Serialize(ref patternCustomSettings[i].useCustomSettings);
-                    buffer.Serialize(ref patternCustomSettings[i].patternLength);
-                    buffer.Serialize(ref patternCustomSettings[i].noteLength);
-                    buffer.Serialize(ref patternCustomSettings[i].beatLength);
+                    var customSettings = patternCustomSettings[i];
+
+                    buffer.Serialize(ref customSettings.useCustomSettings);
+                    buffer.Serialize(ref customSettings.patternLength);
+                    buffer.Serialize(ref customSettings.noteLength);
+                    buffer.Serialize(ref customSettings.beatLength);
+
+                    // At version 10 (FamiStudio 3.0.0) we improved tempo.
+                    if (buffer.Version >= 10)
+                    {
+                        buffer.Serialize(ref customSettings.groove);
+                        buffer.Serialize(ref customSettings.groovePaddingMode);
+                    }
+                    else
+                    {
+                        customSettings.groove = customSettings.useCustomSettings ? new[] { customSettings.noteLength } : null;
+                        customSettings.groovePaddingMode = GroovePaddingType.Middle;
+                    }
 
                     // At version 8 (FamiStudio 2.3.0), we added custom beat length for FamiTracker tempo, so we need to initialize the value here.
                     if (buffer.Version < 8 && project.UsesFamiTrackerTempo && patternCustomSettings[i].useCustomSettings && patternCustomSettings[i].beatLength == 0)
@@ -1018,6 +1039,59 @@ namespace FamiStudio
             // Before 2.3.0, songs had an invalid color by default.
             if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
                 color = ThemeBase.RandomCustomColor();
+        }
+
+        public class PatternCustomSetting
+        {
+            public bool useCustomSettings;
+            public int patternLength;
+            public int noteLength;
+            public int beatLength;
+            public int[] groove;
+            public int groovePaddingMode;
+
+            public void Clear()
+            {
+                useCustomSettings = false;
+                patternLength = 0;
+                noteLength = 0;
+                beatLength = 0;
+                groovePaddingMode = GroovePaddingType.Middle;
+                groove = null;
+            }
+
+            public PatternCustomSetting Clone()
+            {
+                var clone = new PatternCustomSetting();
+                clone.useCustomSettings = useCustomSettings;
+                clone.patternLength = patternLength;
+                clone.noteLength = noteLength;
+                clone.beatLength = beatLength;
+                clone.groovePaddingMode = groovePaddingMode;
+                if (groove != null)
+                    clone.groove = groove.Clone() as int[];
+                return clone;
+            }
+        };
+
+    }
+
+    public static class GroovePaddingType
+    {
+        public const int Beginning = 0;
+        public const int Middle    = 1;
+        public const int End       = 2;
+
+        public static readonly string[] Names =
+        {
+            "Beginning",
+            "Middle",
+            "End"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
         }
     }
 }

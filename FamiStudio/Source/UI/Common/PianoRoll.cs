@@ -283,7 +283,7 @@ namespace FamiStudio
 
         bool showSelection = false;
         bool showEffectsPanel = false;
-        bool snap = false;
+        bool snap = true;
         SnapResolution snapResolution = SnapResolution.OneNote;
         int scrollX = 0;
         int scrollY = 0;

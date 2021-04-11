@@ -25,13 +25,6 @@ namespace FamiStudio
     {
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;
-        protected int famitrackerTempoCounter = 0;
-        protected int playPattern = 0;
-        protected int playNote = 0;
-        protected int famitrackerSpeed = 6;
-        protected byte[] tempoEnvelope;
-        protected int tempoEnvelopeIndex;
-        protected int tempoEnvelopeCounter;
         protected int sampleRate;
         protected int loopCount = 0;
         protected int maxLoopCount = -1;
@@ -43,6 +36,20 @@ namespace FamiStudio
         protected LoopMode loopMode = LoopMode.Song;
         protected int channelMask = 0xffff;
         protected int playPosition = 0;
+        protected int playPattern = 0;
+        protected int playNote = 0;
+
+        // Only used by FamiTracker tempo.
+        protected int famitrackerTempoCounter = 0;
+        protected int famitrackerSpeed = 6;
+
+        // Only used by FamiStudio tempo.
+        protected GrooveIterator grooveIterator;
+
+        // Only used by FamiStudio tempo when doing adapted playback (NTSC -> PAL or vice-versa).
+        protected byte[] tempoEnvelope;
+        protected int tempoEnvelopeIndex;
+        protected int tempoEnvelopeCounter;
 
         protected BasePlayer(int apu, int rate = 44100)
         {
@@ -67,14 +74,14 @@ namespace FamiStudio
             set { loopMode = value; }
         }
 
-        public int CurrentFrame
+        public int PlayPosition
         {
             get { return Math.Max(0, playPosition); }
             set { playPosition = value; }
         }
 
         // Returns the number of frames to run (0, 1 or 2)
-        public int UpdateFamiStudioTempo()
+        protected int UpdateFamiStudioTempo()
         {
             if (famitrackerTempo || song.Project.PalMode == palPlayback)
             {
@@ -99,7 +106,7 @@ namespace FamiStudio
 #endif
 
                     // A NTSC song playing on PAL will sometimes need to run 2 frames to keep up.
-                    // A PAL song playing on NTSC will sometimes need to do nothing for 1 frame to keep up.
+                    // A PAL song playing on NTSC will sometimes need to do nothing for 1 frame to avoid going too fast.
                     return palPlayback ? 2 : 0;
                 }
                 else
@@ -109,41 +116,54 @@ namespace FamiStudio
             }
         }
 
-        private void ResetFamiStudioTempo(bool force)
+        private void ResetFamiStudioTempo()
         {
             if (!famitrackerTempo)
             {
-                var newNoteLength = song.GetPatternNoteLength(playPattern);
-                var newTempoEnvelope = FamiStudioTempoUtils.GetTempoEnvelope(newNoteLength, song.Project.PalMode);
+                var newGroove = song.GetPatternGroove(playPattern);
+                var newGroovePadMode = song.GetPatternGroovePaddingMode(playPattern);
 
-                if (newTempoEnvelope != tempoEnvelope || force)
-                {
-                    tempoEnvelope = newTempoEnvelope;
-                    tempoEnvelopeCounter = tempoEnvelope[0];
-                    tempoEnvelopeIndex = 0;
-                }
+                FamiStudioTempoUtils.ValidateGroove(newGroove);
+
+                grooveIterator = new GrooveIterator(newGroove, newGroovePadMode);
+
+                tempoEnvelope = FamiStudioTempoUtils.GetTempoEnvelope(newGroove, newGroovePadMode, song.Project.PalMode);
+                tempoEnvelopeCounter = tempoEnvelope[0];
+                tempoEnvelopeIndex = 0;
             }
         }
 
-        public bool ShouldFamitrackerTempoAdvance()
+        protected bool ShouldAdvanceSong()
         {
-            return !famitrackerTempo || famitrackerTempoCounter <= 0;
+            if (famitrackerTempo)
+            {
+                return famitrackerTempoCounter <= 0;
+            }
+            else
+            {
+                return !grooveIterator.IsPadFrame;
+            }
         }
 
-        public void UpdateFamitrackerTempo(int speed, int tempo)
+        protected void UpdateTempo()
         {
             if (famitrackerTempo)
             {
                 // Tempo/speed logic straight from Famitracker.
-                var tempoDecrement = (tempo * 24) / speed;
-                var tempoRemainder = (tempo * 24) % speed;
+                var tempoDecrement = (song.FamitrackerTempo * 24) / famitrackerSpeed;
+                var tempoRemainder = (song.FamitrackerTempo * 24) % famitrackerSpeed;
 
                 if (famitrackerTempoCounter <= 0)
                 {
                     int ticksPerSec = palPlayback ? 50 : 60;
                     famitrackerTempoCounter += (60 * ticksPerSec) - tempoRemainder;
                 }
+
                 famitrackerTempoCounter -= tempoDecrement;
+            }
+            else
+            {
+                grooveIterator.Advance();
             }
         }
 
@@ -186,7 +206,7 @@ namespace FamiStudio
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, song.Project.ExpansionAudio, song.Project.ExpansionNumChannels, dmcCallback);
 
-            ResetFamiStudioTempo(true);
+            ResetFamiStudioTempo();
             UpdateChannelsMuting();
 
             //Debug.WriteLine($"START SEEKING!!"); 
@@ -197,7 +217,7 @@ namespace FamiStudio
 
                 AdvanceChannels();
                 UpdateChannels();
-                UpdateFamitrackerTempo(famitrackerSpeed, song.FamitrackerTempo);
+                UpdateTempo();
 
                 while (song.GetPatternStartNote(playPattern) + playNote < startNote)
                 {
@@ -211,7 +231,7 @@ namespace FamiStudio
             {
                 AdvanceChannels();
                 UpdateChannels();
-                UpdateFamitrackerTempo(famitrackerSpeed, song.FamitrackerTempo);
+                UpdateTempo();
             }
 
             EndFrame();
@@ -233,7 +253,7 @@ namespace FamiStudio
 
             for (int i = 0; i < numFramesToRun; i++)
             {
-                if (ShouldFamitrackerTempoAdvance())
+                if (ShouldAdvanceSong())
                 {
                     //Debug.WriteLine($"  Seeking Frame {song.GetPatternStartNote(playPattern) + playNote}!");
 
@@ -244,7 +264,7 @@ namespace FamiStudio
                 }
 
                 UpdateChannels();
-                UpdateFamitrackerTempo(famitrackerSpeed, song.FamitrackerTempo);
+                UpdateTempo();
 
 #if DEBUG
                 if (i > 0)
@@ -273,7 +293,7 @@ namespace FamiStudio
             return true;
         }
 
-        public bool AdvanceSong(int songLength, LoopMode loopMode)
+        protected bool AdvanceSong(int songLength, LoopMode loopMode)
         {
             bool advancedPattern = false;
             bool forceResetTempo = false;
@@ -326,7 +346,7 @@ namespace FamiStudio
             }
 
             if (advancedPattern)
-                ResetFamiStudioTempo(forceResetTempo);
+                ResetFamiStudioTempo();
 
             return true;
         }
@@ -380,7 +400,7 @@ namespace FamiStudio
             return null;
         }
 
-        public ChannelState[] CreateChannelStates(IPlayerInterface player, Project project, int apuIdx, int expNumChannels, bool pal)
+        protected ChannelState[] CreateChannelStates(IPlayerInterface player, Project project, int apuIdx, int expNumChannels, bool pal)
         {
             var channelCount = project.GetActiveChannelCount();
             var states = new ChannelState[channelCount];

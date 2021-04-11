@@ -16,7 +16,7 @@ namespace FamiStudio
         // Version 7  = FamiStudio 2.2.0 (Arpeggios)
         // Version 8  = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
         // Version 9  = FamiStudio 2.4.0 (DPCM sample editor)
-        // Version 10 = FamiStudio 2.5.0 (VRC6 saw master volume)
+        // Version 10 = FamiStudio 3.0.0 (VRC6 saw master volume, groove, song sorting)
         public static int Version = 10;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
@@ -1153,6 +1153,7 @@ namespace FamiStudio
             {
                 foreach (var song in songs)
                 {
+                    song.PermanentlyApplyGrooves();
                     song.FamitrackerTempo = Song.NativeTempoNTSC;
                     song.FamitrackerSpeed = 1;
                 }
@@ -1477,6 +1478,8 @@ namespace FamiStudio
             if (buffer.IsReading && !buffer.IsForUndoRedo)
             {
                 EnsureNextIdIsLargeEnough();
+
+                // At version 10 (FamiStudio 3.0.0) we allow users to re-order songs.
                 SortEverything(buffer.Version < 10);
             }
         }

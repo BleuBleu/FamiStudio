@@ -119,6 +119,7 @@
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
+    <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Windows\LabelTrackBar.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -375,6 +376,14 @@
     <EmbeddedResource Include="Resources\ConfigQWERTY.png" />
     <EmbeddedResource Include="Resources\ConfigMixer%402x.png" />
     <EmbeddedResource Include="Resources\ConfigMixer.png" />
+    <EmbeddedResource Include="Resources\PlusSmall%402x.png" />
+    <EmbeddedResource Include="Resources\PlusSmall.png" />
+    <EmbeddedResource Include="Resources\MinusSmall%402x.png" />
+    <EmbeddedResource Include="Resources\MinusSmall.png" />
+    <EmbeddedResource Include="Resources\WarningGood%402x.png" />
+    <EmbeddedResource Include="Resources\WarningGood.png" />
+    <EmbeddedResource Include="Resources\WarningYellow%402x.png" />
+    <EmbeddedResource Include="Resources\WarningYellow.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

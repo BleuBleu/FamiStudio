@@ -32,6 +32,9 @@ namespace FamiStudio
             buttonNo.Show();
             buttonNo.ButtonPressEvent  += ButtonNo_ButtonPressEvent;
 
+            buttonYes.TooltipText = "Accept";
+            buttonNo.TooltipText = "Cancel";
+
             buttonsHBox.PackStart(buttonYes, false, false, 0);
             buttonsHBox.PackStart(buttonNo, false, false, 0);
             buttonsHBox.HeightRequest = GtkUtils.ScaleGtkWidget(40);

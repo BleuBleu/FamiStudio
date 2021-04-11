@@ -56,8 +56,10 @@ namespace FamiStudio
 
         public unsafe bool Save(Project originalProject, int kernel, string filename, int[] songIds, string name, string author, string copyright, int machine)
         {
+#if !DEBUG
             try
             {
+#endif
                 if (songIds.Length == 0)
                     return false;
 
@@ -230,6 +232,7 @@ namespace FamiStudio
                 File.WriteAllBytes(filename, nsfBytes.ToArray());
 
                 Log.LogMessage(LogSeverity.Info, $"NSF export successful, final file size {nsfBytes.Count} bytes.");
+#if !DEBUG
             }
             catch (Exception e)
             {
@@ -238,6 +241,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return false;
             }
+#endif
 
             return true;
         }
@@ -864,7 +868,7 @@ namespace FamiStudio
 
             NsfSetTrack(nsf, songIndex);
 
-            song.ResizeNotes(1, false);
+            song.ChangeFamiStudioTempoGroove(new[] { 1 }, false);
             song.SetDefaultPatternLength(patternLength);
 
             for (int i = 0; i < song.Channels.Length; i++)
@@ -912,7 +916,7 @@ namespace FamiStudio
 
             NsfClose(nsf);
 
-            var factors = Utils.GetFactors(song.PatternLength, Song.MaxNoteLength);
+            var factors = Utils.GetFactors(song.PatternLength, FamiStudioTempoUtils.MaxNoteLength);
             if (factors.Length > 0)
             {
                 var noteLen = factors[0];
@@ -928,10 +932,10 @@ namespace FamiStudio
                     }
                 }
                                 
-                song.ResizeNotes(noteLen, false);
+                song.ChangeFamiStudioTempoGroove(new[] { noteLen }, false);
             }
             else
-                song.ResizeNotes(1, false);
+                song.ChangeFamiStudioTempoGroove(new[] { 1 }, false);
 
             song.SetSensibleBeatLength();
             song.DeleteEmptyPatterns();

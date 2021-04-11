@@ -139,7 +139,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    songStr += $"{GenerateAttribute("PatternLength", song.PatternLength / song.NoteLength)}{GenerateAttribute("BeatLength", song.BeatLength / song.NoteLength)}{GenerateAttribute("NoteLength", song.NoteLength)}";
+                    songStr += $"{GenerateAttribute("PatternLength", song.PatternLength / song.NoteLength)}{GenerateAttribute("BeatLength", song.BeatLength / song.NoteLength)}{GenerateAttribute("NoteLength", song.NoteLength)}{GenerateAttribute("Groove", string.Join("-", song.Groove))}{GenerateAttribute("GroovePaddingMode", GroovePaddingType.Names[song.GroovePaddingMode])}";
                 }
 
                 lines.Add(songStr);
@@ -158,8 +158,10 @@ namespace FamiStudio
                         {
                             var noteLength = song.GetPatternNoteLength(i);
                             var beatLength = song.GetPatternBeatLength(i);
+                            var groove     = song.GetPatternGroove(i);
+                            var groovePaddingMode = song.GetPatternGroovePaddingMode(i);
 
-                            lines.Add($"\t\tPatternCustomSettings{GenerateAttribute("Time", i)}{GenerateAttribute("Length", patternLength / noteLength)}{GenerateAttribute("NoteLength", noteLength)}{GenerateAttribute("BeatLength", beatLength / noteLength)}");
+                            lines.Add($"\t\tPatternCustomSettings{GenerateAttribute("Time", i)}{GenerateAttribute("Length", patternLength / noteLength)}{GenerateAttribute("NoteLength", noteLength)}{GenerateAttribute("Groove", string.Join("-", groove))}{GenerateAttribute("GroovePaddingMode", GroovePaddingType.Names[groovePaddingMode])}{GenerateAttribute("BeatLength", beatLength / noteLength)}");
                         }
                     }
                 }
@@ -292,7 +294,7 @@ namespace FamiStudio
                 var version = "0.0.0";
                 var isVersion230OrNewer = false;
                 var isVersion240OrNewer = false;
-                var isVersion250OrNewer = false;
+                var isVersion300OrNewer = false;
                 var beatLengthAttributeName = "BeatLength";
 
                 foreach (var line in lines)
@@ -313,7 +315,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
                             isVersion230OrNewer = string.CompareOrdinal(version, "2.3.0") >= 0;
                             isVersion240OrNewer = string.CompareOrdinal(version, "2.4.0") >= 0;
-                            isVersion250OrNewer = string.CompareOrdinal(version, "2.5.0") >= 0;
+                            isVersion300OrNewer = string.CompareOrdinal(version, "3.0.0") >= 0;
                             if (!isVersion230OrNewer)
                                 beatLengthAttributeName = "BarLength";
                             break;
@@ -429,9 +431,29 @@ namespace FamiStudio
                             else
                             {
                                 var noteLength = int.Parse(parameters["NoteLength"]);
-                                song.ResizeNotes(noteLength, false);
+
+                                int[] groove;
+                                int groovePaddingMode = GroovePaddingType.Middle;
+                                if (!isVersion300OrNewer)
+                                { 
+                                    groove = new[] { noteLength };
+                                }
+                                else
+                                { 
+                                    groove = parameters["Groove"].Split('-').Select(Int32.Parse).ToArray();
+                                    groovePaddingMode = GroovePaddingType.GetValueForName(parameters["GroovePaddingMode"]);
+                                }
+
+                                if (!FamiStudioTempoUtils.ValidateGroove(groove) || Utils.Min(groove) != noteLength)
+                                {
+                                    Log.LogMessage(LogSeverity.Error, "Invalid tempo settings.");
+                                    return null;
+                                }
+
+                                song.ChangeFamiStudioTempoGroove(groove, false);
                                 song.SetBeatLength(song.BeatLength * noteLength);
                                 song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]) * noteLength);
+                                song.SetGroovePaddingMode(groovePaddingMode);
                             }
                             break;
                         }
@@ -451,7 +473,25 @@ namespace FamiStudio
                                 var noteLength = int.Parse(parameters["NoteLength"]);
                                 var beatLength = int.Parse(parameters[beatLengthAttributeName]);
 
-                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, beatLength * noteLength, noteLength);
+                                int[] groove;
+                                int groovePaddingMode = GroovePaddingType.Middle;
+                                if (!isVersion300OrNewer)
+                                { 
+                                    groove = new[] { noteLength };
+                                }
+                                else
+                                { 
+                                    groove = parameters["Groove"].Split('-').Select(Int32.Parse).ToArray();
+                                    groovePaddingMode = GroovePaddingType.GetValueForName(parameters["GroovePaddingMode"]);
+                                }
+
+                                if (!FamiStudioTempoUtils.ValidateGroove(groove) || Utils.Min(groove) != noteLength)
+                                {
+                                    Log.LogMessage(LogSeverity.Error, "Invalid tempo settings.");
+                                    return null;
+                                }
+
+                                song.SetPatternCustomSettings(int.Parse(parameters["Time"]), patternLength * noteLength, beatLength * noteLength, groove, groovePaddingMode);
                             }
                             break;
                         }
@@ -513,7 +553,7 @@ namespace FamiStudio
                     }
                 }
 
-                project.SortEverything(!isVersion250OrNewer);
+                project.SortEverything(!isVersion300OrNewer);
 
                 return project;
             }

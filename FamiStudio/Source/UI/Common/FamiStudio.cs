@@ -60,7 +60,7 @@ namespace FamiStudio
         public bool IsQwertyPianoEnabled => qwertyPiano;
         public bool FollowModeEnabled { get => followMode; set => followMode = value; }
         public int BaseRecordingOctave => baseRecordingOctave;
-        public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.CurrentFrame : 0);
+        public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
         public int ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : 0xffff; set => songPlayer.ChannelMask = value; }
         public Project Project => project;
         public Song Song => song;
@@ -147,6 +147,24 @@ namespace FamiStudio
         public void SetToolTip(string msg, bool red = false)
         {
             ToolBar.SetToolTip(msg, red);
+        }
+
+        public TimeSpan CurrentTime
+        {
+            get
+            {
+                if (song != null && song.UsesFamiStudioTempo)
+                {
+                    var patternIdx = song.FindPatternInstanceIndex(CurrentFrame, out var noteIdx);
+                    var numFrames  = song.CountFramesBetween(0, 0, patternIdx, noteIdx, 0, false);
+
+                    return TimeSpan.FromMilliseconds(numFrames * 1000.0 / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
+                }
+                else
+                {
+                    return TimeSpan.Zero;
+                }
+            }
         }
 
         private void PianoRoll_DPCMSampleMapped(int note)
@@ -1071,7 +1089,7 @@ namespace FamiStudio
                     if (ctrl && shift)
                         SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartNote(song.LoopPoint) : 0);
                     if (ctrl)
-                        SeekSong(song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _)));
+                        SeekSong(song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.PlayPosition, out _)));
                     else if (shift)
                         SeekSong(0);
 
@@ -1213,7 +1231,7 @@ namespace FamiStudio
             {
                 instrumentPlayer.ConnectOscilloscope(null);
                 songPlayer.ConnectOscilloscope(oscilloscope);
-                songPlayer.Play(song, songPlayer.CurrentFrame, palPlayback);
+                songPlayer.Play(song, songPlayer.PlayPosition, palPlayback);
             }
         }
 
@@ -1227,7 +1245,7 @@ namespace FamiStudio
 
                 // HACK: Update continuous follow mode only last time so it catches up to the 
                 // real final player position.
-                lastTickCurrentFrame = songPlayer.CurrentFrame;
+                lastTickCurrentFrame = songPlayer.PlayPosition;
                 Sequencer.UpdateFollowMode(true);
                 PianoRoll.UpdateFollowMode(true);
                 lastTickCurrentFrame = -1;
@@ -1280,7 +1298,7 @@ namespace FamiStudio
             {
                 bool wasPlaying = songPlayer.IsPlaying;
                 if (wasPlaying) StopSong();
-                songPlayer.CurrentFrame = Utils.Clamp(frame, 0, song.GetPatternStartNote(song.Length) - 1);
+                songPlayer.PlayPosition = Utils.Clamp(frame, 0, song.GetPatternStartNote(song.Length) - 1);
                 if (wasPlaying) PlaySong();
                 InvalidateEverything();
             }
@@ -1292,7 +1310,7 @@ namespace FamiStudio
             {
                 bool wasPlaying = songPlayer.IsPlaying;
                 if (wasPlaying) StopSong();
-                songPlayer.CurrentFrame = song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.CurrentFrame, out _));
+                songPlayer.PlayPosition = song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.PlayPosition, out _));
                 if (wasPlaying) PlaySong();
                 InvalidateEverything();
             }
@@ -1371,7 +1389,7 @@ namespace FamiStudio
 
         public void Tick()
         {
-            lastTickCurrentFrame = IsPlaying ? songPlayer.CurrentFrame : -1;
+            lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
 
             if (audioDeviceChanged)
             {

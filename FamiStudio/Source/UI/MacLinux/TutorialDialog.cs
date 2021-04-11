@@ -43,6 +43,9 @@ namespace FamiStudio
             buttonRight.Show();
             buttonRight.ButtonPressEvent += ButtonRight_ButtonPressEvent;
 
+            buttonLeft.TooltipText = "Previous";
+            buttonRight.TooltipText = "Next";
+
             var buttonsHbox = new HBox(false, 0);
             buttonsHbox.PackStart(buttonLeft,  false, false,  0);
             buttonsHbox.PackStart(buttonRight, false, false, 0);

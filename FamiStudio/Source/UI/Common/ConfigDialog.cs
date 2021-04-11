@@ -138,7 +138,7 @@ namespace FamiStudio
                     page.AddSlider("MMC5", Settings.ExpansionVolumes[ExpansionType.Mmc5], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 4
                     page.AddSlider("N163", Settings.ExpansionVolumes[ExpansionType.N163], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 5
                     page.AddSlider("S5B",  Settings.ExpansionVolumes[ExpansionType.S5B],  -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 6
-                    page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and\nsound engine exports."); // MATTT : Test this in HIDPI.
+                    page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // MATTT : Test this in HIDPI.
                     break;
                 }
                 case ConfigSection.MIDI:
@@ -164,7 +164,7 @@ namespace FamiStudio
                 }
                 case ConfigSection.QWERTY:
                 {
-                    page.AddLabel(null, "Double click on a row to assign a key.\nRight click to clear a key."); // 0
+                    page.AddLabel(null, "Double click on a row to assign a key. Right click to clear a key.", true); // 0
                     page.AddMultiColumnList(new[] { "Octave", "Note", "Key", "Key (alt)" }, GetQwertyMappingStrings(), QwertyListDoubleClicked, QwertyListRightClicked); // 1
                     page.AddButton(null, "Reset to default", ResetQwertyClicked); 
                     break;
@@ -253,7 +253,7 @@ namespace FamiStudio
             if (columnIndex < 2)
                 return;
 
-            var dlg = new PropertyDialog(300, false, dialog);
+            var dlg = new PropertyDialog(300, false, true, dialog);
             dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
             dlg.Properties.Build();
 

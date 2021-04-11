@@ -55,7 +55,6 @@ namespace FamiStudio
             Settings.Load();
             PlatformUtils.Initialize();
             RenderTheme.Initialize();
-            FamiStudioTempoUtils.Initialize();
             NesApu.InitializeNoteTables();
 
 #if FAMISTUDIO_WINDOWS
@@ -63,8 +62,7 @@ namespace FamiStudio
             PerformanceCounter.Initialize();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-#endif
-#if FAMISTUDIO_LINUX
+#elif FAMISTUDIO_LINUX
             LinuxUtils.SetProcessName("FamiStudio");
 #endif
 

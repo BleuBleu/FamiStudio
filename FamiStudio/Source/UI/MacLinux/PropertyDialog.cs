@@ -17,19 +17,23 @@ namespace FamiStudio
         private bool topAlign  = false;
         private FlatButton buttonYes;
         private FlatButton buttonNo;
+        private FlatButton buttonAdvanced;
+        private bool advancedPropertiesVisible = false;
 
         private PropertyPage propertyPage = new PropertyPage();
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, bool canAccept = true, Window parent = null) : base(WindowType.Toplevel)
+        public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, Window parent = null) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = GtkUtils.ScaleGtkWidget(width);
             
             if (!canAccept)
                 buttonYes.Hide();
+            if (!canCancel)
+                buttonNo.Hide();
 
             TransientFor = parent != null ? parent : FamiStudioForm.Instance;
             SetPosition(WindowPosition.CenterOnParent);
@@ -50,29 +54,45 @@ namespace FamiStudio
         private void Init()
         {
             var hbox = new HBox(false, 0);
+            var hboxYesNo = new HBox(false, 0);
 
             var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
 
             buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
             buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
+            buttonAdvanced = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.PlusSmall{suffix}.png"));
 
             buttonYes.Show();
             buttonYes.ButtonPressEvent += ButtonYes_ButtonPressEvent;
             buttonNo.Show();
             buttonNo.ButtonPressEvent += ButtonNo_ButtonPressEvent;
+            buttonAdvanced.ButtonPressEvent += ButtonAdvanced_ButtonPressEvent;
 
-            hbox.PackStart(buttonYes, false, false, 0);
-            hbox.PackStart(buttonNo, false, false, 0);
+            buttonYes.TooltipText = "Accept";
+            buttonNo.TooltipText = "Cancel";
+            buttonAdvanced.TooltipText = "Toggle Advanced Options";
+
+            hboxYesNo.PackStart(buttonYes, false, false, 0);
+            hboxYesNo.PackStart(buttonNo, false, false, 0);
+            hboxYesNo.Show();
+
+            var alignLeft = new Alignment(0.0f, 0.5f, 0.0f, 0.0f);
+            alignLeft.TopPadding = 5;
+            alignLeft.Add(buttonAdvanced);
+            alignLeft.Show();
+
+            var alignRight = new Alignment(1.0f, 0.5f, 0.0f, 0.0f);
+            alignRight.TopPadding = 5;
+            alignRight.Add(hboxYesNo);
+            alignRight.Show();
+
+            hbox.Add(alignLeft);
+            hbox.Add(alignRight);
             hbox.Show();
-
-            var align = new Alignment(1.0f, 0.5f, 0.0f, 0.0f);
-            align.TopPadding = 5;
-            align.Show();
-            align.Add(hbox);
 
             var vbox = new VBox();
             vbox.PackStart(propertyPage, false, false, 0);
-            vbox.PackStart(align, false, false, 0);
+            vbox.PackStart(hbox, false, false, 0);
             vbox.Show();
 
             Add(vbox);
@@ -111,6 +131,18 @@ namespace FamiStudio
                 result = System.Windows.Forms.DialogResult.OK;
         }
 
+        void ButtonAdvanced_ButtonPressEvent(object o, ButtonPressEventArgs args)
+        {
+            Debug.Assert(propertyPage.HasAdvancedProperties);
+
+            advancedPropertiesVisible = !advancedPropertiesVisible;
+            propertyPage.Build(advancedPropertiesVisible);
+
+            var iconName = advancedPropertiesVisible ? "Minus" : "Plus";
+            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            buttonAdvanced.Pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{iconName}Small{suffix}.png");
+        }
+
         private void propertyPage_PropertyWantsClose(int idx)
         {
             if (RunValidation())
@@ -135,6 +167,9 @@ namespace FamiStudio
 
         public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent)
         {
+            if (propertyPage.HasAdvancedProperties)
+                buttonAdvanced.Show();
+
             Show();
 
             if (topAlign || leftAlign)
