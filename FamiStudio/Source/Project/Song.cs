@@ -860,9 +860,6 @@ namespace FamiStudio
             }
             else
             {
-                // TEMPOTODO : What about PAL here?
-                // TEMPOTODO : Also, the param shouldnt be PAL, it should be NTSC -> PAL, or PAL -> NTSC.
-
                 var frameCount = 0;
 
                 if (p0 == p1)
