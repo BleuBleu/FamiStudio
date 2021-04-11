@@ -217,7 +217,7 @@ namespace FamiStudio
 
             cachedGrooveLengths.Add(key, grooveLengthArray);
 
-            return grooveIterator.FrameIndex;
+            return grooveLengthArray[length];
         }
 
         private class CachedTempoEnvelopeKey

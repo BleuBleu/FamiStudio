@@ -673,8 +673,8 @@ namespace FamiStudio
                 if (PatternHasCustomSettings(p))
                 {
                     patternCustomSettings[p].noteLength        = famitrackerSpeed;
-                    patternCustomSettings[p].patternLength     = patternCustomSettings[p].patternLength / famitrackerSpeed * famitrackerSpeed;
-                    patternCustomSettings[p].beatLength        = Math.Max(patternCustomSettings[p].beatLength / famitrackerSpeed, 1);
+                    patternCustomSettings[p].patternLength     = patternCustomSettings[p].patternLength * famitrackerSpeed;
+                    patternCustomSettings[p].beatLength        = Math.Max(patternCustomSettings[p].beatLength * famitrackerSpeed, 1);
                     patternCustomSettings[p].groove            = new int[] { famitrackerSpeed };
                     patternCustomSettings[p].groovePaddingMode = GroovePaddingType.Middle;
                 }
@@ -752,6 +752,7 @@ namespace FamiStudio
 
                         var groove = GetPatternGroove(p);
                         var newPatternLength = GetPatternLength(p);
+                        var newBeatLength    = GetPatternBeatLength(p);
                         
                         // Nothing to do for integral tempos.
                         if (groove.Length > 1)
@@ -777,11 +778,13 @@ namespace FamiStudio
                             }
 
                             newPatternLength = grooveIterator.FrameIndex;
+                            newBeatLength    = Utils.Sum(groove);
                         }
 
                         if (PatternHasCustomSettings(p))
                         {
                             GetPatternCustomSettings(p).patternLength = newPatternLength;
+                            GetPatternCustomSettings(p).beatLength    = newBeatLength;
                         }
 
                         processedPatterns.Add(pattern);
@@ -789,6 +792,7 @@ namespace FamiStudio
                 }
 
                 patternLength = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(patternLength, groove, groovePaddingMode);
+                beatLength    = Utils.Sum(groove);
 
                 UpdatePatternStartNotes();
             }
