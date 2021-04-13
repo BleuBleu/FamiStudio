@@ -18,19 +18,42 @@ namespace FamiStudio
 
         private int tempoMode = TempoType.FamiStudio;
         private int ticksPerQuarterNote = 96;
-        private int trackStartIdx;
+        private int songDuration;
+        private int numTracks;
 
-        private delegate void MetaEventTextDelegate(string text);
-        private delegate void MetaEventEndTrackDelegate(int time);
-        private delegate void MetaEventTempoDelegate(int time, int tempo);
-        private delegate void MetaEventTimeSignatureDelegate(int time, int numer, int denom);
-        private delegate void MidiMessageNoteDelegate(int time, int note, bool on);
+        class TextEvent
+        {
+            public int track;
+            public int tick;
+            public int type;
+            public string text;
+        }
 
-        private MetaEventTextDelegate          textEvent          = null;
-        private MetaEventEndTrackDelegate      endTrack           = null;
-        private MetaEventTempoDelegate         tempoEvent         = null;
-        private MetaEventTimeSignatureDelegate timeSignatureEvent = null;
-        private MidiMessageNoteDelegate        noteMessage        = null;
+        class TimeSignatureEvent
+        {
+            public int tick;
+            public int numer;
+            public int denom;
+        }
+
+        class TempoEvent
+        {
+            public int tick;
+            public int tempo;
+        }
+
+        class NoteEvent
+        {
+            public int tick;
+            public int channel;
+            public int note;
+            public bool on;
+        };
+
+        List<TextEvent>          textEvents          = new List<TextEvent>();
+        List<TimeSignatureEvent> timeSignatureEvents = new List<TimeSignatureEvent>();
+        List<TempoEvent>         tempoEvents         = new List<TempoEvent>();
+        List<NoteEvent>          noteEvents          = new List<NoteEvent>();
 
         private int ReadVarLen()
         {
@@ -99,24 +122,26 @@ namespace FamiStudio
             var numTracks = ReadInt16();
             var ticks     = ReadInt16();
 
+            Debug.Assert(type != 2);
+
             // TODO!
             Debug.Assert((ticks & 0x8000) == 0);
 
             ticksPerQuarterNote = ticks;
-            trackStartIdx = idx;
 
             Debug.WriteLine($"Number of ticks per quarter note {ticks}.");
 
             return true;
         }
 
-        private void ReadMetaEvent(int time)
+        private void ReadMetaEvent(int track, int time)
         {
             var metaType = bytes[idx++];
 
             switch (metaType)
             {
                 // Various text messages.
+                // MIDITODO: Store Read 01/02.
                 case 0x01:
                 case 0x02:
                 case 0x03:
@@ -129,16 +154,37 @@ namespace FamiStudio
                 {
                     var len  = ReadVarLen();
                     var name = Encoding.ASCII.GetString(bytes, idx, len); idx += len;
-                    textEvent?.Invoke(name);
+
+                    var textEvent = new TextEvent();
+                    textEvent.track = track;
+                    textEvent.tick = time;
+                    textEvent.text = name;
+                    textEvent.type = metaType;
+                    textEvents.Add(textEvent);
                     break;
                 }
-                
+                // MIDI Channel Prefix
+                case 0x20:
+                {
+                    Debug.Assert(bytes[idx] == 0x01); // Not sure why this is needed.
+                    idx += 2;
+                    break;
+                }
+
+                // MIDI port
+                case 0x21:
+                {
+                    Debug.Assert(bytes[idx] == 0x01); // Not sure why this is needed.
+                        idx += 2;
+                        break;
+                }
+
                 // Track end
                 case 0x2f:
                 {
                     Debug.Assert(bytes[idx] == 0x00); // Not sure why this is needed.
                     idx++;
-                    endTrack?.Invoke(time);
+                    songDuration = Math.Max(songDuration, time);
                     break;
                 }
 
@@ -149,7 +195,11 @@ namespace FamiStudio
                     idx++;
                     var tempo = ReadInt24();
                     Debug.WriteLine($"At time {time} tempo is now {tempo}.");
-                    tempoEvent?.Invoke(time, tempo);
+
+                    var tempoEvent = new TempoEvent();
+                    tempoEvent.tick = time;
+                    tempoEvent.tempo = tempo;
+                    tempoEvents.Add(tempoEvent);
                     break;
                 }
 
@@ -173,9 +223,15 @@ namespace FamiStudio
                     idx++;
                     var numer = bytes[idx++];
                     var denom = 1 << bytes[idx++];
-                    Debug.WriteLine($"At time {time} time signature is now {numer} / {denom}.");
-                    timeSignatureEvent?.Invoke(time, numer, denom);
                     idx += 2; // WTF is that.
+                    Debug.WriteLine($"At time {time} time signature is now {numer} / {denom}.");
+
+                    var timeSignature = new TimeSignatureEvent();
+                    timeSignature.tick = time;
+                    timeSignature.numer = numer;
+                    timeSignature.denom = denom;
+                    timeSignatureEvents.Add(timeSignature);
+
                     break;
                 }
 
@@ -215,23 +271,21 @@ namespace FamiStudio
 
             var statusHiByte = status >> 4;
 
-            // Note ON
-            if (statusHiByte == 0b1001)
+            // Note ON / OFF
+            if (statusHiByte == 0b1001 ||
+                statusHiByte == 0b1000)
             {
                 var key = bytes[idx++];
                 var vel = bytes[idx++];
 
-                Debug.WriteLine($"At time {time} : NOTE ON! {Note.GetFriendlyName(key - 11)} vel {vel}.");
-                noteMessage?.Invoke(time, key, true);
-            }
+                //Debug.WriteLine($"At time {time} : NOTE ON! {Note.GetFriendlyName(key - 11)} vel {vel}.");
 
-            // Note OFF
-            else if (statusHiByte == 0b1000)
-            {
-                var key = bytes[idx++];
-                var vel = bytes[idx++];
-
-                noteMessage?.Invoke(time, key, false);
+                var noteEvent = new NoteEvent();
+                noteEvent.tick = time;
+                noteEvent.channel = status & 0x0f;
+                noteEvent.note = key - 11;
+                noteEvent.on = statusHiByte == 0b1001;
+                noteEvents.Add(noteEvent);
             }
 
             // Channel pressure
@@ -274,7 +328,7 @@ namespace FamiStudio
             return true;
         }
 
-        private bool ReadTrackChunk(int chunkLen)
+        private bool ReadTrackChunk(int track, int chunkLen)
         {
             var endIdx = idx + chunkLen;
             var status = (byte)0;
@@ -291,7 +345,7 @@ namespace FamiStudio
                 if (evt == 0xff)
                 {
                     idx++;
-                    ReadMetaEvent(time);
+                    ReadMetaEvent(track, time);
                 }
                 else
                 {
@@ -304,7 +358,7 @@ namespace FamiStudio
 
         private bool ReadAllTracks()
         {
-            idx = trackStartIdx;
+            var track = 0;
 
             while (idx < bytes.Length)
             {
@@ -314,7 +368,8 @@ namespace FamiStudio
                 switch (chunkType)
                 {
                     case "MTrk":
-                        ReadTrackChunk(chunkLen);
+                        ReadTrackChunk(track, chunkLen);
+                        track++;
                         break;
                     default:
                         Debug.WriteLine($"Skipping unknown chunk type {chunkType} or length {chunkLen}");
@@ -322,12 +377,11 @@ namespace FamiStudio
                         break;
                 }
             }
-            
-            textEvent          = null;
-            endTrack           = null;
-            tempoEvent         = null;
-            timeSignatureEvent = null;
-            noteMessage        = null;
+
+            timeSignatureEvents.Sort((s1, s2) => s1.tick.CompareTo(s2.tick));
+            tempoEvents.Sort((t1, t2) => t1.tick.CompareTo(t2.tick));
+
+            numTracks = track;
 
             return true;
         }
@@ -365,46 +419,35 @@ namespace FamiStudio
             public int denom;
         };
 
-        class MidiNoteInfo
-        {
-            public int tick;
-            public int note;
-            public bool on;
-        };
-
         private void CreatePatterns(out List<MidiPatternInfo> patternInfos)
         {
-            var timeSignatureChanges = new SortedList<int, Tuple<int, int>>();
-            var tempoChanges         = new SortedList<int, int>();
-            var songDuration         = -1;
-
-            timeSignatureEvent = (t, n, d) => timeSignatureChanges.Add(t, new Tuple<int, int>(n, d));
-            tempoEvent         = (t, tp) => tempoChanges.Add(t, tp);
-            endTrack           = (t) => songDuration = Math.Max(songDuration, t);
-
-            ReadAllTracks();
-
             Debug.Assert(songDuration >= 0);
 
             // 4/4 by default.
-            if (!timeSignatureChanges.ContainsKey(0))
-                timeSignatureChanges.Add(0, new Tuple<int, int>(4, 4)); 
+            if (timeSignatureEvents.Count == 0 || 
+                timeSignatureEvents[0].tick != 0)
+            {
+                timeSignatureEvents.Insert(0, new TimeSignatureEvent() { numer = 4, denom = 4 });
+            }
 
             // 120 BPM by default.
-            if (!tempoChanges.ContainsKey(0))
-                tempoChanges.Add(0, 500000);
+            if (tempoEvents.Count == 0 || 
+                tempoEvents[0].tick != 0)
+            {
+                tempoEvents.Insert(0, new TempoEvent() { tempo = 500000 });
+            }
 
             // Setup default song settings.
-            var initialBpm   = MicroSecondsToBPM(tempoChanges[0]);
-            var initialTempo = GetClosestMatchingTempo(initialBpm, timeSignatureChanges[0].Item2);
+            var initialBpm   = MicroSecondsToBPM(tempoEvents[0].tempo);
+            var initialTempo = GetClosestMatchingTempo(initialBpm, 4);
 
             song.ChangeFamiStudioTempoGroove(initialTempo.groove, false);
-            song.SetBeatLength(song.NoteLength * timeSignatureChanges[0].Item2);
-            song.SetDefaultPatternLength(song.BeatLength * timeSignatureChanges[0].Item1);
+            song.SetBeatLength(song.NoteLength * 4);
+            song.SetDefaultPatternLength(song.BeatLength * timeSignatureEvents[0].numer);
 
-            var defaultNumer = timeSignatureChanges[0].Item1;
-            var defaultDenom = timeSignatureChanges[0].Item2;
-            var defaultTempo = tempoChanges[0];
+            var defaultNumer = timeSignatureEvents[0].numer;
+            var defaultDenom = timeSignatureEvents[0].denom;
+            var defaultTempo = tempoEvents[0].tempo;
 
             var time = 0;
             var patternIdx = 0;
@@ -416,15 +459,17 @@ namespace FamiStudio
 
             while (time < songDuration)
             {
+                var ratio = (4.0 / denom);
+
                 if (numer != defaultNumer ||
                     denom != defaultDenom ||
                     tempo != defaultTempo)
                 {
                     var patternBpm   = MicroSecondsToBPM(tempo);
-                    var patternTempo = GetClosestMatchingTempo(patternBpm, denom);
+                    var patternTempo = GetClosestMatchingTempo(patternBpm, 4);
                     var noteLength   = Utils.Min(patternTempo.groove);
 
-                    song.SetPatternCustomSettings(patternIdx, noteLength * denom * numer, noteLength * denom, patternTempo.groove);
+                    song.SetPatternCustomSettings(patternIdx, (int)Math.Round(noteLength * 4 * numer * ratio), noteLength * 4, patternTempo.groove);
                 }
 
                 var patternInfo = new MidiPatternInfo();
@@ -436,16 +481,16 @@ namespace FamiStudio
                 var lastTime = time;
 
                 // Advance by one bar.
-                time = (int)(time + ticksPerQuarterNote * numer * (4.0 / denom));
+                time = (int)(time + ticksPerQuarterNote * numer * ratio);
                 patternIdx++;
 
                 // Look for any tempo change between the last pattern and now.
                 // We will only allow tempo changes on pattern boundaries for now.
                 var tempoChangeIdx = -1;
-                for (int i = tempoChanges.Keys.Count - 1; i >= 0; i--)
+                for (int i = tempoEvents.Count - 1; i >= 0; i--)
                 {
-                    if (tempoChanges.Keys[i] > lastTime &&
-                        tempoChanges.Keys[i] <= time)
+                    if (tempoEvents[i].tick > lastTime &&
+                        tempoEvents[i].tick <= time)
                     {
                         tempoChangeIdx = i;
                         break;
@@ -453,13 +498,20 @@ namespace FamiStudio
                 }
 
                 if (tempoChangeIdx >= 0)
-                    tempo = tempoChanges.Values[tempoChangeIdx];
+                    tempo = tempoEvents[tempoChangeIdx].tempo;
 
                 // Look for another time signature change.
-                if (timeSignatureChanges.TryGetValue(time, out var foundTimeSignature))
+                var timeSignatureIdx = timeSignatureEvents.FindIndex(s => s.tick == time);
+                if (timeSignatureIdx >= 0)
                 {
-                    numer = foundTimeSignature.Item1;
-                    denom = foundTimeSignature.Item2;
+                    numer = timeSignatureEvents[timeSignatureIdx].numer;
+                    denom = timeSignatureEvents[timeSignatureIdx].denom;
+                }
+
+                if (patternIdx == 256)
+                {
+                    // MIDITODO : Error message here.
+                    break;
                 }
             }
 
@@ -468,32 +520,26 @@ namespace FamiStudio
 
         private void CreateNotes(List<MidiPatternInfo> patternInfos)
         {
-            var notes = new List<MidiNoteInfo>();
-            noteMessage = (t, n, o) => notes.Add(new MidiNoteInfo() { tick = t, note = n - 11, on = o });
-            ReadAllTracks();
-
-            for (int i = 0; i < notes.Count; i++)
+            for (int i = 0; i < noteEvents.Count; i++)
             {
-                var noteInfo = notes[i];
+                var evt = noteEvents[i];
 
-                if (noteInfo.on &&
-                    noteInfo.note >= Note.MusicalNoteMin &&
-                    noteInfo.note <= Note.MusicalNoteMax)
+                // MIDITODO : Show warning if note isnt supported.
+                if (//evt.on &&
+                    //evt.channel == 3 && // MATTT
+                    evt.note >= Note.MusicalNoteMin &&
+                    evt.note <= Note.MusicalNoteMax)
                 {
                     var patternIdx = -1;
                     for (int j = 0; j < patternInfos.Count; j++)
                     {
-                        if (noteInfo.tick >= patternInfos[j].tick && (j == patternInfos.Count - 1 || noteInfo.tick < patternInfos[j + 1].tick))
+                        if (evt.tick >= patternInfos[j].tick && (j == patternInfos.Count - 1 || evt.tick < patternInfos[j + 1].tick))
                         {
                             patternIdx = j;
                             break;
                         }
                     }
                     Debug.Assert(patternIdx >= 0);
-
-                    var patternInfo   = patternInfos[patternIdx];
-                    var tickInPattern = noteInfo.tick - patternInfo.tick;
-                    var noteIndex     = tickInPattern / ticksPerQuarterNote * (4.0 / patternInfo.denom);
 
                     var pattern = song.Channels[0].PatternInstances[patternIdx];
                     if (pattern == null)
@@ -502,12 +548,41 @@ namespace FamiStudio
                         song.Channels[0].PatternInstances[patternIdx] = pattern;
                     }
 
-                    var noteLength = song.GetPatternNoteLength(patternIdx);
-                    var beatLength = song.GetPatternBeatLength(patternIdx);
+                    var patternInfo   = patternInfos[patternIdx];
+                    var tickInPattern = evt.tick - patternInfo.tick;
+                    var noteIndex     = tickInPattern / (double)ticksPerQuarterNote * (4.0 / patternInfo.denom);
+                    var noteLength    = song.GetPatternNoteLength(patternIdx);
+                    var beatLength    = song.GetPatternBeatLength(patternIdx);
 
-                    pattern.Notes[(int)Math.Round(beatLength * noteIndex)] = new Note(noteInfo.note);
+                    pattern.Notes[(int)Math.Round(beatLength * noteIndex)] = new Note(evt.on ? evt.note : Note.NoteStop);
                 }
             }
+        }
+
+        public string[] GetTrackNames(string filename)
+        {
+            idx = 0;
+            bytes = File.ReadAllBytes(filename);
+
+            if (!ReadHeaderChunk())
+                return null;
+
+            ReadAllTracks();
+
+            var trackNames = new Dictionary<int, string>();
+
+            foreach (var textEvent in textEvents)
+            {
+                if (textEvent.type == 3)
+                    trackNames[textEvent.track] = textEvent.text;
+            }
+
+            var names = new string[numTracks];
+            
+            foreach (var kv in trackNames)
+                names[kv.Key] = kv.Value;
+
+            return names;
         }
 
         public Project Load(string filename)
@@ -516,6 +591,7 @@ namespace FamiStudio
             try
 #endif
             {
+                idx = 0;
                 bytes = File.ReadAllBytes(filename);
 
                 if (!ReadHeaderChunk())
@@ -523,6 +599,8 @@ namespace FamiStudio
 
                 project = new Project();
                 song = project.CreateSong();
+
+                ReadAllTracks();
 
                 // First create the pattern based on time signatures/tempos.
                 CreatePatterns(out var patternInfos);

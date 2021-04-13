@@ -72,6 +72,87 @@ namespace FamiStudio
             return false;
         }
 
+        public static int[] GetChannelsForExpansion(int expansion)
+        {
+            var channels = new List<int>(); ;
+
+            channels.Add(ChannelType.Square1);
+            channels.Add(ChannelType.Square2);
+            channels.Add(ChannelType.Triangle);
+            channels.Add(ChannelType.Noise);
+            channels.Add(ChannelType.Dpcm);
+
+            switch (expansion)
+            {
+                case ExpansionType.Vrc6:
+                    channels.Add(ChannelType.Vrc6Square1);
+                    channels.Add(ChannelType.Vrc6Square2);
+                    channels.Add(ChannelType.Vrc6Saw);
+                    break;
+                case ExpansionType.Vrc7:
+                    channels.Add(ChannelType.Vrc7Fm1);
+                    channels.Add(ChannelType.Vrc7Fm2);
+                    channels.Add(ChannelType.Vrc7Fm3);
+                    channels.Add(ChannelType.Vrc7Fm4);
+                    channels.Add(ChannelType.Vrc7Fm5);
+                    channels.Add(ChannelType.Vrc7Fm6);
+                    break;
+                case ExpansionType.Fds:
+                    channels.Add(ChannelType.FdsWave);
+                    break;
+                case ExpansionType.Mmc5:
+                    channels.Add(ChannelType.Mmc5Square1);
+                    channels.Add(ChannelType.Mmc5Square2);
+                    break;
+                case ExpansionType.N163:
+                    channels.Add(ChannelType.N163Wave1);
+                    channels.Add(ChannelType.N163Wave2);
+                    channels.Add(ChannelType.N163Wave3);
+                    channels.Add(ChannelType.N163Wave4);
+                    channels.Add(ChannelType.N163Wave5);
+                    channels.Add(ChannelType.N163Wave6);
+                    channels.Add(ChannelType.N163Wave7);
+                    channels.Add(ChannelType.N163Wave8);
+                    break;
+                case ExpansionType.S5B:
+                    channels.Add(ChannelType.S5BSquare1);
+                    channels.Add(ChannelType.S5BSquare2);
+                    channels.Add(ChannelType.S5BSquare3);
+                    break;
+            }
+
+            return channels.ToArray();
+        }
+
+        public static int GetChannelCountForExpansion(int expansion)
+        {
+            var count = 5;
+
+            switch (expansion)
+            {
+                case ExpansionType.Vrc6:
+                    count += 3;
+                    break;
+                case ExpansionType.Vrc7:
+                    count += 6;
+                    break;
+                case ExpansionType.Fds:
+                    count += 1;
+                    break;
+                case ExpansionType.Mmc5:
+                    count += 2;
+                    break;
+                case ExpansionType.N163:
+                    count += 8;
+                    break;
+                case ExpansionType.S5B:
+                    count += 3;
+                    break;
+            }
+
+            return count;
+        }
+
         public bool SupportsReleaseNotes => type != ChannelType.Dpcm;
         public bool SupportsSlideNotes => type != ChannelType.Noise && type != ChannelType.Dpcm;
         public bool SupportsArpeggios => type != ChannelType.Dpcm;

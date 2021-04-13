@@ -505,7 +505,7 @@ namespace FamiStudio
 
         public void OpenProject()
         {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe", ref Settings.LastFileFolder);
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
             if (filename != null)
             {
                 OpenProject(filename);
@@ -533,11 +533,12 @@ namespace FamiStudio
             }
             else if (allowComplexFormats && filename.ToLower().EndsWith("mid"))
             {
-                project = new MidiFile().Load(filename);
+                var dlg = new MidiImportDialog(filename);
+                project = dlg.ShowDialog(mainForm);
             }
             else if (allowComplexFormats && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
             {
-                NsfImportDialog dlg = new NsfImportDialog(filename);
+                var dlg = new NsfImportDialog(filename);
 
                 if (dlg.ShowDialog(mainForm) == DialogResult.OK)
                 {

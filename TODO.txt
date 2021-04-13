@@ -13,10 +13,18 @@ FamiStudio Tempo 2.0
 FamiStudio 3.0.0
 ================
 - MIDI : 
-	- Review num notes per beat, does it make sense with BPM calculation?
-		- Make sure I got the FamiTracker 4 notes per beat right.
 	- Import, dialog, etc.
+		- Select expansion.
+		- Map velocity to volume
+		- Create instruments
+		- Polyphony behavior : keep oldest note, use new note.
+		- Channel mapping: Can select a track or a channel, map to a NES channel
+		- What about pitch bend?
 	- Export
+		- Map velocity to volume
+		- Should be pretty simple, just export to seperate channnels.
+	- FamiStudio / FamiTracker tempo modes?
+	
 - Note refactor: 
 	- Remove fractional snapping. Too awkward.
 	- When deleting a note, dont delete certain effects.

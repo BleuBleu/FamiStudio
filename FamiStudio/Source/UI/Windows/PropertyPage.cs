@@ -83,6 +83,12 @@ namespace FamiStudio
         [DllImport("user32.dll")]
         static extern bool HideCaret(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        private static extern long ShowScrollBar(IntPtr hwnd, int wBar, bool bShow);
+        private int SB_HORZ = 0;
+        //private int SB_VERT = 1;
+        //private int SB_BOTH = 3;
+
         public PropertyPage()
         {
             InitializeComponent();
@@ -719,11 +725,14 @@ namespace FamiStudio
                 header.Width = -2; // Auto size.
             }
 
-            for (int i = 0; i < data.GetLength(0); i++)
+            if (data != null)
             {
-                var item = list.Items.Add(data[i, 0]);
-                for (int j = 1; j < data.GetLength(1); j++)
-                    item.SubItems.Add(data[i, j]);
+                for (int i = 0; i < data.GetLength(0); i++)
+                {
+                    var item = list.Items.Add(data[i, 0]);
+                    for (int j = 1; j < data.GetLength(1); j++)
+                        item.SubItems.Add(data[i, j]);
+                }
             }
 
             list.Font = font;
@@ -735,6 +744,8 @@ namespace FamiStudio
             list.MouseDoubleClick += ListView_MouseDoubleClick;
             list.MouseDown += ListView_MouseDown;
             list.BackColor = ThemeBase.LightGreyFillColor2;
+
+            ShowScrollBar(list.Handle, SB_HORZ, false);
 
             return list;
         }
@@ -794,9 +805,23 @@ namespace FamiStudio
 
             for (int i = 0; i < data.GetLength(0); i++)
             {
-                var item = list.Items[i];
-                for (int j = 0; j < data.GetLength(1); j++)
-                    item.SubItems[j].Text = data[i, j];
+                if (i >= list.Items.Count)
+                {
+                    var item = list.Items.Add(data[i, 0]);
+                    for (int j = 1; j < data.GetLength(1); j++)
+                        item.SubItems.Add(data[i, j]);
+                }
+                else
+                {
+                    var item = list.Items[i];
+                    for (int j = 0; j < data.GetLength(1); j++)
+                        item.SubItems[j].Text = data[i, j];
+                }
+            }
+
+            while (list.Items.Count > data.GetLength(0)) 
+            {
+                list.Items.RemoveAt(data.GetLength(0));
             }
         }
 
