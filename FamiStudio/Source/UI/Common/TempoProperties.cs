@@ -62,7 +62,7 @@ namespace FamiStudio
                 var notesPerPattern = patternIdx < 0 ? song.PatternLength : song.GetPatternLength(patternIdx);
                 var bpm = Song.ComputeFamiTrackerBPM(song.Project.PalMode, song.FamitrackerSpeed, song.FamitrackerTempo, notesPerBeat);
 
-                notesPerBeatPropIdx    = props.AddIntegerRange("Notes per Beat :", notesPerBeat, 1, 256, CommonTooltips.NotesPerBar); // 2
+                notesPerBeatPropIdx    = props.AddIntegerRange("Notes per Beat :", notesPerBeat, 1, 256, CommonTooltips.NotesPerBeat); // 2
                 notesPerPatternPropIdx = props.AddIntegerRange("Notes per Pattern :", notesPerPattern, 1, Pattern.MaxLength, CommonTooltips.NotesPerPattern); // 3
                 bpmLabelPropIdx        = props.AddLabel("BPM :", bpm.ToString("n1"), false, CommonTooltips.BPM); // 4
 
@@ -88,7 +88,7 @@ namespace FamiStudio
                 grooveStrings = grooveList.Select(g => string.Join("-", g)).ToArray();
 
                 famistudioBpmPropIdx   = props.AddDropDownList("BPM : ", tempoStrings, tempoStrings[tempoIndex]); // 0
-                notesPerBeatPropIdx    = props.AddIntegerRange("Notes per Beat : ", notesPerBeat / noteLength, 1, 256, CommonTooltips.NotesPerBar); // 1
+                notesPerBeatPropIdx    = props.AddIntegerRange("Notes per Beat : ", notesPerBeat / noteLength, 1, 256, CommonTooltips.NotesPerBeat); // 1
                 notesPerPatternPropIdx = props.AddIntegerRange("Notes per Pattern : ", notesPerPattern / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 2
                 framesPerNotePropIdx   = props.AddLabel("Frames per Note :", noteLength.ToString()); // 3
 

@@ -512,7 +512,7 @@ namespace FamiStudio
             }
         }
 
-        public Project OpenProjectFile(string filename, bool allowNsf = true)
+        public Project OpenProjectFile(string filename, bool allowComplexFormats = true)
         {
             var project = (Project)null;
 
@@ -531,7 +531,11 @@ namespace FamiStudio
                 else
                     project = new FamitrackerTextFile().Load(filename);
             }
-            else if (allowNsf && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
+            else if (allowComplexFormats && filename.ToLower().EndsWith("mid"))
+            {
+                project = new MidiFile().Load(filename);
+            }
+            else if (allowComplexFormats && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
             {
                 NsfImportDialog dlg = new NsfImportDialog(filename);
 
@@ -827,7 +831,8 @@ namespace FamiStudio
 
         public void StopInstrument()
         {
-            instrumentPlayer.StopAllNotes();
+            if (instrumentPlayer != null)
+                instrumentPlayer.StopAllNotes();
         }
 
         public void StopEverything()
