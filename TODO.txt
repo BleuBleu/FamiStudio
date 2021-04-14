@@ -14,16 +14,12 @@ FamiStudio 3.0.0
 ================
 - MIDI : 
 	- Import, dialog, etc.
-		x Select expansion.
-		x Map velocity to volume
-		x Create instruments
-		- Polyphony behavior : keep oldest note, use new note.
-		/ Channel mapping: Can select a track or a channel, map to a NES channel
-		- What about pitch bend?
 		- Can yout have more than 1 song in a mid file?
+		- Measures per patterns.
+		- MIDITODOs
 	- Export
 		- Map velocity to volume
-		- Slide note = pitch bend.
+		- Slide note = pitch bend?
 		- Should be pretty simple, just export to seperate channnels, instruments 0...N.
 	- FamiStudio / FamiTracker tempo modes?
 - Note refactor: 
@@ -34,6 +30,9 @@ FamiStudio 3.0.0
 - Loop prevention for envelope (brad issue).
 - Low-pass config in settings (change layout of equalizer)
 - BUG : Assert in video file when exporting a single channel (major chord in sq1).
+- CRASH : Quit while billy jean was playing.
+	Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]);
+	editChannel was 5, only 5 channels (0-4)
 - CRASH : Multi pattern color edit (square selection) crashes when there are empty patterns.
 
 ===============

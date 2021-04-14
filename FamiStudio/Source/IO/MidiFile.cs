@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    class MidiFile
+    class MidiFileReader
     {
         private int idx;
         private byte[] bytes;
@@ -21,7 +21,7 @@ namespace FamiStudio
         private int songDuration;
         private int numTracks;
 
-        private Dictionary<int, Instrument> instrumentMap = new Dictionary<int, Instrument>();
+        private Dictionary<int, Instrument> instrumentMap    = new Dictionary<int, Instrument>();
         private Dictionary<int, Instrument> instrumentMapExp = new Dictionary<int, Instrument>();
 
         private const int MinDrumKey = 24;
@@ -210,11 +210,11 @@ namespace FamiStudio
             "B#5 (Open Triangle)"
         };
 
-        public const ulong AllDrumKeysMask = 0x3ffffffffff;
+        public const ulong AllDrumKeysMask = 0x7fffffffffff;
 
         public class MidiSource
         {
-            public int   type = MidiSourceType.Channel; // True if idx is a track, otherwise channel.
+            public int   type = MidiSourceType.Channel; // Track/channel/None
             public int   index = 0;                     // Index of track/channel.
             public ulong keys  = AllDrumKeysMask;       // Only used for channel 10, can select specific keys.
         }
@@ -356,7 +356,6 @@ namespace FamiStudio
             switch (metaType)
             {
                 // Various text messages.
-                // MIDITODO: Store Read 01/02.
                 case 0x01:
                 case 0x02:
                 case 0x03:
@@ -646,6 +645,23 @@ namespace FamiStudio
             project.SetExpansionAudio(expansion);
             song = project.CreateSong();
 
+            bool foundName = false;
+            bool foundCopyright = false;
+
+            foreach (var textEvent in textEvents)
+            {
+                if (textEvent.type == 1 && !foundName)
+                {
+                    project.Name = textEvent.text;
+                    foundName = true;
+                }
+                else if (textEvent.type == 2 && !foundCopyright)
+                {
+                    project.Copyright = textEvent.text;
+                    foundCopyright = true;
+                }
+            }
+
             // MIDITODO : Tempo mode here.
         }
 
@@ -783,7 +799,8 @@ namespace FamiStudio
                 {
                     if (evt.channel == 9)
                     {
-                        if (evt.note >= MinDrumKey &&
+                        if (evt.channel == source.index &&
+                            evt.note >= MinDrumKey &&
                             evt.note <= MaxDrumKey)
                         {
                             return ((1ul << (evt.note - MinDrumKey)) & source.keys) != 0;
@@ -799,11 +816,12 @@ namespace FamiStudio
             return false;
         }
 
-        private void CreateNotes(List<MidiPatternInfo> patternInfos, int channelIdx, MidiSource source, bool velocityAsVolume)
+        private void CreateNotes(List<MidiPatternInfo> patternInfos, int channelIdx, MidiSource source, bool velocityAsVolume, int polyphony)
         {
             var channelInstruments = new int[16];
             var prgChangeIndex = 0;
             var prevVolume = (byte)15;
+            var activeNote = -1;
 
             for (int i = 0; i < noteEvents.Count; i++)
             {
@@ -819,6 +837,25 @@ namespace FamiStudio
 
                 if (FilterNoteEvent(evt, source))
                 {
+                    if (evt.on)
+                    {
+                        if (activeNote > 0 && polyphony == MidiPolyphonyBehavior.KeepOldNote)
+                        {
+                            continue;
+                        }
+
+                        activeNote = evt.note;
+                    }
+                    else 
+                    {
+                        if (evt.note != activeNote)
+                        {
+                            continue;
+                        }
+
+                        activeNote = -1;
+                    }
+
                     // TODO: Binary search.
                     var patternIdx = -1;
                     for (int j = 0; j < patternInfos.Count; j++)
@@ -894,7 +931,28 @@ namespace FamiStudio
             return names;
         }
 
-        public Project Load(string filename, int expansion, MidiSource[] channelSources, bool velocityAsVolume)
+        private void Cleanup()
+        {
+            project.Cleanup();
+            song.MergeIdenticalPatterns();
+
+            if (project.ExpansionAudio == ExpansionType.N163)
+            {
+                var numN163Channels = 0;
+                for (int i = 5; i < song.Channels.Length; i++)
+                {
+                    if (song.Channels[i].Patterns.Count > 0)
+                        numN163Channels = i - 4;
+                }
+
+                if (numN163Channels == 0)
+                    project.SetExpansionAudio(ExpansionType.None);
+                else
+                    project.SetExpansionAudio(ExpansionType.N163, numN163Channels);
+            }
+        }
+
+        public Project Load(string filename, int expansion, MidiSource[] channelSources, bool velocityAsVolume, int polyphony)
         {
 #if !DEBUG
             try
@@ -915,9 +973,9 @@ namespace FamiStudio
                 CreatePatterns(out var patternInfos);
 
                 for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
-                    CreateNotes(patternInfos, channelIdx, channelSources[channelIdx], velocityAsVolume);
+                    CreateNotes(patternInfos, channelIdx, channelSources[channelIdx], velocityAsVolume, polyphony);
 
-                project.Cleanup();
+                Cleanup();
 
                 return project;
             }
@@ -933,6 +991,182 @@ namespace FamiStudio
         }
     }
 
+    class MidiFileWriter
+    {
+        private Project project;
+        private Song song;
+        private List<byte> bytes = new List<byte>();
+        private byte[] tmp = new byte[4];
+
+        private const int TicksPerQuarterNote = 480;
+
+        void WriteVarLen(int value)
+{
+            var buffer = value & 0x7f;
+            while ((value >>= 7) > 0)
+            {
+                buffer <<= 8;
+                buffer |= 0x80;
+                buffer += (value & 0x7f);
+            }
+
+            while (true)
+            {
+                bytes.Add((byte)buffer);
+                if ((buffer & 0x80) != 0)
+                    buffer >>= 8;
+                else
+                    break;
+            }
+        }
+
+        private void SetInt32(int i, int index)
+        {
+            Debug.Assert(BitConverter.IsLittleEndian);
+            var b = BitConverter.GetBytes(i);
+            // Big endian.
+            bytes[index + 0] = b[3];
+            bytes[index + 1] = b[2];
+            bytes[index + 2] = b[1];
+            bytes[index + 3] = b[0];
+        }
+
+        private void WriteInt32(int i)
+        {
+            Debug.Assert(BitConverter.IsLittleEndian);
+            var b = BitConverter.GetBytes(i);
+            // Big endian.
+            bytes.Add(b[3]);
+            bytes.Add(b[2]);
+            bytes.Add(b[1]);
+            bytes.Add(b[0]);
+        }
+
+        private void WriteInt24(int i)
+        {
+            Debug.Assert(BitConverter.IsLittleEndian);
+            var b = BitConverter.GetBytes(i);
+            // Big endian.
+            bytes.Add(b[2]);
+            bytes.Add(b[1]);
+            bytes.Add(b[0]);
+        }
+
+        private void WriteInt16(short i)
+        {
+            Debug.Assert(BitConverter.IsLittleEndian);
+            var b = BitConverter.GetBytes(i);
+            // Big endian.
+            bytes.Add(b[1]);
+            bytes.Add(b[0]);
+        }
+
+        private void WriteTextEvent(int type, string text)
+        {
+            bytes.Add(0xff);
+            bytes.Add((byte)type);
+            var b = Encoding.ASCII.GetBytes(text);
+            WriteVarLen(b.Length);
+            bytes.AddRange(b);
+        }
+
+        private void WriteTimeSignatureEvent(int patternLength, int beatLength, int[] groove)
+        {
+            // Write time signature
+            bytes.Add(0xff);
+            bytes.Add(0x58);
+            bytes.Add(0x04);
+            bytes.Add(0x04); // numer
+            bytes.Add(0x02); // denom (1 ^ -x)
+            bytes.Add(0x18); // WTF?
+            bytes.Add(0x08); // WTF?
+        }
+
+        private void WriteTempoEvent()
+        {
+            // Write tempo.
+            bytes.Add(0xff);
+            bytes.Add(0x51);
+            bytes.Add(0x03);
+            WriteInt24(500000);
+        }
+
+        private void WriteTrackEndEvent()
+        {
+            bytes.Add(0xff);
+            bytes.Add(0x2f);
+            bytes.Add(0x00);
+        }
+
+        private bool WriteHeaderChunk()
+        {
+            bytes.AddRange(Encoding.ASCII.GetBytes("MThd"));
+            WriteInt32(6);
+            WriteInt16(1);
+            WriteInt16((short)(song.Channels.Length + 1));
+            WriteInt16(TicksPerQuarterNote);
+
+            return true;
+        }
+
+        private void WriteControlTrack()
+        {
+            bytes.AddRange(Encoding.ASCII.GetBytes("MTrk"));
+
+            // Write dummy len, will patch after.
+            var chunckStartIdx = bytes.Count;
+            WriteInt32(0);
+
+            WriteVarLen(0);
+            WriteTextEvent(3, "Control Track");
+            WriteVarLen(0);
+            WriteTimeSignatureEvent(song.PatternLength, song.BeatLength, song.Groove);
+            WriteVarLen(0);
+            WriteTempoEvent();
+            WriteVarLen(480*4);
+            WriteTrackEndEvent();
+
+            // Patch size.
+            SetInt32(bytes.Count - chunckStartIdx - 4, chunckStartIdx);
+        }
+
+        private void WriteChannelTrack(int channelIdx)
+        {
+            bytes.AddRange(Encoding.ASCII.GetBytes("MTrk"));
+
+            // Write dummy len, will patch after.
+            var chunckStartIdx = bytes.Count;
+            WriteInt32(0);
+
+            WriteVarLen(0);
+            WriteTextEvent(3, song.Channels[channelIdx].Name);
+            WriteVarLen(480 * 4);
+            WriteTrackEndEvent();
+
+            // Patch size.
+            SetInt32(bytes.Count - chunckStartIdx - 4, chunckStartIdx);
+        }
+
+        // MIDITODO : PAL.
+        public void Save(Project originalProject, string filename, int songId)
+        {
+            // MIDITODO : FamiStudio tempo only for now.
+            Debug.Assert(originalProject.UsesFamiStudioTempo);
+
+            project = originalProject.DeepClone();
+            project.RemoveAllSongsBut(new int[] { songId }, true);
+            song = project.Songs[0];
+
+            WriteHeaderChunk();
+            WriteControlTrack();
+
+            for (int i = 0; i < song.Channels.Length; i++)
+                WriteChannelTrack(i);
+
+            File.WriteAllBytes(filename, bytes.ToArray());
+        }
+    }
+
     public static class MidiSourceType
     {
         public const int Channel = 0;
@@ -944,6 +1178,23 @@ namespace FamiStudio
             "Channel",
             "Track",
             "None"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
+    }
+
+    public static class MidiPolyphonyBehavior
+    {
+        public const int UseNewNote  = 0;
+        public const int KeepOldNote = 1;
+
+        public static readonly string[] Names =
+        {
+            "Favor most recent note",
+            "Favor currently playing note"
         };
 
         public static int GetValueForName(string str)

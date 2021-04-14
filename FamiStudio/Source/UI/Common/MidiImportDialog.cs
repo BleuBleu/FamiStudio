@@ -10,28 +10,29 @@ namespace FamiStudio
         private PropertyDialog dialog;
         private string[] trackNames;
         private string filename;
-        private MidiFile.MidiSource[] channelSources = new MidiFile.MidiSource[5]
+        private MidiFileReader.MidiSource[] channelSources = new MidiFileReader.MidiSource[5]
         {
-            new MidiFile.MidiSource() { index = 0 },
-            new MidiFile.MidiSource() { index = 1 },
-            new MidiFile.MidiSource() { index = 2 },
-            new MidiFile.MidiSource() { index = 3 },
-            new MidiFile.MidiSource() { index = 4 }
+            new MidiFileReader.MidiSource() { index = 0 },
+            new MidiFileReader.MidiSource() { index = 1 },
+            new MidiFileReader.MidiSource() { index = 2 },
+            new MidiFileReader.MidiSource() { index = 9 },
+            new MidiFileReader.MidiSource() { type = MidiSourceType.None }
         };
 
         public MidiImportDialog(string file)
         {
             filename = file;
-            trackNames = new MidiFile().GetTrackNames(file);
+            trackNames = new MidiFileReader().GetTrackNames(file);
 
             if (trackNames != null)
             {
                 dialog = new PropertyDialog(500);
                 dialog.Properties.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
-                dialog.Properties.AddDropDownList("Polyphony behavior:", new[] { "Keep old note", "Use new note" }, "Keep old note"); // 1
+                dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 1
                 dialog.Properties.AddCheckBox("Use velocity as volume:", true); // 2
                 dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 3
                 dialog.Properties.AddMultiColumnList(new[] { "NES Channel", "MIDI Source                          " }, null, MappingListDoubleClicked, null); // 4
+                dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
 
@@ -47,11 +48,18 @@ namespace FamiStudio
                 var newChannelCount = Channel.GetChannelCountForExpansion(expansion);
                 var oldChannelCount = channelSources.Length;
 
+                var maxChannelIndex = 3;
+                for (int i = 0; i < oldChannelCount; i++)
+                {
+                    if (channelSources[i].type == MidiSourceType.Channel && channelSources[i].index != 9)
+                        maxChannelIndex = Math.Max(maxChannelIndex, channelSources[i].index);
+                }
+
                 Array.Resize(ref channelSources, newChannelCount);
 
                 for (int i = oldChannelCount; i < newChannelCount; i++)
                 {
-                    channelSources[i] = new MidiFile.MidiSource() { index = i };
+                    channelSources[i] = new MidiFileReader.MidiSource() { index = maxChannelIndex++ };
                 }
 
                 UpdateListView();
@@ -68,7 +76,7 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList("Source Type:", MidiSourceType.Names, MidiSourceType.Names[src.type]); // 0
             dlg.Properties.AddDropDownList("Source:", srcNames, srcNames[src.index]); // 1
             dlg.Properties.AddLabel(null, "Channel 10 keys:"); // 2
-            dlg.Properties.AddCheckBoxList(null, MidiFile.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 3
+            dlg.Properties.AddCheckBoxList(null, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 3
             dlg.Properties.AddButton(null, "Select All",  SelectClicked); // 4
             dlg.Properties.AddButton(null, "Select None", SelectClicked); // 5
             dlg.Properties.Build();
@@ -84,7 +92,7 @@ namespace FamiStudio
                 var keysBool   = dlg.Properties.GetPropertyValue<bool[]>(3);
 
                 src.type = sourceType;
-                src.index = sourceType == MidiSourceType.None ? 0 : (int.Parse(sourceName.Substring(sourceType == MidiSourceType.Track ? 6 : 8)) - 1);
+                src.index = sourceType == MidiSourceType.None ? 0 : (int.Parse(sourceName.Substring(sourceType == MidiSourceType.Track ? 6 : 8)) - 1); // TEMPOTODO : Got a crash here.
                 src.keys = 0ul;
 
                 for (int i = 0; i < keysBool.Length; i++)
@@ -99,7 +107,7 @@ namespace FamiStudio
 
         private void SelectClicked(PropertyPage props, int propertyIndex)
         {
-            var keys = new bool[MidiFile.MidiDrumKeyNames.Length];
+            var keys = new bool[MidiFileReader.MidiDrumKeyNames.Length];
 
             if (propertyIndex == 4)
             {
@@ -120,7 +128,7 @@ namespace FamiStudio
             var allowChannel10Mapping = false;
             if (sourceType == MidiSourceType.Channel)
             {
-                var channelIdx = int.Parse(props.GetPropertyValue<string>(1).Substring(8));
+                var channelIdx = int.Parse(props.GetPropertyValue<string>(1).Substring(8)) - 1;
                 allowChannel10Mapping = channelIdx == 9;
             }
 
@@ -151,11 +159,11 @@ namespace FamiStudio
             }
         }
 
-        private bool[] GetSelectedChannel10Keys(MidiFile.MidiSource source)
+        private bool[] GetSelectedChannel10Keys(MidiFileReader.MidiSource source)
         {
-            var keys = new bool[MidiFile.MidiDrumKeyNames.Length];
+            var keys = new bool[MidiFileReader.MidiDrumKeyNames.Length];
 
-            for (int i = 0; i < MidiFile.MidiDrumKeyNames.Length; i++)
+            for (int i = 0; i < MidiFileReader.MidiDrumKeyNames.Length; i++)
                 keys[i] = (((1ul << i) & source.keys) != 0);
 
             return keys;
@@ -178,11 +186,14 @@ namespace FamiStudio
 
                 if (src.type == MidiSourceType.Track)
                 {
-                    gridData[i, 1] = $"Track {src.index + 1} ({trackNames[src.index]})";
+                    gridData[i, 1] = $"Track {src.index + 1}";
+
+                    if (string.IsNullOrEmpty(trackNames[src.index]))
+                        gridData[i, 1] += $" ({trackNames[src.index]})";
                 }
                 else if (src.type == MidiSourceType.Channel)
                 {
-                    if (src.index == 9 && src.keys != MidiFile.AllDrumKeysMask)
+                    if (src.index == 9 && src.keys != MidiFileReader.AllDrumKeysMask)
                         gridData[i, 1] = $"Channel {src.index + 1} (Filtered keys)";
                     else
                         gridData[i, 1] = $"Channel {src.index + 1}";
@@ -200,10 +211,11 @@ namespace FamiStudio
         {
             if (dialog != null && dialog.ShowDialog(parent) == DialogResult.OK)
             {
-                var expansion = ExpansionType.GetValueForName(dialog.Properties.GetPropertyValue<string>(0));
+                var expansion = dialog.Properties.GetSelectedIndex(0);
+                var polyphony = dialog.Properties.GetSelectedIndex(1);
                 var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(2);
 
-                return new MidiFile().Load(filename, expansion, channelSources, velocityAsVolume);
+                return new MidiFileReader().Load(filename, expansion, channelSources, velocityAsVolume, polyphony);
             }
 
             return null;

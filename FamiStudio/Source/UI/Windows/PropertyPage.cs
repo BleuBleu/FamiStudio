@@ -920,7 +920,7 @@ namespace FamiStudio
             return (T)GetPropertyValue(idx);
         }
 
-        public int GetPropertyIndex(int idx)
+        public int GetSelectedIndex(int idx)
         {
             var prop = properties[idx];
 

@@ -16,6 +16,7 @@ namespace FamiStudio
             Video,
             Nsf,
             Rom,
+            Midi,
             Text,
             FamiTracker,
             FamiStudioMusic,
@@ -31,6 +32,7 @@ namespace FamiStudio
             "Video",
             "NSF",
             "ROM / FDS",
+            "MIDI",
             "FamiStudio Text",
             "FamiTracker Text",
             "FamiStudio Music Code",
@@ -46,6 +48,7 @@ namespace FamiStudio
             "ExportVideo",
             "ExportNsf",
             "ExportRom",
+            "ExportMIDI",
             "ExportText",
             "ExportFamiTracker",
             "ExportFamiStudioEngine",
@@ -186,6 +189,8 @@ namespace FamiStudio
                     page.AddCheckBoxList(null, songNames, null); // 2
                     page.SetPropertyEnabled(0,  project.ExpansionAudio == ExpansionType.Fds);
                     page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
+                    break;
+                case ExportFormat.Midi:
                     break;
                 case ExportFormat.Text:
                     page.AddCheckBoxList(null, songNames, null); // 0
@@ -432,6 +437,17 @@ namespace FamiStudio
             }
         }
 
+        private void ExportMidi()
+        {
+            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export MIDI File", "MIDI Files (*.mid)|*.mid", ref Settings.LastExportFolder);
+            if (filename != null)
+            {
+                var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
+                new MidiFileWriter().Save(project, filename, project.Songs[0].Id); // MIDITODO : Song id selection.
+                lastExportFilename = filename;
+            }
+        }
+
         private void ExportText()
         {
             var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiStudio Text File", "FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastExportFolder);
@@ -570,6 +586,7 @@ namespace FamiStudio
                     case ExportFormat.Video: ExportVideo(); break;
                     case ExportFormat.Nsf: ExportNsf(); break;
                     case ExportFormat.Rom: ExportRom(); break;
+                    case ExportFormat.Midi: ExportMidi(); break;
                     case ExportFormat.Text: ExportText(); break;
                     case ExportFormat.FamiTracker: ExportFamiTracker(); break;
                     case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
