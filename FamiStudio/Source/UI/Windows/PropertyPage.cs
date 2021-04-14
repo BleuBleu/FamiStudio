@@ -113,7 +113,7 @@ namespace FamiStudio
             }
         }
 
-        private int GetPropertyIndex(Control ctrl)
+        private int GetPropertyIndexForControl(Control ctrl)
         {
             for (int i = 0; i < properties.Count; i++)
             {
@@ -295,7 +295,7 @@ namespace FamiStudio
             if (e.Button == MouseButtons.Left)
                 ChangeColor(sender as PictureBox, e.X, e.Y);
 
-            PropertyWantsClose?.Invoke(GetPropertyIndex(sender as Control));
+            PropertyWantsClose?.Invoke(GetPropertyIndexForControl(sender as Control));
         }
 
         private void PictureBox_MouseMove(object sender, MouseEventArgs e)
@@ -351,7 +351,7 @@ namespace FamiStudio
 
         private void UpDown_ValueChanged(object sender, EventArgs e)
         {
-            int idx = GetPropertyIndex(sender as Control);
+            int idx = GetPropertyIndexForControl(sender as Control);
             PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
@@ -382,7 +382,7 @@ namespace FamiStudio
 
         private void Cb_CheckedChanged(object sender, EventArgs e)
         {
-            int idx = GetPropertyIndex(sender as Control);
+            int idx = GetPropertyIndexForControl(sender as Control);
             PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
@@ -403,7 +403,7 @@ namespace FamiStudio
 
         private void Cb_SelectedIndexChanged(object sender, EventArgs e)
         {
-            int idx = GetPropertyIndex(sender as Control);
+            int idx = GetPropertyIndexForControl(sender as Control);
             PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
@@ -454,6 +454,15 @@ namespace FamiStudio
             listBox.Items.Clear();
             for (int i = 0; i < values.Length; i++)
                 listBox.Items.Add(values[i], selected != null ? selected[i] : true);
+        }
+
+        public void UpdateCheckBoxList(int idx, bool[] selected)
+        {
+            var listBox = (properties[idx].control as PaddedCheckedListBox);
+
+            Debug.Assert(selected.Length == listBox.Items.Count);
+            for (int i = 0; i < listBox.Items.Count; i++)
+                listBox.SetItemChecked(i, selected[i]);
         }
 
         public int AddColoredString(string value, Color color)
@@ -694,7 +703,7 @@ namespace FamiStudio
 
         private string Slider_FormatValueEvent(Slider slider, double value)
         {
-            var idx = GetPropertyIndex(slider);
+            var idx = GetPropertyIndexForControl(slider);
 
             if (idx >= 0 && properties[idx].sliderFormat != null)
                 return properties[idx].sliderFormat(value);
@@ -909,6 +918,19 @@ namespace FamiStudio
         public T GetPropertyValue<T>(int idx)
         {
             return (T)GetPropertyValue(idx);
+        }
+
+        public int GetPropertyIndex(int idx)
+        {
+            var prop = properties[idx];
+
+            switch (prop.type)
+            {
+                case PropertyType.DropDownList:
+                    return (prop.control as ComboBox).SelectedIndex;
+            }
+
+            return -1;
         }
 
         public void SetPropertyValue(int idx, object value)

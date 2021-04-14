@@ -14,20 +14,22 @@ FamiStudio 3.0.0
 ================
 - MIDI : 
 	- Import, dialog, etc.
-		- Select expansion.
-		- Map velocity to volume
-		- Create instruments
+		x Select expansion.
+		x Map velocity to volume
+		x Create instruments
 		- Polyphony behavior : keep oldest note, use new note.
-		- Channel mapping: Can select a track or a channel, map to a NES channel
+		/ Channel mapping: Can select a track or a channel, map to a NES channel
 		- What about pitch bend?
+		- Can yout have more than 1 song in a mid file?
 	- Export
 		- Map velocity to volume
-		- Should be pretty simple, just export to seperate channnels.
+		- Slide note = pitch bend.
+		- Should be pretty simple, just export to seperate channnels, instruments 0...N.
 	- FamiStudio / FamiTracker tempo modes?
-	
 - Note refactor: 
 	- Remove fractional snapping. Too awkward.
 	- When deleting a note, dont delete certain effects.
+- Playback speed (1, 1/2, 1/4 ?)
 - Remove low pass, add reload.
 - Loop prevention for envelope (brad issue).
 - Low-pass config in settings (change layout of equalizer)

@@ -10,7 +10,14 @@ namespace FamiStudio
         private PropertyDialog dialog;
         private string[] trackNames;
         private string filename;
-        private int[] channelMapping = new int[5] { 0, 1, 2, 3, 4 };
+        private MidiFile.MidiSource[] channelSources = new MidiFile.MidiSource[5]
+        {
+            new MidiFile.MidiSource() { index = 0 },
+            new MidiFile.MidiSource() { index = 1 },
+            new MidiFile.MidiSource() { index = 2 },
+            new MidiFile.MidiSource() { index = 3 },
+            new MidiFile.MidiSource() { index = 4 }
+        };
 
         public MidiImportDialog(string file)
         {
@@ -21,11 +28,10 @@ namespace FamiStudio
             {
                 dialog = new PropertyDialog(500);
                 dialog.Properties.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
-                dialog.Properties.AddCheckBox("Use velocity as volume:", true); // 1
-                dialog.Properties.AddCheckBox("Create instruments:", true); // 2
-                dialog.Properties.AddDropDownList("Polyphony behavior:", new[] { "Keep old note", "Use new note" }, "Keep old note"); // 3
-                dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 4
-                dialog.Properties.AddMultiColumnList(new[] { "NES Channel", "MIDI Source" }, null, MappingListDoubleClicked, null); // 5
+                dialog.Properties.AddDropDownList("Polyphony behavior:", new[] { "Keep old note", "Use new note" }, "Keep old note"); // 1
+                dialog.Properties.AddCheckBox("Use velocity as volume:", true); // 2
+                dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 3
+                dialog.Properties.AddMultiColumnList(new[] { "NES Channel", "MIDI Source                          " }, null, MappingListDoubleClicked, null); // 4
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
 
@@ -39,12 +45,14 @@ namespace FamiStudio
             {
                 var expansion = ExpansionType.GetValueForName((string)value);
                 var newChannelCount = Channel.GetChannelCountForExpansion(expansion);
-                var oldChannelCount = channelMapping.Length;
+                var oldChannelCount = channelSources.Length;
 
-                Array.Resize(ref channelMapping, newChannelCount);
+                Array.Resize(ref channelSources, newChannelCount);
 
                 for (int i = oldChannelCount; i < newChannelCount; i++)
-                    channelMapping[i] = i;
+                {
+                    channelSources[i] = new MidiFile.MidiSource() { index = i };
+                }
 
                 UpdateListView();
             }
@@ -52,21 +60,105 @@ namespace FamiStudio
 
         void MappingListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)
         {
-            var sources = new string[16 + trackNames.Length];
-            for (int i = 0; i < 16; i++)
-                sources[i] = $"Channel {i}";
-            for (int i = 0; i < trackNames.Length; i++)
-                sources[i + 16] = $"Track {i} ({trackNames[i]})";
+            var src = channelSources[itemIndex];
+            var srcNames = GetSourceNames(src.type);
+            var allowChannel10Mapping = src.type == MidiSourceType.Channel && src.index == 9;
 
             var dlg = new PropertyDialog(300, true, true, dialog);
-            dlg.Properties.AddDropDownList("MIDI Source:", sources, sources[channelMapping[itemIndex]]);
+            dlg.Properties.AddDropDownList("Source Type:", MidiSourceType.Names, MidiSourceType.Names[src.type]); // 0
+            dlg.Properties.AddDropDownList("Source:", srcNames, srcNames[src.index]); // 1
+            dlg.Properties.AddLabel(null, "Channel 10 keys:"); // 2
+            dlg.Properties.AddCheckBoxList(null, MidiFile.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 3
+            dlg.Properties.AddButton(null, "Select All",  SelectClicked); // 4
+            dlg.Properties.AddButton(null, "Select None", SelectClicked); // 5
             dlg.Properties.Build();
+            dlg.Properties.PropertyChanged += MappingProperties_PropertyChanged;
+            dlg.Properties.SetPropertyEnabled(3, allowChannel10Mapping);
+            dlg.Properties.SetPropertyEnabled(4, allowChannel10Mapping);
+            dlg.Properties.SetPropertyEnabled(5, allowChannel10Mapping);
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                channelMapping[itemIndex] = Array.IndexOf(sources, dlg.Properties.GetPropertyValue<string>(0));
+                var sourceType = MidiSourceType.GetValueForName(dlg.Properties.GetPropertyValue<string>(0));
+                var sourceName = dlg.Properties.GetPropertyValue<string>(1);
+                var keysBool   = dlg.Properties.GetPropertyValue<bool[]>(3);
+
+                src.type = sourceType;
+                src.index = sourceType == MidiSourceType.None ? 0 : (int.Parse(sourceName.Substring(sourceType == MidiSourceType.Track ? 6 : 8)) - 1);
+                src.keys = 0ul;
+
+                for (int i = 0; i < keysBool.Length; i++)
+                {
+                    if (keysBool[i])
+                        src.keys |= (1ul << i);
+                }
+
                 UpdateListView();
             }
+        }
+
+        private void SelectClicked(PropertyPage props, int propertyIndex)
+        {
+            var keys = new bool[MidiFile.MidiDrumKeyNames.Length];
+
+            if (propertyIndex == 4)
+            {
+                for (int i = 0; i < keys.Length; i++)
+                    keys[i] = true;
+            }
+
+            props.UpdateCheckBoxList(3, keys);
+        }
+
+        private void MappingProperties_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            var sourceType = MidiSourceType.GetValueForName(props.GetPropertyValue<string>(0));
+
+            if (idx == 0)
+                props.UpdateDropDownListItems(1, GetSourceNames(sourceType));
+
+            var allowChannel10Mapping = false;
+            if (sourceType == MidiSourceType.Channel)
+            {
+                var channelIdx = int.Parse(props.GetPropertyValue<string>(1).Substring(8));
+                allowChannel10Mapping = channelIdx == 9;
+            }
+
+            props.SetPropertyEnabled(3, allowChannel10Mapping);
+            props.SetPropertyEnabled(4, allowChannel10Mapping);
+            props.SetPropertyEnabled(5, allowChannel10Mapping);
+        }
+
+        private string[] GetSourceNames(int type)
+        {
+            if (type == MidiSourceType.Track)
+            {
+                var sourceNames = new string[trackNames.Length];
+                for (int i = 0; i < trackNames.Length; i++)
+                    sourceNames[i] = $"Track {i + 1} ({trackNames[i]})";
+                return sourceNames;
+            }
+            else if (type == MidiSourceType.Channel)
+            {
+                var sourceNames = new string[16];
+                for (int i = 0; i < 16; i++)
+                    sourceNames[i] = $"Channel {i + 1}";
+                return sourceNames;
+            }
+            else
+            {
+                return new[] { "N/A" };
+            }
+        }
+
+        private bool[] GetSelectedChannel10Keys(MidiFile.MidiSource source)
+        {
+            var keys = new bool[MidiFile.MidiDrumKeyNames.Length];
+
+            for (int i = 0; i < MidiFile.MidiDrumKeyNames.Length; i++)
+                keys[i] = (((1ul << i) & source.keys) != 0);
+
+            return keys;
         }
 
         public void UpdateListView()
@@ -74,33 +166,44 @@ namespace FamiStudio
             var expansion = ExpansionType.GetValueForName(dialog.Properties.GetPropertyValue<string>(0));
             var channels = Channel.GetChannelsForExpansion(expansion);
 
-            Debug.Assert(channelMapping.Length == channels.Length);
+            Debug.Assert(channelSources.Length == channels.Length);
 
             var gridData = new string[channels.Length, 2];
 
             for (int i = 0; i < channels.Length; i++)
             {
+                var src = channelSources[i];
+
                 gridData[i, 0] = ChannelType.Names[channels[i]];
 
-                // >= 16 is a track, otherwise a channel.
-                if (channelMapping[i] >= 16)
+                if (src.type == MidiSourceType.Track)
                 {
-                    gridData[i, 1] = $"Track {channelMapping[i] - 16} ({trackNames[channelMapping[i] - 16]})";
+                    gridData[i, 1] = $"Track {src.index + 1} ({trackNames[src.index]})";
+                }
+                else if (src.type == MidiSourceType.Channel)
+                {
+                    if (src.index == 9 && src.keys != MidiFile.AllDrumKeysMask)
+                        gridData[i, 1] = $"Channel {src.index + 1} (Filtered keys)";
+                    else
+                        gridData[i, 1] = $"Channel {src.index + 1}";
                 }
                 else
                 {
-                    gridData[i, 1] = $"Channel {channelMapping[i]}";
+                    gridData[i, 1] = "None";
                 }
             }
 
-            dialog.Properties.UpdateMultiColumnList(5, gridData);
+            dialog.Properties.UpdateMultiColumnList(4, gridData);
         }
 
         public Project ShowDialog(FamiStudioForm parent)
         {
             if (dialog != null && dialog.ShowDialog(parent) == DialogResult.OK)
             {
-                return new MidiFile().Load(filename);
+                var expansion = ExpansionType.GetValueForName(dialog.Properties.GetPropertyValue<string>(0));
+                var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(2);
+
+                return new MidiFile().Load(filename, expansion, channelSources, velocityAsVolume);
             }
 
             return null;

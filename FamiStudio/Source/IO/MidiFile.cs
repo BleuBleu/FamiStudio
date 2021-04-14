@@ -21,7 +21,205 @@ namespace FamiStudio
         private int songDuration;
         private int numTracks;
 
-        class TextEvent
+        private Dictionary<int, Instrument> instrumentMap = new Dictionary<int, Instrument>();
+        private Dictionary<int, Instrument> instrumentMapExp = new Dictionary<int, Instrument>();
+
+        private const int MinDrumKey = 24;
+        private const int MaxDrumKey = 70;
+
+        public static readonly string[] MidiInstrumentNames =
+        {
+            "Acoustic Grand Piano",
+            "Bright Acoustic Piano",
+            "Electric Grand Piano",
+            "Honky-tonk Piano",
+            "Electric Piano 1 (Rhodes Piano)",
+            "Electric Piano 2 (Chorused Piano)",
+            "Harpsichord",
+            "Clavinet",
+            "Celesta",
+            "Glockenspiel",
+            "Music Box",
+            "Vibraphone",
+            "Marimba",
+            "Xylophone",
+            "Tubular Bells",
+            "Dulcimer (Santur)",
+            "Drawbar Organ (Hammond)",
+            "Percussive Organ",
+            "Rock Organ",
+            "Church Organ",
+            "Reed Organ",
+            "Accordion (French)",
+            "Harmonica",
+            "Tango Accordion (Band neon)",
+            "Acoustic Guitar (nylon)",
+            "Acoustic Guitar (steel)",
+            "Electric Guitar (jazz)",
+            "Electric Guitar (clean)",
+            "Electric Guitar (muted)",
+            "Overdriven Guitar",
+            "Distortion Guitar",
+            "Guitar harmonics",
+            "Acoustic Bass",
+            "Electric Bass (fingered)",
+            "Electric Bass (picked)",
+            "Fretless Bass",
+            "Slap Bass 1",
+            "Slap Bass 2",
+            "Synth Bass 1",
+            "Synth Bass 2",
+            "Violin",
+            "Viola",
+            "Cello",
+            "Contrabass",
+            "Tremolo Strings",
+            "Pizzicato Strings",
+            "Orchestral Harp",
+            "Timpani",
+            "String Ensemble 1 (strings)",
+            "String Ensemble 2 (slow strings)",
+            "SynthStrings 1",
+            "SynthStrings 2",
+            "Choir Aahs",
+            "Voice Oohs",
+            "Synth Voice",
+            "Orchestra Hit",
+            "Trumpet",
+            "Trombone",
+            "Tuba",
+            "Muted Trumpet",
+            "French Horn",
+            "Brass Section",
+            "SynthBrass 1",
+            "SynthBrass 2",
+            "Soprano Sax",
+            "Alto Sax",
+            "Tenor Sax",
+            "Baritone Sax",
+            "Oboe",
+            "English Horn",
+            "Bassoon",
+            "Clarinet",
+            "Piccolo",
+            "Flute",
+            "Recorder",
+            "Pan Flute",
+            "Blown Bottle",
+            "Shakuhachi",
+            "Whistle",
+            "Ocarina",
+            "Lead 1 (square wave)",
+            "Lead 2 (sawtooth wave)",
+            "Lead 3 (calliope)",
+            "Lead 4 (chiffer)",
+            "Lead 5 (charang)",
+            "Lead 6 (voice solo)",
+            "Lead 7 (fifths)",
+            "Lead 8 (bass + lead)",
+            "Pad 1 (new age Fantasia)",
+            "Pad 2 (warm)",
+            "Pad 3 (polysynth)",
+            "Pad 4 (choir space voice)",
+            "Pad 5 (bowed glass)",
+            "Pad 6 (metallic pro)",
+            "Pad 7 (halo)",
+            "Pad 8 (sweep)",
+            "FX 1 (rain)",
+            "FX 2 (soundtrack)",
+            "FX 3 (crystal)",
+            "FX 4 (atmosphere)",
+            "FX 5 (brightness)",
+            "FX 6 (goblins)",
+            "FX 7 (echoes, drops)",
+            "FX 8 (sci-fi, star theme)",
+            "Sitar",
+            "Banjo",
+            "Shamisen",
+            "Koto",
+            "Kalimba",
+            "Bag pipe",
+            "Fiddle",
+            "Shanai",
+            "Tinkle Bell",
+            "Agogo",
+            "Steel Drums",
+            "Woodblock",
+            "Taiko Drum",
+            "Melodic Tom",
+            "Synth Drum",
+            "Reverse Cymbal",
+            "Guitar Fret Noise",
+            "Breath Noise",
+            "Seashore",
+            "Bird Tweet",
+            "Telephone Ring",
+            "Helicopter",
+            "Applause",
+            "Gunshot"
+        };
+
+        public static readonly string[] MidiDrumKeyNames =
+        {
+            "B1 (Acoustic Bass Drum)",
+            "C2 (Bass Drum 1)",
+            "C#2 (Side Stick)",
+            "D2 (Acoustic Snare)",
+            "D#2 (Hand Clap)",
+            "E2 (Electric Snare)",
+            "F2 (Low Floor Tom)",
+            "F#2 (Closed Hi Hat)",
+            "G2 (High Floor Tom)",
+            "G#2 (Pedal Hi-Hat)",
+            "A2 (Low Tom)",
+            "A#2 (Open Hi-Hat)",
+            "B2 (Low-Mid Tom)",
+            "C3 (Hi Mid Tom)",
+            "B#3 (Crash Cymbal 1)",
+            "B3 (High Tom)",
+            "B#3 (Ride Cymbal 1)",
+            "B3 (Chinese Cymbal)",
+            "B3 (Ride Bell)",
+            "B#3 (Tambourine)",
+            "B3 (Splash Cymbal)",
+            "B#3 (Cowbell)",
+            "B3 (Crash Cymbal 2)",
+            "B#3 (Vibraslap)",
+            "B3 (Ride Cymbal 2)",
+            "C4 (Hi Bongo)",
+            "B#4 (Low Bongo)",
+            "B4 (Mute Hi Conga)",
+            "B#4 (Open Hi Conga)",
+            "B4 (Low Conga)",
+            "B4 (High Timbale)",
+            "B#4 (Low Timbale)",
+            "B4 (High Agogo)",
+            "B#4 (Low Agogo)",
+            "B4 (Cabasa)",
+            "B#4 (Maracas)",
+            "B4 (Short Whistle)",
+            "C5 (Long Whistle)",
+            "B5 (Short Guiro)",
+            "B#5 (Long Guiro)",
+            "B5 (Claves)",
+            "B#5 (Hi Wood Block)",
+            "B5 (Low Wood Block)",
+            "B5 (Mute Cuica)",
+            "B#5 (Open Cuica)",
+            "B5 (Mute Triangle)",
+            "B#5 (Open Triangle)"
+        };
+
+        public const ulong AllDrumKeysMask = 0x3ffffffffff;
+
+        public class MidiSource
+        {
+            public int   type = MidiSourceType.Channel; // True if idx is a track, otherwise channel.
+            public int   index = 0;                     // Index of track/channel.
+            public ulong keys  = AllDrumKeysMask;       // Only used for channel 10, can select specific keys.
+        }
+
+        private class TextEvent
         {
             public int track;
             public int tick;
@@ -29,31 +227,48 @@ namespace FamiStudio
             public string text;
         }
 
-        class TimeSignatureEvent
+        private class TimeSignatureEvent
         {
             public int tick;
             public int numer;
             public int denom;
         }
 
-        class TempoEvent
+        private class TempoEvent
         {
             public int tick;
             public int tempo;
         }
 
-        class NoteEvent
+        private class NoteEvent
         {
             public int tick;
+            public int track;
             public int channel;
             public int note;
+            public int vel;
             public bool on;
         };
 
-        List<TextEvent>          textEvents          = new List<TextEvent>();
-        List<TimeSignatureEvent> timeSignatureEvents = new List<TimeSignatureEvent>();
-        List<TempoEvent>         tempoEvents         = new List<TempoEvent>();
-        List<NoteEvent>          noteEvents          = new List<NoteEvent>();
+        private class ProgramChangeEvent
+        {
+            public int tick;
+            public int channel;
+            public int prg;
+        }
+
+        private class MidiPatternInfo
+        {
+            public int tick;
+            public int numer;
+            public int denom;
+        };
+
+        private List<TextEvent>          textEvents          = new List<TextEvent>();
+        private List<TimeSignatureEvent> timeSignatureEvents = new List<TimeSignatureEvent>();
+        private List<TempoEvent>         tempoEvents         = new List<TempoEvent>();
+        private List<NoteEvent>          noteEvents          = new List<NoteEvent>();
+        private List<ProgramChangeEvent> programChangeEvents = new List<ProgramChangeEvent>();
 
         private int ReadVarLen()
         {
@@ -134,7 +349,7 @@ namespace FamiStudio
             return true;
         }
 
-        private void ReadMetaEvent(int track, int time)
+        private void ReadMetaEvent(int track, int tick)
         {
             var metaType = bytes[idx++];
 
@@ -157,7 +372,7 @@ namespace FamiStudio
 
                     var textEvent = new TextEvent();
                     textEvent.track = track;
-                    textEvent.tick = time;
+                    textEvent.tick = tick;
                     textEvent.text = name;
                     textEvent.type = metaType;
                     textEvents.Add(textEvent);
@@ -184,7 +399,7 @@ namespace FamiStudio
                 {
                     Debug.Assert(bytes[idx] == 0x00); // Not sure why this is needed.
                     idx++;
-                    songDuration = Math.Max(songDuration, time);
+                    songDuration = Math.Max(songDuration, tick);
                     break;
                 }
 
@@ -194,10 +409,10 @@ namespace FamiStudio
                     Debug.Assert(bytes[idx] == 0x03); // Not sure why this is needed.
                     idx++;
                     var tempo = ReadInt24();
-                    Debug.WriteLine($"At time {time} tempo is now {tempo}.");
+                    Debug.WriteLine($"At time {tick} tempo is now {tempo}.");
 
                     var tempoEvent = new TempoEvent();
-                    tempoEvent.tick = time;
+                    tempoEvent.tick = tick;
                     tempoEvent.tempo = tempo;
                     tempoEvents.Add(tempoEvent);
                     break;
@@ -224,10 +439,10 @@ namespace FamiStudio
                     var numer = bytes[idx++];
                     var denom = 1 << bytes[idx++];
                     idx += 2; // WTF is that.
-                    Debug.WriteLine($"At time {time} time signature is now {numer} / {denom}.");
+                    Debug.WriteLine($"At time {tick} time signature is now {numer} / {denom}.");
 
                     var timeSignature = new TimeSignatureEvent();
-                    timeSignature.tick = time;
+                    timeSignature.tick = tick;
                     timeSignature.numer = numer;
                     timeSignature.denom = denom;
                     timeSignatureEvents.Add(timeSignature);
@@ -261,7 +476,7 @@ namespace FamiStudio
             }
         }
 
-        private bool ReadMidiMessage(int time, ref byte status)
+        private bool ReadMidiMessage(int track, int tick, ref byte status)
         {
             // Do we have a status byte?
             if ((bytes[idx] & 0x80) != 0)
@@ -270,6 +485,7 @@ namespace FamiStudio
             }
 
             var statusHiByte = status >> 4;
+            var channel = status & 0x0f;
 
             // Note ON / OFF
             if (statusHiByte == 0b1001 ||
@@ -281,9 +497,11 @@ namespace FamiStudio
                 //Debug.WriteLine($"At time {time} : NOTE ON! {Note.GetFriendlyName(key - 11)} vel {vel}.");
 
                 var noteEvent = new NoteEvent();
-                noteEvent.tick = time;
-                noteEvent.channel = status & 0x0f;
+                noteEvent.tick = tick;
+                noteEvent.channel = channel;
+                noteEvent.track = track;
                 noteEvent.note = key - 11;
+                noteEvent.vel = vel;
                 noteEvent.on = statusHiByte == 0b1001;
                 noteEvents.Add(noteEvent);
             }
@@ -312,6 +530,14 @@ namespace FamiStudio
             else if (statusHiByte == 0b1100)
             {
                 var prg = bytes[idx++];
+
+                Debug.WriteLine($"Program change to {MidiInstrumentNames[prg]} ({prg}) on channel {channel} at time {tick}");
+
+                var prgChange = new ProgramChangeEvent();
+                prgChange.tick = tick;
+                prgChange.channel = channel;
+                prgChange.prg = prg;
+                programChangeEvents.Add(prgChange);
             }
 
             // System exclusive
@@ -332,24 +558,24 @@ namespace FamiStudio
         {
             var endIdx = idx + chunkLen;
             var status = (byte)0;
-            var time = 0;
+            var tick = 0;
 
             while (idx < endIdx)
             {
                 var delta = ReadVarLen();
                 var evt = bytes[idx];
 
-                time += delta;
+                tick += delta;
 
                 // Meta event
                 if (evt == 0xff)
                 {
                     idx++;
-                    ReadMetaEvent(track, time);
+                    ReadMetaEvent(track, tick);
                 }
                 else
                 {
-                    ReadMidiMessage(time, ref status);
+                    ReadMidiMessage(track, tick, ref status);
                 }
             }
             
@@ -380,6 +606,8 @@ namespace FamiStudio
 
             timeSignatureEvents.Sort((s1, s2) => s1.tick.CompareTo(s2.tick));
             tempoEvents.Sort((t1, t2) => t1.tick.CompareTo(t2.tick));
+            programChangeEvents.Sort((p1, p2) => p1.tick.CompareTo(p2.tick));
+            noteEvents.Sort((n1, n2) => n1.tick.CompareTo(n2.tick));
 
             numTracks = track;
 
@@ -412,16 +640,40 @@ namespace FamiStudio
             return bestTempo;
         }
 
-        class MidiPatternInfo
+        private void CreateProjectAndSong(int expansion)
         {
-            public int tick;
-            public int numer;
-            public int denom;
-        };
+            project = new Project();
+            project.SetExpansionAudio(expansion);
+            song = project.CreateSong();
+
+            // MIDITODO : Tempo mode here.
+        }
+
+        private void CreateInstruments()
+        {
+            // Create a default instrument in case there isnt any program change.
+            instrumentMap[0] = project.CreateInstrument(ExpansionType.None, MidiInstrumentNames[0]);
+
+            if (project.UsesExpansionAudio)
+                instrumentMapExp[0] = project.CreateInstrument(project.ExpansionAudio, MidiInstrumentNames[0] + $" {project.ExpansionAudioShortName}");
+
+            foreach (var prgChange in programChangeEvents)
+            {
+                if (!instrumentMap.ContainsKey(prgChange.prg))
+                {
+                    instrumentMap[prgChange.prg] = project.CreateInstrument(ExpansionType.None, MidiInstrumentNames[prgChange.prg]);
+
+                    if (project.UsesExpansionAudio)
+                        instrumentMapExp[prgChange.prg] = project.CreateInstrument(project.ExpansionAudio, MidiInstrumentNames[prgChange.prg] + $" {project.ExpansionAudioShortName}");
+                }
+            }
+        }
 
         private void CreatePatterns(out List<MidiPatternInfo> patternInfos)
         {
             Debug.Assert(songDuration >= 0);
+
+            // MIDITODO: Scan song to find most common time signature / tempo. Use that for the default.
 
             // 4/4 by default.
             if (timeSignatureEvents.Count == 0 || 
@@ -518,18 +770,56 @@ namespace FamiStudio
             song.SetLength(patternIdx);
         }
 
-        private void CreateNotes(List<MidiPatternInfo> patternInfos)
+        private bool FilterNoteEvent(NoteEvent evt, MidiSource source)
         {
+            if (evt.note >= Note.MusicalNoteMin &&
+                evt.note <= Note.MusicalNoteMax)
+            {
+                if (source.type == MidiSourceType.Track)
+                {
+                    return evt.track == source.index;
+                }
+                else if (source.type == MidiSourceType.Channel)
+                {
+                    if (evt.channel == 9)
+                    {
+                        if (evt.note >= MinDrumKey &&
+                            evt.note <= MaxDrumKey)
+                        {
+                            return ((1ul << (evt.note - MinDrumKey)) & source.keys) != 0;
+                        }
+                    }
+                    else
+                    {
+                        return evt.channel == source.index;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private void CreateNotes(List<MidiPatternInfo> patternInfos, int channelIdx, MidiSource source, bool velocityAsVolume)
+        {
+            var channelInstruments = new int[16];
+            var prgChangeIndex = 0;
+            var prevVolume = (byte)15;
+
             for (int i = 0; i < noteEvents.Count; i++)
             {
                 var evt = noteEvents[i];
 
-                // MIDITODO : Show warning if note isnt supported.
-                if (//evt.on &&
-                    //evt.channel == 3 && // MATTT
-                    evt.note >= Note.MusicalNoteMin &&
-                    evt.note <= Note.MusicalNoteMax)
+                // Apply any program change that happened before this event.
+                while (prgChangeIndex < programChangeEvents.Count && programChangeEvents[prgChangeIndex].tick <= evt.tick)
                 {
+                    var prgChange = programChangeEvents[prgChangeIndex];
+                    channelInstruments[prgChange.channel] = prgChange.prg;
+                    prgChangeIndex++;
+                }
+
+                if (FilterNoteEvent(evt, source))
+                {
+                    // TODO: Binary search.
                     var patternIdx = -1;
                     for (int j = 0; j < patternInfos.Count; j++)
                     {
@@ -541,11 +831,12 @@ namespace FamiStudio
                     }
                     Debug.Assert(patternIdx >= 0);
 
-                    var pattern = song.Channels[0].PatternInstances[patternIdx];
+                    var channel = song.Channels[channelIdx];
+                    var pattern = channel.PatternInstances[patternIdx];
                     if (pattern == null)
                     {
-                        pattern = song.Channels[0].CreatePattern();
-                        song.Channels[0].PatternInstances[patternIdx] = pattern;
+                        pattern = channel.CreatePattern();
+                        channel.PatternInstances[patternIdx] = pattern;
                     }
 
                     var patternInfo   = patternInfos[patternIdx];
@@ -554,7 +845,25 @@ namespace FamiStudio
                     var noteLength    = song.GetPatternNoteLength(patternIdx);
                     var beatLength    = song.GetPatternBeatLength(patternIdx);
 
-                    pattern.Notes[(int)Math.Round(beatLength * noteIndex)] = new Note(evt.on ? evt.note : Note.NoteStop);
+                    var note = new Note(evt.on ? evt.note : Note.NoteStop);
+
+                    if (note.IsMusical)
+                    {
+                        var instrumentIdx = channelInstruments[evt.channel];
+                        note.Instrument = channel.IsExpansionChannel ? instrumentMapExp[instrumentIdx] : instrumentMap[instrumentIdx];
+
+                        if (velocityAsVolume && channel.SupportsEffect(Note.EffectVolume))
+                        {
+                            var volume = (byte)Math.Round((evt.vel / 127.0) * 15.0);
+                            if (volume != prevVolume)
+                            {
+                                note.Volume = volume;
+                                prevVolume = volume;
+                            }
+                        }
+                    }
+
+                    pattern.Notes[(int)Math.Round(beatLength * noteIndex)] = note;
                 }
             }
         }
@@ -585,28 +894,30 @@ namespace FamiStudio
             return names;
         }
 
-        public Project Load(string filename)
+        public Project Load(string filename, int expansion, MidiSource[] channelSources, bool velocityAsVolume)
         {
 #if !DEBUG
             try
 #endif
             {
+                Debug.Assert(Channel.GetChannelCountForExpansion(expansion) == channelSources.Length);
+
                 idx = 0;
                 bytes = File.ReadAllBytes(filename);
 
                 if (!ReadHeaderChunk())
                     return null;
 
-                project = new Project();
-                song = project.CreateSong();
-
                 ReadAllTracks();
 
-                // First create the pattern based on time signatures/tempos.
+                CreateProjectAndSong(expansion);
+                CreateInstruments();
                 CreatePatterns(out var patternInfos);
 
-                // Then create the notes.
-                CreateNotes(patternInfos);
+                for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
+                    CreateNotes(patternInfos, channelIdx, channelSources[channelIdx], velocityAsVolume);
+
+                project.Cleanup();
 
                 return project;
             }
@@ -619,6 +930,25 @@ namespace FamiStudio
                 return false;
             }
 #endif
+        }
     }
-}
+
+    public static class MidiSourceType
+    {
+        public const int Channel = 0;
+        public const int Track   = 1;
+        public const int None    = 2;
+
+        public static readonly string[] Names =
+        {
+            "Channel",
+            "Track",
+            "None"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
+    }
 }
