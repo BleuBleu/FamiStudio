@@ -464,7 +464,7 @@ namespace FamiStudio
                     idx++;
                     var numer = bytes[idx++];
                     var denom = 1 << bytes[idx++];
-                    idx += 2; // TEMPOTODO : What is this?
+                    idx += 2; // No idea what these 2 bytes mean.
 
                     var timeSignature = new TimeSignatureEvent();
                     timeSignature.tick = tick;
@@ -726,8 +726,6 @@ namespace FamiStudio
         private void CreatePatterns(out List<MidiPatternInfo> patternInfos)
         {
             Debug.Assert(songDuration >= 0);
-
-            // MIDITODO: Scan song to find most common time signature / tempo. Use that for the default.
 
             // 4/4 by default.
             if (timeSignatureEvents.Count == 0 || 
@@ -1064,7 +1062,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
                 Log.LogMessage(LogSeverity.Error, e.Message);
                 Log.LogMessage(LogSeverity.Error, e.StackTrace);
-                return false;
+                return null;
             }
 #endif
         }
@@ -1170,8 +1168,8 @@ namespace FamiStudio
             bytes.Add(0x04);
             bytes.Add((byte)numer); // numer
             bytes.Add((byte)Utils.Log2Int(denom)); // denom.
-            bytes.Add(0x18); // MIDITODO : What is this.
-            bytes.Add(0x08); // MIDITODO : What is this.
+            bytes.Add(0x18); // Just writing the same value as everybody else. No clue what it means.
+            bytes.Add(0x08); // Just writing the same value as everybody else. No clue what it means.
         }
 
         private void WriteTempoEvent(float bpm)
@@ -1474,8 +1472,11 @@ namespace FamiStudio
         // MIDITODO : PAL.
         public void Save(Project originalProject, string filename, int songId, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
         {
-            // MIDITODO : FamiStudio tempo only for now.
-            Debug.Assert(originalProject.UsesFamiStudioTempo);
+            if (originalProject.UsesFamiTrackerTempo)
+            {
+                Log.LogMessage(LogSeverity.Error, "MIDI export is only available for projects using FamiStudio tempo. Aborting.");
+                return;
+            }
 
             project = originalProject.DeepClone();
             project.RemoveAllSongsBut(new int[] { songId }, true);

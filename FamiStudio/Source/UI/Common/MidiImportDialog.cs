@@ -31,7 +31,7 @@ namespace FamiStudio
                 dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 1
                 dialog.Properties.AddCheckBox("Use velocity as volume:", true); // 2
                 dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 3
-                dialog.Properties.AddMultiColumnList(new[] { "NES Channel", "MIDI Source                          " }, null, MappingListDoubleClicked, null); // 4
+                dialog.Properties.AddMultiColumnList(new[] { "NES Channel        ", "MIDI Source                          " }, null, MappingListDoubleClicked, null); // 4
                 dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
@@ -183,6 +183,9 @@ namespace FamiStudio
                 var src = channelSources[i];
 
                 gridData[i, 0] = ChannelType.Names[channels[i]];
+
+                if (i >= ChannelType.ExpansionAudioStart)
+                    gridData[i, 0] += $" ({ExpansionType.ShortNames[expansion]})";
 
                 if (src.type == MidiSourceType.Track)
                 {
