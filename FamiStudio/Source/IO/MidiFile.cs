@@ -660,7 +660,7 @@ namespace FamiStudio
 
         private TempoInfo GetClosestMatchingTempo(double bpm, int notesPerBeat)
         {
-            var tempos = FamiStudioTempoUtils.GetAvailableTempos(false, notesPerBeat); // MIDITODO : PAL
+            var tempos = FamiStudioTempoUtils.GetAvailableTempos(project.PalMode, notesPerBeat); 
 
             var bestTempoDiff = 1000.0;
             var bestTempo = (TempoInfo)null;
@@ -679,10 +679,12 @@ namespace FamiStudio
             return bestTempo;
         }
 
-        private void CreateProjectAndSong(int expansion)
+        private void CreateProjectAndSong(int expansion, bool pal)
         {
             project = new Project();
             project.SetExpansionAudio(expansion);
+            project.PalMode = pal;
+
             song = project.CreateSong();
 
             bool foundName = false;
@@ -1029,7 +1031,7 @@ namespace FamiStudio
             }
         }
 
-        public Project Load(string filename, int expansion, MidiSource[] channelSources, bool velocityAsVolume, int polyphony)
+        public Project Load(string filename, int expansion, bool pal, MidiSource[] channelSources, bool velocityAsVolume, int polyphony)
         {
 #if !DEBUG
             try
@@ -1045,7 +1047,7 @@ namespace FamiStudio
 
                 ReadAllTracks();
 
-                CreateProjectAndSong(expansion);
+                CreateProjectAndSong(expansion, pal);
                 CreateInstruments();
                 CreatePatterns(out var patternInfos);
 
@@ -1244,8 +1246,7 @@ namespace FamiStudio
 
             WriteTimeSignatureEvent(numer, denom);
 
-            // MIDITODO : PAL here.
-            var bpm = FamiStudioTempoUtils.ComputeBpmForGroove(false, groove, notesPerBeat / noteLength);
+            var bpm = FamiStudioTempoUtils.ComputeBpmForGroove(project.PalMode, groove, notesPerBeat / noteLength);
 
             WriteDeltaTime(0);
             WriteTempoEvent(bpm);
