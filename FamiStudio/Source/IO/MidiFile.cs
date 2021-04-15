@@ -1132,6 +1132,24 @@ namespace FamiStudio
             bytes.Add((byte)prg);
         }
 
+        private void WritePitchWheelEvent(int channel, int pitch)
+        {
+            var status = 0b11100000 | channel;
+
+            bytes.Add((byte)status);
+            bytes.Add((byte)(pitch & 0x7f));
+            bytes.Add((byte)((pitch >> 7) & 0x7f));
+        }
+
+        private void WriteControllerChangeEvent(int channel, int ctrl, int val)
+        {
+            var status = 0b10110000 | channel;
+
+            bytes.Add((byte)status);
+            bytes.Add((byte)ctrl);
+            bytes.Add((byte)val);
+        }
+
         private void WriteHeaderChunk()
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MThd"));
@@ -1157,6 +1175,15 @@ namespace FamiStudio
 
             WriteDeltaTime(0);
             WriteTempoEvent(bpm);
+        }
+
+        private void WritePitchBendRange(int channel, int range)
+        {
+            WriteControllerChangeEvent(channel, 0x65, 0);
+            WriteDeltaTime(0);
+            WriteControllerChangeEvent(channel, 0x64, 0);
+            WriteDeltaTime(0);
+            WriteControllerChangeEvent(channel, 0x06, range);
         }
 
         private void WriteControlTrack(out List<MidiPatternInfo> patternInfos)
@@ -1221,7 +1248,7 @@ namespace FamiStudio
             SetInt32(bytes.Count - chunckStartIdx - 4, chunckStartIdx);
         }
 
-        private void WriteChannelTrack(int channelIdx, List<MidiPatternInfo> patternInfos)
+        private void WriteChannelTrack(int channelIdx, List<MidiPatternInfo> patternInfos, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MTrk"));
 
@@ -1232,47 +1259,82 @@ namespace FamiStudio
             WriteVarLen(0);
             WriteTextEvent(3, song.Channels[channelIdx].Name);
 
+            WriteVarLen(0);
+            WritePitchBendRange(channelIdx, pitchWheelRange);
+
             var tick = 0;
+            var channel = song.Channels[channelIdx];
+            var volume = 127;
+
+            var slidePitch = 0;
+            var slideNumFrames = 0;
+            var slideStep = 0;
+            var slideNeedReset = false;
+
             var lastInstrument = (Instrument)null;
             var lastEventTick = 0;
             var lastActiveNote = -1;
-            var channel = song.Channels[channelIdx];
             
             // Loop through all the patterns.
-            for (int i = 0; i < song.Length; i++)
+            for (int p = 0; p < song.Length; p++)
             {
-                var pattern = channel.PatternInstances[i];
+                var pattern = channel.PatternInstances[p];
 
-                var patternLength     = song.GetPatternLength(i);
-                var patternBeatLength = song.GetPatternBeatLength(i);
+                var patternLength     = song.GetPatternLength(p);
+                var patternBeatLength = song.GetPatternBeatLength(p);
 
                 if (pattern != null)
                 {
-                    foreach (var kv in pattern.Notes)
+                    for (var it = pattern.GetNoteIterator(0, patternLength); !it.Done; it.Next())
                     {
-                        var note = kv.Value;
+                        var time = it.CurrentTime;
+                        var note = it.CurrentNote;
+
+                        var noteIdxFloat = time / (float)patternBeatLength;
+
+                        tick = patternInfos[p].tick + (int)Math.Round(noteIdxFloat * TicksPerQuarterNote);
+
+                        if (slideNumFrames > 0)
+                        {
+                            slidePitch += slideStep;
+                            slideNumFrames--;
+
+                            WriteVarLen(tick - lastEventTick);
+                            WritePitchWheelEvent(channelIdx, slidePitch);
+                            lastEventTick = tick;
+
+                            if (slideNumFrames == 0)
+                                slideNeedReset = true;
+                        }
 
                         if (note == null)
                             continue;
 
+                        if (note.HasVolume && volumeAsVelocity)
+                            volume = (int)Math.Round((note.Volume / 15.0) * 127.0);
+
                         if (!note.IsMusical && !note.IsStop)
                             continue;
-
-                        var noteIdxFloat = kv.Key / (float)patternBeatLength;
-
-                        tick = patternInfos[i].tick + (int)Math.Round(noteIdxFloat * TicksPerQuarterNote);
 
                         // Turn off any previous note.
                         if (lastActiveNote >= 0)
                         {
                             WriteVarLen(tick - lastEventTick);
-                            WriteNoteEvent(false, channelIdx, lastActiveNote, 127); // MIDITODO : Velocity.
+                            WriteNoteEvent(false, channelIdx, lastActiveNote, 127);
                             lastEventTick = tick;
                             lastActiveNote = -1;
                         }
                         
                         if (note.IsMusical)
                         {
+                            if (slideNeedReset)
+                            {
+                                WriteVarLen(tick - lastEventTick);
+                                WritePitchWheelEvent(channelIdx, 8192);
+                                lastEventTick = tick;
+                                slideNeedReset = false;
+                            }
+
                             // Instrument change => program change.
                             if (note.Instrument != null &&
                                 note.Instrument != lastInstrument)
@@ -1284,13 +1346,33 @@ namespace FamiStudio
                                 lastInstrument = note.Instrument;
                             }
 
+                            if (note.IsSlideNote && slideToPitchWheel)
+                            {
+                                var slideDuration = channel.GetSlideNoteDuration(note, p, time);
+                                var semitones = note.SlideNoteTarget - note.Value;
+
+                                if (semitones < 0 && semitones < -pitchWheelRange)
+                                    semitones = -pitchWheelRange;
+                                else if (semitones > 0 && semitones > pitchWheelRange)
+                                    semitones = pitchWheelRange;
+
+                                var stepStepFloat = semitones / (float)pitchWheelRange / slideDuration;
+
+                                slideStep = Utils.Clamp((int)Math.Round(stepStepFloat * 8192), -8192, 8191);
+                                slidePitch = 8192 + slideStep;
+                                slideNumFrames = slideDuration - 1;
+
+                                WriteVarLen(tick - lastEventTick);
+                                WritePitchWheelEvent(channelIdx, slidePitch);
+                                lastEventTick = tick;
+                            }
+
                             // Write note.
                             WriteVarLen(tick - lastEventTick);
-                            WriteNoteEvent(note.IsMusical, channelIdx, note.Value + 11, 127); // MIDITODO : Velocity.
+                            WriteNoteEvent(note.IsMusical, channelIdx, note.Value + 11, volume);
+                            lastEventTick = tick;
                             lastActiveNote = note.Value + 11;
                         }
-
-                        lastEventTick = tick;
                     }
                 }
             }
@@ -1301,7 +1383,7 @@ namespace FamiStudio
             if (lastActiveNote >= 0)
             {
                 WriteVarLen(tick - lastEventTick);
-                WriteNoteEvent(false, channelIdx, lastActiveNote, 127); // MIDITODO : Velocity.
+                WriteNoteEvent(false, channelIdx, lastActiveNote, 127);
                 lastEventTick = tick;
                 lastActiveNote = -1;
             }
@@ -1314,7 +1396,7 @@ namespace FamiStudio
         }
 
         // MIDITODO : PAL.
-        public void Save(Project originalProject, string filename, int songId)
+        public void Save(Project originalProject, string filename, int songId, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
         {
             // MIDITODO : FamiStudio tempo only for now.
             Debug.Assert(originalProject.UsesFamiStudioTempo);
@@ -1327,7 +1409,7 @@ namespace FamiStudio
             WriteControlTrack(out var patternInfos);
 
             for (int i = 0; i < song.Channels.Length; i++)
-                WriteChannelTrack(i, patternInfos);
+                WriteChannelTrack(i, patternInfos, volumeAsVelocity, slideToPitchWheel, pitchWheelRange);
 
             File.WriteAllBytes(filename, bytes.ToArray());
         }

@@ -1,3 +1,7 @@
+- *** BUG RETINA???
+- *** FTM VRC6???
+
+
 FamiStudio Tempo 2.0
 ====================
 - Finish UI, test a lot! 
@@ -17,11 +21,13 @@ FamiStudio 3.0.0
 		- Can yout have more than 1 song in a mid file?
 		- Measures per patterns.
 		- MIDITODOs
+		- Add (VRC6) in table.
 	- Export
-		- Map velocity to volume
-		- Slide note = pitch bend?
-		- Should be pretty simple, just export to seperate channnels, instruments 0...N.
-	- FamiStudio / FamiTracker tempo modes?
+		x Select 1 song
+		x Map velocity to volume
+		x Slide note = pitch bend?
+		- Instrument mapping. ?
+	- Add messgae for FamiTracker tempo.
 - Note refactor: 
 	- Remove fractional snapping. Too awkward.
 	- When deleting a note, dont delete certain effects.

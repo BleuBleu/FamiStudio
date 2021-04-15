@@ -191,6 +191,10 @@ namespace FamiStudio
                     page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
                     break;
                 case ExportFormat.Midi:
+                    page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                    page.AddCheckBox("Use volume as velocity :", true); // 1
+                    page.AddCheckBox("Use pitch wheel for slide notes :", true); // 2
+                    page.AddIntegerRange("Pitch wheel range :", 24, 1, 24); // 3
                     break;
                 case ExportFormat.Text:
                     page.AddCheckBoxList(null, songNames, null); // 0
@@ -443,7 +447,11 @@ namespace FamiStudio
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
-                new MidiFileWriter().Save(project, filename, project.Songs[0].Id); // MIDITODO : Song id selection.
+                var songName = props.GetPropertyValue<string>(0);
+                var velocity = props.GetPropertyValue<bool>(1);
+                var slideNotes = props.GetPropertyValue<bool>(2);
+                var pitchRange = props.GetPropertyValue<int>(3);
+                new MidiFileWriter().Save(project, filename, project.GetSong(songName).Id, velocity, slideNotes, pitchRange); 
                 lastExportFilename = filename;
             }
         }
