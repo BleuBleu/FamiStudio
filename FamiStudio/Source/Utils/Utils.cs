@@ -62,6 +62,20 @@ namespace FamiStudio
             return result;
         }
 
+        public static int Log2Int(int x)
+        {
+            if (x == 0)
+                return int.MinValue;
+
+            int bits = 0;
+            while (x > 0)
+            {
+                bits++;
+                x >>= 1;
+            }
+            return bits - 1;
+        }
+
         public static int RoundDownAndClamp(int x, int factor, int min)
         {
             return Math.Max((x & ~(factor- 1)), min);

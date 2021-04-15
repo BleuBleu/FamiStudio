@@ -523,6 +523,8 @@ namespace FamiStudio
             {
                 var ctrl = bytes[idx++];
                 var val  = bytes[idx++];
+
+                Debug.WriteLine($"Control change {ctrl} = {val}");
             }
 
             // Program change
@@ -603,10 +605,11 @@ namespace FamiStudio
                 }
             }
 
-            timeSignatureEvents.Sort((s1, s2) => s1.tick.CompareTo(s2.tick));
-            tempoEvents.Sort((t1, t2) => t1.tick.CompareTo(t2.tick));
-            programChangeEvents.Sort((p1, p2) => p1.tick.CompareTo(p2.tick));
-            noteEvents.Sort((n1, n2) => n1.tick.CompareTo(n2.tick));
+            textEvents.Sort((e1, e2) => e1.tick.CompareTo(e2.tick));
+            timeSignatureEvents.Sort((e1, e2) => e1.tick.CompareTo(e2.tick));
+            tempoEvents.Sort((e1, e2) => e1.tick.CompareTo(e2.tick));
+            programChangeEvents.Sort((e1, e2) => e1.tick.CompareTo(e2.tick));
+            noteEvents.Sort((e1, e2) => e1.tick.CompareTo(e2.tick));
 
             numTracks = track;
 
@@ -997,6 +1000,14 @@ namespace FamiStudio
         private Song song;
         private List<byte> bytes = new List<byte>();
         private byte[] tmp = new byte[4];
+        private int songDuration;
+
+        private class MidiPatternInfo
+        {
+            public int tick;
+            public int numer;
+            public int denom;
+        };
 
         private const int TicksPerQuarterNote = 480;
 
@@ -1061,6 +1072,11 @@ namespace FamiStudio
             bytes.Add(b[0]);
         }
 
+        private void WriteDeltaTime(int ticks)
+        {
+            WriteVarLen(ticks);
+        }
+
         private void WriteTextEvent(int type, string text)
         {
             bytes.Add(0xff);
@@ -1070,25 +1086,25 @@ namespace FamiStudio
             bytes.AddRange(b);
         }
 
-        private void WriteTimeSignatureEvent(int patternLength, int beatLength, int[] groove)
+        private void WriteTimeSignatureEvent(int numer, int denom)
         {
             // Write time signature
             bytes.Add(0xff);
             bytes.Add(0x58);
             bytes.Add(0x04);
-            bytes.Add(0x04); // numer
-            bytes.Add(0x02); // denom (1 ^ -x)
-            bytes.Add(0x18); // WTF?
-            bytes.Add(0x08); // WTF?
+            bytes.Add((byte)numer); // numer
+            bytes.Add((byte)Utils.Log2Int(denom)); // denom.
+            bytes.Add(0x18); // MIDITODO : What is this.
+            bytes.Add(0x08); // MIDITODO : What is this.
         }
 
-        private void WriteTempoEvent()
+        private void WriteTempoEvent(float bpm)
         {
             // Write tempo.
             bytes.Add(0xff);
             bytes.Add(0x51);
             bytes.Add(0x03);
-            WriteInt24(500000);
+            WriteInt24((int)Math.Round(60000000.0 / bpm));
         }
 
         private void WriteTrackEndEvent()
@@ -1098,18 +1114,52 @@ namespace FamiStudio
             bytes.Add(0x00);
         }
 
-        private bool WriteHeaderChunk()
+        private void WriteNoteEvent(bool on, int channel, int note, int vel)
+        {
+            var status = on ? 0b10010000 : 0b10000000;
+            status |= channel;
+
+            bytes.Add((byte)status);
+            bytes.Add((byte)note);
+            bytes.Add((byte)vel);
+        }
+
+        private void WriteProgramChangeEvent(int channel, int prg)
+        {
+            var status = 0b11000000 | channel;
+
+            bytes.Add((byte)status);
+            bytes.Add((byte)prg);
+        }
+
+        private void WriteHeaderChunk()
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MThd"));
             WriteInt32(6);
             WriteInt16(1);
             WriteInt16((short)(song.Channels.Length + 1));
             WriteInt16(TicksPerQuarterNote);
-
-            return true;
         }
 
-        private void WriteControlTrack()
+        private void WriteTimeSignatureAndTempo(int[] groove, int patternLength, int notesPerBeat, int noteLength)
+        {
+            var factor = 1;
+            while (((patternLength * factor) % notesPerBeat) != 0)
+                factor *= 2;
+
+            var numer = patternLength * factor / notesPerBeat;
+            var denom = 4 * factor;
+
+            WriteTimeSignatureEvent(numer, denom);
+
+            // MIDITODO : PAL here.
+            var bpm = FamiStudioTempoUtils.ComputeBpmForGroove(false, groove, notesPerBeat / noteLength);
+
+            WriteDeltaTime(0);
+            WriteTempoEvent(bpm);
+        }
+
+        private void WriteControlTrack(out List<MidiPatternInfo> patternInfos)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MTrk"));
 
@@ -1117,20 +1167,61 @@ namespace FamiStudio
             var chunckStartIdx = bytes.Count;
             WriteInt32(0);
 
-            WriteVarLen(0);
+            // Name
+            WriteDeltaTime(0);
             WriteTextEvent(3, "Control Track");
-            WriteVarLen(0);
-            WriteTimeSignatureEvent(song.PatternLength, song.BeatLength, song.Groove);
-            WriteVarLen(0);
-            WriteTempoEvent();
-            WriteVarLen(480*4);
+
+            // Default tempo / time signature.
+            if (!song.PatternHasCustomSettings(0))
+            {
+                WriteDeltaTime(0);
+                WriteTimeSignatureAndTempo(song.Groove, song.PatternLength, song.BeatLength, song.NoteLength);
+            }
+
+            patternInfos = new List<MidiPatternInfo>();
+
+            var lastEventTick     = 0;
+            var lastGroove        = song.Groove;
+            var lastPatternLength = song.PatternLength;
+            var lastBeatLength    = song.BeatLength;
+
+            var tick = 0;
+
+            // All custom patterns tempo changes.
+            for (int i = 0; i < song.Length; i++)
+            {
+                var patternGroove     = song.GetPatternGroove(i);
+                var patternLength     = song.GetPatternLength(i);
+                var patternBeatLength = song.GetPatternBeatLength(i);
+                var patternNoteLength = song.GetPatternNoteLength(i);
+
+                if (Utils.CompareArrays(patternGroove, lastGroove) != 0 || patternLength != lastPatternLength || patternBeatLength != lastBeatLength)
+                {
+                    WriteDeltaTime(tick - lastEventTick);
+                    WriteTimeSignatureAndTempo(patternGroove, patternLength, patternBeatLength, patternNoteLength);
+
+                    lastEventTick     = tick;
+                    lastGroove        = patternGroove;
+                    lastPatternLength = patternLength;
+                    lastBeatLength    = patternBeatLength;
+                }
+
+                patternInfos.Add(new MidiPatternInfo() { tick = tick });
+
+                tick += TicksPerQuarterNote * patternLength / patternBeatLength;
+            }
+
+            songDuration = tick;
+
+            // End of track
+            WriteVarLen(songDuration - lastEventTick);
             WriteTrackEndEvent();
 
             // Patch size.
             SetInt32(bytes.Count - chunckStartIdx - 4, chunckStartIdx);
         }
 
-        private void WriteChannelTrack(int channelIdx)
+        private void WriteChannelTrack(int channelIdx, List<MidiPatternInfo> patternInfos)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MTrk"));
 
@@ -1140,7 +1231,82 @@ namespace FamiStudio
 
             WriteVarLen(0);
             WriteTextEvent(3, song.Channels[channelIdx].Name);
-            WriteVarLen(480 * 4);
+
+            var tick = 0;
+            var lastInstrument = (Instrument)null;
+            var lastEventTick = 0;
+            var lastActiveNote = -1;
+            var channel = song.Channels[channelIdx];
+            
+            // Loop through all the patterns.
+            for (int i = 0; i < song.Length; i++)
+            {
+                var pattern = channel.PatternInstances[i];
+
+                var patternLength     = song.GetPatternLength(i);
+                var patternBeatLength = song.GetPatternBeatLength(i);
+
+                if (pattern != null)
+                {
+                    foreach (var kv in pattern.Notes)
+                    {
+                        var note = kv.Value;
+
+                        if (note == null)
+                            continue;
+
+                        if (!note.IsMusical && !note.IsStop)
+                            continue;
+
+                        var noteIdxFloat = kv.Key / (float)patternBeatLength;
+
+                        tick = patternInfos[i].tick + (int)Math.Round(noteIdxFloat * TicksPerQuarterNote);
+
+                        // Turn off any previous note.
+                        if (lastActiveNote >= 0)
+                        {
+                            WriteVarLen(tick - lastEventTick);
+                            WriteNoteEvent(false, channelIdx, lastActiveNote, 127); // MIDITODO : Velocity.
+                            lastEventTick = tick;
+                            lastActiveNote = -1;
+                        }
+                        
+                        if (note.IsMusical)
+                        {
+                            // Instrument change => program change.
+                            if (note.Instrument != null &&
+                                note.Instrument != lastInstrument)
+                            {
+                                WriteVarLen(tick - lastEventTick);
+                                WriteProgramChangeEvent(channelIdx, project.Instruments.IndexOf(note.Instrument));
+
+                                lastEventTick = tick;
+                                lastInstrument = note.Instrument;
+                            }
+
+                            // Write note.
+                            WriteVarLen(tick - lastEventTick);
+                            WriteNoteEvent(note.IsMusical, channelIdx, note.Value + 11, 127); // MIDITODO : Velocity.
+                            lastActiveNote = note.Value + 11;
+                        }
+
+                        lastEventTick = tick;
+                    }
+                }
+            }
+
+            tick = songDuration;
+
+            // Turn off last note.
+            if (lastActiveNote >= 0)
+            {
+                WriteVarLen(tick - lastEventTick);
+                WriteNoteEvent(false, channelIdx, lastActiveNote, 127); // MIDITODO : Velocity.
+                lastEventTick = tick;
+                lastActiveNote = -1;
+            }
+
+            WriteVarLen(tick - lastEventTick);
             WriteTrackEndEvent();
 
             // Patch size.
@@ -1158,10 +1324,10 @@ namespace FamiStudio
             song = project.Songs[0];
 
             WriteHeaderChunk();
-            WriteControlTrack();
+            WriteControlTrack(out var patternInfos);
 
             for (int i = 0; i < song.Channels.Length; i++)
-                WriteChannelTrack(i);
+                WriteChannelTrack(i, patternInfos);
 
             File.WriteAllBytes(filename, bytes.ToArray());
         }
