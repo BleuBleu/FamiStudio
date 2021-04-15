@@ -930,7 +930,7 @@ namespace FamiStudio
                     {
                         if (activeNote > 0)
                         {
-                            Log.LogMessage(LogSeverity.Warning, $"Polyphony detected on channel {evt.channel}, at MIDI tick {evt.tick}.");
+                            Log.LogMessage(LogSeverity.Warning, $"Polyphony detected on channel {evt.channel}, at MIDI tick {evt.tick} ({Note.GetFriendlyName(activeNote)} -> {Note.GetFriendlyName(evt.note)}).");
 
                             if (polyphony == MidiPolyphonyBehavior.KeepOldNote)
                                 continue;
