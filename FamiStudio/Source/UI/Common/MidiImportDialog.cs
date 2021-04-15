@@ -29,7 +29,7 @@ namespace FamiStudio
                 dialog = new PropertyDialog(500);
                 dialog.Properties.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
                 dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 1
-                dialog.Properties.AddIntegerRange("Measures per pattern:", 1, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature happens."); // 2
+                dialog.Properties.AddIntegerRange("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature happens."); // 2
                 dialog.Properties.AddCheckBox("Use velocity as volume:", true); // 3
                 dialog.Properties.AddCheckBox("Create PAL project:", false); // 4
                 dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 5

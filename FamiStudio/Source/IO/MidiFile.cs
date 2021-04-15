@@ -753,7 +753,7 @@ namespace FamiStudio
             var tempoCounts = new Dictionary<Tuple<int, int, int>, int>();
             var individualPatternInfos = new List<MidiPatternInfo>();
 
-            while (time < songDuration && patternIdx != 256)
+            while (time < songDuration)
             {
                 var ratio = (4.0 / denom);
 
@@ -842,22 +842,24 @@ namespace FamiStudio
                     cnt++;
                 }
 
+                patternIdx = patternInfos.Count;
+
                 patternInfo.measureCount = cnt;
                 patternInfos.Add(patternInfo);
 
                 var ratio = (4.0 / patternInfo.denom);
 
                 // Create actual custom pattern settings.
-                if (numer != defaultNumer ||
-                    denom != defaultDenom ||
-                    tempo != defaultTempo ||
+                if (patternInfo.numer != defaultNumer ||
+                    patternInfo.denom != defaultDenom ||
+                    patternInfo.tempo != defaultTempo ||
                     patternInfo.measureCount != measuresPerPattern)
                 {
-                    var patternBpm = MicroSecondsToBPM(tempo);
+                    var patternBpm = MicroSecondsToBPM(patternInfo.tempo);
                     var patternTempo = GetClosestMatchingTempo(patternBpm, 4);
                     var noteLength = Utils.Min(patternTempo.groove);
 
-                    song.SetPatternCustomSettings(p, (int)Math.Round(noteLength * 4 * numer * ratio * patternInfo.measureCount), noteLength * 4, patternTempo.groove);
+                    song.SetPatternCustomSettings(patternIdx, (int)Math.Round(noteLength * 4 * patternInfo.numer * ratio * patternInfo.measureCount), noteLength * 4, patternTempo.groove);
                 }
 
                 if (patternInfos.Count == 256)
@@ -904,6 +906,7 @@ namespace FamiStudio
 
         private void CreateNotes(List<MidiPatternInfo> patternInfos, int channelIdx, MidiSource source, bool velocityAsVolume, int polyphony)
         {
+            var channel = song.Channels[channelIdx];
             var channelInstruments = new int[16];
             var prgChangeIndex = 0;
             var prevVolume = (byte)15;
@@ -925,9 +928,12 @@ namespace FamiStudio
                 {
                     if (evt.on)
                     {
-                        if (activeNote > 0 && polyphony == MidiPolyphonyBehavior.KeepOldNote)
+                        if (activeNote > 0)
                         {
-                            continue;
+                            Log.LogMessage(LogSeverity.Warning, $"Polyphony detected on channel {evt.channel}, at MIDI tick {evt.tick}.");
+
+                            if (polyphony == MidiPolyphonyBehavior.KeepOldNote)
+                                continue;
                         }
 
                         activeNote = evt.note;
@@ -954,7 +960,6 @@ namespace FamiStudio
                     }
                     Debug.Assert(patternIdx >= 0);
 
-                    var channel = song.Channels[channelIdx];
                     var pattern = channel.PatternInstances[patternIdx];
                     if (pattern == null)
                     {
@@ -986,7 +991,15 @@ namespace FamiStudio
                         }
                     }
 
-                    pattern.Notes[(int)Math.Round(beatLength * noteIndex)] = note;
+                    //var quantizedNoteIndex = Utils.Clamp((int)Math.Round(beatLength * noteIndex), 0, song.GetPatternLength(patternIdx) - 1);
+                    var quantizedNoteIndex = (int)(beatLength * noteIndex);
+
+                    if (patternIdx == patternInfos.Count - 1 && quantizedNoteIndex >= song.GetPatternLength(patternIdx))
+                        break;
+
+                    Debug.Assert(quantizedNoteIndex <= song.GetPatternLength(patternIdx));
+
+                    pattern.Notes[quantizedNoteIndex] = note;
                 }
             }
         }
@@ -1020,9 +1033,6 @@ namespace FamiStudio
 
         private void Cleanup()
         {
-            project.Cleanup();
-            song.MergeIdenticalPatterns();
-
             // Truncate # of N163 channels.
             if (project.ExpansionAudio == ExpansionType.N163)
             {
@@ -1038,6 +1048,11 @@ namespace FamiStudio
                 else
                     project.SetExpansionAudio(ExpansionType.N163, numN163Channels);
             }
+
+            song.MergeIdenticalPatterns();
+            song.Trim();
+            project.Cleanup();
+            project.Validate();
         }
 
         public Project Load(string filename, int expansion, bool pal, MidiSource[] channelSources, bool velocityAsVolume, int polyphony, int measuresPerPattern)
@@ -1054,7 +1069,8 @@ namespace FamiStudio
                 if (!ReadHeaderChunk())
                     return null;
 
-                ReadAllTracks();
+                if (!ReadAllTracks())
+                    return null;
 
                 CreateProjectAndSong(expansion, pal);
                 CreateInstruments();
