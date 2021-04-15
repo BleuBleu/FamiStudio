@@ -900,6 +900,10 @@ namespace FamiStudio
                     }
                 }
             }
+            else
+            {
+                Log.LogMessage(LogSeverity.Warning, $"Note on MIDI channel {evt.channel}, MIDI tick {evt.tick} is outside of range supported by FamiStudio (C0 to B7). Ignoring.");
+            }
 
             return false;
         }
@@ -930,7 +934,7 @@ namespace FamiStudio
                     {
                         if (activeNote > 0)
                         {
-                            Log.LogMessage(LogSeverity.Warning, $"Polyphony detected on channel {evt.channel}, at MIDI tick {evt.tick} ({Note.GetFriendlyName(activeNote)} -> {Note.GetFriendlyName(evt.note)}).");
+                            Log.LogMessage(LogSeverity.Warning, $"Polyphony detected on MIDI channel {evt.channel}, at MIDI tick {evt.tick} ({Note.GetFriendlyName(activeNote)} -> {Note.GetFriendlyName(evt.note)}).");
 
                             if (polyphony == MidiPolyphonyBehavior.KeepOldNote)
                                 continue;
