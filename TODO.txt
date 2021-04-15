@@ -18,13 +18,15 @@ FamiStudio 3.0.0
 ================
 - MIDI : 
 	- Import, dialog, etc.
-		- Measures per patterns.
+		/ Measures per patterns.
+		- Trim unused patterns at end of song (billie jean).
+		- Tooltips.
 	- Export
 		x Select 1 song
 		x Map velocity to volume
 		x Slide note = pitch bend?
 		- Instrument mapping. ?
-	- Add message for FamiTracker tempo.
+	- Doc.
 - Note refactor: 
 	- Remove fractional snapping. Too awkward.
 	- When deleting a note, dont delete certain effects.

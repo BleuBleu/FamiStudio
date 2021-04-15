@@ -29,10 +29,11 @@ namespace FamiStudio
                 dialog = new PropertyDialog(500);
                 dialog.Properties.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
                 dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 1
-                dialog.Properties.AddCheckBox("Use velocity as volume:", true); // 2
-                dialog.Properties.AddCheckBox("Create PAL project:", false); // 3
-                dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 4
-                dialog.Properties.AddMultiColumnList(new[] { "NES Channel        ", "MIDI Source                          " }, null, MappingListDoubleClicked, null); // 5
+                dialog.Properties.AddIntegerRange("Measures per pattern:", 1, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature happens."); // 2
+                dialog.Properties.AddCheckBox("Use velocity as volume:", true); // 3
+                dialog.Properties.AddCheckBox("Create PAL project:", false); // 4
+                dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 5
+                dialog.Properties.AddMultiColumnList(new[] { "NES Channel        ", "MIDI Source                          " }, null, MappingListDoubleClicked, null); // 6
                 dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
@@ -213,7 +214,7 @@ namespace FamiStudio
                 }
             }
 
-            dialog.Properties.UpdateMultiColumnList(5, gridData);
+            dialog.Properties.UpdateMultiColumnList(6, gridData);
         }
 
         public Project ShowDialog(FamiStudioForm parent)
@@ -222,10 +223,11 @@ namespace FamiStudio
             {
                 var expansion = dialog.Properties.GetSelectedIndex(0);
                 var polyphony = dialog.Properties.GetSelectedIndex(1);
-                var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(2);
-                var pal = expansion != ExpansionType.None ? false : dialog.Properties.GetPropertyValue<bool>(3);
+                var measuresPerPattern = dialog.Properties.GetPropertyValue<int>(2);
+                var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(3);
+                var pal = expansion != ExpansionType.None ? false : dialog.Properties.GetPropertyValue<bool>(4);
 
-                return new MidiFileReader().Load(filename, expansion, pal, channelSources, velocityAsVolume, polyphony);
+                return new MidiFileReader().Load(filename, expansion, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
             }
 
             return null;

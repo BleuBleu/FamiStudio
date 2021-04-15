@@ -16,7 +16,6 @@ namespace FamiStudio
         private Project project;
         private Song song;
 
-        private int tempoMode = TempoType.FamiStudio;
         private int ticksPerQuarterNote = 96;
         private int songDuration;
         private int numTracks;
@@ -262,6 +261,8 @@ namespace FamiStudio
             public int tick;
             public int numer;
             public int denom;
+            public int tempo;
+            public int measureCount;
         };
 
         private List<TextEvent>          textEvents          = new List<TextEvent>();
@@ -725,7 +726,7 @@ namespace FamiStudio
             }
         }
 
-        private void CreatePatterns(out List<MidiPatternInfo> patternInfos)
+        private void CreatePatterns(out List<MidiPatternInfo> patternInfos, int measuresPerPattern)
         {
             Debug.Assert(songDuration >= 0);
 
@@ -743,124 +744,132 @@ namespace FamiStudio
                 tempoEvents.Insert(0, new TempoEvent() { tempo = 500000 });
             }
 
-            patternInfos = new List<MidiPatternInfo>();
+            // First figure out where each measure starts. Look for most common tempo / time signature
+            var time = 0;
+            var patternIdx = 0;
+            var numer = timeSignatureEvents[0].numer;
+            var denom = timeSignatureEvents[0].denom;
+            var tempo = tempoEvents[0].tempo;
+            var tempoCounts = new Dictionary<Tuple<int, int, int>, int>();
+            var individualPatternInfos = new List<MidiPatternInfo>();
 
-            var defaultNumer = timeSignatureEvents[0].numer;
-            var defaultDenom = timeSignatureEvents[0].denom;
-            var defaultTempo = tempoEvents[0].tempo;
-            var tempoCounts  = new Dictionary<Tuple<int, int, int>, int>();
+            while (time < songDuration && patternIdx != 256)
+            {
+                var ratio = (4.0 / denom);
 
-            // Do 2 pass:
-            // - Pass 1 will look for most common tempo / time signature
-            // - Pass 2 will create the patterns.
-            for (int passIdx = 0; passIdx < 2; passIdx++)
-            { 
-                var time = 0;
-                var patternIdx = 0;
-                var numer = timeSignatureEvents[0].numer;
-                var denom = timeSignatureEvents[0].denom;
-                var tempo = tempoEvents[0].tempo;
+                var key = new Tuple<int, int, int>(numer, denom, tempo);
+                if (!tempoCounts.ContainsKey(key))
+                    tempoCounts.Add(key, 0);
+                tempoCounts[key]++;
 
-                while (time < songDuration)
+                individualPatternInfos.Add(new MidiPatternInfo() { tick = time, denom = denom, numer = numer, tempo = tempo, measureCount = 1 });
+
+                var lastTime = time;
+
+                // Advance by one bar.
+                time = (int)(time + ticksPerQuarterNote * numer * ratio);
+                patternIdx++;
+
+                // Look for any tempo change between the last pattern and now.
+                // We will only allow tempo changes on pattern boundaries for now.
+                for (int i = tempoEvents.Count - 1; i >= 0; i--)
                 {
-                    var ratio = (4.0 / denom);
-
-                    if (passIdx == 0)
+                    if (tempoEvents[i].tick > lastTime &&
+                        tempoEvents[i].tick <= time)
                     {
-                        var key = new Tuple<int, int, int>(numer, denom, tempo);
-                        if (!tempoCounts.ContainsKey(key))
-                            tempoCounts.Add(key, 0);
-                        tempoCounts[key]++;
-                    }
-                    else
-                    {
-                        if (numer != defaultNumer ||
-                            denom != defaultDenom ||
-                            tempo != defaultTempo)
-                        {
-                            var patternBpm   = MicroSecondsToBPM(tempo);
-                            var patternTempo = GetClosestMatchingTempo(patternBpm, 4);
-                            var noteLength   = Utils.Min(patternTempo.groove);
-
-                            song.SetPatternCustomSettings(patternIdx, (int)Math.Round(noteLength * 4 * numer * ratio), noteLength * 4, patternTempo.groove);
-                        }
-
-                        var patternInfo = new MidiPatternInfo();
-                        patternInfo.tick  = time;
-                        patternInfo.denom = denom;
-                        patternInfo.numer = numer;
-                        patternInfos.Add(patternInfo);
-                    }
-
-                    var lastTime = time;
-
-                    // Advance by one bar.
-                    time = (int)(time + ticksPerQuarterNote * numer * ratio);
-                    patternIdx++;
-
-                    // Look for any tempo change between the last pattern and now.
-                    // We will only allow tempo changes on pattern boundaries for now.
-                    var tempoChangeIdx = -1;
-                    for (int i = tempoEvents.Count - 1; i >= 0; i--)
-                    {
-                        if (tempoEvents[i].tick > lastTime &&
-                            tempoEvents[i].tick <= time)
-                        {
-                            tempoChangeIdx = i;
-                            break;
-                        }
-                    }
-
-                    if (tempoChangeIdx >= 0)
-                        tempo = tempoEvents[tempoChangeIdx].tempo;
-
-                    // Look for another time signature change.
-                    var timeSignatureIdx = timeSignatureEvents.FindIndex(s => s.tick == time);
-                    if (timeSignatureIdx >= 0)
-                    {
-                        numer = timeSignatureEvents[timeSignatureIdx].numer;
-                        denom = timeSignatureEvents[timeSignatureIdx].denom;
-                    }
-
-                    if (patternIdx == 256)
-                    {
-                        if (passIdx == 1)
-                            Log.LogMessage(LogSeverity.Warning, $"Song is more than 256 measures long, truncating.");
+                        tempo = tempoEvents[i].tempo;
                         break;
                     }
                 }
 
-                if (passIdx == 0)
+                // Look for another time signature change.
+                var timeSignatureIdx = timeSignatureEvents.FindIndex(s => s.tick == time);
+                if (timeSignatureIdx >= 0)
                 {
-                    var maxCount = 0;
-                    foreach (var kv in tempoCounts)
-                        maxCount = Math.Max(kv.Value, maxCount);
-
-                    foreach (var kv in tempoCounts)
-                    {
-                        if (kv.Value == maxCount)
-                        {
-                            defaultNumer = kv.Key.Item1;
-                            defaultDenom = kv.Key.Item2;
-                            defaultTempo = kv.Key.Item3;
-
-                            // Setup default song settings.
-                            var initialBpm = MicroSecondsToBPM(defaultTempo);
-                            var initialTempo = GetClosestMatchingTempo(initialBpm, 4);
-
-                            song.ChangeFamiStudioTempoGroove(initialTempo.groove, false);
-                            song.SetBeatLength(song.NoteLength * 4);
-                            song.SetDefaultPatternLength(song.BeatLength * defaultNumer);
-
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    song.SetLength(patternIdx);
+                    numer = timeSignatureEvents[timeSignatureIdx].numer;
+                    denom = timeSignatureEvents[timeSignatureIdx].denom;
                 }
             }
+
+            // Figure out which tempo/time signature is most common, use that for song default.
+            var maxCount = 0;
+            foreach (var kv in tempoCounts)
+                maxCount = Math.Max(kv.Value, maxCount);
+
+            int defaultNumer = 4;
+            int defaultDenom = 4;
+            int defaultTempo = 500000;
+
+            foreach (var kv in tempoCounts)
+            {
+                if (kv.Value == maxCount)
+                {
+                    defaultNumer = kv.Key.Item1;
+                    defaultDenom = kv.Key.Item2;
+                    defaultTempo = kv.Key.Item3;
+
+                    // Setup default song settings.
+                    var initialBpm = MicroSecondsToBPM(defaultTempo);
+                    var initialTempo = GetClosestMatchingTempo(initialBpm, 4);
+
+                    song.ChangeFamiStudioTempoGroove(initialTempo.groove, false);
+                    song.SetBeatLength(song.NoteLength * 4);
+                    song.SetDefaultPatternLength(song.BeatLength * defaultNumer * measuresPerPattern);
+
+                    break;
+                }
+            }
+
+            // Merge patterns that have same tempo / time signature, up to measuresPerPattern.
+            patternInfos = new List<MidiPatternInfo>();
+
+            for (int p = 0; p < individualPatternInfos.Count;)
+            {
+                var patternInfo = individualPatternInfos[p];
+                var cnt = 1;
+
+                for (int j = p + 1; j < p + measuresPerPattern && j < individualPatternInfos.Count && cnt < measuresPerPattern; j++)
+                {
+                    var nextPatternInfo = individualPatternInfos[j];
+
+                    if (nextPatternInfo.numer != patternInfo.numer ||
+                        nextPatternInfo.denom != patternInfo.denom ||
+                        nextPatternInfo.tempo != patternInfo.tempo)
+                    {
+                        break;
+                    }
+
+                    cnt++;
+                }
+
+                patternInfo.measureCount = cnt;
+                patternInfos.Add(patternInfo);
+
+                var ratio = (4.0 / patternInfo.denom);
+
+                // Create actual custom pattern settings.
+                if (numer != defaultNumer ||
+                    denom != defaultDenom ||
+                    tempo != defaultTempo ||
+                    patternInfo.measureCount != measuresPerPattern)
+                {
+                    var patternBpm = MicroSecondsToBPM(tempo);
+                    var patternTempo = GetClosestMatchingTempo(patternBpm, 4);
+                    var noteLength = Utils.Min(patternTempo.groove);
+
+                    song.SetPatternCustomSettings(p, (int)Math.Round(noteLength * 4 * numer * ratio * patternInfo.measureCount), noteLength * 4, patternTempo.groove);
+                }
+
+                if (patternInfos.Count == 256)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Song is more than 256 measures long, truncating. You could try increasing the 'Measures per pattern' to reduce the number of patterns.");
+                    break;
+                }
+
+                p += cnt;
+            }
+
+            song.SetLength(patternInfos.Count);
         }
 
         private bool FilterNoteEvent(NoteEvent evt, MidiSource source)
@@ -1031,7 +1040,7 @@ namespace FamiStudio
             }
         }
 
-        public Project Load(string filename, int expansion, bool pal, MidiSource[] channelSources, bool velocityAsVolume, int polyphony)
+        public Project Load(string filename, int expansion, bool pal, MidiSource[] channelSources, bool velocityAsVolume, int polyphony, int measuresPerPattern)
         {
 #if !DEBUG
             try
@@ -1049,7 +1058,7 @@ namespace FamiStudio
 
                 CreateProjectAndSong(expansion, pal);
                 CreateInstruments();
-                CreatePatterns(out var patternInfos);
+                CreatePatterns(out var patternInfos, measuresPerPattern);
 
                 for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
                     CreateNotes(patternInfos, channelIdx, channelSources[channelIdx], velocityAsVolume, polyphony);
@@ -1077,14 +1086,6 @@ namespace FamiStudio
         private List<byte> bytes = new List<byte>();
         private byte[] tmp = new byte[4];
         private int songDuration;
-
-        private class MidiPatternInfo
-        {
-            public int tick;
-            public int numer;
-            public int denom;
-        };
-
         private const int TicksPerQuarterNote = 480;
 
         void WriteVarLen(int value)
@@ -1261,7 +1262,7 @@ namespace FamiStudio
             WriteControllerChangeEvent(channel, 0x06, range);
         }
 
-        private void WriteControlTrack(out List<MidiPatternInfo> patternInfos)
+        private void WriteControlTrack(out List<int> patternStartTick)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MTrk"));
 
@@ -1280,7 +1281,7 @@ namespace FamiStudio
                 WriteTimeSignatureAndTempo(song.Groove, song.PatternLength, song.BeatLength, song.NoteLength);
             }
 
-            patternInfos = new List<MidiPatternInfo>();
+            patternStartTick = new List<int>();
 
             var lastEventTick     = 0;
             var lastGroove        = song.Groove;
@@ -1308,7 +1309,7 @@ namespace FamiStudio
                     lastBeatLength    = patternBeatLength;
                 }
 
-                patternInfos.Add(new MidiPatternInfo() { tick = tick });
+                patternStartTick.Add(tick);
 
                 tick += TicksPerQuarterNote * patternLength / patternBeatLength;
             }
@@ -1323,7 +1324,7 @@ namespace FamiStudio
             SetInt32(bytes.Count - chunckStartIdx - 4, chunckStartIdx);
         }
 
-        private void WriteChannelTrack(int channelIdx, List<MidiPatternInfo> patternInfos, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
+        private void WriteChannelTrack(int channelIdx, List<int> patternInfos, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MTrk"));
 
@@ -1367,7 +1368,7 @@ namespace FamiStudio
 
                         var noteIdxFloat = time / (float)patternBeatLength;
 
-                        tick = patternInfos[p].tick + (int)Math.Round(noteIdxFloat * TicksPerQuarterNote);
+                        tick = patternInfos[p] + (int)Math.Round(noteIdxFloat * TicksPerQuarterNote);
 
                         if (slideNumFrames > 0)
                         {
