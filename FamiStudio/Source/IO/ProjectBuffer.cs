@@ -115,10 +115,18 @@ namespace FamiStudio
 
         public void Serialize(ref string str)
         {
-            buffer.AddRange(BitConverter.GetBytes(str.Length));
-            idx += sizeof(int);
-            buffer.AddRange(Encoding.ASCII.GetBytes(str));
-            idx += str.Length;
+            if (string.IsNullOrEmpty(str))
+            {
+                buffer.AddRange(BitConverter.GetBytes(-1));
+                idx += sizeof(int);
+            }
+            else
+            {
+                buffer.AddRange(BitConverter.GetBytes(str.Length));
+                idx += sizeof(int);
+                buffer.AddRange(Encoding.ASCII.GetBytes(str));
+                idx += str.Length;
+            }
         }
 
         public void Serialize(ref byte[] values)
@@ -304,8 +312,16 @@ namespace FamiStudio
         {
             int len = BitConverter.ToInt32(buffer, idx);
             idx += sizeof(int);
-            str = Encoding.ASCII.GetString(buffer, idx, len);
-            idx += len;
+
+            if (len < 0)
+            {
+                str = null;
+            }
+            else
+            {
+                str = Encoding.ASCII.GetString(buffer, idx, len);
+                idx += len;
+            }
         }
 
         public void Serialize(ref byte[] values)

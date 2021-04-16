@@ -117,6 +117,7 @@ namespace FamiStudio
             ProjectExplorer.ArpeggioColorChanged += ProjectExplorer_ArpeggioColorChanged;
             ProjectExplorer.ArpeggioDeleted += ProjectExplorer_ArpeggioDeleted;
             ProjectExplorer.ArpeggioDroppedOutside += ProjectExplorer_ArpeggioDroppedOutside;
+            ProjectExplorer.DPCMSampleReloaded += ProjectExplorer_DPCMSampleReloaded;
             ProjectExplorer.DPCMSampleEdited += ProjectExplorer_DPCMSampleEdited;
             ProjectExplorer.DPCMSampleColorChanged += ProjectExplorer_DPCMSampleColorChanged;
             ProjectExplorer.DPCMSampleDeleted += ProjectExplorer_DPCMSampleDeleted;
@@ -143,6 +144,7 @@ namespace FamiStudio
             }
 #endif
         }
+
 
         public void SetToolTip(string msg, bool red = false)
         {
@@ -1455,6 +1457,14 @@ namespace FamiStudio
         private void ProjectExplorer_ArpeggioEdited(Arpeggio arpeggio)
         {
             PianoRoll.StartEditArpeggio(arpeggio);
+        }
+
+        private void ProjectExplorer_DPCMSampleReloaded(DPCMSample sample)
+        {
+            if (PianoRoll.IsEditingDPCMSample && PianoRoll.CurrentEditSample == sample)
+            {
+                PianoRoll.StartEditDPCMSample(sample);
+            }
         }
 
         private void ProjectExplorer_DPCMSampleEdited(DPCMSample sample)

@@ -14,6 +14,7 @@ namespace FamiStudio
         private Color color;
 
         // Source data
+        private string sourceFilename;
         private IDPCMSampleSourceData sourceData;
 
         // Processed data 
@@ -42,6 +43,7 @@ namespace FamiStudio
         public string Name { get => name; set => name = value; }
         public Color Color { get => color; set => color = value; }
 
+        public string SourceFilename => sourceFilename;
         public bool SourceDataIsWav { get => sourceData is DPCMSampleWavSourceData; }
         public IDPCMSampleSourceData  SourceData { get => sourceData; }
         public DPCMSampleWavSourceData SourceWavData { get => sourceData as DPCMSampleWavSourceData; }
@@ -95,16 +97,18 @@ namespace FamiStudio
             return processedData.Length * 8 / GetPlaybackSampleRate(palPlayback);
         }
 
-        public void SetDmcSourceData(byte[] data)
+        public void SetDmcSourceData(byte[] data, string filename = null)
         {
             sourceData = new DPCMSampleDmcSourceData(data);
+            sourceFilename = filename;
             paddingMode = DPCMPaddingType.Unpadded;
             ResetVolumeEnvelope();
         }
 
-        public void SetWavSourceData(short[] data, int rate)
+        public void SetWavSourceData(short[] data, int rate, string filename = null)
         {
             sourceData = new DPCMSampleWavSourceData(data, rate);
+            sourceFilename = filename;
             paddingMode = DPCMPaddingType.PadTo16Bytes;
             ResetVolumeEnvelope();
         }
@@ -398,6 +402,12 @@ namespace FamiStudio
                 {
                     buffer.Serialize(ref volumeEnvelope[i].sample);
                     buffer.Serialize(ref volumeEnvelope[i].volume);
+                }
+
+                // At version 10 (FamiStudio 3.0.0) we added the filename of the source asset.
+                if (buffer.Version >= 10)
+                {
+                    buffer.Serialize(ref sourceFilename);
                 }
 
                 // The process data will not be stored in the file, it will 

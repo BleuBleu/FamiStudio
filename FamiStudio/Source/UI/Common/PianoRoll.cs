@@ -334,7 +334,8 @@ namespace FamiStudio
         public bool IsEditingDPCMSampleMapping => editMode == EditionMode.DPCMMapping;
 
         public Instrument CurrentInstrument { get => currentInstrument; set => currentInstrument = value; }
-        public Arpeggio CurrentArpeggio { get => currentArpeggio; set => currentArpeggio = value; }
+        public Arpeggio   CurrentArpeggio { get => currentArpeggio; set => currentArpeggio = value; }
+        public DPCMSample CurrentEditSample { get => editSample; }
 
         public delegate void EmptyDelegate();
         public delegate void PatternDelegate(Pattern pattern);

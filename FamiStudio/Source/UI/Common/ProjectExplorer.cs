@@ -104,11 +104,12 @@ namespace FamiStudio
             N163WaveformEnvelope  = EnvelopeType.N163Waveform,
             EnvelopeMax           = EnvelopeType.Count,
 
-            // Other buttons
+            // Other buttons7
             Add,
             DPCM,
             Load,
             Save,
+            Reload,
             EditWave,
             Play,
             Expand,
@@ -235,8 +236,8 @@ namespace FamiStudio
                         }
                         break;
                     case ButtonType.Dpcm:
-                        active = new[] { true, true, true, true };
-                        return new[] { SubButtonType.EditWave, SubButtonType.Save, SubButtonType.Play, SubButtonType.Expand };
+                        active = new[] { true, true, !string.IsNullOrEmpty(sample.SourceFilename), true, true };
+                        return new[] { SubButtonType.EditWave, SubButtonType.Save, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
                 }
 
                 active = null;
@@ -315,6 +316,8 @@ namespace FamiStudio
                         return projectExplorer.bmpDPCM;
                     case SubButtonType.EditWave:
                         return projectExplorer.bmpWaveEdit;
+                    case SubButtonType.Reload:
+                        return projectExplorer.bmpReload;
                     case SubButtonType.Load:
                         return projectExplorer.bmpLoad;
                     case SubButtonType.Overflow:
@@ -386,6 +389,7 @@ namespace FamiStudio
         RenderBitmap   bmpPlay;
         RenderBitmap   bmpSave;
         RenderBitmap   bmpWaveEdit;
+        RenderBitmap   bmpReload;
         RenderBitmap   bmpExpand;
         RenderBitmap   bmpExpanded;
         RenderBitmap   bmpOverflow;
@@ -448,6 +452,7 @@ namespace FamiStudio
         public event ArpeggioDelegate ArpeggioColorChanged;
         public event ArpeggioDelegate ArpeggioDeleted;
         public event ArpeggioPointDelegate ArpeggioDroppedOutside;
+        public event DPCMSampleDelegate DPCMSampleReloaded;
         public event DPCMSampleDelegate DPCMSampleEdited;
         public event DPCMSampleDelegate DPCMSampleColorChanged;
         public event DPCMSampleDelegate DPCMSampleDeleted;
@@ -617,6 +622,7 @@ namespace FamiStudio
             bmpDPCM = g.CreateBitmapFromResource("DPCMBlack");
             bmpLoad = g.CreateBitmapFromResource("InstrumentOpen");
             bmpWaveEdit = g.CreateBitmapFromResource("WaveEdit");
+            bmpReload = g.CreateBitmapFromResource("Reload");
             bmpSave = g.CreateBitmapFromResource("SaveSmall");
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
             disabledBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
@@ -1026,6 +1032,10 @@ namespace FamiStudio
                     else if (subButtonType == SubButtonType.EditWave)
                     {
                         tooltip = "{MouseLeft} Edit waveform";
+                    }
+                    else if (subButtonType == SubButtonType.Reload)
+                    {
+                        tooltip = "{MouseLeft} Reload source data\nOnly possible when data was loaded from a DMC/WAV file";
                     }
                     else if (subButtonType == SubButtonType.Save)
                     {
@@ -1475,7 +1485,7 @@ namespace FamiStudio
                             }
 
                             App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                            App.Project.CreateDPCMSampleFromWavData(sampleName, wavData, sampleRate);
+                            App.Project.CreateDPCMSampleFromWavData(sampleName, wavData, sampleRate, filename);
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
@@ -1488,7 +1498,7 @@ namespace FamiStudio
                             Log.LogMessage(LogSeverity.Warning, $"The maximum supported size for a DMC is {DPCMSample.MaxSampleSize} bytes. Truncating.");
                         }
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                        App.Project.CreateDPCMSampleFromDmcData(sampleName, dmcData);
+                        App.Project.CreateDPCMSampleFromDmcData(sampleName, dmcData, filename);
                         App.UndoRedoManager.EndTransaction();
                     }
 
@@ -1726,6 +1736,42 @@ namespace FamiStudio
                     if (subButtonType == SubButtonType.EditWave)
                     {
                         DPCMSampleEdited?.Invoke(button.sample);
+                    }
+                    else if (subButtonType == SubButtonType.Reload)
+                    {
+                        if (!string.IsNullOrEmpty(button.sample.SourceFilename) && File.Exists(button.sample.SourceFilename))
+                        {
+                            if (button.sample.SourceDataIsWav)
+                            {
+                                var wavData = WaveFile.Load(button.sample.SourceFilename, out var sampleRate);
+                                if (wavData != null)
+                                {
+                                    var maximumSamples = sampleRate * 2;
+                                    if (wavData.Length > maximumSamples)
+                                        Array.Resize(ref wavData, maximumSamples);
+
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                                    button.sample.SetWavSourceData(wavData, sampleRate, button.sample.SourceFilename);
+                                    App.UndoRedoManager.EndTransaction();
+                                }
+                            }
+                            else
+                            {
+                                var dmcData = File.ReadAllBytes(button.sample.SourceFilename);
+                                if (dmcData.Length > DPCMSample.MaxSampleSize)
+                                    Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
+
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                                button.sample.SetDmcSourceData(dmcData, button.sample.SourceFilename);
+                                App.UndoRedoManager.EndTransaction();
+                            }
+
+                            DPCMSampleReloaded?.Invoke(button.sample);
+                        }
+                        else
+                        {
+                            App.DisplayWarning($"Cannot find source file '{button.sample.SourceFilename}'!"); ;
+                        }
                     }
                     else if (subButtonType == SubButtonType.Save)
                     {

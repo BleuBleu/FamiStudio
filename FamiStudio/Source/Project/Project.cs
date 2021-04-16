@@ -170,27 +170,27 @@ namespace FamiStudio
             return sample;
         }
 
-        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
+        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data, string filename = null)
         {
             var sample = CreateDPCMSample(name);
 
             if (sample == null)
                 return null;
 
-            sample.SetDmcSourceData(data);
+            sample.SetDmcSourceData(data, filename);
             sample.Process();
 
             return sample;
         }
 
-        public DPCMSample CreateDPCMSampleFromWavData(string name, short[] data, int sampleRate)
+        public DPCMSample CreateDPCMSampleFromWavData(string name, short[] data, int sampleRate, string filename = null)
         {
             var sample = CreateDPCMSample(name);
 
             if (sample == null)
                 return null;
 
-            sample.SetWavSourceData(data, sampleRate);
+            sample.SetWavSourceData(data, sampleRate, filename);
             sample.Process();
 
             return sample;
