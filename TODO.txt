@@ -17,6 +17,7 @@ FamiStudio Tempo 2.0
 FamiStudio 3.0.0
 ================
 - MIDI : 
+	- MIDITODOs
 	- Doc.
 - Note refactor: 
 	- Remove fractional snapping. Too awkward.
@@ -28,14 +29,6 @@ FamiStudio 3.0.0
 	Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]);
 	editChannel was 5, only 5 channels (0-4)
 - CRASH : Multi pattern color edit (square selection) crashes when there are empty patterns.
-
-===============
-- CUT! : Groove option for FamiTracker too?
-	/ Add option to project (Speed effect, BPM).
-	- Show speed/BPM depending 
-	- Add to player.
-	- When exporting to Famitracker, FT2, bake in DPCM channel
-	- Support milliseconds when using BPM.
 
 =============
 

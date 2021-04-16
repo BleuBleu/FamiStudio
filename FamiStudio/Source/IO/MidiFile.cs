@@ -534,7 +534,7 @@ namespace FamiStudio
                 noteEvent.track = track;
                 noteEvent.note = key - 11;
                 noteEvent.vel = vel;
-                noteEvent.on = statusHiByte == 0b1001;
+                noteEvent.on = statusHiByte == 0b1001 && vel > 0;
                 noteEvents.Add(noteEvent);
             }
 
