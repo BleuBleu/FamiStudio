@@ -777,7 +777,11 @@ namespace FamiStudio
                     if (tempoEvents[i].tick > lastTime &&
                         tempoEvents[i].tick <= time)
                     {
+                        if (tempoEvents[i].tick != time)
+                            Log.LogMessage(LogSeverity.Warning, $"Tempo change from {MicroSecondsToBPM(tempo).ToString("n1")} BPM to {MicroSecondsToBPM(tempoEvents[i].tempo).ToString("n1")} BPM at MIDI tick {tempoEvents[i].tick} is not exactly at the beginning of a measures and will only be applied at the beginning of the next measure.");
+
                         tempo = tempoEvents[i].tempo;
+
                         break;
                     }
                 }
@@ -1438,7 +1442,6 @@ namespace FamiStudio
                             }
 
                             // Instrument change => program change.
-                            
                             if (instrumentMode == MidiExportInstrumentMode.Instrument &&
                                 note.Instrument != null &&
                                 note.Instrument != lastInstrument)
@@ -1509,8 +1512,8 @@ namespace FamiStudio
             }
 
             Debug.Assert(
-                (instrumentMode == MidiExportInstrumentMode.Instrument && instrumentMapping.Length == project.Instruments.Count) ||
-                (instrumentMode == MidiExportInstrumentMode.Channel    && instrumentMapping.Length == project.GetSong(songId).Channels.Length));
+                (instrumentMode == MidiExportInstrumentMode.Instrument && instrumentMapping.Length == originalProject.Instruments.Count) ||
+                (instrumentMode == MidiExportInstrumentMode.Channel && instrumentMapping.Length == originalProject.GetSong(songId).Channels.Length));
 
             project = originalProject.DeepClone();
             project.RemoveAllSongsBut(new int[] { songId }, true);
