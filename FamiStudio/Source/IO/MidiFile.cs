@@ -1344,7 +1344,7 @@ namespace FamiStudio
             SetInt32(bytes.Count - chunckStartIdx - 4, chunckStartIdx);
         }
 
-        private void WriteChannelTrack(int channelIdx, List<int> patternInfos, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
+        private void WriteChannelTrack(int channelIdx, List<int> patternInfos, int instrumentMode, int[] instrumentMapping, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MTrk"));
 
@@ -1357,6 +1357,12 @@ namespace FamiStudio
 
             WriteVarLen(0);
             WritePitchBendRange(channelIdx, pitchWheelRange);
+
+            if (instrumentMode == MidiExportInstrumentMode.Channel)
+            {
+                WriteVarLen(0);
+                WriteProgramChangeEvent(channelIdx, instrumentMapping[channelIdx]);
+            }
 
             var tick = 0;
             var channel = song.Channels[channelIdx];
@@ -1432,11 +1438,13 @@ namespace FamiStudio
                             }
 
                             // Instrument change => program change.
-                            if (note.Instrument != null &&
+                            
+                            if (instrumentMode == MidiExportInstrumentMode.Instrument &&
+                                note.Instrument != null &&
                                 note.Instrument != lastInstrument)
                             {
                                 WriteVarLen(tick - lastEventTick);
-                                WriteProgramChangeEvent(channelIdx, project.Instruments.IndexOf(note.Instrument));
+                                WriteProgramChangeEvent(channelIdx, instrumentMapping[project.Instruments.IndexOf(note.Instrument)]);
 
                                 lastEventTick = tick;
                                 lastInstrument = note.Instrument;
@@ -1492,13 +1500,17 @@ namespace FamiStudio
         }
 
         // MIDITODO : PAL.
-        public void Save(Project originalProject, string filename, int songId, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
+        public void Save(Project originalProject, string filename, int songId, int instrumentMode, int[] instrumentMapping, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
         {
             if (originalProject.UsesFamiTrackerTempo)
             {
                 Log.LogMessage(LogSeverity.Error, "MIDI export is only available for projects using FamiStudio tempo. Aborting.");
                 return;
             }
+
+            Debug.Assert(
+                (instrumentMode == MidiExportInstrumentMode.Instrument && instrumentMapping.Length == project.Instruments.Count) ||
+                (instrumentMode == MidiExportInstrumentMode.Channel    && instrumentMapping.Length == project.GetSong(songId).Channels.Length));
 
             project = originalProject.DeepClone();
             project.RemoveAllSongsBut(new int[] { songId }, true);
@@ -1508,7 +1520,7 @@ namespace FamiStudio
             WriteControlTrack(out var patternInfos);
 
             for (int i = 0; i < song.Channels.Length; i++)
-                WriteChannelTrack(i, patternInfos, volumeAsVelocity, slideToPitchWheel, pitchWheelRange);
+                WriteChannelTrack(i, patternInfos, instrumentMode, instrumentMapping, volumeAsVelocity, slideToPitchWheel, pitchWheelRange);
 
             File.WriteAllBytes(filename, bytes.ToArray());
         }
@@ -1542,6 +1554,23 @@ namespace FamiStudio
         {
             "Favor most recent note",
             "Favor currently playing note"
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
+    }
+
+    public static class MidiExportInstrumentMode
+    {
+        public const int Instrument = 0;
+        public const int Channel    = 1;
+
+        public static readonly string[] Names =
+        {
+            "Instrument",
+            "Channel"
         };
 
         public static int GetValueForName(string str)

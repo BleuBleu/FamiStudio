@@ -808,7 +808,7 @@ namespace FamiStudio
                 });
         }
 
-        public void UpdateMultiColumnList(int idx, string[,] data)
+        public void UpdateMultiColumnList(int idx, string[,] data, string[] columnNames = null)
         {
             var list = properties[idx].control as ListView;
 
@@ -831,6 +831,22 @@ namespace FamiStudio
             while (list.Items.Count > data.GetLength(0)) 
             {
                 list.Items.RemoveAt(data.GetLength(0));
+            }
+
+            if (columnNames != null)
+            {
+                Debug.Assert(list.Columns.Count == columnNames.Length);
+                for (int i = 0; i < list.Columns.Count; i++)
+                {
+                    var header = list.Columns[i] as ColumnHeader;
+                    header.Text  = columnNames[i];
+                }
+            }
+
+            for (int i = 0; i < list.Columns.Count; i++)
+            {
+                var header = list.Columns[i] as ColumnHeader;
+                header.Width = -2;
             }
         }
 

@@ -21,12 +21,7 @@ FamiStudio 3.0.0
 		x Measures per patterns.
 		x Trim unused patterns at end of song (billie jean).
 		- Tooltips.
-		- BUG : mario 64, 2 measures, validation error/
-	- Export
-		x Select 1 song
-		x Map velocity to volume
-		x Slide note = pitch bend?
-		- Instrument mapping. ?
+		- Warning tempo changes.
 	- Doc.
 - Note refactor: 
 	- Remove fractional snapping. Too awkward.
