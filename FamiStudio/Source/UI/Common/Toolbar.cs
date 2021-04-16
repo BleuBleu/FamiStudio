@@ -77,6 +77,7 @@ namespace FamiStudio
             Dimmed
         }
 
+        private delegate void MouseWheelDelegate(int delta);
         private delegate void EmptyDelegate();
         private delegate ButtonStatus ButtonStatusDelegate();
         private delegate RenderBitmap BitmapDelegate();
@@ -93,6 +94,7 @@ namespace FamiStudio
             public ButtonStatusDelegate Enabled;
             public EmptyDelegate Click;
             public EmptyDelegate RightClick;
+            public MouseWheelDelegate MouseWheel;
             public BitmapDelegate GetBitmap;
             public bool IsPointIn(int px, int py, int width)
             {
@@ -124,6 +126,8 @@ namespace FamiStudio
         RenderBitmap bmpLoopSong;
         RenderBitmap bmpLoopPattern;
         RenderBitmap bmpPlay;
+        RenderBitmap bmpPlayHalf;
+        RenderBitmap bmpPlayQuarter;
         RenderBitmap bmpPause;
         RenderBitmap bmpNtsc;
         RenderBitmap bmpPal;
@@ -146,6 +150,8 @@ namespace FamiStudio
             bmpLoopSong    = g.CreateBitmapFromResource("Loop");
             bmpLoopPattern = g.CreateBitmapFromResource("LoopPattern");
             bmpPlay        = g.CreateBitmapFromResource("Play");
+            bmpPlayHalf    = g.CreateBitmapFromResource("PlayHalf");
+            bmpPlayQuarter = g.CreateBitmapFromResource("PlayQuarter");
             bmpPause       = g.CreateBitmapFromResource("Pause");
             bmpNtsc        = g.CreateBitmapFromResource("NTSC");
             bmpPal         = g.CreateBitmapFromResource("PAL");
@@ -165,7 +171,7 @@ namespace FamiStudio
             buttons[ButtonRedo]      = new Button { Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
             buttons[ButtonTransform] = new Button { Bmp = g.CreateBitmapFromResource("Transform"), Click = OnTransform };
             buttons[ButtonConfig]    = new Button { Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
-            buttons[ButtonPlay]      = new Button { Click = OnPlay, GetBitmap = OnPlayGetBitmap };
+            buttons[ButtonPlay]      = new Button { Click = OnPlay, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap };
             buttons[ButtonRec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[ButtonRewind]    = new Button { Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap };
@@ -185,7 +191,7 @@ namespace FamiStudio
             buttons[ButtonRedo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
             buttons[ButtonTransform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
             buttons[ButtonConfig].ToolTip    = "{MouseLeft} Edit Application Settings";
-            buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
+            buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseWheel} Change play rate - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
@@ -280,8 +286,8 @@ namespace FamiStudio
                 return;
 
             // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
-            bool hideLessImportantButtons = Width < 1360 * RenderTheme.MainWindowScaling;
-            bool hideOscilloscope = Width < 1190 * RenderTheme.MainWindowScaling;
+            bool hideLessImportantButtons = Width < 1420 * RenderTheme.MainWindowScaling;
+            bool hideOscilloscope = Width < 1250 * RenderTheme.MainWindowScaling;
 
             var scaling = RenderTheme.MainWindowScaling;
             var posX = DefaultButtonPosX;
@@ -456,9 +462,33 @@ namespace FamiStudio
                 App.PlaySong();
         }
 
+        private void OnPlayMouseWheel(int delta)
+        {
+            int rate = App.PlayRate;
+
+            if (delta < 0)
+                App.PlayRate = Utils.Clamp(rate * 2, 1, 4);
+            else
+                App.PlayRate = Utils.Clamp(rate / 2, 1, 4);
+
+            ConditionalInvalidate();
+        }
+
         private RenderBitmap OnPlayGetBitmap()
         {
-            return App.IsPlaying ? bmpPause : bmpPlay;
+            if (App.IsPlaying)
+            {
+                return bmpPause;
+            }
+            else
+            {
+                switch (App.PlayRate)
+                {
+                    case 2:  return bmpPlayHalf;
+                    case 4:  return bmpPlayQuarter;
+                    default: return bmpPlay;
+                }
+            }
         }
 
         private void OnRewind()
@@ -782,6 +812,20 @@ namespace FamiStudio
             }
 
             SetToolTip("");
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            foreach (var btn in buttons)
+            {
+                if (btn != null && btn.Visible && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled() != ButtonStatus.Disabled))
+                {
+                    btn.MouseWheel?.Invoke(e.Delta);
+                    break;
+                }
+            }
+
+            base.OnMouseWheel(e);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

@@ -390,6 +390,10 @@
     <EmbeddedResource Include="Resources\ExportMIDI.png" />
     <EmbeddedResource Include="Resources\Reload%402x.png" />
     <EmbeddedResource Include="Resources\Reload.png" />
+    <EmbeddedResource Include="Resources\PlayHalf%402x.png" />
+    <EmbeddedResource Include="Resources\PlayHalf.png" />
+    <EmbeddedResource Include="Resources\PlayQuarter%402x.png" />
+    <EmbeddedResource Include="Resources\PlayQuarter.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

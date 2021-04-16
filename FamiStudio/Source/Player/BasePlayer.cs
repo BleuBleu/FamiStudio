@@ -29,6 +29,8 @@ namespace FamiStudio
         protected int loopCount = 0;
         protected int maxLoopCount = -1;
         protected int frameNumber = 0;
+        protected int playbackRate = 1; // 1 = normal, 2 = 1/2, 4 = 1/4, etc.
+        protected int playbackRateCounter = 1;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
         protected Song song;
@@ -78,6 +80,16 @@ namespace FamiStudio
         {
             get { return Math.Max(0, playPosition); }
             set { playPosition = value; }
+        }
+
+        public int PlayRate
+        {
+            get { return playbackRate; }
+            set
+            {
+                Debug.Assert(value == 1 || value == 2 || value == 4);
+                playbackRate = value;
+            }
         }
 
         // Returns the number of frames to run (0, 1 or 2)
@@ -241,10 +253,26 @@ namespace FamiStudio
             return true;
         }
 
+        protected bool PlaybackRateShouldSkipFrame(bool seeking)
+        {
+            if (seeking)
+                return false;
+
+            if (--playbackRateCounter > 0)
+                return true;
+
+            Debug.Assert(playbackRateCounter == 0);
+            playbackRateCounter = playbackRate;
+            return false;
+        }
+
         protected bool PlaySongFrameInternal(bool seeking)
         {
             //Debug.WriteLine($"PlaySongFrameInternal {playPosition}!");
             //Debug.WriteLine($"PlaySongFrameInternal {song.GetPatternStartNote(playPattern) + playNote}!");
+
+            if (PlaybackRateShouldSkipFrame(seeking))
+                return true;
 
             // Increment before for register listeners to get correct frame number.
             frameNumber++;

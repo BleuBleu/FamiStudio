@@ -31,7 +31,6 @@ FamiStudio 3.0.0
 - Note refactor: 
 	- Remove fractional snapping. Too awkward.
 	- When deleting a note, dont delete certain effects.
-- Playback speed (1, 1/2, 1/4 ?)
 - Loop prevention for envelope (brad issue).
 - Low-pass config in settings (change layout of equalizer)
 - BUG : Assert in video file when exporting a single channel (major chord in sq1).
