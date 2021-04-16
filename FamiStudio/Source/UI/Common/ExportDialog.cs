@@ -195,10 +195,10 @@ namespace FamiStudio
                     break;
                 case ExportFormat.Midi:
                     page.AddDropDownList("Song :", songNames, songNames[0]); // 0
-                    page.AddCheckBox("Use volume as velocity :", true); // 1
-                    page.AddCheckBox("Use pitch wheel for slide notes :", true); // 2
+                    page.AddCheckBox("Export volume as velocity :", true); // 1
+                    page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
                     page.AddIntegerRange("Pitch wheel range :", 24, 1, 24); // 3
-                    page.AddDropDownList("Instrument Mode", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
+                    page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
                     page.AddLabel(null, "Double-click on a row to change."); // 5
                     page.AddMultiColumnList(new[] { "", "" }, null, MidiInstrumentDoubleClick, null); // 6
                     page.PropertyChanged += Midi_PropertyChanged;

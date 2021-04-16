@@ -17,11 +17,6 @@ FamiStudio Tempo 2.0
 FamiStudio 3.0.0
 ================
 - MIDI : 
-	- Import, dialog, etc.
-		x Measures per patterns.
-		x Trim unused patterns at end of song (billie jean).
-		- Tooltips.
-		- Warning tempo changes.
 	- Doc.
 - Note refactor: 
 	- Remove fractional snapping. Too awkward.

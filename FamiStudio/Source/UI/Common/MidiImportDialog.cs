@@ -29,12 +29,12 @@ namespace FamiStudio
                 dialog = new PropertyDialog(500);
                 dialog.Properties.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
                 dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 1
-                dialog.Properties.AddIntegerRange("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature happens."); // 2
-                dialog.Properties.AddCheckBox("Use velocity as volume:", true); // 3
+                dialog.Properties.AddIntegerRange("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 2
+                dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 3
                 dialog.Properties.AddCheckBox("Create PAL project:", false); // 4
                 dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 5
                 dialog.Properties.AddMultiColumnList(new[] { "NES Channel", "MIDI Source" }, null, MappingListDoubleClicked, null); // 6
-                dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
+                dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, only blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
 
@@ -67,9 +67,9 @@ namespace FamiStudio
                 UpdateListView();
 
                 bool allowPal = expansion == ExpansionType.None;
-                dialog.Properties.SetPropertyEnabled(3, allowPal);
+                dialog.Properties.SetPropertyEnabled(4, allowPal);
                 if (!allowPal)
-                    dialog.Properties.SetPropertyValue(3, false);
+                    dialog.Properties.SetPropertyValue(4, false);
             }
         }
 
