@@ -1035,7 +1035,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Reload)
                     {
-                        tooltip = "{MouseLeft} Reload source data\nOnly possible when data was loaded from a DMC/WAV file";
+                        tooltip = "{MouseLeft} Reload source data (if available)\nOnly possible when data was loaded from a DMC/WAV file";
                     }
                     else if (subButtonType == SubButtonType.Save)
                     {
@@ -1739,38 +1739,43 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Reload)
                     {
-                        if (!string.IsNullOrEmpty(button.sample.SourceFilename) && File.Exists(button.sample.SourceFilename))
+                        if (!string.IsNullOrEmpty(button.sample.SourceFilename))
                         {
-                            if (button.sample.SourceDataIsWav)
+                            if (File.Exists(button.sample.SourceFilename))
                             {
-                                var wavData = WaveFile.Load(button.sample.SourceFilename, out var sampleRate);
-                                if (wavData != null)
+                                if (button.sample.SourceDataIsWav)
                                 {
-                                    var maximumSamples = sampleRate * 2;
-                                    if (wavData.Length > maximumSamples)
-                                        Array.Resize(ref wavData, maximumSamples);
+                                    var wavData = WaveFile.Load(button.sample.SourceFilename, out var sampleRate);
+                                    if (wavData != null)
+                                    {
+                                        var maximumSamples = sampleRate * 2;
+                                        if (wavData.Length > maximumSamples)
+                                            Array.Resize(ref wavData, maximumSamples);
+
+                                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+                                        button.sample.SetWavSourceData(wavData, sampleRate, button.sample.SourceFilename);
+                                        button.sample.Process();
+                                        App.UndoRedoManager.EndTransaction();
+                                    }
+                                }
+                                else
+                                {
+                                    var dmcData = File.ReadAllBytes(button.sample.SourceFilename);
+                                    if (dmcData.Length > DPCMSample.MaxSampleSize)
+                                        Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
 
                                     App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                                    button.sample.SetWavSourceData(wavData, sampleRate, button.sample.SourceFilename);
+                                    button.sample.SetDmcSourceData(dmcData, button.sample.SourceFilename);
+                                    button.sample.Process();
                                     App.UndoRedoManager.EndTransaction();
                                 }
+
+                                DPCMSampleReloaded?.Invoke(button.sample);
                             }
                             else
                             {
-                                var dmcData = File.ReadAllBytes(button.sample.SourceFilename);
-                                if (dmcData.Length > DPCMSample.MaxSampleSize)
-                                    Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
-
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                                button.sample.SetDmcSourceData(dmcData, button.sample.SourceFilename);
-                                App.UndoRedoManager.EndTransaction();
+                                App.DisplayWarning($"Cannot find source file '{button.sample.SourceFilename}'!"); ;
                             }
-
-                            DPCMSampleReloaded?.Invoke(button.sample);
-                        }
-                        else
-                        {
-                            App.DisplayWarning($"Cannot find source file '{button.sample.SourceFilename}'!"); ;
                         }
                     }
                     else if (subButtonType == SubButtonType.Save)
