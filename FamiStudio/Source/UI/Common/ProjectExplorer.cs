@@ -652,6 +652,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpDPCM);
             Utils.DisposeAndNullify(ref bmpLoad);
             Utils.DisposeAndNullify(ref bmpWaveEdit);
+            Utils.DisposeAndNullify(ref bmpReload);
             Utils.DisposeAndNullify(ref bmpSave);
             Utils.DisposeAndNullify(ref sliderFillBrush);
             Utils.DisposeAndNullify(ref disabledBrush);
