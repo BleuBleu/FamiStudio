@@ -252,6 +252,8 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpLoopSong);
             Utils.DisposeAndNullify(ref bmpLoopPattern);
             Utils.DisposeAndNullify(ref bmpPlay);
+            Utils.DisposeAndNullify(ref bmpPlayHalf);
+            Utils.DisposeAndNullify(ref bmpPlayQuarter);
             Utils.DisposeAndNullify(ref bmpPause);
             Utils.DisposeAndNullify(ref bmpNtsc);
             Utils.DisposeAndNullify(ref bmpPal);
