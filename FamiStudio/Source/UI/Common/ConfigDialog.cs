@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -9,6 +10,7 @@ namespace FamiStudio
     {
         enum ConfigSection
         {
+            General,
             UserInterface,
             Sound,
             Mixer,
@@ -22,6 +24,7 @@ namespace FamiStudio
 
         readonly string[] ConfigSectionNames =
         {
+            "General",
             "Interface",
             "Sound",
             "Mixer",
@@ -91,6 +94,16 @@ namespace FamiStudio
         {
             switch (section)
             {
+                case ConfigSection.General:
+                {
+                    page.AddCheckBox("Check for updates:", Settings.CheckUpdates); // 0
+                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 1
+#if FAMISTUDIO_MACOS
+                    page.PropertyChanged += PageGeneral_PropertyChanged;
+#endif
+                    break;
+                }
+
                 case ConfigSection.UserInterface:
                 {
 #if FAMISTUDIO_WINDOWS || FAMISTUDIO_LINUX
@@ -98,7 +111,7 @@ namespace FamiStudio
 #elif FAMISTUDIO_MACOS
                     var scalingValues = new[] { "System", "100%", "200%" };
 #endif
-                    var scalingIndex = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
+                    var scalingIndex    = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
                     var timeFormatIndex = Settings.TimeFormat < (int)TimeFormat.Max ? Settings.TimeFormat : 0;
                     var followModeIndex = Settings.FollowMode <= 0 ? 0 : Settings.FollowMode % FollowModeStrings.Length;
                     var followSyncIndex = Settings.FollowSync <= 0 ? 0 : Settings.FollowSync % FollowSyncStrings.Length;
@@ -107,20 +120,13 @@ namespace FamiStudio
                     page.AddDropDownList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]); // 1
                     page.AddDropDownList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex]);  // 2
                     page.AddDropDownList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex]); // 3
-                    page.AddCheckBox("Check for updates:", Settings.CheckUpdates); // 4
-                    page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
-                    page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 6
-                    page.AddCheckBox("Show Scroll Bars:", Settings.ShowScrollBars); // 7
-                    page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope); // 8
-                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer); // 9
-                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 10
-
-#if FAMISTUDIO_MACOS
-                    page.PropertyChanged += Page_PropertyChanged;
-#endif
-
-                        break;
-                }
+                    page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 4
+                    page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 5
+                    page.AddCheckBox("Show Scroll Bars:", Settings.ShowScrollBars); // 6
+                    page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope); // 7
+                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer); // 8
+                    break;
+                    }
                 case ConfigSection.Sound:
                 {
                     page.AddIntegerRange("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16); // 0
@@ -297,9 +303,9 @@ namespace FamiStudio
         }
 
 #if FAMISTUDIO_MACOS
-        private void Page_PropertyChanged(PropertyPage props, int idx, object value)
+        private void PageGeneral_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            if (props == pages[(int)ConfigSection.UserInterface] && idx == 7)
+            if (props == pages[(int)ConfigSection.General] && idx == 1)
             {
                 var macOsPage = pages[(int)ConfigSection.MacOS];
                 macOsPage.SetPropertyEnabled(0, (bool)value);
@@ -315,27 +321,27 @@ namespace FamiStudio
 
             if (dialogResult == DialogResult.OK)
             {
-                // UI
+                var pageGeneral = pages[(int)ConfigSection.General];
                 var pageUI = pages[(int)ConfigSection.UserInterface];
                 var pageSound = pages[(int)ConfigSection.Sound];
                 var pageMixer = pages[(int)ConfigSection.Mixer];
 
+                // General
+                Settings.CheckUpdates = pageGeneral.GetPropertyValue<bool>(0);
+                Settings.TrackPadControls = pageGeneral.GetPropertyValue<bool>(1);
+
+                // UI
                 var scalingString = pageUI.GetPropertyValue<string>(0);
-                var timeFormatString = pageUI.GetPropertyValue<string>(1);
-                var followModeString = pageUI.GetPropertyValue<string>(2);
-                var followSyncString = pageUI.GetPropertyValue<string>(3);
 
                 Settings.DpiScaling = scalingString == "System" ? 0 : int.Parse(scalingString.Substring(0, 3));
-                Settings.TimeFormat = Array.IndexOf(TimeFormatStrings, timeFormatString);
-                Settings.FollowMode = Array.IndexOf(FollowModeStrings, followModeString);
-                Settings.FollowSync = Array.IndexOf(FollowSyncStrings, followSyncString);
-                Settings.CheckUpdates = pageUI.GetPropertyValue<bool>(4);
-                Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(5);
-                Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
-                Settings.ShowScrollBars = pageUI.GetPropertyValue<bool>(7);
-                Settings.ShowOscilloscope = pageUI.GetPropertyValue<bool>(8);
-                Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(9);
-                Settings.TrackPadControls = pageUI.GetPropertyValue<bool>(10);
+                Settings.TimeFormat = Array.IndexOf(TimeFormatStrings, pageUI.GetPropertyValue<string>(1));
+                Settings.FollowMode = Array.IndexOf(FollowModeStrings, pageUI.GetPropertyValue<string>(2));
+                Settings.FollowSync = Array.IndexOf(FollowSyncStrings, pageUI.GetPropertyValue<string>(3));
+                Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(4);
+                Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(5);
+                Settings.ShowScrollBars = pageUI.GetPropertyValue<bool>(6);
+                Settings.ShowOscilloscope = pageUI.GetPropertyValue<bool>(7);
+                Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(8);
 
                 // Sound
                 Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);

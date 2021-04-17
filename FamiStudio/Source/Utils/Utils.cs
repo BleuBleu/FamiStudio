@@ -76,6 +76,19 @@ namespace FamiStudio
             return bits - 1;
         }
 
+        public static int ParseIntWithTrailingGarbage(string s)
+        {
+            int idx = 0;
+
+            for (; idx < s.Length; idx++)
+            {
+                if (!char.IsDigit(s[idx]))
+                    break;
+            }
+
+            return int.Parse(s.Substring(0, idx));
+        }
+
         public static int RoundDownAndClamp(int x, int factor, int min)
         {
             return Math.Max((x & ~(factor- 1)), min);

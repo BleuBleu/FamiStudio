@@ -11,7 +11,9 @@ namespace FamiStudio
     static class Settings
     {
         // Version in case we need to do deprecation.
-        public const int SettingsVersion = 1;
+        // Version 0-1 : Any FamiStudio < 3.0.0
+        // Version 2   : FamiStudio 3.0.0
+        public const int SettingsVersion = 2;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -23,19 +25,19 @@ namespace FamiStudio
 
         // General section.
         public static int Version = SettingsVersion;
+        public static bool CheckUpdates = true;
+        public static bool TrackPadControls = false;
+        public static bool ShowTutorial = true;
 
         // User Interface section
         public static int DpiScaling = 0;
         public static int TimeFormat = 0;
-        public static bool CheckUpdates = true;
         public static bool ShowPianoRollViewRange = true;
-        public static bool TrackPadControls = false;
         public static bool ReverseTrackPad = false;
         public static int TrackPadMoveSensitity = 1;
         public static int TrackPadZoomSensitity = 8;
         public static int FollowMode = 0;
         public static int FollowSync = 0;
-        public static bool ShowTutorial = true;
         public static bool ShowNoteLabels = true;
         public static bool ShowScrollBars = false;
         public static bool ShowOscilloscope = false;
@@ -185,19 +187,21 @@ namespace FamiStudio
 
             Version = ini.GetInt("General", "Version", 0);
 
+            // General
+            CheckUpdates     = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
+            TrackPadControls = ini.GetBool(Version < 2 ? "UI" : "General", "TrackPadControls", false); // At version 2 (FamiStudio 3.0.0, changed section)
+            ShowTutorial     = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
+
             // UI
-            ShowTutorial = ini.GetBool("UI", "ShowTutorial", true);
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
             TimeFormat = ini.GetInt("UI", "TimeFormat", 0);
             FollowMode = ini.GetInt("UI", "FollowMode", FollowModeContinuous);
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
-            CheckUpdates = ini.GetBool("UI", "CheckUpdates", true);
             ShowNoteLabels = ini.GetBool("UI", "ShowNoteLabels", true);
             ShowScrollBars = ini.GetBool("UI", "ShowScrollBars", false);
             ShowOscilloscope = ini.GetBool("UI", "ShowOscilloscope", true);
             ForceCompactSequencer = ini.GetBool("UI", "ForceCompactSequencer", false);
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
-            TrackPadControls = ini.GetBool("UI", "TrackPadControls", false);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
             TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
             TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
@@ -303,21 +307,22 @@ namespace FamiStudio
         {
             var ini = new IniFile();
 
+            // General
             ini.SetInt("General", "Version", SettingsVersion);
+            ini.SetBool("General", "CheckUpdates", CheckUpdates);
+            ini.SetBool("General", "TrackPadControls", TrackPadControls);
+            ini.SetBool("General", "ShowTutorial", ShowTutorial);
 
             // UI
-            ini.SetBool("UI", "ShowTutorial", ShowTutorial);
             ini.SetInt("UI", "DpiScaling", DpiScaling);
             ini.SetInt("UI", "TimeFormat", TimeFormat);
             ini.SetInt("UI", "FollowMode", FollowMode);
             ini.SetInt("UI", "FollowSync", FollowSync);
-            ini.SetBool("UI", "CheckUpdates", CheckUpdates);
             ini.SetBool("UI", "ShowNoteLabels", ShowNoteLabels);
             ini.SetBool("UI", "ShowScrollBars", ShowScrollBars);
             ini.SetBool("UI", "ShowOscilloscope", ShowOscilloscope);
             ini.SetBool("UI", "ForceCompactSequencer", ForceCompactSequencer);
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
-            ini.SetBool("UI", "TrackPadControls", TrackPadControls);
             ini.SetInt("UI", "TrackPadMoveSensitity", TrackPadMoveSensitity);
             ini.SetInt("UI", "TrackPadZoomSensitity", TrackPadZoomSensitity);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
