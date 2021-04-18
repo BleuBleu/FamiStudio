@@ -61,10 +61,11 @@ void Nes_Apu::enable_nonlinear( double v )
 	dmc.nonlinear = true;
 	square_synth.volume( 1.3 * 0.25751258 / 0.742467605 * 0.25 * v );
 	
-	const double tnd = 0.75 / 202 * 0.48;
-	triangle.synth.volume_unit( 3 * tnd );
-	noise.synth.volume_unit( 2 * tnd );
-	dmc.synth.volume_unit( tnd );
+	// TODO : These do not exist in Blip Buffer 4.0, need to see what is the equivalent.
+	//const double tnd = 0.75 / 202 * 0.48;
+	//triangle.synth.volume_unit( 3 * tnd );
+	//noise.synth.volume_unit( 2 * tnd );
+	//dmc.synth.volume_unit( tnd );
 	
 	buffer_cleared();
 }

@@ -168,7 +168,7 @@ long Nes_Nonlinearizer::make_nonlinear( Blip_Buffer& buf, long count )
 		
 		#define ENTRY( s ) (table [((s) >> shift) & entry_mask])
 		
-		BOOST::uint16_t* p = buf.buffer_;
+		Blip_Buffer::buf_t_* p = buf.buffer_;
 		unsigned prev = ENTRY( accum );
 		long accum = this->accum;
 		
