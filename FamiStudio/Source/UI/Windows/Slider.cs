@@ -29,8 +29,21 @@ namespace FamiStudio
 
         public delegate string FormatValueDelegate(Slider slider, double value);
         public event FormatValueDelegate FormatValueEvent;
+        public delegate void ValueChangedDelegate(Slider slider, double value);
+        public event ValueChangedDelegate ValueChangedEvent;
 
-        public double Value => value;
+        public double Value
+        {
+            get
+            {
+                return value;
+            }
+            set
+            {
+                this.value = Math.Round(Utils.Clamp(value, minValue, maxValue), numDecimals);
+                Invalidate();
+            }
+        }
 
         public Slider(double val, double min, double max, double inc, int decimals)
         {
@@ -79,6 +92,8 @@ namespace FamiStudio
                 }
 
                 value = Math.Round(value, numDecimals);
+
+                ValueChangedEvent?.Invoke(this, value);
             }
             else if (e.Button == MouseButtons.Right)
             {
@@ -102,6 +117,7 @@ namespace FamiStudio
                 var ratio = Utils.Clamp((e.X - thumbWidth / 2) / (double)(Width - labelWidth - thumbWidth), 0.0, 1.0);
                 value = Utils.Lerp(minValue, maxValue, ratio);
                 value = Math.Round(value, numDecimals);
+                ValueChangedEvent?.Invoke(this, value);
                 Invalidate();
             }
         }

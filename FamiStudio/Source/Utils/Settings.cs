@@ -156,16 +156,33 @@ namespace FamiStudio
         public static bool SquareSmoothVibrato = true;
         public static bool NoDragSoungWhenPlaying = false;
 
-        // Mixer section (in dB).
-        public static float[] ExpansionVolumes = new float[ExpansionType.Count] 
+        // Mixer section
+        public struct ExpansionMix
         {
-            0.0f, // None
-            0.0f, // Vrc6
-            0.0f, // Vrc7
-            0.0f, // Fds
-            0.0f, // Mmc5
-            0.0f, // N163
-            0.0f  // S5B
+            public ExpansionMix(float v, float t, int c)
+            {
+                volume = v;
+                treble = t;
+                cutoff = c;
+            }
+
+            public float volume; // in dB
+            public float treble; // in dB
+            public int   cutoff; // in Hz.
+        }
+
+        // Some of these (-8.87, 8800) were the default values in Nes_Snd_Emu, review eventually.
+        // FamiTracker by default has (-24, 12000) respectively.
+        public static ExpansionMix[] ExpansionMixerSettings        = new ExpansionMix[ExpansionType.Count];
+        public static ExpansionMix[] DefaultExpansionMixerSettings = new ExpansionMix[ExpansionType.Count]
+        {
+            new ExpansionMix(0.0f,  -8.87f, 8800), // None
+            new ExpansionMix(0.0f,  -8.87f, 8800), // Vrc6
+            new ExpansionMix(0.0f, -15.00f, 4000), // Vrc7
+            new ExpansionMix(0.0f, -15.00f, 2000), // Fds
+            new ExpansionMix(0.0f,  -8.87f, 8800), // Mmc5
+            new ExpansionMix(0.0f, -15.00f, 4000), // N163
+            new ExpansionMix(0.0f,  -8.87f, 8800)  // S5B
         };
 
         // MIDI section
@@ -225,13 +242,15 @@ namespace FamiStudio
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
             // Mixer.
-            ExpansionVolumes[ExpansionType.None] = ini.GetFloat("Mixer", "APU",  0.0f);
-            ExpansionVolumes[ExpansionType.Vrc6] = ini.GetFloat("Mixer", "VRC6", 0.0f);
-            ExpansionVolumes[ExpansionType.Vrc7] = ini.GetFloat("Mixer", "VRC7", 0.0f);
-            ExpansionVolumes[ExpansionType.Fds]  = ini.GetFloat("Mixer", "FDS",  0.0f);
-            ExpansionVolumes[ExpansionType.Mmc5] = ini.GetFloat("Mixer", "MMC5", 0.0f);
-            ExpansionVolumes[ExpansionType.N163] = ini.GetFloat("Mixer", "N163", 0.0f);
-            ExpansionVolumes[ExpansionType.S5B]  = ini.GetFloat("Mixer", "S5B",  0.0f);
+            Array.Copy(DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
+
+            for (int i = 0; i < ExpansionType.Count; i++)
+            {
+                var section = "Mixer" + ExpansionType.ShortNames[i];
+                ExpansionMixerSettings[i].volume = ini.GetFloat(section, "Volume", DefaultExpansionMixerSettings[i].volume);
+                ExpansionMixerSettings[i].treble = ini.GetFloat(section, "Treble", DefaultExpansionMixerSettings[i].treble);
+                ExpansionMixerSettings[i].cutoff = ini.GetInt(section, "Cutoff", DefaultExpansionMixerSettings[i].cutoff);
+            }
 
             // QWERTY
             Array.Copy(DefaultQwertyKeys, QwertyKeys, DefaultQwertyKeys.Length);
@@ -334,13 +353,13 @@ namespace FamiStudio
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
 
             // Mixer
-            ini.SetFloat("Mixer", "APU",  ExpansionVolumes[ExpansionType.None]);
-            ini.SetFloat("Mixer", "VRC6", ExpansionVolumes[ExpansionType.Vrc6]);
-            ini.SetFloat("Mixer", "VRC7", ExpansionVolumes[ExpansionType.Vrc7]);
-            ini.SetFloat("Mixer", "FDS",  ExpansionVolumes[ExpansionType.Fds] );
-            ini.SetFloat("Mixer", "MMC5", ExpansionVolumes[ExpansionType.Mmc5]);
-            ini.SetFloat("Mixer", "N163", ExpansionVolumes[ExpansionType.N163]);
-            ini.SetFloat("Mixer", "S5B",  ExpansionVolumes[ExpansionType.S5B]);
+            for (int i = 0; i < ExpansionType.Count; i++)
+            {
+                var section = "Mixer" + ExpansionType.ShortNames[i];
+                ini.SetFloat(section, "Volume", ExpansionMixerSettings[i].volume);
+                ini.SetFloat(section, "Treble", ExpansionMixerSettings[i].treble);
+                ini.SetInt(section, "Cutoff", ExpansionMixerSettings[i].cutoff);
+            }
 
             // MIDI
             ini.SetString("MIDI", "Device", MidiDevice);

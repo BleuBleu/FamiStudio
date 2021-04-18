@@ -697,8 +697,15 @@ namespace FamiStudio
         {
             var slider = new Slider(value, min, max, increment, numDecimals);
             slider.FormatValueEvent += Slider_FormatValueEvent;
+            slider.ValueChangedEvent += Slider_ValueChangedEvent; // MATTT : Linux too!
             slider.Font = font;
             return slider;
+        }
+
+        private void Slider_ValueChangedEvent(Slider slider, double value)
+        {
+            var idx = GetPropertyIndexForControl(slider);
+            PropertyChanged?.Invoke(this, idx, value);
         }
 
         private string Slider_FormatValueEvent(Slider slider, double value)
@@ -966,6 +973,9 @@ namespace FamiStudio
                     break;
                 case PropertyType.ProgressBar:
                     (prop.control as ProgressBar).Value = (int)Math.Round((float)value * 1000);
+                    break;
+                case PropertyType.Slider:
+                    (prop.control as Slider).Value = (double)value;
                     break;
             }
         }

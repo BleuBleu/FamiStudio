@@ -614,17 +614,10 @@ namespace FamiStudio
         public void OpenConfigDialog()
         {
             var dlg = new ConfigDialog();
-            var oldNumBufferedFrames = Settings.NumBufferedAudioFrames;
-            var oldShowOscilloscope  = Settings.ShowOscilloscope;
 
             if (dlg.ShowDialog(mainForm) == DialogResult.OK)
             {
-                if (oldNumBufferedFrames != Settings.NumBufferedAudioFrames ||
-                    oldShowOscilloscope  != Settings.ShowOscilloscope)
-                {
-                    RecreateAudioPlayers();
-                }
-
+                RecreateAudioPlayers();
                 RefreshLayout();
                 InitializeMidi();
                 InvalidateEverything(true);

@@ -339,48 +339,41 @@ namespace FamiStudio
             WriteRegister(apuIdx, APU_PL1_SWEEP,  0x08); // no sweep
             WriteRegister(apuIdx, APU_PL2_SWEEP,  0x08);
 
-            // These were the default values in Nes_Snd_Emu, review eventually.
-            // FamiTracker by default has -24, 12000 respectively.
-            const double treble = -8.87;
-            const int    cutoff =  8800;
+            var apuSettings = Settings.ExpansionMixerSettings[NesApu.APU_EXPANSION_NONE];
+            var expSettings = Settings.ExpansionMixerSettings[expansion];
 
-            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, treble, cutoff, sampleRate);
-            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(Settings.ExpansionVolumes[ExpansionType.None]));
+            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.treble, apuSettings.cutoff, sampleRate);
+            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.volume));
 
             if (expansion != APU_EXPANSION_NONE)
-                SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(Settings.ExpansionVolumes[expansion]));
+            {
+                TrebleEq(apuIdx, expansion, expSettings.treble, expSettings.cutoff, sampleRate);
+                SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.volume));
+            }
 
             switch (expansion)
             {
                 case APU_EXPANSION_VRC6:
                     WriteRegister(apuIdx, VRC6_CTRL, 0x00);  // No halt, no octave change
-                    TrebleEq(apuIdx, expansion, treble, cutoff, sampleRate);
                     break;
                 case APU_EXPANSION_FDS:
-                    // These are taken from FamiTracker. They smooth out the waveform extremely nicely!
-                    //TrebleEq(apuIdx, expansion, -48, 1000, sampleRate);
-                    TrebleEq(apuIdx, expansion, -15, 2000, sampleRate);
                     break;
                 case APU_EXPANSION_MMC5:
                     WriteRegister(apuIdx, MMC5_PL1_VOL, 0x10);
                     WriteRegister(apuIdx, MMC5_PL2_VOL, 0x10);
                     WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
-                    TrebleEq(apuIdx, expansion, treble, cutoff, sampleRate);
                     break;
                 case APU_EXPANSION_VRC7:
                     WriteRegister(apuIdx, VRC7_SILENCE, 0x00); // Enable VRC7 audio.
-                    TrebleEq(apuIdx, expansion, -15, 4000, sampleRate);
                     break;
                 case APU_EXPANSION_NAMCO:
                     // This is mainly because the instrument player might not update all the channels all the time.
                     WriteRegister(apuIdx, N163_ADDR, N163_REG_VOLUME); 
                     WriteRegister(apuIdx, N163_DATA, (numExpansionChannels - 1) << 4);
-                    TrebleEq(apuIdx, expansion, -15, 4000, sampleRate);
                     break;
                 case APU_EXPANSION_SUNSOFT:
                     WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
                     WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
-                    TrebleEq(apuIdx, expansion, treble, cutoff, sampleRate);
                     break;
             }
         }

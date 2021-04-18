@@ -65,6 +65,7 @@ namespace FamiStudio
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
         private int[,] qwertyKeys; // We keep a copy here in case the user cancels.
+        private Settings.ExpansionMix[] expansionMixer = new Settings.ExpansionMix[ExpansionType.Count];
 
         public unsafe ConfigDialog()
         {
@@ -78,9 +79,12 @@ namespace FamiStudio
 
             this.dialog = new MultiPropertyDialog(width, height);
 
-            // Keep a copy.
+            // Keep a copy of QWERTY keys.
             qwertyKeys = new int[37, 2];
             Array.Copy(Settings.QwertyKeys, qwertyKeys, Settings.QwertyKeys.Length);
+
+            // Keep a copy of mixer settings.
+            Array.Copy(Settings.ExpansionMixerSettings, expansionMixer, Settings.ExpansionMixerSettings.Length);
 
             for (int i = 0; i < (int)ConfigSection.Max; i++)
             {
@@ -137,14 +141,14 @@ namespace FamiStudio
                 }
                 case ConfigSection.Mixer:
                 {
-                    page.AddSlider("APU",  Settings.ExpansionVolumes[ExpansionType.None], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 0
-                    page.AddSlider("VRC6", Settings.ExpansionVolumes[ExpansionType.Vrc6], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 1
-                    page.AddSlider("VRC7", Settings.ExpansionVolumes[ExpansionType.Vrc7], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 2
-                    page.AddSlider("FDS",  Settings.ExpansionVolumes[ExpansionType.Fds] , -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 3
-                    page.AddSlider("MMC5", Settings.ExpansionVolumes[ExpansionType.Mmc5], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 4
-                    page.AddSlider("N163", Settings.ExpansionVolumes[ExpansionType.N163], -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 5
-                    page.AddSlider("S5B",  Settings.ExpansionVolumes[ExpansionType.S5B],  -10.0, 10.0f, 0.1f, 1, FormatDecibels); // 6
-                    page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // MATTT : Test this in HIDPI.
+                    // MATTT : Tooltips.
+                    page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
+                    page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, FormatDecibels); // 1
+                    page.AddSlider("Treble :", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -30.0, 0.0, 0.1, 1, FormatDecibels); // 2
+                    page.AddSlider("Treble Cutoff:", Settings.ExpansionMixerSettings[ExpansionType.None].cutoff, 100.0, 20000.0, 100, 0, FormatHz); // 3
+                    page.AddButton(null, "Reset to default", ResetMixerClicked, "Resets this expansion to the default settings.");
+                    page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 4 // MATTT : Test this in HIDPI.
+                    page.PropertyChanged += MixerPage_PropertyChanged;
                     break;
                 }
                 case ConfigSection.MIDI:
@@ -198,6 +202,11 @@ namespace FamiStudio
         private string FormatDecibels(double value)
         {
             return $"{(value >= 0 ? "+" : "")}{value:N1} dB";
+        }
+
+        private string FormatHz(double value)
+        {
+            return $"{value:N0} Hz";
         }
 
         private void ResetQwertyClicked(PropertyPage props, int propertyIndex)
@@ -302,6 +311,46 @@ namespace FamiStudio
             }
         }
 
+        private void RefreshMixerSettings()
+        {
+            var props = pages[(int)ConfigSection.Mixer];
+            var expansion = props.GetSelectedIndex(0);
+
+            props.SetPropertyValue(1, (double)expansionMixer[expansion].volume);
+            props.SetPropertyValue(2, (double)expansionMixer[expansion].treble);
+            props.SetPropertyValue(3, (double)expansionMixer[expansion].cutoff);
+        }
+
+        private void MixerPage_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            var expansion = props.GetSelectedIndex(0);
+
+            if (idx == 0)
+            {
+                RefreshMixerSettings();
+            }
+            else if (idx == 1)
+            {
+                // MATTT : Make sure slider updates on Linux / Mac.
+                expansionMixer[expansion].volume = (float)(double)value;
+            }
+            else if (idx == 2)
+            {
+                expansionMixer[expansion].treble = (float)(double)value;
+            }
+            else if (idx == 3)
+            {
+                expansionMixer[expansion].cutoff = (int)(double)value;
+            }
+        }
+
+        private void ResetMixerClicked(PropertyPage props, int propertyIndex)
+        {
+            var expansion = props.GetSelectedIndex(0);
+            expansionMixer[expansion] = Settings.DefaultExpansionMixerSettings[expansion];
+            RefreshMixerSettings();
+        }
+
 #if FAMISTUDIO_MACOS
         private void PageGeneral_PropertyChanged(PropertyPage props, int idx, object value)
         {
@@ -315,7 +364,7 @@ namespace FamiStudio
         }
 #endif
 
-            public DialogResult ShowDialog(FamiStudioForm parent)
+        public DialogResult ShowDialog(FamiStudioForm parent)
         {
             var dialogResult = dialog.ShowDialog(parent);
 
@@ -350,13 +399,7 @@ namespace FamiStudio
                 Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(3);
 
                 // Mixer.
-                Settings.ExpansionVolumes[ExpansionType.None] = (float)pageMixer.GetPropertyValue<double>(0);
-                Settings.ExpansionVolumes[ExpansionType.Vrc6] = (float)pageMixer.GetPropertyValue<double>(1);
-                Settings.ExpansionVolumes[ExpansionType.Vrc7] = (float)pageMixer.GetPropertyValue<double>(2);
-                Settings.ExpansionVolumes[ExpansionType.Fds]  = (float)pageMixer.GetPropertyValue<double>(3);
-                Settings.ExpansionVolumes[ExpansionType.Mmc5] = (float)pageMixer.GetPropertyValue<double>(4);
-                Settings.ExpansionVolumes[ExpansionType.N163] = (float)pageMixer.GetPropertyValue<double>(5);
-                Settings.ExpansionVolumes[ExpansionType.S5B]  = (float)pageMixer.GetPropertyValue<double>(6);
+                Array.Copy(expansionMixer, Settings.ExpansionMixerSettings, Settings.ExpansionMixerSettings.Length);
 
                 // MIDI
                 var pageMIDI = pages[(int)ConfigSection.MIDI];
