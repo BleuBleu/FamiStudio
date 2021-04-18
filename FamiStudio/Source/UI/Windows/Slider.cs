@@ -53,7 +53,7 @@ namespace FamiStudio
             minValue = min;
             maxValue = max;
             numDecimals = decimals;
-            value = Math.Round(val, numDecimals);
+            value = Math.Round(Utils.Clamp(val, min, max), numDecimals);
             initValue = value;
             increment = inc;
 
