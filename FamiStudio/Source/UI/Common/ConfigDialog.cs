@@ -144,8 +144,7 @@ namespace FamiStudio
                     // MATTT : Tooltips.
                     page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
                     page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, FormatDecibels); // 1
-                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -30.0, 0.0, 0.1, 1, FormatDecibels); // 2
-                    page.AddSlider("Treble Rolloff:", Settings.ExpansionMixerSettings[ExpansionType.None].cutoff, 100.0, 8000.0, 100, 0, FormatHz); // 3
+                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -40.0, 5.0, 0.1, 1, FormatDecibels); // 2
                     page.AddButton(null, "Reset to default", ResetMixerClicked, "Resets this expansion to the default settings.");
                     page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 4 // MATTT : Test this in HIDPI.
                     page.PropertyChanged += MixerPage_PropertyChanged;
@@ -318,7 +317,6 @@ namespace FamiStudio
 
             props.SetPropertyValue(1, (double)expansionMixer[expansion].volume);
             props.SetPropertyValue(2, (double)expansionMixer[expansion].treble);
-            props.SetPropertyValue(3, (double)expansionMixer[expansion].cutoff);
         }
 
         private void MixerPage_PropertyChanged(PropertyPage props, int idx, object value)
@@ -337,10 +335,6 @@ namespace FamiStudio
             else if (idx == 2)
             {
                 expansionMixer[expansion].treble = (float)(double)value;
-            }
-            else if (idx == 3)
-            {
-                expansionMixer[expansion].cutoff = (int)(double)value;
             }
         }
 

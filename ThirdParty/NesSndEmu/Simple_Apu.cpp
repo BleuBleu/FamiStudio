@@ -76,9 +76,9 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 	}
 }
 
-void Simple_Apu::treble_eq(int exp, double treble, int cutoff, int sample_rate)
+void Simple_Apu::treble_eq(int exp, double treble, int sample_rate)
 {
-	blip_eq_t eq(blip_eq_t(treble, cutoff, sample_rate));
+	blip_eq_t eq(treble, 0, sample_rate);
 
 	// TODO: VRC7 + Sunsoft eq.
 	switch (exp)

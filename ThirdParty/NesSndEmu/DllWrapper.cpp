@@ -76,9 +76,9 @@ extern "C" int __stdcall NesApuIsSeeking(int apuIdx)
 	return apu[apuIdx].is_seeking();
 }
 
-extern "C" void __stdcall NesApuTrebleEq(int apuIdx, int expansion, double treble, int cutoff, int sample_rate)
+extern "C" void __stdcall NesApuTrebleEq(int apuIdx, int expansion, double treble, int sample_rate)
 {
-	apu[apuIdx].treble_eq(expansion, treble, cutoff, sample_rate);
+	apu[apuIdx].treble_eq(expansion, treble, sample_rate);
 }
 
 extern "C" int __stdcall NesApuGetAudioExpansion(int apuIdx)

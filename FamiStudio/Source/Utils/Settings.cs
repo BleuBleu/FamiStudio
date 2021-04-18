@@ -159,16 +159,14 @@ namespace FamiStudio
         // Mixer section
         public struct ExpansionMix
         {
-            public ExpansionMix(float v, float t, int c)
+            public ExpansionMix(float v, float t)
             {
                 volume = v;
                 treble = t;
-                cutoff = c;
             }
 
             public float volume; // in dB
             public float treble; // in dB
-            public int   cutoff; // in Hz.
         }
 
         // Some of these (-8.87, 8800) were the default values in Nes_Snd_Emu, review eventually.
@@ -176,13 +174,13 @@ namespace FamiStudio
         public static ExpansionMix[] ExpansionMixerSettings        = new ExpansionMix[ExpansionType.Count];
         public static ExpansionMix[] DefaultExpansionMixerSettings = new ExpansionMix[ExpansionType.Count]
         {
-            new ExpansionMix(0.0f,  -8.87f, 8800), // None
-            new ExpansionMix(0.0f,  -8.87f, 8800), // Vrc6
-            new ExpansionMix(0.0f, -15.00f, 4000), // Vrc7
-            new ExpansionMix(0.0f, -15.00f, 2000), // Fds
-            new ExpansionMix(0.0f,  -8.87f, 8800), // Mmc5
-            new ExpansionMix(0.0f, -15.00f, 4000), // N163
-            new ExpansionMix(0.0f,  -8.87f, 8800)  // S5B
+            new ExpansionMix(0.0f,  -8.0f), // None
+            new ExpansionMix(0.0f,  -8.0f), // Vrc6
+            new ExpansionMix(0.0f, -15.0f), // Vrc7
+            new ExpansionMix(0.0f, -15.0f), // Fds
+            new ExpansionMix(0.0f,  -8.0f), // Mmc5
+            new ExpansionMix(0.0f, -15.0f), // N163
+            new ExpansionMix(0.0f,  -8.0f)  // S5B
         };
 
         // MIDI section
@@ -249,7 +247,6 @@ namespace FamiStudio
                 var section = "Mixer" + ExpansionType.ShortNames[i];
                 ExpansionMixerSettings[i].volume = ini.GetFloat(section, "Volume", DefaultExpansionMixerSettings[i].volume);
                 ExpansionMixerSettings[i].treble = ini.GetFloat(section, "Treble", DefaultExpansionMixerSettings[i].treble);
-                ExpansionMixerSettings[i].cutoff = ini.GetInt(section, "Cutoff", DefaultExpansionMixerSettings[i].cutoff);
             }
 
             // QWERTY
@@ -358,7 +355,6 @@ namespace FamiStudio
                 var section = "Mixer" + ExpansionType.ShortNames[i];
                 ini.SetFloat(section, "Volume", ExpansionMixerSettings[i].volume);
                 ini.SetFloat(section, "Treble", ExpansionMixerSettings[i].treble);
-                ini.SetInt(section, "Cutoff", ExpansionMixerSettings[i].cutoff);
             }
 
             // MIDI

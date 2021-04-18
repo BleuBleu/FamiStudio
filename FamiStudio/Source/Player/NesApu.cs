@@ -40,7 +40,7 @@ namespace FamiStudio
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuIsSeeking")]
         public extern static int IsSeeking(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuTrebleEq")]
-        public extern static void TrebleEq(int apuIdx, int expansion, double treble, int cutoff, int sample_rate);
+        public extern static void TrebleEq(int apuIdx, int expansion, double treble, int sample_rate);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetAudioExpansion")]
         public extern static int GetAudioExpansion(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSetExpansionVolume")]
@@ -342,12 +342,12 @@ namespace FamiStudio
             var apuSettings = Settings.ExpansionMixerSettings[NesApu.APU_EXPANSION_NONE];
             var expSettings = Settings.ExpansionMixerSettings[expansion];
 
-            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.treble, apuSettings.cutoff, sampleRate);
+            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.treble, sampleRate);
             SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.volume));
 
             if (expansion != APU_EXPANSION_NONE)
             {
-                TrebleEq(apuIdx, expansion, expSettings.treble, expSettings.cutoff, sampleRate);
+                TrebleEq(apuIdx, expansion, expSettings.treble, sampleRate);
                 SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.volume));
             }
 

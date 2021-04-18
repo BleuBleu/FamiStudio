@@ -89,7 +89,7 @@ public:
 
 	void enable_channel(int, bool);
 	
-	void treble_eq(int exp, double treble, int cutoff, int sample_rate);
+	void treble_eq(int exp, double treble, int sample_rate);
 	void set_expansion_volume(int expansion, double evolume);
 
 	// Read at most 'count' samples and return number of samples actually read
