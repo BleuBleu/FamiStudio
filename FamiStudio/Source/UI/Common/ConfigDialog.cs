@@ -144,8 +144,8 @@ namespace FamiStudio
                     // MATTT : Tooltips.
                     page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
                     page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, FormatDecibels); // 1
-                    page.AddSlider("Treble :", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -30.0, 0.0, 0.1, 1, FormatDecibels); // 2
-                    page.AddSlider("Treble Cutoff:", Settings.ExpansionMixerSettings[ExpansionType.None].cutoff, 100.0, 10000.0, 100, 0, FormatHz); // 3
+                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -30.0, 0.0, 0.1, 1, FormatDecibels); // 2
+                    page.AddSlider("Treble Rolloff:", Settings.ExpansionMixerSettings[ExpansionType.None].cutoff, 100.0, 8000.0, 100, 0, FormatHz); // 3
                     page.AddButton(null, "Reset to default", ResetMixerClicked, "Resets this expansion to the default settings.");
                     page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 4 // MATTT : Test this in HIDPI.
                     page.PropertyChanged += MixerPage_PropertyChanged;
