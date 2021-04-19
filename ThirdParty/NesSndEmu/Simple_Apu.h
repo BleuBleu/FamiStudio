@@ -13,6 +13,7 @@
 #include "nes_apu/Nes_Mmc5.h"
 #include "nes_apu/Nes_Namco.h"
 #include "nes_apu/Nes_Sunsoft.h"
+#include "nes_apu/Nes_Fme7.h"
 #include "nes_apu/Blip_Buffer.h"
 
 class Simple_Apu {
@@ -117,7 +118,8 @@ private:
 	Nes_Fds fds;
 	Nes_Mmc5 mmc5;
 	Nes_Namco namco;
-	Nes_Sunsoft sunsoft;
+	//Nes_Sunsoft sunsoft; // My version, based on emu2149
+	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
 	Blip_Buffer buf;
 	blip_time_t time;
 	blip_time_t frame_length;

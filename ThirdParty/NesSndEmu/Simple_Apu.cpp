@@ -71,7 +71,7 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 			case expansion_fds: fds.output(enable ? &buf : NULL); break;
 			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
 			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_sunsoft: sunsoft.enable_channel(idx, enable); break;
+			case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
 		}
 	}
 }
@@ -80,7 +80,6 @@ void Simple_Apu::treble_eq(int exp, double treble, int sample_rate)
 {
 	blip_eq_t eq(treble, 0, sample_rate);
 
-	// TODO: VRC7 + Sunsoft eq.
 	switch (exp)
 	{
 		case expansion_none: apu.treble_eq(eq); break;
@@ -125,6 +124,7 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 				case expansion_mmc5: mmc5.write_shadow_register(addr, data); break;
 				case expansion_namco: namco.write_shadow_register(addr, data); break;
 				case expansion_sunsoft: sunsoft.write_shadow_register(addr, data); break;
+
 			}
 		}
 	}
