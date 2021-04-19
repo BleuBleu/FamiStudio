@@ -169,18 +169,16 @@ namespace FamiStudio
             public float treble; // in dB
         }
 
-        // Some of these (-8.87, 8800) were the default values in Nes_Snd_Emu, review eventually.
-        // FamiTracker by default has (-24, 12000) respectively.
         public static ExpansionMix[] ExpansionMixerSettings        = new ExpansionMix[ExpansionType.Count];
         public static ExpansionMix[] DefaultExpansionMixerSettings = new ExpansionMix[ExpansionType.Count]
         {
-            new ExpansionMix(0.0f,  -8.0f), // None
-            new ExpansionMix(0.0f,  -8.0f), // Vrc6
+            new ExpansionMix(0.0f,  -5.0f), // None
+            new ExpansionMix(0.0f,  -5.0f), // Vrc6
             new ExpansionMix(0.0f, -15.0f), // Vrc7
             new ExpansionMix(0.0f, -15.0f), // Fds
-            new ExpansionMix(0.0f,  -8.0f), // Mmc5
+            new ExpansionMix(0.0f,  -5.0f), // Mmc5
             new ExpansionMix(0.0f, -15.0f), // N163
-            new ExpansionMix(0.0f,  -8.0f)  // S5B
+            new ExpansionMix(0.0f,  -5.0f)  // S5B
         };
 
         // MIDI section
