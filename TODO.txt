@@ -19,9 +19,13 @@ Note refactor
 / If good, write code that converts old notes to solid notes.
 / Rendering of solid notes
 - Change the piano roll editing/rendering, see how it feels.
+	- Add a note
+	- Drag
+	- Selection
+	- Selection operations
 - Highlight actions (resize, move, etc.)
 - Multiple resize and other good stuff.
-- If still good, change the player, imports, etc.
+- If still good, change the player, imports/export, etc.
 
 - Solutions
 	1) Solid notes: 

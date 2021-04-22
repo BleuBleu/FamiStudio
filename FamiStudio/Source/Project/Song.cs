@@ -627,6 +627,19 @@ namespace FamiStudio
             //}
         }
 
+        public NoteLocation AbsoluteNoteLocationToNoteLocation(int absoluteNoteIdx)
+        {
+            // TODO: Binary search
+            for (int i = 0; i < songLength; i++)
+            {
+                if (absoluteNoteIdx < patternStartNote[i + 1])
+                    return new NoteLocation(i, absoluteNoteIdx - patternStartNote[i]);
+            }
+
+            return new NoteLocation(songLength, 0);
+        }
+
+        // NOTETODO : Migrate all to AbsoluteNoteLocationToNoteLocation().
         public int FindPatternInstanceIndex(int idx, out int noteIdx)
         {
             noteIdx = -1;
@@ -831,20 +844,26 @@ namespace FamiStudio
             return false;
         }
 
-        public int CountNotesBetween(int p0, int n0, int p1, int n1)
+        public int CountNotesBetween(NoteLocation start, NoteLocation end)
         {
             int noteCount = 0;
 
-            while (p0 != p1)
+            while (start.PatternIndex != end.PatternIndex)
             {
-                noteCount += GetPatternLength(p0) - n0;
-                p0++;
-                n0 = 0;
+                noteCount += GetPatternLength(start.PatternIndex) - start.NoteIndex;
+                start.PatternIndex++;
+                start.NoteIndex = 0;
             }
 
-            noteCount += (n1 - n0);
+            noteCount += (end.NoteIndex - start.NoteIndex);
 
             return noteCount;
+        }
+
+        // NOTETODO : Get rid of that one!!!
+        public int CountNotesBetween(int p0, int n0, int p1, int n1)
+        {
+            return CountNotesBetween(new NoteLocation(p0, n0), new NoteLocation(p1, n1));
         }
 
         public float CountFramesBetween(int p0, int n0, int p1, int n1, int currentSpeed, bool pal)
@@ -1100,6 +1119,88 @@ namespace FamiStudio
             }
         };
 
+    }
+
+    // NOTETODO : Convert as many thing as possible to this!
+    public struct NoteLocation
+    {
+        public int PatternIndex;
+        public int NoteIndex;
+
+        public NoteLocation(int p, int n)
+        {
+            PatternIndex = p;
+            NoteIndex = n;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = (NoteLocation)obj;
+            return PatternIndex == other.PatternIndex && NoteIndex == other.PatternIndex;
+        }
+
+        public override int GetHashCode()
+        {
+            return Utils.HashCombine(PatternIndex, NoteIndex);
+        }
+
+        public static bool operator ==(NoteLocation n0, NoteLocation n1)
+        {
+            return n0.PatternIndex == n1.PatternIndex && n0.NoteIndex == n1.PatternIndex;
+        }
+
+        public static bool operator !=(NoteLocation n0, NoteLocation n1)
+        {
+            return n0.PatternIndex != n1.PatternIndex || n0.NoteIndex != n1.PatternIndex;
+        }
+
+        public static bool operator <(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex < n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex < n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator <=(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex < n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex <= n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator >(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex > n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex > n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator >=(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex > n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex >= n1.NoteIndex;
+            return false;
+        }
+
+        public static NoteLocation Min(NoteLocation n0, NoteLocation n1)
+        {
+            return n0 < n1 ? n0 : n1;
+        }
+
+        public static NoteLocation Max(NoteLocation n0, NoteLocation n1)
+        {
+            return n0 > n1 ? n0 : n1;
+        }
+
+        public static NoteLocation Invalid = new NoteLocation(-1, -1);
     }
 
     public static class GroovePaddingType

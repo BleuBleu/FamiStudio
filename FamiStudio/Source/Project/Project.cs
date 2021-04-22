@@ -1495,7 +1495,7 @@ namespace FamiStudio
             return newProject;
         }
     }
-
+    
     public static class ExpansionType
     {
         public const int None  = 0;

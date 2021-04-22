@@ -545,9 +545,9 @@ namespace FamiStudio
             return null;
         }
 
-        public SparseChannelNoteIterator GetSparseNoteIterator(int p0, int n0, int p1, int n1)
+        public SparseChannelNoteIterator GetSparseNoteIterator(NoteLocation start, NoteLocation end)
         {
-            return new SparseChannelNoteIterator(this, p0, n0, p1, n1);
+            return new SparseChannelNoteIterator(this, start, end);
         }
 
         public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, ushort[] noteTable, bool pal, bool applyShifts, out int pitchDelta, out int stepSize, out float stepSizeFloat)
@@ -869,7 +869,7 @@ namespace FamiStudio
                         if (n0.Release > 0 && n0.Release != release)
                         {
                             Log.LogMessage(LogSeverity.Warning, $"Note {n0.FriendlyName} in song {song}, channel {NameWithExpansion}, pattern {patternInstances[p0].Name} has multiple release points, " +
-                                "the shortest one will be used. This usually happens when a pattern is re-used, but followed by multiple different patterns starting with a release note. Manual correction may be required.");
+                                "the shortest one will be used. This usually happens when a pattern is re-used, but followed by different patterns starting with a release note. Manual correction may be required.");
                         }
 
                         n0.Release = Math.Min(release, n0.Duration);
@@ -887,7 +887,7 @@ namespace FamiStudio
                         if (n0.Duration > 0 && n0.Duration != duration)
                         {
                             Log.LogMessage(LogSeverity.Warning, $"Note {n0.FriendlyName} in song {song}, channel {NameWithExpansion}, pattern {patternInstances[p0].Name} has multiple durations, " +
-                                "the longest one will be used. This usually happens when a pattern is re-used, but followed by multiple different patterns starting with a stop note. Manual correction may be required.");
+                                "the longest one will be used. This usually happens when a pattern is re-used, but followed by different patterns starting with a stop note. Manual correction may be required.");
                         }
 
                         n0.Duration = Math.Max(duration, n0.Duration);
@@ -902,7 +902,7 @@ namespace FamiStudio
                             if (n0.Duration > 0 && n0.Duration != duration)
                             {
                                 Log.LogMessage(LogSeverity.Warning, $"Note {n0.FriendlyName} in song {song}, channel {NameWithExpansion}, pattern {patternInstances[p0].Name} has multiple durations, " +
-                                    "the longest one will be used. This usually happens when a pattern is re-used, but followed by multiple different patterns. Manual correction may be required.");
+                                    "the longest one will be used. This usually happens when a pattern is re-used, but followed by different patterns starting with a different note. Manual correction may be required.");
                             }
 
                             n0.Duration = Math.Max(duration, n0.Duration);
@@ -1205,17 +1205,9 @@ namespace FamiStudio
     // Basically to ease the migration to solid notes at FamiStudio 3.0.0.
     public class SparseChannelNoteIterator
     {
-        // Current note pattern/time
-        private int currPatIdx  = -1;
-        private int currNoteIdx = -1;
-
-        // Next note pattern/time
-        private int nextPatIdx  = -1;
-        private int nextNoteIdx = -1;
-
-        // End pattern/time
-        private int endPatIdx  = -1;
-        private int endNoteIdx = -1;
+        private NoteLocation current; 
+        private NoteLocation next;
+        private NoteLocation end;
 
         private Channel channel;
         private Pattern pattern;
@@ -1223,32 +1215,31 @@ namespace FamiStudio
         private int currIdx;
         private int nextIdx;
 
-        public int PatternIndex => currPatIdx;
-        public int NoteIndex    => currNoteIdx;
+        public int PatternIndex => current.PatternIndex;
+        public int NoteIndex    => current.NoteIndex;
 
         public Pattern Pattern => pattern;
         public Note    Note    => note;
 
-        public int DistanceToNextNote => channel.Song.CountNotesBetween(currPatIdx, currNoteIdx, nextPatIdx, nextNoteIdx);
+        public int DistanceToNextNote => channel.Song.CountNotesBetween(current, next);
 
-        public bool Done => currPatIdx >= endPatIdx && currNoteIdx > endNoteIdx;
+        public bool Done => current >= end;
 
-        public SparseChannelNoteIterator(Channel c, int p0, int t0, int p1, int t1)
+        public SparseChannelNoteIterator(Channel c, NoteLocation start, NoteLocation end)
         {
-            Debug.Assert(p0 < p1 || t0 < t1);
+            Debug.Assert(start < end);
 
             this.channel = c;
-            this.endPatIdx  = p1;
-            this.endNoteIdx = t1;
+            this.end     = end;
 
             // Look forward for a first musical note.
             do
             {
-                pattern = channel.PatternInstances[p0];
+                pattern = channel.PatternInstances[start.PatternIndex];
 
                 if (pattern != null)
                 {
-                    var idx = pattern.BinarySearchList(pattern.Notes.Keys, t0, true);
+                    var idx = pattern.BinarySearchList(pattern.Notes.Keys, start.NoteIndex, true);
 
                     if (idx >= 0)
                     {
@@ -1256,40 +1247,42 @@ namespace FamiStudio
                         {
                             if (pattern.Notes.Values[idx].IsMusical)
                             {
-                                t0 = pattern.Notes.Keys[idx];
-                                SetCurrentNote(p0, t0, idx);
+                                start.NoteIndex = pattern.Notes.Keys[idx];
+                                SetCurrentNote(start, idx);
                                 return;
                             }
                         }
                     }
                 }
 
-                p0++;
-                t0 = 0;
+                start.PatternIndex++;
+                start.NoteIndex = 0;
             }
-            while (pattern == null && p0 < p1);
+            while (pattern == null && start.PatternIndex < end.PatternIndex);
+
+            // Done.
+            current = end;
         }
 
-        private void SetCurrentNote(int patIdx, int noteIdx, int listIdx)
+        private void SetCurrentNote(NoteLocation location, int listIdx)
         {
-            currPatIdx  = patIdx;
-            currNoteIdx = noteIdx;
+            current = location;
 
-            pattern = channel.PatternInstances[currPatIdx];
+            if (Done)
+                return;
+
+            pattern = channel.PatternInstances[current.PatternIndex];
             currIdx = listIdx;
 
             // Must start on a musical note right now.
             Debug.Assert(pattern != null);
-            Debug.Assert(pattern.Notes.ContainsKey(currNoteIdx));
+            Debug.Assert(pattern.Notes.ContainsKey(current.NoteIndex));
 
             note = pattern.Notes.Values[currIdx];
 
             Debug.Assert(note.IsMusical);
 
             // Find next note.
-            nextPatIdx  = -1;
-            nextNoteIdx = -1;
-
             nextIdx = currIdx;
 
             // Look in the same pattern.
@@ -1298,19 +1291,19 @@ namespace FamiStudio
                 // Only considering musical notes for now.
                 if (pattern.Notes.Values[nextIdx].IsMusical)
                 {
-                    nextPatIdx = currPatIdx;
-                    nextNoteIdx = pattern.Notes.Keys[nextIdx];
+                    next.PatternIndex = current.PatternIndex;
+                    next.NoteIndex    = pattern.Notes.Keys[nextIdx];
                     return;
                 }
             }
 
             // Next patterns.
-            var p = currPatIdx + 1;
-            for (; p <= endPatIdx; p++)
+            var p = current.PatternIndex + 1;
+            for (; p <= end.PatternIndex; p++)
             {
                 var pat = channel.PatternInstances[p];
 
-                if (pat != null)
+                if (pat != null && pat.Notes.Count > 0)
                 {
                     nextIdx = 0;
 
@@ -1319,8 +1312,8 @@ namespace FamiStudio
                         // Only considering musical notes for now.
                         if (pat.Notes.Values[nextIdx].IsMusical)
                         {
-                            nextPatIdx = p;
-                            nextNoteIdx = pat.Notes.Keys[nextIdx];
+                            next.PatternIndex = p;
+                            next.NoteIndex    = pat.Notes.Keys[nextIdx];
                             return;
                         }
                     }
@@ -1329,13 +1322,12 @@ namespace FamiStudio
             }
 
             // If we dont find anything, position at end of song.
-            nextPatIdx  = channel.Song.Length;
-            nextNoteIdx = 0;
+            next = new NoteLocation(channel.Song.Length, 0);
         }
 
         public void Next()
         {
-            SetCurrentNote(nextPatIdx, nextNoteIdx, nextIdx);
+            SetCurrentNote(next, nextIdx);
         }
     }
 

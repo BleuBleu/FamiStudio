@@ -1349,7 +1349,7 @@ namespace FamiStudio
 
         private void InvalidateEverything(bool projectExplorer = false)
         {
-            ToolBar.Invalidate();
+            //ToolBar.Invalidate();
             Sequencer.Invalidate();
             PianoRoll.Invalidate();
             if (projectExplorer)
