@@ -615,6 +615,18 @@ namespace FamiStudio
             }
         }
 
+        private void ConvertToSolidNotes()
+        {
+            foreach (var channel in channels)
+                channel.ConvertToSolidNotes();
+
+            // NOTETODO: Delete this.
+            //for (var it = new SparseChannelNoteIterator(channels[1], 0, 0, 5, 0); !it.Done; it.Next())
+            //{
+            //    Debug.WriteLine($"{it.PatternIndex}-{it.NoteIndex} = {it.Note.ToString()} {it.DistanceToNextNote}");
+            //}
+        }
+
         public int FindPatternInstanceIndex(int idx, out int noteIdx)
         {
             noteIdx = -1;
@@ -899,36 +911,44 @@ namespace FamiStudio
 
         public bool AdvanceNumberOfNotes(int noteCount, ref int p, ref int n)
         {
-            float count = 0;
-
             if (noteCount > 0)
             {
-                while (count < noteCount && p < songLength)
+                n += noteCount;
+
+                while (true)
                 {
-                    count++;
-                    if (++n >= GetPatternLength(p))
+                    var patternLen = GetPatternLength(p);
+
+                    if (n < patternLen)
+                        return true;
+
+                    n -= patternLen;
+
+                    if (++p >= songLength)
                     {
                         n = 0;
-                        p++;
+                        return false;
                     }
                 }
-
-                return p < songLength;
             }
             else if (noteCount < 0)
             {
-                noteCount = -noteCount;
-                while (count < noteCount && p >= 0)
-                {
-                    count++;
-                    if (--n < 0)
-                    {
-                        p--;
-                        n = GetPatternLength(p) - 1;
-                    }
-                }
+                n += noteCount;
 
-                return p >= 0;
+                while (true)
+                {
+                    if (n >= 0)
+                        return true;
+
+                    if (--p < 0)
+                    {
+                        p = 0;
+                        n = 0;
+                        return false;
+                    }
+
+                    n += GetPatternLength(p);
+                }
             }
 
             return true;
@@ -1033,8 +1053,14 @@ namespace FamiStudio
             foreach (var channel in channels)
                 channel.SerializeState(buffer);
 
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
+                DeleteNotesPastMaxInstanceLength();
+
             if (buffer.Version < 5)
                 ConvertJumpSkipEffects();
+
+            if (buffer.Version < 10)
+                ConvertToSolidNotes();
 
             // Before 2.3.0, songs had an invalid color by default.
             if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())

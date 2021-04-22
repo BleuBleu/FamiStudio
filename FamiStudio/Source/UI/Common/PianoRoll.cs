@@ -1723,18 +1723,18 @@ namespace FamiStudio
             return ThemeBase.LightGreyFillColor1;
         }
 
-        private void RenderNote(RenderGraphics g, Channel channel, bool selected, bool activeChannel, Color color, Arpeggio arpeggio, int p0, int i0, Note n0, bool released, int p1, int i1)
+        private void RenderNote(RenderGraphics g, Note note, Color color, int time, int noteLen, bool selected, bool activeChannel, bool released, int slideDuration = -1)
         {
-            int x = channel.Song.GetPatternStartNote(p0, i0) * noteSizeX - scrollX;
-            int y = virtualSizeY - n0.Value * noteSizeY - scrollY;
+            int x = time * noteSizeX - scrollX;
+            int y = virtualSizeY - note.Value * noteSizeY - scrollY;
             int sy = released ? releaseNoteSizeY : noteSizeY;
 
-            if (n0.IsSlideNote && n0.Value != n0.SlideNoteTarget)
+            if (slideDuration >= 0)
             {
                 // We will get zero for notes that start a slide and have an immediate delayed cut.
-                int duration = Math.Max(1, channel.GetSlideNoteDuration(n0, p0, i0)); 
+                int duration = Math.Max(1, slideDuration); 
                 int slideSizeX = duration;
-                int slideSizeY = n0.SlideNoteTarget - n0.Value;
+                int slideSizeY = note.SlideNoteTarget - note.Value;
 
                 g.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), slideSizeX, -slideSizeY);
                 g.FillGeometry(slideNoteGeometry[zoomLevel - MinZoomLevel], g.GetSolidBrush(color, 1.0f, 0.2f), true);
@@ -1746,32 +1746,33 @@ namespace FamiStudio
 
             g.PushTranslation(x, y);
 
-            int noteLen = channel.Song.GetPatternStartNote(p1, i1) - channel.Song.GetPatternStartNote(p0, i0);
             int sx = noteLen * noteSizeX;
             int noteTextPosX = attackIconPosX;
 
             g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
             g.DrawRectangle(0, 0, sx, sy, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
 
-            if (n0.HasAttack && sx > noteAttackSizeX + 4)
-            if (activeChannel && n0.HasAttack && sx > noteAttackSizeX + 4)
+            if (activeChannel)
             {
-                g.FillRectangle(attackIconPosX, attackIconPosX, attackIconPosX + noteAttackSizeX, sy - attackIconPosX + 1, attackBrush);
-                noteTextPosX += noteAttackSizeX + attackIconPosX;
+                if (note.HasAttack && sx > noteAttackSizeX + 4)
+                {
+                    g.FillRectangle(attackIconPosX, attackIconPosX, attackIconPosX + noteAttackSizeX, sy - attackIconPosX + 1, attackBrush);
+                    noteTextPosX += noteAttackSizeX + attackIconPosX;
+                }
+
+                if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && sx > minNoteSizeForText)
+                {
+                    g.DrawText(note.FriendlyName, ThemeBase.FontSmall, noteTextPosX, noteTextPosY, theme.BlackBrush);
+                }
             }
 
-            if (activeChannel && Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && n0.IsMusical && sx > minNoteSizeForText)
+            if (note.Arpeggio != null)
             {
-                g.DrawText(n0.FriendlyName, ThemeBase.FontSmall, noteTextPosX, noteTextPosY, theme.BlackBrush);
-            }
-
-            if (arpeggio != null)
-            {
-                var offsets = arpeggio.GetChordOffsets();
+                var offsets = note.Arpeggio.GetChordOffsets();
                 foreach (var offset in offsets)
                 {
                     g.PushTranslation(0, offset * -noteSizeY);
-                    g.FillRectangle(0, 1, sx, sy, g.GetSolidBrush(arpeggio.Color, 1.0f, 0.2f));
+                    g.FillRectangle(0, 1, sx, sy, g.GetSolidBrush(note.Arpeggio.Color, 1.0f, 0.2f));
                     g.PopTransform();
                 }
             }
@@ -1779,29 +1780,28 @@ namespace FamiStudio
             g.PopTransform();
         }
 
-        private void RenderReleaseStopNote(RenderGraphics g, Song song, int value, bool selected, Color color, Arpeggio arpeggio, int p1, int i1, Note n1, bool released)
+        private void RenderReleaseStopNote(RenderGraphics g, Note note, Color color, int time, bool selected, bool stop, bool released)
         {
-            int x = song.GetPatternStartNote(p1, i1) * noteSizeX - scrollX;
-            int y = virtualSizeY - value * noteSizeY - scrollY;
+            int x = time * noteSizeX - scrollX;
+            int y = virtualSizeY - note.Value * noteSizeY - scrollY;
 
-            var paths = n1.IsStop ? (released ? stopReleaseNoteGeometry : stopNoteGeometry) : releaseNoteGeometry;
+            var paths = stop ? (released ? stopReleaseNoteGeometry : stopNoteGeometry) : releaseNoteGeometry;
 
             g.PushTranslation(x, y);
             g.FillAndDrawGeometry(paths[zoomLevel - MinZoomLevel, 0], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f), selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
 
-            if (arpeggio != null)
+            if (note.Arpeggio != null)
             {
-                var offsets = arpeggio.GetChordOffsets();
+                var offsets = note.Arpeggio.GetChordOffsets();
                 foreach (var offset in offsets)
                 {
                     g.PushTranslation(0, offset * -noteSizeY);
-                    g.FillGeometry(paths[zoomLevel - MinZoomLevel, 1], g.GetSolidBrush(arpeggio.Color, 1.0f, 0.2f), true);
+                    g.FillGeometry(paths[zoomLevel - MinZoomLevel, 1], g.GetSolidBrush(note.Arpeggio.Color, 1.0f, 0.2f), true);
                     g.PopTransform();
                 }
             }
 
             g.PopTransform();
-
         }
 
         private void RenderNotes(RenderGraphics g, RenderArea a)
@@ -1892,7 +1892,7 @@ namespace FamiStudio
 
                     Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]);
 
-                    // Pattern drawing.
+                    // Note drawing.
                     foreach (var c in channelsToRender)
                     {
                         var channel = song.Channels[c];
@@ -1900,124 +1900,115 @@ namespace FamiStudio
 
                         if (isActiveChannel || (ghostChannelMask & (1 << c)) != 0)
                         {
-                            var selected = false;
-                            var color = ThemeBase.LightGreyFillColor1;
-                            var arpeggio = (Arpeggio)null;
-
                             var p0 = a.minVisiblePattern - 1;
-                            var i0 = 0;
-                            var n0 = new Note(Note.NoteInvalid);
+                            var t0 = 0;
+                            var p1 = a.maxVisiblePattern;
+                            var t1 = 0;
 
-                            if (channel.GetLastValidNote(ref p0, ref n0, out i0, out var released))
+                            var dummyNote = (Note)null;
+                            channel.GetLastValidNote(ref p0, ref dummyNote, out t0, out _);
+
+                            for (var it = channel.GetSparseNoteIterator(p0, t0, p1, t1); !it.Done; it.Next())
                             {
-                                n0 = n0.Clone();
-                                selected = IsNoteSelected(p0, i0) && isActiveChannel;
-                                color = GetNoteColor(c, n0, song.Project);
-                                arpeggio = n0.Arpeggio;
-                                if (!isActiveChannel) color = Color.FromArgb((int)(color.A * 0.2f), color);
-                            }
+                                var pattern = it.Pattern;
+                                var patIdx  = it.PatternIndex;
+                                var noteIdx = it.NoteIndex;
+                                var note    = it.Note;
 
-                            for (int p1 = a.minVisiblePattern; p1 < a.maxVisiblePattern; p1++)
-                            {
-                                var pattern = song.Channels[c].PatternInstances[p1];
+                                Debug.Assert(note.IsMusical);
 
-                                if (pattern == null)
-                                    continue;
+                                var time = song.GetPatternStartNote(patIdx, noteIdx);
+                                var nextTime = time + it.DistanceToNextNote;
+                                var duration = Math.Min(it.DistanceToNextNote, note.Duration);
+                                var slideDuration = note.IsSlideNote ? channel.GetSlideNoteDuration(note, patIdx, noteIdx) : -1;
+                                var color = GetNoteColor(c, note, song.Project);
+                                var released = false;
 
-                                var patternLen = song.GetPatternLength(p1);
-
-                                foreach (var kv in pattern.Notes)
+                                // NOTETODO : Render selected!
+                                
+                                // Draw first part, from start to release point.
+                                if (note.HasRelease)
                                 {
-                                    var i1 = kv.Key;
-                                    var n1 = kv.Value.Clone();
+                                    RenderNote(g, note, color, time, Math.Min(note.Release, duration), false, isActiveChannel, released, slideDuration);
+                                    time += note.Release;
+                                    duration -= note.Release;
 
-                                    if (i1 >= patternLen)
-                                        break;
-
-                                    if (isActiveChannel && editMode != EditionMode.VideoRecording && n1.HasAnyEffect)
+                                    if (duration > 0)
                                     {
-                                        // Draw the effect icons.
-                                        // TODO: Iterate on the bits of the effect mask. 
-                                        var effectPosY = 0;
-                                        for (int fx = 0; fx < Note.EffectCount; fx++)
-                                        {
-                                            if (n1.HasValidEffectValue(fx))
-                                            {
-                                                // These 2 effects usually come in a pair, so let's draw only 1 icon.
-                                                if (fx == Note.EffectVibratoDepth && n1.HasValidEffectValue(Note.EffectVibratoSpeed))
-                                                    continue;
-
-                                                bool drawOpaque = !showEffectsPanel || fx == selectedEffectIdx || fx == Note.EffectVibratoDepth && selectedEffectIdx == Note.EffectVibratoSpeed || fx == Note.EffectVibratoSpeed && selectedEffectIdx == Note.EffectVibratoDepth;
-
-                                                int iconX = channel.Song.GetPatternStartNote(p1, i1) * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2 - scrollX;
-                                                int iconY = effectPosY + effectIconPosY;
-                                                g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.DarkGreyLineBrush2);
-                                                g.DrawBitmap(bmpEffects[fx], iconX, iconY, drawOpaque ? 1.0f : 0.4f);
-                                                effectPosY += effectIconSizeX + effectIconPosY + 1;
-                                            }
-                                        }
-                                        maxEffectPosY = Math.Max(maxEffectPosY, effectPosY);
+                                        RenderReleaseStopNote(g, note, color, time, false, false, false);
+                                        time++;
+                                        duration--;
                                     }
 
-                                    if (n0.IsValid && n1.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote || n0.IsArpeggio))
-                                        RenderNote(g, channel, selected, isActiveChannel, color, arpeggio, p0, i0, n0, released, p1, i1);
-
-                                    if (n1.IsStop || n1.IsRelease)
-                                    {
-                                        selected = IsNoteSelected(p1, i1) && isActiveChannel;
-                                        int value = n0.Value >= Note.MusicalNoteMin && n0.Value <= Note.MusicalNoteMax ? n0.Value : 49; // C4 by default.
-
-                                        if (value >= a.minVisibleNote && value <= a.maxVisibleNote)
-                                            RenderReleaseStopNote(g, song, value, selected, color, arpeggio, p1, i1, n1, released);
-
-                                        if (n1.IsRelease)
-                                            released = true;
-
-                                        if (n1.IsStop)
-                                        {
-                                            p0 = -1;
-                                            n0.Value = Note.NoteInvalid;
-                                            n0.Instrument = null;
-                                            arpeggio = null;
-                                        }
-                                        else
-                                        {
-                                            i0 = i1 + 1;
-                                            if (p0 < 0 || i0 >= song.GetPatternLength(p0))
-                                            {
-                                                i0 = 0;
-                                                p0++;
-                                            }
-                                            else
-                                            {
-                                                p0 = p1;
-                                            }
-
-                                            // To avoid redrawing slides after a release note.
-                                            n0.IsSlideNote = false;
-                                            n0.HasAttack = false;
-                                        }
-                                    }
-                                    else if (n1.IsValid)
-                                    {
-                                        n0 = n1;
-                                        p0 = p1;
-                                        i0 = i1;
-                                        released &= !n1.HasAttack;
-                                        selected = IsNoteSelected(p0, i0) && isActiveChannel;
-                                        color = GetNoteColor(c, n0, song.Project);
-                                        arpeggio = n0.Arpeggio;
-                                        if (!isActiveChannel) color = Color.FromArgb((int)(color.A * 0.2f), color);
-                                    }
+                                    released = true;
                                 }
-                            }
 
-                            if (n0.IsValid && ((n0.Value >= a.minVisibleNote && n0.Value <= a.maxVisibleNote) || n0.IsSlideNote || n0.IsArpeggio))
-                            {
-                                RenderNote(g, channel, selected, isActiveChannel, color, arpeggio, p0, i0, n0, released, Math.Min(Song.Length, a.maxVisiblePattern + 1), 0);
+                                // Then second part, after release to stop note.
+                                if (duration > 0)
+                                {
+                                    RenderNote(g, note, color, time, duration, false, isActiveChannel, released, slideDuration);
+                                    time += duration;
+                                    duration -= duration;
+
+                                    if (time < nextTime)
+                                        RenderReleaseStopNote(g, note, color, time, false, true, released);
+                                }
                             }
                         }
                     }
+
+                    // Draw effect icons at the top.
+                    if (editMode != EditionMode.VideoRecording)
+                    {
+                        var channel = song.Channels[editChannel];
+                        for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
+                        {
+                            var pattern = channel.PatternInstances[p];
+
+                            if (pattern == null)
+                                continue;
+
+                            foreach (var kv in pattern.Notes)
+                            {
+                                var time = kv.Key;
+                                var note = kv.Value;
+
+                                if (note.HasAnyEffect)
+                                {
+                                    // TODO: Iterate on the bits of the effect mask. 
+                                    var effectPosY = 0;
+                                    for (int fx = 0; fx < Note.EffectCount; fx++)
+                                    {
+                                        if (note.HasValidEffectValue(fx))
+                                        {
+                                            // These 2 effects usually come in a pair, so let's draw only 1 icon.
+                                            if (fx == Note.EffectVibratoDepth && note.HasValidEffectValue(Note.EffectVibratoSpeed))
+                                                continue;
+
+                                            bool drawOpaque = !showEffectsPanel || fx == selectedEffectIdx || fx == Note.EffectVibratoDepth && selectedEffectIdx == Note.EffectVibratoSpeed || fx == Note.EffectVibratoSpeed && selectedEffectIdx == Note.EffectVibratoDepth;
+
+                                            int iconX = channel.Song.GetPatternStartNote(p, time) * noteSizeX + noteSizeX / 2 - effectIconSizeX / 2 - scrollX;
+                                            int iconY = effectPosY + effectIconPosY;
+                                            g.FillRectangle(iconX, iconY, iconX + effectIconSizeX, iconY + effectIconSizeX, theme.DarkGreyLineBrush2);
+                                            g.DrawBitmap(bmpEffects[fx], iconX, iconY, drawOpaque ? 1.0f : 0.4f);
+                                            effectPosY += effectIconSizeX + effectIconPosY + 1;
+                                        }
+                                    }
+                                    maxEffectPosY = Math.Max(maxEffectPosY, effectPosY);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // NOTETODO : Effect icon drawing.
+                    /*
+
+                                if (isActiveChannel && editMode != EditionMode.VideoRecording && n1.HasAnyEffect)
+                                {
+
+                                }
+                     
+                     */
 
                     if (editMode == EditionMode.Channel)
                     {
@@ -3079,7 +3070,7 @@ namespace FamiStudio
                     var n1 = p == maxPattern ? maxNote : patternLen - 1;
                     var newNotes = new SortedList<int, Note>();
 
-                    for (var it = pattern.GetNoteIterator(n0, n1 + 1); !it.Done; it.Next())
+                    for (var it = pattern.GetDenseNoteIterator(n0, n1 + 1); !it.Done; it.Next())
                     {
                         var transformedNote = function(it.CurrentNote, Song.GetPatternStartNote(p) + it.CurrentTime - startFrameIdx);
                         if (transformedNote != null)

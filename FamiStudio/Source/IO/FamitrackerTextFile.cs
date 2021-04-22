@@ -868,7 +868,7 @@ namespace FamiStudio
 
                         var patternLines = new List<string>();
 
-                        for (var it = pattern.GetNoteIterator(0, song.PatternLength); !it.Done; it.Next())
+                        for (var it = pattern.GetDenseNoteIterator(0, song.PatternLength); !it.Done; it.Next())
                         {
                             var time = it.CurrentTime;
                             var note = it.CurrentNote;

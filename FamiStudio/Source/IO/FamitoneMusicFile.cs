@@ -775,7 +775,7 @@ namespace FamiStudio
 
                     var patternLength = song.GetPatternLength(p); 
 
-                    for (var it = pattern.GetNoteIterator(0, patternLength); !it.Done; )
+                    for (var it = pattern.GetDenseNoteIterator(0, patternLength); !it.Done; )
                     {
                         var time = it.CurrentTime;
                         var note = it.CurrentNote;

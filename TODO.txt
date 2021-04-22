@@ -1,106 +1,149 @@
-- *** BUG RETINA???
-- *** FTM VRC6???
+- *** BUG RETINA??? 
+- *** FTM VRC6??? 
+ 
+ 
+FamiStudio Tempo 2.0 
+==================== 
+- Finish UI, test a lot!  
+	- Is the right groove selected if doing custom settings? 
+- Add missing tooltips (BPM, note length, etc). 
+- Any other formats needs fixing? 
+- Documentation. 
+- Convert demo songs to new tempo (when file format is frozen). 
+	- Gimmick 
+	- Tower 
+	- Any others? 
+ 
+Note refactor 
+============= 
+/ If good, write code that converts old notes to solid notes.
+/ Rendering of solid notes
+- Change the piano roll editing/rendering, see how it feels.
+- Highlight actions (resize, move, etc.)
+- Multiple resize and other good stuff.
+- If still good, change the player, imports, etc.
 
+- Solutions
+	1) Solid notes: 
+		- Different pattern can extend to the same pattern, differente note length. At this point, is it a big deal?
+		- This mean the note + duration + release point will be in a previous pattern if they extend beyond, is that an issue?
+			=> Will change a lot of places where we ierate on notes, a release or stop note can come from a previous pattern.
+		- The beginning of a new note always has priority on the end. This may solve the different note length issue.
+			- Dragging should move the entire note no matter what => More intuitive at least.
+			- Resize respect these 2 rules.
+		- Resize on both ends?
+			=> At end, only to shorten or reach the next note, notes length are more like a "desired" length.
+			=> At beginning, can go as far as you want.
+			
+		Actions
+			- Draw a note with its duration
+			- Add a release note somewhere in there (moving a release should be like a resize)
+			- Drag the entire note, feels "solid"
+			- Resize from both end, with the 2 rules above.
+		
+	2) Stop notes: 
+		- Adding a new note + stop note will require creating the next pattern too (not bad).
+		- Many different possible approaches
+			 - every note could come with a stop (drag length?)
+			 - or maybe resize from end creates a stop note?
+		- Notes will be made to feel "solid"
+			=> What about infinite notes? 
+	3) Hybrid solution (optional duration + stop notes):
+		- Would create a function that converts as many notes to durations as possible.
+		- Code would be quite messy i think.
 
-FamiStudio Tempo 2.0
-====================
-- Finish UI, test a lot! 
-	- Is the right groove selected if doing custom settings?
-- Add missing tooltips (BPM, note length, etc).
-- Any other formats needs fixing?
-- Documentation.
-- Convert demo songs to new tempo (when file format is frozen).
-	- Gimmick
-	- Tower
-	- Any others?
-
-FamiStudio 3.0.0
-================
-- MIDI : 
-	- MIDITODOs
-	- Doc.
-- Note refactor: 
-	- Remove fractional snapping. Too awkward.
-	- When deleting a note, dont delete certain effects.
-- Piano roll note thickness option?
-- Loop prevention for envelope (brad issue).
-- Low-pass config in settings (change layout of equalizer)
-- BUG : Assert in video file when exporting a single channel (major chord in sq1).
-- CRASH : Quit while billy jean was playing.
-	Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]);
-	editChannel was 5, only 5 channels (0-4)
-- CRASH : Multi pattern color edit (square selection) crashes when there are empty patterns.
-
-=============
-
-- MAYBE: MIDI in/out (not sure... non-technical people will be disapointed)
-- QWERTZ?
-	- GTK colors. => Doesnt work on mac...
-	- Test mac with weird keyboards.
-	- If a key is a music key, should we not process it (1-5 changes channel, so playing a note changes the channel...).
-- studX:
-	- Song sorting from FTM.
-	- Reverse 2xx effect??
-
-Doc
-===
-- Hayabusa DPCM doc.
-- 
-
-Testing
-=======
-- MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage.
-- MacOS : "Whenever I minimize it tho, you can't open it back up by clicking on the icon. You have to right click it and click 'Show All Windows', then click the window there.". how2bboss.
-- Linux : Test scaling more.
-- Windows : Scaling, 150% and stuff for the warning in dialogs.
-- OGL : Grey screen happens sometimes.
-- Engine : 
-	- Re-test delayed note, @no_ref delayed note fix.
-	- Re-test FT2 stock with compression thing vs. 2 notes.
-	
-Linux notes
-===========
-- When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe
-- GTK# : sudo apt-get install gtk-sharp2 
-	- This seem to be enough (sudo apt-get install libgtk2.0-cil)
-- How to recompile with old linux:
-	- Ubuntu 16.04.6
-	- Install cmake-gui
-	- OpenAL Soft
-		- Install ALSA libs (libasound2-dev)
-		- Download openal-soft code
-		- Run cmake-gui in /build folder.
-		- Configure
-		- Choose static C + C++ libs
-		- Choose Release (no debug info)
-		- Generate.
-		- make!
-	- NesSndEmu + NotSoFatso, run script.
-	- RtMidi, need to add static C/C++ libs to cmake file.
-
-Trailer/scroll
-==============
-- Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece.
-
-MkDocs
-======
-- Install Python
-- pip install mkdocs
-- pip install mkdocs-bootswatch
-
-Discord
-=======
-- Invite link: https://discord.gg/88UPmxh
-
-Backlog:
-=========
-- Raw FDS modulation table envelope.
-- Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
-- Instrument folders + collapse entire sections (samples, arps, etc.)
-- Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).
-- Mac: Paste special: Text is super dark
-- Mac: Clicking on FS without the window doesn't give it focus...?
-- Installer on Japanese machine?
-- Keyboard recording VS. non-QWERTY keyboards.
-- BUG: After cleanup, selected arpeggio + instrument seems wrong. (added notes make arpeggion sound, but none selected.)
-- Highlight piano keys when they are pressed with QWERTY or MIDI. (LOW PRIO)
+- Remove fractional snapping? Too awkward.
+- When deleting a note, dont delete certain effects. 
+ 
+FamiStudio 3.0.0 
+================ 
+- MIDI :  
+	- MIDITODOs 
+	- Doc. 
+- Mixer / low pass config. 
+	-> He uses "0.4.1" what's in there?
+- F1...F12 keys. 
+- Remove any deprecation from FamiStudio text format, that's not the goal. Give warning if mismatch.
+- Loop prevention for envelope (brad issue). 
+- Low-pass config in settings (change layout of equalizer) 
+	- Blip 4.0 : Look at difference between cutoff / rolloff frequency. => Compare values before/after. 
+- Left/right pan with +/- (cubase style)	
+- BUG : Assert in video file when exporting a single channel (major chord in sq1). 
+- CRASH : Quit while billy jean was playing. 
+	Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]); 
+	editChannel was 5, only 5 channels (0-4) 
+- CRASH : Multi pattern color edit (square selection) crashes when there are empty patterns. 
+ 
+============= 
+ 
+- MAYBE: MIDI in/out (not sure... non-technical people will be disapointed) 
+- QWERTZ? 
+	- GTK colors. => Doesnt work on mac... 
+	- Test mac with weird keyboards. 
+	- If a key is a music key, should we not process it (1-5 changes channel, so playing a note changes the channel...). 
+- studX: 
+	- Song sorting from FTM. 
+	- Reverse 2xx effect?? 
+ 
+Doc 
+=== 
+- Hayabusa DPCM doc. 
+-  
+ 
+Testing 
+======= 
+- MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage. 
+- MacOS : "Whenever I minimize it tho, you can't open it back up by clicking on the icon. You have to right click it and click 'Show All Windows', then click the window there.". how2bboss. 
+- Linux : Test scaling more. 
+- Windows : Scaling, 150% and stuff for the warning in dialogs. 
+- OGL : Grey screen happens sometimes. 
+- Engine :  
+	- Re-test delayed note, @no_ref delayed note fix. 
+	- Re-test FT2 stock with compression thing vs. 2 notes. 
+	 
+Linux notes 
+=========== 
+- When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 
+- GTK# : sudo apt-get install gtk-sharp2  
+	- This seem to be enough (sudo apt-get install libgtk2.0-cil) 
+- How to recompile with old linux: 
+	- Ubuntu 16.04.6 
+	- Install cmake-gui 
+	- OpenAL Soft 
+		- Install ALSA libs (libasound2-dev) 
+		- Download openal-soft code 
+		- Run cmake-gui in /build folder. 
+		- Configure 
+		- Choose static C + C++ libs 
+		- Choose Release (no debug info) 
+		- Generate. 
+		- make! 
+	- NesSndEmu + NotSoFatso, run script. 
+	- RtMidi, need to add static C/C++ libs to cmake file. 
+ 
+Trailer/scroll 
+============== 
+- Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece. 
+ 
+MkDocs 
+====== 
+- Install Python 
+- pip install mkdocs 
+- pip install mkdocs-bootswatch 
+ 
+Discord 
+======= 
+- Invite link: https://discord.gg/88UPmxh 
+ 
+Backlog: 
+========= 
+- Raw FDS modulation table envelope. 
+- Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader. 
+- Instrument folders + collapse entire sections (samples, arps, etc.) 
+- Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID). 
+- Mac: Paste special: Text is super dark 
+- Mac: Clicking on FS without the window doesn't give it focus...? 
+- Installer on Japanese machine? 
+- Keyboard recording VS. non-QWERTY keyboards. 
+- BUG: After cleanup, selected arpeggio + instrument seems wrong. (added notes make arpeggion sound, but none selected.) 
+- Highlight piano keys when they are pressed with QWERTY or MIDI. (LOW PRIO) 

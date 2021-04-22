@@ -385,9 +385,9 @@ namespace FamiStudio
             return Utils.Clamp(lo, 0, list.Count - 1);
         }
 
-        public NoteIterator GetNoteIterator(int startIdx, int endIdx, bool reverse = false)
+        public DensePatternNoteIterator GetDenseNoteIterator(int startIdx, int endIdx, bool reverse = false)
         {
-            return new NoteIterator(this, startIdx, endIdx, reverse);
+            return new DensePatternNoteIterator(this, startIdx, endIdx, reverse);
         }
 
 #if DEBUG
@@ -407,10 +407,18 @@ namespace FamiStudio
                 var time = kv.Key;
                 var note = kv.Value;
 
+                Debug.Assert(time < GetMaxInstanceLength());
                 Debug.Assert(time >= 0);
                 Debug.Assert(time < MaxLength);
                 Debug.Assert(note != null);
                 Debug.Assert(!note.IsEmpty);
+
+                // Not used since FamiStudio 3.0.0
+                Debug.Assert(!note.IsRelease);
+                Debug.Assert(!note.IsStop);
+
+                Debug.Assert(note.Release == 0 || note.Release > 0 && note.Release < note.Duration);
+                Debug.Assert(!note.IsMusical && note.Duration == 0 || note.IsMusical && note.Duration > 0);
 
                 var inst = note.Instrument;
                 Debug.Assert(inst == null || song.Project.InstrumentExists(inst));
@@ -505,7 +513,7 @@ namespace FamiStudio
         }
     }
 
-    public class NoteIterator
+    public class DensePatternNoteIterator
     {
         private bool reverse;
         private int listIdx;
@@ -513,7 +521,7 @@ namespace FamiStudio
         private int noteIdx1;
         private Pattern pattern;
 
-        public NoteIterator(Pattern p, int i0, int i1, bool rev)
+        public DensePatternNoteIterator(Pattern p, int i0, int i1, bool rev)
         {
             Debug.Assert(i0 <= i1);
 

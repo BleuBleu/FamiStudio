@@ -1391,7 +1391,7 @@ namespace FamiStudio
 
                 if (pattern != null)
                 {
-                    for (var it = pattern.GetNoteIterator(0, patternLength); !it.Done; it.Next())
+                    for (var it = pattern.GetDenseNoteIterator(0, patternLength); !it.Done; it.Next())
                     {
                         var time = it.CurrentTime;
                         var note = it.CurrentNote;

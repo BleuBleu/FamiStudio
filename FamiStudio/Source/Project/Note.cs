@@ -45,6 +45,8 @@ namespace FamiStudio
         public byte       Flags;
         public byte       Slide;
         public ushort     EffectMask;
+        public ushort     Duration;
+        public ushort     Release;
         public Instrument Instrument;
         public Arpeggio   Arpeggio;
 
@@ -106,6 +108,11 @@ namespace FamiStudio
         {
             get { return Value == NoteStop; }
             set { if (value) Value = NoteStop; }
+        }
+
+        public bool HasRelease
+        {
+            get { return Release > 0; }
         }
 
         public bool IsRelease
@@ -340,6 +347,11 @@ namespace FamiStudio
             return (Note)MemberwiseClone();
         }
 
+        public override string ToString()
+        {
+            return IsMusical ? FriendlyName : base.ToString();
+        }
+
         public bool IsEmpty => Value == Note.NoteInvalid && Flags == 0 && Slide == 0 && EffectMask == 0;
         public bool HasJumpOrSkip => FxJump != 0xff || FxSkip != 0xff;
 
@@ -414,6 +426,10 @@ namespace FamiStudio
             if (buffer.Version >= 8 && (EffectMask & EffectDutyCycleMask) != 0) buffer.Serialize(ref FxDutyCycle);
             if (buffer.Version >= 8 && (EffectMask & EffectNoteDelayMask) != 0) buffer.Serialize(ref FxNoteDelay);
             if (buffer.Version >= 8 && (EffectMask & EffectCutDelayMask)  != 0) buffer.Serialize(ref FxCutDelay);
+
+            // NOTETODO: See how we want to save this + add comment.
+            if (buffer.Version >= 10) buffer.Serialize(ref Duration);
+            if (buffer.Version >= 10) buffer.Serialize(ref Release);
 
             // At version 7 (FamiStudio 2.2.0) we added support for arpeggios.
             if (buffer.Version >= 7)
