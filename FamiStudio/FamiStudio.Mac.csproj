@@ -78,6 +78,7 @@
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\FdsFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
+    <Compile Include="Source\IO\MidiFile.cs" />
     <Compile Include="Source\IO\Mp3File.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
