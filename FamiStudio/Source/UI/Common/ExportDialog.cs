@@ -321,7 +321,7 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList("MIDI Instrument:", MidiFileReader.MidiInstrumentNames, MidiFileReader.MidiInstrumentNames[midiInstrumentMapping[itemIndex]]); // 0
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(null) == DialogResult.OK)
             {
                 midiInstrumentMapping[itemIndex] = dlg.Properties.GetSelectedIndex(0);
                 UpdateMidiInstrumentMapping();

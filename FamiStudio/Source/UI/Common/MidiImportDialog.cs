@@ -92,7 +92,7 @@ namespace FamiStudio
             dlg.Properties.SetPropertyEnabled(4, allowChannel10Mapping);
             dlg.Properties.SetPropertyEnabled(5, allowChannel10Mapping);
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(null) == DialogResult.OK)
             {
                 var sourceType = MidiSourceType.GetValueForName(dlg.Properties.GetPropertyValue<string>(0));
                 var sourceName = dlg.Properties.GetPropertyValue<string>(1);

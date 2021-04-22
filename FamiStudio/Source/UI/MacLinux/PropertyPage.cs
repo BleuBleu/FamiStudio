@@ -403,6 +403,29 @@ namespace FamiStudio
             return new CheckBoxList(values, selected);
         }
 
+        // MIDITODO : Make those work on Linux/Mac.
+        public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
+        {
+            /*
+            var listBox = (properties[idx].control as CheckBoxList);
+
+            listBox.Items.Clear();
+            for (int i = 0; i < values.Length; i++)
+                listBox.Items.Add(values[i], selected != null ? selected[i] : true);
+                */              
+        }
+
+        public void UpdateCheckBoxList(int idx, bool[] selected)
+        {
+            /*
+            var listBox = (properties[idx].control as CheckBoxList);
+
+            Debug.Assert(selected.Length == listBox.Items.Count);
+            for (int i = 0; i < listBox.Items.Count; i++)
+                listBox.SetItemChecked(i, selected[i]);
+                */              
+        }
+
         private Button CreateButton(string text, string tooltip)
         {
             var button = new Button();
@@ -734,7 +757,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public void UpdateMultiColumnList(int idx, string[,] data)
+        public void UpdateMultiColumnList(int idx, string[,] data, string[] columnNames = null)
         {
             var scroll = properties[idx].control as ScrolledWindow;
             var treeView = scroll.Child as TreeView;
@@ -755,6 +778,15 @@ namespace FamiStudio
                 j++;
             }
             while (ls.IterNext(ref it));
+
+            if (columnNames != null)
+            {
+                Debug.Assert(treeView.Columns.Length == columnNames.Length);
+                for (int i = 0; i < treeView.Columns.Length; i++)
+                {
+                    treeView.Columns[i].Title = columnNames[i];
+                }
+            }
         }
 
         private HScale CreateSlider(double value, double min, double max, double increment, int numDecimals, string tooltip = null)
@@ -877,6 +909,19 @@ namespace FamiStudio
             }
 
             return null;
+        }
+
+        public int GetSelectedIndex(int idx)
+        {
+            var prop = properties[idx];
+
+            switch (prop.type)
+            {
+                case PropertyType.DropDownList:
+                    return (prop.control as ComboBox).Active;
+            }
+
+            return -1;
         }
 
         public T GetPropertyValue<T>(int idx)
