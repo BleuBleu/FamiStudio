@@ -362,6 +362,16 @@
     <EmbeddedResource Include="Resources\WarningGood.png" />
     <EmbeddedResource Include="Resources\WarningYellow%402x.png" />
     <EmbeddedResource Include="Resources\WarningYellow.png" />
+    <EmbeddedResource Include="Resources\ExportMIDI%402x.png" />
+    <EmbeddedResource Include="Resources\ExportMIDI.png" />
+    <EmbeddedResource Include="Resources\Reload%402x.png" />
+    <EmbeddedResource Include="Resources\Reload.png" />
+    <EmbeddedResource Include="Resources\PlayHalf%402x.png" />
+    <EmbeddedResource Include="Resources\PlayHalf.png" />
+    <EmbeddedResource Include="Resources\PlayQuarter%402x.png" />
+    <EmbeddedResource Include="Resources\PlayQuarter.png" />
+    <EmbeddedResource Include="Resources\ConfigGeneral%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigGeneral.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall%402x.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall.png" />
     <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />
