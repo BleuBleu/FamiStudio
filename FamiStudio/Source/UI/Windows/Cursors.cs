@@ -11,6 +11,7 @@ namespace FamiStudio
         public static Cursor Default    = System.Windows.Forms.Cursors.Default;
         public static Cursor SizeWE     = System.Windows.Forms.Cursors.SizeWE;
         public static Cursor SizeNS     = System.Windows.Forms.Cursors.SizeNS;
+        public static Cursor Move       = System.Windows.Forms.Cursors.SizeAll;
         public static Cursor DragCursor = System.Windows.Forms.Cursors.Default;
         public static Cursor CopyCursor = System.Windows.Forms.Cursors.Default;
         public static Cursor Eyedrop    = System.Windows.Forms.Cursors.Default;

@@ -418,6 +418,7 @@ namespace FamiStudio
                 // Not used since FamiStudio 3.0.0
                 Debug.Assert(!note.IsRelease);
                 Debug.Assert(!note.IsStop);
+                Debug.Assert((note.Flags & Note.FlagsTagged) == 0);
 
                 Debug.Assert(note.Release == 0 || note.Release > 0 && note.Release < note.Duration);
                 Debug.Assert(!note.IsMusical && note.Duration == 0 || note.IsMusical && note.Duration > 0);

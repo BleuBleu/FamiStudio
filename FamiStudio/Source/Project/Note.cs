@@ -29,6 +29,7 @@ namespace FamiStudio
 
         public const int FlagsNone        = 0x00;
         public const int FlagsNoAttack    = 0x01;
+        public const int FlagsTagged      = 0x80;
                                           
         public const int NoteInvalid      = 0xff;
         public const int NoteStop         = 0x00;
@@ -292,7 +293,7 @@ namespace FamiStudio
                 if (!value) Flags = (byte)(Flags | FlagsNoAttack);
             }
         }
-
+        
         public bool HasAnyEffect
         {
             get { return EffectMask != 0; }
@@ -304,6 +305,13 @@ namespace FamiStudio
             {
                 return GetFriendlyName(Value);
             }
+        }
+
+        public void ClearReleaseIfPastDuration()
+        {
+            // TODO : We should have a Duration property that handles that.
+            if (HasRelease && Release >= Duration)
+                Release = 0;
         }
 
         public static string GetFriendlyName(int value)
