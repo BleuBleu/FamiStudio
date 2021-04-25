@@ -625,12 +625,13 @@ namespace FamiStudio
         public int DistanceToNextMusicalNote(NoteLocation location)
         {
             var startLocation = location;
+
+            song.AdvanceNumberOfNotes(ref location, 1);
             var pattern = patternInstances[location.PatternIndex];
 
             // Look in current pattern.
             if (pattern != null)
             {
-                song.AdvanceNumberOfNotes(ref location, 1);
                 var idx = pattern.BinarySearchList(pattern.Notes.Keys, location.NoteIndex, true);
 
                 if (idx >= 0)

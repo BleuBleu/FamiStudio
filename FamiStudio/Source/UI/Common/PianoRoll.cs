@@ -4672,12 +4672,12 @@ namespace FamiStudio
                 App.UndoRedoManager.AbortTransaction();
             }
 
-            hoverNoteLocation = captureNoteLocation;
-
             var minLocation = NoteLocation.Min(location, captureNoteLocation);
             var maxLocation = NoteLocation.Max(location, captureNoteLocation);
             var minAbsoluteNoteIndex = minLocation.ToAbsoluteNoteIndex(Song);
             var maxAbsoluteNoteIndex = maxLocation.ToAbsoluteNoteIndex(Song);
+
+            hoverNoteLocation = minLocation;
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[minLocation.PatternIndex];
@@ -4725,7 +4725,7 @@ namespace FamiStudio
             var deltaDuration = resizeStart ? -deltaNoteIdx : 0;
             var deltaNoteValue = resizeStart ? 0 : noteValue - captureNoteValue;
             var newDragFrameMin = dragFrameMin + deltaNoteIdx;
-            var newDragFrameMax = dragFrameMax + deltaNoteIdx + deltaDuration;
+            var newDragFrameMax = dragFrameMax + deltaNoteIdx;
 
             hoverNoteLocation = captureNoteLocation;
             Song.AdvanceNumberOfNotes(ref hoverNoteLocation, deltaNoteIdx);
