@@ -1455,7 +1455,7 @@ namespace FamiStudio
 
                             if (note.IsSlideNote && slideToPitchWheel)
                             {
-                                var slideDuration = channel.GetSlideNoteDuration(note, p, time);
+                                var slideDuration = channel.GetSlideNoteDuration(note, new NoteLocation(p, time)); // NOTETODO : Convert midi file to note location.
                                 var semitones = note.SlideNoteTarget - note.Value;
 
                                 if (semitones < 0 && semitones < -pitchWheelRange)

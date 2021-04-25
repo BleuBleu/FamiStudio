@@ -47,7 +47,7 @@ namespace FamiStudio
         public static bool ShowScrollBars = false;
         public static bool ShowOscilloscope = false;
         public static bool ForceCompactSequencer = false;
-        public static int ShowStopNotes = 0; // NOTETODO : Add to UI, INI.
+        public static int ShowStopNotes = StopNotesFamiTrackerTempo; // NOTETODO : Add to UI, INI.
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
 #if FAMISTUDIO_WINDOWS

@@ -24,7 +24,7 @@ namespace FamiStudio
         private int channelType;
         private Color color;
         private SortedList<int, Note> notes = new SortedList<int, Note>();
-        private int firstValidNoteTime = int.MinValue;
+        private int firstMusicalNoteTime = int.MinValue;
         private SortedList<int, LastValidNoteData> lastValidNoteCache = new SortedList<int, LastValidNoteData>();
 
         public int Id => id;
@@ -104,27 +104,27 @@ namespace FamiStudio
         public unsafe void ClearLastValidNoteCache()
         {
             lastValidNoteCache.Clear();
-            firstValidNoteTime = int.MinValue;
+            firstMusicalNoteTime = int.MinValue;
         }
 
-        private int GetCachedFirstValidNoteIndex()
+        private int GetCachedFirstNoteIndex()
         {
-            if (firstValidNoteTime == int.MinValue)
+            if (firstMusicalNoteTime == int.MinValue)
             {
-                firstValidNoteTime = -1;
+                firstMusicalNoteTime = -1;
 
                 foreach (var kv in notes)
                 {
                     var note = kv.Value;
-                    if (note != null && (note.IsValid || note.HasCutDelay) && !note.IsRelease)
+                    if (note != null && note.IsMusical)
                     {
-                        firstValidNoteTime = kv.Key;
+                        firstMusicalNoteTime = kv.Key;
                         break;
                     }
                 }
             }
 
-            return firstValidNoteTime;
+            return firstMusicalNoteTime;
         }
 
         private LastValidNoteData GetCachedLastValidNoteData(int endTime)
@@ -195,7 +195,7 @@ namespace FamiStudio
 
         public Note GetFirstMusicalNote(out int noteIndex)
         {
-            noteIndex = GetCachedFirstValidNoteIndex();
+            noteIndex = GetCachedFirstNoteIndex();
 
             if (noteIndex >= 0)
             {
@@ -381,7 +381,10 @@ namespace FamiStudio
                 if (list[lo] > value) lo--;
             }
 
-            return Utils.Clamp(lo, 0, list.Count - 1);
+            if (lo >= 0 && lo < list.Count)
+                return lo;
+
+            return -1;
         }
 
         public DensePatternNoteIterator GetDenseNoteIterator(int startIdx, int endIdx, bool reverse = false)

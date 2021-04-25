@@ -184,6 +184,7 @@ namespace FamiStudio
         RenderBrush selectionBgVisibleBrush;
         RenderBrush selectionBgInvisibleBrush;
         RenderBrush selectionNoteBrush;
+        RenderBrush hoverNoteBrush;
         RenderBrush attackBrush;
         RenderBrush iconTransparentBrush;
         RenderBrush dashedVerticalLineBrush;
@@ -705,6 +706,7 @@ namespace FamiStudio
             selectionBgVisibleBrush = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
             selectionBgInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, ThemeBase.LightGreyFillColor1));
             selectionNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
+            hoverNoteBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor2);
             attackBrush = g.CreateSolidBrush(Color.FromArgb(128, ThemeBase.BlackColor));
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, ThemeBase.DarkGreyLineColor2));
             dashedVerticalLineBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
@@ -823,6 +825,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref selectionBgVisibleBrush);
             Utils.DisposeAndNullify(ref selectionBgInvisibleBrush);
             Utils.DisposeAndNullify(ref selectionNoteBrush);
+            Utils.DisposeAndNullify(ref hoverNoteBrush);
             Utils.DisposeAndNullify(ref attackBrush);
             Utils.DisposeAndNullify(ref iconTransparentBrush);
             Utils.DisposeAndNullify(ref dashedVerticalLineBrush);
@@ -1716,9 +1719,9 @@ namespace FamiStudio
             }
         }
 
-        private Color GetNoteColor(int channel, Note note, Project project)
+        private Color GetNoteColor(Channel channel, Note note, Project project)
         {
-            if (channel == ChannelType.Dpcm)
+            if (channel.Type == ChannelType.Dpcm)
             {
                 var mapping = project.GetDPCMMapping(note.Value);
                 if (mapping != null && mapping.Sample != null)
@@ -1732,13 +1735,13 @@ namespace FamiStudio
             return ThemeBase.LightGreyFillColor1;
         }
 
-        private void RenderNote(RenderGraphics g, Note note, Color color, int time, int noteLen, bool selected, bool activeChannel, bool released, int slideDuration = -1)
+        private void RenderNoteBody(RenderGraphics g, Note note, Color color, int time, int noteLen, bool hover, bool selected, bool activeChannel, bool released, bool isFirstPart, int slideDuration = -1)
         {
             int x = time * noteSizeX - scrollX;
             int y = virtualSizeY - note.Value * noteSizeY - scrollY;
             int sy = released ? releaseNoteSizeY : noteSizeY;
 
-            if (slideDuration >= 0)
+            if (isFirstPart && slideDuration >= 0)
             {
                 // We will get zero for notes that start a slide and have an immediate delayed cut.
                 int duration = Math.Max(1, slideDuration); 
@@ -1759,11 +1762,11 @@ namespace FamiStudio
             int noteTextPosX = attackIconPosX;
 
             g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
-            g.DrawRectangle(0, 0, sx, sy, selected ? selectionNoteBrush : theme.BlackBrush, selected ? 2 : 1);
+            g.DrawRectangle(0, 0, sx, sy, hover ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), selected || hover ? 2 : 1);
 
             if (activeChannel)
             {
-                if (note.HasAttack && sx > noteAttackSizeX + 4)
+                if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + 4)
                 {
                     g.FillRectangle(attackIconPosX, attackIconPosX, attackIconPosX + noteAttackSizeX, sy - attackIconPosX + 1, attackBrush);
                     noteTextPosX += noteAttackSizeX + attackIconPosX;
@@ -1789,7 +1792,7 @@ namespace FamiStudio
             g.PopTransform();
         }
 
-        private void RenderReleaseStopNote(RenderGraphics g, Note note, Color color, int time, bool selected, bool stop, bool released)
+        private void RenderNoteReleaseOrStop(RenderGraphics g, Note note, Color color, int time, bool selected, bool stop, bool released)
         {
             int x = time * noteSizeX - scrollX;
             int y = virtualSizeY - note.Value * noteSizeY - scrollY;
@@ -1916,54 +1919,28 @@ namespace FamiStudio
 
                             // NOTETODO : convert GetLastValidNote to NoteLocation.
                             var dummyNote = (Note)null;
-                            channel.GetLastValidNote(ref min.PatternIndex, ref dummyNote, out min.NoteIndex, out _);
+                            channel.GetLastMusicalNote(ref min.PatternIndex, ref dummyNote, out min.NoteIndex, out _);
 
                             for (var it = channel.GetSparseNoteIterator(min, max); !it.Done; it.Next())
                             {
-                                var pattern  = it.Pattern;
-                                var location = it.Location;
-                                var note     = it.Note;
-
-                                Debug.Assert(note.IsMusical);
-
-                                var absoluteIndex = it.Location.ToAbsoluteNoteIndex(Song); 
-                                var nextAbsoluteIndex = absoluteIndex + it.DistanceToNextNote;
-                                var duration = Math.Min(it.DistanceToNextNote, note.Duration);
-                                var slideDuration = note.IsSlideNote ? channel.GetSlideNoteDuration(note, location.PatternIndex, location.NoteIndex) : -1;
-                                var color = GetNoteColor(c, note, song.Project);
-                                var selected = IsNoteSelected(location, duration);
-                                var released = false;
-
-                                // NOTETODO : Render selected!
-                                
-                                // Draw first part, from start to release point.
-                                if (note.HasRelease)
-                                {
-                                    RenderNote(g, note, color, absoluteIndex, Math.Min(note.Release, duration), selected, isActiveChannel, released, slideDuration);
-                                    absoluteIndex += note.Release;
-                                    duration -= note.Release;
-
-                                    if (duration > 0)
-                                    {
-                                        RenderReleaseStopNote(g, note, color, absoluteIndex, selected, false, false);
-                                        absoluteIndex++;
-                                        duration--;
-                                    }
-
-                                    released = true;
-                                }
-
-                                // Then second part, after release to stop note.
-                                if (duration > 0)
-                                {
-                                    RenderNote(g, note, color, absoluteIndex, duration, selected, isActiveChannel, released, slideDuration);
-                                    absoluteIndex += duration;
-                                    duration -= duration;
-
-                                    if (drawStopNotes && absoluteIndex < nextAbsoluteIndex)
-                                        RenderReleaseStopNote(g, note, color, absoluteIndex, selected, true, released);
-                                }
+                                RenderNote(g, it.Location, it.Note, song, channel, it.DistanceToNextNote, drawStopNotes, isActiveChannel, false);
                             }
+
+                            //var pt = PointToClient(Cursor.Position);
+                            //if (GetLocationForCoord(pt.X, pt.Y, out var hoverLocation, out var hoverNoteValue))
+                            //{
+                            //    var hoverNote = Song.Channels[editChannel].FindMusicalNoteAtLocation(ref hoverLocation, hoverNoteValue);
+                            //    if (hoverNote != null)
+                            //    {
+                            //        var duration = (int)hoverNote.Duration;
+                            //        var distToNext = channel.DistanceToNextMusicalNote(hoverLocation);
+
+                            //        if (distToNext >= 0)
+                            //            duration = Math.Min(duration, distToNext);
+
+                            //        RenderNote(g, hoverLocation, hoverNote, song, channel, duration, drawStopNotes, true, true);
+                            //    }
+                            //}
                         }
                     }
 
@@ -2204,6 +2181,49 @@ namespace FamiStudio
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
                 g.DrawText(noteTooltip, ThemeBase.FontMediumBigRight, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, Width - tooltipTextPosX);
+            }
+        }
+
+        private void RenderNote(RenderGraphics g, NoteLocation location, Note note, Song song, Channel channel, int distanceToNextNote, bool drawStopNotes, bool isActiveChannel, bool hover)
+        {
+            Debug.Assert(note.IsMusical);
+
+            var absoluteIndex = location.ToAbsoluteNoteIndex(Song);
+            var nextAbsoluteIndex = absoluteIndex + distanceToNextNote;
+            var duration = Math.Min(distanceToNextNote, note.Duration);
+            var slideDuration = note.IsSlideNote ? channel.GetSlideNoteDuration(note, location) : -1;
+            var color = GetNoteColor(channel, note, song.Project);
+            var selected = IsNoteSelected(location, duration);
+            var released = false;
+
+            // Draw first part, from start to release point.
+            if (note.HasRelease)
+            {
+                RenderNoteBody(g, note, color, absoluteIndex, Math.Min(note.Release, duration), hover, selected, isActiveChannel, released, true, slideDuration);
+                absoluteIndex += note.Release;
+                duration -= note.Release;
+
+                if (duration > 0)
+                {
+                    RenderNoteReleaseOrStop(g, note, color, absoluteIndex, selected, false, false);
+                    absoluteIndex++;
+                    duration--;
+                }
+
+                released = true;
+            }
+
+            // Then second part, after release to stop note.
+            if (duration > 0)
+            {
+                RenderNoteBody(g, note, color, absoluteIndex, duration, hover, selected, isActiveChannel, released, !note.HasRelease, slideDuration);
+                absoluteIndex += duration;
+                duration -= duration;
+
+                if (drawStopNotes && absoluteIndex < nextAbsoluteIndex)
+                {
+                    RenderNoteReleaseOrStop(g, note, color, absoluteIndex, selected, true, released);
+                }
             }
         }
 
@@ -3741,6 +3761,7 @@ namespace FamiStudio
 
                             note = pattern.GetOrCreateNoteAt(location.NoteIndex);
                             note.Value = noteValue;
+                            note.Duration = (ushort)Song.BeatLength;
                             note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
 
                             pattern.ClearLastValidNoteCache();
@@ -4597,6 +4618,7 @@ namespace FamiStudio
             if (last)
                 PatternChanged?.Invoke(pattern);
 
+            pattern.ClearLastValidNoteCache();
             ConditionalInvalidate();
         }
 
@@ -4612,7 +4634,7 @@ namespace FamiStudio
             App.UndoRedoManager.RestoreTransaction(false);
 
             // NOTETODO : Convert to note location overload.
-            GetNoteForCoord(e.X, e.Y, out var patternIdx, out var noteIdx, out var noteValue, true /* captureOperation != CaptureOperation.DragSelection*/);
+            GetNoteForCoord(e.X, e.Y, out var patternIdx, out var noteIdx, out var noteValue, true);
 
             int deltaNoteIdx = Song.GetPatternStartAbsoluteNoteIndex(patternIdx, noteIdx) - captureAbsoluteNoteIdx;
             int deltaNoteValue = noteValue - captureNoteValue;
@@ -4662,33 +4684,39 @@ namespace FamiStudio
                 var p = Song.FindPatternInstanceIndex(kv.Key + deltaNoteIdx, out var n);
                 var pattern = channel.PatternInstances[p];
 
-                if (pattern != null)
+                if (pattern == null)
                 {
-                    if (keepFx)
-                    {
-                        var oldNote = kv.Value;
+                    // Cant create patterns without having promoted the transaction to channel.
+                    Debug.Assert(App.UndoRedoManager.UndoScope == TransactionScope.Channel);
+                    pattern = channel.CreatePatternAndInstance(p);
+                }
 
-                        if (oldNote.IsMusical)
-                        {
-                            var newNote = pattern.GetOrCreateNoteAt(n);
+                if (keepFx)
+                {
+                    var oldNote = kv.Value;
 
-                            newNote.Value = (byte)Utils.Clamp(oldNote.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
-                            newNote.Instrument = oldNote.Instrument;
-                            newNote.Arpeggio = oldNote.Arpeggio;
-                            newNote.Slide = oldNote.Slide;
-                            newNote.Flags = oldNote.Flags;
-                            newNote.Duration = oldNote.Duration;
-                            newNote.Release = oldNote.Release;
-                        }
-                    }
-                    else
+                    if (oldNote.IsMusical)
                     {
-                        var note = kv.Value.Clone();
-                        if (note.IsMusical)
-                            note.Value = (byte)Utils.Clamp(note.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
-                        pattern.SetNoteAt(n, note);
+                        var newNote = pattern.GetOrCreateNoteAt(n);
+
+                        newNote.Value = (byte)Utils.Clamp(oldNote.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                        newNote.Instrument = oldNote.Instrument;
+                        newNote.Arpeggio = oldNote.Arpeggio;
+                        newNote.Slide = oldNote.Slide;
+                        newNote.Flags = oldNote.Flags;
+                        newNote.Duration = oldNote.Duration;
+                        newNote.Release = oldNote.Release;
                     }
                 }
+                else
+                {
+                    var note = kv.Value.Clone();
+                    if (note.IsMusical)
+                        note.Value = (byte)Utils.Clamp(note.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                    pattern.SetNoteAt(n, note);
+                }
+
+                pattern.ClearLastValidNoteCache();
             }
 
             if (captureOperation == CaptureOperation.DragSelection)
@@ -4771,12 +4799,18 @@ namespace FamiStudio
                     // Shorten the drag notes.
                     dragNote.Duration = (ushort)Song.CountNotesBetween(dragNoteLocation, location);
 
+                    // NOTETODO : We could transfer the release to new note.
+                    if (dragNote.Release >= dragNote.Duration)
+                        dragNote.Release = 0;
+
                     var note = pattern.GetOrCreateNoteAt(noteIdx);
 
                     note.Value = noteValue;
                     note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
                     note.Arpeggio = channel.SupportsArpeggios ? currentArpeggio : null;
                     note.Duration = (ushort)(dragNoteOldDuration - dragNote.Duration);
+
+                    pattern.ClearLastValidNoteCache();
                 }
                 else
                 {
@@ -5021,6 +5055,18 @@ namespace FamiStudio
             noteValue = (byte)(numNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, numNotes));
 
             return (x > whiteKeySizeX && y > headerAndEffectSizeY && location.PatternIndex < Song.Length);
+        }
+
+        private Note GetNoteForCoord(int x, int y)
+        {
+            Debug.Assert(editMode == EditionMode.Channel);
+
+            if (GetLocationForCoord(x, y, out var location, out var noteValue))
+            {
+                return Song.Channels[editChannel].FindMusicalNoteAtLocation(ref location, noteValue);
+            }
+
+            return null;
         }
 
         private bool GetEnvelopeValueForCoord(int x, int y, out int idx, out sbyte value)

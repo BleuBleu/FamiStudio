@@ -16,23 +16,29 @@ Note refactor
 ============= 
 / If good, write code that converts old notes to solid notes.
 / Rendering of solid notes
+	- Note attack/release rendering fix
+	- Slide notes
+	- 
 - Change the piano roll editing/rendering, see how it feels.
 	/ Add a note
 	/ Selection
 	/ Mouse over, last valid note shit.
 	/ Add release.
+		- Delete release.
 	/ Drag
 		/ Single
 		/ Multiple
 		- Dragging should create patterns automatically.
 		- Move cursor when hovering?
-		- Crash if create single note with quick click on a note (no drag)
+		/ Crash if create single note with quick click on a note (no drag)
+		- Option to move slide notes when dragging?
 	- Selection operations
-		- Move release
 		- Resizes (single/mutitple)
 		- Highlight what is going to happen.
+		- Move release
+	- When adding a new note, or resizing, draw actual note duration rectangle.
+	- CTRL + drag = duplicate.
 	/ Delete
-		- Clicking EXACTLY on the note doesnt delete it.
 - If still good, change the player, imports/export, etc.
 
 - Solutions

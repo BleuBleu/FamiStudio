@@ -446,7 +446,7 @@ namespace FamiStudio
             return Note.GetEffectDefaultValue(song, effect);
         }
 
-        public bool GetLastValidNote(ref int patternIdx, ref Note lastValidNote, out int noteIdx, out bool released)
+        public bool GetLastMusicalNote(ref int patternIdx, ref Note lastValidNote, out int noteIdx, out bool released)
         {
             noteIdx = -1;
             released = false;
@@ -469,7 +469,7 @@ namespace FamiStudio
 
                     released |= lastNoteReleased;
 
-                    if (note.IsValid)
+                    if (note.IsMusical)
                     {
                         lastValidNote = note;
                         return true;
@@ -524,11 +524,11 @@ namespace FamiStudio
         }
 
         // Duration in number of notes, simply to draw in the piano roll.
-        public int GetSlideNoteDuration(Note note, int patternIdx, int noteIdx)
+        public int GetSlideNoteDuration(Note note, NoteLocation location)
         {
             Debug.Assert(note.IsMusical);
-            FindNextNoteForSlide(patternIdx, noteIdx, 256, out var nextPatternIdx, out var nextNoteIdx); // 256 is kind of arbitrary. 
-            return Song.CountNotesBetween(patternIdx, noteIdx, nextPatternIdx, nextNoteIdx);
+            FindNextNoteForSlide(location, 256, out var nextLocation); // 256 is kind of arbitrary. 
+            return Song.CountNotesBetween(location, nextLocation);
         }
 
         public Note GetNoteAt(int patternIdx, int noteIdx)
@@ -545,7 +545,7 @@ namespace FamiStudio
             return null;
         }
 
-        public SparseChannelNoteIterator GetSparseNoteIterator(NoteLocation start, NoteLocation end)
+        public SparseChannelNoteIterator GetSparseNoteIterator(NoteLocation start, NoteLocation end, SparseChannelIteratorFilter filter = SparseChannelIteratorFilter.Musical)
         {
             return new SparseChannelNoteIterator(this, start, end);
         }
@@ -561,6 +561,8 @@ namespace FamiStudio
 
             pitchDelta = noteTable[note.Value] - noteTable[note.SlideNoteTarget];
 
+            // NOTETODO : Convert this.
+            /*
             if (pitchDelta != 0)
             {
                 pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
@@ -611,6 +613,7 @@ namespace FamiStudio
                 return true;
             }
             else
+            */
             {
                 stepSize = 0;
                 stepSizeFloat = 0.0f;
@@ -662,65 +665,34 @@ namespace FamiStudio
             return -1;
         }
 
-        // NOTETODO: Needs to know about note durations + use locations here.
-        public bool FindNextNoteForSlide(int patternIdx, int noteIdx, int maxNotes, out int nextPatternIdx, out int nextNoteIdx)
+        public bool FindNextNoteForSlide(NoteLocation location, int maxNotes, out NoteLocation nextNoteLocation)
         {
-            nextPatternIdx = patternIdx;
-            nextNoteIdx = noteIdx;
+            nextNoteLocation = location;
 
-            var noteCount = 0;
-            var patternLength = song.GetPatternLength(patternIdx);
-            var pattern = patternInstances[patternIdx];
+            var patternLength = song.GetPatternLength(location.PatternIndex);
+            var pattern = patternInstances[location.PatternIndex];
 
-            if (pattern.Notes.ContainsKey(noteIdx) &&
-                pattern.Notes[noteIdx].HasCutDelay)
+            Debug.Assert(pattern.Notes.ContainsKey(location.NoteIndex));
+            Debug.Assert(pattern.Notes[location.NoteIndex].IsMusical);
+
+            if (pattern.Notes[location.NoteIndex].HasCutDelay)
             {
                 return true;
             }
 
-            // NOTETODO : If we are always at a musical note, we just need a function to find the next. No need for dense iterator.
-            for (var it = pattern.GetDenseNoteIterator(noteIdx + 1, patternLength); !it.Done && noteCount < maxNotes; it.Next(), noteCount++)
-            {
-                var time = it.CurrentTime;
-                var note = it.CurrentNote;
-                if (note != null && (note.IsMusical || note.IsStop || note.HasCutDelay))
-                {
-                    nextPatternIdx = patternIdx;
-                    nextNoteIdx = time;
-                    return true;
-                }
-            }
+            NoteLocation maxLocation = location;
+            Song.AdvanceNumberOfNotes(ref maxLocation, maxNotes);
 
-            for (int p = patternIdx + 1; p < song.Length && noteCount < maxNotes; p++)
-            {
-                pattern = patternInstances[p];
+            var it = GetSparseNoteIterator(location, maxLocation, SparseChannelIteratorFilter.Musical | SparseChannelIteratorFilter.DelayedCut);
+            var noteDuration = (int)pattern.Notes[location.NoteIndex].Duration;
 
-                if (pattern != null)
-                {
-                    var firstNote = pattern.GetFirstMusicalNote(out var firstNoteIdx);
-                    if (firstNote != null)
-                    {
-                        nextPatternIdx = p;
-                        nextNoteIdx = noteCount + firstNoteIdx > maxNotes ? maxNotes - noteCount : firstNoteIdx;
-                        return true;
-                    }
-                }
+            Debug.Assert(!it.Done);
 
-                noteCount += song.GetPatternLength(p);
-            }
+            noteDuration = Math.Min(noteDuration, it.DistanceToNextNote);
+            noteDuration = Math.Min(noteDuration, maxNotes);
 
-            // This mean we hit the end of the song.
-            if (noteCount < maxNotes)
-            {
-                nextPatternIdx = song.Length;
-                nextNoteIdx = 0;
-                return true;
-            }
-
-            // Didnt find anything, just advance to the max note location and return false.
-            song.AdvanceNumberOfNotes(maxNotes, ref nextPatternIdx, ref nextNoteIdx);
-
-            return false;
+            Song.AdvanceNumberOfNotes(ref nextNoteLocation, noteDuration);
+            return true;
         }
 
         // If note value is negative, will return any note.
@@ -1129,7 +1101,15 @@ namespace FamiStudio
             return Array.IndexOf(ShortNames, str);
         }
     }
-    
+
+    [Flags]
+    public enum SparseChannelIteratorFilter
+    {
+        None = 0,
+        Musical = 1,
+        DelayedCut = 2
+    }
+
     // Iterator to to iterate on musical notes in a range of the song and automatically find the following note.
     // Basically to ease the migration to solid notes at FamiStudio 3.0.0.
     public class SparseChannelNoteIterator
@@ -1141,6 +1121,7 @@ namespace FamiStudio
         private Channel channel;
         private Pattern pattern;
         private Note note;
+        private SparseChannelIteratorFilter filter;
         private int currIdx;
         private int nextIdx;
 
@@ -1156,11 +1137,12 @@ namespace FamiStudio
         public bool Done => current > end;
 
         // Iterate from [start, end]
-        public SparseChannelNoteIterator(Channel c, NoteLocation start, NoteLocation end)
+        public SparseChannelNoteIterator(Channel c, NoteLocation start, NoteLocation end, SparseChannelIteratorFilter f = SparseChannelIteratorFilter.Musical)
         {
             Debug.Assert(start <= end);
 
             this.channel = c;
+            this.filter  = f;
             this.end     = end;
 
             // Look forward for a first musical note.
@@ -1176,7 +1158,7 @@ namespace FamiStudio
                     {
                         for (; idx < pattern.Notes.Values.Count; idx++)
                         {
-                            if (pattern.Notes.Values[idx].IsMusical)
+                            if (FilterNote(pattern.Notes.Values[idx]))
                             {
                                 start.NoteIndex = pattern.Notes.Keys[idx];
                                 SetCurrentNote(start, idx);
@@ -1189,11 +1171,22 @@ namespace FamiStudio
                 start.PatternIndex++;
                 start.NoteIndex = 0;
             }
-            while (pattern == null && start.PatternIndex < end.PatternIndex);
+            while (start.PatternIndex <= end.PatternIndex);
 
             // Done.
             current = end;
             current.PatternIndex++;
+        }
+
+        private bool FilterNote(Note note)
+        {
+            if (note.IsMusical && filter.HasFlag(SparseChannelIteratorFilter.Musical))
+                return true;
+
+            if (note.HasCutDelay && filter.HasFlag(SparseChannelIteratorFilter.DelayedCut))
+                return true;
+
+            return false;
         }
 
         private void SetCurrentNote(NoteLocation location, int listIdx)
@@ -1212,7 +1205,7 @@ namespace FamiStudio
 
             note = pattern.Notes.Values[currIdx];
 
-            Debug.Assert(note.IsMusical);
+            Debug.Assert(FilterNote(note));
 
             // Find next note.
             nextIdx = currIdx;
@@ -1221,7 +1214,7 @@ namespace FamiStudio
             while (++nextIdx < pattern.Notes.Values.Count)
             {
                 // Only considering musical notes for now.
-                if (pattern.Notes.Values[nextIdx].IsMusical)
+                if (FilterNote(pattern.Notes.Values[nextIdx]))
                 {
                     next.PatternIndex = current.PatternIndex;
                     next.NoteIndex    = pattern.Notes.Keys[nextIdx];
@@ -1234,14 +1227,14 @@ namespace FamiStudio
             {
                 var pat = channel.PatternInstances[p];
 
-                if (pat != null)
+                if (pat != null && pat.Notes.Count > 0)
                 {
                     nextIdx = 0;
 
                     do
                     {
                         // Only considering musical notes for now.
-                        if (pat.Notes.Values[nextIdx].IsMusical)
+                        if (FilterNote(pat.Notes.Values[nextIdx]))
                         {
                             next.PatternIndex = p;
                             next.NoteIndex    = pat.Notes.Keys[nextIdx];
