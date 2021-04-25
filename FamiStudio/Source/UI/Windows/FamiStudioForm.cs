@@ -25,6 +25,8 @@ namespace FamiStudio
 
         public FamiStudioForm(FamiStudio famistudio)
         {
+            Cursors.Initialize();
+
             this.famistudio = famistudio;
 
             timer.Tick += timer_Tick;

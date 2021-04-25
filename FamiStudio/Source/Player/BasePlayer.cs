@@ -231,7 +231,7 @@ namespace FamiStudio
                 UpdateChannels();
                 UpdateTempo();
 
-                while (song.GetPatternStartNote(playPattern) + playNote < startNote)
+                while (song.GetPatternStartAbsoluteNoteIndex(playPattern) + playNote < startNote)
                 {
                     if (!PlaySongFrameInternal(true))
                         break;
@@ -248,7 +248,7 @@ namespace FamiStudio
 
             EndFrame();
 
-            playPosition = song.GetPatternStartNote(playPattern) + playNote;
+            playPosition = song.GetPatternStartAbsoluteNoteIndex(playPattern) + playNote;
 
             return true;
         }
@@ -305,7 +305,7 @@ namespace FamiStudio
             }
 
             if (!seeking)
-                playPosition = song.GetPatternStartNote(playPattern) + playNote;
+                playPosition = song.GetPatternStartAbsoluteNoteIndex(playPattern) + playNote;
 
             return true;
         }

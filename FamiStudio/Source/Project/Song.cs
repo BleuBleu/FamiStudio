@@ -304,8 +304,9 @@ namespace FamiStudio
             var settings = patternCustomSettings[patternIdx];
             return settings.useCustomSettings ? settings.groovePaddingMode : groovePaddingMode;
         }
-
-        public int GetPatternStartNote(int patternIdx, int note = 0)
+        
+        // NOTETODO : Migrate to note location.
+        public int GetPatternStartAbsoluteNoteIndex(int patternIdx, int note = 0)
         {
             return patternStartNote[patternIdx] + note;
         }
@@ -627,7 +628,7 @@ namespace FamiStudio
             //}
         }
 
-        public NoteLocation AbsoluteNoteLocationToNoteLocation(int absoluteNoteIdx)
+        public NoteLocation AbsoluteNoteIndexToNoteLocation(int absoluteNoteIdx)
         {
             // TODO: Binary search
             for (int i = 0; i < songLength; i++)
@@ -637,6 +638,11 @@ namespace FamiStudio
             }
 
             return new NoteLocation(songLength, 0);
+        }
+
+        public int NoteLocationToAbsoluteNoteIndex(NoteLocation location)
+        {
+            return patternStartNote[location.PatternIndex] + location.NoteIndex;
         }
 
         // NOTETODO : Migrate all to AbsoluteNoteLocationToNoteLocation().
@@ -846,18 +852,7 @@ namespace FamiStudio
 
         public int CountNotesBetween(NoteLocation start, NoteLocation end)
         {
-            int noteCount = 0;
-
-            while (start.PatternIndex != end.PatternIndex)
-            {
-                noteCount += GetPatternLength(start.PatternIndex) - start.NoteIndex;
-                start.PatternIndex++;
-                start.NoteIndex = 0;
-            }
-
-            noteCount += (end.NoteIndex - start.NoteIndex);
-
-            return noteCount;
+            return NoteLocationToAbsoluteNoteIndex(end) - NoteLocationToAbsoluteNoteIndex(start);
         }
 
         // NOTETODO : Get rid of that one!!!
@@ -928,6 +923,52 @@ namespace FamiStudio
             }
         }
 
+        public bool AdvanceNumberOfNotes(ref NoteLocation location, int noteCount)
+        {
+            if (noteCount > 0)
+            {
+                location.NoteIndex += noteCount;
+
+                while (true)
+                {
+                    var patternLen = GetPatternLength(location.PatternIndex);
+
+                    if (location.NoteIndex < patternLen)
+                        return true;
+
+                    location.NoteIndex -= patternLen;
+
+                    if (++location.PatternIndex >= songLength)
+                    {
+                        location.NoteIndex = 0;
+                        return false;
+                    }
+                }
+            }
+            else if (noteCount < 0)
+            {
+                location.NoteIndex += noteCount;
+
+                while (true)
+                {
+                    if (location.NoteIndex >= 0)
+                        return true;
+
+                    if (--location.PatternIndex < 0)
+                    {
+                        location.PatternIndex = 0;
+                        location.NoteIndex = 0;
+                        return false;
+                    }
+
+                    location.NoteIndex += GetPatternLength(location.PatternIndex);
+                }
+            }
+
+            return true;
+        }
+
+        // NOTETODO : Migrate all to NoteLocation overload.
         public bool AdvanceNumberOfNotes(int noteCount, ref int p, ref int n)
         {
             if (noteCount > 0)
@@ -1133,6 +1174,16 @@ namespace FamiStudio
             NoteIndex = n;
         }
 
+        public int ToAbsoluteNoteIndex(Song s)
+        {
+            return s.NoteLocationToAbsoluteNoteIndex(this);
+        }
+
+        public static NoteLocation FromAbsoluteNoteIndex(Song s, int absoluteNoteIndex)
+        {
+            return s.AbsoluteNoteIndexToNoteLocation(absoluteNoteIndex);
+        }
+
         public override bool Equals(object obj)
         {
             var other = (NoteLocation)obj;
@@ -1146,12 +1197,12 @@ namespace FamiStudio
 
         public static bool operator ==(NoteLocation n0, NoteLocation n1)
         {
-            return n0.PatternIndex == n1.PatternIndex && n0.NoteIndex == n1.PatternIndex;
+            return n0.PatternIndex == n1.PatternIndex && n0.NoteIndex == n1.NoteIndex;
         }
 
         public static bool operator !=(NoteLocation n0, NoteLocation n1)
         {
-            return n0.PatternIndex != n1.PatternIndex || n0.NoteIndex != n1.PatternIndex;
+            return n0.PatternIndex != n1.PatternIndex || n0.NoteIndex != n1.NoteIndex;
         }
 
         public static bool operator <(NoteLocation n0, NoteLocation n1)

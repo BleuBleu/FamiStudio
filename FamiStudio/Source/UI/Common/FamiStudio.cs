@@ -393,7 +393,7 @@ namespace FamiStudio
 
         private void UndoRedoManager_Updated()
         {
-            ToolBar.Invalidate();
+            ToolBar.ConditionalInvalidate();
         }
 
         public bool CheckUnloadProject()
@@ -1090,9 +1090,9 @@ namespace FamiStudio
                 else
                 {
                     if (ctrl && shift)
-                        SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartNote(song.LoopPoint) : 0);
+                        SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartAbsoluteNoteIndex(song.LoopPoint) : 0);
                     if (ctrl)
-                        SeekSong(song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.PlayPosition, out _)));
+                        SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.FindPatternInstanceIndex(songPlayer.PlayPosition, out _)));
                     else if (shift)
                         SeekSong(0);
 
@@ -1301,7 +1301,7 @@ namespace FamiStudio
             {
                 bool wasPlaying = songPlayer.IsPlaying;
                 if (wasPlaying) StopSong();
-                songPlayer.PlayPosition = Utils.Clamp(frame, 0, song.GetPatternStartNote(song.Length) - 1);
+                songPlayer.PlayPosition = Utils.Clamp(frame, 0, song.GetPatternStartAbsoluteNoteIndex(song.Length) - 1);
                 if (wasPlaying) PlaySong();
                 InvalidateEverything();
             }
@@ -1313,7 +1313,7 @@ namespace FamiStudio
             {
                 bool wasPlaying = songPlayer.IsPlaying;
                 if (wasPlaying) StopSong();
-                songPlayer.PlayPosition = song.GetPatternStartNote(song.FindPatternInstanceIndex(songPlayer.PlayPosition, out _));
+                songPlayer.PlayPosition = song.GetPatternStartAbsoluteNoteIndex(song.FindPatternInstanceIndex(songPlayer.PlayPosition, out _));
                 if (wasPlaying) PlaySong();
                 InvalidateEverything();
             }

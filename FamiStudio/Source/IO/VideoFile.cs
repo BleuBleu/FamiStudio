@@ -316,7 +316,7 @@ namespace FamiStudio
             for (int i = 0; i < frames.Length; i++)
             {
                 patternIndices[i] = frames[i].playPattern;
-                absoluteNoteIndices[i] = song.GetPatternStartNote(frames[i].playPattern, (int)frames[i].playNote);
+                absoluteNoteIndices[i] = song.GetPatternStartAbsoluteNoteIndex(frames[i].playPattern, (int)frames[i].playNote);
             }
 
             // Do moving average to smooth the movement.
@@ -340,7 +340,7 @@ namespace FamiStudio
                 sum /= cnt;
 
                 frames[i].playPattern = song.FindPatternInstanceIndex((int)sum, out _);
-                frames[i].playNote = sum - song.GetPatternStartNote(frames[i].playPattern);
+                frames[i].playNote = sum - song.GetPatternStartAbsoluteNoteIndex(frames[i].playPattern);
             }
         }
 

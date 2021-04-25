@@ -82,6 +82,8 @@ namespace FamiStudio
             Arpeggio = null;
             Slide = 0;
             Flags = 0;
+            Duration = 0;
+            Release = 0;
 
             if (!preserveFx)
             {

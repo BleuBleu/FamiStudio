@@ -13,7 +13,7 @@ namespace FamiStudio
         private class LastValidNoteData
         {
             public bool released = false;
-            public int time = -1;
+            public int index = -1;
             public int effectMask = 0;
             public int[] effectValues = new int[Note.EffectCount];
         }
@@ -107,7 +107,7 @@ namespace FamiStudio
             firstValidNoteTime = int.MinValue;
         }
 
-        private int GetCachedFirstValidNoteTime()
+        private int GetCachedFirstValidNoteIndex()
         {
             if (firstValidNoteTime == int.MinValue)
             {
@@ -142,6 +142,8 @@ namespace FamiStudio
                 if (i > endTime)
                     break;
 
+                Debug.Assert(!note.IsStop && !note.IsRelease);
+
                 if (note.IsRelease)
                 {
                     lastValidData.released = true;
@@ -150,11 +152,11 @@ namespace FamiStudio
                 {
                     if (note.IsStop)
                     {
-                        lastValidData.time = -1;
+                        lastValidData.index = -1;
                     }
                     if (note.IsValid)
                     {
-                        lastValidData.time = i;
+                        lastValidData.index = i;
                     }
                 }
 
@@ -191,51 +193,48 @@ namespace FamiStudio
             }
         }
 
-        public int FirstValidNoteTime
+        public Note GetFirstMusicalNote(out int noteIndex)
         {
-            get
+            noteIndex = GetCachedFirstValidNoteIndex();
+
+            if (noteIndex >= 0)
             {
-                return GetCachedFirstValidNoteTime();
+                var note = notes[noteIndex];
+                Debug.Assert(note.IsMusical);
+                return note;
             }
+
+            return null;
         }
 
-        public Note FirstValidNote
+        public Note GetLastMusicalNote(int queryIndex, out int noteIndex, out bool released)
         {
-            get
+            var lastData = GetCachedLastValidNoteData(queryIndex);
+
+            noteIndex = -1;
+            released  = false;
+
+            if (lastData.index >= 0)
             {
-                Debug.Assert(GetCachedFirstValidNoteTime() >= 0);
-                return notes[GetCachedFirstValidNoteTime()];
+                noteIndex = lastData.index;
+                released  = lastData.released;
+
+                return notes[lastData.index];
             }
+
+            return null;
         }
 
-        public int GetLastValidNoteTimeAt(int time)
+        public bool HasLastEffectValue(int queryIndex, int effect)
         {
-            var lastData = GetCachedLastValidNoteData(time);
-            return lastData.time >= 0? lastData.time : -1;
-        }
-
-        public Note GetLastValidNoteAt(int time)
-        {
-            var lastData = GetCachedLastValidNoteData(time);
-            return notes[lastData.time];
-        }
-
-        public bool GetLastValidNoteReleasedAt(int time)
-        {
-            var lastData = GetCachedLastValidNoteData(time);
-            return lastData.released;
-        }
-
-        public bool HasLastEffectValueAt(int time, int effect)
-        {
-            var lastData = GetCachedLastValidNoteData(time);
+            var lastData = GetCachedLastValidNoteData(queryIndex);
             return (lastData.effectMask & (1 << effect)) != 0;
         }
 
-        public int GetLastEffectValueAt(int time, int effect)
+        public int GetLastEffectValue(int queryIndex, int effect)
         {
-            Debug.Assert(HasLastEffectValueAt(time, effect));
-            var lastData = GetCachedLastValidNoteData(time);
+            Debug.Assert(HasLastEffectValue(queryIndex, effect));
+            var lastData = GetCachedLastValidNoteData(queryIndex);
             return lastData.effectValues[effect];
         }
 
