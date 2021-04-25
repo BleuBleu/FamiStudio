@@ -15,9 +15,9 @@ FamiStudio Tempo 2.0
 Note refactor 
 ============= 
 - Change the piano roll editing/rendering, see how it feels.
-	- BUG : If note start at last frame of pattern, does display correctly.
+	x BUG : If note start at last frame of pattern, does display correctly.
+	x BUG : Rendering note at end of song.
 	- BUG : Assert transaction not finished when dragging notes.
-	- BUG : Rendering note at end of song.
 	- Highlight when creating new note.
 	- When adding a new note, or resizing, draw actual note duration rectangle? LOW PRIO.
 	- Retest all capture op.

@@ -4672,6 +4672,8 @@ namespace FamiStudio
                 App.UndoRedoManager.AbortTransaction();
             }
 
+            hoverNoteLocation = captureNoteLocation;
+
             var minLocation = NoteLocation.Min(location, captureNoteLocation);
             var maxLocation = NoteLocation.Max(location, captureNoteLocation);
             var minAbsoluteNoteIndex = minLocation.ToAbsoluteNoteIndex(Song);

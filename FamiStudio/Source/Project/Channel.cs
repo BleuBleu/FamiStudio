@@ -1141,6 +1141,13 @@ namespace FamiStudio
         {
             Debug.Assert(start <= end);
 
+            // Clamp end to end of song.
+            if (end.PatternIndex >= c.Song.Length)
+            {
+                end.PatternIndex = c.Song.Length - 1;
+                end.NoteIndex = c.Song.GetPatternLength(end.PatternIndex);
+            }
+
             this.channel = c;
             this.filter  = f;
             this.end     = end;
