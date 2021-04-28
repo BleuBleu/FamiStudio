@@ -238,7 +238,7 @@ namespace FamiStudio
                         }
                     }
                     if (dirty)
-                        pattern.ClearLastValidNoteCache();
+                        pattern.InvalidateCumulativeCache();
                 }
             }
         }
@@ -359,15 +359,12 @@ namespace FamiStudio
             return arpeggio;
         }
 
-        public void UpdateAllLastValidNotesAndVolume()
+        public void InvalidateCumulativePatternCache()
         {
             foreach (var song in songs)
             {
                 foreach (var channel in song.Channels)
-                {
-                    foreach (var pattern in channel.Patterns)
-                        pattern.ClearLastValidNoteCache();
-                }
+                    channel.InvalidateCumulativePatternCache();
             }
         }
 
@@ -395,7 +392,7 @@ namespace FamiStudio
                 }
             }
 
-            UpdateAllLastValidNotesAndVolume();
+            InvalidateCumulativePatternCache();
         }
 
         public void DeleteInstrument(Instrument instrument)
@@ -1160,6 +1157,12 @@ namespace FamiStudio
             }
 
             tempoMode = TempoType.FamiTracker;
+        }
+
+        public void ConvertFromCompoundNotes()
+        {
+            foreach (var song in songs)
+                song.ConvertFromCompoundNotes();
         }
 
         public void DeleteUnusedInstruments()

@@ -690,16 +690,25 @@ namespace FamiStudio
                     maxNote = (byte)(maxNote + 2);
                 }
 
+                var musicalNotes = new List<Tuple<int, Note>>();
+
                 foreach (var kv in p.Notes)
                 {
-                    var idx = kv.Key;
-                    var note = kv.Value;
-
-                    if (kv.Key >= patternLen)
+                    var time = kv.Key;
+                    if (time >= patternLen)
                         break;
 
+                    var note = kv.Value;
                     if (note.IsMusical)
-                        DrawPatternBitmapNote(idx, Math.Min(patternLen - 1, idx + note.Duration), note, patternSizeX, patternSizeY, minNote, maxNote, scaleY, p.ChannelType == ChannelType.Dpcm, data);
+                        musicalNotes.Add(new Tuple<int, Note>(time, note));
+                }
+
+                for (int i = 0; i < musicalNotes.Count; i++)
+                {
+                    var note  = musicalNotes[i].Item2;
+                    var time1 = musicalNotes[i].Item1;
+                    var time2 = i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : (int)ushort.MaxValue;
+                    DrawPatternBitmapNote(time1, Math.Min(time2, Math.Min(patternLen - 1, time1 + note.Duration)), note, patternSizeX, patternSizeY, minNote, maxNote, scaleY, p.ChannelType == ChannelType.Dpcm, data);
                 }
             }
 
@@ -928,6 +937,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                         channel.PatternInstances[patternIdx] = channel.CreatePattern();
+                        channel.InvalidateCumulativePatternCache(patternIdx);
                         PatternClicked?.Invoke(channelIdx, patternIdx);
                         App.UndoRedoManager.EndTransaction();
                         ClearSelection();
@@ -993,6 +1003,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                         channel.PatternInstances[patternIdx] = null;
+                        channel.InvalidateCumulativePatternCache(patternIdx);
                         App.UndoRedoManager.EndTransaction();
                         ClearSelection();
                         ConditionalInvalidate();
@@ -1174,6 +1185,8 @@ namespace FamiStudio
             minSelectedChannelIdx = 0;
             maxSelectedChannelIdx = Song.Channels.Length - 1;
 
+            Song.InvalidateCumulativePatternCache();
+
             App.UndoRedoManager.EndTransaction();
             PatternsPasted?.Invoke();
             ConditionalInvalidate();
@@ -1345,6 +1358,7 @@ namespace FamiStudio
 
                         Song.RemoveUnsupportedEffects();
                         Song.RemoveUnsupportedInstruments();
+                        Song.InvalidateCumulativePatternCache();
 
                         App.UndoRedoManager.EndTransaction();
 
@@ -1405,6 +1419,8 @@ namespace FamiStudio
                 for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                     Song.ClearPatternCustomSettings(j);
             }
+
+            Song.InvalidateCumulativePatternCache();
 
             if (trans)
             {

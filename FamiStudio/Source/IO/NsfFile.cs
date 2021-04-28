@@ -940,8 +940,8 @@ namespace FamiStudio
             song.SetSensibleBeatLength();
             song.DeleteEmptyPatterns();
             song.UpdatePatternStartNotes();
+            song.InvalidateCumulativePatternCache();
             project.DeleteUnusedInstruments();
-            project.UpdateAllLastValidNotesAndVolume();
 
             foreach (var sample in project.Samples)
                 sample.ReverseBits = reverseDpcm;

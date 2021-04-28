@@ -925,7 +925,7 @@ namespace FamiStudio
                 s.DeleteEmptyPatterns();
             }
 
-            project.UpdateAllLastValidNotesAndVolume();
+            project.InvalidateCumulativePatternCache();
             project.SortEverything(false);
             project.Validate();
 

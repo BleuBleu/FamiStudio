@@ -1148,6 +1148,13 @@ namespace FamiStudio
             {
                 ToggleQwertyPiano();
             }
+#if DEBUG
+            else if (ctrl && e.KeyCode == Keys.NumPad0)
+            {
+                //project.Validate();
+                song.Channels[0].ConvertFromCompoundNotes();
+            }
+#endif
 #if FAMISTUDIO_WINDOWS
             else if (e.KeyData == Keys.Up    ||
                      e.KeyData == Keys.Down  ||

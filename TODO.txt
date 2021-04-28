@@ -15,43 +15,21 @@ FamiStudio Tempo 2.0
 Note refactor 
 ============= 
 - Change the piano roll editing/rendering, see how it feels.
-	- BUG : Assert transaction not finished when dragging notes. CANT REPRO.
-	- Retest all capture op.
+	*** BUG DRAG SELECTION. WORRYSOME, CHANNEL LOOKS CORRUPTED.
+	- Cumulative cache : 
+		- Test more stuff, song resize, custom settings, etc.
+	- Should note drag be more agressive?
+	
+	- Make player work.
+	- Delayed cuts, how do we draw them? +1?
 	- Draw "attack" on all notes.
-	- Multiple effect editing.
 	- Get feedback on discord.
-	- CUT : When adding a new note, or resizing, draw actual note duration rectangle? LOW PRIO.
-- If still good, change the player, imports/export, etc.
-
-- Solutions
-	1) Solid notes: 
-		- Different pattern can extend to the same pattern, differente note length. At this point, is it a big deal?
-		- This mean the note + duration + release point will be in a previous pattern if they extend beyond, is that an issue?
-			=> Will change a lot of places where we ierate on notes, a release or stop note can come from a previous pattern.
-		- The beginning of a new note always has priority on the end. This may solve the different note length issue.
-			- Dragging should move the entire note no matter what => More intuitive at least.
-			- Resize respect these 2 rules.
-		- Resize on both ends?
-			=> At end, only to shorten or reach the next note, notes length are more like a "desired" length.
-			=> At beginning, can go as far as you want.
-			
-		Actions
-			- Draw a note with its duration
-			- Add a release note somewhere in there (moving a release should be like a resize)
-			- Drag the entire note, feels "solid"
-			- Resize from both end, with the 2 rules above.
-		
-	2) Stop notes: 
-		- Adding a new note + stop note will require creating the next pattern too (not bad).
-		- Many different possible approaches
-			 - every note could come with a stop (drag length?)
-			 - or maybe resize from end creates a stop note?
-		- Notes will be made to feel "solid"
-			=> What about infinite notes? 
-	3) Hybrid solution (optional duration + stop notes):
-		- Would create a function that converts as many notes to durations as possible.
-		- Code would be quite messy i think.
-
+	- Scan all use of IsStop/IsRelease, etc.
+	- Multiple effect editing.
+	- Create pattern when editing effects.
+	- Retest all capture op.
+- Make sure cant paste data from older FamiStudio
+- FamiStudio text, check major + minor version.
 - Remove fractional snapping? Too awkward.
 - When deleting a note, dont delete certain effects. 
  

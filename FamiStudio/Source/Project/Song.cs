@@ -148,6 +148,7 @@ namespace FamiStudio
                 loopPoint = 0;
 
             UpdatePatternStartNotes();
+            InvalidateCumulativePatternCache();
         }
 
         public void SetDefaultPatternLength(int newLength)
@@ -229,6 +230,7 @@ namespace FamiStudio
         public void ClearPatternCustomSettings(int patternIdx)
         {
             patternCustomSettings[patternIdx].Clear();
+            InvalidateCumulativePatternCache(patternIdx);
             UpdatePatternStartNotes();
         }
 
@@ -262,6 +264,7 @@ namespace FamiStudio
                 patternCustomSettings[patternIdx].groovePaddingMode = groovePaddingMode;
             }
 
+            InvalidateCumulativePatternCache(patternIdx);
             UpdatePatternStartNotes();
         }
 
@@ -399,7 +402,7 @@ namespace FamiStudio
                 foreach (var kv in pattern.Notes)
                     oldNotes[kv.Key] = kv.Value.Clone();
 
-                pattern.Notes.Clear();
+                pattern.DeleteAllNotes();
 
                 // Resize the pattern while applying some kind of priority in case we
                 // 2 notes append to map to the same note (when shortening notes). 
@@ -431,8 +434,6 @@ namespace FamiStudio
                             pattern.SetNoteAt(newIdx, oldNote);
                     }
                 }
-
-                pattern.ClearLastValidNoteCache();
 
                 if (processedPatterns != null)
                     processedPatterns.Add(pattern);
@@ -600,13 +601,13 @@ namespace FamiStudio
 
                             // Converts old Jump effects to loop points.
                             // The first Jump effect will give us our loop point.
-                            if (loopPoint == 0 && note.FxJump != 0xff)
+                            if (loopPoint == 0 && note.Jump != 0xff)
                             {
-                                SetLoopPoint(note.FxJump);
+                                SetLoopPoint(note.Jump);
                             }
 
                             // Converts old Skip effects to custom pattern instances lengths.
-                            if (note.FxSkip != 0xff)
+                            if (note.Skip != 0xff)
                             {
                                 SetPatternCustomSettings(i, kv.Key + 1, BeatLength);
                             }
@@ -616,16 +617,18 @@ namespace FamiStudio
             }
         }
 
-        private void ConvertToSolidNotes()
+        public void ConvertToCompoundNotes()
         {
             foreach (var channel in channels)
-                channel.ConvertToSolidNotes();
+                channel.ConvertToCompoundNotes();
+            UpdatePatternStartNotes();
+        }
 
-            // NOTETODO: Delete this.
-            //for (var it = new SparseChannelNoteIterator(channels[1], 0, 0, 5, 0); !it.Done; it.Next())
-            //{
-            //    Debug.WriteLine($"{it.PatternIndex}-{it.NoteIndex} = {it.Note.ToString()} {it.DistanceToNextNote}");
-            //}
+        public void ConvertFromCompoundNotes()
+        {
+            foreach (var channel in channels)
+                channel.ConvertFromCompoundNotes();
+            UpdatePatternStartNotes();
         }
 
         public NoteLocation AbsoluteNoteIndexToNoteLocation(int absoluteNoteIdx)
@@ -694,8 +697,6 @@ namespace FamiStudio
                         var note = kv.Value;
                         pattern.Notes[kv.Key * newNoteLength] = note;
                     }
-
-                    pattern.ClearLastValidNoteCache();
                 }
             }
 
@@ -719,6 +720,13 @@ namespace FamiStudio
             RemoveUnsupportedEffects();
             UpdatePatternStartNotes();
             DeleteNotesPastMaxInstanceLength();
+            InvalidateCumulativePatternCache();
+        }
+
+        public void InvalidateCumulativePatternCache(int patternIdx = 0)
+        {
+            foreach (var channel in channels)
+                channel.InvalidateCumulativePatternCache(patternIdx);
         }
 
         public void RemoveUnsupportedEffects()
@@ -826,6 +834,7 @@ namespace FamiStudio
                 beatLength    = Utils.Sum(groove);
 
                 UpdatePatternStartNotes();
+                InvalidateCumulativePatternCache();
             }
         }
 
@@ -1120,7 +1129,7 @@ namespace FamiStudio
                 ConvertJumpSkipEffects();
 
             if (buffer.Version < 10)
-                ConvertToSolidNotes();
+                ConvertToCompoundNotes();
 
             // Before 2.3.0, songs had an invalid color by default.
             if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
@@ -1167,6 +1176,8 @@ namespace FamiStudio
     {
         public int PatternIndex;
         public int NoteIndex;
+
+        public bool IsValid => PatternIndex >= 0 && NoteIndex >= 0;
 
         public NoteLocation(int p, int n)
         {

@@ -21,51 +21,96 @@ namespace FamiStudio
             "B"
         };
 
-        public const int VolumeMax        = 0x0f;
-        public const int VibratoSpeedMax  = 0x0c;
-        public const int VibratoDepthMax  = 0x0f;
-        public const int FinePitchMin     = -128;
-        public const int FinePitchMax     =  127;
+        public static readonly string[] EffectNames =
+        {
+            "Volume",
+            "Vib Speed",
+            "Vib Depth",
+            "Pitch",
+            "Speed",
+            "FDS Depth",
+            "FDS Speed",
+            "Duty Cycle",
+            "Note Delay",
+            "Cut Delay",
+        };
 
-        public const int FlagsNone        = 0x00;
-        public const int FlagsNoAttack    = 0x01;
-        public const int FlagsTagged      = 0x80;
-                                          
-        public const int NoteInvalid      = 0xff;
-        public const int NoteStop         = 0x00;
-        public const int MusicalNoteMin   = 0x01;
-        public const int MusicalNoteMax   = 0x60;
-        public const int NoteRelease      = 0x80;
-        public const int DPCMNoteMin      = 0x0c;
-        public const int DPCMNoteMax      = 0x4b;
+        public const int VolumeMax       = 0x0f;
+        public const int VibratoSpeedMax = 0x0c;
+        public const int VibratoDepthMax = 0x0f;
+        public const int FinePitchMin    = -128;
+        public const int FinePitchMax    =  127;
+
+        public const int FlagsNone       = 0x00;
+        public const int FlagsNoAttack   = 0x01;
+                                         
+        public const int NoteInvalid     = 0xff;
+        public const int MusicalNoteMin  = 0x01;
+        public const int MusicalNoteMax  = 0x60;
+        public const int MusicalNoteC4   = 0x31;
+        public const int DPCMNoteMin     = 0x0c;
+        public const int DPCMNoteMax     = 0x4b;
+        
+        public const int EffectVolume           =  0;
+        public const int EffectVibratoSpeed     =  1; // 4Xy
+        public const int EffectVibratoDepth     =  2; // 4xY
+        public const int EffectFinePitch        =  3; // Pxx
+        public const int EffectSpeed            =  4; // Fxx
+        public const int EffectFdsModDepth      =  5; // Gxx
+        public const int EffectFdsModSpeed      =  6; // Ixx/Jxx
+        public const int EffectDutyCycle        =  7; // Vxx
+        public const int EffectNoteDelay        =  8; // Gxx
+        public const int EffectCutDelay         =  9; // Sxx
+        public const int EffectCount            = 10;
+
+        public const int EffectVolumeMask       = (1 << EffectVolume);
+        public const int EffectVibratoMask      = (1 << EffectVibratoSpeed) | (1 << EffectVibratoDepth);
+        public const int EffectFinePitchMask    = (1 << EffectFinePitch);
+        public const int EffectSpeedMask        = (1 << EffectSpeed);
+        public const int EffectFdsModDepthMask  = (1 << EffectFdsModDepth);
+        public const int EffectFdsModSpeedMask  = (1 << EffectFdsModSpeed);
+        public const int EffectDutyCycleMask    = (1 << EffectDutyCycle);
+        public const int EffectNoteDelayMask    = (1 << EffectNoteDelay);
+        public const int EffectCutDelayMask     = (1 << EffectCutDelay);
+
+        public const int EffectAllMask          = 0x3ff; // Must be updated every time a new effect is added.
+
+        // As of FamiStudio 3.0.0, these are semi-deprecated and mostly used in parts of the
+        // code that have not been migrated to compound notes (notes with release and duration) 
+        // yet. The piano roll does note handle those AT ALL.
+        public const int NoteStop    = 0x00;
+        public const int NoteRelease = 0x80;
 
         public readonly static Note EmptyNote = new Note();
 
-        // TODO: Create properties. This used to be a struct, its a proper class now...
-        public byte       Value = NoteInvalid; // (0 = stop, 1 = C0 ... 96 = B7).
-        public byte       Flags;
-        public byte       Slide;
-        public ushort     EffectMask;
-        public ushort     Duration;
-        public ushort     Release;
-        public Instrument Instrument;
-        public Arpeggio   Arpeggio;
+        // General properties.
+        private byte       val = NoteInvalid; // (0 = stop, 1 = C0 ... 96 = B7).
+        private byte       flags;
+        private byte       slide;
+        private ushort     effectMask;
+        private ushort     duration;
+        private ushort     release;
+        private Instrument instrument;
+        private Arpeggio   arpeggio;
 
         // Effects.
-        private byte   FxVolume;
-        private byte   FxVibrato;
-        private byte   FxSpeed;
-        private sbyte  FxFinePitch;
-        private byte   FxFdsModDepth;
-        private ushort FxFdsModSpeed;
-        private byte   FxDutyCycle;
-        private byte   FxNoteDelay;
-        private byte   FxCutDelay;
+        private byte       volume;
+        private byte       vibrato;
+        private byte       speed;
+        private sbyte      finePitch;
+        private byte       fdsModDepth;
+        private ushort     fdsModSpeed;
+        private byte       dutyCycle;
+        private byte       noteDelay;
+        private byte       cutDelay;
 
-        // As of version 5 (FamiStudio 2.0.0), these are deprecated and are only kepth around
+        // As of version 5 (FamiStudio 2.0.0), these are deprecated and are only kept around
         // for migration.
-        public byte FxJump = 0xff;
-        public byte FxSkip = 0xff;
+        private byte jump = 0xff;
+        private byte skip = 0xff;
+
+        public byte Jump => jump;
+        public byte Skip => skip;
 
         public Note()
         {
@@ -73,32 +118,94 @@ namespace FamiStudio
 
         public Note(int value)
         {
-            Value = (byte)value;
+            val = (byte)value;
         }
 
         public void Clear(bool preserveFx = true)
         {
-            Value = NoteInvalid;
-            Instrument = null;
-            Arpeggio = null;
-            Slide = 0;
-            Flags = 0;
-            Duration = 0;
-            Release = 0;
+            val = NoteInvalid;
+            instrument = null;
+            arpeggio = null;
+            slide = 0;
+            flags = 0;
+            duration = 0;
+            release = 0;
 
             if (!preserveFx)
             {
-                EffectMask = 0;
-                FxVolume = 0;
-                FxVibrato = 0;
-                FxSpeed = 0;
-                FxFinePitch = 0;
-                FxFdsModDepth = 0;
-                FxFdsModSpeed = 0;
-                FxDutyCycle = 0;
-                FxNoteDelay = 0;
-                FxCutDelay = 0;
+                effectMask = 0;
+                volume = 0;
+                vibrato = 0;
+                speed = 0;
+                finePitch = 0;
+                fdsModDepth = 0;
+                fdsModSpeed = 0;
+                dutyCycle = 0;
+                noteDelay = 0;
+                cutDelay = 0;
             }
+        }
+
+        public byte Value
+        {
+            get { return val; }
+            set { val = value; }
+        }
+
+        public byte Flags
+        {
+            get { return flags; }
+            set { flags = value; }
+        }
+
+        public byte Slide
+        {
+            get { return slide; }
+            set { slide = value; }
+        }
+
+        public ushort EffectMask
+        {
+            get { return effectMask; }
+        }
+
+        public int Duration
+        {
+            get { return duration; }
+            set
+            {
+                if (IsMusical)
+                {
+                    duration = (ushort)Utils.Clamp(value, 1, (int)ushort.MaxValue);
+                    ClearReleaseIfPastDuration();
+                }
+            }
+        }
+
+        public int Release
+        {
+            get { return release; }
+            set
+            {
+                // NOTETODO : Should we have a ClearRelease function and clamp(1, max) here?
+                if (IsMusical)
+                {
+                    release = (ushort)Math.Min(value, (int)ushort.MaxValue);
+                    ClearReleaseIfPastDuration();
+                }
+            }
+        }
+
+        public Instrument Instrument
+        {
+            get { return instrument; }
+            set { instrument = value; }
+        }
+
+        public Arpeggio Arpeggio
+        {
+            get => arpeggio;
+            set => arpeggio = value;
         }
 
         public bool IsValid
@@ -109,18 +216,18 @@ namespace FamiStudio
 
         public bool IsStop
         {
-            get { return Value == NoteStop; }
-            set { if (value) Value = NoteStop; }
+            get { return val == NoteStop; }
+            set { val = (byte)(value ? NoteStop : NoteInvalid); }
         }
 
         public bool HasRelease
         {
-            get { return Release > 0; }
+            get { return release > 0; }
         }
 
         public bool IsRelease
         {
-            get { return Value == NoteRelease; }
+            get { return val == NoteRelease; }
         }
 
         public bool IsMusical
@@ -130,56 +237,56 @@ namespace FamiStudio
 
         public bool IsSlideNote
         {
-            get { return Slide != 0; }
-            set { if (!value) Slide = 0; }
+            get { return slide != 0; }
+            set { if (!value) slide = 0; }
         }
 
         public byte SlideNoteTarget
         {
-            get { return Slide; }
-            set { Slide = value; }
+            get { return slide; }
+            set { slide = value; }
         }
 
         public bool IsArpeggio
         {
-            get { return Arpeggio != null; }
-            set { if (!value) Arpeggio = null; }
+            get { return arpeggio != null; }
+            set { if (!value) arpeggio = null; }
         }
 
         public byte Volume
         {
-            get { Debug.Assert(HasVolume); return FxVolume; }
-            set { FxVolume = (byte)Utils.Clamp(value, 0, VolumeMax); HasVolume = true; }
+            get { Debug.Assert(HasVolume); return volume; }
+            set { volume = (byte)Utils.Clamp(value, 0, VolumeMax); HasVolume = true; }
         }
 
         public byte RawVibrato
         {
-            get { return FxVibrato; }
+            get { return vibrato; }
             set
             {
-                FxVibrato  = value;
+                vibrato  = value;
                 HasVibrato = true;
             }
         }
 
         public byte VibratoSpeed
         {
-            get { Debug.Assert(HasVibrato); return (byte)(FxVibrato >> 4); }
+            get { Debug.Assert(HasVibrato); return (byte)(vibrato >> 4); }
             set
             {
-                FxVibrato &= 0x0f;
-                FxVibrato |= (byte)((byte)Utils.Clamp(value, 0, VibratoSpeedMax) << 4);
+                vibrato &= 0x0f;
+                vibrato |= (byte)((byte)Utils.Clamp(value, 0, VibratoSpeedMax) << 4);
                 HasVibrato = true;
             }
         }
 
         public byte VibratoDepth
         {
-            get { Debug.Assert(HasVibrato); return (byte)(FxVibrato & 0x0f); }
+            get { Debug.Assert(HasVibrato); return (byte)(vibrato & 0x0f); }
             set
             {
-                FxVibrato &= 0xf0;
-                FxVibrato |= (byte)Utils.Clamp(value, 0, VibratoDepthMax);
+                vibrato &= 0xf0;
+                vibrato |= (byte)Utils.Clamp(value, 0, VibratoDepthMax);
 
                 if (HasVibrato)
                     VibratoSpeed = (byte)Utils.Clamp(VibratoSpeed, 0, VibratoSpeedMax);
@@ -190,98 +297,98 @@ namespace FamiStudio
 
         public sbyte FinePitch
         {
-            get { Debug.Assert(HasFinePitch); return FxFinePitch; }
-            set { FxFinePitch = value; HasFinePitch = true; }
+            get { Debug.Assert(HasFinePitch); return finePitch; }
+            set { finePitch = value; HasFinePitch = true; }
         }
 
         public byte Speed
         {
-            get { Debug.Assert(HasSpeed); return FxSpeed; }
-            set { FxSpeed = (byte)Utils.Clamp(value, 0, 31); HasSpeed = true; }
+            get { Debug.Assert(HasSpeed); return speed; }
+            set { speed = (byte)Utils.Clamp(value, 0, 31); HasSpeed = true; }
         }
 
         public byte FdsModDepth
         {
-            get { Debug.Assert(HasFdsModDepth); return FxFdsModDepth; }
-            set { FxFdsModDepth = (byte)Utils.Clamp(value, 0, 63); HasFdsModDepth = true; }
+            get { Debug.Assert(HasFdsModDepth); return fdsModDepth; }
+            set { fdsModDepth = (byte)Utils.Clamp(value, 0, 63); HasFdsModDepth = true; }
         }
 
         public ushort FdsModSpeed
         {
-            get { Debug.Assert(HasFdsModSpeed); return FxFdsModSpeed; }
-            set { FxFdsModSpeed = (ushort)Utils.Clamp(value, 0, 4095); HasFdsModSpeed = true; }
+            get { Debug.Assert(HasFdsModSpeed); return fdsModSpeed; }
+            set { fdsModSpeed = (ushort)Utils.Clamp(value, 0, 4095); HasFdsModSpeed = true; }
         }
 
         public byte DutyCycle
         {
-            get { Debug.Assert(HasDutyCycle); return FxDutyCycle; }
-            set { FxDutyCycle = (byte)Utils.Clamp(value, 0, 7); HasDutyCycle = true; }
+            get { Debug.Assert(HasDutyCycle); return dutyCycle; }
+            set { dutyCycle = (byte)Utils.Clamp(value, 0, 7); HasDutyCycle = true; }
         }
 
         public byte NoteDelay
         {
-            get { Debug.Assert(HasNoteDelay); return FxNoteDelay; }
-            set { FxNoteDelay = (byte)Utils.Clamp(value, 0, 31); HasNoteDelay = true; }
+            get { Debug.Assert(HasNoteDelay); return noteDelay; }
+            set { noteDelay = (byte)Utils.Clamp(value, 0, 31); HasNoteDelay = true; }
         }
 
         public byte CutDelay
         {
-            get { Debug.Assert(HasCutDelay); return FxCutDelay; }
-            set { FxCutDelay = (byte)Utils.Clamp(value, 0, 31); HasCutDelay = true; }
+            get { Debug.Assert(HasCutDelay); return cutDelay; }
+            set { cutDelay = (byte)Utils.Clamp(value, 0, 31); HasCutDelay = true; }
         }
-
+        
         public bool HasVolume
         {
-            get { return (EffectMask & EffectVolumeMask) != 0; }
-            set { if (value) EffectMask |= EffectVolumeMask; else EffectMask = (ushort)(EffectMask & ~EffectVolumeMask); }
+            get { return (effectMask & EffectVolumeMask) != 0; }
+            set { if (value) effectMask |= EffectVolumeMask; else effectMask = (ushort)(effectMask & ~EffectVolumeMask); }
         }
 
         public bool HasVibrato
         {
-            get { return (EffectMask & EffectVibratoMask) != 0; }
-            set { if (value) EffectMask |= EffectVibratoMask; else EffectMask = (ushort)(EffectMask & ~EffectVibratoMask); }
+            get { return (effectMask & EffectVibratoMask) != 0; }
+            set { if (value) effectMask |= EffectVibratoMask; else effectMask = (ushort)(effectMask & ~EffectVibratoMask); }
         }
 
         public bool HasFinePitch
         {
-            get { return (EffectMask & EffectFinePitchMask) != 0; }
-            set { if (value) EffectMask |= EffectFinePitchMask; else EffectMask = (ushort)(EffectMask & ~EffectFinePitchMask); }
+            get { return (effectMask & EffectFinePitchMask) != 0; }
+            set { if (value) effectMask |= EffectFinePitchMask; else effectMask = (ushort)(effectMask & ~EffectFinePitchMask); }
         }
 
         public bool HasSpeed
         {
-            get { return (EffectMask & EffectSpeedMask) != 0; }
-            set { if (value) EffectMask |= EffectSpeedMask; else EffectMask = (ushort)(EffectMask & ~EffectSpeedMask); }
+            get { return (effectMask & EffectSpeedMask) != 0; }
+            set { if (value) effectMask |= EffectSpeedMask; else effectMask = (ushort)(effectMask & ~EffectSpeedMask); }
         }
 
         public bool HasFdsModDepth
         {
-            get { return (EffectMask & EffectFdsModDepthMask) != 0; }
-            set { if (value) EffectMask |= EffectFdsModDepthMask; else EffectMask = (ushort)(EffectMask & ~EffectFdsModDepthMask); }
+            get { return (effectMask & EffectFdsModDepthMask) != 0; }
+            set { if (value) effectMask |= EffectFdsModDepthMask; else effectMask = (ushort)(effectMask & ~EffectFdsModDepthMask); }
         }
 
         public bool HasFdsModSpeed
         {
-            get { return (EffectMask & EffectFdsModSpeedMask) != 0; }
-            set { if (value) EffectMask |= EffectFdsModSpeedMask; else EffectMask = (ushort)(EffectMask & ~EffectFdsModSpeedMask); }
+            get { return (effectMask & EffectFdsModSpeedMask) != 0; }
+            set { if (value) effectMask |= EffectFdsModSpeedMask; else effectMask = (ushort)(effectMask & ~EffectFdsModSpeedMask); }
         }
 
         public bool HasDutyCycle
         {
-            get { return (EffectMask & EffectDutyCycleMask) != 0; }
-            set { if (value) EffectMask |= EffectDutyCycleMask; else EffectMask = (ushort)(EffectMask & ~EffectDutyCycleMask); }
+            get { return (effectMask & EffectDutyCycleMask) != 0; }
+            set { if (value) effectMask |= EffectDutyCycleMask; else effectMask = (ushort)(effectMask & ~EffectDutyCycleMask); }
         }
 
         public bool HasNoteDelay
         {
-            get { return (EffectMask & EffectNoteDelayMask) != 0; }
-            set { if (value) EffectMask |= EffectNoteDelayMask; else EffectMask = (ushort)(EffectMask & ~EffectNoteDelayMask); }
+            get { return (effectMask & EffectNoteDelayMask) != 0; }
+            set { if (value) effectMask |= EffectNoteDelayMask; else effectMask = (ushort)(effectMask & ~EffectNoteDelayMask); }
         }
 
         public bool HasCutDelay
         {
-            get { return (EffectMask & EffectCutDelayMask) != 0; }
-            set { if (value) EffectMask |= EffectCutDelayMask; else EffectMask = (ushort)(EffectMask & ~EffectCutDelayMask); }
+            get { return (effectMask & EffectCutDelayMask) != 0; }
+            set { if (value) effectMask |= EffectCutDelayMask; else effectMask = (ushort)(effectMask & ~EffectCutDelayMask); }
         }
 
         public bool HasAttack
@@ -296,7 +403,7 @@ namespace FamiStudio
         
         public bool HasAnyEffect
         {
-            get { return EffectMask != 0; }
+            get { return effectMask != 0; }
         }
 
         public string FriendlyName
@@ -307,11 +414,10 @@ namespace FamiStudio
             }
         }
 
-        public void ClearReleaseIfPastDuration()
+        private void ClearReleaseIfPastDuration()
         {
-            // TODO : We should have a Duration property that handles that.
-            if (HasRelease && Release >= Duration)
-                Release = 0;
+            if (HasRelease && release >= duration)
+                release = 0;
         }
 
         public static string GetFriendlyName(int value)
@@ -363,12 +469,24 @@ namespace FamiStudio
         }
 
         public bool IsEmpty => Value == Note.NoteInvalid && Flags == 0 && Slide == 0 && EffectMask == 0;
-        public bool HasJumpOrSkip => FxJump != 0xff || FxSkip != 0xff;
+        public bool HasJumpOrSkip => jump != 0xff || skip != 0xff;
+
+        public bool MatchesFilter(NoteFilter filter)
+        {
+            if (IsMusical && filter.HasFlag(NoteFilter.Musical))
+                return true;
+            if (HasCutDelay && filter.HasFlag(NoteFilter.DelayedCut))
+                return true;
+            if (IsStop && filter.HasFlag(NoteFilter.Stop))
+                return true;
+
+            return false;
+        }
 
         // Serialization for notes before version 5 (before FamiStudio 2.0.0)
         public void SerializeStatePreVer5(ProjectBuffer buffer)
         {
-            buffer.Serialize(ref Value);
+            buffer.Serialize(ref val);
             
             // At version 5 (FamiStudio 2.0.0) we refactored the note effects.
             const int SpeedInvalid   = 0xff;
@@ -376,18 +494,18 @@ namespace FamiStudio
             const int VibratoInvalid = 0xf0;
 
             // At version 5 (FamiStudio 2.0.0), we changed the numerical value of the release note.
-            if (Value == 0xf7)
-                Value = Note.NoteRelease;
+            if (val == 0xf7)
+                val = Note.NoteRelease;
 
             // At version 4 (FamiStudio 1.4.0), we refactored the notes, added slide notes, vibrato and no-attack notes (flags).
             if (buffer.Version >= 4)
             {
-                buffer.Serialize(ref FxJump);
-                buffer.Serialize(ref FxSkip);
-                buffer.Serialize(ref FxSpeed);
-                buffer.Serialize(ref FxVibrato);
-                buffer.Serialize(ref Flags);
-                buffer.Serialize(ref Slide);
+                buffer.Serialize(ref jump);
+                buffer.Serialize(ref skip);
+                buffer.Serialize(ref speed);
+                buffer.Serialize(ref vibrato);
+                buffer.Serialize(ref flags);
+                buffer.Serialize(ref slide);
             }
             else
             {
@@ -396,97 +514,63 @@ namespace FamiStudio
                 buffer.Serialize(ref effect);
                 buffer.Serialize(ref effectParam);
 
-                FxVolume  = VolumeInvalid;
-                FxVibrato = VibratoInvalid;
-                FxSpeed   = SpeedInvalid;
+                volume  = VolumeInvalid;
+                vibrato = VibratoInvalid;
+                speed   = SpeedInvalid;
 
                 switch (effect)
                 {
-                    case 1: FxJump  = effectParam; break;
-                    case 2: FxSkip  = effectParam; break;
-                    case 3: FxSpeed = effectParam; break;
+                    case 1: jump  = effectParam; break;
+                    case 2: skip  = effectParam; break;
+                    case 3: speed = effectParam; break;
                 }
             }
 
             // At version 3 (FamiStudio 1.2.0), we added a volume track.
             if (buffer.Version >= 3)
-                buffer.Serialize(ref FxVolume);
+                buffer.Serialize(ref volume);
 
-            buffer.Serialize(ref Instrument);
+            buffer.Serialize(ref instrument);
 
-            if (FxVolume  != VolumeInvalid)  EffectMask |= EffectVolumeMask;
-            if (FxSpeed   != SpeedInvalid)   EffectMask |= EffectSpeedMask;
-            if (FxVibrato != VibratoInvalid) EffectMask |= EffectVibratoMask;
+            if (volume  != VolumeInvalid)  effectMask |= EffectVolumeMask;
+            if (speed   != SpeedInvalid)   effectMask |= EffectSpeedMask;
+            if (vibrato != VibratoInvalid) effectMask |= EffectVibratoMask;
         }
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            buffer.Serialize(ref Value);
-            buffer.Serialize(ref Flags);
-            buffer.Serialize(ref Slide);
-            buffer.Serialize(ref Instrument);
-            buffer.Serialize(ref EffectMask);
+            buffer.Serialize(ref val);
+            buffer.Serialize(ref flags);
 
-            if ((EffectMask & EffectVolumeMask)      != 0) buffer.Serialize(ref FxVolume);
-            if ((EffectMask & EffectVibratoMask)     != 0) buffer.Serialize(ref FxVibrato);
-            if ((EffectMask & EffectSpeedMask)       != 0) buffer.Serialize(ref FxSpeed);
-            if ((EffectMask & EffectFinePitchMask)   != 0) buffer.Serialize(ref FxFinePitch);
-            if ((EffectMask & EffectFdsModSpeedMask) != 0) buffer.Serialize(ref FxFdsModSpeed);
-            if ((EffectMask & EffectFdsModDepthMask) != 0) buffer.Serialize(ref FxFdsModDepth);
-            if (buffer.Version >= 8 && (EffectMask & EffectDutyCycleMask) != 0) buffer.Serialize(ref FxDutyCycle);
-            if (buffer.Version >= 8 && (EffectMask & EffectNoteDelayMask) != 0) buffer.Serialize(ref FxNoteDelay);
-            if (buffer.Version >= 8 && (EffectMask & EffectCutDelayMask)  != 0) buffer.Serialize(ref FxCutDelay);
+            if (buffer.Version < 10 || IsMusical)
+            {
+                buffer.Serialize(ref slide);
+                buffer.Serialize(ref instrument);
+            }
 
             // NOTETODO: See how we want to save this + add comment.
-            if (buffer.Version >= 10) buffer.Serialize(ref Duration);
-            if (buffer.Version >= 10) buffer.Serialize(ref Release);
+            if (buffer.Version >= 10 && IsMusical)
+            {
+                buffer.Serialize(ref duration);
+                buffer.Serialize(ref release);
+            }
+
+            buffer.Serialize(ref effectMask);
+
+            if ((EffectMask & EffectVolumeMask)      != 0) buffer.Serialize(ref volume);
+            if ((EffectMask & EffectVibratoMask)     != 0) buffer.Serialize(ref vibrato);
+            if ((EffectMask & EffectSpeedMask)       != 0) buffer.Serialize(ref speed);
+            if ((EffectMask & EffectFinePitchMask)   != 0) buffer.Serialize(ref finePitch);
+            if ((EffectMask & EffectFdsModSpeedMask) != 0) buffer.Serialize(ref fdsModSpeed);
+            if ((EffectMask & EffectFdsModDepthMask) != 0) buffer.Serialize(ref fdsModDepth);
+            if (buffer.Version >= 8 && (EffectMask & EffectDutyCycleMask) != 0) buffer.Serialize(ref dutyCycle);
+            if (buffer.Version >= 8 && (EffectMask & EffectNoteDelayMask) != 0) buffer.Serialize(ref noteDelay);
+            if (buffer.Version >= 8 && (EffectMask & EffectCutDelayMask)  != 0) buffer.Serialize(ref cutDelay);
 
             // At version 7 (FamiStudio 2.2.0) we added support for arpeggios.
             if (buffer.Version >= 7)
-                buffer.Serialize(ref Arpeggio);
+                buffer.Serialize(ref arpeggio);
         }
-
-        //
-        // TODO: Move this to a seperate class, just a way to expose param and render the effect panel.
-        //
-
-        public static readonly string[] EffectNames =
-        {
-            "Volume",
-            "Vib Speed",
-            "Vib Depth",
-            "Pitch",
-            "Speed",
-            "FDS Depth",
-            "FDS Speed",
-            "Duty Cycle",
-            "Note Delay",
-            "Cut Delay"
-        };
-
-        public const int EffectVolume       =  0;
-        public const int EffectVibratoSpeed =  1; // 4Xy
-        public const int EffectVibratoDepth =  2; // 4xY
-        public const int EffectFinePitch    =  3; // Pxx
-        public const int EffectSpeed        =  4; // Fxx
-        public const int EffectFdsModDepth  =  5; // Gxx
-        public const int EffectFdsModSpeed  =  6; // Ixx/Jxx
-        public const int EffectDutyCycle    =  7; // Vxx
-        public const int EffectNoteDelay    =  8; // Gxx
-        public const int EffectCutDelay     =  9; // Sxx
-        public const int EffectCount        = 10;
-
-        public const int EffectVolumeMask       = (1 << EffectVolume);
-        public const int EffectVibratoMask      = (1 << EffectVibratoSpeed) | (1 << EffectVibratoDepth);
-        public const int EffectFinePitchMask    = (1 << EffectFinePitch);
-        public const int EffectSpeedMask        = (1 << EffectSpeed);
-        public const int EffectFdsModDepthMask  = (1 << EffectFdsModDepth);
-        public const int EffectFdsModSpeedMask  = (1 << EffectFdsModSpeed);
-        public const int EffectDutyCycleMask    = (1 << EffectDutyCycle);
-        public const int EffectNoteDelayMask    = (1 << EffectNoteDelay);
-        public const int EffectCutDelayMask     = (1 << EffectCutDelay);
-
-        public const int EffectAllMask          = 0x3ff; // Must be updated every time a new effect is added.
 
         public bool HasValidEffectValue(int fx)
         {
@@ -547,16 +631,16 @@ namespace FamiStudio
         {
             switch (fx)
             {
-                case EffectVolume       : HasVolume      = false; break;
-                case EffectVibratoDepth : HasVibrato     = false; break;
-                case EffectVibratoSpeed : HasVibrato     = false; break;
-                case EffectFinePitch    : HasFinePitch   = false; break;
-                case EffectSpeed        : HasSpeed       = false; break;
-                case EffectFdsModDepth  : HasFdsModDepth = false; break;
-                case EffectFdsModSpeed  : HasFdsModSpeed = false; break;
-                case EffectDutyCycle    : HasDutyCycle   = false; break;
-                case EffectNoteDelay    : HasNoteDelay   = false; break;
-                case EffectCutDelay     : HasCutDelay    = false; break;
+                case EffectVolume       : HasVolume       = false; break;
+                case EffectVibratoDepth : HasVibrato      = false; break;
+                case EffectVibratoSpeed : HasVibrato      = false; break;
+                case EffectFinePitch    : HasFinePitch    = false; break;
+                case EffectSpeed        : HasSpeed        = false; break;
+                case EffectFdsModDepth  : HasFdsModDepth  = false; break;
+                case EffectFdsModSpeed  : HasFdsModSpeed  = false; break;
+                case EffectDutyCycle    : HasDutyCycle    = false; break;
+                case EffectNoteDelay    : HasNoteDelay    = false; break;
+                case EffectCutDelay     : HasCutDelay     = false; break;
             }
         }
 
@@ -621,5 +705,17 @@ namespace FamiStudio
 
             return 0;
         }
+    }
+    
+    [Flags]
+    public enum NoteFilter
+    {
+        None         = 0,
+        Musical      = 1,
+        DelayedCut   = 2,
+        Stop = 4,
+
+        // There are all the filter that can interrupt the duration of a note.
+        TruncateDurationMask = Musical | DelayedCut | Stop
     }
 }

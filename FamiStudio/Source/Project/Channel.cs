@@ -9,6 +9,8 @@ namespace FamiStudio
     {
         private Song song;
         private Pattern[] patternInstances = new Pattern[Song.MaxLength];
+        private int maxValidCacheIndex = -1;
+        private PatternCumulativeCache[] patternCache = new PatternCumulativeCache[Song.MaxLength];
         private List<Pattern> patterns = new List<Pattern>();
         private int type;
 
@@ -29,6 +31,9 @@ namespace FamiStudio
         {
             this.song = song;
             this.type = type;
+
+            for (int i = 0; i < patternCache.Length; i++)
+                patternCache[i] = new PatternCumulativeCache();
         }
 
         public Pattern GetPattern(string name)
@@ -200,6 +205,8 @@ namespace FamiStudio
                     instanceLengthMap[pattern] = patternLen;
                 }
             }
+
+            InvalidateCumulativePatternCache();
         }
 
         public void MakePatternsWithDifferentGroovesUnique()
@@ -227,8 +234,10 @@ namespace FamiStudio
                     instanceLengthMap[pattern] = Tuple.Create(groove, groovePadMode);
                 }
             }
+
+            InvalidateCumulativePatternCache();
         }
-       
+
         // Inputs are absolute note indices from beginning of song.
         public void DeleteNotesBetween(int minFrame, int maxFrame, bool preserveFx = false)
         {
@@ -243,7 +252,6 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         pattern.DeleteNotesBetween(patternNoteIdxMin, patternNoteIdxMax, preserveFx);
-                        pattern.ClearLastValidNoteCache();
                     }
                 }
             }
@@ -268,13 +276,13 @@ namespace FamiStudio
                             if (preserveFx)
                                 pattern.DeleteNotesBetween(0, Pattern.MaxLength, true);
                             else
-                                pattern.Notes.Clear();
+                                pattern.DeleteAllNotes();
                         }
-
-                        pattern.ClearLastValidNoteCache();
                     }
                 }
             }
+
+            InvalidateCumulativePatternCache(patternIdxMin);
         }
 
         public Pattern CreatePattern(string name = null)
@@ -430,59 +438,6 @@ namespace FamiStudio
                 pattern.ClearNotesPastMaxInstanceLength();
         }
 
-        public int GetLastValidEffectValue(int startPatternIdx, int effect)
-        {
-            for (int p = startPatternIdx; p >= 0; p--)
-            {
-                var pattern = patternInstances[p];
-                if (pattern != null)
-                {
-                    var lastPatternNoteIdx = song.GetPatternLength(p) - 1;
-                    if (pattern.HasLastEffectValue(lastPatternNoteIdx, effect))
-                        return pattern.GetLastEffectValue(lastPatternNoteIdx, effect);
-                }
-            }
-
-            return Note.GetEffectDefaultValue(song, effect);
-        }
-
-        public bool GetLastMusicalNote(ref int patternIdx, ref Note lastValidNote, out int noteIdx, out bool released)
-        {
-            noteIdx = -1;
-            released = false;
-
-            // Find previous valid note.
-            for (; patternIdx >= 0; patternIdx--)
-            {
-                var pattern = patternInstances[patternIdx];
-                if (pattern != null)
-                {
-                    var note = new Note(Note.NoteInvalid);
-                    var lastPatternNoteIdx = song.GetPatternLength(patternIdx) - 1;
-                    var lastMusicalNote = pattern.GetLastMusicalNote(lastPatternNoteIdx, out var lastNoteIdx, out var lastNoteReleased);
-
-                    if (lastMusicalNote != null)
-                    {
-                        note    = lastMusicalNote;
-                        noteIdx = lastNoteIdx;
-                    }
-
-                    released |= lastNoteReleased;
-
-                    if (note.IsMusical)
-                    {
-                        lastValidNote = note;
-                        return true;
-                    }
-                }
-            }
-
-            patternIdx = 0;
-            noteIdx    = 0;
-
-            return false;
-        }
-
         public static void GetShiftsForType(int type, int numN163Channels, out int pitchShift, out int slideShift)
         {
             if (type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6)
@@ -531,23 +486,27 @@ namespace FamiStudio
             return Song.CountNotesBetween(location, nextLocation);
         }
 
-        public Note GetNoteAt(int patternIdx, int noteIdx)
+        public Note GetNoteAt(NoteLocation location)
         {
-            if (patternIdx < song.Length)
+            if (location.PatternIndex < song.Length)
             {
-                var pattern = patternInstances[patternIdx];
-                if (pattern != null && pattern.Notes.ContainsKey(noteIdx))
-                {
-                    return pattern.Notes[noteIdx];
-                }
+                var pattern = patternInstances[location.PatternIndex];
+                if (pattern != null && pattern.Notes.ContainsKey(location.NoteIndex))
+                    return pattern.Notes[location.NoteIndex];
             }
 
             return null;
         }
 
-        public SparseChannelNoteIterator GetSparseNoteIterator(NoteLocation start, NoteLocation end, SparseChannelIteratorFilter filter = SparseChannelIteratorFilter.Musical)
+        // NOTETODO : Migrate!
+        public Note GetNoteAt(int patternIdx, int noteIdx)
         {
-            return new SparseChannelNoteIterator(this, start, end);
+            return GetNoteAt(new NoteLocation(patternIdx, noteIdx));
+        }
+
+        public SparseChannelNoteIterator GetSparseNoteIterator(NoteLocation start, NoteLocation end, NoteFilter filter = NoteFilter.Musical | NoteFilter.Stop | NoteFilter.DelayedCut)
+        {
+            return new SparseChannelNoteIterator(this, start, end, filter);
         }
 
         public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, ushort[] noteTable, bool pal, bool applyShifts, out int pitchDelta, out int stepSize, out float stepSizeFloat)
@@ -622,7 +581,142 @@ namespace FamiStudio
             }
         }
 
-        public int DistanceToNextMusicalNote(NoteLocation location)
+        public Note GetCachedPatternFirstMusicalNote(int patternIndex, out int noteIndex)
+        {
+            ConditionalUpdateCumulativeCache(patternIndex);
+
+            var cache = patternCache[patternIndex];
+            if (cache.firstNoteIndex >= 0)
+            {
+                var pattern = patternInstances[patternIndex];
+                var note = pattern.Notes[cache.firstNoteIndex];
+                Debug.Assert(note.IsMusical);
+                noteIndex = cache.firstNoteIndex;
+                return note;
+            }
+
+            noteIndex = -1;
+            return null;
+        }
+
+        public int GetCachedLastValidEffectValue(int patternIdx, int effect)
+        {
+            if (patternIdx >= 0)
+            {
+                ConditionalUpdateCumulativeCache(patternIdx);
+
+                var cache = patternCache[patternIdx];
+                if ((cache.lastEffectMask & (1 << effect)) != 0)
+                    return cache.lastEffectValues[effect];
+            }
+
+            return Note.GetEffectDefaultValue(song, effect);
+        }
+
+        public NoteLocation GetCachedLastMusicalNoteWithAttackLocation(int patternIdx)
+        {
+            if (patternIdx >= 0)
+            {
+                ConditionalUpdateCumulativeCache(patternIdx);
+                return patternCache[patternIdx].lastNoteLocation;
+            }
+
+            return NoteLocation.Invalid;
+        }
+
+        public int GetCachedFirstNoteIndex(int patternIdx)
+        {
+            if (patternIdx >= 0)
+            {
+                ConditionalUpdateCumulativeCache(patternIdx);
+                return patternCache[patternIdx].firstNoteIndex;
+            }
+
+            return -1;
+        }
+
+        public void InvalidateCumulativePatternCache(int patternIdx = 0)
+        {
+            maxValidCacheIndex = Math.Min(patternIdx - 1, maxValidCacheIndex);
+        }
+
+        public void InvalidateCumulativePatternCache(Pattern pattern)
+        {
+            Debug.Assert(pattern != null && patterns.Contains(pattern));
+
+            for (int i = 0; i <= maxValidCacheIndex; i++)
+            {
+                if (patternInstances[i] == pattern)
+                {
+                    maxValidCacheIndex = Math.Min(i - 1, maxValidCacheIndex);
+                    return;
+                }
+            }
+        }
+
+        public void ConditionalUpdateCumulativeCache(int patternIndex)
+        {
+            if (maxValidCacheIndex >= patternIndex)
+                return;
+
+            // Update from the last valid pattern until now.
+            for (int p = maxValidCacheIndex + 1; p <= patternIndex; p++)
+            {
+                var cache = patternCache[p];
+
+                // If we are not at the start, start with the state of the previous
+                // pattern cache.
+                if (p > 0)
+                    cache.CopyFrom(patternCache[p - 1]);
+                else
+                    cache.Invalidate();
+
+                var pattern = patternInstances[p];
+                if (pattern == null)
+                    continue;
+
+                var patternLength = Song.GetPatternLength(p);
+
+                foreach (var kv in pattern.Notes)
+                {
+                    var time = kv.Key;
+                    var note = kv.Value;
+
+                    if (time >= patternLength)
+                        break;
+
+                    // Orphan release notes aren't supported anymore.
+                    if (note.IsRelease) // NOTETODO : This is just for testing!
+                        continue;
+                    Debug.Assert(!note.IsRelease);
+
+                    if ((note.IsStop || note.IsMusical) && cache.firstNoteIndex < 0)
+                    {
+                        cache.firstNoteIndex = time;
+                    }
+
+                    if (note.IsMusical)
+                    {
+                        // If its the first note ever, consider it has an attack.
+                        if (!cache.lastNoteLocation.IsValid || note.HasAttack)
+                            cache.lastNoteLocation = new NoteLocation(p, time);
+                    }
+
+                    for (int j = 0; j < Note.EffectCount; j++)
+                    {
+                        if (note.HasValidEffectValue(j))
+                        {
+                            cache.lastEffectMask |= (1 << j);
+                            cache.lastEffectValues[j] = note.GetEffectValue(j);
+                        }
+                    }
+                }
+            }
+
+            maxValidCacheIndex = patternIndex;
+        }
+
+        public int GetDistanceToNextNote(NoteLocation location, NoteFilter filter = NoteFilter.TruncateDurationMask)
         {
             var startLocation = location;
 
@@ -638,7 +732,7 @@ namespace FamiStudio
                 {
                     for (; idx < pattern.Notes.Values.Count; idx++)
                     {
-                        if (pattern.Notes.Values[idx].IsMusical)
+                        if (pattern.Notes.Values[idx].MatchesFilter(filter))
                         {
                             location.NoteIndex = pattern.Notes.Keys[idx];
                             return Song.CountNotesBetween(startLocation, location);
@@ -649,17 +743,12 @@ namespace FamiStudio
 
             for (var p = location.PatternIndex + 1; p < song.Length; p++)
             {
-                pattern = patternInstances[p];
-
-                if (pattern != null)
+                var firstNoteIdx = GetCachedFirstNoteIndex(p);
+                if (firstNoteIdx >= 0)
                 {
-                    var firstMusicalNote = pattern.GetFirstMusicalNote(out var firstMusicalNoteIdx);
-                    if (firstMusicalNote != null)
-                    {
-                        location.PatternIndex = p;
-                        location.NoteIndex = firstMusicalNoteIdx;
-                        return Song.CountNotesBetween(startLocation, location);
-                    }
+                    location.PatternIndex = p;
+                    location.NoteIndex = firstNoteIdx;
+                    return Song.CountNotesBetween(startLocation, location);
                 }
             }
 
@@ -676,7 +765,9 @@ namespace FamiStudio
             Debug.Assert(pattern.Notes.ContainsKey(location.NoteIndex));
             Debug.Assert(pattern.Notes[location.NoteIndex].IsMusical);
 
-            if (pattern.Notes[location.NoteIndex].HasCutDelay)
+            var note = pattern.Notes[location.NoteIndex];
+
+            if (note.HasCutDelay)
             {
                 return true;
             }
@@ -684,73 +775,59 @@ namespace FamiStudio
             NoteLocation maxLocation = location;
             Song.AdvanceNumberOfNotes(ref maxLocation, maxNotes);
 
-            var it = GetSparseNoteIterator(location, maxLocation, SparseChannelIteratorFilter.Musical | SparseChannelIteratorFilter.DelayedCut);
-            var noteDuration = (int)pattern.Notes[location.NoteIndex].Duration;
+            int duration = GetDistanceToNextNote(location);
 
-            Debug.Assert(!it.Done);
+            duration = duration < 0 ? maxNotes : Math.Min(duration, maxNotes);
+            duration = Math.Min(note.Duration, duration);
 
-            noteDuration = Math.Min(noteDuration, it.DistanceToNextNote);
-            noteDuration = Math.Min(noteDuration, maxNotes);
+            Song.AdvanceNumberOfNotes(ref nextNoteLocation, duration);
 
-            Song.AdvanceNumberOfNotes(ref nextNoteLocation, noteDuration);
             return true;
         }
 
         // If note value is negative, will return any note.
         public Note FindMusicalNoteAtLocation(ref NoteLocation location, int noteValue)
         {
-            // Search current pattern.
-            var pattern = patternInstances[location.PatternIndex];
-            if (pattern != null)
+            var startLocation = new NoteLocation(location.PatternIndex, 0);
+            var lastNoteValue = Note.MusicalNoteC4;
+
+            // Start search at the last note with an attack.
+            var lastNoteLocation = GetCachedLastMusicalNoteWithAttackLocation(location.PatternIndex - 1);
+            if (lastNoteLocation.IsValid)
             {
-                var loc0 = new NoteLocation(location.PatternIndex, 0);
-                var loc1 = location; // MATTT new NoteLocation(location.PatternIndex, Math.Max(1, location.NoteIndex));
+                lastNoteValue = GetNoteAt(lastNoteLocation).Value;
+                startLocation = lastNoteLocation;
+            }
 
-                for (var it = GetSparseNoteIterator(loc0, loc1); !it.Done; it.Next())
+            var loc0 = startLocation;
+            var loc1 = location; // MATTT new NoteLocation(location.PatternIndex, Math.Max(1, location.NoteIndex));
+
+            for (var it = GetSparseNoteIterator(loc0, loc1); !it.Done; it.Next())
+            {
+                var note = it.Note;
+                var duration = Math.Min(note.Duration, it.DistanceToNextNote);
+
+                if (note.IsMusical)
+                    lastNoteValue = note.Value;
+
+                if (note.IsMusical || note.IsStop)
                 {
-                    var note = it.Note;
-                    var duration = Math.Min(note.Duration, it.DistanceToNextNote);
+                    var distance = Song.CountNotesBetween(it.Location, location);
 
-                    if (note.IsMusical && location.NoteIndex >= it.NoteIndex && location.NoteIndex < it.NoteIndex + duration)
+                    if (distance < it.DistanceToNextNote &&
+                        distance < note.Duration)
                     {
-                        location.NoteIndex = it.NoteIndex;
-                        return noteValue < 0 || note.Value == noteValue ? note : null;
+                        location = it.Location;
+
+                        if (noteValue < 0)
+                            return note;
+
+                        var noteValueToCompare = note.IsStop ? lastNoteValue : note.Value;
+                        return lastNoteValue == noteValue ? note : null;
                     }
                 }
             }
-
-            var startLocation = location;
-
-            // Go back to previous patterns, look for a match.
-            location.PatternIndex--;
-            while (location.PatternIndex >= 0)
-            {
-                pattern = patternInstances[location.PatternIndex];
-
-                if (pattern != null)
-                {
-                    var lastPatternNoteIdx = song.GetPatternLength(location.PatternIndex) - 1;
-                    var lastNote           = pattern.GetLastMusicalNote(lastPatternNoteIdx, out var lastNoteIdx, out _);
-
-                    if (lastNote != null)
-                    {
-                        if (noteValue < 0 || lastNote.Value == noteValue)
-                        {
-                            location.NoteIndex = lastNoteIdx;
-                            var numNotes = song.CountNotesBetween(location, startLocation);
-                            return numNotes < lastNote.Duration ? lastNote : null;
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    }
-                }
-
-                if (--location.PatternIndex < 0)
-                    break;
-            }
-
+            
             return null;
         }
 
@@ -787,20 +864,46 @@ namespace FamiStudio
         {
             Debug.Assert(this == song.GetChannelByType(type));
             Debug.Assert(this.song == song);
+
             foreach (var inst in patternInstances)
                 Debug.Assert(inst == null || patterns.Contains(inst));
             foreach (var pat in patterns)
                 pat.Validate(this, idMap);
+
+            for (int i = 0; i <= maxValidCacheIndex; i++)
+            {
+                var cache = patternCache[i];
+                if (cache.lastNoteLocation.IsValid)
+                {
+                    var note = GetNoteAt(cache.lastNoteLocation);
+                    Debug.Assert(note.IsMusical && note.HasAttack);
+                }
+                if (cache.firstNoteIndex >= 0)
+                {
+                    var note = patternInstances[i].Notes[cache.firstNoteIndex];
+                    Debug.Assert(note.IsMusical || note.IsStop || note.HasCutDelay);
+                }
+            }
+
+            var oldMaxValidCacheIndex = maxValidCacheIndex;
+            var patternCacheCopy = new PatternCumulativeCache[maxValidCacheIndex + 1];
+
+            for (int i = 0; i <= maxValidCacheIndex; i++)
+            {
+                patternCacheCopy[i] = new PatternCumulativeCache();
+                patternCacheCopy[i].CopyFrom(patternCache[i]);
+                patternCacheCopy[i].firstNoteIndex = patternCache[i].firstNoteIndex;
+            }
+
+            InvalidateCumulativePatternCache();
+            ConditionalUpdateCumulativeCache(oldMaxValidCacheIndex);
+
+            for (int i = 0; i <= maxValidCacheIndex; i++)
+                Debug.Assert(patternCacheCopy[i].IsEqual(patternCache[i]));
         }
 #endif
 
-        public void ClearPatternsLastValidNotesCache()
-        {
-            foreach (var pattern in patterns)
-                pattern.ClearLastValidNoteCache();
-        }
-
-        public void MergeIdenticalPatterns()
+            public void MergeIdenticalPatterns()
         {
             var patternCrcMap = new Dictionary<uint, Pattern>();
 
@@ -826,109 +929,265 @@ namespace FamiStudio
                 }
             }
 
-            ClearPatternsLastValidNotesCache();
+            InvalidateCumulativePatternCache();
         }
 
-        // Converts old (pre FamiStudio 3.0.0) release/stop notes to notes that have their own release point/duration.
-        public void ConvertToSolidNotes()
+        // Converts old (pre-FamiStudio 3.0.0) release/stop notes to compound notes that have their 
+        // own release point + duration. The piano roll can only handle compound notes and eventually
+        // the entire app will be converted.
+        public void ConvertToCompoundNotes()
         {
-            //var processedPatterns = new HashSet<Pattern>();
+            // Reset all durations to zero.
+            foreach (var pattern in patterns)
+            {
+                foreach (var kv in pattern.Notes)
+                {
+                    var note = kv.Value;
 
-            var p0 = -1;
-            var t0 = -1;
+                    if (note.IsMusical)
+                        note.Duration = 0;
+                    else if (note.IsStop || note.IsRelease)
+                        note.Duration = 1;
+                }
+            }
+
+            var l0 = NoteLocation.Invalid;
             var n0 = (Note)null;
 
-            // 
+            // Do a first pass where we handle trivial cases and look for inconsistent durations/releases.
             for (int p1 = 0; p1 < song.Length; p1++)
             {
                 var pattern = patternInstances[p1];
 
-                // NOTETODO : Handle cases where pattern starts with a release/stop note. Duplicate + log message.
-                // NOTETODO : Also, a pattern can loop with itself, so solve that too. Max of all durations?
-                if (pattern == null /* || processedPatterns.Contains(pattern)*/)
+                if (pattern == null)
                     continue;
 
                 foreach (var kv in pattern.Notes)
                 {
-                    var t1 = kv.Key;
+                    var l1 = new NoteLocation(p1, kv.Key);
                     var n1 = kv.Value;
 
                     if (n1.IsRelease)
                     {
+                        // Useless release, discarding.
                         if (n0 == null)
-                        {
-                            Log.LogMessage(LogSeverity.Warning, "Orphan release note."); // NOTETODO : Better error message.
                             continue;
-                        }
 
-                        var release = (ushort)song.CountNotesBetween(p0, t0, p1, t1);
+                        var release = song.CountNotesBetween(l0, l1);
 
-                        if (n0.Release > 0 && n0.Release != release)
-                        {
-                            Log.LogMessage(LogSeverity.Warning, $"Note {n0.FriendlyName} in song {song}, channel {NameWithExpansion}, pattern {patternInstances[p0].Name} has multiple release points, " +
-                                "the shortest one will be used. This usually happens when a pattern is re-used, but followed by different patterns starting with a release note. Manual correction may be required.");
-                        }
-
-                        n0.Release = Math.Min(release, n0.Duration);
+                        if (n0.Release == 0)
+                            n0.Release = release;
+                        else
+                            n0.Release = Math.Min(release, n0.Duration); // Keep the minimum.
                     }
-                    else if (n1.IsStop)
-                    {
-                        if (n0 == null)
-                        {
-                            Log.LogMessage(LogSeverity.Warning, "Orphan stop note."); // NOTETODO : Better error message.
-                            continue;
-                        }
-
-                        var duration = (ushort)song.CountNotesBetween(p0, t0, p1, t1);
-
-                        if (n0.Duration > 0 && n0.Duration != duration)
-                        {
-                            Log.LogMessage(LogSeverity.Warning, $"Note {n0.FriendlyName} in song {song}, channel {NameWithExpansion}, pattern {patternInstances[p0].Name} has multiple durations, " +
-                                "the longest one will be used. This usually happens when a pattern is re-used, but followed by different patterns starting with a stop note. Manual correction may be required.");
-                        }
-
-                        n0.Duration = Math.Max(duration, n0.Duration);
-                        n0 = null;
-                    }
-                    else if (n1.IsMusical)
+                    else if (n1.IsStop || n1.IsMusical)
                     {
                         if (n0 != null)
                         {
-                            var duration = (ushort)song.CountNotesBetween(p0, t0, p1, t1);
+                            var duration = (ushort)song.CountNotesBetween(l0, l1);
 
-                            if (n0.Duration > 0 && n0.Duration != duration)
-                            {
-                                Log.LogMessage(LogSeverity.Warning, $"Note {n0.FriendlyName} in song {song}, channel {NameWithExpansion}, pattern {patternInstances[p0].Name} has multiple durations, " +
-                                    "the longest one will be used. This usually happens when a pattern is re-used, but followed by different patterns starting with a different note. Manual correction may be required.");
-                            }
-
-                            n0.Duration = Math.Max(duration, n0.Duration);
+                            if (n0.Duration == 0)
+                                n0.Duration = duration;
+                            else
+                                n0.Duration = Math.Max(duration, n0.Duration);
                         }
 
-                        p0 = p1;
-                        t0 = t1;
-                        n0 = n1;
+                        if (n1.IsStop)
+                        {
+                            n0 = null;
+                        }
+                        else
+                        {
+                            l0 = l1;
+                            n0 = n1;
+                        }
                     }
                 }
-
-                //processedPatterns.Add(pattern);
             }
 
             // Last note.
             if (n0 != null)
-                n0.Duration = (ushort)song.CountNotesBetween(p0, t0, song.Length, 0); // NOTETODO : Review this.
+            {
+                var duration = song.CountNotesBetween(l0, new NoteLocation(song.Length, 0));
+
+                if (n0.Duration == 0)
+                    n0.Duration = duration;
+                else
+                    n0.Duration = Math.Max(duration, n0.Duration);
+            }
+
+            // Do a second pass to handle inconsistent durations and find the stop notes to keep.
+            var stopNotesToPreserve = new HashSet<Note>();
+
+            l0 = NoteLocation.Invalid;
+            n0 = (Note)null;
+
+            for (int p1 = 0; p1 < song.Length; p1++)
+            {
+                var pattern = patternInstances[p1];
+
+                if (pattern == null)
+                    continue;
+
+                foreach (var kv in pattern.Notes)
+                {
+                    var l1 = new NoteLocation(p1, kv.Key);
+                    var n1 = kv.Value;
+
+                    if (n1.IsStop && n0 != null)
+                    {
+                        Debug.Assert(n0.Duration != 0);
+
+                        var duration = (ushort)song.CountNotesBetween(l0, l1);
+                        if (n0.Duration != duration)
+                        {
+                            Log.LogMessage(LogSeverity.Warning, $"Iconsistent note duration in song {song.Name}, pattern {patternInstances[l0.PatternIndex].Name}, note {n0.FriendlyName}. Orphan stop note added.");
+                            stopNotesToPreserve.Add(n1);
+                        }
+                    }
+                    else if (n1.IsMusical)
+                    {
+                        l0 = l1;
+                        n0 = n1;
+                    }
+                }
+            }
 
             // Cleanup.
             foreach (var pattern in patterns)
             {
                 foreach (var kv in pattern.Notes)
                 {
-                    if (kv.Value.IsStop || kv.Value.IsRelease)
-                        kv.Value.Value = Note.NoteInvalid;
+                    var note = kv.Value;
+
+                    if ((note.IsStop || note.IsRelease) && !stopNotesToPreserve.Contains(note))
+                    {
+                        note.Value = Note.NoteInvalid;
+                        note.Duration = 0;
+                    }
                 }
 
-                pattern.RemoveEmptyNotes();
+                pattern.DeleteEmptyNotes();
             }
+        }
+
+        // Converts compound notes to old (pre-FamiStudio 3.0.0) release/stop notes. This is
+        // needed since some exporter (FamiTracker, etc.) have not been yet ported to handle
+        // compound notes. This is to help the migration.
+        public void ConvertFromCompoundNotes()
+        {
+            var outsidePatternReleases = new Dictionary<Pattern, int>();
+            var outsidePatternStops    = new Dictionary<Pattern, int>();
+
+            var releasesToCreate    = new HashSet<NoteLocation>();
+            var stopsToCreate       = new HashSet<NoteLocation>();
+            var patternsToDuplicate = new HashSet<int>();
+
+            var loc0 = new NoteLocation(0, 0);
+            var loc1 = new NoteLocation(Song.Length, 0);
+
+            for (var it = GetSparseNoteIterator(loc0, loc1); !it.Done; it.Next())
+            {
+                var note = it.Note;
+
+                Debug.Assert(note.IsMusical || note.IsStop);
+
+                if (it.Note.IsMusical)
+                {
+                    var duration = Math.Min(note.Duration, it.DistanceToNextNote);
+
+                    // Find where the release is
+                    if (note.HasRelease && note.Release < duration)
+                    {
+                        var releaseLocation = it.Location;
+                        Song.AdvanceNumberOfNotes(ref releaseLocation, note.Release);
+
+                        bool createRelease = true;
+
+                        // Does it fall in a different pattern?
+                        if (releaseLocation.PatternIndex != it.Location.PatternIndex)
+                        {
+                            // Create missing pattern.
+                            var pattern = patternInstances[releaseLocation.PatternIndex];
+                            if (pattern == null)
+                                pattern = CreatePatternAndInstance(releaseLocation.PatternIndex);
+
+                            // If multiple notes from previous patterns try to write release notes
+                            // at different locations, we need to duplicate the pattern.
+                            if (outsidePatternReleases.TryGetValue(pattern, out var existingRelease))
+                            {
+                                if (existingRelease != releaseLocation.NoteIndex)
+                                    patternsToDuplicate.Add(releaseLocation.PatternIndex);
+                                else
+                                    createRelease = false;
+                            }
+                            else
+                            {
+                                outsidePatternReleases.Add(pattern, releaseLocation.NoteIndex);
+                            }
+                        }
+
+                        if (createRelease)
+                            releasesToCreate.Add(releaseLocation);
+                    }
+
+                    // Find where the notes ends.
+                    var stopLocation = it.Location;
+                    Song.AdvanceNumberOfNotes(ref stopLocation, duration);
+
+                    bool createStop = true;
+
+                    // Does it fall in a different pattern?
+                    if (stopLocation.PatternIndex != it.Location.PatternIndex)
+                    {
+                        // Create missing pattern.
+                        var pattern = patternInstances[stopLocation.PatternIndex];
+                        if (pattern == null)
+                            pattern = CreatePatternAndInstance(stopLocation.PatternIndex);
+
+                        if (outsidePatternStops.TryGetValue(pattern, out var existingStop))
+                        {
+                            // If multiple notes from previous patterns try to write stop notes
+                            // at different locations, we need to duplicate the pattern.
+                            if (existingStop != stopLocation.NoteIndex)
+                                patternsToDuplicate.Add(stopLocation.PatternIndex);
+                            else
+                                createStop = false;
+                        }
+                        else
+                        {
+                            outsidePatternStops.Add(pattern, stopLocation.NoteIndex);
+                        }
+                    }
+
+                    if (createStop)
+                        stopsToCreate.Add(stopLocation);
+                }
+            }
+
+            // Duplicate patterns if needed.
+            foreach (var patternIdx in patternsToDuplicate)
+                patternInstances[patternIdx] = patternInstances[patternIdx].ShallowClone();
+
+            // Create release notes.
+            foreach (var releaseLocation in releasesToCreate)
+            {
+                var pattern = patternInstances[releaseLocation.PatternIndex];
+                var releaseNote = pattern.GetOrCreateNoteAt(releaseLocation.NoteIndex);
+                releaseNote.Value = Note.NoteRelease;
+                releaseNote.Duration = 1;
+            }
+
+            // Create stop notes.
+            foreach (var stopLocation in stopsToCreate)
+            {
+                var pattern = patternInstances[stopLocation.PatternIndex];
+                var stopNote = pattern.GetOrCreateNoteAt(stopLocation.NoteIndex);
+                stopNote.Value = Note.NoteStop;
+                stopNote.Duration = 1;
+            }
+
+            InvalidateCumulativePatternCache();
         }
 
         public void SerializeState(ProjectBuffer buffer)
@@ -954,7 +1213,59 @@ namespace FamiStudio
 
             if (buffer.IsReading && !buffer.IsForUndoRedo)
                 ClearPatternsInstancesPastSongLength();
+
+            if (buffer.IsReading)
+                InvalidateCumulativePatternCache();
         }
+
+        private class PatternCumulativeCache
+        {
+            // Index of the first note in the pattern, -1 if none.
+            public int firstNoteIndex;
+
+            // Last note that had an attack before the end of the pattern.
+            public NoteLocation lastNoteLocation;
+
+            // Cumulative effect values from all the previous patterns.
+            public int   lastEffectMask;
+            public int[] lastEffectValues = new int[Note.EffectCount];
+
+            public PatternCumulativeCache()
+            {
+                Invalidate();
+            }
+
+            public void CopyFrom(PatternCumulativeCache other)
+            {
+                // Not copying first note as this is note a cumulative thing.
+                lastNoteLocation = other.lastNoteLocation;
+                lastEffectMask = other.lastEffectMask;
+                firstNoteIndex = -1;
+                Array.Copy(other.lastEffectValues, lastEffectValues, lastEffectValues.Length);
+            }
+
+            public bool IsEqual(PatternCumulativeCache other)
+            {
+                bool equal = lastNoteLocation == other.lastNoteLocation &&
+                    lastEffectMask == other.lastEffectMask &&
+                    firstNoteIndex == other.firstNoteIndex;
+
+                for (int i = 0; i < Note.EffectCount; i++)
+                {
+                    if ((lastEffectMask & (1 << i)) != 0)
+                        equal &= (lastEffectValues[i] == other.lastEffectValues[i]);
+                }
+
+                return equal;
+            }
+
+            public void Invalidate()
+            {
+                firstNoteIndex   = -1;
+                lastNoteLocation = NoteLocation.Invalid;
+                lastEffectMask   = 0;
+            }
+        };
     }
 
     public static class ChannelType
@@ -1103,14 +1414,6 @@ namespace FamiStudio
         }
     }
 
-    [Flags]
-    public enum SparseChannelIteratorFilter
-    {
-        None = 0,
-        Musical = 1,
-        DelayedCut = 2
-    }
-
     // Iterator to to iterate on musical notes in a range of the song and automatically find the following note.
     // Basically to ease the migration to solid notes at FamiStudio 3.0.0.
     public class SparseChannelNoteIterator
@@ -1122,11 +1425,12 @@ namespace FamiStudio
         private Channel channel;
         private Pattern pattern;
         private Note note;
-        private SparseChannelIteratorFilter filter;
+        private NoteFilter filter;
         private int currIdx;
         private int nextIdx;
 
         public NoteLocation Location => current;
+        public NoteLocation NextLocation => next;
         public int PatternIndex => current.PatternIndex;
         public int NoteIndex    => current.NoteIndex;
 
@@ -1138,7 +1442,7 @@ namespace FamiStudio
         public bool Done => current > end;
 
         // Iterate from [start, end]
-        public SparseChannelNoteIterator(Channel c, NoteLocation start, NoteLocation end, SparseChannelIteratorFilter f = SparseChannelIteratorFilter.Musical)
+        public SparseChannelNoteIterator(Channel c, NoteLocation start, NoteLocation end, NoteFilter f = NoteFilter.TruncateDurationMask)
         {
             Debug.Assert(start <= end);
 
@@ -1166,7 +1470,7 @@ namespace FamiStudio
                     {
                         for (; idx < pattern.Notes.Values.Count; idx++)
                         {
-                            if (FilterNote(pattern.Notes.Values[idx]))
+                            if (pattern.Notes.Values[idx].MatchesFilter(filter))
                             {
                                 start.NoteIndex = pattern.Notes.Keys[idx];
                                 SetCurrentNote(start, idx);
@@ -1186,17 +1490,6 @@ namespace FamiStudio
             current.PatternIndex++;
         }
 
-        private bool FilterNote(Note note)
-        {
-            if (note.IsMusical && filter.HasFlag(SparseChannelIteratorFilter.Musical))
-                return true;
-
-            if (note.HasCutDelay && filter.HasFlag(SparseChannelIteratorFilter.DelayedCut))
-                return true;
-
-            return false;
-        }
-
         private void SetCurrentNote(NoteLocation location, int listIdx)
         {
             current = location;
@@ -1213,7 +1506,7 @@ namespace FamiStudio
 
             note = pattern.Notes.Values[currIdx];
 
-            Debug.Assert(FilterNote(note));
+            Debug.Assert(note.MatchesFilter(filter));
 
             // Find next note.
             nextIdx = currIdx;
@@ -1222,7 +1515,7 @@ namespace FamiStudio
             while (++nextIdx < pattern.Notes.Values.Count)
             {
                 // Only considering musical notes for now.
-                if (FilterNote(pattern.Notes.Values[nextIdx]))
+                if (pattern.Notes.Values[nextIdx].MatchesFilter(filter))
                 {
                     next.PatternIndex = current.PatternIndex;
                     next.NoteIndex    = pattern.Notes.Keys[nextIdx];
@@ -1242,7 +1535,7 @@ namespace FamiStudio
                     do
                     {
                         // Only considering musical notes for now.
-                        if (FilterNote(pat.Notes.Values[nextIdx]))
+                        if (pat.Notes.Values[nextIdx].MatchesFilter(filter))
                         {
                             next.PatternIndex = p;
                             next.NoteIndex    = pat.Notes.Keys[nextIdx];

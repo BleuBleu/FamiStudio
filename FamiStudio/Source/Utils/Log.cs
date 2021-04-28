@@ -51,9 +51,7 @@ namespace FamiStudio
         public static void LogMessage(LogSeverity severity, string msg)
         {
             if ((int)severity >= (int)MinSeverity && LogOutput != null)
-            {
                 LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
-            }
             Debug.WriteLine(SeverityStrings[(int)severity] + msg);
         }
 
