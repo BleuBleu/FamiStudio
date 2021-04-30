@@ -218,7 +218,7 @@ namespace FamiStudio
             Select,
             SelectWave,
             CreateNote,
-            CreateDragSlideNoteTarget,
+            CreateSlideNote,
             DragSlideNoteTarget,
             DragNote,
             DragSelection,
@@ -346,6 +346,9 @@ namespace FamiStudio
         public bool IsEditingArpeggio          => editMode == EditionMode.Arpeggio;
         public bool IsEditingDPCMSample        => editMode == EditionMode.DPCM;
         public bool IsEditingDPCMSampleMapping => editMode == EditionMode.DPCMMapping;
+        
+        public bool CanCopy  => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
+        public bool CanPaste => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ConstainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ConstainsEnvelope);
 
         public Instrument CurrentInstrument { get => currentInstrument; set => currentInstrument = value; }
         public Arpeggio   CurrentArpeggio { get => currentArpeggio; set => currentArpeggio = value; }
@@ -1640,9 +1643,6 @@ namespace FamiStudio
             ReplaceEnvelopeValues(values, selectionMin);
         }
 
-        public bool CanCopy  => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
-        public bool CanPaste => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ConstainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ConstainsEnvelope);
-
         public void Copy()
         {
             if (editMode == EditionMode.Channel)
@@ -2641,16 +2641,6 @@ namespace FamiStudio
             RenderNotes(g, a);
             RenderWaveform(g, a);
             RenderScrollBars(g, a);
-            
-            if (editMode == EditionMode.Channel)
-            {
-                var pt = PointToClient(Cursor.Position);
-                GetLocationForCoord(pt.X, pt.Y, out var location, out byte noteValue);
-
-                var note = Song.Channels[editChannel].FindMusicalNoteAtLocation(ref location, noteValue);
-                if (note != null)
-                    g.DrawText($"NOTE : {note.FriendlyName} {location.PatternIndex}:{location.NoteIndex}", ThemeBase.FontMedium, 100, 100, theme.WhiteBrush);
-            }
         }
 
         private bool GetScrollBarParams(bool horizontal, out int pos, out int size)
@@ -2795,7 +2785,7 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateWavePreset()
+        private void UpdateWavePreset(bool final)
         {
             if (editMode == EditionMode.Enveloppe)
             {
@@ -2812,6 +2802,11 @@ namespace FamiStudio
                         editInstrument.N163WavePreset = WavePresetType.Custom;
                 }
             }
+
+            EnvelopeChanged?.Invoke();
+
+            if (final)
+                App.UndoRedoManager.EndTransaction();
         }
 
         protected bool PointInRectangle(Rectangle rect, int x, int y)
@@ -2992,8 +2987,8 @@ namespace FamiStudio
                         UpdateWaveSelection(e.X);
                         break;
                     case CaptureOperation.DragSlideNoteTarget:
-                    case CaptureOperation.CreateDragSlideNoteTarget:
-                        UpdateSlideNoteTarget(e);
+                    case CaptureOperation.CreateSlideNote:
+                        UpdateSlideNoteCreation(e, false);
                         break;
                     case CaptureOperation.CreateNote:
                         UpdateNoteCreation(e, false, false);
@@ -3018,10 +3013,10 @@ namespace FamiStudio
                         UpdateSampleDrag(e);
                         break;
                     case CaptureOperation.DragSeekBar:
-                        UpdateSeekDrag(e.X);
+                        UpdateSeekDrag(e.X, false);
                         break;
                     case CaptureOperation.DragWaveVolumeEnvelope:
-                        UpdateVolumeEnvelopeDrag(e);
+                        UpdateVolumeEnvelopeDrag(e, false);
                         break;
                     case CaptureOperation.ScrollBarX:
                         UpdateScrollBarX(e);
@@ -3074,62 +3069,44 @@ namespace FamiStudio
 
                 switch (captureOperation)
                 {
-                    case CaptureOperation.DragLoop:
-                    case CaptureOperation.DragRelease:
-                    case CaptureOperation.ChangeEffectValue:
-                    case CaptureOperation.CreateDragSlideNoteTarget:
-                        App.UndoRedoManager.EndTransaction();
-                        break;
                     case CaptureOperation.PlayPiano:
-                        App.StopOrReleaseIntrumentNote(false);
-                        playingNote = -1;
-                        ConditionalInvalidate();
+                        EndPlayPiano();
                         break;
                     case CaptureOperation.ResizeEnvelope:
                     case CaptureOperation.DrawEnvelope:
-                        UpdateWavePreset();
-                        App.UndoRedoManager.EndTransaction();
-                        EnvelopeChanged?.Invoke();
+                        UpdateWavePreset(true);
                         break;
+                    case CaptureOperation.CreateSlideNote:
                     case CaptureOperation.DragSlideNoteTarget:
-                        if (!captureThresholdMet)
-                            Song.Channels[editChannel].PatternInstances[patternIdx].GetOrCreateNoteAt(noteIdx).IsSlideNote ^= true;
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
+                        UpdateSlideNoteCreation(e, true);
                         break;
                     case CaptureOperation.CreateNote:
                         UpdateNoteCreation(e, false, true);
-                        App.StopOrReleaseIntrumentNote();
-                        App.UndoRedoManager.EndTransaction();
                         break;
                     case CaptureOperation.ResizeNoteEnd:
                     case CaptureOperation.ResizeSelectionNoteEnd:
                         UpdateNoteResizeEnd(e, true);
-                        App.UndoRedoManager.EndTransaction();
-                        break;
-                    case CaptureOperation.MoveNoteRelease:
-                        App.UndoRedoManager.EndTransaction();
                         break;
                     case CaptureOperation.DragNote:
                     case CaptureOperation.DragSelection:
                     case CaptureOperation.ResizeNoteStart:
                     case CaptureOperation.ResizeSelectionNoteStart:
                         UpdateNoteDrag(e, true, !captureThresholdMet);
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
-                        App.StopInstrument();
                         break;
                     case CaptureOperation.DragSample:
                         EndSampleDrag(e);
                         break;
                     case CaptureOperation.DragSeekBar:
-                        UpdateSeekDrag(e.X);
-                        App.SeekSong(dragSeekPosition);
+                        UpdateSeekDrag(e.X, true);
                         break;
                     case CaptureOperation.DragWaveVolumeEnvelope:
-                        UpdateVolumeEnvelopeDrag(e);
+                        UpdateVolumeEnvelopeDrag(e, true);
+                        break;
+                    case CaptureOperation.DragLoop:
+                    case CaptureOperation.DragRelease:
+                    case CaptureOperation.ChangeEffectValue:
+                    case CaptureOperation.MoveNoteRelease:
                         App.UndoRedoManager.EndTransaction();
-
                         break;
                 }
 
@@ -3138,6 +3115,8 @@ namespace FamiStudio
                 hoverNoteLocation = NoteLocation.Invalid;
                 Capture = false;
                 panning = false;
+
+                ConditionalInvalidate();
             }
         }
 
@@ -3235,8 +3214,7 @@ namespace FamiStudio
             for (int i = startFrameIdx; i <= endFrameIdx; i++)
                 EditEnvelope.Values[i] = (sbyte)Utils.Clamp(function(EditEnvelope.Values[i], i - startFrameIdx), minVal, maxVal);
 
-            UpdateWavePreset();
-            EnvelopeChanged?.Invoke();
+            UpdateWavePreset(false);
             App.UndoRedoManager.EndTransaction();
             ConditionalInvalidate();
         }
@@ -3582,7 +3560,7 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private bool HandlePanMouseDown(MouseEventArgs e)
+        private bool HandleMouseDownPan(MouseEventArgs e)
         {
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
@@ -3651,8 +3629,7 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInPiano(e))
             {
-                StartCaptureOperation(e, CaptureOperation.PlayPiano);
-                PlayPiano(e.X, e.Y);
+                StartPlayPiano(e);
                 return true;
             }
 
@@ -3661,10 +3638,10 @@ namespace FamiStudio
 
         private bool HandleMouseDownSeekBar(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && editMode == EditionMode.Channel && IsMouseInHeader(e))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInHeader(e))
             {
                 StartCaptureOperation(e, CaptureOperation.DragSeekBar);
-                UpdateSeekDrag(e.X);
+                UpdateSeekDrag(e.X, false);
                 return true;
             }
 
@@ -3673,10 +3650,10 @@ namespace FamiStudio
 
         private bool HandleMouseDownHeaderSelection(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && editMode == EditionMode.Channel && IsMouseInHeader(e))
+            if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInHeader(e))
             {
                 StartCaptureOperation(e, CaptureOperation.Select, false);
-                UpdateSelection(e.X, true);
+                UpdateSelection(e.X);
                 return true;
             }
 
@@ -3685,10 +3662,10 @@ namespace FamiStudio
 
         private bool HandleMouseDownEnvelopeSelection(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && (IsMouseInHeaderTopPart(e) || IsMouseInNoteArea(e)))
+            if (e.Button.HasFlag(MouseButtons.Right) && (IsMouseInHeaderTopPart(e) || IsMouseInNoteArea(e)))
             {
                 StartCaptureOperation(e, CaptureOperation.Select);
-                UpdateSelection(e.X, true);
+                UpdateSelection(e.X);
                 return true;
             }
 
@@ -3724,7 +3701,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownEnvelopeResize(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && IsMouseInHeaderTopPart(e) && EditEnvelope.CanResize)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInHeaderTopPart(e) && EditEnvelope.CanResize)
             {
                 StartCaptureOperation(e, CaptureOperation.ResizeEnvelope);
 
@@ -3745,7 +3722,7 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e))
+            if (((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e))
             {
                 CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e, op);
@@ -3764,7 +3741,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownDrawEnvelope(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && IsMouseInNoteArea(e) && EditEnvelope.Length > 0)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInNoteArea(e) && EditEnvelope.Length > 0)
             {
                 StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
 
@@ -3782,7 +3759,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownChangeEffectValue(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && editMode == EditionMode.Channel && IsMouseInEffectPanel(e) && selectedEffectIdx >= 0)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInEffectPanel(e) && selectedEffectIdx >= 0)
             {
                 if (GetEffectNoteForCoord(e.X, e.Y, out effectPatternIdx, out effectNoteIdx))
                 {
@@ -3804,7 +3781,7 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if ((left || right) && editMode == EditionMode.DPCM && IsMouseInEffectPanel(e))
+            if ((left || right) && IsMouseInEffectPanel(e))
             {
                 var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e);
                 if (vertexIdx >= 0)
@@ -3862,7 +3839,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInTopLeftCorner(e) && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInTopLeftCorner(e))
             {
                 ToggleEffectPannel();
                 return true;
@@ -3873,10 +3850,10 @@ namespace FamiStudio
 
         private bool HandleMouseDownWaveSelection(MouseEventArgs e)
         {
-            if (editMode == EditionMode.DPCM && e.Button.HasFlag(MouseButtons.Left | MouseButtons.Right) && (IsMouseInNoteArea(e) || IsMouseInHeader(e)))
+            if (e.Button.HasFlag(MouseButtons.Left | MouseButtons.Right) && (IsMouseInNoteArea(e) || IsMouseInHeader(e)))
             {
                 StartCaptureOperation(e, CaptureOperation.SelectWave);
-                UpdateWaveSelection(e.X, true);
+                UpdateWaveSelection(e.X);
                 return true;
             }
 
@@ -3888,104 +3865,40 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if (editMode == EditionMode.Channel && GetLocationForCoord(e.X, e.Y, out var mouseLocation, out byte noteValue))
+            if (GetLocationForCoord(e.X, e.Y, out var mouseLocation, out byte noteValue))
             {
                 if (mouseLocation.PatternIndex >= Song.Length)
                     return true;
 
-                var modifiedPattern = (Pattern)null;
                 var channel = Song.Channels[editChannel];
-                var mousePattern = channel.PatternInstances[mouseLocation.PatternIndex];
-
                 var noteLocation = mouseLocation;
                 var note = channel.FindMusicalNoteAtLocation(ref noteLocation, noteValue);
-                var notePattern = note != null ? channel.PatternInstances[noteLocation.PatternIndex] : null;
-
-                var supportsInstrument = channel.SupportsInstrument(currentInstrument);
 
                 if (left)
                 {
-                    var shift = ModifierKeys.HasFlag(Keys.Shift);
-                    var slide = FamiStudioForm.IsKeyDown(Keys.S);
-                    var attack = FamiStudioForm.IsKeyDown(Keys.A);
+                    var shift   = ModifierKeys.HasFlag(Keys.Shift);
+                    var slide   = FamiStudioForm.IsKeyDown(Keys.S);
+                    var attack  = FamiStudioForm.IsKeyDown(Keys.A);
                     var eyedrop = FamiStudioForm.IsKeyDown(Keys.I);
 
-                    if (slide && channel.SupportsSlideNotes && note != null)
+                    if (slide)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, notePattern.Id);
-                        var op = CaptureOperation.DragSlideNoteTarget;
-                        StartCaptureOperation(e, op, false, noteLocation.ToAbsoluteNoteIndex(Song));
-                        modifiedPattern = notePattern;
+                        StartSlideNoteCreation(e, noteLocation, note, noteValue);
                     }
                     else if (attack && note != null)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, notePattern.Id);
-                        notePattern.GetOrCreateNoteAt(noteLocation.NoteIndex).HasAttack ^= true;
-                        App.UndoRedoManager.EndTransaction();
-                        modifiedPattern = notePattern;
+                        ToggleNoteAttack(noteLocation, note);
                     }
                     else if (eyedrop && note != null)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
-                        NoteEyedropped?.Invoke(note);
-                        App.UndoRedoManager.EndTransaction();
+                        Eyedrop(note);
                     }
-                    else if (shift && channel.SupportsReleaseNotes)
+                    else if (shift && note != null)
                     {
-                        if (note != null)
-                        {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, notePattern.Id);
-                            note.Release = (ushort)Math.Max(1, Song.CountNotesBetween(noteLocation, mouseLocation));
-                            channel.InvalidateCumulativePatternCache(noteLocation.PatternIndex);
-                            App.UndoRedoManager.EndTransaction();
-                            modifiedPattern = notePattern;
-                        }
-                        else
-                        {
-                            // MATTT : Test!
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, mousePattern.Id);
-                            note = mousePattern.GetOrCreateNoteAt(mouseLocation.NoteIndex);
-                            note.Value = Note.NoteStop;
-                            note.Duration = 1;
-                            channel.InvalidateCumulativePatternCache(mouseLocation.PatternIndex);
-                            App.UndoRedoManager.EndTransaction();
-                            modifiedPattern = mousePattern;
-                        }
-                    }
-                    else if (slide && channel.SupportsSlideNotes)
-                    {
-                        if (supportsInstrument)
-                        {
-                            if (mousePattern != null)
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, mousePattern.Id);
-                            }
-                            else
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
-                                mousePattern = channel.CreatePatternAndInstance(mouseLocation.PatternIndex);
-                            }
-
-                            SnapPatternNote(mouseLocation.PatternIndex, ref mouseLocation.NoteIndex);
-
-                            note = mousePattern.GetOrCreateNoteAt(mouseLocation.NoteIndex);
-                            note.Value = noteValue;
-                            note.Duration = (ushort)Song.BeatLength;
-                            note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
-
-                            StartCaptureOperation(e, CaptureOperation.CreateDragSlideNoteTarget, true);
-                            modifiedPattern = mousePattern;
-                        }
-                        else
-                        {
-                            ShowInstrumentError();
-                        }
+                        CreateReleaseNote(noteLocation, mouseLocation, note);
                     }
                     else
                     {
-                        var dragStarted = false;
-
-                        // NOTETODO : Finish this.
                         if (note != null)
                         {
                             var captureOp = GetHoverNoteCaptureOperationForCoord(e.X, e.Y);
@@ -3995,160 +3908,38 @@ namespace FamiStudio
                                 captureOp == CaptureOperation.ResizeNoteStart ||
                                 captureOp == CaptureOperation.ResizeSelectionNoteStart)
                             {
-                                var dragSelection = captureOp == CaptureOperation.DragSelection || captureOp == CaptureOperation.ResizeSelectionNoteStart;
-                                var multiplePatterns = dragSelection &&
-                                                       Song.FindPatternInstanceIndex(selectionMin, out _) !=
-                                                       Song.FindPatternInstanceIndex(selectionMax, out _);
-
-                                if (multiplePatterns)
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
-                                else
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, notePattern.Id);
-
-                                StartCaptureOperation(e, captureOp, true, noteLocation.ToAbsoluteNoteIndex(Song));
-
-                                if (dragSelection)
-                                {
-                                    dragNotes = GetSparseSelectedNotes(selectionMin);
-                                    dragFrameMin = selectionMin;
-                                    dragFrameMax = selectionMax;
-                                }
-                                else
-                                {
-                                    var absPrevNoteIdx = noteLocation.ToAbsoluteNoteIndex(Song);
-
-                                    dragFrameMin = absPrevNoteIdx;
-                                    dragFrameMax = absPrevNoteIdx;
-
-                                    dragNotes.Clear();
-                                    dragNotes[absPrevNoteIdx] = note.Clone();
-                                }
-
-                                dragStarted = true;
+                                StartNoteDrag(e, captureOp, noteLocation, note);
                             }
                             else if (captureOp == CaptureOperation.ResizeNoteEnd ||
                                      captureOp == CaptureOperation.ResizeSelectionNoteEnd)
                             {
-                                var dragSelection = captureOp == CaptureOperation.ResizeSelectionNoteEnd;
-                                var multiplePatterns = dragSelection &&
-                                                       Song.FindPatternInstanceIndex(selectionMin, out _) !=
-                                                       Song.FindPatternInstanceIndex(selectionMax, out _);
-
-                                if (multiplePatterns)
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
-                                else
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, notePattern.Id);
-
-                                StartCaptureOperation(e, captureOp, true, noteLocation.ToAbsoluteNoteIndex(Song));
+                                StartNoteResizeEnd(e, captureOp, noteLocation);
                             }
                             else if (captureOp == CaptureOperation.MoveNoteRelease)
                             {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, notePattern.Id);
-                                StartCaptureOperation(e, captureOp, true, noteLocation.ToAbsoluteNoteIndex(Song));
-                            }
-                            else
-                            {
-                                // We shouldnt be here.
-                                Debug.Assert(false);
+                                StartMoveNoteRelease(e, noteLocation);
                             }
                         }
                         else
                         {
-                            if (supportsInstrument)
-                            {
-                                StartCaptureOperation(e, CaptureOperation.CreateNote, true);
-                                modifiedPattern = UpdateNoteCreation(e, true, false);
-                            }
-                            else
-                            {
-                                ShowInstrumentError();
-                            }
-                        }
-
-                        if (dragStarted)
-                        {
-                            modifiedPattern = notePattern;
-                            dragLastNoteValue = -1;
-                            UpdateNoteDrag(e, false); // MATTTTTTT THIS WILL DESTROY THE PATTERNS AND ASSERT.
-                            ConditionalInvalidate();
+                            StartNoteCreation(e, noteLocation, noteValue);
                         }
                     }
                 }
                 else if (right)
                 {
-                    // NOTETODO : This is gonna be a resize.
-                    /*
-                    if (pattern != null && pattern.Notes.TryGetValue(noteIdx, out var note) && (note.IsStop || note.IsRelease))
-                    {
-                        var select = false;
-
-                        if (note.IsStop || note.IsRelease)
-                        {
-                            int prevPatternIdx = patternIdx;
-                            int prevNoteIdx    = noteIdx;
-
-                            // For stop and release note, we actually don't know their position since it 
-                            // depends on the previous note. We need to search for it.
-                            if (channel.FindPreviousMatchingNote(-1, ref prevPatternIdx, ref prevNoteIdx))
-                            {
-                                // See if the previous musical note matches where the user clicked.
-                                if (!channel.PatternInstances[prevPatternIdx].Notes.TryGetValue(prevNoteIdx, out var prevMusicalNote) || prevMusicalNote.Value != noteValue)
-                                    select = true;
-                            }
-                            // When stop or releases are "orphans" (no previous note), they are drawn at C4, so check for that too.
-                            else if (noteValue != 49)
-                            {
-                                select = true;
-                            }
-                        }
-
-                        if (select)
-                        {
-                            StartCaptureOperation(e, CaptureOperation.Select, false);
-                            UpdateSelection(e.X, true);
-                        }
-                        else
-                        {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                            pattern.Notes.Remove(noteIdx);
-                            pattern.ClearLastValidNoteCache();
-                            App.UndoRedoManager.EndTransaction();
-                            changed = true;
-                        }
-                    }
-                    else
-                    */
-
                     if (note != null)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, notePattern.Id);
-
-                        // Preserve mosty effect values when deleting single notes.
-                        note.Clear();
-                        note.HasNoteDelay = false;
-                        note.HasCutDelay = false;
-
-                        if (note.IsEmpty)
-                            notePattern.Notes.Remove(noteLocation.NoteIndex);
-
-                        App.UndoRedoManager.EndTransaction();
-                        modifiedPattern = notePattern;
+                        // NOTETODO : Delete release note here? Or in resize?
+                        DeleteNote(noteLocation, note);
                     }
                     else
                     {
-                        StartCaptureOperation(e, CaptureOperation.Select, false);
-                        UpdateSelection(e.X, true);
+                        StartSelection(e);
                     }
                 }
 
-                if (modifiedPattern != null)
-                {
-                    Debug.Assert(channel.Patterns.Contains(modifiedPattern));
-                    channel.InvalidateCumulativePatternCache(modifiedPattern); // NOTETODO : Use an index here!!
-                    PatternChanged?.Invoke(modifiedPattern);
-                    ConditionalInvalidate();
-                }
-
+                ConditionalInvalidate();
                 return true;
             }
 
@@ -4158,7 +3949,7 @@ namespace FamiStudio
         private bool HandleMouseDownClearEffectValue(MouseEventArgs e)
         {
             /*
-            if (editMode == EditionMode.Channel && e.Button.HasFlag(MouseButtons.Right) && GetEffectNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx) && selectedEffectIdx >= 0)
+            if (e.Button.HasFlag(MouseButtons.Right) && GetEffectNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx) && selectedEffectIdx >= 0)
             {
                 var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
                 if (pattern != null)
@@ -4175,7 +3966,7 @@ namespace FamiStudio
                     else
                     {
                         StartCaptureOperation(e, CaptureOperation.Select, false);
-                        UpdateSelection(e.X, true);
+                        UpdateSelection(e.X);
                     }
                 }
 
@@ -4192,7 +3983,7 @@ namespace FamiStudio
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
             /*
-            if (editMode == EditionMode.DPCMMapping && (left || right) && GetNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx, out noteValue))
+            if ((left || right) && GetNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx, out noteValue))
             {
                 if (App.Project.NoteSupportsDPCM(noteValue))
                 {
@@ -4264,7 +4055,7 @@ namespace FamiStudio
             UpdateCursor();
 
             // General stuff.
-            if (HandlePanMouseDown(e)) return;
+            if (HandleMouseDownPan(e)) return;
             if (HandleMouseDownScrollbar(e)) return;
             if (HandleMouseDownPiano(e)) return;
             if (HandleMouseDownAltZoom(e)) return;
@@ -4285,7 +4076,6 @@ namespace FamiStudio
             {
                 if (HandleMouseDownEnvelopeSelection(e)) return;
                 if (HandleMouseDownEnvelopeResize(e)) return;
-                if (HandleMouseDownEnvelopeLoopRelease(e)) return;
                 if (HandleMouseDownEnvelopeLoopRelease(e)) return;
                 if (HandleMouseDownDrawEnvelope(e)) return;
             }
@@ -4425,7 +4215,39 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateSelection(int mouseX, bool first = false)
+        private void MarkPatternDirty(int patternIdx)
+        {
+            var channel = Song.Channels[editChannel];
+            var pattern = channel.PatternInstances[patternIdx];
+            channel.InvalidateCumulativePatternCache(patternIdx);
+            PatternChanged?.Invoke(pattern);
+        }
+
+        private void MarkPatternDirty(Pattern pattern)
+        {
+            pattern.InvalidateCumulativeCache();
+            PatternChanged?.Invoke(pattern);
+        }
+
+        private void StartPlayPiano(MouseEventArgs e)
+        {
+            StartCaptureOperation(e, CaptureOperation.PlayPiano);
+            PlayPiano(e.X, e.Y);
+        }
+
+        private void EndPlayPiano()
+        {
+            App.StopOrReleaseIntrumentNote(false);
+            playingNote = -1;
+        }
+
+        private void StartSelection(MouseEventArgs e)
+        {
+            StartCaptureOperation(e, CaptureOperation.Select, false);
+            UpdateSelection(e.X);
+        }
+
+        private void UpdateSelection(int mouseX)
         {
             ScrollIfSelectionNearEdge(mouseX);
 
@@ -4439,7 +4261,7 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private void UpdateWaveSelection(int mouseX, bool first = false)
+        private void UpdateWaveSelection(int mouseX)
         {
             ScrollIfSelectionNearEdge(mouseX);
 
@@ -4462,14 +4284,18 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private void UpdateSeekDrag(int mouseX)
+        private void UpdateSeekDrag(int mouseX, bool final)
         {
             dragSeekPosition = (int)Math.Floor((mouseX - whiteKeySizeX + scrollX) / (float)noteSizeX);
             dragSeekPosition = SnapNote(dragSeekPosition);
+
+            if (final)
+                App.SeekSong(dragSeekPosition);
+
             ConditionalInvalidate();
         }
 
-        private void UpdateVolumeEnvelopeDrag(MouseEventArgs e)
+        private void UpdateVolumeEnvelopeDrag(MouseEventArgs e, bool final)
         {
             var halfHeight    = effectPanelSizeY * 0.5f;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
@@ -4488,15 +4314,63 @@ namespace FamiStudio
             editSample.SortVolumeEnvelope(ref volumeEnvelopeDragVertex);
             editSample.Process();
 
+            if (final)
+                App.UndoRedoManager.EndTransaction();
+
             ConditionalInvalidate();
         }
 
-        private void UpdateSlideNoteTarget(MouseEventArgs e)
+        private void StartSlideNoteCreation(MouseEventArgs e, NoteLocation location, Note note, byte noteValue)
+        {
+            var channel = Song.Channels[editChannel];
+            var pattern = channel.PatternInstances[location.PatternIndex];
+
+            if (channel.SupportsSlideNotes)
+            {
+                if (note != null)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                    StartCaptureOperation(e, CaptureOperation.DragSlideNoteTarget, false, location.ToAbsoluteNoteIndex(Song));
+                }
+                else
+                {
+                    if (channel.SupportsInstrument(currentInstrument))
+                    {
+                        if (pattern != null)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                        }
+                        else
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                            pattern = channel.CreatePatternAndInstance(location.PatternIndex);
+                        }
+
+                        SnapPatternNote(location.PatternIndex, ref location.NoteIndex);
+
+                        note = pattern.GetOrCreateNoteAt(location.NoteIndex);
+                        note.Value = noteValue;
+                        note.Duration = (ushort)Song.BeatLength;
+                        note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
+
+                        StartCaptureOperation(e, CaptureOperation.CreateSlideNote, true);
+                    }
+                    else
+                    {
+                        ShowInstrumentError();
+                        return;
+                    }
+                }
+            }
+        }
+
+        private void UpdateSlideNoteCreation(MouseEventArgs e, bool final)
         {
             Debug.Assert(captureNoteAbsoluteIdx >= 0);
 
             var patternIdx = Song.FindPatternInstanceIndex(captureNoteAbsoluteIdx, out var noteIdx);
-            var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
+            var channel = Song.Channels[editChannel];
+            var pattern = channel.PatternInstances[patternIdx];
 
             if (GetNoteValueForCoord(e.X, e.Y, out var noteValue))
             {
@@ -4509,6 +4383,65 @@ namespace FamiStudio
 
                 ConditionalInvalidate();
             }
+
+            if (final)
+            {
+                if (captureOperation == CaptureOperation.CreateSlideNote && !captureThresholdMet)
+                    channel.PatternInstances[patternIdx].GetOrCreateNoteAt(noteIdx).IsSlideNote ^= true;
+                MarkPatternDirty(patternIdx);
+                App.UndoRedoManager.EndTransaction();
+            }
+        }
+
+        private void ToggleNoteAttack(NoteLocation location, Note note)
+        {
+            if (note.IsMusical)
+            {
+                var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                pattern.Notes[location.NoteIndex].HasAttack ^= true;
+                MarkPatternDirty(location.PatternIndex);
+                App.UndoRedoManager.EndTransaction();
+            }
+        }
+
+        private void DeleteNote(NoteLocation location, Note note)
+        {
+            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+
+            // Preserve mosty effect values when deleting single notes.
+            note.Clear();
+            note.HasNoteDelay = false;
+            note.HasCutDelay = false;
+
+            if (note.IsEmpty)
+                pattern.Notes.Remove(location.NoteIndex);
+
+            MarkPatternDirty(location.PatternIndex);
+            App.UndoRedoManager.EndTransaction();
+        }
+
+        private void CreateReleaseNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
+        {
+            var channel = Song.Channels[editChannel];
+            var pattern = channel.PatternInstances[noteLocation.PatternIndex];
+
+            if (channel.SupportsReleaseNotes)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                note.Release = (ushort)Math.Max(1, Song.CountNotesBetween(noteLocation, mouseLocation));
+                MarkPatternDirty(noteLocation.PatternIndex);
+                App.UndoRedoManager.EndTransaction();
+            }
+        }
+
+        private void Eyedrop(Note note)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
+            NoteEyedropped?.Invoke(note);
+            App.UndoRedoManager.EndTransaction();
         }
 
         public void ReplaceSelectionInstrument(Instrument instrument, Point pos)
@@ -4892,15 +4825,25 @@ namespace FamiStudio
             }
         }
 
-        private Pattern UpdateNoteCreation(MouseEventArgs e, bool first, bool last)
+        private void StartNoteCreation(MouseEventArgs e, NoteLocation location, byte noteValue)
+        {
+            if (Song.Channels[editChannel].SupportsInstrument(currentInstrument))
+            {
+                App.PlayInstrumentNote(noteValue, false, false);
+                StartCaptureOperation(e, CaptureOperation.CreateNote, true);
+                UpdateNoteCreation(e, true, false);
+            }
+            else
+            {
+                ShowInstrumentError();
+            }
+        }
+
+        private void UpdateNoteCreation(MouseEventArgs e, bool first, bool last)
         {
             GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
 
-            if (first)
-            {
-                App.PlayInstrumentNote(noteValue, false, false);
-            }
-            else
+            if (!first)
             {
                 // Need to cancel the transaction every time since the start pattern may change.
                 App.UndoRedoManager.RestoreTransaction(false);
@@ -4934,14 +4877,55 @@ namespace FamiStudio
             note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
             note.Arpeggio = Song.Channels[editChannel].SupportsArpeggios ? currentArpeggio : null;
             note.Duration = (ushort)Math.Max(1, SnapNote(maxAbsoluteNoteIndex, true, false) - minAbsoluteNoteIndex);
-            
+
             if (last)
-                PatternChanged?.Invoke(pattern);
+            {
+                MarkPatternDirty(pattern);
+                App.StopOrReleaseIntrumentNote();
+                App.UndoRedoManager.EndTransaction();
+            }
+        }
 
-            channel.InvalidateCumulativePatternCache(minLocation.PatternIndex);
-            ConditionalInvalidate();
+        private void StartNoteDrag(MouseEventArgs e, CaptureOperation captureOp, NoteLocation location, Note note)
+        {
+            var dragSelection = 
+                captureOp == CaptureOperation.DragSelection || 
+                captureOp == CaptureOperation.ResizeSelectionNoteStart;
 
-            return pattern;
+            var minPatternIdx = Song.FindPatternInstanceIndex(selectionMin, out _);
+            var maxPatternIdx = Song.FindPatternInstanceIndex(selectionMax, out _);
+            var multiplePatterns = dragSelection && minPatternIdx != maxPatternIdx;
+
+            var channel = Song.Channels[editChannel];
+            var pattern = channel.PatternInstances[location.PatternIndex];
+
+            if (multiplePatterns)
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+            else
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+
+            StartCaptureOperation(e, captureOp, true, location.ToAbsoluteNoteIndex(Song));
+
+            if (dragSelection)
+            {
+                dragNotes = GetSparseSelectedNotes(selectionMin);
+                dragFrameMin = selectionMin;
+                dragFrameMax = selectionMax;
+            }
+            else
+            {
+                var absPrevNoteIdx = location.ToAbsoluteNoteIndex(Song);
+
+                dragFrameMin = absPrevNoteIdx;
+                dragFrameMax = absPrevNoteIdx;
+
+                dragNotes.Clear();
+                dragNotes[absPrevNoteIdx] = note.Clone();
+            }
+
+            dragLastNoteValue = -1;
+
+            UpdateNoteDrag(e, false);
         }
 
         private void UpdateNoteDrag(MouseEventArgs e, bool final, bool createNote = false)
@@ -5154,9 +5138,29 @@ namespace FamiStudio
             }
 
             if (final)
+            {
                 App.Project.Validate();
+                App.UndoRedoManager.EndTransaction();
+                App.StopInstrument();
+            }
 
             ConditionalInvalidate();
+        }
+
+        private void StartNoteResizeEnd(MouseEventArgs e, CaptureOperation captureOp, NoteLocation location)
+        {
+            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+            var dragSelection = captureOp == CaptureOperation.ResizeSelectionNoteEnd;
+            var multiplePatterns = dragSelection &&
+                                   Song.FindPatternInstanceIndex(selectionMin, out _) !=
+                                   Song.FindPatternInstanceIndex(selectionMax, out _);
+
+            if (multiplePatterns)
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+            else
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+
+            StartCaptureOperation(e, captureOp, true, location.ToAbsoluteNoteIndex(Song));
         }
 
         private void UpdateNoteResizeEnd(MouseEventArgs e, bool final)
@@ -5188,6 +5192,16 @@ namespace FamiStudio
 
                 return note;
             });
+
+            if (final)
+                App.UndoRedoManager.EndTransaction();
+        }
+
+        private void StartMoveNoteRelease(MouseEventArgs e, NoteLocation location)
+        {
+            var pattern = Song.Channels[editChannel].PatternInstances[captureNoteLocation.PatternIndex];
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+            StartCaptureOperation(e, CaptureOperation.MoveNoteRelease, true, location.ToAbsoluteNoteIndex(Song));
         }
 
         private void UpdateMoveNoteRelease(MouseEventArgs e)
@@ -5441,11 +5455,11 @@ namespace FamiStudio
             var pt = this.PointToClient(Cursor.Position);
 
             if (captureOperation == CaptureOperation.Select)
-                UpdateSelection(pt.X, false);
+                UpdateSelection(pt.X);
             else if (captureOperation == CaptureOperation.SelectWave)
-                UpdateWaveSelection(pt.X, false);
+                UpdateWaveSelection(pt.X);
             else if (captureOperation == CaptureOperation.DragSeekBar)
-                UpdateSeekDrag(pt.X);
+                UpdateSeekDrag(pt.X, false);
 
             UpdateFollowMode();
         }

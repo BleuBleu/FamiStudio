@@ -196,6 +196,12 @@ namespace FamiStudio
             }
         }
 
+        public void SetReleaseNoDurationCheck(int value)
+        {
+            if (IsMusical)
+                release = (ushort)Math.Min(value, (int)ushort.MaxValue);
+        }
+
         public Instrument Instrument
         {
             get { return instrument; }
@@ -414,7 +420,7 @@ namespace FamiStudio
             }
         }
 
-        private void ClearReleaseIfPastDuration()
+        public void ClearReleaseIfPastDuration()
         {
             if (HasRelease && release >= duration)
                 release = 0;
@@ -470,6 +476,9 @@ namespace FamiStudio
 
         public bool IsEmpty => Value == Note.NoteInvalid && Flags == 0 && Slide == 0 && EffectMask == 0;
         public bool HasJumpOrSkip => jump != 0xff || skip != 0xff;
+
+        // To fix some bad data from old versions.
+        public bool IsUseless => (IsSlideNote || instrument != null) && !IsValid && Flags == 0 && EffectMask == 0;
 
         public bool MatchesFilter(NoteFilter filter)
         {

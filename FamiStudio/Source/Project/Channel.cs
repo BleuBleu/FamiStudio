@@ -800,7 +800,7 @@ namespace FamiStudio
             }
 
             var loc0 = startLocation;
-            var loc1 = location; // MATTT new NoteLocation(location.PatternIndex, Math.Max(1, location.NoteIndex));
+            var loc1 = location;
 
             for (var it = GetSparseNoteIterator(loc0, loc1); !it.Done; it.Next())
             {
@@ -817,13 +817,22 @@ namespace FamiStudio
                     if (distance < it.DistanceToNextNote &&
                         distance < note.Duration)
                     {
-                        location = it.Location;
-
                         if (noteValue < 0)
+                        {
+                            location = it.Location;
                             return note;
+                        }
 
                         var noteValueToCompare = note.IsStop ? lastNoteValue : note.Value;
-                        return lastNoteValue == noteValue ? note : null;
+                        if (lastNoteValue == noteValue)
+                        {
+                            location = it.Location;
+                            return note;
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                 }
             }
@@ -876,7 +885,7 @@ namespace FamiStudio
                 if (cache.lastNoteLocation.IsValid)
                 {
                     var note = GetNoteAt(cache.lastNoteLocation);
-                    Debug.Assert(note.IsMusical && note.HasAttack);
+                    Debug.Assert(note.IsMusical); // We cant check if it has an attack since the first note of the entire song is assumed to have one.
                 }
                 if (cache.firstNoteIndex >= 0)
                 {
@@ -976,9 +985,9 @@ namespace FamiStudio
                         var release = song.CountNotesBetween(l0, l1);
 
                         if (n0.Release == 0)
-                            n0.Release = release;
+                            n0.SetReleaseNoDurationCheck(release);
                         else
-                            n0.Release = Math.Min(release, n0.Duration); // Keep the minimum.
+                            n0.SetReleaseNoDurationCheck(Math.Min(release, n0.Duration)); // Keep the minimum.
                     }
                     else if (n1.IsStop || n1.IsMusical)
                     {
@@ -1065,6 +1074,8 @@ namespace FamiStudio
                         note.Value = Note.NoteInvalid;
                         note.Duration = 0;
                     }
+
+                    note.ClearReleaseIfPastDuration();
                 }
 
                 pattern.DeleteEmptyNotes();
@@ -1076,9 +1087,14 @@ namespace FamiStudio
         // compound notes. This is to help the migration.
         public void ConvertFromCompoundNotes()
         {
-            var outsidePatternReleases = new Dictionary<Pattern, int>();
-            var outsidePatternStops    = new Dictionary<Pattern, int>();
-
+            // Record all combinations of release/stops.
+            var patternReleaseStops = new int[song.Length, 2];
+            for (int i = 0; i < song.Length; i++)
+            {
+                patternReleaseStops[i, 0] = -1;
+                patternReleaseStops[i, 1] = -1;
+            }
+            
             var releasesToCreate    = new HashSet<NoteLocation>();
             var stopsToCreate       = new HashSet<NoteLocation>();
             var patternsToDuplicate = new HashSet<int>();
@@ -1102,80 +1118,92 @@ namespace FamiStudio
                         var releaseLocation = it.Location;
                         Song.AdvanceNumberOfNotes(ref releaseLocation, note.Release);
 
-                        bool createRelease = true;
-
-                        // Does it fall in a different pattern?
-                        if (releaseLocation.PatternIndex != it.Location.PatternIndex)
+                        if (releaseLocation < loc1)
                         {
-                            // Create missing pattern.
-                            var pattern = patternInstances[releaseLocation.PatternIndex];
-                            if (pattern == null)
-                                pattern = CreatePatternAndInstance(releaseLocation.PatternIndex);
-
-                            // If multiple notes from previous patterns try to write release notes
-                            // at different locations, we need to duplicate the pattern.
-                            if (outsidePatternReleases.TryGetValue(pattern, out var existingRelease))
+                            // Does it fall in a different pattern?
+                            if (releaseLocation < loc1 && releaseLocation.PatternIndex != it.Location.PatternIndex)
                             {
-                                if (existingRelease != releaseLocation.NoteIndex)
-                                    patternsToDuplicate.Add(releaseLocation.PatternIndex);
-                                else
-                                    createRelease = false;
-                            }
-                            else
-                            {
-                                outsidePatternReleases.Add(pattern, releaseLocation.NoteIndex);
-                            }
-                        }
+                                // Create missing pattern.
+                                var pattern = patternInstances[releaseLocation.PatternIndex];
+                                if (pattern == null)
+                                    pattern = CreatePatternAndInstance(releaseLocation.PatternIndex);
 
-                        if (createRelease)
+                                Debug.Assert(patternReleaseStops[releaseLocation.PatternIndex, 0] == -1);
+                                patternReleaseStops[releaseLocation.PatternIndex, 0] = releaseLocation.NoteIndex;
+                            }
+
                             releasesToCreate.Add(releaseLocation);
+                        }
                     }
 
                     // Find where the notes ends.
                     var stopLocation = it.Location;
                     Song.AdvanceNumberOfNotes(ref stopLocation, duration);
 
-                    bool createStop = true;
-
-                    // Does it fall in a different pattern?
-                    if (stopLocation.PatternIndex != it.Location.PatternIndex)
+                    if (stopLocation < loc1)
                     {
-                        // Create missing pattern.
-                        var pattern = patternInstances[stopLocation.PatternIndex];
-                        if (pattern == null)
-                            pattern = CreatePatternAndInstance(stopLocation.PatternIndex);
-
-                        if (outsidePatternStops.TryGetValue(pattern, out var existingStop))
+                        // Does it fall in a different pattern?
+                        if (stopLocation.PatternIndex != it.Location.PatternIndex)
                         {
-                            // If multiple notes from previous patterns try to write stop notes
-                            // at different locations, we need to duplicate the pattern.
-                            if (existingStop != stopLocation.NoteIndex)
-                                patternsToDuplicate.Add(stopLocation.PatternIndex);
-                            else
-                                createStop = false;
-                        }
-                        else
-                        {
-                            outsidePatternStops.Add(pattern, stopLocation.NoteIndex);
-                        }
-                    }
+                            // Create missing pattern.
+                            var pattern = patternInstances[stopLocation.PatternIndex];
+                            if (pattern == null)
+                                pattern = CreatePatternAndInstance(stopLocation.PatternIndex);
 
-                    if (createStop)
+                            Debug.Assert(patternReleaseStops[stopLocation.PatternIndex, 1] == -1);
+                            patternReleaseStops[stopLocation.PatternIndex, 1] = stopLocation.NoteIndex;
+                        }
+
                         stopsToCreate.Add(stopLocation);
+                    }
                 }
             }
 
-            // Duplicate patterns if needed.
-            foreach (var patternIdx in patternsToDuplicate)
-                patternInstances[patternIdx] = patternInstances[patternIdx].ShallowClone();
+            // Duplicate pattern as needed.
+            var visitedPatterns = new HashSet<Pattern>();
+            var patternStopReleaseMap = new Dictionary<Tuple<Pattern, int, int>, Pattern>();
+
+            for (int i = 0; i < song.Length; i++)
+            {
+                if (patternReleaseStops[i, 0] >= 0 ||
+                    patternReleaseStops[i, 1] >= 0)
+                {
+                    var pattern = patternInstances[i];
+                    var key = new Tuple<Pattern, int, int>(pattern, patternReleaseStops[i, 0], patternReleaseStops[i, 1]);
+
+                    // First time we see a pattern, just use it.
+                    if (!visitedPatterns.Contains(pattern))
+                    {
+                        visitedPatterns.Add(pattern);
+                        patternStopReleaseMap[key] = pattern;
+                    }
+                    else 
+                    {
+                        // Otherwise create a unique pattern for each combination of release/stop.
+                        if (patternStopReleaseMap.TryGetValue(key, out var patternToCopy))
+                        {
+                            patternInstances[i] = patternToCopy;
+                        }
+                        else
+                        {
+                            Log.LogMessage(LogSeverity.Warning, $"Duplicating pattern {pattern.Name} in song {song.Name} since it has inconsistent previous notes.");
+                            patternInstances[i] = pattern.ShallowClone();
+                            patternStopReleaseMap.Add(key, patternInstances[i]);
+                        }
+                    }
+                }
+            }
 
             // Create release notes.
             foreach (var releaseLocation in releasesToCreate)
             {
                 var pattern = patternInstances[releaseLocation.PatternIndex];
                 var releaseNote = pattern.GetOrCreateNoteAt(releaseLocation.NoteIndex);
-                releaseNote.Value = Note.NoteRelease;
-                releaseNote.Duration = 1;
+                if (!releaseNote.IsValid)
+                {
+                    releaseNote.Value = Note.NoteRelease;
+                    releaseNote.Duration = 1;
+                }
             }
 
             // Create stop notes.
@@ -1183,8 +1211,11 @@ namespace FamiStudio
             {
                 var pattern = patternInstances[stopLocation.PatternIndex];
                 var stopNote = pattern.GetOrCreateNoteAt(stopLocation.NoteIndex);
-                stopNote.Value = Note.NoteStop;
-                stopNote.Duration = 1;
+                if (!stopNote.IsValid)
+                {
+                    stopNote.Value = Note.NoteStop;
+                    stopNote.Duration = 1;
+                }
             }
 
             InvalidateCumulativePatternCache();

@@ -212,7 +212,7 @@ namespace FamiStudio
             InvalidateCumulativeCache();
         }
 
-        public void DeleteEmptyNotes(bool trim = true)
+        public void DeleteEmptyNotes(bool trim = true, bool deleteUseless = false)
         {
             var keys = notes.Keys;
             var vals = notes.Values;
@@ -220,7 +220,7 @@ namespace FamiStudio
             for (int i = vals.Count - 1; i >= 0; i--)
             {
                 var note = vals[i];
-                if (note == null || note.IsEmpty)
+                if (note == null || note.IsEmpty || note.IsUseless && deleteUseless)
                     notes.Remove(keys[i]);
             }
 
@@ -296,6 +296,7 @@ namespace FamiStudio
 
                 // Not used since FamiStudio 3.0.0
                 Debug.Assert(!note.IsRelease);
+                Debug.Assert(!note.IsUseless);
                 //Debug.Assert(!note.IsStop);
 
                 Debug.Assert(note.Release == 0 || note.Release > 0 && note.Release < note.Duration);
@@ -386,6 +387,9 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
+                if (!buffer.IsForUndoRedo)
+                    DeleteEmptyNotes(true, true);
+
                 InvalidateCumulativeCache();
 
                 // This can happen when pasting from an expansion to another. We wont find the channel.
