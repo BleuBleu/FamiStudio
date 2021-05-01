@@ -850,8 +850,8 @@ namespace FamiStudio
         {
             var meta = new VideoFrameMetadata();
 
-            meta.playPattern = playPattern;
-            meta.playNote = playNote;
+            meta.playPattern = playLocation.PatternIndex;
+            meta.playNote = playLocation.NoteIndex;
             meta.wavOffset = prevNumSamples;
             meta.channelNotes = new Note[song.Channels.Length];
             meta.channelVolumes = new int[song.Channels.Length];

@@ -509,7 +509,7 @@ namespace FamiStudio
             return new SparseChannelNoteIterator(this, start, end, filter);
         }
 
-        public bool ComputeSlideNoteParams(Note note, int patternIdx, int noteIdx, int famitrackerSpeed, ushort[] noteTable, bool pal, bool applyShifts, out int pitchDelta, out int stepSize, out float stepSizeFloat)
+        public bool ComputeSlideNoteParams(Note note, NoteLocation location, int famitrackerSpeed, ushort[] noteTable, bool pal, bool applyShifts, out int pitchDelta, out int stepSize, out float stepSizeFloat)
         {
             Debug.Assert(note.IsMusical);
 
@@ -520,24 +520,22 @@ namespace FamiStudio
 
             pitchDelta = noteTable[note.Value] - noteTable[note.SlideNoteTarget];
 
-            // NOTETODO : Convert this.
-            /*
             if (pitchDelta != 0)
             {
                 pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
 
                 // Find the next note to calculate the slope.
-                FindNextNoteForSlide(patternIdx, noteIdx, 256, out var nextPatternIdx, out var nextNoteIdx); // 256 is kind of arbitrary. 
+                FindNextNoteForSlide(location, 256, out var nextLocation); // 256 is kind of arbitrary. 
 
                 // Approximate how many frames separates these 2 notes.
                 var frameCount = 0.0f;
-                if (patternIdx != nextPatternIdx || noteIdx != nextNoteIdx)
+                if (location != nextLocation)
                 {
                     // Take delayed notes/cuts into account.
                     var delayFrames = -(note.HasNoteDelay ? note.NoteDelay : 0);
                     if (Song.UsesFamiTrackerTempo)
                     {
-                        var nextNote = GetNoteAt(nextPatternIdx, nextNoteIdx);
+                        var nextNote = GetNoteAt(nextLocation);
                         if (nextNote != null)
                         {
                             if (nextNote.HasNoteDelay)
@@ -554,7 +552,7 @@ namespace FamiStudio
                         }
                     }
 
-                    frameCount = Song.CountFramesBetween(patternIdx, noteIdx, nextPatternIdx, nextNoteIdx, famitrackerSpeed, pal) + delayFrames;
+                    frameCount = Song.CountFramesBetween(location, nextLocation, famitrackerSpeed, pal) + delayFrames;
                 }
                 else
                 {
@@ -572,7 +570,6 @@ namespace FamiStudio
                 return true;
             }
             else
-            */
             {
                 stepSize = 0;
                 stepSizeFloat = 0.0f;

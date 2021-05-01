@@ -838,21 +838,24 @@ namespace FamiStudio
             }
         }
 
-        public bool ApplySpeedEffectAt(int patternIdx, int noteIdx, ref int speed)
+        // NOTETODO : Migrate all to location.
+        public bool ApplySpeedEffectAt(int p, int n, ref int speed)
+        {
+            return ApplySpeedEffectAt(new NoteLocation(p, n), ref speed);
+        }
+
+        public bool ApplySpeedEffectAt(NoteLocation location, ref int speed)
         {
             if (UsesFamiStudioTempo)
                 return false;
 
             foreach (var channel in channels)
             {
-                var pattern = channel.PatternInstances[patternIdx];
-                if (pattern != null)
+                var note = channel.GetNoteAt(location);
+                if (note != null && note.HasSpeed)
                 {
-                    if (pattern.Notes.TryGetValue(noteIdx, out var note) && note != null && note.HasSpeed)
-                    {
-                        speed = note.Speed;
-                        return true;
-                    }
+                    speed = note.Speed;
+                    return true;
                 }
             }
 
@@ -864,13 +867,13 @@ namespace FamiStudio
             return NoteLocationToAbsoluteNoteIndex(end) - NoteLocationToAbsoluteNoteIndex(start);
         }
 
-        // NOTETODO : Get rid of that one!!!
-        public int CountNotesBetween(int p0, int n0, int p1, int n1)
+        // NOTETODO : Migrate all to locations.
+        public float CountFramesBetween(int p0, int n0, int p1, int n1, int currentSpeed, bool pal)
         {
-            return CountNotesBetween(new NoteLocation(p0, n0), new NoteLocation(p1, n1));
+            return CountFramesBetween(new NoteLocation(p0, n0), new NoteLocation(p1, n1), currentSpeed, pal);
         }
 
-        public float CountFramesBetween(int p0, int n0, int p1, int n1, int currentSpeed, bool pal)
+        public float CountFramesBetween(NoteLocation l0, NoteLocation l1, int currentSpeed, bool pal)
         {
             // This is simply an approximation that is used to compute slide notes.
             // It doesn't take into account the real state of the tempo accumulator.
@@ -878,16 +881,16 @@ namespace FamiStudio
             {
                 float frameCount = 0;
 
-                while ((p0 != p1 || n0 != n1) && p0 < songLength)
+                while (l0 != l1 && l0.PatternIndex < songLength)
                 {
-                    ApplySpeedEffectAt(p0, n0, ref currentSpeed);
+                    ApplySpeedEffectAt(l0, ref currentSpeed);
                     float tempoRatio = (pal ? NativeTempoPAL : NativeTempoNTSC) / (float)famitrackerTempo;
                     frameCount += currentSpeed * tempoRatio;
 
-                    if (++n0 >= GetPatternLength(p0))
+                    if (++l0.NoteIndex >= GetPatternLength(l0.PatternIndex))
                     {
-                        n0 = 0;
-                        p0++;
+                        l0.NoteIndex = 0;
+                        l0.PatternIndex++;
                     }
                 }
 
@@ -897,34 +900,34 @@ namespace FamiStudio
             {
                 var frameCount = 0;
 
-                if (p0 == p1)
+                if (l0.PatternIndex == l1.PatternIndex)
                 {
                     frameCount =
-                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n1, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0)) -
-                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n0, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(l1.NoteIndex, GetPatternGroove(l1.PatternIndex), GetPatternGroovePaddingMode(l1.PatternIndex)) -
+                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(l0.NoteIndex, GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex));
                 }
                 else
                 {
                     // End of first pattern.
-                    if (n0 != 0)
+                    if (l0.NoteIndex != 0)
                     {
                         frameCount =
-                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(p0), GetPatternGroove(p0), GetPatternGroovePaddingMode(p0)) -
-                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n0, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
-                        p0++;
+                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(l0.PatternIndex), GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex)) -
+                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(l0.NoteIndex, GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex));
+                        l0.PatternIndex++;
                     }
 
                     // Complete patterns in between.
-                    while (p0 != p1)
+                    while (l0.PatternIndex != l1.PatternIndex)
                     {
-                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(p0), GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
-                        p0++;
+                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(l0.PatternIndex), GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex));
+                        l0.PatternIndex++;
                     }
 
                     // First bit of last pattern.
-                    if (n1 != 0)
+                    if (l1.NoteIndex != 0)
                     {
-                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n1, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(l1.NoteIndex, GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex));
                     }
                 }
 
@@ -1023,6 +1026,7 @@ namespace FamiStudio
             return true;
         }
 
+        // NOTETODO : Migrate to location.
         public void AdvanceNumberOfFrames(int frameCount, int initialCount, int currentSpeed, bool pal, ref int p, ref int n)
         {
             Debug.Assert(UsesFamiTrackerTempo);

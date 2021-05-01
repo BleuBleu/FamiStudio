@@ -278,8 +278,6 @@ namespace FamiStudio
         int captureScrollX = 0;
         int captureScrollY = 0;
         int playingNote = -1;
-        int effectPatternIdx;
-        int effectNoteIdx;
         int selectionMin = -1;
         int selectionMax = -1;
         int dragSeekPosition = -1;
@@ -297,7 +295,7 @@ namespace FamiStudio
 
         bool showSelection = false;
         bool showEffectsPanel = false;
-        bool snap = true;
+        bool snap = false;
         SnapResolution snapResolution = SnapResolution.OneNote;
         int scrollX = 0;
         int scrollY = 0;
@@ -2716,11 +2714,11 @@ namespace FamiStudio
             bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
             var channel = Song.Channels[editChannel];
-            var pattern = channel.PatternInstances[effectPatternIdx];
+            var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
             var minValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
             var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
 
-            var note = pattern.GetOrCreateNoteAt(effectNoteIdx);
+            var note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
 
             int newValue;
             if (shift)
@@ -2737,7 +2735,7 @@ namespace FamiStudio
             }
 
             note.SetEffectValue(selectedEffectIdx, newValue);
-            channel.InvalidateCumulativePatternCache(effectPatternIdx);
+            channel.InvalidateCumulativePatternCache(captureNoteLocation.PatternIndex);
 
             ConditionalInvalidate();
         }
@@ -3761,9 +3759,9 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInEffectPanel(e) && selectedEffectIdx >= 0)
             {
-                if (GetEffectNoteForCoord(e.X, e.Y, out effectPatternIdx, out effectNoteIdx))
+                if (GetEffectNoteForCoord(e.X, e.Y, out var location))
                 {
-                    var pattern = Song.Channels[editChannel].PatternInstances[effectPatternIdx];
+                    var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
                     if (pattern != null)
                     {
                         StartCaptureOperation(e, CaptureOperation.ChangeEffectValue);
@@ -3820,6 +3818,7 @@ namespace FamiStudio
                     snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
 
                 ConditionalInvalidate();
+                return true;
             }
 
             return false;
@@ -3948,31 +3947,23 @@ namespace FamiStudio
 
         private bool HandleMouseDownClearEffectValue(MouseEventArgs e)
         {
-            /*
-            if (e.Button.HasFlag(MouseButtons.Right) && GetEffectNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx) && selectedEffectIdx >= 0)
+            if (e.Button.HasFlag(MouseButtons.Right) && GetEffectNoteForCoord(e.X, e.Y, out var location) && selectedEffectIdx >= 0)
             {
-                var pattern = Song.Channels[editChannel].PatternInstances[patternIdx];
+                var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
                 if (pattern != null)
                 {
-                    if (pattern.Notes.TryGetValue(noteIdx, out var note) && note != null && note.HasValidEffectValue(selectedEffectIdx))
+                    if (pattern.Notes.TryGetValue(location.NoteIndex, out var note) && note != null && note.HasValidEffectValue(selectedEffectIdx))
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                        note.ClearEffectValue(selectedEffectIdx);
-                        pattern.ClearLastValidNoteCache();
-                        PatternChanged?.Invoke(pattern);
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
+                        ClearEffectValue(location, note);
                     }
                     else
                     {
-                        StartCaptureOperation(e, CaptureOperation.Select, false);
-                        UpdateSelection(e.X);
+                        StartSelection(e);
                     }
                 }
 
                 return true;
             }
-            */
 
             return false;
         }
@@ -3982,8 +3973,7 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            /*
-            if ((left || right) && GetNoteForCoord(e.X, e.Y, out patternIdx, out noteIdx, out noteValue))
+            if ((left || right) && GetLocationForCoord(e.X, e.Y, out var location, out var noteValue))
             {
                 if (App.Project.NoteSupportsDPCM(noteValue))
                 {
@@ -3991,44 +3981,15 @@ namespace FamiStudio
 
                     if (left && mapping == null)
                     {
-                        if (App.Project.Samples.Count == 0)
-                        {
-                            PlatformUtils.MessageBox("Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons.OK);
-                        }
-                        else
-                        {
-                            var sampleNames = new List<string>();
-                            foreach (var sample in App.Project.Samples)
-                                sampleNames.Add(sample.Name);
-
-                            var dlg = new PropertyDialog(300);
-                            dlg.Properties.AddLabel(null, "Select sample to assign:"); // 0
-                            dlg.Properties.AddDropDownList(null, sampleNames.ToArray(), sampleNames[0]); // 1
-                            dlg.Properties.Build();
-
-                            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
-                                var sampleName = dlg.Properties.GetPropertyValue<string>(1);
-                                App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
-                                App.UndoRedoManager.EndTransaction();
-                                DPCMSampleMapped?.Invoke(noteValue);
-                                ConditionalInvalidate();
-                            }
-                        }
+                        MapDPCMSample(noteValue);
                     }
                     else if (left && mapping != null)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-                        StartCaptureOperation(e, CaptureOperation.DragSample);
+                        StartDragDPCMSampleMapping(e);
                     }
                     else if (right && mapping != null)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
-                        App.Project.UnmapDPCMSample(noteValue);
-                        App.UndoRedoManager.EndTransaction();
-                        DPCMSampleUnmapped?.Invoke(noteValue);
-                        ConditionalInvalidate();
+                        ClearDPCMSampleMapping(noteValue);
                     }
                 }
                 else
@@ -4038,7 +3999,6 @@ namespace FamiStudio
 
                 return true;
             }
-            */
 
             return false;
         }
@@ -4055,44 +4015,52 @@ namespace FamiStudio
             UpdateCursor();
 
             // General stuff.
-            if (HandleMouseDownPan(e)) return;
-            if (HandleMouseDownScrollbar(e)) return;
-            if (HandleMouseDownPiano(e)) return;
-            if (HandleMouseDownAltZoom(e)) return;
+            if (HandleMouseDownPan(e)) goto Handled;
+            if (HandleMouseDownScrollbar(e)) goto Handled;
+            if (HandleMouseDownPiano(e)) goto Handled;
+            if (HandleMouseDownAltZoom(e)) goto Handled;
 
             if (editMode == EditionMode.Channel)
             {
-                if (HandleMouseDownSeekBar(e)) return;
-                if (HandleMouseDownHeaderSelection(e)) return;
-                if (HandleMouseDownEffectList(e)) return;
-                if (HandleMouseDownChangeEffectValue(e)) return;
-                if (HandleMouseDownClearEffectValue(e)) return;
-                if (HandleMouseDownSnapResolutionButton(e)) return;
-                if (HandleMouseDownSnapButton(e)) return;
-                if (HandleMouseDownChannelNote(e)) return;
+                if (HandleMouseDownSeekBar(e)) goto Handled;
+                if (HandleMouseDownHeaderSelection(e)) goto Handled;
+                if (HandleMouseDownEffectList(e)) goto Handled;
+                if (HandleMouseDownChangeEffectValue(e)) goto Handled;
+                if (HandleMouseDownClearEffectValue(e)) goto Handled;
+                if (HandleMouseDownSnapResolutionButton(e)) goto Handled;
+                if (HandleMouseDownSnapButton(e)) goto Handled;
+                if (HandleMouseDownChannelNote(e)) goto Handled;
             }
+
             if (editMode == EditionMode.Enveloppe || 
                 editMode == EditionMode.Arpeggio)
             {
-                if (HandleMouseDownEnvelopeSelection(e)) return;
-                if (HandleMouseDownEnvelopeResize(e)) return;
-                if (HandleMouseDownEnvelopeLoopRelease(e)) return;
-                if (HandleMouseDownDrawEnvelope(e)) return;
+                if (HandleMouseDownEnvelopeSelection(e)) goto Handled;
+                if (HandleMouseDownEnvelopeResize(e)) goto Handled;
+                if (HandleMouseDownEnvelopeLoopRelease(e)) goto Handled;
+                if (HandleMouseDownDrawEnvelope(e)) goto Handled;
             }
+
             if (editMode == EditionMode.DPCM)
             {
-                if (HandleMouseDownDPCMVolumeEnvelope(e)) return;
-                if (HandleMouseDownWaveSelection(e)) return;
+                if (HandleMouseDownDPCMVolumeEnvelope(e)) goto Handled;
+                if (HandleMouseDownWaveSelection(e)) goto Handled;
             }
+
             if (editMode == EditionMode.Channel ||
                 editMode == EditionMode.DPCM)
             {
-                if (HandleMouseDownToggleEffectPanelButton(e)) return;
+                if (HandleMouseDownToggleEffectPanelButton(e)) goto Handled;
             }
+
             if (editMode == EditionMode.DPCMMapping)
             {
-                if (HandleMouseDownDPCMMapping(e)) return;
+                if (HandleMouseDownDPCMMapping(e)) goto Handled;
             }
+            return;
+
+        Handled: // Yes, i use a goto, sue me.
+            ConditionalInvalidate();
         }
 
         public void LayoutChanged()
@@ -4393,6 +4361,15 @@ namespace FamiStudio
             }
         }
 
+        private void ClearEffectValue(NoteLocation location, Note note)
+        {
+            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+            note.ClearEffectValue(selectedEffectIdx);
+            MarkPatternDirty(location.PatternIndex);
+            App.UndoRedoManager.EndTransaction();
+        }
+
         private void ToggleNoteAttack(NoteLocation location, Note note)
         {
             if (note.IsMusical)
@@ -4403,6 +4380,48 @@ namespace FamiStudio
                 MarkPatternDirty(location.PatternIndex);
                 App.UndoRedoManager.EndTransaction();
             }
+        }
+
+        private void MapDPCMSample(byte noteValue)
+        {
+            if (App.Project.Samples.Count == 0)
+            {
+                PlatformUtils.MessageBox("Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons.OK);
+            }
+            else
+            {
+                var sampleNames = new List<string>();
+                foreach (var sample in App.Project.Samples)
+                    sampleNames.Add(sample.Name);
+
+                var dlg = new PropertyDialog(300);
+                dlg.Properties.AddLabel(null, "Select sample to assign:"); // 0
+                dlg.Properties.AddDropDownList(null, sampleNames.ToArray(), sampleNames[0]); // 1
+                dlg.Properties.Build();
+
+                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
+                    var sampleName = dlg.Properties.GetPropertyValue<string>(1);
+                    App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
+                    App.UndoRedoManager.EndTransaction();
+                    DPCMSampleMapped?.Invoke(noteValue);
+                }
+            }
+        }
+
+        private void StartDragDPCMSampleMapping(MouseEventArgs e)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+            StartCaptureOperation(e, CaptureOperation.DragSample);
+        }
+
+        private void ClearDPCMSampleMapping(byte noteValue)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
+            App.Project.UnmapDPCMSample(noteValue);
+            App.UndoRedoManager.EndTransaction();
+            DPCMSampleUnmapped?.Invoke(noteValue);
         }
 
         private void DeleteNote(NoteLocation location, Note note)
@@ -5208,14 +5227,11 @@ namespace FamiStudio
         {
             GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
 
-            App.UndoRedoManager.RestoreTransaction(false);
-
-            var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
             var note = pattern.Notes[captureNoteLocation.NoteIndex];
-            note.Release = (ushort)Utils.Clamp(note.Release + deltaNoteIdx, 1, note.Duration - 1);
-            channel.InvalidateCumulativePatternCache(pattern);
+            note.Release = (ushort)Utils.Clamp(Song.CountNotesBetween(captureNoteLocation, location), 1, note.Duration - 1);
+            channel.InvalidateCumulativePatternCache(captureNoteLocation.PatternIndex);
             ConditionalInvalidate();
         }
 
@@ -5464,18 +5480,17 @@ namespace FamiStudio
             UpdateFollowMode();
         }
 
-        private bool GetEffectNoteForCoord(int x, int y, out int patternIdx, out int noteIdx)
+        private bool GetEffectNoteForCoord(int x, int y, out NoteLocation location)
         {
             if (x > whiteKeySizeX && y > headerSizeY && y < headerAndEffectSizeY)
-            { 
-                noteIdx = (x - whiteKeySizeX + scrollX) / noteSizeX;
-                patternIdx = Song.FindPatternInstanceIndex(noteIdx, out noteIdx);
-                return patternIdx < Song.Length;
+            {
+                var absoluteNoteIndex = (x - whiteKeySizeX + scrollX) / noteSizeX;
+                location = NoteLocation.FromAbsoluteNoteIndex(Song, absoluteNoteIndex);
+                return location.PatternIndex < Song.Length;
             }
             else
             {
-                patternIdx = -1;
-                noteIdx = -1;
+                location = NoteLocation.Invalid;
                 return false;
             }
         }

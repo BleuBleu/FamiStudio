@@ -214,6 +214,11 @@ namespace FamiStudio
             set => arpeggio = value;
         }
 
+        public bool IsMusicalOrStop
+        {
+            get { return IsMusical || IsStop; }
+        }
+
         public bool IsValid
         {
             get { return Value != NoteInvalid; }

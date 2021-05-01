@@ -7,6 +7,8 @@ namespace FamiStudio
     {
         protected int apuIdx;
         protected int channelType;
+        protected int releaseCounter = 0;
+        protected int durationCounter = 0;
         protected int delayedNoteCounter = 0;
         protected int delayedCutCounter = 0;
         protected int delayedNoteSlidePitch = 0;
@@ -48,7 +50,7 @@ namespace FamiStudio
             Channel.GetShiftsForType(type, numN163Channels, out pitchShift, out slideShift);
         }
 
-        public void Advance(Song song, int patternIdx, int noteIdx, ref int famitrackerSpeed)
+        public void Advance(Song song, NoteLocation location, ref int famitrackerSpeed)
         {
             // When advancing row, if there was a delayed note, play it immediately. That's how FamiTracker does it.
             if (delayedNote != null)
@@ -59,12 +61,32 @@ namespace FamiStudio
             }
 
             var channel = song.GetChannelByType(channelType);
-            var pattern = channel.PatternInstances[patternIdx];
+            var pattern = channel.PatternInstances[location.PatternIndex];
 
             if (pattern == null)
                 return;
 
-            if (pattern.Notes.TryGetValue(noteIdx, out var newNote))
+            pattern.Notes.TryGetValue(location.NoteIndex, out var newNote);
+
+            var needClone = true;
+
+            // Generate a release note if the release counter reaches zero.
+            if (releaseCounter > 0 && --releaseCounter == 0 && (newNote == null || !newNote.IsMusicalOrStop))
+            {
+                newNote = newNote == null ? new Note() : newNote.Clone();
+                newNote.Value = Note.NoteRelease;
+                needClone = false;
+            }
+
+            // Generate a stop note if the stop counter reaches zero.
+            if (durationCounter > 0 && --durationCounter == 0 && (newNote == null || !newNote.IsMusicalOrStop))
+            {
+                newNote = newNote == null ? new Note() : newNote.Clone();
+                newNote.Value = Note.NoteStop;
+                needClone = false;
+            }
+
+            if (newNote != null)
             { 
                 // We dont delay speed effects. This is not what FamiTracker does, but I dont care.
                 // There is a special place in hell for people who delay speed effect.
@@ -77,9 +99,17 @@ namespace FamiStudio
                 int noteSlidePitch = 0;
                 int noteSlideStep  = 0;
 
-                if (newNote.IsValid && newNote.IsSlideNote)
+                if (newNote.IsMusical)
                 {
-                    channel.ComputeSlideNoteParams(newNote, patternIdx, noteIdx, famitrackerSpeed, noteTable, palPlayback, true, out noteSlidePitch, out noteSlideStep, out _);
+                    if (newNote.IsSlideNote)
+                    {
+                        channel.ComputeSlideNoteParams(newNote, location, famitrackerSpeed, noteTable, palPlayback, true, out noteSlidePitch, out noteSlideStep, out _);
+                    }
+
+                    if (newNote.HasRelease)
+                        releaseCounter = newNote.Release;
+
+                    durationCounter = newNote.Duration;
                 }
 
                 // Store note for later if delayed.
@@ -92,13 +122,14 @@ namespace FamiStudio
                     return;
                 }
 
-                PlayNote(newNote, noteSlidePitch, noteSlideStep);
+                PlayNote(newNote, noteSlidePitch, noteSlideStep, needClone);
             }
         }
 
-        public void PlayNote(Note newNote, int noteSlidePitch = 0, int noteSlideStep = 0)
+        public void PlayNote(Note newNote, int noteSlidePitch = 0, int noteSlideStep = 0, bool needClone = true)
         {
-            newNote = newNote.Clone();
+            if (needClone)
+                newNote = newNote.Clone();
 
             // Pass on the same effect values if this note doesn't specify them.
             if (!newNote.HasVolume         && note.HasVolume)          newNote.Volume      = note.Volume;
@@ -268,7 +299,7 @@ namespace FamiStudio
             {
                 if (--delayedCutCounter == 0)
                 {
-                    PlayNote(new Note(Note.NoteStop));
+                    PlayNote(new Note(Note.NoteStop), 0, 0, false);
                 }
             }
         }

@@ -910,7 +910,7 @@ namespace FamiStudio
                                 var tempNote = note.Clone();
                                 tempNote.Value = note.Value;
                                 tempNote.SlideNoteTarget = slideTarget;
-                                channel.ComputeSlideNoteParams(tempNote, p, time, famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat); 
+                                channel.ComputeSlideNoteParams(tempNote, new NoteLocation(p, time), famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat); // NOTETODO : Convert to location.
 
                                 if (channel.IsN163WaveChannel)
                                 {
