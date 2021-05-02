@@ -151,9 +151,6 @@ namespace FamiStudio
 
         enum SnapResolution
         {
-            OneQuarter,
-            OneThird,
-            OneHalf,
             OneNote,
             TwoNote,
             ThreeNote,
@@ -163,9 +160,6 @@ namespace FamiStudio
 
         readonly double[] SnapResolutionFactors = new[]
         {
-            1.0 / 4.0,
-            1.0 / 3.0,
-            1.0 / 2.0,
             1.0,
             2.0,
             3.0,
@@ -299,7 +293,7 @@ namespace FamiStudio
         bool showSelection = false;
         bool showEffectsPanel = false;
         bool snap = false;
-        SnapResolution snapResolution = SnapResolution.OneNote;
+        SnapResolution snapResolution = SnapResolution.FourNote;
         int scrollX = 0;
         int scrollY = 0;
         int zoomLevel = 0;
@@ -743,9 +737,6 @@ namespace FamiStudio
             bmpSlide = g.CreateBitmapFromResource("Slide");
             bmpSnap = g.CreateBitmapFromResource("Snap");
             bmpSnapRed = g.CreateBitmapFromResource("SnapRed");
-            bmpSnapResolution[(int)SnapResolution.OneQuarter] = g.CreateBitmapFromResource("Snap1_4");
-            bmpSnapResolution[(int)SnapResolution.OneThird] = g.CreateBitmapFromResource("Snap1_3");
-            bmpSnapResolution[(int)SnapResolution.OneHalf] = g.CreateBitmapFromResource("Snap1_2");
             bmpSnapResolution[(int)SnapResolution.OneNote] = g.CreateBitmapFromResource("Snap1");
             bmpSnapResolution[(int)SnapResolution.TwoNote] = g.CreateBitmapFromResource("Snap2");
             bmpSnapResolution[(int)SnapResolution.ThreeNote] = g.CreateBitmapFromResource("Snap3");
@@ -1811,7 +1802,6 @@ namespace FamiStudio
                     // Highlight note under mouse.
                     var hoverNote = (Note)null;
                     var hoverLocation = NoteLocation.Invalid;
-                    var hoverDuration = -1;
                     var hoverReleased = false;
                     var hoverLastNoteValue = Note.NoteInvalid;
                     var hoverLastInstrument = (Instrument)null;
@@ -1820,22 +1810,15 @@ namespace FamiStudio
                     {
                         hoverLocation = hoverNoteLocation;
                         hoverNote     = song.Channels[editChannel].PatternInstances[hoverLocation.PatternIndex].Notes[hoverLocation.NoteIndex];
-                        hoverDuration = hoverNote.Duration;
-
-                        var dist = song.Channels[editChannel].GetDistanceToNextNote(hoverLocation);
-                        if (dist >= 0)
-                            hoverDuration = Math.Min(dist, hoverDuration);
                     }
                     else if (captureOperation == CaptureOperation.None)
                     {
                         var pt = PointToClient(Cursor.Position);
-                        hoverNote = GetNoteForCoord(pt.X, pt.Y, out _, out hoverLocation, out hoverDuration);
+                        hoverNote = GetNoteForCoord(pt.X, pt.Y, out _, out hoverLocation, out _);
                     }
 
                     var ghostChannelMask = App != null ? App.GhostChannelMask : 0;
                     var maxEffectPosY = 0;
-                    var drawStopNotes = Settings.ShowStopNotes == Settings.StopNotesAlways || 
-                                        Settings.ShowStopNotes == Settings.StopNotesFamiTrackerTempo && Song.UsesFamiTrackerTempo;
 
                     // Render the active channel last.
                     var channelsToRender = new int[song.Channels.Length];
@@ -1852,6 +1835,12 @@ namespace FamiStudio
 
                         if (isActiveChannel || (ghostChannelMask & (1 << c)) != 0)
                         {
+                            var drawImplicitStopNotes = 
+                                isActiveChannel &&
+                                editMode == EditionMode.Channel &&
+                                (Settings.ShowStopNotes == Settings.StopNotesAlways || 
+                                 Settings.ShowStopNotes == Settings.StopNotesFamiTrackerTempo && Song.UsesFamiTrackerTempo);
+
                             var min = new NoteLocation(a.minVisiblePattern, 0);
                             var max = new NoteLocation(a.maxVisiblePattern, 0);
 
@@ -1871,14 +1860,12 @@ namespace FamiStudio
 
                             var released = false;
 
-                            // NOTETODO : Should we include delayed cut here?
                             for (var it = channel.GetSparseNoteIterator(min, max); !it.Done; it.Next())
                             {
                                 var note = it.Note;
 
-                                // These notes are no longer supported in the piano roll. 
-                                // They will eventually be removed from the entire app.
-                                Debug.Assert(/*!note.IsStop &&*/ !note.IsRelease);
+                                // Release notes are no longer supported in the piano roll. 
+                                Debug.Assert(!note.IsRelease);
 
                                 if (note.IsMusical)
                                 {
@@ -1889,22 +1876,20 @@ namespace FamiStudio
                                         released = false;
                                 }
 
-                                if (it.Location != hoverLocation)
-                                {
-                                    if (note.IsMusical)
-                                    {
-                                        RenderNote(g, it.Location, note, song, channel, it.DistanceToNextNote, drawStopNotes, isActiveChannel, false, released);
-                                    }
-                                    else if (note.IsStop)
-                                    {
-                                        RenderNoteReleaseOrStop(g, note, GetNoteColor(channel, lastNoteValue, lastInstrument, song.Project), it.Location.ToAbsoluteNoteIndex(Song), lastNoteValue, false, IsNoteSelected(it.Location, 1), true, released);
-                                    }
-                                }
-                                else
+                                if (it.Location == hoverLocation)
                                 {
                                     hoverReleased = released;
                                     hoverLastNoteValue = lastNoteValue;
                                     hoverLastInstrument = lastInstrument;
+                                }
+
+                                if (note.IsMusical)
+                                {
+                                    RenderNote(g, it.Location, note, song, channel, it.DistanceToNextNote, drawImplicitStopNotes, isActiveChannel, false, released);
+                                }
+                                else if (note.IsStop)
+                                {
+                                    RenderNoteReleaseOrStop(g, note, GetNoteColor(channel, lastNoteValue, lastInstrument, song.Project), it.Location.ToAbsoluteNoteIndex(Song), lastNoteValue, false, IsNoteSelected(it.Location, 1), true, released);
                                 }
 
                                 if (note.HasRelease && note.Release < Math.Min(note.Duration, it.DistanceToNextNote))
@@ -1917,7 +1902,7 @@ namespace FamiStudio
                             {
                                 if (hoverNote.IsMusical)
                                 {
-                                    RenderNote(g, hoverLocation, hoverNote, song, channel, hoverDuration, drawStopNotes, true, true, hoverReleased);
+                                    RenderNote(g, hoverLocation, hoverNote, song, channel, channel.GetDistanceToNextNote(hoverLocation), drawImplicitStopNotes, true, true, hoverReleased);
                                 }
                                 else if (hoverNote.IsStop)
                                 {
@@ -1997,7 +1982,7 @@ namespace FamiStudio
                             var y = virtualSizeY - i * noteSizeY - scrollY;
 
                             g.PushTranslation(0, y);
-                            g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(mapping.Sample.Color, noteSizeY, 0.8f), theme.BlackBrush);
+                            g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(mapping.Sample.Color, noteSizeY, 0.8f), theme.BlackBrush, 1);
                             if (mapping.Sample != null)
                             {
                                 string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.Strings[App.PalPlayback ? 1 : 0][mapping.Pitch]}";
@@ -2027,14 +2012,27 @@ namespace FamiStudio
                         {
                             var y = virtualSizeY - noteValue * noteSizeY - scrollY;
                             g.PushTranslation(0, y);
-                            g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(dragSample.Color, noteSizeY, 0.8f), selectionNoteBrush, 2);
+                            g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(dragSample.Color, noteSizeY, 0.8f), theme.WhiteBrush, 2);
                             g.PopTransform();
                         }
                     }
-                    else if (App.DraggedSample != null && captureOperation == CaptureOperation.None)
+                    else if (captureOperation == CaptureOperation.None)
                     {
+                        var pt = PointToClient(Cursor.Position);
+                        if (GetLocationForCoord(pt.X, pt.Y, out _, out var hoverNoteValue))
+                        {
+                            var mapping = App.Project.GetDPCMMapping(hoverNoteValue);
+                            if (mapping != null)
+                            {
+                                var y = virtualSizeY - hoverNoteValue * noteSizeY - scrollY;
 
+                                g.PushTranslation(0, y);
+                                g.DrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, theme.WhiteBrush, 2);
+                                g.PopTransform();
+                            }
+                        }
                     }
+
                     g.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
                 }
             }
@@ -2157,13 +2155,13 @@ namespace FamiStudio
             }
         }
 
-        private void RenderNoteBody(RenderGraphics g, Note note, Color color, int time, int noteLen, bool hover, bool selected, bool activeChannel, bool released, bool isFirstPart, int slideDuration = -1)
+        private void RenderNoteBody(RenderGraphics g, Note note, Color color, int time, int noteLen, bool outline, bool selected, bool activeChannel, bool released, bool isFirstPart, int slideDuration = -1)
         {
             int x = time * noteSizeX - scrollX;
             int y = virtualSizeY - note.Value * noteSizeY - scrollY;
             int sy = released ? releaseNoteSizeY : noteSizeY;
 
-            if (isFirstPart && slideDuration >= 0)
+            if (!outline && isFirstPart && slideDuration >= 0)
             {
                 // We will get zero for notes that start a slide and have an immediate delayed cut.
                 int duration = Math.Max(1, slideDuration);
@@ -2183,38 +2181,43 @@ namespace FamiStudio
             int sx = noteLen * noteSizeX;
             int noteTextPosX = attackIconPosX;
 
-            g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
-            g.DrawRectangle(0, 0, sx, sy, hover ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), selected || hover ? 2 : 1);
+            if (!outline)
+                g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
 
-            if (activeChannel)
+            g.DrawRectangle(0, 0, sx, sy, outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), selected || outline ? 2 : 1);
+
+            if (!outline)
             {
-                if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + 4)
+                if (activeChannel)
                 {
-                    g.FillRectangle(attackIconPosX, attackIconPosX, attackIconPosX + noteAttackSizeX, sy - attackIconPosX + 1, attackBrush);
-                    noteTextPosX += noteAttackSizeX + attackIconPosX;
+                    if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + 4)
+                    {
+                        g.FillRectangle(attackIconPosX, attackIconPosX, attackIconPosX + noteAttackSizeX, sy - attackIconPosX + 1, attackBrush);
+                        noteTextPosX += noteAttackSizeX + attackIconPosX;
+                    }
+
+                    if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && sx > minNoteSizeForText)
+                    {
+                        g.DrawText(note.FriendlyName, ThemeBase.FontSmall, noteTextPosX, noteTextPosY, theme.BlackBrush);
+                    }
                 }
 
-                if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && sx > minNoteSizeForText)
+                if (note.Arpeggio != null)
                 {
-                    g.DrawText(note.FriendlyName, ThemeBase.FontSmall, noteTextPosX, noteTextPosY, theme.BlackBrush);
-                }
-            }
-
-            if (note.Arpeggio != null)
-            {
-                var offsets = note.Arpeggio.GetChordOffsets();
-                foreach (var offset in offsets)
-                {
-                    g.PushTranslation(0, offset * -noteSizeY);
-                    g.FillRectangle(0, 1, sx, sy, g.GetSolidBrush(note.Arpeggio.Color, 1.0f, 0.2f));
-                    g.PopTransform();
+                    var offsets = note.Arpeggio.GetChordOffsets();
+                    foreach (var offset in offsets)
+                    {
+                        g.PushTranslation(0, offset * -noteSizeY);
+                        g.FillRectangle(0, 1, sx, sy, g.GetSolidBrush(note.Arpeggio.Color, 1.0f, 0.2f));
+                        g.PopTransform();
+                    }
                 }
             }
 
             g.PopTransform();
         }
 
-        private void RenderNoteReleaseOrStop(RenderGraphics g, Note note, Color color, int time, int value, bool hover, bool selected, bool stop, bool released)
+        private void RenderNoteReleaseOrStop(RenderGraphics g, Note note, Color color, int time, int value, bool outline, bool selected, bool stop, bool released)
         {
             int x = time * noteSizeX - scrollX;
             int y = virtualSizeY - value * noteSizeY - scrollY;
@@ -2222,9 +2225,12 @@ namespace FamiStudio
             var paths = stop ? (released ? stopReleaseNoteGeometry : stopNoteGeometry) : releaseNoteGeometry;
 
             g.PushTranslation(x, y);
-            g.FillAndDrawGeometry(paths[zoomLevel - MinZoomLevel, 0], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f), hover ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), hover || selected ? 2 : 1);
+            
+            if (!outline)
+                g.FillGeometry(paths[zoomLevel - MinZoomLevel, 0], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
+            g.DrawGeometry(paths[zoomLevel - MinZoomLevel, 0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), outline || selected ? 2 : 1);
 
-            if (note.Arpeggio != null)
+            if (!outline && note.Arpeggio != null)
             {
                 var offsets = note.Arpeggio.GetChordOffsets();
                 foreach (var offset in offsets)
@@ -2238,9 +2244,12 @@ namespace FamiStudio
             g.PopTransform();
         }
 
-        private void RenderNote(RenderGraphics g, NoteLocation location, Note note, Song song, Channel channel, int distanceToNextNote, bool drawStopNotes, bool isActiveChannel, bool hover, bool released)
+        private void RenderNote(RenderGraphics g, NoteLocation location, Note note, Song song, Channel channel, int distanceToNextNote, bool drawImplicityStopNotes, bool isActiveChannel, bool hover, bool released)
         {
             Debug.Assert(note.IsMusical);
+
+            if (distanceToNextNote < 0)
+                distanceToNextNote = (int)ushort.MaxValue;
 
             var absoluteIndex = location.ToAbsoluteNoteIndex(Song);
             var nextAbsoluteIndex = absoluteIndex + distanceToNextNote;
@@ -2273,9 +2282,9 @@ namespace FamiStudio
                 absoluteIndex += duration;
                 duration -= duration;
 
-                if (drawStopNotes && absoluteIndex < nextAbsoluteIndex)
+                if (drawImplicityStopNotes && absoluteIndex < nextAbsoluteIndex && !hover)
                 {
-                    RenderNoteReleaseOrStop(g, note, color, absoluteIndex, note.Value, hover, selected, true, released);
+                    RenderNoteReleaseOrStop(g, note, Color.FromArgb(128, color), absoluteIndex, note.Value, hover, selected, true, released);
                 }
             }
         }
@@ -3055,9 +3064,6 @@ namespace FamiStudio
                     case CaptureOperation.AltZoom:
                         UpdateAltZoom(e);
                         break;
-                    case CaptureOperation.DragSample:
-                        UpdateSampleDrag(e);
-                        break;
                     case CaptureOperation.DragSeekBar:
                         UpdateSeekDrag(e.X, false);
                         break;
@@ -3074,7 +3080,7 @@ namespace FamiStudio
             }
         }
 
-        private void EndSampleDrag(MouseEventArgs e)
+        private void EndDragDPCMSampleMapping(MouseEventArgs e)
         {
             bool success = false;
             if (GetNoteValueForCoord(e.X, e.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
@@ -3103,8 +3109,6 @@ namespace FamiStudio
                 if (noteValue != captureNoteValue && draggedSample != null)
                     SystemSounds.Beep.Play();
             }
-
-            ConditionalInvalidate();
         }
 
         private void EndCaptureOperation(MouseEventArgs e)
@@ -3140,7 +3144,7 @@ namespace FamiStudio
                         UpdateNoteDrag(e, true, !captureThresholdMet);
                         break;
                     case CaptureOperation.DragSample:
-                        EndSampleDrag(e);
+                        EndDragDPCMSampleMapping(e);
                         break;
                     case CaptureOperation.DragSeekBar:
                         UpdateSeekDrag(e.X, true);
@@ -3543,12 +3547,10 @@ namespace FamiStudio
         {
             if (App.IsRecording && editMode == EditionMode.Channel)
             {
-                var snappedFrame = SnapNote(frame, true, true);
-
                 if (doTransaction)
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
 
-                App.SeekSong(snappedFrame);
+                App.SeekSong(SnapNote(frame, true, true));
                 EnsureSeekBarVisible();
 
                 if (doTransaction)
@@ -3560,7 +3562,7 @@ namespace FamiStudio
 
         public void RecordNote(Note note)
         {
-            if (App.IsRecording && editMode == EditionMode.Channel && (note.IsMusical || note.IsStop))
+            if (App.IsRecording && editMode == EditionMode.Channel && note.IsMusical)
             {
                 var currentFrame = SnapNote(App.CurrentFrame, false, true);
                 var patternIdx = Song.FindPatternInstanceIndex(currentFrame, out var noteIdx);
@@ -3579,8 +3581,11 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                 }
 
+                var nextFrame = SnapNote(currentFrame, true, true);
+
                 var newNote = note.Clone();
                 newNote.HasVolume = false;
+                newNote.Duration = nextFrame - currentFrame;
                 pattern.Notes[noteIdx] = newNote;
                 channel.InvalidateCumulativePatternCache(patternIdx);
                 PatternChanged?.Invoke(pattern);
@@ -3858,7 +3863,7 @@ namespace FamiStudio
                 if (left)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
                 else
-                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
+                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)SnapResolution.OneNote);
 
                 ConditionalInvalidate();
                 return true;
@@ -4032,7 +4037,7 @@ namespace FamiStudio
                     }
                     else if (left && mapping != null)
                     {
-                        StartDragDPCMSampleMapping(e);
+                        StartDragDPCMSampleMapping(e, noteValue);
                     }
                     else if (right && mapping != null)
                     {
@@ -4457,10 +4462,12 @@ namespace FamiStudio
             }
         }
 
-        private void StartDragDPCMSampleMapping(MouseEventArgs e)
+        private void StartDragDPCMSampleMapping(MouseEventArgs e, byte noteValue)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
             StartCaptureOperation(e, CaptureOperation.DragSample);
+            draggedSample = App.Project.GetDPCMMapping(noteValue);
+            App.Project.UnmapDPCMSample(noteValue);
         }
 
         private void ClearDPCMSampleMapping(byte noteValue)
@@ -4850,45 +4857,10 @@ namespace FamiStudio
                 var snapFactor = SnapResolutionFactors[(int)snapResolution];
                 var snappedNoteIndex = absoluteNoteIndex;
 
-                if (snapFactor >= 1.0)
-                {
-                    var numNotes = noteLength * (int)snapFactor;
-                    snappedNoteIndex = (absoluteNoteIndex / numNotes + (roundUp ? 1 : 0)) * numNotes;
-                }
-                else
-                {
-                    // Subtract the base note so that snapping inside a note is always deterministic. 
-                    // Otherwise, rounding errors can create a different snapping pattern every note (6-5-5-6 like Gimmick).
-                    var baseNodeIdx = absoluteNoteIndex / noteLength * noteLength;
-                    var noteFrameIdx = absoluteNoteIndex % noteLength;
-                    var numSnapPoints = (int)Math.Round(1.0 / snapFactor);
+                Debug.Assert(snapFactor >= 1.0); // Fractional snapping is no longer supported.
 
-                    // This is terrible...
-                    if (roundUp)
-                    {
-                        for (int i = 0; i <= numSnapPoints; i++)
-                        {
-                            var snapPoint = (int)Math.Round(i / (double)numSnapPoints * noteLength);
-                            if (noteFrameIdx < snapPoint)
-                            {
-                                snappedNoteIndex = baseNodeIdx + snapPoint;
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for (int i = numSnapPoints - 1; i >= 0; i--)
-                        {
-                            var snapPoint = (int)Math.Round(i / (double)numSnapPoints * noteLength);
-                            if (noteFrameIdx >= snapPoint)
-                            {
-                                snappedNoteIndex = baseNodeIdx + snapPoint;
-                                break;
-                            }
-                        }
-                    }
-                }
+                var numNotes = noteLength * (int)snapFactor;
+                snappedNoteIndex = (absoluteNoteIndex / numNotes + (roundUp ? 1 : 0)) * numNotes;
 
                 if (!roundUp)
                     snappedNoteIndex = Math.Min(Song.GetPatternLength(patternIdx) - 1, snappedNoteIndex);
@@ -5300,12 +5272,12 @@ namespace FamiStudio
         {
             var pattern = Song.Channels[editChannel].PatternInstances[captureNoteLocation.PatternIndex];
             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-            StartCaptureOperation(e, CaptureOperation.MoveNoteRelease, true, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(e, CaptureOperation.MoveNoteRelease, false, location.ToAbsoluteNoteIndex(Song));
         }
 
         private void UpdateMoveNoteRelease(MouseEventArgs e)
         {
-            GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
+            GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, false);
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
@@ -5324,17 +5296,6 @@ namespace FamiStudio
                 ZoomAtLocation(e.X, Math.Sign(-deltaY));
                 captureMouseY = e.Y;
             }
-        }
-
-        private void UpdateSampleDrag(MouseEventArgs e)
-        {
-            if (draggedSample == null && GetNoteValueForCoord(e.X, e.Y, out var noteValue) && noteValue != captureNoteValue)
-            {
-                draggedSample = App.Project.GetDPCMMapping(captureNoteValue);
-                App.Project.UnmapDPCMSample(captureNoteValue);
-            }
-
-            ConditionalInvalidate();
         }
 
         private bool CaptureOperationRequiresEffectHighlight(CaptureOperation op)
@@ -5549,7 +5510,7 @@ namespace FamiStudio
                 if (e.Delta > 0)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
                 else
-                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
+                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)SnapResolution.OneNote);
 
                 ConditionalInvalidate();
             }

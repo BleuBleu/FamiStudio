@@ -624,10 +624,10 @@ namespace FamiStudio
             UpdatePatternStartNotes();
         }
 
-        public void ConvertFromCompoundNotes()
+        public void ConvertToSimpleNotes()
         {
             foreach (var channel in channels)
-                channel.ConvertFromCompoundNotes();
+                channel.ConvertToSimpleNotes();
             UpdatePatternStartNotes();
         }
 

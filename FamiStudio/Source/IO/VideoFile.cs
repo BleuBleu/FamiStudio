@@ -598,7 +598,6 @@ namespace FamiStudio
 
             // Start ffmpeg with pipe input.
             var tempFolder = Utils.GetTemporaryDiretory();
-            var tempVideoFile = Path.Combine(tempFolder, "temp.h264");
             var tempAudioFile = Path.Combine(tempFolder, "temp.wav");
 
             try

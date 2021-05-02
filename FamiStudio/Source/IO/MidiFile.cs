@@ -1059,6 +1059,7 @@ namespace FamiStudio
 
             song.MergeIdenticalPatterns();
             song.Trim();
+            project.ConvertToCompoundNotes();
             project.Cleanup();
             project.Validate();
         }
@@ -1455,7 +1456,7 @@ namespace FamiStudio
 
                             if (note.IsSlideNote && slideToPitchWheel)
                             {
-                                var slideDuration = channel.GetSlideNoteDuration(note, new NoteLocation(p, time)); // NOTETODO : Convert midi file to note location.
+                                var slideDuration = channel.GetSlideNoteDuration(note, new NoteLocation(p, time));
                                 var semitones = note.SlideNoteTarget - note.Value;
 
                                 if (semitones < 0 && semitones < -pitchWheelRange)
@@ -1517,6 +1518,7 @@ namespace FamiStudio
 
             project = originalProject.DeepClone();
             project.RemoveAllSongsBut(new int[] { songId }, true);
+            project.ConvertToSimpleNotes();
             song = project.Songs[0];
 
             WriteHeaderChunk();

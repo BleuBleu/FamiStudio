@@ -822,9 +822,6 @@ namespace FamiStudio
             {
                 instrumentPlayer.StopAllNotes();
             }
-
-            if (allowRecording && recordingMode)
-                PianoRoll.RecordNote(new Note(Note.NoteStop));
         }
 
         public void StopInstrument()
@@ -1149,10 +1146,11 @@ namespace FamiStudio
                 ToggleQwertyPiano();
             }
 #if DEBUG
+            // NOTETODO : Temporary code!!!
             else if (ctrl && e.KeyCode == Keys.NumPad0)
             {
-                //project.Validate();
-                song.Channels[0].ConvertFromCompoundNotes();
+                project.Validate();
+                song.Channels[0].ConvertToSimpleNotes();
             }
 #endif
 #if FAMISTUDIO_WINDOWS

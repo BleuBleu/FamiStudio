@@ -1355,6 +1355,7 @@ namespace FamiStudio
             // Work on a temporary copy.
             project = originalProject.DeepClone();
             project.Filename = originalProject.Filename;
+            project.ConvertToSimpleNotes();
 
             if (kernel == FamiToneKernel.FamiTone2 && project.UsesFamiStudioTempo)
             {

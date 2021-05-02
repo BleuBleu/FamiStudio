@@ -1159,10 +1159,16 @@ namespace FamiStudio
             tempoMode = TempoType.FamiTracker;
         }
 
-        public void ConvertFromCompoundNotes()
+        public void ConvertToCompoundNotes()
         {
             foreach (var song in songs)
-                song.ConvertFromCompoundNotes();
+                song.ConvertToCompoundNotes();
+        }
+
+        public void ConvertToSimpleNotes()
+        {
+            foreach (var song in songs)
+                song.ConvertToSimpleNotes();
         }
 
         public void DeleteUnusedInstruments()

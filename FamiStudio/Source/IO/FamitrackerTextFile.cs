@@ -666,7 +666,7 @@ namespace FamiStudio
                 project.ConvertToFamiTrackerTempo(false);
             }
 
-            project.ConvertFromCompoundNotes();
+            project.ConvertToSimpleNotes();
 
             ConvertPitchEnvelopes(project);
             var envelopes = MergeIdenticalEnvelopes(project);

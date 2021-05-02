@@ -682,9 +682,6 @@ namespace FamiStudio
                     if (time >= patternLength)
                         break;
 
-                    // Orphan release notes aren't supported anymore.
-                    if (note.IsRelease) // NOTETODO : This is just for testing!
-                        continue;
                     Debug.Assert(!note.IsRelease);
 
                     if ((note.IsStop || note.IsMusical) && cache.firstNoteIndex < 0)
@@ -1082,7 +1079,7 @@ namespace FamiStudio
         // Converts compound notes to old (pre-FamiStudio 3.0.0) release/stop notes. This is
         // needed since some exporter (FamiTracker, etc.) have not been yet ported to handle
         // compound notes. This is to help the migration.
-        public void ConvertFromCompoundNotes()
+        public void ConvertToSimpleNotes()
         {
             // Record all combinations of release/stops.
             var patternReleaseStops = new int[song.Length, 2];

@@ -938,6 +938,7 @@ namespace FamiStudio
                 song.ChangeFamiStudioTempoGroove(new[] { 1 }, false);
 
             song.SetSensibleBeatLength();
+            song.ConvertToCompoundNotes();
             song.DeleteEmptyPatterns();
             song.UpdatePatternStartNotes();
             song.InvalidateCumulativePatternCache();

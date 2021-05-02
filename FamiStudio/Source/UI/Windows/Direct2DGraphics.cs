@@ -256,11 +256,11 @@ namespace FamiStudio
             AntiAliasing = false;
         }
 
-        public void DrawGeometry(Geometry geo, Brush brush)
+        public void DrawGeometry(Geometry geo, Brush brush, float lineWidth = 1.0f)
         {
             AntiAliasing = true;
             PushTranslation(0.5f, 0.5f);
-            renderTarget.DrawGeometry(geo, brush, 1.0f, strokeStyleNoScaling);
+            renderTarget.DrawGeometry(geo, brush, lineWidth, strokeStyleNoScaling);
             PopTransform();
             AntiAliasing = false;
         }
