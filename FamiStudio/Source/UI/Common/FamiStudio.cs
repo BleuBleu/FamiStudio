@@ -836,7 +836,8 @@ namespace FamiStudio
 
         public void StopInstrument()
         {
-            instrumentPlayer.StopAllNotes();
+            if (instrumentPlayer != null)
+                instrumentPlayer.StopAllNotes();
         }
 
         public void StopEverything()

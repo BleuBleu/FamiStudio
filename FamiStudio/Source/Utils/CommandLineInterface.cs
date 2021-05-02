@@ -557,7 +557,7 @@ namespace FamiStudio
                 var includeFilename = generateInclude ? Path.ChangeExtension(filename, null) + "_sfxlist.inc" : null;
 
                 FamitoneSoundEffectFile f = new FamitoneSoundEffectFile();
-                f.Save(project, exportSongIds, format, machine, famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2, includeFilename, filename);
+                f.Save(project, exportSongIds, format, machine, famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2, filename, includeFilename);
             }
         }
 
