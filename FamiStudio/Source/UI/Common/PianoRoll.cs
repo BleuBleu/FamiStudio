@@ -1439,7 +1439,7 @@ namespace FamiStudio
 
             var notes = new Note[selectionMax - selectionMin + 1];
 
-            TransformNotes(selectionMin, selectionMax, false, false, (note, idx) =>
+            TransformNotes(selectionMin, selectionMax, false, false, false, (note, idx) =>
             {
                 if (note != null && clone)
                     notes[idx] = note.Clone();
@@ -1459,7 +1459,7 @@ namespace FamiStudio
 
             var notes = new SortedList<int, Note>();
 
-            TransformNotes(selectionMin, selectionMax, false, false, (note, idx) =>
+            TransformNotes(selectionMin, selectionMax, false, false, false, (note, idx) =>
             {
                 if (note != null && !note.IsEmpty && (note.IsMusical || !musicalOnly))
                     notes[idx + offset] = note.Clone();
@@ -1482,7 +1482,7 @@ namespace FamiStudio
 
         private void ReplaceNotes(Note[] notes, int startFrameIdx, bool doTransaction, bool pasteNotes = true, int pasteFxMask = Note.EffectAllMask, bool mix = false)
         {
-            TransformNotes(startFrameIdx, startFrameIdx + notes.Length - 1, doTransaction, true, (note, idx) =>
+            TransformNotes(startFrameIdx, startFrameIdx + notes.Length - 1, doTransaction, true, true, (note, idx) =>
             {
                 var channel = Song.Channels[editChannel];
                 var newNote = notes[idx];
@@ -1495,13 +1495,23 @@ namespace FamiStudio
 
                 if (pasteNotes)
                 {
-                    if (!mix || !note.IsValid && newNote.IsValid)
+                    if (!mix || !note.IsMusicalOrStop && newNote.IsMusicalOrStop)
                     {
                         note.Value = newNote.Value;
-                        note.Instrument = editChannel == ChannelType.Dpcm || !channel.SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
-                        note.Slide = channel.SupportsSlideNotes ? newNote.Slide : (byte)0;
-                        note.Flags = newNote.Flags;
-                        note.Arpeggio = channel.SupportsArpeggios ? newNote.Arpeggio : null;
+
+                        if (note.IsMusical)
+                        {
+                            note.Instrument = editChannel == ChannelType.Dpcm || !channel.SupportsInstrument(newNote.Instrument) ? null : newNote.Instrument;
+                            note.Slide = channel.SupportsSlideNotes ? newNote.Slide : (byte)0;
+                            note.Flags = newNote.Flags;
+                            note.Duration = newNote.Duration;
+                            note.Release = channel.SupportsReleaseNotes ? newNote.Release : 0;
+                            note.Arpeggio = channel.SupportsArpeggios ? newNote.Arpeggio : null;
+                        }
+                        else if (note.IsStop)
+                        {
+                            note.Duration = 1;
+                        }
                     }
                 }
 
@@ -3208,7 +3218,7 @@ namespace FamiStudio
         }
 
         // NOTETODO : This should probably look at durations?
-        private void TransformNotes(int minAbsoluteNoteIdx, int maxAbsoluteNoteIdx, bool doTransaction, bool doPatternChangeEvent, Func<Note, int, Note> function)
+        private void TransformNotes(int minAbsoluteNoteIdx, int maxAbsoluteNoteIdx, bool doTransaction, bool doPatternChangeEvent, bool createMissingPatterns, Func<Note, int, Note> function)
         {
             if (doTransaction)
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
@@ -3219,30 +3229,39 @@ namespace FamiStudio
 
             for (var p = minLocation.PatternIndex; p <= maxLocation.PatternIndex; p++)
             {
-                var pattern = Song.Channels[editChannel].PatternInstances[p];
+                var pattern = channel.PatternInstances[p];
 
-                if (pattern != null)
+                if (pattern == null)
                 {
-                    var patternLen = Song.GetPatternLength(p);
-                    var n0 = p == minLocation.PatternIndex ? minLocation.NoteIndex : 0;
-                    var n1 = p == maxLocation.PatternIndex ? maxLocation.NoteIndex : patternLen - 1;
-                    var newNotes = new SortedList<int, Note>();
-
-                    for (var it = pattern.GetDenseNoteIterator(n0, n1 + 1); !it.Done; it.Next())
+                    if (createMissingPatterns)
                     {
-                        var transformedNote = function(it.CurrentNote, Song.GetPatternStartAbsoluteNoteIndex(p) + it.CurrentTime - minAbsoluteNoteIdx);
-                        if (transformedNote != null)
-                            newNotes[it.CurrentTime] = transformedNote;
+                        pattern = channel.CreatePatternAndInstance(p);
                     }
-
-                    pattern.DeleteNotesBetween(n0, n1 + 1);
-
-                    foreach (var kv in newNotes)
-                        pattern.SetNoteAt(kv.Key, kv.Value);
-
-                    if (doPatternChangeEvent)
-                        PatternChanged?.Invoke(pattern);
+                    else
+                    {
+                        continue;
+                    }
                 }
+
+                var patternLen = Song.GetPatternLength(p);
+                var n0 = p == minLocation.PatternIndex ? minLocation.NoteIndex : 0;
+                var n1 = p == maxLocation.PatternIndex ? maxLocation.NoteIndex : patternLen - 1;
+                var newNotes = new SortedList<int, Note>();
+
+                for (var it = pattern.GetDenseNoteIterator(n0, n1 + 1); !it.Done; it.Next())
+                {
+                    var transformedNote = function(it.CurrentNote, Song.GetPatternStartAbsoluteNoteIndex(p) + it.CurrentTime - minAbsoluteNoteIdx);
+                    if (transformedNote != null)
+                        newNotes[it.CurrentTime] = transformedNote;
+                }
+
+                pattern.DeleteNotesBetween(n0, n1 + 1);
+
+                foreach (var kv in newNotes)
+                    pattern.SetNoteAt(kv.Key, kv.Value);
+
+                if (doPatternChangeEvent)
+                    PatternChanged?.Invoke(pattern);
             }
 
             channel.InvalidateCumulativePatternCache(minLocation.PatternIndex);
@@ -3274,7 +3293,7 @@ namespace FamiStudio
         {
             var processedNotes = new HashSet<Note>();
 
-            TransformNotes(selectionMin, selectionMax, true, true, (note, idx) =>
+            TransformNotes(selectionMin, selectionMax, true, true, false, (note, idx) =>
             {
                 if (note != null && note.IsMusical && !processedNotes.Contains(note))
                 {
@@ -3307,7 +3326,7 @@ namespace FamiStudio
 
         private void DeleteSelectedNotes(bool doTransaction = true, bool deleteNotes = true, int deleteEffectsMask = Note.EffectAllMask)
         {
-            TransformNotes(selectionMin, selectionMax, doTransaction, true, (note, idx) =>
+            TransformNotes(selectionMin, selectionMax, doTransaction, true, false, (note, idx) =>
             {
                 if (note != null)
                 {
@@ -4552,7 +4571,7 @@ namespace FamiStudio
                     // If dragging inside the selection, replace that.
                     if (IsSelectionValid() && IsNoteSelected(location))
                     {
-                        TransformNotes(selectionMin, selectionMax, true, true, (note, idx) =>
+                        TransformNotes(selectionMin, selectionMax, true, true, false, (note, idx) =>
                         {
                             if (note != null && note.IsMusical)
                                 note.Instrument = instrument;
@@ -4591,7 +4610,7 @@ namespace FamiStudio
                     // If dragging inside the selection, replace that.
                     if (IsSelectionValid() && IsNoteSelected(location))
                     {
-                        TransformNotes(selectionMin, selectionMax, true, true, (note, idx) =>
+                        TransformNotes(selectionMin, selectionMax, true, true, false, (note, idx) =>
                         {
                             if (note != null && note.IsMusical)
                                 note.Arpeggio = arpeggio;
@@ -5240,7 +5259,7 @@ namespace FamiStudio
 
             // Since we may be be dragging from the "visual" duration which may be shorter than
             // the real duration, we truncate them right away.
-            TransformNotes(min, max, false, final, (note, idx) =>
+            TransformNotes(min, max, false, final, false, (note, idx) =>
             {
                 if (note != null && note.IsMusical)
                 {
@@ -5256,7 +5275,7 @@ namespace FamiStudio
 
             var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
 
-            TransformNotes(min, max, false, final, (note, idx) =>
+            TransformNotes(min, max, false, final, false, (note, idx) =>
             {
                 if (note != null && note.IsMusical)
                     note.Duration = (ushort)Math.Max(1, note.Duration + deltaNoteIdx);
