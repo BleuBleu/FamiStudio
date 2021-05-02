@@ -179,6 +179,16 @@ namespace FamiStudio
                     duration = (ushort)Utils.Clamp(value, 1, (int)ushort.MaxValue);
                     ClearReleaseIfPastDuration();
                 }
+                else if (IsStop || IsRelease)
+                {
+                    Debug.Assert(value == 1);
+                    duration = 1;
+                }
+                else
+                {
+                    Debug.Assert(value == 0);
+                    duration = 0;
+                }
             }
         }
 
@@ -489,9 +499,9 @@ namespace FamiStudio
         {
             if (IsMusical && filter.HasFlag(NoteFilter.Musical))
                 return true;
-            if (HasCutDelay && filter.HasFlag(NoteFilter.DelayedCut))
-                return true;
             if (IsStop && filter.HasFlag(NoteFilter.Stop))
+                return true;
+            if (((int)filter & (effectMask << 16)) != 0)
                 return true;
 
             return false;
@@ -563,10 +573,18 @@ namespace FamiStudio
             }
 
             // NOTETODO: See how we want to save this + add comment.
-            if (buffer.Version >= 10 && IsMusical)
+            if (buffer.Version >= 10)
             {
-                buffer.Serialize(ref duration);
-                buffer.Serialize(ref release);
+                if (IsMusical)
+                {
+                    buffer.Serialize(ref duration);
+                    buffer.Serialize(ref release);
+                }
+                else if (buffer.IsReading && (IsStop || IsRelease))
+                {
+                    release  = 0;
+                    duration = 1;
+                }
             }
 
             buffer.Serialize(ref effectMask);
@@ -628,16 +646,16 @@ namespace FamiStudio
         {
             switch (fx)
             {
-                case EffectVolume       : Volume       =   (byte)val; break;
-                case EffectVibratoDepth : VibratoDepth =   (byte)val; break;
-                case EffectVibratoSpeed : VibratoSpeed =   (byte)val; break;
-                case EffectFinePitch    : FinePitch    =  (sbyte)val; break;
-                case EffectSpeed        : Speed        =   (byte)val; break;
-                case EffectFdsModDepth  : FdsModDepth  =   (byte)val; break;
-                case EffectFdsModSpeed  : FdsModSpeed  = (ushort)val; break;
-                case EffectDutyCycle    : DutyCycle    =   (byte)val; break;
-                case EffectNoteDelay    : NoteDelay    =   (byte)val; break;
-                case EffectCutDelay     : CutDelay     =   (byte)val; break;
+                case EffectVolume       : Volume       = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectVibratoDepth : VibratoDepth = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectVibratoSpeed : VibratoSpeed = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectFinePitch    : FinePitch    = (sbyte)Utils.Clamp(val, sbyte.MinValue, sbyte.MaxValue); break;
+                case EffectSpeed        : Speed        = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectFdsModDepth  : FdsModDepth  = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectFdsModSpeed  : FdsModSpeed  = (ushort)Utils.Clamp(val, ushort.MinValue, ushort.MaxValue); break;
+                case EffectDutyCycle    : DutyCycle    = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectNoteDelay    : NoteDelay    = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectCutDelay     : CutDelay     = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
             }
         }
         
@@ -719,17 +737,34 @@ namespace FamiStudio
 
             return 0;
         }
+
+        public static NoteFilter GetFilterForEffect(int fx)
+        {
+            return (NoteFilter)(1 << (fx + 16));
+        }
     }
     
     [Flags]
     public enum NoteFilter
     {
-        None         = 0,
-        Musical      = 1,
-        DelayedCut   = 2,
-        Stop = 4,
+        None    = 0,
+        Musical = 1,
+        Stop    = 2,
+
+        // All effects are in the upper 16-bit.
+        EffectVolume      = Note.EffectVolumeMask      << 16,
+        EffectVibrato     = Note.EffectVibratoMask     << 16,
+        EffectFinePitch   = Note.EffectFinePitchMask   << 16,
+        EffectSpeed       = Note.EffectSpeedMask       << 16,
+        EffectFdsModDepth = Note.EffectFdsModDepthMask << 16,
+        EffectFdsModSpeed = Note.EffectFdsModSpeedMask << 16,
+        EffectDutyCycle   = Note.EffectDutyCycleMask   << 16,
+        EffectNoteDelay   = Note.EffectNoteDelayMask   << 16,
+        EffectCutDelay    = Note.EffectCutDelayMask    << 16,
 
         // There are all the filter that can interrupt the duration of a note.
-        TruncateDurationMask = Musical | DelayedCut | Stop
+        TruncateDurationMask = Musical | Stop | EffectCutDelay,
+
+        All = -1,
     }
 }

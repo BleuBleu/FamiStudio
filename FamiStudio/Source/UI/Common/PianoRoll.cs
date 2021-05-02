@@ -214,6 +214,7 @@ namespace FamiStudio
             DragLoop,
             DragRelease,
             ChangeEffectValue,
+            ChangeSelectionEffectValue,
             DrawEnvelope,
             Select,
             SelectWave,
@@ -243,6 +244,7 @@ namespace FamiStudio
             false, // DragLoop
             false, // DragRelease
             false, // ChangeEffectValue
+            false, // ChangeSelectionEffectValue
             false, // DrawEnvelope
             false, // Select
             false, // SelectWave
@@ -270,6 +272,7 @@ namespace FamiStudio
         int captureNoteAbsoluteIdx = 0;
         int captureMouseAbsoluteIdx = 0;
         int captureNoteValue = 0;
+        int captureEffectValue = 0;
         float captureWaveTime = 0.0f;
         int mouseLastX = 0;
         int mouseLastY = 0;
@@ -1255,46 +1258,36 @@ namespace FamiStudio
 
                 if (editMode == EditionMode.Channel)
                 {
-                    var channel = Song.Channels[editChannel];
+                    var song = Song;
+                    var channel = song.Channels[editChannel];
+
+                    var minLocation = new NoteLocation(a.minVisiblePattern, 0);
+                    var maxLocation = new NoteLocation(a.maxVisiblePattern, 0);
 
                     // Draw the effects current value rectangles. Not all effects need this.
                     if (selectedEffectIdx >= 0 && Note.EffectWantsPreviousValue(selectedEffectIdx))
                     {
                         var lastFrame = -1;
                         var lastValue = channel.GetCachedLastValidEffectValue(a.minVisiblePattern - 1, selectedEffectIdx);
-                        var minValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
-                        var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
+                        var minValue = Note.GetEffectMinValue(song, channel, selectedEffectIdx);
+                        var maxValue = Note.GetEffectMaxValue(song, channel, selectedEffectIdx);
 
-                        for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
+                        for (var it = channel.GetSparseNoteIterator(minLocation, maxLocation, NoteFilter.All); !it.Done; it.Next())
                         {
-                            var pattern = channel.PatternInstances[p];
+                            var note = it.Note;
+                            var location = it.Location;
 
-                            if (pattern != null)
+                            if (note.HasValidEffectValue(selectedEffectIdx))
                             {
-                                var patternLen = Song.GetPatternLength(p);
-                                var x = Song.GetPatternStartAbsoluteNoteIndex(p) * noteSizeX - scrollX;
+                                g.PushTranslation(location.ToAbsoluteNoteIndex(song) * noteSizeX - scrollX, 0);
 
-                                foreach (var kv in pattern.Notes)
-                                {
-                                    var time = kv.Key;
-                                    var note = kv.Value;
+                                var frame = location.ToAbsoluteNoteIndex(song);
+                                var sizeY = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
+                                g.FillRectangle(lastFrame < 0 ? -noteSizeX * 100000 : (frame - lastFrame - 1) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
+                                lastValue = note.GetEffectValue(selectedEffectIdx);
+                                lastFrame = frame;
 
-                                    if (time >= patternLen)
-                                        break;
-
-                                    if (note.HasValidEffectValue(selectedEffectIdx))
-                                    {
-                                        g.PushTranslation(x + time * noteSizeX, 0);
-
-                                        var frame = Song.GetPatternStartAbsoluteNoteIndex(p) + time;
-                                        var sizeY = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
-                                        g.FillRectangle(lastFrame < 0 ? -noteSizeX * 100000 : (frame - lastFrame - 1) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
-                                        lastValue = note.GetEffectValue(selectedEffectIdx);
-                                        lastFrame = frame;
-
-                                        g.PopTransform();
-                                    }
-                                }
+                                g.PopTransform();
                             }
                         }
 
@@ -1306,57 +1299,51 @@ namespace FamiStudio
 
                     DrawSelectionRect(g, effectPanelSizeY);
 
-                    for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
+                    var hoverLocation = NoteLocation.Invalid;
+                    if (hoverNoteLocation != NoteLocation.Invalid && CaptureOperationRequiresEffectHighlight(captureOperation))
                     {
-                        var pattern = channel.PatternInstances[p];
+                        hoverLocation = hoverNoteLocation;
+                    }
+                    else if (captureOperation == CaptureOperation.None)
+                    {
+                        var pt = PointToClient(Cursor.Position);
+                        GetEffectNoteForCoord(pt.X, pt.Y, out hoverLocation);
+                    }
 
-                        if (pattern != null)
+                    // Draw the actual effect bars.
+                    for (var it = channel.GetSparseNoteIterator(minLocation, maxLocation, NoteFilter.All); !it.Done; it.Next())
+                    {
+                        var pattern = it.Pattern;
+                        var note = it.Note;
+                        var location = it.Location;
+
+                        if (selectedEffectIdx >= 0 && note.HasValidEffectValue(selectedEffectIdx))
                         {
-                            var patternLen = Song.GetPatternLength(p);
-                            var x = Song.GetPatternStartAbsoluteNoteIndex(p) * noteSizeX - scrollX;
-                            var location = new NoteLocation();
+                            var effectValue = note.GetEffectValue(selectedEffectIdx);
+                            var effectMinValue = Note.GetEffectMinValue(song, channel, selectedEffectIdx);
+                            var effectMaxValue = Note.GetEffectMaxValue(song, channel, selectedEffectIdx);
+                            var sizeY = (effectMinValue == effectMaxValue) ? effectPanelSizeY : (float)Math.Floor((effectValue - effectMinValue) / (float)(effectMaxValue - effectMinValue) * effectPanelSizeY);
 
-                            foreach (var kv in pattern.Notes)
+                            g.PushTranslation(location.ToAbsoluteNoteIndex(song) * noteSizeX - scrollX, 0);
+
+                            if (!Note.EffectWantsPreviousValue(selectedEffectIdx))
+                                g.FillRectangle(0, 0, noteSizeX, effectPanelSizeY, theme.DarkGreyFillBrush2);
+
+                            var hover = location == hoverLocation;
+
+                            g.FillRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, theme.LightGreyFillBrush1);
+                            g.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, hover ? theme.WhiteBrush : theme.BlackBrush, hover || IsNoteSelected(location) ? 2 : 1);
+
+                            var text = effectValue.ToString();
+                            if ((text.Length <= 2 && zoomLevel >= 0) || zoomLevel > 0)
                             {
-                                var time = kv.Key;
-                                var note = kv.Value;
-
-                                if (time >= patternLen)
-                                    break;
-
-                                location.PatternIndex = p;
-                                location.NoteIndex = time;
-
-                                if (selectedEffectIdx >= 0 && note.HasValidEffectValue(selectedEffectIdx))
-                                {
-                                    var effectValue = note.GetEffectValue(selectedEffectIdx);
-                                    var effectMinValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
-                                    var effectMaxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
-                                    var sizeY = (effectMinValue == effectMaxValue) ? effectPanelSizeY : (float)Math.Floor((effectValue - effectMinValue) / (float)(effectMaxValue - effectMinValue) * effectPanelSizeY);
-
-                                    g.PushTranslation(x + time * noteSizeX, 0);
-
-                                    if (!Note.EffectWantsPreviousValue(selectedEffectIdx))
-                                        g.FillRectangle(0, 0, noteSizeX, effectPanelSizeY, theme.DarkGreyFillBrush2);
-
-                                    g.FillRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, theme.LightGreyFillBrush1);
-                                    g.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, theme.BlackBrush, IsNoteSelected(location) ? 2 : 1);
-
-                                    var text = effectValue.ToString();
-                                    if ((text.Length <= 2 && zoomLevel >= 0) || zoomLevel > 0)
-                                    {
-                                        if (sizeY < effectPanelSizeY / 2)
-                                            g.DrawText(text, ThemeBase.FontSmallCenter, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, theme.LightGreyFillBrush1, noteSizeX);
-                                        else
-                                            g.DrawText(text, ThemeBase.FontSmallCenter, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, theme.BlackBrush, noteSizeX);
-                                    }
-
-                                    g.PopTransform();
-                                }
+                                if (sizeY < effectPanelSizeY / 2)
+                                    g.DrawText(text, ThemeBase.FontSmallCenter, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, theme.LightGreyFillBrush1, noteSizeX);
+                                else
+                                    g.DrawText(text, ThemeBase.FontSmallCenter, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, theme.BlackBrush, noteSizeX);
                             }
 
-                            g.DrawLine(x, 0, x, headerAndEffectSizeY, theme.BlackBrush);
-                            g.DrawLine(0, headerAndEffectSizeY - 1, Width, headerAndEffectSizeY - 1, theme.BlackBrush);
+                            g.PopTransform();
                         }
                     }
 
@@ -1826,11 +1813,11 @@ namespace FamiStudio
                     var hoverLocation = NoteLocation.Invalid;
                     var hoverDuration = -1;
                     var hoverReleased = false;
+                    var hoverLastNoteValue = Note.NoteInvalid;
+                    var hoverLastInstrument = (Instrument)null;
 
-                    if (hoverNoteLocation != NoteLocation.Invalid)
+                    if (hoverNoteLocation != NoteLocation.Invalid && CaptureOperationRequiresNoteHighlight(captureOperation))
                     {
-                        Debug.Assert(captureOperation != CaptureOperation.None);
-
                         hoverLocation = hoverNoteLocation;
                         hoverNote     = song.Channels[editChannel].PatternInstances[hoverLocation.PatternIndex].Notes[hoverLocation.NoteIndex];
                         hoverDuration = hoverNote.Duration;
@@ -1839,7 +1826,7 @@ namespace FamiStudio
                         if (dist >= 0)
                             hoverDuration = Math.Min(dist, hoverDuration);
                     }
-                    else
+                    else if (captureOperation == CaptureOperation.None)
                     {
                         var pt = PointToClient(Cursor.Position);
                         hoverNote = GetNoteForCoord(pt.X, pt.Y, out _, out hoverLocation, out hoverDuration);
@@ -1916,6 +1903,8 @@ namespace FamiStudio
                                 else
                                 {
                                     hoverReleased = released;
+                                    hoverLastNoteValue = lastNoteValue;
+                                    hoverLastInstrument = lastInstrument;
                                 }
 
                                 if (note.HasRelease && note.Release < Math.Min(note.Duration, it.DistanceToNextNote))
@@ -1924,8 +1913,17 @@ namespace FamiStudio
                                 }
                             }
 
-                            if (hoverNote != null && hoverNote.IsMusical)
-                                RenderNote(g, hoverLocation, hoverNote, song, channel, hoverDuration, drawStopNotes, true, true, hoverReleased);
+                            if (hoverNote != null)
+                            {
+                                if (hoverNote.IsMusical)
+                                {
+                                    RenderNote(g, hoverLocation, hoverNote, song, channel, hoverDuration, drawStopNotes, true, true, hoverReleased);
+                                }
+                                else if (hoverNote.IsStop)
+                                {
+                                    RenderNoteReleaseOrStop(g, hoverNote, GetNoteColor(channel, hoverLastNoteValue, hoverLastInstrument, song.Project), hoverLocation.ToAbsoluteNoteIndex(Song), hoverLastNoteValue, true, false, true, hoverReleased);
+                                }
+                            }
                         }
                     }
 
@@ -2707,9 +2705,41 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        void ChangeEffectValue(MouseEventArgs e)
+        void StartChangeEffectValue(MouseEventArgs e, NoteLocation location)
+        {
+            var channel   = Song.Channels[editChannel];
+            var pattern   = channel.PatternInstances[location.PatternIndex];
+            var note      = channel.GetNoteAt(location);
+            var selection = IsSelectionValid() && IsNoteSelected(location) && note != null && note.HasValidEffectValue(selectedEffectIdx);
+
+            StartCaptureOperation(e, selection ? CaptureOperation.ChangeSelectionEffectValue : CaptureOperation.ChangeEffectValue, false, location.ToAbsoluteNoteIndex(Song));
+
+            var minPatternIdx = Song.FindPatternInstanceIndex(selectionMin, out _);
+            var maxPatternIdx = Song.FindPatternInstanceIndex(selectionMax, out _);
+
+            if (selection && minPatternIdx != maxPatternIdx || pattern == null)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+
+                if (pattern == null)
+                    pattern = channel.CreatePatternAndInstance(location.PatternIndex);
+            }
+            else
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+            }
+
+            captureEffectValue = note != null && note.HasValidEffectValue(selectedEffectIdx) ? note.GetEffectValue(selectedEffectIdx) : int.MinValue;
+
+            UpdateChangeEffectValue(e);
+        }
+
+        void UpdateChangeEffectValue(MouseEventArgs e)
         {
             Debug.Assert(selectedEffectIdx >= 0);
+
+            if (captureOperation == CaptureOperation.ChangeSelectionEffectValue)
+                App.UndoRedoManager.RestoreTransaction(false);
 
             bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
@@ -2734,8 +2764,25 @@ namespace FamiStudio
                 newValue = (int)Math.Round(ratio * (maxValue - minValue) + minValue);
             }
 
-            note.SetEffectValue(selectedEffectIdx, newValue);
-            channel.InvalidateCumulativePatternCache(captureNoteLocation.PatternIndex);
+            if (captureOperation == CaptureOperation.ChangeSelectionEffectValue)
+            {
+                var effectDelta = newValue - captureEffectValue;
+                var minLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin);
+                var maxLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMax);
+
+                for (var it = channel.GetSparseNoteIterator(minLocation, maxLocation, Note.GetFilterForEffect(selectedEffectIdx)); !it.Done; it.Next())
+                {
+                    var value = it.Note.GetEffectValue(selectedEffectIdx);
+                    it.Note.SetEffectValue(selectedEffectIdx, value + effectDelta);
+                }
+
+                channel.InvalidateCumulativePatternCache(minLocation.PatternIndex);
+            }
+            else
+            {
+                note.SetEffectValue(selectedEffectIdx, newValue);
+                channel.InvalidateCumulativePatternCache(captureNoteLocation.PatternIndex);
+            }
 
             ConditionalInvalidate();
         }
@@ -2973,7 +3020,8 @@ namespace FamiStudio
                         PlayPiano(e.X, e.Y);
                         break;
                     case CaptureOperation.ChangeEffectValue:
-                        ChangeEffectValue(e);
+                    case CaptureOperation.ChangeSelectionEffectValue:
+                        UpdateChangeEffectValue(e);
                         break;
                     case CaptureOperation.DrawEnvelope:
                         DrawEnvelope(e);
@@ -3049,7 +3097,7 @@ namespace FamiStudio
             }
             else
             {
-                App.UndoRedoManager.RestoreTransaction();
+                App.UndoRedoManager.RestoreTransaction(false);
                 App.UndoRedoManager.AbortTransaction();
 
                 if (noteValue != captureNoteValue && draggedSample != null)
@@ -3103,6 +3151,7 @@ namespace FamiStudio
                     case CaptureOperation.DragLoop:
                     case CaptureOperation.DragRelease:
                     case CaptureOperation.ChangeEffectValue:
+                    case CaptureOperation.ChangeSelectionEffectValue:
                     case CaptureOperation.MoveNoteRelease:
                         App.UndoRedoManager.EndTransaction();
                         break;
@@ -3625,7 +3674,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPiano(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInPiano(e))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInPiano(e.X, e.Y))
             {
                 StartPlayPiano(e);
                 return true;
@@ -3636,7 +3685,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownSeekBar(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInHeader(e))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInHeader(e.X, e.Y))
             {
                 StartCaptureOperation(e, CaptureOperation.DragSeekBar);
                 UpdateSeekDrag(e.X, false);
@@ -3648,7 +3697,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownHeaderSelection(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInHeader(e))
+            if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInHeader(e.X, e.Y))
             {
                 StartCaptureOperation(e, CaptureOperation.Select, false);
                 UpdateSelection(e.X);
@@ -3660,7 +3709,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownEnvelopeSelection(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && (IsMouseInHeaderTopPart(e) || IsMouseInNoteArea(e)))
+            if (e.Button.HasFlag(MouseButtons.Right) && (IsMouseInHeaderTopPart(e.X, e.Y) || IsMouseInNoteArea(e.X, e.Y)))
             {
                 StartCaptureOperation(e, CaptureOperation.Select);
                 UpdateSelection(e.X);
@@ -3672,7 +3721,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownEffectList(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInEffectList(e))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInEffectList(e.X, e.Y))
             {
                 int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY;
                 if (effectIdx >= 0 && effectIdx < supportedEffects.Length)
@@ -3699,7 +3748,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownEnvelopeResize(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInHeaderTopPart(e) && EditEnvelope.CanResize)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInHeaderTopPart(e.X, e.Y) && EditEnvelope.CanResize)
             {
                 StartCaptureOperation(e, CaptureOperation.ResizeEnvelope);
 
@@ -3720,7 +3769,7 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if (((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e))
+            if (((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e.X, e.Y))
             {
                 CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e, op);
@@ -3739,7 +3788,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownDrawEnvelope(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInNoteArea(e) && EditEnvelope.Length > 0)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInNoteArea(e.X, e.Y) && EditEnvelope.Length > 0)
             {
                 StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
 
@@ -3757,17 +3806,11 @@ namespace FamiStudio
 
         private bool HandleMouseDownChangeEffectValue(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInEffectPanel(e) && selectedEffectIdx >= 0)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInEffectPanel(e.X, e.Y) && selectedEffectIdx >= 0)
             {
                 if (GetEffectNoteForCoord(e.X, e.Y, out var location))
                 {
-                    var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
-                    if (pattern != null)
-                    {
-                        StartCaptureOperation(e, CaptureOperation.ChangeEffectValue);
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                        ChangeEffectValue(e);
-                    }
+                    StartChangeEffectValue(e, location);
                 }
             }
 
@@ -3779,7 +3822,7 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if ((left || right) && IsMouseInEffectPanel(e))
+            if ((left || right) && IsMouseInEffectPanel(e.X, e.Y))
             {
                 var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e);
                 if (vertexIdx >= 0)
@@ -3810,7 +3853,7 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if ((left || right) && IsMouseOnSnapResolutionButton(e))
+            if ((left || right) && IsMouseOnSnapResolutionButton(e.X, e.Y))
             {
                 if (left)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
@@ -3826,7 +3869,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownSnapButton(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseOnSnapButton(e))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseOnSnapButton(e.X, e.Y))
             {
                 snap = !snap;
                 ConditionalInvalidate();
@@ -3838,7 +3881,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInTopLeftCorner(e))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInTopLeftCorner(e.X, e.Y))
             {
                 ToggleEffectPannel();
                 return true;
@@ -3849,7 +3892,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownWaveSelection(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left | MouseButtons.Right) && (IsMouseInNoteArea(e) || IsMouseInHeader(e)))
+            if (e.Button.HasFlag(MouseButtons.Left | MouseButtons.Right) && (IsMouseInNoteArea(e.X, e.Y) || IsMouseInHeader(e.X, e.Y)))
             {
                 StartCaptureOperation(e, CaptureOperation.SelectWave);
                 UpdateWaveSelection(e.X);
@@ -3876,6 +3919,7 @@ namespace FamiStudio
                 if (left)
                 {
                     var shift   = ModifierKeys.HasFlag(Keys.Shift);
+                    var stop    = FamiStudioForm.IsKeyDown(Keys.T);
                     var slide   = FamiStudioForm.IsKeyDown(Keys.S);
                     var attack  = FamiStudioForm.IsKeyDown(Keys.A);
                     var eyedrop = FamiStudioForm.IsKeyDown(Keys.I);
@@ -3895,6 +3939,10 @@ namespace FamiStudio
                     else if (shift && note != null)
                     {
                         CreateReleaseNote(noteLocation, mouseLocation, note);
+                    }
+                    else if (stop)
+                    {
+                        CreateOrphanStopNote(mouseLocation);
                     }
                     else
                     {
@@ -4456,6 +4504,18 @@ namespace FamiStudio
             }
         }
 
+        private void CreateOrphanStopNote(NoteLocation location)
+        {
+            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+            var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
+            note.Clear();
+            note.Value = Note.NoteStop;
+            note.Duration = 1;
+            MarkPatternDirty(location.PatternIndex);
+            App.UndoRedoManager.EndTransaction();
+        }
+
         private void Eyedrop(Note note)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.Application);
@@ -4570,57 +4630,57 @@ namespace FamiStudio
             return -1;
         }
 
-        private bool IsMouseInHeader(MouseEventArgs e)
+        private bool IsMouseInHeader(int x, int y)
         {
-            return e.X > whiteKeySizeX && e.Y < headerSizeY;
+            return x > whiteKeySizeX && y < headerSizeY;
         }
 
-        private bool IsMouseInHeaderTopPart(MouseEventArgs e)
+        private bool IsMouseInHeaderTopPart(int x, int y)
         {
-            return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && e.X > whiteKeySizeX && e.Y > 0 && e.Y < headerSizeY / 2;
+            return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && x > whiteKeySizeX && y > 0 && y < headerSizeY / 2;
         }
 
-        private bool IsMouseInHeaderBottomPart(MouseEventArgs e)
+        private bool IsMouseInHeaderBottomPart(int x, int y)
         {
-            return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && e.X > whiteKeySizeX && e.Y >= headerSizeY / 2 && e.Y < headerSizeY;
+            return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && x > whiteKeySizeX && y >= headerSizeY / 2 && y < headerSizeY;
         }
 
-        private bool IsMouseInPiano(MouseEventArgs e)
+        private bool IsMouseInPiano(int x, int y)
         {
-            return e.X < whiteKeySizeX && e.Y > headerAndEffectSizeY;
+            return x < whiteKeySizeX && y > headerAndEffectSizeY;
         }
 
-        private bool IsMouseInEffectList(MouseEventArgs e)
+        private bool IsMouseInEffectList(int x, int y)
         {
-            return showEffectsPanel && editMode == EditionMode.Channel && e.X < whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY;
+            return showEffectsPanel && editMode == EditionMode.Channel && x < whiteKeySizeX && y > headerSizeY && y < headerAndEffectSizeY;
         }
 
-        private bool IsMouseInEffectPanel(MouseEventArgs e)
+        private bool IsMouseInEffectPanel(int x, int y)
         {
-            return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && e.X > whiteKeySizeX && e.Y > headerSizeY && e.Y < headerAndEffectSizeY;
+            return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && x > whiteKeySizeX && y > headerSizeY && y < headerAndEffectSizeY;
         }
 
-        private bool IsMouseOnSnapResolutionButton(MouseEventArgs e)
+        private bool IsMouseOnSnapResolutionButton(int x, int y)
         {
             return IsSnappingAllowed &&
-                e.X > whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX * 2 && e.X < whiteKeySizeX - (int)bmpSnap.Size.Width - snapIconPosX &&
-                e.Y > snapIconPosY && e.Y < snapIconPosY + (int)bmpSnap.Size.Height;
+                x > whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX * 2 && x < whiteKeySizeX - (int)bmpSnap.Size.Width - snapIconPosX &&
+                y > snapIconPosY && y < snapIconPosY + (int)bmpSnap.Size.Height;
         }
-        private bool IsMouseOnSnapButton(MouseEventArgs e)
+        private bool IsMouseOnSnapButton(int x, int y)
         {
             return IsSnappingAllowed &&
-                e.X > whiteKeySizeX - (int)bmpSnap.Size.Width - snapIconPosX && e.X < whiteKeySizeX &&
-                e.Y > snapIconPosY && e.Y < snapIconPosY + (int)bmpSnap.Size.Height;
+                x > whiteKeySizeX - (int)bmpSnap.Size.Width - snapIconPosX && x < whiteKeySizeX &&
+                y > snapIconPosY && y < snapIconPosY + (int)bmpSnap.Size.Height;
         }
 
-        private bool IsMouseInNoteArea(MouseEventArgs e)
+        private bool IsMouseInNoteArea(int x, int y)
         {
-            return e.Y > headerSizeY && e.X > whiteKeySizeX;
+            return y > headerSizeY && x > whiteKeySizeX;
         }
 
-        private bool IsMouseInTopLeftCorner(MouseEventArgs e)
+        private bool IsMouseInTopLeftCorner(int x, int y)
         {
-            return (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && e.Y < headerSizeY && e.X < whiteKeySizeX;
+            return (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && y < headerSizeY && x < whiteKeySizeX;
         }
 
         private void UpdateToolTip(MouseEventArgs e)
@@ -4628,39 +4688,39 @@ namespace FamiStudio
             var tooltip = "";
             var newNoteTooltip = "";
 
-            if (IsMouseInHeader(e) && editMode == EditionMode.Channel)
+            if (IsMouseInHeader(e.X, e.Y) && editMode == EditionMode.Channel)
             {
                 tooltip = "{MouseLeft} Seek - {MouseRight} Select - {MouseRight}{MouseRight} Select entire pattern";
             }
-            else if (IsMouseInHeaderTopPart(e) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
+            else if (IsMouseInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
                 tooltip = "{MouseRight} Select - {MouseLeft} Resize envelope";
             }
-            else if (IsMouseInHeaderBottomPart(e) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
+            else if (IsMouseInHeaderBottomPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
                 tooltip = "{MouseLeft} Set loop point - {MouseRight} Set release point (volume only, must have loop point)";
             }
-            else if (IsMouseInPiano(e))
+            else if (IsMouseInPiano(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan";
             }
-            else if (IsMouseOnSnapResolutionButton(e))
+            else if (IsMouseOnSnapResolutionButton(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Next snap precision {MouseRight} Previous snap precision {MouseWheel} Change snap precision";
             }
-            else if (IsMouseOnSnapButton(e))
+            else if (IsMouseOnSnapButton(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Toggle snapping {Shift} {S} {MouseWheel} Change snap precision";
             }
-            else if (IsMouseInTopLeftCorner(e))
+            else if (IsMouseInTopLeftCorner(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Show/hide effect panel {~}";
             }
-            else if (IsMouseInEffectList(e))
+            else if (IsMouseInEffectList(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Select effect track to edit";
             }
-            else if (IsMouseInEffectPanel(e))
+            else if (IsMouseInEffectPanel(e.X, e.Y))
             {
                 if (editMode == EditionMode.Channel)
                 {
@@ -4676,7 +4736,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if ((IsMouseInNoteArea(e) || IsMouseInHeader(e)) && editMode == EditionMode.DPCM)
+            else if ((IsMouseInNoteArea(e.X, e.Y) || IsMouseInHeader(e.X, e.Y)) && editMode == EditionMode.DPCM)
             {
                 tooltip = "{MouseLeft} {Drag} or {MouseRight} {Drag} Select samples from source data";
 
@@ -4686,7 +4746,7 @@ namespace FamiStudio
                     newNoteTooltip = $"{(selectionMax - selectionMin + 1)} samples selected";
                 }
             }
-            else if (IsMouseInNoteArea(e))
+            else if (IsMouseInNoteArea(e.X, e.Y))
             {
                 if (editMode == EditionMode.Channel)
                 {
@@ -4763,10 +4823,7 @@ namespace FamiStudio
             App.SetToolTip(tooltip);
 
             if (noteTooltip != newNoteTooltip)
-            {
                 noteTooltip = newNoteTooltip;
-                ConditionalInvalidate();
-            }
         }
 
         private int PatternLengthForNoteIndex(int noteIdx)
@@ -5031,7 +5088,7 @@ namespace FamiStudio
                         newNote.Value = (byte)Utils.Clamp(oldNote.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
                         newNote.Instrument = oldNote.Instrument;
                         newNote.Arpeggio = oldNote.Arpeggio;
-                        newNote.Slide = oldNote.Slide;
+                        newNote.Slide = (byte)(oldNote.IsSlideNote ? Utils.Clamp(oldNote.Slide + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax) : 0);
                         newNote.Flags = oldNote.Flags;
                         newNote.Duration = (ushort)Math.Max(1, oldNote.Duration + deltaDuration);
                         newNote.Release = oldNote.Release;
@@ -5041,7 +5098,10 @@ namespace FamiStudio
                 {
                     var note = kv.Value.Clone();
                     if (note.IsMusical)
+                    {
                         note.Value = (byte)Utils.Clamp(note.Value + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                        note.Slide = (byte)(note.IsSlideNote ? Utils.Clamp(note.Slide + deltaNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax) : 0);
+                    }
                     pattern.SetNoteAt(n, note);
                 }
             }
@@ -5257,6 +5317,39 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private bool CaptureOperationRequiresEffectHighlight(CaptureOperation op)
+        {
+            return
+                op == CaptureOperation.ChangeEffectValue;
+        }
+
+        private bool CaptureOperationRequiresNoteHighlight(CaptureOperation op)
+        {
+            return
+                op == CaptureOperation.ResizeSelectionNoteEnd ||
+                op == CaptureOperation.ResizeNoteEnd ||
+                op == CaptureOperation.ResizeSelectionNoteStart ||
+                op == CaptureOperation.ResizeNoteStart ||
+                op == CaptureOperation.MoveNoteRelease ||
+                op == CaptureOperation.DragSelection ||
+                op == CaptureOperation.DragNote;
+        }
+
+        private CaptureOperation GetHoverEffectCaptureOperationForCoord(int x, int y)
+        {
+            Debug.Assert(editMode == EditionMode.Channel);
+
+            if (GetEffectNoteForCoord(x, y, out var location))
+            {
+                var note = Song.Channels[editChannel].GetNoteAt(location);
+
+                if (note != null && note.HasValidEffectValue(selectedEffectIdx))
+                    return CaptureOperation.ChangeEffectValue;
+            }
+
+            return CaptureOperation.None;
+        }
+
         private CaptureOperation GetHoverNoteCaptureOperationForCoord(int x, int y)
         {
             Debug.Assert(editMode == EditionMode.Channel);
@@ -5264,21 +5357,24 @@ namespace FamiStudio
             var note = GetNoteForCoord(x, y, out var mouseLocation, out var noteLocation, out var noteDuration);
             if (note != null)
             {
-                var minAbsoluteNoteIdx = noteLocation.ToAbsoluteNoteIndex(Song);
-                var maxAbsoluteNoteIdx = noteLocation.ToAbsoluteNoteIndex(Song) + noteDuration;
+                if (note.IsMusical)
+                {
+                    var minAbsoluteNoteIdx = noteLocation.ToAbsoluteNoteIndex(Song);
+                    var maxAbsoluteNoteIdx = noteLocation.ToAbsoluteNoteIndex(Song) + noteDuration;
 
-                var minNoteCoordX = minAbsoluteNoteIdx * noteSizeX - scrollX;
-                var maxNoteCoordX = maxAbsoluteNoteIdx * noteSizeX - scrollX;
+                    var minNoteCoordX = minAbsoluteNoteIdx * noteSizeX - scrollX;
+                    var maxNoteCoordX = maxAbsoluteNoteIdx * noteSizeX - scrollX;
 
-                x -= whiteKeySizeX;
+                    x -= whiteKeySizeX;
 
-                if (x > maxNoteCoordX - 8) // NOTETODO : hardcoded 4.
-                    return IsNoteSelected(noteLocation) ? CaptureOperation.ResizeSelectionNoteEnd : CaptureOperation.ResizeNoteEnd;
-                if (x < minNoteCoordX + 8) // NOTETODO : hardcoded 4.
-                    return IsNoteSelected(noteLocation) ? CaptureOperation.ResizeSelectionNoteStart : CaptureOperation.ResizeNoteStart;
-                
-                if (note.HasRelease && Song.CountNotesBetween(noteLocation, mouseLocation) == note.Release)
-                    return CaptureOperation.MoveNoteRelease;
+                    if (x > maxNoteCoordX - 8) // NOTETODO : hardcoded 4.
+                        return IsNoteSelected(noteLocation) ? CaptureOperation.ResizeSelectionNoteEnd : CaptureOperation.ResizeNoteEnd;
+                    if (x < minNoteCoordX + 8) // NOTETODO : hardcoded 4.
+                        return IsNoteSelected(noteLocation) ? CaptureOperation.ResizeSelectionNoteStart : CaptureOperation.ResizeNoteStart;
+
+                    if (note.HasRelease && Song.CountNotesBetween(noteLocation, mouseLocation) == note.Release)
+                        return CaptureOperation.MoveNoteRelease;
+                }
 
                 return IsNoteSelected(noteLocation) ? CaptureOperation.DragSelection : CaptureOperation.DragNote;
             }
@@ -5310,24 +5406,41 @@ namespace FamiStudio
             {
                 if (editMode == EditionMode.Channel && captureOperation == CaptureOperation.None)
                 {
-                    var captureOp = GetHoverNoteCaptureOperationForCoord(pt.X, pt.Y);
-
-                    switch (captureOp)
+                    if (IsMouseInEffectPanel(pt.X, pt.Y))
                     {
-                        case CaptureOperation.ResizeNoteStart:
-                        case CaptureOperation.ResizeSelectionNoteStart:
-                        case CaptureOperation.ResizeNoteEnd:
-                        case CaptureOperation.ResizeSelectionNoteEnd:
-                        case CaptureOperation.MoveNoteRelease:
-                            Cursor.Current = Cursors.SizeWE;
-                            break;
-                        case CaptureOperation.DragNote:
-                        case CaptureOperation.DragSelection:
-                            Cursor.Current = Cursors.Move; // NOTETODO : Don't think that's good.
-                            break;
-                        default:
-                            Cursor.Current = Cursors.Default;
-                            break;
+                        var captureOp = GetHoverEffectCaptureOperationForCoord(pt.X, pt.Y);
+
+                        switch (captureOp)
+                        {
+                            case CaptureOperation.ChangeEffectValue:
+                                Cursor.Current = Cursors.SizeNS;
+                                break;
+                            default:
+                                Cursor.Current = Cursors.Default;
+                                break;
+                        }
+                    }
+                    else if (IsMouseInNoteArea(pt.X, pt.Y))
+                    {
+                        var captureOp = GetHoverNoteCaptureOperationForCoord(pt.X, pt.Y);
+
+                        switch (captureOp)
+                        {
+                            case CaptureOperation.ResizeNoteStart:
+                            case CaptureOperation.ResizeSelectionNoteStart:
+                            case CaptureOperation.ResizeNoteEnd:
+                            case CaptureOperation.ResizeSelectionNoteEnd:
+                            case CaptureOperation.MoveNoteRelease:
+                                Cursor.Current = Cursors.SizeWE;
+                                break;
+                            case CaptureOperation.DragNote:
+                            case CaptureOperation.DragSelection:
+                                Cursor.Current = Cursors.Move; // NOTETODO : Don't think that's good.
+                                break;
+                            default:
+                                Cursor.Current = Cursors.Default;
+                                break;
+                        }
                     }
                 }
                 else
@@ -5353,6 +5466,7 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e);
+            ConditionalInvalidate();
 
             mouseLastX = e.X;
             mouseLastY = e.Y;
@@ -5410,7 +5524,7 @@ namespace FamiStudio
                     ZoomAtLocation(e.X, e.Delta);
                 }
             }
-            else if (IsMouseOnSnapResolutionButton(e) || IsMouseOnSnapButton(e))
+            else if (IsMouseOnSnapResolutionButton(e.X, e.Y) || IsMouseOnSnapButton(e.X, e.Y))
             {
                 if (e.Delta > 0)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
@@ -5486,13 +5600,12 @@ namespace FamiStudio
             {
                 var absoluteNoteIndex = (x - whiteKeySizeX + scrollX) / noteSizeX;
                 location = NoteLocation.FromAbsoluteNoteIndex(Song, absoluteNoteIndex);
-                return location.PatternIndex < Song.Length;
+                if (location.PatternIndex < Song.Length)
+                    return true;
             }
-            else
-            {
-                location = NoteLocation.Invalid;
-                return false;
-            }
+
+            location = NoteLocation.Invalid;
+            return false;
         }
 
         // NOTETODO : Migrate all to note location.

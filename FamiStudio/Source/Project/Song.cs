@@ -1266,7 +1266,7 @@ namespace FamiStudio
             return n0 > n1 ? n0 : n1;
         }
 
-        public static NoteLocation Invalid = new NoteLocation(-1, -1);
+        public static readonly NoteLocation Invalid = new NoteLocation(-1, -1);
     }
 
     public static class GroovePaddingType

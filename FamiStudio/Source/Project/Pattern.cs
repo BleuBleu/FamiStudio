@@ -297,11 +297,9 @@ namespace FamiStudio
                 // Not used since FamiStudio 3.0.0
                 Debug.Assert(!note.IsRelease);
                 Debug.Assert(!note.IsUseless);
-                //Debug.Assert(!note.IsStop);
 
                 Debug.Assert(note.Release == 0 || note.Release > 0 && note.Release < note.Duration);
-                Debug.Assert((note.IsMusical && note.Duration > 0) || (note.IsStop && note.Duration == 1) || (!note.IsMusical && note.Duration == 0));
-                //Debug.Assert(!(note.IsMusical && note.HasStopAllNotes));
+                Debug.Assert((note.IsMusical && note.Duration > 0) || (note.IsStop && note.Duration == 1) || (!note.IsMusicalOrStop && note.Duration == 0));
 
                 var inst = note.Instrument;
                 Debug.Assert(inst == null || song.Project.InstrumentExists(inst));

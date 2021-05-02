@@ -504,7 +504,7 @@ namespace FamiStudio
             return GetNoteAt(new NoteLocation(patternIdx, noteIdx));
         }
 
-        public SparseChannelNoteIterator GetSparseNoteIterator(NoteLocation start, NoteLocation end, NoteFilter filter = NoteFilter.Musical | NoteFilter.Stop | NoteFilter.DelayedCut)
+        public SparseChannelNoteIterator GetSparseNoteIterator(NoteLocation start, NoteLocation end, NoteFilter filter = NoteFilter.Musical | NoteFilter.Stop | NoteFilter.EffectCutDelay)
         {
             return new SparseChannelNoteIterator(this, start, end, filter);
         }
