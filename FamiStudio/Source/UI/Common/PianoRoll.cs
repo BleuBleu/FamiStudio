@@ -1897,7 +1897,7 @@ namespace FamiStudio
                                     }
                                     else if (note.IsStop)
                                     {
-                                        RenderNoteReleaseOrStop(g, note, GetNoteColor(channel, lastNoteValue, lastInstrument, song.Project), it.Location.ToAbsoluteNoteIndex(Song), lastNoteValue, false, false, true, released);
+                                        RenderNoteReleaseOrStop(g, note, GetNoteColor(channel, lastNoteValue, lastInstrument, song.Project), it.Location.ToAbsoluteNoteIndex(Song), lastNoteValue, false, IsNoteSelected(it.Location, 1), true, released);
                                     }
                                 }
                                 else
@@ -3938,7 +3938,7 @@ namespace FamiStudio
                     }
                     else if (shift && note != null)
                     {
-                        CreateReleaseNote(noteLocation, mouseLocation, note);
+                        ToggleReleaseNote(noteLocation, mouseLocation, note);
                     }
                     else if (stop)
                     {
@@ -3977,8 +3977,7 @@ namespace FamiStudio
                 {
                     if (note != null)
                     {
-                        // NOTETODO : Delete release note here? Or in resize?
-                        DeleteNote(noteLocation, note);
+                        ClickDeleteNote(noteLocation, mouseLocation, note);
                     }
                     else
                     {
@@ -4472,25 +4471,34 @@ namespace FamiStudio
             DPCMSampleUnmapped?.Invoke(noteValue);
         }
 
-        private void DeleteNote(NoteLocation location, Note note)
+        private void ClickDeleteNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
         {
-            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+            var pattern = Song.Channels[editChannel].PatternInstances[noteLocation.PatternIndex];
+            var dist = noteLocation.DistanceTo(Song, mouseLocation);
 
             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
 
-            // Preserve mosty effect values when deleting single notes.
-            note.Clear();
-            note.HasNoteDelay = false;
-            note.HasCutDelay = false;
+            // Special case : Remove the release point if user clicks on the release.
+            if (note.HasRelease && note.Release == dist)
+            {
+                note.Release = 0;
+            }
+            else
+            {
+                // Preserve mosty effect values when deleting single notes.
+                note.Clear();
+                note.HasNoteDelay = false;
+                note.HasCutDelay = false;
+            }
 
             if (note.IsEmpty)
-                pattern.Notes.Remove(location.NoteIndex);
+                pattern.Notes.Remove(noteLocation.NoteIndex);
 
-            MarkPatternDirty(location.PatternIndex);
+            MarkPatternDirty(noteLocation.PatternIndex);
             App.UndoRedoManager.EndTransaction();
         }
 
-        private void CreateReleaseNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
+        private void ToggleReleaseNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
         {
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[noteLocation.PatternIndex];
@@ -4498,7 +4506,8 @@ namespace FamiStudio
             if (channel.SupportsReleaseNotes)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                note.Release = (ushort)Math.Max(1, Song.CountNotesBetween(noteLocation, mouseLocation));
+                var release = (ushort)Math.Max(1, Song.CountNotesBetween(noteLocation, mouseLocation));
+                note.Release = note.Release == release ? 0 : release;
                 MarkPatternDirty(noteLocation.PatternIndex);
                 App.UndoRedoManager.EndTransaction();
             }
@@ -5024,8 +5033,7 @@ namespace FamiStudio
             var newDragFrameMin = dragFrameMin + deltaNoteIdx;
             var newDragFrameMax = dragFrameMax + deltaNoteIdx;
 
-            hoverNoteLocation = captureNoteLocation;
-            Song.AdvanceNumberOfNotes(ref hoverNoteLocation, deltaNoteIdx);
+            hoverNoteLocation = captureNoteLocation.Advance(Song, deltaNoteIdx);
 
             // When we cross pattern boundaries, we will have to promote the current transaction
             // from pattern to channel.
@@ -5092,6 +5100,12 @@ namespace FamiStudio
                         newNote.Flags = oldNote.Flags;
                         newNote.Duration = (ushort)Math.Max(1, oldNote.Duration + deltaDuration);
                         newNote.Release = oldNote.Release;
+                    }
+                    else if (oldNote.IsStop)
+                    {
+                        var newNote = pattern.GetOrCreateNoteAt(n);
+                        newNote.Value    = Note.NoteStop;
+                        newNote.Duration = 1;
                     }
                 }
                 else
@@ -5248,25 +5262,31 @@ namespace FamiStudio
 
             App.UndoRedoManager.RestoreTransaction(false);
 
-            // Since we may be be dragging from the "visual" duration which may be shorter than
-            // the real duration, we truncate it right away.
-            var distToNext = channel.GetDistanceToNextNote(captureNoteLocation);
-            if (distToNext >= 0)
-            {
-                var note = channel.PatternInstances[captureNoteLocation.PatternIndex].Notes[captureNoteLocation.NoteIndex];
-                note.Duration = (ushort)Utils.Clamp(note.Duration, 1, distToNext);
-            }
-
-            GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
-
-            var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
             var selection = captureOperation == CaptureOperation.ResizeSelectionNoteEnd;
             var min = selection ? selectionMin : captureNoteAbsoluteIdx;
             var max = selection ? selectionMax : captureNoteAbsoluteIdx;
 
+            // Since we may be be dragging from the "visual" duration which may be shorter than
+            // the real duration, we truncate them right away.
             TransformNotes(min, max, false, final, (note, idx) =>
             {
-                if (note != null)
+                if (note != null && note.IsMusical)
+                {
+                    var distToNext = channel.GetDistanceToNextNote(NoteLocation.FromAbsoluteNoteIndex(Song, min + idx));
+                    if (distToNext >= 0)
+                        note.Duration = (ushort)Utils.Clamp(note.Duration, 1, distToNext);
+                }
+
+                return note;
+            });
+          
+            GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
+
+            var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
+
+            TransformNotes(min, max, false, final, (note, idx) =>
+            {
+                if (note != null && note.IsMusical)
                     note.Duration = (ushort)Math.Max(1, note.Duration + deltaNoteIdx);
 
                 return note;

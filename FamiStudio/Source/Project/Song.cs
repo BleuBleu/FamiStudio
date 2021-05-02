@@ -1199,6 +1199,18 @@ namespace FamiStudio
             return s.AbsoluteNoteIndexToNoteLocation(absoluteNoteIndex);
         }
 
+        public NoteLocation Advance(Song s, int num)
+        {
+            NoteLocation loc = this;
+            s.AdvanceNumberOfNotes(ref loc, num);
+            return loc;
+        }
+
+        public int DistanceTo(Song s, NoteLocation other)
+        {
+            return s.CountNotesBetween(this, other);
+        }
+
         public override bool Equals(object obj)
         {
             var other = (NoteLocation)obj;
