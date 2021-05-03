@@ -45,7 +45,7 @@ namespace FamiStudio
         const int DefaultHeaderIconPosX      = 3;
         const int DefaultHeaderIconPosY      = 3;
         const int DefaultHeaderIconSizeX     = 12;
-        const int DefaultScrollBarThickness  = 8;
+        const int DefaultScrollBarThickness  = 10;
         const int DefaultMinScrollBarLength  = 128;
         const float ContinuousFollowPercent = 0.75f;
 
@@ -614,7 +614,7 @@ namespace FamiStudio
                 GetMinMaxScroll(out _, out var maxScrollX);
 
                 int scrollAreaSizeX = Width - trackNameSizeX;
-                sizeX = Math.Max(minScrollBarLength, (int)Math.Round(scrollAreaSizeX * Math.Min(1.0f, scrollAreaSizeX / (float)maxScrollX)));
+                sizeX = Math.Max(minScrollBarLength, (int)Math.Round(scrollAreaSizeX * Math.Min(1.0f, scrollAreaSizeX / (float)(maxScrollX + scrollAreaSizeX))));
                 posX = (int)Math.Round((scrollAreaSizeX - sizeX) * (scrollX / (float)maxScrollX));
                 return true;
             }

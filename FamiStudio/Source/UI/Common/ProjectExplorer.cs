@@ -39,7 +39,7 @@ namespace FamiStudio
         const int DefaultButtonTextNoIconPosX = 4;
         const int DefaultSubButtonSpacingX    = 18;
         const int DefaultSubButtonPosY        = 3;
-        const int DefaultScrollBarThickness   = 8;
+        const int DefaultScrollBarThickness   = 10;
         const int DefaultButtonSizeY          = 21;
         const int DefaultSliderPosX           = 100;
         const int DefaultSliderPosY           = 3;

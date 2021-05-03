@@ -78,7 +78,7 @@ namespace FamiStudio
         const int DefaultMinNoteSizeForText = 24;
         const int DefaultWaveGeometrySampleSize = 2;
         const int DefaultWaveDisplayPaddingY = 8;
-        const int DefaultScrollBarThickness = 8;
+        const int DefaultScrollBarThickness = 10;
         const int DefaultMinScrollBarLength = 128;
         const int DefaultScrollMargin = 128;
         const int DefaultNoteResizeMargin = 8;
