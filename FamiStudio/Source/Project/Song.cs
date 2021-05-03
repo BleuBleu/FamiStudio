@@ -633,14 +633,18 @@ namespace FamiStudio
         {
             foreach (var channel in channels)
                 channel.ConvertToCompoundNotes();
-            UpdatePatternStartNotes();
         }
 
         public void ConvertToSimpleNotes()
         {
             foreach (var channel in channels)
                 channel.ConvertToSimpleNotes();
-            UpdatePatternStartNotes();
+        }
+
+        public void SetNoteDurationToMaximumLength()
+        {
+            foreach (var channel in channels)
+                channel.SetNoteDurationToMaximumLength();
         }
 
         public NoteLocation AbsoluteNoteIndexToNoteLocation(int absoluteNoteIdx)

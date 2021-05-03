@@ -60,7 +60,8 @@ namespace FamiStudio
                 case TransformOperation.SongCleanup:
                     page.AddCheckBox("Merge identical patterns:", true);                       // 0
                     page.AddCheckBox("Delete empty patterns:", true);                          // 1
-                    page.AddCheckBoxList(null, GetSongNames(), null);                      // 2
+                    page.AddCheckBox("Adjust maximum note lengths:", true);                    // 2
+                    page.AddCheckBoxList(null, GetSongNames(), null);                          // 3
                     break;
                 case TransformOperation.ProjectCleanup:
                     page.AddCheckBox("Delete unused instruments:", true);                      // 0
@@ -109,12 +110,13 @@ namespace FamiStudio
         private void SongCleanup()
         {
             var props = dialog.GetPropertyPage((int)TransformOperation.SongCleanup);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(2));
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(3));
 
-            var mergeIdenticalPatterns    = props.GetPropertyValue<bool>(0);
-            var deleteEmptyPatterns       = props.GetPropertyValue<bool>(1);
+            var mergeIdenticalPatterns = props.GetPropertyValue<bool>(0);
+            var deleteEmptyPatterns    = props.GetPropertyValue<bool>(1);
+            var reduceNoteLengths      = props.GetPropertyValue<bool>(2);
 
-            if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns))
+            if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns || reduceNoteLengths))
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -128,19 +130,19 @@ namespace FamiStudio
                 if (mergeIdenticalPatterns)
                 {
                     foreach (var songId in songIds)
-                    {
-                        var song = app.Project.GetSong(songId);
-                        song.MergeIdenticalPatterns();
-                    }
+                        app.Project.GetSong(songId).MergeIdenticalPatterns();
                 }
 
                 if (deleteEmptyPatterns)
                 {
                     foreach (var songId in songIds)
-                    {
-                        var song = app.Project.GetSong(songId);
-                        song.DeleteEmptyPatterns();
-                    }
+                        app.Project.GetSong(songId).DeleteEmptyPatterns();
+                }
+
+                if (reduceNoteLengths)
+                {
+                    foreach (var songId in songIds)
+                        app.Project.GetSong(songId).SetNoteDurationToMaximumLength();
                 }
 
                 app.UndoRedoManager.EndTransaction();

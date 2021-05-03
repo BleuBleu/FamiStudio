@@ -19,10 +19,10 @@ Note refactor
 / Note : Run unit test for player.
 / Export format, fix all of them. TEST!
 	- Create FamiTracker unit tests.
-- Cleanup : Truncate notes to their maximum length. 
-- End of song looping behavior?
-- Tooltips.
-- LOW PRIO... When resizing, move the release if its at the end?
+- POLISH : Tooltips.
+
+- LOW PRIO : When resizing, move the release if its at the end?
+- LOW PRIO : End of song looping behavior?
 
 FamiStudio 3.0.0 
 ================ 

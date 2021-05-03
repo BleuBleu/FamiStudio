@@ -836,6 +836,31 @@ namespace FamiStudio
                 patternInstances[i] = null;
         }
 
+        public void SetNoteDurationToMaximumLength()
+        {
+            var maxNoteLengths = new Dictionary<Note, int>();
+
+            for (var it = GetSparseNoteIterator(Song.StartLocation, Song.EndLocation); !it.Done; it.Next())
+            {
+                if (it.Note.IsMusical)
+                {
+                    var duration = Math.Min(it.Note.Duration, it.DistanceToNextCut);
+
+                    if (maxNoteLengths.TryGetValue(it.Note, out var maxDuration))
+                        maxNoteLengths[it.Note] = Math.Max(maxDuration, duration);
+                    else
+                        maxNoteLengths[it.Note] = duration;
+                }
+            }
+
+            foreach (var kv in maxNoteLengths)
+            {
+                kv.Key.Duration = kv.Value;
+            }
+
+            InvalidateCumulativePatternCache();
+        }
+
         public static int ChannelTypeToIndex(int type)
         {
             if (type < ChannelType.ExpansionAudioStart)
@@ -902,7 +927,7 @@ namespace FamiStudio
         }
 #endif
 
-            public void MergeIdenticalPatterns()
+        public void MergeIdenticalPatterns()
         {
             var patternCrcMap = new Dictionary<uint, Pattern>();
 
