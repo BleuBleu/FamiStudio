@@ -1107,12 +1107,12 @@ namespace FamiStudio
                     SeekSong(0);
                 }
             }
-            if (!recordingMode && e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D9)
+            if (!recordingMode && e.KeyCode >= Keys.F1 && e.KeyCode <= Keys.F12)
             {
                 if (ctrl)
-                    GhostChannelMask ^= (1 << (int)(e.KeyCode - Keys.D1));
+                    GhostChannelMask ^= (1 << (int)(e.KeyCode - Keys.F1));
                 else
-                    Sequencer.SelectedChannel = (int)(e.KeyCode - Keys.D1);
+                    Sequencer.SelectedChannel = (int)(e.KeyCode - Keys.F1);
             }
             else if ((ctrl && e.KeyCode == Keys.Y) || (ctrl && shift && e.KeyCode == Keys.Z))
             {
