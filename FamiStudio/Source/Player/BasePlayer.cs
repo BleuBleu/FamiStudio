@@ -38,8 +38,7 @@ namespace FamiStudio
         protected LoopMode loopMode = LoopMode.Song;
         protected int channelMask = 0xffff;
         protected int playPosition = 0;
-        protected int playPattern = 0;
-        protected int playNote = 0;
+        protected NoteLocation playLocation = new NoteLocation(0, 0);
 
         // Only used by FamiTracker tempo.
         protected int famitrackerTempoCounter = 0;
@@ -132,8 +131,8 @@ namespace FamiStudio
         {
             if (!famitrackerTempo)
             {
-                var newGroove = song.GetPatternGroove(playPattern);
-                var newGroovePadMode = song.GetPatternGroovePaddingMode(playPattern);
+                var newGroove = song.GetPatternGroove(playLocation.PatternIndex);
+                var newGroovePadMode = song.GetPatternGroovePaddingMode(playLocation.PatternIndex);
 
                 FamiStudioTempoUtils.ValidateGroove(newGroove);
 
@@ -183,7 +182,7 @@ namespace FamiStudio
         {
             foreach (var channel in channelStates)
             {
-                channel.Advance(song, playPattern, playNote, ref famitrackerSpeed);
+                channel.Advance(song, playLocation, ref famitrackerSpeed);
             }
         }
 
@@ -210,8 +209,7 @@ namespace FamiStudio
             famitrackerSpeed = song.FamitrackerSpeed;
             palPlayback = pal;
             playPosition = startNote;
-            playPattern = 0;
-            playNote = 0;
+            playLocation = new NoteLocation(0, 0);
             frameNumber = 0;
             famitrackerTempoCounter = 0;
             channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback);
@@ -231,7 +229,7 @@ namespace FamiStudio
                 UpdateChannels();
                 UpdateTempo();
 
-                while (song.GetPatternStartNote(playPattern) + playNote < startNote)
+                while (playLocation.ToAbsoluteNoteIndex(song) < startNote)
                 {
                     if (!PlaySongFrameInternal(true))
                         break;
@@ -248,7 +246,7 @@ namespace FamiStudio
 
             EndFrame();
 
-            playPosition = song.GetPatternStartNote(playPattern) + playNote;
+            playPosition = playLocation.ToAbsoluteNoteIndex(song);
 
             return true;
         }
@@ -297,15 +295,15 @@ namespace FamiStudio
 #if DEBUG
                 if (i > 0)
                 {
-                    var noteLength = song.GetPatternNoteLength(playPattern);
-                    if ((playNote % noteLength) == 0 && noteLength != 1)
+                    var noteLength = song.GetPatternNoteLength(playLocation.PatternIndex);
+                    if ((playLocation.NoteIndex % noteLength) == 0 && noteLength != 1)
                         Debug.WriteLine("*********** INVALID SKIPPED NOTE!");
                 }
 #endif
             }
 
             if (!seeking)
-                playPosition = song.GetPatternStartNote(playPattern) + playNote;
+                playPosition = playLocation.ToAbsoluteNoteIndex(song);
 
             return true;
         }
@@ -326,18 +324,18 @@ namespace FamiStudio
             bool advancedPattern = false;
             bool forceResetTempo = false;
 
-            if (++playNote >= song.GetPatternLength(playPattern))
+            if (++playLocation.NoteIndex >= song.GetPatternLength(playLocation.PatternIndex))
             {
-                playNote = 0;
+                playLocation.NoteIndex = 0;
                 if (loopMode != LoopMode.Pattern)
                 {
-                    playPattern++;
+                    playLocation.PatternIndex++;
                     advancedPattern = true;
-                    forceResetTempo = playPattern == song.LoopPoint;
+                    forceResetTempo = playLocation.PatternIndex == song.LoopPoint;
                 }
             }
 
-            if (playPattern >= songLength)
+            if (playLocation.PatternIndex >= songLength)
             {
                 loopCount++;
 
@@ -350,8 +348,8 @@ namespace FamiStudio
                 {
                     if (song.LoopPoint >= 0)
                     {
-                        playPattern = song.LoopPoint;
-                        playNote = 0;
+                        playLocation.PatternIndex = song.LoopPoint;
+                        playLocation.NoteIndex = 0;
                         advancedPattern = true;
                         forceResetTempo = true;
                     }
@@ -362,8 +360,8 @@ namespace FamiStudio
                 }
                 else if (loopMode == LoopMode.Song)
                 {
-                    playPattern = Math.Max(0, song.LoopPoint);
-                    playNote = 0;
+                    playLocation.PatternIndex = Math.Max(0, song.LoopPoint);
+                    playLocation.NoteIndex = 0;
                     advancedPattern = true;
                     forceResetTempo = true;
                 }

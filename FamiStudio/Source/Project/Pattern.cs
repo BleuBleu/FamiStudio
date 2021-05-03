@@ -10,22 +10,12 @@ namespace FamiStudio
     {
         public const int MaxLength = 2048;
 
-        private class LastValidNoteData
-        {
-            public bool released = false;
-            public int time = -1;
-            public int effectMask = 0;
-            public int[] effectValues = new int[Note.EffectCount];
-        }
-
         private int id;
         private string name;
         private Song song;
         private int channelType;
         private Color color;
         private SortedList<int, Note> notes = new SortedList<int, Note>();
-        private int firstValidNoteTime = int.MinValue;
-        private SortedList<int, LastValidNoteData> lastValidNoteCache = new SortedList<int, LastValidNoteData>();
 
         public int Id => id;
         public int ChannelType => channelType;
@@ -101,82 +91,6 @@ namespace FamiStudio
             }
         }
 
-        public unsafe void ClearLastValidNoteCache()
-        {
-            lastValidNoteCache.Clear();
-            firstValidNoteTime = int.MinValue;
-        }
-
-        private int GetCachedFirstValidNoteTime()
-        {
-            if (firstValidNoteTime == int.MinValue)
-            {
-                firstValidNoteTime = -1;
-
-                foreach (var kv in notes)
-                {
-                    var note = kv.Value;
-                    if (note != null && (note.IsValid || note.HasCutDelay) && !note.IsRelease)
-                    {
-                        firstValidNoteTime = kv.Key;
-                        break;
-                    }
-                }
-            }
-
-            return firstValidNoteTime;
-        }
-
-        private LastValidNoteData GetCachedLastValidNoteData(int endTime)
-        {
-            if (lastValidNoteCache.TryGetValue(endTime, out var lastValidData))
-                return lastValidData;
-
-            lastValidData = new LastValidNoteData();
-
-            foreach (var kv in notes)
-            {
-                var i    = kv.Key;
-                var note = kv.Value;
-
-                if (i > endTime)
-                    break;
-
-                if (note.IsRelease)
-                {
-                    lastValidData.released = true;
-                }
-                else
-                {
-                    if (note.IsStop)
-                    {
-                        lastValidData.time = -1;
-                    }
-                    if (note.IsValid)
-                    {
-                        lastValidData.time = i;
-                    }
-                }
-
-                if (note.IsMusical && note.HasAttack)
-                {
-                    lastValidData.released = false;
-                }
-
-                for (int j = 0; j < Note.EffectCount; j++)
-                {
-                    if (note.HasValidEffectValue(j))
-                    {
-                        lastValidData.effectMask |= (1 << j);
-                        lastValidData.effectValues[j] = note.GetEffectValue(j);
-                    }
-                }
-            }
-
-            lastValidNoteCache[endTime] = lastValidData;
-            return lastValidData;
-        }
-
         public bool IsEmpty
         {
             get
@@ -189,54 +103,6 @@ namespace FamiStudio
 
                 return true;
             }
-        }
-
-        public int FirstValidNoteTime
-        {
-            get
-            {
-                return GetCachedFirstValidNoteTime();
-            }
-        }
-
-        public Note FirstValidNote
-        {
-            get
-            {
-                Debug.Assert(GetCachedFirstValidNoteTime() >= 0);
-                return notes[GetCachedFirstValidNoteTime()];
-            }
-        }
-
-        public int GetLastValidNoteTimeAt(int time)
-        {
-            var lastData = GetCachedLastValidNoteData(time);
-            return lastData.time >= 0? lastData.time : -1;
-        }
-
-        public Note GetLastValidNoteAt(int time)
-        {
-            var lastData = GetCachedLastValidNoteData(time);
-            return notes[lastData.time];
-        }
-
-        public bool GetLastValidNoteReleasedAt(int time)
-        {
-            var lastData = GetCachedLastValidNoteData(time);
-            return lastData.released;
-        }
-
-        public bool HasLastEffectValueAt(int time, int effect)
-        {
-            var lastData = GetCachedLastValidNoteData(time);
-            return (lastData.effectMask & (1 << effect)) != 0;
-        }
-
-        public int GetLastEffectValueAt(int time, int effect)
-        {
-            Debug.Assert(HasLastEffectValueAt(time, effect));
-            var lastData = GetCachedLastValidNoteData(time);
-            return lastData.effectValues[effect];
         }
 
         public void ClearNotesPastMaxInstanceLength()
@@ -304,7 +170,6 @@ namespace FamiStudio
             foreach (var kv in notes)
                 pattern.Notes[kv.Key] = kv.Value.Clone();
 
-            ClearLastValidNoteCache();
             return pattern;
         }
 
@@ -337,9 +202,17 @@ namespace FamiStudio
                     }
                 }
             }
+
+            InvalidateCumulativeCache();
         }
 
-        public void RemoveEmptyNotes(bool trim = true)
+        public void DeleteAllNotes()
+        {
+            notes.Clear();
+            InvalidateCumulativeCache();
+        }
+
+        public void DeleteEmptyNotes(bool trim = true, bool deleteUseless = false)
         {
             var keys = notes.Keys;
             var vals = notes.Values;
@@ -347,7 +220,7 @@ namespace FamiStudio
             for (int i = vals.Count - 1; i >= 0; i--)
             {
                 var note = vals[i];
-                if (note == null || note.IsEmpty)
+                if (note == null || note.IsEmpty || note.IsUseless && deleteUseless)
                     notes.Remove(keys[i]);
             }
 
@@ -382,12 +255,20 @@ namespace FamiStudio
                 if (list[lo] > value) lo--;
             }
 
-            return Utils.Clamp(lo, 0, list.Count - 1);
+            if (lo >= 0 && lo < list.Count)
+                return lo;
+
+            return -1;
         }
 
-        public NoteIterator GetNoteIterator(int startIdx, int endIdx, bool reverse = false)
+        public void InvalidateCumulativeCache()
         {
-            return new NoteIterator(this, startIdx, endIdx, reverse);
+            Channel.InvalidateCumulativePatternCache(this);
+        }
+
+        public DensePatternNoteIterator GetDenseNoteIterator(int startIdx, int endIdx, bool reverse = false)
+        {
+            return new DensePatternNoteIterator(this, startIdx, endIdx, reverse);
         }
 
 #if DEBUG
@@ -407,10 +288,18 @@ namespace FamiStudio
                 var time = kv.Key;
                 var note = kv.Value;
 
+                Debug.Assert(time < GetMaxInstanceLength());
                 Debug.Assert(time >= 0);
                 Debug.Assert(time < MaxLength);
                 Debug.Assert(note != null);
                 Debug.Assert(!note.IsEmpty);
+
+                // Not used since FamiStudio 3.0.0
+                Debug.Assert(!note.IsRelease);
+                Debug.Assert(!note.IsUseless);
+
+                Debug.Assert(note.Release == 0 || note.Release > 0 && note.Release < note.Duration);
+                Debug.Assert((note.IsMusical && note.Duration > 0) || (note.IsStop && note.Duration == 1) || (!note.IsMusicalOrStop && note.Duration == 0));
 
                 var inst = note.Instrument;
                 Debug.Assert(inst == null || song.Project.InstrumentExists(inst));
@@ -455,7 +344,7 @@ namespace FamiStudio
                     notes = new SortedList<int, Note>();
 
                 if (buffer.IsWriting)
-                    RemoveEmptyNotes(false);
+                    DeleteEmptyNotes(false);
                 else
                     notes = new SortedList<int, Note>();
 
@@ -496,7 +385,10 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
-                ClearLastValidNoteCache();
+                if (!buffer.IsForUndoRedo)
+                    DeleteEmptyNotes(true, true);
+
+                InvalidateCumulativeCache();
 
                 // This can happen when pasting from an expansion to another. We wont find the channel.
                 if (buffer.Project.IsChannelActive(channelType))
@@ -505,7 +397,7 @@ namespace FamiStudio
         }
     }
 
-    public class NoteIterator
+    public class DensePatternNoteIterator
     {
         private bool reverse;
         private int listIdx;
@@ -513,7 +405,7 @@ namespace FamiStudio
         private int noteIdx1;
         private Pattern pattern;
 
-        public NoteIterator(Pattern p, int i0, int i1, bool rev)
+        public DensePatternNoteIterator(Pattern p, int i0, int i1, bool rev)
         {
             Debug.Assert(i0 <= i1);
 

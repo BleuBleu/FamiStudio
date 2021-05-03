@@ -417,21 +417,21 @@ namespace FamiStudio
             return 0;
         }
 
-        public static Color Darken(Color color)
+        public static Color Darken(Color color, int amount = 50)
         {
             return Color.FromArgb(
-                    Math.Max(0, color.R - 50),
-                    Math.Max(0, color.G - 50),
-                    Math.Max(0, color.B - 50)
+                    Math.Max(0, color.R - amount),
+                    Math.Max(0, color.G - amount),
+                    Math.Max(0, color.B - amount)
                 );
         }
 
-        public static Color Lighten(Color color)
+        public static Color Lighten(Color color, int amount = 50)
         {
             return Color.FromArgb(
-                    Math.Min(255, color.R + 50),
-                    Math.Min(255, color.G + 50),
-                    Math.Min(255, color.B + 50)
+                    Math.Min(255, color.R + amount),
+                    Math.Min(255, color.G + amount),
+                    Math.Min(255, color.B + amount)
                 );
         }
 

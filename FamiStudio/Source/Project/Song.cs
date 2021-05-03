@@ -48,6 +48,9 @@ namespace FamiStudio
         public int FamitrackerTempo { get => famitrackerTempo; set => famitrackerTempo = value; }
         public int FamitrackerSpeed { get => famitrackerSpeed; set => famitrackerSpeed = value; }
 
+        public NoteLocation StartLocation => new NoteLocation(0, 0);
+        public NoteLocation EndLocation   => new NoteLocation(songLength, 0);
+
         public Song()
         {
             // For serialization.
@@ -148,6 +151,7 @@ namespace FamiStudio
                 loopPoint = 0;
 
             UpdatePatternStartNotes();
+            InvalidateCumulativePatternCache();
         }
 
         public void SetDefaultPatternLength(int newLength)
@@ -229,6 +233,7 @@ namespace FamiStudio
         public void ClearPatternCustomSettings(int patternIdx)
         {
             patternCustomSettings[patternIdx].Clear();
+            InvalidateCumulativePatternCache(patternIdx);
             UpdatePatternStartNotes();
         }
 
@@ -262,6 +267,7 @@ namespace FamiStudio
                 patternCustomSettings[patternIdx].groovePaddingMode = groovePaddingMode;
             }
 
+            InvalidateCumulativePatternCache(patternIdx);
             UpdatePatternStartNotes();
         }
 
@@ -304,8 +310,9 @@ namespace FamiStudio
             var settings = patternCustomSettings[patternIdx];
             return settings.useCustomSettings ? settings.groovePaddingMode : groovePaddingMode;
         }
-
-        public int GetPatternStartNote(int patternIdx, int note = 0)
+        
+        // NOTETODO : Migrate to note location.
+        public int GetPatternStartAbsoluteNoteIndex(int patternIdx, int note = 0)
         {
             return patternStartNote[patternIdx] + note;
         }
@@ -381,7 +388,7 @@ namespace FamiStudio
 
             var oldPatternLength = GetPatternLength(p);
             var oldNoteLength    = GetPatternNoteLength(p);
-            var ratio = (float)(oldNoteLength - 1) / (newNoteLength - 1);
+            var ratio = (float)newNoteLength / oldNoteLength;
 
             if (ratio == 0.0f)
                 ratio = 1.0f;
@@ -398,7 +405,7 @@ namespace FamiStudio
                 foreach (var kv in pattern.Notes)
                     oldNotes[kv.Key] = kv.Value.Clone();
 
-                pattern.Notes.Clear();
+                pattern.DeleteAllNotes();
 
                 // Resize the pattern while applying some kind of priority in case we
                 // 2 notes append to map to the same note (when shortening notes). 
@@ -415,7 +422,7 @@ namespace FamiStudio
                     for (int j = 0; j < oldNoteLength; j++)
                     {
                         var oldIdx = i * oldNoteLength + j;
-                        var newIdx = i * newNoteLength + (int)Math.Round(j / ratio);
+                        var newIdx = i * newNoteLength + (int)Math.Floor(j * ratio);
 
                         oldNotes.TryGetValue(oldIdx, out var oldNote);
                         pattern.Notes.TryGetValue(newIdx, out var newNote);
@@ -427,11 +434,19 @@ namespace FamiStudio
                         int newPriority = GetNoteResizePriority(newNote);
 
                         if (oldPriority < newPriority)
+                        {
+                            if (oldNote.IsMusical)
+                            {
+                                var release = oldNote.Release;
+                                oldNote.Duration = (int)Math.Floor(oldNote.Duration * ratio);
+                                if (release > 0)
+                                    oldNote.Release = (int)Math.Floor(release * ratio);
+                            }
+
                             pattern.SetNoteAt(newIdx, oldNote);
+                        }
                     }
                 }
-
-                pattern.ClearLastValidNoteCache();
 
                 if (processedPatterns != null)
                     processedPatterns.Add(pattern);
@@ -599,13 +614,13 @@ namespace FamiStudio
 
                             // Converts old Jump effects to loop points.
                             // The first Jump effect will give us our loop point.
-                            if (loopPoint == 0 && note.FxJump != 0xff)
+                            if (loopPoint == 0 && note.Jump != 0xff)
                             {
-                                SetLoopPoint(note.FxJump);
+                                SetLoopPoint(note.Jump);
                             }
 
                             // Converts old Skip effects to custom pattern instances lengths.
-                            if (note.FxSkip != 0xff)
+                            if (note.Skip != 0xff)
                             {
                                 SetPatternCustomSettings(i, kv.Key + 1, BeatLength);
                             }
@@ -615,6 +630,38 @@ namespace FamiStudio
             }
         }
 
+        public void ConvertToCompoundNotes()
+        {
+            foreach (var channel in channels)
+                channel.ConvertToCompoundNotes();
+            UpdatePatternStartNotes();
+        }
+
+        public void ConvertToSimpleNotes()
+        {
+            foreach (var channel in channels)
+                channel.ConvertToSimpleNotes();
+            UpdatePatternStartNotes();
+        }
+
+        public NoteLocation AbsoluteNoteIndexToNoteLocation(int absoluteNoteIdx)
+        {
+            // TODO: Binary search
+            for (int i = 0; i < songLength; i++)
+            {
+                if (absoluteNoteIdx < patternStartNote[i + 1])
+                    return new NoteLocation(i, absoluteNoteIdx - patternStartNote[i]);
+            }
+
+            return new NoteLocation(songLength, 0);
+        }
+
+        public int NoteLocationToAbsoluteNoteIndex(NoteLocation location)
+        {
+            return patternStartNote[location.PatternIndex] + location.NoteIndex;
+        }
+
+        // NOTETODO : Migrate all to AbsoluteNoteLocationToNoteLocation().
         public int FindPatternInstanceIndex(int idx, out int noteIdx)
         {
             noteIdx = -1;
@@ -663,8 +710,6 @@ namespace FamiStudio
                         var note = kv.Value;
                         pattern.Notes[kv.Key * newNoteLength] = note;
                     }
-
-                    pattern.ClearLastValidNoteCache();
                 }
             }
 
@@ -688,6 +733,13 @@ namespace FamiStudio
             RemoveUnsupportedEffects();
             UpdatePatternStartNotes();
             DeleteNotesPastMaxInstanceLength();
+            InvalidateCumulativePatternCache();
+        }
+
+        public void InvalidateCumulativePatternCache(int patternIdx = 0)
+        {
+            foreach (var channel in channels)
+                channel.InvalidateCumulativePatternCache(patternIdx);
         }
 
         public void RemoveUnsupportedEffects()
@@ -795,47 +847,46 @@ namespace FamiStudio
                 beatLength    = Utils.Sum(groove);
 
                 UpdatePatternStartNotes();
+                InvalidateCumulativePatternCache();
             }
         }
 
-        public bool ApplySpeedEffectAt(int patternIdx, int noteIdx, ref int speed)
+        // NOTETODO : Migrate all to location.
+        public bool ApplySpeedEffectAt(int p, int n, ref int speed)
+        {
+            return ApplySpeedEffectAt(new NoteLocation(p, n), ref speed);
+        }
+
+        public bool ApplySpeedEffectAt(NoteLocation location, ref int speed)
         {
             if (UsesFamiStudioTempo)
                 return false;
 
             foreach (var channel in channels)
             {
-                var pattern = channel.PatternInstances[patternIdx];
-                if (pattern != null)
+                var note = channel.GetNoteAt(location);
+                if (note != null && note.HasSpeed)
                 {
-                    if (pattern.Notes.TryGetValue(noteIdx, out var note) && note != null && note.HasSpeed)
-                    {
-                        speed = note.Speed;
-                        return true;
-                    }
+                    speed = note.Speed;
+                    return true;
                 }
             }
 
             return false;
         }
 
-        public int CountNotesBetween(int p0, int n0, int p1, int n1)
+        public int CountNotesBetween(NoteLocation start, NoteLocation end)
         {
-            int noteCount = 0;
-
-            while (p0 != p1)
-            {
-                noteCount += GetPatternLength(p0) - n0;
-                p0++;
-                n0 = 0;
-            }
-
-            noteCount += (n1 - n0);
-
-            return noteCount;
+            return NoteLocationToAbsoluteNoteIndex(end) - NoteLocationToAbsoluteNoteIndex(start);
         }
 
+        // NOTETODO : Migrate all to locations.
         public float CountFramesBetween(int p0, int n0, int p1, int n1, int currentSpeed, bool pal)
+        {
+            return CountFramesBetween(new NoteLocation(p0, n0), new NoteLocation(p1, n1), currentSpeed, pal);
+        }
+
+        public float CountFramesBetween(NoteLocation l0, NoteLocation l1, int currentSpeed, bool pal)
         {
             // This is simply an approximation that is used to compute slide notes.
             // It doesn't take into account the real state of the tempo accumulator.
@@ -843,16 +894,16 @@ namespace FamiStudio
             {
                 float frameCount = 0;
 
-                while ((p0 != p1 || n0 != n1) && p0 < songLength)
+                while (l0 != l1 && l0.PatternIndex < songLength)
                 {
-                    ApplySpeedEffectAt(p0, n0, ref currentSpeed);
+                    ApplySpeedEffectAt(l0, ref currentSpeed);
                     float tempoRatio = (pal ? NativeTempoPAL : NativeTempoNTSC) / (float)famitrackerTempo;
                     frameCount += currentSpeed * tempoRatio;
 
-                    if (++n0 >= GetPatternLength(p0))
+                    if (++l0.NoteIndex >= GetPatternLength(l0.PatternIndex))
                     {
-                        n0 = 0;
-                        p0++;
+                        l0.NoteIndex = 0;
+                        l0.PatternIndex++;
                     }
                 }
 
@@ -862,34 +913,34 @@ namespace FamiStudio
             {
                 var frameCount = 0;
 
-                if (p0 == p1)
+                if (l0.PatternIndex == l1.PatternIndex)
                 {
                     frameCount =
-                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n1, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0)) -
-                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n0, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(l1.NoteIndex, GetPatternGroove(l1.PatternIndex), GetPatternGroovePaddingMode(l1.PatternIndex)) -
+                        FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(l0.NoteIndex, GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex));
                 }
                 else
                 {
                     // End of first pattern.
-                    if (n0 != 0)
+                    if (l0.NoteIndex != 0)
                     {
                         frameCount =
-                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(p0), GetPatternGroove(p0), GetPatternGroovePaddingMode(p0)) -
-                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n0, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
-                        p0++;
+                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(l0.PatternIndex), GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex)) -
+                            FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(l0.NoteIndex, GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex));
+                        l0.PatternIndex++;
                     }
 
                     // Complete patterns in between.
-                    while (p0 != p1)
+                    while (l0.PatternIndex != l1.PatternIndex)
                     {
-                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(p0), GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
-                        p0++;
+                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(GetPatternLength(l0.PatternIndex), GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex));
+                        l0.PatternIndex++;
                     }
 
                     // First bit of last pattern.
-                    if (n1 != 0)
+                    if (l1.NoteIndex != 0)
                     {
-                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(n1, GetPatternGroove(p0), GetPatternGroovePaddingMode(p0));
+                        frameCount += FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(l1.NoteIndex, GetPatternGroove(l0.PatternIndex), GetPatternGroovePaddingMode(l0.PatternIndex));
                     }
                 }
 
@@ -897,43 +948,98 @@ namespace FamiStudio
             }
         }
 
-        public bool AdvanceNumberOfNotes(int noteCount, ref int p, ref int n)
+        public bool AdvanceNumberOfNotes(ref NoteLocation location, int noteCount)
         {
-            float count = 0;
-
             if (noteCount > 0)
             {
-                while (count < noteCount && p < songLength)
+                location.NoteIndex += noteCount;
+
+                while (true)
                 {
-                    count++;
-                    if (++n >= GetPatternLength(p))
+                    var patternLen = GetPatternLength(location.PatternIndex);
+
+                    if (location.NoteIndex < patternLen)
+                        return true;
+
+                    location.NoteIndex -= patternLen;
+
+                    if (++location.PatternIndex >= songLength)
                     {
-                        n = 0;
-                        p++;
+                        location.NoteIndex = 0;
+                        return false;
                     }
                 }
-
-                return p < songLength;
             }
             else if (noteCount < 0)
             {
-                noteCount = -noteCount;
-                while (count < noteCount && p >= 0)
-                {
-                    count++;
-                    if (--n < 0)
-                    {
-                        p--;
-                        n = GetPatternLength(p) - 1;
-                    }
-                }
+                location.NoteIndex += noteCount;
 
-                return p >= 0;
+                while (true)
+                {
+                    if (location.NoteIndex >= 0)
+                        return true;
+
+                    if (--location.PatternIndex < 0)
+                    {
+                        location.PatternIndex = 0;
+                        location.NoteIndex = 0;
+                        return false;
+                    }
+
+                    location.NoteIndex += GetPatternLength(location.PatternIndex);
+                }
             }
 
             return true;
         }
 
+        // NOTETODO : Migrate all to NoteLocation overload.
+        public bool AdvanceNumberOfNotes(int noteCount, ref int p, ref int n)
+        {
+            if (noteCount > 0)
+            {
+                n += noteCount;
+
+                while (true)
+                {
+                    var patternLen = GetPatternLength(p);
+
+                    if (n < patternLen)
+                        return true;
+
+                    n -= patternLen;
+
+                    if (++p >= songLength)
+                    {
+                        n = 0;
+                        return false;
+                    }
+                }
+            }
+            else if (noteCount < 0)
+            {
+                n += noteCount;
+
+                while (true)
+                {
+                    if (n >= 0)
+                        return true;
+
+                    if (--p < 0)
+                    {
+                        p = 0;
+                        n = 0;
+                        return false;
+                    }
+
+                    n += GetPatternLength(p);
+                }
+            }
+
+            return true;
+        }
+
+        // NOTETODO : Migrate to location.
         public void AdvanceNumberOfFrames(int frameCount, int initialCount, int currentSpeed, bool pal, ref int p, ref int n)
         {
             Debug.Assert(UsesFamiTrackerTempo);
@@ -1033,8 +1139,14 @@ namespace FamiStudio
             foreach (var channel in channels)
                 channel.SerializeState(buffer);
 
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
+                DeleteNotesPastMaxInstanceLength();
+
             if (buffer.Version < 5)
                 ConvertJumpSkipEffects();
+
+            if (buffer.Version < 10)
+                ConvertToCompoundNotes();
 
             // Before 2.3.0, songs had an invalid color by default.
             if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
@@ -1076,6 +1188,121 @@ namespace FamiStudio
 
     }
 
+    public struct NoteLocation
+    {
+        public int PatternIndex;
+        public int NoteIndex;
+
+        public bool IsValid => PatternIndex >= 0 && NoteIndex >= 0;
+
+        public NoteLocation(int p, int n)
+        {
+            PatternIndex = p;
+            NoteIndex = n;
+        }
+
+        public bool IsInSong(Song s)
+        {
+            return PatternIndex < s.Length;
+        }
+
+        public int ToAbsoluteNoteIndex(Song s)
+        {
+            return s.NoteLocationToAbsoluteNoteIndex(this);
+        }
+
+        public static NoteLocation FromAbsoluteNoteIndex(Song s, int absoluteNoteIndex)
+        {
+            return s.AbsoluteNoteIndexToNoteLocation(absoluteNoteIndex);
+        }
+
+        public NoteLocation Advance(Song s, int num)
+        {
+            NoteLocation loc = this;
+            s.AdvanceNumberOfNotes(ref loc, num);
+            return loc;
+        }
+
+        public int DistanceTo(Song s, NoteLocation other)
+        {
+            return s.CountNotesBetween(this, other);
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = (NoteLocation)obj;
+            return PatternIndex == other.PatternIndex && NoteIndex == other.PatternIndex;
+        }
+
+        public override int GetHashCode()
+        {
+            return Utils.HashCombine(PatternIndex, NoteIndex);
+        }
+
+        public override string ToString()
+        {
+            return $"{PatternIndex}:{NoteIndex}";
+        }
+
+        public static bool operator ==(NoteLocation n0, NoteLocation n1)
+        {
+            return n0.PatternIndex == n1.PatternIndex && n0.NoteIndex == n1.NoteIndex;
+        }
+
+        public static bool operator !=(NoteLocation n0, NoteLocation n1)
+        {
+            return n0.PatternIndex != n1.PatternIndex || n0.NoteIndex != n1.NoteIndex;
+        }
+
+        public static bool operator <(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex < n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex < n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator <=(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex < n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex <= n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator >(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex > n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex > n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator >=(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex > n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex >= n1.NoteIndex;
+            return false;
+        }
+
+        public static NoteLocation Min(NoteLocation n0, NoteLocation n1)
+        {
+            return n0 < n1 ? n0 : n1;
+        }
+
+        public static NoteLocation Max(NoteLocation n0, NoteLocation n1)
+        {
+            return n0 > n1 ? n0 : n1;
+        }
+
+        public static readonly NoteLocation Invalid = new NoteLocation(-1, -1);
+    }
+    
     public static class GroovePaddingType
     {
         public const int Beginning = 0;

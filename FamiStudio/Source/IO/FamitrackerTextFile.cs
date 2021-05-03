@@ -666,6 +666,8 @@ namespace FamiStudio
                 project.ConvertToFamiTrackerTempo(false);
             }
 
+            project.ConvertToSimpleNotes();
+
             ConvertPitchEnvelopes(project);
             var envelopes = MergeIdenticalEnvelopes(project);
 
@@ -868,7 +870,7 @@ namespace FamiStudio
 
                         var patternLines = new List<string>();
 
-                        for (var it = pattern.GetNoteIterator(0, song.PatternLength); !it.Done; it.Next())
+                        for (var it = pattern.GetDenseNoteIterator(0, song.PatternLength); !it.Done; it.Next())
                         {
                             var time = it.CurrentTime;
                             var note = it.CurrentNote;
@@ -908,7 +910,7 @@ namespace FamiStudio
                                 var tempNote = note.Clone();
                                 tempNote.Value = note.Value;
                                 tempNote.SlideNoteTarget = slideTarget;
-                                channel.ComputeSlideNoteParams(tempNote, p, time, famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat); 
+                                channel.ComputeSlideNoteParams(tempNote, new NoteLocation(p, time), famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat); // NOTETODO : Convert to location.
 
                                 if (channel.IsN163WaveChannel)
                                 {

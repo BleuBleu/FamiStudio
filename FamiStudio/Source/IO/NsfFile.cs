@@ -938,10 +938,11 @@ namespace FamiStudio
                 song.ChangeFamiStudioTempoGroove(new[] { 1 }, false);
 
             song.SetSensibleBeatLength();
+            song.ConvertToCompoundNotes();
             song.DeleteEmptyPatterns();
             song.UpdatePatternStartNotes();
+            song.InvalidateCumulativePatternCache();
             project.DeleteUnusedInstruments();
-            project.UpdateAllLastValidNotesAndVolume();
 
             foreach (var sample in project.Samples)
                 sample.ReverseBits = reverseDpcm;

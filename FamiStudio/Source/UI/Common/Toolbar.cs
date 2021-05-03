@@ -355,7 +355,7 @@ namespace FamiStudio
             redTooltip = false;
         }
 
-        private void ConditionalInvalidate()
+        public void ConditionalInvalidate()
         {
             if (App != null && !App.RealTimeUpdate)
                 Invalidate();

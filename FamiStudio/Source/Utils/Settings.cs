@@ -23,6 +23,11 @@ namespace FamiStudio
         public const int FollowSyncPianoRoll = 1;
         public const int FollowSyncBoth      = 2;
 
+        // Constants for Stop notes.
+        public const int StopNotesFamiTrackerTempo = 0;
+        public const int StopNotesNever  = 1;
+        public const int StopNotesAlways = 2;
+
         // General section.
         public static int Version = SettingsVersion;
         public static bool CheckUpdates = true;
@@ -42,6 +47,7 @@ namespace FamiStudio
         public static bool ShowScrollBars = false;
         public static bool ShowOscilloscope = false;
         public static bool ForceCompactSequencer = false;
+        public static int ShowStopNotes = StopNotesFamiTrackerTempo; // NOTETODO : Add to UI, INI.
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
 #if FAMISTUDIO_WINDOWS

@@ -7,15 +7,31 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Globalization;
 
 namespace FamiStudio
 {
     public class FamistudioTextFile
     {
+        CultureInfo oldCulture;
+
+        private void SetInvariantCulture()
+        {
+            oldCulture = CultureInfo.CurrentCulture;
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+        }
+
+        private void ResetCulture()
+        {
+            CultureInfo.CurrentCulture = oldCulture;
+        }
+
         public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData)
         {
             var project = originalProject.DeepClone();
             project.RemoveAllSongsBut(songIds, deleteUnusedData);
+
+            SetInvariantCulture();
 
             var lines = new List<string>();
 
@@ -182,13 +198,23 @@ namespace FamiStudio
                             {
                                 var noteLine = $"\t\t\t\tNote{GenerateAttribute("Time", kv.Key)}";
 
-                                if (note.IsValid)
+                                if (note.IsMusicalOrStop)
                                 {
                                     noteLine += GenerateAttribute("Value", note.FriendlyName);
-                                    if (note.Instrument != null)
-                                        noteLine += GenerateAttribute("Instrument", note.Instrument.Name);
-                                    if (note.IsArpeggio)
-                                        noteLine += GenerateAttribute("Arpeggio", note.Arpeggio.Name);
+
+                                    if (note.IsMusical)
+                                    {
+                                        noteLine += GenerateAttribute("Duration", note.Duration);
+
+                                        if (note.HasRelease)
+                                            noteLine += GenerateAttribute("Release", note.Release);
+                                        if (note.Instrument != null)
+                                            noteLine += GenerateAttribute("Instrument", note.Instrument.Name);
+                                        if (note.IsArpeggio)
+                                            noteLine += GenerateAttribute("Arpeggio", note.Arpeggio.Name);
+                                        if (note.IsSlideNote)
+                                            noteLine += GenerateAttribute("SlideTarget", Note.GetFriendlyName(note.SlideNoteTarget));
+                                    }
                                 }
 
                                 if (!note.HasAttack)     noteLine += GenerateAttribute("Attack", false);
@@ -201,7 +227,6 @@ namespace FamiStudio
                                 if (note.HasDutyCycle)   noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
                                 if (note.HasNoteDelay)   noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
                                 if (note.HasCutDelay)    noteLine += GenerateAttribute("CutDelay", note.CutDelay);
-                                if (note.IsMusical && note.IsSlideNote) noteLine += GenerateAttribute("SlideTarget", Note.GetFriendlyName(note.SlideNoteTarget));
 
                                 lines.Add(noteLine);
                             }
@@ -220,6 +245,7 @@ namespace FamiStudio
 
             File.WriteAllLines(filename, lines);
 
+            ResetCulture();
             return true;
         }
 
@@ -291,11 +317,8 @@ namespace FamiStudio
                 var song = (Song)null;
                 var channel = (Channel)null;
                 var pattern = (Pattern)null;
-                var version = "0.0.0";
-                var isVersion230OrNewer = false;
-                var isVersion240OrNewer = false;
-                var isVersion300OrNewer = false;
-                var beatLengthAttributeName = "BeatLength";
+
+                SetInvariantCulture();
 
                 foreach (var line in lines)
                 {
@@ -306,18 +329,18 @@ namespace FamiStudio
                         case "Project":
                         {
                             project = new Project();
-                            parameters.TryGetValue("Version", out version);
+                            parameters.TryGetValue("Version", out var version);
                             if (parameters.TryGetValue("Name", out var name)) project.Name = name;
                             if (parameters.TryGetValue("Author", out var author)) project.Author = author;
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
                             if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudio(ExpansionType.GetValueForShortName(expansion));
                             if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = TempoType.GetValueForName(tempoMode);
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
-                            isVersion230OrNewer = string.CompareOrdinal(version, "2.3.0") >= 0;
-                            isVersion240OrNewer = string.CompareOrdinal(version, "2.4.0") >= 0;
-                            isVersion300OrNewer = string.CompareOrdinal(version, "3.0.0") >= 0;
-                            if (!isVersion230OrNewer)
-                                beatLengthAttributeName = "BarLength";
+                            if (!version.StartsWith("3.0"))
+                            {
+                                Log.LogMessage(LogSeverity.Error, "File was created with an incompatible version of FamiStudio. The text format is only compatible with the current version.");
+                                return null;
+                            }
                             break;
                         }
                         case "DPCMSample":
@@ -327,12 +350,6 @@ namespace FamiStudio
                             for (int i = 0; i < data.Length; i++)
                                 data[i] = Convert.ToByte(str.Substring(i * 2, 2), 16);
                             var sample = project.CreateDPCMSampleFromDmcData(parameters["Name"], data);
-                            // Any DPCM processing options are no longer supported in 2.4.0 and newer. We just import/export the processed DMC data.
-                            if (!isVersion240OrNewer && parameters.TryGetValue("ReverseBits", out var reverseBitStr))
-                            {
-                                sample.ReverseBits = bool.Parse(reverseBitStr);
-                                sample.Process();
-                            }
                             break;
                         }
                         case "DPCMMapping":
@@ -419,7 +436,7 @@ namespace FamiStudio
                         {
                             song = project.CreateSong(parameters["Name"]);
                             song.SetLength(int.Parse(parameters["Length"]));
-                            song.SetBeatLength(int.Parse(parameters[beatLengthAttributeName]));
+                            song.SetBeatLength(int.Parse(parameters["BeatLength"]));
                             song.SetLoopPoint(int.Parse(parameters["LoopPoint"]));
 
                             if (song.UsesFamiTrackerTempo)
@@ -432,17 +449,8 @@ namespace FamiStudio
                             {
                                 var noteLength = int.Parse(parameters["NoteLength"]);
 
-                                int[] groove;
-                                int groovePaddingMode = GroovePaddingType.Middle;
-                                if (!isVersion300OrNewer)
-                                { 
-                                    groove = new[] { noteLength };
-                                }
-                                else
-                                { 
-                                    groove = parameters["Groove"].Split('-').Select(Int32.Parse).ToArray();
-                                    groovePaddingMode = GroovePaddingType.GetValueForName(parameters["GroovePaddingMode"]);
-                                }
+                                var groove = parameters["Groove"].Split('-').Select(Int32.Parse).ToArray();
+                                var groovePaddingMode = GroovePaddingType.GetValueForName(parameters["GroovePaddingMode"]);
 
                                 if (!FamiStudioTempoUtils.ValidateGroove(groove) || Utils.Min(groove) != noteLength)
                                 {
@@ -462,7 +470,7 @@ namespace FamiStudio
                             if (project.UsesFamiTrackerTempo)
                             {
                                 var beatLength = song.BeatLength;
-                                if (parameters.TryGetValue(beatLengthAttributeName, out var beatLengthStr))
+                                if (parameters.TryGetValue("BeatLength", out var beatLengthStr))
                                     beatLength = int.Parse(beatLengthStr);
 
                                 song.SetPatternCustomSettings(int.Parse(parameters["Time"]), int.Parse(parameters["Length"]), beatLength);
@@ -471,19 +479,10 @@ namespace FamiStudio
                             {
                                 var patternLength = int.Parse(parameters["Length"]);
                                 var noteLength = int.Parse(parameters["NoteLength"]);
-                                var beatLength = int.Parse(parameters[beatLengthAttributeName]);
+                                var beatLength = int.Parse(parameters["BeatLength"]);
 
-                                int[] groove;
-                                int groovePaddingMode = GroovePaddingType.Middle;
-                                if (!isVersion300OrNewer)
-                                { 
-                                    groove = new[] { noteLength };
-                                }
-                                else
-                                { 
-                                    groove = parameters["Groove"].Split('-').Select(Int32.Parse).ToArray();
-                                    groovePaddingMode = GroovePaddingType.GetValueForName(parameters["GroovePaddingMode"]);
-                                }
+                                var groove = parameters["Groove"].Split('-').Select(Int32.Parse).ToArray();
+                                var groovePaddingMode = GroovePaddingType.GetValueForName(parameters["GroovePaddingMode"]);
 
                                 if (!FamiStudioTempoUtils.ValidateGroove(groove) || Utils.Min(groove) != noteLength)
                                 {
@@ -513,14 +512,21 @@ namespace FamiStudio
 
                             if (parameters.TryGetValue("Value", out var valueStr))
                                 note.Value = (byte)Note.FromFriendlyName(valueStr);
-                            if (parameters.TryGetValue("Instrument", out var instStr) && channel.SupportsInstrument(project.GetInstrument(instStr)))
+                            if (note.IsMusical && parameters.TryGetValue("Duration", out var durationStr))
+                                note.Duration = int.Parse(durationStr);
+                            else if (note.IsStop)
+                                note.Duration = 1;
+                            if (note.IsMusical && parameters.TryGetValue("Release", out var releaseStr))
+                                note.Release = int.Parse(releaseStr);
+                            if (note.IsMusical && parameters.TryGetValue("Instrument", out var instStr) && channel.SupportsInstrument(project.GetInstrument(instStr)))
                                 note.Instrument = project.GetInstrument(instStr);
-                            if (parameters.TryGetValue("Arpeggio", out var arpStr) && channel.SupportsArpeggios)
+                            if (note.IsMusical && parameters.TryGetValue("Arpeggio", out var arpStr) && channel.SupportsArpeggios)
                                 note.Arpeggio = project.GetArpeggio(arpStr);
-                            if (parameters.TryGetValue("SlideTarget", out var slideStr) && channel.SupportsSlideNotes)
+                            if (note.IsMusical && parameters.TryGetValue("SlideTarget", out var slideStr) && channel.SupportsSlideNotes)
                                 note.SlideNoteTarget = (byte)Note.FromFriendlyName(slideStr);
-                            if (parameters.TryGetValue("Attack", out var attackStr))
+                            if (note.IsMusical && parameters.TryGetValue("Attack", out var attackStr))
                                 note.HasAttack = bool.Parse(attackStr);
+
                             if (parameters.TryGetValue("Volume", out var volumeStr) && channel.SupportsEffect(Note.EffectVolume))
                                 note.Volume = byte.Parse(volumeStr);
                             if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr) && channel.SupportsEffect(Note.EffectVibratoSpeed))
@@ -553,7 +559,8 @@ namespace FamiStudio
                     }
                 }
 
-                project.SortEverything(!isVersion300OrNewer);
+                project.SortEverything(false);
+                ResetCulture();
 
                 return project;
             }
@@ -563,6 +570,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
                 Log.LogMessage(LogSeverity.Error, e.Message);
                 Log.LogMessage(LogSeverity.Error, e.StackTrace);
+                ResetCulture();
                 return null;
             }
 #endif

@@ -315,7 +315,7 @@ namespace FamiStudio
 
             if (len < 0)
             {
-                str = null;
+                str = "";
             }
             else
             {

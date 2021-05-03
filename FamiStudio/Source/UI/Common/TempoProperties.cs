@@ -299,9 +299,7 @@ namespace FamiStudio
                     var convertTempo = false;
 
                     if (noteLength != originalNoteLength)
-                    {
                         convertTempo = ShowConvertTempoDialog();
-                    }
 
                     song.ChangeFamiStudioTempoGroove(groove, convertTempo);
                     song.SetBeatLength(beatLength * song.NoteLength);
@@ -310,35 +308,35 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var askedToConvertTempo = false;
-                    var convertTempo = false;
+                    var actualNoteLength    = song.NoteLength;
+                    var actualPatternLength = song.PatternLength;
+                    var actualBeatLength    = song.BeatLength;
+
+                    if (custom)
+                    {
+                        actualNoteLength = noteLength;
+                        actualBeatLength = beatLength * noteLength;
+                        actualPatternLength = patternLength * noteLength;
+                    }
+
+                    var patternsToResize = new List<int>();
+                    for (int i = minPatternIdx; i <= maxPatternIdx; i++)
+                    {
+                        if (actualNoteLength != song.GetPatternNoteLength(patternIdx))
+                            patternsToResize.Add(i);
+                    }
+
+                    if (patternsToResize.Count > 0)
+                    {
+                        if (ShowConvertTempoDialog())
+                        {
+                            foreach (var p in patternsToResize)
+                                song.ResizePatternNotes(p, actualNoteLength);
+                        }
+                    }
 
                     for (int i = minPatternIdx; i <= maxPatternIdx; i++)
                     {
-                        var actualNoteLength    = song.NoteLength;
-                        var actualPatternLength = song.PatternLength;
-                        var actualBeatLength    = song.BeatLength;
-
-                        if (custom)
-                        {
-                            actualNoteLength    = noteLength;
-                            actualBeatLength    = beatLength * noteLength;
-                            actualPatternLength = patternLength * noteLength;
-                        }
-
-                        if (actualNoteLength != song.GetPatternNoteLength(patternIdx))
-                        {
-                            if (!askedToConvertTempo)
-                            {
-                                convertTempo = ShowConvertTempoDialog();
-                                askedToConvertTempo = true;
-                            }
-
-                            // TODO : Move this to Song class.
-                            if (convertTempo)
-                                song.ResizePatternNotes(i, actualNoteLength);
-                        }
-
                         if (custom)
                             song.SetPatternCustomSettings(i, actualPatternLength, actualBeatLength, groove, groovePadMode);
                         else

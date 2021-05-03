@@ -14,7 +14,7 @@ namespace FamiStudio
         private Color color;
 
         // Source data
-        private string sourceFilename;
+        private string sourceFilename = "";
         private IDPCMSampleSourceData sourceData;
 
         // Processed data 

@@ -775,7 +775,7 @@ namespace FamiStudio
 
                     var patternLength = song.GetPatternLength(p); 
 
-                    for (var it = pattern.GetNoteIterator(0, patternLength); !it.Done; )
+                    for (var it = pattern.GetDenseNoteIterator(0, patternLength); !it.Done; )
                     {
                         var time = it.CurrentTime;
                         var note = it.CurrentNote;
@@ -953,8 +953,9 @@ namespace FamiStudio
                                 var noteTablePal  = NesApu.GetNoteTableForChannelType(channel.Type, true,  song.Project.ExpansionNumChannels);
 
                                 var found = true;
-                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
-                                found &= channel.ComputeSlideNoteParams(note, p, time, currentSpeed, noteTablePal,  true,  true, out _, out int stepSizePal,  out _);
+                                var location = new NoteLocation(p, time); // NOTETODO : Switch to location here.
+                                found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
+                                found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTablePal,  true,  true, out _, out int stepSizePal,  out _);
 
                                 if (song.Project.UsesExpansionAudio || machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
@@ -1354,6 +1355,7 @@ namespace FamiStudio
             // Work on a temporary copy.
             project = originalProject.DeepClone();
             project.Filename = originalProject.Filename;
+            project.ConvertToSimpleNotes();
 
             if (kernel == FamiToneKernel.FamiTone2 && project.UsesFamiStudioTempo)
             {

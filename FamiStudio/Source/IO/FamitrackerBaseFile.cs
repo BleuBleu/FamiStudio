@@ -393,7 +393,7 @@ namespace FamiStudio
         {
             var pattern = channel.PatternInstances[patternIdx];
 
-            for (var it = pattern.GetNoteIterator(0, noteIdx, true); !it.Done; it.Next())
+            for (var it = pattern.GetDenseNoteIterator(0, noteIdx, true); !it.Done; it.Next())
             {
                 var note = it.CurrentNote;
                 if (note.IsMusical || note.IsStop)
@@ -405,7 +405,7 @@ namespace FamiStudio
                 pattern = channel.PatternInstances[p];
                 if (pattern != null)
                 {
-                    for (var it = pattern.GetNoteIterator(0, channel.Song.GetPatternLength(p), true); !it.Done; it.Next())
+                    for (var it = pattern.GetDenseNoteIterator(0, channel.Song.GetPatternLength(p), true); !it.Done; it.Next())
                     {
                         var note = it.CurrentNote;
                         if (note.IsMusical || note.IsStop)
@@ -430,7 +430,7 @@ namespace FamiStudio
             var patternLen = channel.Song.GetPatternLength(patternIdx);
             var fxData     = patternFxData[pattern];
 
-            for (var it = pattern.GetNoteIterator(noteIdx + 1, patternLen); !it.Done; it.Next())
+            for (var it = pattern.GetDenseNoteIterator(noteIdx + 1, patternLen); !it.Done; it.Next())
             {
                 var time = it.CurrentTime;
                 var note = it.CurrentNote;
@@ -468,7 +468,7 @@ namespace FamiStudio
                 {
                     fxData = patternFxData[pattern];
 
-                    for (var it = pattern.GetNoteIterator(0, patternLen); !it.Done; it.Next())
+                    for (var it = pattern.GetDenseNoteIterator(0, patternLen); !it.Done; it.Next())
                     {
                         var time = it.CurrentTime;
                         var note = it.CurrentNote;
@@ -545,7 +545,7 @@ namespace FamiStudio
                     var fxData = patternFxData[pattern];
                     var patternLen = s.GetPatternLength(p);
 
-                    for (var it = pattern.GetNoteIterator(0, patternLen); !it.Done; it.Next())
+                    for (var it = pattern.GetDenseNoteIterator(0, patternLen); !it.Done; it.Next())
                     {
                         var n    = it.CurrentTime;
                         var note = it.CurrentNote;
@@ -608,7 +608,7 @@ namespace FamiStudio
 
                     var patternLen = s.GetPatternLength(p);
 
-                    for (var it = pattern.GetNoteIterator(0, patternLen); !it.Done; it.Next())
+                    for (var it = pattern.GetDenseNoteIterator(0, patternLen); !it.Done; it.Next())
                     {
                         var n    = it.CurrentTime;
                         var note = it.CurrentNote;
@@ -860,7 +860,7 @@ namespace FamiStudio
                         var pattern = s.Channels[c].PatternInstances[p];
                         if (pattern != null)
                         {
-                            for (var it = pattern.GetNoteIterator(0, s.GetPatternLength(p)); !it.Done; it.Next())
+                            for (var it = pattern.GetDenseNoteIterator(0, s.GetPatternLength(p)); !it.Done; it.Next())
                             {
                                 if (it.CurrentNote != null && it.CurrentNote.HasNoteDelay && it.CurrentNote.HasSpeed)
                                 {
@@ -925,7 +925,8 @@ namespace FamiStudio
                 s.DeleteEmptyPatterns();
             }
 
-            project.UpdateAllLastValidNotesAndVolume();
+            project.ConvertToCompoundNotes();
+            project.InvalidateCumulativePatternCache();
             project.SortEverything(false);
             project.Validate();
 
