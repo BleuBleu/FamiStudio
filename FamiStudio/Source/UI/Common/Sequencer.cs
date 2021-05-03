@@ -1762,7 +1762,9 @@ namespace FamiStudio
                     {
                         for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                         {
-                            Song.Channels[i].PatternInstances[j].Color = newColor;
+                            var pat = Song.Channels[i].PatternInstances[j];
+                            if (pat != null)
+                                pat.Color = newColor;
                         }
                     }
                     App.UndoRedoManager.EndTransaction();
