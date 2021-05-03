@@ -763,7 +763,7 @@ namespace FamiStudio
         EffectCutDelay    = Note.EffectCutDelayMask    << 16,
 
         // There are all the filter that can interrupt the duration of a note.
-        TruncateDurationMask = Musical | Stop | EffectCutDelay,
+        CutDurationMask = Musical | Stop | EffectCutDelay,
 
         All = -1,
     }

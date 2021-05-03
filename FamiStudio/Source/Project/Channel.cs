@@ -482,7 +482,7 @@ namespace FamiStudio
         public int GetSlideNoteDuration(Note note, NoteLocation location)
         {
             Debug.Assert(note.IsMusical);
-            FindNextNoteForSlide(location, 256, out var nextLocation); // 256 is kind of arbitrary. 
+            FindNextNoteForSlide(location, 256, out var nextLocation, true); // 256 is kind of arbitrary. 
             return Song.CountNotesBetween(location, nextLocation);
         }
 
@@ -525,7 +525,7 @@ namespace FamiStudio
                 pitchDelta = slideShift < 0 ? (pitchDelta << -slideShift) : (pitchDelta >> slideShift);
 
                 // Find the next note to calculate the slope.
-                FindNextNoteForSlide(location, 256, out var nextLocation); // 256 is kind of arbitrary. 
+                FindNextNoteForSlide(location, 256, out var nextLocation, false); // 256 is kind of arbitrary. 
 
                 // Approximate how many frames separates these 2 notes.
                 var frameCount = 0.0f;
@@ -710,7 +710,7 @@ namespace FamiStudio
             maxValidCacheIndex = patternIndex;
         }
 
-        public int GetDistanceToNextNote(NoteLocation location, NoteFilter filter = NoteFilter.TruncateDurationMask)
+        public int GetDistanceToNextNote(NoteLocation location, NoteFilter filter = NoteFilter.CutDurationMask, bool endAfterCutDelay = true)
         {
             var startLocation = location;
 
@@ -726,10 +726,11 @@ namespace FamiStudio
                 {
                     for (; idx < pattern.Notes.Values.Count; idx++)
                     {
-                        if (pattern.Notes.Values[idx].MatchesFilter(filter))
+                        var note = pattern.Notes.Values[idx];
+                        if (note.MatchesFilter(filter))
                         {
                             location.NoteIndex = pattern.Notes.Keys[idx];
-                            return Song.CountNotesBetween(startLocation, location);
+                            return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
                         }
                     }
                 }
@@ -740,16 +741,17 @@ namespace FamiStudio
                 var firstNoteIdx = GetCachedFirstNoteIndex(p);
                 if (firstNoteIdx >= 0)
                 {
+                    var note = patternInstances[p].Notes[firstNoteIdx];
                     location.PatternIndex = p;
                     location.NoteIndex = firstNoteIdx;
-                    return Song.CountNotesBetween(startLocation, location);
+                    return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
                 }
             }
 
             return -1;
         }
 
-        public bool FindNextNoteForSlide(NoteLocation location, int maxNotes, out NoteLocation nextNoteLocation)
+        public bool FindNextNoteForSlide(NoteLocation location, int maxNotes, out NoteLocation nextNoteLocation, bool endAfterCutDelay)
         {
             nextNoteLocation = location;
 
@@ -769,7 +771,7 @@ namespace FamiStudio
             NoteLocation maxLocation = location;
             Song.AdvanceNumberOfNotes(ref maxLocation, maxNotes);
 
-            int duration = GetDistanceToNextNote(location);
+            int duration = GetDistanceToNextNote(location, NoteFilter.CutDurationMask, endAfterCutDelay);
 
             duration = duration < 0 ? maxNotes : Math.Min(duration, maxNotes);
             duration = Math.Min(note.Duration, duration);
@@ -799,7 +801,7 @@ namespace FamiStudio
             for (var it = GetSparseNoteIterator(loc0, loc1); !it.Done; it.Next())
             {
                 var note = it.Note;
-                var duration = Math.Min(note.Duration, it.DistanceToNextNote);
+                var duration = Math.Min(note.Duration, it.DistanceToNextCut);
 
                 if (note.IsMusical)
                     lastNoteValue = note.Value;
@@ -808,7 +810,7 @@ namespace FamiStudio
                 {
                     var distance = Song.CountNotesBetween(it.Location, location);
 
-                    if (distance < it.DistanceToNextNote &&
+                    if (distance < it.DistanceToNextCut &&
                         distance < note.Duration)
                     {
                         if (noteValue < 0)
@@ -1104,7 +1106,7 @@ namespace FamiStudio
 
                 if (it.Note.IsMusical)
                 {
-                    var duration = Math.Min(note.Duration, it.DistanceToNextNote);
+                    var duration = Math.Min(note.Duration, it.DistanceToNextCut);
 
                     // Find where the release is
                     if (note.HasRelease && note.Release < duration)
@@ -1464,10 +1466,22 @@ namespace FamiStudio
 
         public int DistanceToNextNote => channel.Song.CountNotesBetween(current, next);
 
+        // Same as DistanceToNextNote, but takes delayed cuts into accounts.
+        public int DistanceToNextCut
+        {
+            get
+            {
+                if (next.IsValid && next.IsInSong(channel.Song) && channel.GetNoteAt(next).HasCutDelay)
+                    return DistanceToNextNote + 1;
+                else
+                    return DistanceToNextNote;
+            }
+        }
+
         public bool Done => current > end;
 
         // Iterate from [start, end]
-        public SparseChannelNoteIterator(Channel c, NoteLocation start, NoteLocation end, NoteFilter f = NoteFilter.TruncateDurationMask)
+        public SparseChannelNoteIterator(Channel c, NoteLocation start, NoteLocation end, NoteFilter f = NoteFilter.CutDurationMask)
         {
             Debug.Assert(start <= end);
 

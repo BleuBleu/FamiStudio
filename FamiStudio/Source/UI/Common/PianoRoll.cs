@@ -1895,14 +1895,14 @@ namespace FamiStudio
 
                                 if (note.IsMusical)
                                 {
-                                    RenderNote(g, it.Location, note, song, channel, it.DistanceToNextNote, drawImplicitStopNotes, isActiveChannel, false, released);
+                                    RenderNote(g, it.Location, note, song, channel, it.DistanceToNextCut, drawImplicitStopNotes, isActiveChannel, false, released);
                                 }
                                 else if (note.IsStop)
                                 {
                                     RenderNoteReleaseOrStop(g, note, GetNoteColor(channel, lastNoteValue, lastInstrument, song.Project), it.Location.ToAbsoluteNoteIndex(Song), lastNoteValue, false, IsNoteSelected(it.Location, 1), true, released);
                                 }
 
-                                if (note.HasRelease && note.Release < Math.Min(note.Duration, it.DistanceToNextNote))
+                                if (note.HasRelease && note.Release < Math.Min(note.Duration, it.DistanceToNextCut))
                                 {
                                     released = true;
                                 }
@@ -4021,16 +4021,14 @@ namespace FamiStudio
             if (e.Button.HasFlag(MouseButtons.Right) && GetEffectNoteForCoord(e.X, e.Y, out var location) && selectedEffectIdx >= 0)
             {
                 var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
-                if (pattern != null)
+
+                if (pattern != null && pattern.Notes.TryGetValue(location.NoteIndex, out var note) && note != null && note.HasValidEffectValue(selectedEffectIdx))
                 {
-                    if (pattern.Notes.TryGetValue(location.NoteIndex, out var note) && note != null && note.HasValidEffectValue(selectedEffectIdx))
-                    {
-                        ClearEffectValue(location, note);
-                    }
-                    else
-                    {
-                        StartSelection(e);
-                    }
+                    ClearEffectValue(location, note);
+                }
+                else
+                {
+                    StartSelection(e);
                 }
 
                 return true;

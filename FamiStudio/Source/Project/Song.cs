@@ -48,6 +48,9 @@ namespace FamiStudio
         public int FamitrackerTempo { get => famitrackerTempo; set => famitrackerTempo = value; }
         public int FamitrackerSpeed { get => famitrackerSpeed; set => famitrackerSpeed = value; }
 
+        public NoteLocation StartLocation => new NoteLocation(0, 0);
+        public NoteLocation EndLocation   => new NoteLocation(songLength, 0);
+
         public Song()
         {
             // For serialization.
@@ -385,7 +388,7 @@ namespace FamiStudio
 
             var oldPatternLength = GetPatternLength(p);
             var oldNoteLength    = GetPatternNoteLength(p);
-            var ratio = (float)(oldNoteLength - 1) / (newNoteLength - 1);
+            var ratio = (float)newNoteLength / oldNoteLength;
 
             if (ratio == 0.0f)
                 ratio = 1.0f;
@@ -419,7 +422,7 @@ namespace FamiStudio
                     for (int j = 0; j < oldNoteLength; j++)
                     {
                         var oldIdx = i * oldNoteLength + j;
-                        var newIdx = i * newNoteLength + (int)Math.Round(j / ratio);
+                        var newIdx = i * newNoteLength + (int)Math.Floor(j * ratio);
 
                         oldNotes.TryGetValue(oldIdx, out var oldNote);
                         pattern.Notes.TryGetValue(newIdx, out var newNote);
@@ -431,7 +434,17 @@ namespace FamiStudio
                         int newPriority = GetNoteResizePriority(newNote);
 
                         if (oldPriority < newPriority)
+                        {
+                            if (oldNote.IsMusical)
+                            {
+                                var release = oldNote.Release;
+                                oldNote.Duration = (int)Math.Floor(oldNote.Duration * ratio);
+                                if (release > 0)
+                                    oldNote.Release = (int)Math.Floor(release * ratio);
+                            }
+
                             pattern.SetNoteAt(newIdx, oldNote);
+                        }
                     }
                 }
 
@@ -1175,7 +1188,6 @@ namespace FamiStudio
 
     }
 
-    // NOTETODO : Convert as many thing as possible to this!
     public struct NoteLocation
     {
         public int PatternIndex;
@@ -1187,6 +1199,11 @@ namespace FamiStudio
         {
             PatternIndex = p;
             NoteIndex = n;
+        }
+
+        public bool IsInSong(Song s)
+        {
+            return PatternIndex < s.Length;
         }
 
         public int ToAbsoluteNoteIndex(Song s)
@@ -1220,6 +1237,11 @@ namespace FamiStudio
         public override int GetHashCode()
         {
             return Utils.HashCombine(PatternIndex, NoteIndex);
+        }
+
+        public override string ToString()
+        {
+            return $"{PatternIndex}:{NoteIndex}";
         }
 
         public static bool operator ==(NoteLocation n0, NoteLocation n1)
@@ -1280,7 +1302,7 @@ namespace FamiStudio
 
         public static readonly NoteLocation Invalid = new NoteLocation(-1, -1);
     }
-
+    
     public static class GroovePaddingType
     {
         public const int Beginning = 0;
