@@ -60,6 +60,7 @@ namespace FamiStudio
         const int DefaultButtonSpacingX          = 34;
         const int DefaultButtonTimecodeSpacingX  = 4; // Spacing before/after timecode.
 
+        int timecodeOffsetX;
         int timecodePosX;
         int timecodePosY;
         int timecodeSizeX;
@@ -69,6 +70,11 @@ namespace FamiStudio
         int tooltipLineSizeY;
         int tooltipSpecialCharSizeX;
         int tooltipSpecialCharSizeY;
+        int buttonPosX;
+        int buttonPosY;
+        int buttonSizeX;
+        int buttonSpacingX;
+        int buttonTimecodeSpacingX;
 
         enum ButtonStatus
         {
@@ -85,10 +91,10 @@ namespace FamiStudio
         class Button
         {
             public int X;
-            public int Y = DefaultButtonPosY;
+            public int Y;
             public bool RightAligned;
             public bool Visible = true;
-            public int Size = DefaultButtonSizeX;
+            public int Size;
             public string ToolTip;
             public RenderBitmap Bmp;
             public ButtonStatusDelegate Enabled;
@@ -146,7 +152,7 @@ namespace FamiStudio
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
 
-            bmpLoopNone = g.CreateBitmapFromResource("LoopNone");
+            bmpLoopNone    = g.CreateBitmapFromResource("LoopNone");
             bmpLoopSong    = g.CreateBitmapFromResource("Loop");
             bmpLoopPattern = g.CreateBitmapFromResource("LoopPattern");
             bmpPlay        = g.CreateBitmapFromResource("Play");
@@ -200,10 +206,9 @@ namespace FamiStudio
             buttons[ButtonFollow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
 
-            UpdateButtonLayout();
-
             var scaling = RenderTheme.MainWindowScaling;
 
+            timecodeOffsetX         = (int)(DefaultTimecodeOffsetX         * scaling);
             timecodePosY            = (int)(DefaultTimecodePosY            * scaling);
             timecodeSizeX           = (int)(DefaultTimecodeSizeX           * scaling);
             tooltipSingleLinePosY   = (int)(DefaultTooltipSingleLinePosY   * scaling);
@@ -211,6 +216,13 @@ namespace FamiStudio
             tooltipLineSizeY        = (int)(DefaultTooltipLineSizeY        * scaling);
             tooltipSpecialCharSizeX = (int)(DefaultTooltipSpecialCharSizeX * scaling);
             tooltipSpecialCharSizeY = (int)(DefaultTooltipSpecialCharSizeY * scaling);
+            buttonPosX              = (int)(DefaultButtonPosX              * scaling);
+            buttonPosY              = (int)(DefaultButtonPosY              * scaling);
+            buttonSizeX             = (int)(DefaultButtonSizeX             * scaling);
+            buttonSpacingX          = (int)(DefaultButtonSpacingX          * scaling);
+            buttonTimecodeSpacingX  = (int)(DefaultButtonTimecodeSpacingX  * scaling);
+
+            UpdateButtonLayout();
 
             specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = (int)(32 * scaling) };
             specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
@@ -291,38 +303,37 @@ namespace FamiStudio
             bool hideLessImportantButtons = Width < 1420 * RenderTheme.MainWindowScaling;
             bool hideOscilloscope = Width < 1250 * RenderTheme.MainWindowScaling;
 
-            var scaling = RenderTheme.MainWindowScaling;
-            var posX = DefaultButtonPosX;
+            var posX = buttonPosX;
 
             for (int i = 0; i < ButtonCount; i++)
             {
                 var btn = buttons[i];
 
                 if (i == ButtonHelp)
-                    btn.X = (int)(DefaultButtonSizeX * scaling);
+                    btn.X = buttonSizeX;
                 else
-                    btn.X = (int)(posX * scaling);
+                    btn.X = posX;
 
-                btn.Y = (int)((DefaultButtonPosY) * scaling);
-                btn.Size = (int)(DefaultButtonSizeX * scaling);
+                btn.Y = buttonPosY;
+                btn.Size = buttonSizeX;
                 btn.Visible = !hideLessImportantButtons || i < ButtonCopy || i > ButtonRedo;
 
                 if (i == ButtonConfig)
                 {
-                    posX += DefaultButtonSpacingX + DefaultTimecodeSizeX + DefaultButtonTimecodeSpacingX * 2;
+                    posX += buttonSpacingX + timecodeSizeX + buttonTimecodeSpacingX * 2;
 
                     oscilloscopeVisible = Settings.ShowOscilloscope && !hideOscilloscope;
                     if (oscilloscopeVisible)
-                        posX += DefaultTimecodeSizeX + DefaultButtonTimecodeSpacingX * 2;
+                        posX += timecodeSizeX + buttonTimecodeSpacingX * 2;
                 }
                 else if (btn.Visible)
                 {
-                    posX += DefaultButtonSpacingX;
+                    posX += buttonSpacingX;
                 }
             }
 
-            timecodePosX = (int)(buttons[ButtonConfig].X + DefaultTimecodeOffsetX * scaling);
-            oscilloscopePosX = timecodePosX + DefaultTimecodeSizeX + DefaultButtonTimecodeSpacingX * 2;
+            timecodePosX = buttons[ButtonConfig].X + timecodeOffsetX;
+            oscilloscopePosX = timecodePosX + timecodeSizeX + buttonTimecodeSpacingX * 2;
         }
 
         public void SetToolTip(string msg, bool red = false)
