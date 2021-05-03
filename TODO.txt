@@ -1,3 +1,5 @@
+- *** NSF IMPORT STUDX *** 
+- *** TWITTER CMD LINE ***
 - *** BUG RETINA??? 
  
 FamiStudio Tempo 2.0 
@@ -15,42 +17,30 @@ FamiStudio Tempo 2.0
 Note refactor 
 ============= 
 - Change the piano roll editing/rendering, see how it feels.
-	*** BUG DRAG SELECTION. WORRYSOME, CHANNEL LOOKS CORRUPTED.
-	- Cumulative cache : 
-		- Test more stuff, song resize, custom settings, etc.
-	- Should note drag be more agressive?
-	
-	- Make player work.
-	- Delayed cuts, how do we draw them? +1?
-	- Draw "attack" on all notes.
-	- Get feedback on discord.
-	- Scan all use of IsStop/IsRelease, etc.
-	- Multiple effect editing.
-	- Create pattern when editing effects.
+	/ Make player work. => Run unit test.
 	- Retest all capture op.
-- Make sure cant paste data from older FamiStudio
-- FamiStudio text, check major + minor version.
-- Remove fractional snapping? Too awkward.
-- When deleting a note, dont delete certain effects. 
- 
+	/ Export format, fix all of them. TEST!
+	- Cleanup : 
+		- Truncate notes to their maximum length.
+	- End of song looping behavior?
+	- Tooltips.
+	- LOW PRIO... When resizing, move the release if its at the end?
+
 FamiStudio 3.0.0 
 ================ 
 - MIDI :  
 	- MIDITODOs 
 	- Doc. 
+- Multiple sample import.
 - Mixer / low pass config. 
-	-> He uses "0.4.1" what's in there?
 - F1...F12 keys. 
-- Remove any deprecation from FamiStudio text format, that's not the goal. Give warning if mismatch.
 - Loop prevention for envelope (brad issue). 
-- Low-pass config in settings (change layout of equalizer) 
-	- Blip 4.0 : Look at difference between cutoff / rolloff frequency. => Compare values before/after. 
-- Left/right pan with +/- (cubase style)	
 - BUG : Assert in video file when exporting a single channel (major chord in sq1). 
 - CRASH : Quit while billy jean was playing. 
 	Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]); 
 	editChannel was 5, only 5 channels (0-4) 
 - CRASH : Multi pattern color edit (square selection) crashes when there are empty patterns. 
+- LOW PRIO : Left/right pan with +/- (cubase style)?
  
 ============= 
  
