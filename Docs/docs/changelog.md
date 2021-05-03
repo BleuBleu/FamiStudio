@@ -2,6 +2,13 @@
 
 Version history / release notes for each release.
 
+## Version 2.4.2 (Hotfix)
+
+Fixes:
+
+* Fixed crash on startup.
+* Fixed crash when exporting SFX to sound engine from command-line.
+
 ## Version 2.4.1 (Hotfix)
 
 Fixes:
