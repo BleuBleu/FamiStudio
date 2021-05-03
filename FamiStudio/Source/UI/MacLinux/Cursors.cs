@@ -16,6 +16,7 @@ namespace FamiStudio
         public static Gdk.Cursor DragCursor = null;
         public static Gdk.Cursor CopyCursor = null;
         public static Gdk.Cursor Eyedrop    = null;
+        public static Gdk.Cursor Move      = null;
 
         private static Gdk.Cursor CreateCursorFromResource(string name, int x, int y)
         {
@@ -47,6 +48,7 @@ namespace FamiStudio
             Default = Gdk.Cursor.NewFromName(Gdk.Display.Default, "default");
             DragCursor = Gdk.Cursor.NewFromName(Gdk.Display.Default, "grab");
             CopyCursor = Gdk.Cursor.NewFromName(Gdk.Display.Default, "copy");
+            Move = Gdk.Cursor.NewFromName(Gdk.Display.Default, "move");
 #else
             DragCursor = CreateMacOSNamedCursor("closedHandCursor");
             CopyCursor = CreateMacOSNamedCursor("dragCopyCursor");
