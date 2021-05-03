@@ -403,27 +403,16 @@ namespace FamiStudio
             return new CheckBoxList(values, selected);
         }
 
-        // MIDITODO : Make those work on Linux/Mac.
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
         {
-            /*
             var listBox = (properties[idx].control as CheckBoxList);
-
-            listBox.Items.Clear();
-            for (int i = 0; i < values.Length; i++)
-                listBox.Items.Add(values[i], selected != null ? selected[i] : true);
-                */              
+            listBox.Update(values, selected);
         }
 
         public void UpdateCheckBoxList(int idx, bool[] selected)
         {
-            /*
             var listBox = (properties[idx].control as CheckBoxList);
-
-            Debug.Assert(selected.Length == listBox.Items.Count);
-            for (int i = 0; i < listBox.Items.Count; i++)
-                listBox.SetItemChecked(i, selected[i]);
-                */              
+            listBox.Update(selected);
         }
 
         private Button CreateButton(string text, string tooltip)
@@ -702,6 +691,9 @@ namespace FamiStudio
                 treeView.AppendColumn(column);
             }
 
+            if (data == null)
+                data = new string[0, 0];
+
             treeView.Model = CreateListStoreFromData(data);
             treeView.EnableGridLines = TreeViewGridLines.Both;
             treeView.ButtonPressEvent += TreeView_ButtonPressEvent;
@@ -763,21 +755,31 @@ namespace FamiStudio
             var treeView = scroll.Child as TreeView;
 
             var ls = treeView.Model as ListStore;
-            ls.GetIterFirst(out var it);
+            var count = ls.IterNChildren();
 
-            var j = 0;
-
-            do
+            if (count == data.GetLength(0))
             {
-                var values = new string[data.GetLength(1)];
+                if (ls.GetIterFirst(out var it))
+                {
+                    var j = 0;
 
-                for (int i = 0; i < data.GetLength(1); i++)
-                    values[i] = data[j, i];
+                    do
+                    {
+                        var values = new string[data.GetLength(1)];
 
-                ls.SetValues(it, values);
-                j++;
+                        for (int i = 0; i < data.GetLength(1); i++)
+                            values[i] = data[j, i];
+
+                        ls.SetValues(it, values);
+                        j++;
+                    }
+                    while (ls.IterNext(ref it));
+                }
             }
-            while (ls.IterNext(ref it));
+            else
+            {
+                treeView.Model = CreateListStoreFromData(data);
+            }
 
             if (columnNames != null)
             {
