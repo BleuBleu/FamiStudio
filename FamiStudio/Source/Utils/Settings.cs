@@ -25,8 +25,7 @@ namespace FamiStudio
 
         // Constants for Stop notes.
         public const int StopNotesFamiTrackerTempo = 0;
-        public const int StopNotesNever  = 1;
-        public const int StopNotesAlways = 2;
+        public const int StopNotesNever            = 1;
 
         // General section.
         public static int Version = SettingsVersion;
@@ -47,7 +46,7 @@ namespace FamiStudio
         public static bool ShowScrollBars = false;
         public static bool ShowOscilloscope = false;
         public static bool ForceCompactSequencer = false;
-        public static int ShowStopNotes = StopNotesFamiTrackerTempo; // NOTETODO : Add to UI, INI.
+        public static bool ShowImplicitStopNotes = true;
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
 #if FAMISTUDIO_WINDOWS
@@ -224,6 +223,7 @@ namespace FamiStudio
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
             TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
             TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
+            ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", true);
 
             // Audio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
@@ -346,6 +346,7 @@ namespace FamiStudio
             ini.SetInt("UI", "TrackPadMoveSensitity", TrackPadMoveSensitity);
             ini.SetInt("UI", "TrackPadZoomSensitity", TrackPadZoomSensitity);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
+            ini.SetBool("UI", "ShowImplicitStopNotes", ShowImplicitStopNotes);
 
             // Audio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);

@@ -360,8 +360,8 @@ namespace FamiStudio
             var seekX = noteSizeX * GetSeekFrameToDraw() - scrollX;
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
             var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / noteSizeX), Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
-            var minVisiblePattern = Utils.Clamp(Song.FindPatternInstanceIndex(minVisibleNoteIdx, out _) + 0, 0, Song.Length);
-            var maxVisiblePattern = Utils.Clamp(Song.FindPatternInstanceIndex(maxVisibleNoteIdx, out _) + 1, 0, Song.Length);
+            var minVisiblePattern = Utils.Clamp(Song.PatternIndexFromAbsoluteNoteIndex(minVisibleNoteIdx) + 0, 0, Song.Length);
+            var maxVisiblePattern = Utils.Clamp(Song.PatternIndexFromAbsoluteNoteIndex(maxVisibleNoteIdx) + 1, 0, Song.Length);
 
             // Track name background
             g.FillRectangle(0, 0, trackNameSizeX, Height, theme.DarkGreyFillBrush1); 
@@ -530,7 +530,7 @@ namespace FamiStudio
 
                 if (noteIdx >= 0 && noteIdx < Song.GetPatternStartAbsoluteNoteIndex(Song.Length))
                 {
-                    var patternIdx = Song.FindPatternInstanceIndex(noteIdx, out _);
+                    var patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(noteIdx);
                     var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
 
                     pt.Y -= headerSizeY;
@@ -758,7 +758,7 @@ namespace FamiStudio
                 return false;
             }
 
-            patternIdx = Song.FindPatternInstanceIndex(noteIdx, out _);
+            patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(noteIdx);
             track = (y - headerSizeY) / trackSizeY;
 
             return (x > trackNameSizeX && y > headerSizeY && track >= 0 && track < Song.Channels.Length);
@@ -1275,7 +1275,7 @@ namespace FamiStudio
 
                     if (noteIdx >= 0 && noteIdx < Song.GetPatternStartAbsoluteNoteIndex(Song.Length))
                     {
-                        var patternIdx = Song.FindPatternInstanceIndex((int)((e.X - trackNameSizeX + scrollX) / noteSizeX), out _);
+                        var patternIdx = Song.PatternIndexFromAbsoluteNoteIndex((int)((e.X - trackNameSizeX + scrollX) / noteSizeX));
                         var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
                         var tmpPatterns = GetSelectedPatterns(out var customSettings);
 
@@ -1512,7 +1512,7 @@ namespace FamiStudio
             }
 
             int noteIdx = (int)((mouseX - trackNameSizeX + scrollX) / noteSizeX);
-            int patternIdx = Song.FindPatternInstanceIndex(noteIdx, out _);
+            int patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(noteIdx);
 
             if (first)
             {

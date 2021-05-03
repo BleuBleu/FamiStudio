@@ -622,13 +622,13 @@ namespace FamiStudio
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
-                int patternIdx = App.Song.FindPatternInstanceIndex(frame, out int noteIdx);
+                var location = NoteLocation.FromAbsoluteNoteIndex(App.Song, frame);
 
                 var numPatternDigits = Utils.NumDecimalDigits(App.Song.Length - 1);
-                var numNoteDigits = Utils.NumDecimalDigits(App.Song.GetPatternLength(patternIdx) - 1);
+                var numNoteDigits = Utils.NumDecimalDigits(App.Song.GetPatternLength(location.PatternIndex) - 1);
 
-                var patternString = patternIdx.ToString("D" + numPatternDigits);
-                var noteString = noteIdx.ToString("D" + numNoteDigits);
+                var patternString = location.PatternIndex.ToString("D" + numPatternDigits);
+                var noteString = location.NoteIndex.ToString("D" + numNoteDigits);
 
                 var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 

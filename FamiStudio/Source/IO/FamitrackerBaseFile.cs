@@ -417,20 +417,19 @@ namespace FamiStudio
             return Note.NoteInvalid;
         }
 
-        private bool FindNextSlideEffect(Channel channel, int patternIdx, int noteIdx, out int nextPatternIdx, out int nextNoteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        private bool FindNextSlideEffect(Channel channel, NoteLocation location, out NoteLocation nextLocation, Dictionary<Pattern, RowFxData[,]> patternFxData)
         {
-            nextPatternIdx = -1;
-            nextNoteIdx    = -1;
+            nextLocation = NoteLocation.Invalid;
 
-            var pattern = channel.PatternInstances[patternIdx];
+            var pattern = channel.PatternInstances[location.PatternIndex];
 
             if (pattern == null || !patternFxData.ContainsKey(pattern))
                 return false;
 
-            var patternLen = channel.Song.GetPatternLength(patternIdx);
+            var patternLen = channel.Song.GetPatternLength(location.PatternIndex);
             var fxData     = patternFxData[pattern];
 
-            for (var it = pattern.GetDenseNoteIterator(noteIdx + 1, patternLen); !it.Done; it.Next())
+            for (var it = pattern.GetDenseNoteIterator(location.NoteIndex + 1, patternLen); !it.Done; it.Next())
             {
                 var time = it.CurrentTime;
                 var note = it.CurrentNote;
@@ -453,13 +452,13 @@ namespace FamiStudio
 
                 if (note != null && note.IsValid || fxChanged)
                 {
-                    nextPatternIdx = patternIdx;
-                    nextNoteIdx = time;
+                    nextLocation.PatternIndex = location.PatternIndex;
+                    nextLocation.NoteIndex = time;
                     return true;
                 }
             }
 
-            for (int p = patternIdx + 1; p < channel.Song.Length; p++)
+            for (int p = location.PatternIndex + 1; p < channel.Song.Length; p++)
             {
                 pattern    = channel.PatternInstances[p];
                 patternLen = channel.Song.GetPatternLength(p);
@@ -491,8 +490,8 @@ namespace FamiStudio
 
                         if (note != null && note.IsValid || fxChanged)
                         {
-                            nextPatternIdx = p;
-                            nextNoteIdx = time;
+                            nextLocation.PatternIndex = p;
+                            nextLocation.NoteIndex = time;
                             return true;
                         }
                     }
@@ -607,14 +606,14 @@ namespace FamiStudio
                         continue;
 
                     var patternLen = s.GetPatternLength(p);
-
+                    
                     for (var it = pattern.GetDenseNoteIterator(0, patternLen); !it.Done; it.Next())
                     {
-                        var n    = it.CurrentTime;
-                        var note = it.CurrentNote;
+                        var location = new NoteLocation(p, it.CurrentTime);
+                        var note     = it.CurrentNote;
 
                         // Look for speed changes.
-                        s.ApplySpeedEffectAt(p, n, ref songSpeed);
+                        s.ApplySpeedEffectAt(location, ref songSpeed);
 
                         if (!patternFxData.ContainsKey(pattern) || processedPatterns.Contains(pattern))
                             continue;
@@ -624,7 +623,7 @@ namespace FamiStudio
 
                         for (int i = 0; i < fxData.GetLength(1); i++)
                         {
-                            var fx = fxData[n, i];
+                            var fx = fxData[location.NoteIndex, i];
 
                             if (fx.param != 0)
                             {
@@ -638,7 +637,7 @@ namespace FamiStudio
                                 {
                                     if (note == null)
                                     {
-                                        note = pattern.GetOrCreateNoteAt(n);
+                                        note = pattern.GetOrCreateNoteAt(location.NoteIndex);
                                         it.Resync();
                                     }
 
@@ -716,29 +715,20 @@ namespace FamiStudio
                                     note.SlideNoteTarget = (byte)slideTarget;
 
                                     // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
-                                    var np = p;
-                                    var nn = n;
-                                    s.AdvanceNumberOfFrames(numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode, ref np, ref nn);
+                                    var nextLocation = location;
+                                    s.AdvanceNumberOfFrames(ref nextLocation, numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode);
 
                                     // Still to see if there is a note between the current one and the 
                                     // next note, this could append if you add a note before the slide 
                                     // is supposed to finish.
-                                    if (FindNextSlideEffect(c, p, n, out var np2, out var nn2, patternFxData))
+                                    if (FindNextSlideEffect(c, location, out var nextLocation2, patternFxData))
                                     {
-                                        if (np2 < np)
-                                        {
-                                            np = np2;
-                                            nn = nn2;
-                                        }
-                                        else if (np2 == np)
-                                        {
-                                            nn = Math.Min(nn, nn2);
-                                        }
+                                        nextLocation = NoteLocation.Min(nextLocation, nextLocation2);
 
                                         // If the slide is interrupted by another slide effect, we will not reach 
                                         // the final target, but rather some intermediate note. Let's do our best
                                         // to interpolate and figure out the best note.
-                                        var numFramesUntilNextSlide = s.CountFramesBetween(p, n, np, nn, songSpeed, s.Project.PalMode);
+                                        var numFramesUntilNextSlide = s.CountFramesBetween(location, nextLocation, songSpeed, s.Project.PalMode);
                                         var ratio = Utils.Clamp(numFramesUntilNextSlide / numFrames, 0.0f, 1.0f);
                                         var intermediatePitch = (int)Math.Round(Utils.Lerp(noteTable[slideSource], noteTable[slideTarget], ratio));
 
@@ -746,13 +736,13 @@ namespace FamiStudio
                                         note.SlideNoteTarget = (byte)slideTarget;
                                     }
 
-                                    if (np < s.Length)
+                                    if (nextLocation.PatternIndex < s.Length)
                                     {
                                         // Add an extra note with no attack to stop the slide.
-                                        var nextPattern = c.PatternInstances[np];
-                                        if (!nextPattern.Notes.TryGetValue(nn, out var nextNote) || !nextNote.IsValid)
+                                        var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
+                                        if (!nextPattern.Notes.TryGetValue(nextLocation.NoteIndex, out var nextNote) || !nextNote.IsValid)
                                         {
-                                            nextNote = nextPattern.GetOrCreateNoteAt(nn);
+                                            nextNote = nextPattern.GetOrCreateNoteAt(nextLocation.NoteIndex);
                                             nextNote.Instrument = note.Instrument;
                                             nextNote.Value = (byte)slideTarget;
                                             nextNote.HasAttack = false;
@@ -760,7 +750,7 @@ namespace FamiStudio
                                         }
                                         else if (nextNote != null && nextNote.IsRelease)
                                         {
-                                            Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nn)}");
+                                            Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nextLocation.NoteIndex)}");
                                         }
                                     }
 
@@ -769,10 +759,10 @@ namespace FamiStudio
                                 }
 
                                 // 1xx/2xy : We know the speed at which we are sliding, but need to figure out what makes it stop.
-                                else if (slideSpeed != 0 && FindNextSlideEffect(c, p, n, out var np, out var nn, patternFxData))
+                                else if (slideSpeed != 0 && FindNextSlideEffect(c, location, out var nextLocation, patternFxData))
                                 {
                                     // See how many frames until the slide stops.
-                                    var numFrames = (int)Math.Round(s.CountFramesBetween(p, n, np, nn, songSpeed, s.Project.PalMode));
+                                    var numFrames = (int)Math.Round(s.CountFramesBetween(location, nextLocation, songSpeed, s.Project.PalMode));
 
                                     // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
                                     numFrames = Math.Max(1, numFrames - (note.HasNoteDelay ? note.NoteDelay : 0));
@@ -784,10 +774,10 @@ namespace FamiStudio
                                     note.SlideNoteTarget = (byte)newNote;
 
                                     // If the FX was turned off, we need to add an extra note.
-                                    var nextPattern = c.PatternInstances[np];
-                                    if (!nextPattern.Notes.TryGetValue(nn, out var nextNote) || !nextNote.IsValid)
+                                    var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
+                                    if (!nextPattern.Notes.TryGetValue(nextLocation.NoteIndex, out var nextNote) || !nextNote.IsValid)
                                     {
-                                        nextNote = nextPattern.GetOrCreateNoteAt(nn);
+                                        nextNote = nextPattern.GetOrCreateNoteAt(nextLocation.NoteIndex);
                                         nextNote.Instrument = note.Instrument;
                                         nextNote.Value = (byte)newNote;
                                         nextNote.HasAttack = false;
@@ -795,7 +785,7 @@ namespace FamiStudio
                                     }
                                     else if (nextNote != null && nextNote.IsRelease)
                                     {
-                                        Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nn)}");
+                                        Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nextLocation.NoteIndex)}");
                                     }
                                 }
                             }

@@ -126,9 +126,10 @@ namespace FamiStudio
                     page.AddDropDownList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex]); // 3
                     page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 4
                     page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 5
-                    page.AddCheckBox("Show Scroll Bars:", Settings.ShowScrollBars); // 6
-                    page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope); // 7
-                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer); // 8
+                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes); // 6
+                    page.AddCheckBox("Show Scroll Bars:", Settings.ShowScrollBars); // 7
+                    page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope); // 8
+                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer); // 9
                     break;
                     }
                 case ConfigSection.Sound:
@@ -382,9 +383,10 @@ namespace FamiStudio
                 Settings.FollowSync = Array.IndexOf(FollowSyncStrings, pageUI.GetPropertyValue<string>(3));
                 Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(4);
                 Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(5);
-                Settings.ShowScrollBars = pageUI.GetPropertyValue<bool>(6);
-                Settings.ShowOscilloscope = pageUI.GetPropertyValue<bool>(7);
-                Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(8);
+                Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(6);
+                Settings.ShowScrollBars = pageUI.GetPropertyValue<bool>(7);
+                Settings.ShowOscilloscope = pageUI.GetPropertyValue<bool>(8);
+                Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(9);
 
                 // Sound
                 Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);

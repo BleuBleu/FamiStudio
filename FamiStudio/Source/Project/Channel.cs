@@ -241,35 +241,35 @@ namespace FamiStudio
         // Inputs are absolute note indices from beginning of song.
         public void DeleteNotesBetween(int minFrame, int maxFrame, bool preserveFx = false)
         {
-            var patternIdxMin = Song.FindPatternInstanceIndex(minFrame, out var patternNoteIdxMin);
-            var patternIdxMax = Song.FindPatternInstanceIndex(maxFrame, out var patternNoteIdxMax);
+            var minLocation = NoteLocation.FromAbsoluteNoteIndex(Song, minFrame);
+            var maxLocation = NoteLocation.FromAbsoluteNoteIndex(Song, maxFrame);
 
-            if (patternIdxMin == patternIdxMax)
+            if (minLocation.PatternIndex == maxLocation.PatternIndex)
             {
-                if (patternIdxMin < song.Length)
+                if (minLocation.PatternIndex < song.Length)
                 {
-                    var pattern = patternInstances[patternIdxMin];
+                    var pattern = patternInstances[minLocation.PatternIndex];
                     if (pattern != null)
                     {
-                        pattern.DeleteNotesBetween(patternNoteIdxMin, patternNoteIdxMax, preserveFx);
+                        pattern.DeleteNotesBetween(minLocation.NoteIndex, maxLocation.NoteIndex, preserveFx);
                     }
                 }
             }
             else
             {
-                for (int p = patternIdxMin; p <= patternIdxMax && p < song.Length; p++)
+                for (int p = minLocation.PatternIndex; p <= maxLocation.PatternIndex && p < song.Length; p++)
                 {
                     var pattern = patternInstances[p];
 
                     if (pattern != null)
                     {
-                        if (p == patternIdxMin)
+                        if (p == minLocation.PatternIndex)
                         {
-                            pattern.DeleteNotesBetween(patternNoteIdxMin, Pattern.MaxLength, preserveFx);
+                            pattern.DeleteNotesBetween(minLocation.NoteIndex, Pattern.MaxLength, preserveFx);
                         }
-                        else if (p == patternIdxMax)
+                        else if (p == maxLocation.PatternIndex)
                         {
-                            pattern.DeleteNotesBetween(0, patternNoteIdxMax, preserveFx);
+                            pattern.DeleteNotesBetween(0, maxLocation.NoteIndex, preserveFx);
                         }
                         else
                         {
@@ -282,7 +282,7 @@ namespace FamiStudio
                 }
             }
 
-            InvalidateCumulativePatternCache(patternIdxMin);
+            InvalidateCumulativePatternCache(minLocation.PatternIndex);
         }
 
         public Pattern CreatePattern(string name = null)
@@ -496,12 +496,6 @@ namespace FamiStudio
             }
 
             return null;
-        }
-
-        // NOTETODO : Migrate!
-        public Note GetNoteAt(int patternIdx, int noteIdx)
-        {
-            return GetNoteAt(new NoteLocation(patternIdx, noteIdx));
         }
 
         public SparseChannelNoteIterator GetSparseNoteIterator(NoteLocation start, NoteLocation end, NoteFilter filter = NoteFilter.Musical | NoteFilter.Stop | NoteFilter.EffectCutDelay)

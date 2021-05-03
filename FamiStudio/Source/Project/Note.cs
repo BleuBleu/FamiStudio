@@ -197,7 +197,6 @@ namespace FamiStudio
             get { return release; }
             set
             {
-                // NOTETODO : Should we have a ClearRelease function and clamp(1, max) here?
                 if (IsMusical)
                 {
                     release = (ushort)Math.Min(value, (int)ushort.MaxValue);
@@ -572,7 +571,7 @@ namespace FamiStudio
                 buffer.Serialize(ref instrument);
             }
 
-            // NOTETODO: See how we want to save this + add comment.
+            // At version 10 (FamiStudio 3.0.0), we switched to compound notes.
             if (buffer.Version >= 10)
             {
                 if (IsMusical)
@@ -580,9 +579,8 @@ namespace FamiStudio
                     buffer.Serialize(ref duration);
                     buffer.Serialize(ref release);
                 }
-                else if (buffer.IsReading && (IsStop || IsRelease))
+                else if (buffer.IsReading && IsStop)
                 {
-                    release  = 0;
                     duration = 1;
                 }
             }

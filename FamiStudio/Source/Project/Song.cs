@@ -311,7 +311,6 @@ namespace FamiStudio
             return settings.useCustomSettings ? settings.groovePaddingMode : groovePaddingMode;
         }
         
-        // NOTETODO : Migrate to note location.
         public int GetPatternStartAbsoluteNoteIndex(int patternIdx, int note = 0)
         {
             return patternStartNote[patternIdx] + note;
@@ -661,19 +660,13 @@ namespace FamiStudio
             return patternStartNote[location.PatternIndex] + location.NoteIndex;
         }
 
-        // NOTETODO : Migrate all to AbsoluteNoteLocationToNoteLocation().
-        public int FindPatternInstanceIndex(int idx, out int noteIdx)
+        public int PatternIndexFromAbsoluteNoteIndex(int idx)
         {
-            noteIdx = -1;
-
             // TODO: Binary search
             for (int i = 0; i < songLength; i++)
             {
                 if (idx < patternStartNote[i + 1])
-                {
-                    noteIdx = idx - patternStartNote[i];
                     return i;
-                }
             }
 
             return songLength;
@@ -851,12 +844,6 @@ namespace FamiStudio
             }
         }
 
-        // NOTETODO : Migrate all to location.
-        public bool ApplySpeedEffectAt(int p, int n, ref int speed)
-        {
-            return ApplySpeedEffectAt(new NoteLocation(p, n), ref speed);
-        }
-
         public bool ApplySpeedEffectAt(NoteLocation location, ref int speed)
         {
             if (UsesFamiStudioTempo)
@@ -878,12 +865,6 @@ namespace FamiStudio
         public int CountNotesBetween(NoteLocation start, NoteLocation end)
         {
             return NoteLocationToAbsoluteNoteIndex(end) - NoteLocationToAbsoluteNoteIndex(start);
-        }
-
-        // NOTETODO : Migrate all to locations.
-        public float CountFramesBetween(int p0, int n0, int p1, int n1, int currentSpeed, bool pal)
-        {
-            return CountFramesBetween(new NoteLocation(p0, n0), new NoteLocation(p1, n1), currentSpeed, pal);
         }
 
         public float CountFramesBetween(NoteLocation l0, NoteLocation l1, int currentSpeed, bool pal)
@@ -993,64 +974,17 @@ namespace FamiStudio
             return true;
         }
 
-        // NOTETODO : Migrate all to NoteLocation overload.
-        public bool AdvanceNumberOfNotes(int noteCount, ref int p, ref int n)
-        {
-            if (noteCount > 0)
-            {
-                n += noteCount;
-
-                while (true)
-                {
-                    var patternLen = GetPatternLength(p);
-
-                    if (n < patternLen)
-                        return true;
-
-                    n -= patternLen;
-
-                    if (++p >= songLength)
-                    {
-                        n = 0;
-                        return false;
-                    }
-                }
-            }
-            else if (noteCount < 0)
-            {
-                n += noteCount;
-
-                while (true)
-                {
-                    if (n >= 0)
-                        return true;
-
-                    if (--p < 0)
-                    {
-                        p = 0;
-                        n = 0;
-                        return false;
-                    }
-
-                    n += GetPatternLength(p);
-                }
-            }
-
-            return true;
-        }
-
-        // NOTETODO : Migrate to location.
-        public void AdvanceNumberOfFrames(int frameCount, int initialCount, int currentSpeed, bool pal, ref int p, ref int n)
+        public void AdvanceNumberOfFrames(ref NoteLocation location, int frameCount, int initialCount, int currentSpeed, bool pal)
         {
             Debug.Assert(UsesFamiTrackerTempo);
 
             float count = initialCount;
 
-            while (count < frameCount && p < songLength)
+            while (count < frameCount && location.PatternIndex < songLength)
             {
                 if (UsesFamiTrackerTempo)
                 {
-                    ApplySpeedEffectAt(p, n, ref currentSpeed);
+                    ApplySpeedEffectAt(location, ref currentSpeed);
                     float tempoRatio = (pal ? NativeTempoPAL : NativeTempoNTSC) / (float)famitrackerTempo;
                     count += currentSpeed * tempoRatio;
                 }
@@ -1059,10 +993,10 @@ namespace FamiStudio
                     count++;
                 }
 
-                if (++n >= GetPatternLength(p))
+                if (++location.NoteIndex >= GetPatternLength(location.PatternIndex))
                 {
-                    n = 0;
-                    p++;
+                    location.PatternIndex++;
+                    location.NoteIndex = 0;
                 }
             }
         }

@@ -159,8 +159,8 @@ namespace FamiStudio
             {
                 if (song != null && song.UsesFamiStudioTempo)
                 {
-                    var patternIdx = song.FindPatternInstanceIndex(CurrentFrame, out var noteIdx);
-                    var numFrames  = song.CountFramesBetween(0, 0, patternIdx, noteIdx, 0, false);
+                    var location = NoteLocation.FromAbsoluteNoteIndex(song, CurrentFrame);
+                    var numFrames  = song.CountFramesBetween(song.StartLocation, location, 0, false);
 
                     return TimeSpan.FromMilliseconds(numFrames * 1000.0 / (song.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC));
                 }
@@ -1089,7 +1089,7 @@ namespace FamiStudio
                     if (ctrl && shift)
                         SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartAbsoluteNoteIndex(song.LoopPoint) : 0);
                     if (ctrl)
-                        SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.FindPatternInstanceIndex(songPlayer.PlayPosition, out _)));
+                        SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition)));
                     else if (shift)
                         SeekSong(0);
 
@@ -1145,14 +1145,6 @@ namespace FamiStudio
             {
                 ToggleQwertyPiano();
             }
-#if DEBUG
-            // NOTETODO : Temporary code!!!
-            else if (ctrl && e.KeyCode == Keys.NumPad0)
-            {
-                project.Validate();
-                song.Channels[0].ConvertToSimpleNotes();
-            }
-#endif
 #if FAMISTUDIO_WINDOWS
             else if (e.KeyData == Keys.Up    ||
                      e.KeyData == Keys.Down  ||
@@ -1318,7 +1310,7 @@ namespace FamiStudio
             {
                 bool wasPlaying = songPlayer.IsPlaying;
                 if (wasPlaying) StopSong();
-                songPlayer.PlayPosition = song.GetPatternStartAbsoluteNoteIndex(song.FindPatternInstanceIndex(songPlayer.PlayPosition, out _));
+                songPlayer.PlayPosition = song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition));
                 if (wasPlaying) PlaySong();
                 InvalidateEverything();
             }

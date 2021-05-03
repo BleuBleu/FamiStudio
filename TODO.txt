@@ -16,15 +16,13 @@ FamiStudio Tempo 2.0
  
 Note refactor 
 ============= 
-- Change the piano roll editing/rendering, see how it feels.
-	/ Make player work. => Run unit test.
-	- Retest all capture op.
-	/ Export format, fix all of them. TEST!
-	- Cleanup : 
-		- Truncate notes to their maximum length.
-	- End of song looping behavior?
-	- Tooltips.
-	- LOW PRIO... When resizing, move the release if its at the end?
+/ Note : Run unit test for player.
+/ Export format, fix all of them. TEST!
+	- Create FamiTracker unit tests.
+- Cleanup : Truncate notes to their maximum length. 
+- End of song looping behavior?
+- Tooltips.
+- LOW PRIO... When resizing, move the release if its at the end?
 
 FamiStudio 3.0.0 
 ================ 
@@ -56,8 +54,8 @@ FamiStudio 3.0.0
 Doc 
 === 
 - Hayabusa DPCM doc. 
--  
- 
+- Vxx is supported.
+
 Testing 
 ======= 
 - MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage. 

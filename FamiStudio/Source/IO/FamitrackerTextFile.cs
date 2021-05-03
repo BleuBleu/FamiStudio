@@ -872,10 +872,10 @@ namespace FamiStudio
 
                         for (var it = pattern.GetDenseNoteIterator(0, song.PatternLength); !it.Done; it.Next())
                         {
-                            var time = it.CurrentTime;
+                            var location = new NoteLocation(p, it.CurrentTime);
                             var note = it.CurrentNote;
 
-                            song.ApplySpeedEffectAt(p, time, ref famitrackerSpeed);
+                            song.ApplySpeedEffectAt(location, ref famitrackerSpeed);
 
                             // Keeps the code a lot simpler.
                             if (note == null)
@@ -910,7 +910,7 @@ namespace FamiStudio
                                 var tempNote = note.Clone();
                                 tempNote.Value = note.Value;
                                 tempNote.SlideNoteTarget = slideTarget;
-                                channel.ComputeSlideNoteParams(tempNote, new NoteLocation(p, time), famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat); // NOTETODO : Convert to location.
+                                channel.ComputeSlideNoteParams(tempNote, location, famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat);
 
                                 if (channel.IsN163WaveChannel)
                                 {
@@ -1004,7 +1004,7 @@ namespace FamiStudio
                                 prevSlideEffect = Effect_None;
                             }
 
-                            if (time == patternLen - 1)
+                            if (location.NoteIndex == patternLen - 1)
                             {
                                 if (p == song.Length - 1 && song.LoopPoint >= 0)
                                     effectString += $" B{song.LoopPoint:X2}";

@@ -339,7 +339,7 @@ namespace FamiStudio
                 }
                 sum /= cnt;
 
-                frames[i].playPattern = song.FindPatternInstanceIndex((int)sum, out _);
+                frames[i].playPattern = song.PatternIndexFromAbsoluteNoteIndex((int)sum);
                 frames[i].playNote = sum - song.GetPatternStartAbsoluteNoteIndex(frames[i].playPattern);
             }
         }
