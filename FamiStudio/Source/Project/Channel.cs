@@ -1095,6 +1095,9 @@ namespace FamiStudio
 
                 pattern.DeleteEmptyNotes();
             }
+
+            InvalidateCumulativePatternCache();
+            DeleteUnusedPatterns();
         }
 
         // Converts compound notes to old (pre-FamiStudio 3.0.0) release/stop notes. This is
@@ -1234,6 +1237,7 @@ namespace FamiStudio
             }
 
             InvalidateCumulativePatternCache();
+            DeleteUnusedPatterns();
         }
 
         public void SerializeState(ProjectBuffer buffer)
