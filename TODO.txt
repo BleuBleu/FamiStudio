@@ -2,21 +2,15 @@ FamiStudio 3.0.0
 ================ 
 - Add missing tempo tooltips (BPM, note length, etc). 
 - Tooltips for note refactor (stop note, etc.)
-- MacOS:
-	- GTK colors. => Doesnt work on mac... 
-	- Test mac with weird keyboards. 
 - studsX: 
 	- Song sorting from FTM. 
 	- Reverse 2xx effect?? 
  	- NSF import VRC7
-- CRASH (NO REPRO) : Quit while billy jean was playing. 
-	Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]); 
-	editChannel was 5, only 5 channels (0-4) 
 - Convert demo songs to new tempo (when file format is frozen). 
 	- Gimmick 
 	- Tower 
 	- Any others? 
-	
+
 - LOW PRIO : When resizing, move the release if its at the end?
 - LOW PRIO : End of song looping behavior?
 - LOW PRIO : Multiple sample import. => Or import samples from other projects?
@@ -37,11 +31,10 @@ Testing
 ======= 
 - Note : Run unit test for player.
 - MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage. 
-- MacOS : "Whenever I minimize it tho, you can't open it back up by clicking on the icon. You have to right click it and click 'Show All Windows', then click the window there.". how2bboss. 
+- MacOS: Test with weird keyboards, see if GTK colors look ok.
 - Linux : See if GL line smooth + thick line works on bare metal.
 - Linux : Test scaling more. 
 - Windows : Scaling, 150% and stuff for the warning in dialogs. 
-- OGL : Grey screen happens sometimes. 
 - Engine :  
 	- Re-test delayed note, @no_ref delayed note fix. 
 	- Re-test FT2 stock with compression thing vs. 2 notes. 
