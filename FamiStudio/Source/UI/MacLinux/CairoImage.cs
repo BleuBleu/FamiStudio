@@ -12,8 +12,9 @@ namespace FamiStudio
         public CairoImage(Pixbuf pb)
         {
             pixbuf = pb;
-            WidthRequest  = GtkUtils.ScaleGtkWidget(pb.Width);
-            HeightRequest = GtkUtils.ScaleGtkWidget(pb.Height);
+
+            WidthRequest  = GtkUtils.ScaleGtkWidget(pb.Width  / GLTheme.DialogScaling);
+            HeightRequest = GtkUtils.ScaleGtkWidget(pb.Height / GLTheme.DialogScaling);
         }
 
         public Pixbuf Pixbuf
