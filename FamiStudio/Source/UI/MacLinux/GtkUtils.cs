@@ -118,6 +118,8 @@ namespace FamiStudio
 
             if ((m & Gdk.ModifierType.ControlMask) != 0)
                 mod |= System.Windows.Forms.Keys.Control;
+            if ((m & Gdk.ModifierType.MetaMask) != 0)
+                mod |= System.Windows.Forms.Keys.Control;
             if ((m & Gdk.ModifierType.ShiftMask) != 0)
                 mod |= System.Windows.Forms.Keys.Shift;
             if ((m & Gdk.ModifierType.Mod1Mask) != 0)
