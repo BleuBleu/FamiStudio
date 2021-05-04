@@ -7,6 +7,12 @@ using Gdk;
 using Gtk;
 using Pango;
 
+#if FAMISTUDIO_LINUX
+    using WarningImage = Gtk.Image;
+#else
+    using WarningImage = FamiStudio.CairoImage;
+#endif
+
 namespace FamiStudio
 {
     public enum PropertyType
@@ -52,7 +58,7 @@ namespace FamiStudio
             public ListClicked listDoubleClick;
             public ListClicked listRightClick;
             public SliderFormatText sliderFormat;
-            public Gtk.Image warningIcon; // TEMPOTODO : Will this look ok on Mac?
+            public WarningImage warningIcon; // TEMPOTODO : Will this look ok on Mac?
             public string multilineLabelText; // HACK for multiline labels.
         };
 
@@ -855,17 +861,9 @@ namespace FamiStudio
             advancedPropertyStart = properties.Count;
         }
 
-        private Gtk.Image CreateImage(Pixbuf pixbuf)
+        private WarningImage CreateImage(Pixbuf pixbuf)
         {
-            var img = new Gtk.Image();
-
-            img.Pixbuf = pixbuf;
-            //img.Width = (int)(bmp.Width * RenderTheme.DialogScaling);
-            //img.Height = (int)(bmp.Height * RenderTheme.DialogScaling);
-            //img.SizeMode = PictureBoxSizeMode.Zoom;
-            //img.BorderStyle = BorderStyle.None;
-
-            return img;
+            return new WarningImage(pixbuf);
         }
 
         public void SetPropertyWarning(int idx, CommentType type, string comment)

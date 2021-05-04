@@ -299,6 +299,7 @@
     <Compile Include="Source\UI\MacLinux\GLWindow.cs" />
     <Compile Include="Source\UI\MacLinux\Cursors.cs" />
     <EmbeddedResource Include="Resources\gtk_linux_hidpi.rc" />
+    <Compile Include="Source\UI\MacLinux\CairoImage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
