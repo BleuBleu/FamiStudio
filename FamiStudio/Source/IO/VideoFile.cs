@@ -626,12 +626,7 @@ namespace FamiStudio
                         foreach (var s in channelStates)
                         {
                             int channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
-
-                            videoGraphics.PushRotation((float)Math.PI * 0.5f);
-                            videoGraphics.PushTranslation(channelPosX0, videoResY);
-                            videoGraphics.DrawBitmap(s.bitmap, 0, 0);
-                            videoGraphics.PopTransform();
-                            videoGraphics.PopTransform();
+                            videoGraphics.DrawRotatedBitmap(s.bitmap, channelPosX0, videoResY, s.bitmap.Size.Width, s.bitmap.Size.Height, 1.0f, 90);
                         }
 
                         // Gradient
