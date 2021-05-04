@@ -14,6 +14,42 @@ namespace FamiStudio
 #endif
         }
 
+        public static int ScaleWindowCoord(int pos)
+        {
+#if FAMISTUDIO_MACOS
+            return (int)(pos * GLTheme.MainWindowScaling);
+#else
+            return pos;
+#endif
+        }
+
+        public static int ScaleWindowCoord(double pos)
+        {
+#if FAMISTUDIO_MACOS
+            return (int)(pos * GLTheme.MainWindowScaling);
+#else
+            return (int)pos;
+#endif
+        }
+
+        public static int UnscaleWindowCoord(int pos)
+        {
+#if FAMISTUDIO_MACOS
+            return (int)(pos / GLTheme.MainWindowScaling);
+#else
+            return pos;
+#endif
+        }
+
+        public static int UnscaleWindowCoord(double pos)
+        {
+#if FAMISTUDIO_MACOS
+            return (int)(pos / GLTheme.MainWindowScaling);
+#else
+            return (int)pos;
+#endif
+        }
+
         public static System.Windows.Forms.MouseEventArgs ToWinFormArgs(Gdk.EventButton e, int x, int y)
         {
             System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;
