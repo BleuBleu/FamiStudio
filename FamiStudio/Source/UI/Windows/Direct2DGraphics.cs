@@ -126,15 +126,15 @@ namespace FamiStudio
             renderTarget.Transform = mat;
         }
 
-        public void PushRotation(float theta)
+        public void PushRotation(float r11, float r12, float r21, float r22)
         {
             var mat = renderTarget.Transform;
             matrixStack.Push(mat);
             // HACK : Doesnt multiply, just replaces.
-            mat.M11 =  (float)Math.Cos(theta);
-            mat.M12 = -(float)Math.Sin(theta);
-            mat.M21 =  (float)Math.Sin(theta);
-            mat.M22 =  (float)Math.Cos(theta);
+            mat.M11 = r11;
+            mat.M12 = r12;
+            mat.M21 = r21;
+            mat.M22 = r22;
             renderTarget.Transform = mat;
         }
 
@@ -190,6 +190,17 @@ namespace FamiStudio
         public void DrawBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity)
         {
             renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + width, y + height), opacity, BitmapInterpolationMode.NearestNeighbor);
+        }
+
+        public void DrawRotatedBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity, int rotation)
+        {
+            Debug.Assert(rotation == 90);
+
+            PushRotation(0, -1, 1, 0);
+            PushTranslation(x, y);
+            renderTarget.DrawBitmap(bmp, new RawRectangleF(0, 0, width, height), opacity, BitmapInterpolationMode.NearestNeighbor);
+            PopTransform();
+            PopTransform();
         }
 
         public void DrawText(string text, TextFormat font, float x, float y, Brush brush, float width = 1000)
