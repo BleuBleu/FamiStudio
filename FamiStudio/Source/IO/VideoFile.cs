@@ -468,7 +468,6 @@ namespace FamiStudio
             
             var theme = RenderTheme.CreateResourcesForGraphics(videoGraphics);
             var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
-            var gradientBrush = videoGraphics.CreateVerticalGradientBrush(0, 256, Color.Black, Color.FromArgb(0, Color.Black));
 
             // Generate WAV data for each individual channel for the oscilloscope.
             var channelStates = new List<VideoChannelState>();
@@ -512,6 +511,8 @@ namespace FamiStudio
             var pianoRollScaleX = Utils.Clamp(resY / 1080.0f, 0.6f, 0.9f);
             var pianoRollScaleY = channelResY < VeryThinNoteThreshold ? 0.5f : (channelResY < ThinNoteThreshold ? 0.667f : 1.0f);
             var channelLineWidth = channelResY < ThinNoteThreshold ? 3 : 5;
+            var gradientSizeY = 256 * (videoResY / 1080.0f);
+            var gradientBrush = videoGraphics.CreateVerticalGradientBrush(0, gradientSizeY, Color.Black, Color.FromArgb(0, Color.Black));
 
             foreach (var s in channelStates)
                 s.bmpIcon = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[s.channel.Type] + bmpSuffix);
@@ -630,7 +631,7 @@ namespace FamiStudio
                         }
 
                         // Gradient
-                        videoGraphics.FillRectangle(0, 0, videoResX, 256 * (videoResY / 1080.0f), gradientBrush);
+                        videoGraphics.FillRectangle(0, 0, videoResX, gradientSizeY, gradientBrush);
 
                         // Channel names + oscilloscope
                         foreach (var s in channelStates)
