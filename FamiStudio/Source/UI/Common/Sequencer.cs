@@ -1625,14 +1625,14 @@ namespace FamiStudio
                     tooltip = "{MouseLeft} Toggle channel display";
                     int idx = (e.Y - headerSizeY) / trackSizeY + 1;
                     if (idx >= 1 && idx <= 9)
-                        tooltip += $" {{Ctrl}} {{{idx}}}";
+                        tooltip += $" {{Ctrl}} {{F{idx}}}";
                 }
                 else
                 {
                     tooltip = "{MouseLeft} Make channel active";
                     int idx = (e.Y - headerSizeY) / trackSizeY + 1;
                     if (idx >= 1 && idx <= 9)
-                        tooltip += $" {{{idx}}}";
+                        tooltip += $" {{F{idx}}}";
                 }
             }
 
