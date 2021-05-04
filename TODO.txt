@@ -1,72 +1,70 @@
-- *** NSF IMPORT STUDX *** 
-- *** TWITTER CMD LINE ***
-- *** BUG RETINA??? 
- 
-FamiStudio Tempo 2.0 
-==================== 
-- Finish UI, test a lot!  
-	- Is the right groove selected if doing custom settings? 
-- Add missing tooltips (BPM, note length, etc). 
-- Any other formats needs fixing? 
-- Documentation. 
+FamiStudio 3.0.0 
+================ 
+- Add missing tempo tooltips (BPM, note length, etc). 
+- Tooltips for note refactor (stop note, etc.)
+- MacOS:
+	- GTK colors. => Doesnt work on mac... 
+	- Test mac with weird keyboards. 
+- studsX: 
+	- Song sorting from FTM. 
+	- Reverse 2xx effect?? 
+ 	- NSF import VRC7
+- CRASH (NO REPRO) : Quit while billy jean was playing. 
+	Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]); 
+	editChannel was 5, only 5 channels (0-4) 
 - Convert demo songs to new tempo (when file format is frozen). 
 	- Gimmick 
 	- Tower 
 	- Any others? 
- 
-Note refactor 
-============= 
-/ Note : Run unit test for player.
-/ Export format, fix all of them. TEST!
-	- Create FamiTracker unit tests.
-- POLISH : Tooltips.
-
+	
 - LOW PRIO : When resizing, move the release if its at the end?
 - LOW PRIO : End of song looping behavior?
-
-FamiStudio 3.0.0 
-================ 
-- MIDI :  
-	- MIDITODOs 
-	- Doc. 
-- Multiple sample import.
-- Mixer / low pass config. 
-- F1...F12 keys. 
-- Loop prevention for envelope (brad issue). 
-- BUG : Assert in video file when exporting a single channel (major chord in sq1). 
-- CRASH : Quit while billy jean was playing. 
-	Utils.Swap(ref channelsToRender[editChannel], ref channelsToRender[channelsToRender.Length - 1]); 
-	editChannel was 5, only 5 channels (0-4) 
-- CRASH : Multi pattern color edit (square selection) crashes when there are empty patterns. 
+- LOW PRIO : Multiple sample import. => Or import samples from other projects?
+- LOW PRIO : Loop prevention for envelope (brad issue). 
 - LOW PRIO : Left/right pan with +/- (cubase style)?
- 
-============= 
- 
-- MAYBE: MIDI in/out (not sure... non-technical people will be disapointed) 
-- QWERTZ? 
-	- GTK colors. => Doesnt work on mac... 
-	- Test mac with weird keyboards. 
-	- If a key is a music key, should we not process it (1-5 changes channel, so playing a note changes the channel...). 
-- studX: 
-	- Song sorting from FTM. 
-	- Reverse 2xx effect?? 
- 
+- LOW PRIO : Stereo WAV/MP3/Video?
+
 Doc 
 === 
 - Hayabusa DPCM doc. 
 - Vxx is supported.
+- MIDI 
+- Note editing
+- Tempo
+- F1-F12 keys.
 
 Testing 
 ======= 
+- Note : Run unit test for player.
 - MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage. 
 - MacOS : "Whenever I minimize it tho, you can't open it back up by clicking on the icon. You have to right click it and click 'Show All Windows', then click the window there.". how2bboss. 
+- Linux : See if GL line smooth + thick line works on bare metal.
 - Linux : Test scaling more. 
 - Windows : Scaling, 150% and stuff for the warning in dialogs. 
 - OGL : Grey screen happens sometimes. 
 - Engine :  
 	- Re-test delayed note, @no_ref delayed note fix. 
 	- Re-test FT2 stock with compression thing vs. 2 notes. 
-	 
+- Import/export format, retest all of them. Create FamiTracker unit tests.
+- Test tempo UI a lot. => Is the right groove selected if doing custom settings? 
+
+FamiStudio 3.0.0 Features
+=========================
+- Redesigned tempo.
+- Redesigned note editing
+- MIDI import/export
+- Oscilloscope
+- Scrollbars
+- Configurable QWERTY keyboard keys
+- Revamped Mac version.
+- Improved sound engine music data compression (15-30% smaller)
+- Audio expansion volume/low pass filter
+- S5B and VRC7 and now properly low-pass filtered.
+- Ability to re-order songs.
+- Hi-DPI support on Linux
+- Quick DPCM source data reload
+- Improved video rendering speed.
+
 Linux notes 
 =========== 
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 

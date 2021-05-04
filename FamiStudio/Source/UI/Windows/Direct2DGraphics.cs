@@ -30,7 +30,7 @@ namespace FamiStudio
         protected Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
         protected Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
         protected StrokeStyle strokeStyleMiter;
-        protected StrokeStyle strokeStyleNoScaling;
+        protected StrokeStyle strokeStyleMiterNoScaling;
         protected float windowScaling = 1.0f;
 
         public Factory Factory => factory;
@@ -75,7 +75,7 @@ namespace FamiStudio
             renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
             renderTarget.AntialiasMode = AntialiasMode.Aliased;
             strokeStyleMiter = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
-            strokeStyleNoScaling = new StrokeStyle1(factory, new StrokeStyleProperties1() { TransformType = StrokeTransformType.Fixed });
+            strokeStyleMiterNoScaling = new StrokeStyle1(factory, new StrokeStyleProperties1() { MiterLimit = 1, TransformType = StrokeTransformType.Fixed });
         }
 
         public virtual void Dispose()
@@ -229,7 +229,7 @@ namespace FamiStudio
             {
                 renderTarget.DrawLine(
                     new RawVector2(points[i + 0, 0], points[i + 0, 1]),
-                    new RawVector2(points[i + 1, 0], points[i + 1, 1]), brush, 1.0f, strokeStyleNoScaling);
+                    new RawVector2(points[i + 1, 0], points[i + 1, 1]), brush, 1.0f, strokeStyleMiterNoScaling);
             }
             PopTransform();
         }
@@ -298,20 +298,24 @@ namespace FamiStudio
 
         public void DrawGeometry(Geometry geo, Brush brush, float lineWidth = 1.0f)
         {
+            bool halfPixelOffset = lineWidth == 1;
+
             AntiAliasing = true;
-            PushTranslation(0.5f, 0.5f);
-            renderTarget.DrawGeometry(geo, brush, lineWidth, strokeStyleNoScaling);
-            PopTransform();
+            if (halfPixelOffset) PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawGeometry(geo, brush, lineWidth, strokeStyleMiterNoScaling);
+            if (halfPixelOffset) PopTransform();
             AntiAliasing = false;
         }
 
         public void FillAndDrawGeometry(Geometry geo, Brush fillBrush, Brush lineBrush, float lineWidth = 1.0f)
         {
+            bool halfPixelOffset = lineWidth == 1;
+
             AntiAliasing = true;
             renderTarget.FillGeometry(geo, fillBrush);
-            PushTranslation(0.5f, 0.5f);
-            renderTarget.DrawGeometry(geo, lineBrush, lineWidth, strokeStyleMiter);
-            PopTransform();
+            if (halfPixelOffset) PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawGeometry(geo, lineBrush, lineWidth, strokeStyleMiterNoScaling);
+            if (halfPixelOffset) PopTransform();
             AntiAliasing = false;
         }
 

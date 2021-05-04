@@ -2977,7 +2977,13 @@ namespace FamiStudio
 
         private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op, bool allowSnap = false, int noteIdx = -1)
         {
+#if DEBUG
             Debug.Assert(captureOperation == CaptureOperation.None);
+#else
+            if (captureOperation != CaptureOperation.None)
+                AbortCaptureOperation();
+#endif
+
             CaptureMouse(e);
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
@@ -3918,7 +3924,10 @@ namespace FamiStudio
 
         private bool HandleMouseDownWaveSelection(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left | MouseButtons.Right) && (IsMouseInNoteArea(e.X, e.Y) || IsMouseInHeader(e.X, e.Y)))
+            bool left  = e.Button.HasFlag(MouseButtons.Left);
+            bool right = e.Button.HasFlag(MouseButtons.Right);
+
+            if ((left || right) && (IsMouseInNoteArea(e.X, e.Y) || IsMouseInHeader(e.X, e.Y)))
             {
                 StartCaptureOperation(e, CaptureOperation.SelectWave);
                 UpdateWaveSelection(e.X);
@@ -4080,7 +4089,10 @@ namespace FamiStudio
 
             ControlActivated?.Invoke();
 
-            if (e.Button.HasFlag(MouseButtons.Left | MouseButtons.Right) && captureOperation != CaptureOperation.None)
+            bool left  = e.Button.HasFlag(MouseButtons.Left);
+            bool right = e.Button.HasFlag(MouseButtons.Right);
+
+            if (captureOperation != CaptureOperation.None && (left || right))
                 return;
 
             UpdateCursor();
@@ -4922,7 +4934,7 @@ namespace FamiStudio
             var minLocation = NoteLocation.Min(location, captureNoteLocation);
             var maxLocation = NoteLocation.Max(location, captureNoteLocation);
             var minAbsoluteNoteIndex = minLocation.ToAbsoluteNoteIndex(Song);
-            var maxAbsoluteNoteIndex = maxLocation.ToAbsoluteNoteIndex(Song);
+            var maxAbsoluteNoteIndex = maxLocation.ToAbsoluteNoteIndex(Song) + 1;
 
             hoverNoteLocation = minLocation;
 
