@@ -13,8 +13,8 @@ namespace FamiStudio
         {
             pixbuf = pb;
 
-            WidthRequest  = GtkUtils.ScaleGtkWidget(pb.Width  / GLTheme.DialogScaling);
-            HeightRequest = GtkUtils.ScaleGtkWidget(pb.Height / GLTheme.DialogScaling);
+            WidthRequest  = GtkUtils.ScaleGtkWidget((int)(pb.Width  / GLTheme.DialogScaling));
+            HeightRequest = GtkUtils.ScaleGtkWidget((int)(pb.Height / GLTheme.DialogScaling));
         }
 
         public Pixbuf Pixbuf
