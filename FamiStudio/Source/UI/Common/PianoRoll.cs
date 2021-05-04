@@ -4868,12 +4868,11 @@ namespace FamiStudio
                 var location = NoteLocation.FromAbsoluteNoteIndex(Song, absoluteNoteIndex);
                 var noteLength = Song.Project.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(location.PatternIndex);
                 var snapFactor = SnapResolutionFactors[(int)snapResolution];
-                var snappedNoteIndex = absoluteNoteIndex;
 
                 Debug.Assert(snapFactor >= 1.0); // Fractional snapping is no longer supported.
 
                 var numNotes = noteLength * (int)snapFactor;
-                snappedNoteIndex = (absoluteNoteIndex / numNotes + (roundUp ? 1 : 0)) * numNotes;
+                var snappedNoteIndex = (location.NoteIndex / numNotes + (roundUp ? 1 : 0)) * numNotes;
 
                 if (!roundUp)
                     snappedNoteIndex = Math.Min(Song.GetPatternLength(location.PatternIndex) - 1, snappedNoteIndex);
