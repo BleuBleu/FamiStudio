@@ -55,7 +55,7 @@ namespace FamiStudio
 
             WidthRequest  = GtkUtils.ScaleGtkWidget(1280);
             HeightRequest = GtkUtils.ScaleGtkWidget(720);
-            controls.Resize(ScaleCoord(WidthRequest), ScaleCoord(HeightRequest));
+            controls.Resize(GtkUtils.ScaleWindowCoord(WidthRequest), GtkUtils.ScaleWindowCoord(HeightRequest));
 
             Events |= 
                 Gdk.EventMask.ButtonPressMask   |
@@ -249,7 +249,7 @@ namespace FamiStudio
 
         protected override void Resized(int width, int height)
         {
-            controls.Resize(ScaleCoord(width), ScaleCoord(height));
+            controls.Resize(GtkUtils.ScaleWindowCoord(width), GtkUtils.ScaleWindowCoord(height));
             Invalidate();
             RenderFrame();
         }
@@ -270,8 +270,8 @@ namespace FamiStudio
 
         void GlWindow_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
-            var scaledX = ScaleCoord(args.Event.X);
-            var scaledY = ScaleCoord(args.Event.Y);
+            var scaledX = GtkUtils.ScaleWindowCoord(args.Event.X);
+            var scaledY = GtkUtils.ScaleWindowCoord(args.Event.Y);
 
             var ctrl = controls.GetControlAtCoord(scaledX, scaledY, out int x, out int y);
 
@@ -319,8 +319,8 @@ namespace FamiStudio
 
         void GlWindow_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
         {
-            var scaledX = ScaleCoord(args.Event.X);
-            var scaledY = ScaleCoord(args.Event.Y);
+            var scaledX = GtkUtils.ScaleWindowCoord(args.Event.X);
+            var scaledY = GtkUtils.ScaleWindowCoord(args.Event.Y);
 
             int x;
             int y;
@@ -350,8 +350,8 @@ namespace FamiStudio
 
         void GlWindow_ScrollEvent(object o, ScrollEventArgs args)
         {
-            var scaledX = ScaleCoord(args.Event.X);
-            var scaledY = ScaleCoord(args.Event.Y);
+            var scaledX = GtkUtils.ScaleWindowCoord(args.Event.X);
+            var scaledY = GtkUtils.ScaleWindowCoord(args.Event.Y);
 
             var ctrl = controls.GetControlAtCoord(scaledX, scaledY, out int x, out int y);
 
@@ -369,8 +369,8 @@ namespace FamiStudio
 
         void GlWindow_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
         {
-            var scaledX = ScaleCoord(args.Event.X);
-            var scaledY = ScaleCoord(args.Event.Y);
+            var scaledX = GtkUtils.ScaleWindowCoord(args.Event.X);
+            var scaledY = GtkUtils.ScaleWindowCoord(args.Event.Y);
 
             int x;
             int y;
@@ -455,7 +455,7 @@ namespace FamiStudio
 
         public void RefreshLayout()
         { 
-            controls.Resize(ScaleCoord(Allocation.Width), ScaleCoord(Allocation.Height));
+            controls.Resize(GtkUtils.ScaleWindowCoord(Allocation.Width), GtkUtils.ScaleWindowCoord(Allocation.Height));
             controls.Invalidate();
         }
 
@@ -467,8 +467,8 @@ namespace FamiStudio
         private void GetScaledWindowOrigin(out int ox, out int oy)
         {
             GdkWindow.GetOrigin(out ox, out oy);
-            ox = ScaleCoord(ox);
-            oy = ScaleCoord(oy);
+            ox = GtkUtils.ScaleWindowCoord(ox);
+            oy = GtkUtils.ScaleWindowCoord(oy);
         }
 
         public Point PointToClient(Point p)
@@ -527,38 +527,6 @@ namespace FamiStudio
         public void Refresh()
         {
             RenderFrame();
-        }
-
-        int ScaleCoord(int pos)
-        {
-#if FAMISTUDIO_MACOS
-            return (int)(pos * GLTheme.MainWindowScaling);
-#else
-            return pos;
-#endif
-        }
-
-        int ScaleCoord(double pos)
-        {
-#if FAMISTUDIO_MACOS
-            return (int)(pos * GLTheme.MainWindowScaling);
-#else
-            return (int)pos;
-#endif
-        }
-
-        int UnscaleCoord(int pos)
-        {
-#if FAMISTUDIO_MACOS
-            return (int)(pos / GLTheme.MainWindowScaling);
-#else
-            return pos;
-#endif
-        }
-
-        double CoordToGtk(double pos)
-        {
-            return pos / GLTheme.MainWindowScaling;
         }
 
         protected override void RenderFrame(bool force = false)
@@ -627,7 +595,7 @@ namespace FamiStudio
             get
             {
                 GetScaledWindowOrigin(out var ox, out var oy);
-                return new Rectangle(ox, oy, ox + ScaleCoord(Allocation.Width), oy + ScaleCoord(Allocation.Height));
+                return new Rectangle(ox, oy, ox + GtkUtils.ScaleWindowCoord(Allocation.Width), oy + GtkUtils.ScaleWindowCoord(Allocation.Height));
             }
         }
 
