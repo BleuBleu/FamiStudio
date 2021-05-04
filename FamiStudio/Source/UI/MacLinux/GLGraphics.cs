@@ -643,7 +643,7 @@ namespace FamiStudio
         public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f)
         {
             GL.PushMatrix();
-            AddHalfPixelOffset();
+            if (lineWidth == 1.0f) AddHalfPixelOffset();
             GL.Enable(EnableCap.LineSmooth);
             GL.Color4(brush.Color0);
 #if FAMISTUDIO_LINUX
