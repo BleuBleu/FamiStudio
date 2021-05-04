@@ -1819,15 +1819,18 @@ namespace FamiStudio
                     var hoverLastNoteValue = Note.NoteInvalid;
                     var hoverLastInstrument = (Instrument)null;
 
-                    if (hoverNoteLocation != NoteLocation.Invalid && CaptureOperationRequiresNoteHighlight(captureOperation))
+                    if (editMode != EditionMode.VideoRecording)
                     {
-                        hoverLocation = hoverNoteLocation;
-                        hoverNote     = song.Channels[editChannel].PatternInstances[hoverLocation.PatternIndex].Notes[hoverLocation.NoteIndex];
-                    }
-                    else if (captureOperation == CaptureOperation.None)
-                    {
-                        var pt = PointToClient(Cursor.Position);
-                        hoverNote = GetNoteForCoord(pt.X, pt.Y, out _, out hoverLocation, out _);
+                        if (hoverNoteLocation != NoteLocation.Invalid && CaptureOperationRequiresNoteHighlight(captureOperation))
+                        {
+                            hoverLocation = hoverNoteLocation;
+                            hoverNote = song.Channels[editChannel].PatternInstances[hoverLocation.PatternIndex].Notes[hoverLocation.NoteIndex];
+                        }
+                        else if (captureOperation == CaptureOperation.None)
+                        {
+                            var pt = PointToClient(Cursor.Position);
+                            hoverNote = GetNoteForCoord(pt.X, pt.Y, out _, out hoverLocation, out _);
+                        }
                     }
 
                     var ghostChannelMask = App != null ? App.GhostChannelMask : 0;
