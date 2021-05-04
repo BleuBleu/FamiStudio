@@ -274,6 +274,7 @@
     <EmbeddedResource Include="Resources\EyedropCursor%402x.png" />
     <Compile Include="Source\UI\MacLinux\FamiStudioFormGtk.cs" />
     <Compile Include="Source\UI\MacLinux\Cursors.cs" />
+    <Compile Include="Source\UI\MacLinux\CairoImage.cs" />
     <EmbeddedResource Include="Resources\FamiStudio_64.png" />
     <Compile Include="Source\UI\MacLinux\GLWindow.cs" />
     <EmbeddedResource Include="Resources\ConfigMacOS.png" />
