@@ -148,8 +148,8 @@ namespace FamiStudio
             }
 
             var pt = MacUtils.SendPoint(e, selLocationInWindow);
-            var px = ScaleCoord((float)(pt.X));
-            var py = ScaleCoord((int)(float)(Allocation.Height - pt.Y));
+            var px = GtkUtils.ScaleWindowCoord((float)(pt.X));
+            var py = GtkUtils.ScaleWindowCoord((int)(float)(Allocation.Height - pt.Y));
 
             var ctrl = controls.GetControlAtCoord(px, py, out int x, out int y);
 
@@ -191,8 +191,8 @@ namespace FamiStudio
             if (Math.Abs(magnificationAccum) > threshold)
             {
                 var pt = MacUtils.SendPoint(e, selLocationInWindow);
-                var px = ScaleCoord((float)(pt.X));
-                var py = ScaleCoord((int)(float)(Allocation.Height - pt.Y));
+                var px = GtkUtils.ScaleWindowCoord((float)(pt.X));
+                var py = GtkUtils.ScaleWindowCoord((int)(float)(Allocation.Height - pt.Y));
 
                 Debug.WriteLine($"{px} {py}");
 

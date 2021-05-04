@@ -43,7 +43,9 @@ namespace FamiStudio
         {
             Init();
             WidthRequest = GtkUtils.ScaleGtkWidget(width);
-            initialLocation = pt;
+
+            initialLocation.X = GtkUtils.UnscaleWindowCoord(pt.X);
+            initialLocation.Y = GtkUtils.UnscaleWindowCoord(pt.Y);
 
             this.leftAlign = leftAlign;
             this.topAlign  = topAlign;
