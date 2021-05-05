@@ -269,7 +269,7 @@ namespace FamiStudio
             }
         }
 
-        void SmoothFamitrackerScrolling(VideoFrameMetadata[] frames)
+        private void SmoothFamitrackerScrolling(VideoFrameMetadata[] frames)
         {
             var numFrames = frames.Length;
 
@@ -304,7 +304,7 @@ namespace FamiStudio
             }
         }
 
-        void SmoothFamiStudioScrolling(VideoFrameMetadata[] frames, Song song)
+        private void SmoothFamiStudioScrolling(VideoFrameMetadata[] frames, Song song)
         {
             var patternIndices = new int[frames.Length];
             var absoluteNoteIndices = new float[frames.Length];
@@ -341,7 +341,7 @@ namespace FamiStudio
             }
         }
 
-        Process LaunchFFmpeg(string ffmpegExecutable, string commandLine, bool redirectStdIn, bool redirectStdOut)
+        private Process LaunchFFmpeg(string ffmpegExecutable, string commandLine, bool redirectStdIn, bool redirectStdOut)
         {
             var psi = new ProcessStartInfo(ffmpegExecutable, commandLine);
 
@@ -389,7 +389,7 @@ namespace FamiStudio
             }
         }
 
-        void ExtendSongForLooping(Song song, int loopCount)
+        private void ExtendSongForLooping(Song song, int loopCount)
         {
             // For looping, we simply extend the song by copying pattern instances.
             if (loopCount > 1 && song.LoopPoint >= 0 && song.LoopPoint < song.Length)
@@ -417,7 +417,22 @@ namespace FamiStudio
                 }
             }
         }
-        
+
+        // Not tested in a while, probably wrong channel order.
+        private unsafe void DumpDebugImage(byte[] image, int sizeX, int sizeY, int frameIndex)
+        {
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+            var pb = new Gdk.Pixbuf(image, true, 8, sizeX, sizeY, sizeX * 4);
+            pb.Save($"/home/mat/Downloads/frame_{frameIndex:D4}.png", "png");
+#else
+            fixed (byte* vp = &image[0])
+            {
+                var b = new Bitmap(sizeX, sizeY, sizeX * 4, System.Drawing.Imaging.PixelFormat.Format32bppArgb, new IntPtr(vp));
+                b.Save($"d:\\dump\\pr\\frame_{frameIndex:D4}.png");
+            }
+#endif
+        }
+
         class VideoChannelState
         {
             public int videoChannelIndex;
@@ -668,18 +683,7 @@ namespace FamiStudio
                         stream.Write(videoImage);
 
                         // Dump debug images.
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-                        //var pb = new Gdk.Pixbuf(channelImage, true, 8, channelResX, channelResY, channelResX * 4);
-                        //pb.Save($"/home/mat/Downloads/channel.png", "png");
-                        //var pb = new Gdk.Pixbuf(videoImage, true, 8, videoResX, videoResY, videoResX * 4);
-                        //pb.Save($"/home/mat/Downloads/frame_{f:D4}.png", "png");
-#else
-                        //fixed (byte* vp = &videoImage[0])
-                        //{
-                        //    var b = new System.Drawing.Bitmap(videoResX, videoResY, videoResX * 4, System.Drawing.Imaging.PixelFormat.Format32bppArgb, new IntPtr(vp));
-                        //    b.Save($"d:\\dump\\pr\\frame_{f:D4}.png");
-                        //}
-#endif
+                        // DumpDebugImage(videoImage, videoResX, videoResY, f);
                     }
                 }
 

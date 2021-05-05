@@ -4799,24 +4799,72 @@ namespace FamiStudio
                 {
                     if (GetLocationForCoord(e.X, e.Y, out var location, out byte noteValue))
                     {
-                        if (Song.Channels[editChannel].PatternInstances[location.PatternIndex] == null)
-                            tooltip = "{MouseWheel} Pan";
-
                         newNoteTooltip = $"{Note.GetFriendlyName(noteValue)} [{location.PatternIndex:D3} : {location.NoteIndex:D3}]";
 
-                        var note = Song.Channels[editChannel].FindMusicalNoteAtLocation(ref location, noteValue);
+                        var channel = Song.Channels[editChannel];
+                        var note = channel.FindMusicalNoteAtLocation(ref location, noteValue);
+
                         if (note != null)
                         {
                             if (note.Instrument != null)
                                 newNoteTooltip += $" ({note.Instrument.Name})";
                             if (note.IsArpeggio)
                                 newNoteTooltip += $" (Arpeggio: {note.Arpeggio.Name})";
+                        }
 
-                            tooltip = "{MouseLeft} {Drag} Add/drag note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseWheel} Pan\n{S} {MouseLeft} {Drag} Slide note - {A} {MouseLeft} Toggle note attack - {I} {MouseLeft} Instrument Eyedrop - {MouseRight} Delete note";
+                        // Main click action.
+                        var captureOp = GetHoverNoteCaptureOperationForCoord(e.X, e.Y);
+                        var tooltipList = new List<string>();
+
+                        switch (captureOp)
+                        {
+                            case CaptureOperation.ResizeNoteStart:
+                            case CaptureOperation.ResizeSelectionNoteStart:
+                            case CaptureOperation.ResizeNoteEnd:
+                            case CaptureOperation.ResizeSelectionNoteEnd:
+                                tooltipList.Add("{MouseLeft} {Drag} Resize note(s)");
+                                break;
+                            case CaptureOperation.MoveNoteRelease:
+                                tooltipList.Add("{MouseLeft} {Drag} Move release point");
+                                break;
+                            case CaptureOperation.DragNote:
+                            case CaptureOperation.DragSelection:
+                                tooltipList.Add("{MouseLeft} {Drag} Move note(s)");
+                                break;
+                            default:
+                                tooltipList.Add("{MouseLeft} {Drag} Create note");
+                                break;
+                        }
+
+                        if (note != null)
+                        {
+                            if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease)
+                                tooltipList.Add("{Shift} {MouseLeft} Set release point");
+                            if (channel.SupportsSlideNotes)
+                                tooltipList.Add("{S} {MouseLeft} {Drag} Slide note");
+                            if (note.IsMusical)
+                            {
+                                tooltipList.Add("{A} {MouseLeft} Toggle note attack");
+                                tooltipList.Add("{I} {MouseLeft} Instrument Eyedrop");
+                            }
+                            tooltipList.Add("{MouseRight} Delete note");
+                        }
+                        else 
+                        {
+                            tooltipList.Add("{T} {MouseLeft} Add stop note");
+                        }
+
+                        tooltipList.Add("{MouseWheel} Pan");
+
+                        if (tooltipList.Count >= 3)
+                        {
+                            var array = tooltipList.ToArray();
+                            var numFirstLine = array.Length / 2;
+                            tooltip = string.Join(" - ", array, 0, numFirstLine) + "\n" + string.Join(" - ", array, numFirstLine, array.Length - numFirstLine);
                         }
                         else
                         {
-                            tooltip = "{MouseLeft} Add note - {Ctrl} {MouseLeft} Add stop note - {Shift} {MouseLeft} Add release note - {MouseWheel} Pan\n{MouseRight} Select";
+                            tooltip = string.Join(" - ", tooltipList);
                         }
                     }
 
