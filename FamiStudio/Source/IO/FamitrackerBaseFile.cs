@@ -596,7 +596,7 @@ namespace FamiStudio
                 var portamentoSpeed = 0;
                 var slideSpeed = 0;
                 var slideShift = c.IsN163WaveChannel ? 2 : 0;
-                var slideSign  = c.IsN163WaveChannel || c.IsFdsWaveChannel ? -1 : 1; // Inverted channels.
+                var slideSign  = c.IsN163WaveChannel || c.IsFdsWaveChannel || c.IsVrc7FmChannel ? -1 : 1; // Inverted channels.
 
                 for (int p = 0; p < s.Length; p++)
                 {
