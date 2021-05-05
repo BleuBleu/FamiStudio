@@ -425,6 +425,12 @@ namespace FamiStudio
             }
         }
 
+        private void FixBadEnvelopeLength()
+        {
+            if (values.Length != maxLength)
+                Array.Resize(ref values, maxLength);
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref length);
@@ -434,6 +440,9 @@ namespace FamiStudio
             if (buffer.Version >= 4)
                 buffer.Serialize(ref relative);
             buffer.Serialize(ref values);
+
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
+                FixBadEnvelopeLength();
         }
     }
 
