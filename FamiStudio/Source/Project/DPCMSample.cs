@@ -25,7 +25,6 @@ namespace FamiStudio
         private int  sampleRate = 15;
         private int  previewRate = 15;
         private int  volumeAdjust = 100;
-        private int  lowPassFilter = 0;
         private int  paddingMode = DPCMPaddingType.PadTo16Bytes;
         private bool reverseBits;
         private bool trimZeroVolume;
@@ -61,11 +60,10 @@ namespace FamiStudio
         public bool     TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
         public bool     PalProcessing  { get => palProcessing;  set => palProcessing  = value; }
         public int      VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
-        public int      LowPassFilter  { get => lowPassFilter;  set => lowPassFilter  = value; }
         public int      PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
         public SampleVolumePair[] VolumeEnvelope { get => volumeEnvelope; }
 
-        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits || lowPassFilter > 0;
+        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits;
 
         public static object ProcessedDataLock = new object();
         public const int MaxSampleSize = (255 << 4) + 1;
@@ -156,7 +154,7 @@ namespace FamiStudio
                 var targetSampleRate = DPCMSampleRate.Frequencies[palProcessing ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.
-                if (!SourceDataIsWav && volumeAdjust == 100 && !UsesVolumeEnvelope && sampleRate == 15 && !trimZeroVolume && lowPassFilter > 0)
+                if (!SourceDataIsWav && volumeAdjust == 100 && !UsesVolumeEnvelope && sampleRate == 15 && !trimZeroVolume)
                 {
                     processedData = WaveUtils.CopyDpcm(SourceDmcData.Data);
 
@@ -187,12 +185,14 @@ namespace FamiStudio
                         WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out sourceWavData);
                     }
 
+                    /*
                     if (lowPassFilter > 0)
                     {
                         var cutoff = Utils.Lerp(0.25f, 0.1f, lowPassFilter / 100.0f);
                         cutoff = (float)Math.Pow(cutoff * 2, 2.0f) / 2.0f;
                         WaveUtils.LowPassFilter(ref sourceWavData, cutoff, cutoff * 0.5f);
                     }
+                    */
 
                     if (UsesVolumeEnvelope)
                     {
