@@ -87,15 +87,15 @@ namespace FamiStudio
                 Debug.Assert(grooveIndex >= 0);
                 grooveStrings = grooveList.Select(g => string.Join("-", g)).ToArray();
 
-                famistudioBpmPropIdx   = props.AddDropDownList("BPM : ", tempoStrings, tempoStrings[tempoIndex]); // 0
+                famistudioBpmPropIdx   = props.AddDropDownList("BPM : ", tempoStrings, tempoStrings[tempoIndex], CommonTooltips.BPM); // 0
                 notesPerBeatPropIdx    = props.AddIntegerRange("Notes per Beat : ", notesPerBeat / noteLength, 1, 256, CommonTooltips.NotesPerBeat); // 1
                 notesPerPatternPropIdx = props.AddIntegerRange("Notes per Pattern : ", notesPerPattern / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 2
-                framesPerNotePropIdx   = props.AddLabel("Frames per Note :", noteLength.ToString()); // 3
+                framesPerNotePropIdx   = props.AddLabel("Frames per Note :", noteLength.ToString(), false, CommonTooltips.FramesPerNote); // 3
 
                 props.ShowWarnings = true;
                 props.BeginAdvancedProperties();
-                groovePropIdx    = props.AddDropDownList("Groove : ", grooveStrings, grooveStrings[grooveIndex]); // 4
-                groovePadPropIdx = props.AddDropDownList("Groove Padding : ", GroovePaddingType.Names, GroovePaddingType.Names[song.GroovePaddingMode]); // 5
+                groovePropIdx    = props.AddDropDownList("Groove : ", grooveStrings, grooveStrings[grooveIndex], CommonTooltips.Groove); // 4
+                groovePadPropIdx = props.AddDropDownList("Groove Padding : ", GroovePaddingType.Names, GroovePaddingType.Names[song.GroovePaddingMode], CommonTooltips.GroovePadding); // 5
 
                 originalNoteLength      = noteLength;
                 originalNotesPerBeat    = notesPerBeat;

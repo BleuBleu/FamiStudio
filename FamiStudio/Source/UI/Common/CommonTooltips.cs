@@ -22,9 +22,12 @@ namespace FamiStudio
         public readonly static string Tempo = "This is not the BPM! It is the rate at which the internal tempo counter in incremented.\nValues other than 150 may yield uneven notes. Please see FamiTracker documentation.";
         public readonly static string Speed = "If tempo is 150, number of NTSC frames (1/60th of a second) between each notes.\nLarger values lead to slower tempo. Please see FamiTracker documentation.";
         public readonly static string BPM = "Beats per minute.";
-        public readonly static string FramesPerNote = "Number of NTSC frames (1/60th of a second) in a notes.\nLonger notes lead to slower tempo.";
+        public readonly static string FramesPerNote = "Number of frames (1/60th of a second in NTSC, 1/50th in PAL) in a notes.";
         public readonly static string NotesPerPattern = "Number of notes in a pattern. A pattern is the smallest unit of your song that you may want to repeat multiple times.";
         public readonly static string NotesPerBeat = "Number of notes in a beat. A darker line will be drawn between beats in the piano roll. Affects BPM calculation.";
+        public readonly static string Groove = "The sequence of frame counts that will be executed to achieve the desired BPM.";
+        public readonly static string GroovePadding = "Determines where an empty frame will be injected when the current groove value is higher than the number of frames in a note.";
+
     }
 
     public static class TutorialMessages

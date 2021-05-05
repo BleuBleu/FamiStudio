@@ -1,7 +1,5 @@
 FamiStudio 3.0.0 
 ================ 
-- Add missing tempo tooltips (BPM, note length, etc). 
-- Tooltips for note refactor (stop note, etc.)
 - studsX: 
 	- Song sorting from FTM. 
 	- Reverse 2xx effect?? 
@@ -10,7 +8,6 @@ FamiStudio 3.0.0
 	- Gimmick 
 	- Tower 
 	- Any others? 
-
 - LOW PRIO : When resizing, move the release if its at the end?
 - LOW PRIO : End of song looping behavior?
 - LOW PRIO : Multiple sample import. => Or import samples from other projects?
@@ -26,20 +23,20 @@ Doc
 - Note editing
 - Tempo
 - F1-F12 keys.
+- QWERTY keys (remove stop note on drawing)
 
 Testing 
 ======= 
 - Note : Run unit test for player.
 - MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage. 
 - MacOS: Test with weird keyboards, see if GTK colors look ok.
-- Linux : See if GL line smooth + thick line works on bare metal.
 - Linux : Test scaling more. 
 - Windows : Scaling, 150% and stuff for the warning in dialogs. 
 - Engine :  
 	- Re-test delayed note, @no_ref delayed note fix. 
 	- Re-test FT2 stock with compression thing vs. 2 notes. 
 - Import/export format, retest all of them. Create FamiTracker unit tests.
-- Test tempo UI a lot. => Is the right groove selected if doing custom settings? 
+- Test tempo UI a lot. 
 
 FamiStudio 3.0.0 Features
 =========================
