@@ -146,6 +146,12 @@ namespace FamiStudio
             }
         }
 
+        public void ClearJumpSkip()
+        {
+            jump = 0xff;
+            skip = 0xff;
+        }
+
         public byte Value
         {
             get { return val; }
@@ -492,6 +498,7 @@ namespace FamiStudio
         public bool HasJumpOrSkip => jump != 0xff || skip != 0xff;
 
         // To fix some bad data from old versions.
+        // NOTE : Keeping notes if they have jumps/skips since they will be cleaned up once the file is completely loaded.
         public bool IsUseless => (IsSlideNote || instrument != null) && !IsValid && Flags == 0 && EffectMask == 0;
 
         public bool MatchesFilter(NoteFilter filter)

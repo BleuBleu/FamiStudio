@@ -836,6 +836,12 @@ namespace FamiStudio
                 patternInstances[i] = null;
         }
 
+        public void DeleteEmptyNotes()
+        {
+            foreach (var pattern in patterns)
+                pattern.DeleteEmptyNotes();
+        }
+
         public void SetNoteDurationToMaximumLength()
         {
             var maxNoteLengths = new Dictionary<Note, int>();
@@ -1092,10 +1098,9 @@ namespace FamiStudio
 
                     note.ClearReleaseIfPastDuration();
                 }
-
-                pattern.DeleteEmptyNotes();
             }
 
+            DeleteEmptyNotes();
             InvalidateCumulativePatternCache();
             DeleteUnusedPatterns();
         }

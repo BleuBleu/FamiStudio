@@ -212,7 +212,7 @@ namespace FamiStudio
             InvalidateCumulativeCache();
         }
 
-        public void DeleteEmptyNotes(bool trim = true, bool deleteUseless = false)
+        public void DeleteEmptyNotes()
         {
             var keys = notes.Keys;
             var vals = notes.Values;
@@ -220,12 +220,9 @@ namespace FamiStudio
             for (int i = vals.Count - 1; i >= 0; i--)
             {
                 var note = vals[i];
-                if (note == null || note.IsEmpty || note.IsUseless && deleteUseless)
+                if (note == null || note.IsEmpty || note.IsUseless)
                     notes.Remove(keys[i]);
             }
-
-            if (trim)
-                notes.TrimExcess();
         }
 
         public int BinarySearchList(IList<int> list, int value, bool roundUp = false)
@@ -344,7 +341,7 @@ namespace FamiStudio
                     notes = new SortedList<int, Note>();
 
                 if (buffer.IsWriting)
-                    DeleteEmptyNotes(false);
+                    DeleteEmptyNotes();
                 else
                     notes = new SortedList<int, Note>();
 
@@ -385,9 +382,6 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
-                if (!buffer.IsForUndoRedo)
-                    DeleteEmptyNotes(true, true);
-
                 InvalidateCumulativeCache();
 
                 // This can happen when pasting from an expansion to another. We wont find the channel.

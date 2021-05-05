@@ -350,6 +350,12 @@ namespace FamiStudio
                 channel.DeleteUnusedPatterns();
         }
 
+        public void DeleteEmptyNotes()
+        {
+            foreach (var channel in channels)
+                channel.DeleteEmptyNotes();
+        }
+
         public void DeleteNotesPastMaxInstanceLength()
         {
             foreach (var channel in channels)
@@ -623,6 +629,8 @@ namespace FamiStudio
                             {
                                 SetPatternCustomSettings(i, kv.Key + 1, BeatLength);
                             }
+
+                            note.ClearJumpSkip();
                         }
                     }
                 }
@@ -1085,6 +1093,9 @@ namespace FamiStudio
 
             if (buffer.Version < 10)
                 ConvertToCompoundNotes();
+
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
+                DeleteEmptyNotes();
 
             // Before 2.3.0, songs had an invalid color by default.
             if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
