@@ -295,7 +295,7 @@ namespace FamiStudio
         bool showSelection = false;
         bool showEffectsPanel = false;
         bool snap = false;
-        SnapResolution snapResolution = SnapResolution.FourNote;
+        SnapResolution snapResolution = SnapResolution.OneNote;
         int scrollX = 0;
         int scrollY = 0;
         int zoomLevel = 0;
@@ -617,7 +617,7 @@ namespace FamiStudio
             scrollY = maxScrollY / 2;
 
             var channel = Song.Channels[editChannel];
-            var note = channel.GetCachedPatternFirstMusicalNote(patternIdx, out _);
+            var note = channel.FindPatternFirstMusicalNote(patternIdx);
 
             if (note != null)
             {

@@ -386,7 +386,7 @@ namespace FamiStudio
 
         private string GetPatternString(Pattern pattern, int n)
         {
-            return $"(Song={pattern.Song.Name}, Channel={ChannelType.Names[pattern.ChannelType]}, Pattern={pattern.Name}, Row={n:X2})";
+            return $"(Song={pattern.Song.Name}, Channel={ChannelType.Names[pattern.ChannelType]}, Location={pattern.Name}:{n:X2})";
         }
 
         private int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
@@ -898,9 +898,6 @@ namespace FamiStudio
                     }
                 }
 
-                s.DeleteNotesPastMaxInstanceLength();
-                s.UpdatePatternStartNotes();
-
                 // FamiTracker always assumes 4 rows per beat for BPM calculation, but let's assume
                 // the artists properly set first row highlight to that.
                 if (barLength == -1)
@@ -909,6 +906,10 @@ namespace FamiStudio
                     s.SetBeatLength(barLength);
 
                 ApplyHaltEffect(s, patternFxData);
+
+                s.DeleteNotesPastMaxInstanceLength();
+                s.UpdatePatternStartNotes();
+
                 CreateArpeggios(s, patternFxData);
                 CreateSlideNotes(s, patternFxData);
 

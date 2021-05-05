@@ -44,6 +44,11 @@ namespace FamiStudio
             set { name = value; }
         }
 
+        public override string ToString()
+        {
+            return name;
+        }
+
         public bool GetMinMaxNote(out int min, out int max)
         {
             bool valid = false;

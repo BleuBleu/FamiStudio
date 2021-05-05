@@ -36,6 +36,11 @@ namespace FamiStudio
                 patternCache[i] = new PatternCumulativeCache();
         }
 
+        public override string ToString()
+        {
+            return NameWithExpansion;
+        }
+
         public Pattern GetPattern(string name)
         {
             return patterns.Find(p => p.Name == name);
@@ -572,21 +577,18 @@ namespace FamiStudio
             }
         }
 
-        public Note GetCachedPatternFirstMusicalNote(int patternIndex, out int noteIndex)
+        public Note FindPatternFirstMusicalNote(int patternIndex)
         {
-            ConditionalUpdateCumulativeCache(patternIndex);
-
-            var cache = patternCache[patternIndex];
-            if (cache.firstNoteIndex >= 0)
+            var pattern = PatternInstances[patternIndex];
+            if (pattern != null)
             {
-                var pattern = patternInstances[patternIndex];
-                var note = pattern.Notes[cache.firstNoteIndex];
-                Debug.Assert(note.IsMusical);
-                noteIndex = cache.firstNoteIndex;
-                return note;
+                foreach (var note in pattern.Notes.Values)
+                {
+                    if (note != null && note.IsMusical)
+                        return note;
+                }
             }
 
-            noteIndex = -1;
             return null;
         }
 
@@ -1047,7 +1049,7 @@ namespace FamiStudio
             }
 
             // Do a second pass to handle inconsistent durations and find the stop notes to keep.
-            var stopNotesToPreserve = new HashSet<Note>();
+            var stopNotesToPreserve = new Dictionary<Note, Pattern>();
 
             l0 = NoteLocation.Invalid;
             n0 = (Note)null;
@@ -1070,10 +1072,9 @@ namespace FamiStudio
 
                         var duration = (ushort)song.CountNotesBetween(l0, l1);
                         if (n0.Duration != duration)
-                        {
-                            Log.LogMessage(LogSeverity.Warning, $"Iconsistent note duration in song {song.Name}, pattern {patternInstances[l0.PatternIndex].Name}, note {n0.FriendlyName}. Orphan stop note added.");
-                            stopNotesToPreserve.Add(n1);
-                        }
+                            stopNotesToPreserve[n1] = pattern;
+
+                        n0 = null;
                     }
                     else if (n1.IsMusical)
                     {
@@ -1083,6 +1084,10 @@ namespace FamiStudio
                 }
             }
 
+            // Print messages.
+            foreach (var kv in stopNotesToPreserve)
+                Log.LogMessage(LogSeverity.Warning, $"Iconsistent note duration, orphan note added. (Song={song.Name}, Channel={NameWithExpansion}, Pattern={kv.Value.Name})");
+
             // Cleanup.
             foreach (var pattern in patterns)
             {
@@ -1090,7 +1095,7 @@ namespace FamiStudio
                 {
                     var note = kv.Value;
 
-                    if ((note.IsStop || note.IsRelease) && !stopNotesToPreserve.Contains(note))
+                    if ((note.IsStop || note.IsRelease) && !stopNotesToPreserve.ContainsKey(note))
                     {
                         note.Value = Note.NoteInvalid;
                         note.Duration = 0;
@@ -1499,10 +1504,19 @@ namespace FamiStudio
         {
             get
             {
-                if (next.IsValid && next.IsInSong(channel.Song) && channel.GetNoteAt(next).HasCutDelay)
-                    return DistanceToNextNote + 1;
-                else
-                    return DistanceToNextNote;
+                // Current note has a cut delay, length = 1.
+                if (note != null && note.HasCutDelay)
+                    return 1;
+
+                if (next.IsValid && next.IsInSong(channel.Song))
+                {
+                    // Next note has a cut delay, distance + 1.
+                    var nextNote = channel.GetNoteAt(next);
+                    if (nextNote != null && !nextNote.IsMusicalOrStop && nextNote.HasCutDelay)
+                        return DistanceToNextNote + 1;
+                }
+               
+                return DistanceToNextNote;
             }
         }
 
@@ -1523,6 +1537,8 @@ namespace FamiStudio
             this.channel = c;
             this.filter  = f;
             this.end     = end;
+
+            Debug.Assert(start.NoteIndex < c.Song.GetPatternLength(start.PatternIndex));
 
             // Look forward for a first musical note.
             do
@@ -1578,8 +1594,10 @@ namespace FamiStudio
             // Find next note.
             nextIdx = currIdx;
 
+            var patternLen = channel.Song.GetPatternLength(current.PatternIndex);
+
             // Look in the same pattern.
-            while (++nextIdx < pattern.Notes.Values.Count)
+            while (++nextIdx < pattern.Notes.Values.Count && pattern.Notes.Keys[nextIdx] < patternLen)
             {
                 // Only considering musical notes for now.
                 if (pattern.Notes.Values[nextIdx].MatchesFilter(filter))
@@ -1594,6 +1612,7 @@ namespace FamiStudio
             for (var p = current.PatternIndex + 1; p <= end.PatternIndex; p++)
             {
                 var pat = channel.PatternInstances[p];
+                patternLen = channel.Song.GetPatternLength(p);
 
                 if (pat != null && pat.Notes.Count > 0)
                 {
@@ -1609,7 +1628,7 @@ namespace FamiStudio
                             return;
                         }
                     }
-                    while (++nextIdx < pat.Notes.Values.Count);
+                    while (++nextIdx < pat.Notes.Values.Count && pat.Notes.Keys[nextIdx] < patternLen);
                 }
             }
 
