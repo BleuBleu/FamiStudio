@@ -1,19 +1,6 @@
 FamiStudio 3.0.0 
 ================
-- FamiTracker:
-	x Assert in srik
-	x Same note warning multiple times when converting to compound notes.
-	x Assert in casino when clicking on song.
-	x Converning hobbits, pattern 07 triangle, start with stop note that shouldnt be there.
-	x Frodo plays megaman, scrolling in piano roll with scroll bar draws weird notes.
-	x If a note is followed by a note with delayed, there is an implicit stop note drawn that shouldnt bere there.
 - Delayed cut fix is probably no good.
-- NSF
-	x Gradius II, Song 3, has like a billion identical samples.
-- studsX: 
-	x Song sorting from FTM. 
-	x Reverse 2xx effect?? 
- 	- NSF import VRC7
 - Convert demo songs to new tempo (when file format is frozen). 
 	- Gimmick 
 	- Tower 
