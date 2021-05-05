@@ -331,7 +331,7 @@ namespace FamiStudio
             public int  pitch   =  0;
             public int  volume  = 15;
             public int  octave  = -1;
-            public int  trigger = Stopped;
+            public int  state   = Stopped;
 
             public int fdsModDepth = 0;
             public int fdsModSpeed = 0;
@@ -570,6 +570,7 @@ namespace FamiStudio
                 var force   = false;
                 var stop    = false;
                 var release = false;
+                var attack  = true;
                 var octave  = -1;
 
                 // VRC6 has a much larger volume range (6-bit) than our volume (4-bit).
@@ -586,47 +587,49 @@ namespace FamiStudio
                     volume = 15 - volume;
                 }
 
-                var hasTrigger = true;
-                var hasPeriod  = true;
-                var hasOctave  = channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6;
+                var hasOctave  = channel.IsVrc7FmChannel;
                 var hasVolume  = channel.Type != ChannelType.Triangle;
                 var hasPitch   = channel.Type != ChannelType.Noise;
                 var hasDuty    = channel.Type == ChannelType.Square1 || channel.Type == ChannelType.Square2 || channel.Type == ChannelType.Noise || channel.Type == ChannelType.Vrc6Square1 || channel.Type == ChannelType.Vrc6Square2 || channel.Type == ChannelType.Mmc5Square1 || channel.Type == ChannelType.Mmc5Square2;
+                var hasTrigger = channel.IsVrc7FmChannel;
 
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
-                    var trigger = NsfGetState(nsf, channel.Type, STATE_VRC7TRIGGER, 0) != 0;
+                    var trigger = NsfGetState(nsf, channel.Type, STATE_VRC7TRIGGER, 0);
                     var sustain = NsfGetState(nsf, channel.Type, STATE_VRC7SUSTAIN, 0) != 0;
-                    var triggerState = trigger ? ChannelState.Triggered : (sustain ? ChannelState.Released : ChannelState.Stopped);
 
-                    if (triggerState != state.trigger)
+                    var newState = state.state;
+
+                    if (trigger == 0)
+                        attack = false;
+                    else
+                        newState = trigger > 0 ? ChannelState.Triggered : (sustain ? ChannelState.Released : ChannelState.Stopped);
+
+                    if (newState != state.state)
                     {
-                        stop    = triggerState == ChannelState.Stopped;
-                        release = triggerState == ChannelState.Released;
+                        stop    = newState == ChannelState.Stopped;
+                        release = newState == ChannelState.Released;
+                        state.state = newState;
                         force |= true;
-                        state.trigger = triggerState;
                     }
 
                     octave = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
                 }
                 else
                 {
-                    if (hasTrigger)
-                    {
-                        var trigger = volume != 0 && (channel.Type == ChannelType.Noise || period != 0) ? ChannelState.Triggered : ChannelState.Stopped;
+                    var newState = volume != 0 && (channel.Type == ChannelType.Noise || period != 0) ? ChannelState.Triggered : ChannelState.Stopped;
 
-                        if (trigger != state.trigger)
-                        {
-                            stop = trigger == ChannelState.Stopped;
-                            force |= true;
-                            state.trigger = trigger;
-                        }
+                    if (newState != state.state)
+                    {
+                        stop = newState == ChannelState.Stopped;
+                        force |= true;
+                        state.state = newState;
                     }
                 }
 
                 if (hasVolume)
                 {
-                    if (state.volume != volume && volume != 0)
+                    if (state.volume != volume && (volume != 0 || hasTrigger))
                     {
                         var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Volume = (byte)volume;
                         state.volume = volume;
@@ -710,13 +713,13 @@ namespace FamiStudio
                     instrument = GetDutyInstrument(channel, 0);
                 }
 
-                if ((hasPeriod && state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
+                if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumChannels);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;
 
-                    if (!stop && !release && state.trigger != ChannelState.Stopped)
+                    if (!stop && !release && state.state != ChannelState.Stopped)
                     {
                         if (channel.Type == ChannelType.Noise)
                             note = (period ^ 0x0f) + 32;
@@ -749,6 +752,8 @@ namespace FamiStudio
                         state.octave = octave;
                         if (instrument != null)
                             state.instrument = instrument;
+                        if (!attack)
+                            newNote.HasAttack = false;
                         hasNote = note != 0;
                     }
 
