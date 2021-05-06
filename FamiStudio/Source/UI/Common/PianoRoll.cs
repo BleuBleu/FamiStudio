@@ -262,6 +262,36 @@ namespace FamiStudio
             false, // MoveNoteRelease
         };
 
+        static readonly bool[] captureWantsRealTimeUpdate = new[]
+        {
+            false, // None
+            false, // PlayPiano
+            false, // ResizeEnvelope
+            false, // DragLoop
+            false, // DragRelease
+            false, // ChangeEffectValue
+            false, // ChangeSelectionEffectValue
+            false, // DrawEnvelope
+            true,  // Select
+            true,  // SelectWave
+            true,  // CreateNote
+            false, // CreateDragSlideNoteTarget
+            false, // DragSlideNoteTarget
+            true,  // DragNote
+            true,  // DragSelection
+            false, // AltZoom
+            false, // DragSample
+            true,  // DragSeekBar
+            false, // DragWaveVolumeEnvelope
+            false, // ScrollBarX
+            false, // ScrollBarY
+            true,  // ResizeNoteStart 
+            true,  // ResizeSelectionNoteStart
+            true,  // ResizeNoteEnd
+            true,  // ResizeSelectionNoteEnd
+            false, // MoveNoteRelease
+        };
+
         NoteLocation hoverNoteLocation = NoteLocation.Invalid;
         NoteLocation captureNoteLocation;
         NoteLocation captureMouseLocation;
@@ -282,6 +312,7 @@ namespace FamiStudio
         int dragSeekPosition = -1;
         int[] supportedEffects;
         bool captureThresholdMet = false;
+        bool captureRealTimeUpdate = false;
         bool panning = false; // TODO: Make this a capture operation.
         bool continuouslyFollowing = false;
         CaptureOperation captureOperation = CaptureOperation.None;
@@ -2987,6 +3018,7 @@ namespace FamiStudio
             CaptureMouse(e);
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
+            captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
             captureWaveTime = editMode == EditionMode.DPCM ? GetWaveTimeForPixel(e.X - whiteKeySizeX) : 0.0f;
             captureNoteValue = numNotes - Utils.Clamp((e.Y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, numNotes);
 
@@ -3026,7 +3058,7 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private void UpdateCaptureOperation(MouseEventArgs e)
+        private void UpdateCaptureOperation(MouseEventArgs e, bool realTime)
         {
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
@@ -3037,7 +3069,7 @@ namespace FamiStudio
                 }
             }
 
-            if (captureOperation != CaptureOperation.None && captureThresholdMet)
+            if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
             {
                 switch (captureOperation)
                 {
@@ -3057,10 +3089,10 @@ namespace FamiStudio
                         DrawEnvelope(e);
                         break;
                     case CaptureOperation.Select:
-                        UpdateSelection(e.X);
+                        UpdateSelection(e);
                         break;
                     case CaptureOperation.SelectWave:
-                        UpdateWaveSelection(e.X);
+                        UpdateWaveSelection(e);
                         break;
                     case CaptureOperation.DragSlideNoteTarget:
                     case CaptureOperation.CreateSlideNote:
@@ -3086,7 +3118,7 @@ namespace FamiStudio
                         UpdateAltZoom(e);
                         break;
                     case CaptureOperation.DragSeekBar:
-                        UpdateSeekDrag(e.X, false);
+                        UpdateSeekDrag(e, false);
                         break;
                     case CaptureOperation.DragWaveVolumeEnvelope:
                         UpdateVolumeEnvelopeDrag(e, false);
@@ -3166,7 +3198,7 @@ namespace FamiStudio
                         EndDragDPCMSampleMapping(e);
                         break;
                     case CaptureOperation.DragSeekBar:
-                        UpdateSeekDrag(e.X, true);
+                        UpdateSeekDrag(e, true);
                         break;
                     case CaptureOperation.DragWaveVolumeEnvelope:
                         UpdateVolumeEnvelopeDrag(e, true);
@@ -3720,7 +3752,7 @@ namespace FamiStudio
             if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInHeader(e.X, e.Y))
             {
                 StartCaptureOperation(e, CaptureOperation.DragSeekBar);
-                UpdateSeekDrag(e.X, false);
+                UpdateSeekDrag(e, false);
                 return true;
             }
 
@@ -3732,7 +3764,7 @@ namespace FamiStudio
             if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInHeader(e.X, e.Y))
             {
                 StartCaptureOperation(e, CaptureOperation.Select, false);
-                UpdateSelection(e.X);
+                UpdateSelection(e);
                 return true;
             }
 
@@ -3744,7 +3776,7 @@ namespace FamiStudio
             if (e.Button.HasFlag(MouseButtons.Right) && (IsMouseInHeaderTopPart(e.X, e.Y) || IsMouseInNoteArea(e.X, e.Y)))
             {
                 StartCaptureOperation(e, CaptureOperation.Select);
-                UpdateSelection(e.X);
+                UpdateSelection(e);
                 return true;
             }
 
@@ -3930,7 +3962,7 @@ namespace FamiStudio
             if ((left || right) && (IsMouseInNoteArea(e.X, e.Y) || IsMouseInHeader(e.X, e.Y)))
             {
                 StartCaptureOperation(e, CaptureOperation.SelectWave);
-                UpdateWaveSelection(e.X);
+                UpdateWaveSelection(e);
                 return true;
             }
 
@@ -4295,14 +4327,14 @@ namespace FamiStudio
         private void StartSelection(MouseEventArgs e)
         {
             StartCaptureOperation(e, CaptureOperation.Select, false);
-            UpdateSelection(e.X);
+            UpdateSelection(e);
         }
 
-        private void UpdateSelection(int mouseX)
+        private void UpdateSelection(MouseEventArgs e)
         {
-            ScrollIfSelectionNearEdge(mouseX);
+            ScrollIfSelectionNearEdge(e.X);
 
-            int noteIdx = (mouseX - whiteKeySizeX + scrollX) / noteSizeX;
+            int noteIdx = (e.X - whiteKeySizeX + scrollX) / noteSizeX;
 
             int minSelectionIdx = Math.Min(noteIdx, captureMouseAbsoluteIdx);
             int maxSelectionIdx = Math.Max(noteIdx, captureMouseAbsoluteIdx);
@@ -4312,11 +4344,11 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private void UpdateWaveSelection(int mouseX)
+        private void UpdateWaveSelection(MouseEventArgs e)
         {
-            ScrollIfSelectionNearEdge(mouseX);
+            ScrollIfSelectionNearEdge(e.X);
 
-            float time = Math.Max(0.0f, GetWaveTimeForPixel(mouseX - whiteKeySizeX));
+            float time = Math.Max(0.0f, GetWaveTimeForPixel(e.X - whiteKeySizeX));
 
             float minSelectionTime = Math.Min(time, captureWaveTime);
             float maxSelectionTime = Math.Max(time, captureWaveTime);
@@ -4335,9 +4367,9 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private void UpdateSeekDrag(int mouseX, bool final)
+        private void UpdateSeekDrag(MouseEventArgs e, bool final)
         {
-            dragSeekPosition = (int)Math.Floor((mouseX - whiteKeySizeX + scrollX) / (float)noteSizeX);
+            dragSeekPosition = (int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX);
             dragSeekPosition = SnapNote(dragSeekPosition);
 
             if (final)
@@ -4970,6 +5002,7 @@ namespace FamiStudio
 
         private void UpdateNoteCreation(MouseEventArgs e, bool first, bool last)
         {
+            ScrollIfSelectionNearEdge(e.X);
             GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
 
             if (!first)
@@ -5067,6 +5100,7 @@ namespace FamiStudio
 
             App.UndoRedoManager.RestoreTransaction(false);
 
+            ScrollIfSelectionNearEdge(e.X);
             GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
 
             var resizeStart = captureOperation == CaptureOperation.ResizeNoteStart || captureOperation == CaptureOperation.ResizeSelectionNoteStart;
@@ -5322,7 +5356,8 @@ namespace FamiStudio
 
                 return note;
             });
-          
+
+            ScrollIfSelectionNearEdge(e.X);
             GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
 
             var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
@@ -5341,7 +5376,7 @@ namespace FamiStudio
 
         private void StartMoveNoteRelease(MouseEventArgs e, NoteLocation location)
         {
-            var pattern = Song.Channels[editChannel].PatternInstances[captureNoteLocation.PatternIndex];
+            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
             StartCaptureOperation(e, CaptureOperation.MoveNoteRelease, false, location.ToAbsoluteNoteIndex(Song));
         }
@@ -5510,7 +5545,7 @@ namespace FamiStudio
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();
-            UpdateCaptureOperation(e);
+            UpdateCaptureOperation(e, false);
 
             if (middle)
             {
@@ -5635,14 +5670,9 @@ namespace FamiStudio
                 return;
 
             var pt = this.PointToClient(Cursor.Position);
+            var e = new MouseEventArgs(MouseButtons.None, 1, pt.X, pt.Y, 0);
 
-            if (captureOperation == CaptureOperation.Select)
-                UpdateSelection(pt.X);
-            else if (captureOperation == CaptureOperation.SelectWave)
-                UpdateWaveSelection(pt.X);
-            else if (captureOperation == CaptureOperation.DragSeekBar)
-                UpdateSeekDrag(pt.X, false);
-
+            UpdateCaptureOperation(e, true);
             UpdateFollowMode();
         }
 
