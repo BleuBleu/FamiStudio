@@ -8,12 +8,14 @@ using FamiStudio.Properties;
 #if FAMISTUDIO_WINDOWS
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
+    using RenderGeometry = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
 #else
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
+    using RenderGeometry = FamiStudio.GLGeometry;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
@@ -44,9 +46,9 @@ namespace FamiStudio
         const int ButtonHelp      = 18;
         const int ButtonCount     = 19;
 
-        const int DefaultTimecodeOffsetX         = 40; // Offset from config button.
+        const int DefaultTimecodeOffsetX         = 38; // Offset from config button.
         const int DefaultTimecodePosY            = 4;
-        const int DefaultTimecodeSizeX           = 160;
+        const int DefaultTimecodeSizeX           = 140;
         const int DefaultTooltipSingleLinePosY   = 12;
         const int DefaultTooltipMultiLinePosY    = 4;
         const int DefaultTooltipLineSizeY        = 17;
@@ -55,17 +57,24 @@ namespace FamiStudio
         const int DefaultButtonPosX              = 4;
         const int DefaultButtonPosY              = 4;
         const int DefaultButtonSizeX             = 32;
-        const int DefaultButtonSpacingX          = 36;
-        const int DefaultButtonTimecodeSpacingX  = 208;
+        const int DefaultButtonSpacingX          = 34;
+        const int DefaultButtonTimecodeSpacingX  = 4; // Spacing before/after timecode.
 
+        int timecodeOffsetX;
         int timecodePosX;
         int timecodePosY;
         int timecodeSizeX;
+        int oscilloscopePosX;
         int tooltipSingleLinePosY;
         int tooltipMultiLinePosY;
         int tooltipLineSizeY;
         int tooltipSpecialCharSizeX;
         int tooltipSpecialCharSizeY;
+        int buttonPosX;
+        int buttonPosY;
+        int buttonSizeX;
+        int buttonSpacingX;
+        int buttonTimecodeSpacingX;
 
         enum ButtonStatus
         {
@@ -74,6 +83,7 @@ namespace FamiStudio
             Dimmed
         }
 
+        private delegate void MouseWheelDelegate(int delta);
         private delegate void EmptyDelegate();
         private delegate ButtonStatus ButtonStatusDelegate();
         private delegate RenderBitmap BitmapDelegate();
@@ -81,15 +91,16 @@ namespace FamiStudio
         class Button
         {
             public int X;
-            public int Y = DefaultButtonPosY;
+            public int Y;
             public bool RightAligned;
             public bool Visible = true;
-            public int Size = DefaultButtonSizeX;
+            public int Size;
             public string ToolTip;
             public RenderBitmap Bmp;
             public ButtonStatusDelegate Enabled;
             public EmptyDelegate Click;
             public EmptyDelegate RightClick;
+            public MouseWheelDelegate MouseWheel;
             public BitmapDelegate GetBitmap;
             public bool IsPointIn(int px, int py, int width)
             {
@@ -109,15 +120,20 @@ namespace FamiStudio
         DateTime warningTime;
         string warning = "";
 
+        bool oscilloscopeVisible = false;
+        bool lastOscilloscopeHadNonZeroSample = false;
         bool redTooltip = false;
         string tooltip = "";
         RenderTheme theme;
         RenderBrush toolbarBrush;
         RenderBrush warningBrush;
+        RenderBrush seekBarBrush;
         RenderBitmap bmpLoopNone;
         RenderBitmap bmpLoopSong;
         RenderBitmap bmpLoopPattern;
         RenderBitmap bmpPlay;
+        RenderBitmap bmpPlayHalf;
+        RenderBitmap bmpPlayQuarter;
         RenderBitmap bmpPause;
         RenderBitmap bmpNtsc;
         RenderBitmap bmpPal;
@@ -134,11 +150,14 @@ namespace FamiStudio
 
             toolbarBrush = g.CreateVerticalGradientBrush(0, Height, ThemeBase.DarkGreyFillColor2, ThemeBase.DarkGreyFillColor1);
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
+            seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
 
             bmpLoopNone    = g.CreateBitmapFromResource("LoopNone");
             bmpLoopSong    = g.CreateBitmapFromResource("Loop");
             bmpLoopPattern = g.CreateBitmapFromResource("LoopPattern");
             bmpPlay        = g.CreateBitmapFromResource("Play");
+            bmpPlayHalf    = g.CreateBitmapFromResource("PlayHalf");
+            bmpPlayQuarter = g.CreateBitmapFromResource("PlayQuarter");
             bmpPause       = g.CreateBitmapFromResource("Pause");
             bmpNtsc        = g.CreateBitmapFromResource("NTSC");
             bmpPal         = g.CreateBitmapFromResource("PAL");
@@ -158,7 +177,7 @@ namespace FamiStudio
             buttons[ButtonRedo]      = new Button { Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
             buttons[ButtonTransform] = new Button { Bmp = g.CreateBitmapFromResource("Transform"), Click = OnTransform };
             buttons[ButtonConfig]    = new Button { Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
-            buttons[ButtonPlay]      = new Button { Click = OnPlay, GetBitmap = OnPlayGetBitmap };
+            buttons[ButtonPlay]      = new Button { Click = OnPlay, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap };
             buttons[ButtonRec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[ButtonRewind]    = new Button { Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap };
@@ -169,7 +188,7 @@ namespace FamiStudio
 
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
             buttons[ButtonOpen].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
-            buttons[ButtonSave].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S} - {MouseRight} Save As...";
+            buttons[ButtonSave].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S}\n{MouseRight} Save As...";
             buttons[ButtonExport].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} Repeat last export {Ctrl} {Shift} {E}";
             buttons[ButtonCopy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
             buttons[ButtonCut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
@@ -178,19 +197,18 @@ namespace FamiStudio
             buttons[ButtonRedo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
             buttons[ButtonTransform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
             buttons[ButtonConfig].ToolTip    = "{MouseLeft} Edit Application Settings";
-            buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
+            buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseWheel} Change play rate - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
-            buttons[ButtonQwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input";
+            buttons[ButtonQwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift} {Q}";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
             buttons[ButtonFollow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
 
-            UpdateButtonLayout();
-
             var scaling = RenderTheme.MainWindowScaling;
 
+            timecodeOffsetX         = (int)(DefaultTimecodeOffsetX         * scaling);
             timecodePosY            = (int)(DefaultTimecodePosY            * scaling);
             timecodeSizeX           = (int)(DefaultTimecodeSizeX           * scaling);
             tooltipSingleLinePosY   = (int)(DefaultTooltipSingleLinePosY   * scaling);
@@ -198,6 +216,13 @@ namespace FamiStudio
             tooltipLineSizeY        = (int)(DefaultTooltipLineSizeY        * scaling);
             tooltipSpecialCharSizeX = (int)(DefaultTooltipSpecialCharSizeX * scaling);
             tooltipSpecialCharSizeY = (int)(DefaultTooltipSpecialCharSizeY * scaling);
+            buttonPosX              = (int)(DefaultButtonPosX              * scaling);
+            buttonPosY              = (int)(DefaultButtonPosY              * scaling);
+            buttonSizeX             = (int)(DefaultButtonSizeX             * scaling);
+            buttonSpacingX          = (int)(DefaultButtonSpacingX          * scaling);
+            buttonTimecodeSpacingX  = (int)(DefaultButtonTimecodeSpacingX  * scaling);
+
+            UpdateButtonLayout();
 
             specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = (int)(32 * scaling) };
             specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
@@ -234,10 +259,13 @@ namespace FamiStudio
 
             Utils.DisposeAndNullify(ref toolbarBrush);
             Utils.DisposeAndNullify(ref warningBrush);
+            Utils.DisposeAndNullify(ref seekBarBrush);
             Utils.DisposeAndNullify(ref bmpLoopNone);
             Utils.DisposeAndNullify(ref bmpLoopSong);
             Utils.DisposeAndNullify(ref bmpLoopPattern);
             Utils.DisposeAndNullify(ref bmpPlay);
+            Utils.DisposeAndNullify(ref bmpPlayHalf);
+            Utils.DisposeAndNullify(ref bmpPlayQuarter);
             Utils.DisposeAndNullify(ref bmpPause);
             Utils.DisposeAndNullify(ref bmpNtsc);
             Utils.DisposeAndNullify(ref bmpPal);
@@ -260,37 +288,52 @@ namespace FamiStudio
             base.OnResize(e);
         }
 
+        public void LayoutChanged()
+        {
+            UpdateButtonLayout();
+            ConditionalInvalidate();
+        }
+
         private void UpdateButtonLayout()
         {
             if (theme == null)
                 return;
 
             // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
-            bool hideCopyPasteUndoRedoButtons = Width < 1280 * RenderTheme.MainWindowScaling;
+            bool hideLessImportantButtons = Width < 1420 * RenderTheme.MainWindowScaling;
+            bool hideOscilloscope = Width < 1250 * RenderTheme.MainWindowScaling;
 
-            var scaling = RenderTheme.MainWindowScaling;
-            var posX = DefaultButtonPosX;
+            var posX = buttonPosX;
 
             for (int i = 0; i < ButtonCount; i++)
             {
                 var btn = buttons[i];
 
                 if (i == ButtonHelp)
-                    btn.X = (int)(DefaultButtonSizeX * scaling);
+                    btn.X = buttonSizeX;
                 else
-                    btn.X = (int)(posX * scaling);
+                    btn.X = posX;
 
-                btn.Y = (int)((DefaultButtonPosY) * scaling);
-                btn.Size = (int)(DefaultButtonSizeX * scaling);
-                btn.Visible = !hideCopyPasteUndoRedoButtons || i < ButtonCopy || i > ButtonRedo;
+                btn.Y = buttonPosY;
+                btn.Size = buttonSizeX;
+                btn.Visible = !hideLessImportantButtons || i < ButtonCopy || i > ButtonRedo;
 
                 if (i == ButtonConfig)
-                    posX += DefaultButtonTimecodeSpacingX;
+                {
+                    posX += buttonSpacingX + timecodeSizeX + buttonTimecodeSpacingX * 2;
+
+                    oscilloscopeVisible = Settings.ShowOscilloscope && !hideOscilloscope;
+                    if (oscilloscopeVisible)
+                        posX += timecodeSizeX + buttonTimecodeSpacingX * 2;
+                }
                 else if (btn.Visible)
-                    posX += DefaultButtonSpacingX;
+                {
+                    posX += buttonSpacingX;
+                }
             }
 
-            timecodePosX = (int)(buttons[ButtonConfig].X + DefaultTimecodeOffsetX * scaling);
+            timecodePosX = buttons[ButtonConfig].X + timecodeOffsetX;
+            oscilloscopePosX = timecodePosX + timecodeSizeX + buttonTimecodeSpacingX * 2;
         }
 
         public void SetToolTip(string msg, bool red = false)
@@ -323,7 +366,7 @@ namespace FamiStudio
             redTooltip = false;
         }
 
-        private void ConditionalInvalidate()
+        public void ConditionalInvalidate()
         {
             if (App != null && !App.RealTimeUpdate)
                 Invalidate();
@@ -432,9 +475,33 @@ namespace FamiStudio
                 App.PlaySong();
         }
 
+        private void OnPlayMouseWheel(int delta)
+        {
+            int rate = App.PlayRate;
+
+            if (delta < 0)
+                App.PlayRate = Utils.Clamp(rate * 2, 1, 4);
+            else
+                App.PlayRate = Utils.Clamp(rate / 2, 1, 4);
+
+            ConditionalInvalidate();
+        }
+
         private RenderBitmap OnPlayGetBitmap()
         {
-            return App.IsPlaying ? bmpPause : bmpPlay;
+            if (App.IsPlaying)
+            {
+                return bmpPause;
+            }
+            else
+            {
+                switch (App.PlayRate)
+                {
+                    case 2:  return bmpPlayHalf;
+                    case 4:  return bmpPlayQuarter;
+                    default: return bmpPlay;
+                }
+            }
         }
 
         private void OnRewind()
@@ -559,20 +626,20 @@ namespace FamiStudio
             var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
             var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
 
-            var timeCodeColor = App.IsRecording ? theme.LightRedFillBrush : theme.BlackBrush;
-            var textColor = App.IsRecording ? theme.BlackBrush : theme.LightGreyFillBrush2;
+            var timeCodeSizeY = Height - timecodePosY * 2;
+            var textColor = App.IsRecording ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
 
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, timeCodeColor, theme.LightGreyFillBrush2);
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.BlackBrush, theme.LightGreyFillBrush2);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
-                int patternIdx = App.Song.FindPatternInstanceIndex(frame, out int noteIdx);
+                var location = NoteLocation.FromAbsoluteNoteIndex(App.Song, frame);
 
                 var numPatternDigits = Utils.NumDecimalDigits(App.Song.Length - 1);
-                var numNoteDigits = Utils.NumDecimalDigits(App.Song.GetPatternLength(patternIdx) - 1);
+                var numNoteDigits = Utils.NumDecimalDigits(App.Song.GetPatternLength(location.PatternIndex) - 1);
 
-                var patternString = patternIdx.ToString("D" + numPatternDigits);
-                var noteString = noteIdx.ToString("D" + numNoteDigits);
+                var patternString = location.PatternIndex.ToString("D" + numPatternDigits);
+                var noteString = location.NoteIndex.ToString("D" + numNoteDigits);
 
                 var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
@@ -587,9 +654,7 @@ namespace FamiStudio
             }
             else
             {
-                TimeSpan time = App.Project != null ? 
-                    TimeSpan.FromMilliseconds(frame * 1000.0 / (App.Project.PalMode ? NesApu.FpsPAL : NesApu.FpsNTSC)) :
-                    TimeSpan.Zero;
+                TimeSpan time = App.CurrentTime;
 
                 var minutesString      = time.Minutes.ToString("D2");
                 var secondsString      = time.Seconds.ToString("D2");
@@ -609,6 +674,48 @@ namespace FamiStudio
                 for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
                     g.DrawText(millisecondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
             }
+        }
+
+        public bool ShouldRefreshOscilloscope(bool hasNonZeroSample)
+        {
+            return oscilloscopeVisible && lastOscilloscopeHadNonZeroSample != hasNonZeroSample;
+        }
+
+        private void RenderOscilloscope(RenderGraphics g)
+        {
+            if (!oscilloscopeVisible)
+                return;
+
+            var oscilloscopeSizeX = timecodeSizeX;
+            var oscilloscopeSizeY = Height - timecodePosY * 2;
+
+            g.FillRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.BlackBrush);
+
+            var oscilloscopeGeometry = App.GetOscilloscopeGeometry(out lastOscilloscopeHadNonZeroSample);
+
+            if (oscilloscopeGeometry != null && lastOscilloscopeHadNonZeroSample)
+            {
+                float scaleX = oscilloscopeSizeX;
+                float scaleY = oscilloscopeSizeY / 2;
+
+                RenderGeometry geo = g.CreateGeometry(oscilloscopeGeometry, false);
+                g.PushTransform(oscilloscopePosX, timecodePosY + oscilloscopeSizeY / 2, scaleX, scaleY);
+                g.AntiAliasing = true;
+                g.DrawGeometry(geo, theme.LightGreyFillBrush2);
+                g.AntiAliasing = false;
+                g.PopTransform();
+                geo.Dispose();
+            }
+            else
+            {
+                g.PushTranslation(oscilloscopePosX, timecodePosY + oscilloscopeSizeY / 2);
+                g.AntiAliasing = true;
+                g.DrawLine(0, 0, oscilloscopeSizeX, 0, theme.LightGreyFillBrush2);
+                g.AntiAliasing = false;
+                g.PopTransform();
+            }
+
+            g.DrawRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.LightGreyFillBrush2);
         }
 
         private void RenderWarningAndTooltip(RenderGraphics g)
@@ -695,6 +802,7 @@ namespace FamiStudio
         {
             RenderButtons(g);
             RenderTimecode(g);
+            RenderOscilloscope(g);
             RenderWarningAndTooltip(g);
         }
 
@@ -717,6 +825,20 @@ namespace FamiStudio
             }
 
             SetToolTip("");
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            foreach (var btn in buttons)
+            {
+                if (btn != null && btn.Visible && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled() != ButtonStatus.Disabled))
+                {
+                    btn.MouseWheel?.Invoke(e.Delta);
+                    break;
+                }
+            }
+
+            base.OnMouseWheel(e);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

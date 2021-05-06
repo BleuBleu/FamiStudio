@@ -15,9 +15,9 @@ public:
 	void reset();
 	void volume(double);
 	void output(Blip_Buffer*);
+	void treble_eq(blip_eq_t const& eq);
 	void enable_channel(int idx, bool enabled);
 	void end_frame(cpu_time_t);
-	void mix_samples(blip_sample_t* p, long s);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 
 	enum { shadow_regs_count = 1 };
@@ -40,9 +40,11 @@ private:
 
 	bool silence;
 	int reg;
-	double vol;
 	struct __OPLL* opll;
 	Blip_Buffer* output_buffer;
+	cpu_time_t last_time;
+	int last_amp;
+	Blip_Synth<blip_med_quality, 7200> synth;
 
 	short shadow_regs[shadow_regs_count];
 	short shadow_internal_regs[shadow_internal_regs_count];

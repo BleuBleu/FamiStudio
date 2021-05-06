@@ -21,14 +21,15 @@ namespace FamiStudio
 {
     public class Direct2DGraphics : IDisposable
     {
-        protected SharpDX.Direct2D1.Factory factory;
+        protected static SharpDX.Direct2D1.Factory factory;
+        protected static int factoryRefCount = 0;
+
         protected DirectWriteFactory directWriteFactory;
         protected RenderTarget renderTarget;
         protected Stack<RawMatrix3x2> matrixStack = new Stack<RawMatrix3x2>();
         protected Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
         protected Dictionary<Tuple<Color, int>, Brush> verticalGradientCache = new Dictionary<Tuple<Color, int>, Brush>();
-        protected StrokeStyle strokeStyleMiter;
-        protected StrokeStyle strokeStyleNoScaling;
+        protected StrokeStyle strokeStyleMiterNoScaling;
         protected float windowScaling = 1.0f;
 
         public Factory Factory => factory;
@@ -50,21 +51,30 @@ namespace FamiStudio
             Initialize();
         }
 
-        protected void CreateFactory()
-        {
-            try
-            {
-                // Some Windows 7 versions dont have version 1 of the factory.
-                factory = new SharpDX.Direct2D1.Factory1();
-            }
-            catch
-            {
-                factory = new SharpDX.Direct2D1.Factory();
-            }
-        }
-
         protected Direct2DGraphics()
         {
+        }
+
+        protected void CreateFactory()
+        {
+            if (factory == null)
+            {
+	            try
+	            {
+	                // Some Windows 7 versions dont have version 1 of the factory.
+	                factory = new SharpDX.Direct2D1.Factory1();
+	            }
+	            catch
+	            {
+	                factory = new SharpDX.Direct2D1.Factory();
+	            }
+				
+                factoryRefCount = 1;
+            }
+            else
+            {
+                factoryRefCount++;
+            }
         }
 
         protected void Initialize()
@@ -73,12 +83,11 @@ namespace FamiStudio
 
             renderTarget.TextAntialiasMode = SharpDX.Direct2D1.TextAntialiasMode.Grayscale;
             renderTarget.AntialiasMode = AntialiasMode.Aliased;
-            strokeStyleMiter = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
 
             if (factory is SharpDX.Direct2D1.Factory1)
-                strokeStyleNoScaling = new StrokeStyle1(factory as SharpDX.Direct2D1.Factory1, new StrokeStyleProperties1() { TransformType = StrokeTransformType.Fixed });
-            else
-                strokeStyleNoScaling = new StrokeStyle(factory, new StrokeStyleProperties());
+	            strokeStyleMiterNoScaling = new StrokeStyle1(factory as SharpDX.Direct2D1.Factory1, new StrokeStyleProperties1() { MiterLimit = 1, TransformType = StrokeTransformType.Fixed });
+			else
+	            strokeStyleMiterNoScaling = new StrokeStyle(factory, new StrokeStyleProperties() { MiterLimit = 1 });
         }
 
         public virtual void Dispose()
@@ -91,10 +100,11 @@ namespace FamiStudio
                 grad.Dispose();
             solidGradientCache.Clear();
 
-            Utils.DisposeAndNullify(ref strokeStyleMiter);
             Utils.DisposeAndNullify(ref renderTarget);
             Utils.DisposeAndNullify(ref directWriteFactory);
-            Utils.DisposeAndNullify(ref factory);
+
+            if (--factoryRefCount == 0)
+                Utils.DisposeAndNullify(ref factory);
         }
 
         public void BeginDraw()
@@ -181,9 +191,29 @@ namespace FamiStudio
             renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + width, y + height), opacity, BitmapInterpolationMode.NearestNeighbor);
         }
 
+        // HACK : Very specific call only used by video rendering, too lazy to do the proper transforms.
+        public void DrawRotatedFlippedBitmap(Bitmap bmp, float x, float y, float width, float height)
+        {
+            var mat = renderTarget.Transform;
+            matrixStack.Push(mat);
+
+            mat.M11 =  0;
+            mat.M12 = -1;
+            mat.M21 = -1;
+            mat.M22 =  0;
+            mat.M31 += x;
+            mat.M32 += y;
+            renderTarget.Transform = mat;
+
+            renderTarget.DrawBitmap(bmp, new RawRectangleF(0, 0, width, height), 1.0f, BitmapInterpolationMode.NearestNeighbor);
+
+            PopTransform();
+        }
+
         public void DrawText(string text, TextFormat font, float x, float y, Brush brush, float width = 1000)
         {
-            renderTarget.DrawText(text, font, new RawRectangleF(x, y, x + width, y + 1000), brush);
+            if (!string.IsNullOrEmpty(text))
+                renderTarget.DrawText(text, font, new RawRectangleF(x, y, x + width, y + 1000), brush);
         }
 
         public float MeasureString(string text, TextFormat font)
@@ -194,31 +224,35 @@ namespace FamiStudio
 
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush)
         {
-            renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush);
+            PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawLine(new RawVector2(x0, y0), new RawVector2(x1, y1), brush);
+            PopTransform();
         }
 
         public void DrawLine(float[,] points, Brush brush)
         {
+            PushTranslation(0.5f, 0.5f);
             for (int i = 0; i < points.GetLength(0) - 1; i++)
             {
                 renderTarget.DrawLine(
-                    new RawVector2(points[i + 0, 0] + 0.5f, points[i + 0, 1] + 0.5f),
-                    new RawVector2(points[i + 1, 0] + 0.5f, points[i + 1, 1] + 0.5f), brush, 1.0f, strokeStyleNoScaling);
+                    new RawVector2(points[i + 0, 0], points[i + 0, 1]),
+                    new RawVector2(points[i + 1, 0], points[i + 1, 1]), brush, 1.0f, strokeStyleMiterNoScaling);
             }
+            PopTransform();
         }
 
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush, float width = 1.0f)
         {
-            renderTarget.DrawLine(new RawVector2(x0 + 0.5f, y0 + 0.5f), new RawVector2(x1 + 0.5f, y1 + 0.5f), brush, width);
+            PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawLine(new RawVector2(x0, y0), new RawVector2(x1, y1), brush, width);
+            PopTransform();
         }
 
         public void DrawRectangle(RawRectangleF rect, Brush brush, float width = 1.0f)
         {
-            rect.Left += 0.5f;
-            rect.Top += 0.5f;
-            rect.Right += 0.5f;
-            rect.Bottom += 0.5f;
+            PushTranslation(0.5f, 0.5f);
             renderTarget.DrawRectangle(rect, brush, width);
+            PopTransform();
         }
 
         public void DrawRectangle(float x0, float y0, float x1, float y1, Brush brush, float width = 1.0f)
@@ -269,22 +303,26 @@ namespace FamiStudio
             AntiAliasing = false;
         }
 
-        public void DrawGeometry(Geometry geo, Brush brush)
+        public void DrawGeometry(Geometry geo, Brush brush, float lineWidth = 1.0f)
         {
+            bool halfPixelOffset = lineWidth == 1;
+
             AntiAliasing = true;
-            PushTranslation(0.5f, 0.5f);
-            renderTarget.DrawGeometry(geo, brush, 1.0f, strokeStyleNoScaling);
-            PopTransform();
+            if (halfPixelOffset) PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawGeometry(geo, brush, lineWidth, strokeStyleMiterNoScaling);
+            if (halfPixelOffset) PopTransform();
             AntiAliasing = false;
         }
 
         public void FillAndDrawGeometry(Geometry geo, Brush fillBrush, Brush lineBrush, float lineWidth = 1.0f)
         {
+            bool halfPixelOffset = lineWidth == 1;
+
             AntiAliasing = true;
             renderTarget.FillGeometry(geo, fillBrush);
-            PushTranslation(0.5f, 0.5f);
-            renderTarget.DrawGeometry(geo, lineBrush, lineWidth, strokeStyleMiter);
-            PopTransform();
+            if (halfPixelOffset) PushTranslation(0.5f, 0.5f);
+            renderTarget.DrawGeometry(geo, lineBrush, lineWidth, strokeStyleMiterNoScaling);
+            if (halfPixelOffset) PopTransform();
             AntiAliasing = false;
         }
 
@@ -414,6 +452,12 @@ namespace FamiStudio
             return result;
         }
 
+        public Bitmap CreateBitmapFromOffscreenGraphics(Direct2DOffscreenGraphics g)
+        {
+            BitmapProperties bmpProps = new BitmapProperties(new PixelFormat(Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied));
+            return new Bitmap(renderTarget, g.Surface, bmpProps);
+        }
+
         public float GetBitmapWidth(Bitmap bmp)
         {
             return bmp.Size.Width;
@@ -463,49 +507,62 @@ namespace FamiStudio
     public class Direct2DOffscreenGraphics : Direct2DGraphics
     {
         // Only used when doing offline rendering.
-        protected SharpDX.Direct3D11.Device d3dDevice;
+        static protected int d3dDeviceRef = 0;
+        static protected SharpDX.Direct3D11.Device d3dDevice;
+
         protected SharpDX.Direct3D11.Texture2D offscreenTexture;
         protected SharpDX.Direct3D11.Texture2D stagingTexture;
 
-        private Direct2DOffscreenGraphics(int imageSizeX, int imageSizeY)
-        {
-            try
+        public Surface Surface => offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>();
+
+        private Direct2DOffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback)
+        {            
+			try
             {
+	            if (d3dDevice == null)
+	            {
+	                d3dDevice = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, SharpDX.Direct3D11.DeviceCreationFlags.BgraSupport);
+	                d3dDeviceRef = 1;
+	            }
+	            else
+	            {
+	                d3dDeviceRef++;
+	            }
 
-                d3dDevice = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, SharpDX.Direct3D11.DeviceCreationFlags.BgraSupport);
+	            offscreenTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+	            {
+	                BindFlags = SharpDX.Direct3D11.BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
+	                CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.None,
+	                Format = Format.B8G8R8A8_UNorm,
+	                Width = imageSizeX,
+	                Height = imageSizeY,
+	                MipLevels = 1,
+	                ArraySize = 1,
+	                OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
+	                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+	                Usage = SharpDX.Direct3D11.ResourceUsage.Default
+	            });
 
-                offscreenTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
-                {
-                    BindFlags = SharpDX.Direct3D11.BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
-                    CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.None,
-                    Format = Format.B8G8R8A8_UNorm,
-                    Width = imageSizeX,
-                    Height = imageSizeY,
-                    MipLevels = 1,
-                    ArraySize = 1,
-                    OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
-                    SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-                    Usage = SharpDX.Direct3D11.ResourceUsage.Default
-                });
+	            if (allowReadback)
+	            {
+	                stagingTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
+	                {
+	                    BindFlags = SharpDX.Direct3D11.BindFlags.None,
+	                    CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.Read,
+	                    Format = Format.B8G8R8A8_UNorm,
+	                    Width = imageSizeX,
+	                    Height = imageSizeY,
+	                    MipLevels = 1,
+	                    ArraySize = 1,
+	                    OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
+	                    SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+	                    Usage = SharpDX.Direct3D11.ResourceUsage.Staging
+	                });
+	            }
 
-                stagingTexture = new SharpDX.Direct3D11.Texture2D(d3dDevice, new SharpDX.Direct3D11.Texture2DDescription
-                {
-                    BindFlags = SharpDX.Direct3D11.BindFlags.None,
-                    CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.Read,
-                    Format = Format.B8G8R8A8_UNorm,
-                    Width = imageSizeX,
-                    Height = imageSizeY,
-                    MipLevels = 1,
-                    ArraySize = 1,
-                    OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
-                    SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-                    Usage = SharpDX.Direct3D11.ResourceUsage.Staging
-                });
-
-                windowScaling = 1.0f; // No scaling for now in videos.
-
-                CreateFactory();
-                renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
+	            windowScaling = 1.0f; // No scaling for now in videos.
+	            CreateFactory();
+	            renderTarget = new RenderTarget(factory, offscreenTexture.QueryInterface<SharpDX.DXGI.Surface>(), new RenderTargetProperties(new SharpDX.Direct2D1.PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
             }
             catch (Exception e)
             {
@@ -513,13 +570,13 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, "Error initializing D3D11. This can happen on Windows 7 system that are missing some D3D11 components such as the KB2670838 update.");
                 return;
             }
-
+            
             Initialize();
         }
 
-        public static Direct2DOffscreenGraphics Create(int imageSizeX, int imageSizeY)
+        public static Direct2DOffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
         {
-            var gfx = new Direct2DOffscreenGraphics(imageSizeX, imageSizeY);
+            var gfx = new Direct2DOffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
 
             if (gfx.renderTarget == null)
             {
@@ -538,12 +595,14 @@ namespace FamiStudio
 
             Utils.DisposeAndNullify(ref offscreenTexture);
             Utils.DisposeAndNullify(ref stagingTexture);
-            Utils.DisposeAndNullify(ref d3dDevice);
+
+            if (--d3dDeviceRef == 0)
+                Utils.DisposeAndNullify(ref d3dDevice);
         }
 
         public unsafe void GetBitmap(byte[] data)
         {
-            int textureWidth = stagingTexture.Description.Width;
+            int textureWidth  = stagingTexture.Description.Width;
             int textureHeight = stagingTexture.Description.Height;
 
             Debug.Assert(data.Length == offscreenTexture.Description.Width * offscreenTexture.Description.Height * 4);
@@ -556,8 +615,13 @@ namespace FamiStudio
             for (int y = 0; y < textureHeight; y++)
             {
                 byte* p = row;
-                for (int x = 0; x < textureWidth * 4; x++)
-                    data[y * textureWidth * 4 + x] = *p++;
+                for (int x = 0; x < textureWidth * 4; x += 4)
+                {
+                    data[y * textureWidth * 4 + x + 3] = *p++;
+                    data[y * textureWidth * 4 + x + 2] = *p++;
+                    data[y * textureWidth * 4 + x + 1] = *p++;
+                    data[y * textureWidth * 4 + x + 0] = *p++;
+                }
                 row += mapSource.RowPitch;
             }
 

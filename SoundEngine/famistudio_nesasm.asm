@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (2.4.0)
+; FAMISTUDIO SOUND ENGINE (2.5.0)
 ; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
@@ -527,6 +527,9 @@ famistudio_chn_inst_changed:      .rs FAMISTUDIO_NUM_CHANNELS-5
     .endif
     .if FAMISTUDIO_CFG_EQUALIZER
 famistudio_chn_note_counter:      .rs FAMISTUDIO_NUM_CHANNELS
+    .endif
+    .if FAMISTUDIO_EXP_VRC6
+famistudio_vrc6_saw_volume:       .rs 1 ; -1 = 1/4, 0 = 1/2, 1 = Full
     .endif
     .if FAMISTUDIO_EXP_VRC7
 famistudio_chn_vrc7_prev_hi:      .rs 6
@@ -1212,6 +1215,11 @@ famistudio_music_play:
         bpl .clear_vrc7_loop 
     .endif
 
+    .if FAMISTUDIO_EXP_VRC6
+    lda #0
+    sta famistudio_vrc6_saw_volume
+    .endif
+
     .if FAMISTUDIO_EXP_FDS
     lda #0
     sta famistudio_fds_mod_speed+0
@@ -1221,7 +1229,7 @@ famistudio_music_play:
     sta famistudio_fds_override_flags
     .endif
 
-    .ifdef famistudio_chn_inst_changed
+    .if (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_FDS != 0)
     lda #0
     ldx #(FAMISTUDIO_NUM_CHANNELS-5)
     .clear_inst_changed_loop:
@@ -1571,7 +1579,11 @@ reg_sweep\@ = \9
 
     .if (FAMISTUDIO_EXP_VRC6 != 0) & (idx\@ = 7)
     ; VRC6 saw has 6-bits
+    ldx famistudio_vrc6_saw_volume
+    bmi .set_volume\@ 
     asl a
+    ldx famistudio_vrc6_saw_volume
+    beq .set_volume\@
     asl a
     .endif
 
@@ -2098,20 +2110,12 @@ famistudio_update_row:
     .base_instrument:
         jsr famistudio_set_instrument
 
+    .new_note:
     .if FAMISTUDIO_CFG_EQUALIZER 
-    .new_note:
-        lda #8
+        lda #9
         sta famistudio_chn_note_counter, x
-        jmp .done
-    .no_new_note:
-        lda famistudio_chn_note_counter, x
-        beq .done
-        dec famistudio_chn_note_counter, x
-    .done:    
-    .else
-    .new_note:
-    .no_new_note:
     .endif
+    .no_new_note:
 
     rts
 
@@ -2472,6 +2476,19 @@ famistudio_update:
     inx 
     cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
     bne .slide_process
+    .endif
+
+    .if FAMISTUDIO_CFG_EQUALIZER
+.update_equalizer:
+    ldx #0
+    .eq_channel_loop:
+        lda famistudio_chn_note_counter, x
+        beq .no_note
+            dec famistudio_chn_note_counter, x
+        .no_note:
+        inx
+        cpx #FAMISTUDIO_NUM_CHANNELS
+        bne .eq_channel_loop
     .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -3206,7 +3223,6 @@ famistudio_channel_update:
     jmp [.special_code_jmp_ptr]
 
     .if FAMISTUDIO_EXP_FDS
-
 .special_code_fds_mod_depth:    
     lda [.channel_data_ptr],y
     famistudio_inc_16 .channel_data_ptr
@@ -3228,7 +3244,14 @@ famistudio_channel_update:
     sta famistudio_fds_override_flags
     dey
     jmp .read_byte
+    .endif
 
+    .if FAMISTUDIO_EXP_VRC6
+.special_code_vrc6_saw_volume:
+    lda [.channel_data_ptr],y
+    famistudio_inc_16 .channel_data_ptr
+    sta famistudio_vrc6_saw_volume
+    jmp .read_byte
     .endif
 
     .if FAMISTUDIO_USE_PITCH_TRACK
@@ -3335,7 +3358,7 @@ famistudio_channel_update:
     lda [.channel_data_ptr],y
     sta famistudio_chn_note_delay,x
     famistudio_inc_16 .channel_data_ptr
-    jmp .done
+    jmp .no_ref
 
 .special_code_cut_delay:
     lda #$40
@@ -3344,6 +3367,30 @@ famistudio_channel_update:
     sta famistudio_chn_cut_delay,x
     famistudio_inc_16 .channel_data_ptr
     jmp .read_byte 
+    .endif
+    .if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
+.special_code_set_tempo_envelope:
+    ; Load and reset the new tempo envelope.
+    lda [.channel_data_ptr],y
+    sta famistudio_tempo_env_ptr_lo
+    sta <.tempo_env_ptr+0
+    iny
+    lda [.channel_data_ptr],y
+    sta famistudio_tempo_env_ptr_hi
+    sta <.tempo_env_ptr+1
+    famistudio_add_16_8 .channel_data_ptr, #2
+    jmp .reset_tempo_env
+.special_code_reset_tempo_envelope:
+    lda famistudio_tempo_env_ptr_lo
+    sta <.tempo_env_ptr+0 
+    lda famistudio_tempo_env_ptr_hi
+    sta <.tempo_env_ptr+1
+.reset_tempo_env:    
+    ldy #0
+    sty famistudio_tempo_env_idx
+    lda [.tempo_env_ptr],y
+    sta famistudio_tempo_env_counter
+    jmp .read_byte
     .endif
 
 .special_code_disable_attack:
@@ -3509,25 +3556,13 @@ famistudio_channel_update:
 
 .set_speed:
     .if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    ; Load and reset the new tempo envelope.
-    lda [.channel_data_ptr],y
-    sta famistudio_tempo_env_ptr_lo
-    sta <.tempo_env_ptr+0
-    iny
-    lda [.channel_data_ptr],y
-    sta famistudio_tempo_env_ptr_hi
-    sta <.tempo_env_ptr+1
-    ldy #0
-    sty famistudio_tempo_env_idx
-    lda [.tempo_env_ptr],y
-    sta famistudio_tempo_env_counter
-    famistudio_add_16_8 .channel_data_ptr, #2
+    jmp .invalid_opcode
     .else
     lda [.channel_data_ptr],y
     sta famistudio_song_speed
     famistudio_inc_16 .channel_data_ptr
-    .endif
     jmp .read_byte 
+    .endif
 
 .set_loop:
     lda [.channel_data_ptr],y
@@ -3624,67 +3659,134 @@ famistudio_channel_update:
     sta famistudio_chn_ptr_hi,x
     rts
 
-    .if !FAMISTUDIO_USE_PITCH_TRACK
-.special_code_fine_pitch:
-    .endif
-    .if !FAMISTUDIO_USE_VIBRATO
-.special_code_override_pitch_envelope:
-.special_code_clear_pitch_override_flag:
-    .endif
-    .if !FAMISTUDIO_USE_ARPEGGIO
-.special_code_override_arpeggio_envelope:
-.special_code_clear_arpeggio_override_flag:
-.special_code_reset_arpeggio:
-    .endif
-    .if !FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-.special_code_duty_cycle_effect:
-    .endif
-    .if !FAMISTUDIO_USE_SLIDE_NOTES
-.special_code_slide:
-    .endif
-    .if !FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-.special_code_note_delay:
-.special_code_cut_delay:
-    .endif    
+.invalid_opcode:
+
     ; If you hit this, this mean you either:
     ; - have fine pitches in your songs, but didnt enable "FAMISTUDIO_USE_PITCH_TRACK"
     ; - have vibrato effect in your songs, but didnt enable "FAMISTUDIO_USE_VIBRATO"
     ; - have arpeggiated chords in your songs, but didnt enable "FAMISTUDIO_USE_ARPEGGIO"
     ; - have slide notes in your songs, but didnt enable "FAMISTUDIO_USE_SLIDE_NOTES"
-    ; - have a duty cycle effect in your songs, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+    ; - have a duty cycle effect in your songs, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT"
+    ; - have delayed notes/cuts in your songs, but didnt enable "FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS"
+    ; - have exported a song that uses FamiStudio tempo but have defined "FAMISTUDIO_USE_FAMITRACKER_TEMPO"
+    ; - have exported VRC6 data but didnt define "FAMISTUDIO_EXP_VRC6"
+
     brk 
 
 .famistudio_special_code_jmp_lo:
-    .byte LOW(.special_code_slide)                        ; $61
-    .byte LOW(.special_code_disable_attack)               ; $62
-    .byte LOW(.special_code_override_pitch_envelope)      ; $63
-    .byte LOW(.special_code_override_arpeggio_envelope)   ; $64
-    .byte LOW(.special_code_clear_pitch_override_flag)    ; $65
-    .byte LOW(.special_code_clear_arpeggio_override_flag) ; $66
-    .byte LOW(.special_code_reset_arpeggio)               ; $67
-    .byte LOW(.special_code_fine_pitch)                   ; $68
-    .byte LOW(.special_code_duty_cycle_effect)            ; $69
-    .byte LOW(.special_code_note_delay)                   ; $6a
-    .byte LOW(.special_code_cut_delay)                    ; $6b
-    .if FAMISTUDIO_EXP_FDS        
-    .byte LOW(.special_code_fds_mod_speed)                ; $6c
-    .byte LOW(.special_code_fds_mod_depth)                ; $6d
+    .if FAMISTUDIO_USE_SLIDE_NOTES
+        .byte LOW(.special_code_slide)                        ; $61
+    .else
+        .byte LOW(.invalid_opcode)                            ; $61
+    .endif    
+        .byte LOW(.special_code_disable_attack)               ; $62
+    .if FAMISTUDIO_USE_VIBRATO    
+        .byte LOW(.special_code_override_pitch_envelope)      ; $63
+        .byte LOW(.special_code_clear_pitch_override_flag)    ; $64
+    .else
+        .byte LOW(.invalid_opcode)                            ; $63
+        .byte LOW(.invalid_opcode)                            ; $64
+    .endif    
+    .if FAMISTUDIO_USE_ARPEGGIO
+        .byte LOW(.special_code_override_arpeggio_envelope)   ; $65
+        .byte LOW(.special_code_clear_arpeggio_override_flag) ; $66
+        .byte LOW(.special_code_reset_arpeggio)               ; $67
+    .else
+        .byte LOW(.invalid_opcode)                            ; $65
+        .byte LOW(.invalid_opcode)                            ; $66
+        .byte LOW(.invalid_opcode)                            ; $67
+    .endif    
+    .if FAMISTUDIO_USE_PITCH_TRACK
+        .byte LOW(.special_code_fine_pitch)                   ; $68
+    .else
+        .byte LOW(.invalid_opcode)                            ; $68
+    .endif    
+    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+        .byte LOW(.special_code_duty_cycle_effect)            ; $69
+    .else
+        .byte LOW(.invalid_opcode)                            ; $69
+    .endif    
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        .byte LOW(.special_code_note_delay)                   ; $6a
+        .byte LOW(.special_code_cut_delay)                    ; $6b
+    .endif
+    .if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
+        .byte LOW(.special_code_set_tempo_envelope)           ; $6a
+        .byte LOW(.special_code_reset_tempo_envelope)         ; $6b
+    .endif
+    .if (FAMISTUDIO_USE_FAMITRACKER_TEMPO != 0) & (FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 0)
+        .byte LOW(.invalid_opcode)                            ; $6a
+        .byte LOW(.invalid_opcode)                            ; $6b
+    .endif    
+    .if FAMISTUDIO_EXP_FDS
+        .byte LOW(.special_code_fds_mod_speed)                ; $6c
+        .byte LOW(.special_code_fds_mod_depth)                ; $6d
+    .endif
+    .if FAMISTUDIO_EXP_VRC6
+        .byte LOW(.special_code_vrc6_saw_volume)              ; $6c
+        .byte LOW(.invalid_opcode)                            ; $6d
+    .endif
+    .if (FAMISTUDIO_EXP_FDS + FAMISTUDIO_EXP_VRC6) = 0
+        .byte LOW(.invalid_opcode)                            ; $6c
+        .byte LOW(.invalid_opcode)                            ; $6d
     .endif        
+
 .famistudio_special_code_jmp_hi:
-    .byte HIGH(.special_code_slide)                        ; $61
-    .byte HIGH(.special_code_disable_attack)               ; $62
-    .byte HIGH(.special_code_override_pitch_envelope)      ; $63
-    .byte HIGH(.special_code_override_arpeggio_envelope)   ; $64
-    .byte HIGH(.special_code_clear_pitch_override_flag)    ; $65
-    .byte HIGH(.special_code_clear_arpeggio_override_flag) ; $66
-    .byte HIGH(.special_code_reset_arpeggio)               ; $67
-    .byte HIGH(.special_code_fine_pitch)                   ; $68
-    .byte HIGH(.special_code_duty_cycle_effect)            ; $69    
-    .byte HIGH(.special_code_note_delay)                   ; $6a
-    .byte HIGH(.special_code_cut_delay)                    ; $6b    
+    .if FAMISTUDIO_USE_SLIDE_NOTES
+        .byte HIGH(.special_code_slide)                       ; $61
+    .else
+        .byte HIGH(.invalid_opcode)                           ; $61
+    .endif     
+        .byte HIGH(.special_code_disable_attack)              ; $62
+    .if FAMISTUDIO_USE_VIBRATO        
+        .byte HIGH(.special_code_override_pitch_envelope)     ; $63
+        .byte HIGH(.special_code_clear_pitch_override_flag)   ; $64
+    .else    
+        .byte HIGH(.invalid_opcode)                           ; $63
+        .byte HIGH(.invalid_opcode)                           ; $64
+    .endif
+    .if FAMISTUDIO_USE_ARPEGGIO
+        .byte HIGH(.special_code_override_arpeggio_envelope)  ; $64
+        .byte HIGH(.special_code_clear_arpeggio_override_flag); $66
+        .byte HIGH(.special_code_reset_arpeggio)              ; $67
+    .else
+        .byte HIGH(.invalid_opcode)                           ; $65
+        .byte HIGH(.invalid_opcode)                           ; $66
+        .byte HIGH(.invalid_opcode)                           ; $67
+    .endif       
+    .if FAMISTUDIO_USE_PITCH_TRACK
+        .byte HIGH(.special_code_fine_pitch)                  ; $68
+    .else
+        .byte HIGH(.invalid_opcode)                           ; $68
+    .endif  
+    .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+        .byte HIGH(.special_code_duty_cycle_effect)           ; $69
+    .else
+        .byte HIGH(.invalid_opcode)                           ; $69
+    .endif    
+    .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+        .byte HIGH(.special_code_note_delay)                  ; $6a
+        .byte HIGH(.special_code_cut_delay)                   ; $6b    
+    .endif
+    .if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
+        .byte HIGH(.special_code_set_tempo_envelope)          ; $6a
+        .byte HIGH(.special_code_reset_tempo_envelope)        ; $6b
+    .endif
+    .if (FAMISTUDIO_USE_FAMITRACKER_TEMPO != 0) & (FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 0)
+        .byte HIGH(.invalid_opcode)                           ; $6a
+        .byte HIGH(.invalid_opcode)                           ; $6b    
+    .endif    
     .if FAMISTUDIO_EXP_FDS        
-    .byte HIGH(.special_code_fds_mod_speed)                ; $6c
-    .byte HIGH(.special_code_fds_mod_depth)                ; $6d
+        .byte HIGH(.special_code_fds_mod_speed)               ; $6c
+        .byte HIGH(.special_code_fds_mod_depth)               ; $6d
+    .endif
+    .if FAMISTUDIO_EXP_VRC6
+        .byte HIGH(.special_code_vrc6_saw_volume)             ; $6c
+        .byte HIGH(.invalid_opcode)                           ; $6d
+    .endif
+    .if (FAMISTUDIO_EXP_FDS + FAMISTUDIO_EXP_VRC6) = 0
+        .byte HIGH(.invalid_opcode)                           ; $6c
+        .byte HIGH(.invalid_opcode)                           ; $6d    
     .endif
 
 ;======================================================================================================================

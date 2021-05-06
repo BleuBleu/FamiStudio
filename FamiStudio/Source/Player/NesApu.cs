@@ -40,9 +40,11 @@ namespace FamiStudio
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuIsSeeking")]
         public extern static int IsSeeking(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuTrebleEq")]
-        public extern static void TrebleEq(int apuIdx, int expansion, double treble, int cutoff, int sample_rate);
+        public extern static void TrebleEq(int apuIdx, int expansion, double treble, int sample_rate);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetAudioExpansion")]
         public extern static int GetAudioExpansion(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSetExpansionVolume")]
+        public extern static int SetExpansionVolume(int apuIdx, int expansion, double volume);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
@@ -237,7 +239,7 @@ namespace FamiStudio
                 NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
                 NoteTableVrc6Saw[i] = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
                 NoteTableFds[i]     = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
-                NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49716.0 + 0.5) : (ushort)(NoteTableVrc7[(i - 1) % 12 + 1] << octave);
+                NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(NoteTableVrc7[(i - 1) % 12 + 1] << octave);
 
                 for (int j = 0; j < 8; j++)
                     NoteTableN163[j][i] = (ushort)Math.Min(0xffff, ((freq * (j + 1) * 983040.0) / clockNtsc) / 4);
@@ -337,23 +339,24 @@ namespace FamiStudio
             WriteRegister(apuIdx, APU_PL1_SWEEP,  0x08); // no sweep
             WriteRegister(apuIdx, APU_PL2_SWEEP,  0x08);
 
-            // These were the default values in Nes_Snd_Emu, review eventually.
-            // FamiTracker by default has -24, 12000 respectively.
-            const double treble = -8.87;
-            const int    cutoff =  8800;
+            var apuSettings = Settings.ExpansionMixerSettings[NesApu.APU_EXPANSION_NONE];
+            var expSettings = Settings.ExpansionMixerSettings[expansion];
 
-            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, treble, cutoff, sampleRate);
+            TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.treble, sampleRate);
+            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.volume));
+
+            if (expansion != APU_EXPANSION_NONE)
+            {
+                TrebleEq(apuIdx, expansion, expSettings.treble, sampleRate);
+                SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.volume));
+            }
 
             switch (expansion)
             {
                 case APU_EXPANSION_VRC6:
                     WriteRegister(apuIdx, VRC6_CTRL, 0x00);  // No halt, no octave change
-                    TrebleEq(apuIdx, expansion, treble, cutoff, sampleRate);
                     break;
                 case APU_EXPANSION_FDS:
-                    // These are taken from FamiTracker. They smooth out the waveform extremely nicely!
-                    //TrebleEq(apuIdx, expansion, -48, 1000, sampleRate);
-                    TrebleEq(apuIdx, expansion, -15, 2000, sampleRate);
                     break;
                 case APU_EXPANSION_MMC5:
                     WriteRegister(apuIdx, MMC5_PL1_VOL, 0x10);
@@ -367,7 +370,6 @@ namespace FamiStudio
                     // This is mainly because the instrument player might not update all the channels all the time.
                     WriteRegister(apuIdx, N163_ADDR, N163_REG_VOLUME); 
                     WriteRegister(apuIdx, N163_DATA, (numExpansionChannels - 1) << 4);
-                    TrebleEq(apuIdx, expansion, -15, 4000, sampleRate);
                     break;
                 case APU_EXPANSION_SUNSOFT:
                     WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);

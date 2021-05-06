@@ -3,15 +3,9 @@ using System;
 using System.Reflection;
 using System.Resources;
 
-#if FAMISTUDIO_LINUX
-    using BaseWindow = Gtk.Dialog;
-#else
-    using BaseWindow = Gtk.Window;
-#endif
-
 namespace FamiStudio
 {
-    public class TutorialDialog : BaseWindow
+    public class TutorialDialog : Gtk.Dialog
     {
         private Label label;
         private Image image;
@@ -23,17 +17,11 @@ namespace FamiStudio
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
         public TutorialDialog()
-#if FAMISTUDIO_MACOS
-             : base(WindowType.Toplevel)
-#endif
         {
             Init();
-            WidthRequest = 756;
-
-#if FAMISTUDIO_LINUX
+            WidthRequest = GtkUtils.ScaleGtkWidget(756);
             TransientFor = FamiStudioForm.Instance;
             SetPosition(WindowPosition.CenterOnParent);
-#endif
         }
 
         private void Init()
@@ -43,6 +31,7 @@ namespace FamiStudio
             buttonRight = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.ArrowRight{suffix}.png"));
 
             checkBoxDontShow = new CheckButton();
+            checkBoxDontShow.CanFocus = false;
             checkBoxDontShow.Show();
 
             var checkLabel = new Label();
@@ -54,13 +43,16 @@ namespace FamiStudio
             buttonRight.Show();
             buttonRight.ButtonPressEvent += ButtonRight_ButtonPressEvent;
 
+            buttonLeft.TooltipText = "Previous";
+            buttonRight.TooltipText = "Next";
+
             var buttonsHbox = new HBox(false, 0);
             buttonsHbox.PackStart(buttonLeft,  false, false,  0);
             buttonsHbox.PackStart(buttonRight, false, false, 0);
             buttonsHbox.Show();
 
             var buttonsAlign = new Alignment(1.0f, 0.5f, 0.0f, 0.0f);
-            buttonsAlign.TopPadding = 5;
+            buttonsAlign.TopPadding = (uint)GtkUtils.ScaleGtkWidget(5);
             buttonsAlign.Show();
             buttonsAlign.Add(buttonsHbox);
 
@@ -70,7 +62,7 @@ namespace FamiStudio
             checkBoxHBox.Show();
 
             var checkBoxAlign = new Alignment(0.0f, 0.5f, 0.0f, 0.0f);
-            checkBoxAlign.TopPadding = 5;
+            checkBoxAlign.TopPadding = (uint)GtkUtils.ScaleGtkWidget(5);
             checkBoxAlign.Show();
             checkBoxAlign.Add(checkBoxHBox);
 
@@ -80,30 +72,25 @@ namespace FamiStudio
             hbox.Show();
 
             label = new Label();
-            label.WidthRequest = 736;
-            label.HeightRequest = 64;
+            label.WidthRequest = GtkUtils.ScaleGtkWidget(736);
+            label.HeightRequest = GtkUtils.ScaleGtkWidget(64);
             label.SetAlignment(0.0f, 0.0f);
             label.Wrap = true;
             label.Show();
 
             image = new Image();
-            image.WidthRequest  = 736;
-            image.HeightRequest = 414;
+            image.WidthRequest  = GtkUtils.ScaleGtkWidget(736);
+            image.HeightRequest = GtkUtils.ScaleGtkWidget(414);
             image.Show();
 
-#if FAMISTUDIO_LINUX
             var vbox = VBox;
-#else
-            var vbox  = new VBox();
-            Add(vbox);
-#endif
 
             vbox.PackStart(label, false, false, 0);
             vbox.PackStart(image, false, false, 0);
             vbox.PackStart(hbox, false, false, 0);
             vbox.Show();
 
-            BorderWidth = 10;
+            BorderWidth = (uint)GtkUtils.ScaleGtkWidget(10);
             Resizable = false;
             Decorated = false;
             Modal = true;
@@ -115,7 +102,7 @@ namespace FamiStudio
         private void SetPage(int idx)
         {
             pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Messages.Length - 1);
-            image.Pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{TutorialMessages.Images[pageIndex]}").ScaleSimple(736, 414, Gdk.InterpType.Bilinear);
+            image.Pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{TutorialMessages.Images[pageIndex]}").ScaleSimple(GtkUtils.ScaleGtkWidget(736), GtkUtils.ScaleGtkWidget(414), Gdk.InterpType.Bilinear);
             label.Text = TutorialMessages.Messages[pageIndex];
             buttonLeft.Visible = pageIndex != 0;
 
@@ -128,9 +115,7 @@ namespace FamiStudio
         private void EndDialog(System.Windows.Forms.DialogResult res)
         {
             result = res;
-#if FAMISTUDIO_LINUX
             Respond(0);
-#endif
         }
 
         void ButtonRight_ButtonPressEvent(object o, ButtonPressEventArgs args)
@@ -168,25 +153,8 @@ namespace FamiStudio
 
         public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent = null)
         {
-#if FAMISTUDIO_MACOS
-            Show();
-
-            int x = parent.Bounds.Left + (parent.Bounds.Width  - Allocation.Width)  / 2;
-            int y = parent.Bounds.Top  + (parent.Bounds.Height - Allocation.Height) / 2;
-            Move(x, y);
-            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-
-            while (result == System.Windows.Forms.DialogResult.None)
-                Application.RunIteration();
-
-            Hide();
-
-            MacUtils.RestoreMainNSWindowFocus();
-#else
             Run();
             Hide();
-#endif
-
             return result;
         }
     }

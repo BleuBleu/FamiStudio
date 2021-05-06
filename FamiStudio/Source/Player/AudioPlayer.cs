@@ -24,6 +24,7 @@ namespace FamiStudio
         protected ManualResetEvent stopEvent = new ManualResetEvent(false);
         protected ConcurrentQueue<short[]> sampleQueue = new ConcurrentQueue<short[]>();
         protected int numBufferedFrames = 3;
+        protected IOscilloscope oscilloscope;
 
         protected AudioPlayer(int apuIndex, bool pal, int sampleRate, int numBuffers) : base(apuIndex, sampleRate)
         {
@@ -38,6 +39,9 @@ namespace FamiStudio
             short[] samples = null;
             if (sampleQueue.TryDequeue(out samples))
             {
+                if (oscilloscope != null)
+                    oscilloscope.AddSamples(samples);
+
                 // Tell player thread it needs to generate one more frame.
                 bufferSemaphore.Release(); 
             }
@@ -62,6 +66,11 @@ namespace FamiStudio
                 playerThread.Join();
 
             audioStream.Dispose();
+        }
+
+        public void ConnectOscilloscope(IOscilloscope osc)
+        {
+            oscilloscope = osc;
         }
 
         protected override unsafe short[] EndFrame()

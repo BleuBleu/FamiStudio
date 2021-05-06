@@ -92,7 +92,7 @@
             // FamiStudioForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.BackColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(37)))), ((int)(((byte)(41)))));
             this.ClientSize = new System.Drawing.Size(1264, 681);
             this.Controls.Add(this.tableLayout);
             this.Controls.Add(this.projectExplorer);

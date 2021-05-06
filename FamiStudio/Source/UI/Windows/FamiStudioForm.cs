@@ -25,6 +25,8 @@ namespace FamiStudio
 
         public FamiStudioForm(FamiStudio famistudio)
         {
+            Cursors.Initialize();
+
             this.famistudio = famistudio;
 
             timer.Tick += timer_Tick;
@@ -112,7 +114,7 @@ namespace FamiStudio
             Application.Run(this);
         }
 
-        public void RefreshSequencerLayout()
+        public void RefreshLayout()
         {
             tableLayout.RowStyles[0].Height = (int)(sequencer.ComputeDesiredSizeY() * Direct2DTheme.MainWindowScaling);
             PianoRoll.Invalidate();

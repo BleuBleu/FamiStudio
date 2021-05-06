@@ -159,16 +159,19 @@ namespace FamiStudio
     {
         public int Id { get; private set; }
         public Size Size { get; private set; }
+        private bool dispose = true;
 
-        public GLBitmap(int id, int width, int height)
+        public GLBitmap(int id, int width, int height, bool disp = true)
         {
             Id = id;
             Size = new Size(width, height);
+            dispose = disp;
         }
 
         public void Dispose()
         {
-            GL.DeleteTexture(Id);
+            if (dispose)
+                GL.DeleteTexture(Id);
         }
     }
 
@@ -236,6 +239,14 @@ namespace FamiStudio
                 rc.Height);
         }
 
+        protected void AddHalfPixelOffset()
+        {
+            GL.GetFloat(GetPName.ModelviewMatrix, out Matrix4 matrix);
+            matrix.Row3.X += 0.5f;
+            matrix.Row3.Y += 0.5f;
+            GL.LoadMatrix(ref matrix);
+        }
+
         public bool AntiAliasing
         {
             get { return antialiasing; }
@@ -251,7 +262,7 @@ namespace FamiStudio
             GL.PushMatrix();
             GL.Translate(x, y, 0);
         }
-
+ 
         public void PushTransform(float tx, float ty, float sx, float sy)
         {
             transformStack.Push(transform);
@@ -307,14 +318,14 @@ namespace FamiStudio
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity)
         {
-            GL.Enable(EnableCap.Texture2D);
-            GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
-            GL.Color4(1.0f, 1.0f, 1.0f, opacity);
-
             int x0 = (int)x;
             int y0 = (int)y;
             int x1 = (int)(x + width);
             int y1 = (int)(y + height);
+
+            GL.Enable(EnableCap.Texture2D);
+            GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
+            GL.Color4(1.0f, 1.0f, 1.0f, opacity);
 
             GL.Begin(BeginMode.Quads);
             GL.TexCoord2(0, 0); GL.Vertex2(x0, y0);
@@ -322,11 +333,32 @@ namespace FamiStudio
             GL.TexCoord2(1, 1); GL.Vertex2(x1, y1);
             GL.TexCoord2(0, 1); GL.Vertex2(x0, y1);
             GL.End();
+
+            GL.Disable(EnableCap.Texture2D);
+        }
+
+        // HACK : Very specific call only used by video rendering, too lazy to do the proper transforms.
+        public void DrawRotatedFlippedBitmap(GLBitmap bmp, float x, float y, float width, float height)
+        {
+            GL.Enable(EnableCap.Texture2D);
+            GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
+            GL.Color4(1.0f, 1.0f, 1.0f, 1.0f);
+
+            GL.Begin(BeginMode.Quads);
+            GL.TexCoord2(0, 0); GL.Vertex2(x - height, y);
+            GL.TexCoord2(1, 0); GL.Vertex2(x - height, y - width);
+            GL.TexCoord2(1, 1); GL.Vertex2(x, y - width);
+            GL.TexCoord2(0, 1); GL.Vertex2(x, y );
+            GL.End();
+
             GL.Disable(EnableCap.Texture2D);
         }
 
         public void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
         {
+            if (string.IsNullOrEmpty(text))
+                return;
+
             GL.Enable(EnableCap.Texture2D);
             GL.BindTexture(TextureTarget.Texture2D, font.Texture);
             GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);
@@ -388,7 +420,7 @@ namespace FamiStudio
         public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
         {
             GL.PushMatrix();
-            GL.Translate(0.5f, 0.5f, 0);
+            AddHalfPixelOffset();
             GL.Color4(brush.Color0);
             if (antialiasing)
                 GL.Enable(EnableCap.LineSmooth);
@@ -448,7 +480,7 @@ namespace FamiStudio
         public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
         {
             GL.PushMatrix();
-            GL.Translate(0.5f, 0.5f, 0);
+            AddHalfPixelOffset();
             GL.Color4(brush.Color0);
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && width > 1)
@@ -612,7 +644,7 @@ namespace FamiStudio
         public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f)
         {
             GL.PushMatrix();
-            GL.Translate(0.5f, 0.5f, 0);
+            if (lineWidth == 1.0f) AddHalfPixelOffset();
             GL.Enable(EnableCap.LineSmooth);
             GL.Color4(brush.Color0);
 #if FAMISTUDIO_LINUX
@@ -737,6 +769,11 @@ namespace FamiStudio
                 pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
 
             return new GLBitmap(CreateGLTexture(pixbuf), pixbuf.Width, pixbuf.Height);
+        }
+
+        public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
+        {
+            return new GLBitmap(g.Texture, g.SizeX, g.SizeY, false);
         }
 
         public float GetBitmapWidth(GLBitmap bmp)
@@ -865,7 +902,11 @@ namespace FamiStudio
         protected int resX;
         protected int resY;
 
-        private GLOffscreenGraphics(int imageSizeX, int imageSizeY)
+        public int Texture => texture;
+        public int SizeX => resX;
+        public int SizeY => resY;
+
+        private GLOffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback)
         {
             resX = imageSizeX;
             resY = imageSizeY;
@@ -884,9 +925,9 @@ namespace FamiStudio
             GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, 0);
         }
 
-        public static GLOffscreenGraphics Create(int imageSizeX, int imageSizeY)
+        public static GLOffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
         {
-            return new GLOffscreenGraphics(imageSizeX, imageSizeY);
+            return new GLOffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
         }
 
         public override void BeginDraw(GLControl control, int windowSizeY)
@@ -909,20 +950,30 @@ namespace FamiStudio
             byte[] tmp = new byte[data.Length];
 
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fbo);
-            fixed (byte* p = &tmp[0])
-                GL.ReadPixels(0, 0, resX, resY, PixelFormat.Bgra, PixelType.UnsignedByte, new IntPtr(p));
-            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
-
-            // Flip image vertically to match D3D. 
-            for (int y = 0; y < resY; y++)
+            fixed (byte* tmpPtr = &tmp[0])
             {
-                int y0 = y;
-                int y1 = resY - y - 1;
+                GL.ReadPixels(0, 0, resX, resY, PixelFormat.Bgra, PixelType.UnsignedByte, new IntPtr(tmpPtr));
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
 
-                y0 *= resX * 4;
-                y1 *= resX * 4;
+                // Flip image vertically to match D3D. 
+                for (int y = 0; y < resY; y++)
+                {
+                    int y0 = y;
+                    int y1 = resY - y - 1;
 
-                Array.Copy(tmp, y0, data, y1, resX * 4);
+                    y0 *= resX * 4;
+                    y1 *= resX * 4;
+
+                    // ABGR -> RGBA
+                    byte* p = tmpPtr + y0; 
+                    for (int x = 0; x < resX * 4; x += 4)
+                    {
+                        data[y1 + x + 3] = *p++;
+                        data[y1 + x + 2] = *p++;
+                        data[y1 + x + 1] = *p++;
+                        data[y1 + x + 0] = *p++;
+                    }
+                }
             }
         }
 

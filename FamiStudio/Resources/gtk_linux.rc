@@ -36,7 +36,10 @@ style "dialog"
 
 style "buttonlabel"
 {
-    fg[NORMAL] = "#000000"
+    fg[NORMAL]      = "#C6CDDA" # LightGreyFillColor2
+    fg[PRELIGHT]    = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE]      = "#C6CDDA" # LightGreyFillColor2
+    fg[INSENSITIVE] = "#C6CDDA" # LightGreyFillColor2    
 }
 
 style "text_view"
@@ -78,6 +81,7 @@ widget_class "*GtkCheckButton*Label*" style "check_label"
 widget_class "*GtkCheckButton*" style "check"
 widget_class "*GtkTextView*" style "text_view"
 widget_class "*FlatButton*" style "flatbutton"
+widget_class "*CairoImage*" style "flatbutton"
 widget_class "*Dialog" style "dialog"
 widget "*CheckBoxList*" style "check_list"
 widget "FamiStudioForm" style "dialog"

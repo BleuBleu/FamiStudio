@@ -46,15 +46,6 @@ namespace FamiStudio
 
         const int FormatSubChunkSize = 16;
 
-        public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, int channelMask)
-        {
-            var project = song.Project;
-            var player = new WavPlayer(sampleRate, loopCount, channelMask);
-            var samples = player.GetSongSamples(song, project.PalMode, duration);
-
-            Save(samples, filename, sampleRate);
-        }
-
         public unsafe static void Save(short[] samples, string filename, int sampleRate)
         {
             using (var file = new FileStream(filename, FileMode.Create))

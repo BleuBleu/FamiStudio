@@ -21,7 +21,7 @@ namespace FamiStudio
         [DllImport(ShineMp3Dll, CallingConvention = CallingConvention.StdCall, EntryPoint = "ShineMp3Encode")]
         extern static int ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples, IntPtr wavData, int mp3_bitrate, int mp3_data_size, IntPtr mp3_data);
 
-        public unsafe static bool Save(Song song, string filename, int sampleRate, int bitRate, int loopCount, int duration, int channelMask)
+        public unsafe static bool Save(short[] wavData, string filename, int sampleRate, int bitRate)
         {
             if (sampleRate < 44100)
             {
@@ -29,9 +29,6 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Warning, $"Sample rate of {sampleRate}Hz is too low for MP3. Forcing 44100Hz.");
             }
 
-            var project = song.Project;
-            var player = new WavPlayer(sampleRate, loopCount, channelMask);
-            var wavData = player.GetSongSamples(song, project.PalMode, duration);
             var mp3Data = new byte[wavData.Length * sizeof(short) * 4];
             var mp3Size = 0;
 

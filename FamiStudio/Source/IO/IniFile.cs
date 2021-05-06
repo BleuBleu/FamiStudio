@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 
 namespace FamiStudio
 {
@@ -59,6 +60,18 @@ namespace FamiStudio
             }
         }
 
+        public float GetFloat(string section, string key, float defaultValue)
+        {
+            try
+            {
+                return float.Parse(iniContent[section][key], CultureInfo.InvariantCulture);
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
         public bool GetBool(string section, string key, bool defaultValue)
         {
             try
@@ -83,11 +96,28 @@ namespace FamiStudio
             }
         }
 
+        public bool HasKey(string section, string key)
+        {
+            if (iniContent.TryGetValue(section, out var sectionValues))
+            {
+                return sectionValues.ContainsKey(key);
+            }
+
+            return false;
+        }
+
         public void SetInt(string section, string key, int value)
         {
             if (!iniContent.ContainsKey(section))
                 iniContent[section] = new Dictionary<string, string>();
             iniContent[section][key] = value.ToString();
+        }
+
+        public void SetFloat(string section, string key, float value)
+        {
+            if (!iniContent.ContainsKey(section))
+                iniContent[section] = new Dictionary<string, string>();
+            iniContent[section][key] = value.ToString(CultureInfo.InvariantCulture);
         }
 
         public void SetBool(string section, string key, bool value)

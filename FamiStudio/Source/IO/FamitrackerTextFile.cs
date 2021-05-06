@@ -662,9 +662,11 @@ namespace FamiStudio
 
             if (project.UsesFamiStudioTempo)
             {
-                Log.LogMessage(LogSeverity.Warning, $"Song uses FamiStudio tempo. Will be exported with speed of 1, tempo 150.");
+                Log.LogMessage(LogSeverity.Warning, $"Song uses FamiStudio tempo. Tempo will be converted with speed of 1 and tempo 150. If you need FamiTracker compatibility, it is recommended that you use FamiTracker tempo in the future.");
                 project.ConvertToFamiTrackerTempo(false);
             }
+
+            project.ConvertToSimpleNotes();
 
             ConvertPitchEnvelopes(project);
             var envelopes = MergeIdenticalEnvelopes(project);
@@ -827,7 +829,7 @@ namespace FamiStudio
                 TruncateLongPatterns(song);
                 CreateMissingPatterns(song);
                 song.CleanupUnusedPatterns();
-                song.DuplicateInstancesWithDifferentLengths();
+                song.MakePatternsWithDifferentLengthsUnique();
 
                 lines.Add($"TRACK{song.PatternLength,4}{song.FamitrackerSpeed,4}{song.FamitrackerTempo,4} \"{song.Name}\"");
                 lines.Add($"COLUMNS : {string.Join(" ", Enumerable.Repeat(3, song.Channels.Length))}");
@@ -868,12 +870,12 @@ namespace FamiStudio
 
                         var patternLines = new List<string>();
 
-                        for (var it = pattern.GetNoteIterator(0, song.PatternLength); !it.Done; it.Next())
+                        for (var it = pattern.GetDenseNoteIterator(0, song.PatternLength); !it.Done; it.Next())
                         {
-                            var time = it.CurrentTime;
+                            var location = new NoteLocation(p, it.CurrentTime);
                             var note = it.CurrentNote;
 
-                            song.ApplySpeedEffectAt(p, time, ref famitrackerSpeed);
+                            song.ApplySpeedEffectAt(location, ref famitrackerSpeed);
 
                             // Keeps the code a lot simpler.
                             if (note == null)
@@ -908,7 +910,7 @@ namespace FamiStudio
                                 var tempNote = note.Clone();
                                 tempNote.Value = note.Value;
                                 tempNote.SlideNoteTarget = slideTarget;
-                                channel.ComputeSlideNoteParams(tempNote, p, time, famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat); 
+                                channel.ComputeSlideNoteParams(tempNote, location, famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat);
 
                                 if (channel.IsN163WaveChannel)
                                 {
@@ -1002,7 +1004,7 @@ namespace FamiStudio
                                 prevSlideEffect = Effect_None;
                             }
 
-                            if (time == patternLen - 1)
+                            if (location.NoteIndex == patternLen - 1)
                             {
                                 if (p == song.Length - 1 && song.LoopPoint >= 0)
                                     effectString += $" B{song.LoopPoint:X2}";

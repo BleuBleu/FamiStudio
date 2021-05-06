@@ -10,7 +10,9 @@ namespace FamiStudio
 
         public Project Load(string filename)
         {
+#if !DEBUG
             try
+#endif
             {
                 using (var stream = File.OpenRead(filename))
                 {
@@ -43,10 +45,12 @@ namespace FamiStudio
                     return project;
                 }
             }
+#if !DEBUG
             catch
             {
                 return null;
             }
+#endif
         }
 
         public bool Save(Project project, string filename)

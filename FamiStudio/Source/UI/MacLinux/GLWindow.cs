@@ -1,19 +1,4 @@
-﻿// Gtk GLWidget Sharp - Gtk OpenGL Widget for CSharp using OpenTK
-/*
-Usage:
-    To render either override OnRenderFrame() or hook to the RenderFrame event.
-
-    When GraphicsContext.ShareContexts == True (Default)
-    To setup OpenGL state hook to the following events:
-        GLWidget.GraphicsContextInitialized
-        GLWidget.GraphicsContextShuttingDown
-
-    When GraphicsContext.ShareContexts == False
-    To setup OpenGL state hook to the following events:
-        GLWidget.Initialized
-        GLWidget.ShuttingDown 
-*/
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Platform;
 using System;
@@ -26,7 +11,7 @@ using System.ComponentModel;
 namespace Gtk
 {
     [ToolboxItem(true)]
-    public class GLWidget : DrawingArea, IDisposable
+    public class GLWindow : Window, IDisposable
     {
         IGraphicsContext graphicsContext;
         static int graphicsContextCount;
@@ -61,6 +46,12 @@ namespace Gtk
         /// <summary>The minor version of OpenGL to use.</summary>
         public int GlVersionMinor { get; set; }
 
+#if FAMISTUDIO_MACOS
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        private delegate void WindowDidResizeDelegate(IntPtr self, IntPtr cmd, IntPtr notification);
+        private readonly WindowDidResizeDelegate WindowDidResizeHandler;
+#endif
+
         public GraphicsContextFlags GraphicsContextFlags
         {
             get;
@@ -70,21 +61,22 @@ namespace Gtk
         GraphicsContextFlags graphicsContextFlags = GraphicsContextFlags.Default;
 
         /// <summary>Constructs a new GLWidget.</summary>
-        public GLWidget()
+        public GLWindow()
             : this(GraphicsMode.Default)
         {
         }
 
         /// <summary>Constructs a new GLWidget using a given GraphicsMode</summary>
-        public GLWidget(GraphicsMode graphicsMode)
+        public GLWindow(GraphicsMode graphicsMode)
             : this(graphicsMode, 1, 0, GraphicsContextFlags.Default)
         {
         }
 
         /// <summary>Constructs a new GLWidget</summary>
-        public GLWidget(GraphicsMode graphicsMode, int glVersionMajor, int glVersionMinor, GraphicsContextFlags graphicsContextFlags)
+        public GLWindow(GraphicsMode graphicsMode, int glVersionMajor, int glVersionMinor, GraphicsContextFlags graphicsContextFlags) :
+            base(WindowType.Toplevel)
         {
-            this.DoubleBuffered = false;
+            DoubleBuffered = false;
 
             SingleBuffer = graphicsMode.Buffers == 1;
             ColorBPP = graphicsMode.ColorFormat.BitsPerPixel;
@@ -97,9 +89,13 @@ namespace Gtk
             GlVersionMajor = glVersionMajor;
             GlVersionMinor = glVersionMinor;
             GraphicsContextFlags = graphicsContextFlags;
+
+#if FAMISTUDIO_MACOS
+            WindowDidResizeHandler = WindowDidResize;
+#endif
         }
 
-        ~GLWidget()
+        ~GLWindow()
         {
             Dispose(false);
         }
@@ -116,7 +112,7 @@ namespace Gtk
             if (disposing)
             {
                 graphicsContext.MakeCurrent(windowInfo);
-                OnShuttingDown();
+                ShuttingDown();
                 if (GraphicsContext.ShareContexts && (Interlocked.Decrement(ref graphicsContextCount) == 0))
                 {
                     OnGraphicsContextShuttingDown();
@@ -144,31 +140,20 @@ namespace Gtk
                 GraphicsContextShuttingDown(null, EventArgs.Empty);
         }
 
-        // Called when this GLWidget has a valid GraphicsContext
-        public event EventHandler Initialized;
-
-        protected virtual void OnInitialized()
+        protected virtual void GLInitialized()
         {
-            if (Initialized != null)
-                Initialized(this, EventArgs.Empty);
         }
 
-        // Called when this GLWidget needs to render a frame
-        public event EventHandler RenderFrame;
-
-        protected virtual void OnRenderFrame()
+        protected virtual void Resized(int width, int height)
         {
-            if (RenderFrame != null)
-                RenderFrame(this, EventArgs.Empty);
         }
 
-        // Called when this GLWidget is being Disposed
-        public event EventHandler ShuttingDown;
-
-        protected virtual void OnShuttingDown()
+        protected virtual void RenderFrame(bool force = false)
         {
-            if (ShuttingDown != null)
-                ShuttingDown(this, EventArgs.Empty);
+        }
+
+        protected virtual void ShuttingDown()
+        {
         }
 
         // Called when a widget is realized. (window handles and such are valid)
@@ -178,7 +163,7 @@ namespace Gtk
         bool initialized;
 
         // Called when the widget needs to be (fully or partially) redrawn.
-        protected override bool OnExposeEvent(Gdk.EventExpose eventExpose)
+        protected override bool OnExposeEvent(Gdk.EventExpose evnt)
         {
             if (!initialized)
             {
@@ -193,8 +178,7 @@ namespace Gtk
                         DepthBPP = 16;
                 }
 
-                ColorFormat colorBufferColorFormat = new ColorFormat(ColorBPP);
-
+                ColorFormat colorBufferColorFormat  = new ColorFormat(ColorBPP);
                 ColorFormat accumulationColorFormat = new ColorFormat(AccumulatorBPP);
 
                 int buffers = 2;
@@ -203,46 +187,41 @@ namespace Gtk
 
                 GraphicsMode graphicsMode = new GraphicsMode(colorBufferColorFormat, DepthBPP, StencilBPP, Samples, accumulationColorFormat, buffers, Stereo);
 
-                // IWindowInfo
-                if (Configuration.RunningOnWindows)
-                {
-                    IntPtr windowHandle = gdk_win32_drawable_get_handle(GdkWindow.Handle);
-                    windowInfo = Utilities.CreateWindowsWindowInfo(windowHandle);
-                }
-                else if (Configuration.RunningOnMacOS)
-                {
-                    IntPtr windowHandle = gdk_x11_drawable_get_xid(GdkWindow.Handle);
-                    const bool ownHandle = true;
-                    const bool isControl = true;
-                    windowInfo = Utilities.CreateMacOSCarbonWindowInfo(windowHandle, ownHandle, isControl);
-                }
-                else if (Configuration.RunningOnX11)
-                {
-                    IntPtr display = gdk_x11_display_get_xdisplay(Display.Handle);
-                    int screen = Screen.Number;
-                    IntPtr windowHandle = gdk_x11_drawable_get_xid(GdkWindow.Handle);
-                    IntPtr rootWindow = gdk_x11_drawable_get_xid(RootWindow.Handle);
+#if FAMISTUDIO_MACOS
+                // Setup a delegate to monitor when the window is resized.
+                // GTK's configure event is not fired immedately, causing garbage to appear
+                // during window resizes since the GL content is not updated.
+                IntPtr windowHandle = FamiStudio.MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle);
+                windowInfo = Utilities.CreateMacOSWindowInfo(windowHandle);
 
-                    IntPtr visualInfo;
-                    if (graphicsMode.Index.HasValue)
-                    {
-                        XVisualInfo info = new XVisualInfo();
-                        info.VisualID = graphicsMode.Index.Value;
-                        int dummy;
-                        visualInfo = XGetVisualInfo(display, XVisualInfoMask.ID, ref info, out dummy);
-                    }
-                    else
-                    {
-                        visualInfo = GetVisualInfo(display);
-                    }
+                var delegateClass = FamiStudio.MacUtils.AllocateClass(FamiStudio.MacUtils.GetClass("NSObject"), "ResizeDelegate", 0);
+                FamiStudio.MacUtils.RegisterMethod(delegateClass, WindowDidResizeHandler, "windowDidResize:", "v@:@");
+                FamiStudio.MacUtils.RegisterClass(delegateClass);
 
-                    windowInfo = Utilities.CreateX11WindowInfo(display, screen, windowHandle, rootWindow, visualInfo);
-                    XFree(visualInfo);
+                var instancePtr = FamiStudio.MacUtils.SendIntPtr(delegateClass, FamiStudio.MacUtils.SelRegisterName("alloc"));
+                FamiStudio.MacUtils.AddNotificationCenterObserver(instancePtr, "windowDidResize:", "NSWindowDidResizeNotification", windowHandle);
+#elif FAMISTUDIO_LINUX
+                IntPtr display = gdk_x11_display_get_xdisplay(Display.Handle);
+                int screen = Screen.Number;
+                IntPtr windowHandle = gdk_x11_drawable_get_xid(GdkWindow.Handle);
+                IntPtr rootWindow = gdk_x11_drawable_get_xid(RootWindow.Handle);
+
+                IntPtr visualInfo;
+                if (graphicsMode.Index.HasValue)
+                {
+                    XVisualInfo info = new XVisualInfo();
+                    info.VisualID = graphicsMode.Index.Value;
+                    int dummy;
+                    visualInfo = XGetVisualInfo(display, XVisualInfoMask.ID, ref info, out dummy);
                 }
                 else
                 {
-                    throw new PlatformNotSupportedException();
+                    visualInfo = GetVisualInfo(display);
                 }
+
+                windowInfo = Utilities.CreateX11WindowInfo(display, screen, windowHandle, rootWindow, visualInfo);
+                XFree(visualInfo);
+#endif
 
                 // GraphicsContext
                 graphicsContext = new GraphicsContext(graphicsMode, windowInfo, GlVersionMajor, GlVersionMinor, graphicsContextFlags);
@@ -265,31 +244,38 @@ namespace Gtk
                     OnGraphicsContextInitialized();
                 }
 
-                OnInitialized();
+                GLInitialized();
             }
             else
             {
                 graphicsContext.MakeCurrent(windowInfo);
             }
 
-            bool result = base.OnExposeEvent(eventExpose);
-            OnRenderFrame();
-            eventExpose.Window.Display.Sync(); // Add Sync call to fix resize rendering problem (Jay L. T. Cornwall) - How does this affect VSync?
-            graphicsContext.SwapBuffers();
+            bool result = base.OnExposeEvent(evnt);
+            RenderFrame(true);
             return result;
         }
 
-        // Called when this GLWidget needs to render a frame
-        public event EventHandler Resized;
+#if FAMISTUDIO_MACOS
+        private void WindowDidResize(IntPtr self, IntPtr cmd, IntPtr notification)
+        {
+            if (graphicsContext != null)
+                graphicsContext.Update(windowInfo);
 
+            IntPtr nsWin = FamiStudio.MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle);
+            var size = FamiStudio.MacUtils.GetWindowSize(nsWin);
+            Resized((int)size.X, (int)size.Y);
+        }
+#endif
+
+#if FAMISTUDIO_LINUX
         // Called on Resize
         protected override bool OnConfigureEvent(Gdk.EventConfigure evnt)
         {
             bool result = base.OnConfigureEvent(evnt);
             if (graphicsContext != null)
                 graphicsContext.Update(windowInfo);
-            if (Resized != null)
-                Resized(this, EventArgs.Empty);
+            Resized(evnt.Width, evnt.Height);
             return result;
         }
 
@@ -465,5 +451,6 @@ namespace Gtk
 
         [SuppressUnmanagedCodeSecurity, DllImport(linux_libgl_name)]
         static extern IntPtr glXChooseVisual(IntPtr display, int screen, int[] attr);
+#endif
     }
 }

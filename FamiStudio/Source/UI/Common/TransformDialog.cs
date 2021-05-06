@@ -58,17 +58,18 @@ namespace FamiStudio
             switch (section)
             {
                 case TransformOperation.SongCleanup:
-                    page.AddBoolean("Merge identical patterns:", true);                       // 0
-                    page.AddBoolean("Delete empty patterns:", true);                          // 1
-                    page.AddStringListMulti(null, GetSongNames(), null);                      // 2
+                    page.AddCheckBox("Merge identical patterns:", true);                       // 0
+                    page.AddCheckBox("Delete empty patterns:", true);                          // 1
+                    page.AddCheckBox("Adjust maximum note lengths:", true);                    // 2
+                    page.AddCheckBoxList(null, GetSongNames(), null);                          // 3
                     break;
                 case TransformOperation.ProjectCleanup:
-                    page.AddBoolean("Delete unused instruments:", true);                      // 0
-                    page.AddBoolean("Merge identical instruments:", true);                    // 1
-                    page.AddBoolean("Unassign unused DPCM instrument keys:", true);           // 2
-                    page.AddBoolean("Delete unassigned samples:", true);                      // 3
-                    page.AddBoolean("Permanently apply all DPCM samples processing:", false); // 4
-                    page.AddBoolean("Delete unused arpeggios:", true);                        // 5
+                    page.AddCheckBox("Delete unused instruments:", true);                      // 0
+                    page.AddCheckBox("Merge identical instruments:", true);                    // 1
+                    page.AddCheckBox("Unassign unused DPCM instrument keys:", true);           // 2
+                    page.AddCheckBox("Delete unassigned samples:", true);                      // 3
+                    page.AddCheckBox("Permanently apply all DPCM samples processing:", false); // 4
+                    page.AddCheckBox("Delete unused arpeggios:", true);                        // 5
                     page.PropertyChanged += ProjectCleanup_PropertyChanged;
                     break;
             }
@@ -109,12 +110,13 @@ namespace FamiStudio
         private void SongCleanup()
         {
             var props = dialog.GetPropertyPage((int)TransformOperation.SongCleanup);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(2));
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(3));
 
-            var mergeIdenticalPatterns    = props.GetPropertyValue<bool>(0);
-            var deleteEmptyPatterns       = props.GetPropertyValue<bool>(1);
+            var mergeIdenticalPatterns = props.GetPropertyValue<bool>(0);
+            var deleteEmptyPatterns    = props.GetPropertyValue<bool>(1);
+            var reduceNoteLengths      = props.GetPropertyValue<bool>(2);
 
-            if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns))
+            if (songIds.Length > 0 && (mergeIdenticalPatterns || deleteEmptyPatterns || reduceNoteLengths))
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -128,19 +130,19 @@ namespace FamiStudio
                 if (mergeIdenticalPatterns)
                 {
                     foreach (var songId in songIds)
-                    {
-                        var song = app.Project.GetSong(songId);
-                        song.MergeIdenticalPatterns();
-                    }
+                        app.Project.GetSong(songId).MergeIdenticalPatterns();
                 }
 
                 if (deleteEmptyPatterns)
                 {
                     foreach (var songId in songIds)
-                    {
-                        var song = app.Project.GetSong(songId);
-                        song.DeleteEmptyPatterns();
-                    }
+                        app.Project.GetSong(songId).DeleteEmptyPatterns();
+                }
+
+                if (reduceNoteLengths)
+                {
+                    foreach (var songId in songIds)
+                        app.Project.GetSong(songId).SetNoteDurationToMaximumLength();
                 }
 
                 app.UndoRedoManager.EndTransaction();

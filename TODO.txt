@@ -1,46 +1,103 @@
-Linux notes
-===========
-- When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe
-- GTK# : sudo apt-get install gtk-sharp2 
-	- This seem to be enough (sudo apt-get install libgtk2.0-cil)
-- How to recompile with old linux:
-	- Ubuntu 16.04.6
-	- Install cmake-gui
-	- OpenAL Soft
-		- Install ALSA libs (libasound2-dev)
-		- Download openal-soft code
-		- Run cmake-gui in /build folder.
-		- Configure
-		- Choose static C + C++ libs
-		- Choose Release (no debug info)
-		- Generate.
-		- make!
-	- NesSndEmu + NotSoFatso, run script.
-	- RtMidi, need to add static C/C++ libs to cmake file.
+FamiStudio 3.0.0 
+================
+- Delayed cut fix is probably no good. 
+- Convert demo songs to new tempo (when file format is frozen). 
+	- Gimmick 
+	- Tower 
+	- Resave all other to remove warnings.
+- LOW PRIO : When resizing, move the release if its at the end?
+- LOW PRIO : End of song looping behavior?
+- LOW PRIO : Multiple sample import. => Or import samples from other projects?
+- LOW PRIO : Loop prevention for envelope (brad issue). 
+- LOW PRIO : Left/right pan with +/- (cubase style)?
+- LOW PRIO : Stereo WAV/MP3/Video?
 
-Trailer/scroll
-==============
-- Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece.
+Doc 
+=== 
+- Hayabusa DPCM doc. 
+- Vxx is supported.
+- MIDI 
+- Note editing
+- Tempo
+- F1-F12 keys.
+- QWERTY keys (remove stop note on drawing)
 
-MkDocs
-======
-- Install Python
-- pip install mkdocs
-- pip install mkdocs-bootswatch
+Testing 
+======= 
+- Note : Run unit test for player.
+- MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage. 
+- MacOS: Test with weird keyboards, see if GTK colors look ok.
+- Linux : Test scaling more. 
+- Windows : Scaling, 150% and stuff for the warning in dialogs. 
+- Engine :  
+	- Re-test delayed note, @no_ref delayed note fix. 
+	- Re-test FT2 stock with compression thing vs. 2 notes. 
+- Import/export format, retest all of them. Create FamiTracker unit tests.
+- Test tempo UI a lot. 
+- Rebuild all DLLs on all platforms.
+- Retest DPCM editor (capture ops).
 
-Discord
-=======
-- Invite link: https://discord.gg/88UPmxh
+FamiStudio 3.0.0 Features
+=========================
+- Redesigned tempo.
+- Redesigned note editing
+- MIDI import/export
+- Oscilloscope
+- Scrollbars
+- Configurable QWERTY keyboard keys
+- Revamped Mac version.
+- Improved sound engine music data compression (15-30% smaller)
+- Audio expansion volume/low pass filter
+- S5B and VRC7 and now properly low-pass filtered.
+- Ability to re-order songs.
+- Hi-DPI support on Linux
+- Quick DPCM source data reload
+- Improved video rendering speed.
 
-Backlog:
-=========
-- Raw FDS modulation table envelope.
-- Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader.
-- Instrument folders + collapse entire sections (samples, arps, etc.)
-- Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID).
-- Mac: Paste special: Text is super dark
-- Mac: Clicking on FS without the window doesn't give it focus...?
-- Installer on Japanese machine?
-- Keyboard recording VS. non-QWERTY keyboards.
-- BUG: After cleanup, selected arpeggio + instrument seems wrong. (added notes make arpeggion sound, but none selected.)
-- Highlight piano keys when they are pressed with QWERTY or MIDI. (LOW PRIO)
+Linux notes 
+=========== 
+- When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 
+- GTK# : sudo apt-get install gtk-sharp2  
+	- This seem to be enough (sudo apt-get install libgtk2.0-cil) 
+- How to recompile with old linux: 
+	- Ubuntu 16.04.6 
+	- Install cmake-gui 
+	- OpenAL Soft 
+		- Install ALSA libs (libasound2-dev) 
+		- Download openal-soft code 
+		- Run cmake-gui in /build folder. 
+		- Configure 
+		- Choose static C + C++ libs 
+		- Choose Release (no debug info) 
+		- Generate. 
+		- make! 
+	- NesSndEmu + NotSoFatso, run script. 
+	- RtMidi, need to add static C/C++ libs to cmake file. 
+ 
+Trailer/scroll 
+============== 
+- Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece. 
+ 
+MkDocs 
+====== 
+- Install Python 
+- pip install mkdocs 
+- pip install mkdocs-bootswatch 
+ 
+Discord 
+======= 
+- Invite link: https://discord.gg/88UPmxh 
+ 
+Backlog: 
+========= 
+- Loop in selection.
+- Raw FDS modulation table envelope. 
+- Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader. 
+- Instrument folders + collapse entire sections (samples, arps, etc.) 
+- Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID). 
+- Mac: Paste special: Text is super dark 
+- Mac: Clicking on FS without the window doesn't give it focus...? 
+- Installer on Japanese machine? 
+- Keyboard recording VS. non-QWERTY keyboards. 
+- BUG: After cleanup, selected arpeggio + instrument seems wrong. (added notes make arpeggion sound, but none selected.) 
+- Highlight piano keys when they are pressed with QWERTY or MIDI. (LOW PRIO) 

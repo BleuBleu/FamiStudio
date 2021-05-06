@@ -5,6 +5,51 @@ namespace FamiStudio
 {
     public static class GtkUtils
     {
+        public static int ScaleGtkWidget(int x)
+        {
+#if FAMISTUDIO_LINUX
+            return (int)(x * GLTheme.DialogScaling);
+#else
+            return x;
+#endif
+        }
+
+        public static int ScaleWindowCoord(int pos)
+        {
+#if FAMISTUDIO_MACOS
+            return (int)(pos * GLTheme.MainWindowScaling);
+#else
+            return pos;
+#endif
+        }
+
+        public static int ScaleWindowCoord(double pos)
+        {
+#if FAMISTUDIO_MACOS
+            return (int)(pos * GLTheme.MainWindowScaling);
+#else
+            return (int)pos;
+#endif
+        }
+
+        public static int UnscaleWindowCoord(int pos)
+        {
+#if FAMISTUDIO_MACOS
+            return (int)(pos / GLTheme.MainWindowScaling);
+#else
+            return pos;
+#endif
+        }
+
+        public static int UnscaleWindowCoord(double pos)
+        {
+#if FAMISTUDIO_MACOS
+            return (int)(pos / GLTheme.MainWindowScaling);
+#else
+            return (int)pos;
+#endif
+        }
+
         public static System.Windows.Forms.MouseEventArgs ToWinFormArgs(Gdk.EventButton e, int x, int y)
         {
             System.Windows.Forms.MouseButtons buttons = System.Windows.Forms.MouseButtons.None;
@@ -41,6 +86,8 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.A + (k - Gdk.Key.a);
             else if (k >= Gdk.Key.Key_0 && k <= Gdk.Key.Key_9)
                 return System.Windows.Forms.Keys.D0 + (k - Gdk.Key.Key_0);
+            else if (k >= Gdk.Key.F1 && k <= Gdk.Key.F12)
+                return System.Windows.Forms.Keys.F1 + (k - Gdk.Key.F1);
             else if (k == Gdk.Key.Control_R || k == Gdk.Key.Control_L)
                 return System.Windows.Forms.Keys.Control;
             else if (k == Gdk.Key.Alt_R || k == Gdk.Key.Alt_L)
@@ -69,6 +116,8 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.Oem3;
             else if (k == Gdk.Key.Tab)
                 return System.Windows.Forms.Keys.Tab;
+            else if (k == Gdk.Key.minus)
+                return System.Windows.Forms.Keys.OemMinus;
             else if (k == Gdk.Key.equal)
                 return System.Windows.Forms.Keys.Oemplus;
             else if (k == Gdk.Key.bracketleft)
@@ -89,6 +138,10 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.PageUp;
             else if (k == Gdk.Key.Next)
                 return System.Windows.Forms.Keys.PageDown;
+            else if (k == Gdk.Key.apostrophe)
+                return System.Windows.Forms.Keys.OemQuotes;
+            else if (k == Gdk.Key.backslash)
+                return System.Windows.Forms.Keys.OemBackslash;
 
             Trace.WriteLine($"Unknown key pressed {k}");
 
@@ -100,6 +153,8 @@ namespace FamiStudio
             var mod = System.Windows.Forms.Keys.None;
 
             if ((m & Gdk.ModifierType.ControlMask) != 0)
+                mod |= System.Windows.Forms.Keys.Control;
+            if ((m & Gdk.ModifierType.MetaMask) != 0)
                 mod |= System.Windows.Forms.Keys.Control;
             if ((m & Gdk.ModifierType.ShiftMask) != 0)
                 mod |= System.Windows.Forms.Keys.Shift;

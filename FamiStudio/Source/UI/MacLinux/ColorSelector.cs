@@ -39,10 +39,10 @@ namespace FamiStudio
 #if FAMISTUDIO_LINUX
                 int y = selectedColor / imgOriginal.Width;
                 int x = selectedColor % imgOriginal.Width;
-                var sx = imgScaled.Width / (float)imgOriginal.Width;
+                var sx = imgScaled.Width  / (float)imgOriginal.Width;
                 var sy = imgScaled.Height / (float)imgOriginal.Height;
 
-                GdkWindow.DrawRectangle(gc, false, new Rectangle((int)(x * sx), (int)(y * sy), (int)sx - 1, (int)sy - 1));
+                GdkWindow.DrawRectangle(gc, false, new Rectangle((int)Math.Round(x * sx), (int)Math.Round(y * sy), (int)Math.Round(sx) - 1, (int)Math.Round(sy) - 1));
 #endif
             }
 

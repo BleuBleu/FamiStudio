@@ -28,9 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.propertyPage = new PropertyPage();
             this.buttonYes = new NoFocusButton();
             this.buttonNo = new NoFocusButton();
+            this.buttonAdvanced = new NoFocusButton();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // propertyPage
@@ -43,6 +46,7 @@
             this.propertyPage.Padding = new System.Windows.Forms.Padding(3);
             this.propertyPage.Size = new System.Drawing.Size(298, 200);
             this.propertyPage.TabIndex = 17;
+            this.propertyPage.UserData = null;
             this.propertyPage.PropertyWantsClose += new PropertyPage.PropertyWantsCloseDelegate(this.propertyPage_PropertyWantsClose);
             // 
             // buttonYes
@@ -67,12 +71,25 @@
             this.buttonNo.UseVisualStyleBackColor = true;
             this.buttonNo.Click += new System.EventHandler(this.buttonNo_Click);
             // 
+            // buttonAdvanced
+            // 
+            this.buttonAdvanced.FlatAppearance.BorderSize = 0;
+            this.buttonAdvanced.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonAdvanced.Location = new System.Drawing.Point(5, 361);
+            this.buttonAdvanced.Name = "buttonAdvanced";
+            this.buttonAdvanced.Size = new System.Drawing.Size(32, 32);
+            this.buttonAdvanced.TabIndex = 18;
+            this.buttonAdvanced.UseVisualStyleBackColor = true;
+            this.buttonAdvanced.Visible = false;
+            this.buttonAdvanced.Click += new System.EventHandler(this.buttonAdvanced_Click);
+            // 
             // PropertyDialog
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(51)))));
             this.ClientSize = new System.Drawing.Size(298, 398);
             this.ControlBox = false;
+            this.Controls.Add(this.buttonAdvanced);
             this.Controls.Add(this.propertyPage);
             this.Controls.Add(this.buttonYes);
             this.Controls.Add(this.buttonNo);
@@ -83,7 +100,6 @@
             this.Name = "PropertyDialog";
             this.ShowInTaskbar = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.Shown += new System.EventHandler(this.PropertyDialog_Shown);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PropertyDialog_KeyDown);
             this.ResumeLayout(false);
 
@@ -93,6 +109,8 @@
 
         private NoFocusButton buttonNo;
         private NoFocusButton buttonYes;
+        private NoFocusButton buttonAdvanced;
         private PropertyPage propertyPage;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }

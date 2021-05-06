@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -20,7 +21,15 @@ namespace FamiStudio
                 var volume = GetVolume();
                 var duty   = GetDuty();
 
-                WriteRegister(NesApu.VRC6_SAW_VOL, (volume << 2)); 
+                var sawMasterVolume = Vrc6SawMasterVolumeType.Full;
+
+                if (note.Instrument != null)
+                {
+                    Debug.Assert(note.Instrument.ExpansionType == ExpansionType.Vrc6);
+                    sawMasterVolume = note.Instrument.Vrc6SawMasterVolume;
+                }
+
+                WriteRegister(NesApu.VRC6_SAW_VOL, (volume << (2 - sawMasterVolume))); 
                 WriteRegister(NesApu.VRC6_SAW_LO, ((period >> 0) & 0xff));
                 WriteRegister(NesApu.VRC6_SAW_HI, ((period >> 8) & 0x0f) | 0x80);
             }

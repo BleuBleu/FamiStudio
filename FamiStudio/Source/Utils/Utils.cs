@@ -22,9 +22,21 @@ namespace FamiStudio
             return val;
         }
 
+        public static double Clamp(double val, double min, double max)
+        {
+            if (val < min) return min;
+            if (val > max) return max;
+            return val;
+        }
+
         public static float Lerp(float v0, float v1, float alpha)
         {
             return v0 * (1.0f - alpha) + v1 * alpha;
+        }
+
+        public static double Lerp(double v0, double v1, double alpha)
+        {
+            return v0 * (1.0 - alpha) + v1 * alpha;
         }
 
         public static int SignedCeil(float x)
@@ -48,6 +60,33 @@ namespace FamiStudio
             for (long i = 0; i < y; i++)
                 result *= x;
             return result;
+        }
+
+        public static int Log2Int(int x)
+        {
+            if (x == 0)
+                return int.MinValue;
+
+            int bits = 0;
+            while (x > 0)
+            {
+                bits++;
+                x >>= 1;
+            }
+            return bits - 1;
+        }
+
+        public static int ParseIntWithTrailingGarbage(string s)
+        {
+            int idx = 0;
+
+            for (; idx < s.Length; idx++)
+            {
+                if (!char.IsDigit(s[idx]))
+                    break;
+            }
+
+            return int.Parse(s.Substring(0, idx));
         }
 
         public static int RoundDownAndClamp(int x, int factor, int min)
@@ -202,6 +241,77 @@ namespace FamiStudio
 
             Directory.CreateDirectory(tempFolder);
             return tempFolder;
+        }
+
+        public static float DbToAmplitude(float db)
+        {
+            return (float)Math.Pow(10.0f, db / 20.0f);
+        }
+
+        public static int Min(int[] array)
+        {
+            var min = array[0];
+            for (int i = 1; i < array.Length; i++)
+                min = Math.Min(min, array[i]);
+            return min;
+        }
+
+        public static int Max(int[] array)
+        {
+            var max = array[0];
+            for (int i = 1; i < array.Length; i++)
+                max = Math.Max(max, array[i]);
+            return max;
+        }
+
+        public static int Sum(int[] array)
+        {
+            var sum = array[0];
+            for (int i = 1; i < array.Length; i++)
+                sum += array[i];
+            return sum;
+        }
+
+        public static int HashCombine(int a, int b)
+        {
+            return a ^ (b + unchecked((int)0x9e3779b9) + (a << 6) + (a >> 2));
+        }
+
+        public static void Permutations(int[] array, List<int[]> permutations, int idx = 0)
+        {
+            if (idx == array.Length)
+            {
+                // Avoid duplicates.
+                if (permutations.FindIndex(a => CompareArrays(a, array) == 0) < 0)
+                    permutations.Add(array.Clone() as int[]);
+            }
+
+            for (int i = idx; i < array.Length; i++)
+            {
+                Swap(ref array[idx], ref array[i]);
+                Permutations(array, permutations, idx + 1);
+                Swap(ref array[idx], ref array[i]);
+            }
+        }
+
+        public static bool CompareFloats(float f1, float f2, float tolerance = 0.001f)
+        {
+            return Math.Abs(f1 - f2) < tolerance;
+        }
+
+        public static int CompareArrays(int[] a1, int[] a2)
+        {
+            if (a1.Length != a2.Length)
+                return int.MaxValue;
+
+            for (int i = 0; i < a1.Length; i++)
+            {
+                var comp = a1[i].CompareTo(a2[i]);
+                if (comp != 0)
+                    return comp;
+            }
+
+            return 0;
         }
 
         public static void OpenUrl(string url)

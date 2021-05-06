@@ -7,16 +7,17 @@ namespace FamiStudio
 {
     public class Project
     {
-        // Version 1 = FamiStudio 1.0.0
-        // Version 2 = FamiStudio 1.1.0 (Project properties)
-        // Version 3 = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
-        // Version 4 = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
-        // Version 5 = FamiStudio 2.0.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
-        // Version 6 = FamiStudio 2.1.0 (PAL authoring machine)
-        // Version 7 = FamiStudio 2.2.0 (Arpeggios)
-        // Version 8 = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
-        // Version 9 = FamiStudio 2.4.0 (DPCM sample editor)
-        public static int Version = 9;
+        // Version 1  = FamiStudio 1.0.0
+        // Version 2  = FamiStudio 1.1.0 (Project properties)
+        // Version 3  = FamiStudio 1.2.0 (Volume tracks, extended notes, release envelopes)
+        // Version 4  = FamiStudio 1.4.0 (VRC6, slide notes, vibrato, no-attack notes)
+        // Version 5  = FamiStudio 2.0.0 (All expansions, fine pitch track, duty cycle envelope, advanced tempo, note refactor)
+        // Version 6  = FamiStudio 2.1.0 (PAL authoring machine)
+        // Version 7  = FamiStudio 2.2.0 (Arpeggios)
+        // Version 8  = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
+        // Version 9  = FamiStudio 2.4.0 (DPCM sample editor)
+        // Version 10 = FamiStudio 3.0.0 (VRC6 saw master volume, groove, song sorting)
+        public static int Version = 10;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
 
@@ -169,27 +170,27 @@ namespace FamiStudio
             return sample;
         }
 
-        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data)
+        public DPCMSample CreateDPCMSampleFromDmcData(string name, byte[] data, string filename = null)
         {
             var sample = CreateDPCMSample(name);
 
             if (sample == null)
                 return null;
 
-            sample.SetDmcSourceData(data);
+            sample.SetDmcSourceData(data, filename);
             sample.Process();
 
             return sample;
         }
 
-        public DPCMSample CreateDPCMSampleFromWavData(string name, short[] data, int sampleRate)
+        public DPCMSample CreateDPCMSampleFromWavData(string name, short[] data, int sampleRate, string filename = null)
         {
             var sample = CreateDPCMSample(name);
 
             if (sample == null)
                 return null;
 
-            sample.SetWavSourceData(data, sampleRate);
+            sample.SetWavSourceData(data, sampleRate, filename);
             sample.Process();
 
             return sample;
@@ -237,7 +238,7 @@ namespace FamiStudio
                         }
                     }
                     if (dirty)
-                        pattern.ClearLastValidNoteCache();
+                        pattern.InvalidateCumulativeCache();
                 }
             }
         }
@@ -294,7 +295,6 @@ namespace FamiStudio
 
             var song = new Song(this, GenerateUniqueId(), name);
             songs.Add(song);
-            SortSongs();
             return song;
         }
 
@@ -359,15 +359,12 @@ namespace FamiStudio
             return arpeggio;
         }
 
-        public void UpdateAllLastValidNotesAndVolume()
+        public void InvalidateCumulativePatternCache()
         {
             foreach (var song in songs)
             {
                 foreach (var channel in song.Channels)
-                {
-                    foreach (var pattern in channel.Patterns)
-                        pattern.ClearLastValidNoteCache();
-                }
+                    channel.InvalidateCumulativePatternCache();
             }
         }
 
@@ -395,7 +392,7 @@ namespace FamiStudio
                 }
             }
 
-            UpdateAllLastValidNotesAndVolume();
+            InvalidateCumulativePatternCache();
         }
 
         public void DeleteInstrument(Instrument instrument)
@@ -583,7 +580,6 @@ namespace FamiStudio
             if (songs.Find(s => s.Name == name) == null)
             {
                 song.Name = name;
-                SortSongs();
                 return true;
             }
 
@@ -593,6 +589,17 @@ namespace FamiStudio
         public void SortSongs()
         {
             songs.Sort((s1, s2) => s1.Name.CompareTo(s2.Name));
+        }
+
+        public void MoveSong(Song song, Song songBefore)
+        {
+            Debug.Assert(songs.Contains(song));
+            songs.Remove(song);
+
+            if (songBefore != null)
+                songs.Insert(songs.IndexOf(songBefore) + 1, song);
+            else
+                songs.Insert(0, song);
         }
 
         public void SetExpansionAudio(int expansion, int numChannels = 1)
@@ -1048,18 +1055,19 @@ namespace FamiStudio
                 songs.Add(song);
             }
 
-            SortEverything();
+            SortEverything(false);
             Validate();
 
             return true;
         }
 
-        public void SortEverything()
+        public void SortEverything(bool songs)
         {
             SortInstruments();
             SortArpeggios();
             SortSamples();
-            SortSongs();
+            if (songs)
+                SortSongs();
         }
 
         public bool MergeOtherProjectInstruments(List<Instrument> otherInstruments)
@@ -1142,12 +1150,25 @@ namespace FamiStudio
             {
                 foreach (var song in songs)
                 {
+                    song.PermanentlyApplyGrooves();
                     song.FamitrackerTempo = Song.NativeTempoNTSC;
                     song.FamitrackerSpeed = 1;
                 }
             }
 
             tempoMode = TempoType.FamiTracker;
+        }
+
+        public void ConvertToCompoundNotes()
+        {
+            foreach (var song in songs)
+                song.ConvertToCompoundNotes();
+        }
+
+        public void ConvertToSimpleNotes()
+        {
+            foreach (var song in songs)
+                song.ConvertToSimpleNotes();
         }
 
         public void DeleteUnusedInstruments()
@@ -1466,7 +1487,9 @@ namespace FamiStudio
             if (buffer.IsReading && !buffer.IsForUndoRedo)
             {
                 EnsureNextIdIsLargeEnough();
-                SortEverything();
+
+                // At version 10 (FamiStudio 3.0.0) we allow users to re-order songs.
+                SortEverything(buffer.Version < 10);
             }
         }
 
@@ -1481,7 +1504,7 @@ namespace FamiStudio
             return newProject;
         }
     }
-
+    
     public static class ExpansionType
     {
         public const int None  = 0;

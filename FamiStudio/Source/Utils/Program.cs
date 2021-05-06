@@ -53,12 +53,8 @@ namespace FamiStudio
 #endif
 
             Settings.Load();
-            RenderTheme.Initialize();
             PlatformUtils.Initialize();
-#if !FAMISTUDIO_MACOS
-            Cursors.Initialize();
-#endif
-            FamiStudioTempoUtils.Initialize();
+            RenderTheme.Initialize();
             NesApu.InitializeNoteTables();
 
 #if FAMISTUDIO_WINDOWS
@@ -66,8 +62,7 @@ namespace FamiStudio
             PerformanceCounter.Initialize();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-#endif
-#if FAMISTUDIO_LINUX
+#elif FAMISTUDIO_LINUX
             LinuxUtils.SetProcessName("FamiStudio");
 #endif
 

@@ -71,23 +71,38 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 			case expansion_fds: fds.output(enable ? &buf : NULL); break;
 			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
 			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_sunsoft: sunsoft.enable_channel(idx, enable); break;
+			case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
 		}
 	}
 }
 
-void Simple_Apu::treble_eq(int exp, double treble, int cutoff, int sample_rate)
+void Simple_Apu::treble_eq(int exp, double treble, int sample_rate)
 {
-	blip_eq_t eq(blip_eq_t(treble, cutoff, sample_rate));
+	blip_eq_t eq(treble, 0, sample_rate);
 
-	// TODO: VRC7 + Sunsoft eq.
 	switch (exp)
 	{
 		case expansion_none: apu.treble_eq(eq); break;
 		case expansion_vrc6: vrc6.treble_eq(eq); break;
+		case expansion_vrc7: vrc7.treble_eq(eq); break;
 		case expansion_fds: fds.treble_eq(eq); break;
 		case expansion_mmc5: mmc5.treble_eq(eq); break;
 		case expansion_namco: namco.treble_eq(eq); break;
+		case expansion_sunsoft: sunsoft.treble_eq(eq); break;
+	}
+}
+
+void Simple_Apu::set_expansion_volume(int exp, double volume)
+{
+	switch (exp)
+	{
+		case expansion_none: apu.volume(volume); break;
+		case expansion_vrc6: vrc6.volume(volume); break;
+		case expansion_vrc7: vrc6.volume(volume); break;
+		case expansion_fds: fds.volume(volume); break;
+		case expansion_mmc5: mmc5.volume(volume); break;
+		case expansion_namco: namco.volume(volume); break;
+		case expansion_sunsoft: sunsoft.volume(volume); break;
 	}
 }
 
@@ -109,6 +124,7 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 				case expansion_mmc5: mmc5.write_shadow_register(addr, data); break;
 				case expansion_namco: namco.write_shadow_register(addr, data); break;
 				case expansion_sunsoft: sunsoft.write_shadow_register(addr, data); break;
+
 			}
 		}
 	}
@@ -215,14 +231,7 @@ long Simple_Apu::samples_avail() const
 
 long Simple_Apu::read_samples( sample_t* p, long s )
 {
-	long count = buf.read_samples( p, s );
-
-	if (expansion == expansion_vrc7)
-		vrc7.mix_samples(p, s);
-	else if (expansion == expansion_sunsoft)
-		sunsoft.mix_samples(p, s);
-
-	return count;
+	return buf.read_samples( p, s );
 }
 
 void Simple_Apu::remove_samples(long s)

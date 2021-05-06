@@ -59,16 +59,12 @@ namespace FamiStudio
 
     public static class InstrumentParamProvider
     {
-        static readonly string[] FdsVolumeStrings =
-        {
-            "100%", "66%", "50%", "40%"
-        };
-
         static public bool HasParams(Instrument instrument)
         {
             return
                 instrument.ExpansionType == ExpansionType.Fds  ||
                 instrument.ExpansionType == ExpansionType.N163 ||
+                instrument.ExpansionType == ExpansionType.Vrc6 ||
                 instrument.ExpansionType == ExpansionType.Vrc7;
         }
 
@@ -80,7 +76,7 @@ namespace FamiStudio
                     return new[]
                     {
                         new InstrumentParamInfo(instrument, "Master Volume", 0, 3, 0, null, true)
-                            { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsVolumeStrings[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } },
+                            { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } },
                         new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                             { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; instrument.UpdateFdsWaveEnvelope(); } },
                         new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.Count - 1, WavePresetType.Flat, null, true )
@@ -102,6 +98,13 @@ namespace FamiStudio
                             { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;} },
                         new InstrumentParamInfo(instrument, "Wave Position", 0, 244, 0, null, false, 4)
                             { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;} },
+                    };
+
+                case ExpansionType.Vrc6:
+                    return new[]
+                    {
+                        new InstrumentParamInfo(instrument, "Saw Master Volume", 0, 2, 0, null, true)
+                            { GetValue = ()  => { return instrument.Vrc6SawMasterVolume; }, GetValueString = () => { return Vrc6SawMasterVolumeType.Names[instrument.Vrc6SawMasterVolume]; }, SetValue = (v) => { instrument.Vrc6SawMasterVolume = (byte)v; } },
                     };
 
                 case ExpansionType.Vrc7:
@@ -186,6 +189,8 @@ namespace FamiStudio
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200, 100, "Volume adjustment (%)")
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
+                // new DPCMSampleParamInfo(sample, "Low-pass filter", 0, 100, 0, "Low-pass filter") // Not satisfied with this, disabling.
+                //    { GetValue = () => { return sample.LowPassFilter; }, SetValue = (v) => { sample.LowPassFilter = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Process as PAL", 0, 1, 0, "Use PAL sample rates for all processing\nFor DMC source data, assumes PAL sample rate")
                     { GetValue = () => { return  sample.PalProcessing ? 1 : 0; }, SetValue = (v) => { sample.PalProcessing = v != 0; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1, 0, "Trim parts of the source data that is considered too low to be audible")

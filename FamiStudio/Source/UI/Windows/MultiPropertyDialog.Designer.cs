@@ -28,11 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.buttonYes = new NoFocusButton();
             this.buttonNo = new NoFocusButton();
             this.tableLayout = new System.Windows.Forms.TableLayoutPanel();
             this.panelProps = new System.Windows.Forms.Panel();
             this.panelTabs = new System.Windows.Forms.Panel();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayout.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -125,5 +127,6 @@
         private System.Windows.Forms.TableLayoutPanel tableLayout;
         private System.Windows.Forms.Panel panelProps;
         private System.Windows.Forms.Panel panelTabs;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }

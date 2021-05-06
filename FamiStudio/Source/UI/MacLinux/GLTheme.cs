@@ -11,14 +11,26 @@ namespace FamiStudio
         public static void Initialize()
         {
             InitializeBase();
+
+#if FAMISTUDIO_LINUX
+            dialogScaling = (float)Gdk.Display.Default.DefaultScreen.Resolution / 96.0f;
+
+            if (Settings.DpiScaling != 0)
+                mainWindowScaling = Utils.Clamp(Settings.DpiScaling / 100.0f, 1, 2);
+            else
+                mainWindowScaling = Utils.Clamp((int)(dialogScaling * 2.0f) / 2.0f, 1.0f, 2.0f); // Round to 1/2 (so only 100%, 150% and 200%) are supported.
+#endif
         }
 
 #if FAMISTUDIO_MACOS
         public static float MainWindowScaling => MacUtils.MainWindowScaling;
         public static float DialogScaling     => MacUtils.DialogScaling;
 #else
-        public const float MainWindowScaling = 1;
-        public const float DialogScaling     = 1;
+        private static float dialogScaling     = 1;
+        private static float mainWindowScaling = 1;
+
+        public static float MainWindowScaling => mainWindowScaling;
+        public static float DialogScaling     => dialogScaling;
 #endif
 
         private void InitializeFonts(GLGraphics g)

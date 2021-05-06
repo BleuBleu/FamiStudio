@@ -17,31 +17,35 @@ namespace FamiStudio
         private bool topAlign  = false;
         private FlatButton buttonYes;
         private FlatButton buttonNo;
+        private FlatButton buttonAdvanced;
+        private bool advancedPropertiesVisible = false;
 
         private PropertyPage propertyPage = new PropertyPage();
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, bool canAccept = true) : base(WindowType.Toplevel)
+        public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, Window parent = null) : base(WindowType.Toplevel)
         {
             Init();
-            WidthRequest = width;
+            WidthRequest = GtkUtils.ScaleGtkWidget(width);
             
             if (!canAccept)
                 buttonYes.Hide();
+            if (!canCancel)
+                buttonNo.Hide();
 
-#if FAMISTUDIO_LINUX
-            TransientFor = FamiStudioForm.Instance;
-#endif
+            TransientFor = parent != null ? parent : FamiStudioForm.Instance;
             SetPosition(WindowPosition.CenterOnParent);
         }
 
         public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false) : base(WindowType.Toplevel)
         {
             Init();
-            WidthRequest = width;
-            initialLocation = pt;
+            WidthRequest = GtkUtils.ScaleGtkWidget(width);
+
+            initialLocation.X = GtkUtils.UnscaleWindowCoord(pt.X);
+            initialLocation.Y = GtkUtils.UnscaleWindowCoord(pt.Y);
 
             this.leftAlign = leftAlign;
             this.topAlign  = topAlign;
@@ -52,29 +56,45 @@ namespace FamiStudio
         private void Init()
         {
             var hbox = new HBox(false, 0);
+            var hboxYesNo = new HBox(false, 0);
 
             var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
 
             buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
             buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
+            buttonAdvanced = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.PlusSmall{suffix}.png"));
 
             buttonYes.Show();
             buttonYes.ButtonPressEvent += ButtonYes_ButtonPressEvent;
             buttonNo.Show();
             buttonNo.ButtonPressEvent += ButtonNo_ButtonPressEvent;
+            buttonAdvanced.ButtonPressEvent += ButtonAdvanced_ButtonPressEvent;
 
-            hbox.PackStart(buttonYes, false, false, 0);
-            hbox.PackStart(buttonNo, false, false, 0);
+            buttonYes.TooltipText = "Accept";
+            buttonNo.TooltipText = "Cancel";
+            buttonAdvanced.TooltipText = "Toggle Advanced Options";
+
+            hboxYesNo.PackStart(buttonYes, false, false, 0);
+            hboxYesNo.PackStart(buttonNo, false, false, 0);
+            hboxYesNo.Show();
+
+            var alignLeft = new Alignment(0.0f, 0.5f, 0.0f, 0.0f);
+            alignLeft.TopPadding = 5;
+            alignLeft.Add(buttonAdvanced);
+            alignLeft.Show();
+
+            var alignRight = new Alignment(1.0f, 0.5f, 0.0f, 0.0f);
+            alignRight.TopPadding = 5;
+            alignRight.Add(hboxYesNo);
+            alignRight.Show();
+
+            hbox.Add(alignLeft);
+            hbox.Add(alignRight);
             hbox.Show();
-
-            var align = new Alignment(1.0f, 0.5f, 0.0f, 0.0f);
-            align.TopPadding = 5;
-            align.Show();
-            align.Add(hbox);
 
             var vbox = new VBox();
             vbox.PackStart(propertyPage, false, false, 0);
-            vbox.PackStart(align, false, false, 0);
+            vbox.PackStart(hbox, false, false, 0);
             vbox.Show();
 
             Add(vbox);
@@ -82,14 +102,12 @@ namespace FamiStudio
             propertyPage.PropertyWantsClose += propertyPage_PropertyWantsClose;
             propertyPage.Show();
 
-            BorderWidth = 5;
+            BorderWidth = (uint)GtkUtils.ScaleGtkWidget(5);
             Resizable = false;
             Decorated = false;
             Modal = true;
             SkipTaskbarHint = true;
-#if FAMISTUDIO_LINUX
             TransientFor = FamiStudioForm.Instance;
-#endif
         }
 
         private bool RunValidation()
@@ -97,22 +115,8 @@ namespace FamiStudio
             if (ValidateProperties == null)
                 return true;
 
-#if FAMISTUDIO_MACOS
-            MacUtils.RemoveNSWindowAlwaysOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
             // Validation might display messages boxes, need to work around z-ordering issues.
             bool valid = ValidateProperties.Invoke(propertyPage);
-
-#if FAMISTUDIO_MACOS
-            // This fixes some super weird focus issues.
-            if (!valid)
-            {
-                Hide();
-                Show();
-            }
-
-            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
 
             return valid;
         }
@@ -127,6 +131,18 @@ namespace FamiStudio
             propertyPage.NotifyClosing();
             if (RunValidation())
                 result = System.Windows.Forms.DialogResult.OK;
+        }
+
+        void ButtonAdvanced_ButtonPressEvent(object o, ButtonPressEventArgs args)
+        {
+            Debug.Assert(propertyPage.HasAdvancedProperties);
+
+            advancedPropertiesVisible = !advancedPropertiesVisible;
+            propertyPage.Build(advancedPropertiesVisible);
+
+            var iconName = advancedPropertiesVisible ? "Minus" : "Plus";
+            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            buttonAdvanced.Pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{iconName}Small{suffix}.png");
         }
 
         private void propertyPage_PropertyWantsClose(int idx)
@@ -153,6 +169,9 @@ namespace FamiStudio
 
         public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent)
         {
+            if (propertyPage.HasAdvancedProperties)
+                buttonAdvanced.Show();
+
             Show();
 
             if (topAlign || leftAlign)
@@ -165,26 +184,10 @@ namespace FamiStudio
                 Move(pt.X, pt.Y);
             }
 
-#if FAMISTUDIO_MACOS
-            if (WindowPosition == WindowPosition.CenterOnParent)
-            {
-                var mainWinRect = parent.Bounds;
-                int x = mainWinRect.Left + (mainWinRect.Width  - Allocation.Width)  / 2;
-                int y = mainWinRect.Top  + (mainWinRect.Height - Allocation.Height) / 2;
-                Move(x, y);
-            }
-
-            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
-
             while (result == System.Windows.Forms.DialogResult.None)
                 Application.RunIteration();
 
             Hide();
-
-#if FAMISTUDIO_MACOS
-            MacUtils.RestoreMainNSWindowFocus();
-#endif
 
             return result;
         }
@@ -192,18 +195,6 @@ namespace FamiStudio
         public void ShowModal(FamiStudioForm parent = null)
         {
             Show();
-
-#if FAMISTUDIO_MACOS
-            if (WindowPosition == WindowPosition.CenterOnParent)
-            {
-                var mainWinRect = parent.Bounds;
-                int x = mainWinRect.Left + (mainWinRect.Width - Allocation.Width) / 2;
-                int y = mainWinRect.Top + (mainWinRect.Height - Allocation.Height) / 2;
-                Move(x, y);
-            }
-
-            MacUtils.SetNSWindowAlwayOnTop(MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle));
-#endif
         }
 
         public void UpdateModalEvents()
@@ -211,10 +202,6 @@ namespace FamiStudio
             if (result != System.Windows.Forms.DialogResult.None)
             {
                 Hide();
-
-#if FAMISTUDIO_MACOS
-                MacUtils.RestoreMainNSWindowFocus();
-#endif
             }
 
             Application.RunIteration(false);
@@ -229,6 +216,11 @@ namespace FamiStudio
 
                 Hide();
             }
+        }
+
+        public void Accept()
+        {
+            result = System.Windows.Forms.DialogResult.OK;
         }
 
         public System.Windows.Forms.DialogResult DialogResult => result;

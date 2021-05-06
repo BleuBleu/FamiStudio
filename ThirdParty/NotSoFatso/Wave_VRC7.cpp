@@ -85,6 +85,9 @@ void CNSFCore::VRC7_Reset()
 	OPLWrite((FM_OPL*)pFMOPL,0xBD,0xC0);
 	OPLWrite((FM_OPL*)pFMOPL,1,0x20);      /* Enable waveform type manipulation */
 	
+	for(x=0;x<6;x++)
+		VRC7Triggered[x] = 0;
+
 	VRC7_RecalcMultiplier(0);
 	VRC7_RecalcMultiplier(1);
 	VRC7_RecalcMultiplier(2);
@@ -236,6 +239,14 @@ void CNSFCore::VRC7_Write(BYTE V)
 			break;
 		case 2:
 			if(x>5) break;
+			
+			if ((VRC7Chan[1][x] & 0x10) == 0 && (V & 0x10) != 0)
+				VRC7Triggered[x] =  1;
+			else if ((VRC7Chan[1][x] & 0x10) != 0 && (V & 0x10) == 0)
+				VRC7Triggered[x] = -1;
+			else
+				VRC7Triggered[x] =  0;
+
 			VRC7Chan[1][x] = V;
 			((FM_OPL*)pFMOPL)->nFreqReg[x] = (((FM_OPL*)pFMOPL)->nFreqReg[x] & 0x00FF) | ((V & 0x0F) << 8);
 			OPLWrite((FM_OPL*)pFMOPL,0xB0 + x,(((VRC7Chan[0][x] >> 7) & 0x01) | ((VRC7Chan[1][x] << 1) & 0x3E)));

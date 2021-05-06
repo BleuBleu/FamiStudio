@@ -15,6 +15,7 @@ public:
 	void reset();
 	void volume( double );
 	void output( Blip_Buffer* );
+	void treble_eq(blip_eq_t const& eq);
 	void enable_channel(int idx, bool enabled);
 	void end_frame( cpu_time_t );
 	void mix_samples(blip_sample_t* sample_buffer, long sample_cnt);
@@ -41,6 +42,9 @@ private:
 	double vol;
 	struct __PSG* psg;
 	Blip_Buffer* output_buffer;
+	cpu_time_t last_time;
+	int last_amp;
+	Blip_Synth<blip_med_quality, 15420> synth;
 
 	short shadow_internal_regs[shadow_internal_regs_count];
 };

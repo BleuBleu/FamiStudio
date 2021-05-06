@@ -86,6 +86,7 @@
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\FdsFile.cs" />
     <Compile Include="Source\IO\IniFile.cs" />
+    <Compile Include="Source\IO\MidiFile.cs" />
     <Compile Include="Source\IO\Mp3File.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
@@ -101,8 +102,10 @@
     <Compile Include="Source\ChannelStates\ChannelStateN163.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateS5B.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
+    <Compile Include="Source\IO\WavMp3ExportUtils.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
+    <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
@@ -110,7 +113,10 @@
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
+    <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
+    <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
+    <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
@@ -261,7 +267,6 @@
     <Compile Include="Source\Utils\LinuxUtils.cs" />
     <Compile Include="Source\UI\MacLinux\FamiStudioFormGtk.cs" />
     <Compile Include="Source\UI\MacLinux\FamiStudioControls.cs" />
-    <Compile Include="Source\UI\MacLinux\GLWidget.cs" />
     <Compile Include="Source\UI\MacLinux\GtkUtils.cs" />
     <None Include="Resources\FamiStudio_128.png" />
     <EmbeddedResource Include="Resources\FamiStudio_16.png" />
@@ -291,7 +296,10 @@
     </Content>
     <EmbeddedResource Include="Resources\EyedropCursor.png" />
     <EmbeddedResource Include="Resources\EyedropCursor%402x.png" />
-    <Compile Include="Source\UI\MacLinux\LinuxCursors.cs" />
+    <Compile Include="Source\UI\MacLinux\GLWindow.cs" />
+    <Compile Include="Source\UI\MacLinux\Cursors.cs" />
+    <EmbeddedResource Include="Resources\gtk_linux_hidpi.rc" />
+    <Compile Include="Source\UI\MacLinux\CairoImage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -343,6 +351,28 @@
     <EmbeddedResource Include="Resources\SaveSmall.png" />
     <EmbeddedResource Include="Resources\DashHorizontal%402x.png" />
     <EmbeddedResource Include="Resources\DashHorizontal.png" />
+    <EmbeddedResource Include="Resources\ConfigQWERTY%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigQWERTY.png" />
+    <EmbeddedResource Include="Resources\ConfigMixer%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigMixer.png" />
+    <EmbeddedResource Include="Resources\PlusSmall%402x.png" />
+    <EmbeddedResource Include="Resources\PlusSmall.png" />
+    <EmbeddedResource Include="Resources\MinusSmall%402x.png" />
+    <EmbeddedResource Include="Resources\MinusSmall.png" />
+    <EmbeddedResource Include="Resources\WarningGood%402x.png" />
+    <EmbeddedResource Include="Resources\WarningGood.png" />
+    <EmbeddedResource Include="Resources\WarningYellow%402x.png" />
+    <EmbeddedResource Include="Resources\WarningYellow.png" />
+    <EmbeddedResource Include="Resources\ExportMIDI%402x.png" />
+    <EmbeddedResource Include="Resources\ExportMIDI.png" />
+    <EmbeddedResource Include="Resources\Reload%402x.png" />
+    <EmbeddedResource Include="Resources\Reload.png" />
+    <EmbeddedResource Include="Resources\PlayHalf%402x.png" />
+    <EmbeddedResource Include="Resources\PlayHalf.png" />
+    <EmbeddedResource Include="Resources\PlayQuarter%402x.png" />
+    <EmbeddedResource Include="Resources\PlayQuarter.png" />
+    <EmbeddedResource Include="Resources\ConfigGeneral%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigGeneral.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall%402x.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall.png" />
     <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />

@@ -1,6 +1,7 @@
 ﻿using FamiStudio.Properties;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -16,6 +17,7 @@ namespace FamiStudio
             Video,
             Nsf,
             Rom,
+            Midi,
             Text,
             FamiTracker,
             FamiStudioMusic,
@@ -31,6 +33,7 @@ namespace FamiStudio
             "Video",
             "NSF",
             "ROM / FDS",
+            "MIDI",
             "FamiStudio Text",
             "FamiTracker Text",
             "FamiStudio Music Code",
@@ -46,6 +49,7 @@ namespace FamiStudio
             "ExportVideo",
             "ExportNsf",
             "ExportRom",
+            "ExportMIDI",
             "ExportText",
             "ExportFamiTracker",
             "ExportFamiStudioEngine",
@@ -58,6 +62,7 @@ namespace FamiStudio
         MultiPropertyDialog dialog;
         uint lastExportCrc;
         string lastExportFilename;
+        int[] midiInstrumentMapping;
 
         public unsafe ExportDialog(Project project)
         {
@@ -102,6 +107,34 @@ namespace FamiStudio
             return channelNames;
         }
 
+        private bool[] GetDefaultSelectedChannels()
+        {
+            // Find all channels used by the project.
+            var anyChannelActive = false;
+            var channelActives = new bool[project.GetActiveChannelCount()];
+            foreach (var song in project.Songs)
+            {
+                for (int i = 0; i < song.Channels.Length; i++)
+                {
+                    var channel = song.Channels[i];
+                    if (channel.Patterns.Count > 0)
+                    {
+                        anyChannelActive = true;
+                        channelActives[i] = true;
+                    }
+                }
+            }
+
+            // All true if its an empty project.
+            if (!anyChannelActive)
+            {
+                for (int i = 0; i < channelActives.Length; i++)
+                    channelActives[i] = true;
+            }
+
+            return channelActives;
+        }
+
         private PropertyPage CreatePropertyPage(PropertyPage page, ExportFormat format)
         {
             var songNames = GetSongNames();
@@ -109,17 +142,19 @@ namespace FamiStudio
             switch (format)
             {
                 case ExportFormat.WavMp3:
-                    page.AddStringList("Song :", songNames, songNames[0]); // 0
-                    page.AddStringList("Format :", new[] { "WAV", "MP3" }, "WAV"); // 1
-                    page.AddStringList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
-                    page.AddStringList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
-                    page.AddStringList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
+                    page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                    page.AddDropDownList("Format :", new[] { "WAV", "MP3" }, "WAV"); // 1
+                    page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
+                    page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
+                    page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
                     page.AddIntegerRange("Loop count:", 1, 1, 10); // 5
                     page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
-                    page.AddBoolean("Separate channel files", false); // 7
-                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 8
+                    page.AddCheckBox("Separate channel files", false); // 7
+                    page.AddCheckBox("Separate intro file", false); // 8
+                    page.AddCheckBoxList("Channels :", GetChannelNames(), GetDefaultSelectedChannels()); // 9
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
+                    page.PropertyChanged += WavMp3_PropertyChanged;
                     break;
                 case ExportFormat.Video:
                     page.AddButton("Path To FFmpeg:", Settings.FFmpegExecutablePath, FFmpegPathButtonClicked, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 0
@@ -129,86 +164,167 @@ namespace FamiStudio
 #else
                     page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
 #endif
-                    page.AddStringList("Song :", songNames, songNames[0]); // 2
-                    page.AddStringList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
-                    page.AddStringList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
-                    page.AddStringList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "192"); // 5
-                    page.AddStringList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
-                    page.AddStringList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
+                    page.AddDropDownList("Song :", songNames, songNames[0]); // 2
+                    page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
+                    page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
+                    page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 5
+                    page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
+                    page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
                     page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
-                    page.AddStringListMulti("Channels :", GetChannelNames(), null); // 9
+                    page.AddCheckBoxList("Channels :", GetChannelNames(), GetDefaultSelectedChannels()); // 9
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
                     page.AddString("Artist :", project.Author, 31); // 1
                     page.AddString("Copyright :", project.Copyright, 31); // 2
-                    page.AddStringList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 3
-                    page.AddStringListMulti(null, songNames, null); // 4
+                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 3
+                    page.AddCheckBoxList(null, songNames, null); // 4
 #if DEBUG
-                    page.AddStringList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 5
+                    page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 5
 #endif
                     page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
                     break;
                 case ExportFormat.Rom:
-                    page.AddStringList("Type :", new[] { "NES ROM", "FDS Disk" }, project.ExpansionAudio == ExpansionType.Fds ? "FDS Disk" : "NES ROM"); // 0
+                    page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.ExpansionAudio == ExpansionType.Fds ? "FDS Disk" : "NES ROM"); // 0
                     page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
                     page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
-                    page.AddStringList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
-                    page.AddStringListMulti(null, songNames, null); // 2
+                    page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
+                    page.AddCheckBoxList(null, songNames, null); // 2
                     page.SetPropertyEnabled(0,  project.ExpansionAudio == ExpansionType.Fds);
                     page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
                     break;
+                case ExportFormat.Midi:
+                    page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                    page.AddCheckBox("Export volume as velocity :", true); // 1
+                    page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
+                    page.AddIntegerRange("Pitch wheel range :", 24, 1, 24); // 3
+                    page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
+                    page.AddLabel(null, "Double-click on a row to change."); // 5
+                    page.AddMultiColumnList(new[] { "", "" }, null, MidiInstrumentDoubleClick, null); // 6
+                    page.PropertyChanged += Midi_PropertyChanged;
+                    break;
                 case ExportFormat.Text:
-                    page.AddStringListMulti(null, songNames, null); // 0
-                    page.AddBoolean("Delete unused data :", false); // 1
+                    page.AddCheckBoxList(null, songNames, null); // 0
+                    page.AddCheckBox("Delete unused data :", false); // 1
                     break;
                 case ExportFormat.FamiTracker:
-                    page.AddStringListMulti(null, songNames, null); // 0
+                    page.AddCheckBoxList(null, songNames, null); // 0
                     break;
                 case ExportFormat.FamiTone2Music:
                 case ExportFormat.FamiStudioMusic:
-                    page.AddStringList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
-                    page.AddBoolean("Separate Files :", false); // 1
+                    page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
+                    page.AddCheckBox("Separate Files :", false); // 1
                     page.AddString("Song Name Pattern :", "{project}_{song}"); // 2
                     page.AddString("DMC Name Pattern :", "{project}"); // 3
-                    page.AddBoolean("Generate song list include :", false); // 4
-                    page.AddStringListMulti(null, songNames, null); // 5
+                    page.AddCheckBox("Generate song list include :", false); // 4
+                    page.AddCheckBoxList(null, songNames, null); // 5
                     page.SetPropertyEnabled(2, false);
                     page.SetPropertyEnabled(3, false);
+                    page.PropertyChanged += SoundEngine_PropertyChanged;
                     break;
                 case ExportFormat.FamiTone2Sfx:
                 case ExportFormat.FamiStudioSfx:
-                    page.AddStringList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
-                    page.AddStringList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 1
-                    page.AddBoolean("Generate SFX list include :", false); // 2
-                    page.AddStringListMulti(null, songNames, null); // 3
+                    page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
+                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 1
+                    page.AddCheckBox("Generate SFX list include :", false); // 2
+                    page.AddCheckBoxList(null, songNames, null); // 3
                     break;
             }
 
             page.Build();
-            page.PropertyChanged += Page_PropertyChanged;
+
+            if (format == ExportFormat.Midi)
+            {
+                UpdateMidiInstrumentMapping();
+            }
 
             return page;
         }
 
-        private void Page_PropertyChanged(PropertyPage props, int idx, object value)
+        private void SoundEngine_PropertyChanged(PropertyPage props, int idx, object value)
         {
-            if ((props == dialog.GetPropertyPage((int)ExportFormat.FamiTone2Music) || props == dialog.GetPropertyPage((int)ExportFormat.FamiStudioMusic)) && idx == 1)
+            if (idx == 1)
             {
                 props.SetPropertyEnabled(2, (bool)value);
                 props.SetPropertyEnabled(3, (bool)value);
             }
-            else if (props == dialog.GetPropertyPage((int)ExportFormat.WavMp3))
+        }
+
+        private void WavMp3_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            if (idx == 1)
             {
-                if (idx == 1)
+                props.SetPropertyEnabled(3, (string)value == "MP3");
+            }
+            else if (idx == 4)
+            {
+                props.SetPropertyEnabled(5, (string)value != "Duration");
+                props.SetPropertyEnabled(6, (string)value == "Duration");
+            }
+        }
+
+        private void Midi_PropertyChanged(PropertyPage props, int idx, object value)
+        {
+            if (idx == 4)
+            {
+                midiInstrumentMapping = null;
+                UpdateMidiInstrumentMapping();
+            }
+        }
+
+        private void UpdateMidiInstrumentMapping()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
+            var mode  = props.GetSelectedIndex(4);
+            var data  = (string[,])null;
+            var cols = new[] { "", "MIDI Instrument" };
+
+            if (mode == MidiExportInstrumentMode.Instrument)
+            {
+                if (midiInstrumentMapping == null)
+                    midiInstrumentMapping = new int[project.Instruments.Count];
+
+                data = new string[project.Instruments.Count, 2];
+                for (int i = 0; i < project.Instruments.Count; i++)
                 {
-                    props.SetPropertyEnabled(3, (string)value == "MP3");
+                    data[i, 0] = project.Instruments[i].Name;
+                    data[i, 1] = MidiFileReader.MidiInstrumentNames[midiInstrumentMapping[i]];
                 }
-                else if (idx == 4)
+
+                cols[0] = "FamiStudio Instrument";
+            }
+            else
+            {
+                var firstSong = project.Songs[0];
+
+                if (midiInstrumentMapping == null)
+                    midiInstrumentMapping = new int[firstSong.Channels.Length];
+
+                data = new string[firstSong.Channels.Length, 2];
+                for (int i = 0; i < firstSong.Channels.Length; i++)
                 {
-                    props.SetPropertyEnabled(5, (string)value != "Duration");
-                    props.SetPropertyEnabled(6, (string)value == "Duration");
+                    data[i, 0] = firstSong.Channels[i].Name;
+                    data[i, 1] = MidiFileReader.MidiInstrumentNames[midiInstrumentMapping[i]];
                 }
+
+                cols[0] = "NES Channel";
+            }
+
+            props.UpdateMultiColumnList(6, data, cols);
+        }
+
+        private void MidiInstrumentDoubleClick(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)
+        {
+            Debug.Assert(midiInstrumentMapping != null);
+
+            var dlg = new PropertyDialog(400, true, true, dialog);
+            dlg.Properties.AddDropDownList("MIDI Instrument:", MidiFileReader.MidiInstrumentNames, MidiFileReader.MidiInstrumentNames[midiInstrumentMapping[itemIndex]]); // 0
+            dlg.Properties.Build();
+
+            if (dlg.ShowDialog(null) == DialogResult.OK)
+            {
+                midiInstrumentMapping[itemIndex] = dlg.Properties.GetSelectedIndex(0);
+                UpdateMidiInstrumentMapping();
             }
         }
 
@@ -222,11 +338,11 @@ namespace FamiStudio
 #endif
 
 #if FAMISTUDIO_MACOS
-            dialog.TemporarelyHide();
+            // dialog.TemporarelyHide(); MATTT
 #endif
             string filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
 #if FAMISTUDIO_MACOS
-            dialog.TemporarelyShow();
+            // dialog.TemporarelyShow(); MATTT
 #endif
 
             if (filename != null)
@@ -277,38 +393,25 @@ namespace FamiStudio
                 var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
                 var duration  = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
                 var separateFiles = props.GetPropertyValue<bool>(7);
-                var selectedChannels = props.GetPropertyValue<bool[]>(8);
+                var separateIntro = props.GetPropertyValue<bool>(8);
+                var selectedChannels = props.GetPropertyValue<bool[]>(9);
                 var song = project.GetSong(songName);
 
-                if (separateFiles)
+                var channelMask = 0;
+                for (int i = 0; i < selectedChannels.Length; i++)
                 {
-                    for (int i = 0; i < selectedChannels.Length; i++)
-                    {
-                        if (selectedChannels[i])
-                        {
-                            var channelFilename = Utils.AddFileSuffix(filename, "_" + song.Channels[i].ShortName);
-
-                            if (format == "MP3")
-                                Mp3File.Save(song, channelFilename, sampleRate, bitRate, loopCount, duration, 1 << i);
-                            else
-                                WaveFile.Save(song, channelFilename, sampleRate, loopCount, duration, 1 << i);
-                        }
-                    }
+                    if (selectedChannels[i])
+                        channelMask |= (1 << i);
                 }
-                else
-                {
-                    var channelMask = 0;
-                    for (int i = 0; i < selectedChannels.Length; i++)
-                    {
-                        if (selectedChannels[i])
-                            channelMask |= (1 << i);
-                    }
 
-                    if (format == "MP3")
-                        Mp3File.Save(song, filename, sampleRate, bitRate, loopCount, duration, channelMask);
-                    else
-                        WaveFile.Save(song, filename, sampleRate, loopCount, duration, channelMask);
-                }
+                WavMp3ExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro,
+                     (samples, fn) => 
+                     {
+                         if (format == "MP3")
+                             Mp3File.Save(samples, fn, sampleRate, bitRate);
+                         else
+                             WaveFile.Save(samples, fn, sampleRate);
+                     });
 
                 lastExportFilename = filename;
             }
@@ -413,6 +516,24 @@ namespace FamiStudio
 
                     lastExportFilename = filename;
                 }
+            }
+        }
+
+        private void ExportMidi()
+        {
+            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export MIDI File", "MIDI Files (*.mid)|*.mid", ref Settings.LastExportFolder);
+            if (filename != null)
+            {
+                var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
+                var songName = props.GetPropertyValue<string>(0);
+                var velocity = props.GetPropertyValue<bool>(1);
+                var slideNotes = props.GetPropertyValue<bool>(2);
+                var pitchRange = props.GetPropertyValue<int>(3);
+                var instrumentMode = props.GetSelectedIndex(4);
+
+                new MidiFileWriter().Save(project, filename, project.GetSong(songName).Id, instrumentMode, midiInstrumentMapping, velocity, slideNotes, pitchRange); 
+
+                lastExportFilename = filename;
             }
         }
 
@@ -521,8 +642,14 @@ namespace FamiStudio
 
             foreach (var song in project.Songs)
             {
-                crc = CRC32.Compute(song.Id, crc);
+                crc = CRC32.Compute(song.Id,   crc);
                 crc = CRC32.Compute(song.Name, crc);
+            }
+
+            foreach (var inst in project.Instruments)
+            {
+                crc = CRC32.Compute(inst.Id,   crc);
+                crc = CRC32.Compute(inst.Name, crc);
             }
 
             return crc;
@@ -554,6 +681,7 @@ namespace FamiStudio
                     case ExportFormat.Video: ExportVideo(); break;
                     case ExportFormat.Nsf: ExportNsf(); break;
                     case ExportFormat.Rom: ExportRom(); break;
+                    case ExportFormat.Midi: ExportMidi(); break;
                     case ExportFormat.Text: ExportText(); break;
                     case ExportFormat.FamiTracker: ExportFamiTracker(); break;
                     case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
